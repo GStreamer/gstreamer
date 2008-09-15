@@ -46,6 +46,8 @@
 
 #include "gstpcapparse.h"
 
+#include <string.h>
+
 #ifndef _MSC_VER
 #include <arpa/inet.h>
 #include <netinet/in.h>

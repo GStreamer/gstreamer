@@ -1,5 +1,13 @@
 2008-09-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/celt/gstceltenc.h:
+	  Help gtk-doc to parse this correctly.
+
+	* gst/pcapparse/gstpcapparse.c:
+	  Add missing include.
+
+2008-09-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* examples/Makefile.am:
 	  Only built scaletempo example if we have gtk.
 

@@ -52,8 +52,8 @@ struct _GstCeltEnc {
   GstElement            element;
 
   /* pads */
-  GstPad                *sinkpad,
-                        *srcpad;
+  GstPad                *sinkpad;
+  GstPad                *srcpad;
 
   CELTHeader            header;
   CELTMode             *mode;
