@@ -46,6 +46,10 @@ struct _GstRtpMP4GDepay
 
   gint profile_level_id;
   gint streamtype;
+
+  gint constantSize;
+  gint constantDuration;
+
   gint sizelength;
   gint indexlength;
   gint indexdeltalength;
@@ -54,6 +58,14 @@ struct _GstRtpMP4GDepay
   gint randomaccessindication;
   gint streamstateindication;
   gint auxiliarydatasizelength;
+
+  guint max_AU_index;
+  guint prev_AU_index;
+  guint last_AU_index;
+  guint next_AU_index;
+  guint32 prev_rtptime;
+
+  GQueue *packets;
   
   GstAdapter *adapter;
 };

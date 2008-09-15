@@ -1,5 +1,15 @@
 2008-09-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_init),
+	(gst_rtp_mp4g_depay_finalize), (gst_rtp_mp4g_depay_setcaps),
+	(gst_rtp_mp4g_depay_clear_queue), (gst_rtp_mp4g_depay_flush_queue),
+	(gst_rtp_mp4g_depay_queue), (gst_rtp_mp4g_depay_process),
+	(gst_rtp_mp4g_depay_change_state):
+	* gst/rtp/gstrtpmp4gdepay.h:
+	Handle interleaved streams by reordering AU in a queue.
+
+2008-09-15  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/gstrtpmp4gdepay.c: (gst_bs_parse_init),
 	(gst_bs_parse_read), (gst_rtp_mp4g_depay_process):
 	Change some of the ranges in the caps, mostly for the amount of bits we
