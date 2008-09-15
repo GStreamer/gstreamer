@@ -1,3 +1,9 @@
+2008-09-15  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	* gst/typefind/gsttypefindfunctions.c:
+	  Recognise Kate subtitle streams (#550582).
+
 2008-09-13  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/audio/audio.h: (GST_AUDIO_FIELD_SIGNED):

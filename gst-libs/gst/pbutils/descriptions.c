@@ -207,6 +207,7 @@ static const FormatInfo formats[] = {
   /* subtitle formats with static descriptions */
   {"application/x-subtitle-sami", N_("Sami subtitle format"), 0},
   {"application/x-subtitle-tmplayer", N_("TMPlayer subtitle format"), 0},
+  {"application/x-kate", N_("Kate subtitle format"), 0},
   /* add variant field to typefinder? { "application/x-subtitle", N_("subtitle"), 0}, */
 
   /* formats with dynamic descriptions */
