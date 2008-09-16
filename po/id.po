@@ -1,0 +1,587 @@
+# Indonesian translations for gst-plugins-base package.
+# This file is put in the public domain.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2008.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 0.10.19.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-09-10 18:14+0100\n"
+"PO-Revision-Date: 2008-08-05 21:40+0700\n"
+"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
+"Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ext/alsa/gstalsamixertrack.c:144
+msgid "Master"
+msgstr "Utama"
+
+#: ext/alsa/gstalsamixertrack.c:145
+msgid "Bass"
+msgstr "Bas"
+
+#: ext/alsa/gstalsamixertrack.c:146
+msgid "Treble"
+msgstr "Treble"
+
+#: ext/alsa/gstalsamixertrack.c:147
+msgid "PCM"
+msgstr "PCM"
+
+#: ext/alsa/gstalsamixertrack.c:148
+msgid "Synth"
+msgstr "Synth"
+
+#: ext/alsa/gstalsamixertrack.c:149
+msgid "Line-in"
+msgstr "Jalur masuk"
+
+#: ext/alsa/gstalsamixertrack.c:150
+msgid "CD"
+msgstr "CD"
+
+#: ext/alsa/gstalsamixertrack.c:151
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: ext/alsa/gstalsamixertrack.c:152
+msgid "PC Speaker"
+msgstr "Pengeras Suara PC"
+
+#: ext/alsa/gstalsamixertrack.c:153
+msgid "Playback"
+msgstr "Putar kembali"
+
+#: ext/alsa/gstalsamixertrack.c:154 ext/alsa/gstalsamixertrack.c:220
+#: ext/alsa/gstalsamixertrack.c:223
+msgid "Capture"
+msgstr "Tangkap"
+
+#: ext/alsa/gstalsasink.c:479
+msgid "Could not open device for playback in mono mode."
+msgstr "Tak dapat membuka divais untuk putar kembali dalam mode mono."
+
+#: ext/alsa/gstalsasink.c:481
+msgid "Could not open device for playback in stereo mode."
+msgstr "Tak dapat membuka divais untuk putar kembali dalam mode stereo."
+
+#: ext/alsa/gstalsasink.c:485
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Tak dapat membuka divais untuk putar kembali dalam mode %d-kanal."
+
+#: ext/alsa/gstalsasink.c:685
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
+"oleh aplikasi lain."
+
+#: ext/alsa/gstalsasink.c:690
+msgid "Could not open audio device for playback."
+msgstr "Tak dapat membuka divais audio untuk putar kembali."
+
+#: ext/alsa/gstalsasrc.c:417
+msgid "Could not open device for recording in mono mode."
+msgstr "Tak dapat membuka divais untuk merekam dalam mode mono."
+
+#: ext/alsa/gstalsasrc.c:419
+msgid "Could not open device for recording in stereo mode."
+msgstr "Tak dapat membuka divais untuk merekam dalam mode stereo."
+
+#: ext/alsa/gstalsasrc.c:423
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Tak dapat membuka divais untuk merekam dalam mode %d-kanal"
+
+#: ext/alsa/gstalsasrc.c:628
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Tak dapat membuka divais audio untuk merekam. Divais sedang digunakan oleh "
+"aplikasi lain."
+
+#: ext/alsa/gstalsasrc.c:633
+msgid "Could not open audio device for recording."
+msgstr "Tak dapat membuka divais audio untuk merekam."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:257 ext/cdparanoia/gstcdparanoiasrc.c:263
+msgid "Could not open CD device for reading."
+msgstr "Tak dapat membuka divais CD untuk dibaca."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:389
+msgid "Could not seek CD."
+msgstr "Tak dapat mencari CD."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:397
+msgid "Could not read CD."
+msgstr "Tak dapat membaca CD."
+
+#: ext/gnomevfs/gstgnomevfssink.c:379
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "Tak dapat membuka berkas vfs \"%s\" untuk ditulis: %s."
+
+#: ext/gnomevfs/gstgnomevfssink.c:386
+msgid "No filename given"
+msgstr "Tak ada nama berkas yang diberikan"
+
+#: ext/gnomevfs/gstgnomevfssink.c:412
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "Tak dapat menutup berkas vfs \"%s\"."
+
+#: ext/gnomevfs/gstgnomevfssink.c:566
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Galat ketika menulis ke berkas \"%s\"."
+
+#: ext/ogg/gstoggdemux.c:3126
+msgid "Internal data stream error."
+msgstr "Galat arus data internal."
+
+#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr "Plugin %s dibutuhkan untuk memutar arus ini, tapi tidak diinstal."
+
+#: gst/playback/gstdecodebin.c:1715
+msgid "This appears to be a text file"
+msgstr "Ini kelihatannya merupakan berkas teks"
+
+#: gst/playback/gstplaybasebin.c:1519
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "URI subjudul \"%s\" tidak sah, subjudul dinonaktifkan."
+
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+msgid "No URI specified to play from."
+msgstr "Tak ada URI yang ditentukan untuk diputar."
+
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "URI \"%s\" tidak sah."
+
+#: gst/playback/gstplaybasebin.c:1654
+msgid "RTSP streams cannot be played yet."
+msgstr "Arus RTSP belum dapat dimainkan."
+
+#: gst/playback/gstplaybasebin.c:2006
+msgid "Could not create \"decodebin\" element."
+msgstr "Tak dapat membuat elemen \"decodebin\""
+
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+msgid "Source element is invalid."
+msgstr "Elemen sumber tidak sah."
+
+#: gst/playback/gstplaybasebin.c:2301
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Hanya arus subjudul yang terdeteksi. Mungkin anda memuat berkas subjudul "
+"atau tipe lain dari berkas teks, atau berkas media yang tidak dikenal."
+
+#: gst/playback/gstplaybasebin.c:2306
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Anda tidak memiliki pengawasandi terinstal untuk menangani berkas ini. Anda "
+"mungkin harus menginstal plugin yang diperlukan."
+
+#: gst/playback/gstplaybasebin.c:2310
+msgid "This is not a media file"
+msgstr "Ini bukan berkas media"
+
+#: gst/playback/gstplaybasebin.c:2315
+msgid "A subtitle stream was detected, but no video stream."
+msgstr "Arus subjudul terdeteksi, tapi bukan arus video."
+
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "Baik elemen autovideosink maupun xvimagesink hilang."
+
+#: gst/playback/gstplaybin.c:890 gst/playback/gstplaybin.c:900
+#: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
+#: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
+#: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
+#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
+#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
+#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
+#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
+#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
+
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
+
+#: gst/playback/gstplaysink.c:989
+msgid "No volume control found"
+msgstr ""
+
+#: gst/playback/gstqueue2.c:991
+msgid "No file name specified."
+msgstr "Tak ada nama berkas yang ditentukan."
+
+#: gst/playback/gstqueue2.c:997
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
+
+#: gst/playback/gsturidecodebin.c:548
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "Tak ada pengawasandi yang tersedia untuk tipe '%s'."
+
+#: gst/playback/gsturidecodebin.c:779
+msgid "This stream type cannot be played yet."
+msgstr "Tipe arus ini belum dapat dimainkan."
+
+#: gst/playback/gsturidecodebin.c:790
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "Tak ada penanganan URI yang diimplementasikan untuk \"%s\"."
+
+#: gst/playback/gsturidecodebin.c:1081
+msgid "Could not create \"decodebin2\" element."
+msgstr "Tak dapat membuat elemen \"decodebin2\"."
+
+#: gst/playback/gsturidecodebin.c:1137
+msgid "Could not create \"queue2\" element."
+msgstr "Tak dapat membuat elemen \"queue2\"."
+
+#: gst/playback/gsturidecodebin.c:1176
+msgid "Could not create \"typefind\" element."
+msgstr "Tak dapat membuat elemen \"typefind\"."
+
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Galat ketika mengirim data ke \"%s:%d\"."
+
+#: gst/tcp/gsttcp.c:555
+#, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr "Galat ketika mengirim data tajuk gdp ke \"%s:%d\"."
+
+#: gst/tcp/gsttcp.c:564
+#, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr "Galat ketika mengirim data pemuat gdp ke \"%s:%d\"."
+
+#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#, c-format
+msgid "Connection to %s:%d refused."
+msgstr "Koneksi ke %s:%d ditolak."
+
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+msgid "Can't record audio fast enough"
+msgstr "Tak dapat merekam audio cukup cepat"
+
+#: gst-libs/gst/tag/gsttagdemux.c:1038
+msgid "Failed to read tag: not enough data"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "track ID"
+msgstr "ID jalur"
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "MusicBrainz track ID"
+msgstr "ID jalur MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:61
+msgid "artist ID"
+msgstr "ID artis"
+
+#: gst-libs/gst/tag/tags.c:61
+msgid "MusicBrainz artist ID"
+msgstr "ID artis MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:63
+msgid "album ID"
+msgstr "ID album"
+
+#: gst-libs/gst/tag/tags.c:63
+msgid "MusicBrainz album ID"
+msgstr "ID album MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:66
+msgid "album artist ID"
+msgstr "ID artis album"
+
+#: gst-libs/gst/tag/tags.c:66
+msgid "MusicBrainz album artist ID"
+msgstr "ID artis album MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:68
+msgid "track TRM ID"
+msgstr "ID TRM jalur"
+
+#: gst-libs/gst/tag/tags.c:68
+msgid "MusicBrainz TRM ID"
+msgstr "ID TRM MusicBrainz"
+
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+msgid "This CD has no audio tracks"
+msgstr "CD ini tidak memiliki jalur audio"
+
+#: gst-libs/gst/pbutils/descriptions.c:66
+msgid "ID3 tag"
+msgstr "Tag ID3"
+
+#: gst-libs/gst/pbutils/descriptions.c:67
+msgid "APE tag"
+msgstr "Tag APE"
+
+#: gst-libs/gst/pbutils/descriptions.c:68
+msgid "ICY internet radio"
+msgstr "Radio internet ICY"
+
+#: gst-libs/gst/pbutils/descriptions.c:91
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple Lossless Audio (ALAC)"
+
+#: gst-libs/gst/pbutils/descriptions.c:100
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
+
+#: gst-libs/gst/pbutils/descriptions.c:125
+#: gst-libs/gst/pbutils/descriptions.c:126
+msgid "Lossless True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
+
+#: gst-libs/gst/pbutils/descriptions.c:134
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+#: gst-libs/gst/pbutils/descriptions.c:148
+msgid "CYUV Lossless"
+msgstr "CYUV Lossless"
+
+#: gst-libs/gst/pbutils/descriptions.c:151
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+#: gst-libs/gst/pbutils/descriptions.c:163
+msgid "Lossless MSZH"
+msgstr "Lossless MSZH"
+
+#: gst-libs/gst/pbutils/descriptions.c:169
+msgid "Uncompressed Gray Image"
+msgstr "Citra Abu-abu Tak Dikompres"
+
+#: gst-libs/gst/pbutils/descriptions.c:174
+msgid "Run-length encoding"
+msgstr "Penyandian sepanjang-jalan"
+
+#: gst-libs/gst/pbutils/descriptions.c:208
+msgid "Sami subtitle format"
+msgstr "Format subjudul Sami"
+
+#: gst-libs/gst/pbutils/descriptions.c:209
+msgid "TMPlayer subtitle format"
+msgstr "Format subjudul TMPlayer"
+
+#: gst-libs/gst/pbutils/descriptions.c:268
+msgid "Uncompressed planar YUV 4:2:0"
+msgstr "YUV 4:2:0 planar tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:271
+msgid "Uncompressed planar YVU 4:2:0"
+msgstr "YVU 4:2:0 planar tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:274
+#: gst-libs/gst/pbutils/descriptions.c:284
+msgid "Uncompressed packed YUV 4:2:2"
+msgstr "YUV 4:2:2 terkemas tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:277
+msgid "Uncompressed packed YUV 4:1:0"
+msgstr "YUV 4:1:0 terkemas tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:280
+msgid "Uncompressed packed YVU 4:1:0"
+msgstr "YVU 4:1:0 terkemas tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:287
+msgid "Uncompressed packed YUV 4:1:1"
+msgstr "YUV 4:1:1 terkemas tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:290
+msgid "Uncompressed packed YUV 4:4:4"
+msgstr "YUV 4:4:4 terkemas tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:293
+msgid "Uncompressed planar YUV 4:2:2"
+msgstr "YUV 4:2:2 planar tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:296
+msgid "Uncompressed planar YUV 4:1:1"
+msgstr "YUV 4:1:1 planar tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:299
+msgid "Uncompressed black and white Y-plane"
+msgstr "Y-plane hitam dan putih tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:302
+msgid "Uncompressed YUV"
+msgstr "YUV tak dikompresi"
+
+#: gst-libs/gst/pbutils/descriptions.c:313
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Terpalet dan tak dikompresi dari %d-bit %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:365
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 Versi %d"
+
+#: gst-libs/gst/pbutils/descriptions.c:583
+#, c-format
+msgid "Raw %d-bit PCM audio"
+msgstr "Audio PCM %d-bita mentah"
+
+#: gst-libs/gst/pbutils/descriptions.c:585
+msgid "Raw PCM audio"
+msgstr "Audio PCM mentah"
+
+#: gst-libs/gst/pbutils/descriptions.c:591
+#, c-format
+msgid "Raw %d-bit floating-point audio"
+msgstr "Audio titik-apung %d-bita mentah"
+
+#: gst-libs/gst/pbutils/descriptions.c:593
+msgid "Raw floating-point audio"
+msgstr "Audio titik-apung mentah"
+
+#: gst-libs/gst/pbutils/descriptions.c:680
+msgid "Audio CD source"
+msgstr "Sumber CD audio"
+
+#: gst-libs/gst/pbutils/descriptions.c:683
+msgid "DVD source"
+msgstr "Sumber DVD"
+
+#: gst-libs/gst/pbutils/descriptions.c:686
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Sumber Real Time Streaming Protocol (RTSP)"
+
+#: gst-libs/gst/pbutils/descriptions.c:690
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Sumber protokol Microsoft Media Server (MMS)"
+
+#: gst-libs/gst/pbutils/descriptions.c:698
+#, c-format
+msgid "%s protocol source"
+msgstr "%s sumber protokol"
+
+#: gst-libs/gst/pbutils/descriptions.c:766
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "%s video RTP depayloader"
+
+#: gst-libs/gst/pbutils/descriptions.c:768
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "%s audio RTP depayloader"
+
+#: gst-libs/gst/pbutils/descriptions.c:770
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP depayloader"
+
+#: gst-libs/gst/pbutils/descriptions.c:777
+#, c-format
+msgid "%s demuxer"
+msgstr "%s demuxer"
+
+#: gst-libs/gst/pbutils/descriptions.c:779
+#, c-format
+msgid "%s decoder"
+msgstr "%s pengawasandi"
+
+#: gst-libs/gst/pbutils/descriptions.c:814
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "%s video RTP payloader"
+
+#: gst-libs/gst/pbutils/descriptions.c:816
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s audio RTP payloader"
+
+#: gst-libs/gst/pbutils/descriptions.c:818
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP payloader"
+
+#: gst-libs/gst/pbutils/descriptions.c:825
+#, c-format
+msgid "%s muxer"
+msgstr "%s muxer"
+
+#: gst-libs/gst/pbutils/descriptions.c:827
+#, c-format
+msgid "%s encoder"
+msgstr "%s penyandi"
+
+#: gst-libs/gst/pbutils/descriptions.c:858
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Elemen GStreamer %s"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:554
+msgid "Unknown source element"
+msgstr "Elemen sumber tak diketahui"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:557
+msgid "Unknown sink element"
+msgstr "Elemen tenggelam tak diketahui"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:560
+msgid "Unknown element"
+msgstr "Elemen tak diketahui"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:563
+msgid "Unknown decoder element"
+msgstr "Elemen pengawasandi tak diketahui"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:566
+msgid "Unknown encoder element"
+msgstr "Elemen penyandi tak diketahui"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:571
+msgid "Plugin or element of unknown type"
+msgstr "Plugin atau elemen dari tipe yang tak diketahui"
+
+#: sys/v4l/v4l_calls.c:159
+msgid "No device specified."
+msgstr "Tak ada divais yang ditentukan."
+
+#: sys/v4l/v4l_calls.c:168
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Divais \"%s\" tak ada."
+
+#: sys/v4l/v4l_calls.c:173
+#, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "Divais \"%s\" telah digunakan."
+
+#: sys/v4l/v4l_calls.c:178
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Tak dapat membuka divaus \"%s\" untuk dibaca dan ditulis."

@@ -10,6 +10,17 @@
 	  Remove trailing comma from enum list, which causes problems
 	  with -pendantic (#550729).
 
+2008-09-10  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.20.2 pre-release
+
+	* po/LINGUAS:
+	* po/id.po:
+	* po/pt_BR.po:
+
+	New translations.
+
 2008-09-05  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/interfaces/propertyprobe.c:

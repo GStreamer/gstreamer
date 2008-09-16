@@ -1,0 +1,594 @@
+# Brazilian Portuguese translation of gst-plugins-base.
+# Copyright (C) 2008 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-base package.
+# Fabrício Godoy <skarllot@gmail.com>, 2008.
+#
+# PCM -> PCM
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base-0.10.19.3\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-09-10 18:14+0100\n"
+"PO-Revision-Date: 2008-07-12 23:44-0003\n"
+"Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
+"Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ext/alsa/gstalsamixertrack.c:144
+msgid "Master"
+msgstr "Principal"
+
+#: ext/alsa/gstalsamixertrack.c:145
+msgid "Bass"
+msgstr "Grave"
+
+#: ext/alsa/gstalsamixertrack.c:146
+msgid "Treble"
+msgstr "Agudo"
+
+#: ext/alsa/gstalsamixertrack.c:147
+msgid "PCM"
+msgstr "PCM"
+
+#: ext/alsa/gstalsamixertrack.c:148
+msgid "Synth"
+msgstr "Sintetizador"
+
+#: ext/alsa/gstalsamixertrack.c:149
+msgid "Line-in"
+msgstr "Entrada de linha"
+
+#: ext/alsa/gstalsamixertrack.c:150
+msgid "CD"
+msgstr "CD"
+
+#: ext/alsa/gstalsamixertrack.c:151
+msgid "Microphone"
+msgstr "Microfone"
+
+#: ext/alsa/gstalsamixertrack.c:152
+msgid "PC Speaker"
+msgstr "Alto-falante do PC"
+
+#: ext/alsa/gstalsamixertrack.c:153
+msgid "Playback"
+msgstr "Reprodução"
+
+#: ext/alsa/gstalsamixertrack.c:154 ext/alsa/gstalsamixertrack.c:220
+#: ext/alsa/gstalsamixertrack.c:223
+msgid "Capture"
+msgstr "Captura"
+
+#: ext/alsa/gstalsasink.c:479
+msgid "Could not open device for playback in mono mode."
+msgstr "Não foi possível abrir o dispositivo para reprodução em mono."
+
+#: ext/alsa/gstalsasink.c:481
+msgid "Could not open device for playback in stereo mode."
+msgstr "Não foi possível abrir o dispositivo para reprodução em estéreo."
+
+#: ext/alsa/gstalsasink.c:485
+#, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Não foi possível abrir o dispositivo para reprodução com %d canal(is)."
+
+#: ext/alsa/gstalsasink.c:685
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para reprodução. O dispositivo "
+"está sendo usado por outro aplicativo."
+
+#: ext/alsa/gstalsasink.c:690
+msgid "Could not open audio device for playback."
+msgstr "Não foi possível abrir o dispositivo de áudio para reprodução."
+
+#: ext/alsa/gstalsasrc.c:417
+msgid "Could not open device for recording in mono mode."
+msgstr "Não foi possível abrir o dispositivo para gravação em mono."
+
+#: ext/alsa/gstalsasrc.c:419
+msgid "Could not open device for recording in stereo mode."
+msgstr "Não foi possível abrir o dispositivo para gravação em estéreo."
+
+#: ext/alsa/gstalsasrc.c:423
+#, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Não foi possível abrir o dispositivo para gravação com %d canal(is)."
+
+#: ext/alsa/gstalsasrc.c:628
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para gravação. O dispositivo "
+"está sendo usado por outro aplicativo."
+
+#: ext/alsa/gstalsasrc.c:633
+msgid "Could not open audio device for recording."
+msgstr "Não foi possível abrir o dispositivo de áudio para gravação."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:257 ext/cdparanoia/gstcdparanoiasrc.c:263
+msgid "Could not open CD device for reading."
+msgstr "Não foi possível abrir o dispositivo de CD para leitura."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:389
+msgid "Could not seek CD."
+msgstr "Não foi possível buscar no CD."
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:397
+msgid "Could not read CD."
+msgstr "Não foi possível ler o CD."
+
+#: ext/gnomevfs/gstgnomevfssink.c:379
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "Não foi possível abrir o arquivo VFS \"%s\" para escrita: %s."
+
+#: ext/gnomevfs/gstgnomevfssink.c:386
+msgid "No filename given"
+msgstr "Não foi fornecido um nome de arquivo"
+
+#: ext/gnomevfs/gstgnomevfssink.c:412
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "Não foi possível fechar o arquivo VFS \"%s\"."
+
+#: ext/gnomevfs/gstgnomevfssink.c:566
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Erro ao escrever no arquivo \"%s\"."
+
+#: ext/ogg/gstoggdemux.c:3126
+msgid "Internal data stream error."
+msgstr "Erro interno no fluxo de dados."
+
+#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr ""
+"O plug-in %s é necessário para reproduzir este fluxo, mas não está instalado."
+
+#: gst/playback/gstdecodebin.c:1715
+msgid "This appears to be a text file"
+msgstr "Este parece ser um arquivo de texto"
+
+#: gst/playback/gstplaybasebin.c:1519
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "O URI \"%s\" para legenda é inválido, legendas desabilitadas."
+
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+msgid "No URI specified to play from."
+msgstr "Nenhum URI especificado para reprodução."
+
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "O URI \"%s\" é inválido."
+
+#: gst/playback/gstplaybasebin.c:1654
+msgid "RTSP streams cannot be played yet."
+msgstr "Os fluxos RTSP ainda não podem ser reproduzidos."
+
+#: gst/playback/gstplaybasebin.c:2006
+msgid "Could not create \"decodebin\" element."
+msgstr "Não foi possível criar o elemento \"decodebin\"."
+
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+msgid "Source element is invalid."
+msgstr "O elemente de origem é inválido."
+
+#: gst/playback/gstplaybasebin.c:2301
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Apenas um fluxo de legendas foi detectado. Ou você está carregando um "
+"arquivo de legenda ou algum outro tipo de arquivo de texto, ou o arquivo de "
+"mídia não é reconhecido."
+
+#: gst/playback/gstplaybasebin.c:2306
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Você não tem um decodificador instalado para manipular este arquivo. Você "
+"deveria instalar os plug-ins necessários."
+
+#: gst/playback/gstplaybasebin.c:2310
+msgid "This is not a media file"
+msgstr "Este não é um arquivo de mídia"
+
+#: gst/playback/gstplaybasebin.c:2315
+msgid "A subtitle stream was detected, but no video stream."
+msgstr "Um fluxo de legenda foi detectado, mas nenhum fluxo de vídeo."
+
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "Os elementos autovideosink e xvimagesink estão faltando."
+
+#: gst/playback/gstplaybin.c:890 gst/playback/gstplaybin.c:900
+#: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
+#: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
+#: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
+#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
+#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
+#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
+#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
+#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+"O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
+
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr "Os elementos autoaudiosink e alsasink estão faltando."
+
+#: gst/playback/gstplaysink.c:989
+msgid "No volume control found"
+msgstr ""
+
+#: gst/playback/gstqueue2.c:991
+msgid "No file name specified."
+msgstr "Não foi especificado um nome de arquivo."
+
+#: gst/playback/gstqueue2.c:997
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
+
+#: gst/playback/gsturidecodebin.c:548
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "Decodificador não disponível para o tipo \"%s\"."
+
+#: gst/playback/gsturidecodebin.c:779
+msgid "This stream type cannot be played yet."
+msgstr "Este tipo de fluxo ainda não pode ser reproduzido."
+
+#: gst/playback/gsturidecodebin.c:790
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "Nenhum manipulador para o URI \"%s\" foi implementado."
+
+#: gst/playback/gsturidecodebin.c:1081
+msgid "Could not create \"decodebin2\" element."
+msgstr "Não foi possível criar o elemento \"decodebin2\"."
+
+#: gst/playback/gsturidecodebin.c:1137
+msgid "Could not create \"queue2\" element."
+msgstr "Não foi possível criar o elemento \"queue2\"."
+
+#: gst/playback/gsturidecodebin.c:1176
+msgid "Could not create \"typefind\" element."
+msgstr "Não foi possível criar o elemento \"typefind\"."
+
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Erro ao enviar dados para \"%s:%d\"."
+
+#: gst/tcp/gsttcp.c:555
+#, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr "Erro ao enviar o cabeçalho GDP de dados para \"%s:%d\"."
+
+#: gst/tcp/gsttcp.c:564
+#, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr "Erro ao enviar carga de dados GDP para \"%s:%d\"."
+
+#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#, c-format
+msgid "Connection to %s:%d refused."
+msgstr "A conexão para %s:%d foi recusada."
+
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+msgid "Can't record audio fast enough"
+msgstr "Não é possível gravar o áudio rápido suficiente"
+
+#: gst-libs/gst/tag/gsttagdemux.c:1038
+msgid "Failed to read tag: not enough data"
+msgstr ""
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "track ID"
+msgstr "ident. da trilha"
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "MusicBrainz track ID"
+msgstr "ident. da trilha no MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:61
+msgid "artist ID"
+msgstr "ident. do artista"
+
+#: gst-libs/gst/tag/tags.c:61
+msgid "MusicBrainz artist ID"
+msgstr "ident. do artista no MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:63
+msgid "album ID"
+msgstr "ident. do álbum"
+
+#: gst-libs/gst/tag/tags.c:63
+msgid "MusicBrainz album ID"
+msgstr "ident. do álbum no MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:66
+msgid "album artist ID"
+msgstr "ident. do artista do álbum"
+
+#: gst-libs/gst/tag/tags.c:66
+msgid "MusicBrainz album artist ID"
+msgstr "ident. do artista do álbum no MusicBrainz"
+
+#: gst-libs/gst/tag/tags.c:68
+msgid "track TRM ID"
+msgstr "ident. da trilha TRM"
+
+#: gst-libs/gst/tag/tags.c:68
+msgid "MusicBrainz TRM ID"
+msgstr "ident. da trilha TRM no MusicBrainz"
+
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+msgid "This CD has no audio tracks"
+msgstr "Este CD não tem trilhas de áudio"
+
+#: gst-libs/gst/pbutils/descriptions.c:66
+msgid "ID3 tag"
+msgstr "Etiqueta ID3"
+
+#: gst-libs/gst/pbutils/descriptions.c:67
+msgid "APE tag"
+msgstr "Etiqueta APE"
+
+#: gst-libs/gst/pbutils/descriptions.c:68
+msgid "ICY internet radio"
+msgstr "Rádio on-line ICY"
+
+#: gst-libs/gst/pbutils/descriptions.c:91
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Áudio Sem Perdas da Apple (ALAC)"
+
+#: gst-libs/gst/pbutils/descriptions.c:100
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Codec Livre de Áudio Sem Perdas (FLAC)"
+
+#: gst-libs/gst/pbutils/descriptions.c:125
+#: gst-libs/gst/pbutils/descriptions.c:126
+msgid "Lossless True Audio (TTA)"
+msgstr "Áudio Real Sem Perdas (TTA)"
+
+#: gst-libs/gst/pbutils/descriptions.c:134
+msgid "Windows Media Speech"
+msgstr "Mídia de Voz do Windows (WMS)"
+
+#: gst-libs/gst/pbutils/descriptions.c:148
+msgid "CYUV Lossless"
+msgstr "CYUV Sem Perdas"
+
+#: gst-libs/gst/pbutils/descriptions.c:151
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+#: gst-libs/gst/pbutils/descriptions.c:163
+msgid "Lossless MSZH"
+msgstr "MSZH Sem Perdas"
+
+#: gst-libs/gst/pbutils/descriptions.c:169
+msgid "Uncompressed Gray Image"
+msgstr "Imagem Monocromática Sem Compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:174
+msgid "Run-length encoding"
+msgstr "Codificação Run-length"
+
+#: gst-libs/gst/pbutils/descriptions.c:208
+msgid "Sami subtitle format"
+msgstr "Formato de legendas Sami"
+
+#: gst-libs/gst/pbutils/descriptions.c:209
+msgid "TMPlayer subtitle format"
+msgstr "Formato de legendas TMPlayer"
+
+#: gst-libs/gst/pbutils/descriptions.c:268
+msgid "Uncompressed planar YUV 4:2:0"
+msgstr "YUV 4:2:0 plano sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:271
+msgid "Uncompressed planar YVU 4:2:0"
+msgstr "YVU 4:2:0 plano sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:274
+#: gst-libs/gst/pbutils/descriptions.c:284
+msgid "Uncompressed packed YUV 4:2:2"
+msgstr "YUV 4:2:2 empacotado sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:277
+msgid "Uncompressed packed YUV 4:1:0"
+msgstr "YUV 4:1:0 empacotado sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:280
+msgid "Uncompressed packed YVU 4:1:0"
+msgstr "YVU 4:1:0 empacotado sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:287
+msgid "Uncompressed packed YUV 4:1:1"
+msgstr "YUV 4:1:1 empacotado sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:290
+msgid "Uncompressed packed YUV 4:4:4"
+msgstr "YUV 4:4:4 empacotado sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:293
+msgid "Uncompressed planar YUV 4:2:2"
+msgstr "YUV 4:2:2 plano sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:296
+msgid "Uncompressed planar YUV 4:1:1"
+msgstr "YUV 4:1:1 plano sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:299
+msgid "Uncompressed black and white Y-plane"
+msgstr "Plano Y em preto e branco sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:302
+msgid "Uncompressed YUV"
+msgstr "YUV sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:313
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "%2$s de %1$d bits com paletas sem compressão"
+
+#: gst-libs/gst/pbutils/descriptions.c:365
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 Versão %d"
+
+#: gst-libs/gst/pbutils/descriptions.c:583
+#, c-format
+msgid "Raw %d-bit PCM audio"
+msgstr "Áudio PCM Raw de %d bits"
+
+#: gst-libs/gst/pbutils/descriptions.c:585
+msgid "Raw PCM audio"
+msgstr "Áudio PCM Raw"
+
+#: gst-libs/gst/pbutils/descriptions.c:591
+#, c-format
+msgid "Raw %d-bit floating-point audio"
+msgstr "Áudio Raw de ponto-flutuante de %d bits"
+
+#: gst-libs/gst/pbutils/descriptions.c:593
+msgid "Raw floating-point audio"
+msgstr "Áudio Raw de ponto-flutuante"
+
+#: gst-libs/gst/pbutils/descriptions.c:680
+msgid "Audio CD source"
+msgstr "Origem: CD de áudio"
+
+#: gst-libs/gst/pbutils/descriptions.c:683
+msgid "DVD source"
+msgstr "Origem: DVD"
+
+#: gst-libs/gst/pbutils/descriptions.c:686
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Origem: Protocolo de Fluxo Contínuo em Tempo Real (RTSP)"
+
+#: gst-libs/gst/pbutils/descriptions.c:690
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Origem: protocolo do Servidor de Mídia da Microsoft (MMS)"
+
+#: gst-libs/gst/pbutils/descriptions.c:698
+#, c-format
+msgid "%s protocol source"
+msgstr "Origem: protocolo %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:766
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "decodificador de vídeo RTP %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:768
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "decodificador de áudio RTP %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:770
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "decodificador RTP %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:777
+#, c-format
+msgid "%s demuxer"
+msgstr "Demultiplexador %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:779
+#, c-format
+msgid "%s decoder"
+msgstr "Decodificador %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:814
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "codificador de vídeo RTP %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:816
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "codificador de áudio RTP %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:818
+#, c-format
+msgid "%s RTP payloader"
+msgstr "codificador RTP %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:825
+#, c-format
+msgid "%s muxer"
+msgstr "Multiplexador %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:827
+#, c-format
+msgid "%s encoder"
+msgstr "Codificador %s"
+
+#: gst-libs/gst/pbutils/descriptions.c:858
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Elemento \"%s\" do GStreamer"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:554
+msgid "Unknown source element"
+msgstr "Elemento de origem desconhecida"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:557
+msgid "Unknown sink element"
+msgstr "Elemento consumidor desconhecido"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:560
+msgid "Unknown element"
+msgstr "Elemento desconhecido"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:563
+msgid "Unknown decoder element"
+msgstr "Elemento decodificador desconhecido"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:566
+msgid "Unknown encoder element"
+msgstr "Elemento codificador desconhecido"
+
+#: gst-libs/gst/pbutils/missing-plugins.c:571
+msgid "Plugin or element of unknown type"
+msgstr "Elemento ou plug-in de tipo desconhecido"
+
+#: sys/v4l/v4l_calls.c:159
+msgid "No device specified."
+msgstr "Nenhum dispositivo especificado."
+
+#: sys/v4l/v4l_calls.c:168
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "O dispositivo \"%s\" não existe."
+
+#: sys/v4l/v4l_calls.c:173
+#, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "O dispositivo \"%s\" já está sendo usado."
+
+#: sys/v4l/v4l_calls.c:178
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e escrita."
