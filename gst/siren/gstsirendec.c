@@ -188,6 +188,8 @@ gst_siren_dec_chain (GstPad *pad, GstBuffer *buf)
   if (ret != GST_FLOW_OK)
     return ret;
 
+  GST_BUFFER_TIMESTAMP (decoded) = GST_BUFFER_TIMESTAMP (buf);
+
   while((inoffset + 40 <= GST_BUFFER_SIZE (buf)) &&
       ret == GST_FLOW_OK) {
 
