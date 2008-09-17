@@ -231,7 +231,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
    * its timestamps. */
   if (ABS (delta - jbuf->skew) > GST_SECOND) {
     GST_DEBUG ("delta %" GST_TIME_FORMAT " too big, reset skew",
-        delta - jbuf->skew);
+        GST_TIME_ARGS (delta - jbuf->skew));
     jbuf->base_time = time;
     jbuf->base_rtptime = gstrtptime;
     jbuf->base_extrtp = ext_rtptime;

@@ -1,3 +1,9 @@
+2008-09-17  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/jack/gstjackaudiosink.c: (jack_process_cb):
+	* gst/rtpmanager/rtpjitterbuffer.c: (calculate_skew):
+	Fix compiler warnings on OS/X
+
 2008-09-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Michael Krufky
