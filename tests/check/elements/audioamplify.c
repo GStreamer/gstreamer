@@ -124,7 +124,7 @@ GST_START_TEST (test_passthrough)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       in[0], in[1], in[2], in[3], in[4], in[5], res[0], res[1], res[2], res[3],
       res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), in, 12) == 0);
@@ -166,7 +166,7 @@ GST_START_TEST (test_zero)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);
@@ -208,7 +208,7 @@ GST_START_TEST (test_050_clip)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);
@@ -250,7 +250,7 @@ GST_START_TEST (test_200_clip)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);
@@ -293,7 +293,7 @@ GST_START_TEST (test_050_wrap_negative)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);
@@ -336,7 +336,7 @@ GST_START_TEST (test_200_wrap_negative)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);
@@ -379,7 +379,7 @@ GST_START_TEST (test_050_wrap_positive)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);
@@ -422,7 +422,7 @@ GST_START_TEST (test_200_wrap_positive)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       out[0], out[1], out[2], out[3], out[4], out[5], res[0], res[1], res[2],
       res[3], res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 12) == 0);

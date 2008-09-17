@@ -124,7 +124,7 @@ GST_START_TEST (test_passthrough)
 
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
   GST_INFO
-      ("expected %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld real %+5ld %+5ld %+5ld %+5ld %+5ld %+5ld",
+      ("expected %+5d %+5d %+5d %+5d %+5d %+5d real %+5d %+5d %+5d %+5d %+5d %+5d",
       in[0], in[1], in[2], in[3], in[4], in[5], res[0], res[1], res[2], res[3],
       res[4], res[5]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), in, 12) == 0);

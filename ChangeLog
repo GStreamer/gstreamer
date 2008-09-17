@@ -1,3 +1,18 @@
+2008-09-17  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/interleave/Makefile.am:
+	* gst/matroska/Makefile.am:
+	Fix build flags order.
+
+	* tests/check/elements/audioamplify.c: (GST_START_TEST):
+	* tests/check/elements/audiodynamic.c: (GST_START_TEST):
+	* tests/check/elements/audioinvert.c: (GST_START_TEST):
+	* tests/check/elements/audiopanorama.c: (GST_START_TEST):
+	Format fixes.
+
+	* tests/check/elements/multifile.c:
+	Pull in unistd.h
+
 2008-09-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_init),

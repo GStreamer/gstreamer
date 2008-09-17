@@ -23,6 +23,8 @@
 #endif
 
 #include <glib/gstdio.h>
+#include <unistd.h>
+
 #include <gst/check/gstcheck.h>
 #include <stdlib.h>
 #include <unistd.h>
