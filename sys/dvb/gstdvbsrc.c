@@ -756,7 +756,8 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
     case FE_ATSC:
       adapter_desc = "ATSC";
       adapter_structure = gst_structure_new ("dvb-adapter",
-          "type", G_TYPE_STRING, adapter_desc, NULL);
+          "type", G_TYPE_STRING, adapter_desc,
+          "name", G_TYPE_STRING, adapter_name, NULL);
       break;
     default:
       g_error ("Unknown frontend type: %d", object->adapter_type);

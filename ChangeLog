@@ -1,3 +1,10 @@
+2008-09-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Michael Krufky
+
+	* sys/dvb/gstdvbsrc.c:
+	Add adapter_name for bus message in ATSC case. Fixes #552536.
+
 2008-09-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/celt/gstceltenc.h:
