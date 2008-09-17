@@ -1,3 +1,9 @@
+2008-09-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_start):
+	  Don't post LIBRARY_INIT errors where we should be posting
+	  RESOURCE OPEN_READ errors. Fixes #552506.
+
 2008-09-17  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/jack/gstjackaudiosink.c: (jack_process_cb):

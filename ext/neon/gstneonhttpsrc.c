@@ -496,8 +496,9 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
 
   ne_oom_callback (oom_callback);
 
-  if (ne_sock_init () != 0)
-    return FALSE;
+  res = ne_sock_init ();
+  if (res != 0)
+    goto init_failed;
 
   res = gst_neonhttp_src_send_request_and_redirect (src,
       &src->session, &src->request, 0, src->automatic_redirect);
@@ -509,7 +510,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
         GST_ERROR_OBJECT (src, "HTTP Request failed when opening socket!");
       }
 #endif
-      goto init_failed;
+      goto socket_error;
     } else if (res == HTTP_REQUEST_WRONG_PROXY) {
 #ifndef GST_DISABLE_GST_DEBUG
       if (src->neon_http_debug) {
@@ -584,19 +585,25 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
   /* ERRORS */
 init_failed:
   {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("ne_sock_init() failed: %d", res));
+    return FALSE;
+  }
+socket_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (NULL), ("Could not initialize neon library (%i)", res));
     return FALSE;
   }
 wrong_proxy:
   {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
         (NULL), ("Both proxy host and port must be specified or none"));
     return FALSE;
   }
 begin_req_failed:
   {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (NULL), ("Could not begin request (%i)", res));
     return FALSE;
   }
