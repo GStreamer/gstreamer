@@ -1,3 +1,12 @@
+2008-09-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_header),
+	(gst_qtdemux_chain):
+	Some 'broken' files out there have atom lengths of zero...
+	which basically results in qtdemux consuming that atom again and again
+	until the *end of night* !
+	Detect that and emits an adequate element error message.
+
 2008-09-17  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/interleave/Makefile.am:

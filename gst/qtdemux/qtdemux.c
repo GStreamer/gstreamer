@@ -1089,6 +1089,15 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
   extract_initial_length_and_fourcc (GST_BUFFER_DATA (buf), &length, &fourcc);
   gst_buffer_unref (buf);
 
+  if (length == 0) {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is invalid and cannot be played.")),
+        ("Header atom '%" GST_FOURCC_FORMAT "' has empty length",
+            GST_FOURCC_ARGS (fourcc)));
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
+
   switch (fourcc) {
     case FOURCC_mdat:
     case FOURCC_free:
@@ -2092,6 +2101,14 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         GST_DEBUG_OBJECT (demux,
             "Peeking found [%" GST_FOURCC_FORMAT "] size: %u",
             GST_FOURCC_ARGS (fourcc), (guint) size);
+        if (size == 0) {
+          GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+              (_("This file is invalid and cannot be played.")),
+              ("initial atom '%" GST_FOURCC_FORMAT "' has empty length",
+                  GST_FOURCC_ARGS (fourcc)));
+          ret = GST_FLOW_ERROR;
+          break;
+        }
         if (fourcc == FOURCC_mdat) {
           if (demux->n_streams > 0) {
             demux->state = QTDEMUX_STATE_MOVIE;
