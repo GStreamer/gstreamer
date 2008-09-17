@@ -243,7 +243,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
 wrong_size:
   {
     GST_ERROR_OBJECT (sink, "nbytes (%d) != flen (%d)",
-        nframes * sizeof (sample_t), flen);
+        (gint) (nframes * sizeof (sample_t)), flen);
     return 1;
   }
 }
