@@ -505,26 +505,10 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
 
   if (res != NE_OK || !src->session) {
     if (res == HTTP_SOCKET_ERROR) {
-#ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_debug) {
-        GST_ERROR_OBJECT (src, "HTTP Request failed when opening socket!");
-      }
-#endif
       goto socket_error;
     } else if (res == HTTP_REQUEST_WRONG_PROXY) {
-#ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_debug) {
-        GST_ERROR_OBJECT (src,
-            "Proxy Server URI is invalid to the HTTP Request!");
-      }
-#endif
       goto wrong_proxy;
     } else {
-#ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_debug) {
-        GST_ERROR_OBJECT (src, "HTTP Request failed, error unrecognized!");
-      }
-#endif
       goto begin_req_failed;
     }
   }
@@ -591,20 +575,21 @@ init_failed:
   }
 socket_error:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (NULL), ("Could not initialize neon library (%i)", res));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("HTTP Request failed when opening socket: %d", res));
     return FALSE;
   }
 wrong_proxy:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
-        (NULL), ("Both proxy host and port must be specified or none"));
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Proxy Server URI is invalid - make sure that either both proxy host "
+            "and port are specified or neither."));
     return FALSE;
   }
 begin_req_failed:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (NULL), ("Could not begin request (%i)", res));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Could not begin request: %d", res));
     return FALSE;
   }
 }
@@ -844,12 +829,8 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
         if (redir != NULL) {
           ne_uri_free (&src->uri);
           gst_neonhttp_src_set_location (src, redir);
-#ifndef GST_DISABLE_GST_DEBUG
-          if (src->neon_http_debug)
-            GST_LOG_OBJECT (src,
-                "--> Got HTTP Status Code %d; Using 'Location' header [%s]",
-                http_status, src->uri.host);
-#endif
+          GST_LOG_OBJECT (src, "Got HTTP Status Code %d", http_status);
+          GST_LOG_OBJECT (src, "Using 'Location' header [%s]", src->uri.host);
         }
       }
     }
@@ -872,17 +853,15 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
     /* if - NE_OK */
     if ((http_status == 302 || http_status == 303) && do_redir) {
       ++request_count;
-      GST_WARNING_OBJECT (src, "%s %s.",
-          (request_count < MAX_HTTP_REDIRECTS_NUMBER)
-          && do_redir ? "Redirecting to" :
-          "WILL NOT redirect, try it again with a different URI; an alternative is",
-          src->uri.host);
+      GST_LOG_OBJECT (src, "redirect request_count is now %d", request_count);
+      if (request_count < MAX_HTTP_REDIRECTS_NUMBER && do_redir) {
+        GST_INFO_OBJECT (src, "Redirecting to %s", src->uri.host);
+      } else {
+        GST_WARNING_OBJECT (src, "Will not redirect, try again with a "
+            "different URI or redirect location %s", src->uri.host);
+      }
       /* FIXME: when not redirecting automatically, shouldn't we post a 
        * redirect element message on the bus? */
-#ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_debug)
-        GST_LOG_OBJECT (src, "--> request_count = %d", request_count);
-#endif
     }
     /* do the redirect, go back to send another HTTP request now using the 'Location' */
   } while (do_redir && (request_count < MAX_HTTP_REDIRECTS_NUMBER)

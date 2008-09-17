@@ -1,5 +1,15 @@
 2008-09-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_start),
+	  (gst_neonhttp_src_send_request_and_redirect):
+	  Clean up the debug logging code and #ifdef mess a bit: whether or not
+	  gstreamer debug messages should be output should not depend on an
+	  element property; also, GST_ELEMENT_ERROR will leave a line in the log
+	  already, so merge the more useful debug log messages with the less useful
+	  error debug strings.
+
+2008-09-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_start):
 	  Don't post LIBRARY_INIT errors where we should be posting
 	  RESOURCE OPEN_READ errors. Fixes #552506.
