@@ -2133,11 +2133,14 @@ void
 gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, GLint height)
 {
   gst_gl_display_lock (display);
-  display->del_texture = texture;
-  display->del_texture_width = width;
-  display->del_texture_height = height;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DEL_TEXTURE, display);
-  g_cond_wait (display->cond_del_texture, display->mutex);
+  if (texture)
+  {
+    display->del_texture = texture;
+    display->del_texture_width = width;
+    display->del_texture_height = height;
+    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DEL_TEXTURE, display);
+    g_cond_wait (display->cond_del_texture, display->mutex);
+  }
   gst_gl_display_unlock (display);
 }
 
