@@ -183,7 +183,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->upload_intex_v = 0;
   display->upload_width = 0;
   display->upload_height = 0;
-  display->upload_video_format = 0;
+  display->upload_video_format = GST_VIDEO_FORMAT_RGBx;
   display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
   display->upload_data_width = 0;
   display->upload_data_height = 0;
