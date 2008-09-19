@@ -62,7 +62,15 @@ static void gst_gl_effects_luma_to_curve (GstGLEffects *effects,
     
     glDisable(GL_TEXTURE_1D);
   }
-    
+
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+
+  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
+
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
   glActiveTexture (GL_TEXTURE5);
   glEnable (GL_TEXTURE_1D);
   glBindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);

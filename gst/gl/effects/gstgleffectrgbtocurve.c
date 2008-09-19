@@ -59,10 +59,18 @@ static void gst_gl_effects_rgb_to_curve (GstGLEffects *effects,
                  curve.width, 0,
                  GL_RGB, GL_UNSIGNED_BYTE,
                  curve.pixel_data);
-    
+
     glDisable(GL_TEXTURE_1D);
   }
-    
+
+  glActiveTexture (GL_TEXTURE0);
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+
+  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
+
+  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+
   glActiveTexture (GL_TEXTURE5);
   glEnable (GL_TEXTURE_1D);
   glBindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
