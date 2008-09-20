@@ -51,6 +51,11 @@ struct _GstGLShaderPrivate
 
 G_DEFINE_TYPE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT);
 
+#undef G_LOG_DOMAIN
+#define G_LOG_DOMAIN "GstGLShader"
+
+gboolean _gst_gl_shader_debug = FALSE;
+
 static void
 gst_gl_shader_finalize (GObject * object)
 {
@@ -124,6 +129,15 @@ gst_gl_shader_get_property (GObject * object,
       break;
   }
 
+}
+
+static void
+gst_gl_shader_log_handler (const gchar *domain, GLogLevelFlags flags,
+                           const gchar *message, gpointer user_data)
+{
+  if (_gst_gl_shader_debug) {
+    g_log_default_handler (domain, flags, message, user_data);
+  }
 }
 
 static void
@@ -230,6 +244,12 @@ gst_gl_shader_init (GstGLShader * self)
 
   priv->compiled = FALSE;
   priv->active = FALSE;         // unused at the moment
+
+  if (g_getenv ("GST_GL_SHADER_DEBUG"))
+    _gst_gl_shader_debug = TRUE;
+
+  g_log_set_handler ("GstGLShader", G_LOG_LEVEL_DEBUG,
+                     gst_gl_shader_log_handler, NULL);
 }
 
 GstGLShader *
