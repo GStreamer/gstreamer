@@ -1,5 +1,6 @@
 /* 
  * GStreamer
+ * Copyright (C) 2007 David Schleef <ds@schleef.org>
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
  *

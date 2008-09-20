@@ -1,6 +1,9 @@
 /*
  * GStreamer
+ * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
+ * Copyright (C) 2005,2006,2007 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

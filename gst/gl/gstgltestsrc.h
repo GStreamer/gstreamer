@@ -1,7 +1,7 @@
 /* 
  * GStreamer
- * Copyright (C) 2002,2007 David A. Schleef <ds@schleef.org>
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2002,2007 David A. Schleef <ds@schleef.org>
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
