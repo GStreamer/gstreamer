@@ -71,11 +71,11 @@ static void gst_gl_effects_rgb_to_curve (GstGLEffects *effects,
 
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
-  glActiveTexture (GL_TEXTURE5);
+  glActiveTexture (GL_TEXTURE1);
   glEnable (GL_TEXTURE_1D);
   glBindTexture (GL_TEXTURE_1D, effects->curve[curve_index]);
 
-  gst_gl_shader_set_uniform_1i (shader, "curve", 5);
+  gst_gl_shader_set_uniform_1i (shader, "curve", 1);
 
   glDisable (GL_TEXTURE_1D);
   
