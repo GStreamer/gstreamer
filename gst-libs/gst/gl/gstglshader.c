@@ -245,7 +245,7 @@ gst_gl_shader_init (GstGLShader * self)
   priv->compiled = FALSE;
   priv->active = FALSE;         // unused at the moment
 
-  if (g_getenv ("GST_GL_SHADER_DEBUG"))
+  if (g_getenv ("GST_GL_SHADER_DEBUG") != NULL)
     _gst_gl_shader_debug = TRUE;
 
   g_log_set_handler ("GstGLShader", G_LOG_LEVEL_DEBUG,
