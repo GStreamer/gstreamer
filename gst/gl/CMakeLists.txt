@@ -25,6 +25,7 @@ add_library (gstopengl SHARED
   gstglfilterblur.c
 	gstglfiltercube.c
 	gstglfilterlaplacian.c
+	gstglfilterglass.c
 	gstglfilterapp.c
 	gstglcolorscale.c
   gltestsrc.c

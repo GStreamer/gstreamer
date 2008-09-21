@@ -29,6 +29,7 @@
 #include "gstglupload.h"
 #include "gstglfiltercube.h"
 #include "gstglfilterlaplacian.h"
+#include "gstglfilterglass.h"
 #include "gstglfilterapp.h"
 #include "gstgldownload.h"
 #include "gstglimagesink.h"
@@ -44,6 +45,7 @@ GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_filterblur_get_type (void);
 GType gst_gl_filter_edge_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
+GType gst_gl_filter_glass_get_type (void);
 #ifdef HAVE_GDKPIXBUF
 GType gst_gl_pixbufoverlay_get_type (void);
 GType gst_gl_differencematte_get_type (void);
@@ -100,6 +102,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterlaplacian",
           GST_RANK_NONE, GST_TYPE_GL_FILTER_LAPLACIAN)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glfilterglass",
+          GST_RANK_NONE, GST_TYPE_GL_FILTER_GLASS)) {
     return FALSE;
   }
 
