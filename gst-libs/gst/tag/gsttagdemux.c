@@ -1151,6 +1151,13 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
     demux->priv->send_tag_event = TRUE;
   }
 
+  if (demux->priv->upstream_size <=
+      demux->priv->strip_start + demux->priv->strip_end) {
+    /* There was no data (probably due to a truncated file) */
+    GST_DEBUG_OBJECT (demux, "No data in file");
+    return FALSE;
+  }
+
   /* 3 - Do typefinding on data */
   caps = gst_type_find_helper_get_range (GST_OBJECT (demux),
       (GstTypeFindHelperGetRangeFunction) gst_tag_demux_read_range,

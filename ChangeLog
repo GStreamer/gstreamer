@@ -1,3 +1,9 @@
+2008-09-22  Michael Smith <msmith@songbirdnest.com>
+
+	* gst-libs/gst/tag/gsttagdemux.c:
+	  Fail to activate if there's insufficient data in the file to be usable,
+	  preventing an assertion fail later. Fixes #552960
+
 2008-09-15  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/pbutils/descriptions.c:
