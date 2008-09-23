@@ -1,3 +1,12 @@
+2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_insert),
+	(rtp_jitter_buffer_get_sync):
+	* gst/rtpmanager/rtpsession.c: (on_sender_timeout),
+	(session_cleanup):
+	* gst/rtpmanager/rtpsource.c:
+	Fix some docs.
+
 2008-09-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	Patch from: Josep Torra

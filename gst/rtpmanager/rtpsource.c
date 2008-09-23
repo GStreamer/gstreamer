@@ -970,7 +970,8 @@ rtp_source_process_bye (RTPSource * src, const gchar * reason)
  * rtp_source_send_rtp:
  * @src: an #RTPSource
  * @buffer: an RTP buffer
- * @ntpnstime: the NTP time when this buffer was captured in nanoseconds
+ * @ntpnstime: the NTP time when this buffer was captured in nanoseconds. This
+ * is the buffer timestamp converted to NTP time.
  *
  * Send an RTP @buffer originating from @src. This will make @src a sender.
  * This function takes ownership of @buffer and modifies the SSRC in the RTP
