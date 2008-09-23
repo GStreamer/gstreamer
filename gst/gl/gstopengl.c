@@ -43,6 +43,7 @@ GType gst_gl_effects_get_type (void);
 GType gst_gl_filter_app_get_type (void);
 GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_filterblur_get_type (void);
+GType gst_gl_filtersobel_get_type (void);
 GType gst_gl_filter_edge_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
 GType gst_gl_filter_glass_get_type (void);
@@ -97,6 +98,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glfilterblur",
           GST_RANK_NONE, gst_gl_filterblur_get_type())) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glfiltersobel",
+          GST_RANK_NONE, gst_gl_filtersobel_get_type())) {
     return FALSE;
   }
 

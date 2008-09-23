@@ -13,6 +13,7 @@ libgstopengl_la_SOURCES = \
 	gstgldownload.c \
 	gstgldownload.h \
 	gstglfilterblur.c \
+	gstglfiltersobel.c \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstglfilterlaplacian.c \
