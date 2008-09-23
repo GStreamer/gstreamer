@@ -57,6 +57,9 @@ G_BEGIN_DECLS
 #define HAVE_LATENCY
 #endif
 
+#define FLUTS_MIN_PES_BUFFER_SIZE     4 * 1024
+#define FLUTS_MAX_PES_BUFFER_SIZE   256 * 1024
+
 #define FLUTS_MAX_PID 0x1fff
 #define FLUTS_NORMAL_TS_PACKETSIZE  188
 #define FLUTS_M2TS_TS_PACKETSIZE    192
@@ -157,6 +160,10 @@ struct _GstFluTSStream {
   /* for PES streams */
   guint8            id;
   guint8            stream_type;
+  GstBuffer         * pes_buffer;
+  guint32           pes_buffer_size;
+  guint32           pes_buffer_used;
+  gboolean          pes_buffer_overflow;
   GstPESFilter      filter;
   GstPad            * pad;
   GstFlowReturn     last_ret;

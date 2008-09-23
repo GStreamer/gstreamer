@@ -1951,6 +1951,76 @@ gst_fluts_demux_is_PMT (GstFluTSDemux * demux, guint16 PID)
   return FALSE;
 }
 
+static FORCE_INLINE GstFlowReturn
+gst_fluts_stream_pes_buffer_flush (GstFluTSStream * stream)
+{
+  GstFlowReturn ret;
+
+  g_return_val_if_fail (stream->pes_buffer, GST_FLOW_OK);
+
+  GST_BUFFER_SIZE (stream->pes_buffer) = stream->pes_buffer_used;
+  ret = gst_pes_filter_push (&stream->filter, stream->pes_buffer);
+  stream->pes_buffer = NULL;
+  return ret;
+}
+
+static FORCE_INLINE GstFlowReturn
+gst_fluts_stream_pes_buffer_push (GstFluTSStream * stream,
+    const guint8 * in_data, guint in_size)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint8 *out_data;
+
+  if (G_UNLIKELY (stream->pes_buffer
+          && stream->pes_buffer_used + in_size > stream->pes_buffer_size)) {
+    GST_DEBUG ("stream with PID 0x%04x have PES buffer full at %u bytes."
+        " Flushing and growing the buffer",
+        stream->PID, stream->pes_buffer_size);
+    stream->pes_buffer_overflow = TRUE;
+    if (stream->pes_buffer_size < (FLUTS_MAX_PES_BUFFER_SIZE >> 1))
+      stream->pes_buffer_size <<= 1;
+
+    ret = gst_fluts_stream_pes_buffer_flush (stream);
+  }
+
+  if (G_UNLIKELY (!stream->pes_buffer)) {
+    /* set initial size of PES buffer */
+    if (G_UNLIKELY (stream->pes_buffer_size == 0))
+      stream->pes_buffer_size = FLUTS_MIN_PES_BUFFER_SIZE;
+
+    stream->pes_buffer = gst_buffer_new_and_alloc (stream->pes_buffer_size);
+    stream->pes_buffer_used = 0;
+  }
+  out_data = GST_BUFFER_DATA (stream->pes_buffer) + stream->pes_buffer_used;
+#ifdef USE_LIBOIL
+  oil_memcpy (out_data, in_data, in_size);
+#else
+  memcpy (out_data, in_data, in_size);
+#endif
+  stream->pes_buffer_used += in_size;
+
+  return ret;
+}
+
+static FORCE_INLINE GstFlowReturn
+gst_fluts_demux_pes_buffer_flush (GstFluTSDemux * demux)
+{
+  gint i;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  for (i = 0; i < FLUTS_MAX_PID + 1; i++) {
+    GstFluTSStream *stream = demux->streams[i];
+    if (stream && stream->pad) {
+      ret = gst_fluts_stream_pes_buffer_flush (stream);
+      if (G_UNLIKELY (ret == GST_FLOW_OK))
+        goto done;
+    }
+  }
+
+done:
+  return ret;
+}
+
 /*
  * transport_packet(){
  *   sync_byte                                                               8 bslbf == 0x47
@@ -2132,23 +2202,29 @@ gst_fluts_demux_parse_stream (GstFluTSDemux * demux, GstFluTSStream * stream,
         break;
       case PID_TYPE_ELEMENTARY:
       {
-        GstBuffer *es_buf;
-
         if (payload_unit_start_indicator) {
-          GST_DEBUG_OBJECT (demux, "new PES start for PID 0x%04x", PID);
+          GST_DEBUG_OBJECT (demux, "new PES start for PID 0x%04x, used %u"
+              "bytes of %u bytes in the PES buffer",
+              PID, stream->pes_buffer_used, stream->pes_buffer_size);
+          /* Resize the buffer to half if no overflow detected and
+           * had been used less than half of it */
+          if (stream->pes_buffer_overflow == FALSE
+              && stream->pes_buffer_used < (stream->pes_buffer_size >> 1)) {
+            stream->pes_buffer_size >>= 1;
+            GST_DEBUG_OBJECT (demux, "PES buffer size reduced to %u bytes",
+                stream->pes_buffer_size);
+          }
+          stream->pes_buffer_overflow = FALSE;
+
+          /* Flush buffered PES data */
+          gst_fluts_stream_pes_buffer_flush (stream);
           gst_pes_filter_drain (&stream->filter);
         }
         GST_LOG_OBJECT (demux, "Elementary packet of size %u for PID 0x%04x",
             datalen, PID);
 
         if (datalen > 0) {
-          es_buf = gst_buffer_new_and_alloc (datalen);
-#ifdef USE_LIBOIL
-          oil_memcpy (GST_BUFFER_DATA (es_buf), data, datalen);
-#else
-          memcpy (GST_BUFFER_DATA (es_buf), data, datalen);
-#endif
-          ret = gst_pes_filter_push (&stream->filter, es_buf);
+          ret = gst_fluts_stream_pes_buffer_push (stream, data, datalen);
           break;
         } else {
           GST_WARNING_OBJECT (demux, "overflow of datalen: %u so skipping",
@@ -2238,6 +2314,9 @@ gst_fluts_demux_sink_event (GstPad * pad, GstEvent * event)
       res = gst_fluts_demux_send_event (demux, event);
       break;
     case GST_EVENT_EOS:
+      /* Flush buffered PES data */
+      gst_fluts_demux_pes_buffer_flush (demux);
+      /* Send the EOS event on each stream */
       if (!(res = gst_fluts_demux_send_event (demux, event))) {
         /* we have no streams */
         GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND,
