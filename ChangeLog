@@ -1,3 +1,8 @@
+2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_set_property):
+	Fix setting the qos.
+
 2008-09-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_header),

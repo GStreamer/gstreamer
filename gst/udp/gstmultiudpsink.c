@@ -547,7 +547,7 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
       udpsink->loop = g_value_get_boolean (value);
       break;
     case PROP_QOS_DSCP:
-      udpsink->qos_dscp = g_value_get_uint (value);
+      udpsink->qos_dscp = g_value_get_int (value);
       gst_multiudpsink_setup_qos_dscp (udpsink);
       break;
     default:
