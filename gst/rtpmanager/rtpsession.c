@@ -1815,6 +1815,7 @@ ignore:
  * @buffer: an RTP buffer
  * @current_time: the current system time
  * @ntpnstime: the NTP time in nanoseconds of when this buffer was captured.
+ * This is the buffer timestamp converted to NTP time.
  *
  * Send the RTP buffer in the session manager. This function takes ownership of
  * @buffer.
