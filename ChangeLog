@@ -1,5 +1,11 @@
 2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
+	Handle the case where we cannot do desribe or when the describe result
+	does not contain a valid SDP message.
+
+2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_set_property):
 	Fix setting the qos.
 

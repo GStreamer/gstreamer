@@ -3365,6 +3365,7 @@ handle_request_failed:
  * @src: the rtsp source
  * @request: must point to a valid request
  * @response: must point to an empty #GstRTSPMessage
+ * @code: an optional code result
  *
  * send @request and retrieve the response in @response. optionally @code can be
  * non-NULL in which case it will contain the status code of the response.
@@ -4110,6 +4111,10 @@ restart:
     goto restart;
   }
 
+  /* it could be that the DESCRIBE method was not implemented */
+  if (!src->methods & GST_RTSP_DESCRIBE)
+    goto no_describe;
+
   /* check if reply is SDP */
   gst_rtsp_message_get_header (&response, GST_RTSP_HDR_CONTENT_TYPE, &respcont,
       0);
@@ -4122,6 +4127,9 @@ restart:
 
   /* get message body and parse as SDP */
   gst_rtsp_message_get_body (&response, &data, &size);
+
+  if (data == NULL)
+    goto no_describe;
 
   GST_DEBUG_OBJECT (src, "parse SDP...");
   gst_sdp_message_init (&sdp);
@@ -4214,8 +4222,15 @@ wrong_content_type:
         ("Server does not support SDP, got %s.", respcont));
     goto cleanup_error;
   }
+no_describe:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Server can not provide an SDP."));
+    goto cleanup_error;
+  }
 setup_failed:
   {
+    gst_rtspsrc_close (src);
     /* error was posted */
     goto cleanup_error;
   }
