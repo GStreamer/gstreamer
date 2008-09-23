@@ -213,7 +213,7 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
     GstRTSPMethod * method, const gchar ** uri, GstRTSPVersion * version)
 {
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (msg->type != GST_RTSP_MESSAGE_REQUEST, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_REQUEST, GST_RTSP_EINVAL);
 
   if (method)
     *method = msg->type_data.request.method;
@@ -340,7 +340,7 @@ gst_rtsp_message_parse_response (GstRTSPMessage * msg,
     GstRTSPStatusCode * code, const gchar ** reason, GstRTSPVersion * version)
 {
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (msg->type != GST_RTSP_MESSAGE_RESPONSE,
+  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_RESPONSE,
       GST_RTSP_EINVAL);
 
   if (code)

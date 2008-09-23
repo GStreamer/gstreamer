@@ -1,3 +1,10 @@
+2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspmessage.c:
+	(gst_rtsp_message_parse_request),
+	(gst_rtsp_message_parse_response):
+	Fix the g_return_val_if_fail() statements.
+
 2008-09-22  Michael Smith <msmith@songbirdnest.com>
 
 	* gst-libs/gst/tag/gsttagdemux.c:
