@@ -26,6 +26,7 @@ add_library (gstopengl SHARED
 	gstglfiltersobel.c
 	gstglfiltercube.c
 	gstglfilterlaplacian.c
+  gstglfiltersobel.c
 	gstglfilterglass.c
 	gstglfilterapp.c
 	gstglcolorscale.c
