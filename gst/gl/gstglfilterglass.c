@@ -294,7 +294,7 @@ gst_gl_filter_glass_callback (gint width, gint height, guint texture, gpointer s
     time_left -= 1000000 / 25;
     if (time_left > 2000)
     {
-        GST_CAT_LOG (GST_CAT_DEFAULT, "escape");
+        GST_LOG ("escape");
         return;
     }
   }
