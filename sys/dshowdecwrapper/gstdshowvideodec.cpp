@@ -48,6 +48,8 @@
 #endif
 
 #include <atlbase.h>
+#include <dmoreg.h>
+#include <wmcodecdsp.h>
 
 #include "gstdshowvideodec.h"
 
@@ -107,140 +109,168 @@ static gboolean gst_dshowvideodec_get_filter_output_format (GstDshowVideoDec *
 #define GUID_MEDIASUBTYPE_RGB32   {0xe436eb7e, 0x524f, 0x11ce, { 0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70 }}
 #define GUID_MEDIASUBTYPE_RGB565  {0xe436eb7b, 0x524f, 0x11ce, { 0x9f, 0x53, 0x00, 0x20, 0xaf, 0x0b, 0xa7, 0x70 }}
 
+/* WMV always uses the WMV DMO */
+static PreferredFilter preferred_wmv_filters[] = {
+  {&CLSID_CWMVDecMediaObject, &DMOCATEGORY_VIDEO_DECODER}, {0}
+};
+
+static const GUID CLSID_AVI_DECOMPRESSOR = 
+  {0xCF49D4E0, 0x1115, 0x11CE, 
+   {0xB0, 0x3A, 0x00, 0x20, 0xAF, 0x0B, 0xA7, 0x70}};
+static PreferredFilter preferred_cinepack_filters[] = {
+  {&CLSID_AVI_DECOMPRESSOR}, {0}
+};
+
+/* Various MPEG-4 video variants */
+// MPG4, mpg4, MP42, mp42
+static PreferredFilter preferred_mpeg4_filters[] = {
+  {&CLSID_CMpeg4DecMediaObject, &DMOCATEGORY_VIDEO_DECODER}, {0}};
+// MP4S, mp4s, M4S2, m4s2
+static PreferredFilter preferred_mp4s_filters[] = {
+  {&CLSID_CMpeg4sDecMediaObject, &DMOCATEGORY_VIDEO_DECODER}, {0}};
+// MP43, mp43
+static PreferredFilter preferred_mp43_filters[] = {
+  {&CLSID_CMpeg43DecMediaObject, &DMOCATEGORY_VIDEO_DECODER}, {0}};
+
+static const GUID CLSID_MPEG_VIDEO_DECODER = 
+  {0xFEB50740, 0x7BEF, 0x11CE, 
+   {0x9B, 0xD9, 0x00, 0x00, 0xE2, 0x02, 0x59, 0x9C}};
+static PreferredFilter preferred_mpeg1_filters[] = {
+  {&CLSID_MPEG_VIDEO_DECODER}, {0}
+};
+
+
 /* video codecs array */
 static const VideoCodecEntry video_dec_codecs[] = {
-  {"dshowvdec_wmv1",
-        "Windows Media Video 7",
-        "DMO",
-        GST_MAKE_FOURCC ('W', 'M', 'V', '1'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVV1,
-        "video/x-wmv, wmvversion = (int) 1",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_wmv2",
-        "Windows Media Video 8",
-        "DMO",
-        GST_MAKE_FOURCC ('W', 'M', 'V', '2'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVV2,
-        "video/x-wmv, wmvversion = (int) 2",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_wmv3",
-        "Windows Media Video 9",
-        "DMO",
-        GST_MAKE_FOURCC ('W', 'M', 'V', '3'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVV3,
-        "video/x-wmv, wmvversion = (int) 3, " "format = (fourcc) WMV3",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_wmvp",
-        "Windows Media Video 9 Image",
-        "DMO",
-        GST_MAKE_FOURCC ('W', 'M', 'V', 'P'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVP,
-        "video/x-wmv, wmvversion = (int) 3, " "format = (fourcc) WMVP",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_wmva",
-        "Windows Media Video 9 Advanced",
-        "DMO",
-        GST_MAKE_FOURCC ('W', 'M', 'V', 'A'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVA,
-        "video/x-wmv, wmvversion = (int) 3, " "format = (fourcc) WMVA",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_cinepak",
-        "Cinepack",
-        "AVI Decompressor",
-        0x64697663,
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_CVID,
-        "video/x-cinepak",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_RGB32,
-      "video/x-raw-rgb, bpp=(int)32, depth=(int)24, "
-        "endianness=(int)4321, red_mask=(int)65280, "
-        "green_mask=(int)16711680, blue_mask=(int)-16777216"},
-  {"dshowvdec_msmpeg41",
-        "Microsoft ISO MPEG-4 version 1",
-        "DMO",
-        GST_MAKE_FOURCC ('M', 'P', '4', 'S'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MP4S,
-        "video/x-msmpeg, msmpegversion=(int)41",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_msmpeg42",
-        "Microsoft ISO MPEG-4 version 2",
-        "DMO",
-        GST_MAKE_FOURCC ('M', 'P', '4', '2'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MP42,
-        "video/x-msmpeg, msmpegversion=(int)42",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_msmpeg43",
-        "Microsoft ISO MPEG-4 version 3",
-        "DMO",
-        GST_MAKE_FOURCC ('M', 'P', '4', '3'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MP43,
-        "video/x-msmpeg, msmpegversion=(int)43",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_msmpeg4",
-        "Microsoft ISO MPEG-4 version 1.1",
-        "DMO",
-        GST_MAKE_FOURCC ('M', '4', 'S', '2'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_M4S2,
-        "video/x-msmpeg, msmpegversion=(int)4",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
+  {"dshowvdec_wmv1", "Windows Media Video 7",
+   GST_MAKE_FOURCC ('W', 'M', 'V', '1'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVV1,
+   "video/x-wmv, wmvversion = (int) 1",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_wmv_filters},
+
+  {"dshowvdec_wmv2", "Windows Media Video 8",
+   GST_MAKE_FOURCC ('W', 'M', 'V', '2'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVV2,
+   "video/x-wmv, wmvversion = (int) 2",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_wmv_filters},
+
+  {"dshowvdec_wmv3", "Windows Media Video 9",
+   GST_MAKE_FOURCC ('W', 'M', 'V', '3'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVV3,
+   "video/x-wmv, wmvversion = (int) 3, " "format = (fourcc) WMV3",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_wmv_filters},
+
+  {"dshowvdec_wmvp", "Windows Media Video 9 Image",
+   GST_MAKE_FOURCC ('W', 'M', 'V', 'P'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVP,
+   "video/x-wmv, wmvversion = (int) 3, " "format = (fourcc) WMVP",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_wmv_filters},
+
+  {"dshowvdec_wmva", "Windows Media Video 9 Advanced",
+   GST_MAKE_FOURCC ('W', 'M', 'V', 'A'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_WMVA,
+   "video/x-wmv, wmvversion = (int) 3, " "format = (fourcc) WMVA",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_wmv_filters},
+
+  {"dshowvdec_cinepak", "Cinepack",
+   0x64697663,
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_CVID,
+   "video/x-cinepak",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_RGB32,
+   "video/x-raw-rgb, bpp=(int)32, depth=(int)24, "
+       "endianness=(int)4321, red_mask=(int)65280, "
+       "green_mask=(int)16711680, blue_mask=(int)-16777216",
+   preferred_cinepack_filters},
+
+  {"dshowvdec_msmpeg41", "Microsoft ISO MPEG-4 version 1",
+   GST_MAKE_FOURCC ('M', 'P', '4', 'S'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MP4S,
+   "video/x-msmpeg, msmpegversion=(int)41",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_mp4s_filters},
+
+  {"dshowvdec_msmpeg42", "Microsoft ISO MPEG-4 version 2",
+   GST_MAKE_FOURCC ('M', 'P', '4', '2'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MP42,
+   "video/x-msmpeg, msmpegversion=(int)42",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_mpeg4_filters},
+
+  {"dshowvdec_msmpeg43", "Microsoft ISO MPEG-4 version 3",
+   GST_MAKE_FOURCC ('M', 'P', '4', '3'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MP43,
+   "video/x-msmpeg, msmpegversion=(int)43",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_mp43_filters},
+
+  {"dshowvdec_msmpeg4", "Microsoft ISO MPEG-4 version 1.1",
+   GST_MAKE_FOURCC ('M', '4', 'S', '2'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_M4S2,
+   "video/x-msmpeg, msmpegversion=(int)4",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_mp4s_filters},
+
   {"dshowvdec_mpeg1",
-        "MPEG-1 Video",
-        "MPEG Video Decoder",
-        GST_MAKE_FOURCC ('M', 'P', 'E', 'G'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MPEG1Payload,
-        "video/mpeg, mpegversion= (int) 1, "
-        "parsed= (boolean) true, " "systemstream= (boolean) false",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_xvid",
-        "XVID Video",
-        "ffdshow",
-        GST_MAKE_FOURCC ('X', 'V', 'I', 'D'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_XVID,
-        "video/x-xvid",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_divx5",
-        "DIVX 5.0 Video",
-        "ffdshow",
-        GST_MAKE_FOURCC ('D', 'X', '5', '0'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_DX50,
-        "video/x-divx, divxversion=(int)5",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_divx4",
-        "DIVX 4.0 Video",
-        "ffdshow",
-        GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_DIVX,
-        "video/x-divx, divxversion=(int)4",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"},
-  {"dshowvdec_divx3",
-        "DIVX 3.0 Video",
-        "ffdshow",
-        GST_MAKE_FOURCC ('D', 'I', 'V', '3'),
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_DIV3,
-        "video/x-divx, divxversion=(int)3",
-        GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-      "video/x-raw-yuv, format=(fourcc)YUY2"}
-  /*,
-     { "dshowvdec_mpeg4",
-     "DMO",
-     GST_MAKE_FOURCC ('M', 'P', 'G', '4'),
-     GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MPG4,
-     "video/mpeg, msmpegversion=(int)4",
-     GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
-     "video/x-raw-yuv, format=(fourcc)YUY2"
-     } */
+   "MPEG-1 Video",
+   GST_MAKE_FOURCC ('M', 'P', 'E', 'G'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MPEG1Payload,
+   "video/mpeg, mpegversion= (int) 1, "
+       "parsed= (boolean) true, " "systemstream= (boolean) false",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_mpeg1_filters},
+   
+  {"dshowvdec_mpeg4", "MPEG-4 Video",
+   GST_MAKE_FOURCC ('M', 'P', 'G', '4'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_MPG4,
+   "video/mpeg, msmpegversion=(int)4",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2",
+   preferred_mpeg4_filters},
+
+  /* The rest of these have no preferred filter; windows doesn't come
+   * with anything appropriate */
+  {"dshowvdec_xvid", "XVID Video",
+   GST_MAKE_FOURCC ('X', 'V', 'I', 'D'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_XVID,
+   "video/x-xvid",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2"},
+
+  {"dshowvdec_divx5", "DIVX 5.0 Video",
+   GST_MAKE_FOURCC ('D', 'X', '5', '0'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_DX50,
+   "video/x-divx, divxversion=(int)5",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2"},
+
+  {"dshowvdec_divx4", "DIVX 4.0 Video",
+   GST_MAKE_FOURCC ('D', 'I', 'V', 'X'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_DIVX,
+   "video/x-divx, divxversion=(int)4",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2"},
+
+  {"dshowvdec_divx3", "DIVX 3.0 Video",
+   GST_MAKE_FOURCC ('D', 'I', 'V', '3'),
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_DIV3,
+   "video/x-divx, divxversion=(int)3",
+   GUID_MEDIATYPE_VIDEO, GUID_MEDIASUBTYPE_YUY2,
+   "video/x-raw-yuv, format=(fourcc)YUY2"}
 };
 
 HRESULT VideoFakeSink::DoRenderSample(IMediaSample *pMediaSample)
@@ -975,11 +1005,13 @@ gst_dshowvideodec_create_graph_and_filters (GstDshowVideoDec * vdec)
   }
 
   /* search a decoder filter and create it */
-  if (!gst_dshow_find_filter (klass->entry->input_majortype,
+  vdec->decfilter = gst_dshow_find_filter (
+          klass->entry->input_majortype,
           klass->entry->input_subtype,
           klass->entry->output_majortype,
           klass->entry->output_subtype,
-          klass->entry->preferred_filter_substring, &vdec->decfilter)) {
+          klass->entry->preferred_filters);
+  if (vdec->decfilter == NULL) {
     GST_ELEMENT_ERROR (vdec, STREAM, FAILED, ("Can't create an instance "
             "of the decoder filter"), (NULL));
     goto error;
@@ -1136,15 +1168,17 @@ dshow_vdec_register (GstPlugin * plugin)
 
   for (i = 0; i < sizeof (video_dec_codecs) / sizeof (VideoCodecEntry); i++) {
     GType type;
+    CComPtr<IBaseFilter> filter;
 
-    if (gst_dshow_find_filter (video_dec_codecs[i].input_majortype,
+    filter = gst_dshow_find_filter (
+            video_dec_codecs[i].input_majortype,
             video_dec_codecs[i].input_subtype,
             video_dec_codecs[i].output_majortype,
             video_dec_codecs[i].output_subtype,
-            video_dec_codecs[i].preferred_filter_substring, NULL)) {
+            video_dec_codecs[i].preferred_filters);
+    if (filter != NULL) {
 
-      GST_CAT_DEBUG (dshowvideodec_debug, "Registering %s",
-          video_dec_codecs[i].element_name);
+      GST_DEBUG ("Registering %s", video_dec_codecs[i].element_name);
 
       tmp = &video_dec_codecs[i];
       type =
@@ -1154,12 +1188,11 @@ dshow_vdec_register (GstPlugin * plugin)
               GST_RANK_PRIMARY, type)) {
         return FALSE;
       }
-      GST_CAT_DEBUG (dshowvideodec_debug, "Registered %s",
-          video_dec_codecs[i].element_name);
+      GST_DEBUG ("Registered %s", video_dec_codecs[i].element_name);
     } else {
-      GST_CAT_DEBUG (dshowvideodec_debug,
-          "Element %s not registered (the format is not supported by the system)",
-          video_dec_codecs[i].element_name);
+      GST_DEBUG ("Element %s not registered "
+        "(the format is not supported by the system)",
+        video_dec_codecs[i].element_name);
     }
   }
 

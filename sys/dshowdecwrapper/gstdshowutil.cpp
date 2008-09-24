@@ -20,6 +20,8 @@
  */
 
 #include <atlbase.h>
+#include <dmodshow.h>
+#include <dmoreg.h>
 
 #include "gstdshowutil.h"
 #include "gstdshowfakesrc.h"
@@ -49,108 +51,87 @@ gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir)
   return NULL;
 }
 
-gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
-                               CLSID output_majortype, CLSID output_subtype, 
-                               gchar * prefered_filter_name, IBaseFilter **filter)
+IBaseFilter * 
+gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
+                      CLSID output_majortype, CLSID output_subtype, 
+                      PreferredFilter *preferred_filters)
 {
-  gboolean ret = FALSE;
   HRESULT hres;
-  GUID arrayInTypes[2];
-  GUID arrayOutTypes[2];
-  IFilterMapper2 *mapper = NULL;
-  IEnumMoniker *enum_moniker = NULL;
-  IMoniker *moniker = NULL;
+  GUID inTypes[2];
+  GUID outTypes[2];
+  CComPtr<IFilterMapper2> mapper;
+  CComPtr<IEnumMoniker> enum_moniker;
+  CComPtr<IMoniker> moniker;
   ULONG fetched;
-  gchar *prefered_filter_upper = NULL;
-  gboolean exit = FALSE;
+  IBaseFilter *filter;
 
-  /* initialize output parameter */
-  if (filter)
-    *filter = NULL;
+  /* First, see if any of our preferred filters is available.
+   * If not, we fall back to the highest-ranked installed filter */
+  if (preferred_filters) {
+    while (preferred_filters->filter_guid) 
+    {
+      /* If the filter is a DMO, we need to do this a bit differently */
+      if (preferred_filters->dmo_category) 
+      {
+        CComPtr<IDMOWrapperFilter> wrapper;
 
-  /* create a private copy of prefered filter substring in upper case */
-  if (prefered_filter_name) {
-    prefered_filter_upper = g_strdup (prefered_filter_name);
-    strupr (prefered_filter_upper);
+        hres = CoCreateInstance (CLSID_DMOWrapperFilter, NULL, 
+          CLSCTX_INPROC,
+          IID_IBaseFilter, (void **)&filter);
+        if (SUCCEEDED(hres)) {
+          hres = filter->QueryInterface (&wrapper);
+          if (SUCCEEDED(hres)) {
+            hres = wrapper->Init (*preferred_filters->filter_guid, 
+                *preferred_filters->dmo_category);
+            if (SUCCEEDED(hres))
+              return filter;
+          }
+          filter->Release();
+        }
+      }
+      else 
+      {
+        hres = CoCreateInstance (*preferred_filters->filter_guid, 
+          NULL, CLSCTX_INPROC,
+          IID_IBaseFilter, (void **)&filter);
+        if (SUCCEEDED(hres))
+          return filter;
+      }
+
+      /* Continue to the next filter */
+      preferred_filters++;
+    }
   }
 
   hres = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC, 
       IID_IFilterMapper2, (void **) &mapper);
   if (FAILED(hres))
-    goto clean;
+    return NULL;
   
-  memcpy(&arrayInTypes[0], &input_majortype, sizeof (CLSID));
-  memcpy(&arrayInTypes[1], &input_subtype, sizeof (CLSID));
-  memcpy(&arrayOutTypes[0], &output_majortype, sizeof (CLSID));
-  memcpy(&arrayOutTypes[1], &output_subtype, sizeof (CLSID));
+  inTypes[0] = input_majortype;
+  inTypes[1] = input_subtype;
+  outTypes[0] = output_majortype;
+  outTypes[1] = output_subtype;
 
-  hres = mapper->EnumMatchingFilters (&enum_moniker, 0, FALSE, MERIT_DO_NOT_USE+1, 
-          TRUE, 1, arrayInTypes, NULL, NULL, FALSE, 
-          TRUE, 1, arrayOutTypes, NULL, NULL);
+  hres = mapper->EnumMatchingFilters (&enum_moniker, 0, 
+          FALSE, MERIT_DO_NOT_USE+1, 
+          TRUE, 1, inTypes, NULL, NULL, FALSE, 
+          TRUE, 1, outTypes, NULL, NULL);
   if (FAILED(hres))
-    goto clean;
+    return NULL;
   
   enum_moniker->Reset ();
-  
-  while(hres = enum_moniker->Next (1, &moniker, &fetched),hres == S_OK
-    && !exit) {
-    IBaseFilter *filter_temp = NULL;
-    IPropertyBag *property_bag = NULL;
-    gchar * friendly_name = NULL;
 
-    hres = moniker->BindToStorage (NULL, NULL, IID_IPropertyBag, (void **)&property_bag);
-    if(SUCCEEDED(hres) && property_bag) {
-      VARIANT varFriendlyName;
-      VariantInit (&varFriendlyName);
-      
-      hres = property_bag->Read (L"FriendlyName", &varFriendlyName, NULL);
-      if(hres == S_OK && varFriendlyName.bstrVal) {
-         friendly_name = g_utf16_to_utf8((const gunichar2*)varFriendlyName.bstrVal, 
-            wcslen(varFriendlyName.bstrVal), NULL, NULL, NULL);        
-         if (friendly_name)
-           strupr (friendly_name);
-        SysFreeString (varFriendlyName.bstrVal);
-      }
-      property_bag->Release ();
+  while(enum_moniker->Next (1, &moniker, &fetched) == S_OK)
+  {
+    hres = moniker->BindToObject(NULL, NULL, 
+          IID_IBaseFilter, (void**)&filter);
+    if(SUCCEEDED(hres)) {
+      return filter;
     }
-
-    hres = moniker->BindToObject(NULL, NULL, IID_IBaseFilter, (void**)&filter_temp);    
-    if(SUCCEEDED(hres) && filter_temp) {
-      ret = TRUE;
-      if (filter) {
-        if (*filter)
-          (*filter)->Release ();
-
-        *filter = filter_temp;
-        (*filter)->AddRef ();
-
-        if (prefered_filter_upper && friendly_name &&
-          strstr(friendly_name, prefered_filter_upper))
-          exit = TRUE;
-      }
-
-      /* if we just want to know if the formats are supported OR 
-          if we don't care about what will be the filter used 
-          => we can stop enumeration */
-      if (!filter || !prefered_filter_upper)
-        exit = TRUE;
-
-      filter_temp->Release ();
-    }
-
-    if (friendly_name)
-      g_free (friendly_name);
-    moniker->Release ();
+    moniker.Release ();
   }
 
-clean:
-  if (prefered_filter_upper)
-    g_free (prefered_filter_upper);
-  if (enum_moniker)
-    enum_moniker->Release ();
-  if (mapper)
-    mapper->Release ();
-
-  return ret;
+  return NULL;
 }
 

@@ -49,6 +49,8 @@
 
 #include "gstdshowaudiodec.h"
 #include <mmreg.h>
+#include <dmoreg.h>
+#include <wmcodecdsp.h>
 
 GST_DEBUG_CATEGORY_STATIC (dshowaudiodec_debug);
 #define GST_CAT_DEFAULT dshowaudiodec_debug
@@ -81,45 +83,76 @@ static gboolean gst_dshowaudiodec_setup_graph (GstDshowAudioDec * adec, GstCaps 
     { fourcc , 0x0000, 0x0010, \
     { 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71 }}
 
+/* WMA we should always use the DMO */
+static PreferredFilter preferred_wma_filters[] = {
+  {&CLSID_CWMADecMediaObject, &DMOCATEGORY_AUDIO_DECODER},
+  {0}
+};
+
+/* Prefer the Vista (DMO) decoder if present, otherwise the XP
+ * decoder (not a DMO), otherwise fallback to highest-merit */
+static const GUID CLSID_XP_MP3_DECODER = {0x38BE3000, 0xDBF4, 0x11D0,
+   {0x86,0x0E,0x00,0xA0,0x24,0xCF,0xEF,0x6D}};
+static PreferredFilter preferred_mp3_filters[] = {
+  {&CLSID_CMP3DecMediaObject, &DMOCATEGORY_AUDIO_DECODER},
+  {&CLSID_XP_MP3_DECODER},
+  {0}
+};
+
+/* MPEG 1/2: use the MPEG Audio Decoder filter */
+static const GUID CLSID_WINDOWS_MPEG_AUDIO_DECODER = 
+  {0x4A2286E0, 0x7BEF, 0x11CE, 
+   {0x9B, 0xD9, 0x00, 0x00, 0xE2, 0x02, 0x59, 0x9C}};
+static PreferredFilter preferred_mpegaudio_filters[] = {
+  {&CLSID_WINDOWS_MPEG_AUDIO_DECODER},
+  {0}
+};
+
 static const AudioCodecEntry audio_dec_codecs[] = {
-  {"dshowadec_wma1",
-   "Windows Media Audio 7",
+  {"dshowadec_wma1", "Windows Media Audio 7",
    WAVE_FORMAT_MSAUDIO1,
-   "audio/x-wma, wmaversion = (int) 1"},
-  {"dshowadec_wma2",
-   "Windows Media Audio 8",
+   "audio/x-wma, wmaversion = (int) 1",
+   preferred_wma_filters},
+
+  {"dshowadec_wma2", "Windows Media Audio 8",
    WAVE_FORMAT_WMAUDIO2,
-   "audio/x-wma, wmaversion = (int) 2"},
-  {"dshowadec_wma3",
-   "Windows Media Audio 9 Professional",
+   "audio/x-wma, wmaversion = (int) 2",
+   preferred_wma_filters},
+
+  {"dshowadec_wma3", "Windows Media Audio 9 Professional",
    WAVE_FORMAT_WMAUDIO3,
-   "audio/x-wma, wmaversion = (int) 3"},
-  {"dshowadec_wma4",
-   "Windows Media Audio 9 Lossless",
+   "audio/x-wma, wmaversion = (int) 3",
+   preferred_wma_filters},
+
+  {"dshowadec_wma4", "Windows Media Audio 9 Lossless",
    WAVE_FORMAT_WMAUDIO_LOSSLESS,
-   "audio/x-wma, wmaversion = (int) 4"},
-  {"dshowadec_wms",
-   "Windows Media Audio Voice v9",
+   "audio/x-wma, wmaversion = (int) 4",
+   preferred_wma_filters},
+
+  {"dshowadec_wms", "Windows Media Audio Voice v9",
    WAVE_FORMAT_WMAVOICE9,
-   "audio/x-wms"},
-  {"dshowadec_mp3",
-   "MPEG Layer 3 Audio",
+   "audio/x-wms",
+   preferred_wma_filters},
+
+  {"dshowadec_mp3", "MPEG Layer 3 Audio",
    WAVE_FORMAT_MPEGLAYER3,
    "audio/mpeg, "
        "mpegversion = (int) 1, "
        "layer = (int)3, "
        "rate = (int) [ 8000, 48000 ], "
        "channels = (int) [ 1, 2 ], "
-       "parsed= (boolean) true"},
-  {"dshowadec_mpeg_1_2",
-   "MPEG Layer 1,2 Audio",
+       "parsed= (boolean) true",
+   preferred_mp3_filters},
+
+  {"dshowadec_mpeg_1_2", "MPEG Layer 1,2 Audio",
    WAVE_FORMAT_MPEG,
    "audio/mpeg, "
        "mpegversion = (int) 1, "
        "layer = (int) [ 1, 2 ], "
        "rate = (int) [ 8000, 48000 ], "
        "channels = (int) [ 1, 2 ], "
-       "parsed= (boolean) true"},
+       "parsed= (boolean) true",
+   preferred_mpegaudio_filters},
 };
 
 HRESULT AudioFakeSink::DoRenderSample(IMediaSample *pMediaSample)
@@ -230,7 +263,7 @@ HRESULT AudioFakeSink::DoRenderSample(IMediaSample *pMediaSample)
 done:
   return S_OK;
 }
-    
+
 HRESULT AudioFakeSink::CheckMediaType(const CMediaType *pmt)
 {
   if(pmt != NULL)
@@ -921,11 +954,12 @@ gst_dshowaudiodec_create_graph_and_filters (GstDshowAudioDec * adec)
   adec->fakesrc->AddRef();
 
   /* create decoder filter */
-  if (!gst_dshow_find_filter (MEDIATYPE_Audio,
+  adec->decfilter = gst_dshow_find_filter (MEDIATYPE_Audio,
           insubtype,
           MEDIATYPE_Audio,
           outsubtype,
-          NULL, &adec->decfilter)) {
+          klass->entry->preferred_filters);
+  if (adec->decfilter == NULL) {
     GST_ELEMENT_ERROR (adec, STREAM, FAILED,
         ("Can't create an instance of the decoder filter"), (NULL));
     goto error;
@@ -1038,21 +1072,22 @@ dshow_adec_register (GstPlugin * plugin)
   hr = CoInitialize(0);
   for (i = 0; i < sizeof (audio_dec_codecs) / sizeof (AudioCodecEntry); i++) {
     GType type;
-
+    CComPtr<IBaseFilter> filter;
     GUID insubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (audio_dec_codecs[i].format);
     GUID outsubtype = GUID_MEDIASUBTYPE_FROM_FOURCC (WAVE_FORMAT_PCM);
-    if (gst_dshow_find_filter (MEDIATYPE_Audio,
+
+    filter = gst_dshow_find_filter (MEDIATYPE_Audio,
             insubtype,
             MEDIATYPE_Audio,
             outsubtype,
-            NULL, NULL)) {
+            audio_dec_codecs[i].preferred_filters);
 
-      GST_CAT_DEBUG (dshowaudiodec_debug, "Registering %s",
-          audio_dec_codecs[i].element_name);
+    if (filter) 
+    {
+      GST_DEBUG ("Registering %s", audio_dec_codecs[i].element_name);
 
       tmp = &audio_dec_codecs[i];
-      type =
-          g_type_register_static (GST_TYPE_ELEMENT,
+      type = g_type_register_static (GST_TYPE_ELEMENT,
           audio_dec_codecs[i].element_name, &info, (GTypeFlags)0);
       if (!gst_element_register (plugin, audio_dec_codecs[i].element_name,
               GST_RANK_PRIMARY, type)) {
@@ -1060,10 +1095,11 @@ dshow_adec_register (GstPlugin * plugin)
       }
       GST_CAT_DEBUG (dshowaudiodec_debug, "Registered %s",
           audio_dec_codecs[i].element_name);
-    } else {
-      GST_CAT_DEBUG (dshowaudiodec_debug,
-          "Element %s not registered (the format is not supported by the system)",
-          audio_dec_codecs[i].element_name);
+    }
+    else {
+      GST_DEBUG ("Element %s not registered "
+                 "(the format is not supported by the system)",
+                 audio_dec_codecs[i].element_name);
     }
   }
 

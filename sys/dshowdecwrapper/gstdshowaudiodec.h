@@ -60,6 +60,7 @@ typedef struct {
   gchar *element_longname;  /* Description string for element */
   gint32 format;            /* WAVEFORMATEX format */
   gchar *sinkcaps;          /* GStreamer caps of input format */
+  PreferredFilter *preferred_filters; /* NULL-terminated list of preferred filters */
 } AudioCodecEntry;
 
 #define GST_TYPE_DSHOWAUDIODEC               (gst_dshowaudiodec_get_type())

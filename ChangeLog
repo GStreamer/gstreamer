@@ -1,3 +1,17 @@
+2008-09-24  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/dshowdecwrapper/gstdshowaudiodec.cpp:
+	* sys/dshowdecwrapper/gstdshowaudiodec.h:
+	* sys/dshowdecwrapper/gstdshowfakesrc.cpp:
+	* sys/dshowdecwrapper/gstdshowutil.cpp:
+	* sys/dshowdecwrapper/gstdshowutil.h:
+	* sys/dshowdecwrapper/gstdshowvideodec.cpp:
+	* sys/dshowdecwrapper/gstdshowvideodec.h:
+	  Prefer known-good filters, create directly by GUID if possible,
+	  fall back to creating highest-merit filter otherwise.
+	  Fixes playback with random dshow filters installed in some
+	  cases.
+
 2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_insert),

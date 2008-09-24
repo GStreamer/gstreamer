@@ -31,12 +31,18 @@
 
 #include <glib.h>
 
+typedef struct {
+  const GUID *filter_guid;  /* The filter GUID, or DMO GUID */
+  const GUID *dmo_category; /* If non-NULL, the filter is a DMO of this
+                               category */
+} PreferredFilter;
+
 /* get a pin from directshow filter */
 IPin *gst_dshow_get_pin_from_filter (IBaseFilter *filter, PIN_DIRECTION pindir);
 
 /* find and return a filter according to the input and output types */
-gboolean gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
-                               CLSID output_majortype, CLSID output_subtype,
-                               gchar * prefered_filter_name, IBaseFilter **filter);
-
+IBaseFilter * 
+gst_dshow_find_filter(CLSID input_majortype, CLSID input_subtype, 
+                      CLSID output_majortype, CLSID output_subtype, 
+                      PreferredFilter *preferred_filters);
 #endif /* _GST_DSHOW_UTIL_H_ */

@@ -46,14 +46,33 @@ HRESULT FakeOutputPin::GetMediaType(int iPosition,
   
   return VFW_S_NO_MORE_ITEMS;
 }
+#if 0
+#define GUID_FORMAT "0x%.8x 0x%.4x 0x%.4x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%.2x"
+#define GUID_ARGS(g) g.Data1, g.Data2, g.Data3, \
+  g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], \
+  g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]
+
+static void printMediaType (AM_MEDIA_TYPE *mt)
+{
+  GST_DEBUG (":: majortype: "GUID_FORMAT, GUID_ARGS(mt->majortype));
+  GST_DEBUG (":: subtype: "GUID_FORMAT, GUID_ARGS(mt->subtype));
+
+  GST_DEBUG (":: bFixedSizeSamples: %d", mt->bFixedSizeSamples);
+  GST_DEBUG (":: bTemporalCompression: %d", mt->bTemporalCompression);
+  GST_DEBUG (":: cbFormat: %d", mt->cbFormat);
+  GST_DEBUG (":: formattype: %x", mt->formattype);
+  GST_DEBUG (":: lSampleSize: %lu", mt->lSampleSize);
+  GST_DEBUG (":: pbFormat: %p", mt->pbFormat);
+}
+#endif
 
 HRESULT FakeOutputPin::CheckMediaType(const CMediaType *pmt)
 {
-    if (m_MediaType == *pmt) {
-        return S_OK;
-    }
+  if (m_MediaType == *pmt) {
+    return S_OK;
+  }
 
-    return S_FALSE;
+  return S_FALSE;
 }
 
 HRESULT FakeOutputPin::DecideBufferSize (IMemAllocator *pAlloc, 

@@ -55,7 +55,6 @@ G_BEGIN_DECLS
 typedef struct {
   gchar *element_name;      /* The gst element factory name */
   gchar *element_longname;  /* Description string for element */
-  gchar *preferred_filter_substring; /* TODO: Remove this? */
   gint32 format;            /* ??? */
   GUID input_majortype;
   GUID input_subtype;
@@ -63,6 +62,7 @@ typedef struct {
   GUID output_majortype;
   GUID output_subtype;
   gchar *srccaps;
+  PreferredFilter *preferred_filters;
 } VideoCodecEntry;
 
 #define GST_TYPE_DSHOWVIDEODEC               (gst_dshowvideodec_get_type())
