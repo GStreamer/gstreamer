@@ -1,3 +1,10 @@
+2008-09-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer):
+	Take new caps ref because our old one might have been gone when the
+	subclass performs a gst_pad_set_caps() on the srcpad. See #548764.
+
 2008-09-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

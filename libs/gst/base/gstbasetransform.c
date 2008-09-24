@@ -1117,6 +1117,10 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         bclass->prepare_output_buffer (trans, in_buf, outsize, oldcaps,
         out_buf);
 
+    /* get a new ref to the srcpad caps, the prepare_output_buffer function can
+     * update the pad caps if it wants */
+    oldcaps = GST_PAD_CAPS (trans->srcpad);
+
     /* FIXME 0.11:
      * decrease refcount again if vmethod returned refcounted in_buf. This
      * is because we need to make sure that the buffer is writable for the
