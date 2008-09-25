@@ -376,26 +376,18 @@ static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
-
   GstNetBuffer *outbuf;
-
   struct sockaddr_storage tmpaddr;
-
   socklen_t len;
-
   guint8 *pktdata;
-
   gint pktsize;
-
 #ifdef G_OS_UNIX
   gint readsize;
 #elif defined G_OS_WIN32
   gulong readsize;
 #endif
   GstClockTime timeout;
-
   gint ret;
-
   gboolean try_again;
 
   udpsrc = GST_UDPSRC_CAST (psrc);
@@ -787,8 +779,9 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
       goto setsockopt_error;
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
-    if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr,
-                sizeof (src->myaddr))) < 0)
+    /* Mac OS is picky about the size */
+    len = sizeof (struct sockaddr_in);
+    if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr, len)) < 0)
       goto bind_error;
 
     len = sizeof (src->myaddr);
