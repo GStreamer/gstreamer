@@ -317,6 +317,7 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
   for (i = 0; i < 3; i++) {
     ogg_packet packet;
     GstBuffer *buf;
+    int ret;
 
     buf = parse->streamheader[i];
     gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
@@ -326,7 +327,12 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
     packet.granulepos = GST_BUFFER_OFFSET_END (buf);
     packet.packetno = i + 1;
     packet.e_o_s = 0;
-    theora_decode_header (&parse->info, &parse->comment, &packet);
+    packet.b_o_s = (i == 0);
+    ret = theora_decode_header (&parse->info, &parse->comment, &packet);
+    if (ret < 0) {
+      GST_WARNING_OBJECT (parse, "Failed to decode Theora header %d: %d\n",
+          i + 1, ret);
+    }
   }
 
   parse->fps_n = parse->info.fps_numerator;

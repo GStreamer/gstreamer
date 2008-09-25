@@ -1,3 +1,10 @@
+2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: ogg.k.ogg.k <ogg dot k dot ogg dot k at googlemail dot com>
+
+	* ext/theora/theoraparse.c: (theora_parse_set_streamheader):
+	Set the BOS flag on the BOS packet. Fixes #553244.
+
 2008-09-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtsp/gstrtspmessage.c:
