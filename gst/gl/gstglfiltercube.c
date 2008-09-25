@@ -268,4 +268,6 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture, gpointer st
     xrot+=0.3f;
     yrot+=0.2f;
     zrot+=0.4f;
+
+    glDisable(GL_DEPTH_TEST);
 }

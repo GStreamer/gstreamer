@@ -68,33 +68,27 @@ static const gchar *glass_fragment_source =
   "uniform sampler2DRect tex;"
   "uniform float width, height;"
   "void main () {"
-  "  float xl = 0.0525*width;"
-  "  float xr = (1.0 - 0.0525)*width;"
-  "  float yl = 0.0875*height;"
-  "  float yr = (1.0 - 0.0875)*height;"
-  "  float r;"
-  "  if (gl_TexCoord[0].x < xl && gl_TexCoord[0].y < yl)"
-  "      r = (gl_TexCoord[0].x - xl) * (gl_TexCoord[0].x - xl) + (gl_TexCoord[0].y - yl) * (gl_TexCoord[0].y - yl);"
-  "  else if (gl_TexCoord[0].x > xr && gl_TexCoord[0].y < yl)"
-  "      r = (gl_TexCoord[0].x - xr) * (gl_TexCoord[0].x - xr) + (gl_TexCoord[0].y - yl) * (gl_TexCoord[0].y - yl);"
-  "  else if (gl_TexCoord[0].x > xr && gl_TexCoord[0].y > yr)"
-  "      r = (gl_TexCoord[0].x - xr) * (gl_TexCoord[0].x - xr) + (gl_TexCoord[0].y - yr) * (gl_TexCoord[0].y - yr);"
-  "  else if (gl_TexCoord[0].x < xl && gl_TexCoord[0].y > yr)"
-  "      r = (gl_TexCoord[0].x - xl) * (gl_TexCoord[0].x - xl) + (gl_TexCoord[0].y - yr) * (gl_TexCoord[0].y - yr);"
-  "  else if (gl_TexCoord[0].y < yl)"
-  "      r = (gl_TexCoord[0].y - yl) * (gl_TexCoord[0].y - yl);"
-  "  else if (gl_TexCoord[0].y > yr)"
-  "      r = (gl_TexCoord[0].y - yr) * (gl_TexCoord[0].y - yr);"
-  "  else if (gl_TexCoord[0].x < xl)"
-  "      r = (gl_TexCoord[0].x - xl) * (gl_TexCoord[0].x - xl);"
-  "  else if (gl_TexCoord[0].x > xr)"
-  "      r = (gl_TexCoord[0].x - xr) * (gl_TexCoord[0].x - xr);"
-  "  else"
-  "      r = width;"
-  "  float v = clamp(r, width, width + width/10.0);"
-  "  v = (v - width) * 10.0 / width;"
+  "  float p = 0.0525;"
+  "  float L1 = p*width;"
+  "  float L2 = width - L1;"
+  "  float L3 = height - L1;"
+  "  float w = 1.0;"
+  "  float r = L1;"
+  "  if (gl_TexCoord[0].x < L1 && gl_TexCoord[0].y < L1)"
+  "      r = sqrt( (gl_TexCoord[0].x - L1) * (gl_TexCoord[0].x - L1) + (gl_TexCoord[0].y - L1) * (gl_TexCoord[0].y - L1) );"
+
+  "  else if (gl_TexCoord[0].x > L2 && gl_TexCoord[0].y < L1)"
+  "      r = sqrt( (gl_TexCoord[0].x - L2) * (gl_TexCoord[0].x - L2) + (gl_TexCoord[0].y - L1) * (gl_TexCoord[0].y - L1) );"
+
+  "  else if (gl_TexCoord[0].x > L2 && gl_TexCoord[0].y > L3)"
+  "      r = sqrt( (gl_TexCoord[0].x - L2) * (gl_TexCoord[0].x - L2) + (gl_TexCoord[0].y - L3) * (gl_TexCoord[0].y - L3) );"
+
+  "  else if (gl_TexCoord[0].x < L1 && gl_TexCoord[0].y > L3)"
+  "      r = sqrt( (gl_TexCoord[0].x - L1) * (gl_TexCoord[0].x - L1) + (gl_TexCoord[0].y - L3) * (gl_TexCoord[0].y - L3) );"
+  "  if (r > L1)"
+  "      w = 0.0;"
   "  vec4 color = texture2DRect (tex, gl_TexCoord[0].st);"
-  "  gl_FragColor = vec4(color.rgb, color.a * (1.0 - v));"
+  "  gl_FragColor = vec4(color.rgb, gl_Color.a * w);"
   "}";
 
 static void
@@ -299,9 +293,6 @@ gst_gl_filter_glass_callback (gint width, gint height, guint texture, gpointer s
     }
   }
 
-  glEnable (GL_BLEND);
-  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   glTranslatef(0.0f, 2.0f, -3.0f);
 
   gst_gl_filter_glass_draw_background_gradient ();
@@ -313,18 +304,17 @@ gst_gl_filter_glass_callback (gint width, gint height, guint texture, gpointer s
       glRotated (sin (time_passed / 1200000.0) * 45.0, 0.0, 1.0, 0.0);
   }
 
-  glPushMatrix ();
+  glEnable (GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   //Reflection
   gst_gl_filter_glass_draw_video_plane (filter, width, height, texture,
-    0.0f, 0.0f, 0.3f, 0.5f, TRUE);
+    0.0f, 0.0f, 0.3f, 0.0f, TRUE);
 
   //Main video
   gst_gl_filter_glass_draw_video_plane (filter, width, height, texture,
     0.0f, -2.0f, 1.0f, 1.0f, FALSE);
 
-  glActiveTextureARB (GL_TEXTURE0_ARB);
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
-  glPopMatrix ();
+  glDisable (GL_BLEND);
 }
