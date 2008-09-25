@@ -3550,14 +3550,14 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
 
   if (src->methods == 0) {
     /* neither Allow nor Public are required, assume the server supports
-     * at least DESCRIBE, SETUP, we always assume it supports PLAY and PAUSE as
+     * at least DESCRIBE, SETUP, we always assume it supports PLAY as
      * well. */
     GST_DEBUG_OBJECT (src, "could not get OPTIONS");
     src->methods = GST_RTSP_DESCRIBE | GST_RTSP_SETUP;
   }
-  /* always assume PLAY and PAUSED, FIXME, extensions should be able to override
+  /* always assume PLAY, FIXME, extensions should be able to override
    * this */
-  src->methods |= GST_RTSP_PLAY | GST_RTSP_PAUSE;
+  src->methods |= GST_RTSP_PLAY;
 
   /* we need describe and setup */
   if (!(src->methods & GST_RTSP_DESCRIBE))
