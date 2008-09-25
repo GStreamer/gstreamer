@@ -1277,6 +1277,7 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
     }
     if (mix->sendseg && (mixpad == mix->master)) {
       GstEvent *event;
+      gint64 stop, start;
 
       GstSegment *segment = &data->segment;
 
@@ -1294,8 +1295,18 @@ gst_videomixer_fill_queues (GstVideoMixer * mix)
        * match.
        */
       GST_INFO ("_sending play segment");
+
+      start = segment->accum;
+
+      /* get the duration of the segment if we can and add it to the accumulated
+       * time on the segment. */
+      if (segment->stop != -1 && segment->start != -1)
+        stop = start + (segment->stop - segment->start);
+      else
+        stop = -1;
+
       event = gst_event_new_new_segment_full (FALSE, segment->rate, 1.0,
-          segment->format, 0, -1, mix->segment_position);
+          segment->format, start, stop, start + mix->segment_position);
       gst_pad_push_event (mix->srcpad, event);
       mix->sendseg = FALSE;
     }
@@ -1625,6 +1636,9 @@ gst_videomixer_sink_event (GstPad * pad, GstEvent * event)
        * assume the collectpads forwarded the FLUSH_STOP past us
        * and downstream (using our source pad, the bastard!).
        */
+      videomixer->sendseg = TRUE;
+      break;
+    case GST_EVENT_NEWSEGMENT:
       videomixer->sendseg = TRUE;
       break;
     default:

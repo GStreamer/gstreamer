@@ -1,5 +1,11 @@
 2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/videomixer/videomixer.c: (gst_videomixer_fill_queues),
+	(gst_videomixer_sink_event):
+	Handle segments a little better. Fixes #537361.
+
+2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_methods):
 	Don't assume the server supports PAUSE by default. Fixes #551048.
 
