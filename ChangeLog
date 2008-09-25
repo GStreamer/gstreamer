@@ -1,5 +1,11 @@
 2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_set_uri), (gst_udpsrc_start):
+	Switch on the socket family to get the addrlen size right.
+
+2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Daniel Franke <df at dfranke dot us>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_create), (gst_udpsrc_start):

@@ -247,9 +247,7 @@ static void
 gst_udpsrc_class_init (GstUDPSrcClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstBaseSrcClass *gstbasesrc_class;
-
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -582,9 +580,7 @@ static gboolean
 gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
 {
   gchar *protocol;
-
   gchar *location;
-
   gchar *colptr;
 
   protocol = gst_uri_get_protocol (uri);
@@ -743,17 +739,11 @@ static gboolean
 gst_udpsrc_start (GstBaseSrc * bsrc)
 {
   guint bc_val;
-
   gint reuse;
-
   int port;
-
   GstUDPSrc *src;
-
   gint ret;
-
   int rcvsize;
-
   guint len;
 
   src = GST_UDPSRC (bsrc);
@@ -779,8 +769,20 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
       goto setsockopt_error;
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
-    /* Mac OS is picky about the size */
-    len = sizeof (struct sockaddr_in);
+
+    /* Mac OS is picky about the size for the bind so we switch on the family */
+    switch (src->myaddr.ss_family) {
+      case AF_INET:
+        len = sizeof (struct sockaddr_in);
+        break;
+      case AF_INET6:
+        len = sizeof (struct sockaddr_in6);
+        break;
+      default:
+        /* don't know, Screw MacOS and use the full length */
+        len = sizeof (src->myaddr);
+        break;
+    }
     if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr, len)) < 0)
       goto bind_error;
 
