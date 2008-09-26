@@ -27,6 +27,9 @@
 #include <string.h>
 #include "gstrtpamrdepay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpamrdepay_debug);
+#define GST_CAT_DEFAULT (rtpamrdepay_debug)
+
 /* references:
  *
  * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File
@@ -146,6 +149,9 @@ gst_rtp_amr_depay_class_init (GstRtpAMRDepayClass * klass)
 
   gstbasertpdepayload_class->process = gst_rtp_amr_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_amr_depay_setcaps;
+
+  GST_DEBUG_CATEGORY_INIT (rtpamrdepay_debug, "rtpamrdepay", 0,
+      "AMR/AMR-WB RTP Depayloader");
 }
 
 static void
@@ -304,7 +310,9 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gint i, num_packets, num_nonempty_packets;
     gint amr_len;
     gint ILL, ILP;
+    gboolean marker;
 
+    marker = gst_rtp_buffer_get_marker (buf);
     payload_len = gst_rtp_buffer_get_payload_len (buf);
 
     /* need at least 2 bytes for the header */
@@ -412,10 +420,17 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     /* we can set the duration because each packet is 20 milliseconds */
     GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;
 
+    if (marker) {
+      /* marker bit marks a discont buffer */
+      GST_DEBUG_OBJECT (depayload, "marker bit was set");
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      marker = FALSE;
+    }
+
     gst_buffer_set_caps (outbuf,
         GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload)));
 
-    GST_DEBUG ("gst_rtp_amr_depay_chain: pushing buffer of size %d",
+    GST_DEBUG_OBJECT (depayload, "pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
   }
   return outbuf;

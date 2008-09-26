@@ -1,5 +1,16 @@
 2008-09-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_class_init),
+	(gst_rtp_amr_depay_process):
+	Mark DISCONT on output buffers when the marker bit signals a new talk
+	spurt.
+
+	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_handle_buffer):
+	Set the marker bit for buffers with a DISCONT flag to signal a talk
+	spurt.
+
+2008-09-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpmp4apay.c: (gst_rtp_mp4a_pay_get_type),

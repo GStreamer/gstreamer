@@ -211,6 +211,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gint i, num_packets, num_nonempty_packets;
   gint amr_len;
   gint *frame_size;
+  gboolean discont;
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay);
@@ -219,6 +220,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+  discont = GST_BUFFER_IS_DISCONT (buffer);
 
   /* setup frame size pointer */
   if (rtpamrpay->mode == GST_RTP_AMR_P_MODE_NB)
@@ -267,21 +269,21 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* now alloc output buffer */
   outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
 
-  /* copy timestamp, or fabricate one */
-  if (timestamp != GST_CLOCK_TIME_NONE)
-    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-  else {
-    /* AMR (nb) and AMR-WB both have 20 ms per frame */
-    /* FIXME: when we do more than one AMR frame per packet, fix this */
-    gint count = basepayload->seqnum - basepayload->seqnum_base;
+  /* copy timestamp */
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    GST_BUFFER_TIMESTAMP (outbuf) = count * 20 * GST_MSECOND;
-  }
-
+  /* FIXME: when we do more than one AMR frame per packet, fix this */
   if (duration != GST_CLOCK_TIME_NONE)
     GST_BUFFER_DURATION (outbuf) = duration;
   else {
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
+  }
+
+  if (discont) {
+    GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    gst_rtp_buffer_set_marker (outbuf, TRUE);
+    discont = FALSE;
   }
 
   /* get payload, this is now writable */
