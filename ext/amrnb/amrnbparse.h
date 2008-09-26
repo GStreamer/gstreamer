@@ -39,6 +39,10 @@ G_BEGIN_DECLS
 typedef struct _GstAmrnbParse GstAmrnbParse;
 typedef struct _GstAmrnbParseClass GstAmrnbParseClass;
 
+typedef gboolean (*GstAmrnbSeekHandler) (GstAmrnbParse * amrnbparse, GstPad * pad,
+		    GstEvent * event);
+
+
 struct _GstAmrnbParse {
   GstElement element;
 
@@ -51,6 +55,8 @@ struct _GstAmrnbParse {
   gboolean need_header;
   gint64 offset;
   gint block;
+
+  GstAmrnbSeekHandler seek_handler;
 
   guint64 ts;
 
