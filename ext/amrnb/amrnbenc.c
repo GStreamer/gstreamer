@@ -264,6 +264,7 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (amrnbenc->adapter);
     amrnbenc->ts = 0;
+    amrnbenc->discont = TRUE;
   }
 
   /* take latest timestamp, FIXME timestamp is the one of the
@@ -284,8 +285,14 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
     out = gst_buffer_new_and_alloc (32);
     GST_BUFFER_DURATION (out) = amrnbenc->duration;
     GST_BUFFER_TIMESTAMP (out) = amrnbenc->ts;
-    if (amrnbenc->ts != -1)
+    if (amrnbenc->ts != -1) {
       amrnbenc->ts += amrnbenc->duration;
+    }
+    if (amrnbenc->discont) {
+      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
+      amrnbenc->discont = FALSE;
+    }
+
     gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbenc->srcpad));
 
     /* The AMR encoder actually writes into the source data buffers it gets */
@@ -332,6 +339,7 @@ gst_amrnbenc_state_change (GstElement * element, GstStateChange transition)
       amrnbenc->rate = 0;
       amrnbenc->channels = 0;
       amrnbenc->ts = 0;
+      amrnbenc->discont = FALSE;
       gst_adapter_clear (amrnbenc->adapter);
       break;
     default:
