@@ -1,3 +1,16 @@
+2008-09-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmp4apay.c: (gst_rtp_mp4a_pay_get_type),
+	(gst_rtp_mp4a_pay_base_init), (gst_rtp_mp4a_pay_class_init),
+	(gst_rtp_mp4a_pay_init), (gst_rtp_mp4a_pay_finalize),
+	(gst_rtp_mp4a_pay_parse_audio_config), (gst_rtp_mp4a_pay_new_caps),
+	(gst_rtp_mp4a_pay_setcaps), (gst_rtp_mp4a_pay_handle_buffer),
+	(gst_rtp_mp4a_pay_change_state), (gst_rtp_mp4a_pay_plugin_init):
+	* gst/rtp/gstrtpmp4apay.h:
+	Added MP4A-LATM payloader to match the depayloader.
+
 2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_fill_queues),
