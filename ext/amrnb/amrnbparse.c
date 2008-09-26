@@ -216,22 +216,23 @@ gst_amrnbparse_query (GstPad * pad, GstQuery * query)
         return FALSE;
 
       tot = -1;
+      res = FALSE;
 
       peer = gst_pad_get_peer (amrnbparse->sinkpad);
       if (peer) {
         GstFormat pformat;
-        gint64 pcur, ptot;
+        gint64 ptot;
 
         pformat = GST_FORMAT_BYTES;
-        res = gst_pad_query_position (peer, &pformat, &pcur);
-        res &= gst_pad_query_duration (peer, &pformat, &ptot);
-        gst_object_unref (GST_OBJECT (peer));
-        if (res) {
-          tot = amrnbparse->ts * ((gdouble) ptot / pcur);
+        res = gst_pad_query_duration (peer, &pformat, &ptot);
+        if (res && amrnbparse->block) {
+          tot =
+              gst_util_uint64_scale_int (ptot, 20 * GST_MSECOND,
+              amrnbparse->block);
         }
+        gst_object_unref (GST_OBJECT (peer));
       }
       gst_query_set_duration (query, GST_FORMAT_TIME, tot);
-      res = TRUE;
       break;
     }
     default:
@@ -290,7 +291,7 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstAmrnbParse *amrnbparse;
   GstFlowReturn res;
-  gint block, mode;
+  gint mode;
   const guint8 *data;
   GstBuffer *out;
   GstClockTime timestamp;
@@ -311,6 +312,7 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
   /* init */
   if (amrnbparse->need_header) {
     GstEvent *segev;
+    GstCaps *caps;
 
     if (gst_adapter_available (amrnbparse->adapter) < 6)
       goto done;
@@ -322,6 +324,11 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_flush (amrnbparse->adapter, 6);
 
     amrnbparse->need_header = FALSE;
+
+    caps = gst_caps_new_simple ("audio/AMR",
+        "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
+    gst_pad_set_caps (amrnbparse->srcpad, caps);
+    gst_caps_unref (caps);
 
     GST_DEBUG_OBJECT (amrnbparse, "Sending first segment");
     segev = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
@@ -337,15 +344,15 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* get size */
     mode = (data[0] >> 3) & 0x0F;
-    block = block_size[mode] + 1;       /* add one for the mode */
+    amrnbparse->block = block_size[mode] + 1;   /* add one for the mode */
 
-    if (gst_adapter_available (amrnbparse->adapter) < block)
+    if (gst_adapter_available (amrnbparse->adapter) < amrnbparse->block)
       break;
 
-    out = gst_buffer_new_and_alloc (block);
+    out = gst_buffer_new_and_alloc (amrnbparse->block);
 
-    data = gst_adapter_peek (amrnbparse->adapter, block);
-    memcpy (GST_BUFFER_DATA (out), data, block);
+    data = gst_adapter_peek (amrnbparse->adapter, amrnbparse->block);
+    memcpy (GST_BUFFER_DATA (out), data, amrnbparse->block);
 
     /* timestamp, all constants that won't overflow */
     GST_BUFFER_DURATION (out) = GST_SECOND * 160 / 8000;
@@ -353,13 +360,13 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
     if (GST_CLOCK_TIME_IS_VALID (amrnbparse->ts))
       amrnbparse->ts += GST_BUFFER_DURATION (out);
 
-    gst_buffer_set_caps (out,
-        (GstCaps *) gst_pad_get_pad_template_caps (amrnbparse->srcpad));
+    gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbparse->srcpad));
 
-    GST_DEBUG_OBJECT (amrnbparse, "Pushing %d bytes of data", block);
+    GST_DEBUG_OBJECT (amrnbparse, "Pushing %d bytes of data",
+        amrnbparse->block);
     res = gst_pad_push (amrnbparse->srcpad, out);
 
-    gst_adapter_flush (amrnbparse->adapter, block);
+    gst_adapter_flush (amrnbparse->adapter, amrnbparse->block);
   }
 done:
 
@@ -412,18 +419,25 @@ gst_amrnbparse_loop (GstPad * pad)
   GstBuffer *buffer;
   guint8 *data;
   gint size;
-  gint block, mode;
+  gint mode;
   GstFlowReturn ret;
 
   amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
 
   /* init */
   if (G_UNLIKELY (amrnbparse->need_header)) {
+    GstCaps *caps;
+
     if (!gst_amrnbparse_pull_header (amrnbparse)) {
       GST_ELEMENT_ERROR (amrnbparse, STREAM, WRONG_TYPE, (NULL), (NULL));
       GST_LOG_OBJECT (amrnbparse, "could not read header");
       goto need_pause;
     }
+
+    caps = gst_caps_new_simple ("audio/AMR",
+        "rate", G_TYPE_INT, 8000, "channels", G_TYPE_INT, 1, NULL);
+    gst_pad_set_caps (amrnbparse->srcpad, caps);
+    gst_caps_unref (caps);
 
     GST_DEBUG_OBJECT (amrnbparse, "Sending newsegment event");
     gst_pad_push_event (amrnbparse->srcpad,
@@ -452,36 +466,35 @@ gst_amrnbparse_loop (GstPad * pad)
 
   /* get size */
   mode = (data[0] >> 3) & 0x0F;
-  block = block_size[mode] + 1; /* add one for the mode */
+  amrnbparse->block = block_size[mode] + 1;     /* add one for the mode */
 
   gst_buffer_unref (buffer);
 
   ret =
-      gst_pad_pull_range (amrnbparse->sinkpad, amrnbparse->offset, block,
-      &buffer);
+      gst_pad_pull_range (amrnbparse->sinkpad, amrnbparse->offset,
+      amrnbparse->block, &buffer);
 
   if (ret == GST_FLOW_UNEXPECTED)
     goto eos;
   else if (ret != GST_FLOW_OK)
     goto need_pause;
 
-  if (GST_BUFFER_SIZE (buffer) < block) {
+  if (GST_BUFFER_SIZE (buffer) < amrnbparse->block) {
     gst_buffer_unref (buffer);
     goto eos;
   }
 
-  amrnbparse->offset += block;
+  amrnbparse->offset += amrnbparse->block;
 
   /* output */
   buffer = gst_buffer_make_metadata_writable (buffer);
   GST_BUFFER_DURATION (buffer) = GST_SECOND * 160 / 8000;
   GST_BUFFER_TIMESTAMP (buffer) = amrnbparse->ts;
 
-  gst_buffer_set_caps (buffer,
-      (GstCaps *) gst_pad_get_pad_template_caps (amrnbparse->srcpad));
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (amrnbparse->srcpad));
 
   GST_DEBUG_OBJECT (amrnbparse, "Pushing %2d bytes, ts=%" GST_TIME_FORMAT,
-      block, GST_TIME_ARGS (amrnbparse->ts));
+      amrnbparse->block, GST_TIME_ARGS (amrnbparse->ts));
 
   ret = gst_pad_push (amrnbparse->srcpad, buffer);
 
@@ -576,6 +589,7 @@ gst_amrnbparse_state_change (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       amrnbparse->need_header = TRUE;
       amrnbparse->ts = -1;
+      amrnbparse->block = 0;
       gst_segment_init (&amrnbparse->segment, GST_FORMAT_TIME);
       break;
     default:

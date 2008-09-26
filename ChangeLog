@@ -1,3 +1,14 @@
+2008-09-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Benoit Fouet <benoit dot fouet at purplelabs dot com>
+
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_query),
+	(gst_amrnbparse_chain), (gst_amrnbparse_loop),
+	(gst_amrnbparse_state_change):
+	* ext/amrnb/amrnbparse.h:
+	Fix the duration query. Fixes #536226.
+	Also set caps on the pads and buffers more correctly.
+
 2008-09-02  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* po/LINGUAS:
