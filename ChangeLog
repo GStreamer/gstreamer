@@ -1,3 +1,9 @@
+2008-09-27  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/pulse/pulsesink.c:
+	Fix problems with pulsesink randomly erroring with code 'OK' after a
+	format change on the stream by waiting when disconnecting the stream.
+
 2008-09-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_class_init),

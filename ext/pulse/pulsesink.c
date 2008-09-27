@@ -273,6 +273,7 @@ gst_pulsesink_destroy_stream (GstPulseSink * pulsesink)
 {
   if (pulsesink->stream) {
     pa_stream_disconnect (pulsesink->stream);
+    pa_threaded_mainloop_wait (pulsesink->mainloop);
     pa_stream_unref (pulsesink->stream);
     pulsesink->stream = NULL;
   }
@@ -507,6 +508,7 @@ gst_pulsesink_open (GstAudioSink * asink)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
   gchar *name = gst_pulse_client_name ();
+  pa_context_state_t state;
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
 
@@ -530,7 +532,9 @@ gst_pulsesink_open (GstAudioSink * asink)
   /* Wait until the context is ready */
   pa_threaded_mainloop_wait (pulsesink->mainloop);
 
-  if (pa_context_get_state (pulsesink->context) != PA_CONTEXT_READY) {
+  state = pa_context_get_state (pulsesink->context);
+  if (state != PA_CONTEXT_READY) {
+    GST_DEBUG_OBJECT (pulsesink, "Context state was not READY. Got: %d", state);
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED, ("Failed to connect: %s",
             pa_strerror (pa_context_errno (pulsesink->context))), (NULL));
     goto unlock_and_fail;
@@ -564,6 +568,7 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
   pa_buffer_attr buf_attr;
   pa_channel_map channel_map;
+  pa_stream_state_t s_state;
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
 
   if (!gst_pulse_fill_sample_spec (spec, &pulsesink->sample_spec)) {
@@ -620,7 +625,10 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   /* Wait until the stream is ready */
   pa_threaded_mainloop_wait (pulsesink->mainloop);
 
-  if (pa_stream_get_state (pulsesink->stream) != PA_STREAM_READY) {
+  s_state = pa_stream_get_state (pulsesink->stream);
+  if (s_state != PA_STREAM_READY) {
+    GST_DEBUG_OBJECT (pulsesink, "Stream state was not READY. Got: %d",
+        s_state);
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("Failed to connect stream: %s",
             pa_strerror (pa_context_errno (pulsesink->context))), (NULL));
