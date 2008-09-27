@@ -1,3 +1,13 @@
+2008-09-27  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/gstmpegdemux.h:
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/rsnstreamselector.c:
+	Add in Title/Chapter seeking, and simple but buggy audio
+	and subtitle stream selection.
+
 2008-09-24  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/dshowdecwrapper/gstdshowaudiodec.cpp:

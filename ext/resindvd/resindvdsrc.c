@@ -84,6 +84,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 /* Private seek format for private flushing */
 static GstFormat rsndvd_format;
+/* Title/chapter formats */
+static GstFormat title_format;
+static GstFormat chapter_format;
 
 static void rsn_dvdsrc_register_extra (GType rsn_dvdsrc_type);
 
@@ -104,6 +107,7 @@ static gboolean rsn_dvdsrc_stop (RsnBaseSrc * bsrc);
 static gboolean rsn_dvdsrc_unlock (RsnBaseSrc * bsrc);
 static gboolean rsn_dvdsrc_unlock_stop (RsnBaseSrc * bsrc);
 
+static gboolean rsn_dvdsrc_is_seekable (RsnBaseSrc * bsrc);
 static gboolean rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
     GstSegment * segment);
 static gboolean rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment);
@@ -163,6 +167,9 @@ rsn_dvdsrc_register_extra (GType rsn_dvdsrc_type)
 
   rsndvd_format = gst_format_register ("rsndvdsrc-internal",
       "private Resin DVD src format");
+
+  title_format = gst_format_register ("title", "DVD title format");
+  chapter_format = gst_format_register ("chapter", "DVD chapter format");
 }
 
 static void
@@ -206,6 +213,7 @@ rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
   gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (rsn_dvdsrc_unlock_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (rsn_dvdsrc_src_event);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (rsn_dvdsrc_src_query);
+  gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (rsn_dvdsrc_is_seekable);
   gstbasesrc_class->prepare_seek_segment =
       GST_DEBUG_FUNCPTR (rsn_dvdsrc_prepare_seek);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (rsn_dvdsrc_do_seek);
@@ -284,7 +292,6 @@ rsn_dvdsrc_set_property (GObject * object, guint prop_id,
       else
         src->device = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (src);
-      g_print ("Device is now %s\n", src->device);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -756,7 +763,6 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
     case DVDNAV_VTS_CHANGE:{
       dvdnav_vts_change_event_t *event = (dvdnav_vts_change_event_t *) data;
 
-      g_print ("VTS change\n");
       if (dvdnav_is_domain_vmgm (src->dvdnav))
         src->vts_n = 0;
       else
@@ -772,7 +778,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
     case DVDNAV_AUDIO_STREAM_CHANGE:{
       dvdnav_audio_stream_change_event_t *event =
           (dvdnav_audio_stream_change_event_t *) data;
-      g_print ("cur audio stream change\n");
+
       GST_DEBUG_OBJECT (src, "  physical: %d", event->physical);
       GST_DEBUG_OBJECT (src, "  logical: %d", event->logical);
 
@@ -782,9 +788,10 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
     case DVDNAV_SPU_STREAM_CHANGE:{
       dvdnav_spu_stream_change_event_t *event =
           (dvdnav_spu_stream_change_event_t *) data;
+      gint phys_track = event->physical_wide & 0x1f;
+      gboolean forced_only = (event->physical_wide & 0x80) ? TRUE : FALSE;
 
-      rsn_dvdsrc_prepare_spu_stream_event (src, event->physical_wide & 0x1f,
-          (event->physical_wide & 0x80) ? TRUE : FALSE);
+      rsn_dvdsrc_prepare_spu_stream_event (src, phys_track, forced_only);
 
       GST_DEBUG_OBJECT (src, "  physical_wide: %d", event->physical_wide);
       GST_DEBUG_OBJECT (src, "  physical_letterbox: %d",
@@ -1200,6 +1207,8 @@ rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src, guint8 phys_stream)
     return;
   src->cur_audio_phys_stream = phys_stream;
 
+  g_print ("Preparing audio change, phys %d\n", phys_stream);
+
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-set-audio-track",
       "physical-id", G_TYPE_INT, (gint) phys_stream, NULL);
@@ -1220,11 +1229,13 @@ rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src, guint8 phys_stream,
 
   if (phys_stream == src->cur_spu_phys_stream &&
       forced_only == src->cur_spu_forced_only) {
-    g_print ("Not preparing SPU change\n");
     return;
   }
   src->cur_spu_phys_stream = phys_stream;
   src->cur_spu_forced_only = forced_only;
+
+  g_print ("Preparing SPU change, phys %d forced %d\n",
+      phys_stream, forced_only);
 
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-set-subpicture-track",
@@ -1252,6 +1263,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   gchar lang_code[3] = { '\0', '\0', '\0' };
   gchar *t;
   gboolean is_widescreen;
+  gboolean have_audio;
 
   if (src->vts_attrs == NULL || src->vts_n >= src->vts_attrs->len) {
     if (src->vts_attrs)
@@ -1301,12 +1313,20 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
       NULL);
 
   /* audio */
-  if (n_audio == 0) {
-    /* Always create at least one audio stream */
-    gst_structure_set (s, "audio-0-format", G_TYPE_INT, (int) 0, NULL);
-  }
+  have_audio = FALSE;
   for (i = 0; i < n_audio; i++) {
     const audio_attr_t *a = a_attrs + i;
+
+#if 1
+    /* FIXME: Only output A52 streams for now, until the decoder switching
+     * is ready */
+    if (a->audio_format != 0) {
+      GST_DEBUG_OBJECT (src, "Ignoring non-A52 stream %d, format %d", i,
+          (int) a->audio_format);
+      continue;
+    }
+#endif
+    have_audio = TRUE;
 
     t = g_strdup_printf ("audio-%d-format", i);
     gst_structure_set (s, t, G_TYPE_INT, (int) a->audio_format, NULL);
@@ -1325,6 +1345,11 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
       GST_DEBUG_OBJECT (src, "Audio stream %d is language %s", i, lang_code);
     } else
       GST_DEBUG_OBJECT (src, "Audio stream %d - no language", i, lang_code);
+  }
+
+  if (have_audio == FALSE) {
+    /* Always create at least one audio stream */
+    gst_structure_set (s, "audio-0-format", G_TYPE_INT, (int) 0, NULL);
   }
 
   /* subpictures */
@@ -1447,7 +1472,15 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
 
   /* Check if we have a new button number, or a new highlight region. */
   if (button != src->active_button ||
-      memcmp (&area, &(src->area), sizeof (dvdnav_highlight_area_t)) != 0) {
+      area.sx != src->area.sx || area.sy != src->area.sy ||
+      area.ex != src->area.ex || area.ey != src->area.ey ||
+      area.palette != src->area.palette) {
+
+    g_print ("Setting highlight. Button %d @ %d,%d active %d palette 0x%x "
+        "(from button %d @ %d,%d palette 0x%x)\n",
+        button, src->area.sx, src->area.sy, mode, src->area.palette,
+        src->active_button, area.sx, area.sy, area.palette);
+
     memcpy (&(src->area), &area, sizeof (dvdnav_highlight_area_t));
 
     s = gst_structure_new ("application/x-gst-dvd", "event",
@@ -1468,9 +1501,6 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
     }
 
     src->active_button = button;
-
-    g_print ("Setting highlight. Button %d @ %d,%d active %d"
-        " palette 0x%x\n", button, area.sx, area.sy, mode, area.palette);
 
     if (src->highlight_event)
       gst_event_unref (src->highlight_event);
@@ -1708,11 +1738,70 @@ rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
       gst_query_parse_duration (query, &format, NULL);
-      if (format == GST_FORMAT_TIME && src->pgc_duration != GST_CLOCK_TIME_NONE) {
-        val = src->pgc_duration;
-        gst_query_set_duration (query, format, val);
-        res = TRUE;
+      g_mutex_lock (src->dvd_lock);
+      if (!src->running) {
+        g_mutex_unlock (src->dvd_lock);
+        break;
       }
+
+      if (format == GST_FORMAT_TIME) {
+        if (src->pgc_duration != GST_CLOCK_TIME_NONE) {
+          val = src->pgc_duration;
+          gst_query_set_duration (query, format, val);
+          res = TRUE;
+        }
+      } else if (format == title_format) {
+        gint32 titles;
+
+        if (dvdnav_get_number_of_titles (src->dvdnav,
+                &titles) == DVDNAV_STATUS_OK) {
+          val = titles;
+          gst_query_set_duration (query, format, val);
+          res = TRUE;
+        }
+      } else if (format == chapter_format) {
+        gint32 title, chapters, x;
+
+        if (dvdnav_current_title_info (src->dvdnav, &title,
+                &x) == DVDNAV_STATUS_OK) {
+          if (dvdnav_get_number_of_parts (src->dvdnav, title,
+                  &chapters) == DVDNAV_STATUS_OK) {
+            val = chapters;
+            gst_query_set_duration (query, format, val);
+            res = TRUE;
+          }
+        }
+      }
+      g_mutex_unlock (src->dvd_lock);
+      break;
+    case GST_QUERY_POSITION:
+      gst_query_parse_position (query, &format, NULL);
+
+      g_mutex_lock (src->dvd_lock);
+      if (!src->running) {
+        g_mutex_unlock (src->dvd_lock);
+        break;
+      }
+      if (format == title_format) {
+        gint32 title, chapter;
+
+        if (dvdnav_current_title_info (src->dvdnav, &title,
+                &chapter) == DVDNAV_STATUS_OK) {
+          val = title;
+          gst_query_set_position (query, format, val);
+          res = TRUE;
+        }
+      } else if (format == chapter_format) {
+        gint32 title, chapter = -1;
+
+        if (dvdnav_current_title_info (src->dvdnav, &title,
+                &chapter) == DVDNAV_STATUS_OK) {
+          val = chapter;
+          gst_query_set_position (query, format, val);
+          res = TRUE;
+        }
+      }
+      g_mutex_unlock (src->dvd_lock);
       break;
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
@@ -1720,6 +1809,12 @@ rsn_dvdsrc_src_query (RsnBaseSrc * basesrc, GstQuery * query)
   }
 
   return res;
+}
+
+static gboolean
+rsn_dvdsrc_is_seekable (RsnBaseSrc * bsrc)
+{
+  return TRUE;
 }
 
 static gboolean
@@ -1737,8 +1832,9 @@ rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
   gst_event_parse_seek (event, &rate, &seek_format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
-  if (seek_format == rsndvd_format) {
-    /* Seeks in our internal format are passed directly through to the do_seek
+  if (seek_format == rsndvd_format || seek_format == title_format ||
+      seek_format == chapter_format) {
+    /* Seeks in our internal formats are passed directly through to the do_seek
      * method. */
     gst_segment_init (segment, seek_format);
     gst_segment_set_seek (segment, rate, seek_format, flags, cur_type, cur,
@@ -1753,8 +1849,7 @@ rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
   if (seek_format == GST_FORMAT_BYTES)
     return FALSE;
 
-  /* Let basesrc handle other formats for now. FIXME: Implement angle,
-   * chapter etc */
+  /* Let basesrc handle other formats for now. FIXME: Implement angle */
   return GST_BASE_SRC_CLASS (parent_class)->prepare_seek_segment (bsrc,
       event, segment);
 }
@@ -1766,6 +1861,9 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
   gboolean ret = FALSE;
 
   if (segment->format == rsndvd_format) {
+    /* The internal format has alread served its purpose of waking
+     * everything up and flushing, we just need to step to the next
+     * data block (below) so we know our new position */
     ret = TRUE;
   } else {
     /* FIXME: Handle other formats: Time, title, chapter, angle */
@@ -1773,13 +1871,41 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
     if (segment->format == GST_FORMAT_TIME) {
       ret = TRUE;
       src->discont = TRUE;
+    } else if (segment->format == title_format) {
+      gint titles;
+
+      g_mutex_lock (src->dvd_lock);
+      if (src->running &&
+          dvdnav_get_number_of_titles (src->dvdnav,
+              &titles) == DVDNAV_STATUS_OK) {
+        if (segment->start > 0 && segment->start <= titles) {
+          dvdnav_title_play (src->dvdnav, segment->start);
+          ret = TRUE;
+          src->discont = TRUE;
+        }
+      }
+      g_mutex_unlock (src->dvd_lock);
+    } else if (segment->format == chapter_format) {
+      g_mutex_lock (src->dvd_lock);
+      if (src->running) {
+        gint32 title, chapters, x;
+        if (dvdnav_current_title_info (src->dvdnav, &title, &x) ==
+            DVDNAV_STATUS_OK) {
+          if (dvdnav_get_number_of_parts (src->dvdnav, title, &chapters) ==
+              DVDNAV_STATUS_OK) {
+            if (segment->start > 0 && segment->start <= chapters) {
+              dvdnav_part_play (src->dvdnav, title, segment->start);
+              ret = TRUE;
+              src->discont = TRUE;
+            }
+          }
+        }
+      }
+      g_mutex_unlock (src->dvd_lock);
     }
   }
 
   if (ret) {
-    /* The internal format has served its purpose of waking everything
-     * up and flushing, now step to the next data block so we know our
-     * position */
     /* Force a highlight update */
     src->active_button = -1;
 

@@ -42,6 +42,8 @@ typedef struct _GstFluPSDemuxClass GstFluPSDemuxClass;
 
 #define GST_FLUPS_DEMUX_MAX_STREAMS	256
 #define GST_FLUPS_DEMUX_MAX_PSM		256
+#define MAX_DVD_AUDIO_STREAMS 8
+#define MAX_DVD_SUBPICTURE_STREAMS 32
 
 typedef enum {
   STATE_FLUPS_DEMUX_NEED_SYNC,
@@ -106,6 +108,7 @@ struct _GstFluPSDemux {
   /* Language codes event is stored when a dvd-lang-codes
    * custom event arrives from upstream */
   GstEvent * lang_codes;
+  gint       audio_stream_types[MAX_DVD_AUDIO_STREAMS];
 };
 
 struct _GstFluPSDemuxClass {

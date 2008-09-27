@@ -63,7 +63,9 @@ enum
 
 static gboolean rsn_stream_selector_is_active_sinkpad (RsnStreamSelector * sel,
     GstPad * pad);
-static GstPad *rsn_stream_selector_activate_sinkpad (RsnStreamSelector * sel,
+static GstPad *rsn_stream_selector_get_active (RsnStreamSelector * sel,
+    GstPad * pad);
+static void rsn_stream_selector_set_active (RsnStreamSelector * sel,
     GstPad * pad);
 static GstPad *rsn_stream_selector_get_linked_pad (GstPad * pad,
     gboolean strict);
@@ -261,7 +263,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
   selpad = GST_SELECTOR_PAD_CAST (pad);
 
   /* only forward if we are dealing with the active sinkpad */
-  active_sinkpad = rsn_stream_selector_activate_sinkpad (sel, pad);
+  active_sinkpad = rsn_stream_selector_get_active (sel, pad);
   forward = (active_sinkpad == pad);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -307,6 +309,18 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_UNLOCK (selpad);
       break;
     }
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      const GstStructure *structure = gst_event_get_structure (event);
+      if (structure != NULL &&
+          gst_structure_has_name (structure, "application/x-gst-dvd")) {
+        const char *type = gst_structure_get_string (structure, "event");
+        if (strcmp (type, "select-pad") == 0) {
+          rsn_stream_selector_set_active (sel, pad);
+          forward = FALSE;
+        }
+      }
+    }
     case GST_EVENT_EOS:
       selpad->eos = TRUE;
       break;
@@ -351,7 +365,7 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
 
   sel = RSN_STREAM_SELECTOR (gst_pad_get_parent (pad));
 
-  active_sinkpad = rsn_stream_selector_activate_sinkpad (sel, pad);
+  active_sinkpad = rsn_stream_selector_get_active (sel, pad);
 
   /* Fallback allocation for buffers from pads except the selected one */
   if (pad != active_sinkpad) {
@@ -397,7 +411,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   selpad = GST_SELECTOR_PAD_CAST (pad);
   seg = &selpad->segment;
 
-  active_sinkpad = rsn_stream_selector_activate_sinkpad (sel, pad);
+  active_sinkpad = rsn_stream_selector_get_active (sel, pad);
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -574,28 +588,10 @@ rsn_stream_selector_set_property (GObject * object, guint prop_id,
     case PROP_ACTIVE_PAD:
     {
       GstPad *pad = NULL;
-      GstPad **active_pad_p;
 
       pad = g_value_get_object (value);
+      rsn_stream_selector_set_active (sel, pad);
 
-      GST_OBJECT_LOCK (object);
-      if (pad != sel->active_sinkpad) {
-        RsnSelectorPad *selpad;
-
-        selpad = GST_SELECTOR_PAD_CAST (pad);
-        /* we can only activate pads that have data received */
-        if (selpad && !selpad->active) {
-          GST_DEBUG_OBJECT (sel, "No data received on pad %" GST_PTR_FORMAT,
-              pad);
-        } else {
-          active_pad_p = &sel->active_sinkpad;
-          gst_object_replace ((GstObject **) active_pad_p,
-              GST_OBJECT_CAST (pad));
-          GST_DEBUG_OBJECT (sel, "New active pad is %" GST_PTR_FORMAT,
-              sel->active_sinkpad);
-        }
-      }
-      GST_OBJECT_UNLOCK (object);
       break;
     }
     default:
@@ -694,7 +690,7 @@ rsn_stream_selector_is_active_sinkpad (RsnStreamSelector * sel, GstPad * pad)
 
 /* Get or create the active sinkpad */
 static GstPad *
-rsn_stream_selector_activate_sinkpad (RsnStreamSelector * sel, GstPad * pad)
+rsn_stream_selector_get_active (RsnStreamSelector * sel, GstPad * pad)
 {
   GstPad *active_sinkpad;
   RsnSelectorPad *selpad;
@@ -712,6 +708,29 @@ rsn_stream_selector_activate_sinkpad (RsnStreamSelector * sel, GstPad * pad)
   GST_OBJECT_UNLOCK (sel);
 
   return active_sinkpad;
+}
+
+static void
+rsn_stream_selector_set_active (RsnStreamSelector * sel, GstPad * pad)
+{
+  GstPad **active_pad_p;
+
+  GST_OBJECT_LOCK (GST_OBJECT_CAST (sel));
+  if (pad != sel->active_sinkpad) {
+    RsnSelectorPad *selpad;
+
+    selpad = GST_SELECTOR_PAD_CAST (pad);
+    /* we can only activate pads that have data received */
+    if (selpad && !selpad->active) {
+      GST_DEBUG_OBJECT (sel, "No data received on pad %" GST_PTR_FORMAT, pad);
+    } else {
+      active_pad_p = &sel->active_sinkpad;
+      gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
+      GST_DEBUG_OBJECT (sel, "New active pad is %" GST_PTR_FORMAT,
+          sel->active_sinkpad);
+    }
+  }
+  GST_OBJECT_UNLOCK (GST_OBJECT_CAST (sel));
 }
 
 static GList *

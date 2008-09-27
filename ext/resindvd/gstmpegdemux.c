@@ -28,9 +28,6 @@
 #include "gstmpegdefs.h"
 #include "gstmpegdemux.h"
 
-#define MAX_DVD_AUDIO_STREAMS 8
-#define MAX_DVD_SUBPICTURE_STREAMS 32
-
 #define SEGMENT_THRESHOLD (GST_SECOND/2)
 
 /* The SCR_MUNGE value is used to offset the scr_adjust value, to avoid
@@ -581,6 +578,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
   gint i;
   gchar cur_stream_name[32];
   GstFluPSStream *temp;
+  gboolean ret = TRUE;
 
   if (strcmp (type, "dvd-lang-codes") == 0) {
     GstEvent **p_ev;
@@ -623,6 +621,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
       g_snprintf (cur_stream_name, 32, "audio-%d-format", i);
       if (!gst_structure_get_int (structure, cur_stream_name, &stream_format))
         continue;
+
+      demux->audio_stream_types[i] = stream_format;
 
       switch (stream_format) {
         case 0x0:
@@ -678,10 +678,89 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
     gst_element_no_more_pads (GST_ELEMENT (demux));
     demux->need_no_more_pads = FALSE;
     gst_event_unref (event);
+  } else if (strcmp (type, "dvd-set-subpicture-track") == 0) {
+    gint stream_id;
+    gboolean forced_only;
+
+    gst_structure_get_boolean (structure, "forced-only", &forced_only);
+
+    if (gst_structure_get_int (structure, "physical-id", &stream_id)) {
+      temp = demux->streams[0x20 + stream_id];
+      if (temp != NULL && temp->pad != NULL) {
+        /* Send event to the selector to activate the desired pad */
+        GstStructure *s = gst_structure_new ("application/x-gst-dvd",
+            "event", G_TYPE_STRING, "select-pad", NULL);
+        GstEvent *sel_event =
+            gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+        gst_pad_push_event (temp->pad, sel_event);
+
+        gst_event_ref (event);
+        ret = gst_pad_push_event (temp->pad, event);
+        g_print ("Subpicture physical ID change to %d, forced %d\n", stream_id,
+            forced_only);
+      }
+    }
+    gst_event_unref (event);
+  } else if (strcmp (type, "dvd-set-audio-track") == 0) {
+    gint stream_id;
+
+    if (gst_structure_get_int (structure, "physical-id", &stream_id)) {
+      gint aud_type;
+
+      stream_id %= MAX_DVD_AUDIO_STREAMS;
+
+      aud_type = demux->audio_stream_types[stream_id % MAX_DVD_AUDIO_STREAMS];
+
+      switch (aud_type) {
+        case 0x0:
+          /* AC3 */
+          stream_id += 0x80;
+          temp = demux->streams[stream_id];
+          break;
+#if 0                           /* FIXME: Ignore non AC-3 requests until the decoder bin can handle them */
+        case 0x2:
+        case 0x3:
+          /* MPEG audio without and with extension stream are 
+           * treated the same */
+          stream_id = 0xC0 + i;
+          temp = demux->streams[stream_id];
+          break;
+        case 0x4:
+          /* LPCM */
+          stream_id = 0xA0 + i;
+          temp = demux->streams[stream_id];
+          break;
+        case 0x6:
+          /* DTS */
+          stream_id = 0x88 + i;
+          temp = demux->streams[stream_id];
+          break;
+        case 0x7:
+          /* FIXME: What range is SDDS? */
+          break;
+#endif
+        default:
+          temp = NULL;
+          break;
+      }
+      if (temp != NULL && temp->pad != NULL) {
+        /* Send event to the selector to activate the desired pad */
+        GstStructure *s = gst_structure_new ("application/x-gst-dvd",
+            "event", G_TYPE_STRING, "select-pad", NULL);
+        GstEvent *sel_event =
+            gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+        gst_pad_push_event (temp->pad, sel_event);
+        g_print ("Audio physical ID change to %d\n", stream_id);
+
+        gst_event_ref (event);
+        ret = gst_pad_push_event (temp->pad, event);
+      }
+    }
+    ret = gst_flups_demux_send_event (demux, event);
   } else {
-    gst_flups_demux_send_event (demux, event);
+    ret = gst_flups_demux_send_event (demux, event);
   }
-  return TRUE;
+  return ret;
 }
 
 static gboolean
