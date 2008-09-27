@@ -235,7 +235,6 @@ gst_a52dec_init (GstA52Dec * a52dec)
   a52dec->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_use_fixed_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
   a52dec->request_channels = A52_CHANNEL;
@@ -576,8 +575,12 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
    * accept - this allows a52dec to do downmixing in preference to a 
    * downstream element such as audioconvert.
    */
-  if (a52dec->request_channels == A52_CHANNEL) {
+  if (a52dec->request_channels != A52_CHANNEL) {
+    flags = a52dec->request_channels;
+  } else if (a52dec->flag_update) {
     GstCaps *caps;
+
+    a52dec->flag_update = FALSE;
 
     caps = gst_pad_get_allowed_caps (a52dec->srcpad);
     if (caps && gst_caps_get_size (caps) > 0) {
@@ -600,22 +603,22 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
           flags ? gst_a52dec_channels (flags, NULL) : 6);
       gst_structure_get_int (structure, "channels", &channels);
       if (channels <= 6)
-        a52dec->request_channels = a52_channels[channels - 1];
+        flags = a52_channels[channels - 1];
       else
-        a52dec->request_channels = a52_channels[5];
+        flags = a52_channels[5];
 
       gst_caps_unref (copy);
     } else if (flags)
-      a52dec->request_channels = a52dec->stream_channels;
+      flags = a52dec->stream_channels;
     else
-      a52dec->request_channels = A52_3F2R | A52_LFE;
+      flags = A52_3F2R | A52_LFE;
 
     if (caps)
       gst_caps_unref (caps);
+  } else {
+    flags = a52dec->using_channels;
   }
-
   /* process */
-  flags = a52dec->request_channels;     /* | A52_ADJUST_LEVEL; */
   a52dec->level = 1;
   if (a52_frame (a52dec->state, data, &flags, &a52dec->level, a52dec->bias)) {
     GST_WARNING ("a52_frame error");
@@ -812,6 +815,11 @@ gst_a52dec_chain_raw (GstPad * pad, GstBuffer * buf)
   flags = 0;
   while (size >= 7) {
     length = a52_syncinfo (data, &flags, &sample_rate, &bit_rate);
+
+    if (flags != a52dec->prev_flags)
+      a52dec->flag_update = TRUE;
+    a52dec->prev_flags = flags;
+
     if (length == 0) {
       /* no sync */
       data++;
@@ -873,6 +881,7 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
       a52dec->bias = 0;
       a52dec->time = 0;
       a52dec->sent_segment = FALSE;
+      a52dec->flag_update = TRUE;
       gst_segment_init (&a52dec->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

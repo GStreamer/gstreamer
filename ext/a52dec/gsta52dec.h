@@ -51,6 +51,9 @@ struct _GstA52Dec {
   gboolean       sent_segment;
   gboolean       discont;
 
+  gboolean       flag_update;
+  int            prev_flags;
+
   int            bit_rate;
   int            sample_rate;
   int            stream_channels;

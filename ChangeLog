@@ -1,3 +1,12 @@
+2008-09-27  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/a52dec/gsta52dec.h:
+	Fix channel re-negotiation on a change of the incoming stream.
+
+	Patch By: Thijs Vermeir <thijsvermeir@gmail.com>
+	Fixes: #551660
+
 2008-09-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_chain),
