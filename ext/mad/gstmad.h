@@ -85,8 +85,10 @@ struct _GstMad
   gint times_pending;
 
   gboolean caps_set;            /* used to keep track of whether to change/update caps */
+#ifndef GST_DISABLE_INDEX
   GstIndex *index;
   gint index_id;
+#endif
 
   gboolean check_for_xing;
   gboolean xing_found;
