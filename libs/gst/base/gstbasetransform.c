@@ -1130,19 +1130,25 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       gst_buffer_unref (in_buf);
 
     /* never discard the buffer from the prepare_buffer method */
-    discard = FALSE;
-  } else {
-    GST_DEBUG_OBJECT (trans, "doing alloc with caps %" GST_PTR_FORMAT, oldcaps);
-
-    ret = gst_pad_alloc_buffer (trans->srcpad,
-        GST_BUFFER_OFFSET (in_buf), outsize, oldcaps, out_buf);
+    if (*out_buf != NULL)
+      discard = FALSE;
   }
 
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
 
-  /* must always return a buffer */
-  g_assert (*out_buf != NULL);
+  if (*out_buf == NULL) {
+    GST_DEBUG_OBJECT (trans, "doing alloc with caps %" GST_PTR_FORMAT, oldcaps);
+
+    ret = gst_pad_alloc_buffer (trans->srcpad,
+        GST_BUFFER_OFFSET (in_buf), outsize, oldcaps, out_buf);
+    if (ret != GST_FLOW_OK)
+      goto alloc_failed;
+  }
+
+  /* must always have a buffer by now */
+  if (*out_buf == NULL)
+    goto no_buffer;
 
   /* check if we got different caps on this new output buffer */
   newcaps = GST_BUFFER_CAPS (*out_buf);
@@ -1272,6 +1278,12 @@ alloc_failed:
   {
     GST_WARNING_OBJECT (trans, "pad-alloc failed: %s", gst_flow_get_name (ret));
     return ret;
+  }
+no_buffer:
+  {
+    GST_ELEMENT_ERROR (trans, STREAM, NOT_IMPLEMENTED,
+        ("Sub-class failed to provide an output buffer"), (NULL));
+    return GST_FLOW_ERROR;
   }
 unknown_size:
   {

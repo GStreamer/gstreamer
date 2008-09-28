@@ -291,6 +291,8 @@ static GstFlowReturn
 gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
     gint size, GstCaps * caps, GstBuffer ** buf)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
+
   if (GST_BUFFER_CAPS (input) != NULL) {
     /* Output buffer already has caps */
     GST_DEBUG_OBJECT (trans,
@@ -332,11 +334,19 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
       if (GST_PAD_CAPS (trans->srcpad) == NULL)
         gst_pad_set_caps (trans->srcpad, out_caps);
     } else {
-      GST_DEBUG_OBJECT (trans, "Have unfixed output caps %" GST_PTR_FORMAT,
-          out_caps);
+      gchar *caps_str = gst_caps_to_string (out_caps);
+
+      GST_DEBUG_OBJECT (trans, "Cannot choose caps. Have unfixed output caps %"
+          GST_PTR_FORMAT, out_caps);
       gst_caps_unref (out_caps);
+
+      ret = GST_FLOW_ERROR;
+      GST_ELEMENT_ERROR (trans, STREAM, FORMAT,
+          ("Filter caps do not completely specify the output format"),
+          ("Output caps are unfixed: %s", caps_str));
+      g_free (caps_str);
     }
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }

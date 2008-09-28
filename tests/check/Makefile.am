@@ -58,6 +58,7 @@ REGISTRY_CHECKS =				\
 	gst/gsturi  				\
 	gst/gstutils				\
 	generic/sinks				\
+	elements/capsfilter			\
 	elements/fakesink			\
 	elements/fakesrc			\
 	elements/fdsrc			  	\

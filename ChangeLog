@@ -1,3 +1,15 @@
+2008-09-28  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	* plugins/elements/gstcapsfilter.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/capsfilter.c:
+	Fix assertion in basetransform when the subclass chooses not to
+	allocate a buffer in prepare_buffer(), and make capsfilter error out
+	cleanly if requested to apply caps that don't completely specify the
+	buffer. Fixes #551509
+
 2008-09-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:
