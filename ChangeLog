@@ -2,6 +2,16 @@
 
 	Patch by: Sameer Naik <sameer dot subscriptions at damagehead dot com>
 
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_class_init),
+	(handle_slice), (gst_mpeg2dec_sink_event),
+	(gst_mpeg2dec_src_event):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Fix compilation with --disable-index. Fixes bug #554150.
+
+2008-09-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Sameer Naik <sameer dot subscriptions at damagehead dot com>
+
 	* ext/mad/gstmad.c: (gst_mad_class_init), (gst_mad_dispose),
 	(gst_mad_src_event), (gst_mad_chain):
 	* ext/mad/gstmad.h:

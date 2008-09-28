@@ -107,8 +107,10 @@ struct _GstMpeg2dec {
   gint           fps_d;
   gboolean       need_sequence;
 
+#ifndef GST_DISABLE_INDEX
   GstIndex      *index;
   gint           index_id;
+#endif
   
   gint           error_count;
   gboolean       can_allocate_aligned;

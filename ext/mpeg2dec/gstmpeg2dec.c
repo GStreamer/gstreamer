@@ -95,8 +95,11 @@ static void gst_mpeg2dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_mpeg2dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+#ifndef GST_DISABLE_INDEX
 static void gst_mpeg2dec_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
+#endif
 
 static gboolean gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event);
 static const GstQueryType *gst_mpeg2dec_get_src_query_types (GstPad * pad);
@@ -193,8 +196,10 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
   gobject_class->finalize = gst_mpeg2dec_finalize;
 
   gstelement_class->change_state = gst_mpeg2dec_change_state;
+#ifndef GST_DISABLE_INDEX
   gstelement_class->set_index = gst_mpeg2dec_set_index;
   gstelement_class->get_index = gst_mpeg2dec_get_index;
+#endif
 }
 
 static void
@@ -281,6 +286,7 @@ gst_mpeg2dec_qos_reset (GstMpeg2dec * mpeg2dec)
   GST_OBJECT_UNLOCK (mpeg2dec);
 }
 
+#ifndef GST_DISABLE_INDEX
 static void
 gst_mpeg2dec_set_index (GstElement * element, GstIndex * index)
 {
@@ -298,6 +304,7 @@ gst_mpeg2dec_get_index (GstElement * element)
 
   return mpeg2dec->index;
 }
+#endif
 
 /* see gst-plugins/gst/games/gstvideoimage.c, paint_setup_I420() */
 #define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
@@ -917,12 +924,14 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
       picture->nb_fields, GST_BUFFER_OFFSET (outbuf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
 
+#ifndef GST_DISABLE_INDEX
   if (mpeg2dec->index) {
     gst_index_add_association (mpeg2dec->index, mpeg2dec->index_id,
         (key_frame ? GST_ASSOCIATION_FLAG_KEY_UNIT : 0),
         GST_FORMAT_BYTES, GST_BUFFER_OFFSET (outbuf),
         GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf), 0);
   }
+#endif
 
   if (picture->flags & PIC_FLAG_SKIP)
     goto skip;
@@ -1261,9 +1270,11 @@ gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
+#ifndef GST_DISABLE_INDEX
       if (mpeg2dec->index && mpeg2dec->closed) {
         gst_index_commit (mpeg2dec->index, mpeg2dec->index_id);
       }
+#endif
       ret = gst_pad_push_event (mpeg2dec->srcpad, event);
       break;
     default:
@@ -1526,6 +1537,7 @@ gst_mpeg2dec_get_event_masks (GstPad * pad)
 }
 #endif
 
+#ifndef GST_DISABLE_INDEX
 static gboolean
 index_seek (GstPad * pad, GstEvent * event)
 {
@@ -1592,7 +1604,7 @@ index_seek (GstPad * pad, GstEvent * event)
   }
   return FALSE;
 }
-
+#endif
 
 static gboolean
 normal_seek (GstPad * pad, GstEvent * event)
@@ -1678,9 +1690,11 @@ gst_mpeg2dec_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:{
       gst_event_ref (event);
       if (!(res = gst_pad_push_event (mpeg2dec->sinkpad, event))) {
+#ifndef GST_DISABLE_INDEX
         if (mpeg2dec->index)
           res = index_seek (pad, event);
         else
+#endif
           res = normal_seek (pad, event);
       }
       gst_event_unref (event);
