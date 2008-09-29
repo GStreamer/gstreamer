@@ -424,7 +424,7 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
     padpriv->have_base = TRUE;
   }
 
-  caps = gst_caps_make_writable (caps);
+  caps = gst_caps_copy (caps);
 
   gst_caps_set_simple (caps,
       "clock-base", G_TYPE_UINT, rtp_mux->ts_base,
@@ -434,6 +434,7 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
   GST_DEBUG_OBJECT (rtp_mux,
       "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
   ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
+  gst_caps_unref (caps);
 
  out:
   gst_object_unref (rtp_mux);
