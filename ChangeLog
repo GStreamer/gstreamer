@@ -1,3 +1,62 @@
+2008-09-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/flacparse/Makefile.am:
+	* gst/flacparse/gstbaseparse.c: (gst_base_parse_get_type),
+	(gst_base_parse_base_init), (gst_base_parse_base_finalize),
+	(gst_base_parse_finalize), (gst_base_parse_class_init),
+	(gst_base_parse_init), (gst_base_parse_check_frame),
+	(gst_base_parse_parse_frame), (gst_base_parse_bytepos_to_time),
+	(gst_base_parse_sink_event), (gst_base_parse_sink_eventfunc),
+	(gst_base_parse_src_event), (gst_base_parse_src_eventfunc),
+	(gst_base_parse_is_seekable), (gst_base_parse_push_buffer),
+	(gst_base_parse_handle_and_push_buffer), (gst_base_parse_drain),
+	(gst_base_parse_chain), (gst_base_parse_pull_range),
+	(gst_base_parse_loop), (gst_base_parse_sink_activate),
+	(gst_base_parse_activate), (gst_base_parse_sink_activate_push),
+	(gst_base_parse_sink_activate_pull), (gst_base_parse_set_duration),
+	(gst_base_parse_set_min_frame_size),
+	(gst_base_parse_get_querytypes), (gst_base_parse_query),
+	(gst_base_parse_handle_seek), (gst_base_parse_sink_setcaps):
+	* gst/flacparse/gstbaseparse.h:
+	* gst/flacparse/gstbitreader.c: (gst_bit_reader_new),
+	(gst_bit_reader_new_from_buffer), (gst_bit_reader_free),
+	(gst_bit_reader_init), (gst_bit_reader_init_from_buffer),
+	(gst_bit_reader_set_pos), (gst_bit_reader_get_pos),
+	(gst_bit_reader_get_remaining), (gst_bit_reader_skip),
+	(gst_bit_reader_skip_to_byte):
+	* gst/flacparse/gstbitreader.h:
+	* gst/flacparse/gstbytereader.c: (GDOUBLE_SWAP_LE_BE),
+	(GFLOAT_SWAP_LE_BE), (gst_byte_reader_new),
+	(gst_byte_reader_new_from_buffer), (gst_byte_reader_free),
+	(gst_byte_reader_init), (gst_byte_reader_init_from_buffer),
+	(gst_byte_reader_set_pos), (gst_byte_reader_get_pos),
+	(gst_byte_reader_get_remaining), (gst_byte_reader_skip),
+	(gst_byte_reader_get_uint8), (gst_byte_reader_get_int8),
+	(gst_byte_reader_peek_uint8), (gst_byte_reader_peek_int8),
+	(gst_byte_reader_get_uint24_le), (gst_byte_reader_get_uint24_be),
+	(gst_byte_reader_get_int24_le), (gst_byte_reader_get_int24_be),
+	(gst_byte_reader_peek_uint24_le), (gst_byte_reader_peek_uint24_be),
+	(gst_byte_reader_peek_int24_le), (gst_byte_reader_peek_int24_be):
+	* gst/flacparse/gstbytereader.h:
+	* gst/flacparse/gstflac.c: (plugin_init):
+	* gst/flacparse/gstflacparse.c: (gst_flac_parse_base_init),
+	(gst_flac_parse_class_init), (gst_flac_parse_init),
+	(gst_flac_parse_finalize), (gst_flac_parse_start),
+	(gst_flac_parse_stop), (gst_flac_parse_get_frame_size),
+	(gst_flac_parse_check_valid_frame),
+	(gst_flac_parse_handle_streaminfo),
+	(gst_flac_parse_handle_vorbiscomment),
+	(gst_flac_parse_handle_picture), (_value_array_append_buffer),
+	(gst_flac_parse_handle_headers), (gst_flac_parse_generate_headers),
+	(gst_flac_parse_parse_frame):
+	* gst/flacparse/gstflacparse.h:
+	Add FLAC parser, based on GstBaseParse. Also add the bit and byte reader
+	that will be added to libgstbase later.
+
+	The FLAC parser is currently not 100% bug free and fails to get the
+	correct frame size for some frames in some streams.
+
 2008-09-27  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/gstmpegdemux.c:
