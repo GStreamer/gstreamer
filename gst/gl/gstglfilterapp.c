@@ -18,6 +18,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glfilterapp
+ *
+ * The resize and redraw callbacks can be set from a client code.
+ *
+ * <refsect2>
+ * <title>CLient callbacks</title>
+ * <para>
+ * The graphic scene can be written from a client code through the 
+ * two glfilterapp properties.
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Examples</title>
+ * see gst-plugins-gl/tests/examples/generic/recordgraphic
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

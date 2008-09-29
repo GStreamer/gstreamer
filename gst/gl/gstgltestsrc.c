@@ -25,16 +25,16 @@
  *
  * <refsect2>
  * <para>
- * The gltestsrc element is used to produce test video data in a wide variaty
- * of formats. The video test data produced can be controlled with the "pattern"
+ * The gltestsrc element is used to produce test video texture.
+ * The video test produced can be controlled with the "pattern"
  * property.
  * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v gltestsrc pattern=snow ! ximagesink
+ * gst-launch -v gltestsrc pattern=smpte ! glimagesink
  * </programlisting>
- * Shows random noise in an X window.
+ * Shows original SMPTE color bars in a window.
  * </para>
  * </refsect2>
  */

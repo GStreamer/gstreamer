@@ -20,6 +20,65 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glimagesink
+ *
+ * glimagesink renders video frames to a drawable on a local or remote
+ * display using OpenGL. This element can receive a Window ID from the 
+ * application through the XOverlay interface and will then render video 
+ * frames in this drawable.
+ * If no Window ID was provided by the application, the element will 
+ * create its own internal window and render into it.
+ *
+ * <refsect2>
+ * <title>Scaling</title>
+ * <para>
+ * Depends on the driver, OpenGL handles hardware accelerated
+ * scaling of video frames. This means that the element will just accept
+ * incoming video frames no matter their geometry and will then put them to the
+ * drawable scaling them on the fly. Using the #GstXvImageSink:force-aspect-ratio
+ * property it is possible to enforce scaling with a constant aspect ratio,
+ * which means drawing black borders around the video frame.
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Events</title>
+ * <para>
+ * Through the gl thread, glimagesink handle some events coming from the drawable
+ * to manage its appearance even when the data is not flowing (GST_STATE_PAUSED).
+ * That means that even when the element is paused, it will receive expose events 
+ * from the drawable and draw the latest frame with correct borders/aspect-ratio.
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-rgb" ! glimagesink
+ * ]| A pipeline to test hardware scaling.
+ * No special opengl extension is used in this pipeline, that's why it should work
+ * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-yuv, format=(fourcc)I420" ! glimagesink
+ * ]| A pipeline to test hardware scaling and hardware colorspace conversion.
+ * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1), 
+ * the 4 following format YUY2, UYVY, I420, YV12 and AYUV are converted to RGB32
+ * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
+ * If your driver does not support GLSL but supports MESA_YCbCr extension then
+ * the you can use YUY2 and UYVY. In this case the colorspace conversion is automatically
+ * made when loading the texture and therefore no framebuffer is used.
+ * |[
+ * gst-launch -v gltestsrc ! glimagesink
+ * ]| A pipeline 100% OpenGL.
+ * No special opengl extension is used in this pipeline, that's why it should work
+ * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
+ * |[
+ * gst-plugins-gl/tests/examples/generic/cube
+ * ]| The graphic FPS scene can be greater than the input video FPS.
+ * The graphic scene can be written from a client code through the 
+ * two glfilterapp properties.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

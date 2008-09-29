@@ -18,6 +18,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glfiltercube
+ *
+ * The resize and redraw callbacks can be set from a client code.
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v videotestsrc ! glupload ! glfiltercube ! glimagesink
+ * ]| A pipeline to mpa textures on the 6 cube faces..
+ * FBO is required.
+ * |[
+ * gst-launch -v videotestsrc ! glupload ! glfiltercube ! video/x-raw-gl, width=640, height=480 ! glimagesink
+ * ]| Resize scene after drawing the cube.
+ * The scene size is greater than the input video size.
+  |[
+ * gst-launch -v videotestsrc ! glupload ! video/x-raw-gl, width=640, height=480  ! glfiltercube ! glimagesink
+ * ]| Resize scene before drawing the cube.
+ * The scene size is greater than the input video size.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

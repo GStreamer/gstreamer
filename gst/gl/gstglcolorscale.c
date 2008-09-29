@@ -18,6 +18,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glcolorscale
+ *
+ * video frame scaling and colorspace conversion.
+ *
+ * <refsect2>
+ * <title>Scaling and Color space conversion</title>
+ * <para>
+ * Equivalent to glupload ! gldownload. 
+ * </para>
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-yuv" ! glcolorscale ! ximagesink
+ * ]| A pipeline to test colorspace conversion.
+ * FBO is required.
+  |[
+ * gst-launch -v videotestsrc ! "video/x-raw-yuv, width=640, height=480, format=(fourcc)AYUV" ! glcolorscale ! \
+ *   "video/x-raw-yuv, width=320, height=240, format=(fourcc)YV12" ! autovideosink
+ * ]| A pipeline to test hardware scaling and colorspace conversion.
+ * FBO and GLSL are required.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

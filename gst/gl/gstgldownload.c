@@ -19,6 +19,45 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-gldownload
+ *
+ * download opengl textures into video frames.
+ *
+ * <refsect2>
+ * <title>Color space conversion</title>
+ * <para>
+ * When needed, the color space conversion is made in a fragment shader using 
+ * one frame buffer object instance.
+ * </para>
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-rgb" ! glupload ! gldownload ! \
+ *   "video/x-raw-rgb" ! ximagesink
+ * ]| A pipeline to test downloading.
+ * No special opengl extension is used in this pipeline, that's why it should work
+ * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
+  |[
+ * gst-launch -v videotestsrc ! "video/x-raw-rgb, width=640, height=480" ! glupload ! gldownload ! \
+ *   "video/x-raw-rgb, width=320, height=240" ! ximagesink
+ * ]| A pipeline to test hardware scaling.
+ * Frame buffer extension is required. Inded one FBO is used bettween glupload and gldownload,
+ * because the texture needs to be resized.
+ * |[
+ * gst-launch -v gltestsrc ! gldownload ! xvimagesink
+ * ]| A pipeline to test hardware colorspace conversion.
+ * Your driver must support GLSL (OpenGL Shading Language needs OpenGL >= 2.1). 
+ * Texture RGB32T is converted to one of the 4 following format YUY2, UYVY, I420, YV12 and AYUV,
+ * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
+ * MESA >= 7.1 supports GLSL but it's made in software.
+ * |[
+ * gst-launch -v videotestsrc ! glupload ! gldownload ! "video/x-raw-yuv, format=(fourcc)YUY2" ! glimagesink
+ * ]| A pipeline to test hardware colorspace conversion
+ * FBO and GLSL are required. 
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

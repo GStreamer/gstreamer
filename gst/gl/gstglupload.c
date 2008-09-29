@@ -19,6 +19,51 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glupload
+ *
+ * upload video frames video frames into opengl textures.
+ *
+ * <refsect2>
+ * <title>Color space conversion</title>
+ * <para>
+ * Depends on the driver and when needed, the color space conversion is made 
+ * in a fragment shader using one frame buffer object instance, or using
+ * mesa ycbcr .
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-rgb" ! glupload ! glimagesink
+ * ]| A pipeline to test hardware scaling.
+ * No special opengl extension is used in this pipeline, that's why it should work
+ * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-yuv, format=(fourcc)I420" ! glupload ! glimagesink
+ * ]| A pipeline to test hardware scaling and hardware colorspace conversion.
+ * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1), 
+ * the 4 following format YUY2, UYVY, I420, YV12 and AYUV are converted to RGB32
+ * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
+ * If your driver does not support GLSL but supports MESA_YCbCr extension then
+ * the you can use YUY2 and UYVY. In this case the colorspace conversion is automatically
+ * made when loading the texture and therefore no framebuffer is used.
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-rgb, width=320, height=240" ! glupload ! \
+ *    "video/x-raw-gl, width=640, height=480" ! glimagesink
+ * ]| A pipeline to test hardware scaling.
+ * Frame buffer extension is required. Inded one FBO is used bettween glupload and glimagesink,
+ * because the texture needs to be resized.
+ * |[
+ * gst-launch -v videotestsrc ! "video/x-raw-yuv, width=320, height=240" ! glupload ! \
+ *    "video/x-raw-gl, width=640, height=480" ! glimagesink
+ * ]| A pipeline to test hardware scaling.
+ * Frame buffer extension is required. Inded one FBO is used bettween glupload and glimagesink,
+ * because the texture needs to be resized. Depends on your driver the color space conversion 
+ * is made in a fragment shader using one frame buffer object instance, or using mesa ycbcr .
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -96,9 +96,6 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-
   for (i = 0; i < 7; i++) {
     glColor4f (vts_colors[i].R * (1 / 255.0f), vts_colors[i].G * (1 / 255.0f),
         vts_colors[i].B * (1 / 255.0f), 1.0f);
@@ -173,7 +170,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
     glEnd ();
   }
 
-  glColor4f (0.5, 0.5, 0.5, 1.0);
+  glColor4f (1.0, 1.0, 1.0, 1.0);
   glBegin (GL_QUADS);
   glVertex3f (-1.0 + 2.0 * (0.75), -1.0 + 2.0 * 1, 0);
   glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * 1, 0);

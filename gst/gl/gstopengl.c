@@ -21,6 +21,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:plugin-opengl
+ *
+ * Cross-platform OpenGL plugin.
+ * <refsect2>
+ * <title>Debugging</title>
+ * </refsect2>
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch-0.10 --gst-debug=gldisplay:3 videotestsrc ! glimagesink
+ * ]| A debugging pipeline.
+  |[
+ * GST_GL_SHADER_DEBUG=1 gst-launch-0.10 videotestsrc ! glimagesink
+ * ]| A debugging pipelines related to shaders.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

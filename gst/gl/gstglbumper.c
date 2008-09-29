@@ -19,6 +19,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glbumper
+ *
+ * Bump mapping using the normal method.
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v videotestsrc ! glupload ! glbumper location=normalmap.bmp ! glimagesink
+ * ]| A pipeline to test normal mapping.
+ * FBO and GLSL are required.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
