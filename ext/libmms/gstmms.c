@@ -418,7 +418,7 @@ plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "mmssrc", GST_RANK_NONE, GST_TYPE_MMS);
 }
 
-static guint
+static GstURIType
 gst_mms_uri_get_type (void)
 {
   return GST_URI_SRC;

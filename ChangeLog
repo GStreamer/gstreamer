@@ -1,3 +1,8 @@
+2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* ext/libmms/gstmms.c (plugin_init):
+	Fix return type of the GstURIHandler::get_type() implementation.
+
 2008-09-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
