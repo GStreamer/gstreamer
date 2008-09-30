@@ -1,6 +1,18 @@
 2008-09-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/flacparse/gstbaseparse.c: (gst_base_parse_class_init),
+	(gst_base_parse_push_buffer),
+	(gst_base_parse_update_upstream_durations),
+	(gst_base_parse_convert), (gst_base_parse_frame_in_segment):
+	* gst/flacparse/gstbaseparse.h:
+	Provide a vfunc for the subclass to decide whether a frame is inside
+	the segment or not and add a default implementation.
+
+	Fix approximate bitrate calculations.
+
+2008-09-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/flacparse/gstbaseparse.c: (gst_base_parse_class_init),
 	(gst_base_parse_init), (gst_base_parse_push_buffer),
 	(gst_base_parse_update_upstream_durations), (gst_base_parse_chain),
 	(gst_base_parse_loop), (gst_base_parse_activate),

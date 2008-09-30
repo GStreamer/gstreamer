@@ -151,6 +151,8 @@ struct _GstBaseParse {
  *                  set the buffer timestamp, duration, caps and possibly
  *                  other necessary metadata. This is called with srcpad's
  *                  STREAM_LOCK held.
+ * @frame_in_segment: Optional. Check if the given frame is contained in the
+ *                    given segment.
  * @convert:        Optional.
  *                  Convert between formats.
  * @find_frame:     Optional.
@@ -196,6 +198,10 @@ struct _GstBaseParseClass {
 
   GstFlowReturn (*parse_frame)        (GstBaseParse *parse,
                                        GstBuffer *buffer);
+
+  gboolean      (*frame_in_segment)   (GstBaseParse *parse,
+                                       GstBuffer *buffer,
+                                       GstSegment *segment);
 
   gboolean      (*convert)            (GstBaseParse * parse,
                                        GstFormat src_format,
