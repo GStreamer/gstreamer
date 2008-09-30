@@ -217,14 +217,14 @@ HRESULT AudioFakeSink::DoRenderSample(IMediaSample *pMediaSample)
         MIN ((unsigned int)size, GST_BUFFER_SIZE (out_buf)));
 
     /* we have to remove some heading samples */
-    if (clip_start > buf_start) {
+    if ((GstClockTime) clip_start > buf_start) {
       start_offset = (guint)gst_util_uint64_scale_int (clip_start - buf_start,
           mDec->rate, GST_SECOND) * mDec->depth / 8 * mDec->channels;
     }
     else
       start_offset = 0;
     /* we have to remove some trailing samples */
-    if (clip_stop < buf_stop) {
+    if ((GstClockTime) clip_stop < buf_stop) {
       stop_offset = (guint)gst_util_uint64_scale_int (buf_stop - clip_stop,
           mDec->rate, GST_SECOND) * mDec->depth / 8 * mDec->channels;
     }

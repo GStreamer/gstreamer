@@ -1,5 +1,11 @@
 2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* sys/dshowdecwrapper/gstdshowaudiodec.cpp
+	  (AudioFakeSink.DoRenderSample):
+	Fix a couple of signed/unsigned comparison warnings.
+
+2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	* sys/dshowdecwrapper/gstdshowaudiodec.h (AudioFakeSink.AudioFakeSink):
 	* sys/dshowdecwrapper/gstdshowvideodec.h (VideoFakeSink.VideoFakeSink):
 	Use the _T() macro to support both Unicode and MBCS.
