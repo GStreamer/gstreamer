@@ -1,3 +1,11 @@
+2008-09-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c: (on_new_ssrc), (on_ssrc_collision),
+	(on_ssrc_validated), (on_ssrc_active), (on_ssrc_sdes),
+	(on_bye_ssrc), (on_bye_timeout), (on_timeout), (on_sender_timeout):
+	Ref the rtpsource object before we release the session lock when we emit
+	the signals.
+
 2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* sys/Makefile.am:
