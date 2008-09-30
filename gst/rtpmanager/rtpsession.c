@@ -462,77 +462,95 @@ rtp_session_get_property (GObject * object, guint prop_id,
 static void
 on_new_ssrc (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_NEW_SSRC], 0, source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_ssrc_collision (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_COLLISION], 0,
       source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_ssrc_validated (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_VALIDATED], 0,
       source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_ssrc_active (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE], 0, source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_ssrc_sdes (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   GST_DEBUG ("SDES changed for SSRC %08x", source->ssrc);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_SDES], 0, source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_bye_ssrc (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_BYE_SSRC], 0, source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_bye_timeout (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_BYE_TIMEOUT], 0, source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_timeout (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_TIMEOUT], 0, source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 static void
 on_sender_timeout (RTPSession * sess, RTPSource * source)
 {
+  g_object_ref (source);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT], 0,
       source);
   RTP_SESSION_LOCK (sess);
+  g_object_unref (source);
 }
 
 /**
