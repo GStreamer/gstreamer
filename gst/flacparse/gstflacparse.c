@@ -597,7 +597,7 @@ need_more_data:
     if (upstream_len != -1 ||
         (gst_pad_query_peer_duration (GST_BASE_PARSE_SINK_PAD (GST_BASE_PARSE
                     (flacparse)), &fmt, &upstream_len)
-            && fmt == GST_FORMAT_BYTES)) {
+            && fmt == GST_FORMAT_BYTES && upstream_len != -1)) {
       flacparse->upstream_length = upstream_len;
       upstream_len -= GST_BUFFER_OFFSET (buffer);
 
@@ -635,14 +635,15 @@ need_streaminfo:
     return -2;
   }
 
-error:
-  {
-    GST_WARNING_OBJECT (flacparse, "Invalid frame");
-    return -1;
-  }
 eos:
   {
     GST_WARNING_OBJECT (flacparse, "EOS");
+    return -1;
+  }
+
+error:
+  {
+    GST_WARNING_OBJECT (flacparse, "Invalid frame");
     return -1;
   }
 }

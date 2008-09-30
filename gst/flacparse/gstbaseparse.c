@@ -163,7 +163,6 @@
  *  - In push mode provide a queue of adapter-"queued" buffers for upstream
  *    buffer metadata
  *  - Handle upstream timestamps
- *  - Bitrate tracking => inaccurate seeking, inaccurate duration calculation
  *  - Let subclass decide if frames outside the segment should be dropped
  */
 
@@ -211,8 +210,12 @@ struct _GstBaseParsePrivate
 
   GstAdapter *adapter;
 
-  guint64 bitrate_sum;
+  guint64 upstream_size;
+  guint64 upstream_duration;
+
   guint64 avg_bitrate;
+  guint64 estimated_size;
+  guint64 estimated_duration;
 };
 
 struct _GstBaseParseClassPrivate
@@ -271,12 +274,6 @@ static const GstQueryType *gst_base_parse_get_querytypes (GstPad * pad);
 static GstFlowReturn gst_base_parse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_parse_loop (GstPad * pad);
 
-static gboolean gst_base_parse_check_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize);
-
-static gboolean gst_base_parse_parse_frame (GstBaseParse * parse,
-    GstBuffer * buffer);
-
 static gboolean gst_base_parse_sink_eventfunc (GstBaseParse * parse,
     GstEvent * event);
 
@@ -284,6 +281,10 @@ static gboolean gst_base_parse_src_eventfunc (GstBaseParse * parse,
     GstEvent * event);
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
+
+static gboolean
+gst_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value);
 
 static void gst_base_parse_drain (GstBaseParse * parse);
 
@@ -351,11 +352,12 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_parse_finalize);
 
   /* Default handlers */
-  klass->check_valid_frame = gst_base_parse_check_frame;
-  klass->parse_frame = gst_base_parse_parse_frame;
+  klass->check_valid_frame = NULL;
+  klass->parse_frame = NULL;
   klass->event = gst_base_parse_sink_eventfunc;
   klass->src_event = gst_base_parse_src_eventfunc;
   klass->is_seekable = gst_base_parse_is_seekable;
+  klass->convert = gst_base_parse_convert;
 }
 
 static void
@@ -411,49 +413,13 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->priv->discont = FALSE;
   parse->priv->flushing = FALSE;
   parse->priv->offset = 0;
+  parse->priv->avg_bitrate = 0;
+  parse->priv->upstream_duration = -1;
+  parse->priv->upstream_size = -1;
+  parse->priv->estimated_size = -1;
+  parse->priv->estimated_duration = -1;
   GST_DEBUG_OBJECT (parse, "init ok");
 }
-
-
-
-/**
- * gst_base_parse_check_frame:
- * @parse: #GstBaseParse.
- * @buffer: GstBuffer.
- * @framesize: This will be set to tell the found frame size in bytes.
- * @skipsize: Output parameter that tells how much data needs to be skipped
- *            in order to find the following frame header.
- *
- * Default callback for check_valid_frame.
- * 
- * Returns: Always TRUE.
- */
-static gboolean
-gst_base_parse_check_frame (GstBaseParse * parse,
-    GstBuffer * buffer, guint * framesize, gint * skipsize)
-{
-  *framesize = GST_BUFFER_SIZE (buffer);
-  *skipsize = 0;
-  return TRUE;
-}
-
-
-/**
- * gst_base_parse_parse_frame:
- * @parse: #GstBaseParse.
- * @buffer: #GstBuffer.
- *
- * Default callback for parse_frame.
- */
-static gboolean
-gst_base_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
-{
-  /* FIXME: Could we even _try_ to do something clever here? */
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  return TRUE;
-}
-
 
 /**
  * gst_base_parse_bytepos_to_time:
@@ -797,6 +763,42 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   if (ret == GST_FLOW_OK && last_stop != GST_CLOCK_TIME_NONE)
     gst_segment_set_last_stop (&parse->segment, GST_FORMAT_TIME, last_stop);
 
+  if (parse->priv->upstream_size && (!parse->priv->upstream_duration
+          && parse->priv->duration == -1)) {
+    parse->priv->avg_bitrate =
+        gst_util_uint64_scale (parse->priv->offset, 8,
+        parse->segment.last_stop);
+    GST_DEBUG_OBJECT (parse, "Approximate average bitrate: %" G_GUINT64_FORMAT,
+        parse->priv->avg_bitrate);
+    parse->priv->estimated_duration =
+        gst_util_uint64_scale (parse->priv->avg_bitrate,
+        parse->priv->upstream_size, 8);
+    GST_DEBUG_OBJECT (parse, "Estimated duration: %" GST_TIME_FORMAT,
+        parse->priv->estimated_duration);
+  } else if (!parse->priv->upstream_size && parse->priv->upstream_duration) {
+    parse->priv->avg_bitrate =
+        gst_util_uint64_scale (parse->priv->offset, 8,
+        parse->segment.last_stop);
+    GST_DEBUG_OBJECT (parse, "Approximate average bitrate: %" G_GUINT64_FORMAT,
+        parse->priv->avg_bitrate);
+    parse->priv->estimated_size =
+        gst_util_uint64_scale (parse->priv->upstream_duration,
+        parse->priv->avg_bitrate, 8);
+    GST_DEBUG_OBJECT (parse, "Estimated size: %" G_GUINT64_FORMAT,
+        parse->priv->estimated_size);
+  } else if (!parse->priv->upstream_size && parse->priv->duration != -1) {
+    parse->priv->avg_bitrate =
+        gst_util_uint64_scale (parse->priv->offset, 8,
+        parse->segment.last_stop);
+    GST_DEBUG_OBJECT (parse, "Approximate average bitrate: %" G_GUINT64_FORMAT,
+        parse->priv->avg_bitrate);
+    parse->priv->estimated_size =
+        gst_util_uint64_scale (parse->priv->duration, parse->priv->avg_bitrate,
+        8);
+    GST_DEBUG_OBJECT (parse, "Estimated size: %" G_GUINT64_FORMAT,
+        parse->priv->estimated_size);
+  }
+
   return ret;
 }
 
@@ -870,6 +872,58 @@ gst_base_parse_drain (GstBaseParse * parse)
   }
 }
 
+static void
+gst_base_parse_update_upstream_durations (GstBaseParse * parse)
+{
+  /* Get/update upstream size and duration if possible */
+  if (parse->priv->upstream_duration == -1 ||
+      (parse->priv->upstream_duration > 0 &&
+          parse->segment.last_stop > parse->priv->upstream_duration)) {
+    GstFormat fmt = GST_FORMAT_TIME;
+    gint64 duration;
+
+    if (gst_pad_query_peer_duration (parse->sinkpad, &fmt, &duration) &&
+        fmt == GST_FORMAT_TIME && duration != -1) {
+      parse->priv->upstream_duration = duration;
+      GST_DEBUG_OBJECT (parse, "Upstream duration: %" GST_TIME_FORMAT,
+          parse->priv->upstream_duration);
+    } else {
+      GST_DEBUG_OBJECT (parse, "Failed to get upstream duration");
+      parse->priv->upstream_duration = 0;
+    }
+  }
+
+  if (parse->priv->upstream_size == -1 ||
+      (parse->priv->upstream_size > 0
+          && parse->priv->offset > parse->priv->upstream_size)) {
+    GstFormat fmt = GST_FORMAT_BYTES;
+    gint64 duration;
+
+    if (gst_pad_query_peer_duration (parse->sinkpad, &fmt, &duration) &&
+        fmt == GST_FORMAT_BYTES && duration != -1) {
+      parse->priv->upstream_size = duration;
+      GST_DEBUG_OBJECT (parse, "Upstream size: %" G_GUINT64_FORMAT " bytes",
+          parse->priv->upstream_size);
+    } else {
+      GST_DEBUG_OBJECT (parse, "Failed to get upstream size in bytes");
+      parse->priv->upstream_size = 0;
+    }
+  }
+
+  if (parse->priv->upstream_size && parse->priv->upstream_duration) {
+    parse->priv->avg_bitrate =
+        gst_util_uint64_scale (parse->priv->upstream_duration, 8,
+        parse->priv->upstream_size);
+    GST_DEBUG_OBJECT (parse, "Approximate average bitrate: %" G_GUINT64_FORMAT,
+        parse->priv->avg_bitrate);
+  } else if (parse->priv->upstream_size && parse->priv->duration != -1) {
+    parse->priv->avg_bitrate =
+        gst_util_uint64_scale (parse->priv->duration, 8,
+        parse->priv->upstream_size);
+    GST_DEBUG_OBJECT (parse, "Approximate average bitrate: %" G_GUINT64_FORMAT,
+        parse->priv->avg_bitrate);
+  }
+}
 
 /**
  * gst_base_parse_chain:
@@ -900,6 +954,8 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_clear (parse->priv->adapter);
     parse->priv->offset = parse->priv->pending_offset;
   }
+
+  gst_base_parse_update_upstream_durations (parse);
 
   if (buffer) {
     GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
@@ -1091,6 +1147,8 @@ gst_base_parse_loop (GstPad * pad)
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
+  gst_base_parse_update_upstream_durations (parse);
+
   /* TODO: Check if we reach segment stop limit */
 
   while (TRUE) {
@@ -1237,6 +1295,11 @@ gst_base_parse_activate (GstBaseParse * parse, gboolean active)
     parse->priv->discont = FALSE;
     parse->priv->flushing = FALSE;
     parse->priv->offset = 0;
+    parse->priv->avg_bitrate = 0;
+    parse->priv->upstream_duration = -1;
+    parse->priv->upstream_size = -1;
+    parse->priv->estimated_size = -1;
+    parse->priv->estimated_duration = -1;
 
     if (parse->pending_segment)
       gst_event_unref (parse->pending_segment);
@@ -1339,6 +1402,39 @@ gst_base_parse_sink_activate_pull (GstPad * sinkpad, gboolean active)
   return result;
 }
 
+static gboolean
+gst_base_parse_convert (GstBaseParse * parse, GstFormat src_format,
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
+{
+  gboolean res = FALSE;
+
+  if (G_UNLIKELY (src_format == dest_format)) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  if (src_value == -1) {
+    *dest_value = -1;
+    return TRUE;
+  }
+
+  /* TODO: Use seek table for accurate conversions */
+  if (parse->priv->avg_bitrate && src_format == GST_FORMAT_BYTES
+      && dest_format == GST_FORMAT_TIME) {
+    *dest_value =
+        gst_util_uint64_scale (src_value, 8, parse->priv->avg_bitrate);
+    res = TRUE;
+  } else if (parse->priv->avg_bitrate && src_format == GST_FORMAT_TIME
+      && dest_format == GST_FORMAT_BYTES) {
+    *dest_value =
+        gst_util_uint64_scale (src_value, parse->priv->avg_bitrate, 8);
+    res = TRUE;
+  } else {
+    res = FALSE;
+  }
+
+  return res;
+}
 
 /**
  * gst_base_parse_set_duration:
@@ -1431,12 +1527,6 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
   parse = GST_BASE_PARSE (GST_PAD_PARENT (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  /* If subclass doesn't provide conversion function we can't reply
-     to the query either */
-  if (!klass->convert) {
-    return FALSE;
-  }
-
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
@@ -1466,7 +1556,7 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       if (res)
         gst_query_set_position (query, format, dest_value);
       else
-        res = gst_pad_query_default (pad, query);
+        res = gst_pad_peer_query (parse->sinkpad, query);
 
       break;
     }
@@ -1481,24 +1571,45 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
 
       g_mutex_lock (parse->parse_lock);
 
-      if (format == GST_FORMAT_BYTES) {
-        res = gst_pad_query_peer_duration (parse->sinkpad, &format,
-            &dest_value);
-      } else if (parse->priv->duration != -1 &&
-          format == parse->priv->duration_fmt) {
-        dest_value = parse->priv->duration;
-        res = TRUE;
-      } else if (parse->priv->duration != -1) {
-        res = klass->convert (parse, parse->priv->duration_fmt,
-            parse->priv->duration, format, &dest_value);
+      switch (format) {
+        case GST_FORMAT_BYTES:
+          if (parse->priv->upstream_duration != -1 &&
+              parse->priv->upstream_duration) {
+            dest_value = parse->priv->upstream_duration;
+            res = TRUE;
+          } else if (parse->priv->estimated_duration != -1 &&
+              parse->priv->estimated_duration) {
+            dest_value = parse->priv->estimated_duration;
+            res = TRUE;
+          }
+          break;
+        case GST_FORMAT_TIME:
+          if (parse->priv->duration != -1 &&
+              format == parse->priv->duration_fmt) {
+            dest_value = parse->priv->duration;
+            res = TRUE;
+          } else if (parse->priv->duration != -1) {
+            res = klass->convert (parse, parse->priv->duration_fmt,
+                parse->priv->duration, format, &dest_value);
+          } else if (parse->priv->upstream_duration != -1 &&
+              parse->priv->upstream_duration > 0) {
+            dest_value = parse->priv->upstream_duration;
+            res = TRUE;
+          } else if (parse->priv->estimated_duration != -1 &&
+              parse->priv->estimated_duration > 0) {
+            dest_value = parse->priv->estimated_duration;
+            res = TRUE;
+          }
+          break;
+        default:
+          break;
       }
-
       g_mutex_unlock (parse->parse_lock);
 
       if (res)
         gst_query_set_duration (query, format, dest_value);
       else
-        res = gst_pad_query_default (pad, query);
+        res = gst_pad_peer_query (parse->sinkpad, query);
       break;
     }
     case GST_QUERY_SEEKING:
@@ -1544,11 +1655,13 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
       if (res) {
         gst_query_set_convert (query, src_format, src_value,
             dest_format, dest_value);
+      } else {
+        res = gst_pad_peer_query (parse->sinkpad, query);
       }
       break;
     }
     default:
-      res = gst_pad_query_default (pad, query);
+      res = gst_pad_peer_query (parse->sinkpad, query);
       break;
   }
   return res;

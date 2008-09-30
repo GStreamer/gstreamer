@@ -1,3 +1,17 @@
+2008-09-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/flacparse/gstbaseparse.c: (gst_base_parse_class_init),
+	(gst_base_parse_init), (gst_base_parse_push_buffer),
+	(gst_base_parse_update_upstream_durations), (gst_base_parse_chain),
+	(gst_base_parse_loop), (gst_base_parse_activate),
+	(gst_base_parse_convert), (gst_base_parse_query):
+	Approximate the average bitrate, duration and size if possible
+	and add a default conversion function which uses this for
+	time<->byte conversions.
+
+	* gst/flacparse/gstflacparse.c: (gst_flac_parse_get_frame_size):
+	Fix parsing if upstream gives -1 as duration.
+
 2008-09-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/rtpsession.c: (on_new_ssrc), (on_ssrc_collision),
