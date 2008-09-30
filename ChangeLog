@@ -1,5 +1,23 @@
 2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* sys/Makefile.am:
+	* sys/wasapi/Makefile.am:
+	* sys/wasapi/gstwasapi.c:
+	* sys/wasapi/gstwasapisink.c:
+	* sys/wasapi/gstwasapisink.h:
+	* sys/wasapi/gstwasapisrc.c:
+	* sys/wasapi/gstwasapisrc.h:
+	* sys/wasapi/gstwasapiutil.c:
+	* sys/wasapi/gstwasapiutil.h:
+	New plugin for audio capture and playback using Windows Audio Session
+	API (WASAPI) available with Vista and newer (#520901).
+
+	Comes with hardcoded caps and obviously needs lots of love. Haven't
+	had time to work on this code since it was written, was initially just
+	a quick experiment to play around with this new API.
+
+2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	* sys/dshowdecwrapper/gstdshowaudiodec.cpp
 	  (AudioFakeSink.DoRenderSample):
 	Fix a couple of signed/unsigned comparison warnings.
