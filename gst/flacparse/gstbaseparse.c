@@ -157,7 +157,6 @@
  *  - Better segment handling:
  *    - NEWSEGMENT for gaps
  *    - Not NEWSEGMENT starting at 0 but at first frame timestamp
- *  - GstIndex support
  *  - Seek table generation and subclass seek entry injection
  *  - Accurate seeking
  *  - In push mode provide a queue of adapter-"queued" buffers for upstream
@@ -215,6 +214,11 @@ struct _GstBaseParsePrivate
   guint64 avg_bitrate;
   guint64 estimated_size;
   guint64 estimated_duration;
+
+#ifndef GST_DISABLE_INDEX
+  GstIndex *index;
+  gint index_id;
+#endif
 };
 
 struct _GstBaseParseClassPrivate
@@ -263,6 +267,13 @@ static gboolean gst_base_parse_sink_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
+
+static GstStateChangeReturn gst_base_parse_change_state (GstElement *
+    element, GstStateChange transition);
+#ifndef GST_DISABLE_INDEX
+static void gst_base_parse_set_index (GstElement * element, GstIndex * index);
+static GstIndex *gst_base_parse_get_index (GstElement * element);
+#endif
 
 static gboolean gst_base_parse_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_parse_sink_event (GstPad * pad, GstEvent * event);
@@ -341,6 +352,10 @@ gst_base_parse_finalize (GObject * object)
   g_list_free (parse->priv->pending_events);
   parse->priv->pending_events = NULL;
 
+#ifndef GST_DISABLE_INDEX
+  gst_base_parse_set_index (GST_ELEMENT (object), NULL);
+#endif
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -348,11 +363,19 @@ static void
 gst_base_parse_class_init (GstBaseParseClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
   g_type_class_add_private (klass, sizeof (GstBaseParsePrivate));
   parent_class = g_type_class_peek_parent (klass);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_parse_finalize);
+
+  gstelement_class->change_state = gst_base_parse_change_state;
+#ifndef GST_DISABLE_INDEX
+  gstelement_class->set_index = gst_base_parse_set_index;
+  gstelement_class->get_index = gst_base_parse_get_index;
+#endif
 
   /* Default handlers */
   klass->frame_in_segment = gst_base_parse_frame_in_segment;
@@ -735,9 +758,21 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
   if (last_stop != GST_CLOCK_TIME_NONE && GST_BUFFER_DURATION_IS_VALID (buffer))
     last_stop += GST_BUFFER_DURATION (buffer);
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
+#ifndef GST_DISABLE_INDEX
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    gint64 offset, timestamp;
 
-  /* TODO: Add to seek table */
+    g_assert (parse->priv->offset >= GST_BUFFER_SIZE (buffer));
+
+    offset = parse->priv->offset - GST_BUFFER_SIZE (buffer);
+    timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    gst_index_add_association (parse->priv->index, parse->priv->index_id,
+        GST_ASSOCIATION_FLAG_NONE, GST_FORMAT_BYTES, offset, GST_FORMAT_TIME,
+        timestamp, NULL);
+  }
+#endif
+
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
 
   if (!klass->frame_in_segment (parse, buffer, &parse->segment)) {
     GST_LOG_OBJECT (parse, "Dropped frame, outside configured segment");
@@ -1665,6 +1700,59 @@ gst_base_parse_query (GstPad * pad, GstQuery * query)
   }
   return res;
 }
+
+static GstStateChangeReturn
+gst_base_parse_change_state (GstElement * element, GstStateChange transition)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+#ifndef GST_DISABLE_INDEX
+      if (!parse->priv->index)
+        gst_base_parse_set_index (element, gst_index_factory_make ("memindex"));
+#endif
+    default:
+      break;
+  }
+
+  if (GST_ELEMENT_CLASS (parent_class)->change_state)
+    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+#ifndef GST_DISABLE_INDEX
+static void
+gst_base_parse_set_index (GstElement * element, GstIndex * index)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (element);
+
+  if (index) {
+    parse->priv->index = index;
+    gst_index_get_writer_id (index, GST_OBJECT (element),
+        &parse->priv->index_id);
+  } else {
+    parse->priv->index = NULL;
+  }
+}
+
+static GstIndex *
+gst_base_parse_get_index (GstElement * element)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (element);
+
+  return parse->priv->index;
+}
+#endif
 
 static gboolean
 gst_base_parse_frame_in_segment (GstBaseParse * parse, GstBuffer * buffer,
