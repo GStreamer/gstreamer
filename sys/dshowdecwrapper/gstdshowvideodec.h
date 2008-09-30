@@ -131,7 +131,7 @@ class VideoFakeSink :  public CBaseRenderer
 public:
   VideoFakeSink(GstDshowVideoDec *dec) : 
       m_hres(S_OK),
-      CBaseRenderer(CLSID_VideoFakeSink, L"VideoFakeSink", NULL, &m_hres),
+      CBaseRenderer(CLSID_VideoFakeSink, _T("VideoFakeSink"), NULL, &m_hres),
       mDec(dec) 
   {};
   virtual ~VideoFakeSink() {};

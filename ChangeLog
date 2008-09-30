@@ -1,5 +1,11 @@
 2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
+	* sys/dshowdecwrapper/gstdshowaudiodec.h (AudioFakeSink.AudioFakeSink):
+	* sys/dshowdecwrapper/gstdshowvideodec.h (VideoFakeSink.VideoFakeSink):
+	Use the _T() macro to support both Unicode and MBCS.
+
+2008-09-30  Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
 	* ext/libmms/gstmms.c (plugin_init):
 	Fix return type of the GstURIHandler::get_type() implementation.
 

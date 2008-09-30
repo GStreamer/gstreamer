@@ -132,7 +132,7 @@ class AudioFakeSink :  public CBaseRenderer
 public:
   AudioFakeSink(GstDshowAudioDec *dec) : 
       m_hres(S_OK),
-      CBaseRenderer(CLSID_AudioFakeSink, L"AudioFakeSink", NULL, &m_hres),
+      CBaseRenderer(CLSID_AudioFakeSink, _T("AudioFakeSink"), NULL, &m_hres),
       mDec(dec) 
   {};
   virtual ~AudioFakeSink() {};
