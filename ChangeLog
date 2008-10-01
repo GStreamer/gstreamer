@@ -1,3 +1,11 @@
+2008-10-01  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	  Fix libs for linking directsound.
+	* sys/directsound/gstdirectsoundsink.c:
+	  Fix buffer sizing to prevent racing the ringbuffer at startup.
+	  Add volume property.
+
 2008-09-27  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/pulse/pulsesink.c:

@@ -62,6 +62,8 @@
 
 #include "gstdirectsoundsink.h"
 
+#include <math.h>
+
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 
 /* elementfactory information */
@@ -76,6 +78,11 @@ static void gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass);
 static void gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
     GstDirectSoundSinkClass * g_class);
 static void gst_directsound_sink_finalise (GObject * object);
+
+static void gst_directsound_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_directsound_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_directsound_sink_getcaps (GstBaseSink * bsink);
 static gboolean gst_directsound_sink_prepare (GstAudioSink * asink,
@@ -110,6 +117,12 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
         "width = (int) 8, "
         "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"));
+
+enum
+{
+  PROP_0,
+  PROP_VOLUME
+};
 
 GST_BOILERPLATE_FULL (GstDirectSoundSink, gst_directsound_sink, GstAudioSink,
     GST_TYPE_AUDIO_SINK, gst_directsound_sink_interfaces_init);
@@ -167,6 +180,28 @@ gst_directsound_sink_mixer_list_tracks (GstMixer * mixer)
   return dsoundsink->tracks;
 }
 
+static void
+gst_directsound_sink_set_volume (GstDirectSoundSink * dsoundsink)
+{
+  if (dsoundsink->pDSBSecondary) {
+    /* DirectSound controls volume using units of 100th of a decibel,
+     * ranging from -10000 to 0. We use a linear scale of 0 - 100
+     * here, so remap.
+     */
+    long dsVolume;
+    if (dsoundsink->volume == 0)
+      dsVolume = -10000;
+    else
+      dsVolume = 100 * (long) (20 * log10 ((double) dsoundsink->volume / 100.));
+    dsVolume = CLAMP (dsVolume, -10000, 0);
+
+    GST_DEBUG_OBJECT (dsoundsink,
+        "Setting volume on secondary buffer to %d from %d", (int) dsVolume,
+        (int) dsoundsink->volume);
+    IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary, dsVolume);
+  }
+}
+
 /*
  * Set volume. volumes is an array of size track->num_channels, and
  * each value in the array gives the wanted volume for one channel
@@ -182,13 +217,7 @@ gst_directsound_sink_mixer_set_volume (GstMixer * mixer,
   if (volumes[0] != dsoundsink->volume) {
     dsoundsink->volume = volumes[0];
 
-    if (dsoundsink->pDSBSecondary) {
-      /* DirectSound is using attenuation in the following range 
-       * (DSBVOLUME_MIN=-10000, DSBVOLUME_MAX=0) */
-      glong ds_attenuation = DSBVOLUME_MIN + (dsoundsink->volume * 100);
-
-      IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary, ds_attenuation);
-    }
+    gst_directsound_sink_set_volume (dsoundsink);
   }
 }
 
@@ -261,6 +290,10 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_sink_finalise);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_directsound_sink_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_directsound_sink_get_property);
 
   gstbasesink_class->get_caps =
       GST_DEBUG_FUNCPTR (gst_directsound_sink_getcaps);
@@ -274,6 +307,12 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_directsound_sink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_directsound_sink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_directsound_sink_reset);
+
+  g_object_class_install_property (gobject_class,
+      PROP_VOLUME,
+      g_param_spec_double ("volume", "Volume",
+          "Volume of this stream", 0.0, 1.0, 1.0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -298,6 +337,39 @@ gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
   dsoundsink->volume = 100;
   dsoundsink->dsound_lock = g_mutex_new ();
   dsoundsink->first_buffer_after_reset = FALSE;
+}
+
+static void
+gst_directsound_sink_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstDirectSoundSink *sink = GST_DIRECTSOUND_SINK (object);
+
+  switch (prop_id) {
+    case PROP_VOLUME:
+      sink->volume = (int) (g_value_get_double (value) * 100);
+      gst_directsound_sink_set_volume (sink);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_directsound_sink_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstDirectSoundSink *sink = GST_DIRECTSOUND_SINK (object);
+
+  switch (prop_id) {
+    case PROP_VOLUME:
+      g_value_set_double (value, (double) sink->volume / 100.);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstCaps *
@@ -358,8 +430,19 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   wfx.nBlockAlign = spec->bytes_per_sample;
   wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 
-  /* directsound buffer size can handle 1/2 sec of the stream */
-  dsoundsink->buffer_size = wfx.nAvgBytesPerSec / 2;
+  /* Create directsound buffer with size based on our configured 
+   * buffer_size (which is 200 ms by default) */
+  dsoundsink->buffer_size =
+      gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->buffer_time,
+      GST_MSECOND);
+
+  spec->segsize =
+      gst_util_uint64_scale_int (wfx.nAvgBytesPerSec, spec->latency_time,
+      GST_MSECOND);
+  spec->segtotal = dsoundsink->buffer_size / spec->segsize;
+
+  // Make the final buffer size be an integer number of segments
+  dsoundsink->buffer_size = spec->segsize * spec->segtotal;
 
   GST_INFO_OBJECT (dsoundsink,
       "GstRingBufferSpec->channels: %d, GstRingBufferSpec->rate: %d, GstRingBufferSpec->bytes_per_sample: %d\n"
@@ -385,6 +468,8 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
             DXGetErrorString9 (hRes)), (NULL));
     return FALSE;
   }
+
+  gst_directsound_sink_set_volume (dsoundsink);
 
   return TRUE;
 }
