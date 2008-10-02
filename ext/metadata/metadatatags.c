@@ -427,35 +427,6 @@ metadata_tags_exif_register (void)
   gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META,
       GST_TYPE_FRACTION, GST_TAG_IMAGE_YRESOLUTION,
       "Vertical resolution in pixels per inch", NULL);
-
-  /* GPS tags */
-
-  /* Altitude:
-   * positive values means above the sea level
-   * negative values means under the sea level
-   */
-
-  gst_tag_register (GST_TAG_GPS_ALTITUDE, GST_TAG_FLAG_META,
-      GST_TYPE_FRACTION, GST_TAG_GPS_ALTITUDE, "Altitude", NULL);
-
-  /* Latitude:
-   * "DDD,MM,SSk" or "DDD,MM.mmk" fixed size string where:
-   * D- degrees, M- minutes, S-seconds,
-   * mm- fraction of minutes, k- N (north) or S (south)
-   */
-
-  gst_tag_register (GST_TAG_GPS_LATITUDE, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_GPS_LATITUDE, "Latitude", NULL);
-
-  /* Longitude:
-   * "DDD,MM,SSk" or "DDD,MM.mmk" fixed size string where:
-   * D- degrees, M- minutes, S-seconds,
-   * mm- fraction of minutes, k- N (north) or S (south)
-   */
-
-  gst_tag_register (GST_TAG_GPS_LONGITUDE, GST_TAG_FLAG_META,
-      G_TYPE_STRING, GST_TAG_GPS_LONGITUDE, "Longitude", NULL);
-
 }
 
 /*
