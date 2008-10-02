@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.19.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.20.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-10 18:14+0100\n"
-"PO-Revision-Date: 2008-08-05 21:40+0700\n"
+"POT-Creation-Date: 2008-09-17 14:28+0100\n"
+"PO-Revision-Date: 2008-09-17 21:42+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -227,7 +227,7 @@ msgstr "Baik elemen autoaudiosink maupun alsasink hilang."
 
 #: gst/playback/gstplaysink.c:989
 msgid "No volume control found"
-msgstr ""
+msgstr "Tak ada kontrol volume yang ditemukan"
 
 #: gst/playback/gstqueue2.c:991
 msgid "No file name specified."
@@ -290,7 +290,7 @@ msgstr "Tak dapat merekam audio cukup cepat"
 
 #: gst-libs/gst/tag/gsttagdemux.c:1038
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "Gagal membaca tanda: tak cukup data"
 
 #: gst-libs/gst/tag/tags.c:59
 msgid "track ID"
@@ -394,151 +394,155 @@ msgstr "Format subjudul Sami"
 msgid "TMPlayer subtitle format"
 msgstr "Format subjudul TMPlayer"
 
-#: gst-libs/gst/pbutils/descriptions.c:268
+#: gst-libs/gst/pbutils/descriptions.c:210
+msgid "Kate subtitle format"
+msgstr "Format subjudul Kate"
+
+#: gst-libs/gst/pbutils/descriptions.c:269
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "YUV 4:2:0 planar tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:271
+#: gst-libs/gst/pbutils/descriptions.c:272
 msgid "Uncompressed planar YVU 4:2:0"
 msgstr "YVU 4:2:0 planar tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:274
-#: gst-libs/gst/pbutils/descriptions.c:284
+#: gst-libs/gst/pbutils/descriptions.c:275
+#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "YUV 4:2:2 terkemas tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:277
+#: gst-libs/gst/pbutils/descriptions.c:278
 msgid "Uncompressed packed YUV 4:1:0"
 msgstr "YUV 4:1:0 terkemas tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:280
+#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "Uncompressed packed YVU 4:1:0"
 msgstr "YVU 4:1:0 terkemas tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:287
+#: gst-libs/gst/pbutils/descriptions.c:288
 msgid "Uncompressed packed YUV 4:1:1"
 msgstr "YUV 4:1:1 terkemas tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:290
+#: gst-libs/gst/pbutils/descriptions.c:291
 msgid "Uncompressed packed YUV 4:4:4"
 msgstr "YUV 4:4:4 terkemas tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:293
+#: gst-libs/gst/pbutils/descriptions.c:294
 msgid "Uncompressed planar YUV 4:2:2"
 msgstr "YUV 4:2:2 planar tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:296
+#: gst-libs/gst/pbutils/descriptions.c:297
 msgid "Uncompressed planar YUV 4:1:1"
 msgstr "YUV 4:1:1 planar tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:299
+#: gst-libs/gst/pbutils/descriptions.c:300
 msgid "Uncompressed black and white Y-plane"
 msgstr "Y-plane hitam dan putih tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:302
+#: gst-libs/gst/pbutils/descriptions.c:303
 msgid "Uncompressed YUV"
 msgstr "YUV tak dikompresi"
 
-#: gst-libs/gst/pbutils/descriptions.c:313
+#: gst-libs/gst/pbutils/descriptions.c:314
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Terpalet dan tak dikompresi dari %d-bit %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:365
+#: gst-libs/gst/pbutils/descriptions.c:366
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versi %d"
 
-#: gst-libs/gst/pbutils/descriptions.c:583
+#: gst-libs/gst/pbutils/descriptions.c:584
 #, c-format
 msgid "Raw %d-bit PCM audio"
 msgstr "Audio PCM %d-bita mentah"
 
-#: gst-libs/gst/pbutils/descriptions.c:585
+#: gst-libs/gst/pbutils/descriptions.c:586
 msgid "Raw PCM audio"
 msgstr "Audio PCM mentah"
 
-#: gst-libs/gst/pbutils/descriptions.c:591
+#: gst-libs/gst/pbutils/descriptions.c:592
 #, c-format
 msgid "Raw %d-bit floating-point audio"
 msgstr "Audio titik-apung %d-bita mentah"
 
-#: gst-libs/gst/pbutils/descriptions.c:593
+#: gst-libs/gst/pbutils/descriptions.c:594
 msgid "Raw floating-point audio"
 msgstr "Audio titik-apung mentah"
 
-#: gst-libs/gst/pbutils/descriptions.c:680
+#: gst-libs/gst/pbutils/descriptions.c:681
 msgid "Audio CD source"
 msgstr "Sumber CD audio"
 
-#: gst-libs/gst/pbutils/descriptions.c:683
+#: gst-libs/gst/pbutils/descriptions.c:684
 msgid "DVD source"
 msgstr "Sumber DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:686
+#: gst-libs/gst/pbutils/descriptions.c:687
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Sumber Real Time Streaming Protocol (RTSP)"
 
-#: gst-libs/gst/pbutils/descriptions.c:690
+#: gst-libs/gst/pbutils/descriptions.c:691
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Sumber protokol Microsoft Media Server (MMS)"
 
-#: gst-libs/gst/pbutils/descriptions.c:698
+#: gst-libs/gst/pbutils/descriptions.c:699
 #, c-format
 msgid "%s protocol source"
 msgstr "%s sumber protokol"
 
-#: gst-libs/gst/pbutils/descriptions.c:766
+#: gst-libs/gst/pbutils/descriptions.c:767
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s video RTP depayloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:768
+#: gst-libs/gst/pbutils/descriptions.c:769
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s audio RTP depayloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:770
+#: gst-libs/gst/pbutils/descriptions.c:771
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "%s RTP depayloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:777
+#: gst-libs/gst/pbutils/descriptions.c:778
 #, c-format
 msgid "%s demuxer"
 msgstr "%s demuxer"
 
-#: gst-libs/gst/pbutils/descriptions.c:779
+#: gst-libs/gst/pbutils/descriptions.c:780
 #, c-format
 msgid "%s decoder"
 msgstr "%s pengawasandi"
 
-#: gst-libs/gst/pbutils/descriptions.c:814
+#: gst-libs/gst/pbutils/descriptions.c:815
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s video RTP payloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:816
+#: gst-libs/gst/pbutils/descriptions.c:817
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s audio RTP payloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:818
+#: gst-libs/gst/pbutils/descriptions.c:819
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s RTP payloader"
 
-#: gst-libs/gst/pbutils/descriptions.c:825
+#: gst-libs/gst/pbutils/descriptions.c:826
 #, c-format
 msgid "%s muxer"
 msgstr "%s muxer"
 
-#: gst-libs/gst/pbutils/descriptions.c:827
+#: gst-libs/gst/pbutils/descriptions.c:828
 #, c-format
 msgid "%s encoder"
 msgstr "%s penyandi"
 
-#: gst-libs/gst/pbutils/descriptions.c:858
+#: gst-libs/gst/pbutils/descriptions.c:859
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Elemen GStreamer %s"

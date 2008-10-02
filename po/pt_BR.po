@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.19.3\n"
+"Project-Id-Version: gst-plugins-base-0.10.20.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-10 18:14+0100\n"
-"PO-Revision-Date: 2008-07-12 23:44-0003\n"
+"POT-Creation-Date: 2008-09-17 14:28+0100\n"
+"PO-Revision-Date: 2008-09-18 00:16-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "MIME-Version: 1.0\n"
@@ -142,7 +142,7 @@ msgstr "Não foi possível fechar o arquivo VFS \"%s\"."
 #: ext/gnomevfs/gstgnomevfssink.c:566
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Erro ao escrever no arquivo \"%s\"."
+msgstr "Erro ao gravar no arquivo \"%s\"."
 
 #: ext/ogg/gstoggdemux.c:3126
 msgid "Internal data stream error."
@@ -234,7 +234,7 @@ msgstr "Os elementos autoaudiosink e alsasink estão faltando."
 
 #: gst/playback/gstplaysink.c:989
 msgid "No volume control found"
-msgstr ""
+msgstr "Nenhum controle de volume encontrado"
 
 #: gst/playback/gstqueue2.c:991
 msgid "No file name specified."
@@ -297,7 +297,7 @@ msgstr "Não é possível gravar o áudio rápido suficiente"
 
 #: gst-libs/gst/tag/gsttagdemux.c:1038
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "Falha ao ler etiqueta: dados insuficientes"
 
 #: gst-libs/gst/tag/tags.c:59
 msgid "track ID"
@@ -401,151 +401,155 @@ msgstr "Formato de legendas Sami"
 msgid "TMPlayer subtitle format"
 msgstr "Formato de legendas TMPlayer"
 
-#: gst-libs/gst/pbutils/descriptions.c:268
+#: gst-libs/gst/pbutils/descriptions.c:210
+msgid "Kate subtitle format"
+msgstr "Formato de legendas Kate"
+
+#: gst-libs/gst/pbutils/descriptions.c:269
 msgid "Uncompressed planar YUV 4:2:0"
 msgstr "YUV 4:2:0 plano sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:271
+#: gst-libs/gst/pbutils/descriptions.c:272
 msgid "Uncompressed planar YVU 4:2:0"
 msgstr "YVU 4:2:0 plano sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:274
-#: gst-libs/gst/pbutils/descriptions.c:284
+#: gst-libs/gst/pbutils/descriptions.c:275
+#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "Uncompressed packed YUV 4:2:2"
 msgstr "YUV 4:2:2 empacotado sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:277
+#: gst-libs/gst/pbutils/descriptions.c:278
 msgid "Uncompressed packed YUV 4:1:0"
 msgstr "YUV 4:1:0 empacotado sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:280
+#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "Uncompressed packed YVU 4:1:0"
 msgstr "YVU 4:1:0 empacotado sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:287
+#: gst-libs/gst/pbutils/descriptions.c:288
 msgid "Uncompressed packed YUV 4:1:1"
 msgstr "YUV 4:1:1 empacotado sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:290
+#: gst-libs/gst/pbutils/descriptions.c:291
 msgid "Uncompressed packed YUV 4:4:4"
 msgstr "YUV 4:4:4 empacotado sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:293
+#: gst-libs/gst/pbutils/descriptions.c:294
 msgid "Uncompressed planar YUV 4:2:2"
 msgstr "YUV 4:2:2 plano sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:296
+#: gst-libs/gst/pbutils/descriptions.c:297
 msgid "Uncompressed planar YUV 4:1:1"
 msgstr "YUV 4:1:1 plano sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:299
+#: gst-libs/gst/pbutils/descriptions.c:300
 msgid "Uncompressed black and white Y-plane"
 msgstr "Plano Y em preto e branco sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:302
+#: gst-libs/gst/pbutils/descriptions.c:303
 msgid "Uncompressed YUV"
 msgstr "YUV sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:313
+#: gst-libs/gst/pbutils/descriptions.c:314
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "%2$s de %1$d bits com paletas sem compressão"
 
-#: gst-libs/gst/pbutils/descriptions.c:365
+#: gst-libs/gst/pbutils/descriptions.c:366
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versão %d"
 
-#: gst-libs/gst/pbutils/descriptions.c:583
+#: gst-libs/gst/pbutils/descriptions.c:584
 #, c-format
 msgid "Raw %d-bit PCM audio"
 msgstr "Áudio PCM Raw de %d bits"
 
-#: gst-libs/gst/pbutils/descriptions.c:585
+#: gst-libs/gst/pbutils/descriptions.c:586
 msgid "Raw PCM audio"
 msgstr "Áudio PCM Raw"
 
-#: gst-libs/gst/pbutils/descriptions.c:591
+#: gst-libs/gst/pbutils/descriptions.c:592
 #, c-format
 msgid "Raw %d-bit floating-point audio"
 msgstr "Áudio Raw de ponto-flutuante de %d bits"
 
-#: gst-libs/gst/pbutils/descriptions.c:593
+#: gst-libs/gst/pbutils/descriptions.c:594
 msgid "Raw floating-point audio"
 msgstr "Áudio Raw de ponto-flutuante"
 
-#: gst-libs/gst/pbutils/descriptions.c:680
+#: gst-libs/gst/pbutils/descriptions.c:681
 msgid "Audio CD source"
 msgstr "Origem: CD de áudio"
 
-#: gst-libs/gst/pbutils/descriptions.c:683
+#: gst-libs/gst/pbutils/descriptions.c:684
 msgid "DVD source"
 msgstr "Origem: DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:686
+#: gst-libs/gst/pbutils/descriptions.c:687
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Origem: Protocolo de Fluxo Contínuo em Tempo Real (RTSP)"
 
-#: gst-libs/gst/pbutils/descriptions.c:690
+#: gst-libs/gst/pbutils/descriptions.c:691
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Origem: protocolo do Servidor de Mídia da Microsoft (MMS)"
 
-#: gst-libs/gst/pbutils/descriptions.c:698
+#: gst-libs/gst/pbutils/descriptions.c:699
 #, c-format
 msgid "%s protocol source"
 msgstr "Origem: protocolo %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:766
+#: gst-libs/gst/pbutils/descriptions.c:767
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "decodificador de vídeo RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:768
+#: gst-libs/gst/pbutils/descriptions.c:769
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "decodificador de áudio RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:770
+#: gst-libs/gst/pbutils/descriptions.c:771
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "decodificador RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:777
+#: gst-libs/gst/pbutils/descriptions.c:778
 #, c-format
 msgid "%s demuxer"
 msgstr "Demultiplexador %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:779
+#: gst-libs/gst/pbutils/descriptions.c:780
 #, c-format
 msgid "%s decoder"
 msgstr "Decodificador %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:814
+#: gst-libs/gst/pbutils/descriptions.c:815
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "codificador de vídeo RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:816
+#: gst-libs/gst/pbutils/descriptions.c:817
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "codificador de áudio RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:818
+#: gst-libs/gst/pbutils/descriptions.c:819
 #, c-format
 msgid "%s RTP payloader"
 msgstr "codificador RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:825
+#: gst-libs/gst/pbutils/descriptions.c:826
 #, c-format
 msgid "%s muxer"
 msgstr "Multiplexador %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:827
+#: gst-libs/gst/pbutils/descriptions.c:828
 #, c-format
 msgid "%s encoder"
 msgstr "Codificador %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:858
+#: gst-libs/gst/pbutils/descriptions.c:859
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Elemento \"%s\" do GStreamer"
