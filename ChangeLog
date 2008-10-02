@@ -1,3 +1,10 @@
+=== release 0.10.21 ===
+
+2008-10-02  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.21, "Take These Things From Me"
+
 2008-09-28  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
@@ -787,7 +794,7 @@
 
 2008-07-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
-	Patch by: tmatth <le dot businessman at gmail dot com>
+	Patch by: Tristan Matthews <le dot businessman at gmail dot com>
 
 	* docs/pwg/building-testapp.xml:
 	Don't use an undeclared variable in the example program.
@@ -1254,7 +1261,7 @@
 
 2008-06-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: joel larsson <tilljoel at gmail dot com>
+	Patch by: Joel Larsson <tilljoel at gmail dot com>
 
 	* docs/plugins/gstreamer-plugins.args:
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init),

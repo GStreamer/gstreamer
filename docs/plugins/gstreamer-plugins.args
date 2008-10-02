@@ -271,7 +271,7 @@
 <ARG>
 <NAME>GstFakeSink::num-buffers</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>num-buffers</NICK>
 <BLURB>Number of buffers to accept going EOS.</BLURB>

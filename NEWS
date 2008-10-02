@@ -1,4 +1,71 @@
-This is GStreamer 0.10.20 "You Crazy Diamond"
+This is GStreamer 0.10.21 "Take These Things From Me"
+
+Changes since 0.10.20:
+
+      * Basetransform rework
+      * Basesink synchronisation extensions
+      * New documentation
+      * Many bug fixes, enhancements and optimisations
+
+Bugs fixed since 0.10.20:
+
+      * 481169 : [tag] add support for geo tags (gps location etc.)
+      * 520694 : adding GST_TAG_KEYWORDS
+      * 538201 : deleting the control point at ts=0 does not lower the con...
+      * 544855 : fakesrc and fakesink should call super::event()
+      * 339795 : [GstBaseTransform] Reverse negotiation issues in passthro...
+      * 348114 : [PPC64?] [gcc-4.1.2?] GST_BUFFER_IN_CAPS flag should have...
+      * 361718 : [basetransform] needs API to force renegotiation
+      * 533856 : gst_buffer_join() documentation is unclear
+      * 536978 : GTKDOC_CFLAGS should include CFLAGS
+      * 537804 : [multiqueue] wrongly reporting that the queue is full.
+      * 537812 : [check] add api to setup a pad by name
+      * 538568 : Add GST_TAG_ATTACHMENT
+      * 539772 : gst_pad_template_new() does more than call g_object_new()
+      * 542175 : gst-inspect --gst-plugins-path fails with multiple direct...
+      * 543444 : gst_base_sink_get_position can return 0 unexpectedly
+      * 543853 : Bison version check failure on OSX 10.4 Tiger
+      * 544174 : [basesrc] allow dynamic value of the seekable value.
+      * 544776 : [win32] binary registry may fail if glib is using a diffe...
+      * 545352 : gsturi is too restrictive
+      * 545603 : gst-inspect: don't print uri handler when compiled withou...
+      * 545605 : gstelementfactory: don't use uri handler code without uri...
+      * 545607 : gst: include gstconfig when using macros defined therein
+      * 545853 : [basetransform] rewrite
+      * 546328 : fractions with G_MAXINT cause failure for fixation
+      * 546822 : gstreamer doesn't tell gettext to output its translations...
+      * 547277 : filesrc detect if a file is seekable using SEEK_SET and n...
+      * 547728 : [basetransform] fail on buffer_alloc 
+      * 548394 : basesink should ignore EOS during flushing
+      * 548652 : [Inconsistency] GST_TAG_LOCATION is used for different me...
+      * 549504 : Thread-safe version of gst_pad_get_internal_links()
+      * 551952 : Need 'check' package when compile
+      * 551978 : Memleak in gst_element_sync_state_with_paren
+      * 547835 : tee release_request_pad while buffer_alloc racyness
+      * 538628 : Patch: added a timeout property to fdsrc used in gst_poll...
+      * 546883 : [basetransform] ximagesink fails when resizing video window
+      * 551509 : gst_base_transform_prepare_output_buffer: assertion faile...
+
+API added since 0.10.20:
+
+      * Add GST_TAG_ATTACHMENT for generic file attachments to streams.
+      * Add gst_base_sink_set_render_delay()
+      * Add gst_base_sink_get_render_delay()
+      * Add gst_check_setup_src_pad_by_name
+      * Add gst_check_setup_sink_pad_by_name
+      * Add gst_check_teardown_pad_by_name
+      * Add GstBaseTransform::gst_base_transform_suggest()
+      * GstBaseTransform::gst_base_transform_reconfigure()
+      * GstPad::gst_pad_set_iterate_internal_links_function()
+      * GstPad::GstPadIterIntLinkFunction
+      * GstPad::gst_pad_iterate_internal_links()
+      * GstPad::gst_pad_iterate_internal_links_default()
+
+API deprecated since 0.10.20:
+
+      * gst_pad_get_internal_links()
+      * gst_pad_set_internal_link_function()
+      * gst_pad_get_internal_links_default()
 
 Changes since 0.10.19:
 

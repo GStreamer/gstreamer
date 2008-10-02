@@ -11,6 +11,9 @@
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
 
+/* data dir */
+#define GST_DATADIR PREFIX "\\share"
+
 /* Location of registry */
 #define GST_CACHE_DIR PREFIX "\\var\\cache"
 
@@ -21,7 +24,7 @@
 /* #undef GST_GCOV_ENABLED */
 
 /* Default errorlevel to use */
-#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
+#define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
@@ -30,7 +33,7 @@
 #define GST_MAJORMINOR "0.10"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -45,7 +48,7 @@
 #undef HAVE_CPU_HPPA
 
 /* Define if the host CPU is an x86 */
-#undef HAVE_CPU_I386
+#define HAVE_CPU_I386 1
 
 /* Define if the host CPU is a IA64 */
 #undef HAVE_CPU_IA64
@@ -194,13 +197,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.20.1"
+#define PACKAGE_STRING "GStreamer 0.10.21"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.20.1"
+#define PACKAGE_VERSION "0.10.21"
 
 /* Define the plugin directory */
 #ifdef _DEBUG
@@ -216,7 +219,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.20.1"
+#define VERSION "0.10.21"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
