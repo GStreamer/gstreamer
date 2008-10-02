@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-06-11 21:29+0100\n"
+"POT-Creation-Date: 2008-09-10 17:50+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n!=1;\n"
 
-#: gst/gst.c:307
+#: gst/gst.c:309
 msgid "Print the GStreamer version"
 msgstr "Imprimeix la versió de GStreamer"
 
-#: gst/gst.c:309
+#: gst/gst.c:311
 msgid "Make all warnings fatal"
 msgstr "Fes fatals tots els avisos"
 
-#: gst/gst.c:313
+#: gst/gst.c:315
 msgid "Print available debug categories and exit"
 msgstr "Imprimeix les categories de depuració disponibles i surt"
 
-#: gst/gst.c:317
+#: gst/gst.c:319
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Nivell de depuració per defecte des de 1 (només errors) a 5 (tot) o 0 per a "
 "cap sortida"
 
-#: gst/gst.c:319
+#: gst/gst.c:321
 msgid "LEVEL"
 msgstr "NIVELL"
 
-#: gst/gst.c:321
+#: gst/gst.c:323
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "nivells específics per a les categories individuals. Per exemple: "
 "GST_AUTOPLUG:5, GST_ELEMENT_*:3"
 
-#: gst/gst.c:324
+#: gst/gst.c:326
 msgid "LIST"
 msgstr "LLISTA"
 
-#: gst/gst.c:326
+#: gst/gst.c:328
 msgid "Disable colored debugging output"
 msgstr "Inhabilita la sortida de depuració colorejada"
 
-#: gst/gst.c:329
+#: gst/gst.c:331
 msgid "Disable debugging"
 msgstr "Inhabilita la depuració"
 
-#: gst/gst.c:333
+#: gst/gst.c:335
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Habilita els diagnòstics detallats de càrrega de connectors"
 
-#: gst/gst.c:337
+#: gst/gst.c:339
 msgid "Colon-separated paths containing plugins"
 msgstr "Camins separats per dos punts que contenen connectors"
 
-#: gst/gst.c:337
+#: gst/gst.c:339
 msgid "PATHS"
 msgstr "CAMINS"
 
-#: gst/gst.c:340
+#: gst/gst.c:342
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,57 +80,57 @@ msgstr ""
 "Llista separada per comes de connectors a precarregar a més de la llista "
 "emmagatzemada en la variable d'entorn GST_PLUGIN_PATH"
 
-#: gst/gst.c:342
+#: gst/gst.c:344
 msgid "PLUGINS"
 msgstr "CONNECTORS"
 
-#: gst/gst.c:345
+#: gst/gst.c:347
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inhabilita la captura de violacions de segment durant la càrrega de "
 "connectors"
 
-#: gst/gst.c:350
+#: gst/gst.c:352
 msgid "Disable updating the registry"
 msgstr ""
 
-#: gst/gst.c:355
+#: gst/gst.c:357
 msgid "Disable the use of fork() while scanning the registry"
 msgstr ""
 
-#: gst/gst.c:376
+#: gst/gst.c:378
 msgid "GStreamer Options"
 msgstr "Opcions del GStreamer"
 
-#: gst/gst.c:377
+#: gst/gst.c:379
 msgid "Show GStreamer Options"
 msgstr "Mostra les opcions del GStreamer"
 
-#: gst/gst.c:752
+#: gst/gst.c:754
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr ""
 
-#: gst/gst.c:788 gst/gst.c:797 gst/gst.c:842
+#: gst/gst.c:790 gst/gst.c:799 gst/gst.c:844
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr ""
 
-#: gst/gst.c:857
+#: gst/gst.c:859
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr ""
 
-#: gst/gst.c:1235
+#: gst/gst.c:1231
 msgid "Unknown option"
 msgstr "Opció desconeguda"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2202
+#: gst/gstelement.c:299 gst/gstutils.c:2208
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERROR: des de l'element %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2204 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2210 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -338,384 +338,447 @@ msgstr ""
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 
-#: gst/gsttaglist.c:97
+#: gst/gsttaglist.c:99
 msgid "title"
 msgstr "títol"
 
-#: gst/gsttaglist.c:97
+#: gst/gsttaglist.c:99
 msgid "commonly used title"
 msgstr "títol usat habitualment"
 
-#: gst/gsttaglist.c:100
+#: gst/gsttaglist.c:102
 msgid "title sortname"
 msgstr ""
 
-#: gst/gsttaglist.c:100
+#: gst/gsttaglist.c:102
 #, fuzzy
 msgid "commonly used title for sorting purposes"
 msgstr "títol usat habitualment"
 
-#: gst/gsttaglist.c:103
+#: gst/gsttaglist.c:105
 msgid "artist"
 msgstr "artista"
 
-#: gst/gsttaglist.c:104
+#: gst/gsttaglist.c:106
 msgid "person(s) responsible for the recording"
 msgstr "persones responsables de la gravació"
 
-#: gst/gsttaglist.c:108
+#: gst/gsttaglist.c:110
 msgid "artist sortname"
 msgstr ""
 
-#: gst/gsttaglist.c:109
+#: gst/gsttaglist.c:111
 #, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "persones responsables de la gravació"
 
-#: gst/gsttaglist.c:112
+#: gst/gsttaglist.c:114
 msgid "album"
 msgstr "àlbum"
 
-#: gst/gsttaglist.c:113
+#: gst/gsttaglist.c:115
 msgid "album containing this data"
 msgstr "àlbum que conté aquesta dades"
 
-#: gst/gsttaglist.c:116
+#: gst/gsttaglist.c:118
 msgid "album sortname"
 msgstr ""
 
-#: gst/gsttaglist.c:117
+#: gst/gsttaglist.c:119
 #, fuzzy
 msgid "album containing this data for sorting purposes"
 msgstr "àlbum que conté aquesta dades"
 
-#: gst/gsttaglist.c:119
+#: gst/gsttaglist.c:121
 msgid "date"
 msgstr "data"
 
-#: gst/gsttaglist.c:119
+#: gst/gsttaglist.c:121
 msgid "date the data was created (as a GDate structure)"
 msgstr "data en la qual es van crear les dades (com a una estructura GDate)"
 
-#: gst/gsttaglist.c:122
+#: gst/gsttaglist.c:124
 msgid "genre"
 msgstr "gènere"
 
-#: gst/gsttaglist.c:123
+#: gst/gsttaglist.c:125
 msgid "genre this data belongs to"
 msgstr "gènere al qual pertanyen aquestes dades"
 
-#: gst/gsttaglist.c:126
+#: gst/gsttaglist.c:128
 msgid "comment"
 msgstr "comentari"
 
-#: gst/gsttaglist.c:127
+#: gst/gsttaglist.c:129
 msgid "free text commenting the data"
 msgstr "text lliure comentant les dades"
 
-#: gst/gsttaglist.c:130
+#: gst/gsttaglist.c:132
 #, fuzzy
 msgid "extended comment"
 msgstr "comentari"
 
-#: gst/gsttaglist.c:131
+#: gst/gsttaglist.c:133
 #, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr "text lliure comentant les dades"
 
-#: gst/gsttaglist.c:135
+#: gst/gsttaglist.c:137
 msgid "track number"
 msgstr "número de pista"
 
-#: gst/gsttaglist.c:136
+#: gst/gsttaglist.c:138
 msgid "track number inside a collection"
 msgstr "número de pista dins d'una col·lecció"
 
-#: gst/gsttaglist.c:139
+#: gst/gsttaglist.c:141
 msgid "track count"
 msgstr "compte de pistes"
 
-#: gst/gsttaglist.c:140
+#: gst/gsttaglist.c:142
 msgid "count of tracks inside collection this track belongs to"
 msgstr "compte de pistes dins de la col·lecció a la qual pertany aquesta pista"
 
-#: gst/gsttaglist.c:144
+#: gst/gsttaglist.c:146
 msgid "disc number"
 msgstr "número de disc"
 
-#: gst/gsttaglist.c:145
+#: gst/gsttaglist.c:147
 msgid "disc number inside a collection"
 msgstr "número de disc dins d'una col·lecció"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:150
 msgid "disc count"
 msgstr "compte de disc"
 
-#: gst/gsttaglist.c:149
+#: gst/gsttaglist.c:151
 msgid "count of discs inside collection this disc belongs to"
 msgstr "comte de discs dins de la col·lecció a la qual pertany aquest disc"
 
-#: gst/gsttaglist.c:153
+#: gst/gsttaglist.c:155
 msgid "location"
 msgstr "ubicació"
 
-#: gst/gsttaglist.c:154
-msgid "original location of file as a URI"
-msgstr "ubicació original del fitxer com una URI"
+#: gst/gsttaglist.c:157
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
 
-#: gst/gsttaglist.c:158
+#: gst/gsttaglist.c:160
 msgid "description"
 msgstr "descripció"
 
-#: gst/gsttaglist.c:159
+#: gst/gsttaglist.c:160
 msgid "short text describing the content of the data"
 msgstr "text curt descrivint el contingut de les dades"
 
-#: gst/gsttaglist.c:162
+#: gst/gsttaglist.c:163
 msgid "version"
 msgstr "versió"
 
-#: gst/gsttaglist.c:162
+#: gst/gsttaglist.c:163
 msgid "version of this data"
 msgstr "versió d'aquestes dades"
 
-#: gst/gsttaglist.c:165
+#: gst/gsttaglist.c:164
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:166
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
 "International Standard Recording Code - vegeu http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:169
+#: gst/gsttaglist.c:168
 msgid "organization"
 msgstr "organització"
 
-#: gst/gsttaglist.c:172
+#: gst/gsttaglist.c:171
 msgid "copyright"
 msgstr "copyright"
 
-#: gst/gsttaglist.c:172
+#: gst/gsttaglist.c:171
 msgid "copyright notice of the data"
 msgstr "nota de copyright de les dades"
 
-#: gst/gsttaglist.c:174
+#: gst/gsttaglist.c:173
 #, fuzzy
 msgid "copyright uri"
 msgstr "copyright"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:174
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "nota de copyright de les dades"
 
-#: gst/gsttaglist.c:178
+#: gst/gsttaglist.c:177
 msgid "contact"
 msgstr "contacte"
 
-#: gst/gsttaglist.c:178
+#: gst/gsttaglist.c:177
 msgid "contact information"
 msgstr "informació de contactec"
 
-#: gst/gsttaglist.c:180
+#: gst/gsttaglist.c:179
 msgid "license"
 msgstr "llicència"
 
-#: gst/gsttaglist.c:180
+#: gst/gsttaglist.c:179
 msgid "license of data"
 msgstr "llicència de les dades"
 
-#: gst/gsttaglist.c:182
+#: gst/gsttaglist.c:181
 #, fuzzy
 msgid "license uri"
 msgstr "llicència"
 
-#: gst/gsttaglist.c:183
+#: gst/gsttaglist.c:182
 #, fuzzy
 msgid "URI to the license of the data"
 msgstr "llicència de les dades"
 
-#: gst/gsttaglist.c:186
+#: gst/gsttaglist.c:185
 msgid "performer"
 msgstr "músic"
 
-#: gst/gsttaglist.c:187
+#: gst/gsttaglist.c:186
 msgid "person(s) performing"
 msgstr "persones que toquen"
 
-#: gst/gsttaglist.c:190
+#: gst/gsttaglist.c:189
 msgid "composer"
 msgstr ""
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:190
 #, fuzzy
 msgid "person(s) who composed the recording"
 msgstr "persones responsables de la gravació"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:194
 msgid "duration"
 msgstr "duració"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:194
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "duració en la unitat de temps de GStreamer (nanosegons)"
 
-#: gst/gsttaglist.c:198
+#: gst/gsttaglist.c:197
 msgid "codec"
 msgstr "còdec"
 
-#: gst/gsttaglist.c:199
+#: gst/gsttaglist.c:198
 msgid "codec the data is stored in"
 msgstr "còdec en el qual estan emmagatzemades les dades"
 
-#: gst/gsttaglist.c:202
+#: gst/gsttaglist.c:201
 msgid "video codec"
 msgstr "còdec de vídeo"
 
-#: gst/gsttaglist.c:202
+#: gst/gsttaglist.c:201
 msgid "codec the video data is stored in"
 msgstr "còdel en el qual estan emmagatzemades les dades de vídeo"
 
-#: gst/gsttaglist.c:205
+#: gst/gsttaglist.c:204
 msgid "audio codec"
 msgstr "còdec d'àudio"
 
-#: gst/gsttaglist.c:205
+#: gst/gsttaglist.c:204
 msgid "codec the audio data is stored in"
 msgstr "còdec en el qual estan emmagatzemades les dades d'àudio"
 
-#: gst/gsttaglist.c:207
+#: gst/gsttaglist.c:206
 msgid "bitrate"
 msgstr "ràtio de bits"
 
-#: gst/gsttaglist.c:207
+#: gst/gsttaglist.c:206
 msgid "exact or average bitrate in bits/s"
 msgstr "mitja o valor exacte de ràtio de bits en bits/s"
 
-#: gst/gsttaglist.c:209
+#: gst/gsttaglist.c:208
 msgid "nominal bitrate"
 msgstr "ràtio de bits nominal"
 
-#: gst/gsttaglist.c:209
+#: gst/gsttaglist.c:208
 msgid "nominal bitrate in bits/s"
 msgstr "ràtio de bits nominal en bits/s"
 
-#: gst/gsttaglist.c:211
+#: gst/gsttaglist.c:210
 msgid "minimum bitrate"
 msgstr "ràtio de bits mínim"
 
-#: gst/gsttaglist.c:211
+#: gst/gsttaglist.c:210
 msgid "minimum bitrate in bits/s"
 msgstr "ràtio de bits mínim en bits/s"
 
-#: gst/gsttaglist.c:213
+#: gst/gsttaglist.c:212
 msgid "maximum bitrate"
 msgstr "ràtio de bits màxim"
 
-#: gst/gsttaglist.c:213
+#: gst/gsttaglist.c:212
 msgid "maximum bitrate in bits/s"
 msgstr "ràtio de bits màxim en bits/s"
 
-#: gst/gsttaglist.c:216
+#: gst/gsttaglist.c:215
 msgid "encoder"
 msgstr "codificador"
 
-#: gst/gsttaglist.c:216
+#: gst/gsttaglist.c:215
 msgid "encoder used to encode this stream"
 msgstr "codificador utilitzat per a codificar aquest flux"
 
-#: gst/gsttaglist.c:219
+#: gst/gsttaglist.c:218
 msgid "encoder version"
 msgstr "versió del codificador"
 
-#: gst/gsttaglist.c:220
+#: gst/gsttaglist.c:219
 msgid "version of the encoder used to encode this stream"
 msgstr "versió del codificador utilitzat per a codificar aquest flux"
 
-#: gst/gsttaglist.c:222
+#: gst/gsttaglist.c:221
 msgid "serial"
 msgstr "número de sèrie"
 
-#: gst/gsttaglist.c:222
+#: gst/gsttaglist.c:221
 msgid "serial number of track"
 msgstr "número de sèrie de la pista"
 
-#: gst/gsttaglist.c:224
+#: gst/gsttaglist.c:223
 msgid "replaygain track gain"
 msgstr "ganància de replaygain de la pista"
 
-#: gst/gsttaglist.c:224
+#: gst/gsttaglist.c:223
 msgid "track gain in db"
 msgstr "ganància de la pista en db"
 
-#: gst/gsttaglist.c:226
+#: gst/gsttaglist.c:225
 msgid "replaygain track peak"
 msgstr "cim de les pistes del replaygain"
 
-#: gst/gsttaglist.c:226
+#: gst/gsttaglist.c:225
 msgid "peak of the track"
 msgstr "cim de les pistes"
 
-#: gst/gsttaglist.c:228
+#: gst/gsttaglist.c:227
 msgid "replaygain album gain"
 msgstr "ganància de l'àlbum del replaygain"
 
-#: gst/gsttaglist.c:228
+#: gst/gsttaglist.c:227
 msgid "album gain in db"
 msgstr "ganància de l'àlbum en db"
 
-#: gst/gsttaglist.c:230
+#: gst/gsttaglist.c:229
 msgid "replaygain album peak"
 msgstr "cim de l'àlbum del replaygain"
 
-#: gst/gsttaglist.c:230
+#: gst/gsttaglist.c:229
 msgid "peak of the album"
 msgstr "cim de l'àlbum"
 
-#: gst/gsttaglist.c:232
+#: gst/gsttaglist.c:231
 #, fuzzy
 msgid "replaygain reference level"
 msgstr "cim de les pistes del replaygain"
 
-#: gst/gsttaglist.c:233
+#: gst/gsttaglist.c:232
 msgid "reference level of track and album gain values"
 msgstr ""
 
-#: gst/gsttaglist.c:235
+#: gst/gsttaglist.c:234
 msgid "language code"
 msgstr "codi de la llengua"
 
-#: gst/gsttaglist.c:236
+#: gst/gsttaglist.c:235
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr "codi de la llengua per a aquest flux, conformant amb ISO-639-1"
 
-#: gst/gsttaglist.c:238
+#: gst/gsttaglist.c:237
 msgid "image"
 msgstr ""
 
-#: gst/gsttaglist.c:238
+#: gst/gsttaglist.c:237
 #, fuzzy
 msgid "image related to this stream"
 msgstr "codificador utilitzat per a codificar aquest flux"
 
-#: gst/gsttaglist.c:240
+#: gst/gsttaglist.c:239
 msgid "preview image"
 msgstr ""
 
-#: gst/gsttaglist.c:240
+#: gst/gsttaglist.c:239
 msgid "preview image related to this stream"
 msgstr ""
 
-#: gst/gsttaglist.c:242
+#: gst/gsttaglist.c:241
+msgid "attachment"
+msgstr ""
+
+#: gst/gsttaglist.c:241
+#, fuzzy
+msgid "file attached to this stream"
+msgstr "codificador utilitzat per a codificar aquest flux"
+
+#: gst/gsttaglist.c:244
 msgid "beats per minute"
 msgstr ""
 
-#: gst/gsttaglist.c:242
+#: gst/gsttaglist.c:244
 msgid "number of beats per minute in audio"
 msgstr ""
 
-#: gst/gsttaglist.c:282
+#: gst/gsttaglist.c:246
+msgid "keywords"
+msgstr ""
+
+#: gst/gsttaglist.c:246
+#, fuzzy
+msgid "comma separated keywords describing the content"
+msgstr "text curt descrivint el contingut de les dades"
+
+#: gst/gsttaglist.c:249
+#, fuzzy
+msgid "geo location name"
+msgstr "ubicació"
+
+#: gst/gsttaglist.c:251
+msgid ""
+"human readable descriptive location or where the media has been recorded or "
+"produced"
+msgstr ""
+
+#: gst/gsttaglist.c:254
+msgid "geo location latitude"
+msgstr ""
+
+#: gst/gsttaglist.c:256
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+
+#: gst/gsttaglist.c:259
+msgid "geo location longitude"
+msgstr ""
+
+#: gst/gsttaglist.c:261
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+
+#: gst/gsttaglist.c:264
+msgid "geo location elevation"
+msgstr ""
+
+#: gst/gsttaglist.c:266
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+
+#: gst/gsttaglist.c:307
 msgid ", "
 msgstr ", "
 
@@ -787,20 +850,20 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: libs/gst/base/gstbasesrc.c:1915
+#: libs/gst/base/gstbasesrc.c:1909
 #, fuzzy
 msgid "Internal clock error."
 msgstr "S'ha produït un error intern de flux de dades."
 
-#: libs/gst/base/gstbasesrc.c:2239 libs/gst/base/gstbasesrc.c:2250
+#: libs/gst/base/gstbasesrc.c:2233 libs/gst/base/gstbasesrc.c:2244
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
-#: libs/gst/base/gstbasesink.c:2579
+#: libs/gst/base/gstbasesink.c:2688
 msgid "Internal data flow problem."
 msgstr "Hi ha un problema intern de flux de dades."
 
-#: libs/gst/base/gstbasesink.c:2726
+#: libs/gst/base/gstbasesink.c:2837
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "S'ha produït un error intern de flux de dades."
@@ -815,151 +878,151 @@ msgid ""
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
-#: plugins/elements/gstfdsink.c:297
+#: plugins/elements/gstfdsink.c:296
 #, fuzzy, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
-#: plugins/elements/gstfdsink.c:337
+#: plugins/elements/gstfdsink.c:336
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr ""
 
-#: plugins/elements/gstfilesink.c:352
+#: plugins/elements/gstfilesink.c:351
 msgid "No file name specified for writing."
 msgstr "No s'ha especificat cap nom de fitxer per a l'escriptura."
 
-#: plugins/elements/gstfilesink.c:358
+#: plugins/elements/gstfilesink.c:357
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
 
-#: plugins/elements/gstfilesink.c:383
+#: plugins/elements/gstfilesink.c:382
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "S'ha produït un error en tancar el fitxer «%s»."
 
-#: plugins/elements/gstfilesink.c:519
+#: plugins/elements/gstfilesink.c:518
 #, fuzzy, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
-#: plugins/elements/gstfilesink.c:526 plugins/elements/gstfilesink.c:588
+#: plugins/elements/gstfilesink.c:525 plugins/elements/gstfilesink.c:587
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
-#: plugins/elements/gstfilesrc.c:973
+#: plugins/elements/gstfilesrc.c:1010
 msgid "No file name specified for reading."
 msgstr "No s'ha especificat cap fitxer per a llegir."
 
-#: plugins/elements/gstfilesrc.c:985
+#: plugins/elements/gstfilesrc.c:1022
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 
-#: plugins/elements/gstfilesrc.c:994
+#: plugins/elements/gstfilesrc.c:1031
 #, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "no s'ha pogut obtenir informació sobre «%s»."
 
-#: plugins/elements/gstfilesrc.c:1001
+#: plugins/elements/gstfilesrc.c:1038
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» és un directori."
 
-#: plugins/elements/gstfilesrc.c:1008
+#: plugins/elements/gstfilesrc.c:1045
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "El fitxer «%s» és un sòcol."
 
-#: plugins/elements/gstidentity.c:548
+#: plugins/elements/gstidentity.c:547
 msgid "Failed after iterations as requested."
 msgstr "Ha fallat després de les iteracions com s'ha demanat."
 
-#: plugins/elements/gsttypefindelement.c:194
+#: plugins/elements/gsttypefindelement.c:203
 msgid "caps"
 msgstr "capacitats"
 
-#: plugins/elements/gsttypefindelement.c:195
+#: plugins/elements/gsttypefindelement.c:204
 msgid "detected capabilities in stream"
 msgstr "capacitats detectades al flux"
 
-#: plugins/elements/gsttypefindelement.c:198
+#: plugins/elements/gsttypefindelement.c:207
 msgid "minimum"
 msgstr "mínim"
 
-#: plugins/elements/gsttypefindelement.c:203
+#: plugins/elements/gsttypefindelement.c:212
 msgid "maximum"
 msgstr "màxim"
 
-#: plugins/elements/gsttypefindelement.c:208
+#: plugins/elements/gsttypefindelement.c:217
 msgid "force caps"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:209
+#: plugins/elements/gsttypefindelement.c:218
 msgid "force caps without doing a typefind"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:512
-#: plugins/elements/gsttypefindelement.c:776
+#: plugins/elements/gsttypefindelement.c:521
+#: plugins/elements/gsttypefindelement.c:785
 #, fuzzy
 msgid "Stream contains no data."
 msgstr "àlbum que conté aquesta dades"
 
-#: tools/gst-inspect.c:251
+#: tools/gst-inspect.c:244
 msgid "Implemented Interfaces:\n"
 msgstr ""
 
-#: tools/gst-inspect.c:300
+#: tools/gst-inspect.c:293
 msgid "readable"
 msgstr ""
 
-#: tools/gst-inspect.c:307
+#: tools/gst-inspect.c:300
 #, fuzzy
 msgid "writable"
 msgstr "títol"
 
-#: tools/gst-inspect.c:314
+#: tools/gst-inspect.c:307
 msgid "controllable"
 msgstr ""
 
-#: tools/gst-inspect.c:1033
+#: tools/gst-inspect.c:1015
 #, fuzzy
 msgid "Total count: "
 msgstr "compte de pistes"
 
-#: tools/gst-inspect.c:1034
+#: tools/gst-inspect.c:1016
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:1036
+#: tools/gst-inspect.c:1018
 #, fuzzy, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "funcionalitat"
 msgstr[1] "funcionalitats"
 
-#: tools/gst-inspect.c:1348
+#: tools/gst-inspect.c:1324
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
 
-#: tools/gst-inspect.c:1350
+#: tools/gst-inspect.c:1326
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
 
-#: tools/gst-inspect.c:1430
+#: tools/gst-inspect.c:1406
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
 
-#: tools/gst-inspect.c:1435
+#: tools/gst-inspect.c:1411
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "no hi ha cap element font per a l'URI «%s»"
@@ -1162,6 +1225,9 @@ msgstr "S'està establint el conducte a NUL ...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
+
+#~ msgid "original location of file as a URI"
+#~ msgstr "ubicació original del fitxer com una URI"
 
 #~ msgid "Could not open file \"%s\" for reading: %s."
 #~ msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura: %s."

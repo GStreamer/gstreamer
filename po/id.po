@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.19.3\n"
+"Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-10 17:50+0100\n"
-"PO-Revision-Date: 2008-08-05 23:39+0700\n"
+"PO-Revision-Date: 2008-09-17 21:51+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -459,6 +459,8 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"Asal media dalam bentuk URI (lokasi, dimana berkas asal atau arus "
+"ditempatkan)"
 
 #: gst/gsttaglist.c:160
 msgid "description"
@@ -699,12 +701,11 @@ msgstr "citra pratayang yang berhubungan dengan arus ini"
 
 #: gst/gsttaglist.c:241
 msgid "attachment"
-msgstr ""
+msgstr "lampiran"
 
 #: gst/gsttaglist.c:241
-#, fuzzy
 msgid "file attached to this stream"
-msgstr "citra yang berhubungan dengan arus ini"
+msgstr "berkas yang dilampirkan dalam arus ini"
 
 #: gst/gsttaglist.c:244
 msgid "beats per minute"
@@ -716,27 +717,27 @@ msgstr "jumlah denyut per menit dalam audio"
 
 #: gst/gsttaglist.c:246
 msgid "keywords"
-msgstr ""
+msgstr "kata kunci"
 
 #: gst/gsttaglist.c:246
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "teks pendek yang menerangkan isi data"
+msgstr "kata kunci yang dipisahkan koma menerangkan isi data"
 
 #: gst/gsttaglist.c:249
-#, fuzzy
 msgid "geo location name"
-msgstr "lokasi"
+msgstr "nama lokasi geografis"
 
 #: gst/gsttaglist.c:251
 msgid ""
 "human readable descriptive location or where the media has been recorded or "
 "produced"
 msgstr ""
+"lokasi deskriptif dapat dibaca manusia atau dimana media telah direkam atau "
+"dihasilkan"
 
 #: gst/gsttaglist.c:254
 msgid "geo location latitude"
-msgstr ""
+msgstr "lintang lokasi geografis"
 
 #: gst/gsttaglist.c:256
 msgid ""
@@ -744,10 +745,12 @@ msgid ""
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"lokasi lintang geografis tempat media direkam atau dihasilkan dalam derajat "
+"menurut WGS84 (nol pada khatulistiwa, nilai negatif untuk lintang selatan)"
 
 #: gst/gsttaglist.c:259
 msgid "geo location longitude"
-msgstr ""
+msgstr "bujur lokasi geografis"
 
 #: gst/gsttaglist.c:261
 msgid ""
@@ -755,16 +758,21 @@ msgid ""
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"lokasi bujur geografis tempat media direkam atau dihasilkan dalam derajat "
+"menurut WGS84 (nol pada meridian utama di Greenwich/UK, nilai negatif untuk "
+"bujur timur)"
 
 #: gst/gsttaglist.c:264
 msgid "geo location elevation"
-msgstr ""
+msgstr "ketinggian lokasi geografis"
 
 #: gst/gsttaglist.c:266
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"ketinggian geografis tempat media direkam atau dihasilkan dalam meter "
+"menurut WGS84 (nol adalah permukaan laut rata-rata)"
 
 #: gst/gsttaglist.c:307
 msgid ", "
@@ -1077,9 +1085,9 @@ msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
 #: tools/gst-launch.c:521
-#, c-format
+#, fuzzy, c-format
 msgid "buffering... %d  \r"
-msgstr "menyangga... %d  \r"
+msgstr "menyangga... %d  \n"
 
 #: tools/gst-launch.c:533
 #, c-format

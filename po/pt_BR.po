@@ -5,7 +5,7 @@
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
-# flow -> vazão
+# flow -> fluxo
 # stream -> fluxo
 # preroll -> preparar
 # clock -> temporizador
@@ -15,10 +15,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.19.3\n"
+"Project-Id-Version: gstreamer-0.10.20.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-10 17:50+0100\n"
-"PO-Revision-Date: 2008-07-10 20:47-0300\n"
+"PO-Revision-Date: 2008-09-28 20:37-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
 "MIME-Version: 1.0\n"
@@ -72,11 +72,11 @@ msgstr "Desabilitar depuração"
 
 #: gst/gst.c:335
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "Habilitar diagnótico detalhado do carregamento do plugin"
+msgstr "Habilitar diagnótico detalhado do carregamento do plug-in"
 
 #: gst/gst.c:339
 msgid "Colon-separated paths containing plugins"
-msgstr "Caminhos, separados por dois-pontos, de plugins"
+msgstr "Caminhos, separados por dois-pontos, de plug-ins"
 
 #: gst/gst.c:339
 msgid "PATHS"
@@ -87,18 +87,18 @@ msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"Lista, separada por vírgulas, de plugins para pré-carregar além da lista "
+"Lista, separada por vírgulas, de plug-ins para pré-carregar além da lista "
 "armazenada na variável de ambiente GST_PLUGIN_PATH"
 
 #: gst/gst.c:344
 msgid "PLUGINS"
-msgstr "PLUGINS"
+msgstr "PLUG-INS"
 
 #: gst/gst.c:347
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Desabilitar intercepção das falhas de segmentação durante o carregamento do "
-"plugin"
+"plug-in"
 
 #: gst/gst.c:352
 msgid "Disable updating the registry"
@@ -178,7 +178,7 @@ msgstr "Erro interno no GStreamer: problema no segmento (thread)."
 
 #: gst/gsterror.c:151
 msgid "Internal GStreamer error: negotiation problem."
-msgstr "Erro interno no GStreamer: problema na negociação."
+msgstr "Erro interno no GStreamer: problema de negociação."
 
 #: gst/gsterror.c:153
 msgid "Internal GStreamer error: event problem."
@@ -198,7 +198,7 @@ msgstr "Erro interno no GStreamer: problema na etiqueta."
 
 #: gst/gsterror.c:160
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "Sua instalação do GStreamer está com um plugin faltando."
+msgstr "Sua instalação do GStreamer está com um plug-in faltando."
 
 #: gst/gsterror.c:162
 msgid "Internal GStreamer error: clock problem."
@@ -209,7 +209,7 @@ msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
-"Essa aplicação está tentando usar uma funcionalidade do GStreamer que foi "
+"Este aplicativo está tentando usar uma funcionalidade do GStreamer que foi "
 "desabilitada."
 
 #: gst/gsterror.c:179
@@ -473,6 +473,8 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"A origem da mídia como um URI (localização onde o arquivo ou fluxo original "
+"está hospedado)"
 
 #: gst/gsttaglist.c:160
 msgid "description"
@@ -714,12 +716,11 @@ msgstr "miniatura relacionada a este fluxo"
 
 #: gst/gsttaglist.c:241
 msgid "attachment"
-msgstr ""
+msgstr "anexo"
 
 #: gst/gsttaglist.c:241
-#, fuzzy
 msgid "file attached to this stream"
-msgstr "imagem relacionada a este fluxo"
+msgstr "arquivo anexado a este fluxo"
 
 #: gst/gsttaglist.c:244
 msgid "beats per minute"
@@ -731,27 +732,26 @@ msgstr "número de batidas por minuto no áudio"
 
 #: gst/gsttaglist.c:246
 msgid "keywords"
-msgstr ""
+msgstr "palavras-chave"
 
 #: gst/gsttaglist.c:246
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "texto pequeno descrevendo o conteúdo dos dados"
+msgstr "palavras-chave separadas por vírgula descrevendo o conteúdo"
 
 #: gst/gsttaglist.c:249
-#, fuzzy
 msgid "geo location name"
-msgstr "local"
+msgstr "nome da localização geográfica"
 
 #: gst/gsttaglist.c:251
 msgid ""
 "human readable descriptive location or where the media has been recorded or "
 "produced"
 msgstr ""
+"localização ou onde a mídia foi gravada ou produzida descritiva e legível"
 
 #: gst/gsttaglist.c:254
 msgid "geo location latitude"
-msgstr ""
+msgstr "latitude da localização geográfica"
 
 #: gst/gsttaglist.c:256
 msgid ""
@@ -759,10 +759,13 @@ msgid ""
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"latitude da localização geográfica de onde a mídia foi gravada ou produzida "
+"em graus de acordo com WGS84 (zero corresponde ao equador e valores "
+"negativos a latitudes ao sul)"
 
 #: gst/gsttaglist.c:259
 msgid "geo location longitude"
-msgstr ""
+msgstr "longitude da localização geográfica"
 
 #: gst/gsttaglist.c:261
 msgid ""
@@ -770,16 +773,21 @@ msgid ""
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"longitude da localização geográfica de onde a mídia foi gravada ou produzida "
+"em graus de acordo com WGS84 (zero corresponde ao meridiano de Greenwich/UK "
+"e valores negativos a latitudes ao oeste)"
 
 #: gst/gsttaglist.c:264
 msgid "geo location elevation"
-msgstr ""
+msgstr "elevação da localização geográfica"
 
 #: gst/gsttaglist.c:266
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"elevação geográfica de onde a mídia foi gravada ou produzida em metros de "
+"acordo com WGS84 (zero é a média do nível do mar)"
 
 #: gst/gsttaglist.c:307
 msgid ", "
@@ -861,11 +869,11 @@ msgstr "Erro interno no temporizador."
 
 #: libs/gst/base/gstbasesrc.c:2233 libs/gst/base/gstbasesrc.c:2244
 msgid "Internal data flow error."
-msgstr "Erro interno na vazão de dados."
+msgstr "Erro interno no fluxo de dados."
 
 #: libs/gst/base/gstbasesink.c:2688
 msgid "Internal data flow problem."
-msgstr "Problema interno na vazão de dados."
+msgstr "Problema interno no fluxo de dados."
 
 #: libs/gst/base/gstbasesink.c:2837
 msgid "Internal data stream error."
@@ -999,8 +1007,8 @@ msgstr "Contagem total: "
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] "%d plugin"
-msgstr[1] "%d plugins"
+msgstr[0] "%d plug-in"
+msgstr[1] "%d plug-ins"
 
 #: tools/gst-inspect.c:1018
 #, c-format
@@ -1019,20 +1027,20 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"Exibir uma lista, legível para máquina, de recursos que o plugin "
+"Exibir uma lista, legível para máquina, de recursos que o plug-in "
 "especificado fornece.\n"
 "                                       Útil na conexão com mecanismos "
-"externos de instalação automática de plugins"
+"externos de instalação automática de plug-ins"
 
 #: tools/gst-inspect.c:1406
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Não foi possível carregar o arquivo do plugin: %s\n"
+msgstr "Não foi possível carregar o arquivo do plug-in: %s\n"
 
 #: tools/gst-inspect.c:1411
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Nenhum elemento ou plugin \"%s\"\n"
+msgstr "Nenhum elemento ou plug-in \"%s\"\n"
 
 #: tools/gst-launch.c:80
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -1101,9 +1109,9 @@ msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, esperando o preenchimento do buffer para finalizar...\n"
 
 #: tools/gst-launch.c:521
-#, c-format
+#, fuzzy, c-format
 msgid "buffering... %d  \r"
-msgstr "preenchendo buffer... %d  \r"
+msgstr "preenchendo buffer... %d  \n"
 
 #: tools/gst-launch.c:533
 #, c-format
