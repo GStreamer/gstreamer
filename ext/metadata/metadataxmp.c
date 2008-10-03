@@ -160,6 +160,8 @@ static const SchemaTagMap schema_map_dublin_tags_map[] = {
   {"description", GST_TAG_DESCRIPTION },
   {"title",       GST_TAG_TITLE       },
   {"rights",      GST_TAG_COPYRIGHT   },
+  {"type",        GST_TAG_CODEC       },
+  {"format",      GST_TAG_VIDEO_CODEC },
   {NULL, NULL}
 };
 /* *INDENT-ON* */

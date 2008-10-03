@@ -1,3 +1,10 @@
+2008-10-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/metadata/metadata_mapping.htm:
+	* ext/metadata/metadataxmp.c:
+	* ext/metadata/Makefile.am:
+	  Add mapping of format and mime type to xmp.
+
 2008-10-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/metadata/README:
@@ -12,7 +19,7 @@
 	* ext/metadata/metadataexif.c:
 	* ext/metadata/metadatatags.c:
 	* ext/metadata/metadatatags.h:
-	  Use core gsp tags.
+	  Use core gps tags.
 
 2008-09-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 

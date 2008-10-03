@@ -35,3 +35,4 @@ noinst_HEADERS = 	gstmetadatademux.h   \
 			gstmetadatamux.h     \
 			gstbasemetadata.h
 
+EXTRA_DIST = metadata_mapping.htm
