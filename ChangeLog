@@ -1,3 +1,8 @@
+2008-10-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac::
+	  Depend on released versions of core and base.
+
 2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/pulse/pulsesink.c: (gst_pulsesink_write):
