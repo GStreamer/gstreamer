@@ -1,3 +1,10 @@
+2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.h:
+	Getting the Class from an instance is not just a matter of casting it to
+	the class struct but it involves calling G_OBJECT_GET_CLASS on the
+	instance. Fixes #549784.
+
 2008-10-01  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:

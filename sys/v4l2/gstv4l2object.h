@@ -157,7 +157,7 @@ interface_as_function ## _probe_probe_property (GstPropertyProbe * probe,       
 			                        guint prop_id,                              \
                                                 const GParamSpec * pspec)                   \
 {                                                                                           \
-  Type_Class *this_class = (Type_Class*) probe;                                             \
+  Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
   gst_v4l2_probe_probe_property (probe, prop_id, pspec,                                     \
                                         &this_class->v4l2_class_devices);	            \
 }                                                                                           \
@@ -167,7 +167,7 @@ interface_as_function ## _probe_needs_probe (GstPropertyProbe * probe,          
 			                     guint prop_id,                                 \
                                              const GParamSpec * pspec)                      \
 {                                                                                           \
-  Type_Class *this_class = (Type_Class*) probe;                                             \
+  Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
   return gst_v4l2_probe_needs_probe (probe, prop_id, pspec,                                 \
                                         &this_class->v4l2_class_devices);	            \
 }                                                                                           \
@@ -177,7 +177,7 @@ interface_as_function ## _probe_get_values (GstPropertyProbe * probe,           
 			                    guint prop_id,                                  \
                                             const GParamSpec * pspec)                       \
 {                                                                                           \
-  Type_Class *this_class = (Type_Class*) probe;                                             \
+  Type_Class *this_class = (Type_Class*) G_OBJECT_GET_CLASS (probe);                        \
   return gst_v4l2_probe_get_values (probe, prop_id, pspec,                                  \
                                     &this_class->v4l2_class_devices);	                    \
 }                                                                                           \
