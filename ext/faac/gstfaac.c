@@ -356,6 +356,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
   gboolean ret = FALSE;
   gint n, ver, mpegversion;
   faacEncConfiguration *conf;
+  guint maxbitrate;
 
   mpegversion = FAAC_DEFAULT_MPEGVERSION;
 
@@ -392,6 +393,20 @@ gst_faac_configure_source_pad (GstFaac * faac)
   conf->inputFormat = faac->format;
   conf->outputFormat = faac->outputformat;
   conf->shortctl = faac->shortctl;
+
+  /* check, warn and correct if the max bitrate for the given samplerate is
+   * exceeded. Maximum of 6144 bit for a channel */
+  maxbitrate =
+      (unsigned int) (6144.0 * (double) faac->samplerate / (double) 1024.0 +
+      .5);
+  if (conf->bitRate > maxbitrate) {
+    GST_ELEMENT_WARNING (faac, RESOURCE, SETTINGS, (NULL),
+        ("bitrate %u exceeds maximum allowed bitrate of %u for samplerate %d. "
+            "Setting bitrate to %u", conf->bitRate, maxbitrate,
+            faac->samplerate, maxbitrate));
+    conf->bitRate = maxbitrate;
+  }
+
   if (!faacEncSetConfiguration (faac->handle, conf))
     goto set_failed;
 

@@ -1,3 +1,9 @@
+2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/faac/gstfaac.c: (gst_faac_configure_source_pad):
+	Warn and clamp to max bitrate for samplerate.
+	Fixes #550486.
+
 2008-10-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtsparse.c:
