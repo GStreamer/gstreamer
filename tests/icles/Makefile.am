@@ -1,5 +1,5 @@
 if USE_X
-X_TESTS = stress-xoverlay test-colorkey
+X_TESTS = stress-xoverlay
 
 stress_xoverlay_SOURCES = stress-xoverlay.c
 stress_xoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS)

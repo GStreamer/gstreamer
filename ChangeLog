@@ -1,3 +1,8 @@
+2008-10-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tests/icles/Makefile.am:
+	Only build test-colorkey if GTK+ is available.
+
 === release 0.10.21 ===
 
 2008-10-03  Jan Schmidt <jan.schmidt@sun.com>
