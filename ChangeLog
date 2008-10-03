@@ -1,5 +1,13 @@
 2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_start),
+	(gst_ximage_src_stop), (gst_ximage_src_ximage_get):
+	Stop leaking the cursor image.
+	Unref the last_ximage and the cached cursor image on shutdown.
+	Fixes #551570.
+
+2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* sys/v4l2/gstv4l2object.h:
 	Getting the Class from an instance is not just a matter of casting it to
 	the class struct but it involves calling G_OBJECT_GET_CLASS on the

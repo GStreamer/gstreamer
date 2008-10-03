@@ -210,6 +210,8 @@ gst_ximage_src_start (GstBaseSrc * basesrc)
 
   s->last_frame_no = -1;
 #ifdef HAVE_XDAMAGE
+  if (s->last_ximage)
+    gst_buffer_unref (GST_BUFFER_CAST (s->last_ximage));
   s->last_ximage = NULL;
 #endif
   return gst_ximage_src_open_display (s, s->display_name);
@@ -220,7 +222,15 @@ gst_ximage_src_stop (GstBaseSrc * basesrc)
 {
   GstXImageSrc *src = GST_XIMAGE_SRC (basesrc);
 
+  if (src->last_ximage)
+    gst_buffer_unref (GST_BUFFER_CAST (src->last_ximage));
+  src->last_ximage = NULL;
+
   gst_ximage_src_clear_bufpool (src);
+
+  if (src->cursor_image)
+    XFree (src->cursor_image);
+  src->cursor_image = NULL;
 
   if (src->xcontext) {
     g_mutex_lock (src->x_lock);
@@ -604,6 +614,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
     GST_DEBUG_OBJECT (ximagesrc, "Using XFixes to draw cursor");
     /* get cursor */
+    if (ximagesrc->cursor_image)
+      XFree (ximagesrc->cursor_image);
     ximagesrc->cursor_image = XFixesGetCursorImage (ximagesrc->xcontext->disp);
     if (ximagesrc->cursor_image != NULL) {
       int cx, cy, i, j, count;
