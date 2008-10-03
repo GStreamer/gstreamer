@@ -1,5 +1,11 @@
 2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/pulse/pulsesink.c: (gst_pulsesink_write):
+	* ext/pulse/pulsesrc.c: (gst_pulsesrc_read):
+	Return -1 instead of 0 in error cases. Fixes #554771.
+
+2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_start),
 	(gst_ximage_src_stop), (gst_ximage_src_ximage_get):
 	Stop leaking the cursor image.

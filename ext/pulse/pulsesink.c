@@ -717,10 +717,12 @@ gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
 
   return sum;
 
+  /* ERRORS */
 unlock_and_fail:
-
-  pa_threaded_mainloop_unlock (pulsesink->mainloop);
-  return 0;
+  {
+    pa_threaded_mainloop_unlock (pulsesink->mainloop);
+    return -1;
+  }
 }
 
 static guint

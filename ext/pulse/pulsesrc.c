@@ -578,9 +578,12 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
 
   return sum;
 
+  /* ERRORS */
 unlock_and_fail:
-  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
-  return 0;
+  {
+    pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+    return -1;
+  }
 }
 
 static guint
