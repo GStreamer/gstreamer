@@ -1,4 +1,21 @@
-This is GStreamer Python Bindings 0.10.12, "A Wild Finish"
+This is GStreamer Python Bindings 0.10.13, "Feel The Sun Rise"
+
+Changes since 0.10.12:
+
+      * Updated for GStreamer 0.10.21 API
+      * New examples
+      * Fix double import issues on OS/X
+      * Bug fixes
+
+Bugs fixed since 0.10.12:
+
+      * 553131 : Import modules in correct order
+      * 553134 : Assumes wrong RTLD constants for Linux/MIPS
+      * 461838 : Fails to build on Mac OS X i686 with multiply defined sym...
+      * 517993 : pipeline-tester should not be hardcoded to ALSA
+      * 540221 : Empty GstMiniObject GValues raise a SystemError
+      * 546689 : Add GST_DEBUG_BIN_TO_DOT_FILE* to python bindings
+      * 549450 : caps.append_structure() gives warnings if structure is no...
 
 Changes since 0.10.11:
 
