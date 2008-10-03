@@ -248,8 +248,9 @@ mpegts_parse_reset (MpegTSParse * parse)
   /* PAT */
   g_hash_table_insert (parse->psi_pids,
       GINT_TO_POINTER (0), GINT_TO_POINTER (1));
-
+  parse->pat = NULL;
   /* pmt pids will be added and removed dynamically */
+
 }
 
 static void
@@ -290,8 +291,10 @@ mpegts_parse_finalize (GObject * object)
   MpegTSParse *parse = GST_MPEGTS_PARSE (object);
 
   g_free (parse->program_numbers);
-  if (parse->pat)
+  if (parse->pat) {
     gst_structure_free (parse->pat);
+    parse->pat = NULL;
+  }
   g_hash_table_destroy (parse->programs);
   g_hash_table_destroy (parse->psi_pids);
 

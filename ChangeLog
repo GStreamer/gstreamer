@@ -1,3 +1,8 @@
+2008-10-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtsparse.c:
+	Fix possible crash where pat is pointing to a freed structure.
+
 2008-10-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/metadata/metadata_mapping.htm:
