@@ -1,3 +1,10 @@
+=== release 0.10.21 ===
+
+2008-10-03  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.21, "We Could Be Wrong"
+
 2008-09-28  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
@@ -5,7 +12,7 @@
 
 2008-09-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
-	Patch by: ogg.k.ogg.k <ogg dot k dot ogg dot k at googlemail dot com>
+	Patch by: Vincent Penquerc'h <ogg dot k dot ogg dot k at googlemail dot com>
 
 	* ext/theora/theoraparse.c: (theora_parse_set_streamheader):
 	Set the BOS flag on the BOS packet. Fixes #553244.

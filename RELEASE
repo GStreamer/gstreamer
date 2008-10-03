@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.20 "Here I Go Again"
+Release notes for GStreamer Base Plug-ins 0.10.21 "We Could Be Wrong"
         
 
 
@@ -54,92 +54,50 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * RTP improvements
-      * Support digest auth for RTSP
-      * Additional documentation
-      * Support DSCP QoS in multifdsink
-      * Add NV12/NV21 video buffer layouts
-      * Video scaling now bilinear by default
-      * Support more than 8 channels in audio conversions
-      * Channel mapping fixes for audioconvert
-      * Improve tmplayer and sami subtitle support
-      * Support 1x1 pixel buffers for videoscale
-      * Typefinding improvements for MPEG2, musepack
-      * Ogg/Dirac mapping updated in oggmux
-      * Fixes in ogg demuxing
-      * audiosink synchronisation and slaving fixes
-      * Support muting of the audio in playbin by selecting -1 as the audio stream
-      * Work done on playbin2 and uridecodebin
-      * Improvements in the experimental GIO plugin
-      * decodebin fixes
-      * Handle GAP buffers in some places
-      * Various other leak and bug-fixes
+      * Continue playbin2 development
+      * Ogg improvements - CELT support, skeleton fixes
+      * DVD subpicture support
+      * Improved audio dithering random number generator
+      * xvimagesink/ximagesink fixes
+      * Vorbis encoding and decoding fixes
+      * Recognise Kate subtitle streams
+      * Many bug-fixes and enhancements
 
 Bugs fixed in this release
      
-      * 526794 : [giosrc] totem doesn't work with some gvfs backends
-      * 510417 : [PLUGIN-MOVE] Move gio to gst-plugins-base
-      * 509125 : crash in CD Player: - playing CD - lowering/...
-      * 517813 : [audioconvert] make gap aware
-      * 302798 : [playbin] add mute property
-      * 342294 : Setting playbin property current-audio=-1 also stops the ...
-      * 398033 : [audioconvert] support more than 8 channels
-      * 419351 : [avi/a52dec] AV synchronization problems
-      * 467911 : [subparse] sami parser update
-      * 469933 : multifdsink IPv6 and diffserv TOS/TC markup
-      * 506659 : [textoverlay] rendering error when using non-standard widths
-      * 512333 : [gstvorbistag] Retrieve Ogg/Vorbis cover art as image met...
-      * 512382 : [playbin] race condition when pausing/playing multiple in...
-      * 518037 : pbutils-enumtypes.c is not included in win32/vs6/libgstpb...
-      * 521761 : gstaudioclock frozen the clock value until reaches latest...
-      * 522401 : gdpdepay doesn't validate payload CRCs
-      * 523993 : playbin2 blocks after a while when listening to a radio s...
-      * 524724 : [PATCH] [baseaudiosrc] buffer-time and latency-time do no...
-      * 525665 : Crash on Ogg/Vorbis with chain=NULL
-      * 525915 : [streamheader] Unit test fails with " gst_adapter_peek: as...
-      * 526173 : [typefinding] fails to detect mpeg video stream whereas m...
-      * 529018 : gst_ogm_parse_stream_header creates fraction value with w...
-      * 529500 : [videotestsrc] support for NV12 and NV21
-      * 529546 : [Playbin] Memory leak in streaminfo handling
+      * 537380 : [gnomevfssrc] Doesn't handle short reads properly
+      * 538656 : xvimagesink support for autofill/colorkey property
+      * 540334 : Build fails without X in tests/examples/seek
+      * 528299 : Multiple GstMixerTracks with the same label cause problem...
       * 530068 : Ogg Streams with Skeleton and Granulepos > 0 do not work(...
-      * 530531 : [typefinding] bad read in mpeg_video_stream_type_find
-      * 530719 : gst_video_calculate_display_ratio fails when playing Ogg ...
-      * 530962 : [subparse] parses only every second line of TMPlayer subt...
-      * 532454 : [NV12/NV21] videotestsrc and ffmpegcolorspace don't play ...
-      * 533087 : GstRTSPTransport kept opaque in docs
-      * 533817 : [audioconvert] Can't use default 7 channel layout / only ...
-      * 534071 : Gdppay memleak
-      * 534331 : race in decodebin when changing states while the internal...
-      * 535356 : vorbisdec doesn't support 8 channels
-      * 536475 : gdppay memleak and possible crash
-      * 536521 : Refcounting errors in playbin
-      * 536874 : Build failure on windows
-      * 532166 : [ffmpegcolorspace] support NV12 format
-      * 533617 : [audioconvert] Produces silence when converting 1/2 chann...
-      * 536848 : [giosrc] Doesn't handle short reads properly
-      * 536849 : [giosrc] Very slow doing any playback
-      * 518082 : [alsamixer] playback volumes overwritten by capture volum...
-      * 435633 : [PATCH] videorate not (fully) segment aware; causes frame...
-      * 532364 : tcpclientsrc broken in 0.10.19
-      * 533075 : gst_rtp_buffer_compare_seqnum doesn't do what it says
-      * 533265 : [cddabasesrc] Sound Juicer cut a sector when ripping a track
+      * 537009 : playbin2 silly typo breaks signals
+      * 537045 : decodebin2 sometimes emits 'drained' multiple times
+      * 537599 : [oggdemux] skeleton streams not skipped in ogg
+      * 537889 : [xvimagesink] colorbalance is bad
+      * 538232 : vorbisenc/vorbisdec don't work with a live source
+      * 538663 : gdppay memleak in gst_gdp_pay_reset
+      * 540215 : decodebin does not insert a queue for raw data type
+      * 540351 : [avidemux] Doesn't know about Duck DK4 ADPCM
+      * 540497 : ffmpegcolorspace is returning wrong size
+      * 541358 : cross mingw32 gcc: getaddrinfo is not in ws2_32.dll befor...
+      * 544306 : rtspsrc debug=1 segfaults with some libc
+      * 548898 : GStreamer-CRITICAL errors on seeking beyond stream borders
+      * 548913 : vorbisenc being picky about rounding errors in timestamps
+      * 549062 : Video devices aren't updated on subsequent probing.
+      * 549814 : [typefind] add application/pdf typefinder
+      * 550582 : [oggdemux] KATE streams not recognised
+      * 550638 : [typefind] Recognize some jpeg2k file types
+      * 550656 : recognize TrueSpeech in wavparse
+      * 550729 : gst-plugins-base won't compile with " -pedantic " option
+      * 552960 : tagdemux asserts and aborts on truncated files
+      * 553244 : theoraparse doesn't work at all (throws criticals and ass...
 
 API changed in this release
      
 - API additions:
     
-* decodebin2::sink-caps property
-* giosrc::file property
-* giosink::file property
-* gst_base_audio_src_set_slave_method()
-* gst_base_audio_src_get_slave_method()
-* GstAudioClock::gst_audio_clock_reset()
-* GstBaseAudioSrc:actual-buffer-time property
-* GstBaseAudioSrc:actual-latency-time property
-* gst_audio_check_channel_positions()
-* add gst_tag_image_data_to_image_buffer()
-* add gst_tag_list_add_id3_image()
-* add GST_TAG_IMAGE_TYPE_NONE enum value
+* Add "index" property to GstMixerTrack to differantiate between
+       multiple mixer tracks with the same label.
 
 Download
 
@@ -169,29 +127,26 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Dessina
+      * Andy Wingo
       * Antoine Tremblay
-      * Bernard B
       * Damien Lespiau
       * David Schleef
       * Edward Hervey
-      * Felipe Contreras
-      * Hannes Bistry
-      * Henrik Eriksson
+      * Evgeniy Stepanov
+      * Frederic Crozat
       * Jan Gerber
       * Jan Schmidt
-      * John Millikin
+      * Jonathan Matthew
       * Julien Moutte
       * Mark Nauwelaerts
       * Michael Smith
-      * Ole André Vadla Ravnås
-      * Peter Kjellerstedt
+      * Mike Ruprecht
+      * Sam Morris
       * Sebastian Dröge
-      * Sjoerd Simons
       * Stefan Kost
-      * Thijs Vermeir
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Victor STINNER
+      * Vincent Penquerc'h
       * Wim Taymans
-      * Wouter Cloetens
-      * Young-Ho Cha
  

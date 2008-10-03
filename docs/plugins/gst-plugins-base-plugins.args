@@ -129,6 +129,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstXvImageSink::autopaint-colorkey</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Autofill with colorkey</NICK>
+<BLURB>Whether to autofill overlay with colorkey.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::colorkey</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Colorkey</NICK>
+<BLURB>Color to use for the overlay mask.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::draw-borders</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Colorkey</NICK>
+<BLURB>Draw black borders to fill unused area in force-aspect-ratio mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstXImageSink::display</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -861,11 +891,11 @@
 <ARG>
 <NAME>GstVorbisEnc::quality</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[-0,1,1]</RANGE>
+<RANGE>[-0.1,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Specify quality instead of specifying a particular bitrate.</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -881,7 +911,7 @@
 <ARG>
 <NAME>GstTheoraEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,2000]</RANGE>
+<RANGE>[0,16777215]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate</NICK>
 <BLURB>Compressed video bitrate (kbps).</BLURB>
@@ -1185,7 +1215,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Volume</NICK>
 <BLURB>Volume of test signal.</BLURB>
-<DEFAULT>0,8</DEFAULT>
+<DEFAULT>0.8</DEFAULT>
 </ARG>
 
 <ARG>

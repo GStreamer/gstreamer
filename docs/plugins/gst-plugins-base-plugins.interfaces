@@ -3,16 +3,18 @@ GstPipeline GstChildProxy
 GstPlayBaseBin GstChildProxy
 GstPlayBin GstChildProxy
 GstPlayBin2 GstChildProxy
-GstDecodeBin GstChildProxy
 GstDecodeBin2 GstChildProxy
 GstURIDecodeBin GstChildProxy
+GstDecodeBin GstChildProxy
+GstGnomeVFSSrc GstURIHandler
 GstCddaBaseSrc GstURIHandler
 GstCdParanoiaSrc GstURIHandler
 GstAlsaSrc GstImplementsInterface GstMixer GstPropertyProbe
-GstV4lElement GstImplementsInterface GstPropertyProbe GstXOverlay GstColorBalance GstTuner
-GstV4lSrc GstImplementsInterface GstPropertyProbe GstXOverlay GstColorBalance GstTuner
-GstGnomeVFSSrc GstURIHandler
+GstV4lElement GstImplementsInterface GstPropertyProbe GstXOverlay GstTuner GstColorBalance
+GstV4lSrc GstImplementsInterface GstPropertyProbe GstXOverlay GstTuner GstColorBalance
+GstGioSrc GstURIHandler
 GstGnomeVFSSink GstURIHandler
+GstGioSink GstURIHandler
 GstAlsaSink GstPropertyProbe
 GstXImageSink GstImplementsInterface GstNavigation GstXOverlay
 GstXvImageSink GstImplementsInterface GstPropertyProbe GstNavigation GstXOverlay GstColorBalance
@@ -20,3 +22,9 @@ GstVorbisEnc GstTagSetter
 GstVorbisTag GstTagSetter
 GstAlsaMixerElement GstImplementsInterface GstMixer GstPropertyProbe
 GstVolume GstImplementsInterface GstMixer
+GTypeModule GTypePlugin
+GIOModule GTypePlugin
+GHalDrive GDrive
+GHalMount GMount
+GHalVolume GVolume
+GAppLookupGConf GDesktopAppInfoLookup
