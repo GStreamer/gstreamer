@@ -26,8 +26,9 @@
  * <refsect2>
  * <title>Scaling and Color space conversion</title>
  * <para>
- * Equivalent to glupload ! gldownload. 
+ * Equivalent to glupload ! gldownload.
  * </para>
+ * </refsect2>
  * <refsect2>
  * <title>Examples</title>
  * |[

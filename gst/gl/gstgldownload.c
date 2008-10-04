@@ -30,6 +30,7 @@
  * When needed, the color space conversion is made in a fragment shader using 
  * one frame buffer object instance.
  * </para>
+ * </refsect2>
  * <refsect2>
  * <title>Examples</title>
  * |[
