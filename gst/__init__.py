@@ -167,12 +167,12 @@ except:
 
 if RTLD_GLOBAL != -1 and RTLD_LAZY != -1:
     sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
-    from _gst import *
-    import interfaces
     try:
         import libxml2
     except:
         pass
+    from _gst import *
+    import interfaces
 
 version = get_gst_version
 

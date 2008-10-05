@@ -1,3 +1,11 @@
+2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Alexander Wirt <formorer at debian dot org>
+
+	* gst/__init__.py:
+	Import modules in the correct order, i.e. libxml2 before
+	GStreamer stuff, to prevent unresolved symbols. Fixes bug #553131.
+
 === release 0.10.13 ===
 
 2008-10-03  Jan Schmidt <jan.schmidt@sun.com>
