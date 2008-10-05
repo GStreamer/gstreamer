@@ -1,5 +1,14 @@
 2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Thiemo Seufer <ths at networkno dot de>
+	
+	* gst/__init__.py:
+	Use correct values for RTLD_GLOBAL and RTLD_LAZY on Linux/MIPS
+	as the values are different there from all other Linux platforms.
+	Fixes bug #553134.
+
+2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Alexander Wirt <formorer at debian dot org>
 
 	* gst/__init__.py:

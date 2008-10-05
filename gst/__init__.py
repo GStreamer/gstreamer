@@ -155,8 +155,13 @@ except ImportError:
     import os
     osname = os.uname()[0]
     if osname == 'Linux' or osname == 'SunOS' or osname == 'FreeBSD':
-        RTLD_GLOBAL = 0x100
-        RTLD_LAZY = 0x1
+        machinename = os.uname()[4]
+        if machinename == 'mips' or machinename == 'mips64':
+            RTLD_GLOBAL = 0x4
+            RTLD_LAZY = 0x1
+        else:
+            RTLD_GLOBAL = 0x100
+            RTLD_LAZY = 0x1
     elif osname == 'Darwin':
         RTLD_GLOBAL = 0x8
         RTLD_LAZY = 0x1
