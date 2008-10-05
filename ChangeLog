@@ -1,3 +1,9 @@
+2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (mxf_type_find),
+	(plugin_init):
+	Add typefinder for MXF.
+
 2008-10-03  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/icles/Makefile.am:

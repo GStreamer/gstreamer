@@ -2329,6 +2329,39 @@ matroska_type_find (GstTypeFind * tf, gpointer ununsed)
     }
 }
 
+/*** application/mxf ***/
+static GstStaticCaps mxf_caps = GST_STATIC_CAPS ("application/mxf");
+
+#define MXF_MAX_PROBE_LENGTH (1024 * 64)
+#define MXF_CAPS (gst_static_caps_get(&mxf_caps))
+
+/*
+ * Quoting http://www.digitalpreservation.gov/formats/fdd/fdd000013.shtml:
+ * "MXF files start with an optional run-in followed by the SMPTE header partition pack key.
+ *  The run-in is less than 64k bytes and the condition for finding the start of the file is
+ *  to identify the first 11 bytes of the partition pack key . . . scan the initial 64 k bytes
+ *  for these 11 bytes" to identify an MXF file. (From SMPTE EG 41, p. 45) The 11 bytes listed
+ *  are from SMPTE 377M, p.20.
+ */
+static void
+mxf_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  static const guint8 header_partition_pack_key[] =
+      { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0d, 0x01, 0x02 };
+  DataScanCtx c = { 0, NULL, 0 };
+
+  while (c.offset <= MXF_MAX_PROBE_LENGTH) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 11)))
+      break;
+
+    if (memcmp (c.data, header_partition_pack_key, 11) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MXF_CAPS);
+      return;
+    }
+    data_scan_ctx_advance (tf, &c, 1);
+  }
+}
+
 /*** video/x-dv ***/
 
 static GstStaticCaps dv_caps = GST_STATIC_CAPS ("video/x-dv, "
@@ -3016,6 +3049,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mid_exts[] = { "mid", "midi", NULL };
   static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
   static gchar *pdf_exts[] = { "pdf", NULL };
+  static gchar *mxf_exts[] = { "mxf", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -3148,6 +3182,8 @@ plugin_init (GstPlugin * plugin)
       tiff_exts, TIFF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
       matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/mxf", GST_RANK_PRIMARY,
+      mxf_type_find, mxf_exts, MXF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-mve", GST_RANK_SECONDARY,
       mve_exts, "Interplay MVE File\032\000\032\000\000\001\063\021", 26,
       GST_TYPE_FIND_MAXIMUM);
