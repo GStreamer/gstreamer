@@ -1,3 +1,8 @@
+2008-10-05  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Back to development -> 0.10.21.1
+
 2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/typefind/gsttypefindfunctions.c: (flac_type_find),
