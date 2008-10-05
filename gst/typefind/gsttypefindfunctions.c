@@ -524,6 +524,7 @@ static void
 flac_type_find (GstTypeFind * tf, gpointer unused)
 {
   guint8 *data;
+  DataScanCtx c = { 0, NULL, 0 };
 
   data = gst_type_find_peek (tf, 0, 5);
   if (G_LIKELY (data)) {
@@ -535,6 +536,21 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
     else if (memcmp (data, "\177FLAC\001", 6) == 0) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
     }
+  }
+
+  /* flac without headers */
+  /* 64K should be enough */
+  while (c.offset < (64 * 1024)) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 2)))
+      break;
+
+    if (data[0] == 0xff && (data[1] >> 2) == 0x3e) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, FLAC_CAPS);
+      /* TODO: maybe check more parts of the frame header 
+       * to lower the risk of false positives */
+      return;
+    }
+    data_scan_ctx_advance (tf, &c, 1);
   }
 }
 
