@@ -1,3 +1,8 @@
+2008-10-05  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Back to development -> 0.10.21.1
+
 === release 0.10.21 ===
 
 2008-10-02  Jan Schmidt <jan.schmidt@sun.com>
