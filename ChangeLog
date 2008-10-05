@@ -1,5 +1,12 @@
 2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/typefind/gsttypefindfunctions.c: (flac_type_find),
+	(plugin_init):
+	Add typefinding for FLAC without headers in the beginning.
+	This is already handled by flacdec and friends.
+
+2008-10-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/typefind/gsttypefindfunctions.c: (mxf_type_find),
 	(plugin_init):
 	Add typefinder for MXF.
