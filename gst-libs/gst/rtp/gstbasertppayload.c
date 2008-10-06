@@ -816,6 +816,7 @@ gst_basertppayload_change_state (GstElement * element,
       else
         basertppayload->seqnum_base = basertppayload->seqnum_offset;
       priv->next_seqnum = basertppayload->seqnum_base;
+      basertppayload->seqnum = basertppayload->seqnum_base;
 
       if (priv->ssrc_random)
         basertppayload->current_ssrc = g_rand_int (basertppayload->ssrc_rand);
@@ -826,6 +827,7 @@ gst_basertppayload_change_state (GstElement * element,
         basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
       else
         basertppayload->ts_base = basertppayload->ts_offset;
+      basertppayload->timestamp = basertppayload->ts_base;
       break;
     default:
       break;

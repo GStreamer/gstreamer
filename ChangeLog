@@ -1,5 +1,12 @@
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_change_state):
+	Configure the next seqnum and timestamp in the state change so that they
+	can be queried soon after.
+
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_chain):
 	Improve debugging of the rtptime.
