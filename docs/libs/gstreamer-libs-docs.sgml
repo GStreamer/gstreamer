@@ -8,6 +8,8 @@
 <!ENTITY GstBaseSrc SYSTEM "xml/gstbasesrc.xml">
 <!ENTITY GstBaseSink SYSTEM "xml/gstbasesink.xml">
 <!ENTITY GstBaseTransform SYSTEM "xml/gstbasetransform.xml">
+<!ENTITY GstBitReader SYSTEM "xml/gstbitreader.xml">
+<!ENTITY GstByteReader SYSTEM "xml/gstbytereader.xml">
 <!ENTITY GstCollectPads SYSTEM "xml/gstcollectpads.xml">
 <!ENTITY GstPushSrc SYSTEM "xml/gstpushsrc.xml">
 <!ENTITY GstTypeFindHelper SYSTEM "xml/gsttypefindhelper.xml">
@@ -64,6 +66,8 @@
       &GstPushSrc;
 
       &GstAdapter;
+      &GstBitReader;
+      &GstByteReader;
       &GstCollectPads;
       &GstTypeFindHelper;
       &GstDataQueue;

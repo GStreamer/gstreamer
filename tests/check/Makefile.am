@@ -100,6 +100,8 @@ check_PROGRAMS =				\
 	libs/libsabi				\
 	libs/gdp				\
 	libs/adapter				\
+	libs/bitreader				\
+	libs/bytereader				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
 	libs/transform1				
@@ -148,6 +150,12 @@ elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdi
 elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
 libs_basesrc_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_bitreader_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_bytereader_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
 libs_adapter_LDADD = \

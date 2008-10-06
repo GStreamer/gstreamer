@@ -1,3 +1,36 @@
+2008-10-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/base/gstbitreader.c: (gst_bit_reader_new),
+	(gst_bit_reader_new_from_buffer), (gst_bit_reader_free),
+	(gst_bit_reader_init), (gst_bit_reader_init_from_buffer),
+	(gst_bit_reader_set_pos), (gst_bit_reader_get_pos),
+	(gst_bit_reader_get_remaining), (gst_bit_reader_skip),
+	(gst_bit_reader_skip_to_byte):
+	* libs/gst/base/gstbitreader.h:
+	* libs/gst/base/gstbytereader.c: (GDOUBLE_SWAP_LE_BE),
+	(GFLOAT_SWAP_LE_BE), (gst_byte_reader_new),
+	(gst_byte_reader_new_from_buffer), (gst_byte_reader_free),
+	(gst_byte_reader_init), (gst_byte_reader_init_from_buffer),
+	(gst_byte_reader_set_pos), (gst_byte_reader_get_pos),
+	(gst_byte_reader_get_remaining), (gst_byte_reader_skip),
+	(gst_byte_reader_get_uint8), (gst_byte_reader_get_int8),
+	(gst_byte_reader_peek_uint8), (gst_byte_reader_peek_int8),
+	(gst_byte_reader_get_uint24_le), (gst_byte_reader_get_uint24_be),
+	(gst_byte_reader_get_int24_le), (gst_byte_reader_get_int24_be),
+	(gst_byte_reader_peek_uint24_le), (gst_byte_reader_peek_uint24_be),
+	(gst_byte_reader_peek_int24_le), (gst_byte_reader_peek_int24_be):
+	* libs/gst/base/gstbytereader.h:
+	* tests/check/Makefile.am:
+	* tests/check/libs/bitreader.c: (GST_START_TEST),
+	(gst_bit_reader_suite):
+	* tests/check/libs/bytereader.c: (GST_START_TEST),
+	(gst_byte_reader_suite):
+	Add bit reader and byte reader classes, including documentation
+	and an extensive unit test suite. Fixes bug #553554.
+
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position),
