@@ -28,7 +28,7 @@
 	(gst_bit_reader_suite):
 	* tests/check/libs/bytereader.c: (GST_START_TEST),
 	(gst_byte_reader_suite):
-	Add bit reader and byte reader classes, including documentation
+	API: Add bit reader and byte reader classes, including documentation
 	and an extensive unit test suite. Fixes bug #553554.
 
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
