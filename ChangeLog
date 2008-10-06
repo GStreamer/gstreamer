@@ -1,3 +1,8 @@
+2008-10-06  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	Fix documentation
+
 2008-10-06  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstbuffer.h (GST_BUFFER_FREE_FUNC): New API, a free function

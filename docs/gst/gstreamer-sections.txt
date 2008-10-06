@@ -145,6 +145,7 @@ GST_BUFFER_FLAG_UNSET
 
 GST_BUFFER_DATA
 GST_BUFFER_MALLOCDATA
+GST_BUFFER_FREE_FUNC
 GST_BUFFER_SIZE
 GST_BUFFER_TIMESTAMP
 GST_BUFFER_DURATION
@@ -756,6 +757,7 @@ gst_ghost_pad_new_from_template
 gst_ghost_pad_new_no_target_from_template
 gst_ghost_pad_set_target
 gst_ghost_pad_get_target
+gst_ghost_pad_construct
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD
