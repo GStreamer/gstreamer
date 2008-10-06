@@ -1,3 +1,9 @@
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	Add some more quarks for new message. See #510354.
+
 2008-10-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* docs/libs/gstreamer-libs-docs.sgml:

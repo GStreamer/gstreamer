@@ -60,8 +60,10 @@ typedef enum _GstQuarkId
   GST_QUARK_MIN_LATENCY = 31,
   GST_QUARK_MAX_LATENCY = 32,
   GST_QUARK_BUSY = 33,
+  GST_QUARK_TYPE = 34,
+  GST_QUARK_OWNER = 35,
 
-  GST_QUARK_MAX = 34
+  GST_QUARK_MAX = 36
 } GstQuarkId;
 
 extern GQuark _priv_gst_quark_table[GST_QUARK_MAX];

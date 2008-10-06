@@ -34,7 +34,7 @@ static const gchar *_quark_strings[] = {
   "avg-in-rate", "avg-out-rate", "buffering-left",
   "estimated-total", "old-state", "new-state", "pending-state",
   "clock", "ready", "position", "new-base-time", "live", "min-latency",
-  "max-latency", "busy"
+  "max-latency", "busy", "type", "owner"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];
