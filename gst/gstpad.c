@@ -559,9 +559,7 @@ gst_pad_get_direction (GstPad * pad)
    * error return value */
   g_return_val_if_fail (GST_IS_PAD (pad), GST_PAD_UNKNOWN);
 
-  GST_OBJECT_LOCK (pad);
   result = GST_PAD_DIRECTION (pad);
-  GST_OBJECT_UNLOCK (pad);
 
   return result;
 }
@@ -1185,7 +1183,7 @@ void
 gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
 {
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
+  g_return_if_fail (GST_PAD_IS_SINK (pad));
 
   GST_PAD_CHAINFUNC (pad) = chain;
   GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "chainfunc set to %s",
@@ -1205,7 +1203,7 @@ void
 gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
 {
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (GST_PAD_IS_SRC (pad));
 
   GST_PAD_GETRANGEFUNC (pad) = get;
 
@@ -1226,7 +1224,7 @@ gst_pad_set_checkgetrange_function (GstPad * pad,
     GstPadCheckGetRangeFunction check)
 {
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC);
+  g_return_if_fail (GST_PAD_IS_SRC (pad));
 
   GST_PAD_CHECKGETRANGEFUNC (pad) = check;
 
@@ -1567,22 +1565,35 @@ gst_pad_set_bufferalloc_function (GstPad * pad,
 gboolean
 gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
 {
+  gboolean result = FALSE;
+  GstElement *parent = NULL;
+
   g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
+  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), FALSE);
   g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
+  g_return_val_if_fail (GST_PAD_IS_SINK (sinkpad), FALSE);
 
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinking %s:%s(%p) and %s:%s(%p)",
       GST_DEBUG_PAD_NAME (srcpad), srcpad,
       GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
+  /* We need to notify the parent before taking any pad locks as the bin in
+   * question might be waiting for a lock on the pad while holding its lock
+   * that our message will try to take. */
+  if ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad)))) {
+    if (GST_IS_ELEMENT (parent)) {
+      gst_element_post_message (parent,
+          gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+              GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK, parent, TRUE));
+    } else {
+      gst_object_unref (parent);
+      parent = NULL;
+    }
+  }
+
   GST_OBJECT_LOCK (srcpad);
 
-  if (G_UNLIKELY (GST_PAD_DIRECTION (srcpad) != GST_PAD_SRC))
-    goto not_srcpad;
-
   GST_OBJECT_LOCK (sinkpad);
-
-  if (G_UNLIKELY (GST_PAD_DIRECTION (sinkpad) != GST_PAD_SINK))
-    goto not_sinkpad;
 
   if (G_UNLIKELY (GST_PAD_PEER (srcpad) != sinkpad))
     goto not_linked_together;
@@ -1609,28 +1620,25 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
   GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "unlinked %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
-  return TRUE;
+  result = TRUE;
 
-not_srcpad:
-  {
-    g_critical ("pad %s is not a source pad", GST_PAD_NAME (srcpad));
-    GST_OBJECT_UNLOCK (srcpad);
-    return FALSE;
+done:
+  if (parent != NULL) {
+    gst_element_post_message (parent,
+        gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+            GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK, parent, FALSE));
+    gst_object_unref (parent);
   }
-not_sinkpad:
-  {
-    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (sinkpad));
-    GST_OBJECT_UNLOCK (sinkpad);
-    GST_OBJECT_UNLOCK (srcpad);
-    return FALSE;
-  }
+  return result;
+
+  /* ERRORS */
 not_linked_together:
   {
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
-    return FALSE;
+    goto done;
   }
 }
 
@@ -1793,25 +1801,15 @@ wrong_grandparents:
 static GstPadLinkReturn
 gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
 {
-  /* generic checks */
-  g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
-  g_return_val_if_fail (GST_IS_PAD (sinkpad), GST_PAD_LINK_REFUSED);
-
   GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
       GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
 
   GST_OBJECT_LOCK (srcpad);
 
-  if (G_UNLIKELY (GST_PAD_DIRECTION (srcpad) != GST_PAD_SRC))
-    goto not_srcpad;
-
   if (G_UNLIKELY (GST_PAD_PEER (srcpad) != NULL))
     goto src_was_linked;
 
   GST_OBJECT_LOCK (sinkpad);
-
-  if (G_UNLIKELY (GST_PAD_DIRECTION (sinkpad) != GST_PAD_SINK))
-    goto not_sinkpad;
 
   if (G_UNLIKELY (GST_PAD_PEER (sinkpad) != NULL))
     goto sink_was_linked;
@@ -1829,12 +1827,6 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
 
   return GST_PAD_LINK_OK;
 
-not_srcpad:
-  {
-    g_critical ("pad %s is not a source pad", GST_PAD_NAME (srcpad));
-    GST_OBJECT_UNLOCK (srcpad);
-    return GST_PAD_LINK_WRONG_DIRECTION;
-  }
 src_was_linked:
   {
     GST_CAT_INFO (GST_CAT_PADS, "src %s:%s was already linked to %s:%s",
@@ -1844,13 +1836,6 @@ src_was_linked:
      * be made MT safe.*/
     GST_OBJECT_UNLOCK (srcpad);
     return GST_PAD_LINK_WAS_LINKED;
-  }
-not_sinkpad:
-  {
-    g_critical ("pad %s is not a sink pad", GST_PAD_NAME (sinkpad));
-    GST_OBJECT_UNLOCK (sinkpad);
-    GST_OBJECT_UNLOCK (srcpad);
-    return GST_PAD_LINK_WRONG_DIRECTION;
   }
 sink_was_linked:
   {
@@ -1895,12 +1880,31 @@ GstPadLinkReturn
 gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
 {
   GstPadLinkReturn result;
+  GstElement *parent;
+
+  g_return_val_if_fail (GST_IS_PAD (srcpad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), GST_PAD_LINK_WRONG_DIRECTION);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), GST_PAD_LINK_REFUSED);
+  g_return_val_if_fail (GST_PAD_IS_SINK (sinkpad),
+      GST_PAD_LINK_WRONG_DIRECTION);
+
+  /* Notify the parent early. See gst_pad_unlink for details. */
+  if ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (srcpad)))) {
+    if (GST_IS_ELEMENT (parent)) {
+      gst_element_post_message (parent,
+          gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+              GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, TRUE));
+    } else {
+      gst_object_unref (parent);
+      parent = NULL;
+    }
+  }
 
   /* prepare will also lock the two pads */
   result = gst_pad_link_prepare (srcpad, sinkpad);
 
   if (result != GST_PAD_LINK_OK)
-    goto prepare_failed;
+    goto done;
 
   /* must set peers before calling the link function */
   GST_PAD_PEER (srcpad) = sinkpad;
@@ -1946,12 +1950,16 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
   }
-  return result;
 
-prepare_failed:
-  {
-    return result;
+done:
+  if (parent) {
+    gst_element_post_message (parent,
+        gst_message_new_structure_change (GST_OBJECT_CAST (srcpad),
+            GST_STRUCTURE_CHANGE_TYPE_PAD_LINK, parent, FALSE));
+    gst_object_unref (parent);
   }
+
+  return result;
 }
 
 static void
@@ -3242,7 +3250,7 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
           break;
         }
 
-        if (GST_PAD_DIRECTION (eventpad) == GST_PAD_SRC) {
+        if (GST_PAD_IS_SRC (eventpad)) {
           /* for each pad we send to, we should ref the event; it's up
            * to downstream to unref again when handled. */
           GST_LOG_OBJECT (pad, "Reffing and sending event %p (%s) to %s:%s",
@@ -3287,7 +3295,7 @@ no_iter:
    * return TRUE. This is so that when using the default handler on a sink
    * element, we don't fail to push it. */
   if (!pushed_pads)
-    result = (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
+    result = GST_PAD_IS_SINK (pad);
 
   g_list_free (pushed_pads);
 
@@ -3957,8 +3965,7 @@ GstFlowReturn
 gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 {
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
-      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   return gst_pad_chain_unchecked (pad, buffer);
@@ -4000,7 +4007,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pad);
@@ -4111,7 +4118,7 @@ gst_pad_check_pull_range (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_OBJECT_LOCK (pad);
-  if (GST_PAD_DIRECTION (pad) != GST_PAD_SINK)
+  if (!GST_PAD_IS_SINK (pad))
     goto wrong_direction;
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
@@ -4189,7 +4196,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   GST_PAD_STREAM_LOCK (pad);
@@ -4323,8 +4330,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   gboolean emit_signal;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
-      GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pad);

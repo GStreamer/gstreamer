@@ -1,5 +1,33 @@
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Base on Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/gstbin.c: (gst_bin_init), (gst_bin_add_func),
+	(gst_bin_remove_func), (update_degree),
+	(gst_bin_sort_iterator_new), (gst_bin_handle_message_func):
+	Keep track of pads that are being linked/unlinked and resync the state
+	changes.
+
+	* gst/gstpad.c: (gst_pad_get_direction),
+	(gst_pad_set_chain_function), (gst_pad_set_getrange_function),
+	(gst_pad_set_checkgetrange_function), (gst_pad_unlink),
+	(gst_pad_link_prepare), (gst_pad_link),
+	(gst_pad_event_default_dispatch), (gst_pad_chain), (gst_pad_push),
+	(gst_pad_check_pull_range), (gst_pad_get_range),
+	(gst_pad_pull_range):
+	Some code cleanups, use macros to check pad direction.
+	Don't need to take the lock on the pad direction.
+	Post structure change when pads are linked/unlinked.
+	Change some checks into _return_if_fail().
+
+	* tests/check/gst/gstbin.c:
+	(test_link_structure_change_state_changed_sync_cb),
+	(GST_START_TEST), (gst_bin_suite):
+	Add testcase for pad link/unlinke resync during a state change.
+	Fixes #510354.
+
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstmessage.c: (gst_message_new_structure_change),
 	(gst_message_parse_structure_change):

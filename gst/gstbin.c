@@ -201,6 +201,8 @@ struct _GstBinPrivate
    * have to process the message after finishing the state change even when no
    * child returned GST_STATE_CHANGE_ASYNC. */
   gboolean pending_async_done;
+
+  guint32 structure_cookie;
 };
 
 typedef struct
@@ -485,6 +487,7 @@ gst_bin_init (GstBin * bin)
 
   bin->priv = GST_BIN_GET_PRIVATE (bin);
   bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
+  bin->priv->structure_cookie = 0;
 }
 
 static void
@@ -748,7 +751,7 @@ find_message (GstBin * bin, GstObject * src, GstMessageType types)
   return result;
 }
 
-/* with LOCK, returns TRUE if message had a valid SRC, takes ref on
+/* with LOCK, returns TRUE if message had a valid SRC, takes ownership of
  * the message.
  *
  * A message that is cached and has the same SRC and type is replaced
@@ -916,6 +919,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
+  bin->priv->structure_cookie++;
 
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
@@ -1125,6 +1129,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
    * so that others can detect a change in the children list. */
   bin->numchildren--;
   bin->children_cookie++;
+  bin->priv->structure_cookie++;
 
   if (is_sink && !othersink) {
     /* we're not a sink anymore */
@@ -1150,19 +1155,44 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   for (walk = bin->messages; walk; walk = next) {
     GstMessage *message = (GstMessage *) walk->data;
     GstElement *src = GST_ELEMENT_CAST (GST_MESSAGE_SRC (message));
+    gboolean remove;
 
     next = g_list_next (walk);
+    remove = FALSE;
 
-    if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_START) {
-      if (src == element)
-        this_async = TRUE;
-      else
-        other_async = TRUE;
+    switch (GST_MESSAGE_TYPE (message)) {
+      case GST_MESSAGE_ASYNC_START:
+        if (src == element)
+          this_async = TRUE;
+        else
+          other_async = TRUE;
 
-      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
-          "looking at message %p", message);
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
+            "looking at message %p", message);
+        break;
+      case GST_MESSAGE_STRUCTURE_CHANGE:
+      {
+        GstElement *owner;
+
+        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
+            "looking at structure change message %p", message);
+        /* it's unlikely that this message is still in the list of messages
+         * because this would mean that a link/unlink is busy in another thread
+         * while we remove the element. We still have to remove the message
+         * because we might not receive the done message anymore when the element
+         * is removed from the bin. */
+        gst_message_parse_structure_change (message, NULL, &owner, NULL);
+        if (owner == element)
+          remove = TRUE;
+        break;
+      }
+      default:
+        break;
     }
-    if (src == element) {
+    if (src == element)
+      remove = TRUE;
+
+    if (remove) {
       /* delete all message types */
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
           "deleting message %p of element \"%s\"", message, elem_name);
@@ -1652,17 +1682,27 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
   gboolean linked = FALSE;
 
   GST_OBJECT_LOCK (element);
-  /* don't touch degree if element has no sourcepads */
+  /* don't touch degree if element has no sinkpads */
   if (element->numsinkpads != 0) {
     /* loop over all sinkpads, decrement degree for all connected
      * elements in this bin */
     GList *pads;
 
     for (pads = element->sinkpads; pads; pads = g_list_next (pads)) {
-      GstPad *peer;
+      GstPad *pad, *peer;
 
-      if ((peer = gst_pad_get_peer (GST_PAD_CAST (pads->data)))) {
+      pad = GST_PAD_CAST (pads->data);
+
+      if ((peer = gst_pad_get_peer (pad))) {
         GstElement *peer_element;
+
+        /* we're iterating over the sinkpads, this is the peer and thus the
+         * srcpad, check if it's busy in a link/unlink */
+        if (G_UNLIKELY (find_message (bit->bin, GST_OBJECT_CAST (peer),
+                    GST_MESSAGE_STRUCTURE_CHANGE))) {
+          gst_object_unref (peer);
+          continue;
+        }
 
         if ((peer_element = gst_pad_get_parent_element (peer))) {
           GST_OBJECT_LOCK (peer_element);
@@ -1686,7 +1726,10 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
                 GST_ELEMENT_NAME (peer_element), old_deg, new_deg,
                 GST_ELEMENT_NAME (element));
 
-            /* update degree */
+            /* update degree, it is possible that an element was in 0 and
+             * reaches -1 here. This would mean that the element had no sinkpads
+             * but became linked while the state change was happening. We will
+             * resync on this with the structure change message. */
             if (new_deg == 0) {
               /* degree hit 0, add to queue */
               add_to_queue (bit, peer_element);
@@ -1814,7 +1857,7 @@ gst_bin_sort_iterator_new (GstBin * bin)
       gst_iterator_new (sizeof (GstBinSortIterator),
       GST_TYPE_ELEMENT,
       GST_OBJECT_GET_LOCK (bin),
-      &bin->children_cookie,
+      &bin->priv->structure_cookie,
       (GstIteratorNextFunction) gst_bin_sort_iterator_next,
       (GstIteratorItemFunction) NULL,
       (GstIteratorResyncFunction) gst_bin_sort_iterator_resync,
@@ -2927,6 +2970,34 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         gst_message_unref (message);
         break;
       }
+    }
+    case GST_MESSAGE_STRUCTURE_CHANGE:
+    {
+      gboolean busy;
+
+      gst_message_parse_structure_change (message, NULL, NULL, &busy);
+
+      GST_OBJECT_LOCK (bin);
+      if (busy) {
+        /* while the pad is busy, avoid following it when doing state changes.
+         * Don't update the cookie yet, we will do that after the structure
+         * change finished and we are ready to inspect the new updated
+         * structure. */
+        bin_replace_message (bin, message, GST_MESSAGE_STRUCTURE_CHANGE);
+        message = NULL;
+      } else {
+        /* a pad link/unlink ended, signal the state change iterator that we
+         * need to resync by updating the structure_cookie. */
+        bin_remove_messages (bin, GST_MESSAGE_SRC (message),
+            GST_MESSAGE_STRUCTURE_CHANGE);
+        bin->priv->structure_cookie++;
+      }
+      GST_OBJECT_UNLOCK (bin);
+
+      if (message)
+        gst_message_unref (message);
+
+      break;
     }
     default:
       goto forward;

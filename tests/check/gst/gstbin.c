@@ -893,6 +893,82 @@ GST_START_TEST (test_iterate_sorted)
 
 GST_END_TEST;
 
+static void
+test_link_structure_change_state_changed_sync_cb (GstBus * bus,
+    GstMessage * message, gpointer data)
+{
+  GstPipeline *pipeline = GST_PIPELINE (data);
+  GstElement *src, *identity, *sink;
+  GstState old, snew, pending;
+
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  fail_unless (sink != NULL, "Could not get sink");
+
+  gst_message_parse_state_changed (message, &old, &snew, &pending);
+  if (message->src != GST_OBJECT (sink) || snew != GST_STATE_READY) {
+    gst_object_unref (sink);
+    return;
+  }
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  fail_unless (src != NULL, "Could not get src");
+
+  identity = gst_bin_get_by_name (GST_BIN (pipeline), "identity");
+  fail_unless (identity != NULL, "Could not get identity");
+
+  /* link src to identity, the pipeline should detect the new link and
+   * resync the state change */
+  fail_unless (gst_element_link (src, identity) == TRUE);
+
+  gst_object_unref (src);
+  gst_object_unref (identity);
+  gst_object_unref (sink);
+}
+
+GST_START_TEST (test_link_structure_change)
+{
+  GstElement *src, *identity, *sink, *pipeline;
+  GstBus *bus;
+  GstState state;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  fail_unless (bus != NULL, "Could not get bus");
+
+  /* use the sync signal handler to link elements while the pipeline is still
+   * doing the state change */
+  gst_bus_set_sync_handler (bus, gst_bus_sync_signal_handler, pipeline);
+  g_object_connect (bus, "signal::sync-message::state-changed",
+      G_CALLBACK (test_link_structure_change_state_changed_sync_cb), pipeline,
+      NULL);
+
+  src = gst_element_factory_make ("fakesrc", "src");
+  fail_if (src == NULL, "Could not create fakesrc");
+
+  identity = gst_element_factory_make ("identity", "identity");
+  fail_if (identity == NULL, "Could not create identity");
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_if (sink == NULL, "Could not create fakesink1");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, identity, sink, NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_READY);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  /* the state change will be done on src only if the pipeline correctly resyncs
+   * after that filesrc has been linked to identity */
+  gst_element_get_state (src, &state, NULL, 0);
+  fail_unless_equals_int (state, GST_STATE_READY);
+
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -913,6 +989,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_add_linked);
   tcase_add_test (tc_chain, test_add_self);
   tcase_add_test (tc_chain, test_iterate_sorted);
+  tcase_add_test (tc_chain, test_link_structure_change);
 
   return s;
 }
