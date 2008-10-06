@@ -1,3 +1,12 @@
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked):
+	Original patch by : Simon Descaries
+	Fix small refount leak in caps compatibility check.
+	Fixes #551676.
+
 2008-10-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/advanced-request.xml:
