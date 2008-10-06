@@ -1,5 +1,17 @@
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.c: (gst_message_new_structure_change),
+	(gst_message_parse_structure_change):
+	* gst/gstmessage.h:
+	Implement STRUCTURE_CHANGED messages. These messages will be used to
+	signal the parent bin of link/unlink operations that could require a
+	resync when doing a state change. See ##510354.
+	API: gst_message_new_structure_change()
+	API: gst_message_parse_structure_change()
+
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstquark.c:
 	* gst/gstquark.h:
 	Add some more quarks for new message. See #510354.

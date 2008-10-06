@@ -623,6 +623,48 @@ gst_message_new_new_clock (GstObject * src, GstClock * clock)
 }
 
 /**
+ * gst_message_new_structure_change:
+ * @src: The object originating the message.
+ * @type: The change type.
+ * @owner: The owner element of @src.
+ * @busy: Whether the structure change is busy.
+ *
+ * Create a new structure change message. This message is posted when the
+ * structure of a pipeline is in the process of being changed, for example
+ * when pads are linked or unlinked.
+ *
+ * @src should be the srcpad that unlinked or linked.
+ *
+ * Returns: The new structure change message.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.22.
+ */
+GstMessage *
+gst_message_new_structure_change (GstObject * src, GstStructureChangeType type,
+    GstElement * owner, gboolean busy)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  g_return_val_if_fail (GST_IS_PAD (src), NULL);
+  g_return_val_if_fail (GST_PAD_DIRECTION (src) == GST_PAD_SRC, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (owner), NULL);
+
+  structure = gst_structure_empty_new ("GstMessageStructureChange");
+  gst_structure_id_set (structure,
+      GST_QUARK (TYPE), GST_TYPE_STRUCTURE_CHANGE_TYPE, type,
+      GST_QUARK (OWNER), GST_TYPE_ELEMENT, owner,
+      GST_QUARK (BUSY), G_TYPE_BOOLEAN, busy, NULL);
+
+  message = gst_message_new_custom (GST_MESSAGE_STRUCTURE_CHANGE, src,
+      structure);
+
+  return message;
+}
+
+/**
  * gst_message_new_segment_start:
  * @src: The object originating the message.
  * @format: The format of the position being played
@@ -1069,6 +1111,45 @@ gst_message_parse_new_clock (GstMessage * message, GstClock ** clock)
 
   if (clock)
     *clock = (GstClock *) g_value_get_object (clock_gvalue);
+}
+
+/**
+ * gst_message_parse_structure_change:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STRUCTURE_CHANGE.
+ * @type: A pointer to hold the change type
+ * @owner: The owner element of the message source
+ * @busy: A pointer to hold whether the change is in progress or has been
+ * completed
+ *
+ * Extracts the change type and completion status from the GstMessage.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.22
+ */
+void
+gst_message_parse_structure_change (GstMessage * message,
+    GstStructureChangeType * type, GstElement ** owner, gboolean * busy)
+{
+  const GValue *owner_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STRUCTURE_CHANGE);
+
+  owner_gvalue =
+      gst_structure_id_get_value (message->structure, GST_QUARK (OWNER));
+  g_return_if_fail (owner_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (owner_gvalue) == GST_TYPE_ELEMENT);
+
+  if (type)
+    *type = g_value_get_enum (gst_structure_id_get_value (message->structure,
+            GST_QUARK (TYPE)));
+  if (owner)
+    *owner = (GstElement *) g_value_get_object (owner_gvalue);
+  if (busy)
+    *busy =
+        g_value_get_boolean (gst_structure_id_get_value (message->structure,
+            GST_QUARK (BUSY)));
 }
 
 /**
