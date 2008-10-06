@@ -162,8 +162,8 @@ gst_siren_dec_chain (GstPad *pad, GstBuffer *buf)
   GstSirenDec *dec = GST_SIREN_DEC (gst_pad_get_parent_element (pad));
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *decoded = NULL;
-  guint inoffset = 0;
-  guint outoffset = 0;
+  guint in_offset = 0;
+  guint out_offset = 0;
   gint decode_ret = 0;
   guint size = 0;
 
@@ -190,28 +190,28 @@ gst_siren_dec_chain (GstPad *pad, GstBuffer *buf)
 
   GST_BUFFER_TIMESTAMP (decoded) = GST_BUFFER_TIMESTAMP (buf);
 
-  while((inoffset + 40 <= GST_BUFFER_SIZE (buf)) &&
+  while((in_offset + 40 <= GST_BUFFER_SIZE (buf)) &&
       ret == GST_FLOW_OK) {
 
     GST_LOG_OBJECT (dec, "Decoding frame");
 
     decode_ret = Siren7_DecodeFrame (dec->decoder,
-        GST_BUFFER_DATA (buf) + inoffset,
-        GST_BUFFER_DATA (decoded) + outoffset);
+        GST_BUFFER_DATA (buf) + in_offset,
+        GST_BUFFER_DATA (decoded) + out_offset);
     if (decode_ret != 0) {
       GST_ERROR_OBJECT (dec, "Siren7_DecodeFrame returned %d", decode_ret);
       ret = GST_FLOW_ERROR;
     }
 
-    inoffset += 40;
-    outoffset += 640;
+    in_offset += 40;
+    out_offset += 640;
   }
 
-  GST_LOG_OBJECT (dec, "Finished decoding : %d", outoffset);
-  if (outoffset != GST_BUFFER_SIZE (decoded)) {
+  GST_LOG_OBJECT (dec, "Finished decoding : %d", out_offset);
+  if (out_offset != GST_BUFFER_SIZE (decoded)) {
     GST_ERROR_OBJECT (dec,
         "didn't decode enough : offfset (%d) != BUFFER_SIZE (%d)",
-        outoffset, GST_BUFFER_SIZE (decoded));
+        out_offset, GST_BUFFER_SIZE (decoded));
     return GST_FLOW_ERROR;
   }
 
