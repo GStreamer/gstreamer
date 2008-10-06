@@ -1954,13 +1954,13 @@ gst_fluts_demux_is_PMT (GstFluTSDemux * demux, guint16 PID)
 static FORCE_INLINE GstFlowReturn
 gst_fluts_stream_pes_buffer_flush (GstFluTSStream * stream)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  g_return_val_if_fail (stream->pes_buffer, GST_FLOW_OK);
-
-  GST_BUFFER_SIZE (stream->pes_buffer) = stream->pes_buffer_used;
-  ret = gst_pes_filter_push (&stream->filter, stream->pes_buffer);
-  stream->pes_buffer = NULL;
+  if (stream->pes_buffer) {
+    GST_BUFFER_SIZE (stream->pes_buffer) = stream->pes_buffer_used;
+    ret = gst_pes_filter_push (&stream->filter, stream->pes_buffer);
+    stream->pes_buffer = NULL;
+  }
   return ret;
 }
 

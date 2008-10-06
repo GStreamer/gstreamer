@@ -1,3 +1,10 @@
+2008-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch by: Josep Torra
+
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	Fix wrong firing of critical introduced by previous optimisation.
+
 2008-10-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/faac/gstfaac.c: (gst_faac_configure_source_pad):
