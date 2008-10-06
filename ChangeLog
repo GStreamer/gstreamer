@@ -1,5 +1,16 @@
 2008-10-06  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstbuffer.h (GST_BUFFER_FREE_FUNC): New API, a free function
+	that will be called on the malloc_data to free it. Basically a way
+	to avoid subclassing when all you need is a different free
+	function, i.e. free() instead of g_free().
+
+	* gst/gstbuffer.c (gst_buffer_finalize): Free malloc_data via
+	calling the free function.
+	(gst_buffer_init): Initialize the free function to g_free.
+
+2008-10-06  Andy Wingo  <wingo@pobox.com>
+
 	* gst/gstghostpad.h:
 	* gst/gstghostpad.c (gst_ghost_pad_construct): New function,
 	finishes the initialization of ghost pad. Useful for language
