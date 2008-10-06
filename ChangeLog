@@ -1,5 +1,12 @@
 2008-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/mpegtsparse/mpegtsparse.c:
+	Actually copy the structure passed in when assigning it because
+	it gets freed straight after the function call.
+	Re: pat_info and pmt_info GstStructures.
+
+2008-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	Patch by: Josep Torra
 
 	* gst/mpegdemux/gstmpegtsdemux.c:
