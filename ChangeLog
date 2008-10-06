@@ -1,5 +1,18 @@
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on Patch by: Tero Saarni <tero dot saarni at gmail dot com>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c: (gst_sdp_parse_line),
+	(print_media), (gst_sdp_message_dump):
+	Fix parsing of the c= field containing multicast addresses.
+	Fixes #552199.
+	Add the connection info to the session or streams.
+	Fix parsing of the bandwidth.
+	Add debugging for the connections and bandwidths for a media.
+	Add debugging for the bandwidth of the session. 
+
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/rtp/gstbasertppayload.c:
 	(gst_basertppayload_change_state):
 	Configure the next seqnum and timestamp in the state change so that they
