@@ -1,3 +1,9 @@
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain):
+	Improve debugging of the rtptime.
+
 2008-10-05  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

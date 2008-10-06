@@ -258,6 +258,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   GstBuffer *out_buf;
   GstClockTime timestamp;
   guint16 seqnum;
+  guint32 rtptime;
   gboolean reset_seq, discont;
   gint gap;
 
@@ -280,11 +281,13 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   priv->duration = GST_BUFFER_DURATION (in);
 
   seqnum = gst_rtp_buffer_get_seq (in);
+  rtptime = gst_rtp_buffer_get_timestamp (in);
   reset_seq = TRUE;
   discont = FALSE;
 
-  GST_LOG_OBJECT (filter, "discont %d, seqnum %u, timestamp %"
-      GST_TIME_FORMAT, priv->discont, seqnum, GST_TIME_ARGS (timestamp));
+  GST_LOG_OBJECT (filter, "discont %d, seqnum %u, rtptime %u, timestamp %"
+      GST_TIME_FORMAT, priv->discont, seqnum, rtptime,
+      GST_TIME_ARGS (timestamp));
 
   /* Check seqnum. This is a very simple check that makes sure that the seqnums
    * are striclty increasing, dropping anything that is out of the ordinary. We
@@ -333,10 +336,6 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   /* let's send it out to processing */
   out_buf = bclass->process (filter, in);
   if (out_buf) {
-    guint32 rtptime;
-
-    rtptime = gst_rtp_buffer_get_timestamp (in);
-
     /* we pass rtptime as backward compatibility, in reality, the incomming
      * buffer timestamp is always applied to the outgoing packet. */
     ret = gst_base_rtp_depayload_push_ts (filter, rtptime, out_buf);
