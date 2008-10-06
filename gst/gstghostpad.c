@@ -509,8 +509,10 @@ struct _GstGhostPad
   /* with PROXY_LOCK */
   gulong notify_id;
 
+  gpointer constructed;
+
   /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstGhostPadClass
@@ -758,41 +760,51 @@ gst_ghost_pad_dispose (GObject * object)
   G_OBJECT_CLASS (gst_ghost_pad_parent_class)->dispose (object);
 }
 
-static GstPad *
-gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
-    GstPadTemplate * templ)
+/**
+ * gst_ghost_pad_construct:
+ * @gpad: the newly allocated ghost pad
+ *
+ * Finish initialization of a newly allocated ghost pad.
+ *
+ * This function is most useful in language bindings and when subclassing
+ * #GstGhostPad; plugin and application developers normally will not call this
+ * function. Call this function directly after a call to g_object_new
+ * (GST_TYPE_GHOST_PAD, "direction", @dir, ..., NULL).
+ *
+ * Returns: %TRUE if the construction succeeds, %FALSE otherwise.
+ */
+gboolean
+gst_ghost_pad_construct (GstGhostPad * gpad)
 {
-  GstPad *ret;
-  GstPad *internal;
-  GstPadDirection otherdir;
+  GstPadDirection dir, otherdir;
+  GstPadTemplate *templ;
+  GstPad *pad, *internal;
 
-  g_return_val_if_fail (dir != GST_PAD_UNKNOWN, NULL);
+  g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
+  g_return_val_if_fail (!gpad->constructed, FALSE);
 
-  /* OBJECT CREATION */
-  if (templ) {
-    ret = g_object_new (GST_TYPE_GHOST_PAD, "name", name,
-        "direction", dir, "template", templ, NULL);
-  } else {
-    ret = g_object_new (GST_TYPE_GHOST_PAD, "name", name,
-        "direction", dir, NULL);
-  }
+  g_object_get (gpad, "direction", &dir, "template", &templ, NULL);
+
+  g_return_val_if_fail (dir != GST_PAD_UNKNOWN, FALSE);
+
+  pad = GST_PAD (gpad);
 
   /* Set directional padfunctions for ghostpad */
   if (dir == GST_PAD_SINK) {
-    gst_pad_set_bufferalloc_function (ret,
+    gst_pad_set_bufferalloc_function (pad,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_bufferalloc));
-    gst_pad_set_chain_function (ret,
+    gst_pad_set_chain_function (pad,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_chain));
   } else {
-    gst_pad_set_getrange_function (ret,
+    gst_pad_set_getrange_function (pad,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_getrange));
-    gst_pad_set_checkgetrange_function (ret,
+    gst_pad_set_checkgetrange_function (pad,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_checkgetrange));
   }
 
   /* link/unlink functions */
-  gst_pad_set_link_function (ret, GST_DEBUG_FUNCPTR (gst_ghost_pad_do_link));
-  gst_pad_set_unlink_function (ret,
+  gst_pad_set_link_function (pad, GST_DEBUG_FUNCPTR (gst_ghost_pad_do_link));
+  gst_pad_set_unlink_function (pad,
       GST_DEBUG_FUNCPTR (gst_ghost_pad_do_unlink));
 
 
@@ -822,11 +834,11 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
         GST_DEBUG_FUNCPTR (gst_proxy_pad_do_checkgetrange));
   }
 
-  GST_PROXY_LOCK (ret);
+  GST_PROXY_LOCK (pad);
 
   /* now make the ghostpad a parent of the internal pad */
   if (!gst_object_set_parent (GST_OBJECT_CAST (internal),
-          GST_OBJECT_CAST (ret)))
+          GST_OBJECT_CAST (pad)))
     goto parent_failed;
 
   /* The ghostpad is the parent of the internal pad and is the only object that
@@ -837,17 +849,17 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
    * it's refcount on the internal pad in the dispose method by un-parenting it.
    * This is why we don't take extra refcounts in the assignments below
    */
-  GST_PROXY_PAD_INTERNAL (ret) = internal;
-  GST_PROXY_PAD_INTERNAL (internal) = ret;
+  GST_PROXY_PAD_INTERNAL (pad) = internal;
+  GST_PROXY_PAD_INTERNAL (internal) = pad;
 
   /* could be more general here, iterating over all writable properties...
    * taking the short road for now tho */
-  GST_GHOST_PAD_CAST (ret)->notify_id =
+  GST_GHOST_PAD_CAST (pad)->notify_id =
       g_signal_connect (internal, "notify::caps", G_CALLBACK (on_int_notify),
-      ret);
+      pad);
 
   /* call function to init values of the pad caps */
-  on_int_notify (internal, NULL, GST_GHOST_PAD_CAST (ret));
+  on_int_notify (internal, NULL, GST_GHOST_PAD_CAST (pad));
 
   /* special activation functions for the internal pad */
   gst_pad_set_activatepull_function (internal,
@@ -855,22 +867,50 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
   gst_pad_set_activatepush_function (internal,
       GST_DEBUG_FUNCPTR (gst_ghost_pad_internal_do_activate_push));
 
-  GST_PROXY_UNLOCK (ret);
+  GST_PROXY_UNLOCK (pad);
 
-  return ret;
+  gpad->constructed = (gpointer) 1;
+  return TRUE;
 
   /* ERRORS */
 parent_failed:
   {
-    GST_WARNING_OBJECT (ret, "Could not set internal pad %s:%s",
+    GST_WARNING_OBJECT (gpad, "Could not set internal pad %s:%s",
         GST_DEBUG_PAD_NAME (internal));
     g_critical ("Could not set internal pad %s:%s",
         GST_DEBUG_PAD_NAME (internal));
-    GST_PROXY_UNLOCK (ret);
-    gst_object_unref (ret);
+    GST_PROXY_UNLOCK (pad);
     gst_object_unref (internal);
-    return NULL;
+    return FALSE;
   }
+}
+
+static GstPad *
+gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
+    GstPadTemplate * templ)
+{
+  GstGhostPad *ret;
+
+  g_return_val_if_fail (dir != GST_PAD_UNKNOWN, NULL);
+
+  /* OBJECT CREATION */
+  if (templ) {
+    ret = g_object_new (GST_TYPE_GHOST_PAD, "name", name,
+        "direction", dir, "template", templ, NULL);
+  } else {
+    ret = g_object_new (GST_TYPE_GHOST_PAD, "name", name,
+        "direction", dir, NULL);
+  }
+
+  if (!gst_ghost_pad_construct (ret))
+    goto construct_failed;
+
+  return GST_PAD (ret);
+
+construct_failed:
+  /* already logged */
+  gst_object_unref (ret);
+  return NULL;
 }
 
 /**

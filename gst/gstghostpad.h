@@ -57,6 +57,8 @@ GstPad*		 gst_ghost_pad_new_no_target_from_template (const gchar *name, GstPadTe
 GstPad*		 gst_ghost_pad_get_target	(GstGhostPad *gpad);
 gboolean	 gst_ghost_pad_set_target	(GstGhostPad *gpad, GstPad *newtarget);
 
+gboolean	 gst_ghost_pad_construct	(GstGhostPad *gpad);
+
 G_END_DECLS
 
 #endif /* __GST_GHOST_PAD_H__ */

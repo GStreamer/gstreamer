@@ -1,3 +1,11 @@
+2008-10-06  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstghostpad.h:
+	* gst/gstghostpad.c (gst_ghost_pad_construct): New function,
+	finishes the initialization of ghost pad. Useful for language
+	bindings and subclassers of GstGhostPad. Fixes #539108.
+	(gst_ghost_pad_new_full): Use the new constructor.
+
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Base on Patch by: Olivier Crete <tester at tester dot ca>
