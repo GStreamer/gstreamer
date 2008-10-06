@@ -3225,7 +3225,7 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, gint64 * cur)
 
 static gboolean
 gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
-    gint64 * cur)
+    gint64 * cur, gboolean * upstream)
 {
   GstClock *clock;
   gboolean res = FALSE;
@@ -3320,8 +3320,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       break;
     }
     default:
-      /* cannot answer other than TIME, we return FALSE, which will
-       * send the query upstream. */
+      /* cannot answer other than TIME, ask to send the query upstream. */
+      *upstream = TRUE;
       break;
   }
 
@@ -3347,7 +3347,7 @@ in_pause:
   }
 wrong_state:
   {
-    /* in NULL or READY we always return 0 */
+    /* in NULL or READY we always return FALSE and -1 */
     GST_DEBUG_OBJECT (basesink, "position in wrong state, return -1");
     res = FALSE;
     *cur = -1;
@@ -3356,10 +3356,12 @@ wrong_state:
   }
 no_sync:
   {
-    /* report last seen timestamp if any, else return FALSE so
-     * that upstream can answer */
+    /* report last seen timestamp if any, else ask upstream to answer */
     if ((*cur = basesink->priv->current_sstart) != -1)
       res = TRUE;
+    else
+      *upstream = TRUE;
+
     GST_DEBUG_OBJECT (basesink, "no sync, res %d, POSITION %" GST_TIME_FORMAT,
         res, GST_TIME_ARGS (*cur));
     GST_OBJECT_UNLOCK (basesink);
@@ -3379,15 +3381,17 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     {
       gint64 cur = 0;
       GstFormat format;
+      gboolean upstream = FALSE;
 
       gst_query_parse_position (query, &format, NULL);
 
       GST_DEBUG_OBJECT (basesink, "position format %d", format);
 
       /* first try to get the position based on the clock */
-      if ((res = gst_base_sink_get_position (basesink, format, &cur))) {
+      if ((res =
+              gst_base_sink_get_position (basesink, format, &cur, &upstream))) {
         gst_query_set_position (query, format, cur);
-      } else {
+      } else if (upstream) {
         /* fallback to peer query */
         res = gst_base_sink_peer_query (basesink, query);
       }

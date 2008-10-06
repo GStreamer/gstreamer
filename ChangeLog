@@ -1,5 +1,12 @@
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position),
+	(gst_base_sink_query):
+	Improve position reporting while flushing and other intermediate state
+	changes. Fixes #553874.
+
+2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
 
 	* gst/gstpad.c: (gst_pad_link_check_compatible_unlocked):
