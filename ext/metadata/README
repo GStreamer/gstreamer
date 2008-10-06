@@ -87,3 +87,20 @@ Obs: By looking at the proposed design (1- view and 2- modify) seems that the me
   application could send width and height tag events to the pipeline
 * should metadatamux get info from caps (width and height) and use if not receive a event with such tags?
 
+
+Testing
+GST_DEBUG="*:2,metadata*:4" 
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=66.1,geo-location-longitude=22.5,geo-location-elevation=10.3" ! metadatamux ! filesink location="meta_test_ppp.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=66.1,geo-location-longitude=22.5,geo-location-elevation=-10.3" ! metadatamux ! filesink location="meta_test_ppn.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=66.1,geo-location-longitude=-22.5,geo-location-elevation=10.3" ! metadatamux ! filesink location="meta_test_pnp.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=66.1,geo-location-longitude=-22.5,geo-location-elevation=-10.3" ! metadatamux ! filesink location="meta_test_pnn.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=-66.1,geo-location-longitude=22.5,geo-location-elevation=10.3" ! metadatamux ! filesink location="meta_test_npp.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=-66.1,geo-location-longitude=22.5,geo-location-elevation=-10.3" ! metadatamux ! filesink location="meta_test_npn.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=-66.1,geo-location-longitude=-22.5,geo-location-elevation=10.3" ! metadatamux ! filesink location="meta_test_nnp.jpeg"
+gst-launch videotestsrc num-buffers=1 ! jpegenc ! taginject  tags="geo-location-latitude=-66.1,geo-location-longitude=-22.5,geo-location-elevation=-10.3" ! metadatamux ! filesink location="meta_test_nnn.jpeg"
+
+exiv2 -pt pr meta_test_ppp.jpeg | grep "Exif.GPSInfo"
+exif meta_test_ppp.jpeg
+
+gst-launch -t filesrc location="meta_test_ppp.jpeg" ! metadatademux ! fakesink
+

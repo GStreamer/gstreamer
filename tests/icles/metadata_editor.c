@@ -932,8 +932,8 @@ me_gst_bus_callback_view (GstBus * bus, GstMessage * message, gpointer data)
           if (ntl) {
             gst_tag_list_free (tag_list);
             tag_list = ntl;
-            gst_tag_list_free (tl);
           }
+          gst_tag_list_free (tl);
         }
       }
       /* remove whole chunk tags */

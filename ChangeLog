@@ -1,5 +1,24 @@
 2008-10-06  Stefan Kost  <ensonic@users.sf.net>
 
+        * configure.ac
+	* ext/metadata/README:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	  Start using core geo tags (bump req). Fix handling of location
+	  references.
+
+	* tests/check/Makefile.am:
+	  Sort blacklisted elements and remove moved ones. Add new test.
+
+	* tests/check/pipelines/metadata.c:
+	  Add first tests for metadata element.
+
+	* tests/icles/metadata_editor.c:
+	  Move free to correct place.
+
+2008-10-06  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/generic/states.c:
 	  Stop test on state-change error. Should be applied on other modules if
 	  we agree that it makes sense.

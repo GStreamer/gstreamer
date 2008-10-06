@@ -13,7 +13,7 @@ TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
         GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
-        STATE_IGNORE_ELEMENTS="cdaudio festival vcdsrc nassink glimagesink dvbsrc dvbbasebin sdlaudiosink sdlvideosink alsaspdifsink dfbvideosink dc1394src"
+        STATE_IGNORE_ELEMENTS="alsaspdifsink cdaudio dc1394src dvbsrc dvbbasebin dfbvideosink festival nassink sdlaudiosink sdlvideosink vcdsrc"
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
@@ -26,6 +26,12 @@ CLEANFILES = core.* test-registry.*
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
+
+if USE_METADATA
+check_metadata = pipelines/metadata
+else
+check_metadata =
+endif
 
 if USE_MPEG2ENC
 check_mpeg2enc = elements/mpeg2enc
@@ -82,7 +88,10 @@ check_PROGRAMS = \
 	$(check_timidity)  \
 	$(check_x264enc)   \
 	elements/selector \
-	elements/y4menc
+	elements/y4menc   \
+	elements/amrparse \
+	elements/aacparse \
+	$(check_metadata)
 
 noinst_HEADERS = 
 
