@@ -103,6 +103,7 @@ teardown ()
 GST_START_TEST (test_state_changes_up_and_down_seq)
 {
   GstElement *element;
+  GstStateChangeReturn sret;
   GList *e;
 
   for (e = elements; e; e = e->next) {
@@ -116,17 +117,20 @@ GST_START_TEST (test_state_changes_up_and_down_seq)
       GST_DEBUG ("element %s is a pipeline", name);
     }
 
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_PLAYING);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_NULL);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_PLAYING);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_NULL);
+    sret = gst_element_set_state (element, GST_STATE_READY);
+    if (sret != GST_STATE_CHANGE_FAILURE) {
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_NULL);
+
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_NULL);
+    }
     gst_object_unref (GST_OBJECT (element));
   }
 }
@@ -136,6 +140,7 @@ GST_END_TEST;
 GST_START_TEST (test_state_changes_up_seq)
 {
   GstElement *element;
+  GstStateChangeReturn sret;
   GList *e;
 
   for (e = elements; e; e = e->next) {
@@ -149,17 +154,18 @@ GST_START_TEST (test_state_changes_up_seq)
       GST_DEBUG ("element %s is a pipeline", name);
     }
 
-    gst_element_set_state (element, GST_STATE_READY);
+    sret = gst_element_set_state (element, GST_STATE_READY);
+    if (sret != GST_STATE_CHANGE_FAILURE) {
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
 
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
 
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_PLAYING);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-
-    gst_element_set_state (element, GST_STATE_NULL);
+      gst_element_set_state (element, GST_STATE_NULL);
+    }
     gst_object_unref (GST_OBJECT (element));
   }
 }
@@ -169,6 +175,7 @@ GST_END_TEST;
 GST_START_TEST (test_state_changes_down_seq)
 {
   GstElement *element;
+  GstStateChangeReturn sret;
   GList *e;
 
   for (e = elements; e; e = e->next) {
@@ -182,21 +189,23 @@ GST_START_TEST (test_state_changes_down_seq)
       GST_DEBUG ("element %s is a pipeline", name);
     }
 
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_PLAYING);
+    sret = gst_element_set_state (element, GST_STATE_READY);
+    if (sret != GST_STATE_CHANGE_FAILURE) {
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PLAYING);
 
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PLAYING);
 
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PLAYING);
 
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_NULL);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_NULL);
+    }
     gst_object_unref (GST_OBJECT (element));
   }
 }
