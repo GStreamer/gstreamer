@@ -186,7 +186,8 @@ gst_buffer_finalize (GstBuffer * buffer)
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
   /* free our data */
-  g_free (buffer->malloc_data);
+  if (G_LIKELY (buffer->malloc_data))
+    buffer->free_func (buffer->malloc_data);
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 
@@ -279,6 +280,7 @@ gst_buffer_init (GTypeInstance * instance, gpointer g_class)
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_FREE_FUNC (buffer) = g_free;
 }
 
 /**
