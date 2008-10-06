@@ -1,3 +1,10 @@
+2008-10-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/manual/basics-data.xml:
+	  Change "event-event interaction" to "element-element interaction".
+	  Fixes #552448. Also fix sample code for seeking and do more 0.8->0.10
+	  updates.
+
 2008-10-05  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
