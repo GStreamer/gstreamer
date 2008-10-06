@@ -253,7 +253,7 @@ gst_my_filter_request_new_pad (GstElement     *element,
 
   context = g_new0 (GstMyFilterInputContext, 1);
   pad = gst_pad_new_from_template (templ, name);
-  gst_element_set_private_data (pad, context);
+  gst_pad_set_element_private (pad, context);
 
   /* normally, you would set _link () and _getcaps () functions here */
 

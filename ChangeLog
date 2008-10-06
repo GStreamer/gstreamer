@@ -1,5 +1,13 @@
 2008-10-06  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/pwg/advanced-request.xml:
+	  Fix 0.8 api usage in example. Fixes #554561
+
+	* docs/pwg/appendix-porting.xml:
+	  Change 0.9 to 0.10 here.
+
+2008-10-06  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/manual/basics-data.xml:
 	  Change "event-event interaction" to "element-element interaction".
 	  Fixes #552448. Also fix sample code for seeking and do more 0.8->0.10
