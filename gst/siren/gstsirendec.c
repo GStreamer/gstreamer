@@ -179,7 +179,7 @@ gst_siren_dec_chain (GstPad *pad, GstBuffer *buf)
     return GST_FLOW_OK;
   }
 
-  if (size % 40 != 0)
+  if (GST_BUFFER_SIZE (buf) % 40 != 0)
     GST_LOG_OBJECT (dec, "Got buffer with size not a multiple for frame size,"
         " ignoring last %u bytes", GST_BUFFER_SIZE (buf) % 40);
 
