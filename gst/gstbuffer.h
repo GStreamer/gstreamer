@@ -150,6 +150,8 @@ typedef struct _GstBufferClass GstBufferClass;
  *
  * Note that the free function only affects the buffer's malloc_data; if the
  * buffer's malloc_data is NULL, the function will not be called.
+ *
+ * Since: 0.10.22
  */
 #define GST_BUFFER_FREE_FUNC(buf)		(GST_BUFFER_CAST(buf)->free_func)
 

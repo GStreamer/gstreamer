@@ -1,3 +1,9 @@
+2008-10-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstbuffer.h: (GST_BUFFER_FREE_FUNC):
+	* gst/gstghostpad.c: (gst_ghost_pad_construct):
+	  Add 'Since' bits to gtk-doc chunks for new API.
+
 2008-10-06  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* docs/gst/gstreamer-sections.txt:

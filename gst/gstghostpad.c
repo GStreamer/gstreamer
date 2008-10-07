@@ -772,6 +772,8 @@ gst_ghost_pad_dispose (GObject * object)
  * (GST_TYPE_GHOST_PAD, "direction", @dir, ..., NULL).
  *
  * Returns: %TRUE if the construction succeeds, %FALSE otherwise.
+ *
+ * Since: 0.10.22
  */
 gboolean
 gst_ghost_pad_construct (GstGhostPad * gpad)
