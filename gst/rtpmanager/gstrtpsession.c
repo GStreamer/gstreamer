@@ -225,6 +225,7 @@ enum
   PROP_SDES_NOTE,
   PROP_NUM_SOURCES,
   PROP_NUM_ACTIVE_SOURCES,
+  PROP_INTERNAL_SESSION,
   PROP_LAST
 };
 
@@ -655,6 +656,11 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           "The number of active sources in the session", 0, G_MAXUINT,
           DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE));
 
+  g_object_class_install_property (gobject_class, PROP_INTERNAL_SESSION,
+      g_param_spec_object ("internal-session", "Internal Session",
+          "The internal RTPSession object", RTP_TYPE_SESSION,
+          G_PARAM_READABLE));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -844,6 +850,9 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_NUM_ACTIVE_SOURCES:
       g_value_set_uint (value,
           rtp_session_get_num_active_sources (priv->session));
+      break;
+    case PROP_INTERNAL_SESSION:
+      g_value_set_object (value, priv->session);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1981,10 +1990,4 @@ wrong_pad:
     g_warning ("gstrtpsession: asked to release an unknown pad");
     return;
   }
-}
-
-void
-gst_rtp_session_set_ssrc (GstRtpSession * sess, guint32 ssrc)
-{
-  rtp_session_set_internal_ssrc (sess->priv->session, ssrc);
 }
