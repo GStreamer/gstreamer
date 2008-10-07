@@ -1,6 +1,13 @@
+2008-10-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_parse_caps):
+	Only update the seqnum-base when it was not already configured for the
+	streams.
+
 2008-10-06  Stefan Kost  <ensonic@users.sf.net>
 
-        * configure.ac
+	* configure.ac
 	* ext/metadata/README:
 	* ext/metadata/metadataexif.c:
 	* ext/metadata/metadatatags.c:
