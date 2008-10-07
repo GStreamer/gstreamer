@@ -23,7 +23,7 @@
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <gst/netbuffer/gstnetbuffer.h>
 
-
+#include "gstrtpbin-marshal.h"
 #include "rtpsession.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtp_session_debug);
@@ -32,6 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtp_session_debug);
 /* signals and args */
 enum
 {
+  SIGNAL_GET_SOURCE_BY_SSRC,
   SIGNAL_ON_NEW_SSRC,
   SIGNAL_ON_SSRC_COLLISION,
   SIGNAL_ON_SSRC_VALIDATED,
@@ -116,6 +117,19 @@ rtp_session_class_init (RTPSessionClass * klass)
   gobject_class->finalize = rtp_session_finalize;
   gobject_class->set_property = rtp_session_set_property;
   gobject_class->get_property = rtp_session_get_property;
+
+  /**
+   * RTPSession::get-source-by-ssrc:
+   * @session: the object which received the signal
+   * @ssrc: the SSRC of the RTPSource
+   *
+   * Request the #RTPSource object with SSRC @ssrc in @session.
+   */
+  rtp_session_signals[SIGNAL_GET_SOURCE_BY_SSRC] =
+      g_signal_new ("get-source-by-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (RTPSessionClass,
+          get_source_by_ssrc), NULL, NULL, gst_rtp_bin_marshal_OBJECT__UINT,
+      RTP_TYPE_SOURCE, 1, G_TYPE_UINT);
 
   /**
    * RTPSession::on-new-ssrc:
@@ -285,6 +299,9 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_param_spec_uint ("num-active-sources", "Num Active Sources",
           "The number of active sources in the session", 0, G_MAXUINT,
           DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE));
+
+  klass->get_source_by_ssrc =
+      GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
 
   GST_DEBUG_CATEGORY_INIT (rtp_session_debug, "rtpsession", 0, "RTP Session");
 }
@@ -947,7 +964,7 @@ static gboolean
 check_collision (RTPSession * sess, RTPSource * source,
     RTPArrivalStats * arrival, gboolean rtp)
 {
-  /* If we have not arrival address, we can't do collision checking */
+  /* If we have no arrival address, we can't do collision checking */
   if (!arrival->have_address)
     return FALSE;
 

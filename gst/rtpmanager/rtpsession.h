@@ -149,7 +149,6 @@ typedef struct {
  * This structure is used to account for addresses that have conflicted to find
  * loops.
  */
-
 typedef struct {
   GstNetAddress address;
   GstClockTime time;
@@ -219,6 +218,9 @@ struct _RTPSession {
 struct _RTPSessionClass {
   GObjectClass   parent_class;
 
+  /* action signals */
+  RTPSource* (*get_source_by_ssrc) (RTPSession *sess, guint32 ssrc);
+
   /* signals */
   void (*on_new_ssrc)       (RTPSession *sess, RTPSource *source);
   void (*on_ssrc_collision) (RTPSession *sess, RTPSource *source);
@@ -279,17 +281,22 @@ RTPSource*      rtp_session_get_source_by_cname    (RTPSession *sess, const gcha
 RTPSource*      rtp_session_create_source          (RTPSession *sess);
 
 /* processing packets from receivers */
-GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer *buffer, GstClockTime current_time, guint64 ntpnstime);
-GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer *buffer, GstClockTime current_time);
+GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer *buffer,
+                                                    GstClockTime current_time, guint64 ntpnstime);
+GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer *buffer,
+                                                    GstClockTime current_time);
 
 /* processing packets for sending */
-GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer, GstClockTime current_time, guint64 ntpnstime);
+GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer,
+                                                    GstClockTime current_time, guint64 ntpnstime);
 
 /* stopping the session */
-GstFlowReturn   rtp_session_send_bye               (RTPSession *sess, const gchar *reason, GstClockTime current_time);
+GstFlowReturn   rtp_session_send_bye               (RTPSession *sess, const gchar *reason,
+                                                    GstClockTime current_time);
 
 /* get interval for next RTCP interval */
 GstClockTime    rtp_session_next_timeout           (RTPSession *sess, GstClockTime current_time);
-GstFlowReturn   rtp_session_on_timeout             (RTPSession *sess, GstClockTime current_time, guint64 ntpnstime);
+GstFlowReturn   rtp_session_on_timeout             (RTPSession *sess, GstClockTime current_time,
+                                                    guint64 ntpnstime);
 
 #endif /* __RTP_SESSION_H__ */

@@ -22,6 +22,8 @@
 
 #include <gst/gst.h>
 
+#include "rtpsession.h"
+
 #define GST_TYPE_RTP_BIN \
   (gst_rtp_bin_get_type())
 #define GST_RTP_BIN(obj) \
@@ -63,9 +65,13 @@ struct _GstRtpBinClass {
   GstBinClass  parent_class;
 
   /* get the caps for pt */
-  GstCaps* (*request_pt_map)  (GstRtpBin *rtpbin, guint session, guint pt);
-  void     (*clear_pt_map)    (GstRtpBin *rtpbin);
+  GstCaps*    (*request_pt_map)       (GstRtpBin *rtpbin, guint session, guint pt);
 
+  /* action signals */
+  void        (*clear_pt_map)         (GstRtpBin *rtpbin);
+  RTPSession* (*get_internal_session) (GstRtpBin *rtpbin, guint session_id);
+
+  /* session manager signals */
   void     (*on_new_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_ssrc_collision) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_ssrc_validated) (GstRtpBin *rtpbin, guint session, guint32 ssrc);

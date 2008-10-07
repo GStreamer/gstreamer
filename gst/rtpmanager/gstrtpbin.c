@@ -119,6 +119,7 @@
 
 #include "gstrtpbin-marshal.h"
 #include "gstrtpbin.h"
+#include "rtpsession.h"
 #include "gstrtpsession.h"
 #include "gstrtpjitterbuffer.h"
 
@@ -228,6 +229,7 @@ enum
 {
   SIGNAL_REQUEST_PT_MAP,
   SIGNAL_CLEAR_PT_MAP,
+  SIGNAL_GET_INTERNAL_SESSION,
 
   SIGNAL_ON_NEW_SSRC,
   SIGNAL_ON_SSRC_COLLISION,
@@ -732,6 +734,25 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
     GST_RTP_SESSION_UNLOCK (session);
   }
   GST_RTP_BIN_UNLOCK (bin);
+}
+
+static RTPSession *
+gst_rtp_bin_get_internal_session (GstRtpBin * bin, guint session_id)
+{
+  RTPSession *internal_session = NULL;
+  GstRtpBinSession *session;
+
+  GST_RTP_BIN_LOCK (bin);
+  GST_DEBUG_OBJECT (bin, "retrieving internal RTPSession object, index: %d",
+      session_id);
+  session = find_session_by_id (bin, (gint) session_id);
+  if (session) {
+    g_object_get (session->session, "internal-session", &internal_session,
+        NULL);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+
+  return internal_session;
 }
 
 static void
@@ -1290,6 +1311,18 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
           clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE,
       0, G_TYPE_NONE);
+  /**
+   * GstRtpBin::get-internal-session:
+   * @rtpbin: the object which received the signal
+   * @id: the session id
+   *
+   * Request the internal RTPSession object as #GObject in session @id.
+   */
+  gst_rtp_bin_signals[SIGNAL_GET_INTERNAL_SESSION] =
+      g_signal_new ("get-internal-session", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
+          get_internal_session), NULL, NULL, gst_rtp_bin_marshal_OBJECT__UINT,
+      RTP_TYPE_SESSION, 1, G_TYPE_UINT);
 
   /**
    * GstRtpBin::on-new-ssrc:
@@ -1460,6 +1493,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gstbin_class->handle_message = GST_DEBUG_FUNCPTR (gst_rtp_bin_handle_message);
 
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_bin_clear_pt_map);
+  klass->get_internal_session =
+      GST_DEBUG_FUNCPTR (gst_rtp_bin_get_internal_session);
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_bin_debug, "rtpbin", 0, "RTP bin");
 }
