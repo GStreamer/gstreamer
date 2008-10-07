@@ -1,3 +1,14 @@
+2008-10-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.h:
+	Always use the unaligned variants of GST_READ_UINT* and GST_WRITE_UINT*
+	as it's too easy to break the ISO C strict aliasing rules with simple
+	casts to the corresponding type and this would introduce hard to debug
+	bugs. Fixes bug #545714.
+
+	API: Add GST_READ_UINT24_(LE|BE) and GST_WRITE_UINT24_(LE|BE).
+
 2008-10-07  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstbuffer.h: (GST_BUFFER_FREE_FUNC):
