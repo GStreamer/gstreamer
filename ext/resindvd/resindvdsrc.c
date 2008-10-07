@@ -38,8 +38,10 @@ GST_DEBUG_CATEGORY_STATIC (rsndvdsrc_debug);
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ CLOCK_BASE * 10000
 
-#define MPEGTIME_TO_GSTTIME(time) (((time) * (GST_MSECOND/10)) / CLOCK_BASE)
-#define GSTTIME_TO_MPEGTIME(time) (((time) * CLOCK_BASE) / (GST_MSECOND/10))
+#define MPEGTIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
+            GST_MSECOND/10, CLOCK_BASE))
+#define GSTTIME_TO_MPEGTIME(time) (gst_util_uint64_scale ((time), \
+            CLOCK_BASE, GST_MSECOND/10))
 
 typedef enum
 {
@@ -1891,8 +1893,16 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
         gint32 title, chapters, x;
         if (dvdnav_current_title_info (src->dvdnav, &title, &x) ==
             DVDNAV_STATUS_OK) {
-          if (dvdnav_get_number_of_parts (src->dvdnav, title, &chapters) ==
-              DVDNAV_STATUS_OK) {
+          if (segment->start + 1 == x) {
+            dvdnav_prev_pg_search (src->dvdnav);
+            ret = TRUE;
+            src->discont = TRUE;
+          } else if (segment->start == x + 1) {
+            dvdnav_next_pg_search (src->dvdnav);
+            ret = TRUE;
+            src->discont = TRUE;
+          } else if (dvdnav_get_number_of_parts (src->dvdnav, title,
+                  &chapters) == DVDNAV_STATUS_OK) {
             if (segment->start > 0 && segment->start <= chapters) {
               dvdnav_part_play (src->dvdnav, title, segment->start);
               ret = TRUE;

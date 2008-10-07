@@ -1,3 +1,10 @@
+2008-10-07  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/resindvdsrc.c:
+	Fix next/prev chapter seeking at the beginning or end.
+	Use 64-bit scaling utility functions for converting MPEG
+	timestamps.
+
 2008-10-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Håvard Graff <havard dot graff at tandberg dot com>
