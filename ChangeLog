@@ -1,5 +1,14 @@
 2008-10-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* libs/gst/base/gstbytereader.c: (gst_byte_reader_get_uint24_le),
+	(gst_byte_reader_get_uint24_be), (gst_byte_reader_get_int24_le),
+	(gst_byte_reader_get_int24_be), (gst_byte_reader_peek_uint24_le),
+	(gst_byte_reader_peek_uint24_be), (gst_byte_reader_peek_int24_le),
+	(gst_byte_reader_peek_int24_be):
+	Use new GST_READ_UINT24_(LE|BE) macros.
+
+2008-10-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstutils.h:
 	Always use the unaligned variants of GST_READ_UINT* and GST_WRITE_UINT*

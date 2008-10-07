@@ -916,9 +916,7 @@ gst_byte_reader_get_uint24_le (GstByteReader * reader, guint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  *val =
-      (reader->data[reader->byte] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte + 2] << 16));
+  *val = GST_READ_UINT24_LE (&reader->data[reader->byte]);
   reader->byte += 3;
   return TRUE;
 }
@@ -932,9 +930,7 @@ gst_byte_reader_get_uint24_be (GstByteReader * reader, guint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  *val =
-      (reader->data[reader->byte + 2] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte] << 16));
+  *val = GST_READ_UINT24_BE (&reader->data[reader->byte]);
   reader->byte += 3;
   return TRUE;
 }
@@ -950,10 +946,7 @@ gst_byte_reader_get_int24_le (GstByteReader * reader, gint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  ret =
-      (reader->data[reader->byte] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte + 2] << 16));
-
+  ret = GST_READ_UINT24_LE (&reader->data[reader->byte]);
   if (ret & 0x00800000)
     ret |= 0xff000000;
 
@@ -974,9 +967,7 @@ gst_byte_reader_get_int24_be (GstByteReader * reader, gint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  ret =
-      (reader->data[reader->byte + 2] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte] << 16));
+  ret = GST_READ_UINT24_BE (&reader->data[reader->byte]);
   if (ret & 0x00800000)
     ret |= 0xff000000;
 
@@ -995,9 +986,7 @@ gst_byte_reader_peek_uint24_le (GstByteReader * reader, guint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  *val =
-      (reader->data[reader->byte] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte + 2] << 16));
+  *val = GST_READ_UINT24_LE (&reader->data[reader->byte]);
   return TRUE;
 }
 
@@ -1010,9 +999,7 @@ gst_byte_reader_peek_uint24_be (GstByteReader * reader, guint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  *val =
-      (reader->data[reader->byte + 2] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte] << 16));
+  *val = GST_READ_UINT24_BE (&reader->data[reader->byte]);
   return TRUE;
 }
 
@@ -1027,10 +1014,7 @@ gst_byte_reader_peek_int24_le (GstByteReader * reader, gint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  ret =
-      (reader->data[reader->byte] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte + 2] << 16));
-
+  ret = GST_READ_UINT24_LE (&reader->data[reader->byte]);
   if (ret & 0x00800000)
     ret |= 0xff000000;
 
@@ -1049,9 +1033,7 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
   if (reader->byte + 3 > reader->size)
     return FALSE;
 
-  ret =
-      (reader->data[reader->byte + 2] | (reader->data[reader->byte +
-              1] << 8) | (reader->data[reader->byte] << 16));
+  ret = GST_READ_UINT24_BE (&reader->data[reader->byte]);
   if (ret & 0x00800000)
     ret |= 0xff000000;
 
