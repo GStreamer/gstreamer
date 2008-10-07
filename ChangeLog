@@ -1,5 +1,19 @@
 2008-10-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpbin.c: (find_session_by_pad),
+	(free_session), (gst_rtp_bin_dispose), (remove_recv_rtp),
+	(remove_recv_rtcp), (remove_send_rtp), (remove_rtcp),
+	(gst_rtp_bin_release_pad):
+	Release pads of the session manager.
+	Start implementing releasing pads of gstrtpbin.
+
+	* gst/rtpmanager/gstrtpsession.c: (remove_recv_rtp_sink),
+	(remove_recv_rtcp_sink), (remove_send_rtp_sink),
+	(remove_send_rtcp_src), (gst_rtp_session_release_pad):
+	Implement releasing pads in gstrtpsession.
+
+2008-10-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_jitter_buffer_sink_parse_caps):
 	Only update the seqnum-base when it was not already configured for the

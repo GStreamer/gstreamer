@@ -1720,6 +1720,29 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
   return rtpsession->recv_rtp_sink;
 }
 
+/* Remove sinkpad to receive RTP packets from senders. This will also remove
+ * the srcpad for the RTP packets.
+ */
+static void
+remove_recv_rtp_sink (GstRtpSession * rtpsession)
+{
+  GST_DEBUG_OBJECT (rtpsession, "removing RTP sink pad");
+
+  /* deactivate from source to sink */
+  gst_pad_set_active (rtpsession->recv_rtp_src, FALSE);
+  gst_pad_set_active (rtpsession->recv_rtp_sink, FALSE);
+
+  /* remove pads */
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession),
+      rtpsession->recv_rtp_sink);
+  rtpsession->recv_rtp_sink = NULL;
+
+  GST_DEBUG_OBJECT (rtpsession, "removing RTP src pad");
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession),
+      rtpsession->recv_rtp_src);
+  rtpsession->recv_rtp_src = NULL;
+}
+
 /* Create a sinkpad to receive RTCP messages from senders, this will also create a
  * sync_src pad for the SR packets.
  */
@@ -1752,6 +1775,23 @@ create_recv_rtcp_sink (GstRtpSession * rtpsession)
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->sync_src);
 
   return rtpsession->recv_rtcp_sink;
+}
+
+static void
+remove_recv_rtcp_sink (GstRtpSession * rtpsession)
+{
+  GST_DEBUG_OBJECT (rtpsession, "removing RTCP sink pad");
+
+  gst_pad_set_active (rtpsession->sync_src, FALSE);
+  gst_pad_set_active (rtpsession->recv_rtcp_sink, FALSE);
+
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession),
+      rtpsession->recv_rtcp_sink);
+  rtpsession->recv_rtcp_sink = NULL;
+
+  GST_DEBUG_OBJECT (rtpsession, "removing sync src pad");
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->sync_src);
+  rtpsession->sync_src = NULL;
 }
 
 /* Create a sinkpad to receive RTP packets for receivers. This will also create a
@@ -1788,6 +1828,23 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
   return rtpsession->send_rtp_sink;
 }
 
+static void
+remove_send_rtp_sink (GstRtpSession * rtpsession)
+{
+  GST_DEBUG_OBJECT (rtpsession, "removing pad");
+
+  gst_pad_set_active (rtpsession->send_rtp_src, FALSE);
+  gst_pad_set_active (rtpsession->send_rtp_sink, FALSE);
+
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession),
+      rtpsession->send_rtp_sink);
+  rtpsession->send_rtp_sink = NULL;
+
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession),
+      rtpsession->send_rtp_src);
+  rtpsession->send_rtp_src = NULL;
+}
+
 /* Create a srcpad with the RTCP packets to send out.
  * This pad will be driven by the RTP session manager when it wants to send out
  * RTCP packets.
@@ -1810,6 +1867,18 @@ create_send_rtcp_src (GstRtpSession * rtpsession)
       rtpsession->send_rtcp_src);
 
   return rtpsession->send_rtcp_src;
+}
+
+static void
+remove_send_rtcp_src (GstRtpSession * rtpsession)
+{
+  GST_DEBUG_OBJECT (rtpsession, "removing pad");
+
+  gst_pad_set_active (rtpsession->send_rtcp_src, FALSE);
+
+  gst_element_remove_pad (GST_ELEMENT_CAST (rtpsession),
+      rtpsession->send_rtcp_src);
+  rtpsession->send_rtcp_src = NULL;
 }
 
 static GstPad *
@@ -1879,6 +1948,39 @@ exists:
 static void
 gst_rtp_session_release_pad (GstElement * element, GstPad * pad)
 {
+  GstRtpSession *rtpsession;
+
+  g_return_if_fail (GST_IS_RTP_SESSION (element));
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  rtpsession = GST_RTP_SESSION (element);
+
+  GST_DEBUG_OBJECT (element, "releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  GST_RTP_SESSION_LOCK (rtpsession);
+
+  if (rtpsession->recv_rtp_sink == pad) {
+    remove_recv_rtp_sink (rtpsession);
+  } else if (rtpsession->recv_rtcp_sink == pad) {
+    remove_recv_rtcp_sink (rtpsession);
+  } else if (rtpsession->send_rtp_sink == pad) {
+    remove_send_rtp_sink (rtpsession);
+  } else if (rtpsession->send_rtcp_src == pad) {
+    remove_send_rtcp_src (rtpsession);
+  } else
+    goto wrong_pad;
+
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
+  return;
+
+  /* ERRORS */
+wrong_pad:
+  {
+    GST_RTP_SESSION_UNLOCK (rtpsession);
+    g_warning ("gstrtpsession: asked to release an unknown pad");
+    return;
+  }
 }
 
 void
