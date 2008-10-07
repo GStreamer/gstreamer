@@ -482,11 +482,13 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %" G_GINT64_FORMAT,
       priv->clock_base);
 
-  /* first expected seqnum */
-  if (gst_structure_get_uint (caps_struct, "seqnum-base", &val))
-    priv->next_seqnum = val;
-  else
-    priv->next_seqnum = -1;
+  /* first expected seqnum, only update when we didn't have a previous base. */
+  if (priv->next_seqnum == -1) {
+    if (gst_structure_get_uint (caps_struct, "seqnum-base", &val))
+      priv->next_seqnum = val;
+    else
+      priv->next_seqnum = -1;
+  }
 
   GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_seqnum);
 
