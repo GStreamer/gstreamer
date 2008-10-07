@@ -387,6 +387,7 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstOutputSelector *sel;
+  GstPad *output_pad = NULL;
 
   sel = GST_OUTPUT_SELECTOR (gst_pad_get_parent (pad));
 
@@ -419,8 +420,10 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
       gst_pad_event_default (pad, event);
       break;
     default:
-      /* Send other events to active src pad */
-      res = gst_pad_push_event (sel->active_srcpad, event);
+      /* Send other events to pending or active src pad */
+      output_pad =
+          sel->pending_srcpad ? sel->pending_srcpad : sel->active_srcpad;
+      res = gst_pad_push_event (output_pad, event);
       break;
   }
 
