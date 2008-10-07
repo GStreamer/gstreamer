@@ -139,7 +139,7 @@ GST_START_TEST (test_deserialize_guint64)
     0xffffffffffffffffULL,
     9223372036854775810ULL,
     9223372036854775806ULL,
-    -1,
+    (guint64) - 1,
     1,
     0,
   };

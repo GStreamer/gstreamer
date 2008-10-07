@@ -124,11 +124,13 @@ noinst_HEADERS = \
 	gst/struct_hppa.h \
 	gst/struct_ppc32.h \
 	gst/struct_ppc64.h \
+	gst/struct_sparc.h \
 	gst/struct_x86_64.h \
 	libs/struct_i386.h \
 	libs/struct_hppa.h \
 	libs/struct_ppc32.h \
 	libs/struct_ppc64.h \
+	libs/struct_sparc.h \
 	libs/struct_x86_64.h
 
 EXTRA_DIST = \

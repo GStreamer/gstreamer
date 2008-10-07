@@ -1,3 +1,15 @@
+2008-10-07  Jan Schmidt - Sun Microsystems <jan.schmidt@sun.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gstabi.c:
+	* tests/check/gst/struct_sparc.h:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_sparc.h:
+	Add Sparc ABI checks
+
+	* tests/check/gst/gstvalue.c: (GST_START_TEST):
+	Cast signed integer to unsigned to avoid a compiler warning.
+
 2008-10-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* libs/gst/base/gstbytereader.c: (gst_byte_reader_get_uint24_le),
