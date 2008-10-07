@@ -1,3 +1,10 @@
+2008-10-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/rtp/client-H263p.sdp:
+	* tests/examples/rtp/client-H263p.sh:
+	* tests/examples/rtp/server-VTS-H263p.sh:
+	Add some more H263p server and client examples.
+
 2008-10-03  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac::
