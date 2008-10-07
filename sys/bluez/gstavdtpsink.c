@@ -778,7 +778,7 @@ gst_avdtp_sink_get_channel_mode (const gchar * mode)
     return BT_A2DP_CHANNEL_MODE_STEREO;
   else if (strcmp (mode, "joint-stereo") == 0)
     return BT_A2DP_CHANNEL_MODE_JOINT_STEREO;
-  else if (strcmp (mode, "dual") == 0)
+  else if (strcmp (mode, "dual-channel") == 0)
     return BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL;
   else if (strcmp (mode, "mono") == 0)
     return BT_A2DP_CHANNEL_MODE_MONO;
