@@ -517,9 +517,9 @@ gboolean
 audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint samples, gboolean src_writable)
 {
-  gint insize, outsize, size;
+  guint insize, outsize, size;
   gpointer outbuf, tmpbuf;
-  gint intemp = 0, outtemp = 0, biggest;
+  guint intemp = 0, outtemp = 0, biggest;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -537,9 +537,9 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
       : sizeof (gint32);
 
   if (!ctx->in_default)
-    intemp = insize * size * 8 / ctx->in.width;
+    intemp = gst_util_uint64_scale (insize, size * 8, ctx->in.width);
   if (!ctx->mix_passthrough || !ctx->out_default)
-    outtemp = outsize * size * 8 / ctx->out.width;
+    outtemp = gst_util_uint64_scale (outsize, size * 8, ctx->out.width);
   biggest = MAX (intemp, outtemp);
 
   /* see if one of the buffers can be used as temp */

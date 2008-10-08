@@ -1,5 +1,12 @@
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/audioconvert/audioconvert.c: (audio_convert_convert):
+	Prevent overflows with big buffer when calculating the size of
+	the intermediate buffer by using gst_util_uint64_scale() instead of
+	plain arithmetics. Fixes bug #552801.
+
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Pavel Zeldin <pzeldin at gmail dot com>
 
 	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_render_time),
