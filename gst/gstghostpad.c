@@ -485,7 +485,6 @@ gst_proxy_pad_save_thyself (GstObject * object, xmlNodePtr parent)
  */
 
 
-#define GST_GHOST_PAD_CAST(obj)		((GstGhostPad*)(obj))
 #define GST_GHOST_PAD_PRIVATE(obj)	(GST_GHOST_PAD_CAST (obj)->private)
 
 struct _GstGhostPadPrivate

@@ -1,5 +1,9 @@
 2008-10-08  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstghostpad.h (GST_GHOST_PAD_CAST):
+	* gst/gstghostpad.c (GST_GHOST_PAD_CAST): Fix unintended API
+	removal: re-add GST_GHOST_PAD_CAST to the header.
+
 	* gst/gstghostpad.h (GstProxyPad, GstProxyPadClass, GstGhostPad)
 	(GstGhostPadClass): Publically expose these structures so as to
 	allow easy subclassing from C. Hide the member data behind a
