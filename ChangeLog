@@ -1,3 +1,9 @@
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstghostpad.c:
+	* gst/gstghostpad.h:
+	Unbreak -good build, private is a reserved c++ keyword.
+
 2008-10-08  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstghostpad.h (GST_GHOST_PAD_CAST):

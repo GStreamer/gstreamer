@@ -46,7 +46,7 @@ struct _GstProxyPad
   GstPad pad;
 
   /*< private > */
-  GstProxyPadPrivate *private;
+  GstProxyPadPrivate *priv;
 };
 
 struct _GstProxyPadClass
@@ -81,7 +81,7 @@ struct _GstGhostPad
   GstProxyPad pad;
 
   /*< private > */
-  GstGhostPadPrivate *private;
+  GstGhostPadPrivate *priv;
 };
 
 struct _GstGhostPadClass

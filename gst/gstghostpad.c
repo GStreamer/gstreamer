@@ -53,7 +53,7 @@
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
 #define GST_PROXY_PAD_CAST(obj)         ((GstProxyPad *)obj)
-#define GST_PROXY_PAD_PRIVATE(obj)      (GST_PROXY_PAD_CAST (obj)->private)
+#define GST_PROXY_PAD_PRIVATE(obj)      (GST_PROXY_PAD_CAST (obj)->priv)
 #define GST_PROXY_PAD_TARGET(pad)       (GST_PROXY_PAD_PRIVATE (pad)->target)
 #define GST_PROXY_PAD_INTERNAL(pad)     (GST_PROXY_PAD_PRIVATE (pad)->internal)
 #define GST_PROXY_GET_LOCK(pad) (GST_PROXY_PAD_PRIVATE (pad)->proxy_lock)
@@ -485,7 +485,7 @@ gst_proxy_pad_save_thyself (GstObject * object, xmlNodePtr parent)
  */
 
 
-#define GST_GHOST_PAD_PRIVATE(obj)	(GST_GHOST_PAD_CAST (obj)->private)
+#define GST_GHOST_PAD_PRIVATE(obj)	(GST_GHOST_PAD_CAST (obj)->priv)
 
 struct _GstGhostPadPrivate
 {
