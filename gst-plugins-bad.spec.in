@@ -93,7 +93,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdspu.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
 %{_libdir}/gstreamer-%{majorminor}/libgstflvdemux.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgststereo.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvcdsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvb.so

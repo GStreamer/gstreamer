@@ -9,7 +9,9 @@ libgstmpegdemux_la_SOURCES = \
 	gstmpegdesc.c \
 	gstmpegtsdemux.c \
 	gstpesfilter.c \
-	gstsectionfilter.c
+	gstsectionfilter.c \
+	mpegtsparse.c \
+	mpegtspacketizer.c
 
 libgstmpegdemux_la_CFLAGS = $(GST_CFLAGS) $(LIBOIL_CFLAGS)
 libgstmpegdemux_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
@@ -24,5 +26,7 @@ noinst_HEADERS = \
 	flutspatinfo.h \
 	flutspmtinfo.h \
 	flutspmtstreaminfo.h \
-	gstsectionfilter.h
+	gstsectionfilter.h \
+	mpegtspacketizer.h \
+	mpegtsparse.h
 

@@ -1,3 +1,18 @@
+2008-10-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	* gst-plugins-bad.spec.in:
+	* gst/mpegdemux/Makefile.am:
+	* gst/mpegdemux/flumpegdemux.c:
+	* gst/mpegdemux/gstmpegdesc.c:
+	* gst/mpegdemux/gstmpegdesc.h:
+	* gst/mpegdemux/mpegtspacketizer.c:
+	* gst/mpegdemux/mpegtspacketizer.h:
+	* gst/mpegdemux/mpegtsparse.c:
+	* gst/mpegdemux/mpegtsparse.h:
+	Move of mpegtsparse to mpegdemux.
+	Fixes #555193.
+
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data),

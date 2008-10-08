@@ -1,10 +1,4 @@
-/*
- * This library is licensed under 2 different licenses and you
- * can choose to use it under the terms of either one of them. The
- * two licenses are the MPL 1.1 and the LGPL.
- *
- * MPL:
- *
+/* 
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -15,23 +9,6 @@
  * License for the specific language governing rights and limitations
  * under the License.
  *
- * LGPL:
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- *
  * The Original Code is Fluendo MPEG Demuxer plugin.
  *
  * The Initial Developer of the Original Code is Fluendo, S.L.
@@ -39,6 +16,17 @@
  * Fluendo, S.L. All Rights Reserved.
  *
  * Contributor(s): Wim Taymans <wim@fluendo.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * the GNU Lesser General Public License Version 2 or later (the "LGPL"),
+ * in which case the provisions of the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of the MPL or the LGPL.
  */
 
 #ifndef __GST_MPEG_DESC_H__
@@ -154,6 +142,7 @@
 /* 0x7D and 0x7E are reserved for future use */
 #define DESC_DVB_EXTENSION      0x7F
 /* 0x80 - 0xFE are user defined */
+#define DESC_DTG_LOGICAL_CHANNEL	0x83 /* from DTG D-Book */
 /* 0xFF is forbidden */
 
 /* common for all descriptors */
@@ -255,17 +244,78 @@
 #define DESC_DVB_NETWORK_NAME_length(desc)  (GST_READ_UINT8((desc)+1))
 #define DESC_DVB_NETWORK_NAME_text(desc)    (desc+2)
 
+/* DVB Service Descriptor */
+#define DESC_DVB_SERVICE_type(desc) (desc[2])
+#define DESC_DVB_SERVICE_provider_name_length(desc) (desc[3])
+#define DESC_DVB_SERVICE_provider_name_text(desc)   (desc+4)
+#define DESC_DVB_SERVICE_name_length(desc)  (desc[4 + DESC_DVB_SERVICE_provider_name_length(desc)])
+#define DESC_DVB_SERVICE_name_text(desc)    (desc + 5 + DESC_DVB_SERVICE_provider_name_length(desc))
+
+/* DVB Component Descriptor */
+#define DESC_DVB_COMPONENT_stream_content(desc) (desc[2] & 0x0F)
+#define DESC_DVB_COMPONENT_type(desc)   (desc[3])
+#define DESC_DVB_COMPONENT_tag(desc)    (desc[4])
+#define DESC_DVB_COMPONENT_language(desc)   (desc + 5)
+
+/* DVB Bouquet Name Descriptor */
+#define DESC_DVB_BOUQUET_NAME_text(desc)    (desc + 2)
+
+/* DVB Short Event Descriptor */
+#define DESC_DVB_SHORT_EVENT_name_text(desc)	(desc + 6)
+#define DESC_DVB_SHORT_EVENT_name_length(desc)	(desc[5])
+#define DESC_DVB_SHORT_EVENT_description_text(desc) (desc + 6 + DESC_DVB_SHORT_EVENT_name_length(desc) + 1)
+#define DESC_DVB_SHORT_EVENT_description_length(desc)	(desc[6 + DESC_DVB_SHORT_EVENT_name_length(desc)])
+
+/* DVB Extended Event Descriptor */
+#define DESC_DVB_EXTENDED_EVENT_descriptor_number(desc) ((desc[2] & 0xF0) >> 4)
+#define DESC_DVB_EXTENDED_EVENT_last_descriptor_number(desc) (desc[2] & 0x0F)
+#define DESC_DVB_EXTENDED_EVENT_iso639_language_code(desc) (desc + 3)
+#define DESC_DVB_EXTENDED_EVENT_items_length(desc) (desc[6])
+#define DESC_DVB_EXTENDED_EVENT_items(desc) (desc + 7) 
+#define DESC_DVB_EXTENDED_EVENT_text_length(desc) (desc[7 + DESC_DVB_EXTENDED_EVENT_items_length(desc)])
+#define DESC_DVB_EXTENDED_EVENT_text(desc) (desc + 7 + DESC_DVB_EXTENDED_EVENT_items_length(desc) + 1)
+
+/* DVB Satellite Delivery System Descriptor */
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_frequency(desc)	(desc + 2)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_orbital_position(desc)	(desc + 6)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_west_east_flag(desc)	((desc[8] & 0x80) == 0x80)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_polarization(desc)	((desc[8] & 0x60) >> 5)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_modulation(desc)	(desc[8] & 0x1F)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
+#define DESC_DVB_SATELLITE_DELIVERY_SYSTEM_fec_inner(desc)	(desc[12] & 0x0F)
+
+/* DVB Terrestrial Delivery System Descriptor */
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_frequency(desc)	(GST_READ_UINT32_BE((desc) + 2))
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_bandwidth(desc)	(desc[6] & 0xE0)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_constellation(desc)	(desc[7] & 0xC0)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_hierarchy(desc)	(desc[7] & 0x38)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_hp(desc)	(desc[7] & 0x07)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_lp(desc)	(desc[8] & 0xE0)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_guard_interval(desc)	(desc[8] & 0x18)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode(desc)	(desc[8] & 0x06)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency(desc)	((desc[8] & 0x01) == 0x01)
+
+/* DVB Cable Delivery System Descriptor */
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_frequency(desc)		(desc + 2)
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_outer(desc)		(desc[7] & 0x0F)
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_modulation(desc)		(desc[8])
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_symbol_rate(desc)	(desc + 9)
+#define DESC_DVB_CABLE_DELIVERY_SYSTEM_fec_inner(desc)		(desc[12] & 0x0F)
+
 typedef struct {
   guint    n_desc;
   guint8   data_length;
   guint8  *data;
 } GstMPEGDescriptor;
 
+void gst_mpegtsdesc_init_debug ();
 GstMPEGDescriptor* 	gst_mpeg_descriptor_parse 	(guint8 *data, guint size);
 void		 	gst_mpeg_descriptor_free 	(GstMPEGDescriptor *desc);
 
 guint 			gst_mpeg_descriptor_n_desc	(GstMPEGDescriptor *desc);
 guint8*			gst_mpeg_descriptor_find	(GstMPEGDescriptor *desc, gint tag);
+GArray*         gst_mpeg_descriptor_find_all (GstMPEGDescriptor * desc, gint tag);
+
 guint8*			gst_mpeg_descriptor_nth		(GstMPEGDescriptor *desc, guint i);
 
 #endif /* __GST_MPEG_DESC_H__ */
