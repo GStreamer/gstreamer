@@ -1,3 +1,23 @@
+2008-10-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	* ext/libswscale/gstffmpegscale.c:
+	(gst_ffmpegscale_method_get_type), (gst_ffmpegscale_base_init),
+	(gst_ffmpegscale_class_init), (gst_ffmpegscale_init),
+	(gst_ffmpegscale_reset), (gst_ffmpegscale_finalize),
+	(gst_ffmpegscale_caps_remove_format_info),
+	(gst_ffmpegscale_transform_caps), (gst_ffmpegscale_fixate_caps),
+	(gst_ffmpegscale_get_unit_size), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpegscale_fill_info), (gst_ffmpegscale_set_caps),
+	(gst_ffmpegscale_transform), (gst_ffmpegscale_handle_src_event),
+	(gst_ffmpegscale_stop), (gst_ffmpegscale_set_property),
+	(gst_ffmpegscale_get_property), (gst_ffmpeg_log_callback),
+	(plugin_init):
+	Rewrite ffvideoscale using libswscale and put into a separate plugin.
+	Fixes #504056.
+
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>

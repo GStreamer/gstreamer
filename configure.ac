@@ -212,6 +212,7 @@ AC_ARG_WITH(system-ffmpeg,
 if test "x$with_system_ffmpeg" = "xyes"; then
   PKG_CHECK_MODULES(FFMPEG, libavutil libavcodec libavformat)
   PKG_CHECK_MODULES(POSTPROC, libavcodec libpostproc)
+  PKG_CHECK_MODULES(SWSCALE, libavutil libswcale)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"
   AC_CHECK_HEADERS([avi.h])
@@ -278,6 +279,16 @@ else
   POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libpostproc/libpostproc.a \
   		 \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
   				 
+  dnl
+  SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libswscale	\
+                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil 	\
+                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg 	\
+                  -Wno-deprecated-declarations"
+
+  dnl libgstswscale.la: libs to statically link to
+  SWSCALE_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libswscale/libswscale.a \
+                \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
+
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
@@ -288,7 +299,7 @@ else
       with_ffmpeg_extra_configure=no)
 
   # Enable shared and static so that we get .a files, but with PIC code.
-  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices --disable-network"
+  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-swscale --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices --disable-network"
 
   # if we are cross-compiling, tell ffmpeg so
   if test "x$cross_compiling" = xyes; then
@@ -330,6 +341,8 @@ AC_SUBST(FFMPEG_LIBS)
 AC_SUBST(FFMPEG_SUBDIRS)
 AC_SUBST(POSTPROC_CFLAGS)
 AC_SUBST(POSTPROC_LIBS)
+AC_SUBST(SWSCALE_CFLAGS)
+AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
  
 if test x$HAVE_FFMPEG_UNINSTALLED = x1; then
@@ -343,6 +356,7 @@ gst-ffmpeg.spec
 ext/Makefile
 ext/ffmpeg/Makefile
 ext/libpostproc/Makefile
+ext/libswscale/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
 docs/Makefile
