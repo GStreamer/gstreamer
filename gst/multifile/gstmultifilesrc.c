@@ -63,6 +63,7 @@ static void gst_multi_file_src_set_property (GObject * object, guint prop_id,
 static void gst_multi_file_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstCaps *gst_multi_file_src_getcaps (GstBaseSrc * src);
+static gboolean gst_multi_file_src_query (GstBaseSrc * src, GstQuery * query);
 
 
 static GstStaticPadTemplate gst_multi_file_src_pad_template =
@@ -135,9 +136,10 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 
   gobject_class->dispose = gst_multi_file_src_dispose;
 
-  gstpushsrc_class->create = gst_multi_file_src_create;
-
   gstbasesrc_class->get_caps = gst_multi_file_src_getcaps;
+  gstbasesrc_class->query = gst_multi_file_src_query;
+
+  gstpushsrc_class->create = gst_multi_file_src_create;
 
   if (sizeof (off_t) < 8) {
     GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT,
@@ -183,6 +185,39 @@ gst_multi_file_src_getcaps (GstBaseSrc * src)
   } else {
     return gst_caps_new_any ();
   }
+}
+
+static gboolean
+gst_multi_file_src_query (GstBaseSrc * src, GstQuery * query)
+{
+  gboolean res;
+  GstMultiFileSrc *mfsrc;
+
+  mfsrc = GST_MULTI_FILE_SRC (src);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+      switch (format) {
+        case GST_FORMAT_BUFFERS:
+        case GST_FORMAT_DEFAULT:
+          gst_query_set_position (query, GST_FORMAT_BUFFERS, mfsrc->index);
+          res = TRUE;
+          break;
+        default:
+          res = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+          break;
+      }
+      break;
+    }
+    default:
+      res = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
+      break;
+  }
+  return res;
 }
 
 static gboolean

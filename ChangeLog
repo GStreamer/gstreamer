@@ -1,3 +1,9 @@
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_class_init),
+	(gst_multi_file_src_query):
+	Implement DEFAULT and BUFFER position queries. See #555260.
+
 2008-10-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_stop):
