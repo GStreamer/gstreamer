@@ -1,3 +1,9 @@
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_send_event):
+	Forward LATENCY events upstreams so that elements know about the total
+	pipeline latency. Fixes #555307.
+
 2008-10-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* plugins/elements/gstqueue.c:

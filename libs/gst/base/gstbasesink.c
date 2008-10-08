@@ -1605,6 +1605,9 @@ no_clock:
  * to a state change to READY or a FLUSH event (in which case this function
  * returns #GST_FLOW_WRONG_STATE).
  *
+ * This function should only be called with the PREROLL_LOCK held, like in the
+ * render function.
+ *
  * Since: 0.10.11
  *
  * Returns: #GST_FLOW_OK if the preroll completed and processing can
@@ -3128,13 +3131,9 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
       GST_DEBUG_OBJECT (basesink, "latency set to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (latency));
 
-      /* don't forward, yet. FIXME. The latency event should likely be forwarded
-       * to upstream element so that they can configure themselves. Each element
-       * would subtract the amount of LATENCY it can maximally compensate for. 
-       * It's currently not very useful; even if this sink cannot compensate for
-       * all the latency, upstream will block while this sink waits which will
-       * trigger implicit buffering and latency there. */
-      forward = FALSE;
+      /* We forward this event so that all elements know about the global pipeline
+       * latency. This is interesting for an element when it wants to figure out
+       * when a particular piece of data will be rendered. */
       break;
     }
     default:
