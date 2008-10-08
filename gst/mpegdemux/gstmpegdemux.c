@@ -442,12 +442,22 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   if (stream == NULL)
     goto no_stream;
 
+  /* timestamps */
+  if (demux->next_pts != G_MAXUINT64)
+    timestamp = MPEGTIME_TO_GSTTIME (demux->next_pts);
+  else
+    timestamp = GST_CLOCK_TIME_NONE;
+
   /* discont */
   if (stream->need_segment) {
     gint64 time, start, stop;
     GstEvent *newsegment;
 
     start = demux->base_time + demux->src_segment.start;
+    if (timestamp != GST_CLOCK_TIME_NONE &&
+        GST_CLOCK_DIFF (start, timestamp) > GST_SECOND)
+      start = timestamp;
+
     if (demux->src_segment.stop != -1)
       stop = demux->base_time + demux->src_segment.stop;
     else
@@ -480,12 +490,6 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 
     stream->need_segment = FALSE;
   }
-
-  /* timestamps */
-  if (demux->next_pts != G_MAXUINT64)
-    timestamp = MPEGTIME_TO_GSTTIME (demux->next_pts);
-  else
-    timestamp = GST_CLOCK_TIME_NONE;
 
   /* OK, sent new segment now prepare the buffer for sending */
   /* caps */
@@ -1123,7 +1127,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   /* adjustment of the SCR */
   if (demux->current_scr != G_MAXUINT64) {
     gint64 diff;
-    guint64 old_scr, old_mux_rate, bss, adjust;
+    guint64 old_scr, old_mux_rate, bss, adjust = 0;
 
     /* keep SCR of the previous packet */
     old_scr = demux->current_scr;
@@ -1137,7 +1141,9 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
 
     /* estimate the new SCR using the previous one according the notes
        on point 2.5.2.2 of the ISO/IEC 13818-1 document */
-    adjust = (bss * CLOCK_FREQ) / old_mux_rate;
+    if (old_mux_rate != 0)
+      adjust = (bss * CLOCK_FREQ) / old_mux_rate;
+
     if (demux->sink_segment.rate >= 0.0)
       demux->next_scr = old_scr + adjust;
     else

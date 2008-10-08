@@ -1,3 +1,18 @@
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data),
+	(gst_flups_demux_parse_pack_start):
+	Prevent a division by zero if last mux rate was zero.
+
+	If we're going to send a NEWSEGMENT event but the segment start
+	and the current buffer timestamp differ by more than a second we
+	will start the NEWSEGMENT at the buffer timestamp.
+
+	This fixes playback of the tv2-1_25.mpg file, which has 0 as first SCR
+	but the first PTS are around 1 hour and 40 minutes.
+
+	Fixes bug #553755.
+
 2008-10-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/resindvdsrc.c:
