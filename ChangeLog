@@ -1,5 +1,10 @@
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpipeline.c: (gst_pipeline_change_state):
+	Release the object lock before trying to flush the bus.
+
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_send_event):
 	Forward LATENCY events upstreams so that elements know about the total
 	pipeline latency. Fixes #555307.

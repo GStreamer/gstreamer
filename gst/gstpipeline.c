@@ -505,16 +505,27 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+    {
+      GstBus *bus;
+      gboolean auto_flush;
+
+      /* grab some stuff before we release the lock to flush out the bus */
       GST_OBJECT_LOCK (element);
-      if (element->bus) {
-        if (pipeline->priv->auto_flush_bus) {
-          gst_bus_set_flushing (element->bus, TRUE);
+      if ((bus = element->bus))
+        gst_object_ref (bus);
+      auto_flush = pipeline->priv->auto_flush_bus;
+      GST_OBJECT_UNLOCK (element);
+
+      if (bus) {
+        if (auto_flush) {
+          gst_bus_set_flushing (bus, TRUE);
         } else {
           GST_INFO_OBJECT (element, "not flushing bus, auto-flushing disabled");
         }
+        gst_object_unref (bus);
       }
-      GST_OBJECT_UNLOCK (element);
       break;
+    }
   }
   return result;
 
