@@ -248,9 +248,8 @@ mpegts_parse_reset (MpegTSParse * parse)
   /* PAT */
   g_hash_table_insert (parse->psi_pids,
       GINT_TO_POINTER (0), GINT_TO_POINTER (1));
-  parse->pat = NULL;
-  /* pmt pids will be added and removed dynamically */
 
+  /* pmt pids will be added and removed dynamically */
 }
 
 static void
@@ -291,10 +290,8 @@ mpegts_parse_finalize (GObject * object)
   MpegTSParse *parse = GST_MPEGTS_PARSE (object);
 
   g_free (parse->program_numbers);
-  if (parse->pat) {
+  if (parse->pat)
     gst_structure_free (parse->pat);
-    parse->pat = NULL;
-  }
   g_hash_table_destroy (parse->programs);
   g_hash_table_destroy (parse->psi_pids);
 
@@ -851,7 +848,7 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
   gchar *dbg;
 
   old_pat = parse->pat;
-  parse->pat = gst_structure_copy (pat_info);
+  parse->pat = pat_info;
 
   dbg = gst_structure_to_string (pat_info);
   GST_INFO_OBJECT (parse, "PAT %s", dbg);
@@ -975,16 +972,14 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
       for (i = 0; i < gst_value_list_get_size (old_streams); ++i) {
         value = gst_value_list_get_value (old_streams, i);
         stream = g_value_get_boxed (value);
+
         gst_structure_get_uint (stream, "pid", &pid);
         gst_structure_get_uint (stream, "stream-type", &stream_type);
         mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
       }
-
       /* remove pcr stream */
       mpegts_parse_program_remove_stream (parse, program, program->pcr_pid);
-
       gst_structure_free (program->pmt_info);
-      program->pmt_info = NULL;
     }
   } else {
     /* no PAT?? */
@@ -994,7 +989,7 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   }
 
   /* activate new pmt */
-  program->pmt_info = gst_structure_copy (pmt_info);
+  program->pmt_info = pmt_info;
   program->pmt_pid = pmt_pid;
   program->pcr_pid = pcr_pid;
   mpegts_parse_program_add_stream (parse, program, (guint16) pcr_pid, -1);
