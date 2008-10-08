@@ -239,6 +239,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   }
   memset (&avi->stream, 0, sizeof (avi->stream));
 
+  avi->header_state = GST_AVI_DEMUX_HEADER_TAG_LIST;
   avi->num_streams = 0;
   avi->num_v_streams = 0;
   avi->num_a_streams = 0;
