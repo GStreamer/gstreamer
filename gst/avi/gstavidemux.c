@@ -1035,9 +1035,14 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi,
     /* timestamps */
     entry->ts = stream->idx_duration;
     if (stream->is_vbr) {
-      /* VBR get next timestamp */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames + 1, &format, &next_ts);
+      /* VBR stream next timestamp */
+      if (stream->strh->type == GST_RIFF_FCC_auds) {
+        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
+            stream->total_blocks + 1, &format, &next_ts);
+      } else {
+        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
+            stream->total_frames + 1, &format, &next_ts);
+      }
     } else {
       /* CBR get next timestamp */
       gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
@@ -1052,6 +1057,14 @@ gst_avi_demux_parse_subindex (GstAviDemux * avi,
 
     stream->total_bytes += entry->size;
     stream->total_frames++;
+    if (stream->strh->type == GST_RIFF_FCC_auds) {
+      if (stream->strf.auds->blockalign > 0)
+        stream->total_blocks +=
+            (entry->size + stream->strf.auds->blockalign -
+            1) / stream->strf.auds->blockalign;
+      else
+        stream->total_blocks++;
+    }
     stream->idx_duration = next_ts;
 
     entries_list = g_list_prepend (entries_list, entry);
@@ -1615,6 +1628,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   stream->num = avi->num_streams;
   stream->total_bytes = 0;
   stream->total_frames = 0;
+  stream->total_blocks = 0;
   stream->current_frame = 0;
   stream->current_byte = 0;
   gst_pad_set_element_private (pad, stream);
@@ -1847,8 +1861,13 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     target->ts = stream->idx_duration;
     if (stream->is_vbr) {
       /* VBR stream next timestamp */
-      gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
-          stream->total_frames + 1, &format, &next_ts);
+      if (stream->strh->type == GST_RIFF_FCC_auds) {
+        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
+            stream->total_blocks + 1, &format, &next_ts);
+      } else {
+        gst_avi_demux_src_convert (stream->pad, GST_FORMAT_DEFAULT,
+            stream->total_frames + 1, &format, &next_ts);
+      }
     } else {
       /* constant rate stream */
       gst_avi_demux_src_convert (stream->pad, GST_FORMAT_BYTES,
@@ -1863,6 +1882,14 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
 
     stream->total_bytes += target->size;
     stream->total_frames++;
+    if (stream->strh->type == GST_RIFF_FCC_auds) {
+      if (stream->strf.auds->blockalign > 0)
+        stream->total_blocks +=
+            (target->size + stream->strf.auds->blockalign -
+            1) / stream->strf.auds->blockalign;
+      else
+        stream->total_blocks++;
+    }
     stream->idx_duration = next_ts;
 
     GST_LOG_OBJECT (avi,

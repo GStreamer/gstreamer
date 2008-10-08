@@ -1,5 +1,14 @@
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_subindex),
+	(gst_avi_demux_parse_stream), (gst_avi_demux_parse_index):
+	* gst/avi/gstavidemux.h:
+	For timestamping audio packets we need to take into account the
+	amount of blocks in one entry using the blockalign. Fixes some sync
+	issues with zero-padded audio blocks in the beginning of avi files.
+
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_class_init),
 	(gst_multi_file_src_query):
 	Implement DEFAULT and BUFFER position queries. See #555260.
