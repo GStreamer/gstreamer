@@ -1,5 +1,18 @@
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Pavel Zeldin <pzeldin at gmail dot com>
+
+	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_render_time),
+	(gst_clock_overlay_class_init), (gst_clock_overlay_finalize),
+	(gst_clock_overlay_init), (gst_clock_overlay_set_property),
+	(gst_clock_overlay_get_property):
+	* ext/pango/gstclockoverlay.h:
+	API: Add ability to specify format for date/time display by
+	adding a "time-format" property.
+	Fixes bug #554879.
+
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Jan Gerber <j at oil21 dot org>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),

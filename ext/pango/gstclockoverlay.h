@@ -47,6 +47,7 @@ typedef struct _GstClockOverlayClass GstClockOverlayClass;
  */
 struct _GstClockOverlay {
   GstTextOverlay textoverlay;
+	gchar         *format; /* as in strftime () */
 };
 
 struct _GstClockOverlayClass {
