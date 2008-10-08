@@ -1,3 +1,9 @@
+2008-10-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create):
+	Fix debug statements (space between '%' and actual format).
+
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_pad_activate):

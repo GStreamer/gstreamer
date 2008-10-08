@@ -862,8 +862,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         /* the skew we have between running_time and the ringbuffertime */
         segment_skew = running_time_segment - current_segment;
 
-        GST_DEBUG_OBJECT (bsrc, "\n running_time = % " GST_TIME_FORMAT
-            "\n timestamp     = % " GST_TIME_FORMAT
+        GST_DEBUG_OBJECT (bsrc, "\n running_time = %" GST_TIME_FORMAT
+            "\n timestamp     = %" GST_TIME_FORMAT
             "\n running_time_segment = %d"
             "\n current_segment      = %d"
             "\n segment_skew         = %d",
@@ -933,8 +933,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 
           GST_DEBUG_OBJECT (bsrc,
               "Timeshifted the ringbuffer with %d segments: "
-              "Updating the timestamp to % " GST_TIME_FORMAT ", "
-              "and src->next_sample to % " G_GUINT64_FORMAT, segment_diff,
+              "Updating the timestamp to %" GST_TIME_FORMAT ", "
+              "and src->next_sample to %" G_GUINT64_FORMAT, segment_diff,
               GST_TIME_ARGS (timestamp), src->next_sample);
         }
         break;
