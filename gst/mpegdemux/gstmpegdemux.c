@@ -100,7 +100,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
 
 /* elementfactory information */
 static GstElementDetails flups_demux_details = {
-  "MPEG Program Demuxer",
+  "The Fluendo MPEG Program Stream Demuxer",
   "Codec/Demuxer",
   "Demultiplexes MPEG Program Streams",
   "Wim Taymans <wim@fluendo.com>"

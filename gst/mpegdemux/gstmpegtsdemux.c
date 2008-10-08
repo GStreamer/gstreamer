@@ -75,9 +75,9 @@ GST_DEBUG_CATEGORY_STATIC (gstflutsdemux_debug);
 
 /* elementfactory information */
 #ifdef USE_LIBOIL
-#define LONGNAME "MPEG Transport stream demuxer (liboil build)"
+#define LONGNAME "The Fluendo MPEG Transport stream demuxer (liboil build)"
 #else
-#define LONGNAME "MPEG Transport stream demuxer"
+#define LONGNAME "The Fluendo MPEG Transport stream demuxer"
 #endif
 
 #ifndef __always_inline

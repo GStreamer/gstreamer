@@ -1,5 +1,11 @@
 2008-10-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	Add Fluendo to the Long Name.
+
+2008-10-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* configure.ac:
 	* gst-plugins-bad.spec.in:
 	* gst/mpegdemux/Makefile.am:
