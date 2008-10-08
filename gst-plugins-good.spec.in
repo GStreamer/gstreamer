@@ -112,7 +112,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmultipart.so
 %{_libdir}/gstreamer-%{majorminor}/libgstid3demux.so
-@USE_CDIO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcdio.so
 @USE_GDK_PIXBUF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
 %{_libdir}/gstreamer-%{majorminor}/libgstannodex.so
