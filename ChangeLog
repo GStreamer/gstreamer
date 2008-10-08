@@ -1,5 +1,16 @@
 2008-10-08  Andy Wingo  <wingo@pobox.com>
 
+	* gst/playback/gstdecodebin2.c (expose_pad): Fix typo: unset
+	target instead of setting it.
+	(gst_decode_pad_activate, gst_decode_pad_unblock): This is now the
+	API for a decode pad. The bugfix is that we set the group in
+	activate(), not when the pad was created because it might be NULL
+	then.
+	(gst_decode_group_control_source_pad, gst_decode_group_expose):
+	Update to use the API.
+
+2008-10-08  Andy Wingo  <wingo@pobox.com>
+
 	* gst/playback/gstdecodebin2.c (struct _GstDecodePad): Change to
 	be a subclass of GstGhostPad.
 	(analyze_new_pad): So, when emitting the signals that determine
