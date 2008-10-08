@@ -1,3 +1,12 @@
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Jan Gerber <j at oil21 dot org>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	Add FFV1 fourcc to support playback of FFMPEG lossless video
+	in AVI. Fixes bug #555319.
+
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Håvard Graff <havard dot graff at tandberg dot com>

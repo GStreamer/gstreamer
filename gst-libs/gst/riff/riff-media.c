@@ -625,6 +625,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Dirac");
       break;
 
+    case GST_MAKE_FOURCC ('F', 'F', 'V', '1'):
+      caps = gst_caps_new_simple ("video/x-ffv",
+          "ffvversion", G_TYPE_INT, 1, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("FFmpeg lossless video codec");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -1516,7 +1523,8 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('h', '2', '6', '4'),
     GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
     GST_MAKE_FOURCC ('x', '2', '6', '3'),
-    GST_MAKE_FOURCC ('d', 'r', 'a', 'c')
+    GST_MAKE_FOURCC ('d', 'r', 'a', 'c'),
+    GST_MAKE_FOURCC ('F', 'F', 'V', '1')
         /* FILL ME */
   };
   guint i;
