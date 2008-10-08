@@ -816,6 +816,8 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
     internal =
         g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,
         "direction", otherdir, "template", templ, NULL);
+    /* release ref obtained via g_object_get */
+    gst_object_unref (templ);
   } else {
     internal =
         g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,

@@ -146,10 +146,10 @@ typedef struct _GstBufferClass GstBufferClass;
  * @buf: a #GstBuffer.
  *
  * A pointer to a function that will be called on the buffer's malloc_data when
- * this buffer is finalized. Defaults to g_free() if NULL.
+ * this buffer is finalized. Defaults to g_free().
  *
  * Note that the free function only affects the buffer's malloc_data; if the
- * buffer's malloc_data is NULL, the function will not be called.
+ * buffer's malloc_data is %NULL, the function will not be called.
  *
  * Since: 0.10.22
  */
