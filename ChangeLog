@@ -1,5 +1,13 @@
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Håvard Graff <havard dot graff at tandberg dot com>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create):
+	Implement skew clock slaving. Fixes #552559.
+
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/multichannel.c:
 	* gst-libs/gst/audio/testchannels.c:
 	Fix include of config.h
