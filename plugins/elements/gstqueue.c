@@ -1216,9 +1216,9 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
           peer_pos -= queue->cur_level.time;
           break;
         default:
-          GST_WARNING_OBJECT (queue, "dropping query in %s format, don't "
+          GST_DEBUG_OBJECT (queue, "Can't adjust query in %s format, don't "
               "know how to adjust value", gst_format_get_name (format));
-          return FALSE;
+          return TRUE;
       }
       /* set updated position */
       gst_query_set_position (query, format, peer_pos);

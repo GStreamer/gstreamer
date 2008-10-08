@@ -1,3 +1,11 @@
+2008-10-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* plugins/elements/gstqueue.c:
+	Allow through queries when we don't know how
+	to adjust them (not TIME or BYTES), as otherwise it's
+	not possible to query the current position in order
+	to seek in other formats at all.
+
 2008-10-08  Andy Wingo  <wingo@pobox.com>
 
 	* docs/gst/gstreamer-sections.txt: Placate doc pendants.
