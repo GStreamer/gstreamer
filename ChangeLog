@@ -1,3 +1,9 @@
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_pad_activate):
+	Remove bogus assert, the decodepad could have been created inside an
+	already existing group.
+
 2008-10-08  Andy Wingo  <wingo@pobox.com>
 
 	* gst/playback/gstdecodebin2.c (expose_pad): Fix typo: unset

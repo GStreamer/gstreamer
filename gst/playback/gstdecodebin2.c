@@ -2307,7 +2307,6 @@ gst_decode_pad_add_drained_check (GstDecodePad * dpad)
 static void
 gst_decode_pad_activate (GstDecodePad * dpad, GstDecodeGroup * group)
 {
-  g_return_if_fail (dpad->group == NULL);
   g_return_if_fail (group != NULL);
 
   dpad->group = group;
