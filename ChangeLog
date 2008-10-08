@@ -1,3 +1,7 @@
+2008-10-08  Andy Wingo  <wingo@pobox.com>
+
+	* docs/gst/gstreamer-sections.txt: Placate doc pendants.
+
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstghostpad.c:
