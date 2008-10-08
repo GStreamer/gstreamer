@@ -1,3 +1,12 @@
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/mad/gstmad.c: (gst_mad_src_event), (gst_mad_chain),
+	(gst_mad_change_state):
+	* ext/mad/gstmad.h:
+	track discont on incomming buffers and set discont on outgoing
+	buffers.
+	Pass unknown events upstreams instead of dropping them.
+
 2008-09-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Sameer Naik <sameer dot subscriptions at damagehead dot com>

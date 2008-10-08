@@ -811,10 +811,10 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-      /* the all-formats seek logic */
     case GST_EVENT_SEEK:
+      /* the all-formats seek logic, ref the event, we need it later */
       gst_event_ref (event);
-      if (!(res = gst_pad_event_default (pad, event))) {
+      if (!(res = gst_pad_push_event (mad->sinkpad, event))) {
 #ifndef GST_DISABLE_INDEX
         if (mad->index)
           res = index_seek (mad, pad, event);
@@ -822,14 +822,13 @@ gst_mad_src_event (GstPad * pad, GstEvent * event)
 #endif
           res = normal_seek (mad, pad, event);
       }
+      gst_event_unref (event);
       break;
-
     default:
-      res = FALSE;
+      res = gst_pad_push_event (mad->sinkpad, event);
       break;
   }
 
-  gst_event_unref (event);
   return res;
 }
 
@@ -1289,6 +1288,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   guint8 *data;
   glong size, tempsize;
   gboolean new_pts = FALSE;
+  gboolean discont;
   GstClockTime timestamp;
   GstFlowReturn result = GST_FLOW_OK;
 
@@ -1299,6 +1299,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
     mad->need_newsegment = TRUE;
     GST_DEBUG ("mad restarted");
   }
+
+  /* take discont flag */
+  discont = GST_BUFFER_IS_DISCONT (buffer);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_DEBUG ("mad in timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
@@ -1335,6 +1338,10 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
     gint tocopy;
     guchar *mad_input_buffer;   /* convenience pointer to tempbuffer */
 
+    if (mad->tempsize == 0 && discont) {
+      mad->discont = TRUE;
+      discont = FALSE;
+    }
     tocopy =
         MIN (MAD_BUFFER_MDLEN, MIN (size,
             MAD_BUFFER_MDLEN * 3 - mad->tempsize));
@@ -1626,6 +1633,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         GST_BUFFER_TIMESTAMP (outbuffer) = time_offset;
         GST_BUFFER_DURATION (outbuffer) = time_duration;
         GST_BUFFER_OFFSET (outbuffer) = mad->total_samples;
+        GST_BUFFER_OFFSET_END (outbuffer) = mad->total_samples + nsamples;
 
         /* output sample(s) in 16-bit signed native-endian PCM */
         if (mad->channels == 1) {
@@ -1649,6 +1657,13 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
               "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
               GST_BUFFER_OFFSET (outbuffer),
               GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuffer)));
+
+          /* apply discont */
+          if (mad->discont) {
+            GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_DISCONT);
+            mad->discont = FALSE;
+          }
+
           mad->segment.last_stop = GST_BUFFER_TIMESTAMP (outbuffer);
           result = gst_pad_push (mad->srcpad, outbuffer);
           if (result != GST_FLOW_OK) {
@@ -1672,6 +1687,10 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         mad->bytes_consumed = 0;
       }
       tempsize = 0;
+      if (discont) {
+        mad->discont = TRUE;
+        discont = FALSE;
+      }
 
       if (gst_mad_check_restart (mad)) {
         goto end;
@@ -1723,6 +1742,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
       mad_frame_init (&mad->frame);
       mad_synth_init (&mad->synth);
       mad->tempsize = 0;
+      mad->discont = TRUE;
       mad->total_samples = 0;
       mad->rate = 0;
       mad->channels = 0;
