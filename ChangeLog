@@ -1,3 +1,9 @@
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache):
+	If we can't get a cache file don't try to save something to it.
+	Dereferencing NULL pointers usually isn't a good idea.
+
 2008-10-07  Jan Schmidt - Sun Microsystems <jan.schmidt@sun.com>
 
 	* tests/check/Makefile.am:

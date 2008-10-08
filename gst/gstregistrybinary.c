@@ -838,7 +838,8 @@ fail_free_list:
     }
     g_list_free (to_write);
 
-    (void) gst_registry_binary_cache_finish (registry, cache, FALSE);
+    if (cache)
+      (void) gst_registry_binary_cache_finish (registry, cache, FALSE);
     /* fall through */
   }
 fail:
