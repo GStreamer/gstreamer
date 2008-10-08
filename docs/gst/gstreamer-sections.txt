@@ -767,6 +767,16 @@ GST_IS_GHOST_PAD_CLASS
 GST_TYPE_GHOST_PAD
 GST_GHOST_PAD_CAST
 <SUBSECTION Private>
+GST_IS_PROXY_PAD
+GST_IS_PROXY_PAD_CLASS
+GST_PROXY_PAD
+GST_PROXY_PAD_CLASS
+GST_TYPE_PROXY_PAD
+GstGhostPadPrivate
+GstProxyPad
+GstProxyPadClass
+GstProxyPadPrivate
+gst_proxy_pad_get_type
 gst_ghost_pad_get_type
 </SECTION>
 
