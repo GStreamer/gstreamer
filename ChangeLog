@@ -1,3 +1,30 @@
+2008-10-08  Andy Wingo  <wingo@pobox.com>
+
+	* gst/playback/gstdecodebin2.c (struct _GstDecodePad): Change to
+	be a subclass of GstGhostPad.
+	(analyze_new_pad): So, when emitting the signals that determine
+	how we do autoplugging, already create the ghost pad and use it as
+	the pad in the signal arguments. This allows applications to make
+	a connection between the pad passed in e.g. autoplug-continue, and
+	the pad passed in new-decoded-pad.
+	(connect_pad, expose_pad): Update to receive the ghosted decode
+	pad in the args, retargetting it as necessary if we have to plug
+	the target pad through a multiqueue.
+	(gst_decode_group_control_source_pad): Adapt to receive an
+	already-ghosted pad that just needs activation, blocking, and
+	drain notification.
+	(sort_end_pads): Adapt for decode pads actually being pads.
+	(gst_decode_group_expose): Adapt for decode pads actually being
+	pads. Rewrite the decode pad names so they appear in order. Adds a
+	new error case if we couldn't set the name.
+	(gst_decode_group_free, gst_decode_group_hide): Adapt cleanup
+	logic.
+	(gst_decode_pad_set_blocked, gst_decode_pad_add_drained_check):
+	New API for the decode pad, needed because we shouldn't do these
+	things inside gst_decode_pad_new(), but after.
+	(gst_decode_pad_new): Change to actually make the real pad, and
+	delay the blocking/drainage bits.
+
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Daniel Drake <dsd at laptop dot org>
