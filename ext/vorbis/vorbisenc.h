@@ -80,6 +80,7 @@ struct _GstVorbisEnc {
   gboolean         next_discont;
   guint64          granulepos_offset;
   gint64           subgranule_offset;
+  GstSegment       segment;
 
   GstTagList *     tags;
 

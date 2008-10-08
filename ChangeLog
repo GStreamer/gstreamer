@@ -1,5 +1,16 @@
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Based on a patch by: Klaas <klaas at rivercrew dot net>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_sink_event),
+	(gst_vorbis_enc_buffer_check_discontinuous),
+	(gst_vorbis_enc_chain), (gst_vorbis_enc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	Keep track of the upstream segments and use the running time on that
+	segment instead of the buffer timestamp everywhere. Fixes bug #525807.
+
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/audioconvert/audioconvert.c: (audio_convert_convert):
 	Prevent overflows with big buffer when calculating the size of
 	the intermediate buffer by using gst_util_uint64_scale() instead of
