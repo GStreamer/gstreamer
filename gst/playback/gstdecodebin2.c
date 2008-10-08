@@ -288,8 +288,9 @@ G_DEFINE_TYPE (GstDecodePad, gst_decode_pad, GST_TYPE_GHOST_PAD);
 
 static GstDecodePad *gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad,
     GstDecodeGroup * group);
-static void gst_decode_pad_set_blocked (GstDecodePad * pad, gboolean blocked);
-static void gst_decode_pad_add_drained_check (GstDecodePad * dpad);
+static void gst_decode_pad_activate (GstDecodePad * dpad,
+    GstDecodeGroup * group);
+static void gst_decode_pad_unblock (GstDecodePad * dpad);
 
 /* TempPadStruct
  * Internal structure used for pads which have more than one structure.
@@ -1385,7 +1386,7 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   if (isdemux) {
     GST_LOG_OBJECT (src, "connecting the pad through multiqueue");
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), pad);
+    gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), NULL);
     if (!(mqpad = gst_decode_group_control_demuxer_pad (group, pad)))
       goto beach;
     pad = mqpad;
@@ -1785,9 +1786,7 @@ gst_decode_group_control_source_pad (GstDecodeGroup * group,
   GST_DEBUG_OBJECT (dpad, "adding decode pad to group %p", group);
 
   /* FIXME : check if pad is already controlled */
-  gst_pad_set_active (GST_PAD (dpad), TRUE);
-  gst_decode_pad_set_blocked (dpad, TRUE);
-  gst_decode_pad_add_drained_check (dpad);
+  gst_decode_pad_activate (dpad, group);
 
   GROUP_MUTEX_LOCK (group);
   group->endpads = g_list_append (group->endpads, gst_object_ref (dpad));
@@ -2055,7 +2054,7 @@ gst_decode_group_expose (GstDecodeGroup * group)
     next = g_list_next (tmp);
 
     GST_DEBUG_OBJECT (dpad, "unblocking");
-    gst_decode_pad_set_blocked (dpad, FALSE);
+    gst_decode_pad_unblock (dpad);
     GST_DEBUG_OBJECT (dpad, "unblocked");
   }
 
@@ -2303,6 +2302,24 @@ gst_decode_pad_add_drained_check (GstDecodePad * dpad)
 {
   gst_pad_add_event_probe (GST_PAD (dpad),
       G_CALLBACK (source_pad_event_probe), dpad);
+}
+
+static void
+gst_decode_pad_activate (GstDecodePad * dpad, GstDecodeGroup * group)
+{
+  g_return_if_fail (dpad->group == NULL);
+  g_return_if_fail (group != NULL);
+
+  dpad->group = group;
+  gst_pad_set_active (GST_PAD (dpad), TRUE);
+  gst_decode_pad_set_blocked (dpad, TRUE);
+  gst_decode_pad_add_drained_check (dpad);
+}
+
+static void
+gst_decode_pad_unblock (GstDecodePad * dpad)
+{
+  gst_decode_pad_set_blocked (dpad, FALSE);
 }
 
 /*gst_decode_pad_new:
