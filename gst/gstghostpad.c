@@ -52,42 +52,21 @@
 
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
-#define GST_TYPE_PROXY_PAD              (gst_proxy_pad_get_type ())
-#define GST_IS_PROXY_PAD(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PROXY_PAD))
-#define GST_IS_PROXY_PAD_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PROXY_PAD))
-#define GST_PROXY_PAD(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PROXY_PAD, GstProxyPad))
-#define GST_PROXY_PAD_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PROXY_PAD, GstProxyPadClass))
 #define GST_PROXY_PAD_CAST(obj)         ((GstProxyPad *)obj)
-
-#define GST_PROXY_PAD_TARGET(pad)       (GST_PROXY_PAD_CAST (pad)->target)
-#define GST_PROXY_PAD_INTERNAL(pad)     (GST_PROXY_PAD_CAST (pad)->internal)
-
-typedef struct _GstProxyPad GstProxyPad;
-typedef struct _GstProxyPadClass GstProxyPadClass;
-
-#define GST_PROXY_GET_LOCK(pad) (GST_PROXY_PAD_CAST (pad)->proxy_lock)
+#define GST_PROXY_PAD_PRIVATE(obj)      (GST_PROXY_PAD_CAST (obj)->private)
+#define GST_PROXY_PAD_TARGET(pad)       (GST_PROXY_PAD_PRIVATE (pad)->target)
+#define GST_PROXY_PAD_INTERNAL(pad)     (GST_PROXY_PAD_PRIVATE (pad)->internal)
+#define GST_PROXY_GET_LOCK(pad) (GST_PROXY_PAD_PRIVATE (pad)->proxy_lock)
 #define GST_PROXY_LOCK(pad)     (g_mutex_lock (GST_PROXY_GET_LOCK (pad)))
 #define GST_PROXY_UNLOCK(pad)   (g_mutex_unlock (GST_PROXY_GET_LOCK (pad)))
 
-struct _GstProxyPad
+struct _GstProxyPadPrivate
 {
-  GstPad pad;
-
   /* with PROXY_LOCK */
   GMutex *proxy_lock;
   GstPad *target;
   GstPad *internal;
 };
-
-struct _GstProxyPadClass
-{
-  GstPadClass parent_class;
-
-  /*< private > */
-  gpointer _gst_reserved[1];
-};
-
-static GType gst_proxy_pad_get_type (void);
 
 G_DEFINE_TYPE (GstProxyPad, gst_proxy_pad, GST_TYPE_PAD);
 
@@ -106,6 +85,8 @@ static void
 gst_proxy_pad_class_init (GstProxyPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstProxyPadPrivate));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_proxy_pad_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_proxy_pad_finalize);
@@ -410,8 +391,8 @@ gst_proxy_pad_finalize (GObject * object)
 {
   GstProxyPad *pad = GST_PROXY_PAD (object);
 
-  g_mutex_free (pad->proxy_lock);
-  pad->proxy_lock = NULL;
+  g_mutex_free (GST_PROXY_GET_LOCK (pad));
+  GST_PROXY_GET_LOCK (pad) = NULL;
 
   G_OBJECT_CLASS (gst_proxy_pad_parent_class)->finalize (object);
 }
@@ -421,7 +402,9 @@ gst_proxy_pad_init (GstProxyPad * ppad)
 {
   GstPad *pad = (GstPad *) ppad;
 
-  ppad->proxy_lock = g_mutex_new ();
+  GST_PROXY_PAD_PRIVATE (ppad) = G_TYPE_INSTANCE_GET_PRIVATE (ppad,
+      GST_TYPE_PROXY_PAD, GstProxyPadPrivate);
+  GST_PROXY_GET_LOCK (pad) = g_mutex_new ();
 
   gst_pad_set_query_type_function (pad,
       GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query_type));
@@ -502,27 +485,16 @@ gst_proxy_pad_save_thyself (GstObject * object, xmlNodePtr parent)
  */
 
 
-struct _GstGhostPad
-{
-  GstProxyPad pad;
+#define GST_GHOST_PAD_CAST(obj)		((GstGhostPad*)(obj))
+#define GST_GHOST_PAD_PRIVATE(obj)	(GST_GHOST_PAD_CAST (obj)->private)
 
+struct _GstGhostPadPrivate
+{
   /* with PROXY_LOCK */
   gulong notify_id;
 
-  gpointer constructed;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gboolean constructed;
 };
-
-struct _GstGhostPadClass
-{
-  GstProxyPadClass parent_class;
-
-  /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
-};
-
 
 G_DEFINE_TYPE (GstGhostPad, gst_ghost_pad, GST_TYPE_PROXY_PAD);
 
@@ -532,6 +504,8 @@ static void
 gst_ghost_pad_class_init (GstGhostPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstGhostPadPrivate));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ghost_pad_dispose);
 }
@@ -714,6 +688,9 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 static void
 gst_ghost_pad_init (GstGhostPad * pad)
 {
+  GST_GHOST_PAD_PRIVATE (pad) = G_TYPE_INSTANCE_GET_PRIVATE (pad,
+      GST_TYPE_GHOST_PAD, GstGhostPadPrivate);
+
   gst_pad_set_activatepull_function (GST_PAD_CAST (pad),
       GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_pull));
   gst_pad_set_activatepush_function (GST_PAD_CAST (pad),
@@ -737,7 +714,8 @@ gst_ghost_pad_dispose (GObject * object)
   gst_pad_set_activatepull_function (internal, NULL);
   gst_pad_set_activatepush_function (internal, NULL);
 
-  g_signal_handler_disconnect (internal, GST_GHOST_PAD_CAST (pad)->notify_id);
+  g_signal_handler_disconnect (internal,
+      GST_GHOST_PAD_PRIVATE (pad)->notify_id);
 
   intpeer = gst_pad_get_peer (internal);
   if (intpeer) {
@@ -783,7 +761,8 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
   GstPad *pad, *internal;
 
   g_return_val_if_fail (GST_IS_GHOST_PAD (gpad), FALSE);
-  g_return_val_if_fail (!gpad->constructed, FALSE);
+  g_return_val_if_fail (GST_GHOST_PAD_PRIVATE (gpad)->constructed == FALSE,
+      FALSE);
 
   g_object_get (gpad, "direction", &dir, "template", &templ, NULL);
 
@@ -858,7 +837,7 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   /* could be more general here, iterating over all writable properties...
    * taking the short road for now tho */
-  GST_GHOST_PAD_CAST (pad)->notify_id =
+  GST_GHOST_PAD_PRIVATE (pad)->notify_id =
       g_signal_connect (internal, "notify::caps", G_CALLBACK (on_int_notify),
       pad);
 
@@ -873,7 +852,7 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
 
   GST_PROXY_UNLOCK (pad);
 
-  gpad->constructed = (gpointer) 1;
+  GST_GHOST_PAD_PRIVATE (gpad)->constructed = TRUE;
   return TRUE;
 
   /* ERRORS */

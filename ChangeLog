@@ -1,3 +1,20 @@
+2008-10-08  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstghostpad.h (GstProxyPad, GstProxyPadClass, GstGhostPad)
+	(GstGhostPadClass): Publically expose these structures so as to
+	allow easy subclassing from C. Hide the member data behind a
+	private opaque data pointer.
+
+	* gst/gstghostpad.c: Adapt to store instance data in the type
+	instance's private data region, not in the public struct.
+
+2008-10-08  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstghostpad.c (gst_ghost_pad_construct): If we got a
+	template via g_object_get(), be sure to unref it.
+
+	* gst/gstbuffer.h (GST_BUFFER_FREE_FUNC): Fix incorrect doc.
+
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache):
