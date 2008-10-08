@@ -1,3 +1,9 @@
+2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/multichannel.c:
+	* gst-libs/gst/audio/testchannels.c:
+	Fix include of config.h
+
 2008-10-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on Patch by: Tero Saarni <tero dot saarni at gmail dot com>
