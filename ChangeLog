@@ -1,5 +1,12 @@
 2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Daniel Drake <dsd at laptop dot org>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_clear_collectpads):
+	Unref all buffers when clearing collectpads. Fixes bug #546955.
+
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Based on a patch by: Klaas <klaas at rivercrew dot net>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_sink_event),

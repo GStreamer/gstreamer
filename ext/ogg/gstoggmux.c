@@ -1613,6 +1613,15 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
     }
     g_queue_free (oggpad->pagebuffers);
     oggpad->pagebuffers = NULL;
+
+    if (oggpad->buffer) {
+      gst_buffer_unref (oggpad->buffer);
+      oggpad->buffer = NULL;
+    }
+    if (oggpad->next_buffer) {
+      gst_buffer_unref (oggpad->next_buffer);
+      oggpad->next_buffer = NULL;
+    }
   }
 }
 
