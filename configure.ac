@@ -281,8 +281,21 @@ else
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
+
+  AC_ARG_WITH(ffmpeg-extra-configure, 
+      AC_HELP_STRING([--with-ffmpeg-extra-configure="xxx"],
+      [extra configure options for internal ffmpeg ./configure script]),,
+      with_ffmpeg_extra_configure=no)
+
   # Enable shared and static so that we get .a files, but with PIC code.
   ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices --disable-network"
+
+  # if we are cross-compiling, tell ffmpeg so
+  if test "x$cross_compiling" = xyes; then
+    ac_configure_args="$ac_configure_args --enable-cross-compile \
+        --target-os=$host_os --arch=$host_cpu --cross-prefix=$host_alias-"
+  fi
+
   case $host_os in
     # Unfortunately, in Mac OS 10.5 the current rev of ffmpeg builds
     # some non-PIC code into the .a file. See
@@ -291,9 +304,20 @@ else
     darwin*) 
       ac_configure_args="$ac_configure_args --disable-mmx --disable-altivec"
       ;;
+    mingw32*)
+      ac_configure_args="$ac_configure_args --enable-memalign-hack"
+      WIN32_LIBS="-lws2_32"
+      ;;
     *)
+      WIN32_LIBS=
       ;;
   esac
+
+  # append extra configure options to ac_configure_args if needed
+  if test "x$with_ffmpeg_extra_configure" != no; then
+    ac_configure_args="$ac_configure_args $with_ffmpeg_extra_configure"
+  fi
+
   AC_SUBST(FFMPEG_CO_DIR)
   AC_SUBST(FFMPEG_SVN)
   AC_SUBST(FFMPEG_REVISION)
@@ -306,6 +330,7 @@ AC_SUBST(FFMPEG_LIBS)
 AC_SUBST(FFMPEG_SUBDIRS)
 AC_SUBST(POSTPROC_CFLAGS)
 AC_SUBST(POSTPROC_LIBS)
+AC_SUBST(WIN32_LIBS)
  
 if test x$HAVE_FFMPEG_UNINSTALLED = x1; then
   AC_DEFINE(HAVE_FFMPEG_UNINSTALLED, [], [Defined if building against uninstalled FFmpeg source])

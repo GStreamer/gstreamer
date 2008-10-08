@@ -1,3 +1,12 @@
+2008-10-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* configure.ac:
+	* ext/ffmpeg/Makefile.am:
+	Fix cross compilation and add support for compilation with mingw32.
+	Fixes bug #542216.
+
 2008-09-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
