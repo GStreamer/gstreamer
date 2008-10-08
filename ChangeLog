@@ -1,3 +1,8 @@
+2008-10-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_stop):
+	Fix build for systems that don't have XDamage.
+
 2008-10-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/rtp/client-H263p.sdp:

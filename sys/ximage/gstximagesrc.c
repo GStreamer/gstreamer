@@ -222,15 +222,19 @@ gst_ximage_src_stop (GstBaseSrc * basesrc)
 {
   GstXImageSrc *src = GST_XIMAGE_SRC (basesrc);
 
+#ifdef HAVE_XDAMAGE
   if (src->last_ximage)
     gst_buffer_unref (GST_BUFFER_CAST (src->last_ximage));
   src->last_ximage = NULL;
+#endif
 
   gst_ximage_src_clear_bufpool (src);
 
+#ifdef HAVE_XFIXES
   if (src->cursor_image)
     XFree (src->cursor_image);
   src->cursor_image = NULL;
+#endif
 
   if (src->xcontext) {
     g_mutex_lock (src->x_lock);
