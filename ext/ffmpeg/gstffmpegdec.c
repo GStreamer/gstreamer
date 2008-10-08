@@ -1046,7 +1046,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
   }
 
   caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
-      ffmpegdec->context, oclass->in_plugin->id);
+      ffmpegdec->context, oclass->in_plugin->id, FALSE);
 
   if (caps == NULL)
     goto no_caps;
@@ -2497,8 +2497,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
       srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
     } else {
-      srccaps =
-          gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
+      srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL,
+          in_plugin->id, FALSE);
     }
     if (!srccaps) {
       GST_WARNING ("Couldn't get source caps for decoder %s",

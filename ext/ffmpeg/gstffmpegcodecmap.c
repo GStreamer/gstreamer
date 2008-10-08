@@ -87,14 +87,28 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
   va_list var_args;
   gint i;
 
-  if (context != NULL) {
+  /* fixed, non probing context */
+  if (context != NULL && context->width != -1) {
     caps = gst_caps_new_simple (mimetype,
         "width", G_TYPE_INT, context->width,
         "height", G_TYPE_INT, context->height,
         "framerate", GST_TYPE_FRACTION,
         context->time_base.den, context->time_base.num, NULL);
-  } else {
+  } else if (context) {
+    /* so we are after restricted caps in this case */
     switch (codec_id) {
+      case CODEC_ID_H261:
+      {
+        caps = gst_caps_new_simple (mimetype,
+            "width", G_TYPE_INT, 352,
+            "height", G_TYPE_INT, 288,
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+        gst_caps_append (caps, gst_caps_new_simple (mimetype,
+                "width", G_TYPE_INT, 176,
+                "height", G_TYPE_INT, 144,
+                "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL));
+        break;
+      }
       case CODEC_ID_H263:
       {
         /* 128x96, 176x144, 352x288, 704x576, and 1408x1152. slightly reordered
@@ -131,21 +145,37 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
               "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
           gst_caps_append (caps, temp);
-	}
+        }
+        break;
+      }
+      case CODEC_ID_DNXHD:
+      {
+        caps = gst_caps_new_simple (mimetype,
+            "width", G_TYPE_INT, 1920,
+            "height", G_TYPE_INT, 1080,
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+        gst_caps_append (caps, gst_caps_new_simple (mimetype,
+                "width", G_TYPE_INT, 1280,
+                "height", G_TYPE_INT, 720,
+                "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL));
         break;
       }
       default:
-        caps = gst_caps_new_simple (mimetype,
-            "width", GST_TYPE_INT_RANGE, 16, 4096,
-            "height", GST_TYPE_INT_RANGE, 16, 4096,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
         break;
     }
   }
 
+  /* no fixed caps or special restrictions applied;
+   * default unfixed setting */
+  if (!caps)
+    caps = gst_caps_new_simple (mimetype,
+        "width", GST_TYPE_INT_RANGE, 16, 4096,
+        "height", GST_TYPE_INT_RANGE, 16, 4096,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
   for (i = 0; i < gst_caps_get_size (caps); i++) {
-    structure = gst_caps_get_structure (caps, i);
     va_start (var_args, fieldname);
+    structure = gst_caps_get_structure (caps, i);
     gst_structure_set_valist (structure, fieldname, var_args);
     va_end (var_args);
   }
@@ -162,36 +192,94 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
 {
   GstCaps *caps = NULL;
   GstStructure *structure = NULL;
+  gint i;
   va_list var_args;
 
-  if (context != NULL) {
+  /* fixed, non-probing context */
+  if (context != NULL && context->channels != -1) {
     caps = gst_caps_new_simple (mimetype,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
   } else {
-    gint maxchannels;
-    /* Until decoders/encoders expose the maximum number of channels
-     * they support, we whitelist them here. */
-    switch (codec_id) {
-    case CODEC_ID_AC3:
-    case CODEC_ID_AAC:
-    case CODEC_ID_DTS:
-      maxchannels = 6;
-      break;
-    default:
-      maxchannels = 2;
-    }
+    gint maxchannels = 2;
+    const gint *rates = NULL;
+    gint n_rates = 0;
 
-    caps = gst_caps_new_simple (mimetype,
-        "rate", GST_TYPE_INT_RANGE, 8000, 96000,
-        "channels", GST_TYPE_INT_RANGE, 1, maxchannels, NULL);
+    if (context)
+      /* so we must be after restricted caps in this particular case */
+      switch (codec_id) {
+        case CODEC_ID_MP2:
+        {
+          const static gint l_rates[] =
+              { 48000, 44100, 32000, 24000, 22050, 16000 };
+          n_rates = G_N_ELEMENTS (l_rates);
+          rates = l_rates;
+          break;
+        }
+        case CODEC_ID_AC3:
+        {
+          const static gint l_rates[] = { 48000, 44100, 32000 };
+          n_rates = G_N_ELEMENTS (l_rates);
+          rates = l_rates;
+          maxchannels = 6;
+          break;
+        }
+        case CODEC_ID_ADPCM_SWF:
+        {
+          const static gint l_rates[] = { 11025, 22050, 44100 };
+          n_rates = G_N_ELEMENTS (l_rates);
+          rates = l_rates;
+          break;
+        }
+        case CODEC_ID_ROQ_DPCM:
+        {
+          const static gint l_rates[] = { 22050 };
+          n_rates = G_N_ELEMENTS (l_rates);
+          rates = l_rates;
+          break;
+        }
+        case CODEC_ID_ADPCM_G726:
+          maxchannels = 1;
+          break;
+        case CODEC_ID_AAC:
+        case CODEC_ID_DTS:
+          /* Until decoders/encoders expose the maximum number of channels
+           * they support, we whitelist them here. */
+          maxchannels = 6;
+          break;
+        default:
+          break;
+      }
 
+    if (maxchannels == 1)
+      caps = gst_caps_new_simple (mimetype,
+          "channels", G_TYPE_INT, maxchannels, NULL);
+    else
+      caps = gst_caps_new_simple (mimetype,
+          "channels", GST_TYPE_INT_RANGE, 1, maxchannels, NULL);
+    if (n_rates) {
+      GValue list = { 0, };
+      GstStructure *structure;
+
+      g_value_init (&list, GST_TYPE_LIST);
+      for (i = 0; i < n_rates; i++) {
+        GValue v = { 0, };
+
+        g_value_init (&v, G_TYPE_INT);
+        g_value_set_int (&v, rates[i]);
+        gst_value_list_append_value (&list, &v);
+        g_value_unset (&v);
+      }
+      structure = gst_caps_get_structure (caps, 0);
+      gst_structure_set_value (structure, "rate", &list);
+      g_value_unset (&list);
+    } else
+      gst_caps_set_simple (caps, "rate", GST_TYPE_INT_RANGE, 8000, 96000, NULL);
   }
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (structure) {
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
     va_start (var_args, fieldname);
+    structure = gst_caps_get_structure (caps, i);
     gst_structure_set_valist (structure, fieldname, var_args);
     va_end (var_args);
   }
@@ -428,7 +516,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_RAWVIDEO:
-      caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, context, codec_id);
+      caps = gst_ffmpeg_codectype_to_caps (CODEC_TYPE_VIDEO, context, codec_id,
+          encode);
       break;
 
     case CODEC_ID_MSMPEG4V1:
@@ -1366,7 +1455,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
 
 GstCaps *
 gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
-    AVCodecContext * context, enum CodecID codec_id)
+    AVCodecContext * context, enum CodecID codec_id, gboolean encode)
 {
   GstCaps *caps;
 
@@ -1374,14 +1463,17 @@ gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
     case CODEC_TYPE_VIDEO:
       if (context) {
         caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt,
-            context->width == -1 ? NULL : context, codec_id);
+            context, codec_id);
       } else {
         GstCaps *temp;
         enum PixelFormat i;
+        AVCodecContext ctx = { 0, };
 
         caps = gst_caps_new_empty ();
         for (i = 0; i < PIX_FMT_NB; i++) {
-          temp = gst_ffmpeg_pixfmt_to_caps (i, NULL, codec_id);
+          ctx.width = -1;
+          ctx.pix_fmt = i;
+          temp = gst_ffmpeg_pixfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
           if (temp != NULL) {
             gst_caps_append (caps, temp);
           }
@@ -1396,10 +1488,12 @@ gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
       } else {
         GstCaps *temp;
         enum SampleFormat i;
+        AVCodecContext ctx = { 0, };
 
+        ctx.channels = -1;
         caps = gst_caps_new_empty ();
         for (i = 0; i <= SAMPLE_FMT_S16; i++) {
-          temp = gst_ffmpeg_smpfmt_to_caps (i, NULL, codec_id);
+          temp = gst_ffmpeg_smpfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
           if (temp != NULL) {
             gst_caps_append (caps, temp);
           }

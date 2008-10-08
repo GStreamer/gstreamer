@@ -286,6 +286,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   AVCodecContext *ctx = NULL;
   enum PixelFormat pixfmt;
   GstCaps *caps = NULL;
+  gint i;
 
   GST_DEBUG_OBJECT (ffmpegenc, "getting caps");
 
@@ -317,8 +318,19 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   _shut_up_I_am_probing = TRUE;
 #endif
   GST_DEBUG_OBJECT (ffmpegenc, "probing caps");
-  for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
+  i = pixfmt = 0;
+  /* check pixfmt until deemed finished */
+  for (pixfmt = 0;; pixfmt++) {
     GstCaps *tmpcaps;
+
+    /* override looping all pixfmt if codec declares pixfmts;
+     * these may not properly check and report supported pixfmt during _init */
+    if (oclass->in_plugin->pix_fmts) {
+      if ((pixfmt = oclass->in_plugin->pix_fmts[i++]) == PIX_FMT_NONE)
+        break;
+    }
+    if (pixfmt >= PIX_FMT_NB)
+      break;
 
     /* need to start with a fresh codec_context each time around, since
      * codec_close may have released stuff causing the next pass to segfault */
@@ -344,7 +356,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
       if (!caps)
         caps = gst_caps_new_empty ();
       tmpcaps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx,
-          oclass->in_plugin->id);
+          oclass->in_plugin->id, TRUE);
       if (tmpcaps)
         gst_caps_append (caps, tmpcaps);
       else
@@ -1018,8 +1030,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       sinkcaps = gst_caps_from_string
           ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
     } else {
-      sinkcaps =
-          gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
+      sinkcaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL,
+          in_plugin->id, TRUE);
     }
     if (!sinkcaps) {
       GST_WARNING ("Couldn't get sink caps for encoder %s",

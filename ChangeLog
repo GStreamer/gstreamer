@@ -1,5 +1,18 @@
 2008-10-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_vid_caps_new),
+	(gst_ff_aud_caps_new), (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_codectype_to_caps):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_negotiate),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_register):
+	Add some more width/height/channels/rate limitations to caps
+	to cater for more automagic negotiation.  Addresses #532422.
+
+2008-10-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/libswscale/Makefile.am:
