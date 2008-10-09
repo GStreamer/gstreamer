@@ -45,13 +45,6 @@ GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
-static GstElementDetails flv_demux_details = {
-  "FLV Demuxer",
-  "Codec/Demuxer",
-  "Demux FLV feeds into digital streams",
-  "Julien Moutte <julien@moutte.net>"
-};
-
 GST_DEBUG_CATEGORY (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
 
@@ -188,8 +181,13 @@ gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
 
 parse:
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_DEBUG_OBJECT (demux, "got flow return %s", gst_flow_get_name (ret));
-    goto beach;
+    if (ret == GST_FLOW_NOT_LINKED && (demux->audio_linked
+            || demux->video_linked)) {
+      ret = GST_FLOW_OK;
+    } else {
+      GST_DEBUG_OBJECT (demux, "got flow return %s", gst_flow_get_name (ret));
+      goto beach;
+    }
   }
 
   if (G_UNLIKELY (demux->flushing)) {
@@ -1166,7 +1164,10 @@ gst_flv_demux_base_init (gpointer g_class)
       gst_static_pad_template_get (&audio_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_src_template));
-  gst_element_class_set_details (element_class, &flv_demux_details);
+  gst_element_class_set_details_simple (element_class, "FLV Demuxer",
+      "Codec/Demuxer",
+      "Demux FLV feeds into digital streams",
+      "Julien Moutte <julien@moutte.net>");
 }
 
 static void
