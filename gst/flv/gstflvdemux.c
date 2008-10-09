@@ -57,7 +57,9 @@ GST_DEBUG_CATEGORY (flvdemux_debug);
 
 GST_BOILERPLATE (GstFLVDemux, gst_flv_demux, GstElement, GST_TYPE_ELEMENT);
 
+/* 9 bytes of header + 4 bytes of first previous tag size */
 #define FLV_HEADER_SIZE 13
+/* 1 byte of tag type + 3 bytes of tag data size */
 #define FLV_TAG_TYPE_SIZE 4
 
 static void
@@ -177,7 +179,7 @@ gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
     demux->offset = 0;
   }
 
-  if (G_UNLIKELY (demux->offset == 0)) {
+  if (G_UNLIKELY (demux->offset == 0 && GST_BUFFER_OFFSET (buffer) != 0)) {
     GST_DEBUG_OBJECT (demux, "offset was zero, synchronizing with buffer's");
     demux->offset = GST_BUFFER_OFFSET (buffer);
   }
@@ -185,11 +187,17 @@ gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
   gst_adapter_push (demux->adapter, buffer);
 
 parse:
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_DEBUG_OBJECT (demux, "got flow return %s", gst_flow_get_name (ret));
+    goto beach;
+  }
+
   if (G_UNLIKELY (demux->flushing)) {
     GST_DEBUG_OBJECT (demux, "we are now flushing, exiting parser loop");
     ret = GST_FLOW_WRONG_STATE;
     goto beach;
   }
+
   switch (demux->state) {
     case FLV_STATE_HEADER:
     {

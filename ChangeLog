@@ -1,5 +1,15 @@
 2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_chain):
+	Go out of the parse loop as soon as we get an error instead
+	of parsing until the GstAdapter is empty.
+
+	Add some explanations about the header and tag size.
+
+	Don't print synchronizing message if everything is fine.
+
+2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/Makefile.am:
 	* gst/flv/gstflvdemux.c: (plugin_init):
 	* gst/flv/gstflvmux.c: (gst_flv_mux_base_init),
