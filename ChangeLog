@@ -1,5 +1,19 @@
 2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_video_negotiate):
+	Correct caps for video codec id 5: It's On2 VP6 with alpha channel
+	which needs a different decoder and has different caps.
+
+	Add support for audio codec id 14, which is MP3 with 8kHz sampling
+	rate.
+
+	Fix endianness and signedness for raw audio codec ids.
+
+	Add support for alaw and mulaw audio.
+
+2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_chain):
 	Go out of the parse loop as soon as we get an error instead
 	of parsing until the GstAdapter is empty.

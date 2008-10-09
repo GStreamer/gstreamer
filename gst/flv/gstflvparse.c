@@ -406,15 +406,19 @@ gst_flv_parse_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
       codec_name = "Shockwave ADPCM";
       break;
     case 2:
+    case 14:
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
       codec_name = "MPEG 1 Audio, Layer 3 (MP3)";
       break;
     case 0:
     case 3:
+      /* Assuming little endian for 0 (aka endianness of the
+       * system on which the file was created) as most people
+       * are probably using little endian machines */
       caps = gst_caps_new_simple ("audio/x-raw-int",
-          "endianness", G_TYPE_INT, G_BYTE_ORDER,
-          "signed", G_TYPE_BOOLEAN, TRUE,
+          "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+          "signed", G_TYPE_BOOLEAN, (width == 8) ? FALSE : TRUE,
           "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
       codec_name = "Raw Audio";
       break;
@@ -428,6 +432,14 @@ gst_flv_parse_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, NULL);
       codec_name = "AAC";
+      break;
+    case 7:
+      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+      codec_name = "A-Law";
+      break;
+    case 8:
+      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+      codec_name = "Mu-Law";
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -522,6 +534,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   } else {
     codec_data = 1;
   }
+
+  /* codec tags with special rates */
+  if (codec_tag == 5 || codec_tag == 14)
+    rate = 8000;
+  else if (codec_tag == 4)
+    rate = 16000;
 
   GST_LOG_OBJECT (demux, "audio tag with %d channels, %dHz sampling rate, "
       "%d bits width, codec tag %u (flags %02X)", channels, rate, width,
@@ -710,9 +728,12 @@ gst_flv_parse_video_negotiate (GstFLVDemux * demux, guint32 codec_tag)
       caps = gst_caps_new_simple ("video/x-flash-screen", NULL);
       codec_name = "Flash Screen Video";
     case 4:
-    case 5:
       caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
       codec_name = "On2 VP6 Video";
+      break;
+    case 5:
+      caps = gst_caps_new_simple ("video/x-vp6-alpha", NULL);
+      codec_name = "On2 VP6 Video with alpha channel";
       break;
     case 7:
       caps = gst_caps_new_simple ("video/x-h264", NULL);
