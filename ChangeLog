@@ -1,3 +1,12 @@
+2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_chain),
+	(gst_flv_demux_base_init):
+	Use gst_element_class_set_details_simple().
+
+	If we get GST_FLOW_NOT_LINKED in the parse loop but at least
+	one of the pads is linked continue the loop.
+
 2008-10-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrwb/gstamrwbenc.c:
