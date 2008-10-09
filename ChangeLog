@@ -2,6 +2,13 @@
 
 	* ext/amrwb/gstamrwbparse.c:
 	* ext/amrwb/gstamrwbparse.h:
+	  Add flush seek handler. Taken from recent armnbparse changes.
+	  Sync the code more and use #defines for HEADER.
+
+2008-10-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrwb/gstamrwbparse.c:
+	* ext/amrwb/gstamrwbparse.h:
           Fix the duration query. Also set caps on the pads and buffers more
           correctly. Taken from recent armnbparse changes.
 
