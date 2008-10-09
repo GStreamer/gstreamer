@@ -1448,6 +1448,7 @@ sys/fbdev/Makefile
 sys/oss4/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile
+sys/wasapi/Makefile
 sys/wininet/Makefile
 sys/winks/Makefile
 sys/winscreencap/Makefile

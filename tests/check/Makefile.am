@@ -89,8 +89,6 @@ check_PROGRAMS = \
 	$(check_x264enc)   \
 	elements/selector \
 	elements/y4menc   \
-	elements/amrparse \
-	elements/aacparse \
 	$(check_metadata)
 
 noinst_HEADERS = 

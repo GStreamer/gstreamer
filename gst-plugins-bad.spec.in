@@ -92,7 +92,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstbayer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdspu.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
-%{_libdir}/gstreamer-%{majorminor}/libgstflvdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgststereo.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvcdsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
@@ -113,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstflacparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstflv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
@@ -147,6 +149,9 @@ rm -rf $RPM_BUILD_ROOT
 @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 
 %changelog
+* Thu Oct 9 2008 Christian Schaller <chrisian.schaller at collabora dot co uk>
+- flacparse, flvmux and j2kdec plugins added
+
 * Mon Sep 1 2008 Christian Schaller <christian.schaller at collabora dot co uk>
 - Add tsmux and scaletempo plugins
 
