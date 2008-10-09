@@ -1,9 +1,8 @@
+plugin_LTLIBRARIES = libgstflv.la
 
-plugin_LTLIBRARIES = libgstflvdemux.la
+libgstflv_la_CFLAGS = ${GST_CFLAGS}
+libgstflv_la_LIBADD = $(GST_BASE_LIBS)
+libgstflv_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
+libgstflv_la_SOURCES = gstflvdemux.c gstflvparse.c gstflvmux.c
 
-libgstflvdemux_la_CFLAGS = ${GST_CFLAGS}
-libgstflvdemux_la_LIBADD = $(GST_BASE_LIBS)
-libgstflvdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
-libgstflvdemux_la_SOURCES = gstflvdemux.c gstflvparse.c
-
-noinst_HEADERS = gstflvdemux.h gstflvparse.h
+noinst_HEADERS = gstflvdemux.h gstflvparse.h gstflvmux.h

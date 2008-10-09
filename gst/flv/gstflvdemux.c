@@ -23,6 +23,7 @@
 
 #include "gstflvdemux.h"
 #include "gstflvparse.h"
+#include "gstflvmux.h"
 
 #include <string.h>
 
@@ -1207,12 +1208,14 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (flvdemux_debug, "flvdemux", 0, "FLV demuxer");
 
   if (!gst_element_register (plugin, "flvdemux", GST_RANK_PRIMARY,
-          gst_flv_demux_get_type ()))
+          gst_flv_demux_get_type ()) ||
+      !gst_element_register (plugin, "flvmux", GST_RANK_NONE,
+          gst_flv_mux_get_type ()))
     return FALSE;
 
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "flvdemux", "Element demuxing FLV stream",
+    "flv", "FLV muxing and demuxing plugin",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -1,3 +1,19 @@
+2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/flv/Makefile.am:
+	* gst/flv/gstflvdemux.c: (plugin_init):
+	* gst/flv/gstflvmux.c: (gst_flv_mux_base_init),
+	(gst_flv_mux_class_init), (gst_flv_mux_init),
+	(gst_flv_mux_finalize), (gst_flv_mux_reset),
+	(gst_flv_mux_handle_src_event), (gst_flv_mux_handle_sink_event),
+	(gst_flv_mux_video_pad_setcaps), (gst_flv_mux_audio_pad_setcaps),
+	(gst_flv_mux_request_new_pad), (gst_flv_mux_release_pad),
+	(gst_flv_mux_write_header), (gst_flv_mux_write_buffer),
+	(gst_flv_mux_collected), (gst_flv_mux_change_state):
+	* gst/flv/gstflvmux.h:
+	Add first version of a FLV muxer. The only missing feature is writing
+	of stream metadata.
+
 2008-10-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrwb/gstamrwbparse.c:
