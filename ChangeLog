@@ -1,3 +1,8 @@
+2008-10-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac::
+	  Require core CVS for ghostpad API additions used by decodebin2.
+
 2008-10-08  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
