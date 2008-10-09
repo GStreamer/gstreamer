@@ -279,6 +279,14 @@ gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer)
     goto done;
   }
 
+  /* discontinuity clears adapter, FIXME, maybe we can set some
+   * encoder flag to mask the discont. */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (amrwbenc->adapter);
+    amrwbenc->ts = 0;
+    amrwbenc->discont = TRUE;
+  }
+
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     amrwbenc->ts = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -295,7 +303,13 @@ gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_DURATION (out) = GST_SECOND * L_FRAME16k /
         (amrwbenc->rate * amrwbenc->channels);
     GST_BUFFER_TIMESTAMP (out) = amrwbenc->ts;
-    amrwbenc->ts += GST_BUFFER_DURATION (out);
+    if (amrwbenc->ts != -1) {
+      amrwbenc->ts += GST_BUFFER_DURATION (out);
+    }
+    if (amrwbenc->discont) {
+      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
+      amrwbenc->discont = FALSE;
+    }
     gst_buffer_set_caps (out, gst_pad_get_caps (amrwbenc->srcpad));
 
     data = (guint8 *) gst_adapter_peek (amrwbenc->adapter, buffer_size);
@@ -308,7 +322,9 @@ gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_flush (amrwbenc->adapter, buffer_size);
     GST_BUFFER_SIZE (out) = outsize;
 
-    ret = gst_pad_push (amrwbenc->srcpad, out);
+    /* play */
+    if ((ret = gst_pad_push (amrwbenc->srcpad, out)) != GST_FLOW_OK)
+      break;
   }
 
 done:
@@ -332,7 +348,10 @@ gst_amrwbenc_state_change (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      amrwbenc->rate = 0;
+      amrwbenc->channels = 0;
       amrwbenc->ts = 0;
+      amrwbenc->discont = FALSE;
       gst_adapter_clear (amrwbenc->adapter);
       break;
     default:

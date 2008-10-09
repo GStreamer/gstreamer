@@ -47,6 +47,7 @@ struct _GstAmrwbEnc {
   /* pads */
   GstPad *sinkpad, *srcpad;
   guint64 ts;
+  gboolean discont;
 
   GstAdapter *adapter;
 
