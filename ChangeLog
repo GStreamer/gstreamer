@@ -1,3 +1,8 @@
+2008-10-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrnb/amrnbparse.c:
+	  use #defines for HEADER. Unref the object in _sink_activate_pull().
+
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/mad/gstmad.c: (gst_mad_src_event), (gst_mad_chain),

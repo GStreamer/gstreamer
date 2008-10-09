@@ -57,6 +57,9 @@ static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
   0, 0, 0, 0, 0, 0, 0
 };
 
+#define AMRNB_HEADER_SIZE 6
+#define AMRNB_HEADER_STR "#!AMR\n"
+
 /*static const GstFormat *gst_amrnbparse_formats (GstPad * pad);*/
 static const GstQueryType *gst_amrnbparse_querytypes (GstPad * pad);
 static gboolean gst_amrnbparse_query (GstPad * pad, GstQuery * query);
@@ -180,6 +183,7 @@ gst_amrnbparse_querytypes (GstPad * pad)
 {
   static const GstQueryType list[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
     0
   };
 
@@ -296,9 +300,10 @@ gst_amrnbparse_handle_pull_seek (GstAmrnbParse * amrnbparse, GstPad * pad,
    * decoding. */
   cur = cur / (20 * GST_MSECOND) * (20 * GST_MSECOND);
   if (cur != -1)
-    byte_cur = amrnbparse->block * (cur / 20 / GST_MSECOND) + 6;
+    byte_cur = amrnbparse->block * (cur / 20 / GST_MSECOND) + AMRNB_HEADER_SIZE;
   if (stop != -1)
-    byte_stop = amrnbparse->block * (stop / 20 / GST_MSECOND) + 6;
+    byte_stop =
+        amrnbparse->block * (stop / 20 / GST_MSECOND) + AMRNB_HEADER_SIZE;
   amrnbparse->offset = byte_cur;
   amrnbparse->ts = cur;
 
@@ -354,9 +359,10 @@ gst_amrnbparse_handle_push_seek (GstAmrnbParse * amrnbparse, GstPad * pad,
    * decoding. */
   cur = cur / (20 * GST_MSECOND) * (20 * GST_MSECOND);
   if (cur != -1)
-    byte_cur = amrnbparse->block * (cur / 20 / GST_MSECOND) + 6;
+    byte_cur = amrnbparse->block * (cur / 20 / GST_MSECOND) + AMRNB_HEADER_SIZE;
   if (stop != -1)
-    byte_stop = amrnbparse->block * (stop / 20 / GST_MSECOND) + 6;
+    byte_stop =
+        amrnbparse->block * (stop / 20 / GST_MSECOND) + AMRNB_HEADER_SIZE;
   amrnbparse->ts = cur;
 
   GST_DEBUG_OBJECT (amrnbparse, "Seeking to byte range %" G_GINT64_FORMAT
@@ -464,14 +470,14 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
     GstEvent *segev;
     GstCaps *caps;
 
-    if (gst_adapter_available (amrnbparse->adapter) < 6)
+    if (gst_adapter_available (amrnbparse->adapter) < AMRNB_HEADER_SIZE)
       goto done;
 
-    data = gst_adapter_peek (amrnbparse->adapter, 6);
-    if (memcmp (data, "#!AMR\n", 6) != 0)
+    data = gst_adapter_peek (amrnbparse->adapter, AMRNB_HEADER_SIZE);
+    if (memcmp (data, AMRNB_HEADER_STR, AMRNB_HEADER_SIZE) != 0)
       goto done;
 
-    gst_adapter_flush (amrnbparse->adapter, 6);
+    gst_adapter_flush (amrnbparse->adapter, AMRNB_HEADER_SIZE);
 
     amrnbparse->need_header = FALSE;
 
@@ -531,21 +537,22 @@ gst_amrnbparse_pull_header (GstAmrnbParse * amrnbparse)
   guint8 *data;
   gint size;
 
-  ret = gst_pad_pull_range (amrnbparse->sinkpad, 0, 6, &buffer);
+  ret = gst_pad_pull_range (amrnbparse->sinkpad, G_GUINT64_CONSTANT (0),
+      AMRNB_HEADER_SIZE, &buffer);
   if (ret != GST_FLOW_OK)
     return FALSE;
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
-  if (size < 6)
+  if (size < AMRNB_HEADER_SIZE)
     goto not_enough;
 
-  if (memcmp (data, "#!AMR\n", 6))
+  if (memcmp (data, AMRNB_HEADER_STR, AMRNB_HEADER_SIZE))
     goto no_header;
 
   gst_buffer_unref (buffer);
 
-  amrnbparse->offset = 6;
+  amrnbparse->offset = AMRNB_HEADER_SIZE;
   return TRUE;
 
 not_enough:
@@ -720,8 +727,8 @@ gst_amrnbparse_sink_activate_push (GstPad * sinkpad, gboolean active)
   } else {
     amrnbparse->seek_handler = NULL;
   }
-  gst_object_unref (amrnbparse);
 
+  gst_object_unref (amrnbparse);
   return TRUE;
 }
 
@@ -740,6 +747,7 @@ gst_amrnbparse_sink_activate_pull (GstPad * sinkpad, gboolean active)
     result = gst_pad_stop_task (sinkpad);
   }
 
+  gst_object_unref (amrnbparse);
   return result;
 }
 
