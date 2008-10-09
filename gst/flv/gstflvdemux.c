@@ -302,6 +302,31 @@ beach:
 }
 
 static GstFlowReturn
+gst_flv_demux_pull_range (GstFLVDemux * demux, GstPad * pad, guint64 offset,
+    guint size, GstBuffer ** buffer)
+{
+  GstFlowReturn ret;
+
+  ret = gst_pad_pull_range (pad, offset, size, buffer);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (demux, "failed when pulling %d bytes", size);
+    *buffer = NULL;
+    return ret;
+  }
+
+  if (G_UNLIKELY (*buffer && GST_BUFFER_SIZE (*buffer) != size)) {
+    GST_WARNING_OBJECT (demux, "partial pull got %d when expecting %d",
+        GST_BUFFER_SIZE (*buffer), size);
+    gst_buffer_unref (*buffer);
+    ret = GST_FLOW_UNEXPECTED;
+    *buffer = NULL;
+    return ret;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
 {
   GstBuffer *buffer = NULL;
@@ -311,20 +336,9 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
   demux->cur_tag_offset = demux->offset;
 
   /* Get the first 4 bytes to identify tag type and size */
-  ret = gst_pad_pull_range (pad, demux->offset, FLV_TAG_TYPE_SIZE, &buffer);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed when pulling %d bytes",
-        FLV_TAG_TYPE_SIZE);
+  if (G_UNLIKELY (gst_flv_demux_pull_range (demux, pad, demux->offset,
+              FLV_TAG_TYPE_SIZE, &buffer) != GST_FLOW_OK))
     goto beach;
-  }
-
-  if (G_UNLIKELY (buffer && GST_BUFFER_SIZE (buffer) != FLV_TAG_TYPE_SIZE)) {
-    GST_WARNING_OBJECT (demux, "partial pull got %d when expecting %d",
-        GST_BUFFER_SIZE (buffer), FLV_TAG_TYPE_SIZE);
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_UNEXPECTED;
-    goto beach;
-  }
 
   /* Identify tag type */
   ret = gst_flv_parse_tag_type (demux, GST_BUFFER_DATA (buffer),
@@ -336,21 +350,9 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
   demux->offset += FLV_TAG_TYPE_SIZE;
 
   /* Pull the whole tag */
-  ret = gst_pad_pull_range (pad, demux->offset, demux->tag_size, &buffer);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux,
-        "failed when pulling %" G_GUINT64_FORMAT " bytes", demux->tag_size);
+  if (G_UNLIKELY (gst_flv_demux_pull_range (demux, pad, demux->offset,
+              demux->tag_size, &buffer) != GST_FLOW_OK))
     goto beach;
-  }
-
-  if (G_UNLIKELY (buffer && GST_BUFFER_SIZE (buffer) != demux->tag_size)) {
-    GST_WARNING_OBJECT (demux,
-        "partial pull got %d when expecting %" G_GUINT64_FORMAT,
-        GST_BUFFER_SIZE (buffer), demux->tag_size);
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_UNEXPECTED;
-    goto beach;
-  }
 
   switch (demux->state) {
     case FLV_STATE_TAG_VIDEO:
@@ -401,19 +403,9 @@ gst_flv_demux_pull_header (GstPad * pad, GstFLVDemux * demux)
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* Get the first 9 bytes */
-  ret = gst_pad_pull_range (pad, demux->offset, FLV_HEADER_SIZE, &buffer);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed when pulling %d bytes", FLV_HEADER_SIZE);
+  if (G_UNLIKELY (gst_flv_demux_pull_range (demux, pad, demux->offset,
+              FLV_HEADER_SIZE, &buffer) != GST_FLOW_OK))
     goto beach;
-  }
-
-  if (G_UNLIKELY (buffer && GST_BUFFER_SIZE (buffer) != FLV_HEADER_SIZE)) {
-    GST_WARNING_OBJECT (demux, "partial pull got %d when expecting %d",
-        GST_BUFFER_SIZE (buffer), FLV_HEADER_SIZE);
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_UNEXPECTED;
-    goto beach;
-  }
 
   ret = gst_flv_parse_header (demux, GST_BUFFER_DATA (buffer),
       GST_BUFFER_SIZE (buffer));
