@@ -1391,7 +1391,7 @@ static gboolean
 gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstRTSPSrc *src;
-  gboolean res = FALSE;
+  gboolean res = TRUE;
 
   src = GST_RTSPSRC_CAST (gst_pad_get_parent (pad));
 

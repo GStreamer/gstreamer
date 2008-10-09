@@ -1,3 +1,9 @@
+2008-10-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_handle_src_event):
+	Return TRUE instead of FALSE from the event handler when we swallowed the
+	event.
+
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
