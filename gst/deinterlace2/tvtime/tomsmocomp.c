@@ -164,7 +164,9 @@ static void
 {
   GstDeinterlaceMethodClass *dim_class = (GstDeinterlaceMethodClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
+#ifdef BUILD_X86_ASM
   guint cpu_flags = oil_cpu_get_flags ();
+#endif
 
   gobject_class->set_property = gst_deinterlace_method_tomsmocomp_set_property;
   gobject_class->get_property = gst_deinterlace_method_tomsmocomp_get_property;

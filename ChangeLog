@@ -1,3 +1,10 @@
+2008-10-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/deinterlace2/tvtime/tomsmocomp.c:
+	(gst_deinterlace_method_tomsmocomp_class_init):
+	Fix unused variable compiler warning when not building
+	X86 assembly.
+
 2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_loop):
