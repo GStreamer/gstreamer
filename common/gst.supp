@@ -1,0 +1,1660 @@
+### this file contains suppressions for valgrind when running
+### the gstreamer unit tests
+### it might be useful for wider use as well
+
+### syscall suppressions
+
+{
+   <clone on Wim's Debian>
+   Memcheck:Param
+   clone(parent_tidptr)
+   fun:clone
+   fun:clone
+}
+
+{
+   <clone on Wim's Debian>
+   Memcheck:Param
+   clone(child_tidptr)
+   fun:clone
+   fun:clone
+}
+
+{
+   <clone on Wim's Debian>
+   Memcheck:Param
+   clone(tlsinfo)
+   fun:clone
+   fun:clone
+}
+
+### glibc suppressions
+
+{
+   <conditional jump on wim's debian 2/2/06>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+
+# glibc does not deallocate thread-local storage
+
+{
+   <tls>
+   Memcheck:Leak
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@*
+}
+
+# I get an extra stack entry on x86/dapper
+{
+   <tls>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_allocate_tls
+   fun:pthread_create@@*
+}
+
+
+{
+   <pthread strstr>
+   Memcheck:Cond
+   fun:strstr
+   fun:__pthread_initialize_minimal
+   obj:/lib/libpthread-*.so
+   obj:/lib/libpthread-*.so
+   fun:call_init
+   fun:_dl_init
+   obj:/lib/ld-*.so
+}
+
+# a thread-related free problem in glibc from Edgard
+{
+   __libc_freeres_rw_acess
+   Memcheck:Addr4
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   fun:__libc_freeres
+}
+
+{
+   <a conditional jump on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+}
+
+# g_module_open-related problems
+{
+   <started showing up on fc4-quick>
+   Memcheck:Addr2
+   fun:memcpy
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:init_post
+   fun:g_option_context_parse
+   fun:gst_init_check
+   fun:gst_init
+   fun:gst_check_init
+   fun:main
+}
+
+{
+   <started showing up on fc4-quick>
+   Memcheck:Addr4
+   fun:memcpy
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:init_post
+   fun:g_option_context_parse
+   fun:gst_init_check
+   fun:gst_init
+   fun:gst_check_init
+   fun:main
+}
+
+{
+   <g_module_open on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:do_sym
+   fun:_dl_sym
+   fun:dlsym_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+
+{
+   <g_module_open on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+{
+   <g_module_open on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_plugin_load_by_name
+   fun:gst_plugin_feature_load
+}
+
+{
+   <leak on wim's debian in g_module_open>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_plugin_load_by_name
+}
+
+{
+   <invalid read on wim's debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+}
+
+{
+   <invalid read on wim's debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+}
+
+{
+   <invalid read on wim's debian - 2006-02-02>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <invalid read on wim's debian - 2006-02-02>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <invalid read on wim's debian - 2006-02-02>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:do_sym
+   fun:_dl_sym
+   fun:dlsym_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
+}
+
+{
+   <futex on Andy's 64-bit ubuntu>
+   Memcheck:Param
+   futex(uaddr2)
+   fun:pthread_once
+   obj:/lib/libc-2.3.*.so
+   obj:/lib/libc-2.3.*.so
+   fun:mbsnrtowcs
+   fun:vfprintf
+   fun:vsprintf
+   fun:sprintf
+   obj:/lib/libc-2.3.*.so
+   fun:tmpfile
+   fun:setup_pipe
+   fun:setup_messaging_with_key
+   fun:setup_messaging
+}
+
+# valgrind doesn't allow me to specify a suppression for Addr1, Addr2, Addr4
+# as Addr*, so 3 copies for that; and then 2 of each for that pesky memcpy
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr1
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr2
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr4
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr1
+   fun:memcpy
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr2
+   fun:memcpy
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr4
+   fun:memcpy
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Addr8 on Andy's AMD64 ubuntu in dl_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/libc-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+}
+
+{
+   <Conditional jump on Andy's AMD64 ubuntu>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/libc-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/libdl-2.3.*.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_plugin_load_by_name
+   fun:gst_plugin_feature_load
+}
+
+{
+   <Mike's x86 dapper>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libc-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   fun:dlopen
+}
+
+{
+   <Mike's x86 dapper>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libc-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   fun:dlopen
+}
+
+{
+   <Another dapper one>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libc-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   fun:dlopen
+}
+
+### glib suppressions
+{
+   <g_parse_debug_string>
+   Memcheck:Cond
+   fun:g_parse_debug_string
+   obj:/usr/lib*/libglib-2.0.so.*
+   fun:g_slice_alloc
+   fun:g_slice_alloc0
+}
+
+{
+   <g_type_init malloc>
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:g_strdup
+   fun:g_quark_from_string
+   obj:*
+   obj:*
+   fun:g_type_register_fundamental
+   obj:*
+   fun:g_type_init_with_debug_flags
+   fun:g_type_init
+   fun:init_pre
+}
+
+{
+   <g_type_init calloc>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*
+   obj:*
+   fun:g_type_register_fundamental
+}
+
+{
+   <g_type_init calloc 2>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*
+   obj:*
+   fun:g_type_init_with_debug_flags
+}
+
+{
+   <g_type_init calloc 3, GSlice version>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:g_slice_alloc
+   obj:*
+   obj:*
+   fun:g_type_init_with_debug_flags
+}
+
+#pthread memleaks
+
+{
+   Thread creation leak
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate*
+   fun:_dl_allocate*
+   fun:__pthread_initialize_minimal
+}
+
+{
+   Thread management leak
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate*
+   fun:_dl_allocate*
+   fun:__pthread_*
+}
+
+{
+   Thread management leak 2
+   Memcheck:Leak
+   fun:memalign
+   fun:_dl_allocate*
+   fun:_dl_allocate*
+   fun:__pthread_*
+}
+
+{
+   pthread_create Syscall param write(buf) points to uninitialised byte(s)
+   Memcheck:Param
+   write(buf)
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:g_thread_create*
+
+}
+
+# nss_parse_* memleak (used by g_option_context_parse)
+{
+   nss_parse_* memleak
+   Memcheck:Leak
+   fun:malloc
+   fun:nss_parse_service_list
+   fun:__nss_database_lookup
+}
+
+# liboil suppressions
+{
+   <liboil cpu_fault_check_try>
+   Memcheck:Value8
+   obj:/usr/lib/liboil-0.3.so.0.1.0
+   obj:/usr/lib/liboil-0.3.so.0.1.0
+   obj:/usr/lib/liboil-0.3.so.0.1.0
+   fun:oil_cpu_fault_check_try
+   fun:oil_test_check_impl
+   fun:oil_class_optimize
+   fun:oil_optimize_all
+   fun:oil_init
+}
+
+{
+   <annoying read error inside dlopen stuff on Ubuntu Dapper x86_64>
+   Memcheck:Addr8
+   obj:/lib/ld-2.3.6.so
+}
+
+{
+   <Ubuntu Dapper x86_64>
+   Memcheck:Param
+   futex(uaddr2)
+   fun:pthread_once
+   obj:/lib/libc-2.3.6.so
+   obj:/lib/libc-2.3.6.so
+   fun:setlocale
+   fun:init_pre
+   fun:g_option_context_parse
+   fun:gst_init_check
+   fun:gst_init
+   fun:gst_check_init
+   fun:main
+}
+
+{
+   <Ubuntu Dapper x86_64 dlopen stuff again>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/libdl-2.3.6.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+# this exists in a bunch of different variations, hence the short tail/trace
+{
+   <dlopen invalid read of size 4 suppression on tpm's Ubuntu edgy/x86>
+   Memcheck:Addr4
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+}
+{
+   <and the same for 64bit systems>
+   Memcheck:Addr8
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+}
+
+# More edgy suppressions (Mike)
+{  
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   fun:dlopen_doit
+   obj:/lib/ld-2.4.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+}
+
+{  
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   fun:dlopen_doit
+   obj:/lib/ld-2.4.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+}
+
+{  
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   fun:do_sym
+   fun:_dl_sym
+}
+
+# This one's overly general, but there's zero other information in the stack
+# trace - just these five lines!
+{  
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+}
+
+{
+   <tls leaks on Edgy/x86>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/ld-2.4.so
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.1
+}
+
+# TLS leaks for feisty/x86
+{
+   <tls leaks on Feisty/x86>
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.1
+}
+
+{
+   <libcdio 0.76 leak>
+   Memcheck:Leak
+   fun:calloc
+   obj:/usr/lib/libcdio.so.6.0.1
+   fun:cdio_open_am_linux
+   obj:/usr/lib/libcdio.so.6.0.1
+   fun:cdio_open_am
+}
+
+{
+   <Addr8 on Jan's AMD64 ubuntu Feisty in dl_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.5.so
+}
+
+{
+   <First of many Alsa errors>
+   Memcheck:Cond
+   fun:snd_pcm_direct_shm_create_or_connect
+   fun:snd_pcm_dsnoop_open
+   fun:_snd_pcm_dsnoop_open
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_plug_open
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_asym_open
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+}
+
+{
+   <alsa error>
+   Memcheck:Cond
+   fun:snd_pcm_hw_param_set_near
+   fun:set_hwparams
+}
+
+{
+   <alsa error>
+   Memcheck:Cond
+   fun:_snd_pcm_hw_param_set_min
+   fun:snd_pcm_hw_param_set_min
+   fun:snd_pcm_hw_param_set_near
+   fun:set_hwparams
+}
+
+{
+   <alsa error>
+   Memcheck:Cond
+   fun:_snd_pcm_hw_param_set_min
+   fun:snd_pcm_hw_param_set_min
+   fun:snd_pcm_hw_param_set_near
+   fun:set_hwparams
+}
+
+{
+   <alsa error>
+   Memcheck:Cond
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_hw_param_set_near
+   fun:set_hwparams
+}
+{
+   <alsa error>
+   Memcheck:Cond
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_close
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error>
+   Memcheck:Cond
+   fun:snd_pcm_direct_shm_create_or_connect
+   fun:snd_pcm_dmix_open
+   fun:_snd_pcm_dmix_open
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_softvol_open
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_plug_open
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_asym_open
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   fun:snd_dlobj_cache_add
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:snd_pcm_dsnoop_open
+   fun:_snd_pcm_dsnoop_open
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_plug_open
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_pcm_open_slave
+   fun:_snd_pcm_asym_open
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+}
+# Catch about 15 variations on inserting info into an ALSA
+# internal cache
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:malloc
+   fun:snd_dlobj_cache_add
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <this catches a bunch of very similar errors related to parsing the configs>
+   Memcheck:Leak
+   fun:malloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+}
+{
+   <alsa error - same as above with 6 libasound>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+}
+{
+   <alsa error - same as above with 7 libasound>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+}
+{
+   <alsa error - same as above with 10 libasound>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+}
+{
+   <alsa error - same as above with 11 libasound>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:malloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   fun:snd_config_hook_load_for_all_cards
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+}
+{
+   <alsa error - same as above, but using calloc>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   fun:snd_config_hook_load_for_all_cards
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+}
+{
+   <alsa error - same as above, but with only 9 libasounds>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 7 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 6 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 6 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 7 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 8 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 9 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 10 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error - same as above, with 11 libasound repeats>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_update_r
+   fun:snd_config_update
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   fun:snd_config_hook_load_for_all_cards
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error - same as above, but with 8 libasound in the stack>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   fun:snd_config_hook_load_for_all_cards
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error - same as above, but with 7 libasound in the stack>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   fun:snd_config_hook_load_for_all_cards
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <alsa error - same as above, but with 6 libasound in the stack>
+   Memcheck:Leak
+   fun:calloc
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_hook_load
+   fun:snd_config_hook_load_for_all_cards
+   obj:/*lib/libasound.so.2.0.0
+   fun:snd_config_searcha_hooks
+   fun:snd_config_search_alias_hooks
+   fun:snd_config_search_definition
+   obj:/*lib/libasound.so.2.0.0
+}
+{
+   <nss lookup within ALSA>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/libc*.so
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getgrnam_r
+   fun:getgrnam
+   fun:snd_pcm_direct_parse_open_conf
+}
+
+{
+   <libxcb leak on Ubuntu Feisty>
+   Memcheck:Leak
+   fun:calloc
+   fun:_XCBInitDisplayLock
+   fun:XOpenDisplay
+}
+
+# GConf internal initialisations related to getting the default client.
+{
+   <Orbit something or other>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_tcval
+   obj:/usr/lib/libORBit-2.so.*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:CORBA_ORB_string_to_object
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_get_current_lock_holder
+   fun:gconf_activate_server
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf internal leak>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_tcval
+   obj:/usr/lib/libORBit-2.so.*
+   fun:PortableServer_POA_servant_to_reference
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf internal leak>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_tcval
+   obj:/usr/lib/libORBit-2.so.*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:CORBA_ORB_string_to_object
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_get_current_lock_holder
+   fun:gconf_activate_server
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}  
+{
+   <gconf internal initialisation>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   obj:/usr/lib/libORBit-2.so.*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:ORBit_demarshal_value
+   obj:/usr/lib/libORBit-2.so.*
+   fun:ORBit_small_invoke_stub
+   fun:ConfigServer_get_default_database
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf internal init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   obj:/usr/lib/libORBit-2.so.*
+   fun:IOP_generate_profiles
+   fun:ORBit_marshal_object
+   fun:ORBit_marshal_value
+   obj:/usr/lib/libORBit-2.so.*
+   fun:ORBit_small_invoke_stub
+   fun:ConfigServer_add_client
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf internal init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_by_tc
+   obj:/usr/lib/libORBit-2.so.*
+   fun:PortableServer_POA_servant_to_reference
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf internal init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_by_tc
+   obj:/usr/lib/libORBit-2.so.*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:CORBA_ORB_string_to_object
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_get_current_lock_holder
+   fun:gconf_activate_server
+   obj:/usr/lib/libgconf-2.so.*
+   obj:/usr/lib/libgconf-2.so.*
+   fun:gconf_engine_get_default
+}
+
+# Some libORBit/bonobo initialisation stuff
+{
+   <bonobo init>
+   Memcheck:Leak
+   fun:malloc
+   fun:g_malloc
+   fun:ORBit_alloc_string
+   fun:CORBA_string_dup
+   fun:Bonobo_ActivationEnvValue_set
+   fun:bonobo_activation_init_activation_env
+   fun:bonobo_activation_orb_init
+   fun:bonobo_activation_init
+}
+{
+   <bonobo init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_alloc*
+   obj:/usr/lib/libORBit-2.so*
+   fun:PortableServer_POA_servant_to_reference
+   obj:/usr/lib/libbonobo-2.so*
+}
+{
+   <bonobo init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_tcval
+   fun:ORBit_small_allocbuf
+   fun:ORBit_adaptor_setup
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_POA_setup_root
+   fun:ORBit_init_internals
+   fun:CORBA_ORB_init
+}
+{
+   <bonobo init - more recent variant of above>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc_tcval
+   fun:ORBit_adaptor_setup
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_POA_setup_root
+   fun:ORBit_init_internals
+   fun:CORBA_ORB_init
+}
+{
+   <bonobo init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_allocbuf
+   fun:bonobo_activation_init_activation_env
+   fun:bonobo_activation_orb_init
+   fun:bonobo_activation_init
+}
+
+# More GConf stuff from the FC5 buildbot, mostly variations on the 
+# above stack traces
+{
+   <incompletely initialised ORBit buffer>
+   Memcheck:Param
+   writev(vector[...])
+   fun:writev
+   obj:/usr/lib/libORBit-2.so*
+   fun:link_connection_writev
+   fun:giop_send_buffer_write
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_small_invoke_stub
+   fun:ORBit_small_invoke_stub_n
+   fun:ORBit_c_stub_invoke
+   fun:ConfigServer_ping
+   fun:gconf_activate_server
+   obj:/usr/lib/libgconf-2.so*
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_alloc*
+   obj:/usr/lib/libORBit-2.so*
+   fun:PortableServer_POA_servant_to_reference
+   obj:/usr/lib/libgconf-2.so*
+   obj:/usr/lib/libgconf-2.so*
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_alloc
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:CORBA_ORB_string_to_object
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_get_current_lock_holder
+   fun:gconf_activate_server
+   obj:/usr/lib/libgconf-2.so*
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_alloc*
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:CORBA_ORB_string_to_object
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_get_current_lock_holder
+   fun:gconf_activate_server
+   obj:/usr/lib/libgconf-2.so*
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_engine_get_default
+}
+{
+   <bonobo init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_alloc*
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_demarshal_IOR
+   fun:ORBit_demarshal_object
+   fun:ORBit_demarshal_value
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_small_invoke_stub
+   fun:ORBit_small_invoke_stub_n
+   fun:ORBit_c_stub_invoke
+   fun:ConfigServer_get_default_database
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_engine_get_default
+}
+{
+   <gconf init>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   fun:ORBit_alloc*
+   fun:ORBit_small_alloc*
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_OAObject_object_to_objkey
+   fun:IOP_generate_profiles
+   fun:ORBit_marshal_object
+   fun:ORBit_marshal_value
+   obj:/usr/lib/libORBit-2.so*
+   fun:ORBit_small_invoke_stub
+   fun:ORBit_small_invoke_stub_n
+   fun:ORBit_c_stub_invoke
+   fun:ConfigServer_add_client
+   obj:/usr/lib/libgconf-2.so*
+   obj:/usr/lib/libgconf-2.so*
+   fun:gconf_engine_get_default
+}
+{
+   <GLib caching the home dir>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/libc-*.so
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwnam_r
+   fun:g_get_any_init_do
+   fun:g_get_home_dir
+}
+{
+   <GLib caching the user name>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/libc-*.so
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwnam_r
+   fun:g_get_any_init_do
+   fun:g_get_user_name
+}
+{
+   <GLib caching the tmp dir>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/libc-*.so
+   fun:__nss_database_lookup
+   obj:*
+   obj:*
+   fun:getpwnam_r
+   obj:/usr/lib*/libglib-2.0.so.*
+   fun:g_get_tmp_dir
+}
+
+
+## Some Fontconfig errors.
+{
+   <First time load of a font - feisty x86_64>
+   Memcheck:Leak
+   fun:malloc
+   fun:FcPatternObjectInsertElt
+   fun:FcPatternObjectAddWithBinding
+   fun:FcPatternAppend
+   fun:FcEndElement
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+   fun:FcConfigParseAndLoad
+   fun:FcParseInclude
+   fun:FcEndElement
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+}
+{
+   <First time load of a font - feisty x86_64>
+   Memcheck:Leak
+   fun:malloc
+   fun:FcStrCopy
+   fun:FcEndElement
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+   fun:FcConfigParseAndLoad
+   fun:FcParseInclude
+   fun:FcEndElement
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   obj:/usr/lib/libexpat.so.1.0.0
+   fun:XML_ParseBuffer
+   fun:FcConfigParseAndLoad
+   fun:FcInitLoadConfig
+   fun:FcInitLoadConfigAndFonts
+}
+

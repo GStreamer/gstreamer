@@ -1,0 +1,18 @@
+GstRTSP is an RTSP server built on top of GStreamer (http://gstreamer.net).
+
+Currently there is no configuration tools for this server so any streamed 
+files need to be hardcoded into the file:
+src/rtsp-media.c
+
+Edit in your sources after the examples found under the section headlines by
+* STREAMING CONFIGURATION
+
+Once the server is started you should be able to view the streams at:
+rtsp://localhost:1554/@name_of_stream@
+
+The replacement for @name_of_stream@ is from the rtsp-media.c editing you did above.
+
+You should be able to get the http proxy link working without any editing of the rtsp-media.c file as it points to an online http file:
+
+rtsp://localhost:1554/rtphttpproxy
+
