@@ -1,5 +1,14 @@
 2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_loop):
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_timestamp):
+	* gst/flv/gstflvparse.h:
+	Get an approximate duration of the file by looking at the timestamp
+	of the last tag in pull mode. If we get (maybe better) duration from
+	metadata later we'll use that instead.
+
+2008-10-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_range),
 	(gst_flv_demux_pull_tag), (gst_flv_demux_pull_header):
 	Refactor _pull_range() logic with checks into a seperate function

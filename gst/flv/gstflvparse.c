@@ -1006,6 +1006,37 @@ beach:
   return ret;
 }
 
+GstClockTime
+gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
+    size_t data_size)
+{
+  guint32 pts = 0, pts_ext = 0;
+
+  if (data[0] != 9 && data[0] != 8 && data[0] != 18) {
+    GST_WARNING_OBJECT (demux, "Unsupported tag type %u", data[0]);
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (FLV_GET_BEUI24 (data + 1, data_size - 1) != data_size - 11) {
+    GST_WARNING_OBJECT (demux, "Invalid tag");
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  data += 4;
+
+  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
+      data[2], data[3]);
+
+  /* Grab timestamp of tag tag */
+  pts = FLV_GET_BEUI24 (data, data_size);
+  /* read the pts extension to 32 bits integer */
+  pts_ext = GST_READ_UINT8 (data + 3);
+  /* Combine them */
+  pts |= pts_ext << 24;
+
+  return pts * GST_MSECOND;
+}
+
 GstFlowReturn
 gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
     size_t data_size)
