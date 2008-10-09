@@ -53,6 +53,7 @@ struct _GstAmrwbParse {
   gboolean seekable;
   gboolean need_header;
   gint64 offset;
+  gint block;
 
   guint64 ts;
 };

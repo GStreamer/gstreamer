@@ -205,19 +205,20 @@ gst_amrwbparse_query (GstPad * pad, GstQuery * query)
       }
 
       tot = -1;
+      res = FALSE;
 
       peer = gst_pad_get_peer (amrwbparse->sinkpad);
       if (peer) {
         GstFormat pformat;
-        gint64 pcur, ptot;
+        gint64 ptot;
 
         pformat = GST_FORMAT_BYTES;
-        res = gst_pad_query_position (peer, &pformat, &pcur);
         res = gst_pad_query_duration (peer, &pformat, &ptot);
-        gst_object_unref (GST_OBJECT (peer));
-        if (res) {
-          tot = amrwbparse->ts * ((gdouble) ptot / pcur);
+        if (res && amrwbparse->block) {
+          tot = gst_util_uint64_scale_int (ptot, 20 * GST_MSECOND,
+              amrwbparse->block);
         }
+        gst_object_unref (GST_OBJECT (peer));
       }
       gst_query_set_duration (query, GST_FORMAT_TIME, tot);
       res = TRUE;
@@ -243,7 +244,7 @@ gst_amrwbparse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstAmrwbParse *amrwbparse;
   GstFlowReturn res = GST_FLOW_OK;
-  gint block, mode;
+  gint mode;
   const guint8 *data;
   GstBuffer *out;
 
@@ -253,6 +254,8 @@ gst_amrwbparse_chain (GstPad * pad, GstBuffer * buffer)
 
   /* init */
   if (amrwbparse->need_header) {
+    GstEvent *segev;
+    GstCaps *caps;
 
     if (gst_adapter_available (amrwbparse->adapter) < 9)
       goto done;
@@ -264,6 +267,17 @@ gst_amrwbparse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_flush (amrwbparse->adapter, 9);
 
     amrwbparse->need_header = FALSE;
+
+    caps = gst_caps_new_simple ("audio/AMR-WB",
+        "rate", G_TYPE_INT, 16000, "channels", G_TYPE_INT, 1, NULL);
+    gst_pad_set_caps (amrwbparse->srcpad, caps);
+    gst_caps_unref (caps);
+
+    GST_DEBUG_OBJECT (amrwbparse, "Sending first segment");
+    segev = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+        GST_FORMAT_TIME, 0, -1, 0);
+
+    gst_pad_push_event (amrwbparse->srcpad, segev);
   }
 
   while (TRUE) {
@@ -274,26 +288,30 @@ gst_amrwbparse_chain (GstPad * pad, GstBuffer * buffer)
 
     /* get size */
     mode = (data[0] >> 3) & 0x0F;
-    block = block_size[mode] + 1;       /* add one for the mode */
+    amrwbparse->block = block_size[mode] + 1;   /* add one for the mode */
 
-    if (gst_adapter_available (amrwbparse->adapter) < block)
+    if (gst_adapter_available (amrwbparse->adapter) < amrwbparse->block)
       break;
 
-    out = gst_buffer_new_and_alloc (block);
+    out = gst_buffer_new_and_alloc (amrwbparse->block);
 
-    data = gst_adapter_peek (amrwbparse->adapter, block);
-    memcpy (GST_BUFFER_DATA (out), data, block);
+    data = gst_adapter_peek (amrwbparse->adapter, amrwbparse->block);
+    memcpy (GST_BUFFER_DATA (out), data, amrwbparse->block);
 
-    /* output */
+    /* timestamp, all constants that won't overflow */
     GST_BUFFER_DURATION (out) = GST_SECOND * L_FRAME16k / 16000;
     GST_BUFFER_TIMESTAMP (out) = amrwbparse->ts;
-    amrwbparse->ts += GST_BUFFER_DURATION (out);
-    gst_buffer_set_caps (out,
-        (GstCaps *) gst_pad_get_pad_template_caps (amrwbparse->srcpad));
+    if (GST_CLOCK_TIME_IS_VALID (amrwbparse->ts))
+      amrwbparse->ts += GST_BUFFER_DURATION (out);
+
+    gst_buffer_set_caps (out, GST_PAD_CAPS (amrwbparse->srcpad));
+
+    GST_DEBUG_OBJECT (amrwbparse, "Pushing %d bytes of data",
+        amrwbparse->block);
 
     res = gst_pad_push (amrwbparse->srcpad, out);
 
-    gst_adapter_flush (amrwbparse->adapter, block);
+    gst_adapter_flush (amrwbparse->adapter, amrwbparse->block);
   }
 done:
 
