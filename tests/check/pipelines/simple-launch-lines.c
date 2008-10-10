@@ -54,10 +54,13 @@ run_pipeline (GstElement * pipeline, gchar * descr,
   bus = gst_element_get_bus (pipeline);
   fail_if (bus == NULL);
 
+  GST_DEBUG ("running pipeline %s", descr);
+
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   ret = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   if (ret != GST_STATE_CHANGE_SUCCESS) {
+    GST_WARNING ("have failed state change %d", ret);
     g_critical ("Couldn't set pipeline to PLAYING");
     goto done;
   }
@@ -168,11 +171,10 @@ GST_START_TEST (test_state_change_returns)
   check_state_change_return (pipeline, GST_STATE_READY,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_PAUSED,
-      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+      GST_STATE_CHANGE_ASYNC, GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_PLAYING,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
-  check_state_change_return (pipeline, GST_STATE_PAUSED,
-      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+  /* can't check PAUSED, it's not deterministic */
   check_state_change_return (pipeline, GST_STATE_READY,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS,

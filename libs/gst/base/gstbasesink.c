@@ -3000,12 +3000,16 @@ gst_base_sink_pad_activate (GstPad * pad)
   gst_base_sink_set_flushing (basesink, pad, FALSE);
 
   /* we need to have the pull mode enabled */
-  if (!basesink->can_activate_pull)
+  if (!basesink->can_activate_pull) {
+    GST_DEBUG_OBJECT (basesink, "pull mode disabled");
     goto fallback;
+  }
 
   /* check if downstreams supports pull mode at all */
-  if (!gst_pad_check_pull_range (pad))
+  if (!gst_pad_check_pull_range (pad)) {
+    GST_DEBUG_OBJECT (basesink, "pull mode not supported");
     goto fallback;
+  }
 
   /* set the pad mode before starting the task so that it's in the
    * correct state for the new thread. also the sink set_caps and get_caps
@@ -3014,8 +3018,10 @@ gst_base_sink_pad_activate (GstPad * pad)
 
   /* we first try to negotiate a format so that when we try to activate
    * downstream, it knows about our format */
-  if (!gst_base_sink_negotiate_pull (basesink))
+  if (!gst_base_sink_negotiate_pull (basesink)) {
+    GST_DEBUG_OBJECT (basesink, "failed to negotiate in pull mode");
     goto fallback;
+  }
 
   /* ok activate now */
   if (!gst_pad_activate_pull (pad, TRUE)) {
@@ -3023,6 +3029,7 @@ gst_base_sink_pad_activate (GstPad * pad)
     GST_OBJECT_LOCK (basesink);
     gst_caps_replace (&basesink->priv->pull_caps, NULL);
     GST_OBJECT_UNLOCK (basesink);
+    GST_DEBUG_OBJECT (basesink, "failed to activate in pull mode");
     goto fallback;
   }
 

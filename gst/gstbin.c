@@ -1167,15 +1167,14 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
         else
           other_async = TRUE;
 
-        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
-            "looking at message %p", message);
+        GST_DEBUG_OBJECT (src, "looking at message %p", message);
         break;
       case GST_MESSAGE_STRUCTURE_CHANGE:
       {
         GstElement *owner;
 
-        GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
-            "looking at structure change message %p", message);
+        GST_DEBUG_OBJECT (src, "looking at structure change message %p",
+            message);
         /* it's unlikely that this message is still in the list of messages
          * because this would mean that a link/unlink is busy in another thread
          * while we remove the element. We still have to remove the message
@@ -1194,8 +1193,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 
     if (remove) {
       /* delete all message types */
-      GST_DEBUG_OBJECT (GST_MESSAGE_SRC (message),
-          "deleting message %p of element \"%s\"", message, elem_name);
+      GST_DEBUG_OBJECT (src, "deleting message %p of element \"%s\"",
+          message, elem_name);
       bin->messages = g_list_delete_link (bin->messages, walk);
       gst_message_unref (message);
     }
@@ -2769,7 +2768,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
   type = GST_MESSAGE_TYPE (message);
 
   GST_DEBUG_OBJECT (bin, "[msg %p] handling child %s message of type %s",
-      message, GST_ELEMENT_NAME (src), GST_MESSAGE_TYPE_NAME (message));
+      message, src ? GST_ELEMENT_NAME (src) : "(NULL)",
+      GST_MESSAGE_TYPE_NAME (message));
 
   switch (type) {
     case GST_MESSAGE_EOS:
@@ -2903,7 +2903,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       GstState target;
 
       GST_DEBUG_OBJECT (bin, "ASYNC_START message %p, %s", message,
-          GST_OBJECT_NAME (src));
+          src ? GST_OBJECT_NAME (src) : "(NULL)");
 
       gst_message_parse_async_start (message, &new_base_time);
 
@@ -2935,7 +2935,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gboolean is_bin;
 
       GST_DEBUG_OBJECT (bin, "ASYNC_DONE message %p, %s", message,
-          GST_OBJECT_NAME (src));
+          src ? GST_OBJECT_NAME (src) : "(NULL)");
 
       GST_OBJECT_LOCK (bin);
       target = GST_STATE_TARGET (bin);

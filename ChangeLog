@@ -1,5 +1,21 @@
 2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstbin.c: (gst_bin_remove_func), (update_degree),
+	(gst_bin_handle_message_func):
+	The message src can be NULL, don't try to print the object names in that
+	case.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_pad_activate):
+	Add some more debug info.
+
+	* tests/check/pipelines/simple-launch-lines.c: (run_pipeline),
+	(GST_START_TEST):
+	Add some debug.
+	Fix the test, pull based sinks go ASYNC to PAUSED, just like other
+	scheduling modes.
+
+2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-negotiation.txt:
 	Small doc update.
 
