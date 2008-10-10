@@ -1,3 +1,11 @@
+2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstxml.c:
+	Clarify that the save_thyself() and restore_thyself() virtual
+	functions of GstObject need to be overriden, not
+	gst_object_(save|restore)_thyself() which is impossible.
+	Fixes bug #555700.
+
 2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpad.c: (gst_pad_get_range), (gst_pad_pull_range):
