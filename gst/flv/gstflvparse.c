@@ -548,15 +548,14 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   /* If we don't have our audio pad created, then create it. */
   if (G_UNLIKELY (!demux->audio_pad)) {
 
-    demux->audio_pad = gst_pad_new ("audio", GST_PAD_SRC);
+    demux->audio_pad =
+        gst_pad_new_from_template (gst_element_class_get_pad_template
+        (GST_ELEMENT_GET_CLASS (demux), "audio"), "audio");
     if (G_UNLIKELY (!demux->audio_pad)) {
       GST_WARNING_OBJECT (demux, "failed creating audio pad");
       ret = GST_FLOW_ERROR;
       goto beach;
     }
-
-    /* Make it active */
-    gst_pad_set_active (demux->audio_pad, TRUE);
 
     /* Negotiate caps */
     if (!gst_flv_parse_audio_negotiate (demux, codec_tag, rate, channels,
@@ -577,6 +576,11 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query));
     gst_pad_set_event_function (demux->audio_pad,
         GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
+
+    gst_pad_use_fixed_caps (demux->audio_pad);
+
+    /* Make it active */
+    gst_pad_set_active (demux->audio_pad, TRUE);
 
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
@@ -823,14 +827,14 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 
   /* If we don't have our video pad created, then create it. */
   if (G_UNLIKELY (!demux->video_pad)) {
-    demux->video_pad = gst_pad_new ("video", GST_PAD_SRC);
+    demux->video_pad =
+        gst_pad_new_from_template (gst_element_class_get_pad_template
+        (GST_ELEMENT_GET_CLASS (demux), "video"), "video");
     if (G_UNLIKELY (!demux->video_pad)) {
       GST_WARNING_OBJECT (demux, "failed creating video pad");
       ret = GST_FLOW_ERROR;
       goto beach;
     }
-    /* Make it active */
-    gst_pad_set_active (demux->video_pad, TRUE);
 
     if (!gst_flv_parse_video_negotiate (demux, codec_tag)) {
       gst_object_unref (demux->video_pad);
@@ -853,6 +857,11 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query));
     gst_pad_set_event_function (demux->video_pad,
         GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
+
+    gst_pad_use_fixed_caps (demux->video_pad);
+
+    /* Make it active */
+    gst_pad_set_active (demux->video_pad, TRUE);
 
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
