@@ -802,7 +802,7 @@ gst_base_parse_push_buffer (GstBaseParse * parse, GstBuffer * buffer)
         gst_util_uint64_scale (parse->priv->upstream_size, 8 * GST_SECOND,
         parse->priv->avg_bitrate);
     GST_DEBUG_OBJECT (parse, "Estimated duration: %" GST_TIME_FORMAT,
-        parse->priv->estimated_duration);
+        GST_TIME_ARGS (parse->priv->estimated_duration));
   } else if (!parse->priv->upstream_size && parse->priv->upstream_duration) {
     parse->priv->avg_bitrate =
         gst_util_uint64_scale (parse->priv->offset, 8 * GST_SECOND,
@@ -916,7 +916,7 @@ gst_base_parse_update_upstream_durations (GstBaseParse * parse)
         fmt == GST_FORMAT_TIME && duration != -1) {
       parse->priv->upstream_duration = duration;
       GST_DEBUG_OBJECT (parse, "Upstream duration: %" GST_TIME_FORMAT,
-          parse->priv->upstream_duration);
+          GST_TIME_ARGS (parse->priv->upstream_duration));
     } else {
       GST_DEBUG_OBJECT (parse, "Failed to get upstream duration");
       parse->priv->upstream_duration = 0;
