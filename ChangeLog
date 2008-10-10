@@ -1,3 +1,8 @@
+2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	Disable flacparse for this release as it's too buggy.
+
 2008-10-10  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/flacparse/gstbaseparse.c (gst_base_parse_push_buffer),

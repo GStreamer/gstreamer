@@ -251,8 +251,6 @@ AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(filter)
-AG_GST_CHECK_PLUGIN(flacparse)
-AG_GST_CHECK_PLUGIN(flacparse)
 AG_GST_CHECK_PLUGIN(flv)
 AG_GST_CHECK_PLUGIN(freeze)
 AG_GST_CHECK_PLUGIN(h264parse)
@@ -1404,7 +1402,6 @@ gst/deinterlace2/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/filter/Makefile
-gst/flacparse/Makefile
 gst/flv/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
