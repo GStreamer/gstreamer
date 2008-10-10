@@ -1,3 +1,10 @@
+2008-10-10  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* tests/check/gst/gstutils.c: (probe_do_nothing), (data_probe),
+	(buffer_probe), (event_probe), (GST_START_TEST):
+	We now see 3 events go through our pad, since basesink now sends
+	upstream latency events.
+
 2008-10-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstpipeline.c: (gst_pipeline_change_state):

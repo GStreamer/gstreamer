@@ -31,6 +31,7 @@ static int n_event_probes = 0;
 static gboolean
 probe_do_nothing (GstPad * pad, GstMiniObject * obj, gpointer data)
 {
+  GST_DEBUG_OBJECT (pad, "is buffer:%d", GST_IS_BUFFER (obj));
   return TRUE;
 }
 
@@ -38,7 +39,7 @@ static gboolean
 data_probe (GstPad * pad, GstMiniObject * obj, gpointer data)
 {
   n_data_probes++;
-  GST_DEBUG ("data probe %d", n_data_probes);
+  GST_DEBUG_OBJECT (pad, "data probe %d", n_data_probes);
   g_assert (GST_IS_MINI_OBJECT (obj));
   g_assert (data == SPECIAL_POINTER (0));
   return TRUE;
@@ -48,7 +49,7 @@ static gboolean
 buffer_probe (GstPad * pad, GstBuffer * obj, gpointer data)
 {
   n_buffer_probes++;
-  GST_DEBUG ("buffer probe %d", n_buffer_probes);
+  GST_DEBUG_OBJECT (pad, "buffer probe %d", n_buffer_probes);
   g_assert (GST_IS_BUFFER (obj));
   g_assert (data == SPECIAL_POINTER (1));
   return TRUE;
@@ -58,7 +59,8 @@ static gboolean
 event_probe (GstPad * pad, GstEvent * obj, gpointer data)
 {
   n_event_probes++;
-  GST_DEBUG ("event probe %d", n_event_probes);
+  GST_DEBUG_OBJECT (pad, "event probe %d [%s]",
+      n_event_probes, GST_EVENT_TYPE_NAME (obj));
   g_assert (GST_IS_EVENT (obj));
   g_assert (data == SPECIAL_POINTER (2));
   return TRUE;
@@ -107,16 +109,16 @@ GST_START_TEST (test_buffer_probe_n_times)
   gst_object_unref (bus);
 
   g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 2);       /* new segment and eos */
-  g_assert (n_data_probes == 12);       /* duh */
+  g_assert (n_event_probes == 3);       /* new segment, latency and eos */
+  g_assert (n_data_probes == 13);       /* duh */
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 
   /* make sure nothing was sent in addition to the above when shutting down */
   g_assert (n_buffer_probes == 10);     /* one for every buffer */
-  g_assert (n_event_probes == 2);       /* new segment and eos */
-  g_assert (n_data_probes == 12);       /* duh */
+  g_assert (n_event_probes == 3);       /* new segment, latency and eos */
+  g_assert (n_data_probes == 13);       /* duh */
 } GST_END_TEST;
 
 static int n_data_probes_once = 0;
