@@ -4177,10 +4177,6 @@ not_connected:
  * installed (see gst_pad_set_getrange_function()) this function returns
  * #GST_FLOW_NOT_SUPPORTED.
  *
- * @buffer's caps must either be unset or the same as what is already
- * configured on @pad. Renegotiation within a running pull-mode pipeline is not
- * supported.
- *
  * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
  *
  * Returns: a #GstFlowReturn from the pad.
@@ -4194,6 +4190,8 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
   GstFlowReturn ret;
   GstPadGetRangeFunction getrangefunc;
   gboolean emit_signal;
+  GstCaps *caps;
+  gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
@@ -4226,23 +4224,22 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
 
   GST_PAD_STREAM_UNLOCK (pad);
 
-  if (G_LIKELY (ret == GST_FLOW_OK)) {
-    GstCaps *caps;
-    gboolean caps_changed;
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto get_range_failed;
 
-    GST_OBJECT_LOCK (pad);
-    /* Before pushing the buffer to the peer pad, ensure that caps
-     * are set on this pad */
-    caps = GST_BUFFER_CAPS (*buffer);
-    caps_changed = caps && caps != GST_PAD_CAPS (pad);
-    GST_OBJECT_UNLOCK (pad);
+  GST_OBJECT_LOCK (pad);
+  /* Before pushing the buffer to the peer pad, ensure that caps
+   * are set on this pad */
+  caps = GST_BUFFER_CAPS (*buffer);
+  caps_changed = caps && caps != GST_PAD_CAPS (pad);
+  GST_OBJECT_UNLOCK (pad);
 
-    /* we got a new datatype from the pad not supported in a running pull-mode
-     * pipeline */
-    if (G_UNLIKELY (caps_changed))
+  if (G_UNLIKELY (caps_changed)) {
+    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
+    /* this should usually work because the element produced the buffer */
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
       goto not_negotiated;
   }
-
   return ret;
 
   /* ERRORS */
@@ -4271,23 +4268,20 @@ dropping:
     *buffer = NULL;
     return GST_FLOW_UNEXPECTED;
   }
+get_range_failed:
+  {
+    *buffer = NULL;
+    GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
+        "getrange failed %s", gst_flow_get_name (ret));
+    return ret;
+  }
 not_negotiated:
   {
-    /* ideally we want to use the commented-out code, but currently demuxers
-     * and typefind do not follow part-negotiation.txt. When switching into
-     * pull mode, typefind should probably return the found caps from
-     * getcaps(), and demuxers should do the setcaps(). */
-
-#if 0
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
-        "getrange returned buffer of different caps");
+        "getrange returned buffer of unaccaptable caps");
     return GST_FLOW_NOT_NEGOTIATED;
-#endif
-    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "getrange returned buffer of different caps");
-    return ret;
   }
 }
 
@@ -4328,6 +4322,8 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
   GstPad *peer;
   GstFlowReturn ret;
   gboolean emit_signal;
+  GstCaps *caps;
+  gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), GST_FLOW_ERROR);
@@ -4352,28 +4348,28 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   gst_object_unref (peer);
 
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto pull_range_failed;
+
   /* can only fire the signal if we have a valid buffer */
-  if (G_UNLIKELY (emit_signal) && (ret == GST_FLOW_OK)) {
+  if (G_UNLIKELY (emit_signal)) {
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer)))
       goto dropping;
   }
 
-  if (G_LIKELY (ret == GST_FLOW_OK)) {
-    GstCaps *caps;
-    gboolean caps_changed;
+  GST_OBJECT_LOCK (pad);
+  /* Before pushing the buffer to the peer pad, ensure that caps
+   * are set on this pad */
+  caps = GST_BUFFER_CAPS (*buffer);
+  caps_changed = caps && caps != GST_PAD_CAPS (pad);
+  GST_OBJECT_UNLOCK (pad);
 
-    GST_OBJECT_LOCK (pad);
-    /* Before pushing the buffer to the peer pad, ensure that caps
-     * are set on this pad */
-    caps = GST_BUFFER_CAPS (*buffer);
-    caps_changed = caps && caps != GST_PAD_CAPS (pad);
-    GST_OBJECT_UNLOCK (pad);
-
-    /* we got a new datatype on the pad, see if it can handle it */
-    if (G_UNLIKELY (caps_changed))
+  /* we got a new datatype on the pad, see if it can handle it */
+  if (G_UNLIKELY (caps_changed)) {
+    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
+    if (G_UNLIKELY (!gst_pad_configure_sink (pad, caps)))
       goto not_negotiated;
   }
-
   return ret;
 
   /* ERROR recovery here */
@@ -4383,6 +4379,13 @@ not_connected:
         "pulling range, but it was not linked");
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
+  }
+pull_range_failed:
+  {
+    *buffer = NULL;
+    GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pullrange failed %s", gst_flow_get_name (ret));
+    return ret;
   }
 dropping:
   {
@@ -4394,21 +4397,11 @@ dropping:
   }
 not_negotiated:
   {
-    /* ideally we want to use the commented-out code, but currently demuxers
-     * and typefind do not follow part-negotiation.txt. When switching into
-     * pull mode, typefind should probably return the found caps from
-     * getcaps(), and demuxers should do the setcaps(). */
-
-#if 0
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
         "pullrange returned buffer of different caps");
     return GST_FLOW_NOT_NEGOTIATED;
-#endif
-    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pullrange returned buffer of different caps");
-    return ret;
   }
 }
 

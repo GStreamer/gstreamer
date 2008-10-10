@@ -1,5 +1,12 @@
 2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpad.c: (gst_pad_get_range), (gst_pad_pull_range):
+	Revert a patch from 21 months ago that broke caps negotiation in pull
+	mode. Basically, having a buffer pass over a pad will trigger the
+	setcaps function when caps change, just like in push mode.
+
+2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-negotiation.txt:
 	Update the docs some more.
 
