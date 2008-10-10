@@ -1,3 +1,15 @@
+2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/subparse/gstsubparse.c:
+	(gst_sub_parse_data_format_autodetect), (handle_buffer),
+	(gst_sub_parse_change_state):
+	* gst/subparse/gstsubparse.h:
+	* tests/check/elements/subparse.c: (GST_START_TEST):
+	Add support for subtitle files with UTF-8 BOM at the beginning
+	by simple stripping it from the first line before passing it
+	to any parsing code. Fixes bug #555257 and playback of files
+	created by Gnome Subtitles.
+
 2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:

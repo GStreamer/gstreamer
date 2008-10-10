@@ -922,6 +922,11 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     }
   }
 
+  /* If the string contains a UTF-8 BOM drop it */
+  if ((guint8) match_str[0] == 0xEF && (guint8) match_str[1] == 0xBB
+      && (guint8) match_str[2] == 0xBF)
+    match_str += 3;
+
   if (regexec (&mdvd_rx, match_str, 0, NULL, 0) == 0) {
     GST_LOG ("MicroDVD (frame based) format detected");
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
@@ -1073,11 +1078,22 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
   }
 
   while ((line = get_next_line (self)) && !self->flushing) {
+    guint offset = 0;
+
+    /* If this is the first line and it contains a UTF-8 BOM drop it */
+    if (self->first_line && strlen (line) >= 3 &&
+        (guint8) line[0] == 0xEF && (guint8) line[1] == 0xBB
+        && (guint8) line[2] == 0xBF) {
+      offset = 3;
+    }
+
+    self->first_line = FALSE;
+
     /* Set segment on our parser state machine */
     self->state.segment = &self->segment;
     /* Now parse the line, out of segment lines will just return NULL */
-    GST_LOG_OBJECT (self, "Parsing line '%s'", line);
-    subtitle = self->parse_line (&self->state, line);
+    GST_LOG_OBJECT (self, "Parsing line '%s'", line + offset);
+    subtitle = self->parse_line (&self->state, line + offset);
     g_free (line);
 
     if (subtitle) {
@@ -1252,6 +1268,7 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       self->next_offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       self->valid_utf8 = TRUE;
+      self->first_line = TRUE;
       g_string_truncate (self->textbuf, 0);
       break;
     default:

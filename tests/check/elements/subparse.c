@@ -132,6 +132,13 @@ static SubParseInputChunk srt_input1[] = {
       44 * GST_SECOND + 44 * GST_MSECOND, "I still cant see anything."}
 };
 
+/* has UTF-8 BOM at the start */
+static SubParseInputChunk srt_input2[] = {
+  {
+        "\xef\xbb\xbf" "1\n00:00:00,000 --> 00:00:03,50\nJust testing.\n\n",
+      0, 3 * GST_SECOND + 50 * GST_MSECOND, "Just testing."}
+};
+
 static void
 setup_subparse (void)
 {
@@ -237,6 +244,9 @@ GST_START_TEST (test_srt)
 
   /* try with spaces instead of doubled zeroes (which is not exactly according to spec) */
   test_srt_do_test (srt_input1, 0, G_N_ELEMENTS (srt_input1));
+
+  /* try with UTF-8 BOM at the start */
+  test_srt_do_test (srt_input1, 0, G_N_ELEMENTS (srt_input2));
 }
 
 GST_END_TEST;
