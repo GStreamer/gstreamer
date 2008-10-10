@@ -1,3 +1,10 @@
+2008-10-10  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/flacparse/gstbaseparse.c (gst_base_parse_push_buffer),
+	(gst_base_parse_update_upstream_durations):
+	Fix compiler warning on OS/X about parameters not matching
+	the debug format string.
+
 2008-10-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/deinterlace2/tvtime/tomsmocomp.c:
