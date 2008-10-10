@@ -982,7 +982,7 @@ gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
   }
 
   GST_LOG_OBJECT (dec, "feeding %u bytes to decoder (available=%u, bytes=%u)",
-      len, gst_adapter_available (dec->adapter), *bytes);
+      len, gst_adapter_available (dec->adapter), (guint) * bytes);
   memcpy (buffer, gst_adapter_peek (dec->adapter, len), len);
   *bytes = len;
 

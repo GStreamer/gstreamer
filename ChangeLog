@@ -1,3 +1,10 @@
+2008-10-10  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/flac/gstflacdec.c (gst_flac_dec_read_stream):
+	* ext/flac/gstflacenc.c (gst_flac_enc_write_callback):
+	Cast some size_t arguments to guint to avoid compiler
+	warnings on 64-bit systems.
+
 2008-10-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_handle_src_event):

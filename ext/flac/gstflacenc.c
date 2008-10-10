@@ -996,7 +996,8 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
   /* we assume libflac passes us stuff neatly framed */
   if (!flacenc->got_headers) {
     if (samples == 0) {
-      GST_DEBUG_OBJECT (flacenc, "Got header, queueing (%u bytes)", bytes);
+      GST_DEBUG_OBJECT (flacenc, "Got header, queueing (%u bytes)",
+          (guint) bytes);
       flacenc->headers = g_list_append (flacenc->headers, outbuf);
       /* note: it's important that we increase our byte offset */
       goto out;
@@ -1011,7 +1012,7 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
 
   GST_LOG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
       "pos=%" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
-      samples, bytes, flacenc->offset);
+      samples, (guint) bytes, flacenc->offset);
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (flacenc->srcpad));
   ret = gst_pad_push (flacenc->srcpad, outbuf);
