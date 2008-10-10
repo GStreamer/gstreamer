@@ -1,5 +1,15 @@
 2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Based on a patch by: xavierb at gmail dot com
+
+	* gst/subparse/gstsubparse.c:
+	(gst_sub_parse_data_format_autodetect):
+	* tests/check/elements/subparse.c: (GST_START_TEST):
+	Make the detection of the used subtitle a bit less strict
+	for srt subtitles. Fixes bug #555607.
+
+2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/vorbis/vorbisenc.c:
 	(gst_vorbis_enc_buffer_check_discontinuous):
 	Fix discontinuity detection which was broken by last commit.

@@ -116,6 +116,22 @@ static SubParseInputChunk srt_input0[] = {
       3 * GST_SECOND, 4 * GST_SECOND, "Three"}
 };
 
+/* has spaces instead of doubled zeroes (not exactly according to spec) */
+static SubParseInputChunk srt_input1[] = {
+  {
+        "1\n 0: 0:26, 26 --> 0: 0:28, 17\nI cant see.\n\n",
+        26 * GST_SECOND + 26 * GST_MSECOND,
+      28 * GST_SECOND + 17 * GST_MSECOND, "I cant see."},
+  {
+        "2\n 0: 0:30, 30 --> 0: 0:33, 22\nI really cant see.\n\n",
+        30 * GST_SECOND + 30 * GST_MSECOND,
+      33 * GST_SECOND + 22 * GST_MSECOND, "I really cant see."},
+  {
+        "3\n 0: 0:40, 40 --> 0: 0:44, 44\nI still cant see anything.\n\n",
+        40 * GST_SECOND + 40 * GST_MSECOND,
+      44 * GST_SECOND + 44 * GST_MSECOND, "I still cant see anything."}
+};
+
 static void
 setup_subparse (void)
 {
@@ -218,6 +234,9 @@ GST_START_TEST (test_srt)
 
   /* try with chunk number 0 (which is not exactly according to spec) */
   test_srt_do_test (srt_input0, 0, G_N_ELEMENTS (srt_input0));
+
+  /* try with spaces instead of doubled zeroes (which is not exactly according to spec) */
+  test_srt_do_test (srt_input1, 0, G_N_ELEMENTS (srt_input1));
 }
 
 GST_END_TEST;
