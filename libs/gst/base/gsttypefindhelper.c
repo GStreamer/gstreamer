@@ -54,6 +54,9 @@ type_find_factory_rank_cmp (gconstpointer fac1, gconstpointer fac2)
 
 /* ********************** typefinding in pull mode ************************ */
 
+static void
+helper_find_suggest (gpointer data, guint probability, const GstCaps * caps);
+
 typedef struct
 {
   GSList *buffers;              /* buffer cache */
@@ -88,6 +91,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GSList *insert_pos = NULL;
   guint buf_size;
   guint64 buf_offset;
+  GstCaps *caps;
 
   helper = (GstTypeFindHelper *) data;
 
@@ -138,6 +142,19 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
 
   if (ret != GST_FLOW_OK)
     goto error;
+
+  caps = GST_BUFFER_CAPS (buffer);
+
+  if (caps && !gst_caps_is_empty (caps) && !gst_caps_is_any (caps)) {
+    GST_DEBUG ("buffer has caps %" GST_PTR_FORMAT ", suggest max probability",
+        caps);
+
+    gst_caps_replace (&helper->caps, caps);
+    helper->best_probability = GST_TYPE_FIND_MAXIMUM;
+
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
 
   /* getrange might silently return shortened buffers at the end of a file,
    * we must, however, always return either the full requested data or NULL */

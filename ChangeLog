@@ -1,3 +1,12 @@
+2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	Update the docs some more.
+
+	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek):
+	If we pull a buffer with non-trivial caps, suggest those caps with the
+	max probability.
+
 2008-10-10  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* docs/design/part-TODO.txt:

@@ -229,14 +229,18 @@ low latency offered by pull mode, we want to avoid capsnego from within
 the pulling thread, in case it causes us to miss our scheduling
 deadlines.
 
-The time to do capsnego, then, is after activate_pull() has succeeded,
-but before the sink has spawned the pulling thread. Because of the
-latency concerns just mentioned, capsnego does not occur in the pulling
-thread.
+The pull thread is usually started in the PAUSED->PLAYING state change. We must
+be able to complete the negotiation before this state change happens.
+
+The time to do capsnego, then, is after _check_pull_range() has succeeded,
+but before the sink has spawned the pulling thread.
 
 
 Mechanism
 .........
+
+The sink determines that the upstream elements support pull based scheduling by
+calling gst_pad_check_pull_range().
 
 The sink initiates the negotiation process by intersecting the results
 of gst_pad_get_caps() on its sink pad and its peer src pad. This is the
@@ -247,19 +251,24 @@ this way the sink element knows the capabilities of the entire pipeline.
 
 The sink element then fixates the resulting caps, if necessary,
 resulting in the flow caps. It notifies the pipeline of the caps by
-calling gst_pad_set_caps() on its sink pad. Sink pads should proxy the
-setcaps() to their peer src pads. In the simple passthrough case, src
-pads' setcaps() functions proxy the setcaps() to all of their sink pads,
-which then set_caps() on their peers, and so the entire pipeline becomes
-configured before dataflow has started. All pads have fixed caps.
+calling gst_pad_set_caps() on its sink pad. From now on, the getcaps function
+of the sinkpad will only return these fixed caps meaning that upstream elements
+will only be able to produce this format.
 
 If the sink element could not set caps on its sink pad, it should post
 an error message on the bus indicating that negotiation was not
 possible.
 
-In this way all pads are negotiated before data starts flowing, so all
-getrange() requests have a defined meaning for the number of bytes being
-pulled.
+When negotiation succeeded, the sinkpad and all upstream internally linked pads
+are activated in pull mode. Typically, this operation will trigger negotiation
+on the downstream elements, which will now be forced to negotiation to the
+final fixed desired caps of the sinkpad.
+
+After these steps, the sink element returns ASYNC from the state change
+function. The state will commit to PAUSED when the first buffer is received in
+the sink. This is needed to provide a consistent API to the applications that
+expect ASYNC return values from sinks but it also allows us to perform the
+remainder of the negotiation outside of the context of the pulling thread.
 
 During dataflow, gst_pad_pull_range() checks the caps on the pulled
 buffer. If they are different from the sink pad's caps, it will return
