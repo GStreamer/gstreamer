@@ -358,6 +358,7 @@ EXPORTS
 	gst_fraction_get_type
 	gst_fraction_range_get_type
 	gst_g_error_get_type
+	gst_ghost_pad_construct
 	gst_ghost_pad_get_target
 	gst_ghost_pad_get_type
 	gst_ghost_pad_new
@@ -458,6 +459,7 @@ EXPORTS
 	gst_message_new_segment_start
 	gst_message_new_state_changed
 	gst_message_new_state_dirty
+	gst_message_new_structure_change
 	gst_message_new_tag
 	gst_message_new_warning
 	gst_message_parse_async_start
@@ -472,6 +474,7 @@ EXPORTS
 	gst_message_parse_segment_done
 	gst_message_parse_segment_start
 	gst_message_parse_state_changed
+	gst_message_parse_structure_change
 	gst_message_parse_tag
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
@@ -694,6 +697,7 @@ EXPORTS
 	gst_preset_set_meta
 	gst_print_element_args
 	gst_print_pad_caps
+	gst_proxy_pad_get_type
 	gst_query_get_structure
 	gst_query_get_type
 	gst_query_new_application
@@ -789,6 +793,7 @@ EXPORTS
 	gst_static_pad_template_get_type
 	gst_stream_error_get_type
 	gst_stream_error_quark
+	gst_structure_change_type_get_type
 	gst_structure_copy
 	gst_structure_empty_new
 	gst_structure_fixate_field_boolean

@@ -10,6 +10,7 @@ EXPORTS
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
+	gst_base_sink_get_blocksize
 	gst_base_sink_get_last_buffer
 	gst_base_sink_get_latency
 	gst_base_sink_get_max_lateness
@@ -21,6 +22,7 @@ EXPORTS
 	gst_base_sink_is_qos_enabled
 	gst_base_sink_query_latency
 	gst_base_sink_set_async_enabled
+	gst_base_sink_set_blocksize
 	gst_base_sink_set_max_lateness
 	gst_base_sink_set_qos_enabled
 	gst_base_sink_set_render_delay
@@ -29,10 +31,12 @@ EXPORTS
 	gst_base_sink_wait_clock
 	gst_base_sink_wait_eos
 	gst_base_sink_wait_preroll
+	gst_base_src_get_blocksize
 	gst_base_src_get_do_timestamp
 	gst_base_src_get_type
 	gst_base_src_is_live
 	gst_base_src_query_latency
+	gst_base_src_set_blocksize
 	gst_base_src_set_do_timestamp
 	gst_base_src_set_format
 	gst_base_src_set_live
@@ -48,6 +52,77 @@ EXPORTS
 	gst_base_transform_set_qos_enabled
 	gst_base_transform_suggest
 	gst_base_transform_update_qos
+	gst_bit_reader_free
+	gst_bit_reader_get_bits_uint16
+	gst_bit_reader_get_bits_uint32
+	gst_bit_reader_get_bits_uint64
+	gst_bit_reader_get_bits_uint8
+	gst_bit_reader_get_pos
+	gst_bit_reader_get_remaining
+	gst_bit_reader_init
+	gst_bit_reader_init_from_buffer
+	gst_bit_reader_new
+	gst_bit_reader_new_from_buffer
+	gst_bit_reader_peek_bits_uint16
+	gst_bit_reader_peek_bits_uint32
+	gst_bit_reader_peek_bits_uint64
+	gst_bit_reader_peek_bits_uint8
+	gst_bit_reader_set_pos
+	gst_bit_reader_skip
+	gst_bit_reader_skip_to_byte
+	gst_byte_reader_free
+	gst_byte_reader_get_float32_be
+	gst_byte_reader_get_float32_le
+	gst_byte_reader_get_float64_be
+	gst_byte_reader_get_float64_le
+	gst_byte_reader_get_int16_be
+	gst_byte_reader_get_int16_le
+	gst_byte_reader_get_int24_be
+	gst_byte_reader_get_int24_le
+	gst_byte_reader_get_int32_be
+	gst_byte_reader_get_int32_le
+	gst_byte_reader_get_int64_be
+	gst_byte_reader_get_int64_le
+	gst_byte_reader_get_int8
+	gst_byte_reader_get_pos
+	gst_byte_reader_get_remaining
+	gst_byte_reader_get_uint16_be
+	gst_byte_reader_get_uint16_le
+	gst_byte_reader_get_uint24_be
+	gst_byte_reader_get_uint24_le
+	gst_byte_reader_get_uint32_be
+	gst_byte_reader_get_uint32_le
+	gst_byte_reader_get_uint64_be
+	gst_byte_reader_get_uint64_le
+	gst_byte_reader_get_uint8
+	gst_byte_reader_init
+	gst_byte_reader_init_from_buffer
+	gst_byte_reader_new
+	gst_byte_reader_new_from_buffer
+	gst_byte_reader_peek_float32_be
+	gst_byte_reader_peek_float32_le
+	gst_byte_reader_peek_float64_be
+	gst_byte_reader_peek_float64_le
+	gst_byte_reader_peek_int16_be
+	gst_byte_reader_peek_int16_le
+	gst_byte_reader_peek_int24_be
+	gst_byte_reader_peek_int24_le
+	gst_byte_reader_peek_int32_be
+	gst_byte_reader_peek_int32_le
+	gst_byte_reader_peek_int64_be
+	gst_byte_reader_peek_int64_le
+	gst_byte_reader_peek_int8
+	gst_byte_reader_peek_uint16_be
+	gst_byte_reader_peek_uint16_le
+	gst_byte_reader_peek_uint24_be
+	gst_byte_reader_peek_uint24_le
+	gst_byte_reader_peek_uint32_be
+	gst_byte_reader_peek_uint32_le
+	gst_byte_reader_peek_uint64_be
+	gst_byte_reader_peek_uint64_le
+	gst_byte_reader_peek_uint8
+	gst_byte_reader_set_pos
+	gst_byte_reader_skip
 	gst_collect_pads_add_pad
 	gst_collect_pads_add_pad_full
 	gst_collect_pads_available

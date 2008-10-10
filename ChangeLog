@@ -1,3 +1,9 @@
+2008-10-10  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	Add new symbols to the win32 defs files
+
 2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbin.c: (gst_bin_remove_func), (update_degree),
