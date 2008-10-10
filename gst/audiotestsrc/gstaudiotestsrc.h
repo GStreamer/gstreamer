@@ -107,14 +107,16 @@ struct _GstAudioTestSrc {
   /* audio parameters */
   gint samplerate;
   gint samples_per_buffer;
+  gint sample_size;
   GstAudioTestSrcFormat format;
   
   /*< private >*/
   gboolean tags_pushed;			/* send tags just once ? */
   GstClockTimeDiff timestamp_offset;    /* base offset */
-  GstClockTime running_time;            /* total running time */
-  gint64 n_samples;                     /* total samples sent */
-  gint64 n_samples_stop;
+  GstClockTime next_time;               /* next timestamp */
+  gint64 next_sample;                   /* next sample to send */
+  gint64 next_byte;                     /* next byte to send */
+  gint64 sample_stop;
   gboolean check_seek_stop;
   gboolean eos_reached;
   gint generate_samples_per_buffer;	/* used to generate a partial buffer */

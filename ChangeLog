@@ -1,3 +1,21 @@
+2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audio_test_src_class_init), (gst_audio_test_src_init),
+	(gst_audio_test_src_src_fixate), (gst_audio_test_src_setcaps),
+	(gst_audio_test_src_start), (gst_audio_test_src_stop),
+	(gst_audio_test_src_do_seek), (gst_audio_test_src_check_get_range),
+	(gst_audio_test_src_create):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	Define the default property values in the usual place.
+	Implement start/stop to reset values correctly.
+	Calculate the sample size only once when we negotiate.
+	Rename some values to make more sense.
+	Keep track of our byte range.
+	Add support for pull based scheduling. Disabled for now until we have
+	the whole stack working.
+	Set the BUFFER_OFFSET correctly.
+
 2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Based on a patch by: xavierb at gmail dot com
