@@ -1,5 +1,12 @@
 2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video):
+	Create pads from the pad templates, use fixed caps on them
+	and only activate them after the caps are set.
+
+2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	Disable flacparse for this release as it's too buggy.
 
