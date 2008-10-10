@@ -230,6 +230,8 @@ gst_base_src_is_live
 gst_base_src_set_live
 gst_base_src_set_format
 gst_base_src_query_latency
+gst_base_src_get_blocksize
+gst_base_src_set_blocksize
 gst_base_src_get_do_timestamp
 gst_base_src_set_do_timestamp
 
@@ -272,6 +274,8 @@ gst_base_sink_get_ts_offset
 gst_base_sink_set_render_delay
 gst_base_sink_get_render_delay
 gst_base_sink_get_last_buffer
+gst_base_sink_set_blocksize
+gst_base_sink_get_blocksize
 
 GST_BASE_SINK_PAD
 

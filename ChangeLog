@@ -1,3 +1,41 @@
+2008-10-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	Small doc update.
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_pad_getcaps), (gst_base_sink_pad_setcaps),
+	(gst_base_sink_init), (gst_base_sink_set_blocksize),
+	(gst_base_sink_get_blocksize), (gst_base_sink_set_property),
+	(gst_base_sink_get_property), (gst_base_sink_needs_preroll),
+	(gst_base_sink_loop), (gst_base_sink_pad_activate),
+	(gst_base_sink_negotiate_pull), (gst_base_sink_pad_activate_pull),
+	(gst_base_sink_change_state):
+	* libs/gst/base/gstbasesink.h:
+	Add blocksize property and methods to control the amount of data
+	to pull.
+	Negotiate first before activating upstream in pull mode so that they can
+	negotiate themselves.
+	When we operate in pull mode, we only accept the caps that we
+	negotiated.
+	Make the sink go ASYNC to PAUSED, like all other sinks.
+	API: GstBaseSink::gst_base_sink_set_blocksize()
+	API: GstBaseSink::gst_base_sink_get_blocksize()
+	API: GstBaseSink::blocksize
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_wait_playing),
+	(gst_base_src_set_live), (gst_base_src_is_live),
+	(gst_base_src_set_format), (gst_base_src_query_latency),
+	(gst_base_src_set_blocksize), (gst_base_src_get_blocksize),
+	(gst_base_src_set_do_timestamp), (gst_base_src_get_do_timestamp),
+	(gst_base_src_set_property), (gst_base_src_get_property):
+	* libs/gst/base/gstbasesrc.h:
+	Add typechecking in public API functions.
+	Add methods to control the blocksize in subclasses.
+	API: GstBaseSrc::gst_base_src_set_blocksize()
+	API: GstBaseSrc::gst_base_src_get_blocksize()
+
 2008-10-10  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* tests/check/gst/gstutils.c: (probe_do_nothing), (data_probe),

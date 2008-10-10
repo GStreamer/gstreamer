@@ -455,6 +455,8 @@ gst_base_src_finalize (GObject * object)
 GstFlowReturn
 gst_base_src_wait_playing (GstBaseSrc * src)
 {
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), GST_FLOW_ERROR);
+
   /* block until the state changes, or we get a flush, or something */
   GST_DEBUG_OBJECT (src, "live source waiting for running state");
   GST_LIVE_WAIT (src);
@@ -489,6 +491,8 @@ flushing:
 void
 gst_base_src_set_live (GstBaseSrc * src, gboolean live)
 {
+  g_return_if_fail (GST_IS_BASE_SRC (src));
+
   GST_OBJECT_LOCK (src);
   src->is_live = live;
   GST_OBJECT_UNLOCK (src);
@@ -506,6 +510,8 @@ gboolean
 gst_base_src_is_live (GstBaseSrc * src)
 {
   gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), FALSE);
 
   GST_OBJECT_LOCK (src);
   result = src->is_live;
@@ -530,6 +536,8 @@ gst_base_src_is_live (GstBaseSrc * src)
 void
 gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
 {
+  g_return_if_fail (GST_IS_BASE_SRC (src));
+
   gst_segment_init (&src->segment, format);
 }
 
@@ -557,6 +565,8 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
 {
   GstClockTime min;
 
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), FALSE);
+
   GST_OBJECT_LOCK (src);
   if (live)
     *live = src->is_live;
@@ -583,6 +593,50 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
 }
 
 /**
+ * gst_base_src_set_blocksize:
+ * @src: the source
+ * @blocksize: the new blocksize in bytes
+ *
+ * Set the number of bytes that @src will push out with each buffer.
+ *
+ * Since: 0.10.22
+ */
+void
+gst_base_src_set_blocksize (GstBaseSrc * src, gulong blocksize)
+{
+  g_return_if_fail (GST_IS_BASE_SRC (src));
+
+  GST_OBJECT_LOCK (src);
+  src->blocksize = blocksize;
+  GST_OBJECT_UNLOCK (src);
+}
+
+/**
+ * gst_base_src_get_blocksize:
+ * @src: the source
+ *
+ * Get the number of bytes that @src will push out with each buffer.
+ *
+ * Returns: the number of bytes pushed with each buffer.
+ *
+ * Since: 0.10.22
+ */
+gulong
+gst_base_src_get_blocksize (GstBaseSrc * src)
+{
+  gulong res;
+
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), 0);
+
+  GST_OBJECT_LOCK (src);
+  res = src->blocksize;
+  GST_OBJECT_UNLOCK (src);
+
+  return res;
+}
+
+
+/**
  * gst_base_src_set_do_timestamp:
  * @src: the source
  * @timestamp: enable or disable timestamping
@@ -596,6 +650,8 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
 void
 gst_base_src_set_do_timestamp (GstBaseSrc * src, gboolean timestamp)
 {
+  g_return_if_fail (GST_IS_BASE_SRC (src));
+
   GST_OBJECT_LOCK (src);
   src->priv->do_timestamp = timestamp;
   GST_OBJECT_UNLOCK (src);
@@ -615,6 +671,8 @@ gboolean
 gst_base_src_get_do_timestamp (GstBaseSrc * src)
 {
   gboolean res;
+
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), FALSE);
 
   GST_OBJECT_LOCK (src);
   res = src->priv->do_timestamp;
@@ -1513,7 +1571,7 @@ gst_base_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BLOCKSIZE:
-      src->blocksize = g_value_get_ulong (value);
+      gst_base_src_set_blocksize (src, g_value_get_ulong (value));
       break;
     case PROP_NUM_BUFFERS:
       src->num_buffers = g_value_get_int (value);
@@ -1522,7 +1580,7 @@ gst_base_src_set_property (GObject * object, guint prop_id,
       src->data.ABI.typefind = g_value_get_boolean (value);
       break;
     case PROP_DO_TIMESTAMP:
-      src->priv->do_timestamp = g_value_get_boolean (value);
+      gst_base_src_set_do_timestamp (src, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1540,7 +1598,7 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_BLOCKSIZE:
-      g_value_set_ulong (value, src->blocksize);
+      g_value_set_ulong (value, gst_base_src_get_blocksize (src));
       break;
     case PROP_NUM_BUFFERS:
       g_value_set_int (value, src->num_buffers);
@@ -1549,7 +1607,7 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, src->data.ABI.typefind);
       break;
     case PROP_DO_TIMESTAMP:
-      g_value_set_boolean (value, src->priv->do_timestamp);
+      g_value_set_boolean (value, gst_base_src_get_do_timestamp (src));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

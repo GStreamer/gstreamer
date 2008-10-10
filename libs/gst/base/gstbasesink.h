@@ -221,6 +221,9 @@ GstClockTime	gst_base_sink_get_latency 	(GstBaseSink *sink);
 void		gst_base_sink_set_render_delay  (GstBaseSink *sink, GstClockTime delay);
 GstClockTime    gst_base_sink_get_render_delay 	(GstBaseSink *sink);
 
+/* blocksize */
+void		gst_base_sink_set_blocksize     (GstBaseSink *sink, guint blocksize);
+guint           gst_base_sink_get_blocksize 	(GstBaseSink *sink);
 
 GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink * basesink, GstClockTime time,
                                                  GstClockTimeDiff * jitter);

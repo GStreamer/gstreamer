@@ -37,7 +37,8 @@ The basics of negotiation are as follows:
    the buffer has changed. The element should reconfigure itself to the
    new format before processing the buffer data. If the data type on
    the buffer is not acceptable, the element should refuse the buffer by 
-   returning an appropriate return value from the chain function.
+   returning an appropriate GST_FLOW_NOT_NEGOTIATED return value from the
+   chain function.
    The core will automatically call the set_caps function for this purpose
    when it is installed on the sink or source pad.
 
