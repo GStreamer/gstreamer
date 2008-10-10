@@ -625,9 +625,10 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Create buffer from pad */
-  ret = gst_pad_alloc_buffer (demux->audio_pad, GST_BUFFER_OFFSET_NONE,
-      demux->tag_data_size - codec_data, GST_PAD_CAPS (demux->audio_pad),
-      &buffer);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (demux->audio_pad,
+      GST_BUFFER_OFFSET_NONE, demux->tag_data_size - codec_data,
+      GST_PAD_CAPS (demux->audio_pad), &buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (demux, "failed allocating a %" G_GUINT64_FORMAT
         " bytes buffer: %s", demux->tag_data_size, gst_flow_get_name (ret));
@@ -674,6 +675,19 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_OFFSET (buffer) = demux->audio_offset++;
   GST_BUFFER_OFFSET_END (buffer) = demux->audio_offset;
+
+  /* Only add audio frames to the index if we have no video */
+  if (!demux->has_video) {
+    if (demux->index) {
+      GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          demux->cur_tag_offset);
+      gst_index_add_association (demux->index, demux->index_id,
+          GST_ASSOCIATION_FLAG_KEY_UNIT,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+          GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
+    }
+  }
 
   if (G_UNLIKELY (demux->audio_need_discont)) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -909,9 +923,10 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Create buffer from pad */
-  ret = gst_pad_alloc_buffer (demux->video_pad, GST_BUFFER_OFFSET_NONE,
-      demux->tag_data_size - codec_data, GST_PAD_CAPS (demux->video_pad),
-      &buffer);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (demux->video_pad,
+      GST_BUFFER_OFFSET_NONE, demux->tag_data_size - codec_data,
+      GST_PAD_CAPS (demux->video_pad), &buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (demux, "failed allocating a %" G_GUINT64_FORMAT
         " bytes buffer: %s", demux->tag_data_size, gst_flow_get_name (ret));
@@ -961,6 +976,15 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 
   if (!keyframe) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    if (demux->index) {
+      GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          demux->cur_tag_offset);
+      gst_index_add_association (demux->index, demux->index_id,
+          GST_ASSOCIATION_FLAG_NONE,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+          GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
+    }
   } else {
     if (demux->index) {
       GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
