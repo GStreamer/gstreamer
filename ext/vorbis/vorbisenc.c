@@ -1062,7 +1062,7 @@ gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
 
   if (timestamp != GST_CLOCK_TIME_NONE &&
       vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
-      duration != vorbisenc->expected_ts) {
+      timestamp + duration != vorbisenc->expected_ts) {
     /* It turns out that a lot of elements don't generate perfect streams due
      * to rounding errors. So, we permit small errors (< 1/2 a sample) without
      * causing a discont.

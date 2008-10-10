@@ -1,3 +1,9 @@
+2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/vorbisenc.c:
+	(gst_vorbis_enc_buffer_check_discontinuous):
+	Fix discontinuity detection which was broken by last commit.
+
 2008-10-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac::
