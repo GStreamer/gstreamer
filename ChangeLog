@@ -1,3 +1,8 @@
+2008-10-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c:
+	  Don't assert on caps==NULL.
+
 2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/subparse/gstsubparse.c:

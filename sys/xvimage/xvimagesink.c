@@ -517,6 +517,9 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
+  if (caps == NULL)
+    return NULL;
+
   xvimage = (GstXvImageBuffer *) gst_mini_object_new (GST_TYPE_XVIMAGE_BUFFER);
   GST_DEBUG_OBJECT (xvimage, "Creating new XvImageBuffer");
 
