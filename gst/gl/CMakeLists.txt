@@ -23,7 +23,6 @@ add_library (gstopengl SHARED
 	gstglupload.c
 	gstgldownload.c
   gstglfilterblur.c
-	gstglfiltersobel.c
 	gstglfiltercube.c
 	gstglfilterlaplacian.c
   gstglfiltersobel.c
