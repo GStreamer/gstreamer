@@ -383,7 +383,7 @@ no_permission:
   {
     if (!silent_errors) {
       GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
-          (_("Could not open audio device for playback."
+          (_("Could not open audio device for playback. "
                   "You don't have permission to open the device.")),
           GST_ERROR_SYSTEM);
     }
@@ -403,7 +403,7 @@ legacy_oss:
   {
     if (!silent_errors) {
       GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
-          (_("Could not open audio device for playback."
+          (_("Could not open audio device for playback. "
                   "This version of the Open Sound System is not supported by this "
                   "element.")), ("Try the 'osssink' element instead"));
     }
