@@ -1,5 +1,12 @@
 2008-10-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag),
+	(gst_flv_demux_pull_header):
+	Fix regression of handling flow returns in pull mode.
+	Fixes bug #556003.
+
+2008-10-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/Makefile.am:
 	Add apexsink to SUBDIRS. Fixes bug #555912.
 
