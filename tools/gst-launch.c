@@ -518,7 +518,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gint percent;
 
         gst_message_parse_buffering (message, &percent);
-        fprintf (stderr, _("buffering... %d  \r"), percent);
+        fprintf (stderr, "%s %d%%  \r", _("buffering..."), percent);
 
         /* no state management needed for live pipelines */
         if (is_live)

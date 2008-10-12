@@ -1,3 +1,9 @@
+2008-10-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tools/gst-launch.c:
+	Change the printing of the 'buffering...' output to avoid putting
+	a \r in a translateable string (flagged by the TP).
+
 2008-10-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstxml.c:
