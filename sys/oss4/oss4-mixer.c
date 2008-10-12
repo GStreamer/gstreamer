@@ -313,7 +313,7 @@ legacy_oss:
     gst_oss4_mixer_close (mixer);
     if (!silent_errors) {
       GST_ELEMENT_ERROR (mixer, RESOURCE, OPEN_READ_WRITE,
-          (_("Could not open audio device for mixer control handling."
+          (_("Could not open audio device for mixer control handling. "
                   "This version of the Open Sound System is not supported by this "
                   "element.")), ("Try the 'ossmixer' element instead"));
     } else {

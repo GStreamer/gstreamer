@@ -1,3 +1,11 @@
+2008-10-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/oss4/oss4-mixer.c:
+	* sys/oss4/oss4-sink.c:
+	* sys/oss4/oss4-source.c:
+	Add some spaces in translateable strings.
+	Fixes: #555969 #555968 #555965
+
 2008-10-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag),
