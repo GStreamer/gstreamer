@@ -336,8 +336,8 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
   demux->cur_tag_offset = demux->offset;
 
   /* Get the first 4 bytes to identify tag type and size */
-  if (G_UNLIKELY (gst_flv_demux_pull_range (demux, pad, demux->offset,
-              FLV_TAG_TYPE_SIZE, &buffer) != GST_FLOW_OK))
+  if (G_UNLIKELY ((ret = gst_flv_demux_pull_range (demux, pad, demux->offset,
+                  FLV_TAG_TYPE_SIZE, &buffer)) != GST_FLOW_OK))
     goto beach;
 
   /* Identify tag type */
@@ -350,8 +350,8 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
   demux->offset += FLV_TAG_TYPE_SIZE;
 
   /* Pull the whole tag */
-  if (G_UNLIKELY (gst_flv_demux_pull_range (demux, pad, demux->offset,
-              demux->tag_size, &buffer) != GST_FLOW_OK))
+  if (G_UNLIKELY ((ret = gst_flv_demux_pull_range (demux, pad, demux->offset,
+                  demux->tag_size, &buffer)) != GST_FLOW_OK))
     goto beach;
 
   switch (demux->state) {
@@ -403,8 +403,8 @@ gst_flv_demux_pull_header (GstPad * pad, GstFLVDemux * demux)
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* Get the first 9 bytes */
-  if (G_UNLIKELY (gst_flv_demux_pull_range (demux, pad, demux->offset,
-              FLV_HEADER_SIZE, &buffer) != GST_FLOW_OK))
+  if (G_UNLIKELY ((ret = gst_flv_demux_pull_range (demux, pad, demux->offset,
+                  FLV_HEADER_SIZE, &buffer)) != GST_FLOW_OK))
     goto beach;
 
   ret = gst_flv_parse_header (demux, GST_BUFFER_DATA (buffer),
