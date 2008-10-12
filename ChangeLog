@@ -1,3 +1,8 @@
+2008-10-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/Makefile.am:
+	Add apexsink to SUBDIRS. Fixes bug #555912.
+
 2008-10-11  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/check/pipelines/metadata.c:

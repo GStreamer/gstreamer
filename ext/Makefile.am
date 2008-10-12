@@ -10,6 +10,12 @@ else
 AMRWB_DIR =
 endif
 
+if USE_APEXSINK
+APEXSINK_DIR = apexsink
+else
+APEXSINK_DIR =
+endif
+
 # if USE_ARTS
 # ARTS_DIR=arts
 # else
@@ -315,6 +321,7 @@ endif
 SUBDIRS=\
 	$(ALSASPDIF_DIR) \
 	$(AMRWB_DIR) \
+	$(APEXSINK_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
