@@ -30,6 +30,7 @@ libgstcoreelements_la_LIBADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(GST_OBJ_LIBS)
 libgstcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstcoreelements_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS =		\
 	gstcapsfilter.h		\

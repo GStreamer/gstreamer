@@ -1,3 +1,9 @@
+2008-10-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/Makefile.am:
+	* plugins/indexers/Makefile.am:
+	  Don't install static libs for plugins. Fixes #550851 for core.
+
 2008-10-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbus.c: (gst_bus_source_finalize),
