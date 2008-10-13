@@ -93,6 +93,10 @@ struct _GstTheoraDec
   /* QoS stuff */ /* with LOCK*/
   gdouble proportion;
   GstClockTime earliest_time;
+
+  gboolean have_par;
+  gint par_num;
+  gint par_den;
 };
 
 struct _GstTheoraDecClass

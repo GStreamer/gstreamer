@@ -86,6 +86,7 @@ static void theora_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static gboolean theora_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean theora_dec_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn theora_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_dec_change_state (GstElement * element,
     GstStateChange transition);
@@ -146,6 +147,7 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
       gst_pad_new_from_static_template (&theora_dec_sink_factory, "sink");
   gst_pad_set_query_function (dec->sinkpad, theora_dec_sink_query);
   gst_pad_set_event_function (dec->sinkpad, theora_dec_sink_event);
+  gst_pad_set_setcaps_function (dec->sinkpad, theora_dec_setcaps);
   gst_pad_set_chain_function (dec->sinkpad, theora_dec_chain);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
@@ -727,6 +729,25 @@ newseg_wrong_format:
   }
 }
 
+static gboolean
+theora_dec_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstTheoraDec *dec;
+  GstStructure *s;
+
+  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+
+  s = gst_caps_get_structure (caps, 0);
+
+  /* parse the par, this overrides the encoded par */
+  dec->have_par = gst_structure_get_fraction (s, "pixel-aspect-ratio",
+      &dec->par_num, &dec->par_den);
+
+  gst_object_unref (dec);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
@@ -789,8 +810,16 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
    * x:0 for other x isn't technically allowed, but it's seen in the wild and
    * is reasonable to treat the same. 
    */
-  par_num = dec->info.aspect_numerator;
-  par_den = dec->info.aspect_denominator;
+  if (dec->have_par) {
+    /* we had a par on the sink caps, override the encoded par */
+    GST_DEBUG_OBJECT (dec, "overriding with input PAR");
+    par_num = dec->par_num;
+    par_den = dec->par_den;
+  } else {
+    /* take encoded par */
+    par_num = dec->info.aspect_numerator;
+    par_den = dec->info.aspect_denominator;
+  }
   if (par_den == 0) {
     par_num = par_den = 1;
   }
@@ -1237,6 +1266,8 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
   /* EOS does not matter for the decoder */
   packet.e_o_s = 0;
 
+  GST_LOG_OBJECT (dec, "decode buffer of size %u", packet.bytes);
+
   if (dec->have_header) {
     if (packet.granulepos != -1) {
       dec->granulepos = packet.granulepos;
@@ -1483,6 +1514,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
       theora_comment_init (&dec->comment);
       GST_DEBUG_OBJECT (dec, "Setting have_header to FALSE in READY->PAUSED");
       dec->have_header = FALSE;
+      dec->have_par = FALSE;
       gst_theora_dec_reset (dec);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
