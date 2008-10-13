@@ -541,7 +541,7 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
   /* flac without headers */
   /* 64K should be enough */
   while (c.offset < (64 * 1024)) {
-    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 3)))
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 4)))
       break;
 
     if (data[0] == 0xff && (data[1] >> 2) == 0x3e) {

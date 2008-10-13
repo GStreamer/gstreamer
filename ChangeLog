@@ -1,6 +1,12 @@
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/typefind/gsttypefindfunctions.c: (flac_type_find):
+	For looking at the 4th byte we have to get 4 bytes of course
+	and not 3.
+
+2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (flac_type_find):
 	Improve FLAC-without-headers typefinding by looking at most of the
 	frame header and checking if invalid values are used. Should prevent
 	quite some false positives compared to the old version which only
