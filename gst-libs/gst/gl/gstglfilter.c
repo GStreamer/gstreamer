@@ -159,11 +159,11 @@ gst_gl_filter_reset (GstGLFilter* filter)
 {
   GstGLFilterClass* filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (filter_class->onReset)
-    filter_class->onReset (filter);
-
   if (filter->display)
   {
+    if (filter_class->onReset)
+      filter_class->onReset (filter);
+
     if (filter_class->display_reset_cb != NULL) {
       gst_gl_display_thread_add (filter->display, gst_gl_filter_stop_gl, filter);
     }
