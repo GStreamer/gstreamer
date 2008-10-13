@@ -1,3 +1,16 @@
+2008-10-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbus.c: (gst_bus_source_finalize),
+	(gst_bus_add_watch_full_unlocked), (gst_bus_add_watch_full),
+	(gst_bus_enable_sync_message_emission),
+	(gst_bus_disable_sync_message_emission),
+	(gst_bus_add_signal_watch_full), (gst_bus_remove_signal_watch):
+	Fix deadlock, g_source_get_id() cannot be called in finalize.
+	Keep track of the watch source by keeping a pointer to the source object
+	instead.
+	Use the bus lock to protect access to the pointer to the current
+	watch source.
+
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Base on Patch by: Olivier Crete <tester at tester dot ca>

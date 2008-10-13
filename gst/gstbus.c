@@ -108,7 +108,7 @@ struct _GstBusPrivate
 
   GCond *queue_cond;
 
-  guint watch_id;
+  GSource *watch_id;
 };
 
 GType
@@ -802,9 +802,16 @@ static void
 gst_bus_source_finalize (GSource * source)
 {
   GstBusSource *bsource = (GstBusSource *) source;
+  GstBus *bus;
 
-  if (bsource->bus->priv->watch_id == g_source_get_id (source))
-    bsource->bus->priv->watch_id = 0;
+  bus = bsource->bus;
+
+  GST_DEBUG_OBJECT (bus, "finalize source %p", source);
+
+  GST_OBJECT_LOCK (bus);
+  if (bus->priv->watch_id == source)
+    bus->priv->watch_id = NULL;
+  GST_OBJECT_UNLOCK (bus);
 
   gst_object_unref (bsource->bus);
   bsource->bus = NULL;
@@ -842,6 +849,38 @@ gst_bus_create_watch (GstBus * bus)
   return (GSource *) source;
 }
 
+/* must be called with the bus OBJECT LOCK */
+static guint
+gst_bus_add_watch_full_unlocked (GstBus * bus, gint priority,
+    GstBusFunc func, gpointer user_data, GDestroyNotify notify)
+{
+  guint id;
+  GSource *source;
+
+  if (bus->priv->watch_id) {
+    GST_ERROR_OBJECT (bus,
+        "Tried to add new watch while one was already there");
+    return 0;
+  }
+
+  source = gst_bus_create_watch (bus);
+
+  if (priority != G_PRIORITY_DEFAULT)
+    g_source_set_priority (source, priority);
+
+  g_source_set_callback (source, (GSourceFunc) func, user_data, notify);
+
+  id = g_source_attach (source, NULL);
+  g_source_unref (source);
+
+  if (id) {
+    bus->priv->watch_id = source;
+  }
+
+  GST_DEBUG_OBJECT (bus, "New source %p with id %u", source, id);
+  return id;
+}
+
 /**
  * gst_bus_add_watch_full:
  * @bus: a #GstBus to create the watch for.
@@ -870,29 +909,13 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
     GstBusFunc func, gpointer user_data, GDestroyNotify notify)
 {
   guint id;
-  GSource *source;
 
   g_return_val_if_fail (GST_IS_BUS (bus), 0);
 
-  if (bus->priv->watch_id) {
-    GST_ERROR_OBJECT (bus,
-        "Tried to add new watch while one was already there");
-    return 0;
-  }
+  GST_OBJECT_LOCK (bus);
+  id = gst_bus_add_watch_full_unlocked (bus, priority, func, user_data, notify);
+  GST_OBJECT_UNLOCK (bus);
 
-  source = gst_bus_create_watch (bus);
-
-  if (priority != G_PRIORITY_DEFAULT)
-    g_source_set_priority (source, priority);
-
-  g_source_set_callback (source, (GSourceFunc) func, user_data, notify);
-
-  id = g_source_attach (source, NULL);
-  g_source_unref (source);
-
-  bus->priv->watch_id = id;
-
-  GST_DEBUG_OBJECT (bus, "New source %p", source);
   return id;
 }
 
@@ -1155,9 +1178,7 @@ gst_bus_enable_sync_message_emission (GstBus * bus)
   g_return_if_fail (GST_IS_BUS (bus));
 
   GST_OBJECT_LOCK (bus);
-
   bus->priv->num_sync_message_emitters++;
-
   GST_OBJECT_UNLOCK (bus);
 }
 
@@ -1182,13 +1203,10 @@ void
 gst_bus_disable_sync_message_emission (GstBus * bus)
 {
   g_return_if_fail (GST_IS_BUS (bus));
-
   g_return_if_fail (bus->num_signal_watchers == 0);
 
   GST_OBJECT_LOCK (bus);
-
   bus->priv->num_sync_message_emitters--;
-
   GST_OBJECT_UNLOCK (bus);
 }
 
@@ -1221,23 +1239,30 @@ gst_bus_add_signal_watch_full (GstBus * bus, gint priority)
   if (bus->num_signal_watchers > 0)
     goto done;
 
+  /* this should not fail because the counter above takes care of it */
   g_assert (bus->signal_watch_id == 0);
 
   bus->signal_watch_id =
-      gst_bus_add_watch_full (bus, priority, gst_bus_async_signal_func, NULL,
-      NULL);
+      gst_bus_add_watch_full_unlocked (bus, priority, gst_bus_async_signal_func,
+      NULL, NULL);
 
-  if (bus->signal_watch_id == 0) {
-    GST_ERROR_OBJECT (bus, "Could not add signal watch to bus");
-    GST_OBJECT_UNLOCK (bus);
-    return;
-  }
+  if (G_UNLIKELY (bus->signal_watch_id == 0))
+    goto add_failed;
 
 done:
 
   bus->num_signal_watchers++;
 
   GST_OBJECT_UNLOCK (bus);
+  return;
+
+  /* ERRORS */
+add_failed:
+  {
+    g_critical ("Could not add signal watch to bus %s", GST_OBJECT_NAME (bus));
+    GST_OBJECT_UNLOCK (bus);
+    return;
+  }
 }
 
 /**
@@ -1272,6 +1297,8 @@ gst_bus_add_signal_watch (GstBus * bus)
 void
 gst_bus_remove_signal_watch (GstBus * bus)
 {
+  guint id = 0;
+
   g_return_if_fail (GST_IS_BUS (bus));
 
   /* I know the callees don't take this lock, so go ahead and abuse it */
@@ -1285,13 +1312,20 @@ gst_bus_remove_signal_watch (GstBus * bus)
   if (bus->num_signal_watchers > 0)
     goto done;
 
-  g_source_remove (bus->signal_watch_id);
+  id = bus->signal_watch_id;
   bus->signal_watch_id = 0;
+
+  GST_DEBUG_OBJECT (bus, "removing signal watch %u", id);
 
 done:
   GST_OBJECT_UNLOCK (bus);
+
+  if (id)
+    g_source_remove (id);
+
   return;
 
+  /* ERRORS */
 error:
   {
     g_critical ("Bus %s has no signal watches attached", GST_OBJECT_NAME (bus));
