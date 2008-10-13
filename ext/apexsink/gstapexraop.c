@@ -309,10 +309,11 @@ gst_apexraop_connect (GstApExRAOP * con)
       "Client-Instance: %s\r\n"
       "User-Agent: %s\r\n"
       "Content-Type: application/sdp\r\n"
-      "Content-Length: %d\r\n"
+      "Content-Length: %u\r\n"
       "Apple-Challenge: %s\r\n",
       conn->host,
-      conn->url_abspath, ++conn->cseq, conn->cid, conn->ua, strlen (creq), ac);
+      conn->url_abspath, ++conn->cseq, conn->cid, conn->ua,
+      (guint) strlen (creq), ac);
 
   RSA_free (rsa);
   g_free (ky);
@@ -523,10 +524,10 @@ gst_apexraop_set_volume (GstApExRAOP * con, const guint volume)
       "User-Agent: %s\r\n"
       "Session: %s\r\n"
       "Content-Type: text/parameters\r\n"
-      "Content-Length: %d\r\n",
+      "Content-Length: %u\r\n",
       conn->host,
       conn->url_abspath,
-      ++conn->cseq, conn->cid, conn->ua, conn->session, strlen (creq)
+      ++conn->cseq, conn->cid, conn->ua, conn->session, (guint) strlen (creq)
       );
 
   req = g_strconcat (hreq, "\r\n", creq, NULL);

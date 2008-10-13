@@ -1,3 +1,9 @@
+2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/apexsink/gstapexraop.c: (gst_apexraop_connect),
+	(gst_apexraop_set_volume):
+	Fix format string compiler warnings.
+
 2008-10-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* sys/oss4/oss4-mixer.c:
