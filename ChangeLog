@@ -1,3 +1,10 @@
+2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event):
+	Post a GST_ELEMENT_ERROR if we get EOS before seeing any valid
+	frames. Partially fixes bug #552237.
+
 2008-10-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrnb/amrnbparse.c:

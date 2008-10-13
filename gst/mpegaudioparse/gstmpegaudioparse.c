@@ -44,7 +44,9 @@ GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 #define XING_TOC_FLAG        0x0004
 #define XING_VBR_SCALE_FLAG  0x0008
 
+#ifndef GST_READ_UINT24_BE
 #define GST_READ_UINT24_BE(p) (p[2] | (p[1] << 8) | (p[0] << 16))
+#endif
 
 static inline MPEGAudioSeekEntry *
 mpeg_audio_seek_entry_new ()
@@ -578,6 +580,12 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_replace (eventp, NULL);
       res = gst_pad_push_event (mp3parse->srcpad, event);
       break;
+    case GST_EVENT_EOS:
+      if (mp3parse->frame_count == 0) {
+        GST_ELEMENT_ERROR (mp3parse, STREAM, WRONG_TYPE,
+            ("No valid frames found before end of stream"), (NULL));
+      }
+      /* fall through */
     default:
       if (mp3parse->pending_segment &&
           (GST_EVENT_TYPE (event) != GST_EVENT_EOS) &&
