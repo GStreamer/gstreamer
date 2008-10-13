@@ -9,6 +9,7 @@ libgstamrnb_la_SOURCES = \
 libgstamrnb_la_CFLAGS = $(GST_CFLAGS) $(AMRNB_CFLAGS)
 libgstamrnb_la_LIBADD = $(GST_BASE_LIBS) $(AMRNB_LIBS)
 libgstamrnb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstamrnb_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	amrnbdec.h \

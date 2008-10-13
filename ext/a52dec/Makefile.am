@@ -12,5 +12,6 @@ libgsta52dec_la_LIBADD = \
 	$(LIBOIL_LIBS) \
 	$(A52DEC_LIBS)
 libgsta52dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsta52dec_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gsta52dec.h

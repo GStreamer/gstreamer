@@ -9,5 +9,6 @@ libgstmad_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
 	-lgstaudio-$(GST_MAJORMINOR) $(MAD_LIBS) $(ID3_LIBS)
 libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmad_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstmad.h

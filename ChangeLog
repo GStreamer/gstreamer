@@ -1,3 +1,25 @@
+2008-10-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/a52dec/Makefile.am:
+	* ext/amrnb/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/dvdnav/Makefile.am:
+	* ext/dvdread/Makefile.am:
+	* ext/lame/Makefile.am:
+	* ext/mad/Makefile.am:
+	* ext/mpeg2dec/Makefile.am:
+	* ext/sidplay/Makefile.am:
+	* gst/ac3parse/Makefile.am:
+	* gst/asfdemux/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/iec958/Makefile.am:
+	* gst/mpegaudioparse/Makefile.am:
+	* gst/mpegstream/Makefile.am:
+	* gst/realmedia/Makefile.am:
+	* gst/synaesthesia/Makefile.am:
+	  Don't install static libs for plugins. Fixes #550851 for ugly.
+
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
