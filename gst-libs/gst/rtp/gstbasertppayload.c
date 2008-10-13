@@ -467,6 +467,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     ...)
 {
   GstCaps *srccaps, *peercaps;
+  gboolean res;
 
   /* fill in the defaults, there properties cannot be negotiated. */
   srccaps = gst_caps_new_simple ("application/x-rtp",
@@ -581,10 +582,10 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     GST_DEBUG_OBJECT (payload, "with peer caps: %" GST_PTR_FORMAT, srccaps);
   }
 
-  gst_pad_set_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), srccaps);
+  res = gst_pad_set_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 }
 
 /**

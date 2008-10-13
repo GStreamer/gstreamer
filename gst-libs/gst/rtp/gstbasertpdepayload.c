@@ -58,6 +58,8 @@ struct _GstBaseRTPDepayloadPrivate
   GstClockTime duration;
 
   guint32 next_seqnum;
+
+  gboolean negotiated;
 };
 
 /* Filter signals and args */
@@ -243,6 +245,8 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   else
     res = TRUE;
 
+  priv->negotiated = res;
+
   gst_object_unref (filter);
 
   return res;
@@ -263,13 +267,17 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   gint gap;
 
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+  priv = filter->priv;
+
+  /* we must have a setcaps first */
+  if (G_UNLIKELY (!priv->negotiated))
+    goto not_negotiated;
 
   /* we must validate, it's possible that this element is plugged right after a
    * network receiver and we don't want to operate on invalid data */
-  if (!gst_rtp_buffer_validate (in))
+  if (G_UNLIKELY (!gst_rtp_buffer_validate (in)))
     goto invalid_buffer;
 
-  priv = filter->priv;
   priv->discont = GST_BUFFER_IS_DISCONT (in);
 
   timestamp = GST_BUFFER_TIMESTAMP (in);
@@ -292,7 +300,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   /* Check seqnum. This is a very simple check that makes sure that the seqnums
    * are striclty increasing, dropping anything that is out of the ordinary. We
    * can only do this when the next_seqnum is known. */
-  if (priv->next_seqnum != -1) {
+  if (G_LIKELY (priv->next_seqnum != -1)) {
     gap = gst_rtp_buffer_compare_seqnum (seqnum, priv->next_seqnum);
 
     /* if we have no gap, all is fine */
@@ -320,7 +328,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   }
   priv->next_seqnum = (seqnum + 1) & 0xffff;
 
-  if (discont && !priv->discont) {
+  if (G_UNLIKELY (discont && !priv->discont)) {
     GST_LOG_OBJECT (filter, "mark DISCONT on input buffer");
     /* we detected a seqnum discont but the buffer was not flagged with a discont,
      * set the discont flag so that the subclass can throw away old data. */
@@ -345,6 +353,14 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   return ret;
 
   /* ERRORS */
+not_negotiated:
+  {
+    /* this is not fatal but should be filtered earlier */
+    GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
+        ("Not RTP format was negotiated"));
+    gst_buffer_unref (in);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 invalid_buffer:
   {
     /* this is not fatal but should be filtered earlier */
@@ -587,7 +603,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     GST_BUFFER_DURATION (buf) = priv->duration;
 
   /* if this is the first buffer send a NEWSEGMENT */
-  if (filter->need_newsegment) {
+  if (G_UNLIKELY (filter->need_newsegment)) {
     GstEvent *event;
 
     event = create_segment_event (filter, FALSE, 0);
@@ -619,7 +635,8 @@ gst_base_rtp_depayload_change_state (GstElement * element,
       priv->npt_stop = -1;
       priv->play_speed = 1.0;
       priv->play_scale = 1.0;
-      filter->priv->next_seqnum = -1;
+      priv->next_seqnum = -1;
+      priv->negotiated = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

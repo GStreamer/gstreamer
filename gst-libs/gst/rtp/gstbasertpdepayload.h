@@ -96,7 +96,7 @@ struct _GstBaseRTPDepayloadClass
 {
   GstElementClass parent_class;
 
-  /* virtuals */
+  /* virtuals, inform the subclass of the caps. */
   gboolean (*set_caps) (GstBaseRTPDepayload *filter, GstCaps *caps);
 
   /* non-pure function, default implementation in base class
@@ -104,9 +104,10 @@ struct _GstBaseRTPDepayloadClass
   GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstBuffer *in);
 
   /* pure virtual function, child must use this to process incoming
-   * rtp packets. If the child returns a buffer, the timestamp of @in will be
-   * applied to the result buffer and the buffer will be pushed. If this
-   * function returns %NULL, nothing is pushed.  */
+   * rtp packets. If the child returns a buffer without a valid timestamp,
+   * the timestamp of @in will be applied to the result buffer and the
+   * buffer will be pushed. If this function returns %NULL, nothing is
+   * pushed.  */
   GstBuffer * (*process) (GstBaseRTPDepayload *base, GstBuffer *in);
 
   /* non-pure function used to convert from RTP timestamp to GST timestamp

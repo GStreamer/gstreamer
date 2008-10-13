@@ -1,3 +1,17 @@
+2008-10-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_setcaps), (gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_change_state):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Add some more G_LIKELY
+	Fail when the setcaps function was not called.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_set_outcaps):
+	Propagate return value of setcaps.
+
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/subparse/Makefile.am:
