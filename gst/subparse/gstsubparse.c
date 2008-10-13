@@ -142,6 +142,17 @@ gst_sub_parse_dispose (GObject * object)
     g_free (subparse->encoding);
     subparse->encoding = NULL;
   }
+
+  if (subparse->detected_encoding) {
+    g_free (subparse->detected_encoding);
+    subparse->detected_encoding = NULL;
+  }
+
+  if (subparse->adapter) {
+    gst_object_unref (subparse->adapter);
+    subparse->adapter = NULL;
+  }
+
   if (subparse->textbuf) {
     g_string_free (subparse->textbuf, TRUE);
     subparse->textbuf = NULL;
@@ -169,10 +180,10 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
 
   g_object_class_install_property (object_class, PROP_ENCODING,
       g_param_spec_string ("subtitle-encoding", "subtitle charset encoding",
-          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
-          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
-          "be checked for an encoding to use. If that is not set either, "
-          "ISO-8859-15 will be assumed.", DEFAULT_ENCODING,
+          "Encoding to assume if input subtitles are not in UTF-8 or any other "
+          "Unicode encoding. If not set, the GST_SUBTITLE_ENCODING environment "
+          "variable will be checked for an encoding to use. If that is not set "
+          "either, ISO-8859-15 will be assumed.", DEFAULT_ENCODING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -197,6 +208,8 @@ gst_sub_parse_init (GstSubParse * subparse)
   gst_segment_init (&subparse->segment, GST_FORMAT_TIME);
   subparse->need_segment = TRUE;
   subparse->encoding = g_strdup (DEFAULT_ENCODING);
+  subparse->detected_encoding = NULL;
+  subparse->adapter = gst_adapter_new ();
 }
 
 /*
@@ -304,21 +317,88 @@ gst_sub_parse_get_property (GObject * object, guint prop_id,
 }
 
 static gchar *
-convert_encoding (GstSubParse * self, const gchar * str, gsize len)
+gst_convert_to_utf8 (const gchar * str, gsize len, const gchar * encoding,
+    gsize * consumed, GError ** err)
+{
+  gchar *ret = NULL;
+
+  *consumed = 0;
+  ret =
+      g_convert_with_fallback (str, len, "UTF-8", encoding, "*", consumed, NULL,
+      err);
+  if (ret == NULL)
+    return ret;
+
+  /* + 3 to skip UTF-8 BOM if it was added */
+  len = strlen (ret);
+  if (len >= 3 && (guint8) ret[0] == 0xEF && (guint8) ret[1] == 0xBB
+      && (guint8) ret[2] == 0xBF)
+    g_memmove (ret, ret + 3, len + 1 - 3);
+
+  return ret;
+}
+
+static gchar *
+detect_encoding (const gchar * str, gsize len)
+{
+  if (len >= 3 && (guint8) str[0] == 0xEF && (guint8) str[1] == 0xBB
+      && (guint8) str[2] == 0xBF)
+    return g_strdup ("UTF-8");
+
+  if (len >= 2 && (guint8) str[0] == 0xFE && (guint8) str[1] == 0xFF)
+    return g_strdup ("UTF-16BE");
+
+  if (len >= 2 && (guint8) str[0] == 0xFF && (guint8) str[1] == 0xFE)
+    return g_strdup ("UTF-16LE");
+
+  if (len >= 4 && (guint8) str[0] == 0x00 && (guint8) str[1] == 0x00
+      && (guint8) str[2] == 0xFE && (guint8) str[3] == 0xFF)
+    return g_strdup ("UTF-32BE");
+
+  if (len >= 4 && (guint8) str[0] == 0xFF && (guint8) str[1] == 0xFE
+      && (guint8) str[2] == 0x00 && (guint8) str[3] == 0x00)
+    return g_strdup ("UTF-32LE");
+
+  return NULL;
+}
+
+static gchar *
+convert_encoding (GstSubParse * self, const gchar * str, gsize len,
+    gsize * consumed)
 {
   const gchar *encoding;
   GError *err = NULL;
-  gchar *ret;
+  gchar *ret = NULL;
 
+  *consumed = 0;
+
+  /* First try any detected encoding */
+  if (self->detected_encoding) {
+    ret =
+        gst_convert_to_utf8 (str, len, self->detected_encoding, consumed, &err);
+
+    if (!err)
+      return ret;
+
+    GST_WARNING_OBJECT (self, "could not convert string from '%s' to UTF-8: %s",
+        encoding, err->message);
+    g_free (self->detected_encoding);
+    self->detected_encoding = NULL;
+    g_error_free (err);
+  }
+
+  /* Otherwise check if it's UTF8 */
   if (self->valid_utf8) {
     if (g_utf8_validate (str, len, NULL)) {
       GST_LOG_OBJECT (self, "valid UTF-8, no conversion needed");
+      *consumed = len;
       return g_strndup (str, len);
     }
     GST_INFO_OBJECT (self, "invalid UTF-8!");
     self->valid_utf8 = FALSE;
   }
 
+  /* Else try fallback */
   encoding = self->encoding;
   if (encoding == NULL || *encoding == '\0') {
     encoding = g_getenv ("GST_SUBTITLE_ENCODING");
@@ -331,8 +411,7 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len)
     }
   }
 
-  ret = g_convert_with_fallback (str, len, "UTF-8", encoding, "*", NULL,
-      NULL, &err);
+  ret = gst_convert_to_utf8 (str, len, encoding, consumed, &err);
 
   if (err) {
     GST_WARNING_OBJECT (self, "could not convert string from '%s' to UTF-8: %s",
@@ -340,8 +419,7 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len)
     g_error_free (err);
 
     /* invalid input encoding, fall back to ISO-8859-15 (always succeeds) */
-    ret = g_convert_with_fallback (str, len, "UTF-8", "ISO-8859-15", "*",
-        NULL, NULL, NULL);
+    ret = gst_convert_to_utf8 (str, len, "ISO-8859-15", consumed, NULL);
   }
 
   GST_LOG_OBJECT (self,
@@ -373,7 +451,7 @@ get_next_line (GstSubParse * self)
   }
 
   line_len = line_end - self->textbuf->str;
-  line = convert_encoding (self, self->textbuf->str, line_len);
+  line = g_strndup (self->textbuf->str, line_len);
   self->textbuf = g_string_erase (self->textbuf, 0,
       line_len + (have_r ? 2 : 1));
   return line;
@@ -922,11 +1000,6 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     }
   }
 
-  /* If the string contains a UTF-8 BOM drop it */
-  if ((guint8) match_str[0] == 0xEF && (guint8) match_str[1] == 0xBB
-      && (guint8) match_str[2] == 0xBF)
-    match_str += 3;
-
   if (regexec (&mdvd_rx, match_str, 0, NULL, 0) == 0) {
     GST_LOG ("MicroDVD (frame based) format detected");
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
@@ -1026,6 +1099,8 @@ static void
 feed_textbuf (GstSubParse * self, GstBuffer * buf)
 {
   gboolean discont;
+  gsize consumed;
+  gchar *input = NULL;
 
   discont = GST_BUFFER_IS_DISCONT (buf);
 
@@ -1040,6 +1115,7 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
     /* flush the parser state */
     parser_state_init (&self->state);
     g_string_truncate (self->textbuf, 0);
+    gst_adapter_clear (self->adapter);
 #ifndef GST_DISABLE_XML
     sami_context_reset (&self->state);
 #endif
@@ -1048,12 +1124,22 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
      * subtitles which are discontinuous by nature. */
   }
 
-  self->textbuf = g_string_append_len (self->textbuf,
-      (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   self->offset = GST_BUFFER_OFFSET (buf) + GST_BUFFER_SIZE (buf);
   self->next_offset = self->offset;
 
-  gst_buffer_unref (buf);
+  gst_adapter_push (self->adapter, buf);
+
+  input =
+      convert_encoding (self, (const gchar *) gst_adapter_peek (self->adapter,
+          gst_adapter_available (self->adapter)),
+      (gsize) gst_adapter_available (self->adapter), &consumed);
+
+  if (input && consumed > 0) {
+    self->textbuf = g_string_append (self->textbuf, input);
+    gst_adapter_flush (self->adapter, consumed);
+  }
+
+  g_free (input);
 }
 
 static GstFlowReturn
@@ -1062,6 +1148,13 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL;
   gchar *line, *subtitle;
+
+  if (self->first_buffer) {
+    self->detected_encoding =
+        detect_encoding ((gchar *) GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+    self->first_buffer = FALSE;
+  }
 
   feed_textbuf (self, buf);
 
@@ -1079,15 +1172,6 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
   while ((line = get_next_line (self)) && !self->flushing) {
     guint offset = 0;
-
-    /* If this is the first line and it contains a UTF-8 BOM drop it */
-    if (self->first_line && strlen (line) >= 3 &&
-        (guint8) line[0] == 0xEF && (guint8) line[1] == 0xBB
-        && (guint8) line[2] == 0xBF) {
-      offset = 3;
-    }
-
-    self->first_line = FALSE;
 
     /* Set segment on our parser state machine */
     self->state.segment = &self->segment;
@@ -1268,8 +1352,11 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       self->next_offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       self->valid_utf8 = TRUE;
-      self->first_line = TRUE;
+      self->first_buffer = TRUE;
+      g_free (self->detected_encoding);
+      self->detected_encoding = NULL;
       g_string_truncate (self->textbuf, 0);
+      gst_adapter_clear (self->adapter);
       break;
     default:
       break;
@@ -1320,12 +1407,34 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
   const guint8 *data;
   GstCaps *caps;
   gchar *str;
+  gchar *encoding = NULL;
 
-  if (!(data = gst_type_find_peek (tf, 0, 36)))
+  if (!(data = gst_type_find_peek (tf, 0, 129)))
     return;
 
   /* make sure string passed to _autodetect() is NUL-terminated */
-  str = g_strndup ((gchar *) data, 35);
+  str = g_malloc0 (129);
+  memcpy (str, data, 128);
+
+  if ((encoding = detect_encoding (str, 128)) != NULL) {
+    gchar *converted_str;
+    GError *err = NULL;
+    gsize tmp;
+
+    converted_str = gst_convert_to_utf8 (str, 128, encoding, &tmp, &err);
+    if (converted_str == NULL) {
+      GST_DEBUG ("Encoding '%s' detected but conversion failed: %s", encoding,
+          err->message);
+      g_error_free (err);
+      g_free (encoding);
+      g_free (str);
+      return;
+    }
+    g_free (str);
+
+    str = converted_str;
+  }
+
   format = gst_sub_parse_data_format_autodetect (str);
   g_free (str);
 

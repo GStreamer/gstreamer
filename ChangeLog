@@ -1,5 +1,20 @@
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/subparse/Makefile.am:
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_dispose),
+	(gst_sub_parse_class_init), (gst_sub_parse_init),
+	(gst_convert_to_utf8), (detect_encoding), (convert_encoding),
+	(get_next_line), (gst_sub_parse_data_format_autodetect),
+	(feed_textbuf), (handle_buffer), (gst_sub_parse_change_state),
+	(gst_subparse_type_find):
+	* gst/subparse/gstsubparse.h:
+	Add support for UTF16/UTF32 subtitles as long as the first bytes of
+	the first buffer contain the BOM. This also adds support for other
+	encodings that allow NUL bytes via the encoding property.
+	Fixes bugs #552237 and #456788.
+
+2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst-libs/gst/tag/tags.c: (gst_tag_image_data_to_image_buffer):
 	Don't drop the last byte of image tags if they're not an URI list.
 	Fixes bug #556066.

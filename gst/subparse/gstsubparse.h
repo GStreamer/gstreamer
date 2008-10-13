@@ -22,6 +22,7 @@
 #define __GST_SUBPARSE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 GST_DEBUG_CATEGORY_EXTERN (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug
@@ -73,6 +74,9 @@ struct _GstSubParse {
 
   GstPad *sinkpad,*srcpad;
 
+  /* contains the input in the input encoding */
+  GstAdapter *adapter;
+  /* contains the UTF-8 decoded input */
   GString *textbuf;
 
   GstSubParseFormat parser_type;
@@ -92,9 +96,10 @@ struct _GstSubParse {
   
   gboolean flushing;
   gboolean valid_utf8;
+  gchar   *detected_encoding;
   gchar   *encoding;
 
-  gboolean first_line;
+  gboolean first_buffer;
 };
 
 struct _GstSubParseClass {

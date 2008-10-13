@@ -17,9 +17,9 @@ libgstsubparse_la_SOURCES = \
 	mpl2parse.c \
 	mpl2parse.h
 
-libgstsubparse_la_CFLAGS = $(GST_CFLAGS)
+libgstsubparse_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstsubparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsubparse_la_LIBADD = $(GST_LIBS)
+libgstsubparse_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 
 noinst_HEADERS = \
 	gstssaparse.h \
