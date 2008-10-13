@@ -107,6 +107,8 @@ struct _GstBusPrivate
   guint num_sync_message_emitters;
 
   GCond *queue_cond;
+
+  guint watch_id;
 };
 
 GType
@@ -155,8 +157,8 @@ marshal_VOID__MINIOBJECT (GClosure * closure, GValue * return_value,
     data2 = closure->data;
   }
   callback =
-      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data : cc->
-      callback);
+      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data :
+      cc->callback);
 
   callback (data1, gst_value_get_mini_object (param_values + 1), data2);
 }
@@ -801,6 +803,9 @@ gst_bus_source_finalize (GSource * source)
 {
   GstBusSource *bsource = (GstBusSource *) source;
 
+  if (bsource->bus->priv->watch_id == g_source_get_id (source))
+    bsource->bus->priv->watch_id = 0;
+
   gst_object_unref (bsource->bus);
   bsource->bus = NULL;
 }
@@ -847,6 +852,8 @@ gst_bus_create_watch (GstBus * bus)
  *
  * Adds a bus watch to the default main context with the given @priority.
  * This function is used to receive asynchronous messages in the main loop.
+ * There can only be a single bus watch per bus, you must remove it before you
+ * can set a new one.
  *
  * When @func is called, the message belongs to the caller; if you want to
  * keep a copy of it, call gst_message_ref() before leaving @func.
@@ -867,6 +874,12 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
 
   g_return_val_if_fail (GST_IS_BUS (bus), 0);
 
+  if (bus->priv->watch_id) {
+    GST_ERROR_OBJECT (bus,
+        "Tried to add new watch while one was already there");
+    return 0;
+  }
+
   source = gst_bus_create_watch (bus);
 
   if (priority != G_PRIORITY_DEFAULT)
@@ -876,6 +889,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
 
   id = g_source_attach (source, NULL);
   g_source_unref (source);
+
+  bus->priv->watch_id = id;
 
   GST_DEBUG_OBJECT (bus, "New source %p", source);
   return id;
@@ -889,6 +904,8 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  *
  * Adds a bus watch to the default main context with the default priority.
  * This function is used to receive asynchronous messages in the main loop.
+ * There can only be a single bus watch per bus, you must remove it before you
+ * can set a new one.
  *
  * The watch can be removed using g_source_remove() or by returning FALSE
  * from @func.
@@ -1188,6 +1205,9 @@ gst_bus_disable_sync_message_emission (GstBus * bus)
  * responsible for calling gst_bus_remove_signal_watch() as many times as this
  * function is called.
  *
+ * There can only be a single bus watch per bus, you most remove all signal watch
+ * before you can set another type of watch.
+ *
  * MT safe.
  */
 void
@@ -1206,6 +1226,12 @@ gst_bus_add_signal_watch_full (GstBus * bus, gint priority)
   bus->signal_watch_id =
       gst_bus_add_watch_full (bus, priority, gst_bus_async_signal_func, NULL,
       NULL);
+
+  if (bus->signal_watch_id == 0) {
+    GST_ERROR_OBJECT (bus, "Could not add signal watch to bus");
+    GST_OBJECT_UNLOCK (bus);
+    return;
+  }
 
 done:
 
