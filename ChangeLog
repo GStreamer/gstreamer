@@ -1,5 +1,11 @@
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst-libs/gst/tag/tags.c: (gst_tag_image_data_to_image_buffer):
+	Don't drop the last byte of image tags if they're not an URI list.
+	Fixes bug #556066.
+
+2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/typefind/gsttypefindfunctions.c: (flac_type_find):
 	For looking at the 4th byte we have to get 4 bytes of course
 	and not 3.
