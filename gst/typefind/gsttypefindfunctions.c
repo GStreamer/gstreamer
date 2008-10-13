@@ -541,13 +541,35 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
   /* flac without headers */
   /* 64K should be enough */
   while (c.offset < (64 * 1024)) {
-    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 2)))
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 3)))
       break;
 
     if (data[0] == 0xff && (data[1] >> 2) == 0x3e) {
+      /* bit 15 must be 0 */
+      if (((data[1] >> 1) & 0x01) == 0x01)
+        continue;
+
+      /* blocksize must be != 0x00 */
+      if ((data[2] >> 4) == 0x00)
+        continue;
+
+      /* samplerate must be != 0x0f */
+      if ((data[2] & 0x0f) == 0x0f)
+        continue;
+
+      /* channel assignment must be < 11 */
+      if ((data[3] >> 4) >= 11)
+        continue;
+
+      /* sample size must be != 0x07 */
+      if (((data[3] >> 1) & 0x07) == 0x07)
+        continue;
+
+      /* next bit must be 0 */
+      if ((data[3] & 0x01) == 0x01)
+        continue;
+
       gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, FLAC_CAPS);
-      /* TODO: maybe check more parts of the frame header 
-       * to lower the risk of false positives */
       return;
     }
     data_scan_ctx_advance (tf, &c, 1);
