@@ -34,7 +34,10 @@ static const gchar *_quark_strings[] = {
   "avg-in-rate", "avg-out-rate", "buffering-left",
   "estimated-total", "old-state", "new-state", "pending-state",
   "clock", "ready", "position", "new-base-time", "live", "min-latency",
-  "max-latency", "busy", "type", "owner"
+  "max-latency", "busy", "type", "owner", "update", "applied-rate",
+  "start", "stop", "minsize", "maxsize", "async", "proportion",
+  "diff", "timestamp", "flags", "cur-type", "cur", "stop-type",
+  "latency"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];
@@ -43,6 +46,10 @@ void
 _priv_gst_quarks_initialize (void)
 {
   gint i;
+
+  if (G_N_ELEMENTS (_quark_strings) != GST_QUARK_MAX)
+    g_warning ("the quark table is not consistent! %ld != %d",
+        G_N_ELEMENTS (_quark_strings), GST_QUARK_MAX);
 
   for (i = 0; i < GST_QUARK_MAX; i++) {
     _priv_gst_quark_table[i] = g_quark_from_static_string (_quark_strings[i]);

@@ -2,46 +2,63 @@ Seeking
 -------
 
 Seeking in GStreamer means configuring the pipeline for playback of the
-media between a certain start and stop time, called a segment.
+media between a certain start and stop time, called a segment. By default a
+pipeline will play from position 0 to the total duration of the media at a rate
+of 1.0.
 
-Different kinds of seeking exist:
+A seek is performed by sending a seek event to the sink elements of a
+pipeline. Sending the seek event to a bin will by default forward
+the event to all sinks in the bin.
 
- - immediate seeking with low latency (FLUSH seek)
- - seeking without flush, playback will start from the new
-   position after all the queues are emptied with old data.
- - segment seeking with and without FLUSH, this can be used to
-   implement seamless looping or NLE functionality.
+When performing a seek, the start and stop values of the segment can be
+specified as absoulte positions or relative to the currently configured
+playback segment. Note that it is not possible to seek relative to the current
+playback position.
+
+Feedback of the seek operation can be immediatly using the GST_SEEK_FLAG_FLUSH
+flag. With this flag, all pending data in the pipeline is discarded and playback
+starts from the new position immediatly.
+
+When the FLUSH flag is not set, the seek will be queued and executed as
+soon as possible, which might be after all queues are emptied.
 
 Seeking can be performed in different formats such as time, frames
 or samples.
 
-Seeking can be performed to an absolute position or relative to the
-currently configured segment.
+The seeking can be performed to a nearby key unit or to the exact
+(estimated) unit in the media (GST_SEEK_FLAG_KEY_UNIT). 
 
-For seeking to work reliably, all plugins in the pipeline need to follow
-the well-defined rules in this document.
+The seeking can be performed by using an estimated target position or in an
+accurate way (GST_SEEK_FLAG_ACCURATE). For some formats this can result in
+having to scan the complete file in order to accurately find the target unit.
 
 Non segment seeking will make the pipeline emit EOS when the configured 
 segment has been played.
 
-Segment seeking will not emit an EOS at the end of the range but will
-post a SEGMENT_DONE message on the bus. This message is posted by the
-earliest element in the pipeline, typically a demuxer. After receiving
-the message, the application can reconnect the pipeline or issue other
-seek events in the pipeline. Since the message is posted as early as
-possible in the pipeline, the application has some time to issue a new
-seek to make the transition seamless. Typically the allowed delay is
-defined by the buffer sizes of the sinks as well as the size of any 
-queues in the pipeline.
+Segment seeking (using the GST_SEEK_FLAG_SEGMENT) will not emit an EOS at
+the end of the playback segment but will post a SEGMENT_DONE message on the
+bus. This message is posted by the element driving the playback in the
+pipeline, typically a demuxer.  After receiving the message, the application
+can reconnect the pipeline or issue other seek events in the pipeline.
+Since the message is posted as early as possible in the pipeline, the
+application has some time to issue a new seek to make the transition seamless.
+Typically the allowed delay is defined by the buffer sizes of the sinks as well
+as the size of any queues in the pipeline.
 
 The seek can also  change the playback speed of the configured segment.
 A speed of 1.0 is normal speed, 2.0 is double speed. Negative values
 mean backward playback.
 
+When performing a seek with a playback rate different from 1.0, the
+GST_SEEK_FLAG_SKIP flag can be used to instruct decoders and demuxers that they
+are allowed to skip decoding. This can be useful when resource consumption is
+more important than accurately producing all frames.
+
 
 Generating seeking events
 -------------------------
 
+A seek event is created with gst_event_new_seek ().
 
 
 

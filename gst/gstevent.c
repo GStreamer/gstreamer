@@ -83,6 +83,7 @@
 #include "gstevent.h"
 #include "gstenumtypes.h"
 #include "gstutils.h"
+#include "gstquark.h"
 
 static void gst_event_init (GTypeInstance * instance, gpointer g_class);
 static void gst_event_class_init (gpointer g_class, gpointer class_data);
@@ -545,6 +546,9 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
     gdouble applied_rate, GstFormat format, gint64 start, gint64 stop,
     gint64 position)
 {
+  GstEvent *event;
+  GstStructure *structure;
+
   g_return_val_if_fail (rate != 0.0, NULL);
   g_return_val_if_fail (applied_rate != 0.0, NULL);
 
@@ -568,15 +572,18 @@ gst_event_new_new_segment_full (gboolean update, gdouble rate,
   if (stop != -1)
     g_return_val_if_fail (start <= stop, NULL);
 
-  return gst_event_new_custom (GST_EVENT_NEWSEGMENT,
-      gst_structure_new ("GstEventNewsegment",
-          "update", G_TYPE_BOOLEAN, update,
-          "rate", G_TYPE_DOUBLE, rate,
-          "applied_rate", G_TYPE_DOUBLE, applied_rate,
-          "format", GST_TYPE_FORMAT, format,
-          "start", G_TYPE_INT64, start,
-          "stop", G_TYPE_INT64, stop,
-          "position", G_TYPE_INT64, position, NULL));
+  structure = gst_structure_empty_new ("GstEventNewsegment");
+  gst_structure_id_set (structure,
+      GST_QUARK (UPDATE), G_TYPE_BOOLEAN, update,
+      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
+      GST_QUARK (APPLIED_RATE), G_TYPE_DOUBLE, applied_rate,
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (START), G_TYPE_INT64, start,
+      GST_QUARK (STOP), G_TYPE_INT64, stop,
+      GST_QUARK (POSITION), G_TYPE_INT64, position, NULL);
+  event = gst_event_new_custom (GST_EVENT_NEWSEGMENT, structure);
+
+  return event;
 }
 
 /**
@@ -609,22 +616,32 @@ gst_event_parse_new_segment_full (GstEvent * event, gboolean * update,
   structure = gst_event_get_structure (event);
   if (G_LIKELY (update))
     *update =
-        g_value_get_boolean (gst_structure_get_value (structure, "update"));
+        g_value_get_boolean (gst_structure_id_get_value (structure,
+            GST_QUARK (UPDATE)));
   if (G_LIKELY (rate))
-    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
+    *rate =
+        g_value_get_double (gst_structure_id_get_value (structure,
+            GST_QUARK (RATE)));
   if (G_LIKELY (applied_rate))
     *applied_rate =
-        g_value_get_double (gst_structure_get_value (structure,
-            "applied_rate"));
+        g_value_get_double (gst_structure_id_get_value (structure,
+            GST_QUARK (APPLIED_RATE)));
   if (G_LIKELY (format))
-    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+    *format =
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (FORMAT)));
   if (G_LIKELY (start))
-    *start = g_value_get_int64 (gst_structure_get_value (structure, "start"));
+    *start =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (START)));
   if (G_LIKELY (stop))
-    *stop = g_value_get_int64 (gst_structure_get_value (structure, "stop"));
+    *stop =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (STOP)));
   if (G_LIKELY (position))
     *position =
-        g_value_get_int64 (gst_structure_get_value (structure, "position"));
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (POSITION)));
 }
 
 /**
@@ -679,17 +696,23 @@ GstEvent *
 gst_event_new_buffer_size (GstFormat format, gint64 minsize,
     gint64 maxsize, gboolean async)
 {
+  GstEvent *event;
+  GstStructure *structure;
+
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating buffersize format %s, minsize %" G_GINT64_FORMAT
       ", maxsize %" G_GINT64_FORMAT ", async %d", gst_format_get_name (format),
       minsize, maxsize, async);
 
-  return gst_event_new_custom (GST_EVENT_BUFFERSIZE,
-      gst_structure_new ("GstEventBufferSize",
-          "format", GST_TYPE_FORMAT, format,
-          "minsize", G_TYPE_INT64, minsize,
-          "maxsize", G_TYPE_INT64, maxsize,
-          "async", G_TYPE_BOOLEAN, async, NULL));
+  structure = gst_structure_empty_new ("GstEventBufferSize");
+  gst_structure_id_set (structure,
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (MINSIZE), G_TYPE_INT64, minsize,
+      GST_QUARK (MAXSIZE), G_TYPE_INT64, maxsize,
+      GST_QUARK (ASYNC), G_TYPE_BOOLEAN, async, NULL);
+  event = gst_event_new_custom (GST_EVENT_BUFFERSIZE, structure);
+
+  return event;
 }
 
 /**
@@ -713,15 +736,21 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
 
   structure = gst_event_get_structure (event);
   if (format)
-    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+    *format =
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (FORMAT)));
   if (minsize)
     *minsize =
-        g_value_get_int64 (gst_structure_get_value (structure, "minsize"));
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (MINSIZE)));
   if (maxsize)
     *maxsize =
-        g_value_get_int64 (gst_structure_get_value (structure, "maxsize"));
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (MAXSIZE)));
   if (async)
-    *async = g_value_get_boolean (gst_structure_get_value (structure, "async"));
+    *async =
+        g_value_get_boolean (gst_structure_id_get_value (structure,
+            GST_QUARK (ASYNC)));
 }
 
 /**
@@ -770,6 +799,9 @@ GstEvent *
 gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
     GstClockTime timestamp)
 {
+  GstEvent *event;
+  GstStructure *structure;
+
   /* diff must be positive or timestamp + diff must be positive */
   g_return_val_if_fail (diff >= 0 || -diff <= timestamp, NULL);
 
@@ -778,11 +810,14 @@ gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
       ", timestamp %" GST_TIME_FORMAT, proportion,
       diff, GST_TIME_ARGS (timestamp));
 
-  return gst_event_new_custom (GST_EVENT_QOS,
-      gst_structure_new ("GstEventQOS",
-          "proportion", G_TYPE_DOUBLE, proportion,
-          "diff", G_TYPE_INT64, diff,
-          "timestamp", G_TYPE_UINT64, timestamp, NULL));
+  structure = gst_structure_empty_new ("GstEventQOS");
+  gst_structure_id_set (structure,
+      GST_QUARK (PROPORTION), G_TYPE_DOUBLE, proportion,
+      GST_QUARK (DIFF), G_TYPE_INT64, diff,
+      GST_QUARK (TIMESTAMP), G_TYPE_UINT64, timestamp, NULL);
+  event = gst_event_new_custom (GST_EVENT_QOS, structure);
+
+  return event;
 }
 
 /**
@@ -807,12 +842,16 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
   structure = gst_event_get_structure (event);
   if (proportion)
     *proportion =
-        g_value_get_double (gst_structure_get_value (structure, "proportion"));
+        g_value_get_double (gst_structure_id_get_value (structure,
+            GST_QUARK (PROPORTION)));
   if (diff)
-    *diff = g_value_get_int64 (gst_structure_get_value (structure, "diff"));
+    *diff =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (DIFF)));
   if (timestamp)
     *timestamp =
-        g_value_get_uint64 (gst_structure_get_value (structure, "timestamp"));
+        g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (TIMESTAMP)));
 }
 
 /**
@@ -841,9 +880,9 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * configured playback segment can be queried with #GST_QUERY_SEGMENT. 
  *
  * @start_type and @stop_type specify how to adjust the currently configured 
- * start and stop fields in @segment. Adjustments can be made relative or
- * absolute to the last configured values. A type of #GST_SEEK_TYPE_NONE means
- * that the position should not be updated.
+ * start and stop fields in playback segment. Adjustments can be made relative
+ * or absolute to the last configured values. A type of #GST_SEEK_TYPE_NONE
+ * means that the position should not be updated.
  *
  * When the rate is positive and @start has been updated, playback will start
  * from the newly configured start position. 
@@ -855,7 +894,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * It is not possible to seek relative to the current playback position, to do
  * this, PAUSE the pipeline, query the current playback position with
  * #GST_QUERY_POSITION and update the playback segment current position with a
- * #GST_SEEK_TYPE_SET to the desired position.
+ * #GST_SEEK_TYPE_SET to the desired position. 
  *
  * Returns: A new seek event.
  */
@@ -863,6 +902,9 @@ GstEvent *
 gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
     GstSeekType start_type, gint64 start, GstSeekType stop_type, gint64 stop)
 {
+  GstEvent *event;
+  GstStructure *structure;
+
   g_return_val_if_fail (rate != 0.0, NULL);
 
   if (format == GST_FORMAT_TIME) {
@@ -881,14 +923,18 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
         stop);
   }
 
-  return gst_event_new_custom (GST_EVENT_SEEK,
-      gst_structure_new ("GstEventSeek", "rate", G_TYPE_DOUBLE, rate,
-          "format", GST_TYPE_FORMAT, format,
-          "flags", GST_TYPE_SEEK_FLAGS, flags,
-          "cur_type", GST_TYPE_SEEK_TYPE, start_type,
-          "cur", G_TYPE_INT64, start,
-          "stop_type", GST_TYPE_SEEK_TYPE, stop_type,
-          "stop", G_TYPE_INT64, stop, NULL));
+  structure = gst_structure_empty_new ("GstEventSeek");
+  gst_structure_id_set (structure,
+      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (FLAGS), GST_TYPE_SEEK_FLAGS, flags,
+      GST_QUARK (CUR_TYPE), GST_TYPE_SEEK_TYPE, start_type,
+      GST_QUARK (CUR), G_TYPE_INT64, start,
+      GST_QUARK (STOP_TYPE), GST_TYPE_SEEK_TYPE, stop_type,
+      GST_QUARK (STOP), G_TYPE_INT64, stop, NULL);
+  event = gst_event_new_custom (GST_EVENT_SEEK, structure);
+
+  return event;
 }
 
 /**
@@ -916,21 +962,33 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
 
   structure = gst_event_get_structure (event);
   if (rate)
-    *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
+    *rate =
+        g_value_get_double (gst_structure_id_get_value (structure,
+            GST_QUARK (RATE)));
   if (format)
-    *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
+    *format =
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (FORMAT)));
   if (flags)
-    *flags = g_value_get_flags (gst_structure_get_value (structure, "flags"));
+    *flags =
+        g_value_get_flags (gst_structure_id_get_value (structure,
+            GST_QUARK (FLAGS)));
   if (start_type)
     *start_type =
-        g_value_get_enum (gst_structure_get_value (structure, "cur_type"));
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (CUR_TYPE)));
   if (start)
-    *start = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
+    *start =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (CUR)));
   if (stop_type)
     *stop_type =
-        g_value_get_enum (gst_structure_get_value (structure, "stop_type"));
+        g_value_get_enum (gst_structure_id_get_value (structure,
+            GST_QUARK (STOP_TYPE)));
   if (stop)
-    *stop = g_value_get_int64 (gst_structure_get_value (structure, "stop"));
+    *stop =
+        g_value_get_int64 (gst_structure_id_get_value (structure,
+            GST_QUARK (STOP)));
 }
 
 /**
@@ -968,12 +1026,18 @@ gst_event_new_navigation (GstStructure * structure)
 GstEvent *
 gst_event_new_latency (GstClockTime latency)
 {
+  GstEvent *event;
+  GstStructure *structure;
+
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating latency event %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 
-  return gst_event_new_custom (GST_EVENT_LATENCY,
-      gst_structure_new ("GstEventLatency",
-          "latency", G_TYPE_UINT64, latency, NULL));
+  structure = gst_structure_empty_new ("GstEventLatency");
+  gst_structure_id_set (structure,
+      GST_QUARK (LATENCY), G_TYPE_UINT64, latency, NULL);
+  event = gst_event_new_custom (GST_EVENT_LATENCY, structure);
+
+  return event;
 }
 
 /**
@@ -996,5 +1060,6 @@ gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
   structure = gst_event_get_structure (event);
   if (latency)
     *latency =
-        g_value_get_uint64 (gst_structure_get_value (structure, "latency"));
+        g_value_get_uint64 (gst_structure_id_get_value (structure,
+            GST_QUARK (LATENCY)));
 }

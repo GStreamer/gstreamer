@@ -38,6 +38,13 @@ Use case: FLUSHING seek
     When doing a seek in this pipeline for a segment 1 to 5 seconds, avidemux
     will perform the seek.
 
+    Avidemux starts by sending a FLUSH_START event downstream and upstream. This
+    will cause its streaming task to PAUSED because _pad_pull_range() and
+    _pad_push() will return WRONG_STATE. It then waits for the STREAM_LOCK,
+    which will be unlocked when the streaming task pauses. At this point no
+    streaming is happening anymore in the pipeline and a FLUSH_STOP is sent
+    upstream and downstream.
+
     When avidemux starts playback of the segment from second 1 to 5, it pushes
     out a newsegment with 1 and 5 as start and stop times. The stream_time in
     the newsegment is also 1 as this is the position we seek to.
@@ -57,17 +64,20 @@ Use case: FLUSHING seek
     When it reaches timestamp 5, it does not decode and push frames anymore.
 
     The video sink receives a frame of timestamp 1. It takes the start value of 
-    the previous newsegment and aplies the folowing formula:
+    the previous newsegment and aplies the folowing (simplified) formula:
 
         render_time = BUFFER_TIMESTAMP - segment_start + element->base_time
 
-    It then syncs against the clock with this render_time. Not that 
+    It then syncs against the clock with this render_time. Note that 
     BUFFER_TIMESTAMP is always >= segment_start or else it would fall outside of
     the configure segment.
 
-    Videosink reports its current position as:
+    Videosink reports its current position as (simplified):
 
         current_position = clock_time - element->base_time + segment_time
+
+    See part-synchronisation.txt for a more detailed and accurate explanation of
+    synchronisation and position reporting.
 
     Since after a flushing seek the stream_time is reset to 0, the new buffer
     will be rendered immediatly after the seek and the current_position will be

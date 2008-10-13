@@ -165,6 +165,7 @@ GST_START_TEST (test_watch)
   main_loop = g_main_loop_new (NULL, FALSE);
 
   id = gst_bus_add_watch (test_bus, gst_bus_async_signal_func, NULL);
+  fail_if (id == 0);
   g_signal_connect (test_bus, "message::eos", (GCallback) message_func_eos,
       NULL);
   g_signal_connect (test_bus, "message::application",

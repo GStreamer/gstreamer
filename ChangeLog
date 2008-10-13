@@ -1,3 +1,29 @@
+2008-10-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-TODO.txt:
+	Remove item from the todo list because it was fixed with the latency
+	state change rewrites.
+
+	* docs/design/part-seeking.txt:
+	* docs/design/part-segments.txt:
+	Update some docs.
+
+	* gst/gstevent.c: (gst_event_new_new_segment_full),
+	(gst_event_parse_new_segment_full), (gst_event_new_buffer_size),
+	(gst_event_parse_buffer_size), (gst_event_new_qos),
+	(gst_event_parse_qos), (gst_event_new_seek),
+	(gst_event_parse_seek), (gst_event_new_latency),
+	(gst_event_parse_latency):
+	Use quarks to construct and parse events.
+
+	* gst/gstquark.c: (_priv_gst_quarks_initialize):
+	* gst/gstquark.h:
+	Add some more quarks to the table.
+	Emit a warning when the quark tables are not in sync.
+
+	* tests/check/gst/gstbus.c: (GST_START_TEST):
+	Add an assert.
+
 2008-10-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/Makefile.am:

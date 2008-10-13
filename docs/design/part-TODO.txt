@@ -59,12 +59,6 @@ API/ABI
 
 - Make serialisation of structures more consistent, readable and nicer code-wise.
 
-- When a seekable live source does a flushing seek, it needs a new base_time to
-  timestamp new data. The pipeline however does not know that there is a live
-  source in the pipeline and thus does not select a new base_time automatically.
-  There needs to be a mechanism for a live source to request a new base_time or
-  pipeline restart.
-
 - pad block has several issues: 
   * can't block on selected things, like push, pull, pad_alloc, events, ...
   * can't check why the block happened. We should also be able to get the item/
