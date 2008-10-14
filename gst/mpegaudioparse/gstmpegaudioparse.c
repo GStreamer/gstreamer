@@ -1349,10 +1349,12 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
           mp3parse->spf = 384;
         else if (mp3parse->layer == 2)
           mp3parse->spf = 1152;
-        else if (mp3parse->version == 2) {
-          mp3parse->spf = 576;
-        } else
+        else if (mp3parse->version == 1) {
           mp3parse->spf = 1152;
+        } else {
+          /* MPEG-2 or "2.5" */
+          mp3parse->spf = 576;
+        }
       }
 
       mp3parse->bit_rate = bitrate;
