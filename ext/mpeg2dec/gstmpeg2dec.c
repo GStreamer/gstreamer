@@ -115,6 +115,7 @@ static GstStateChangeReturn gst_mpeg2dec_change_state (GstElement * element,
     GstStateChange transition);
 
 static gboolean gst_mpeg2dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_mpeg2dec_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf);
 
 static void clear_buffers (GstMpeg2dec * mpeg2dec);
@@ -216,6 +217,8 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
 #endif
   gst_pad_set_event_function (mpeg2dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2dec_sink_event));
+  gst_pad_set_setcaps_function (mpeg2dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_mpeg2dec_setcaps));
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->sinkpad);
 
   mpeg2dec->srcpad =
@@ -627,11 +630,15 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
   mpeg2dec->width = info->sequence->picture_width;
   mpeg2dec->height = info->sequence->picture_height;
-  mpeg2dec->pixel_width = info->sequence->pixel_width;
-  mpeg2dec->pixel_height = info->sequence->pixel_height;
   mpeg2dec->decoded_width = info->sequence->width;
   mpeg2dec->decoded_height = info->sequence->height;
   mpeg2dec->total_frames = 0;
+
+  /* don't take the sequence PAR if we already have one from the sink caps */
+  if (!mpeg2dec->have_par) {
+    mpeg2dec->pixel_width = info->sequence->pixel_width;
+    mpeg2dec->pixel_height = info->sequence->pixel_height;
+  }
 
   /* mpeg2 video can only be from 16x16 to 4096x4096. Everything
    * else is a corrupted files */
@@ -1294,6 +1301,25 @@ newseg_wrong_format:
     gst_event_unref (event);
     goto done;
   }
+}
+
+static gboolean
+gst_mpeg2dec_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstMpeg2dec *mpeg2dec;
+  GstStructure *s;
+
+  mpeg2dec = GST_MPEG2DEC (gst_pad_get_parent (pad));
+
+  s = gst_caps_get_structure (caps, 0);
+
+  /* parse the par, this overrides the encoded par */
+  mpeg2dec->have_par = gst_structure_get_fraction (s, "pixel-aspect-ratio",
+      &mpeg2dec->pixel_width, &mpeg2dec->pixel_height);
+
+  gst_object_unref (mpeg2dec);
+
+  return TRUE;
 }
 
 static gboolean

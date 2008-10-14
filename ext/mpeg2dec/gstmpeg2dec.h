@@ -123,6 +123,9 @@ struct _GstMpeg2dec {
   GList *gather;
   GList *decode;
   GList *queued;
+
+  /* whether we have a pixel aspect ratio from the sink caps */
+  gboolean have_par;
 };
 
 struct _GstMpeg2decClass {

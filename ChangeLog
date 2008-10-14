@@ -1,3 +1,13 @@
+2008-10-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Robin Stocker <robin at nibor dot org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),
+	(handle_sequence), (gst_mpeg2dec_setcaps):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Prefer the container's PAR over the stream's PAR if it's
+	given in the srcpad caps. Fixes bug #556184.
+
 2008-10-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/a52dec/Makefile.am:
