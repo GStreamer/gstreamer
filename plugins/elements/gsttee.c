@@ -594,13 +594,14 @@ restart:
           gst_flow_get_name (ret));
     }
     /* stop pushing more buffers when we have a fatal error */
-    if (GST_FLOW_IS_FATAL (ret))
+    if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
       goto error;
 
-    /* keep all other return values, overwriting the previous one */
-    GST_LOG_OBJECT (tee, "Replacing ret val %d with %d", cret, ret);
-    if (cret == GST_FLOW_NOT_LINKED)
+    /* keep all other return values, overwriting the previous one. */
+    if (ret != GST_FLOW_NOT_LINKED) {
+      GST_LOG_OBJECT (tee, "Replacing ret val %d with %d", cret, ret);
       cret = ret;
+    }
 
     if (GST_ELEMENT_CAST (tee)->pads_cookie != cookie) {
       GST_LOG_OBJECT (tee, "pad list changed");

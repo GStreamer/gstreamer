@@ -1,3 +1,17 @@
+2008-10-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gsttee.c: (gst_tee_handle_buffer):
+	Fix flow aggregation of tee. Error out immediately for all flow returns
+	except OK and NOT_LINKED, return NOT_LINKED if all pads are not linked
+	and return OK if at least one pad is linked.
+
+	Before we errored out on "fatal" flow returns (i.e. not for WRONG_STATE)
+	and otherwise returned the flow return of the last pad, which is wrong.
+	
+	* tests/check/elements/tee.c: (_fake_chain), (_fake_chain_error),
+	(GST_START_TEST), (tee_suite):
+	Add unit tests for the flow aggregation.
+
 2008-10-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/design/part-TODO.txt:
