@@ -1,3 +1,9 @@
+2008-10-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/aiffparse/aiffparse.c: (plugin_init):
+	Fix debugging category initialization.
+	Fixes #556274	
+
 2008-10-14  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/apexsink/gstapexsink.c:

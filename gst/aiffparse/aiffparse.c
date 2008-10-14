@@ -102,11 +102,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_AUDIO_INT_PAD_TEMPLATE_CAPS)
     );
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (aiffparse_debug, "aiffparse", 0, "AIFF parser");
-
-GST_BOILERPLATE_FULL (AIFFParse, gst_aiffparse, GstElement,
-    GST_TYPE_ELEMENT, DEBUG_INIT);
+GST_BOILERPLATE (AIFFParse, gst_aiffparse, GstElement, GST_TYPE_ELEMENT);
 
 static void
 gst_aiffparse_base_init (gpointer g_class)
@@ -1559,6 +1555,8 @@ gst_aiffparse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (aiffparse_debug, "aiffparse", 0, "AIFF parser");
+
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
