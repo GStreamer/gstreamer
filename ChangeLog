@@ -1,3 +1,8 @@
+2008-10-14  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/theora/theoradec.c: (theora_dec_decode_buffer):
+	Fix build on macosx.
+
 2008-10-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on patch by: Robin Stocker <robin at nibor dot org>

@@ -1266,7 +1266,7 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
   /* EOS does not matter for the decoder */
   packet.e_o_s = 0;
 
-  GST_LOG_OBJECT (dec, "decode buffer of size %u", packet.bytes);
+  GST_LOG_OBJECT (dec, "decode buffer of size %ld", packet.bytes);
 
   if (dec->have_header) {
     if (packet.granulepos != -1) {
