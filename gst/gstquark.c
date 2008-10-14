@@ -48,8 +48,8 @@ _priv_gst_quarks_initialize (void)
   gint i;
 
   if (G_N_ELEMENTS (_quark_strings) != GST_QUARK_MAX)
-    g_warning ("the quark table is not consistent! %ld != %d",
-        G_N_ELEMENTS (_quark_strings), GST_QUARK_MAX);
+    g_warning ("the quark table is not consistent! %d != %d",
+        (int) G_N_ELEMENTS (_quark_strings), GST_QUARK_MAX);
 
   for (i = 0; i < GST_QUARK_MAX; i++) {
     _priv_gst_quark_table[i] = g_quark_from_static_string (_quark_strings[i]);

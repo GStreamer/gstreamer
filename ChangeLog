@@ -1,3 +1,8 @@
+2008-10-14  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstquark.c: (_priv_gst_quarks_initialize):
+	  Fix printf format warning.
+
 2008-10-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* plugins/elements/gsttee.c: (gst_tee_handle_buffer):
