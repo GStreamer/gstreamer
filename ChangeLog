@@ -1,3 +1,8 @@
+2008-10-14  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/apexsink/gstapexsink.c:
+	Fix some more format string compiler warnings (from OS/X)
+
 2008-10-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/apexsink/gstapexraop.c: (gst_apexraop_connect),

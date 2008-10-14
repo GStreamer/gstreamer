@@ -295,7 +295,7 @@ gst_apexsink_init (GstApExSink * apexsink, GstApExSinkClass * g_class)
   apexsink->tracks = g_list_append (apexsink->tracks, track);
 
   GST_INFO_OBJECT (apexsink,
-      "ApEx sink default initialization, target=\"%s\", port=\"%d\", volume=\"%d\%\"",
+      "ApEx sink default initialization, target=\"%s\", port=\"%d\", volume=\"%d%%\"",
       apexsink->host, apexsink->port, apexsink->volume);
 }
 
@@ -335,7 +335,7 @@ gst_apexsink_set_property (GObject * object, guint prop_id,
       if (sink->gst_apexraop != NULL)
         gst_apexraop_set_volume (sink->gst_apexraop, sink->volume);
 
-      GST_INFO_OBJECT (sink, "ApEx volume set to \"%d\%\"", sink->volume);
+      GST_INFO_OBJECT (sink, "ApEx volume set to \"%d%%\"", sink->volume);
     }
       break;
     default:
@@ -465,11 +465,11 @@ gst_apexsink_open (GstAudioSink * asink)
           gst_apexraop_set_volume (apexsink->gst_apexraop,
               apexsink->volume)) != GST_RTSP_STS_OK) {
     GST_WARNING_OBJECT (apexsink,
-        "%s : could not set initial volume to \"%d\%\", RTSP code=%d",
+        "%s : could not set initial volume to \"%d%%\", RTSP code=%d",
         apexsink->host, apexsink->volume, res);
   } else {
     GST_INFO_OBJECT (apexsink,
-        "OPEN : ApEx sink successfully set volume to \"%d\%\"",
+        "OPEN : ApEx sink successfully set volume to \"%d%%\"",
         apexsink->volume);
   }
 
