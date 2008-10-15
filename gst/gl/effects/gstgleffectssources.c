@@ -192,6 +192,7 @@ const gchar *sobel_fragment_source =
   "uniform sampler2DRect tex;"
   "uniform float hkern[9];"
   "uniform float vkern[9];"
+  "uniform bool invert;"
   "void main () {"
   "  vec2 offset[9] = vec2[9] ( vec2(-1.0,-1.0), vec2( 0.0,-1.0), vec2( 1.0,-1.0),"
   "                             vec2(-1.0, 0.0), vec2( 0.0, 0.0), vec2( 1.0, 0.0),"
@@ -210,6 +211,7 @@ const gchar *sobel_fragment_source =
   "    }"
   "  }"
   "  float g = sqrt(gx*gx + gy*gy);"
+  "  if (invert) g = 1.0 - g;"
   "  gl_FragColor = vec4(vec3(g), 1.0);"
   "}";
 

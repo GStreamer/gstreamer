@@ -40,12 +40,20 @@ struct _GstGLFilterSobel
   GstGLFilter filter;
   GstGLShader *shader0;
 
+  gboolean invert;
+
   GLuint midtexture;
 };
 
 struct _GstGLFilterSobelClass
 {
   GstGLFilterClass filter_class;
+};
+
+enum
+{
+  PROP_0,
+  PROP_INVERT,
 };
 
 GType gst_gl_glfiltersobel_get_type (void);
@@ -122,6 +130,15 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filtersobel_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filtersobel_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_filtersobel_reset;
+
+  g_object_class_install_property (
+    gobject_class,
+    PROP_INVERT,
+    g_param_spec_boolean ("invert",
+                          "Invert the colors",
+                          "Invert colors to get dark edges on bright background",
+                          FALSE,
+                          G_PARAM_READWRITE));
 }
 
 static void
@@ -129,6 +146,7 @@ gst_gl_filtersobel_init (GstGLFilterSobel * filtersobel, GstGLFilterSobelClass *
 {
   filtersobel->shader0 = NULL;
   filtersobel->midtexture = 0;
+  filtersobel->invert = FALSE;
 }
 
 static void
@@ -144,12 +162,15 @@ static void
 gst_gl_filtersobel_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (object); */
+  GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (object);
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  case PROP_INVERT:
+    filtersobel->invert = g_value_get_boolean (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    break;
   }
 }
 
@@ -157,12 +178,15 @@ static void
 gst_gl_filtersobel_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (object); */
+  GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (object);
 
   switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  case PROP_INVERT:
+    g_value_set_boolean (value, filtersobel->invert);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    break;
   }
 }
 
@@ -259,6 +283,8 @@ gst_gl_filtersobel_callback (gint width, gint height, guint texture, gpointer st
 
   gst_gl_shader_set_uniform_1fv (filtersobel->shader0, "hkern", 9, hkern);
   gst_gl_shader_set_uniform_1fv (filtersobel->shader0, "vkern", 9, vkern);
+
+  gst_gl_shader_set_uniform_1i (filtersobel->shader0, "invert", filtersobel->invert);
 
   gst_gl_filtersobel_draw_texture (filtersobel, texture);
 }
