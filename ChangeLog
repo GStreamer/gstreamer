@@ -1,3 +1,13 @@
+2008-10-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Robin Stocker <robin at nibor dot org>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	(gst_ffmpegdec_add_pixel_aspect_ratio):
+	If both, the decoder and the demuxer, provide a non-1:1 PAR
+	prefer the one of the demuxer instead of the one of the decoder.
+	Fixes bug #556336.
+
 2008-10-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_vid_caps_new),

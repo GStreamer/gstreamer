@@ -364,7 +364,7 @@ gst_ffmpegdec_finalize (GObject * object)
     /* clean up remaining allocated data */
     av_free (ffmpegdec->context);
     av_free (ffmpegdec->picture);
-    
+
   }
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -864,7 +864,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
     }
     case CODEC_TYPE_AUDIO:
     default:
-      GST_ERROR_OBJECT (ffmpegdec, "_get_buffer() should never get called for non-video buffers !");
+      GST_ERROR_OBJECT (ffmpegdec,
+          "_get_buffer() should never get called for non-video buffers !");
       g_assert_not_reached ();
       break;
   }
@@ -965,15 +966,16 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
 
   /* Both the demuxer and the decoder provide a PAR. If one of
    * the two PARs is 1:1 and the other one is not, use the one
-   * that is not 1:1. If both are non-1:1, use the pixel aspect
-   * ratio provided by the codec */
+   * that is not 1:1. */
   if (demuxer_num == demuxer_denom && decoder_num != decoder_denom)
     goto use_decoder_par;
 
   if (decoder_num == decoder_denom && demuxer_num != demuxer_denom)
     goto use_demuxer_par;
 
-  /* fall through and use decoder pixel aspect ratio */
+  /* Both PARs are non-1:1, so use the PAR provided by the demuxer */
+  goto use_demuxer_par;
+
 use_decoder_par:
   {
     GST_DEBUG_OBJECT (ffmpegdec,
@@ -1863,7 +1865,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
        * else we might create the first buffer with a very big timestamp gap. */
       if (outbuf == NULL && ffmpegdec->discont) {
         GST_DEBUG_OBJECT (ffmpegdec, "no buffer but keeping timestamp");
-	ffmpegdec->clear_ts = FALSE;
+        ffmpegdec->clear_ts = FALSE;
       }
       break;
     default:
@@ -2214,10 +2216,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
         /* there is output, set pointers for next round. */
         bsize -= res;
         bdata += res;
-      }
-      else {
-	/* Parser did not consume any data, make sure we don't clear the
-	 * timestamp for the next round */
+      } else {
+        /* Parser did not consume any data, make sure we don't clear the
+         * timestamp for the next round */
         ffmpegdec->clear_ts = FALSE;
       }
 
@@ -2301,8 +2302,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     if (ffmpegdec->clear_ts) {
       in_timestamp = GST_CLOCK_TIME_NONE;
       in_duration = GST_CLOCK_TIME_NONE;
-    }
-    else {
+    } else {
       ffmpegdec->clear_ts = TRUE;
     }
 
@@ -2471,8 +2471,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
-    GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name,
-	       in_plugin->long_name);
+    GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
     /* MPEG1VIDEO : the mpeg2video decoder is preferred */
@@ -2501,8 +2500,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
           in_plugin->id, FALSE);
     }
     if (!srccaps) {
-      GST_WARNING ("Couldn't get source caps for decoder %s",
-          in_plugin->name);
+      GST_WARNING ("Couldn't get source caps for decoder %s", in_plugin->name);
       goto next;
     }
 
