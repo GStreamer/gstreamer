@@ -2603,19 +2603,23 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
 		     GL_BGR, GL_UNSIGNED_BYTE, data);
     break;
   case GST_VIDEO_FORMAT_RGBx:
+  case GST_VIDEO_FORMAT_RGBA:
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_RGBA, GL_UNSIGNED_BYTE, data);
     break;
   case GST_VIDEO_FORMAT_BGRx:
+  case GST_VIDEO_FORMAT_BGRA:
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_BGRA, GL_UNSIGNED_BYTE, data);
     break;
   case GST_VIDEO_FORMAT_AYUV:
   case GST_VIDEO_FORMAT_xRGB:
+  case GST_VIDEO_FORMAT_ARGB:
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
     break;
   case GST_VIDEO_FORMAT_xBGR:
+  case GST_VIDEO_FORMAT_ABGR:
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
     break;
