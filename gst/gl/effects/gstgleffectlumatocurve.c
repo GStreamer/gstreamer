@@ -19,13 +19,13 @@
  */
 
 #include <gstgleffects.h>
-#include <gstgleffectscurves.h>
+#include <gstgleffectlumatocurve.h>
 
-static void gst_gl_effects_luma_to_curve (GstGLEffects *effects,
-                                          GstGLEffectsCurve curve,
-                                          gint curve_index,
-                                          gint width, gint height,
-                                          GLuint texture) 
+void gst_gl_effects_luma_to_curve (GstGLEffects *effects,
+                                   GstGLEffectsCurve curve,
+                                   gint curve_index,
+                                   gint width, gint height,
+                                   GLuint texture) 
 {
   GstGLShader *shader;
 
@@ -63,11 +63,11 @@ static void gst_gl_effects_luma_to_curve (GstGLEffects *effects,
     glDisable(GL_TEXTURE_1D);
   }
 
-  glActiveTexture (GL_TEXTURE0);
+  glActiveTexture (GL_TEXTURE2);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
 
-  gst_gl_shader_set_uniform_1i (shader, "tex", 0);
+  gst_gl_shader_set_uniform_1i (shader, "tex", 2);
 
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
