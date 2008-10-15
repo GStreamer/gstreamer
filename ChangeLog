@@ -1,3 +1,9 @@
+2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_node):
+	Remove problematic and useless refcount check.
+	Fixes #556381
+
 2008-10-10  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/flac/gstflacdec.c (gst_flac_dec_read_stream):
