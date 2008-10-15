@@ -1,3 +1,10 @@
+2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/selector/gstinputselector.c: (gst_input_selector_event),
+	(gst_input_selector_query):
+	Gracefully handle the cases when we dont' have otherpad.
+	Fixes #556430
+
 2008-10-14  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/aiffparse/aiffparse.c: (plugin_init):

@@ -1017,15 +1017,16 @@ gst_input_selector_get_linked_pad (GstPad * pad, gboolean strict)
 static gboolean
 gst_input_selector_event (GstPad * pad, GstEvent * event)
 {
-  gboolean res;
+  gboolean res = FALSE;
   GstPad *otherpad;
 
   otherpad = gst_input_selector_get_linked_pad (pad, TRUE);
 
-  res = gst_pad_push_event (otherpad, event);
+  if (otherpad) {
+    res = gst_pad_push_event (otherpad, event);
 
-  gst_object_unref (otherpad);
-
+    gst_object_unref (otherpad);
+  }
   return res;
 }
 
@@ -1034,7 +1035,7 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_input_selector_query (GstPad * pad, GstQuery * query)
 {
-  gboolean res;
+  gboolean res = TRUE;
   GstInputSelector *sel;
   GstPad *otherpad;
 
@@ -1101,10 +1102,12 @@ gst_input_selector_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      res = gst_pad_peer_query (otherpad, query);
+      if (otherpad)
+        res = gst_pad_peer_query (otherpad, query);
       break;
   }
-  gst_object_unref (otherpad);
+  if (otherpad)
+    gst_object_unref (otherpad);
   gst_object_unref (sel);
 
   return res;
