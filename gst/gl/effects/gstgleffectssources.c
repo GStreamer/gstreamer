@@ -294,6 +294,16 @@ const gchar *sum_fragment_source =
   "  gl_FragColor = alpha * basecolor + beta * blendcolor;"
   "}";
 
+const gchar *multiply_fragment_source =
+  "#extension GL_ARB_texture_rectangle : enable\n"
+  "uniform sampler2DRect base;"
+  "uniform sampler2DRect blend;"
+  "uniform float alpha;"
+  "void main () {"
+  "  vec4 basecolor = texture2DRect (base, gl_TexCoord[0].st);"
+  "  vec4 blendcolor = texture2DRect (blend, gl_TexCoord[0].st);"
+  "  gl_FragColor = (1 - alpha) * basecolor + alpha * basecolor * blendcolor;"
+  "}";
 
 /* lut operations, map luma to tex1d, see orange book (chapter 19) */
 const gchar *luma_to_curve_fragment_source =
