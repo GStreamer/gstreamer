@@ -2330,6 +2330,12 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
     }
 
     stream = &avi->stream[stream_nr];
+    if (stream->pad == NULL) {
+      GST_WARNING_OBJECT (avi,
+          "Stream %d does not have an output pad, can't create new index",
+          stream_nr);
+      goto next;
+    }
 
     /* pre-allocate */
     if (index_size % 1024 == 0) {

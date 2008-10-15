@@ -1,5 +1,12 @@
 2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_scan):
+	Skip entries for streams that don't have a output pad yet, thereby
+	avoiding calling pad functions with a NULL pad.
+	Fixes #556424
+
+2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/qtdemux/qtdemux.c: Remove previous wrong commit
 	* tests/check/elements/icydemux.c: (icydemux_found_pad):
 	Remove problematic and useless refcount check.
