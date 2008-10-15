@@ -190,6 +190,7 @@ main (gint argc, gchar * argv[])
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "xpro");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "lumaxpro");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "sepia");
+  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "xray");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "sin");
   gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "glow");
 

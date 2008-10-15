@@ -43,9 +43,11 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectbulge.c \
 	effects/gstgleffectsquare.c \
 	effects/gstgleffectlumatocurve.c \
+	effects/gstgleffectlumatocurve.h \
 	effects/gstgleffectrgbtocurve.c \
 	effects/gstgleffectsin.c \
-	effects/gstgleffectglow.c
+	effects/gstgleffectglow.c \
+	effects/gstgleffectxray.c
 
 if HAVE_GDKPIXBUF
 libgstopengl_la_SOURCES += gstglpixbufoverlay.c \

@@ -50,6 +50,7 @@ enum {
   GST_GL_EFFECTS_CURVE_SEPIA,
   GST_GL_EFFECTS_CURVE_XPRO,
   GST_GL_EFFECTS_CURVE_LUMA_XPRO,
+  GST_GL_EFFECTS_CURVE_XRAY,
   GST_GL_EFFECTS_N_CURVES
 };
 
@@ -100,6 +101,7 @@ void gst_gl_effects_square (GstGLEffects *effects);
 void gst_gl_effects_heat (GstGLEffects *effects);
 void gst_gl_effects_sepia (GstGLEffects *effects);
 void gst_gl_effects_xpro (GstGLEffects *effects);
+void gst_gl_effects_xray (GstGLEffects *effects);
 void gst_gl_effects_luma_xpro (GstGLEffects *effects);
 void gst_gl_effects_sin (GstGLEffects *effects);
 void gst_gl_effects_glow (GstGLEffects *effects);

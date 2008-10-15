@@ -72,6 +72,7 @@ typedef enum {
   GST_GL_EFFECT_SEPIA,
   GST_GL_EFFECT_XPRO,
   GST_GL_EFFECT_LUMA_XPRO,
+  GST_GL_EFFECT_XRAY,
   GST_GL_EFFECT_SIN,
   GST_GL_EFFECT_GLOW,
   GST_GL_N_EFFECTS
@@ -96,6 +97,7 @@ gst_gl_effects_effect_get_type (void)
     { GST_GL_EFFECT_SEPIA, "Sepia Toning Effect", "sepia" },
     { GST_GL_EFFECT_XPRO, "Cross Processing Effect", "xpro" },
     { GST_GL_EFFECT_LUMA_XPRO, "Luma Cross Processing Effect", "lumaxpro" },
+    { GST_GL_EFFECT_XRAY, "Glowing negative effect", "xray" },
     { GST_GL_EFFECT_SIN, "All Grey but Red Effect", "sin" },
     { GST_GL_EFFECT_GLOW, "Glow Lighting Effect", "glow" },
     { 0, NULL, NULL }
@@ -150,6 +152,9 @@ gst_gl_effects_set_effect (GstGLEffects *effects, gint effect_type) {
     break;
   case GST_GL_EFFECT_LUMA_XPRO:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_luma_xpro;
+    break;
+  case GST_GL_EFFECT_XRAY:
+    effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_xray;
     break;
   case GST_GL_EFFECT_SIN:
     effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_sin;
