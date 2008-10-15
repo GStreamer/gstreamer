@@ -632,6 +632,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("FFmpeg lossless video codec");
       break;
 
+    case GST_MAKE_FOURCC ('K', 'M', 'V', 'C'):
+      caps = gst_caps_new_simple ("video/x-kmvc", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Karl Morton's video codec");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -1524,8 +1530,9 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
     GST_MAKE_FOURCC ('x', '2', '6', '3'),
     GST_MAKE_FOURCC ('d', 'r', 'a', 'c'),
-    GST_MAKE_FOURCC ('F', 'F', 'V', '1')
-        /* FILL ME */
+    GST_MAKE_FOURCC ('F', 'F', 'V', '1'),
+    GST_MAKE_FOURCC ('K', 'M', 'V', 'C'),
+    /* FILL ME */
   };
   guint i;
   GstCaps *caps, *one;

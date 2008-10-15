@@ -1,5 +1,11 @@
 2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	Add mappping for the KMVC (Karl Morton's Video) Codec.
+
+2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/typefind/gsttypefindfunctions.c: (flac_type_find):
 	Don't forget to advance the offset of what we're matching against, else
 	we end up in a forever loop.
