@@ -1408,6 +1408,7 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
   GstCaps *caps;
   gchar *str;
   gchar *encoding = NULL;
+  const gchar *end;
 
   if (!(data = gst_type_find_peek (tf, 0, 129)))
     return;
@@ -1427,12 +1428,39 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
           err->message);
       g_error_free (err);
       g_free (encoding);
+    } else {
+      g_free (str);
+      str = converted_str;
+      g_free (encoding);
+    }
+  }
+
+  /* Check if at least the first 120 chars are valid UTF8,
+   * otherwise convert as always */
+  if (!g_utf8_validate (str, 128, &end) && (end - str) < 120) {
+    gchar *converted_str;
+    GError *err = NULL;
+    gsize tmp;
+    const gchar *enc;
+
+    enc = g_getenv ("GST_SUBTITLE_ENCODING");
+    if (enc == NULL || *enc == '\0') {
+      /* if local encoding is UTF-8 and no encoding specified
+       * via the environment variable, assume ISO-8859-15 */
+      if (g_get_charset (&enc)) {
+        enc = "ISO-8859-15";
+      }
+    }
+    converted_str = gst_convert_to_utf8 (str, 128, enc, &tmp, &err);
+    if (converted_str == NULL) {
+      GST_DEBUG ("Charset conversion failed: %s", err->message);
+      g_error_free (err);
       g_free (str);
       return;
+    } else {
+      g_free (str);
+      str = converted_str;
     }
-    g_free (str);
-
-    str = converted_str;
   }
 
   format = gst_sub_parse_data_format_autodetect (str);
