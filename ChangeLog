@@ -1,5 +1,12 @@
 2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/qtdemux/qtdemux.c: Remove previous wrong commit
+	* tests/check/elements/icydemux.c: (icydemux_found_pad):
+	Remove problematic and useless refcount check.
+	Fixes #556381
+
+2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_node):
 	Remove problematic and useless refcount check.
 	Fixes #556381
