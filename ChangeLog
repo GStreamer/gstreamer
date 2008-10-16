@@ -1,3 +1,9 @@
+2008-10-16  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data):
+	Make sure the mpegpsdemux element creates valid newsegment events.
+	Fixes #556428
+
 2008-10-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Sebastian Pölsterl

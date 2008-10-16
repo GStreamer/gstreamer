@@ -453,12 +453,18 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     gint64 time, start, stop;
     GstEvent *newsegment;
 
-    start = demux->base_time + demux->src_segment.start;
+    if (GST_CLOCK_TIME_IS_VALID (demux->base_time) &&
+        GST_CLOCK_TIME_IS_VALID (demux->src_segment.start))
+      start = demux->base_time + demux->src_segment.start;
+    else
+      start = 0;
+
     if (timestamp != GST_CLOCK_TIME_NONE &&
         GST_CLOCK_DIFF (start, timestamp) > GST_SECOND)
       start = timestamp;
 
-    if (demux->src_segment.stop != -1)
+    if (GST_CLOCK_TIME_IS_VALID (demux->src_segment.stop) &&
+        GST_CLOCK_TIME_IS_VALID (demux->base_time))
       stop = demux->base_time + demux->src_segment.stop;
     else
       stop = -1;
