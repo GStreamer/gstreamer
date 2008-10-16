@@ -2206,19 +2206,22 @@ gst_fluts_demux_parse_stream (GstFluTSDemux * demux, GstFluTSStream * stream,
           GST_DEBUG_OBJECT (demux, "new PES start for PID 0x%04x, used %u"
               "bytes of %u bytes in the PES buffer",
               PID, stream->pes_buffer_used, stream->pes_buffer_size);
+          /* Flush buffered PES data */
+          ret = gst_fluts_stream_pes_buffer_flush (stream);
+          gst_pes_filter_drain (&stream->filter);
           /* Resize the buffer to half if no overflow detected and
            * had been used less than half of it */
           if (stream->pes_buffer_overflow == FALSE
               && stream->pes_buffer_used < (stream->pes_buffer_size >> 1)) {
             stream->pes_buffer_size >>= 1;
+            if (stream->pes_buffer_size < FLUTS_MIN_PES_BUFFER_SIZE)
+              stream->pes_buffer_size = FLUTS_MIN_PES_BUFFER_SIZE;
             GST_DEBUG_OBJECT (demux, "PES buffer size reduced to %u bytes",
                 stream->pes_buffer_size);
           }
+          if (ret == GST_FLOW_LOST_SYNC)
+            goto done;
           stream->pes_buffer_overflow = FALSE;
-
-          /* Flush buffered PES data */
-          gst_fluts_stream_pes_buffer_flush (stream);
-          gst_pes_filter_drain (&stream->filter);
         }
         GST_LOG_OBJECT (demux, "Elementary packet of size %u for PID 0x%04x",
             datalen, PID);

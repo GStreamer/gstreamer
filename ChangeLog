@@ -1,3 +1,11 @@
+2008-10-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Josep Torra
+
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	Fixes a segfault in the adaptation buffer size strategy.
+	Fixes #556440
+
 2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/selector/gstinputselector.c: (gst_input_selector_event),
