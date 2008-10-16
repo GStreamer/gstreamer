@@ -253,6 +253,7 @@ gst_audio_test_src_init (GstAudioTestSrc * src, GstAudioTestSrcClass * g_class)
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
 
   src->wave = DEFAULT_WAVE;
+  gst_base_src_set_blocksize (GST_BASE_SRC (src), -1);
 }
 
 static void

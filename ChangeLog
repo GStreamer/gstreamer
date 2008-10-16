@@ -1,3 +1,9 @@
+2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_init):
+	Set the default blocksize to -1 because we will then use the configured
+	samplesperbuffer to create our output buffer.
+
 2008-10-15  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
