@@ -1,5 +1,10 @@
 2008-10-16  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* tests/check/Makefile.am:
+	Don't run the states test on pulsesrc and pulsesink
+
+2008-10-16  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* configure.ac:
 	Commit 0.10.10.2 pre-release bump that actually went
 	out on 2008-10-11
