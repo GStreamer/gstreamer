@@ -209,6 +209,11 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
 
   GST_DEBUG_OBJECT (sink, "enter thread");
 
+  GST_OBJECT_LOCK (abuf);
+  GST_DEBUG_OBJECT (sink, "signal wait");
+  GST_AUDIORING_BUFFER_SIGNAL (buf);
+  GST_OBJECT_UNLOCK (abuf);
+
   writefunc = csink->write;
   if (writefunc == NULL)
     goto no_function;
@@ -218,6 +223,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
     guint8 *readptr;
     gint readseg;
 
+    /* buffer must be started */
     if (gst_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
       gint written = 0;
 
@@ -356,6 +362,7 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   GstAudioSinkClass *csink;
   GstAudioRingBuffer *abuf;
   gboolean result = FALSE;
+  GError *error = NULL;
 
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
@@ -375,16 +382,34 @@ gst_audioringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   abuf = GST_AUDIORING_BUFFER_CAST (buf);
   abuf->running = TRUE;
 
+  GST_DEBUG_OBJECT (sink, "starting thread");
   sink->thread =
       g_thread_create ((GThreadFunc) audioringbuffer_thread_func, buf, TRUE,
-      NULL);
+      &error);
+  if (!sink->thread || error != NULL)
+    goto thread_failed;
+
+  GST_DEBUG_OBJECT (sink, "waiting for thread");
+  /* the object lock is taken */
   GST_AUDIORING_BUFFER_WAIT (buf);
+  GST_DEBUG_OBJECT (sink, "thread is started");
 
   return result;
 
 could_not_prepare:
   {
     GST_DEBUG_OBJECT (sink, "could not prepare device");
+    return FALSE;
+  }
+thread_failed:
+  {
+    if (error)
+      GST_ERROR_OBJECT (sink, "could not create thread %s", error->message);
+    else
+      GST_ERROR_OBJECT (sink, "could not create thread for unknown reason");
+    /* still unprepare */
+    if (csink->unprepare)
+      result = csink->unprepare (sink);
     return FALSE;
   }
 }
@@ -405,6 +430,7 @@ gst_audioringbuffer_release (GstRingBuffer * buf)
   abuf->running = FALSE;
   GST_DEBUG_OBJECT (sink, "signal wait");
   GST_AUDIORING_BUFFER_SIGNAL (buf);
+
   GST_OBJECT_UNLOCK (buf);
 
   /* join the thread */

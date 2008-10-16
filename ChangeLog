@@ -1,5 +1,13 @@
 2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func),
+	(gst_audioringbuffer_acquire), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_stop):
+	Signal thread startup earlier so that we can immediatly go into pull
+	mode when we have to and block on preroll.
+
+2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstringbuffer.c:
 	(gst_ring_buffer_prepare_read):
 	In pull mode we want the callback to prepull a buffer we can preroll on
