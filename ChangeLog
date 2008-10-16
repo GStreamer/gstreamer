@@ -1,3 +1,34 @@
+2008-10-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/alsa/Makefile.am:
+	* ext/cdparanoia/Makefile.am:
+	* ext/gio/Makefile.am:
+	* ext/gnomevfs/Makefile.am:
+	* ext/libvisual/Makefile.am:
+	* ext/ogg/Makefile.am:
+	* ext/pango/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* gst/adder/Makefile.am:
+	* gst/audioconvert/Makefile.am:
+	* gst/audiorate/Makefile.am:
+	* gst/audioresample/Makefile.am:
+	* gst/audiotestsrc/Makefile.am:
+	* gst/ffmpegcolorspace/Makefile.am:
+	* gst/gdp/Makefile.am:
+	* gst/playback/Makefile.am:
+	* gst/subparse/Makefile.am:
+	* gst/tcp/Makefile.am:
+	* gst/typefind/Makefile.am:
+	* gst/videorate/Makefile.am:
+	* gst/videoscale/Makefile.am:
+	* gst/videotestsrc/Makefile.am:
+	* gst/volume/Makefile.am:
+	* sys/v4l/Makefile.am:
+	* sys/ximage/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	  Don't install static libs for plugins. Fixes #550851 for base.
+
 2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_init):

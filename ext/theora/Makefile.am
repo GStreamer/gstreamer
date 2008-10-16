@@ -9,3 +9,5 @@ libgsttheora_la_LIBADD = \
 	$(GST_LIBS) \
 	$(THEORA_LIBS)
 libgsttheora_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsttheora_la_LIBTOOLFLAGS = --tag=disable-static
+

@@ -11,5 +11,6 @@ libgstvorbis_la_LIBADD = \
 	$(GST_LIBS) \
 	$(VORBIS_LIBS) $(VORBISENC_LIBS)
 libgstvorbis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstvorbis_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = vorbisenc.h vorbisdec.h vorbisparse.h vorbistag.h

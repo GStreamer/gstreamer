@@ -12,6 +12,7 @@ libgstffmpegcolorspace_la_SOURCES = \
 libgstffmpegcolorspace_la_CFLAGS = $(GST_CFLAGS)
 libgstffmpegcolorspace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstffmpegcolorspace_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
+libgstffmpegcolorspace_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstffmpegcolorspace.h \

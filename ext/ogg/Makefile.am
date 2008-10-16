@@ -18,3 +18,5 @@ libgstogg_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(OGG_LIBS)
 libgstogg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstogg_la_LIBTOOLFLAGS = --tag=disable-static
+

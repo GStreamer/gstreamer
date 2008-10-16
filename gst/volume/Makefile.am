@@ -10,6 +10,7 @@ libgstvolume_la_LIBADD = \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \
 	$(LIBOIL_LIBS)
+libgstvolume_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstvolume.h
 

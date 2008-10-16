@@ -27,6 +27,7 @@ libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstplaybin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
+libgstplaybin_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstdecodebin_la_SOURCES = gstdecodebin.c
 nodist_libgstdecodebin_la_SOURCES = $(built_sources)
@@ -35,6 +36,7 @@ libgstdecodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdecodebin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
+libgstdecodebin_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstdecodebin2_la_SOURCES = gstdecodebin2.c gsturidecodebin.c gstfactorylists.c gstplay-enum.c
 nodist_libgstdecodebin2_la_SOURCES = $(built_sources)
@@ -43,12 +45,14 @@ libgstdecodebin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdecodebin2_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
+libgstdecodebin2_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstqueue2_la_SOURCES = gstqueue2.c
 nodist_libgstqueue2_la_SOURCES = $(built_sources)
 libgstqueue2_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstqueue2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstqueue2_la_LIBADD = $(GST_LIBS)
+libgstqueue2_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstplaybasebin.h \

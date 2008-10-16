@@ -8,5 +8,6 @@ libgstcdparanoia_la_LIBADD = \
 	$(GST_LIBS) \
 	$(CDPARANOIA_LIBS)
 libgstcdparanoia_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstcdparanoia_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstcdparanoiasrc.h
