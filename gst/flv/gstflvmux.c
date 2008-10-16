@@ -310,9 +310,9 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     else
       ret = FALSE;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-alaw") == 0) {
-    cpad->video_codec = 7;
+    cpad->audio_codec = 7;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-mulaw") == 0) {
-    cpad->video_codec = 8;
+    cpad->audio_codec = 8;
   } else {
     ret = FALSE;
   }
@@ -536,7 +536,7 @@ next:
       size += GST_BUFFER_SIZE (buffer);
   } else {
     size += 1;
-    if (cpad->video_codec == 10 && !cpad->sent_codec_data)
+    if (cpad->audio_codec == 10 && !cpad->sent_codec_data)
       size += 1 + GST_BUFFER_SIZE (cpad->audio_codec_data);
     else if (cpad->audio_codec == 10)
       size += 1 + GST_BUFFER_SIZE (buffer);
@@ -595,7 +595,7 @@ next:
     data[11] |= (cpad->width << 1) & 0x02;
     data[11] |= (cpad->channels << 0) & 0x01;
 
-    if (cpad->video_codec == 10 && !cpad->sent_codec_data) {
+    if (cpad->audio_codec == 10 && !cpad->sent_codec_data) {
       data[12] = 0;
 
       memcpy (data + 11 + 1 + 1, GST_BUFFER_DATA (cpad->audio_codec_data),
