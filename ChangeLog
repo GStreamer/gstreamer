@@ -1,3 +1,10 @@
+2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_prepare_read):
+	In pull mode we want the callback to prepull a buffer we can preroll on
+	even when we are not yet playing.
+
 2008-10-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/alsa/Makefile.am:
