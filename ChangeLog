@@ -1,3 +1,18 @@
+2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_parse_caps),
+	(gst_rtp_jitter_buffer_flush_start),
+	(gst_rtp_jitter_buffer_flush_stop), (gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_loop):
+	Fix problem with using the output seqnum counter to check for input
+	seqnum discontinuities.
+	Improve gap detection and recovery, reset and flush the jitterbuffer on
+	seqnum restart. Fixes #556520.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_insert):
+	Fix wrong G_LIKELY.
+
 2008-10-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
