@@ -18,38 +18,39 @@ include_directories(AFTER
 
 add_library (gstopengl SHARED
   gstopengl.c
-	gstglimagesink.c
-	gstglimagesink.h
-	gstglupload.c
-	gstgldownload.c
+  gstglimagesink.c
+  gstglimagesink.h
+  gstglupload.c
+  gstgldownload.c
   gstglfilterblur.c
-	gstglfiltercube.c
-	gstglfilterlaplacian.c
+  gstglfiltercube.c
+  gstglfilterlaplacian.c
   gstglfiltersobel.c
-	gstglfilterglass.c
-	gstglfilterapp.c
-	gstglcolorscale.c
+  gstglfilterglass.c
+  gstglfilterapp.c
+  gstglcolorscale.c
   gltestsrc.c
-	gstgltestsrc.c
-	gstgleffects.c
+  gstgltestsrc.c
+  gstgleffects.c
   gstglpixbufoverlay.c
   gstgldifferencematte.c
   gstglbumper.c
-	effects/gstgleffectssources.c
-	effects/gstgleffectidentity.c
-	effects/gstgleffectmirror.c
-	effects/gstgleffectsqueeze.c
-	effects/gstgleffectstretch.c
-	effects/gstgleffecttunnel.c
-	effects/gstgleffectfisheye.c
-	effects/gstgleffecttwirl.c
-	effects/gstgleffectbulge.c
-	effects/gstgleffectsquare.c
-	effects/gstgleffectlumatocurve.c
-	effects/gstgleffectrgbtocurve.c
-	effects/gstgleffectsin.c
-	effects/gstgleffectglow.c)
-  
+  effects/gstgleffectssources.c
+  effects/gstgleffectidentity.c
+  effects/gstgleffectmirror.c
+  effects/gstgleffectsqueeze.c
+  effects/gstgleffectstretch.c
+  effects/gstgleffecttunnel.c
+  effects/gstgleffectfisheye.c
+  effects/gstgleffecttwirl.c
+  effects/gstgleffectbulge.c
+  effects/gstgleffectsquare.c
+  effects/gstgleffectlumatocurve.c
+  effects/gstgleffectrgbtocurve.c
+  effects/gstgleffectsin.c
+  effects/gstgleffectglow.c
+  effects/gstgleffectxray.c)
+
 target_link_libraries(gstopengl
   general gstgl
   general ${GTK2_LIBRARIES})

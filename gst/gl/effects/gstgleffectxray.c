@@ -23,9 +23,9 @@
 #include <gstgleffectlumatocurve.h>
 
 /* Gaussian Kernel: std = 1.200000, size = 9x1 */
-static gfloat gauss_kernel[9] = { 0.001285, 0.014607, 0.082898,
-                                  0.234927, 0.332452, 0.234927,
-                                  0.082898, 0.014607, 0.001285 };
+static gfloat gauss_kernel[9] = { 0.001285f, 0.014607f, 0.082898f,
+                                  0.234927f, 0.332452f, 0.234927f,
+                                  0.082898f, 0.014607f, 0.001285f };
 /* Normalization Constant = 0.999885 */
 
 static void gst_gl_effects_xray_step_one (gint width, gint height, guint texture, gpointer data)
@@ -66,7 +66,7 @@ gst_gl_effects_xray_step_two (gint width, gint height, guint texture, gpointer d
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
 
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.999885);
+  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.999885f);
   gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
@@ -102,7 +102,7 @@ gst_gl_effects_xray_step_three (gint width, gint height, guint texture, gpointer
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
 
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 9, gauss_kernel);
-  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.999885);
+  gst_gl_shader_set_uniform_1f (shader, "norm_const", 0.999885f);
   gst_gl_shader_set_uniform_1f (shader, "norm_offset", 0.0f);
 
   gst_gl_effects_draw_texture (effects, texture);
