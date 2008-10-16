@@ -164,6 +164,7 @@ struct _GstFluTSStream {
   guint32           pes_buffer_size;
   guint32           pes_buffer_used;
   gboolean          pes_buffer_overflow;
+  gboolean          pes_buffer_in_sync;
   GstPESFilter      filter;
   GstPad            * pad;
   GstFlowReturn     last_ret;
