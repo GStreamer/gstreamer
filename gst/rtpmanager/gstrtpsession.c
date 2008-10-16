@@ -1546,6 +1546,33 @@ gst_rtp_session_query_send_rtcp_src (GstPad * pad, GstQuery * query)
 }
 
 static gboolean
+gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
+{
+  GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
+  gboolean ret = FALSE;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  priv = rtpsession->priv;
+
+  GST_DEBUG_OBJECT (rtpsession, "received EVENT");
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_LATENCY:
+      ret = TRUE;
+      break;
+    default:
+      /* other events simply fail for now */
+      break;
+  }
+
+  gst_object_unref (rtpsession);
+
+  return ret;
+}
+
+
+static gboolean
 gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
@@ -1872,6 +1899,8 @@ create_send_rtcp_src (GstRtpSession * rtpsession)
       gst_rtp_session_internal_links);
   gst_pad_set_query_function (rtpsession->send_rtcp_src,
       gst_rtp_session_query_send_rtcp_src);
+  gst_pad_set_event_function (rtpsession->send_rtcp_src,
+      gst_rtp_session_event_send_rtcp_src);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->send_rtcp_src);
 

@@ -1,3 +1,10 @@
+2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_event_send_rtcp_src), (create_send_rtcp_src):
+	Install event handler on the rtcp_src pad, make LATENCY event return
+	TRUE.
+
 2008-10-16  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data):
