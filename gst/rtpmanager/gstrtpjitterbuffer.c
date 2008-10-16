@@ -142,10 +142,12 @@ struct _GstRtpJitterBufferPrivate
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
-  /* the next expected seqnum */
+  /* the next expected seqnum we push */
   guint32 next_seqnum;
   /* last output time */
   GstClockTime last_out_time;
+  /* the next expected seqnum we receive */
+  guint32 next_in_seqnum;
 
   /* state */
   gboolean eos;
@@ -163,6 +165,7 @@ struct _GstRtpJitterBufferPrivate
   /* for sync */
   GstSegment segment;
   GstClockID clock_id;
+  gboolean unscheduled;
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
   GstClockTime peer_latency;
@@ -483,14 +486,14 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       priv->clock_base);
 
   /* first expected seqnum, only update when we didn't have a previous base. */
-  if (priv->next_seqnum == -1) {
+  if (priv->next_in_seqnum == -1) {
     if (gst_structure_get_uint (caps_struct, "seqnum-base", &val))
-      priv->next_seqnum = val;
+      priv->next_in_seqnum = val;
     else
-      priv->next_seqnum = -1;
+      priv->next_in_seqnum = -1;
   }
 
-  GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_seqnum);
+  GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_in_seqnum);
 
   return TRUE;
 
@@ -543,8 +546,10 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   JBUF_SIGNAL (priv);
   /* unlock clock, we just unschedule, the entry will be released by the 
    * locking streaming thread. */
-  if (priv->clock_id)
+  if (priv->clock_id) {
     gst_clock_id_unschedule (priv->clock_id);
+    priv->unscheduled = TRUE;
+  }
   JBUF_UNLOCK (priv);
 }
 
@@ -563,6 +568,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_popped_seqnum = -1;
   priv->last_out_time = -1;
   priv->next_seqnum = -1;
+  priv->next_in_seqnum = -1;
   priv->clock_rate = -1;
   priv->eos = FALSE;
   rtp_jitter_buffer_flush (priv->jbuf);
@@ -881,39 +887,49 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (priv->eos))
     goto have_eos;
 
-  /* let's check if this buffer is too late, we can only accept packets with
-   * bigger seqnum than the one we last pushed. */
-  if (G_LIKELY (priv->last_popped_seqnum != -1)) {
+  /* now check against our expected seqnum */
+  if (G_LIKELY (priv->next_in_seqnum != -1)) {
     gint gap;
     gboolean reset = FALSE;
 
-    gap = gst_rtp_buffer_compare_seqnum (priv->last_popped_seqnum, seqnum);
-
-    if (G_UNLIKELY (gap <= 0)) {
-      /* priv->last_popped_seqnum >= seqnum, this packet is too late or the
+    gap = gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, seqnum);
+    if (G_UNLIKELY (gap != 0)) {
+      GST_DEBUG_OBJECT (jitterbuffer, "expected #%d, got #%d, gap of %d",
+          priv->next_in_seqnum, seqnum, gap);
+      /* priv->next_in_seqnum >= seqnum, this packet is too late or the
        * sender might have been restarted with different seqnum. */
       if (gap < -RTP_MAX_MISORDER) {
         GST_DEBUG_OBJECT (jitterbuffer, "reset: buffer too old %d", gap);
         reset = TRUE;
-      } else {
-        goto too_late;
       }
-    } else {
-      /* priv->last_popped_seqnum < seqnum, this is a new packet */
-      if (G_UNLIKELY (gap > RTP_MAX_DROPOUT)) {
+      /* priv->next_in_seqnum < seqnum, this is a new packet */
+      else if (G_UNLIKELY (gap > RTP_MAX_DROPOUT)) {
         GST_DEBUG_OBJECT (jitterbuffer, "reset: too many dropped packets %d",
             gap);
         reset = TRUE;
       } else {
-        GST_DEBUG_OBJECT (jitterbuffer, "dropped packets %d but <= %d", gap,
-            RTP_MAX_DROPOUT);
+        GST_DEBUG_OBJECT (jitterbuffer, "tolerable gap");
       }
     }
     if (G_UNLIKELY (reset)) {
-      priv->last_popped_seqnum = -1;
-      priv->next_seqnum = -1;
+      rtp_jitter_buffer_flush (priv->jbuf);
       rtp_jitter_buffer_reset_skew (priv->jbuf);
+      priv->last_popped_seqnum = -1;
+      priv->next_seqnum = seqnum;
     }
+  }
+  priv->next_in_seqnum = (seqnum + 1) & 0xffff;
+
+  /* let's check if this buffer is too late, we can only accept packets with
+   * bigger seqnum than the one we last pushed. */
+  if (G_LIKELY (priv->last_popped_seqnum != -1)) {
+    gint gap;
+
+    gap = gst_rtp_buffer_compare_seqnum (priv->last_popped_seqnum, seqnum);
+
+    /* priv->last_popped_seqnum >= seqnum, we're too late. */
+    if (G_UNLIKELY (gap <= 0))
+      goto too_late;
   }
 
   /* let's drop oldest packet if the queue is already full and drop-on-latency
@@ -921,7 +937,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
    * latency is set, we just pump it in the queue and let the other end push it
    * out as fast as possible. */
   if (priv->latency_ms && priv->drop_on_latency) {
-
     latency_ts =
         gst_util_uint64_scale_int (priv->latency_ms, priv->clock_rate, 1000);
 
@@ -958,10 +973,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG_OBJECT (jitterbuffer,
         "Unscheduling waiting buffer, new tail buffer");
     gst_clock_id_unschedule (priv->clock_id);
+    priv->unscheduled = TRUE;
   }
 
-  GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets",
-      seqnum, rtp_jitter_buffer_num_packets (priv->jbuf));
+  GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, tail: %d",
+      seqnum, rtp_jitter_buffer_num_packets (priv->jbuf), tail);
 
 finished:
   JBUF_UNLOCK (priv);
@@ -1183,6 +1199,7 @@ again:
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
+    priv->unscheduled = FALSE;
     GST_OBJECT_UNLOCK (jitterbuffer);
 
     /* release the lock so that the other end can push stuff or unlock */
@@ -1203,8 +1220,9 @@ again:
           goto flushing;
 
     /* if we got unscheduled and we are not flushing, it's because a new tail
-     * element became available in the queue. Grab it and try to push or sync. */
-    if (ret == GST_CLOCK_UNSCHEDULED) {
+     * element became available in the queue or we flushed the queue.
+     * Grab it and try to push or sync. */
+    if (ret == GST_CLOCK_UNSCHEDULED || priv->unscheduled) {
       GST_DEBUG_OBJECT (jitterbuffer,
           "Wait got unscheduled, will retry to push with new buffer");
       goto again;

@@ -385,7 +385,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
 
   /* tail was changed when we did not find a previous packet, we set the return
    * flag when requested. */
-  if (G_UNLIKELY (tail))
+  if (G_LIKELY (tail))
     *tail = (list == NULL);
 
   return TRUE;
