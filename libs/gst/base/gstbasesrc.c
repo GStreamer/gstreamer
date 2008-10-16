@@ -328,12 +328,13 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
-          "Size in bytes to read per buffer (0 = default)", 0, G_MAXULONG,
+          "Size in bytes to read per buffer (-1 = default)", 0, G_MAXULONG,
           DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
-          "Number of buffers to output before sending EOS", -1, G_MAXINT,
-          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Number of buffers to output before sending EOS (-1 = unlimited)",
+          -1, G_MAXINT, DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TYPEFIND,
       g_param_spec_boolean ("typefind", "Typefind",
           "Run typefind before negotiating", DEFAULT_TYPEFIND,
@@ -597,7 +598,8 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
  * @src: the source
  * @blocksize: the new blocksize in bytes
  *
- * Set the number of bytes that @src will push out with each buffer.
+ * Set the number of bytes that @src will push out with each buffer. When
+ * @blocksize is set to -1, a default length will be used.
  *
  * Since: 0.10.22
  */
