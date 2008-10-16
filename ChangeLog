@@ -1,3 +1,11 @@
+2008-10-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Sebastian Pölsterl
+	
+	* gst/mpegdemux/mpegtspacketizer.c:
+	Fixes segfault in get_encoding_and_convert.
+	Fixes #556482
+
 2008-10-15  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Josep Torra
