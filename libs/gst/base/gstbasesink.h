@@ -187,6 +187,7 @@ struct _GstBaseSinkClass {
 
 GType gst_base_sink_get_type(void);
 
+GstFlowReturn	gst_base_sink_do_preroll 	(GstBaseSink *sink, GstMiniObject *obj);
 GstFlowReturn	gst_base_sink_wait_preroll 	(GstBaseSink *sink);
 
 /* synchronizing against the clock */

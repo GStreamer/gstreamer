@@ -258,6 +258,7 @@ GstBaseSinkClass
 
 gst_base_sink_query_latency
 gst_base_sink_get_latency
+gst_base_sink_do_preroll
 gst_base_sink_wait_preroll
 gst_base_sink_wait_clock
 gst_base_sink_wait_eos
