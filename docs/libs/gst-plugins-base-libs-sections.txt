@@ -172,6 +172,9 @@ gst_ring_buffer_acquire
 gst_ring_buffer_release
 gst_ring_buffer_is_acquired
 
+gst_ring_buffer_activate
+gst_ring_buffer_is_active
+
 gst_ring_buffer_start
 gst_ring_buffer_pause
 gst_ring_buffer_stop
@@ -181,6 +184,7 @@ gst_ring_buffer_samples_done
 gst_ring_buffer_set_sample
 gst_ring_buffer_commit
 gst_ring_buffer_commit_full
+gst_ring_buffer_convert
 
 gst_ring_buffer_prepare_read
 gst_ring_buffer_read

@@ -1,3 +1,16 @@
+2008-10-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_convert),
+	(gst_ring_buffer_activate), (gst_ring_buffer_is_active):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Add methods to more accuratly control the pulling thread of a
+	ringbuffer.
+	Add format conversion helper code to the ringbuffer.
+	API: GstRingBuffer:gst_ring_buffer_activate()
+	API: GstRingBuffer:gst_ring_buffer_is_active()
+	API: GstRingBuffer:gst_ring_buffer_convert()
+
 2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func),

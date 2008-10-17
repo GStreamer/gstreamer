@@ -433,6 +433,101 @@ parse_error:
 }
 
 /**
+ * gst_ring_buffer_convert:
+ * @buf: the #GstRingBuffer
+ * @src_fmt: the source format
+ * @src_val: the source value
+ * @dest_fmt: the destination format
+ * @dest_val: a location to store the converted value
+ *
+ * Convert @src_val in @src_fmt to the equivalent value in @dest_fmt. The result
+ * will be put in @dest_val.
+ *
+ * Returns: TRUE if the conversion succeeded.
+ *
+ * Since: 0.10.22.
+ */
+gboolean
+gst_ring_buffer_convert (GstRingBuffer * buf,
+    GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
+{
+  gboolean res = TRUE;
+  gint bps, rate;
+
+  GST_DEBUG ("converting value %" G_GINT64_FORMAT " from %s (%d) to %s (%d)",
+      src_val, gst_format_get_name (src_fmt), src_fmt,
+      gst_format_get_name (dest_fmt), dest_fmt);
+
+  if (src_fmt == dest_fmt || src_val == -1) {
+    *dest_val = src_val;
+    goto done;
+  }
+
+  /* get important info */
+  GST_OBJECT_LOCK (buf);
+  bps = buf->spec.bytes_per_sample;
+  rate = buf->spec.rate;
+  GST_OBJECT_UNLOCK (buf);
+
+  if (bps == 0 || rate == 0) {
+    GST_DEBUG ("no rate or bps configured");
+    res = FALSE;
+    goto done;
+  }
+
+  switch (src_fmt) {
+    case GST_FORMAT_BYTES:
+      switch (dest_fmt) {
+        case GST_FORMAT_TIME:
+          *dest_val = gst_util_uint64_scale_int (src_val / bps, GST_SECOND,
+              rate);
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_val = src_val / bps;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (dest_fmt) {
+        case GST_FORMAT_TIME:
+          *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND, rate);
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_val = src_val * bps;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (dest_fmt) {
+        case GST_FORMAT_DEFAULT:
+          *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_val = gst_util_uint64_scale_int (src_val, rate, GST_SECOND);
+          *dest_val *= bps;
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+done:
+  GST_DEBUG ("ret=%d result %" G_GINT64_FORMAT, res, *dest_val);
+
+  return res;
+}
+
+/**
  * gst_ring_buffer_set_callback:
  * @buf: the #GstRingBuffer to set the callback on
  * @cb: the callback to set
@@ -607,7 +702,6 @@ gst_ring_buffer_device_is_open (GstRingBuffer * buf)
 
   return res;
 }
-
 
 /**
  * gst_ring_buffer_acquire:
@@ -799,6 +893,103 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 
   return res;
 }
+
+/**
+ * gst_ring_buffer_activate:
+ * @buf: the #GstRingBuffer to activate
+ * @active: the new mode
+ *
+ * Activate @buf to start or stop pulling data.
+ *
+ * Returns: TRUE if the device could be activated in the requested mode,
+ * FALSE on error.
+ *
+ * Since: 0.10.22.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
+{
+  gboolean res = FALSE;
+  GstRingBufferClass *rclass;
+
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+
+  GST_DEBUG_OBJECT (buf, "activate device");
+
+  GST_OBJECT_LOCK (buf);
+  if (G_UNLIKELY (active && !buf->acquired))
+    goto not_acquired;
+
+  if (G_UNLIKELY (buf->abidata.ABI.active == active))
+    goto was_active;
+
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+  /* if there is no activate function we assume it was started/released
+   * in the acquire method */
+  if (G_LIKELY (rclass->activate))
+    res = rclass->activate (buf, active);
+  else
+    res = TRUE;
+
+  if (G_UNLIKELY (!res))
+    goto activate_failed;
+
+  buf->abidata.ABI.active = active;
+
+done:
+  GST_OBJECT_UNLOCK (buf);
+
+  return res;
+
+  /* ERRORS */
+not_acquired:
+  {
+    GST_DEBUG_OBJECT (buf, "device not acquired");
+    g_critical ("Device for %p not acquired", buf);
+    res = FALSE;
+    goto done;
+  }
+was_active:
+  {
+    res = TRUE;
+    GST_DEBUG_OBJECT (buf, "device was active in mode %d", active);
+    goto done;
+  }
+activate_failed:
+  {
+    GST_DEBUG_OBJECT (buf, "failed to activate device");
+    goto done;
+  }
+}
+
+/**
+ * gst_ring_buffer_is_active:
+ * @buf: the #GstRingBuffer
+ *
+ * Check if @buf is activated.
+ *
+ * Returns: TRUE if the device is active.
+ *
+ * Since: 0.10.22.
+ *
+ * MT safe.
+ */
+gboolean
+gst_ring_buffer_is_active (GstRingBuffer * buf)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
+
+  GST_OBJECT_LOCK (buf);
+  res = buf->abidata.ABI.active;
+  GST_OBJECT_UNLOCK (buf);
+
+  return res;
+}
+
 
 /**
  * gst_ring_buffer_set_flushing:

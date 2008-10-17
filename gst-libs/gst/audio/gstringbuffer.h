@@ -279,6 +279,7 @@ struct _GstRingBuffer {
       gboolean           flushing;
       /* ATOMIC */
       gint               may_start;
+      gboolean           active;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
@@ -297,6 +298,7 @@ struct _GstRingBuffer {
  * @resume: resume processing of samples after pause
  * @stop: stop processing of samples
  * @delay: get number of samples queued in device
+ * @activate: activate the thread that starts pulling. Since 0.10.22
  *
  * The vmethods that subclasses can override to implement the ringbuffer.
  */
@@ -316,8 +318,11 @@ struct _GstRingBufferClass {
 
   guint        (*delay)        (GstRingBuffer *buf);
 
+  /* ABI added */
+  gboolean     (*activate)     (GstRingBuffer *buf, gboolean active);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 GType gst_ring_buffer_get_type(void);
@@ -330,6 +335,10 @@ gboolean        gst_ring_buffer_parse_caps      (GstRingBufferSpec *spec, GstCap
 void            gst_ring_buffer_debug_spec_caps (GstRingBufferSpec *spec);
 void            gst_ring_buffer_debug_spec_buff (GstRingBufferSpec *spec);
 
+gboolean        gst_ring_buffer_convert         (GstRingBuffer * buf, GstFormat src_fmt,
+                                                 gint64 src_val, GstFormat dest_fmt,
+						 gint64 * dest_val);
+
 /* device state */
 gboolean        gst_ring_buffer_open_device     (GstRingBuffer *buf);
 gboolean        gst_ring_buffer_close_device    (GstRingBuffer *buf);
@@ -341,6 +350,10 @@ gboolean        gst_ring_buffer_acquire         (GstRingBuffer *buf, GstRingBuff
 gboolean        gst_ring_buffer_release         (GstRingBuffer *buf);
 
 gboolean        gst_ring_buffer_is_acquired     (GstRingBuffer *buf);
+
+/* activating */
+gboolean        gst_ring_buffer_activate        (GstRingBuffer *buf, gboolean active);
+gboolean        gst_ring_buffer_is_active       (GstRingBuffer *buf);
 
 /* flushing */
 void            gst_ring_buffer_set_flushing    (GstRingBuffer *buf, gboolean flushing);
