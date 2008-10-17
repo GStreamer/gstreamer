@@ -3290,19 +3290,39 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (active) {
+    GstFormat format;
+    gint64 duration;
+
     /* we mark we have a newsegment here because pull based
      * mode works just fine without having a newsegment before the
      * first buffer */
-    gst_segment_init (&basesink->segment, GST_FORMAT_BYTES);
-    gst_segment_init (basesink->abidata.ABI.clip_segment, GST_FORMAT_BYTES);
+    format = GST_FORMAT_BYTES;
+
+    gst_segment_init (&basesink->segment, format);
+    gst_segment_init (basesink->abidata.ABI.clip_segment, format);
     GST_OBJECT_LOCK (basesink);
     basesink->have_newsegment = TRUE;
     GST_OBJECT_UNLOCK (basesink);
+
+    /* get the peer duration in bytes */
+    result = gst_pad_query_peer_duration (pad, &format, &duration);
+    if (result) {
+      GST_DEBUG_OBJECT (basesink,
+          "setting duration in bytes to %" G_GINT64_FORMAT, duration);
+      gst_segment_set_duration (basesink->abidata.ABI.clip_segment, format,
+          duration);
+      gst_segment_set_duration (&basesink->segment, format, duration);
+    } else {
+      GST_DEBUG_OBJECT (basesink, "unknown duration");
+    }
 
     if (bclass->activate_pull)
       result = bclass->activate_pull (basesink, TRUE);
     else
       result = FALSE;
+
+    if (!result)
+      goto activate_failed;
 
     /* but if starting the thread fails, set it back */
     if (!result)
@@ -3325,6 +3345,13 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
   gst_object_unref (basesink);
 
   return result;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_ERROR_OBJECT (basesink, "subclass failed to activate in pull mode");
+    return FALSE;
+  }
 }
 
 /* send an event to our sinkpad peer. */
@@ -3627,9 +3654,39 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       break;
     }
     case GST_QUERY_DURATION:
-      GST_DEBUG_OBJECT (basesink, "duration query");
-      res = gst_base_sink_peer_query (basesink, query);
+    {
+      GstFormat format, uformat;
+      gint64 duration, uduration;
+
+      gst_query_parse_duration (query, &format, NULL);
+
+      GST_DEBUG_OBJECT (basesink, "duration query in format %s",
+          gst_format_get_name (format));
+
+      if (basesink->pad_mode == GST_ACTIVATE_PULL) {
+        uformat = GST_FORMAT_BYTES;
+
+        /* get the duration in bytes, in pull mode that's all we are sure to
+         * know. */
+        res = gst_pad_query_peer_duration (basesink->sinkpad, &uformat,
+            &uduration);
+        if (res && format != uformat) {
+          /* convert to the requested format */
+          res = gst_pad_query_convert (basesink->sinkpad, uformat, uduration,
+              &format, &duration);
+        } else {
+          duration = uduration;
+        }
+        if (res) {
+          /* set the result */
+          gst_query_set_duration (query, format, duration);
+        }
+      } else {
+        /* in push mode we simply forward upstream */
+        res = gst_base_sink_peer_query (basesink, query);
+      }
       break;
+    }
     case GST_QUERY_LATENCY:
     {
       gboolean live, us_live;

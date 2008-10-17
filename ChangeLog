@@ -1,3 +1,11 @@
+2008-10-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_pad_activate_pull),
+	(gst_base_sink_query):
+	Query the total number of bytes when activating the pad in pull mode.
+	Implement duration query in pull mode by using the installed pad convert
+	function to convert from bytes to the requested format.
+
 2008-10-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/libs/gstreamer-libs-sections.txt:
