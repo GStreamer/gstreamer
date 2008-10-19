@@ -1,3 +1,8 @@
+2008-10-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_do_seek);
+	  Remove duplicated assignment and log a message in failure case.
+
 2008-10-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: Dig Ge <dig.ge.cn at gmail com>

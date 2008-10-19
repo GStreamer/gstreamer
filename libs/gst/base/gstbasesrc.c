@@ -986,9 +986,10 @@ gst_base_src_default_do_seek (GstBaseSrc * src, GstSegment * segment)
   } else if (segment->start == 0) {
     /* seek to start, we can implement a default for this. */
     segment->time = 0;
-    res = TRUE;
-  } else
+  } else {
     res = FALSE;
+    GST_INFO_OBJECT (src, "Can't do a default seek");
+  }
 
   return res;
 }
