@@ -1,3 +1,9 @@
+2008-10-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* ext/apexsink/gstapexplugin.c: (plugin_init):
+	  Set apexsink's rank to NONE so it doesn't get used by
+	  autoaudiosink (there's no point really). (#556588)
+
 2008-10-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

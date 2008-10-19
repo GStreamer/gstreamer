@@ -31,7 +31,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, GST_APEX_SINK_NAME, GST_RANK_PRIMARY,
+  return gst_element_register (plugin, GST_APEX_SINK_NAME, GST_RANK_NONE,
       GST_TYPE_APEX_SINK);
 }
 
