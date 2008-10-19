@@ -75,7 +75,7 @@ main (int argc, char *argv[])
     return -1;
   }
   resample = gst_element_factory_make ("audioresample", "audioresample");
-  if (!conv) {
+  if (!resample) {
     g_print ("could not create \"audioresample\" element!");
     return -1;
   }

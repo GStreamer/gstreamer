@@ -1,3 +1,10 @@
+2008-10-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: Dig Ge <dig.ge.cn at gmail com>
+
+	* tests/examples/helloworld/helloworld.c: (main):
+	  Fix copy'n'paste bug in hello world example (#556900).
+
 2008-10-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_pad_activate_pull),
