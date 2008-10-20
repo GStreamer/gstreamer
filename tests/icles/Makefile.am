@@ -39,4 +39,8 @@ test_scale_SOURCES = test-scale.c
 test_scale_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 test_scale_LDADD = $(GST_LIBS) $(LIBM)
 
-noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) stress-playbin test-scale
+test_box_SOURCES = test-box.c
+test_box_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+test_box_LDADD = $(GST_LIBS) $(LIBM)
+
+noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) stress-playbin test-scale test-box

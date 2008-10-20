@@ -1,3 +1,13 @@
+2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/icles/.cvsignore:
+	update ignore file.
+
+	* tests/icles/Makefile.am:
+	* tests/icles/test-box.c: (make_pipeline), (main):
+	Add another interactive command line experimentation suite for
+	dynamically boxing/cropping/saling an input video.
+
 2008-10-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
