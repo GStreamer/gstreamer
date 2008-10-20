@@ -1169,7 +1169,8 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     if (dest_format != seek_format && !relative_seek) {
       /* If we have an ABSOLUTE position (SEEK_SET only), we can convert it
        * here before taking the stream lock, otherwise we must convert it later,
-       * once we have the stream lock and can read the current position */
+       * once we have the stream lock and can read the last configures segment
+       * start and stop positions */
       gst_segment_init (&seeksegment, dest_format);
 
       if (!gst_base_src_prepare_seek_segment (src, event, &seeksegment))

@@ -1694,6 +1694,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_OBJECT_UNLOCK (trans);
 
     if (G_UNLIKELY (reconfigure)) {
+      GST_DEBUG_OBJECT (trans, "we had a pending reconfigure");
       /* if we need to reconfigure we pretend a buffer with new caps arrived. This
        * will reconfigure the transform with the new output format. We can only
        * do this if the buffer actually has caps. */
@@ -2326,6 +2327,7 @@ gst_base_transform_reconfigure (GstBaseTransform * trans)
   g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
 
   GST_OBJECT_LOCK (trans);
+  GST_DEBUG_OBJECT (trans, "marking reconfigure");
   trans->priv->reconfigure = TRUE;
   GST_OBJECT_UNLOCK (trans);
 }

@@ -1,3 +1,16 @@
+2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek):
+	Update comment.
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_handle_buffer),
+	(gst_base_transform_reconfigure):
+	Add some debug info.
+
+	* win32/common/libgstbase.def:
+	Add new method.
+
 2008-10-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_do_seek);
