@@ -2497,11 +2497,11 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
 {
   gboolean res;
 
-  /* See if pad accepts the caps */
-  if (!gst_pad_accept_caps (pad, caps))
-    goto not_accepted;
-
   if (dosetcaps) {
+    /* See if pad accepts the caps */
+    if (!gst_pad_accept_caps (pad, caps))
+      goto not_accepted;
+
     res = gst_pad_set_caps (pad, caps);
   } else {
     res = TRUE;

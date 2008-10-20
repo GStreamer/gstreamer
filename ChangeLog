@@ -1,5 +1,13 @@
 2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpad.c: (gst_pad_configure_src):
+	When we use gst_pad_alloc_buffer() without wanting to set the caps we
+	also don't need to check if the caps are compatible because the caller
+	presumably is going to perform its own custom checks. Fixes some cases
+	where basetransform elements would error out when it was not needed.
+
+2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek):
 	Update comment.
 
