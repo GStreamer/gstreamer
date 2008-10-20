@@ -1,3 +1,28 @@
+2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiosink.c:
+	(gst_audioringbuffer_class_init), (gst_audioringbuffer_acquire),
+	(gst_audioringbuffer_activate), (gst_audioringbuffer_release),
+	(gst_audioringbuffer_stop):
+	Implement a separate activate functions to start monitoring the segments
+	or, in pull mode, pulling in data.
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_init), (gst_base_audio_sink_dispose),
+	(gst_base_audio_sink_query_pad), (gst_base_audio_sink_query),
+	(gst_base_audio_sink_setcaps), (gst_base_audio_sink_callback),
+	(gst_base_audio_sink_activate_pull),
+	(gst_base_audio_sink_async_play),
+	(gst_base_audio_sink_change_state):
+	Implement pad and element convert query function.
+	Activate the ringbuffer.
+	Use the segment last_stop value as the offset to pull.
+	Use new basesink _do_preroll() method to preroll in the pulling thread.
+	Take appropriate locking in the pulling thread.
+
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Update some docs.
+
 2008-10-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/typefind/gsttypefindfunctions.c: (mxf_type_find):

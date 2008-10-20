@@ -298,7 +298,8 @@ struct _GstRingBuffer {
  * @resume: resume processing of samples after pause
  * @stop: stop processing of samples
  * @delay: get number of samples queued in device
- * @activate: activate the thread that starts pulling. Since 0.10.22
+ * @activate: activate the thread that starts pulling and monitoring the
+ * consumed segments in the device. Since 0.10.22
  *
  * The vmethods that subclasses can override to implement the ringbuffer.
  */
