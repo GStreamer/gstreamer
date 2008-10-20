@@ -1,3 +1,10 @@
+2008-10-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/typefind/gsttypefindfunctions.c: (mxf_type_find):
+	Improve MXF typefinding a bit by searching for a header partition
+	pack instead of just a general partition pack and checking more
+	bytes for valid values.
+
 2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/icles/.cvsignore:
