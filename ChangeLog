@@ -1,3 +1,9 @@
+2008-10-20  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data):
+	Fix reverse playback regression.
+	Fixes #557080
+
 2008-10-19  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/apexsink/gstapexplugin.c: (plugin_init):
