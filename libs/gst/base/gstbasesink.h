@@ -95,6 +95,7 @@ struct _GstBaseSink {
       GstSegment    *clip_segment;
       /* max amount of time a buffer can be late, -1 no limit. */
       gint64	     max_lateness;
+      gboolean       running;
     } ABI;
     gpointer _gst_reserved[GST_PADDING_LARGE - 1];
   } abidata;

@@ -1,5 +1,20 @@
 2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_default_do_seek),
+	(gst_base_sink_default_prepare_seek_segment),
+	(gst_base_sink_perform_seek), (gst_base_sink_get_position_last),
+	(gst_base_sink_get_position_paused), (gst_base_sink_get_position),
+	(gst_base_sink_query):
+	Implement more seeking in pull mode.
+	Use pad convert functions to convert position to the requested format.
+	Fix position/duration reporting in pull mode.
+	Implement position and duration reporting in other formats than time.
+
+	* libs/gst/base/gstbasesink.h:
+	Add member to keep track of when the segment is playing.
+
+2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_configure_src):
 	When we use gst_pad_alloc_buffer() without wanting to set the caps we
 	also don't need to check if the caps are compatible because the caller
