@@ -1,5 +1,12 @@
 2008-10-21  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst/avi/gstavimux.c:
+	Fix VPRP chunk setup in avimux.
+	Fixes: #556010
+	Patch By: Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+2008-10-21  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst/videobox/gstvideobox.c:
 	support dynamically changing properties in videobox
 	Fixed: #557085
