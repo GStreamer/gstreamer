@@ -251,7 +251,7 @@ struct _GstBaseTransformPrivate
   /* upstream caps and size suggestions */
   GstCaps *sink_suggest;
   guint size_suggest;
-  gint suggest_pending;
+  gboolean suggest_pending;
 
   gboolean reconfigure;
 };
@@ -1224,7 +1224,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
             gst_caps_unref (priv->sink_suggest);
           priv->sink_suggest = gst_caps_ref (othercaps);
           priv->size_suggest = size_suggest;
-          g_atomic_int_set (&trans->priv->suggest_pending, 1);
+          trans->priv->suggest_pending = TRUE;
           GST_OBJECT_UNLOCK (trans->sinkpad);
         }
         gst_caps_unref (othercaps);
@@ -1366,7 +1366,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstBaseTransform *trans;
   GstBaseTransformPrivate *priv;
   GstFlowReturn res;
-  gboolean proxy, suggest;
+  gboolean proxy, suggest, same_caps;
   GstCaps *sink_suggest;
   guint size_suggest;
 
@@ -1384,8 +1384,12 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
   /* we remember our previous alloc request to quickly see if we can proxy or
    * not. We skip this check if we have a pending suggestion. */
-  if (g_atomic_int_get (&priv->suggest_pending) == 0 && caps &&
-      gst_caps_is_equal (priv->sink_alloc, caps)) {
+  GST_OBJECT_LOCK (pad);
+  same_caps = !priv->suggest_pending && caps &&
+      gst_caps_is_equal (priv->sink_alloc, caps);
+  GST_OBJECT_UNLOCK (pad);
+
+  if (same_caps) {
     /* we have seen this before, see below if we need to proxy */
     GST_DEBUG_OBJECT (trans, "have old caps");
     sink_suggest = caps;
@@ -1414,7 +1418,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       size_suggest = size;
       suggest = FALSE;
     }
-    g_atomic_int_set (&priv->suggest_pending, 0);
+    priv->suggest_pending = FALSE;
     GST_OBJECT_UNLOCK (pad);
 
     /* check if we actually handle this format on the sinkpad */
@@ -1462,7 +1466,10 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     }
   }
   /* remember the new caps */
+  GST_OBJECT_LOCK (pad);
   gst_caps_replace (&priv->sink_alloc, sink_suggest);
+  GST_OBJECT_UNLOCK (pad);
+
   proxy = priv->proxy_alloc;
   GST_DEBUG_OBJECT (trans, "doing default alloc, proxy %d", proxy);
 
@@ -1487,11 +1494,13 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     if (!gst_caps_is_equal (newcaps, caps)) {
       GST_DEBUG_OBJECT (trans, "caps are new");
       /* we have new caps, see if we can proxy downstream */
-      if (gst_pad_peer_accept_caps (trans->sinkpad, newcaps)) {
+      if (gst_pad_peer_accept_caps (pad, newcaps)) {
         /* peer accepts the caps, return a buffer in this format */
         GST_DEBUG_OBJECT (trans, "peer accepted new caps");
         /* remember the format */
+        GST_OBJECT_LOCK (pad);
         gst_caps_replace (&priv->sink_alloc, newcaps);
+        GST_OBJECT_UNLOCK (pad);
       } else {
         GST_DEBUG_OBJECT (trans, "peer did not accept new caps");
         /* peer does not accept the caps, free the buffer we received and
@@ -2306,7 +2315,7 @@ gst_base_transform_suggest (GstBaseTransform * trans, GstCaps * caps,
     caps = gst_caps_copy (caps);
   trans->priv->sink_suggest = caps;
   trans->priv->size_suggest = size;
-  g_atomic_int_set (&trans->priv->suggest_pending, 1);
+  trans->priv->suggest_pending = TRUE;
   GST_DEBUG_OBJECT (trans, "new suggest %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (trans->sinkpad);
 }

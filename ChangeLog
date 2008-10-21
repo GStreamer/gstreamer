@@ -1,3 +1,12 @@
+2008-10-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_buffer_alloc), (gst_base_transform_suggest):
+	Protect sink_alloc caps with the sinkpad lock to avoid nasty caps
+	refcount problems as seen in banshee and maybe also in farsight2.
+	Remove atomic int now that we need to take the lock anyways.
+
 2008-10-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_default_do_seek),
