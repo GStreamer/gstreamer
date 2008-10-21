@@ -133,7 +133,6 @@ static void gst_video_box_set_property (GObject * object, guint prop_id,
 static void gst_video_box_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean video_box_recalc_transform (GstVideoBox * video_box);
 static GstCaps *gst_video_box_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * from);
 static gboolean gst_video_box_set_caps (GstBaseTransform * trans,
@@ -304,7 +303,7 @@ gst_video_box_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  video_box_recalc_transform (video_box);
+  GST_DEBUG_OBJECT (video_box, "Calling reconfigure");
   gst_base_transform_reconfigure (GST_BASE_TRANSFORM (video_box));
   GST_BASE_TRANSFORM_UNLOCK (GST_BASE_TRANSFORM_CAST (video_box));
 }
@@ -374,7 +373,7 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
     if (width <= 0)
       width = 1;
 
-    GST_DEBUG ("New caps width: %d", width);
+    GST_DEBUG_OBJECT (trans, "New caps width: %d", width);
     gst_structure_set (structure, "width", G_TYPE_INT, width, NULL);
   }
 
@@ -390,7 +389,7 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
     if (height <= 0)
       height = 1;
 
-    GST_DEBUG ("New caps height: %d", height);
+    GST_DEBUG_OBJECT (trans, "New caps height: %d", height);
     gst_structure_set (structure, "height", G_TYPE_INT, height, NULL);
   }
 
@@ -405,26 +404,6 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       " to %" GST_PTR_FORMAT, direction, from, ret);
 
   return ret;
-}
-
-static gboolean
-video_box_recalc_transform (GstVideoBox * video_box)
-{
-  gboolean res = TRUE;
-
-  /* if we have the same format in and out and we don't need to perform and
-   * cropping at all, we can just operate in passthorugh mode */
-  if (video_box->in_fourcc == video_box->out_fourcc &&
-      video_box->box_left == 0 && video_box->box_right == 0 &&
-      video_box->box_top == 0 && video_box->box_bottom == 0) {
-
-    GST_LOG_OBJECT (video_box, "we are using passthrough");
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), TRUE);
-  } else {
-    GST_LOG_OBJECT (video_box, "we are not using passthrough");
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), FALSE);
-  }
-  return res;
 }
 
 static gboolean
@@ -450,11 +429,23 @@ gst_video_box_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   if (!ret)
     goto no_caps;
 
-  GST_DEBUG ("Input w: %d h: %d", video_box->in_width, video_box->in_height);
-  GST_DEBUG ("Output w: %d h: %d", video_box->out_width, video_box->out_height);
+  GST_DEBUG_OBJECT (trans, "Input w: %d h: %d", video_box->in_width,
+      video_box->in_height);
+  GST_DEBUG_OBJECT (trans, "Output w: %d h: %d", video_box->out_width,
+      video_box->out_height);
 
-  /* recalc the transformation strategy */
-  ret = video_box_recalc_transform (video_box);
+  /* if we have the same format in and out and we don't need to perform and
+   * cropping at all, we can just operate in passthorugh mode */
+  if (video_box->in_fourcc == video_box->out_fourcc &&
+      video_box->box_left == 0 && video_box->box_right == 0 &&
+      video_box->box_top == 0 && video_box->box_bottom == 0) {
+
+    GST_LOG_OBJECT (video_box, "we are using passthrough");
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), TRUE);
+  } else {
+    GST_LOG_OBJECT (video_box, "we are not using passthrough");
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (video_box), FALSE);
+  }
 
   return ret;
 
