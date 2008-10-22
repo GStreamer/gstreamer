@@ -410,7 +410,6 @@ gst_tag_image_data_to_image_buffer (const guint8 * image_data,
 
   memcpy (GST_BUFFER_DATA (image), image_data, image_data_len);
   GST_BUFFER_DATA (image)[image_data_len] = '\0';
-  GST_BUFFER_SIZE (image) = image_data_len + 1;
 
   /* Find GStreamer media type, can't trust declared type */
   caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
