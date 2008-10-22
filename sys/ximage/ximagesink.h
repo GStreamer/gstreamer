@@ -60,7 +60,7 @@ typedef struct _GstXImageBufferClass GstXImageBufferClass;
 typedef struct _GstXImageSink GstXImageSink;
 typedef struct _GstXImageSinkClass GstXImageSinkClass;
 
-/**
+/*
  * GstXContext:
  * @disp: the X11 Display of this context
  * @screen: the default Screen of Display @disp
@@ -110,7 +110,7 @@ struct _GstXContext {
   GstCaps *caps;
 };
 
-/**
+/*
  * GstXWindow:
  * @win: the Window ID of this X11 window
  * @width: the width in pixels of Window @win

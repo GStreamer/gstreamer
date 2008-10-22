@@ -1,5 +1,11 @@
 2008-10-22  Stefan Kost  <ensonic@users.sf.net>
 
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.h:
+	  Don't mark as gtk-doc docs as they aren't public.
+
+2008-10-22  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c:
 	* sys/xvimage/xvimagesink.h:
 	* tests/icles/Makefile.am:

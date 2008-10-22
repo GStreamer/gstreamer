@@ -64,7 +64,7 @@ typedef struct _GstXvImageBufferClass GstXvImageBufferClass;
 typedef struct _GstXvImageSink GstXvImageSink;
 typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
 
-/**
+/*
  * GstXContext:
  * @disp: the X11 Display of this context
  * @screen: the default Screen of Display @disp
@@ -130,7 +130,7 @@ struct _GstXContext {
   gint last_format;
 };
 
-/**
+/*
  * GstXWindow:
  * @win: the Window ID of this X11 window
  * @width: the width in pixels of Window @win
