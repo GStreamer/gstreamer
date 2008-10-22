@@ -1,3 +1,9 @@
+2008-10-22  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* libs/gst/base/gstbitreader.c:
+	* libs/gst/base/gstbytereader.c:
+	Fix the names of 2 functions in the docs strings.
+
 2008-10-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:

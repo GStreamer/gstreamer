@@ -171,7 +171,7 @@ gst_byte_reader_init (GstByteReader * reader, const guint8 * data, guint size)
 }
 
 /**
- * gst_byte_reader_init:
+ * gst_byte_reader_init_from_buffer:
  * @reader: a #GstByteReader instance
  * @buffer: Buffer from which the #GstByteReader should read
  *
