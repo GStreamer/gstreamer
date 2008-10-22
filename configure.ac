@@ -695,6 +695,7 @@ if test "x${GST_DISABLE_OPTION_PARSING}" = "xno"; then enable_option_parsing="ye
 if test "x${GST_DISABLE_TRACE}" = "xno"; then enable_trace="yes"; fi
 if test "x${GST_DISABLE_ALLOC_TRACE}" = "xno"; then enable_alloc_trace="yes"; fi
 if test "x${GST_DISABLE_PLUGIN}" = "xno"; then enable_plugin="yes"; fi
+if test "x${GST_DISABLE_REGISTRY}" = "xno"; then enable_registry="yes"; fi
 if test "x${GST_DISABLE_NET}" = "xno"; then enable_net="yes"; fi
 
 echo "
@@ -715,7 +716,8 @@ Configuration
 	Option parsing in gst_init : ${enable_option_parsing}
 	Tracing subsystem          : ${enable_trace}
 	Allocation tracing         : ${enable_alloc_trace}
-	Plugin registry            : ${enable_plugin}
+	Plugin registry            : ${enable_registry}
+	Plugin support	           : ${enable_plugin}
 	Network support            : ${enable_net}
 
 	Debug                      : ${USE_DEBUG}

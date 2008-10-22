@@ -1,5 +1,11 @@
 2008-10-22  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	Fix a bug in the output of the configure script summary
+	when --gst-disable-registry is supplied
+
+2008-10-22  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* libs/gst/base/gstbitreader.c:
 	* libs/gst/base/gstbytereader.c:
 	Fix the names of 2 functions in the docs strings.
