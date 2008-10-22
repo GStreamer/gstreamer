@@ -1,3 +1,13 @@
+2008-10-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c:
+	* sys/xvimage/xvimagesink.h:
+	* tests/icles/Makefile.am:
+	* tests/icles/test-colorkey.c:
+	  Allow setting colorkey if possible. Implement property probe interface
+	  for optional X features (autopaint-colorkey, double-buffer and
+	  colorkey). Fixes #554533
+
 2008-10-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/tag/tags.c: (gst_tag_image_data_to_image_buffer):

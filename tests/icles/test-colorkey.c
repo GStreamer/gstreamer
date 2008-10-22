@@ -24,14 +24,17 @@
 #endif
 
 #include <stdlib.h>
-#include <glib.h>
-#include <gtk/gtk.h>
-#include <gst/gst.h>
 #include <string.h>
 
-#include <X11/Xlib.h>
+#include <glib.h>
 #include <gdk/gdkx.h>
+#include <gtk/gtk.h>
+
+#include <X11/Xlib.h>
+
+#include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/interfaces/propertyprobe.h>
 
 static GtkWidget *video_window = NULL;
 static GstElement *sink = NULL;
@@ -61,8 +64,8 @@ bus_sync_handler (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   return GST_BUS_PASS;
 }
 
-static gboolean
-handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event, gpointer data)
+static void
+redraw_overlay (GtkWidget * widget)
 {
   gdk_draw_rectangle (widget->window, widget->style->white_gc, TRUE,
       0, 0, widget->allocation.width, widget->allocation.height);
@@ -82,6 +85,19 @@ handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event, gpointer data)
       }
     }
   }
+}
+
+static gboolean
+handle_resize_cb (GtkWidget * widget, GdkEventConfigure * event, gpointer data)
+{
+  redraw_overlay (widget);
+  return FALSE;
+}
+
+static gboolean
+handle_expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
+{
+  redraw_overlay (widget);
   return FALSE;
 }
 
@@ -138,6 +154,9 @@ main (int argc, char **argv)
   GtkWidget *window;
   GstElement *pipeline, *src;
   GstBus *bus;
+  GstStateChangeReturn sret;
+  GstPropertyProbe *probe;
+  GValueArray *arr;
 
   if (!g_thread_supported ())
     g_thread_init (NULL);
@@ -158,9 +177,35 @@ main (int argc, char **argv)
   gst_bin_add_many (GST_BIN (pipeline), src, sink, NULL);
   gst_element_link (src, sink);
 
-  g_object_set (G_OBJECT (sink),
-      "autopaint-colorkey", FALSE,
-      "force-aspect-ratio", TRUE, "draw-borders", FALSE, NULL);
+  g_object_set (G_OBJECT (sink), "autopaint-colorkey", FALSE, "force-aspect-ratio", TRUE, "draw-borders", FALSE, "colorkey", 0x7F7F7F,  /* gray */
+      NULL);
+
+  /* check xvimagesink capabilities */
+  sret = gst_element_set_state (pipeline, GST_STATE_READY);
+  if (sret == GST_STATE_CHANGE_FAILURE) {
+    g_printerr ("Can't set pipelien to READY\n");
+    gst_object_unref (pipeline);
+    return -1;
+  }
+
+  probe = GST_PROPERTY_PROBE (sink);
+  if (!probe) {
+    g_printerr ("Can't probe sink\n");
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+    return -1;
+  }
+  arr =
+      gst_property_probe_probe_and_get_values_name (probe,
+      "autopaint-colorkey");
+  if (!arr || !arr->n_values) {
+    g_printerr ("Can't disable autopaint-colorkey property\n");
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+    return -1;
+  }
+  if (arr)
+    g_value_array_free (arr);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler,
@@ -173,21 +218,27 @@ main (int argc, char **argv)
   /* prepare the ui */
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  video_window = gtk_drawing_area_new ();
-  gtk_widget_set_double_buffered (video_window, FALSE);
-
-  gtk_window_set_default_size (GTK_WINDOW (window), 320, 240);
-  gtk_container_add (GTK_CONTAINER (window), video_window);
   g_signal_connect (G_OBJECT (window), "delete-event",
       G_CALLBACK (window_closed), (gpointer) pipeline);
+  gtk_window_set_default_size (GTK_WINDOW (window), 320, 240);
+
+  video_window = gtk_drawing_area_new ();
   g_signal_connect (G_OBJECT (video_window), "configure-event",
       G_CALLBACK (handle_resize_cb), NULL);
+  g_signal_connect (G_OBJECT (video_window), "expose-event",
+      G_CALLBACK (handle_expose_cb), NULL);
+  gtk_widget_set_double_buffered (video_window, FALSE);
+  gtk_container_add (GTK_CONTAINER (window), video_window);
 
-  /* show the gui. */
+  /* show the gui and play */
+
   gtk_widget_show_all (window);
-
-  //connect_bus_signals (pipeline);
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (sret == GST_STATE_CHANGE_FAILURE) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+    return -1;
+  }
   gtk_main ();
   gst_object_unref (pipeline);
 

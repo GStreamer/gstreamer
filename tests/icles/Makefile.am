@@ -19,7 +19,6 @@ else
 X_TESTS =
 endif
 
-
 if USE_PANGO
 PANGO_TESTS = test-textoverlay
 

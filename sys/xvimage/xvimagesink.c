@@ -1363,6 +1363,10 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
     GST_DEBUG_OBJECT (xvimagesink, "Checking %d Xv port attributes", count);
 
+    xvimagesink->have_autopaint_colorkey = FALSE;
+    xvimagesink->have_double_buffer = FALSE;
+    xvimagesink->have_colorkey = FALSE;
+
     for (i = 0; ((i < count) && todo); i++)
       if (!strcmp (attr[i].name, autopaint)) {
         const Atom atom = XInternAtom (xcontext->disp, autopaint, False);
@@ -1371,20 +1375,25 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
             (xvimagesink->autopaint_colorkey ? 1 : 0));
         todo--;
+        xvimagesink->have_autopaint_colorkey = TRUE;
       } else if (!strcmp (attr[i].name, dbl_buffer)) {
         const Atom atom = XInternAtom (xcontext->disp, dbl_buffer, False);
 
         XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
             (xvimagesink->double_buffer ? 1 : 0));
         todo--;
+        xvimagesink->have_double_buffer = TRUE;
       } else if (!strcmp (attr[i].name, colorkey)) {
-        /* Set the colorkey to something that is dark but hopefully won't randomly
-         * appear on the screen elsewhere (ie not black or greys) */
+        /* Set the colorkey, default is something that is dark but hopefully
+         * won't randomly appear on the screen elsewhere (ie not black or greys)
+         * can be overridden by setting "colorkey" property
+         */
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
         guint32 ckey = 0;
         guint32 keymask;
         gint bits;
         gboolean set_attr = TRUE;
+        guint cr, cg, cb;
 
         /* Count the bits in the colorkey mask 'max' value */
         bits = 0;
@@ -1397,14 +1406,15 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
          * depth (xcontext->depth). We only handle these 2 cases, because
          * they're the only types of devices we've encountered. If we don't
          * recognise it, leave it alone  */
+        cr = (xvimagesink->colorkey >> 16);
+        cg = (xvimagesink->colorkey >> 8) & 0xFF;
+        cb = (xvimagesink->colorkey) & 0xFF;
         if (bits == 16)
-          ckey = (1 << 11) | (2 << 5) | 3;
+          ckey = (cr << 11) | (cg << 5) | cb;
         else if (bits == 24 || bits == 32)
-          ckey = (1 << 16) | (2 << 8) | 3;
+          ckey = (cr << 16) | (cg << 8) | cb;
         else
           set_attr = FALSE;
-
-        xvimagesink->colorkey = (1 << 16) | (2 << 8) | 3;
 
         if (set_attr) {
           ckey = CLAMP (ckey, (guint32) attr[i].min_value,
@@ -1420,6 +1430,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
               "Unknown bit depth %d for Xv Colorkey - not adjusting", bits);
         }
         todo--;
+        xvimagesink->have_colorkey = TRUE;
       }
 
     XFree (attr);
@@ -2734,6 +2745,14 @@ gst_xvimagesink_probe_get_properties (GstPropertyProbe * probe)
 
   if (!list) {
     list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
+    list =
+        g_list_append (list, g_object_class_find_property (klass,
+            "autopaint-colorkey"));
+    list =
+        g_list_append (list, g_object_class_find_property (klass,
+            "double-buffer"));
+    list =
+        g_list_append (list, g_object_class_find_property (klass, "colorkey"));
   }
 
   return list;
@@ -2747,7 +2766,11 @@ gst_xvimagesink_probe_probe_property (GstPropertyProbe * probe,
 
   switch (prop_id) {
     case ARG_DEVICE:
-      GST_DEBUG_OBJECT (xvimagesink, "probing device list");
+    case ARG_AUTOPAINT_COLORKEY:
+    case ARG_DOUBLE_BUFFER:
+    case ARG_COLORKEY:
+      GST_DEBUG_OBJECT (xvimagesink,
+          "probing device list and get capabilities");
       if (!xvimagesink->xcontext) {
         GST_DEBUG_OBJECT (xvimagesink, "generating xcontext");
         xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
@@ -2768,6 +2791,9 @@ gst_xvimagesink_probe_needs_probe (GstPropertyProbe * probe,
 
   switch (prop_id) {
     case ARG_DEVICE:
+    case ARG_AUTOPAINT_COLORKEY:
+    case ARG_DOUBLE_BUFFER:
+    case ARG_COLORKEY:
       if (xvimagesink->xcontext != NULL) {
         ret = FALSE;
       } else {
@@ -2814,6 +2840,43 @@ gst_xvimagesink_probe_get_values (GstPropertyProbe * probe,
       g_value_unset (&value);
       break;
     }
+    case ARG_AUTOPAINT_COLORKEY:
+      if (xvimagesink->have_autopaint_colorkey) {
+        GValue value = { 0 };
+
+        array = g_value_array_new (2);
+        g_value_init (&value, G_TYPE_BOOLEAN);
+        g_value_set_boolean (&value, FALSE);
+        g_value_array_append (array, &value);
+        g_value_set_boolean (&value, TRUE);
+        g_value_array_append (array, &value);
+        g_value_unset (&value);
+      }
+      break;
+    case ARG_DOUBLE_BUFFER:
+      if (xvimagesink->have_double_buffer) {
+        GValue value = { 0 };
+
+        array = g_value_array_new (2);
+        g_value_init (&value, G_TYPE_BOOLEAN);
+        g_value_set_boolean (&value, FALSE);
+        g_value_array_append (array, &value);
+        g_value_set_boolean (&value, TRUE);
+        g_value_array_append (array, &value);
+        g_value_unset (&value);
+      }
+      break;
+    case ARG_COLORKEY:
+      if (xvimagesink->have_colorkey) {
+        GValue value = { 0 };
+
+        array = g_value_array_new (1);
+        g_value_init (&value, GST_TYPE_INT_RANGE);
+        gst_value_set_int_range (&value, 0, 0xffffff);
+        g_value_array_append (array, &value);
+        g_value_unset (&value);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
       break;
@@ -2911,6 +2974,9 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       break;
     case ARG_AUTOPAINT_COLORKEY:
       xvimagesink->autopaint_colorkey = g_value_get_boolean (value);
+      break;
+    case ARG_COLORKEY:
+      xvimagesink->colorkey = g_value_get_int (value);
       break;
     case ARG_DRAW_BORDERS:
       xvimagesink->draw_borders = g_value_get_boolean (value);
@@ -3106,7 +3172,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->handle_expose = TRUE;
   xvimagesink->autopaint_colorkey = TRUE;
 
-  xvimagesink->colorkey = -1;
+  xvimagesink->colorkey = (1 << 16) | (2 << 8) | 3;;
   xvimagesink->draw_borders = TRUE;
 }
 
@@ -3224,7 +3290,7 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_COLORKEY,
       g_param_spec_int ("colorkey", "Colorkey",
           "Color to use for the overlay mask", G_MININT, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstXvImageSink:draw-borders
