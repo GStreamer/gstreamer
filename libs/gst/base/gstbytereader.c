@@ -1211,3 +1211,64 @@ gst_byte_reader_peek_float##bits##_be (GstByteReader *reader, g##type *val) \
 
 GST_BYTE_READER_READ_FLOATS (32, float, FLOAT);
 GST_BYTE_READER_READ_FLOATS (64, double, DOUBLE);
+
+/**
+ * gst_byte_reader_get_data:
+ * @reader: a #GstByteReader instance
+ * @size: Size in bytes
+ * @val: Pointer to a #guint8 to store the result
+ *
+ * Returns a constant pointer to the current data
+ * position if at least @size bytes are left and
+ * updates the current position.
+ *
+ *
+ * Returns: %TRUE if successful, %FALSE otherwise.
+ * 
+ * Since: 0.10.22
+ */
+
+/**
+ * gst_byte_reader_peek_data:
+ * @reader: a #GstByteReader instance
+ * @size: Size in bytes
+ * @val: Pointer to a #guint8 to store the result
+ *
+ * Returns a constant pointer to the current data
+ * position if at least @size bytes are left and
+ * keeps the current position.
+ *
+ *
+ * Returns: %TRUE if successful, %FALSE otherwise.
+ * 
+ * Since: 0.10.22
+ */
+
+gboolean
+gst_byte_reader_get_data (GstByteReader * reader, guint size,
+    const guint8 ** val)
+{
+  g_return_val_if_fail (reader != NULL, FALSE);
+  g_return_val_if_fail (val != NULL, FALSE);
+
+  if (reader->byte + size > reader->size)
+    return FALSE;
+
+  *val = reader->data + reader->byte;
+  reader->byte += size;
+  return TRUE;
+}
+
+gboolean
+gst_byte_reader_peek_data (GstByteReader * reader, guint size,
+    const guint8 ** val)
+{
+  g_return_val_if_fail (reader != NULL, FALSE);
+  g_return_val_if_fail (val != NULL, FALSE);
+
+  if (reader->byte + size > reader->size)
+    return FALSE;
+
+  *val = reader->data + reader->byte;
+  return TRUE;
+}

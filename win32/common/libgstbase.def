@@ -72,6 +72,7 @@ EXPORTS
 	gst_bit_reader_skip
 	gst_bit_reader_skip_to_byte
 	gst_byte_reader_free
+	gst_byte_reader_get_data
 	gst_byte_reader_get_float32_be
 	gst_byte_reader_get_float32_le
 	gst_byte_reader_get_float64_be
@@ -100,6 +101,7 @@ EXPORTS
 	gst_byte_reader_init_from_buffer
 	gst_byte_reader_new
 	gst_byte_reader_new_from_buffer
+	gst_byte_reader_peek_data
 	gst_byte_reader_peek_float32_be
 	gst_byte_reader_peek_float32_le
 	gst_byte_reader_peek_float64_be

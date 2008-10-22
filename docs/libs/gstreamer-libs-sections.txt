@@ -440,6 +440,9 @@ gst_byte_reader_peek_float32_le
 gst_byte_reader_peek_float32_be
 gst_byte_reader_peek_float64_le
 gst_byte_reader_peek_float64_be
+
+gst_byte_reader_get_data
+gst_byte_reader_peek_data
 </SECTION>
 
 <SECTION>

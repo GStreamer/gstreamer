@@ -1,3 +1,14 @@
+2008-10-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbytereader.c: (gst_byte_reader_get_data),
+	(gst_byte_reader_peek_data):
+	* libs/gst/base/gstbytereader.h:
+	* win32/common/libgstbase.def:
+	API: Add gst_byte_reader_get_data and gst_byte_reader_peek_data
+	to get a pointer to the data at the current position and have
+	a guaranteed size.
+
 2008-10-22  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
