@@ -44,19 +44,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 GST_BOILERPLATE_FULL (GstGLDisplay, gst_gl_display, GObject, G_TYPE_OBJECT, DEBUG_INIT);
 static void gst_gl_display_finalize (GObject* object);
 
-/* GL thread loop */
-static gpointer gst_gl_display_thread_func (GstGLDisplay* display);
-static void gst_gl_display_thread_loop (void);
-static void gst_gl_display_thread_dispatch_action (GstGLDisplayMsg *msg);
-static gboolean gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg);
-
 /* Called in the gl thread, protected by lock and unlock */
-static void gst_gl_display_thread_create_context (GstGLDisplay* display);
+static gpointer gst_gl_display_thread_create_context (GstGLDisplay* display);
 static void gst_gl_display_thread_destroy_context (GstGLDisplay* display);
 static void gst_gl_display_thread_change_context (GstGLDisplay* display);
-static void gst_gl_display_thread_set_visible_context (GstGLDisplay* display);
-static void gst_gl_display_thread_resize_context (GstGLDisplay* display);
-static void gst_gl_display_thread_redisplay (GstGLDisplay* display);
 static void gst_gl_display_thread_run_generic (GstGLDisplay *display);
 static void gst_gl_display_thread_gen_texture (GstGLDisplay* display);
 static void gst_gl_display_thread_del_texture (GstGLDisplay* display);
@@ -73,10 +64,9 @@ static void gst_gl_display_thread_del_shader (GstGLDisplay *display);
 /* private methods */
 void gst_gl_display_lock (GstGLDisplay* display);
 void gst_gl_display_unlock (GstGLDisplay* display);
-void gst_gl_display_post_message (GstGLDisplayAction action, GstGLDisplay* display);
-void gst_gl_display_on_resize(gint width, gint height);
-void gst_gl_display_on_draw (void);
-void gst_gl_display_on_close (void);
+void gst_gl_display_on_resize(GstGLDisplay* display, gint width, gint height);
+void gst_gl_display_on_draw (GstGLDisplay* display);
+void gst_gl_display_on_close (GstGLDisplay* display);
 void gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
 void gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
 gboolean gst_gl_display_texture_pool_func_clean (gpointer key, gpointer value, gpointer data);
@@ -90,19 +80,6 @@ static void gst_gl_display_thread_do_upload_fill (GstGLDisplay *display);
 static void gst_gl_display_thread_do_upload_draw (GstGLDisplay *display);
 static void gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display);
 static void gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display);
-
-//------------------------------------------------------------
-//-------------------- GL context management -----------------
-//------------------------------------------------------------
-
-//(key=int glutWinId) and (value=GstGLDisplay *display)
-static GHashTable* gst_gl_display_map = NULL;
-
-//all glut functions and opengl primitives are called in this thread
-static GThread* gst_gl_display_gl_thread = NULL;
-
-//-timepoped by glutIdleFunc
-static GAsyncQueue* gst_gl_display_messageQueue = NULL;
 
 
 //------------------------------------------------------------
@@ -128,9 +105,9 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->mutex = g_mutex_new ();
 
   //gl context
-  display->glutWinId = -1;
+  display->gl_thread = NULL;
+  display->gl_window = NULL;
   display->winId = 0;
-  display->title = g_string_new ("OpenGL renderer ");
   display->win_xpos = 0;
   display->win_ypos = 0;
   display->visible = FALSE;
@@ -139,20 +116,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 
   //conditions
   display->cond_create_context = g_cond_new ();
-  display->cond_destroy_context = g_cond_new ();
-  display->cond_change_context = g_cond_new ();
-  display->cond_generic = g_cond_new ();
-  display->cond_gen_texture = g_cond_new ();
-  display->cond_del_texture = g_cond_new ();
-  display->cond_init_upload = g_cond_new ();
-  display->cond_do_upload = g_cond_new ();
-  display->cond_init_download = g_cond_new ();
-  display->cond_do_download = g_cond_new ();
-  display->cond_gen_fbo = g_cond_new ();
-  display->cond_use_fbo = g_cond_new ();
-  display->cond_del_fbo = g_cond_new ();
-  display->cond_gen_shader = g_cond_new ();
-  display->cond_del_shader = g_cond_new ();
 
   //action redisplay
   display->redisplay_texture = 0;
@@ -386,8 +349,7 @@ gst_gl_display_finalize (GObject* object)
   //request glut window destruction
   //blocking call because display must be alive
   gst_gl_display_lock (display);
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT, display);
-  g_cond_wait (display->cond_destroy_context, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_destroy_context, display);
   gst_gl_display_unlock (display);
 
   if (display->texture_pool) {
@@ -396,69 +358,9 @@ gst_gl_display_finalize (GObject* object)
     g_hash_table_unref (display->texture_pool);
     display->texture_pool = NULL;
   }
-  if (display->title) {
-    g_string_free (display->title, TRUE);
-    display->title = NULL;
-  }
   if (display->mutex) {
     g_mutex_free (display->mutex);
     display->mutex = NULL;
-  }
-  if (display->cond_del_shader) {
-    g_cond_free (display->cond_del_shader);
-    display->cond_del_shader = NULL;
-  }
-  if (display->cond_gen_shader) {
-    g_cond_free (display->cond_gen_shader);
-    display->cond_gen_shader = NULL;
-  }
-  if (display->cond_del_fbo) {
-    g_cond_free (display->cond_del_fbo);
-    display->cond_del_fbo = NULL;
-  }
-  if (display->cond_use_fbo) {
-    g_cond_free (display->cond_use_fbo);
-    display->cond_use_fbo = NULL;
-  }
-  if (display->cond_gen_fbo) {
-    g_cond_free (display->cond_gen_fbo);
-    display->cond_gen_fbo = NULL;
-  }
-  if (display->cond_do_download) {
-    g_cond_free (display->cond_do_download);
-    display->cond_do_download = NULL;
-  }
-  if (display->cond_init_download) {
-    g_cond_free (display->cond_init_download);
-    display->cond_init_download = NULL;
-  }
-  if (display->cond_do_upload) {
-    g_cond_free (display->cond_do_upload);
-    display->cond_do_upload = NULL;
-  }
-  if (display->cond_init_upload) {
-    g_cond_free (display->cond_init_upload);
-    display->cond_init_upload = NULL;
-  }
-  if (display->cond_del_texture) {
-    g_cond_free (display->cond_del_texture);
-    display->cond_del_texture = NULL;
-  }
-  if (display->cond_gen_texture) {
-    g_cond_free (display->cond_gen_texture);
-    display->cond_gen_texture = NULL;
-  }
-  if (display->cond_gen_texture) {
-    g_cond_free (display->cond_gen_texture);
-    display->cond_gen_texture = NULL;
-  }
-  if (display->cond_change_context) {
-    g_cond_free (display->cond_change_context);
-    display->cond_change_context = NULL;
-  }
-  if (display->cond_destroy_context) {
-    g_cond_free (display->cond_destroy_context);
-    display->cond_destroy_context = NULL;
   }
   if (display->cond_create_context) {
     g_cond_free (display->cond_create_context);
@@ -473,194 +375,14 @@ gst_gl_display_finalize (GObject* object)
   if (display->use_fbo_stuff)
     display->use_fbo_stuff = NULL;
 
-  //at this step, the next condition implies that
-  //the last display has been removed
-  if (g_hash_table_size (gst_gl_display_map) == 0)
+  if (display->gl_thread)
   {
-    g_thread_join (gst_gl_display_gl_thread);
+    g_thread_join (display->gl_thread);
     GST_INFO ("gl thread joined");
-    gst_gl_display_gl_thread = NULL;
-    g_async_queue_unref (gst_gl_display_messageQueue);
-    g_hash_table_unref (gst_gl_display_map);
-    gst_gl_display_map = NULL;
-  }
-}
-
-
-//------------------------------------------------------------
-//----------------- BEGIN GL THREAD LOOP ---------------------
-//------------------------------------------------------------
-
-
-/* The gl thread handles GstGLDisplayMsg messages
- * Every OpenGL code lines are called in the gl thread */
-static gpointer
-gst_gl_display_thread_func (GstGLDisplay *display)
-{
-  static char *argv = "gst-launch-0.10";
-  static gint argc = 1;
-
-  //-display  DISPLAY
-  //Specify the X server to connect to. If not specified, the value of the DISPLAY environment variable is used.
-  //Should be pass through a glimagesink property
-  glutInit(&argc, &argv);
-  glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
-  //glutSetOption(GLUT_RENDERING_CONTEXT, GLUT_USE_CURRENT_CONTEXT);
-
-  glutIdleFunc (gst_gl_display_thread_loop);
-
-  gst_gl_display_lock (display);
-  gst_gl_display_thread_create_context (display);
-  gst_gl_display_unlock (display);
-
-  GST_INFO ("gl mainLoop started");
-  glutMainLoop ();
-  GST_INFO ("gl mainLoop exited");
-
-  return NULL;
-}
-
-
-/* Called in the gl thread */
-static void
-gst_gl_display_thread_loop (void)
-{
-  GTimeVal timeout;
-  GstGLDisplayMsg *msg;
-
-  //check for pending actions that require a glut context
-  g_get_current_time (&timeout);
-  g_time_val_add (&timeout, 1000000L); //timeout 1 sec
-  msg = g_async_queue_timed_pop (gst_gl_display_messageQueue, &timeout);
-  if (msg)
-  {
-    if (gst_gl_display_thread_check_msg_validity (msg))
-      gst_gl_display_thread_dispatch_action (msg);
-    while (g_async_queue_length (gst_gl_display_messageQueue))
-    {
-      msg = g_async_queue_pop (gst_gl_display_messageQueue);
-      if (gst_gl_display_thread_check_msg_validity (msg))
-	gst_gl_display_thread_dispatch_action (msg);
-    }
-  }
-  else GST_INFO ("timeout reached in idle func");
-}
-
-
-/* Called in the gl thread loop */
-static void
-gst_gl_display_thread_dispatch_action (GstGLDisplayMsg* msg)
-{
-  gst_gl_display_lock (msg->display);
-  switch (msg->action)
-  {
-  case GST_GL_DISPLAY_ACTION_CREATE_CONTEXT:
-    gst_gl_display_thread_create_context (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT:
-    gst_gl_display_thread_destroy_context (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT:
-    gst_gl_display_thread_change_context (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT:
-    gst_gl_display_thread_set_visible_context (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT:
-    gst_gl_display_thread_resize_context (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
-    gst_gl_display_thread_redisplay (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_GENERIC:
-    gst_gl_display_thread_run_generic (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_GEN_TEXTURE:
-    gst_gl_display_thread_gen_texture (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_DEL_TEXTURE:
-    gst_gl_display_thread_del_texture (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
-    gst_gl_display_thread_init_upload (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_DO_UPLOAD:
-    gst_gl_display_thread_do_upload (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD:
-    gst_gl_display_thread_init_download (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_DO_DOWNLOAD:
-    gst_gl_display_thread_do_download (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_GEN_FBO:
-    gst_gl_display_thread_gen_fbo (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_USE_FBO:
-    gst_gl_display_thread_use_fbo (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_DEL_FBO:
-    gst_gl_display_thread_del_fbo (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_GEN_SHADER:
-    gst_gl_display_thread_gen_shader (msg->display);
-    break;
-  case GST_GL_DISPLAY_ACTION_DEL_SHADER:
-    gst_gl_display_thread_del_shader (msg->display);
-    break;
-  default:
-    g_assert_not_reached ();
-  }
-  gst_gl_display_unlock (msg->display);
-  g_free (msg);
-}
-
-
-/* Called in the gl thread loop
- * Return false if the message is out of date */
-static gboolean
-gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
-{
-  gboolean valid = TRUE;
-
-  switch (msg->action)
-  {
-  case GST_GL_DISPLAY_ACTION_CREATE_CONTEXT:
-    //display is not in the map only when we want create one
-    valid = TRUE;
-    break;
-  case GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT:
-  case GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT:
-  case GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT:
-  case GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT:
-  case GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT:
-  case GST_GL_DISPLAY_ACTION_GENERIC:
-  case GST_GL_DISPLAY_ACTION_GEN_TEXTURE:
-  case GST_GL_DISPLAY_ACTION_DEL_TEXTURE:
-  case GST_GL_DISPLAY_ACTION_INIT_UPLOAD:
-  case GST_GL_DISPLAY_ACTION_DO_UPLOAD:
-  case GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD:
-  case GST_GL_DISPLAY_ACTION_DO_DOWNLOAD:
-  case GST_GL_DISPLAY_ACTION_GEN_FBO:
-  case GST_GL_DISPLAY_ACTION_USE_FBO:
-  case GST_GL_DISPLAY_ACTION_DEL_FBO:
-  case GST_GL_DISPLAY_ACTION_GEN_SHADER:
-  case GST_GL_DISPLAY_ACTION_DEL_SHADER:
-    //msg is out of date if the associated display is not in the map
-    if (!g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (msg->glutWinId)))
-      valid = FALSE;
-    break;
-  default:
-    g_assert_not_reached ();
+    display->gl_thread = NULL;
   }
 
-  return valid;
 }
-
-
-//------------------------------------------------------------
-//------------------ END GL THREAD LOOP ----------------------
-//------------------------------------------------------------
 
 
 //------------------------------------------------------------
@@ -672,30 +394,16 @@ gst_gl_display_thread_check_msg_validity (GstGLDisplayMsg *msg)
 //in a lock/unlock scope.
 
 /* Called in the gl thread */
-static void
+static gpointer
 gst_gl_display_thread_create_context (GstGLDisplay *display)
 {
-  gint glutWinId = 0;
-  gchar buffer[5];
   GLenum err = 0;
 
-  //prepare opengl context
-  glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowPosition(display->win_xpos, display->win_ypos);
-  glutInitWindowSize(display->upload_width, display->upload_height);
+  display->gl_window = gst_gl_window_new (display->upload_width, display->upload_height);
 
-  //create opengl context
-  sprintf(buffer, "%d", glutWinId);
+  GST_INFO ("gl window created");
 
-  display->title =  g_string_append (display->title, buffer);
-  glutWinId = glutCreateWindow (display->title->str, display->winId);
-
-  GST_INFO ("Context %d created", glutWinId);
-
-  if (display->visible)
-    glutShowWindow ();
-  else
-    glutHideWindow ();
+  gst_gl_window_visible (display->gl_window, display->visible);
 
   //Init glew
   err = glewInit();
@@ -736,20 +444,21 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   }
 
   //setup callbacks
-  glutReshapeFunc (gst_gl_display_on_resize);
-  glutDisplayFunc (gst_gl_display_on_draw);
-  glutCloseFunc (gst_gl_display_on_close);
+  gst_gl_window_set_resize_callback (display->gl_window, gst_gl_display_on_resize, display);
+  gst_gl_window_set_draw_callback (display->gl_window, gst_gl_display_on_draw, display);
+  gst_gl_window_set_close_callback (display->gl_window, gst_gl_display_on_close, display);
 
-  //insert glut context to the map
-  display->glutWinId = glutWinId;
-  g_hash_table_insert (gst_gl_display_map, GUINT_TO_POINTER (glutWinId), display);
-
-  //check glut id validity
-  g_assert (glutGetWindow() == glutWinId);
-  GST_INFO ("Context %d initialized", display->glutWinId);
-
-  //release display constructor
   g_cond_signal (display->cond_create_context);
+
+  gst_gl_window_run_loop (display->gl_window);
+
+  GST_DEBUG ("loop exited\n");
+
+  g_object_unref (G_OBJECT (display->gl_window));
+
+  display->gl_window;
+
+  return NULL;
 }
 
 
@@ -757,10 +466,6 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 static void
 gst_gl_display_thread_destroy_context (GstGLDisplay *display)
 {
-  glutSetWindow (display->glutWinId);
-  glutReshapeFunc (NULL);
-  glutDestroyWindow (display->glutWinId);
-
   //colorspace_conversion specific
   switch (display->upload_colorspace_conversion)
   {
@@ -871,74 +576,30 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   g_hash_table_foreach_remove (display->texture_pool, gst_gl_display_texture_pool_func_clean,
     NULL);
 
-  g_hash_table_remove (gst_gl_display_map, GINT_TO_POINTER (display->glutWinId));
-  GST_INFO ("Context %d destroyed", display->glutWinId);
+  gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
+  gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
+  gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
 
-  //if the map is empty, leaveMainloop and join the thread
-  if (g_hash_table_size (gst_gl_display_map) == 0)
-    glutLeaveMainLoop ();
-
-  //release display destructor
-  g_cond_signal (display->cond_destroy_context);
+  gst_gl_window_quit_loop (display->gl_window);
+  
+  GST_INFO ("Context destroyed");
 }
 
-
-/* Called in the gl thread */
-static void
-gst_gl_display_thread_change_context (GstGLDisplay *display)
-{
-  glutSetWindow (display->glutWinId);
-  glutChangeWindow (display->winId);
-  g_cond_signal (display->cond_change_context);
-}
-
-
-/* Called in the gl thread */
-static void
-gst_gl_display_thread_set_visible_context (GstGLDisplay *display)
-{
-  glutSetWindow (display->glutWinId);
-  if (display->visible)
-    glutShowWindow ();
-  else
-    glutHideWindow ();
-}
-
-
-/* Called by the idle function */
-static void
-gst_gl_display_thread_resize_context (GstGLDisplay* display)
-{
-  glutSetWindow (display->glutWinId);
-  glutReshapeWindow (display->resize_width, display->resize_height);
-}
-
-
-/* Called in the gl thread */
-static void
-gst_gl_display_thread_redisplay (GstGLDisplay * display)
-{
-  glutSetWindow (display->glutWinId);
-  glutPostRedisplay ();
-}
 
 static void
 gst_gl_display_thread_run_generic (GstGLDisplay *display)
 {
-  glutSetWindow (display->glutWinId);
   display->generic_callback (display, display->data);
-  g_cond_signal (display->cond_generic);
 }
+
 
 /* Called in the gl thread */
 static void
 gst_gl_display_thread_gen_texture (GstGLDisplay * display)
 {
-  glutSetWindow (display->glutWinId);
   //setup a texture to render to (this one will be in a gl buffer)
   gst_gl_display_glgen_texture (display, &display->gen_texture,
     display->gen_texture_width, display->gen_texture_height);
-  g_cond_signal (display->cond_gen_texture);
 }
 
 
@@ -946,10 +607,8 @@ gst_gl_display_thread_gen_texture (GstGLDisplay * display)
 static void
 gst_gl_display_thread_del_texture (GstGLDisplay* display)
 {
-  glutSetWindow (display->glutWinId);
   gst_gl_display_gldel_texture (display, &display->del_texture,
     display->del_texture_width, display->del_texture_height);
-  g_cond_signal (display->cond_del_texture);
 }
 
 
@@ -957,8 +616,6 @@ gst_gl_display_thread_del_texture (GstGLDisplay* display)
 static void
 gst_gl_display_thread_init_upload (GstGLDisplay *display)
 {
-  glutSetWindow (display->glutWinId);
-
   switch (display->upload_video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
@@ -989,7 +646,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     /* shouldn't we require ARB_shading_language_100? --Filippo */
     if (GLEW_ARB_fragment_shader)
     {
-      GST_INFO ("Context %d, ARB_fragment_shader supported: yes", display->glutWinId);
+      GST_INFO ("Context, ARB_fragment_shader supported: yes");
 
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
       
@@ -1066,8 +723,8 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     else if (GLEW_MESA_ycbcr_texture)
     {
       //GLSL and Color Matrix are not available on your drivers, switch to YCBCR MESA
-      GST_INFO ("Context %d, ARB_fragment_shader supported: no", display->glutWinId);
-      GST_INFO ("Context %d, GLEW_MESA_ycbcr_texture supported: yes", display->glutWinId);
+      GST_INFO ("Context, ARB_fragment_shader supported: no");
+      GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: yes");
 
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
 
@@ -1097,9 +754,9 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     else if (GLEW_ARB_imaging)
     {
       //GLSL is not available on your drivers, switch to Color Matrix
-      GST_INFO ("Context %d, ARB_fragment_shader supported: no", display->glutWinId);
-      GST_INFO ("Context %d, GLEW_MESA_ycbcr_texture supported: no", display->glutWinId);
-      GST_INFO ("Context %d, GLEW_ARB_imaging supported: yes", display->glutWinId);
+      GST_INFO ("Context, ARB_fragment_shader supported: no");
+      GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: no");
+      GST_INFO ("Context, GLEW_ARB_imaging supported: yes");
 
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
 
@@ -1109,9 +766,9 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
     }
     else
     {
-      GST_WARNING ("Context %d, ARB_fragment_shader supported: no", display->glutWinId);
-      GST_WARNING ("Context %d, GLEW_ARB_imaging supported: no", display->glutWinId);
-      GST_WARNING ("Context %d, GLEW_MESA_ycbcr_texture supported: no", display->glutWinId);
+      GST_WARNING ("Context, ARB_fragment_shader supported: no");
+      GST_WARNING ("Context, GLEW_ARB_imaging supported: no");
+      GST_WARNING ("Context, GLEW_MESA_ycbcr_texture supported: no");
 
       //turn off the pipeline because colorspace conversion is not possible
       display->isAlive = FALSE;
@@ -1121,8 +778,6 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
   default:
     g_assert_not_reached ();
   }
-
-  g_cond_signal (display->cond_init_upload);
 }
 
 
@@ -1130,8 +785,6 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 static void
 gst_gl_display_thread_do_upload (GstGLDisplay *display)
 {
-  glutSetWindow (display->glutWinId);
-
   gst_gl_display_thread_do_upload_fill (display);
 
   switch (display->upload_video_format)
@@ -1185,8 +838,6 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
   default:
 	  g_assert_not_reached ();
   }
-
-  g_cond_signal (display->cond_do_upload);
 }
 
 
@@ -1194,8 +845,6 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
 static void
 gst_gl_display_thread_init_download (GstGLDisplay *display)
 {
-  glutSetWindow (display->glutWinId);
-
   switch (display->download_video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
@@ -1220,7 +869,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
 
     if (GLEW_EXT_framebuffer_object)
     {
-      GST_DEBUG ("Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
+      GST_DEBUG ("Context, EXT_framebuffer_object supported: yes");
 
       //-- init output frame buffer object (GL -> video)
 
@@ -1310,7 +959,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
       {
         //turn off the pipeline because Frame buffer object is a requirement when using filters
         //or when using GLSL colorspace conversion
-        GST_WARNING ("Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
+        GST_WARNING ("Context, EXT_framebuffer_object supported: no");
         display->isAlive = FALSE;
       }
     }
@@ -1404,7 +1053,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
     else
     {
       //turn off the pipeline because colorspace conversion is not possible
-      GST_DEBUG ("Context %d, ARB_fragment_shader supported: no", display->glutWinId);
+      GST_DEBUG ("Context, ARB_fragment_shader supported: no");
       display->isAlive = FALSE;
     }
   }
@@ -1412,8 +1061,6 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
   default:
     g_assert_not_reached ();
   }
-
-  g_cond_signal (display->cond_init_download);
 }
 
 
@@ -1421,8 +1068,6 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
 static void
 gst_gl_display_thread_do_download (GstGLDisplay * display)
 {
-  glutSetWindow (display->glutWinId);
-
   switch (display->download_video_format)
   {
   case GST_VIDEO_FORMAT_RGBx:
@@ -1449,7 +1094,6 @@ gst_gl_display_thread_do_download (GstGLDisplay * display)
   default:
     g_assert_not_reached ();
   }
-  g_cond_signal (display->cond_do_download);
 }
 
 
@@ -1459,8 +1103,6 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay *display)
 {
   //a texture must be attached to the FBO
   GLuint fake_texture = 0;
-
-  glutSetWindow (display->glutWinId);
 
   //-- generate frame buffer object
 
@@ -1495,8 +1137,6 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay *display)
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 
   glDeleteTextures (1, &fake_texture);
-
-  g_cond_signal (display->cond_gen_fbo);
 }
 
 
@@ -1504,8 +1144,6 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay *display)
 static void
 gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 {
-  glutSetWindow (display->glutWinId);
-
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->use_fbo);
 
   //setup a texture to render to
@@ -1562,8 +1200,6 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
   glPopAttrib();
 
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
-
-  g_cond_signal (display->cond_use_fbo);
 }
 
 
@@ -1571,8 +1207,6 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 static void
 gst_gl_display_thread_del_fbo (GstGLDisplay* display)
 {
-  glutSetWindow (display->glutWinId);
-
   if (display->del_fbo)
   {
     glDeleteFramebuffersEXT (1, &display->del_fbo);
@@ -1583,8 +1217,6 @@ gst_gl_display_thread_del_fbo (GstGLDisplay* display)
     glDeleteRenderbuffersEXT(1, &display->del_depth_buffer);
     display->del_depth_buffer = 0;
   }
-
-  g_cond_signal (display->cond_del_fbo);
 }
 
 
@@ -1592,7 +1224,6 @@ gst_gl_display_thread_del_fbo (GstGLDisplay* display)
 static void
 gst_gl_display_thread_gen_shader (GstGLDisplay* display)
 {
-  glutSetWindow (display->glutWinId);
   if (GLEW_ARB_fragment_shader)
   {
     if (display->gen_shader_vertex_source ||
@@ -1633,7 +1264,6 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
     display->isAlive = FALSE;
     display->gen_shader = NULL;
   }
-  g_cond_signal (display->cond_gen_shader);
 }
 
 
@@ -1641,13 +1271,11 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
 static void
 gst_gl_display_thread_del_shader (GstGLDisplay* display)
 {
-  glutSetWindow (display->glutWinId);
   if (display->del_shader)
   {
     g_object_unref (G_OBJECT (display->del_shader));
     display->del_shader = NULL;
   }
-  g_cond_signal (display->cond_del_shader);
 }
 
 
@@ -1675,37 +1303,9 @@ gst_gl_display_unlock (GstGLDisplay * display)
 }
 
 
-/* Post a message that will be handled by the gl thread
- * Must be preceded by gst_gl_display_lock
- * and followed by gst_gl_display_unlock
- * Called in the public functions */
 void
-gst_gl_display_post_message (GstGLDisplayAction action, GstGLDisplay* display)
+gst_gl_display_on_resize (GstGLDisplay* display, gint width, gint height)
 {
-  GstGLDisplayMsg* msg = g_new0 (GstGLDisplayMsg, 1);
-  msg->action = action;
-  msg->glutWinId = display->glutWinId;
-  msg->display = display;
-  g_async_queue_push (gst_gl_display_messageQueue, msg);
-}
-
-
-/* glutReshapeFunc callback */
-void
-gst_gl_display_on_resize (gint width, gint height)
-{
-  gint glutWinId = 0;
-  GstGLDisplay *display = NULL;
-
-  //retrieve the display associated to the glut context
-  glutWinId = glutGetWindow ();
-  display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
-
-  //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
-  if (display == NULL) return;
-
-  gst_gl_display_lock (display);
-
   //check if a client reshape callback is registered
   if (display->clientReshapeCallback)
     display->clientReshapeCallback(width, height);
@@ -1719,33 +1319,14 @@ gst_gl_display_on_resize (gint width, gint height)
     gluOrtho2D(0, width, 0, height);
     glMatrixMode(GL_MODELVIEW);
   }
-
-  gst_gl_display_unlock (display);
 }
 
-/* glutDisplayFunc callback */
-void gst_gl_display_on_draw(void)
+
+void gst_gl_display_on_draw(GstGLDisplay* display)
 {
-  gint glutWinId = 0;
-  GstGLDisplay *display = NULL;
-
-  //retrieve the display associated to the glut context
-  glutWinId = glutGetWindow ();
-  display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
-
-  //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
-  if (display == NULL) return;
-
-  //lock the display because gstreamer elements
-  //(and so the main thread) may modify it
-  gst_gl_display_lock (display);
-
   //check if video format has been setup
   if (!display->redisplay_texture)
-  {
-    gst_gl_display_unlock (display);
     return;
-  }
 
   //opengl scene
 
@@ -1759,14 +1340,11 @@ void gst_gl_display_on_draw(void)
   if (display->clientDrawCallback)
   {
     gboolean doRedisplay =
-      display->clientDrawCallback(display->redisplay_texture,
+      display->clientDrawCallback (display->redisplay_texture,
 				  display->redisplay_texture_width, display->redisplay_texture_height);
 
-    glFlush();
-    glutSwapBuffers();
-
     if (doRedisplay)
-      gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT, display);
+      gst_gl_window_draw (display->gl_window);
   }
   //default opengl scene
   else
@@ -1792,31 +1370,13 @@ void gst_gl_display_on_draw(void)
     glEnd ();
 
     glDisable(GL_TEXTURE_RECTANGLE_ARB);
-
-    glFlush();
-    glutSwapBuffers();
-
   }//end default opengl scene
-
-  gst_gl_display_unlock (display);
 }
 
 
-/* glutCloseFunc callback */
-void gst_gl_display_on_close (void)
+void gst_gl_display_on_close (GstGLDisplay* display)
 {
-  gint glutWinId = 0;
-  GstGLDisplay* display = NULL;
-
-  //retrieve the display associated to the glut context
-  glutWinId = glutGetWindow ();
-  display = g_hash_table_lookup (gst_gl_display_map, GINT_TO_POINTER (glutWinId));
-
-  //glutGetWindow return 0 if no windows exists, then g_hash_table_lookup return NULL
-  if (display == NULL) return;
-
   GST_INFO ("on close");
-
   gst_gl_display_lock (display);
   display->isAlive = FALSE;
   gst_gl_display_unlock (display);
@@ -2034,22 +1594,11 @@ gst_gl_display_create_context (GstGLDisplay *display,
   display->upload_height = height;
   display->visible = visible;
 
-  //if no glut_thread exists, create it with a window associated to the display
-  if (!gst_gl_display_map)
-  {
-    gst_gl_display_messageQueue = g_async_queue_new ();
-    gst_gl_display_map = g_hash_table_new (g_direct_hash, g_direct_equal);
-    gst_gl_display_gl_thread = g_thread_create (
-      (GThreadFunc) gst_gl_display_thread_func, display, TRUE, NULL);
-    g_cond_wait (display->cond_create_context, display->mutex);
-  }
-  //request glut window creation
-  else
-  {
-    //blocking call because glut context must be alive
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CREATE_CONTEXT, display);
-    g_cond_wait (display->cond_create_context, display->mutex);
-  }
+  display->gl_thread = g_thread_create (
+    (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE, NULL);
+
+  g_cond_wait (display->cond_create_context, display->mutex);
+
   gst_gl_display_unlock (display);
 }
 
@@ -2062,7 +1611,7 @@ gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible)
   if (display->visible != visible)
   {
     display->visible = visible;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT, display);
+    gst_gl_window_visible (display->gl_window, visible);
   }
   gst_gl_display_unlock (display);
 }
@@ -2075,14 +1624,14 @@ gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height)
   gst_gl_display_lock (display);
   display->resize_width = width;
   display->resize_height = height;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT, display);
+  gst_gl_window_resize (display->gl_window, display->resize_width, display->resize_height);
   gst_gl_display_unlock (display);
 }
 
 
 /* Called by the glimagesink element */
 gboolean
-gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width , gint height)
+gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height)
 {
   gboolean isAlive = TRUE;
 
@@ -2096,7 +1645,7 @@ gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width , gi
       display->redisplay_texture_width = width;
       display->redisplay_texture_height = height;
     }
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT, display);
+    gst_gl_window_draw (display->gl_window);
   }
   gst_gl_display_unlock (display);
 
@@ -2110,8 +1659,7 @@ gst_gl_display_thread_add (GstGLDisplay *display,
   gst_gl_display_lock (display);
   display->data = data;
   display->generic_callback = func;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GENERIC, display);
-  g_cond_wait (display->cond_generic, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_run_generic, display);
   gst_gl_display_unlock (display);
 }
 
@@ -2122,8 +1670,7 @@ gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width
   gst_gl_display_lock (display);
   display->gen_texture_width = width;
   display->gen_texture_height = height;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_TEXTURE, display);
-  g_cond_wait (display->cond_gen_texture, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_gen_texture, display);
   *pTexture = display->gen_texture;
   gst_gl_display_unlock (display);
 }
@@ -2139,8 +1686,7 @@ gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, 
     display->del_texture = texture;
     display->del_texture_width = width;
     display->del_texture_height = height;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DEL_TEXTURE, display);
-    g_cond_wait (display->cond_del_texture, display->mutex);
+    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_del_texture, display);
   }
   gst_gl_display_unlock (display);
 }
@@ -2158,8 +1704,7 @@ gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
   display->upload_height = gl_height;
   display->upload_data_width = video_width;
   display->upload_data_height = video_height;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_INIT_UPLOAD, display);
-  g_cond_wait (display->cond_init_upload, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_init_upload, display);
   gst_gl_display_unlock (display);
 }
 
@@ -2180,8 +1725,7 @@ gst_gl_display_do_upload (GstGLDisplay *display, GLuint texture,
     display->upload_data_width = data_width;
     display->upload_data_height = data_height;
     display->upload_data = data;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DO_UPLOAD, display);
-    g_cond_wait (display->cond_do_upload, display->mutex);
+    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_do_upload, display);
   }
   gst_gl_display_unlock (display);
 
@@ -2198,8 +1742,7 @@ gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format
   display->download_video_format = video_format;
   display->download_width = width;
   display->download_height = height;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD, display);
-  g_cond_wait (display->cond_init_download, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_init_download, display);
   gst_gl_display_unlock (display);
 }
 
@@ -2221,8 +1764,7 @@ gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
     display->ouput_texture = texture;
     display->ouput_texture_width = width;
     display->ouput_texture_height = height;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DO_DOWNLOAD, display);
-    g_cond_wait (display->cond_do_download, display->mutex);
+    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_do_download, display);
   }
   gst_gl_display_unlock (display);
 
@@ -2240,8 +1782,7 @@ gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
   {
     display->gen_fbo_width = width;
     display->gen_fbo_height = height;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_FBO, display);
-    g_cond_wait (display->cond_gen_fbo, display->mutex);
+    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_gen_fbo, display);
     *fbo = display->generated_fbo;
     *depthbuffer = display->generated_depth_buffer;
   }
@@ -2286,8 +1827,7 @@ gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint text
     display->input_texture_width = input_texture_width;
     display->input_texture_height = input_texture_height;
     display->input_texture = input_texture;
-    gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_USE_FBO, display);
-    g_cond_wait (display->cond_use_fbo, display->mutex);
+    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_use_fbo, display);
   }
   gst_gl_display_unlock (display);
 
@@ -2303,8 +1843,7 @@ gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
   gst_gl_display_lock (display);
   display->del_fbo = fbo;
   display->del_depth_buffer = depth_buffer;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DEL_FBO, display);
-  g_cond_wait (display->cond_del_fbo, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_del_fbo, display);
   gst_gl_display_unlock (display);
 }
 
@@ -2319,8 +1858,7 @@ gst_gl_display_gen_shader (GstGLDisplay* display,
   gst_gl_display_lock (display);
   display->gen_shader_vertex_source = shader_vertex_source;
   display->gen_shader_fragment_source = shader_fragment_source;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_GEN_SHADER, display);
-  g_cond_wait (display->cond_gen_shader, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_gen_shader, display);
   if (shader)
     *shader = display->gen_shader;
   display->gen_shader = NULL;
@@ -2336,8 +1874,7 @@ gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader)
 {
   gst_gl_display_lock (display);
   display->del_shader = shader;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_DEL_SHADER, display);
-  g_cond_wait (display->cond_del_shader, display->mutex);
+  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_del_shader, display);
   gst_gl_display_unlock (display);
 }
 
@@ -2350,8 +1887,7 @@ gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
   //otehrwise it can directly create the gl context using the winId
   gst_gl_display_lock (display);
   display->winId = winId;
-  gst_gl_display_post_message (GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT, display);
-  g_cond_wait (display->cond_change_context, display->mutex);
+  gst_gl_window_set_external_window_id (display->gl_window, display->winId);
   gst_gl_display_unlock (display);
 }
 
@@ -2389,7 +1925,7 @@ void gst_gl_display_thread_init_upload_fbo (GstGLDisplay *display)
     //a texture must be attached to the FBO
     GLuint fake_texture = 0;
 
-    GST_INFO ("Context %d, EXT_framebuffer_object supported: yes", display->glutWinId);
+    GST_INFO ("Context, EXT_framebuffer_object supported: yes");
 
     //-- init intput frame buffer object (video -> GL)
 
@@ -2433,7 +1969,7 @@ void gst_gl_display_thread_init_upload_fbo (GstGLDisplay *display)
   else
   {
     //turn off the pipeline because Frame buffer object is a not present
-    GST_WARNING ("Context %d, EXT_framebuffer_object supported: no", display->glutWinId);
+    GST_WARNING ("Context, EXT_framebuffer_object supported: no");
     display->isAlive = FALSE;
   }
 }

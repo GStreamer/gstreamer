@@ -16,8 +16,19 @@ add_library (gstgl STATIC
 	gstglfilter.c
 	gstglshader.c)
 
+#FIXME: get ride of this condition
+if (WIN32)
 target_link_libraries(gstgl
-  general gstfreeglut
+  general ${OPENGL_LIBRARIES}
+  general ${GLEW_LIBRARY}
+  general ${GLIB2_LIBRARIES}
+  general ${GSTREAMER_LIBRARIES}
+  gdi32
+  winmm)
+else (WIN32)
+target_link_libraries(gstgl
+  general ${OPENGL_LIBRARIES}
   general ${GLEW_LIBRARY}
   general ${GLIB2_LIBRARIES}
   general ${GSTREAMER_LIBRARIES})
+endif (WIN32)

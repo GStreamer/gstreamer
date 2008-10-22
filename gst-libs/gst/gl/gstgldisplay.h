@@ -23,10 +23,7 @@
 #ifndef __GST_GL_H__
 #define __GST_GL_H__
 
-#include <GL/glew.h>
-#include <gstfreeglut.h>
-
-#include <gst/gst.h>
+#include <gstglwindow.h>
 #include <gst/video/video.h>
 
 #include "gstglshader.h"
@@ -114,9 +111,9 @@ struct _GstGLDisplay {
   GMutex* mutex;
 
   //gl context
-  gint glutWinId;
+  GThread* gl_thread;
+  GstGLWindow* gl_window;
   gulong winId;
-  GString* title;
   gint win_xpos;
   gint win_ypos;
   gboolean visible;
@@ -125,20 +122,6 @@ struct _GstGLDisplay {
 
   //conditions
   GCond* cond_create_context;
-  GCond* cond_destroy_context;
-  GCond* cond_change_context;
-  GCond* cond_generic;
-  GCond* cond_gen_texture;
-  GCond* cond_del_texture;
-  GCond* cond_init_upload;
-  GCond* cond_do_upload;
-  GCond* cond_init_download;
-  GCond* cond_do_download;
-  GCond* cond_gen_fbo;
-  GCond* cond_use_fbo;
-  GCond* cond_del_fbo;
-  GCond* cond_gen_shader;
-  GCond* cond_del_shader;
 
   //generic gl code
   GstGLDisplayThreadFunc generic_callback;
