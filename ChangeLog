@@ -1,3 +1,10 @@
+2008-10-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/floatcast/floatcast.h:
+	Move float endianness conversion macros to core. Second part of
+	bug ##555196.
+
 2008-10-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/ximage/ximagesink.h:

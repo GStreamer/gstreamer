@@ -298,14 +298,6 @@ gst_fft_f64_free
 <SECTION>
 <FILE>gstfloatcast</FILE>
 <INCLUDE>gst/floatcast/floatcast.h</INCLUDE>
-GDOUBLE_FROM_BE
-GDOUBLE_FROM_LE
-GDOUBLE_TO_BE
-GDOUBLE_TO_LE
-GFLOAT_FROM_BE
-GFLOAT_FROM_LE
-GFLOAT_TO_BE
-GFLOAT_TO_LE
 gst_cast_double
 gst_cast_float
 </SECTION>
