@@ -164,6 +164,8 @@ gst_rtsp_session_get_stream (GstRTSPSessionMedia *media, guint idx)
   GstRTSPSessionStream *result;
   GList *walk;
 
+  result = NULL;
+
   for (walk = media->streams; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionStream *) walk->data; 
 
