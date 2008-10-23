@@ -1,3 +1,8 @@
+2008-10-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_identification_packet):
+	Attempt to make obfuscated code clearer.
+
 2008-10-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

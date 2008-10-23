@@ -628,6 +628,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
       };
       pos = pos7;
+      /* fallthrough */
     }
     case 8:{
       static const GstAudioChannelPosition pos8[] = {
@@ -642,6 +643,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       };
 
       pos = pos8;
+      /* fallthrough */
     }
     default:{
       gint i;
