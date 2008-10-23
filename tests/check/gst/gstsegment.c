@@ -593,6 +593,7 @@ GST_START_TEST (segment_newsegment_open)
   fail_unless (segment.stop == -1);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
 
   /* update, nothing changes */
   gst_segment_set_newsegment (&segment, TRUE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
@@ -601,6 +602,7 @@ GST_START_TEST (segment_newsegment_open)
   fail_unless (segment.stop == -1);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
 
   /* update */
   gst_segment_set_newsegment (&segment, TRUE, 1.0,
@@ -610,6 +612,7 @@ GST_START_TEST (segment_newsegment_open)
   fail_unless (segment.stop == -1);
   fail_unless (segment.time == 100);
   fail_unless (segment.accum == 100);
+  fail_unless (segment.last_stop == 100);
 
   /* last_stop 0, accum does not change */
   gst_segment_set_newsegment (&segment, FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
@@ -621,6 +624,8 @@ GST_START_TEST (segment_newsegment_open)
 
   gst_segment_set_last_stop (&segment, GST_FORMAT_BYTES, 200);
 
+  fail_unless (segment.last_stop == 200);
+
   /* last_stop 200, accum changes */
   gst_segment_set_newsegment (&segment, FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
 
@@ -628,7 +633,7 @@ GST_START_TEST (segment_newsegment_open)
   fail_unless (segment.stop == -1);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 300);
-
+  fail_unless (segment.last_stop == 0);
 }
 
 GST_END_TEST;
@@ -654,13 +659,29 @@ GST_START_TEST (segment_newsegment_closed)
   fail_unless (segment.last_stop == 0);
   fail_unless (segment.duration == -1);
 
-  /* do an update */
-  gst_segment_set_newsegment (&segment, TRUE, 1.0, GST_FORMAT_BYTES, 0, 300, 0);
+  /* assume we advanced to position 40 */
+  gst_segment_set_last_stop (&segment, GST_FORMAT_BYTES, 40);
+  fail_unless (segment.last_stop == 40);
 
-  fail_unless (segment.start == 0);
+  /* do an update to the start, last_stop is unchanged because it's bigger */
+  gst_segment_set_newsegment (&segment, TRUE, 1.0, GST_FORMAT_BYTES, 20, 200,
+      20);
+
+  fail_unless (segment.start == 20);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 20);
+  fail_unless (segment.accum == 20);
+  fail_unless (segment.last_stop == 40);
+
+  /* do an update past our last_stop, it should be updated now */
+  gst_segment_set_newsegment (&segment, TRUE, 1.0, GST_FORMAT_BYTES, 50, 300,
+      50);
+
+  fail_unless (segment.start == 50);
   fail_unless (segment.stop == 300);
-  fail_unless (segment.time == 0);
-  fail_unless (segment.accum == 0);
+  fail_unless (segment.time == 50);
+  fail_unless (segment.accum == 50);
+  fail_unless (segment.last_stop == 50);
 
   /* and a new accumulated one */
   gst_segment_set_newsegment (&segment, FALSE, 1.0,
@@ -1222,7 +1243,7 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
   fail_unless (segment.time == 200);
   /* accumulated 100 of previous segment to make 200 */
   fail_unless (segment.accum == 200);
-  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.last_stop == 200);
   fail_unless (segment.duration == -1);
 
   /* invalid time gives invalid result */
@@ -1262,7 +1283,7 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
   fail_unless (segment.stop == 200);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 400);
-  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.last_stop == 200);
   fail_unless (segment.duration == -1);
 
   /* invalid time gives invalid result */
@@ -1487,7 +1508,7 @@ GST_START_TEST (segment_newsegment_accum)
   fail_unless (segment.stop == 200);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
-  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.last_stop == 200);
   fail_unless (segment.duration == -1);
 
   /* invalid time gives invalid result */
@@ -1512,7 +1533,7 @@ GST_START_TEST (segment_newsegment_accum)
   fail_unless (segment.stop == 150);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 50);
-  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.last_stop == 150);
   fail_unless (segment.duration == -1);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
@@ -1534,7 +1555,7 @@ GST_START_TEST (segment_newsegment_accum)
   fail_unless (segment.stop == 200);
   fail_unless (segment.time == 100);
   fail_unless (segment.accum == 50);
-  fail_unless (segment.last_stop == 100);
+  fail_unless (segment.last_stop == 150);
   fail_unless (segment.duration == -1);
 
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
@@ -1568,7 +1589,7 @@ GST_START_TEST (segment_newsegment_accum2)
   fail_unless (segment.stop == 200);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
-  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.last_stop == 200);
   fail_unless (segment.duration == -1);
 
   /* invalid time gives invalid result */
@@ -1593,7 +1614,7 @@ GST_START_TEST (segment_newsegment_accum2)
   fail_unless (segment.stop == 200);
   fail_unless (segment.time == 0);
   fail_unless (segment.accum == 0);
-  fail_unless (segment.last_stop == 150);
+  fail_unless (segment.last_stop == 200);
   fail_unless (segment.duration == -1);
 
   /* new segment, this accumulates 50. */

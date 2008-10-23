@@ -1,3 +1,13 @@
+2008-10-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstsegment.c: (gst_segment_set_newsegment_full):
+	Set the last_stop to a more meaningful position when configuring the
+	segment. ie. the start/stop of the segment or clipped against the
+	updated segment boundaries.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST):
+	Add some unit tests for the last_stop.
+
 2008-10-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* libs/gst/base/gstbytereader.c:

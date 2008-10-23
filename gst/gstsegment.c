@@ -440,7 +440,7 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
     gdouble rate, gdouble applied_rate, GstFormat format, gint64 start,
     gint64 stop, gint64 time)
 {
-  gint64 duration;
+  gint64 duration, last_stop;
 
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (applied_rate != 0.0);
@@ -483,12 +483,18 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
       else
         duration = 0;
     }
+    /* update last_stop to be a valid value in the updated segment */
+    if (start > segment->last_stop)
+      last_stop = start;
+    else if (stop != -1 && stop < segment->last_stop)
+      last_stop = stop;
+    else
+      last_stop = segment->last_stop;
   } else {
     /* the new segment has to be aligned with the old segment.
      * We first update the accumulated time of the previous
      * segment. the accumulated time is used when syncing to the
-     * clock. 
-     */
+     * clock. */
     if (segment->stop != -1) {
       duration = segment->stop - segment->start;
     } else if (segment->last_stop != -1) {
@@ -500,6 +506,12 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
       g_warning ("closing segment of unknown duration, assuming duration of 0");
       duration = 0;
     }
+    /* position the last_stop to the next expected position in the new segment,
+     * which is the start or the stop of the segment */
+    if (rate > 0.0)
+      last_stop = start;
+    else
+      last_stop = stop;
   }
   /* use previous rate to calculate duration */
   if (segment->abs_rate != 1.0)
@@ -513,7 +525,7 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
   segment->abs_rate = ABS (rate);
   segment->applied_rate = applied_rate;
   segment->start = start;
-  segment->last_stop = start;
+  segment->last_stop = last_stop;
   segment->stop = stop;
   segment->time = time;
 }
