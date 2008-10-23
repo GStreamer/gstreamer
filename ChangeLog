@@ -1,3 +1,11 @@
+2008-10-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_create_read):
+	Use gst_buffer_try_new_and_alloc() and handle errors instead of
+	using gst_buffer_new_and_alloc() which aborts if the buffer couldn't
+	be allocated.
+
 2008-10-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstsegment.c: (gst_segment_set_newsegment_full):

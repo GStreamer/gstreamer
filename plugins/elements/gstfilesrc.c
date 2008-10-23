@@ -565,8 +565,8 @@ gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
   GST_LOG ("unmapped region %08lx+%08lx at %p",
       (gulong) offset, (gulong) size, data);
 
-  GST_MINI_OBJECT_CLASS (mmap_buffer_parent_class)->
-      finalize (GST_MINI_OBJECT (mmap_buffer));
+  GST_MINI_OBJECT_CLASS (mmap_buffer_parent_class)->finalize (GST_MINI_OBJECT
+      (mmap_buffer));
 }
 
 static GstBuffer *
@@ -822,7 +822,11 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     src->read_position = offset;
   }
 
-  buf = gst_buffer_new_and_alloc (length);
+  buf = gst_buffer_try_new_and_alloc (length);
+  if (G_UNLIKELY (buf == NULL && length > 0)) {
+    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", length);
+    return GST_FLOW_ERROR;
+  }
 
   GST_LOG_OBJECT (src, "Reading %d bytes", length);
   ret = read (src->fd, GST_BUFFER_DATA (buf), length);
@@ -1076,6 +1080,7 @@ gst_file_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_file_src_uri_get_protocols (void)
 {
@@ -1083,6 +1088,7 @@ gst_file_src_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_file_src_uri_get_uri (GstURIHandler * handler)
 {

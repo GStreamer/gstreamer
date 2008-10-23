@@ -432,7 +432,11 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   blocksize = GST_BASE_SRC (src)->blocksize;
 
   /* create the buffer */
-  buf = gst_buffer_new_and_alloc (blocksize);
+  buf = gst_buffer_try_new_and_alloc (blocksize);
+  if (G_UNLIKELY (buf == NULL)) {
+    GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", blocksize);
+    return GST_FLOW_ERROR;
+  }
 
   do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), blocksize);
@@ -556,6 +560,7 @@ gst_fd_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_fd_src_uri_get_protocols (void)
 {
@@ -563,6 +568,7 @@ gst_fd_src_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_fd_src_uri_get_uri (GstURIHandler * handler)
 {
