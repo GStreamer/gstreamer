@@ -45,21 +45,21 @@ GST_BOILERPLATE_FULL (GstGLDisplay, gst_gl_display, GObject, G_TYPE_OBJECT, DEBU
 static void gst_gl_display_finalize (GObject* object);
 
 /* Called in the gl thread, protected by lock and unlock */
-static gpointer gst_gl_display_thread_create_context (GstGLDisplay* display);
-static void gst_gl_display_thread_destroy_context (GstGLDisplay* display);
-static void gst_gl_display_thread_change_context (GstGLDisplay* display);
-static void gst_gl_display_thread_run_generic (GstGLDisplay *display);
-static void gst_gl_display_thread_gen_texture (GstGLDisplay* display);
-static void gst_gl_display_thread_del_texture (GstGLDisplay* display);
-static void gst_gl_display_thread_init_upload (GstGLDisplay* display);
-static void gst_gl_display_thread_do_upload (GstGLDisplay* display);
-static void gst_gl_display_thread_init_download (GstGLDisplay *display);
-static void gst_gl_display_thread_do_download (GstGLDisplay* display);
-static void gst_gl_display_thread_gen_fbo (GstGLDisplay *display);
-static void gst_gl_display_thread_use_fbo (GstGLDisplay *display);
-static void gst_gl_display_thread_del_fbo (GstGLDisplay *display);
-static void gst_gl_display_thread_gen_shader (GstGLDisplay *display);
-static void gst_gl_display_thread_del_shader (GstGLDisplay *display);
+gpointer gst_gl_display_thread_create_context (GstGLDisplay* display);
+void gst_gl_display_thread_destroy_context (GstGLDisplay* display);
+void gst_gl_display_thread_change_context (GstGLDisplay* display);
+void gst_gl_display_thread_run_generic (GstGLDisplay *display);
+void gst_gl_display_thread_gen_texture (GstGLDisplay* display);
+void gst_gl_display_thread_del_texture (GstGLDisplay* display);
+void gst_gl_display_thread_init_upload (GstGLDisplay* display);
+void gst_gl_display_thread_do_upload (GstGLDisplay* display);
+void gst_gl_display_thread_init_download (GstGLDisplay *display);
+void gst_gl_display_thread_do_download (GstGLDisplay* display);
+void gst_gl_display_thread_gen_fbo (GstGLDisplay *display);
+void gst_gl_display_thread_use_fbo (GstGLDisplay *display);
+void gst_gl_display_thread_del_fbo (GstGLDisplay *display);
+void gst_gl_display_thread_gen_shader (GstGLDisplay *display);
+void gst_gl_display_thread_del_shader (GstGLDisplay *display);
 
 /* private methods */
 void gst_gl_display_lock (GstGLDisplay* display);
@@ -74,12 +74,12 @@ void gst_gl_display_check_framebuffer_status (void);
 
 /* To not make gst_gl_display_thread_do_upload
  * and gst_gl_display_thread_do_download too big */
-static void gst_gl_display_thread_init_upload_fbo (GstGLDisplay *display);
-static void gst_gl_display_thread_do_upload_make (GstGLDisplay *display);
-static void gst_gl_display_thread_do_upload_fill (GstGLDisplay *display);
-static void gst_gl_display_thread_do_upload_draw (GstGLDisplay *display);
-static void gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display);
-static void gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display);
+void gst_gl_display_thread_init_upload_fbo (GstGLDisplay *display);
+void gst_gl_display_thread_do_upload_make (GstGLDisplay *display);
+void gst_gl_display_thread_do_upload_fill (GstGLDisplay *display);
+void gst_gl_display_thread_do_upload_draw (GstGLDisplay *display);
+void gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay *display);
+void gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display);
 
 
 //------------------------------------------------------------
@@ -346,11 +346,19 @@ gst_gl_display_finalize (GObject* object)
 {
   GstGLDisplay* display = GST_GL_DISPLAY (object);
 
-  //request glut window destruction
-  //blocking call because display must be alive
+  //leave gl window loop
   gst_gl_display_lock (display);
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_destroy_context, display);
+  GST_DEBUG ("send quit gl window loop");
+  gst_gl_window_quit_loop (display->gl_window);
+  GST_DEBUG ("quit sent to gl window loop");
   gst_gl_display_unlock (display);
+
+  if (display->gl_thread)
+  {
+    g_thread_join (display->gl_thread);
+    GST_INFO ("gl thread joined");
+    display->gl_thread = NULL;
+  }
 
   if (display->texture_pool) {
     //texture pool is empty after destroying the gl context
@@ -374,14 +382,6 @@ gst_gl_display_finalize (GObject* object)
     display->use_fbo_scene_cb = NULL;
   if (display->use_fbo_stuff)
     display->use_fbo_stuff = NULL;
-
-  if (display->gl_thread)
-  {
-    g_thread_join (display->gl_thread);
-    GST_INFO ("gl thread joined");
-    display->gl_thread = NULL;
-  }
-
 }
 
 
@@ -394,7 +394,7 @@ gst_gl_display_finalize (GObject* object)
 //in a lock/unlock scope.
 
 /* Called in the gl thread */
-static gpointer
+gpointer
 gst_gl_display_thread_create_context (GstGLDisplay *display)
 {
   GLenum err = 0;
@@ -454,16 +454,18 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   GST_DEBUG ("loop exited\n");
 
+  gst_gl_display_thread_destroy_context (display);
+
   g_object_unref (G_OBJECT (display->gl_window));
 
-  display->gl_window;
+  display->gl_window = NULL;
 
   return NULL;
 }
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_destroy_context (GstGLDisplay *display)
 {
   //colorspace_conversion specific
@@ -579,14 +581,12 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
   gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
   gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
-
-  gst_gl_window_quit_loop (display->gl_window);
   
   GST_INFO ("Context destroyed");
 }
 
 
-static void
+void
 gst_gl_display_thread_run_generic (GstGLDisplay *display)
 {
   display->generic_callback (display, display->data);
@@ -594,7 +594,7 @@ gst_gl_display_thread_run_generic (GstGLDisplay *display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_gen_texture (GstGLDisplay * display)
 {
   //setup a texture to render to (this one will be in a gl buffer)
@@ -604,7 +604,7 @@ gst_gl_display_thread_gen_texture (GstGLDisplay * display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_del_texture (GstGLDisplay* display)
 {
   gst_gl_display_gldel_texture (display, &display->del_texture,
@@ -613,7 +613,7 @@ gst_gl_display_thread_del_texture (GstGLDisplay* display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_init_upload (GstGLDisplay *display)
 {
   switch (display->upload_video_format)
@@ -782,7 +782,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
 
 
 /* Called by the idle function */
-static void
+void
 gst_gl_display_thread_do_upload (GstGLDisplay *display)
 {
   gst_gl_display_thread_do_upload_fill (display);
@@ -842,7 +842,7 @@ gst_gl_display_thread_do_upload (GstGLDisplay *display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_init_download (GstGLDisplay *display)
 {
   switch (display->download_video_format)
@@ -1065,7 +1065,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_do_download (GstGLDisplay * display)
 {
   switch (display->download_video_format)
@@ -1098,7 +1098,7 @@ gst_gl_display_thread_do_download (GstGLDisplay * display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_gen_fbo (GstGLDisplay *display)
 {
   //a texture must be attached to the FBO
@@ -1141,7 +1141,7 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay *display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 {
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->use_fbo);
@@ -1204,7 +1204,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay *display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_del_fbo (GstGLDisplay* display)
 {
   if (display->del_fbo)
@@ -1221,7 +1221,7 @@ gst_gl_display_thread_del_fbo (GstGLDisplay* display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_gen_shader (GstGLDisplay* display)
 {
   if (GLEW_ARB_fragment_shader)
@@ -1268,7 +1268,7 @@ gst_gl_display_thread_gen_shader (GstGLDisplay* display)
 
 
 /* Called in the gl thread */
-static void
+void
 gst_gl_display_thread_del_shader (GstGLDisplay* display)
 {
   if (display->del_shader)
