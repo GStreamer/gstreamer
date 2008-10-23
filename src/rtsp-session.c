@@ -110,6 +110,8 @@ gst_rtsp_session_get_media (GstRTSPSession *sess, GstRTSPMedia *media)
   GstRTSPSessionMedia *result;
   GList *walk;
 
+  result = NULL;
+
   for (walk = sess->medias; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionMedia *) walk->data; 
 
