@@ -1,3 +1,18 @@
+2008-10-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.h:
+	API: Move float endianness conversion macros from libgstfloatcast
+	to core as it's useful in general, even in core. Fixes bug #555196.
+	This adds GDOUBLE_FROM_BE, GDOUBLE_FROM_LE, GDOUBLE_TO_BE,
+	GDOUBLE_TO_LE, GDOUBLE_SWAP_LE_BE, GFLOAT_FROM_BE, GFLOAT_FROM_LE,
+	GFLOAT_TO_BE, GFLOAT_TO_LE, GFLOAT_SWAP_LE_BE.
+
+	Also add GST_READ_ and GST_WRITE_ macros for floats and doubles:
+	GST_READ_FLOAT_LE, GST_READ_FLOAT_BE, GST_READ_DOUBLE_LE,
+	GST_READ_DOUBLE_BE, GST_WRITE_FLOAT_LE, GST_WRITE_FLOAT_BE,
+	GST_WRITE_DOUBLE_LE, GST_WRITE_DOUBLE_BE.
+
 2008-10-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/libs/gstreamer-libs-sections.txt:
