@@ -37,59 +37,6 @@
  * 32 and 64 bits.
  */
 
-
-/* Copied from gst/floatcast/floatcast.h as this is in gst-plugins-base */
-
-inline static gdouble
-GDOUBLE_SWAP_LE_BE (gdouble in)
-{
-  union
-  {
-    guint64 i;
-    gdouble d;
-  } u;
-
-  u.d = in;
-  u.i = GUINT64_SWAP_LE_BE (u.i);
-  return u.d;
-}
-
-inline static gfloat
-GFLOAT_SWAP_LE_BE (gfloat in)
-{
-  union
-  {
-    guint32 i;
-    gfloat f;
-  } u;
-
-  u.f = in;
-  u.i = GUINT32_SWAP_LE_BE (u.i);
-  return u.f;
-}
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define GFLOAT_TO_LE(val)    ((gfloat) (val))
-#define GFLOAT_TO_BE(val)    (GFLOAT_SWAP_LE_BE (val))
-#define GDOUBLE_TO_LE(val)   ((gdouble) (val))
-#define GDOUBLE_TO_BE(val)   (GDOUBLE_SWAP_LE_BE (val))
-
-#elif G_BYTE_ORDER == G_BIG_ENDIAN
-#define GFLOAT_TO_LE(val)    (GFLOAT_SWAP_LE_BE (val))
-#define GFLOAT_TO_BE(val)    ((gfloat) (val))
-#define GDOUBLE_TO_LE(val)   (GDOUBLE_SWAP_LE_BE (val))
-#define GDOUBLE_TO_BE(val)   ((gdouble) (val))
-
-#else /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
-#error unknown ENDIAN type
-#endif /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
-
-#define GFLOAT_FROM_LE(val)  (GFLOAT_TO_LE (val))
-#define GFLOAT_FROM_BE(val)  (GFLOAT_TO_BE (val))
-#define GDOUBLE_FROM_LE(val) (GDOUBLE_TO_LE (val))
-#define GDOUBLE_FROM_BE(val) (GDOUBLE_TO_BE (val))
-
-
 /**
  * gst_byte_reader_new:
  * @data: Data from which the #GstByteReader should read
@@ -1149,63 +1096,51 @@ gst_byte_reader_peek_int24_be (GstByteReader * reader, gint32 * val)
 gboolean \
 gst_byte_reader_get_float##bits##_le (GstByteReader *reader, g##type *val) \
 { \
-  g##type ret; \
-  \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
   if (reader->byte + bits / 8 > reader->size) \
     return FALSE; \
   \
-  memcpy (&ret, &reader->data[reader->byte], bits / 8); \
-  *val = G##TYPE##_FROM_LE (ret); \
+  *val = GST_READ_##TYPE##_LE (&reader->data[reader->byte]); \
   reader->byte += bits / 8; \
   return TRUE; \
 } \
 gboolean \
 gst_byte_reader_get_float##bits##_be (GstByteReader *reader, g##type *val) \
 { \
-  g##type ret; \
-  \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
   if (reader->byte + bits / 8 > reader->size) \
     return FALSE; \
   \
-  memcpy (&ret, &reader->data[reader->byte], bits / 8); \
-  *val = G##TYPE##_FROM_BE (ret); \
+  *val = GST_READ_##TYPE##_BE (&reader->data[reader->byte]); \
   reader->byte += bits / 8; \
   return TRUE; \
 } \
 gboolean \
 gst_byte_reader_peek_float##bits##_le (GstByteReader *reader, g##type *val) \
 { \
-  g##type ret; \
-  \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
   if (reader->byte + bits / 8 > reader->size) \
     return FALSE; \
   \
-  memcpy (&ret, &reader->data[reader->byte], bits / 8); \
-  *val = G##TYPE##_FROM_LE (ret); \
+  *val = GST_READ_##TYPE##_LE (&reader->data[reader->byte]); \
   return TRUE; \
 } \
 gboolean \
 gst_byte_reader_peek_float##bits##_be (GstByteReader *reader, g##type *val) \
 { \
-  g##type ret; \
-  \
   g_return_val_if_fail (reader != NULL, FALSE); \
   g_return_val_if_fail (val != NULL, FALSE); \
   \
   if (reader->byte + bits / 8 > reader->size) \
     return FALSE; \
   \
-  memcpy (&ret, &reader->data[reader->byte], bits / 8); \
-  *val = G##TYPE##_FROM_BE (ret); \
+  *val = GST_READ_##TYPE##_BE (&reader->data[reader->byte]); \
   return TRUE; \
 }
 

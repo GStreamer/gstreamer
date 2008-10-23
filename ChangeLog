@@ -1,5 +1,11 @@
 2008-10-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* libs/gst/base/gstbytereader.c:
+	Use GST_(READ|WRITE)_(FLOAT|DOUBLE)_(LE|BE) instead of our own
+	copies of them.
+
+2008-10-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstutils.h:
 	API: Move float endianness conversion macros from libgstfloatcast
