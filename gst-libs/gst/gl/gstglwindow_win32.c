@@ -88,6 +88,7 @@ static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
   WNDCLASS wc;
+  ATOM atom = 0;
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
   klass->instance = (guint64) GetModuleHandle (NULL);
 
@@ -110,7 +111,11 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
   wc.lpszMenuName = NULL;
   wc.lpszClassName = "GSTGL";
 
-  RegisterClass (&wc);
+  atom = RegisterClass (&wc);
+
+  g_assert (atom);
+
+  g_debug ("GSTGL window class registered\n");
 }
 
 static void
@@ -166,6 +171,8 @@ gst_gl_window_new (gint width, gint height)
   );
 
   g_assert (priv->internal_win_id);
+
+  g_debug ("gl window created: %d\n", priv->internal_win_id);
 
   //device is set in the window_proc 
   g_assert (priv->device);
@@ -351,7 +358,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
   gboolean bRet = FALSE;
   MSG msg;
 
-  g_debug ("start loop\n");
+  g_debug ("begin loop\n");
 
   while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0)
   { 
@@ -366,30 +373,32 @@ gst_gl_window_run_loop (GstGLWindow *window)
           DispatchMessage (&msg); 
       }
   }
-  /*while (GetMessage (&msg, priv->internal_win_id, 0, 0))
-  { 
-    TranslateMessage (&msg); 
-    DispatchMessage (&msg); 
-  }*/
-  g_debug ("loop terminated\n");
+
+  g_debug ("end loop\n");
 }
 
-/* Must be called in the gl thread */
+/* Thread safe */
 void
 gst_gl_window_quit_loop (GstGLWindow *window)
 {
-  PostQuitMessage(0);
+  if (window)
+  {
+    GstGLWindowPrivate *priv = window->priv;
+    LRESULT res = PostMessage(priv->internal_win_id, WM_CLOSE, 0, 0);
+    g_assert (SUCCEEDED (res));
+  }
 }
 
+/* Thread safe */
 void
 gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
-  GstGLWindowPrivate *priv = NULL;
-  LRESULT res;
-  g_assert (window);
-  priv = window->priv;
-  res = SendMessage (priv->internal_win_id, WM_GSTGLWINDOW, (WPARAM) data, (LPARAM) callback);
-  g_assert (SUCCEEDED (res));
+  if (window)
+  {
+    GstGLWindowPrivate *priv = window->priv;
+    LRESULT res = SendMessage (priv->internal_win_id, WM_GSTGLWINDOW, (WPARAM) data, (LPARAM) callback);
+    g_assert (SUCCEEDED (res));
+  }
 }
 
 /* PRIVATE */
@@ -463,6 +472,8 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     }
 
     created = TRUE;
+
+    return 0;
   }
   else if (created) {
 
@@ -479,7 +490,6 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
       case WM_SIZE:
       {
-        g_debug ("WM_SIZE\n");
         if (priv->resize_cb)
           priv->resize_cb (priv->resize_data, LOWORD(lParam), HIWORD(lParam));
         break;
@@ -487,7 +497,6 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
       case WM_PAINT:
       { 
-        g_debug ("WM_PAINT\n");
         if (priv->draw_cb)
         {
           PAINTSTRUCT ps;
@@ -527,16 +536,16 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       case WM_GSTGLWINDOW:
       {
         GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
-        
-        g_debug ("WM_GSTGLWINDOW\n");
         custom_cb ((gpointer) wParam);
         break;
       }
 
       default:
-        break;
+        return DefWindowProc( hWnd, uMsg, wParam, lParam );
     }
-  }
 
-  return DefWindowProc( hWnd, uMsg, wParam, lParam );
+    return 0;
+  }
+  else
+    return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
