@@ -1074,6 +1074,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
   priv = trans->priv;
 
+  *out_buf = NULL;
+
   /* figure out how to allocate a buffer based on the current configuration */
   if (trans->passthrough) {
     GST_DEBUG_OBJECT (trans, "doing passthrough alloc");
@@ -1863,15 +1865,25 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
   ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
-  if (ret == GST_FLOW_OK) {
-    GST_BASE_TRANSFORM_LOCK (trans);
-    ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
-    GST_BASE_TRANSFORM_UNLOCK (trans);
-  }
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto pull_error;
 
+  GST_BASE_TRANSFORM_LOCK (trans);
+  ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
+  GST_BASE_TRANSFORM_UNLOCK (trans);
+
+done:
   gst_object_unref (trans);
 
   return ret;
+
+  /* ERRORS */
+pull_error:
+  {
+    GST_DEBUG_OBJECT (trans, "failed to pull a buffer: %s",
+        gst_flow_get_name (ret));
+    goto done;
+  }
 }
 
 static GstFlowReturn
