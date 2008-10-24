@@ -3,7 +3,7 @@
   <description>IIR audio filter element</description>
   <filename>../../gst/filter/.libs/libgstfilter.so</filename>
   <basename>libgstfilter.so</basename>
-  <version>0.10.8</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -17,14 +17,14 @@
       <author>Monty &lt;monty@xiph.org&gt;, Thomas &lt;thomas@apestaart.org&gt;, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32</details>
         </caps>

@@ -1,4 +1,73 @@
-This is GStreamer Bad Plug-ins 0.10.8, "Vapour Trails"
+This is GStreamer Bad Plug-ins 0.10.9, "Matters of Fact"
+
+Changes since 0.10.8:
+
+      * New CELT encoder and decoder
+      * New TwoLAME encoder
+      * New DCCP element
+      * New AIFF parser element
+      * New APEX sink element
+      * deinterlace2 element improvements
+      * New JACK audio src element
+      * New winscreencap, winks and pcapparse plugins
+      * x624enc fixes
+      * Support for ATSC tuning and channels.conf parsing
+      * RTP improvements
+      * New scaletempo element
+      * Add Fluendo MPEG-TS muxer
+      * Add Fluendo MPEG-TS and MPEG-PS demuxers
+      * New JPEG2000 element
+      * New FLAC parser element
+      * DVD playback improvements
+      * Improved DirectShow decoding support
+      * New Windows Audio Session audio src element
+      * New FLV muxer element
+      * Many other bug fixes and improvements
+
+Bugs fixed since 0.10.8:
+
+      * 537700 : [scaletempo] Scale audio tempo in sync with playback rate
+      * 550468 : [name conflict] New Fluendo mpeg demuxers
+      * 545197 : jackaudiosrc
+      * 555244 : Output-selector has unexpected event forwarding right aft...
+      * 402593 : deinterleave gives corrupt output
+      * 406673 : Need AIFF parser
+      * 535527 : [real] Real video/audio stream fails to play
+      * 537455 : ATSC: VSB / QAM Annex B support
+      * 538500 : AIFF file doesn't play
+      * 542390 : Implementation of DCCP Plugin for gstreamer
+      * 542510 : [apexsink] Apple AirPort Express Wireless Sink
+      * 545247 : use g_setenv() insteed of setenv() in sdlvideosink.c
+      * 546312 : Make the metadata writable before modifying it in rtpmanager
+      * 549409 : gstrtpbin don't stop at the end of a stream
+      * 549774 : audio / video synchronization glitch during rtsp playback
+      * 550486 : [faac] Negotiation problem with mono audio for some sampl...
+      * 550657 : New element jasperdec
+      * 552506 : [neonhttpsrc] doesn't handle/throw errors correctly
+      * 552536 : fix incomplete change to gstdvbsrc.c
+      * 553755 : [mpegpsdemux] FP exception when playing tv2-1_25.mpg
+      * 555193 : [ELEMENT-MOVE] Move mpegtsparse element into mpegdemux pl...
+      * 555198 : [mpegpsdemux] Lower the RANK to MARGINAL for next release
+      * 555912 : [apexsink] Missing from ext/Makefile.am
+      * 555965 : Missing space after point mark
+      * 555968 : Missing space after point mark
+      * 555969 : Missing space after point mark
+      * 556003 : [flvdemux] Regression in handling flow returns in pull-mode
+      * 556274 : [aiffparse] Uses debugging methods before debugging is in...
+      * 556338 : Failed to configure latency
+      * 556428 : [mpegpsdemux] Creates invalid newsegment events 
+      * 556430 : [inputselector] Assumes there's always an otherpad
+      * 556440 : [PATCH] crash on demuxing certain transport streams
+      * 556482 : [PATCH] crash in mpegtsparse get_encoding_and_convert
+      * 556564 : [flvmux] Copy & paste bugs resulting in invalid files
+      * 556588 : [apexsink] should not have PRIMARY rank
+      * 557080 : [mpegpsdemux] Regression with reverse-playback
+      * 543480 : gstrtpbin fails to release lock while emitting signal
+      * 556520 : jitterbuffer seqnum gap detection is wrong
+      * 463941 : Plugin for screen capture on windows
+      * 519935 : New plugin for video capture on Windows
+      * 520899 : New plugin: pcapparse
+      * 520901 : New plugin: wasapi (Windows Audio Session API) 
 
 Changes since 0.10.7:
 

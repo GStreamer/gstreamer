@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -16855,7 +16855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17000,12 +17000,12 @@
 
 <ARG>
 <NAME>GstX264Enc::pass</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 3</RANGE>
+<TYPE>GstX264EncPass</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Pass</NICK>
-<BLURB>Pass of multipass encoding (0=single pass; 1=first pass, 2=middle pass, 3=last pass).</BLURB>
-<DEFAULT>0</DEFAULT>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17051,10 +17051,10 @@
 <ARG>
 <NAME>GstX264Enc::threads</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[1,4]</RANGE>
+<RANGE><= 4</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threads</NICK>
-<BLURB>Number of threads used by the codec.</BLURB>
+<BLURB>Number of threads used by the codec (0 for automatic).</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -17825,7 +17825,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17865,7 +17865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18015,7 +18015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0,1</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18206,6 +18206,16 @@
 <NICK>SDES TOOL</NICK>
 <BLURB>The TOOL to put in SDES messages of this session.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::internal-session</NAME>
+<TYPE>RTPSession*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Internal Session</NICK>
+<BLURB>The internal RTPSession object.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -22451,5 +22461,205 @@
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegTSDemux::check-crc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check CRC</NICK>
+<BLURB>Enable CRC checking.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegTSDemux::es-pids</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Colon separated list of PIDs containing Elementary Streams</NICK>
+<BLURB>PIDs to treat as Elementary Streams in the absence of a PMT, eg 0x10:0x11:0x20.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegTSDemux::m2ts-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>M2TS(192 bytes) Mode</NICK>
+<BLURB>Defines if the input is normal TS ie .ts(188 bytes)or Blue-Ray Format ie .m2ts(192 bytes).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegTSDemux::pat-info</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>GValueArray containing GObjects with properties</NICK>
+<BLURB>Array of GObjects containing information from the TS PAT about all programs listed in the current Program Association Table (PAT).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegTSDemux::pmt-info</NAME>
+<TYPE>FluTsPmtInfo*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Information about the current program</NICK>
+<BLURB>GObject with properties containing information from the TS PMT about the currently selected program and its streams.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpegTSDemux::program-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Program Number</NICK>
+<BLURB>Program number to demux for (-1 to ignore).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::overlap</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlap Length</NICK>
+<BLURB>Percentage of stride to overlap.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Playback Rate</NICK>
+<BLURB>Current playback rate.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::search</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 500</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Search Length</NICK>
+<BLURB>Length in milliseconds to search for best overlap position.</BLURB>
+<DEFAULT>14</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::stride</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,5000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stride Length</NICK>
+<BLURB>Length in milliseconds to output each stride.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPcapParse::dst-ip</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Destination IP</NICK>
+<BLURB>Destination IP to restrict to.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPcapParse::dst-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Destination port</NICK>
+<BLURB>Destination port to restrict to.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPcapParse::src-ip</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Source IP</NICK>
+<BLURB>Source IP to restrict to.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPcapParse::src-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Source port</NICK>
+<BLURB>Source port to restrict to.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTsMux::m2ts-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>M2TS(192 bytes) Mode</NICK>
+<BLURB>Defines what packet size to use, normal TS format ie .ts(188 bytes) or Blue-Ray disc ie .m2ts(192 bytes).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstApExSink::host</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Host</NICK>
+<BLURB>AirPort Express target host.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstApExSink::jack-status</NAME>
+<TYPE>GstApExJackStatus</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Jack Status</NICK>
+<BLURB>AirPort Express jack connection status.</BLURB>
+<DEFAULT>GST_APEX_JACK_STATUS_UNDEFINED</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstApExSink::jack-type</NAME>
+<TYPE>GstApExJackType</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Jack Type</NICK>
+<BLURB>AirPort Express connected jack type.</BLURB>
+<DEFAULT>GST_APEX_JACK_TYPE_UNDEFINED</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstApExSink::port</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 32000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Port</NICK>
+<BLURB>AirPort Express target port.</BLURB>
+<DEFAULT>5000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstApExSink::volume</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume</NICK>
+<BLURB>AirPort Express target volume.</BLURB>
+<DEFAULT>75</DEFAULT>
 </ARG>
 

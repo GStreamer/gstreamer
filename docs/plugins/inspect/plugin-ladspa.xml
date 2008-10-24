@@ -3,7 +3,7 @@
   <description>All LADSPA plugins</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>0.10.8</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -17,14 +17,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -38,13 +38,7 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Input_-Left-</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
-        </caps>
-        <caps>
-          <name>Output_-Left-</name>
+          <name>Output_-Right-</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
@@ -56,8 +50,14 @@
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output_-Right-</name>
+          <name>Output_-Left-</name>
           <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Input_-Left-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -71,14 +71,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -92,14 +92,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -113,14 +113,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Input</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Input</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -149,8 +149,8 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Frequency_-Hz-</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -161,8 +161,8 @@
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -176,14 +176,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Frequency_-Hz-</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
@@ -197,14 +197,14 @@
       <author>Richard Furse (LADSPA example plugins)</author>
       <pads>
         <caps>
-          <name>Amplitude</name>
-          <direction>sink</direction>
+          <name>Output</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>
         <caps>
-          <name>Output</name>
-          <direction>source</direction>
+          <name>Amplitude</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
         </caps>

@@ -139,6 +139,23 @@ guint  arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::get-internal-session</NAME>
+<RETURNS>RTPSession*</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpBin::on-sender-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -259,6 +276,14 @@ guint  arg1
 <SIGNAL>
 <NAME>GstRtpSession::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpSession::on-sender-timeout</NAME>
+<RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstRtpSession *gstrtpsession
 guint  arg1

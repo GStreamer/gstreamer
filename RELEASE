@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plug-ins 0.10.8 "Vapour Trails"
+Release notes for GStreamer Bad Plug-ins 0.10.9 "Matters of fact"
         
 
 
@@ -60,60 +60,72 @@ contains a set of well-supported plug-ins, but might pose problems for
 
 Features of this release
     
-      * Support shared desktops in RFB input
-      * Make the Quicktime codec wrapper work on win32
-      * Experimental DVD navigation support
-      * Support AAC/H.264 in FLV files
-      * Fixes in the DirectShow codec wrapper
-      * Fix the Real codec wrapper plugin
-      * New deinterlace2 plugin incorporating TVtime deinterlacers
-      * Handle seeking, timestamps, duration in RAW video/audio parsers
-      * New DirectShow video sink for Win32
-      * FAAD reverse playback support
-      * OSS4 support improvements
-      * MythTV seeking support
-      * SPC decoder now supports seeking, tags and duration queries
-      * Replaygain elements moved to Good
-      * Deinterleave/interleave elements fixed and moved to Good
-      * MPEG-4 video stream parser fixes
-      * Improved MPEG-TS parsing for DVB support
-      * Improvements in App source/sink
-      * RTP manager enhancements
+      * New CELT encoder and decoder
+      * New TwoLAME encoder
+      * New DCCP element
+      * New AIFF parser element
+      * New APEX sink element
+      * deinterlace2 element improvements
+      * New JACK audio src element
+      * New winscreencap, winks and pcapparse plugins
+      * x624enc fixes
+      * Support for ATSC tuning and channels.conf parsing
+      * RTP improvements
+      * New scaletempo element
+      * Add Fluendo MPEG-TS muxer
+      * Add Fluendo MPEG-TS and MPEG-PS demuxers
+      * New JPEG2000 element
+      * New FLAC parser element
+      * DVD playback improvements
+      * Improved DirectShow decoding support
+      * New Windows Audio Session audio src element
+      * New FLV muxer element
+      * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 533736 : [mythtvsrc] Seeking doesn't work
-      * 544050 : ext/timidity/gsttimidity.c :  ISO C90 forbids mixed decla...
-      * 454151 : SPC plugin enhancements (patch)
-      * 506594 : [interleave] doesn't work with channels > 1
-      * 521392 : Proposed patches for bayer2rgb encoding
-      * 525613 : [wildmidi] [PATCH] initializes library multiple times
-      * 528618 : amrwb plugin do not build without warning with the 3ggp s...
-      * 529359 : BBC Real Audio stream is just noise
-      * 530611 : [gstsrtenc] declare variables at beginning of block
-      * 531840 : QuickTime wrapper doesn't work on Win32
-      * 531955 : gstrtpsession doesn't send RTCP bye on EOS
-      * 532723 : mpeg4videoparse should parse the codec data
-      * 533435 : wildmidi does not work
-      * 533559 : mpeg4videoparse should skip garbage
-      * 535043 : VCD plugin only plays first track
-      * 536042 : mpeg4videoparse broken on big endian architectures
-      * 536258 : interleave doesn't close properly
-      * 536856 : rtpmanager deadlocks when receiving new data while going ...
-      * 538560 : [mpegtsparse] static caps reference counter incremented i...
-      * 539292 : memory leak in mpegtsparse
-      * 539601 : [realvideodec] not-negotiated error if codec lib isn't found
-      * 541522 : cross mingw32 gcc: festival plugin compilation fix
-      * 541543 : fix HAVE_OSS4 detection code in configure.ac
-      * 543286 : deinterlace2 doesn't build outside gcc
-      * 543846 : [resindvd] Impossible to build from the first configure r...
-      * 543848 : [ladspa] Needs to link with -ldl for dlopen() and friends
-      * 543860 : [modplug] Uses CFLAGS for CXXFLAGS
-      * 543861 : [resindvd] Some files not disted
-      * 544457 : -bad doesn't compile with MSVC
-      * 526905 : [musepack] Port to the new libmpcdec API
-      * 532011 : Deadlock in rtpsession
-      * 536309 : Seeking in pipeline with videoparse crashes
+      * 537700 : [scaletempo] Scale audio tempo in sync with playback rate
+      * 550468 : [name conflict] New Fluendo mpeg demuxers
+      * 545197 : jackaudiosrc
+      * 555244 : Output-selector has unexpected event forwarding right aft...
+      * 402593 : deinterleave gives corrupt output
+      * 406673 : Need AIFF parser
+      * 535527 : [real] Real video/audio stream fails to play
+      * 537455 : ATSC: VSB / QAM Annex B support
+      * 538500 : AIFF file doesn't play
+      * 542390 : Implementation of DCCP Plugin for gstreamer
+      * 542510 : [apexsink] Apple AirPort Express Wireless Sink
+      * 545247 : use g_setenv() insteed of setenv() in sdlvideosink.c
+      * 546312 : Make the metadata writable before modifying it in rtpmanager
+      * 549409 : gstrtpbin don't stop at the end of a stream
+      * 549774 : audio / video synchronization glitch during rtsp playback
+      * 550486 : [faac] Negotiation problem with mono audio for some sampl...
+      * 550657 : New element jasperdec
+      * 552506 : [neonhttpsrc] doesn't handle/throw errors correctly
+      * 552536 : fix incomplete change to gstdvbsrc.c
+      * 553755 : [mpegpsdemux] FP exception when playing tv2-1_25.mpg
+      * 555193 : [ELEMENT-MOVE] Move mpegtsparse element into mpegdemux pl...
+      * 555198 : [mpegpsdemux] Lower the RANK to MARGINAL for next release
+      * 555912 : [apexsink] Missing from ext/Makefile.am
+      * 555965 : Missing space after point mark
+      * 555968 : Missing space after point mark
+      * 555969 : Missing space after point mark
+      * 556003 : [flvdemux] Regression in handling flow returns in pull-mode
+      * 556274 : [aiffparse] Uses debugging methods before debugging is in...
+      * 556338 : Failed to configure latency
+      * 556428 : [mpegpsdemux] Creates invalid newsegment events
+      * 556430 : [inputselector] Assumes there's always an otherpad
+      * 556440 : [PATCH] crash on demuxing certain transport streams
+      * 556482 : [PATCH] crash in mpegtsparse get_encoding_and_convert
+      * 556564 : [flvmux] Copy & paste bugs resulting in invalid files
+      * 556588 : [apexsink] should not have PRIMARY rank
+      * 557080 : [mpegpsdemux] Regression with reverse-playback
+      * 543480 : gstrtpbin fails to release lock while emitting signal
+      * 556520 : jitterbuffer seqnum gap detection is wrong
+      * 463941 : Plugin for screen capture on windows
+      * 519935 : New plugin for video capture on Windows
+      * 520899 : New plugin: pcapparse
+      * 520901 : New plugin: wasapi (Windows Audio Session API)
 
 Download
 
@@ -143,33 +155,27 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Andy Wingo
-      * Bastien Nocera
-      * Brian Koropoff
-      * Clive Wright
-      * Damien Lespiau
       * David Schleef
       * Edward Hervey
+      * Frederic Crozat
+      * Haakon Sporsheim
       * Håvard Graff
-      * Ilja Pavkovic
       * Jan Schmidt
-      * Jens Granseuer
-      * Julien Moutte
+      * Josep Torra
+      * Jérémie Bernard
+      * Leandro Melo de Sales
       * Mark Nauwelaerts
-      * Martin Eikermann
+      * Michael Krufky
       * Michael Smith
       * Ole André Vadla Ravnås
       * Olivier Crete
-      * Peter Kjellerstedt
-      * Ryan Houdek
+      * Rov Juvano
       * Sebastian Dröge
       * Sebastian Pölsterl
-      * Sebastien Merle
-      * Sjoerd Simons
       * Stefan Kost
-      * Thijs Vermeir
+      * Tal Shalif
       * Tim-Philipp Müller
+      * Tristan Matthews
       * Wim Taymans
       * Zaheer Abbas Merali
  

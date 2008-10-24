@@ -3,7 +3,7 @@
   <description>Element parsing raw h264 streams</description>
   <filename>../../gst/h264parse/.libs/libgsth264parse.so</filename>
   <basename>libgsth264parse.so</basename>
-  <version>0.10.8</version>
+  <version>0.10.9</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -17,14 +17,14 @@
       <author>Michal Benes &lt;michal.benes@itonis.tv&gt;,Wim Taymans &lt;wim.taymans@gmail.com</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-h264</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/x-h264</details>
         </caps>
