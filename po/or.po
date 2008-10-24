@@ -8,13 +8,32 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-19 14:58+0100\n"
+"POT-Creation-Date: 2008-10-16 16:51+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: ext/resindvd/resindvdsrc.c:330
+#, fuzzy
+msgid "Could not read title information for DVD."
+msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
+
+#: ext/resindvd/resindvdsrc.c:336
+#, fuzzy, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
+
+#: ext/resindvd/rsnbasesrc.c:1659
+msgid "Internal clock error."
+msgstr ""
+
+#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
+#: gst/aiffparse/aiffparse.c:1234
+msgid "Internal data flow error."
+msgstr ""
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 #, fuzzy
@@ -35,25 +54,358 @@ msgstr ""
 msgid "Could not write to file \"%s\"."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
-#: sys/dvb/gstdvbsrc.c:694 sys/dvb/gstdvbsrc.c:775
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
+#: ext/twolame/gsttwolame.c:502
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+
+#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "\"%s\" ଯନ୍ତ୍ର ଅବସ୍ଥିତ ନାହିଁ."
 
-#: sys/dvb/gstdvbsrc.c:698
+#: sys/dvb/gstdvbsrc.c:701
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: sys/dvb/gstdvbsrc.c:710
+#: sys/dvb/gstdvbsrc.c:713
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
-#: sys/dvb/gstdvbsrc.c:779
+#: sys/dvb/gstdvbsrc.c:794
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#: sys/oss4/oss4-mixer.c:302
+#, fuzzy
+msgid "Could not open audio device for mixer control handling."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#: sys/oss4/oss4-mixer.c:316
+#, fuzzy
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#: sys/oss4/oss4-mixer.c:720
+msgid "Fast"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:721
+msgid "Low"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:722
+msgid "Medium"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:723
+msgid "High"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:724
+msgid "Very high"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:725
+msgid "Production"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:726
+msgid "Off"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:727
+msgid "On"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:728
+msgid "Stereo"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:729
+msgid "Surround sound"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
+msgid "Input mix"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
+msgid "Front"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
+#, fuzzy
+msgid "Rear"
+msgstr "ଅନୁଲିପିକରଣ"
+
+#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
+#, fuzzy
+msgid "Side"
+msgstr "ଭିଡିଓ"
+
+#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
+msgid "Center / LFE"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
+msgid "Microphone"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
+msgid "Front panel microphone"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:737
+msgid "Input"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
+msgid "Line-in"
+msgstr "ଲାଇନ-ଇନ"
+
+#: sys/oss4/oss4-mixer.c:739
+#, fuzzy
+msgid "PCM 1"
+msgstr "ପି.ସି.ଏମ."
+
+#: sys/oss4/oss4-mixer.c:740
+#, fuzzy
+msgid "PCM 2"
+msgstr "ପି.ସି.ଏମ.-୨"
+
+#: sys/oss4/oss4-mixer.c:741
+#, fuzzy
+msgid "PCM 3"
+msgstr "ପି.ସି.ଏମ."
+
+#: sys/oss4/oss4-mixer.c:742
+#, fuzzy
+msgid "PCM 4"
+msgstr "ପି.ସି.ଏମ."
+
+#: sys/oss4/oss4-mixer.c:754
+msgid "Green connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:755
+msgid "Green front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:756
+msgid "Pink connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:757
+msgid "Pink front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:758
+msgid "Blue connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:759
+msgid "Blue front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:760
+msgid "Orange connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:761
+msgid "Orange front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:762
+msgid "Black connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:763
+msgid "Black front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:764
+msgid "Gray connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:765
+msgid "Gray front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:766
+msgid "White connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:767
+msgid "White front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:768
+msgid "Red connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:769
+msgid "Red front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:770
+msgid "Yellow connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:771
+msgid "Yellow front panel connector"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:774
+msgid "Green connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:775
+msgid "Green front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:776
+msgid "Pink connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:777
+msgid "Pink front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:778
+msgid "Blue connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:779
+msgid "Blue front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:780
+msgid "Orange connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:781
+msgid "Orange front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:782
+msgid "Black connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:783
+msgid "Black front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:784
+msgid "Gray connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:785
+msgid "Gray front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:786
+msgid "White connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:787
+msgid "White front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:788
+msgid "Red connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:789
+msgid "Red front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:790
+msgid "Yellow connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:791
+msgid "Yellow front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:797
+msgid "Front panel line-in"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:798
+msgid "Headphones"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:799
+msgid "Front panel headphones"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:804
+msgid "PCM"
+msgstr "ପି.ସି.ଏମ."
+
+#: sys/oss4/oss4-mixer.c:846
+msgid "Virtual mixer input"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:848
+msgid "Virtual mixer output"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:850
+msgid "Virtual mixer channel configuration"
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:522
+msgid "Playback is not supported by this audio device."
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:529
+msgid "Audio playback error."
+msgstr ""
+
+#: sys/oss4/oss4-source.c:520
+msgid "Recording is not supported by this audio device."
+msgstr ""
+
+#: sys/oss4/oss4-source.c:527
+msgid "Error recording from audio device."
+msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
@@ -66,9 +418,6 @@ msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେ�
 
 #~ msgid "Could not get buffers from device \"%s\"."
 #~ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
@@ -121,29 +470,14 @@ msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେ�
 #~ msgid "Synth"
 #~ msgstr "ସିନ୍ଥେସାଇଜର"
 
-#~ msgid "PCM"
-#~ msgstr "ପି.ସି.ଏମ."
-
 #~ msgid "Speaker"
 #~ msgstr "ସ୍ବରବର୍ଦ୍ଧକ ୟନ୍ତ୍ର"
-
-#~ msgid "Line-in"
-#~ msgstr "ଲାଇନ-ଇନ"
-
-#~ msgid "Microphone"
-#~ msgstr "ମାଇକ୍ରୋଫୋନ୍"
 
 #~ msgid "CD"
 #~ msgstr "ସି.ଡି."
 
 #~ msgid "Mixer"
 #~ msgstr "ମିଶ୍ରଣ ଯନ୍ତ୍ର"
-
-#~ msgid "PCM-2"
-#~ msgstr "ପି.ସି.ଏମ.-୨"
-
-#~ msgid "Record"
-#~ msgstr "ଅନୁଲିପିକରଣ"
 
 #~ msgid "In-gain"
 #~ msgstr "ନିବେଶ-ବୃଦ୍ଧି"
@@ -174,9 +508,6 @@ msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେ�
 
 #~ msgid "Phone-out"
 #~ msgstr "ଫୋନ-ନିର୍ଗମ"
-
-#~ msgid "Video"
-#~ msgstr "ଭିଡିଓ"
 
 #~ msgid "Radio"
 #~ msgstr "ରେଡିଓ"

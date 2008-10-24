@@ -4,15 +4,33 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-19 14:58+0100\n"
-"PO-Revision-Date: 2008-02-09 19:42+0100\n"
+"POT-Creation-Date: 2008-10-16 16:51+0100\n"
+"PO-Revision-Date: 2008-10-17 17:14+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: ext/resindvd/resindvdsrc.c:330
+msgid "Could not read title information for DVD."
+msgstr "Nie udało się odczytać informacji o tytułach dla DVD."
+
+#: ext/resindvd/resindvdsrc.c:336
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Nie udało się otworzyć urządzenia DVD '%s'."
+
+#: ext/resindvd/rsnbasesrc.c:1659
+msgid "Internal clock error."
+msgstr "Błąd wewnętrzny zegara."
+
+#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
+#: gst/aiffparse/aiffparse.c:1234
+msgid "Internal data flow error."
+msgstr "Błąd wewnętrzny przepływu danych."
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
@@ -32,22 +50,357 @@ msgstr "Błąd wewnętrzny strumienia danych."
 msgid "Could not write to file \"%s\"."
 msgstr "Nie udało się zapisać danych do pliku \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:694 sys/dvb/gstdvbsrc.c:775
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"Nie udało się skonfigurować kodera TwoLAME. Proszę sprawdzić parametry "
+"kodowania."
+
+#: ext/twolame/gsttwolame.c:502
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Żądane bitrate %d kbit/s dla właściwości '%s' nie jest dozwolone - zmieniono "
+"na %d kbit/s."
+
+#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Urządzenei \"%s\" nie istnieje."
+msgstr "Urządzenie \"%s\" nie istnieje."
 
-#: sys/dvb/gstdvbsrc.c:698
+#: sys/dvb/gstdvbsrc.c:701
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nie udało się otworzyć urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:710
+#: sys/dvb/gstdvbsrc.c:713
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:779
+#: sys/dvb/gstdvbsrc.c:794
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
+
+#: sys/oss4/oss4-mixer.c:302
+msgid "Could not open audio device for mixer control handling."
+msgstr "Nie udało się otworzyć urządzenia dźwiękowego do sterowania mikserem."
+
+#: sys/oss4/oss4-mixer.c:316
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Nie udało się otworzyć urządzenia dźwiękowego do sterowania mikserem. Ta "
+"wersja Open Sound System nie jest obsługiwana przez ten moduł."
+
+#: sys/oss4/oss4-mixer.c:720
+msgid "Fast"
+msgstr "Szybka"
+
+#: sys/oss4/oss4-mixer.c:721
+msgid "Low"
+msgstr "Niska"
+
+#: sys/oss4/oss4-mixer.c:722
+msgid "Medium"
+msgstr "Średnia"
+
+#: sys/oss4/oss4-mixer.c:723
+msgid "High"
+msgstr "Wysoka"
+
+#: sys/oss4/oss4-mixer.c:724
+msgid "Very high"
+msgstr "Bardzo wysoka"
+
+#: sys/oss4/oss4-mixer.c:725
+msgid "Production"
+msgstr "Produkcyjna"
+
+#: sys/oss4/oss4-mixer.c:726
+msgid "Off"
+msgstr "Wyłączone"
+
+#: sys/oss4/oss4-mixer.c:727
+msgid "On"
+msgstr "Włączone"
+
+#: sys/oss4/oss4-mixer.c:728
+msgid "Stereo"
+msgstr "Stereo"
+
+#: sys/oss4/oss4-mixer.c:729
+msgid "Surround sound"
+msgstr "Dźwięk surround"
+
+#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
+msgid "Input mix"
+msgstr "Miksowanie wejścia"
+
+#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
+msgid "Front"
+msgstr "Przód"
+
+#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
+msgid "Rear"
+msgstr "Tył"
+
+#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
+msgid "Side"
+msgstr "Bok"
+
+#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
+msgid "Center / LFE"
+msgstr "Środek / LFE"
+
+#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
+msgid "Front panel microphone"
+msgstr "Mikrofon na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:737
+msgid "Input"
+msgstr "Wejście"
+
+#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
+msgid "Line-in"
+msgstr "Wejście linii"
+
+#: sys/oss4/oss4-mixer.c:739
+msgid "PCM 1"
+msgstr "PCM 1"
+
+#: sys/oss4/oss4-mixer.c:740
+msgid "PCM 2"
+msgstr "PCM 2"
+
+#: sys/oss4/oss4-mixer.c:741
+msgid "PCM 3"
+msgstr "PCM 3"
+
+#: sys/oss4/oss4-mixer.c:742
+msgid "PCM 4"
+msgstr "PCM 4"
+
+#: sys/oss4/oss4-mixer.c:754
+msgid "Green connector"
+msgstr "Zielone gniazdo"
+
+#: sys/oss4/oss4-mixer.c:755
+msgid "Green front panel connector"
+msgstr "Zielone gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:756
+msgid "Pink connector"
+msgstr "Różowe gniazdo"
+
+#: sys/oss4/oss4-mixer.c:757
+msgid "Pink front panel connector"
+msgstr "Różowe gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:758
+msgid "Blue connector"
+msgstr "Niebieskie gniazdo"
+
+#: sys/oss4/oss4-mixer.c:759
+msgid "Blue front panel connector"
+msgstr "Niebieskie gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:760
+msgid "Orange connector"
+msgstr "Pomarańczowe gniazdo"
+
+#: sys/oss4/oss4-mixer.c:761
+msgid "Orange front panel connector"
+msgstr "Pomarańczowe gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:762
+msgid "Black connector"
+msgstr "Czarne gniazdo"
+
+#: sys/oss4/oss4-mixer.c:763
+msgid "Black front panel connector"
+msgstr "Czarne gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:764
+msgid "Gray connector"
+msgstr "Szare gniazdo"
+
+#: sys/oss4/oss4-mixer.c:765
+msgid "Gray front panel connector"
+msgstr "Szare gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:766
+msgid "White connector"
+msgstr "Białe gniazdo"
+
+#: sys/oss4/oss4-mixer.c:767
+msgid "White front panel connector"
+msgstr "Białe gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:768
+msgid "Red connector"
+msgstr "Czerwone gniazdo"
+
+#: sys/oss4/oss4-mixer.c:769
+msgid "Red front panel connector"
+msgstr "Czerwone gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:770
+msgid "Yellow connector"
+msgstr "Żółte gniazdo"
+
+#: sys/oss4/oss4-mixer.c:771
+msgid "Yellow front panel connector"
+msgstr "Żółte gniazdo na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:774
+msgid "Green connector function"
+msgstr "Funkcja zielonego gniazda"
+
+#: sys/oss4/oss4-mixer.c:775
+msgid "Green front panel connector function"
+msgstr "Funkcja zielonego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:776
+msgid "Pink connector function"
+msgstr "Funkcja różowego gniazda"
+
+#: sys/oss4/oss4-mixer.c:777
+msgid "Pink front panel connector function"
+msgstr "Funkcja różowego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:778
+msgid "Blue connector function"
+msgstr "Funkcja niebieskiego gniazda"
+
+#: sys/oss4/oss4-mixer.c:779
+msgid "Blue front panel connector function"
+msgstr "Funkcja niebieskiego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:780
+msgid "Orange connector function"
+msgstr "Funkcja pomarańczowego gniazda"
+
+#: sys/oss4/oss4-mixer.c:781
+msgid "Orange front panel connector function"
+msgstr "Funkcja pomarańczowego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:782
+msgid "Black connector function"
+msgstr "Funkcja czarnego gniazda"
+
+#: sys/oss4/oss4-mixer.c:783
+msgid "Black front panel connector function"
+msgstr "Funkcja czarnego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:784
+msgid "Gray connector function"
+msgstr "Funkcja szarego gniazda"
+
+#: sys/oss4/oss4-mixer.c:785
+msgid "Gray front panel connector function"
+msgstr "Funkcja szarego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:786
+msgid "White connector function"
+msgstr "Funkcja białego gniazda"
+
+#: sys/oss4/oss4-mixer.c:787
+msgid "White front panel connector function"
+msgstr "Funkcja białego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:788
+msgid "Red connector function"
+msgstr "Funkcja czerwonego gniazda"
+
+#: sys/oss4/oss4-mixer.c:789
+msgid "Red front panel connector function"
+msgstr "Funkcja czerwonego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:790
+msgid "Yellow connector function"
+msgstr "Funkcja żółtego gniazda"
+
+#: sys/oss4/oss4-mixer.c:791
+msgid "Yellow front panel connector function"
+msgstr "Funkcja żółtego gniazda na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:797
+msgid "Front panel line-in"
+msgstr "Wejście linii na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:798
+msgid "Headphones"
+msgstr "Słuchawki"
+
+#: sys/oss4/oss4-mixer.c:799
+msgid "Front panel headphones"
+msgstr "Słuchawki na przednim panelu"
+
+#: sys/oss4/oss4-mixer.c:804
+msgid "PCM"
+msgstr "PCM"
+
+#: sys/oss4/oss4-mixer.c:846
+msgid "Virtual mixer input"
+msgstr "Wejście wirtualnego miksera"
+
+#: sys/oss4/oss4-mixer.c:848
+msgid "Virtual mixer output"
+msgstr "Wyjście wirtualnego miksera"
+
+#: sys/oss4/oss4-mixer.c:850
+msgid "Virtual mixer channel configuration"
+msgstr "Konfiguracja kanałów wirtualnego miksera"
+
+#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania. Urządzenie "
+"jest używane przez inną aplikację."
+
+#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania. Brak uprawnień "
+"do otwarcia urządzenia."
+
+#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
+msgid "Could not open audio device for playback."
+msgstr "Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania."
+
+#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania. Ta wersja Open "
+"Sound System nie jest obsługiwana przez ten moduł."
+
+#: sys/oss4/oss4-sink.c:522
+msgid "Playback is not supported by this audio device."
+msgstr "To urządzenie dźwiękowe nie obsługuje odtwarzania."
+
+#: sys/oss4/oss4-sink.c:529
+msgid "Audio playback error."
+msgstr "Błąd odtwarzania dźwięku"
+
+#: sys/oss4/oss4-source.c:520
+msgid "Recording is not supported by this audio device."
+msgstr "To urządzenie dźwiękowe nie obsługuje nagrywania."
+
+#: sys/oss4/oss4-source.c:527
+msgid "Error recording from audio device."
+msgstr "Błąd nagrywania z urządzenia dźwiękowego."

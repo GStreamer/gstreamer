@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-08-02 13:00+0200\n"
+"POT-Creation-Date: 2008-10-16 16:51+0100\n"
 "PO-Revision-Date: 2004-08-05 15:48+0200\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -15,272 +15,544 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:346 ext/sndfile/gstsf.c:621
+#: ext/resindvd/resindvdsrc.c:330
+#, fuzzy
+msgid "Could not read title information for DVD."
+msgstr "No s'ha pogut escriure al fitxer «%s»."
+
+#: ext/resindvd/resindvdsrc.c:336
+#, fuzzy, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
+
+#: ext/resindvd/rsnbasesrc.c:1659
+msgid "Internal clock error."
+msgstr ""
+
+#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
+#: gst/aiffparse/aiffparse.c:1234
+msgid "Internal data flow error."
+msgstr ""
+
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
+#, fuzzy
+msgid "No file name specified for writing."
+msgstr "No s'ha especificat cap nom de fitxer."
+
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a l'escriptura."
 
-#: ext/audiofile/gstafsink.c:368 ext/audiofile/gstafsrc.c:373
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "S'ha produït un error en tancar el fitxer «%s»."
+#: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
+msgid "Internal data stream error."
+msgstr ""
 
-#: ext/audiofile/gstafsrc.c:320
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
-
-#: ext/cdparanoia/gstcdparanoia.c:657 ext/cdparanoia/gstcdparanoia.c:673
-msgid "Could not open CD device for reading."
-msgstr "No s'ha pogut obrir el dispositiu de CD per a la lectura."
-
-#: ext/gnomevfs/gstgnomevfssrc.c:1067 ext/gnomevfs/gstgnomevfssrc.c:1090
-#, c-format
-msgid "Could not open vfs file \"%s\" for reading."
-msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a la lectura."
-
-#: ext/gnomevfs/gstgnomevfssink.c:344
-#, c-format
-msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
-
-#: ext/gnomevfs/gstgnomevfssink.c:351
-msgid "No filename given"
-msgstr "No s'ha donat cap nom de fitxer"
-
-#: ext/gnomevfs/gstgnomevfssink.c:377
-#, c-format
-msgid "Could not close vfs file \"%s\"."
-msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
-
-#: ext/sndfile/gstsf.c:582
-msgid "No filename specified."
-msgstr "No s'ha especificat cap nom de fitxer."
-
-#: ext/sndfile/gstsf.c:835
+#: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "No s'ha pogut escriure al fitxer «%s»."
 
-#: gst/avi/gstavimux.c:1052
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "L'entrada d'àudio no existeix o és invàlida, el flux AVI serà corrupte."
-
-#: gst-libs/gst/play/play.c:110
-#, c-format
-msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
-msgstr "No s'ha pogut trobar l'element %s. Aquest element és essencial per a la reproducció. Si us plau, instal·leu el connector adequat i verifiqueu que funciona correctament executant «gst-inspect %s»"
-
-#: gst-libs/gst/play/play.c:139
-msgid ""
-"No usable colorspace element could be found.\n"
-"Please install one and restart."
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"No s'ha trobat cap element d'espai de color utilitzable.\n"
-"Si us plau, instal·leu un i reinicieu."
 
-#: sys/dxr3/dxr3audiosink.c:298
+#: ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "No s'ha pogut obrir el dispositiu de control «%s» per a l'escriptura."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "No s'ha pogut configurar el dispositiu d'àudio «%s»."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "No s'ha pogut establir el dispositiu d'àudio «%s» a %d Hz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "No s'ha pogut tancar el dispositiu d'àudio «%s»."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "No s'ha pogut obrir el dispositiu de vídeo «%s» per a l'escriptura."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "No s'ha pogut tancar el dispositiu de vídeo «%s»."
-
-#: sys/dxr3/dxr3videosink.c:453 sys/v4l2/v4l2src_calls.c:123
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "No s'ha pogut escriure al dispositiu «%s»."
-
-#: sys/oss/gstosselement.c:725
-#, c-format
-msgid "OSS device \"%s\" is already in use by another program."
-msgstr "El dispositiu OSS «%s» ja està en ús per un altre programa."
-
-#: sys/oss/gstosselement.c:732 sys/oss/gstosselement.c:736
-#, c-format
-msgid "Could not access device \"%s\", check its permissions."
-msgstr "No s'ha pogut accedir al dispositiu «%s», comproveu els seus permisos."
-
-#: sys/oss/gstosselement.c:743 sys/v4l/v4l_calls.c:167
+#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "El dispositiu «%s» no existeix."
 
-#: sys/oss/gstosselement.c:750
+#: sys/dvb/gstdvbsrc.c:701
+#, fuzzy, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "No s'ha pogut tancar el dispositiu de control «%s»."
+
+#: sys/dvb/gstdvbsrc.c:713
+#, fuzzy, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "No s'han pogut obtenir búfers suficients del dispositiu «%s»."
+
+#: sys/dvb/gstdvbsrc.c:794
 #, c-format
-msgid "Could not open device \"%s\" for writing."
-msgstr "No s'ha pogut obrir el dispositiu «%s» per a l'escriptura."
+msgid "Could not open file \"%s\" for reading."
+msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura."
 
-#: sys/oss/gstosselement.c:754
-#, c-format
-msgid "Could not open device \"%s\" for reading."
-msgstr "No s'ha pogut obrir el dispositiu «%s» per a la lectura."
+#: sys/oss4/oss4-mixer.c:302
+#, fuzzy
+msgid "Could not open audio device for mixer control handling."
+msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
 
-#: sys/oss/gstosselement.c:1131
-msgid "Your OSS device could not be probed correctly"
-msgstr "No s'ha pogut detectar el vostre dispositiu d'OSS correctament"
+#: sys/oss4/oss4-mixer.c:316
+#, fuzzy
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
 
-#: sys/oss/gstossmixer.c:98
-msgid "Volume"
-msgstr "Volum"
+#: sys/oss4/oss4-mixer.c:720
+msgid "Fast"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:100
-msgid "Bass"
-msgstr "Baixos"
+#: sys/oss4/oss4-mixer.c:721
+msgid "Low"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:102
-msgid "Treble"
-msgstr "Aguts"
+#: sys/oss4/oss4-mixer.c:722
+msgid "Medium"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:104
-msgid "Synth"
-msgstr "Sintetitzador"
+#: sys/oss4/oss4-mixer.c:723
+msgid "High"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:106
-msgid "PCM"
-msgstr "PCM"
+#: sys/oss4/oss4-mixer.c:724
+msgid "Very high"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:108
-msgid "Speaker"
-msgstr "Altaveu"
+#: sys/oss4/oss4-mixer.c:725
+msgid "Production"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:110
-msgid "Line-in"
-msgstr "Línia-entrada"
+#: sys/oss4/oss4-mixer.c:726
+msgid "Off"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:112
+#: sys/oss4/oss4-mixer.c:727
+msgid "On"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:728
+msgid "Stereo"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:729
+msgid "Surround sound"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
+msgid "Input mix"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
+msgid "Front"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
+#, fuzzy
+msgid "Rear"
+msgstr "Enregistrament"
+
+#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
+#, fuzzy
+msgid "Side"
+msgstr "Vídeo"
+
+#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
+msgid "Center / LFE"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
 msgstr "Micròfon"
 
-#: sys/oss/gstossmixer.c:114
-msgid "CD"
-msgstr "CD"
+#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
+msgid "Front panel microphone"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:116
-msgid "Mixer"
-msgstr "Mesclador"
+#: sys/oss4/oss4-mixer.c:737
+msgid "Input"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:118
-msgid "PCM-2"
+#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
+msgid "Line-in"
+msgstr "Línia-entrada"
+
+#: sys/oss4/oss4-mixer.c:739
+#, fuzzy
+msgid "PCM 1"
+msgstr "PCM"
+
+#: sys/oss4/oss4-mixer.c:740
+#, fuzzy
+msgid "PCM 2"
 msgstr "PCM-2"
 
-#: sys/oss/gstossmixer.c:120
-msgid "Record"
-msgstr "Enregistrament"
+#: sys/oss4/oss4-mixer.c:741
+#, fuzzy
+msgid "PCM 3"
+msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:122
-msgid "In-gain"
-msgstr "Ganància-entrada"
+#: sys/oss4/oss4-mixer.c:742
+#, fuzzy
+msgid "PCM 4"
+msgstr "PCM"
 
-#: sys/oss/gstossmixer.c:124
-msgid "Out-gain"
-msgstr "Ganància-sortida"
+#: sys/oss4/oss4-mixer.c:754
+msgid "Green connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:126
-msgid "Line-1"
-msgstr "Línia-1"
+#: sys/oss4/oss4-mixer.c:755
+msgid "Green front panel connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:128
-msgid "Line-2"
-msgstr "Línia-2"
+#: sys/oss4/oss4-mixer.c:756
+msgid "Pink connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:130
-msgid "Line-3"
-msgstr "Línia-3"
+#: sys/oss4/oss4-mixer.c:757
+msgid "Pink front panel connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:132
-msgid "Digital-1"
-msgstr "Digital-1"
+#: sys/oss4/oss4-mixer.c:758
+msgid "Blue connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:134
-msgid "Digital-2"
-msgstr "Digital-2"
+#: sys/oss4/oss4-mixer.c:759
+msgid "Blue front panel connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:136
-msgid "Digital-3"
-msgstr "Digital-3"
+#: sys/oss4/oss4-mixer.c:760
+msgid "Orange connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:138
-msgid "Phone-in"
-msgstr "Telèfon-entrada"
+#: sys/oss4/oss4-mixer.c:761
+msgid "Orange front panel connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:140
-msgid "Phone-out"
-msgstr "Telèfon-sortida"
+#: sys/oss4/oss4-mixer.c:762
+msgid "Black connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:142
-msgid "Video"
-msgstr "Vídeo"
+#: sys/oss4/oss4-mixer.c:763
+msgid "Black front panel connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:144
-msgid "Radio"
-msgstr "Ràdio"
+#: sys/oss4/oss4-mixer.c:764
+msgid "Gray connector"
+msgstr ""
 
-#: sys/oss/gstossmixer.c:146
-msgid "Monitor"
-msgstr "Monitor"
+#: sys/oss4/oss4-mixer.c:765
+msgid "Gray front panel connector"
+msgstr ""
 
-#: sys/v4l/v4l_calls.c:158
-msgid "No device specified."
-msgstr "No s'ha especificat cap dispositiu."
+#: sys/oss4/oss4-mixer.c:766
+msgid "White connector"
+msgstr ""
 
-#: sys/v4l/v4l_calls.c:171 sys/v4l2/v4l2_calls.c:397
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "No s'ha pogut obrir el dispositiu «%s» per a l'escriptura i lectura."
+#: sys/oss4/oss4-mixer.c:767
+msgid "White front panel connector"
+msgstr ""
 
-#: sys/v4l/v4l_calls.h:50
-msgid "Device is not open."
-msgstr "El dispositiu no està obert."
+#: sys/oss4/oss4-mixer.c:768
+msgid "Red connector"
+msgstr ""
 
-#: sys/v4l/v4l_calls.h:59
-msgid "Device is open."
-msgstr "El dispositiu està obert."
+#: sys/oss4/oss4-mixer.c:769
+msgid "Red front panel connector"
+msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:411
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "El dispositiu «%s» no és un dispositiu de captura."
+#: sys/oss4/oss4-mixer.c:770
+msgid "Yellow connector"
+msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:255
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "No s'han pogut obtenir els búfers del dispositiu «%s»."
+#: sys/oss4/oss4-mixer.c:771
+msgid "Yellow front panel connector"
+msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:264
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
-msgstr "No s'han pogut obtenir búfers suficients del dispositiu «%s»."
+#: sys/oss4/oss4-mixer.c:774
+msgid "Green connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:775
+msgid "Green front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:776
+msgid "Pink connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:777
+msgid "Pink front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:778
+msgid "Blue connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:779
+msgid "Blue front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:780
+msgid "Orange connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:781
+msgid "Orange front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:782
+msgid "Black connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:783
+msgid "Black front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:784
+msgid "Gray connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:785
+msgid "Gray front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:786
+msgid "White connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:787
+msgid "White front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:788
+msgid "Red connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:789
+msgid "Red front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:790
+msgid "Yellow connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:791
+msgid "Yellow front panel connector function"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:797
+msgid "Front panel line-in"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:798
+msgid "Headphones"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:799
+msgid "Front panel headphones"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:804
+msgid "PCM"
+msgstr "PCM"
+
+#: sys/oss4/oss4-mixer.c:846
+msgid "Virtual mixer input"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:848
+msgid "Virtual mixer output"
+msgstr ""
+
+#: sys/oss4/oss4-mixer.c:850
+msgid "Virtual mixer channel configuration"
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
+
+#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "No s'ha pogut el dispositiu d'àudio «%s» per a l'escriptura."
+
+#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:522
+msgid "Playback is not supported by this audio device."
+msgstr ""
+
+#: sys/oss4/oss4-sink.c:529
+msgid "Audio playback error."
+msgstr ""
+
+#: sys/oss4/oss4-source.c:520
+msgid "Recording is not supported by this audio device."
+msgstr ""
+
+#: sys/oss4/oss4-source.c:527
+msgid "Error recording from audio device."
+msgstr ""
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "S'ha produït un error en tancar el fitxer «%s»."
+
+#~ msgid "Could not open CD device for reading."
+#~ msgstr "No s'ha pogut obrir el dispositiu de CD per a la lectura."
+
+#~ msgid "Could not open vfs file \"%s\" for reading."
+#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a la lectura."
+
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "No s'ha pogut obrir el fitxer vfs «%s» per a l'escriptura: %s."
+
+#~ msgid "No filename given"
+#~ msgstr "No s'ha donat cap nom de fitxer"
+
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "No s'ha pogut tancar el fitxer vfs «%s»."
+
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr ""
+#~ "L'entrada d'àudio no existeix o és invàlida, el flux AVI serà corrupte."
+
+#~ msgid ""
+#~ "The %s element could not be found. This element is essential for "
+#~ "playback. Please install the right plug-in and verify that it works by "
+#~ "running 'gst-inspect %s'"
+#~ msgstr ""
+#~ "No s'ha pogut trobar l'element %s. Aquest element és essencial per a la "
+#~ "reproducció. Si us plau, instal·leu el connector adequat i verifiqueu que "
+#~ "funciona correctament executant «gst-inspect %s»"
+
+#~ msgid ""
+#~ "No usable colorspace element could be found.\n"
+#~ "Please install one and restart."
+#~ msgstr ""
+#~ "No s'ha trobat cap element d'espai de color utilitzable.\n"
+#~ "Si us plau, instal·leu un i reinicieu."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr ""
+#~ "No s'ha pogut obrir el dispositiu de control «%s» per a l'escriptura."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "No s'ha pogut configurar el dispositiu d'àudio «%s»."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "No s'ha pogut establir el dispositiu d'àudio «%s» a %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "No s'ha pogut tancar el dispositiu d'àudio «%s»."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "No s'ha pogut obrir el dispositiu de vídeo «%s» per a l'escriptura."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "No s'ha pogut tancar el dispositiu de vídeo «%s»."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "No s'ha pogut escriure al dispositiu «%s»."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr "El dispositiu OSS «%s» ja està en ús per un altre programa."
+
+#~ msgid "Could not access device \"%s\", check its permissions."
+#~ msgstr ""
+#~ "No s'ha pogut accedir al dispositiu «%s», comproveu els seus permisos."
+
+#~ msgid "Could not open device \"%s\" for writing."
+#~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a l'escriptura."
+
+#~ msgid "Could not open device \"%s\" for reading."
+#~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a la lectura."
+
+#~ msgid "Your OSS device could not be probed correctly"
+#~ msgstr "No s'ha pogut detectar el vostre dispositiu d'OSS correctament"
+
+#~ msgid "Volume"
+#~ msgstr "Volum"
+
+#~ msgid "Bass"
+#~ msgstr "Baixos"
+
+#~ msgid "Treble"
+#~ msgstr "Aguts"
+
+#~ msgid "Synth"
+#~ msgstr "Sintetitzador"
+
+#~ msgid "Speaker"
+#~ msgstr "Altaveu"
+
+#~ msgid "CD"
+#~ msgstr "CD"
+
+#~ msgid "Mixer"
+#~ msgstr "Mesclador"
+
+#~ msgid "In-gain"
+#~ msgstr "Ganància-entrada"
+
+#~ msgid "Out-gain"
+#~ msgstr "Ganància-sortida"
+
+#~ msgid "Line-1"
+#~ msgstr "Línia-1"
+
+#~ msgid "Line-2"
+#~ msgstr "Línia-2"
+
+#~ msgid "Line-3"
+#~ msgstr "Línia-3"
+
+#~ msgid "Digital-1"
+#~ msgstr "Digital-1"
+
+#~ msgid "Digital-2"
+#~ msgstr "Digital-2"
+
+#~ msgid "Digital-3"
+#~ msgstr "Digital-3"
+
+#~ msgid "Phone-in"
+#~ msgstr "Telèfon-entrada"
+
+#~ msgid "Phone-out"
+#~ msgstr "Telèfon-sortida"
+
+#~ msgid "Radio"
+#~ msgstr "Ràdio"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "No device specified."
+#~ msgstr "No s'ha especificat cap dispositiu."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "No s'ha pogut obrir el dispositiu «%s» per a l'escriptura i lectura."
+
+#~ msgid "Device is not open."
+#~ msgstr "El dispositiu no està obert."
+
+#~ msgid "Device is open."
+#~ msgstr "El dispositiu està obert."
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "El dispositiu «%s» no és un dispositiu de captura."
+
+#~ msgid "Could not get buffers from device \"%s\"."
+#~ msgstr "No s'han pogut obtenir els búfers del dispositiu «%s»."

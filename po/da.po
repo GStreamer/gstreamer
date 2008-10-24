@@ -1,57 +1,412 @@
-# Translation of gst-plugins-bad to Danish.
-# This file is put in the public domain.
-#
+# Danish translation of gst-plugins-bad.
+# Copyright (C) 2008 gst.
+# This file is distributed under the same license as the gst-plugins-bad package.
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.4\n"
+"Project-Id-Version: gst-plugins-bad-0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-19 14:58+0100\n"
-"PO-Revision-Date: 2007-03-11 03:49+0100\n"
-"Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
+"POT-Creation-Date: 2008-10-16 16:51+0100\n"
+"PO-Revision-Date: 2008-10-13 11:28+0200\n"
+"Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.2\n"
+
+#: ext/resindvd/resindvdsrc.c:330
+msgid "Could not read title information for DVD."
+msgstr "Kunne ikke læse titelinformation for dvd."
+
+#: ext/resindvd/resindvdsrc.c:336
+#, c-format
+msgid "Failed to open DVD device '%s'."
+msgstr "Kunne ikke åbne dvd-enhed »%s«."
+
+#: ext/resindvd/rsnbasesrc.c:1659
+msgid "Internal clock error."
+msgstr "Intern urfejl."
+
+#: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
+#: gst/aiffparse/aiffparse.c:1234
+msgid "Internal data flow error."
+msgstr "Intern datastrømfejl."
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
-msgstr ""
+msgstr "Intet filnavn er angivet til skrivning."
 
 #: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kunne ikke åbne filen \"%s\" for læsning."
+msgstr "Kunne ikke åbne filen »%s« for skrivning."
 
 #: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Intern datastrømfejl."
 
 #: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
-#, fuzzy, c-format
+#, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Kunne ikke åbne forende-enheden \"%s\"."
+msgstr "Kunne ikke skrive til fil »%s«."
 
-#: sys/dvb/gstdvbsrc.c:694 sys/dvb/gstdvbsrc.c:775
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"Mislykkedes i at konfigurere TwoLAME-koder. Undersøg dine kodningsparametre."
+
+#: ext/twolame/gsttwolame.c:502
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Den anmodne bitrate %d kbit/s for egenskab »%s« er ikke tilladt. Bitraten "
+"blev ændret til %d kbit/s."
+
+#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Enheden \"%s\" eksisterer ikke."
+msgstr "Enheden »%s« eksisterer ikke."
 
-#: sys/dvb/gstdvbsrc.c:698
+#: sys/dvb/gstdvbsrc.c:701
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Kunne ikke åbne forende-enheden \"%s\"."
+msgstr "Kunne ikke åbne forende-enheden »%s«."
 
-#: sys/dvb/gstdvbsrc.c:710
+#: sys/dvb/gstdvbsrc.c:713
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Kunne ikke hente indstillinger fra forende-enheden \"%s\"."
+msgstr "Kunne ikke hente indstillinger fra forende-enheden »%s«."
 
-#: sys/dvb/gstdvbsrc.c:779
+#: sys/dvb/gstdvbsrc.c:794
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åbne filen \"%s\" for læsning."
+msgstr "Kunne ikke åbne filen »%s« for læsning."
+
+#: sys/oss4/oss4-mixer.c:302
+msgid "Could not open audio device for mixer control handling."
+msgstr "Kunne ikke åbne lydenhed til mikserpulthåndtering."
+
+#: sys/oss4/oss4-mixer.c:316
+#, fuzzy
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Kunne ikke åbne lydenhed til mikserpulthåndtering. Denne version af Open "
+"Sound System er ikke understøttet af dette element."
+
+#: sys/oss4/oss4-mixer.c:720
+msgid "Fast"
+msgstr "Hurtig"
+
+#: sys/oss4/oss4-mixer.c:721
+msgid "Low"
+msgstr "Lav"
+
+#: sys/oss4/oss4-mixer.c:722
+msgid "Medium"
+msgstr "Medium"
+
+#: sys/oss4/oss4-mixer.c:723
+msgid "High"
+msgstr "Højt"
+
+#: sys/oss4/oss4-mixer.c:724
+msgid "Very high"
+msgstr "Meget højt"
+
+#: sys/oss4/oss4-mixer.c:725
+msgid "Production"
+msgstr "Produktion"
+
+#: sys/oss4/oss4-mixer.c:726
+msgid "Off"
+msgstr "Slukket"
+
+#: sys/oss4/oss4-mixer.c:727
+msgid "On"
+msgstr "Tændt"
+
+#: sys/oss4/oss4-mixer.c:728
+msgid "Stereo"
+msgstr "Stereo"
+
+#: sys/oss4/oss4-mixer.c:729
+msgid "Surround sound"
+msgstr "Surround-lyd"
+
+#: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
+msgid "Input mix"
+msgstr "Inddata mix"
+
+#: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
+msgid "Front"
+msgstr "Front"
+
+#: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
+msgid "Rear"
+msgstr "Bagende"
+
+#: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
+msgid "Side"
+msgstr "Side"
+
+#: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
+msgid "Center / LFE"
+msgstr "Center / LFE"
+
+#: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
+msgid "Front panel microphone"
+msgstr "Frontpanelmikrofon"
+
+#: sys/oss4/oss4-mixer.c:737
+msgid "Input"
+msgstr "Inddata"
+
+#: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
+msgid "Line-in"
+msgstr "Linje-ind"
+
+#: sys/oss4/oss4-mixer.c:739
+msgid "PCM 1"
+msgstr "PCM 1"
+
+#: sys/oss4/oss4-mixer.c:740
+msgid "PCM 2"
+msgstr "PCM 2"
+
+#: sys/oss4/oss4-mixer.c:741
+msgid "PCM 3"
+msgstr "PCM 3"
+
+#: sys/oss4/oss4-mixer.c:742
+msgid "PCM 4"
+msgstr "PCM 4"
+
+#: sys/oss4/oss4-mixer.c:754
+msgid "Green connector"
+msgstr "Grøn forbindelse"
+
+#: sys/oss4/oss4-mixer.c:755
+msgid "Green front panel connector"
+msgstr "Grøn frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:756
+msgid "Pink connector"
+msgstr "Lyserød forbindelse"
+
+#: sys/oss4/oss4-mixer.c:757
+msgid "Pink front panel connector"
+msgstr "Lyserød frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:758
+msgid "Blue connector"
+msgstr "Blå forbindelse"
+
+#: sys/oss4/oss4-mixer.c:759
+msgid "Blue front panel connector"
+msgstr "Blå frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:760
+msgid "Orange connector"
+msgstr "Orange forbindelse"
+
+#: sys/oss4/oss4-mixer.c:761
+msgid "Orange front panel connector"
+msgstr "Orange frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:762
+msgid "Black connector"
+msgstr "Sort forbindelse"
+
+#: sys/oss4/oss4-mixer.c:763
+msgid "Black front panel connector"
+msgstr "Sort frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:764
+msgid "Gray connector"
+msgstr "Grå forbindelse"
+
+#: sys/oss4/oss4-mixer.c:765
+msgid "Gray front panel connector"
+msgstr "Grå frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:766
+msgid "White connector"
+msgstr "Hvid forbindelse"
+
+#: sys/oss4/oss4-mixer.c:767
+msgid "White front panel connector"
+msgstr "Hvid frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:768
+msgid "Red connector"
+msgstr "Rød forbindelse"
+
+#: sys/oss4/oss4-mixer.c:769
+msgid "Red front panel connector"
+msgstr "Rød frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:770
+msgid "Yellow connector"
+msgstr "Gul forbindelse"
+
+#: sys/oss4/oss4-mixer.c:771
+msgid "Yellow front panel connector"
+msgstr "Gul frontpanelforbindelse"
+
+#: sys/oss4/oss4-mixer.c:774
+msgid "Green connector function"
+msgstr "Grøn forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:775
+msgid "Green front panel connector function"
+msgstr "Grøn frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:776
+msgid "Pink connector function"
+msgstr "Lyserød forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:777
+msgid "Pink front panel connector function"
+msgstr "Lyserød frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:778
+msgid "Blue connector function"
+msgstr "Blå forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:779
+msgid "Blue front panel connector function"
+msgstr "Blå frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:780
+msgid "Orange connector function"
+msgstr "Orange forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:781
+msgid "Orange front panel connector function"
+msgstr "Orange frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:782
+msgid "Black connector function"
+msgstr "Sort forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:783
+msgid "Black front panel connector function"
+msgstr "Sort frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:784
+msgid "Gray connector function"
+msgstr "Grå forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:785
+msgid "Gray front panel connector function"
+msgstr "Grå frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:786
+msgid "White connector function"
+msgstr "Hvid forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:787
+msgid "White front panel connector function"
+msgstr "Hvid frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:788
+msgid "Red connector function"
+msgstr "Rød forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:789
+msgid "Red front panel connector function"
+msgstr "Rød frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:790
+msgid "Yellow connector function"
+msgstr "Gul forbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:791
+msgid "Yellow front panel connector function"
+msgstr "Gul frontpanelforbindelsesfunktion"
+
+#: sys/oss4/oss4-mixer.c:797
+msgid "Front panel line-in"
+msgstr "Frontpanel linje-ind"
+
+#: sys/oss4/oss4-mixer.c:798
+msgid "Headphones"
+msgstr "Høretelefoner"
+
+#: sys/oss4/oss4-mixer.c:799
+msgid "Front panel headphones"
+msgstr "Frontpanel høretelefoner"
+
+#: sys/oss4/oss4-mixer.c:804
+msgid "PCM"
+msgstr "PCM"
+
+#: sys/oss4/oss4-mixer.c:846
+msgid "Virtual mixer input"
+msgstr "Virtuel mikserpultinddata"
+
+#: sys/oss4/oss4-mixer.c:848
+msgid "Virtual mixer output"
+msgstr "Virtuel mikserpultuddata"
+
+#: sys/oss4/oss4-mixer.c:850
+msgid "Virtual mixer channel configuration"
+msgstr "Virtuel mikserkanalkonfiguration"
+
+#: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Kunne ikke åbne lydenhed til afspilning. Enheden bruges af et andet program."
+
+#: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Kunne ikke åbne lydenhed til afspilning. Du har ikke rettigheder til at åbne "
+"enheden."
+
+#: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
+msgid "Could not open audio device for playback."
+msgstr "Kunne ikke åbne lydenhed til afspilning."
+
+#: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Kunne ikke åbne lydenhed for afspilning. Denne version af Open Sound System "
+"er ikke understøttet af dette element."
+
+#: sys/oss4/oss4-sink.c:522
+msgid "Playback is not supported by this audio device."
+msgstr "Afspilning er ikke understøttet af denne lydenhed."
+
+#: sys/oss4/oss4-sink.c:529
+msgid "Audio playback error."
+msgstr "Fejl ved lydafspilning."
+
+#: sys/oss4/oss4-source.c:520
+msgid "Recording is not supported by this audio device."
+msgstr "Optagelse er ikke understøttet af denne lydenhed."
+
+#: sys/oss4/oss4-source.c:527
+msgid "Error recording from audio device."
+msgstr "Fejl under optagelse fra lydenhed."
 
 #~ msgid "This file is corrupt and cannot be played."
 #~ msgstr "Denne fil er korrupt og kan ikke afspilles."
