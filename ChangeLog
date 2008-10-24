@@ -1,3 +1,10 @@
+2008-10-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
+	(gst_rmdemux_descramble_mp4a_audio),
+	(gst_rmdemux_handle_scrambled_packet):
+	Add suport for mpeg4 and aac audio. See #556714.
+
 2008-10-14  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

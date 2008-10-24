@@ -1375,18 +1375,21 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         stream->subpackets = NULL;
         break;
 
-        /* RealAudio 10 (AAC) */
-      case GST_RM_AUD_RAAC:
-        codec_name = "Real Audio 10 (AAC)";
-        version = 10;
-        break;
-
         /* MPEG-4 based */
+      case GST_RM_AUD_RAAC:
       case GST_RM_AUD_RACP:
-        /* FIXME: codec_name = */
+        codec_name = "MPEG4 audio";
         stream_caps =
             gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT,
-            (int) 4, NULL);
+            (int) 4, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+        if (stream->extra_data_size > 0) {
+          /* strip off an unknown byte in the extra data */
+          stream->extra_data_size--;
+          stream->extra_data++;
+        }
+        stream->needs_descrambling = TRUE;
+        stream->subpackets_needed = 1;
+        stream->subpackets = NULL;
         break;
 
         /* Sony ATRAC3 */
@@ -1979,6 +1982,52 @@ gst_rmdemux_descramble_dnet_audio (GstRMDemux * rmdemux,
 }
 
 static GstFlowReturn
+gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream)
+{
+  GstFlowReturn res;
+  GstBuffer *buf, *outbuf;
+  guint frames, index, i;
+  guint8 *data;
+  guint size;
+  GstClockTime timestamp;
+
+  res = GST_FLOW_OK;
+
+  buf = g_ptr_array_index (stream->subpackets, 0);
+  g_ptr_array_index (stream->subpackets, 0) = NULL;
+  g_ptr_array_set_size (stream->subpackets, 0);
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  frames = (data[1] & 0xf0) >> 4;
+  index = 2 * frames + 2;
+
+  for (i = 0; i < frames; i++) {
+    guint len = (data[i * 2 + 2] << 8) | data[i * 2 + 3];
+
+    outbuf = gst_buffer_create_sub (buf, index, len);
+    if (i == 0)
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (stream->pad));
+
+    index += len;
+
+    if (stream->discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      stream->discont = FALSE;
+    }
+    res = gst_pad_push (stream->pad, outbuf);
+    if (res != GST_FLOW_OK)
+      break;
+  }
+  gst_buffer_unref (buf);
+  return res;
+}
+
+static GstFlowReturn
 gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream, GstBuffer * buf, gboolean keyframe)
 {
@@ -2007,6 +2056,10 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
       break;
     case GST_RM_AUD_COOK:
       ret = gst_rmdemux_descramble_cook_audio (rmdemux, stream);
+      break;
+    case GST_RM_AUD_RAAC:
+    case GST_RM_AUD_RACP:
+      ret = gst_rmdemux_descramble_mp4a_audio (rmdemux, stream);
       break;
     default:
       g_assert_not_reached ();
