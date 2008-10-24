@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.9 "Steam Train Rolling"
+Release notes for GStreamer Good Plug-ins 0.10.11 "Secondary Consideration"
         
 
 
@@ -54,95 +54,52 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Replaygain elements moved from Bad
-      * Interleave/Deinterleave elements moved from Bad
-      * Pulseaudio plugin http://pulseaudio.org is now integrated
-      * New simple Karaoke audio effect plugin
-      * Improvements in v4l2src
-      * Multi-channel FLAC file fixes
-      * AVI and Quicktime reverse playback support
-      * AVI and Matroska muxing improvements
-      * New element for rendering SMPTE transitions into alpha channels
-      * Many improvements in the Win32 directdraw elements
-      * Error out cleanly for encrypted streams
-      * RTP/UDP handling improvements
-      * RTSP digest authentatication implemented.
-      * New RTP Pay/Depay-loaders for Speex, G.729, DV & raw video/audio
-      * Error concealment for Speex
-      * Many other bug-fixes and enhancements
+      * HDV capture support
+      * Port flactag element to 0.10
+      * Support FLAC in alternate bit-depths and more samplerates
+      * Matroska muxing improvements
+      * Support Google RTSP variant
+      * Many other bug-fixes and improvements
 
 Bugs fixed in this release
      
-      * 541787 : incorrect timestamp
-      * 413705 : [PLUGINS MOVE] gst-plugins-good contails GPL'ed libcdio p...
-      * 345393 : Missing documentation
-      * 400679 : [PLUGIN-MOVE] pulse-gst to -good
-      * 422917 : G729 payloader/depayloader
-      * 429322 : [matroska-demux] hangs if file starts at non-zero timestamp
-      * 465146 : Add more complete negotiation to gstrtpbasepayload
-      * 469917 : multiudpsink IPv6 and diffserv TOS/TC markup
-      * 499318 : [osxvideosink] warnings on build (ppc, 64bit, 10.4)
-      * 503288 : rtph264pay does not split multiple NAL units in incoming ...
-      * 511489 : avimux muxed audio and video out of sync
-      * 512345 : gstalpha: chroma-key should not set alpha to 0 if brightn...
-      * 515962 : [udp] add ipv6 support to multiudpsink and udpsrc, add mu...
-      * 516509 : gstid3v2mux.cc build failure on Solaris, CFLAGS not valid...
-      * 519301 : avimux fails when going from NULL to playing a second time
-      * 519460 : 8 bytes missing in AVI streamheader
-      * 520092 : v4l2src proposed patches
-      * 520885 : directdrawsink has some issues
-      * 527865 : [PATCH] [matroskademux] uses wrong colourspace for palett...
-      * 529454 : [udpsrc] generates false error on win32 due to ICMP dest-...
-      * 529692 : [goom] fails to build on Windows with mingw32
-      * 529707 : [rtp] fails to build on Windows with mingw32
-      * 530886 : Support more mpeg2 variants in .mov files
-      * 531532 : rtspsrc leaks filedescriptors when gst_rtspsrc_open fails
-      * 531672 : [qtdemux] does not handle files with edit lists correctly...
-      * 532295 : gconf setting default audio sink to video default visualizer
-      * 532393 : [dvdec] Shouldn't be GST_RANK_PRIMARY
-      * 532409 : RTP payload/depayloader for G.729
-      * 532423 : RTP payload/depayloader for DV
-      * 533264 : Make v4l2 compile without X
-      * 533619 : udpsink dies when Linux fails (for no reason) sendto() wi...
-      * 535121 : [videomixer] proper seek/segment handling
-      * 535300 : [avidemux] missing support for reverse playback.
-      * 535935 : [qtdemux] Missing metadata
-      * 536228 : [PLUGIN-MOVE] Move interleave/deinterleave to gst-plugins...
-      * 536317 : [v4l2src] Doesn't compile with latest git kernel
-      * 536646 : v4l2src doesn't pick the optimal resolution
-      * 536831 : v4l2src == non-experimental
-      * 536903 : udpsrc now assumes one is using multicast
-      * 537021 : [cdio] does not extract album title from CD-TEXT
-      * 537031 : Enhancement to SunAudio mixer plugin
+      * 545433 : [wavparse] support tempo tag
+      * 311586 : Matroska mux/demux don't support flac
+      * 350830 : [raw1394] Add HDV support
+      * 413841 : [flactag] needs porting to 0.10.x
+      * 536067 : [matroska] Add support for real audio/video
       * 537361 : videomixer segment handler fail
-      * 537377 : Gstreamer avidemux fails on avi files with non-AV data st...
-      * 537622 : [matroskademux] Doesn't export covers (file attachments)
-      * 537675 : rtp vorbis/theora payloader static caps don't specify del...
-      * 537832 : rtsp is broken
-      * 539372 : udpsrc do not set port properly on anonymous binding
-      * 539548 : [udpsrc] Fails to bind with permission denied when trying...
-      * 540067 : souphttpsrc does not support http authentication
-      * 540300 : [souphttpsrc] souphttpsrc does not seek ahead in http stream
-      * 540940 : Quicktime demuxer does not handle dirac in QT files
-      * 541081 : [v4l2src] Doesn't compile with on old kernel
-      * 541384 : cross mingw32 gcc: making goom compile
-      * 541412 : cross mingw32 gcc: making libgstrtp plugin compile
-      * 541650 : udpsrc fails to parse URI with IPv6 address
-      * 541956 : v4l2src only requests interlaced video
-      * 542410 : qtdemux not recognizing pcm 8bit streams correctly
-      * 543054 : [osxvideosink] minor build issue
-      * 543255 : -Wno-attributes does not exist in every gcc version
-      * 543259 : warning in gstv4l2src.c due to an uninitialized variable
-      * 543300 : [qtdemux] [PATCH] wrong depth in RLE video caps and wrong...
-      * 543406 : [PLUGIN-MOVE] move replaygain elements to -good
-      * 544509 : [qtdemux] Regression in segment.stop
-      * 539482 : [avidemux] Doesn't parse vprp ODML header
-      * 544433 : Some -good plugins aren't buildable with MSVC
-      * 536994 : Improve v4l2src negotiation a bit more
-      * 329198 : GStreamer-CRITICAL: gst_pad_activate_pull: assertion `old...
-      * 532065 : Implement RTSP Digest authentication
-      * 533287 : Mapping of mime types to gst names in multipartdemux
-      * 538891 : G.726 pay/depayloader is missing
+      * 543101 : The udpsrc/udpsink/multiudpsink/dynudpsink elements may l...
+      * 544956 : [videobox] segfault when changing properties at running p...
+      * 545463 : autodetect plugin links to gconf, unnecessarily
+      * 545710 : [rtspsrc] : create rtp/rtcp socket pair + same port for d...
+      * 546465 : can't play m.youtube.com rtsp streams
+      * 547075 : [speex] Encoder doesn't handle non-zero start timestamps ...
+      * 547217 : Implement GstPropertyProbe interface on pulsesrc for dete...
+      * 547227 : Implement GstPropertyProbe interface on pulsesink for det...
+      * 547518 : pulsemixer probe fails after device property is set
+      * 547519 : Add device-name property to pulsesrc
+      * 548530 : wavenc allows audio depth of 25
+      * 548831 : matroska demuxer setting incorrect timestamps
+      * 549073 : buffer_alloc function from new basetransform sometimes fa...
+      * 549090 : v4l2src has no property named norm but notifies it
+      * 549551 : conversion of gst structure names to mime types in multip...
+      * 549784 : Memory Corruption Probing v4l2src with Video4Linux1 device
+      * 550015 : build failure: gstcmmlparser.c:115: error: format not a s...
+      * 550791 : [flacenc] files are too big, mid-side-stereo=true should ...
+      * 551048 : rtsp implementation sends PAUSE even when server doesn't ...
+      * 551570 : plugin ximagesrc is memory leaking...
+      * 551584 : Crash when modifying the videobox " top " and " left " live w...
+      * 552213 : [qtdemux] map tiff fourcc to image/tiff caps
+      * 553191 : udpsrc: bind() fails on OS X
+      * 554771 : totem spins CPU 100% while allocating (infinitely) becaus...
+      * 556010 : AVI muxer segfault
+      * 556381 : [icydemux] test fails with latest core
+      * 556424 : [avidemux] segmentation fault when creating indexes
+      * 557085 : [videobox] support dynamically changing properties
+      * 557610 : udpsrc fails to bind() on Mac OS X (IPv4 vs. IPv6 problem)
+      * 547842 : Vorbis RTP RFC 5215 is out
+      * 550288 : Sound not played - a quicktime file
 
 Download
 
@@ -172,44 +129,27 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Bastien Nocera
-      * Benjamin Kampmann
-      * Benoit Fouet
-      * Brian Cameron
-      * Bruno Santos
-      * Christian Schaller
-      * Damien Lespiau
-      * Daniel Drake
+      * Aurelien Grimaud
+      * Craig Keogh
+      * Daniel Franke
       * David Schleef
       * Edward Hervey
-      * Gustaf Räntilä
-      * Haakon Sporsheim
-      * Henrik Eriksson
-      * Jan Gerber
+      * Filippo Argiolas
+      * Frederic Crozat
       * Jan Schmidt
-      * Jason Donenfeld
-      * Jesús Corrius
-      * Julien Moutte
+      * Jonathan Matthew
+      * Laszlo Pandy
       * Mark Nauwelaerts
       * Mersad Jelacic
       * Michael Smith
+      * Mike Ruprecht
       * Ole André Vadla Ravnås
       * Olivier Crete
-      * Patrick Radizi
       * Peter Kjellerstedt
       * Sebastian Dröge
-      * Sebastian Keller
-      * Sjoerd Simons
       * Stefan Kost
-      * Tero Saarni
-      * Thiago Sousa Santos
       * Thijs Vermeir
-      * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tomasz Grobelny
-      * William M. Brack
       * Wim Taymans
-      * Wouter Cloetens
-      * Youness Alaoui
+      * Zaheer Abbas Merali
  

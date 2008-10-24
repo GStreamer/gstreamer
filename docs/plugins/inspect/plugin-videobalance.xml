@@ -3,7 +3,7 @@
   <description>Changes hue, saturation, brightness etc. on video images</description>
   <filename>../../gst/videofilter/.libs/libgstvideobalance.so</filename>
   <basename>libgstvideobalance.so</basename>
-  <version>0.10.9</version>
+  <version>0.10.11</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -17,14 +17,14 @@
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc){ IYUV, I420, YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw-yuv, format=(fourcc){ IYUV, I420, YV12 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>

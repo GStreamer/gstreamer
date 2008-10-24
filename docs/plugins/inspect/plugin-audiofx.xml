@@ -3,7 +3,7 @@
   <description>Audio effects plugin</description>
   <filename>../../gst/audiofx/.libs/libgstaudiofx.so</filename>
   <basename>libgstaudiofx.so</basename>
-  <version>0.10.9</version>
+  <version>0.10.11</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -17,14 +17,14 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -38,14 +38,14 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -59,14 +59,14 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -80,14 +80,14 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -101,14 +101,14 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -122,14 +122,14 @@
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -143,16 +143,16 @@
       <author>Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)2, endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -164,14 +164,14 @@
       <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
@@ -185,14 +185,14 @@
       <author>Thomas &lt;thomas@apestaart.org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>

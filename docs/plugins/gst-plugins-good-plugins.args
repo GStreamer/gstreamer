@@ -1492,7 +1492,7 @@
 <NAME>GstFlacEnc::blocksize</NAME>
 <TYPE>guint</TYPE>
 <RANGE>[16,65535]</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Blocksize</NICK>
 <BLURB>Blocksize in samples.</BLURB>
 <DEFAULT>4608</DEFAULT>
@@ -1502,7 +1502,7 @@
 <NAME>GstFlacEnc::escape-coding</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Do Escape coding</NICK>
 <BLURB>search for escape codes in the entropy coding stage for slightly better compression.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -1512,7 +1512,7 @@
 <NAME>GstFlacEnc::exhaustive-model-search</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Do exhaustive model search</NICK>
 <BLURB>do exhaustive search of LP coefficient quantization (expensive!).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -1522,7 +1522,7 @@
 <NAME>GstFlacEnc::loose-mid-side-stereo</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Loose mid side stereo</NICK>
 <BLURB>Loose mid side stereo.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -1532,7 +1532,7 @@
 <NAME>GstFlacEnc::max-lpc-order</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 32</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Max LPC order</NICK>
 <BLURB>Max LPC order; 0 => use only fixed predictors.</BLURB>
 <DEFAULT>8</DEFAULT>
@@ -1542,7 +1542,7 @@
 <NAME>GstFlacEnc::max-residual-partition-order</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 16</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Max residual partition order</NICK>
 <BLURB>Max residual partition order (above 4 doesn't usually help much).</BLURB>
 <DEFAULT>3</DEFAULT>
@@ -1552,7 +1552,7 @@
 <NAME>GstFlacEnc::mid-side-stereo</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Do mid side stereo</NICK>
 <BLURB>Do mid side stereo (only for stereo input).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
@@ -1562,7 +1562,7 @@
 <NAME>GstFlacEnc::min-residual-partition-order</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 16</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Min residual partition order</NICK>
 <BLURB>Min residual partition order (above 4 doesn't usually help much).</BLURB>
 <DEFAULT>3</DEFAULT>
@@ -1572,7 +1572,7 @@
 <NAME>GstFlacEnc::qlp-coeff-prec-search</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Do QLP coefficients precision search</NICK>
 <BLURB>false = use qlp_coeff_precision, true = search around qlp_coeff_precision, take best.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
@@ -1582,7 +1582,7 @@
 <NAME>GstFlacEnc::qlp-coeff-precision</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 32</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>QLP coefficients precision</NICK>
 <BLURB>Precision in bits of quantized linear-predictor coefficients; 0 = automatic.</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -1592,7 +1592,7 @@
 <NAME>GstFlacEnc::quality</NAME>
 <TYPE>GstFlacEncQuality</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Speed versus compression tradeoff.</BLURB>
 <DEFAULT>5 - Default</DEFAULT>
@@ -1602,7 +1602,7 @@
 <NAME>GstFlacEnc::rice-parameter-search-dist</NAME>
 <TYPE>guint</TYPE>
 <RANGE><= 15</RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>rice_parameter_search_dist</NICK>
 <BLURB>0 = try only calc'd parameter k; else try all [k-dist..k+dist] parameters, use best.</BLURB>
 <DEFAULT>0</DEFAULT>
@@ -1612,7 +1612,7 @@
 <NAME>GstFlacEnc::streamable-subset</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>rwx</FLAGS>
 <NICK>Streamable subset</NICK>
 <BLURB>true to limit encoder to generating a Subset stream, else false.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
@@ -19309,6 +19309,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPulseSink::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPulseSrc::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -19325,6 +19335,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Server</NICK>
 <BLURB>The PulseAudio server to connect to.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSrc::device-name</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Device name</NICK>
+<BLURB>Human-readable name of the sound device.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -19531,7 +19551,7 @@
 <ARG>
 <NAME>GstHDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>

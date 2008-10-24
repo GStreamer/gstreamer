@@ -1,4 +1,61 @@
-This is GStreamer Good Plug-ins 0.10.9, "Steam Train Rolling"
+This is GStreamer Good Plug-ins 0.10.11, "Secondary Consideration"
+
+Changes since 0.10.10:
+
+      * HDV capture support
+      * Port flactag element to 0.10
+      * Support FLAC in alternate bit-depths and more samplerates
+      * Matroska muxing improvements
+      * Support Google RTSP variant
+      * Many other bug-fixes and improvements
+
+Bugs fixed since 0.10.10:
+
+      * 545433 : [wavparse] support tempo tag
+      * 311586 : Matroska mux/demux don't support flac
+      * 350830 : [raw1394] Add HDV support
+      * 413841 : [flactag] needs porting to 0.10.x
+      * 536067 : [matroska] Add support for real audio/video
+      * 537361 : videomixer segment handler fail
+      * 543101 : The udpsrc/udpsink/multiudpsink/dynudpsink elements may l...
+      * 544956 : [videobox] segfault when changing properties at running p...
+      * 545463 : autodetect plugin links to gconf, unnecessarily
+      * 545710 : [rtspsrc] : create rtp/rtcp socket pair + same port for d...
+      * 546465 : can't play m.youtube.com rtsp streams
+      * 547075 : [speex] Encoder doesn't handle non-zero start timestamps ...
+      * 547217 : Implement GstPropertyProbe interface on pulsesrc for dete...
+      * 547227 : Implement GstPropertyProbe interface on pulsesink for det...
+      * 547518 : pulsemixer probe fails after device property is set
+      * 547519 : Add device-name property to pulsesrc
+      * 548530 : wavenc allows audio depth of 25
+      * 548831 : matroska demuxer setting incorrect timestamps
+      * 549073 : buffer_alloc function from new basetransform sometimes fa...
+      * 549090 : v4l2src has no property named norm but notifies it
+      * 549551 : conversion of gst structure names to mime types in multip...
+      * 549784 : Memory Corruption Probing v4l2src with Video4Linux1 device
+      * 550015 : build failure: gstcmmlparser.c:115: error: format not a s...
+      * 550791 : [flacenc] files are too big, mid-side-stereo=true should ...
+      * 551048 : rtsp implementation sends PAUSE even when server doesn't ...
+      * 551570 : plugin ximagesrc is memory leaking...
+      * 551584 : Crash when modifying the videobox " top " and " left " live w...
+      * 552213 : [qtdemux] map tiff fourcc to image/tiff caps
+      * 553191 : udpsrc: bind() fails on OS X
+      * 554771 : totem spins CPU 100% while allocating (infinitely) becaus...
+      * 556010 : AVI muxer segfault
+      * 556381 : [icydemux] test fails with latest core
+      * 556424 : [avidemux] segmentation fault when creating indexes
+      * 557085 : [videobox] support dynamically changing properties
+      * 557610 : udpsrc fails to bind() on Mac OS X (IPv4 vs. IPv6 problem)
+      * 547842 : Vorbis RTP RFC 5215 is out
+      * 550288 : Sound not played - a quicktime file
+
+Changes since 0.10.9:
+
+      * Move the libcdio cddasrc element to -ugly, because of the GPL license
+
+Bugs fixed since 0.10.9:
+
+      * 413705 : [PLUGINS MOVE] gst-plugins-good contails GPL'ed libcdio p...
 
 Changes since 0.10.8:
 
