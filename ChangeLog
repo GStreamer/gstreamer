@@ -1,3 +1,9 @@
+2008-10-24  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	oops, forgot to bump the version back to devel
+	after the last release 0.10.9.1
+
 2008-10-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
