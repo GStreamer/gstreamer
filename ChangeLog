@@ -1,3 +1,8 @@
+2008-10-24  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Commit 0.10.8.4 pre-release
+
 2008-10-20  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data):
