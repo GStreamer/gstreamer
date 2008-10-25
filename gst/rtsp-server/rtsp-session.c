@@ -144,7 +144,7 @@ gst_rtsp_session_get_media (GstRTSPSession *sess, GstRTSPMedia *media)
 no_media:
   {
     gst_rtsp_session_free_media (result);
-    return FALSE;
+    return NULL;
   }
 }
 
