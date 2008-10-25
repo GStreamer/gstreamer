@@ -56,6 +56,7 @@ struct _GstGLWindowPrivate
   gpointer resize_data;
   GstGLWindowCB close_cb;
   gpointer close_data;
+  gboolean is_closed;
 };
 
 G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
@@ -85,33 +86,18 @@ gst_gl_window_log_handler (const gchar *domain, GLogLevelFlags flags,
 }
 
 static void
+gst_gl_window_base_init (gpointer g_class)
+{
+}
+
+static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
-  WNDCLASS wc;
-  ATOM atom = 0;
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
-  klass->instance = (guint64) GetModuleHandle (NULL);
 
   g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
 
   obj_class->finalize = gst_gl_window_finalize;
-
-  atom = GetClassInfo ((HINSTANCE)klass->instance, "GSTGL", &wc);
-
-  ZeroMemory (&wc, sizeof(WNDCLASS));
-
-  wc.lpfnWndProc = window_proc;
-  wc.cbClsExtra = 0;
-  wc.cbWndExtra = 0;
-  wc.hInstance = (HINSTANCE) klass->instance;
-  wc.hIcon = LoadIcon( NULL, IDI_WINLOGO );
-  wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-  wc.hCursor = LoadCursor( NULL, IDC_ARROW );
-  wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
-  wc.lpszMenuName = NULL;
-  wc.lpszClassName = "GSTGL";
-
-  atom = RegisterClass (&wc);
 }
 
 static void
@@ -133,9 +119,37 @@ gst_gl_window_new (gint width, gint height)
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
   GstGLWindowClass* klass = GST_GL_WINDOW_GET_CLASS (window);
-  
+
+  WNDCLASS wc;
+  ATOM atom = 0;
+  HINSTANCE hinstance = GetModuleHandle (NULL);
+
   static gint x = 0;
   static gint y = 0;
+
+  atom = GetClassInfo (hinstance, "GSTGL", &wc);
+
+  if (atom == 0)
+  {
+    ZeroMemory (&wc, sizeof(WNDCLASS));
+
+    wc.lpfnWndProc = window_proc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = hinstance;
+    wc.hIcon = LoadIcon (NULL, IDI_WINLOGO);
+    wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    wc.hCursor = LoadCursor (NULL, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = "GSTGL";
+
+    atom = RegisterClass (&wc);
+
+    if (atom == 0)
+      g_error ("Failed to register window class %x\r\n", GetLastError());
+  }
+
   x += 20;
   y += 20;
 
@@ -151,6 +165,7 @@ gst_gl_window_new (gint width, gint height)
   priv->resize_data = NULL;
   priv->close_cb = NULL;
   priv->close_data = NULL;
+  priv->is_closed = FALSE;
 
   width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
   height += 2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
@@ -163,11 +178,15 @@ gst_gl_window_new (gint width, gint height)
     x, y, width, height,
     (HWND) NULL,
     (HMENU) NULL,
-    (HINSTANCE) klass->instance,
+    hinstance,
     window
   );
 
-  g_assert (priv->internal_win_id);
+  if (!priv->internal_win_id)
+  {
+    g_debug ("failed to create gl window: %d\n", priv->internal_win_id);
+    return NULL;
+  }
 
   g_debug ("gl window created: %d\n", priv->internal_win_id);
 
@@ -177,13 +196,7 @@ gst_gl_window_new (gint width, gint height)
   UpdateWindow (priv->internal_win_id);
   ShowCursor (TRUE);
 
-  if (wglMakeCurrent (priv->device, priv->gl_context))
-    return window;
-  else
-  {
-    g_debug ("Failed to make opengl context current");
-    return NULL;
-  }
+  return window;
 }
 
 GQuark
@@ -283,6 +296,8 @@ gst_gl_window_visible (GstGLWindow *window, gboolean visible)
 {
   GstGLWindowPrivate *priv = window->priv;
   BOOL ret = FALSE; 
+
+  g_debug ("set visible %d\n", priv->internal_win_id);
   
   if (visible)
     ret = ShowWindow (priv->internal_win_id, SW_SHOW);
@@ -298,7 +313,7 @@ gst_gl_window_draw (GstGLWindow *window)
   
   if (!priv->has_external_window_id)
     RedrawWindow (priv->internal_win_id, NULL, NULL,
-      RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE /*| RDW_UPDATENOW*/);
+      RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
   else
   {
     PAINTSTRUCT ps;
@@ -365,7 +380,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
   { 
       if (bRet == -1)
       {
-          g_debug ("error in gst_gl_window_run_loop\n");
+          g_error ("Failed to get message %x\r\n", GetLastError());
           running = FALSE;
       }
       else
@@ -431,7 +446,7 @@ gst_gl_window_set_pixel_format (GstGLWindow *window)
     pfd.cAccumGreenBits = 0;
     pfd.cAccumBlueBits  = 0;
     pfd.cAccumAlphaBits = 0;
-    pfd.cDepthBits      = 24;
+    pfd.cDepthBits      = 32;
     pfd.cStencilBits    = 8;
     pfd.cAuxBuffers     = 0;
     pfd.iLayerType      = PFD_MAIN_PLANE;
@@ -459,8 +474,6 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
     g_debug ("WM_CREATE\n");
 
-    SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG)(guint64)(gpointer) window);
-
     g_assert (window);
 
     {
@@ -471,10 +484,14 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       if (priv->gl_context)
         g_debug ("gl context created: %d\n", priv->gl_context);
       else
-        g_debug ("failed to create glcontext %d\n", hWnd);
+        g_debug ("failed to create glcontext %d, %x\r\n", hWnd, GetLastError());
       g_assert (priv->gl_context);
       ReleaseDC (hWnd, priv->device);
+      if (!wglMakeCurrent (priv->device, priv->gl_context))
+        g_debug ("failed to make opengl context current %d, %x\r\n", hWnd, GetLastError());
     }
+
+    SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG)(guint64)(gpointer) window);
 
     return 0;
   }
@@ -490,6 +507,8 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     g_assert (priv);
 
     g_assert (priv->internal_win_id == hWnd);
+
+    g_assert (priv->gl_context == wglGetCurrentContext());
 
     switch ( uMsg ) {
 
@@ -516,18 +535,24 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       case WM_CLOSE:
       {
         g_debug ("WM_CLOSE\n");
-        if (priv->close_cb)
-          priv->close_cb (priv->close_data);
-        wglMakeCurrent (NULL, NULL);
+        priv->is_closed = TRUE;
+        SetWindowLongPtr (hWnd, GWLP_USERDATA, 0);
+
+        if (!wglMakeCurrent (NULL, NULL))
+          g_debug ("failed to make current %d, %x\r\n", hWnd, GetLastError());
 
         if (priv->gl_context)
-          wglDeleteContext (priv->gl_context);
+        {
+          if (!wglDeleteContext (priv->gl_context))
+            g_debug ("failed to destroy context %d, %x\r\n", priv->gl_context, GetLastError());
+        }
 
         if (priv->internal_win_id)
-          DestroyWindow(priv->internal_win_id);
-
-        SetWindowLongPtr (hWnd, GWLP_USERDATA, 0);
-        DestroyWindow(hWnd);
+        {
+          if (!DestroyWindow(priv->internal_win_id))
+            g_debug ("failed to destroy window %d, %x\r\n", hWnd, GetLastError());
+        }
+          
         PostQuitMessage (0);
         break;
       }
@@ -542,8 +567,13 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
       case WM_GSTGLWINDOW:
       {
-        GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
-        custom_cb ((gpointer) wParam);
+        if (priv->is_closed && priv->close_cb)
+          priv->close_cb (priv->close_data);
+        else
+        {
+          GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
+          custom_cb ((gpointer) wParam);
+        }
         break;
       }
 

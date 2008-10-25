@@ -346,9 +346,9 @@ gst_gl_display_finalize (GObject* object)
 
   //leave gl window loop
   gst_gl_display_lock (display);
-  GST_DEBUG ("send quit gl window loop");
+  GST_INFO ("send quit gl window loop");
   gst_gl_window_quit_loop (display->gl_window);
-  GST_DEBUG ("quit sent to gl window loop");
+  GST_INFO ("quit sent to gl window loop");
   gst_gl_display_unlock (display);
 
   if (display->gl_thread)
@@ -453,7 +453,9 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   gst_gl_window_run_loop (display->gl_window);
 
-  GST_DEBUG ("loop exited\n");
+  GST_INFO ("loop exited\n");
+
+  display->isAlive = FALSE;
 
   gst_gl_display_thread_destroy_context (display);
 
@@ -870,7 +872,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
 
     if (GLEW_EXT_framebuffer_object)
     {
-      GST_DEBUG ("Context, EXT_framebuffer_object supported: yes");
+      GST_INFO ("Context, EXT_framebuffer_object supported: yes");
 
       //-- init output frame buffer object (GL -> video)
 
@@ -1054,7 +1056,7 @@ gst_gl_display_thread_init_download (GstGLDisplay *display)
     else
     {
       //turn off the pipeline because colorspace conversion is not possible
-      GST_DEBUG ("Context, ARB_fragment_shader supported: no");
+      GST_WARNING ("Context, ARB_fragment_shader supported: no");
       display->isAlive = FALSE;
     }
   }
@@ -1325,11 +1327,12 @@ gst_gl_display_on_resize (GstGLDisplay* display, gint width, gint height)
 
 void gst_gl_display_on_draw(GstGLDisplay* display)
 {
-  //check if video format has been setup
+  //check if tecture is ready for being drawn
   if (!display->redisplay_texture)
     return;
 
   //opengl scene
+  GST_INFO ("on draw");
 
   //make sure that the environnement is clean
   if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
@@ -1378,9 +1381,7 @@ void gst_gl_display_on_draw(GstGLDisplay* display)
 void gst_gl_display_on_close (GstGLDisplay* display)
 {
   GST_INFO ("on close");
-  gst_gl_display_lock (display);
   display->isAlive = FALSE;
-  gst_gl_display_unlock (display);
 }
 
 
