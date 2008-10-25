@@ -108,8 +108,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->gl_thread = NULL;
   display->gl_window = NULL;
   display->winId = 0;
-  display->win_xpos = 0;
-  display->win_ypos = 0;
   display->visible = FALSE;
   display->isAlive = TRUE;
   display->texture_pool = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -355,8 +353,9 @@ gst_gl_display_finalize (GObject* object)
 
   if (display->gl_thread)
   {
-    g_thread_join (display->gl_thread);
+    gpointer ret = g_thread_join (display->gl_thread);
     GST_INFO ("gl thread joined");
+    g_assert (ret == NULL);
     display->gl_thread = NULL;
   }
 
@@ -389,10 +388,6 @@ gst_gl_display_finalize (GObject* object)
 //------------------ BEGIN GL THREAD ACTIONS -----------------
 //------------------------------------------------------------
 
-//The following functions are thread safe because
-//called by the "gst_gl_display_thread_dispatch_action"
-//in a lock/unlock scope.
-
 /* Called in the gl thread */
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay *display)
@@ -401,9 +396,15 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   display->gl_window = gst_gl_window_new (display->upload_width, display->upload_height);
 
-  GST_INFO ("gl window created");
+  if (!display->gl_window)
+  {
+    display->isAlive = FALSE;
+    GST_ERROR_OBJECT (display, "Failed to create gl window");
+    g_cond_signal (display->cond_create_context);
+    return NULL;
+  }
 
-  gst_gl_window_visible (display->gl_window, display->visible);
+  GST_INFO ("gl window created");
 
   //Init glew
   err = glewInit();
@@ -1580,19 +1581,14 @@ gst_gl_display_new (void)
  * Called by the first gl element of a video/x-raw-gl flow */
 void
 gst_gl_display_create_context (GstGLDisplay *display,
-                               GLint x, GLint y,
                                GLint width, GLint height,
-                               gulong winId,
-                               gboolean visible)
+                               gulong winId)
 {
   gst_gl_display_lock (display);
 
   display->winId = winId;
-  display->win_xpos = x;
-  display->win_ypos = y;
   display->upload_width = width;
   display->upload_height = height;
-  display->visible = visible;
 
   display->gl_thread = g_thread_create (
     (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE, NULL);

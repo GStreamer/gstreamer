@@ -56,39 +56,6 @@ typedef enum {
   GST_GL_DISPLAY_PROJECTION_PERSPECIVE
 } GstGLDisplayProjection;
 
-
-//Message type
-typedef enum {
-  GST_GL_DISPLAY_ACTION_CREATE_CONTEXT,
-  GST_GL_DISPLAY_ACTION_DESTROY_CONTEXT,
-  GST_GL_DISPLAY_ACTION_CHANGE_CONTEXT,
-  GST_GL_DISPLAY_ACTION_VISIBLE_CONTEXT,
-  GST_GL_DISPLAY_ACTION_RESIZE_CONTEXT,
-  GST_GL_DISPLAY_ACTION_REDISPLAY_CONTEXT,
-  GST_GL_DISPLAY_ACTION_GENERIC,
-  GST_GL_DISPLAY_ACTION_GEN_TEXTURE,
-  GST_GL_DISPLAY_ACTION_DEL_TEXTURE,
-  GST_GL_DISPLAY_ACTION_INIT_UPLOAD,
-  GST_GL_DISPLAY_ACTION_DO_UPLOAD,
-  GST_GL_DISPLAY_ACTION_INIT_DOWNLOAD,
-  GST_GL_DISPLAY_ACTION_DO_DOWNLOAD,
-  GST_GL_DISPLAY_ACTION_GEN_FBO,
-  GST_GL_DISPLAY_ACTION_USE_FBO,
-  GST_GL_DISPLAY_ACTION_DEL_FBO,
-  GST_GL_DISPLAY_ACTION_GEN_SHADER,
-  GST_GL_DISPLAY_ACTION_DEL_SHADER
-
-} GstGLDisplayAction;
-
-
-//Message to communicate with the gl thread
-typedef struct _GstGLDisplayMsg {
-  GstGLDisplayAction action;
-  gint glutWinId;
-  GstGLDisplay* display;
-} GstGLDisplayMsg;
-
-
 //Texture pool elements
 typedef struct _GstGLDisplayTex {
   GLuint texture;
@@ -114,8 +81,6 @@ struct _GstGLDisplay {
   GThread* gl_thread;
   GstGLWindow* gl_window;
   gulong winId;
-  gint win_xpos;
-  gint win_ypos;
   gboolean visible;
   gboolean isAlive;
   GHashTable* texture_pool;
@@ -248,10 +213,8 @@ GType gst_gl_display_get_type (void);
 GstGLDisplay* gst_gl_display_new (void);
 
 void gst_gl_display_create_context (GstGLDisplay* display,
-                                    GLint x, GLint y,
                                     GLint width, GLint height,
-                                    gulong winId,
-                                    gboolean visible);
+                                    gulong winId);
 void gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible);
 void gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height);
 gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);

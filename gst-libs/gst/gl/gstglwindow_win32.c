@@ -96,7 +96,7 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
 
   obj_class->finalize = gst_gl_window_finalize;
 
-  GetClassInfo ((HINSTANCE)klass->instance, "GSTGL", &wc);
+  atom = GetClassInfo ((HINSTANCE)klass->instance, "GSTGL", &wc);
 
   ZeroMemory (&wc, sizeof(WNDCLASS));
 
@@ -107,15 +107,11 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
   wc.hIcon = LoadIcon( NULL, IDI_WINLOGO );
   wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
   wc.hCursor = LoadCursor( NULL, IDC_ARROW );
-  wc.hbrBackground = NULL;
+  wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
   wc.lpszMenuName = NULL;
   wc.lpszClassName = "GSTGL";
 
   atom = RegisterClass (&wc);
-
-  g_assert (atom);
-
-  g_debug ("GSTGL window class registered\n");
 }
 
 static void
@@ -138,9 +134,10 @@ gst_gl_window_new (gint width, gint height)
   GstGLWindowPrivate *priv = window->priv;
   GstGLWindowClass* klass = GST_GL_WINDOW_GET_CLASS (window);
   
-  static gint x = 50;
+  static gint x = 0;
   static gint y = 0;
-  y = 50 + height * y++;
+  x += 20;
+  y += 20;
 
   priv->internal_win_id = 0;
   priv->external_win_id = 0;
@@ -180,9 +177,13 @@ gst_gl_window_new (gint width, gint height)
   UpdateWindow (priv->internal_win_id);
   ShowCursor (TRUE);
 
-  wglMakeCurrent (priv->device, priv->gl_context);
-
-  return window;
+  if (wglMakeCurrent (priv->device, priv->gl_context))
+    return window;
+  else
+  {
+    g_debug ("Failed to make opengl context current");
+    return NULL;
+  }
 }
 
 GQuark
@@ -324,7 +325,7 @@ gst_gl_window_draw (GstGLWindow *window)
 
     BeginPaint (priv->external_win_id, &ps);
     priv->draw_cb (priv->draw_data);  //FIXME: wrong thread caller
-    //glFlush();
+    glFlush();
     SwapBuffers (priv->device);
     EndPaint (priv->external_win_id, &ps);
   }
@@ -386,6 +387,7 @@ gst_gl_window_quit_loop (GstGLWindow *window)
     GstGLWindowPrivate *priv = window->priv;
     LRESULT res = PostMessage(priv->internal_win_id, WM_CLOSE, 0, 0);
     g_assert (SUCCEEDED (res));
+    g_debug ("end loop requested\n");
   }
 }
 
@@ -451,8 +453,6 @@ gst_gl_window_set_pixel_format (GstGLWindow *window)
 
 LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  static gboolean created = FALSE;
-
   if (uMsg == WM_CREATE) {
 
     GstGLWindow *window = (GstGLWindow *) (((LPCREATESTRUCT) lParam)->lpCreateParams);
@@ -468,14 +468,17 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       priv->device = GetDC (hWnd);
       gst_gl_window_set_pixel_format (window);
       priv->gl_context = wglCreateContext (priv->device);
+      if (priv->gl_context)
+        g_debug ("gl context created: %d\n", priv->gl_context);
+      else
+        g_debug ("failed to create glcontext %d\n", hWnd);
+      g_assert (priv->gl_context);
       ReleaseDC (hWnd, priv->device);
     }
 
-    created = TRUE;
-
     return 0;
   }
-  else if (created) {
+  else if (GetWindowLongPtr(hWnd, GWLP_USERDATA)) {
 
     GstGLWindow *window = (GstGLWindow *) (guint64) GetWindowLongPtr(hWnd, GWLP_USERDATA);
     GstGLWindowPrivate *priv = NULL;
@@ -485,6 +488,8 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     priv = window->priv;
 
     g_assert (priv);
+
+    g_assert (priv->internal_win_id == hWnd);
 
     switch ( uMsg ) {
 
@@ -513,14 +518,16 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         g_debug ("WM_CLOSE\n");
         if (priv->close_cb)
           priv->close_cb (priv->close_data);
-        DestroyWindow(hWnd);
-        break;
-      }
+        wglMakeCurrent (NULL, NULL);
 
-      case WM_DESTROY:
-      {
-        g_debug ("WM_DESTROY\n");
-        created = FALSE;
+        if (priv->gl_context)
+          wglDeleteContext (priv->gl_context);
+
+        if (priv->internal_win_id)
+          DestroyWindow(priv->internal_win_id);
+
+        SetWindowLongPtr (hWnd, GWLP_USERDATA, 0);
+        DestroyWindow(hWnd);
         PostQuitMessage (0);
         break;
       }
@@ -539,6 +546,9 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         custom_cb ((gpointer) wParam);
         break;
       }
+
+      case WM_ERASEBKGND:
+        return TRUE;
 
       default:
         return DefWindowProc( hWnd, uMsg, wParam, lParam );

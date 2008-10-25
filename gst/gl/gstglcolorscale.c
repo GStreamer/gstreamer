@@ -395,7 +395,6 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 {
     GstGLColorscale* colorscale = GST_GL_COLORSCALE (bt);
     gboolean ret = FALSE;
-    static gint y_pos = 0;
 
     GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
@@ -415,9 +414,8 @@ gst_gl_colorscale_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 
     //init unvisible opengl context
     gst_gl_display_create_context (colorscale->display,
-        50, y_pos++ * (colorscale->output_video_height+50) + 50,
         colorscale->output_video_width, colorscale->output_video_height,
-        0, FALSE);
+        0);
 
     //blocking call, init colorspace conversion if needed
     gst_gl_display_init_upload (colorscale->display, colorscale->input_video_format,

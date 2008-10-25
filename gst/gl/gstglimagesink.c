@@ -519,18 +519,13 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
         //if glimagesink has not the display yet
         if (glimage_sink->display == NULL)
         {
-
-            //do not stack when multiple windows
-            static gint y_pos = 0;
-
             //create a display
             glimage_sink->display = gst_gl_display_new ();
 
             //init opengl context
             gst_gl_display_create_context (glimage_sink->display,
-                50, y_pos++ * (glimage_sink->height+50) + 50,
                 glimage_sink->width, glimage_sink->height,
-                glimage_sink->window_id, TRUE);
+                glimage_sink->window_id);
 
             //init colorspace conversion if needed
             gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format,
@@ -544,6 +539,8 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
                 glimage_sink->clientDrawCallback);
 
             gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
+
+            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
         }
 
         //blocking call
