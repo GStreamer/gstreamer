@@ -53,7 +53,6 @@ struct _GstGLWindow {
 struct _GstGLWindowClass {
   /*< private >*/
   GObjectClass parent_class;
-  guint64 instance;
 };
 
 /* methods */

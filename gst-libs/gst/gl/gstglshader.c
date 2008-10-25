@@ -141,6 +141,12 @@ gst_gl_shader_log_handler (const gchar *domain, GLogLevelFlags flags,
 }
 
 static void
+gst_gl_shader_base_init (gpointer g_class)
+{
+}
+
+
+static void
 gst_gl_shader_class_init (GstGLShaderClass * klass)
 {
   /* bind class methods .. */
