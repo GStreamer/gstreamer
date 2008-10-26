@@ -1,3 +1,8 @@
+2008-10-26  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	Back to development -> 0.10.11.1
+
 2008-10-25  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-plugins-good.doap:
