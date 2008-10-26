@@ -35,7 +35,7 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
-   <revision>0.10.12</revision>
+   <revision>0.10.11</revision>
    <branch>0.10</branch>
    <name>Secondary Consideration</name>
    <created>2008-10-24</created>

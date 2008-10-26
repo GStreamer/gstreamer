@@ -1,3 +1,8 @@
+2008-10-25  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-plugins-good.doap:
+	Fix version number of 0.10.11 release in doap file
+
 === release 0.10.11 ===
 
 2008-10-24  Jan Schmidt <jan.schmidt@sun.com>
