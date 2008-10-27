@@ -80,7 +80,6 @@ struct _GstGLDisplay {
   //gl context
   GThread* gl_thread;
   GstGLWindow* gl_window;
-  gulong winId;
   gboolean visible;
   gboolean isAlive;
   GHashTable* texture_pool;
@@ -96,10 +95,6 @@ struct _GstGLDisplay {
   GLuint redisplay_texture;
   GLuint redisplay_texture_width;
   GLuint redisplay_texture_height;
-
-  //action resize
-  gint resize_width;
-  gint resize_height;
 
   //action gen and del texture
   GLuint gen_texture;
@@ -213,10 +208,8 @@ GType gst_gl_display_get_type (void);
 GstGLDisplay* gst_gl_display_new (void);
 
 void gst_gl_display_create_context (GstGLDisplay* display,
-                                    GLint width, GLint height,
-                                    gulong winId);
+                                    GLint width, GLint height);
 void gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible);
-void gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height);
 gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
 
 void gst_gl_display_thread_add (GstGLDisplay *display,
@@ -254,7 +247,7 @@ void gst_gl_display_gen_shader (GstGLDisplay* display,
                                 GstGLShader** shader);
 void gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader);
 
-void gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId);
+void gst_gl_display_set_window_id (GstGLDisplay* display, gulong window_id);
 void gst_gl_display_set_client_reshape_callback (GstGLDisplay* display, CRCB cb);
 void gst_gl_display_set_client_draw_callback (GstGLDisplay* display, CDCB cb);
 
