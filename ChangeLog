@@ -1,3 +1,15 @@
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: vanista <vanista at gmail dot com>
+
+	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_choose_best_stream):
+	Fix EOS logic by correctly popping the collect pad buffers only
+	when we've chosen to use them instead of popping them always and
+	storing them in a private queue.
+
+	Before the pipeline would deadlock if all pads go EOS at the same
+	time. Fixes bug #557763.
+
 2008-10-26  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

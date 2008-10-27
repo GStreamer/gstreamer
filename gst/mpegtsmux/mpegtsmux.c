@@ -418,6 +418,7 @@ static MpegTsPadData *
 mpegtsmux_choose_best_stream (MpegTsMux * mux)
 {
   MpegTsPadData *best = NULL;
+  GstCollectData *c_best = NULL;
   GSList *walk;
 
   for (walk = mux->collect->data; walk != NULL; walk = g_slist_next (walk)) {
@@ -428,7 +429,8 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
       if (ts_data->queued_buf == NULL) {
         GstBuffer *buf;
 
-        ts_data->queued_buf = buf = gst_collect_pads_pop (mux->collect, c_data);
+        ts_data->queued_buf = buf =
+            gst_collect_pads_peek (mux->collect, c_data);
 
         if (buf != NULL) {
           if (ts_data->prepare_func) {
@@ -463,8 +465,10 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
 
           /* Choose a stream we've never seen a timestamp for to ensure
            * we push enough buffers from it to reach a timestamp */
-          if (ts_data->last_ts == GST_CLOCK_TIME_NONE)
+          if (ts_data->last_ts == GST_CLOCK_TIME_NONE) {
             best = ts_data;
+            c_best = c_data;
+          }
         } else {
           ts_data->eos = TRUE;
           continue;
@@ -478,11 +482,16 @@ mpegtsmux_choose_best_stream (MpegTsMux * mux)
             best->last_ts != GST_CLOCK_TIME_NONE &&
             ts_data->last_ts < best->last_ts) {
           best = ts_data;
+          c_best = c_data;
         }
       } else {
         best = ts_data;
+        c_best = c_data;
       }
     }
+  }
+  if (c_best) {
+    gst_buffer_unref (gst_collect_pads_pop (mux->collect, c_best));
   }
 
   return best;
