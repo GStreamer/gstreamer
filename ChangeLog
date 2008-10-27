@@ -1,3 +1,8 @@
+2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* win32/common/libgstaudio.def:
+	Add new symbols.
+
 2008-10-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_identification_packet):
