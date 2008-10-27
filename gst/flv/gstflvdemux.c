@@ -152,14 +152,6 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
   }
 }
 
-static void
-gst_flv_demux_adapter_flush (GstFLVDemux * demux, guint64 bytes)
-{
-  demux->offset += bytes;
-
-  gst_adapter_flush (demux->adapter, bytes);
-}
-
 static GstFlowReturn
 gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -205,13 +197,14 @@ parse:
     case FLV_STATE_HEADER:
     {
       if (gst_adapter_available (demux->adapter) >= FLV_HEADER_SIZE) {
-        const guint8 *data;
+        GstBuffer *buffer;
 
-        data = gst_adapter_peek (demux->adapter, FLV_HEADER_SIZE);
+        buffer = gst_adapter_take_buffer (demux->adapter, FLV_HEADER_SIZE);
 
-        ret = gst_flv_parse_header (demux, data, FLV_HEADER_SIZE);
+        ret = gst_flv_parse_header (demux, buffer);
 
-        gst_flv_demux_adapter_flush (demux, FLV_HEADER_SIZE);
+        gst_buffer_unref (buffer);
+        demux->offset += FLV_HEADER_SIZE;
 
         demux->state = FLV_STATE_TAG_TYPE;
         goto parse;
@@ -222,16 +215,17 @@ parse:
     case FLV_STATE_TAG_TYPE:
     {
       if (gst_adapter_available (demux->adapter) >= FLV_TAG_TYPE_SIZE) {
-        const guint8 *data;
+        GstBuffer *buffer;
 
         /* Remember the tag offset in bytes */
         demux->cur_tag_offset = demux->offset;
 
-        data = gst_adapter_peek (demux->adapter, FLV_TAG_TYPE_SIZE);
+        buffer = gst_adapter_take_buffer (demux->adapter, FLV_TAG_TYPE_SIZE);
 
-        ret = gst_flv_parse_tag_type (demux, data, FLV_TAG_TYPE_SIZE);
+        ret = gst_flv_parse_tag_type (demux, buffer);
 
-        gst_flv_demux_adapter_flush (demux, FLV_TAG_TYPE_SIZE);
+        gst_buffer_unref (buffer);
+        demux->offset += FLV_TAG_TYPE_SIZE;
 
         goto parse;
       } else {
@@ -241,13 +235,14 @@ parse:
     case FLV_STATE_TAG_VIDEO:
     {
       if (gst_adapter_available (demux->adapter) >= demux->tag_size) {
-        const guint8 *data;
+        GstBuffer *buffer;
 
-        data = gst_adapter_peek (demux->adapter, demux->tag_size);
+        buffer = gst_adapter_take_buffer (demux->adapter, demux->tag_size);
 
-        ret = gst_flv_parse_tag_video (demux, data, demux->tag_size);
+        ret = gst_flv_parse_tag_video (demux, buffer);
 
-        gst_flv_demux_adapter_flush (demux, demux->tag_size);
+        gst_buffer_unref (buffer);
+        demux->offset += demux->tag_size;
 
         demux->state = FLV_STATE_TAG_TYPE;
         goto parse;
@@ -258,13 +253,14 @@ parse:
     case FLV_STATE_TAG_AUDIO:
     {
       if (gst_adapter_available (demux->adapter) >= demux->tag_size) {
-        const guint8 *data;
+        GstBuffer *buffer;
 
-        data = gst_adapter_peek (demux->adapter, demux->tag_size);
+        buffer = gst_adapter_take_buffer (demux->adapter, demux->tag_size);
 
-        ret = gst_flv_parse_tag_audio (demux, data, demux->tag_size);
+        ret = gst_flv_parse_tag_audio (demux, buffer);
 
-        gst_flv_demux_adapter_flush (demux, demux->tag_size);
+        gst_buffer_unref (buffer);
+        demux->offset += demux->tag_size;
 
         demux->state = FLV_STATE_TAG_TYPE;
         goto parse;
@@ -275,13 +271,14 @@ parse:
     case FLV_STATE_TAG_SCRIPT:
     {
       if (gst_adapter_available (demux->adapter) >= demux->tag_size) {
-        const guint8 *data;
+        GstBuffer *buffer;
 
-        data = gst_adapter_peek (demux->adapter, demux->tag_size);
+        buffer = gst_adapter_take_buffer (demux->adapter, demux->tag_size);
 
-        ret = gst_flv_parse_tag_script (demux, data, demux->tag_size);
+        ret = gst_flv_parse_tag_script (demux, buffer);
 
-        gst_flv_demux_adapter_flush (demux, demux->tag_size);
+        gst_buffer_unref (buffer);
+        demux->offset += demux->tag_size;
 
         demux->state = FLV_STATE_TAG_TYPE;
         goto parse;
@@ -349,8 +346,7 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
     goto beach;
 
   /* Identify tag type */
-  ret = gst_flv_parse_tag_type (demux, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  ret = gst_flv_parse_tag_type (demux, buffer);
 
   gst_buffer_unref (buffer);
 
@@ -367,16 +363,13 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
 
   switch (demux->state) {
     case FLV_STATE_TAG_VIDEO:
-      ret = gst_flv_parse_tag_video (demux, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer));
+      ret = gst_flv_parse_tag_video (demux, buffer);
       break;
     case FLV_STATE_TAG_AUDIO:
-      ret = gst_flv_parse_tag_audio (demux, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer));
+      ret = gst_flv_parse_tag_audio (demux, buffer);
       break;
     case FLV_STATE_TAG_SCRIPT:
-      ret = gst_flv_parse_tag_script (demux, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer));
+      ret = gst_flv_parse_tag_script (demux, buffer);
       break;
     default:
       GST_WARNING_OBJECT (demux, "unexpected state %d", demux->state);
@@ -418,8 +411,9 @@ gst_flv_demux_pull_header (GstPad * pad, GstFLVDemux * demux)
                   FLV_HEADER_SIZE, &buffer)) != GST_FLOW_OK))
     goto beach;
 
-  ret = gst_flv_parse_header (demux, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
+  ret = gst_flv_parse_header (demux, buffer);
+
+  gst_buffer_unref (buffer);
 
   /* Jump over the header now */
   demux->offset += FLV_HEADER_SIZE;
@@ -470,9 +464,13 @@ gst_flv_demux_create_index (GstFLVDemux * demux)
   while ((ret =
           gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset, 12,
               &buffer)) == GST_FLOW_OK) {
-    if (gst_flv_parse_tag_timestamp (demux, GST_BUFFER_DATA (buffer),
-            GST_BUFFER_SIZE (buffer), &tag_size) == GST_CLOCK_TIME_NONE)
+    if (gst_flv_parse_tag_timestamp (demux, buffer,
+            &tag_size) == GST_CLOCK_TIME_NONE) {
+      gst_buffer_unref (buffer);
       break;
+    }
+
+    gst_buffer_unref (buffer);
     demux->offset += tag_size;
   }
 

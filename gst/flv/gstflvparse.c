@@ -297,14 +297,15 @@ error:
 }
 
 GstFlowReturn
-gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+gst_flv_parse_tag_script (GstFLVDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstByteReader reader = GST_BYTE_READER_INIT (data + 7, data_size - 7);
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
   guint8 type;
 
-  g_return_val_if_fail (data_size >= 7, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) >= 7, GST_FLOW_ERROR);
+
+  gst_byte_reader_skip (&reader, 7);
 
   GST_LOG_OBJECT (demux, "parsing a script tag");
 
@@ -476,18 +477,19 @@ beach:
 }
 
 GstFlowReturn
-gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buffer = NULL;
   guint32 pts = 0, codec_tag = 0, rate = 5512, width = 8, channels = 1;
   guint32 codec_data = 0, pts_ext = 0;
   guint8 flags = 0;
+  guint8 *data = GST_BUFFER_DATA (buffer);
+  GstBuffer *outbuf;
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
-  g_return_val_if_fail (data_size == demux->tag_size, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) == demux->tag_size,
+      GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
       data[2], data[3]);
@@ -499,7 +501,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   /* Combine them */
   pts |= pts_ext << 24;
 
-  if (data_size < 12) {
+  if (GST_BUFFER_SIZE (buffer) < 12) {
     GST_ERROR_OBJECT (demux, "Too small tag size");
     return GST_FLOW_ERROR;
   }
@@ -625,23 +627,9 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Create buffer from pad */
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (demux->audio_pad,
-      GST_BUFFER_OFFSET_NONE, demux->tag_data_size - codec_data,
-      GST_PAD_CAPS (demux->audio_pad), &buffer);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed allocating a %" G_GUINT64_FORMAT
-        " bytes buffer: %s", demux->tag_data_size, gst_flow_get_name (ret));
-    if (ret == GST_FLOW_NOT_LINKED) {
-      demux->audio_linked = FALSE;
-    }
-    goto beach;
-  }
-
-  memcpy (GST_BUFFER_DATA (buffer), data + 7 + codec_data,
-      MIN (demux->tag_data_size - codec_data, GST_BUFFER_SIZE (buffer)));
-
-  demux->audio_linked = TRUE;
+  outbuf =
+      gst_buffer_create_sub (buffer, 7 + codec_data,
+      demux->tag_data_size - codec_data);
 
   if (demux->audio_codec_tag == 10) {
     guint8 aac_packet_type = GST_READ_UINT8 (data + 8);
@@ -654,7 +642,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         if (demux->audio_codec_data) {
           gst_buffer_unref (demux->audio_codec_data);
         }
-        demux->audio_codec_data = buffer;
+        demux->audio_codec_data = outbuf;
         /* Use that buffer data in the caps */
         gst_flv_parse_audio_negotiate (demux, codec_tag, rate, channels, width);
         goto beach;
@@ -671,34 +659,35 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Fill buffer with data */
-  GST_BUFFER_TIMESTAMP (buffer) = pts * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buffer) = demux->audio_offset++;
-  GST_BUFFER_OFFSET_END (buffer) = demux->audio_offset;
+  GST_BUFFER_TIMESTAMP (outbuf) = pts * GST_MSECOND;
+  GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (outbuf) = demux->audio_offset++;
+  GST_BUFFER_OFFSET_END (outbuf) = demux->audio_offset;
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->audio_pad));
 
   if (demux->duration == GST_CLOCK_TIME_NONE ||
-      demux->duration < GST_BUFFER_TIMESTAMP (buffer))
-    demux->duration = GST_BUFFER_TIMESTAMP (buffer);
+      demux->duration < GST_BUFFER_TIMESTAMP (outbuf))
+    demux->duration = GST_BUFFER_TIMESTAMP (outbuf);
 
   /* Only add audio frames to the index if we have no video 
    * and if we don't have random access */
   if (!demux->has_video && demux->index && !demux->random_access) {
     GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-        G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         demux->cur_tag_offset);
     gst_index_add_association (demux->index, demux->index_id,
         GST_ASSOCIATION_FLAG_KEY_UNIT,
-        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
         GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
   }
 
   if (G_UNLIKELY (demux->audio_need_discont)) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     demux->audio_need_discont = FALSE;
   }
 
   gst_segment_set_last_stop (demux->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
+      GST_BUFFER_TIMESTAMP (outbuf));
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (demux->audio_need_segment)) {
@@ -726,11 +715,22 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
 
   GST_LOG_OBJECT (demux, "pushing %d bytes buffer at pts %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT,
-      GST_BUFFER_SIZE (buffer), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_OFFSET (buffer));
+      GST_BUFFER_SIZE (outbuf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf));
 
   /* Push downstream */
-  ret = gst_pad_push (demux->audio_pad, buffer);
+  ret = gst_pad_push (demux->audio_pad, outbuf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
+        " bytes audio buffer: %s", demux->tag_data_size,
+        gst_flow_get_name (ret));
+    if (ret == GST_FLOW_NOT_LINKED) {
+      demux->audio_linked = FALSE;
+    }
+    goto beach;
+  }
+
+  demux->audio_linked = TRUE;
 
 beach:
   return ret;
@@ -808,16 +808,17 @@ beach:
 }
 
 GstFlowReturn
-gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *buffer = NULL;
   guint32 pts = 0, codec_data = 1, pts_ext = 0;
   gboolean keyframe = FALSE;
   guint8 flags = 0, codec_tag = 0;
+  guint8 *data = GST_BUFFER_DATA (buffer);
+  GstBuffer *outbuf;
 
-  g_return_val_if_fail (data_size == demux->tag_size, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) == demux->tag_size,
+      GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
@@ -831,7 +832,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   /* Combine them */
   pts |= pts_ext << 24;
 
-  if (data_size < 12) {
+  if (GST_BUFFER_SIZE (buffer) < 12) {
     GST_ERROR_OBJECT (demux, "Too small tag size");
     return GST_FLOW_ERROR;
   }
@@ -941,23 +942,9 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Create buffer from pad */
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (demux->video_pad,
-      GST_BUFFER_OFFSET_NONE, demux->tag_data_size - codec_data,
-      GST_PAD_CAPS (demux->video_pad), &buffer);
-  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed allocating a %" G_GUINT64_FORMAT
-        " bytes buffer: %s", demux->tag_data_size, gst_flow_get_name (ret));
-    if (ret == GST_FLOW_NOT_LINKED) {
-      demux->video_linked = FALSE;
-    }
-    goto beach;
-  }
-
-  demux->video_linked = TRUE;
-
-  memcpy (GST_BUFFER_DATA (buffer), data + 7 + codec_data,
-      MIN (demux->tag_data_size - codec_data, GST_BUFFER_SIZE (buffer)));
+  outbuf =
+      gst_buffer_create_sub (buffer, 7 + codec_data,
+      demux->tag_data_size - codec_data);
 
   if (demux->video_codec_tag == 7) {
     guint8 avc_packet_type = GST_READ_UINT8 (data + 8);
@@ -970,7 +957,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
         if (demux->video_codec_data) {
           gst_buffer_unref (demux->video_codec_data);
         }
-        demux->video_codec_data = buffer;
+        demux->video_codec_data = outbuf;
         /* Use that buffer data in the caps */
         gst_flv_parse_video_negotiate (demux, codec_tag);
         goto beach;
@@ -987,45 +974,46 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Fill buffer with data */
-  GST_BUFFER_TIMESTAMP (buffer) = pts * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET (buffer) = demux->video_offset++;
-  GST_BUFFER_OFFSET_END (buffer) = demux->video_offset;
+  GST_BUFFER_TIMESTAMP (outbuf) = pts * GST_MSECOND;
+  GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (outbuf) = demux->video_offset++;
+  GST_BUFFER_OFFSET_END (outbuf) = demux->video_offset;
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (demux->video_pad));
 
   if (demux->duration == GST_CLOCK_TIME_NONE ||
-      demux->duration < GST_BUFFER_TIMESTAMP (buffer))
-    demux->duration = GST_BUFFER_TIMESTAMP (buffer);
+      demux->duration < GST_BUFFER_TIMESTAMP (outbuf))
+    demux->duration = GST_BUFFER_TIMESTAMP (outbuf);
 
   if (!keyframe) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     if (demux->index && !demux->random_access) {
       GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
           demux->cur_tag_offset);
       gst_index_add_association (demux->index, demux->index_id,
           GST_ASSOCIATION_FLAG_NONE,
-          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
           GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
     }
   } else {
     if (demux->index && !demux->random_access) {
       GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
           demux->cur_tag_offset);
       gst_index_add_association (demux->index, demux->index_id,
           GST_ASSOCIATION_FLAG_KEY_UNIT,
-          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (outbuf),
           GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
     }
   }
 
   if (G_UNLIKELY (demux->video_need_discont)) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     demux->video_need_discont = FALSE;
   }
 
   gst_segment_set_last_stop (demux->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer));
+      GST_BUFFER_TIMESTAMP (outbuf));
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (demux->video_need_segment)) {
@@ -1053,29 +1041,42 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 
   GST_LOG_OBJECT (demux, "pushing %d bytes buffer at pts %" GST_TIME_FORMAT
       " with duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
-      ", keyframe (%d)", GST_BUFFER_SIZE (buffer),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)), GST_BUFFER_OFFSET (buffer),
+      ", keyframe (%d)", GST_BUFFER_SIZE (outbuf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)), GST_BUFFER_OFFSET (outbuf),
       keyframe);
 
   /* Push downstream */
-  ret = gst_pad_push (demux->video_pad, buffer);
+  ret = gst_pad_push (demux->video_pad, outbuf);
+
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (demux, "failed pushing a %" G_GUINT64_FORMAT
+        " bytes video buffer: %s", demux->tag_data_size,
+        gst_flow_get_name (ret));
+    if (ret == GST_FLOW_NOT_LINKED) {
+      demux->video_linked = FALSE;
+    }
+    goto beach;
+  }
+
+  demux->video_linked = TRUE;
 
 beach:
   return ret;
 }
 
 GstClockTime
-gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size, size_t * tag_size)
+gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
+    size_t * tag_size)
 {
   guint32 pts = 0, pts_ext = 0;
   guint32 tag_data_size;
   guint8 type;
   gboolean keyframe = TRUE;
   GstClockTime ret;
+  guint8 *data = GST_BUFFER_DATA (buffer);
 
-  g_return_val_if_fail (data_size >= 12, GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) >= 12, GST_CLOCK_TIME_NONE);
 
   type = data[0];
 
@@ -1086,7 +1087,7 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
 
   tag_data_size = GST_READ_UINT24_BE (data + 1);
 
-  if (data_size >= tag_data_size + 11 + 4) {
+  if (GST_BUFFER_SIZE (buffer) >= tag_data_size + 11 + 4) {
     if (GST_READ_UINT32_BE (data + tag_data_size + 11) != tag_data_size + 11) {
       GST_WARNING_OBJECT (demux, "Invalid tag size");
       return GST_CLOCK_TIME_NONE;
@@ -1131,13 +1132,13 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
 }
 
 GstFlowReturn
-gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+gst_flv_parse_tag_type (GstFLVDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 tag_type = 0;
+  guint8 *data = GST_BUFFER_DATA (buffer);
 
-  g_return_val_if_fail (data_size >= 4, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) >= 4, GST_FLOW_ERROR);
 
   tag_type = data[0];
 
@@ -1169,12 +1170,12 @@ gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
 }
 
 GstFlowReturn
-gst_flv_parse_header (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+gst_flv_parse_header (GstFLVDemux * demux, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  guint8 *data = GST_BUFFER_DATA (buffer);
 
-  g_return_val_if_fail (data_size >= 9, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_BUFFER_SIZE (buffer) >= 9, GST_FLOW_ERROR);
 
   /* Check for the FLV tag */
   if (data[0] == 'F' && data[1] == 'L' && data[2] == 'V') {
