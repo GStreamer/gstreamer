@@ -1,5 +1,14 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_push_src_event),
+	(gst_flv_demux_loop), (gst_flv_demux_handle_seek_pull),
+	(gst_flv_demux_sink_event):
+	Instead of using gst_pad_event_default() use a small
+	gst_pad_push_event() wrapper that only does what we want and is much
+	more simple.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_change_state),
 	(gst_flv_demux_set_index), (gst_flv_demux_init):
 	* gst/flv/gstflvdemux.h:
