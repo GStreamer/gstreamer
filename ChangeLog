@@ -1,5 +1,14 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: David Härdeman <david at hardeman dot nu>
+
+	* gst/mpegdemux/mpegtspacketizer.c: (mpegts_packetizer_parse_nit):
+	Add support for the frequency list descriptor, which provides
+	additional frequencies that should be scanned by a DVB application.
+	Fixes bug #557814.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: vanista <vanista at gmail dot com>
 
 	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_choose_best_stream):

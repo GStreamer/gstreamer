@@ -1046,6 +1046,78 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
         gst_structure_set_value (transport, "channels", &channel_numbers);
         g_value_unset (&channel_numbers);
       }
+      if ((delivery =
+              gst_mpeg_descriptor_find (mpegdescriptor,
+                  DESC_DVB_FREQUENCY_LIST))) {
+        guint8 *current_pos = delivery + 2;
+        GValue frequencies = { 0 };
+        guint8 type;
+
+        g_value_init (&frequencies, GST_TYPE_LIST);
+        type = *current_pos & 0x03;
+        current_pos++;
+
+        if (type) {
+          const gchar *fieldname = NULL;
+
+          while (current_pos < delivery + DESC_LENGTH (delivery) - 3) {
+            guint32 freq = 0;
+            guint8 *frequency_bcd = current_pos;
+            GValue frequency = { 0 };
+
+            switch (type) {
+              case 0x01:
+                /* satellite */
+                freq =
+                    10 * ((frequency_bcd[3] & 0x0F) +
+                    10 * ((frequency_bcd[3] & 0xF0) >> 4) +
+                    100 * (frequency_bcd[2] & 0x0F) +
+                    1000 * ((frequency_bcd[2] & 0xF0) >> 4) +
+                    10000 * (frequency_bcd[1] & 0x0F) +
+                    100000 * ((frequency_bcd[1] & 0xF0) >> 4) +
+                    1000000 * (frequency_bcd[0] & 0x0F) +
+                    10000000 * ((frequency_bcd[0] & 0xF0) >> 4));
+                break;
+              case 0x02:
+                /* cable */
+                freq = 100 *
+                    ((frequency_bcd[3] & 0x0F) +
+                    10 * ((frequency_bcd[3] & 0xF0) >> 4) +
+                    100 * (frequency_bcd[2] & 0x0F) +
+                    1000 * ((frequency_bcd[2] & 0xF0) >> 4) +
+                    10000 * (frequency_bcd[1] & 0x0F) +
+                    100000 * ((frequency_bcd[1] & 0xF0) >> 4) +
+                    1000000 * (frequency_bcd[0] & 0x0F) +
+                    10000000 * ((frequency_bcd[0] & 0xF0) >> 4));
+                break;
+              case 0x03:
+                /* terrestrial */
+                freq = GST_READ_UINT32_BE (current_pos) * 10;
+                break;
+            }
+            g_value_init (&frequency, G_TYPE_UINT);
+            g_value_set_uint (&frequency, freq);
+            gst_value_list_append_value (&frequencies, &frequency);
+            g_value_unset (&frequency);
+            current_pos += 4;
+          }
+
+          switch (type) {
+            case 0x01:
+              fieldname = "frequency-list-satellite";
+              break;
+            case 0x02:
+              fieldname = "frequency-list-cable";
+              break;
+            case 0x03:
+              fieldname = "frequency-list-terrestrial";
+              break;
+          }
+
+          gst_structure_set_value (transport, fieldname, &frequencies);
+          g_value_unset (&frequencies);
+        }
+      }
       gst_mpeg_descriptor_free (mpegdescriptor);
 
       descriptors = g_value_array_new (0);
