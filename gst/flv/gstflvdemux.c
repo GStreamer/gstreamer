@@ -354,6 +354,9 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
 
   gst_buffer_unref (buffer);
 
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto beach;
+
   /* Jump over tag type + size */
   demux->offset += FLV_TAG_TYPE_SIZE;
 
