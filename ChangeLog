@@ -1,5 +1,20 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_create_index),
+	(gst_flv_demux_loop):
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_script),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	(gst_flv_parse_tag_timestamp):
+	* gst/flv/gstflvparse.h:
+	In pull mode we create our own index before doing anything else
+	and don't use the index provided by some files (which are more than
+	often incorrect and cause failed seeks).
+
+	For push mode we still use the index provided by the file and extend it
+	while doing the playback.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_push_src_event),
 	(gst_flv_demux_loop), (gst_flv_demux_handle_seek_pull),
 	(gst_flv_demux_sink_event):
