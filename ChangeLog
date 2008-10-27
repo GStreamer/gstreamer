@@ -2,6 +2,14 @@
 
 	Patch by: <lrn1986 at gmail dot com>
 
+	* gst/udp/gstudpnetutils.h:
+	Define the correct WINVER so getaddinfo() can be used when using
+	mingw32. Fixes bug #557294.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: <lrn1986 at gmail dot com>
+
 	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_render):
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render):
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):

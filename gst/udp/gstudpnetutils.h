@@ -27,6 +27,9 @@
 #include <glib.h>
 
 #ifdef G_OS_WIN32
+/* ws2_32.dll has getaddrinfo and freeaddrinfo on Windows XP and later.
+ * minwg32 headers check WINVER before allowing the use of these */
+#define WINVER 0x0501
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
