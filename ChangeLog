@@ -1,5 +1,10 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	Require CVS of core for the last change.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/Makefile.am:
 	Fix (non-critical) syntax error and add all required CFLAGS and LIBS.
 
