@@ -699,6 +699,10 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (demux->audio_need_segment)) {
+    if (demux->close_seg_event)
+      gst_pad_push_event (demux->audio_pad,
+          gst_event_ref (demux->close_seg_event));
+
     if (!demux->new_seg_event) {
       GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
@@ -1007,6 +1011,10 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (demux->video_need_segment)) {
+    if (demux->close_seg_event)
+      gst_pad_push_event (demux->video_pad,
+          gst_event_ref (demux->close_seg_event));
+
     if (!demux->new_seg_event) {
       GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT,

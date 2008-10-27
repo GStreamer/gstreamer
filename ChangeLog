@@ -1,5 +1,15 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	(gst_flv_demux_handle_seek_pull), (gst_flv_demux_dispose):
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video):
+	Close the currently playing segment from the streaming thread
+	instead of the thread where the seek event is handled.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: David Härdeman <david at hardeman dot nu>
 
 	* gst/mpegdemux/mpegtspacketizer.c: (mpegts_packetizer_parse_nit):

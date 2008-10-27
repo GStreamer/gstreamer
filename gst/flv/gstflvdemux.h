@@ -67,6 +67,7 @@ struct _GstFLVDemux
 
   GstSegment *segment;
 
+  GstEvent *close_seg_event;
   GstEvent *new_seg_event;
 
   GstTagList *taglist;

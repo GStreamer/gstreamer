@@ -112,6 +112,11 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
     demux->new_seg_event = NULL;
   }
 
+  if (demux->close_seg_event) {
+    gst_event_unref (demux->close_seg_event);
+    demux->close_seg_event = NULL;
+  }
+
   gst_adapter_clear (demux->adapter);
 
   if (demux->audio_codec_data) {
@@ -774,14 +779,18 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
     GST_DEBUG_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
         demux->segment);
 
-    /* Close the current segment for a linear playback, FIXME, queue for
-     * streaming thread. */
+    if (G_UNLIKELY (demux->close_seg_event)) {
+      gst_event_unref (demux->close_seg_event);
+      demux->close_seg_event = NULL;
+    }
+
+    /* Close the current segment for a linear playback */
     if (demux->segment->rate >= 0) {
       /* for forward playback, we played from start to last_stop */
-      gst_pad_event_default (demux->sinkpad, gst_event_new_new_segment (TRUE,
-              demux->segment->rate, demux->segment->format,
-              demux->segment->start, demux->segment->last_stop,
-              demux->segment->time));
+      demux->close_seg_event = gst_event_new_new_segment (TRUE,
+          demux->segment->rate, demux->segment->format,
+          demux->segment->start, demux->segment->last_stop,
+          demux->segment->time);
     } else {
       gint64 stop;
 
@@ -789,9 +798,9 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
         stop = demux->segment->duration;
 
       /* for reverse playback, we played from stop to last_stop. */
-      gst_pad_event_default (demux->sinkpad, gst_event_new_new_segment (TRUE,
-              demux->segment->rate, demux->segment->format,
-              demux->segment->last_stop, stop, demux->segment->last_stop));
+      demux->close_seg_event = gst_event_new_new_segment (TRUE,
+          demux->segment->rate, demux->segment->format,
+          demux->segment->last_stop, stop, demux->segment->last_stop);
     }
   }
 
@@ -1137,6 +1146,11 @@ gst_flv_demux_dispose (GObject * object)
   if (demux->new_seg_event) {
     gst_event_unref (demux->new_seg_event);
     demux->new_seg_event = NULL;
+  }
+
+  if (demux->close_seg_event) {
+    gst_event_unref (demux->close_seg_event);
+    demux->close_seg_event = NULL;
   }
 
   if (demux->audio_codec_data) {
