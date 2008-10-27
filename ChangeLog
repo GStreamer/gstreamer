@@ -1,5 +1,10 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_range):
+	Improve debugging a bit when pulling a buffer from upstream fails.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
 	(gst_flv_demux_handle_seek_pull), (gst_flv_demux_dispose):
 	* gst/flv/gstflvdemux.h:

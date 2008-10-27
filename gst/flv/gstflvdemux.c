@@ -314,14 +314,17 @@ gst_flv_demux_pull_range (GstFLVDemux * demux, GstPad * pad, guint64 offset,
 
   ret = gst_pad_pull_range (pad, offset, size, buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed when pulling %d bytes", size);
+    GST_WARNING_OBJECT (demux,
+        "failed when pulling %d bytes from offset %" G_GUINT64_FORMAT ": %s",
+        size, offset, gst_flow_get_name (ret));
     *buffer = NULL;
     return ret;
   }
 
   if (G_UNLIKELY (*buffer && GST_BUFFER_SIZE (*buffer) != size)) {
-    GST_WARNING_OBJECT (demux, "partial pull got %d when expecting %d",
-        GST_BUFFER_SIZE (*buffer), size);
+    GST_WARNING_OBJECT (demux,
+        "partial pull got %d when expecting %d from offset %" G_GUINT64_FORMAT,
+        GST_BUFFER_SIZE (*buffer), size, offset);
     gst_buffer_unref (*buffer);
     ret = GST_FLOW_UNEXPECTED;
     *buffer = NULL;
