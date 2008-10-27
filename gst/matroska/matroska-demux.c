@@ -2230,22 +2230,23 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       res = gst_matroska_demux_handle_seek_event (demux, pad, event);
+      gst_event_unref (event);
       break;
 
       /* events we don't need to handle */
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_QOS:
+      gst_event_unref (event);
       res = FALSE;
       break;
 
+    case GST_EVENT_LATENCY:
     default:
-      GST_WARNING ("Unhandled %s event, dropped", GST_EVENT_TYPE_NAME (event));
-      res = FALSE;
+      res = gst_pad_push_event (demux->sinkpad, event);
       break;
   }
 
   gst_object_unref (demux);
-  gst_event_unref (event);
 
   return res;
 }

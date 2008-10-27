@@ -1,5 +1,11 @@
 2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_src_event):
+	Forward unknown events upstream.
+
+2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/check/elements/icydemux.c: (icydemux_found_pad):
 	Add some refcount check
 
