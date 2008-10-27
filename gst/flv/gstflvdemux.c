@@ -1064,6 +1064,14 @@ gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* If this is our own index destroy it as the
+       * old entries might be wrong for the new stream */
+      if (demux->own_index) {
+        gst_object_unref (demux->index);
+        demux->index = NULL;
+        demux->own_index = FALSE;
+      }
+
       /* If no index was created, generate one */
       if (G_UNLIKELY (!demux->index)) {
         GST_DEBUG_OBJECT (demux, "no index provided creating our own");
@@ -1072,6 +1080,7 @@ gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
 
         gst_index_get_writer_id (demux->index, GST_OBJECT (demux),
             &demux->index_id);
+        demux->own_index = TRUE;
       }
       gst_flv_demux_cleanup (demux);
       break;
@@ -1106,6 +1115,7 @@ gst_flv_demux_set_index (GstElement * element, GstIndex * index)
   GST_OBJECT_UNLOCK (demux);
 
   gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
+  demux->own_index = FALSE;
 }
 
 static GstIndex *
@@ -1248,6 +1258,8 @@ gst_flv_demux_init (GstFLVDemux * demux, GstFLVDemuxClass * g_class)
   demux->segment = gst_segment_new ();
   demux->taglist = gst_tag_list_new ();
   gst_segment_init (demux->segment, GST_FORMAT_TIME);
+
+  demux->own_index = FALSE;
 
   gst_flv_demux_cleanup (demux);
 }

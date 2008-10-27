@@ -1,5 +1,14 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_change_state),
+	(gst_flv_demux_set_index), (gst_flv_demux_init):
+	* gst/flv/gstflvdemux.h:
+	If our index was created by the element and not provided from the
+	outside we should destroy it when starting a new stream to get
+	all old entries removed.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_range):
 	Improve debugging a bit when pulling a buffer from upstream fails.
 
