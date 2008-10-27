@@ -1,5 +1,10 @@
 2008-10-27  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/esd/esdmon.c:
+	  Add doc blob.
+
+2008-10-27  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

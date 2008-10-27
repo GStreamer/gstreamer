@@ -19,7 +19,25 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:element-esdmod
+ *
+ * This element outputs sound to an already-running Enlightened Sound Daemon
+ * (ESound Daemon, esd). Note that a sound daemon will never be auto-spawned
+ * through this element (regardless of the system configuration), since this
+ * is actively prevented by the element. If you must use esd, you need to
+ * make sure it is started automatically with your session or otherwise.
+ *
+ * TODO: insert some comments about how sucky esd is and that all the cool
+ * kids use pulseaudio or whatever these days.
+ * 
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch esdmon ! audioconvert ! waveenc ! filesink location=record.wav
+ * ]| Record from audioinput
+ * </refsect2>
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
