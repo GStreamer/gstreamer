@@ -408,9 +408,6 @@ gst_matroska_mux_reset (GstElement * element)
     collect_pad = (GstMatroskaPad *) walk->data;
     thepad = collect_pad->collect.pad;
 
-    /* free collect pad resources */
-    gst_matroska_pad_free (collect_pad);
-
     /* remove from collectpads */
     gst_collect_pads_remove_pad (mux->collect, thepad);
   }
@@ -1362,7 +1359,9 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   newpad = gst_pad_new_from_template (templ, name);
   g_free (name);
   collect_pad = (GstMatroskaPad *)
-      gst_collect_pads_add_pad (mux->collect, newpad, sizeof (GstMatroskaPad));
+      gst_collect_pads_add_pad_full (mux->collect, newpad,
+      sizeof (GstMatroskaPad),
+      (GstCollectDataDestroyNotify) gst_matroska_pad_free);
 
   /* TODO: check default values for the context */
   context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
@@ -1424,15 +1423,13 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
           mux->duration < collect_pad->duration)
         mux->duration = collect_pad->duration;
 
-      gst_matroska_pad_free (collect_pad);
-      gst_collect_pads_remove_pad (mux->collect, pad);
-      gst_element_remove_pad (element, pad);
-      mux->num_streams--;
-      return;
+      break;
     }
   }
 
-  g_warning ("%s: unknown pad %s", GST_FUNCTION, GST_PAD_NAME (pad));
+  gst_collect_pads_remove_pad (mux->collect, pad);
+  if (gst_element_remove_pad (element, pad))
+    mux->num_streams--;
 }
 
 

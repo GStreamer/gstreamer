@@ -1,5 +1,19 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
+	(gst_matroska_mux_request_new_pad), (gst_matroska_mux_release_pad):
+	Fix a memory leak when pads are requested but the pipeline never
+	goes into PLAYING.
+
+	Correctly remove request pads, no matter if they have collected
+	data or not.
+
+	Fixes bug #557710.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: <lrn1986 at gmail dot com>
 
 	* gst/udp/gstudpnetutils.h:
