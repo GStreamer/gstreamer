@@ -1,5 +1,13 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/autodetect/gstautoaudiosrc.c:
+	(gst_auto_audio_src_class_init):
+	* gst/autodetect/gstautovideosrc.c:
+	(gst_auto_video_src_class_init):
+	Fix "Since" tags in the documentation.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>
 
 	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_class_init),

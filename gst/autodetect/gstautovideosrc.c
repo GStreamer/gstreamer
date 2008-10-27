@@ -112,7 +112,7 @@ gst_auto_video_src_class_init (GstAutoVideoSrcClass * klass)
    *
    * This property can only be set before the element goes to the READY state.
    *
-   * Since: 0.10.11
+   * Since: 0.10.12
    **/
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("filter-caps", "Filter caps",
