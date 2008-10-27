@@ -19568,3 +19568,23 @@
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAutoVideoSrc::filter-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter caps</NICK>
+<BLURB>Filter src candidates using these caps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAutoAudioSrc::filter-caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter caps</NICK>
+<BLURB>Filter sink candidates using these caps.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+

@@ -26,7 +26,9 @@
     <xi:include href="xml/element-audiopanorama.xml" />
     <xi:include href="xml/element-audiokaraoke.xml" />
     <xi:include href="xml/element-autoaudiosink.xml" />
+    <xi:include href="xml/element-autoaudiosrc.xml" />
     <xi:include href="xml/element-autovideosink.xml" />
+    <xi:include href="xml/element-autovideosrc.xml" />
     <xi:include href="xml/element-avidemux.xml" />
     <xi:include href="xml/element-avimux.xml" />
     <xi:include href="xml/element-avisubtitle.xml" />

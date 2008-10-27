@@ -211,6 +211,20 @@ gst_auto_audio_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-autoaudiosrc</FILE>
+<TITLE>autoaudiosrc</TITLE>
+GstAutoAudioSrc
+<SUBSECTION Standard>
+GstAutoAudioSrcClass
+GST_TYPE_AUTO_AUDIO_SRC
+GST_AUTO_AUDIO_SRC
+GST_AUTO_AUDIO_SRC_CLASS
+GST_IS_AUTO_AUDIO_SRC
+GST_IS_AUTO_AUDIO_SRC_CLASS
+gst_auto_audio_src_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-autovideosink</FILE>
 <TITLE>autovideosink</TITLE>
 GstAutoVideoSink
@@ -222,6 +236,20 @@ GST_AUTO_VIDEO_SINK_CLASS
 GST_IS_AUTO_VIDEO_SINK
 GST_IS_AUTO_VIDEO_SINK_CLASS
 gst_auto_video_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-autovideosrc</FILE>
+<TITLE>autovideosrc</TITLE>
+GstAutoVideoSrc
+<SUBSECTION Standard>
+GstAutoVideoSrcClass
+GST_TYPE_AUTO_VIDEO_SRC
+GST_AUTO_VIDEO_SRC
+GST_AUTO_VIDEO_SRC_CLASS
+GST_IS_AUTO_VIDEO_SRC
+GST_IS_AUTO_VIDEO_SRC_CLASS
+gst_auto_video_src_get_type
 </SECTION>
 
 <SECTION>

@@ -115,7 +115,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiofx/audiowsincband.h \
 	$(top_srcdir)/gst/audiofx/audiowsinclimit.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
+	$(top_srcdir)/gst/autodetect/gstautoaudiosrc.h \
 	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
+	$(top_srcdir)/gst/autodetect/gstautovideosrc.h \
 	$(top_srcdir)/gst/avi/gstavidemux.h \
 	$(top_srcdir)/gst/avi/gstavimux.h \
 	$(top_srcdir)/gst/avi/gstavisubtitle.h \

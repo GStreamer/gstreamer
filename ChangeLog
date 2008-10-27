@@ -1,3 +1,14 @@
+2008-10-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	  Add the docs of the new elements.
+
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/autodetect/gstautoaudiosrc.c:
