@@ -1,3 +1,14 @@
+2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/icydemux.c: (icydemux_found_pad):
+	Add some refcount check
+
+	* tests/check/elements/rtp-payloading.c: (rtp_pipeline_run):
+	Don't ignore the result of write(), fixes a  compiler warning for me.
+
+	* tests/icles/videobox-test.c: (main):
+	Make the output a little more pretty.
+
 2008-10-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/esd/esdmon.c:

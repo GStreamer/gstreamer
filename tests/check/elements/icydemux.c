@@ -75,6 +75,8 @@ typefind_succeed (GstTypeFind * tf, gpointer private)
 static void
 icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
 {
+  GST_DEBUG ("got new pad %" GST_PTR_FORMAT, pad);
+
   /* Turns out that this asserts a refcount which is wrong for this
    * case (adding the pad from a pad-added callback), so just do the same
    * thing inline... */
@@ -84,6 +86,12 @@ icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
   srcpad = gst_element_get_static_pad (icydemux, "src");
   fail_if (srcpad == NULL, "Failed to get srcpad from icydemux");
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
+
+  GST_DEBUG ("checking srcpad %p refcount", srcpad);
+  /* 1 from element, 1 from signal, 1 from us */
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 3);
+
+  GST_DEBUG ("linking srcpad");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Failed to link pads");
   gst_object_unref (srcpad);

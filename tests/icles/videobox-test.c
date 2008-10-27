@@ -85,7 +85,7 @@ main (int argc, char **argv)
     ldir = rdir = 10;
 
     for (round = 0; round < MAX_ROUND; round++) {
-      g_print ("box to %d %d %d %d (%d/%d)   \r", top, bottom, left, right,
+      g_print ("box to %4d %4d %4d %4d (%d/%d)   \r", top, bottom, left, right,
           round, MAX_ROUND);
 
       g_object_set (box, "top", top, "bottom", bottom, "left", left, "right",
