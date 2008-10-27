@@ -1,5 +1,13 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	(gst_flv_parse_tag_type), (gst_flv_parse_header):
+	Properly check everywhere that we have enough data to parse and
+	don't read outside the allocated memory region. 
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
 	(gst_flv_parse_tag_video):
 	If the caps change during playback and negotiation fails error out

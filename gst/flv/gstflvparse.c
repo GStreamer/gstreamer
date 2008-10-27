@@ -48,7 +48,7 @@ FLV_GET_STRING (const guint8 * data, size_t data_size)
   g_return_val_if_fail (data_size >= 2, NULL);
 
   string_size = GST_READ_UINT16_BE (data);
-  if (G_UNLIKELY (string_size > data_size)) {
+  if (G_UNLIKELY (string_size > data_size - 2)) {
     return NULL;
   }
 
@@ -504,6 +504,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
+  g_return_val_if_fail (data_size == demux->tag_size, GST_FLOW_ERROR);
+
   GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
       data[2], data[3]);
 
@@ -513,6 +515,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
   pts |= pts_ext << 24;
+
+  if (data_size < 12) {
+    GST_ERROR_OBJECT (demux, "Too small tag size");
+    return GST_FLOW_ERROR;
+  }
+
   /* Skip the stream id and go directly to the flags */
   flags = GST_READ_UINT8 (data + 7);
 
@@ -826,6 +834,8 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   gboolean keyframe = FALSE;
   guint8 flags = 0, codec_tag = 0;
 
+  g_return_val_if_fail (data_size == demux->tag_size, GST_FLOW_ERROR);
+
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
   GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
@@ -837,6 +847,12 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
   pts |= pts_ext << 24;
+
+  if (data_size < 12) {
+    GST_ERROR_OBJECT (demux, "Too small tag size");
+    return GST_FLOW_ERROR;
+  }
+
   /* Skip the stream id and go directly to the flags */
   flags = GST_READ_UINT8 (data + 7);
 
@@ -1138,6 +1154,8 @@ gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 tag_type = 0;
 
+  g_return_val_if_fail (data_size >= 4, GST_FLOW_ERROR);
+
   tag_type = data[0];
 
   switch (tag_type) {
@@ -1172,6 +1190,8 @@ gst_flv_parse_header (GstFLVDemux * demux, const guint8 * data,
     size_t data_size)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+
+  g_return_val_if_fail (data_size >= 9, GST_FLOW_ERROR);
 
   /* Check for the FLV tag */
   if (data[0] == 'F' && data[1] == 'L' && data[2] == 'V') {
