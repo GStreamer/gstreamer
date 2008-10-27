@@ -1,5 +1,15 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: <lrn1986 at gmail dot com>
+
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_render):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render):
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	Fix "argument type mismatch" compiler warnings on Windows.
+	Fixes bug #557293.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/equalizer/gstiirequalizer.c: (update_coefficients):
 	Don't calculate the filter coefficients for every single buffer
 	but only when it's needed. Fixes bug #557260.

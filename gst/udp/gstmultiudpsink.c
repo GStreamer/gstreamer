@@ -395,9 +395,12 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     GST_LOG_OBJECT (sink, "sending %d bytes to client %p", size, client);
 
     while (TRUE) {
+#ifdef G_OS_WIN32
+      ret = sendto (*client->sock, (char *) data, size, 0,
+#else
       ret = sendto (*client->sock, data, size, 0,
+#endif
           (struct sockaddr *) &client->theiraddr, sizeof (client->theiraddr));
-
       if (ret < 0) {
         /* we get a non-posix EPERM on Linux when a firewall rule blocks this
          * destination. We will simply ignore this. */

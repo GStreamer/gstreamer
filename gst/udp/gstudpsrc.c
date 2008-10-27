@@ -458,7 +458,11 @@ no_select:
 
   while (TRUE) {
     len = sizeof (struct sockaddr);
+#ifdef G_OS_WIN32
+    ret = recvfrom (udpsrc->sock.fd, (char *) pktdata, pktsize,
+#else
     ret = recvfrom (udpsrc->sock.fd, pktdata, pktsize,
+#endif
         0, (struct sockaddr *) &tmpaddr, &len);
     if (G_UNLIKELY (ret < 0)) {
 #ifdef G_OS_WIN32
@@ -744,8 +748,11 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   GstUDPSrc *src;
   gint ret;
   int rcvsize;
+#ifdef G_OS_WIN32
+  gint len;
+#else
   guint len;
-
+#endif
   src = GST_UDPSRC (bsrc);
 
   if (src->sockfd == -1) {

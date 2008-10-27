@@ -243,7 +243,11 @@ gst_dynudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   theiraddr.sin_family = AF_INET;
   theiraddr.sin_addr.s_addr = destaddr;
   theiraddr.sin_port = destport;
+#ifdef G_OS_WIN32
+  ret = sendto (sink->sock, (char *) data, size, 0,
+#else
   ret = sendto (sink->sock, data, size, 0,
+#endif
       (struct sockaddr *) &theiraddr, sizeof (theiraddr));
 
   if (ret < 0) {
