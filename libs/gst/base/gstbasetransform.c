@@ -896,6 +896,18 @@ gst_base_transform_find_transform (GstBaseTransform * trans, GstPad * pad,
       gst_pad_fixate_caps (otherpad, othercaps);
     }
     GST_DEBUG_OBJECT (trans, "after fixating %" GST_PTR_FORMAT, othercaps);
+  } else {
+    /* else caps are fixed but the subclass may want to add fields */
+    if (klass->fixate_caps) {
+      othercaps = gst_caps_make_writable (othercaps);
+
+      GST_DEBUG_OBJECT (trans, "doing fixate %" GST_PTR_FORMAT
+          " using caps %" GST_PTR_FORMAT
+          " on pad %s:%s using fixate_caps vmethod", othercaps, caps,
+          GST_DEBUG_PAD_NAME (otherpad));
+
+      klass->fixate_caps (trans, GST_PAD_DIRECTION (pad), caps, othercaps);
+    }
   }
 
   /* caps should be fixed now, if not we have to fail. */

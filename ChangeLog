@@ -1,3 +1,11 @@
+2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_find_transform), (gst_base_transform_getrange):
+	If we have a fixate function, call it even if we already have fixed caps
+	because the subclass might add some caps. Makes audioconvert add a
+	default channel layout.
+
 2008-10-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:
