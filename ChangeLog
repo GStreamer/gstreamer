@@ -1,5 +1,10 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag):
+	Error out early if pulling a tag failed.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_create_index),
 	(gst_flv_demux_loop):
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_script),
