@@ -1,3 +1,13 @@
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_class_init),
+	(gst_soup_http_src_set_property), (gst_soup_http_src_get_property):
+	Add support for souphttpsrc to act as a live source. This makes it
+	possible to get timestamped buffers in combination with the
+	"do-timestamp" property. Fixes bug #556019.
+
 2008-10-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/autodetect/Makefile.am:
@@ -10,7 +20,6 @@
 	* gst/autodetect/gstautovideosrc.h:
 	  Implement src plugins. Little code/string cleanup in the sinks.
 	  Fixes #523813.
-
 
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 

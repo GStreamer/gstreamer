@@ -117,6 +117,7 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
+  PROP_IS_LIVE,
   PROP_USER_AGENT,
   PROP_AUTOMATIC_REDIRECT,
   PROP_PROXY,
@@ -263,6 +264,10 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_COOKIES, g_param_spec_boxed ("cookies", "Cookies",
           "HTTP request cookies", G_TYPE_STRV, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class,
+      PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "is-live",
+          "Act like a live source", FALSE, G_PARAM_READWRITE));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -427,6 +432,9 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       g_strfreev (src->cookies);
       src->cookies = g_strdupv (g_value_get_boxed (value));
       break;
+    case PROP_IS_LIVE:
+      gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
+      break;
   }
 done:
   return;
@@ -460,6 +468,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_COOKIES:
       g_value_set_boxed (value, g_strdupv (src->cookies));
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (src)));
       break;
     case PROP_IRADIO_MODE:
       g_value_set_boolean (value, src->iradio_mode);
@@ -816,8 +827,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
   GST_BUFFER_OFFSET (*src->outbuf) = basesrc->segment.last_stop;
 
   gst_buffer_set_caps (*src->outbuf,
-      (src->
-          icy_caps) ? src->icy_caps :
+      (src->icy_caps) ? src->icy_caps :
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)));
 
   new_position = src->read_position + chunk->length;
