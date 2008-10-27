@@ -1,3 +1,9 @@
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/equalizer/gstiirequalizer.c: (update_coefficients):
+	Don't calculate the filter coefficients for every single buffer
+	but only when it's needed. Fixes bug #557260.
+
 2008-10-26  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

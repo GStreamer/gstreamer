@@ -470,6 +470,7 @@ update_coefficients (GstIirEqualizer * equ)
   for (i = 0; i < equ->freq_band_count; i++) {
     setup_filter (equ, equ->bands[i]);
   }
+  equ->need_new_coefficients = FALSE;
 }
 
 void
