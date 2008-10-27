@@ -606,7 +606,11 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     GST_DEBUG_OBJECT (demux, "audio settings have changed, changing caps");
 
     /* Negotiate caps */
-    gst_flv_parse_audio_negotiate (demux, codec_tag, rate, channels, width);
+    if (!gst_flv_parse_audio_negotiate (demux, codec_tag, rate, channels,
+            width)) {
+      ret = GST_FLOW_ERROR;
+      goto beach;
+    }
   }
 
   /* Push taglist if present */
@@ -907,7 +911,10 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 
     GST_DEBUG_OBJECT (demux, "video settings have changed, changing caps");
 
-    gst_flv_parse_video_negotiate (demux, codec_tag);
+    if (!gst_flv_parse_video_negotiate (demux, codec_tag)) {
+      ret = GST_FLOW_ERROR;
+      goto beach;
+    }
 
     /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
      * metadata tag that would come later and trigger a caps change */

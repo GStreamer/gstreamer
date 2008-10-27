@@ -1,5 +1,12 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video):
+	If the caps change during playback and negotiation fails error out
+	instead of trying to continue.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvmux.c: (gst_flv_mux_audio_pad_setcaps),
 	(gst_flv_mux_request_new_pad), (gst_flv_mux_write_buffer),
 	(gst_flv_mux_collected):
