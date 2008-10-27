@@ -432,6 +432,22 @@ gst_flv_demux_seek_to_prev_keyframe (GstFLVDemux * demux)
   return GST_FLOW_OK;
 }
 
+static gboolean
+gst_flv_demux_push_src_event (GstFLVDemux * demux, GstEvent * event)
+{
+  gboolean ret = TRUE;
+
+  if (demux->audio_pad)
+    ret |= gst_pad_push_event (demux->audio_pad, gst_event_ref (event));
+
+  if (demux->video_pad)
+    ret |= gst_pad_push_event (demux->video_pad, gst_event_ref (event));
+
+  gst_event_unref (event);
+
+  return ret;
+}
+
 static void
 gst_flv_demux_loop (GstPad * pad)
 {
@@ -563,7 +579,7 @@ pause:
           /* normal playback, send EOS to all linked pads */
           gst_element_no_more_pads (GST_ELEMENT (demux));
           GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          if (!gst_pad_event_default (demux->sinkpad, gst_event_new_eos ())) {
+          if (!gst_flv_demux_push_src_event (demux, gst_event_new_eos ())) {
             GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
             GST_ELEMENT_ERROR (demux, STREAM, FAILED,
                 ("Internal data stream error."),
@@ -575,7 +591,7 @@ pause:
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
             ("Internal data stream error."),
             ("stream stopped, reason %s", reason));
-        gst_pad_event_default (demux->sinkpad, gst_event_new_eos ());
+        gst_flv_demux_push_src_event (demux, gst_event_new_eos ());
       }
     }
     gst_object_unref (demux);
@@ -732,7 +748,7 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are
        idle */
-    gst_pad_event_default (demux->sinkpad, gst_event_new_flush_start ());
+    gst_flv_demux_push_src_event (demux, gst_event_new_flush_start ());
     gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
   } else {
     /* Pause the pulling task */
@@ -777,7 +793,7 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
 
   if (flush) {
     /* Stop flushing, the sinks are at time 0 now */
-    gst_pad_event_default (demux->sinkpad, gst_event_new_flush_stop ());
+    gst_flv_demux_push_src_event (demux, gst_event_new_flush_stop ());
   } else {
     GST_DEBUG_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
         demux->segment);
@@ -909,12 +925,12 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (demux, "trying to force chain function to exit");
       demux->flushing = TRUE;
-      ret = gst_pad_event_default (demux->sinkpad, event);
+      ret = gst_flv_demux_push_src_event (demux, event);
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (demux, "flushing FLV demuxer");
       gst_flv_demux_flush (demux, TRUE);
-      ret = gst_pad_event_default (demux->sinkpad, event);
+      ret = gst_flv_demux_push_src_event (demux, event);
       break;
     case GST_EVENT_EOS:
       GST_DEBUG_OBJECT (demux, "received EOS");
@@ -923,7 +939,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
         gst_index_commit (demux->index, demux->index_id);
       }
       gst_element_no_more_pads (GST_ELEMENT (demux));
-      if (!gst_pad_event_default (demux->sinkpad, event)) {
+      if (!gst_flv_demux_push_src_event (demux, event)) {
         GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
             ("Internal data stream error."),
@@ -953,7 +969,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
             demux->segment);
 
         /* and forward */
-        ret = gst_pad_event_default (demux->sinkpad, event);
+        ret = gst_flv_demux_push_src_event (demux, event);
       } else {
         /* non-time format */
         demux->audio_need_segment = TRUE;
@@ -964,7 +980,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_event_default (demux->sinkpad, event);
+      ret = gst_flv_demux_push_src_event (demux, event);
       break;
   }
 
