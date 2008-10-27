@@ -1,5 +1,13 @@
 2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_class_init),
+	(gst_rtp_L16_pay_setcaps), (gst_rtp_L16_pay_getcaps):
+	Implement getcaps in rtpL16pay. Fixes #556484.
+
+2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_setcaps),
 	(gst_rtp_L16_depay_process):
 	Check if clock-rate and channels are valid.
