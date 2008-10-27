@@ -174,6 +174,7 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   const gchar *params;
   const gchar *str, *type;
   gint clock_rate, need_clock_rate;
+  gboolean res;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
@@ -183,11 +184,11 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if ((str = gst_structure_get_string (structure, "encoding-name"))) {
     if (strcmp (str, "AMR") == 0) {
       rtpamrdepay->mode = GST_RTP_AMR_DP_MODE_NB;
-      clock_rate = need_clock_rate = 8000;
+      need_clock_rate = 8000;
       type = "audio/AMR";
     } else if (strcmp (str, "AMR-WB") == 0) {
       rtpamrdepay->mode = GST_RTP_AMR_DP_MODE_WB;
-      clock_rate = need_clock_rate = 16000;
+      need_clock_rate = 16000;
       type = "audio/AMR-WB";
     } else
       goto invalid_mode;
@@ -235,7 +236,8 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     rtpamrdepay->channels = atoi (params);
   }
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = need_clock_rate;
   depayload->clock_rate = clock_rate;
 
   /* we require 1 channel, 8000 Hz, octet aligned, no CRC,
@@ -254,13 +256,10 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   srccaps = gst_caps_new_simple (type,
       "channels", G_TYPE_INT, rtpamrdepay->channels,
       "rate", G_TYPE_INT, clock_rate, NULL);
-
-  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
-  rtpamrdepay->negotiated = TRUE;
-
-  return TRUE;
+  return res;
 
   /* ERRORS */
 invalid_mode:
@@ -289,12 +288,6 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   gint *frame_size;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
-
-  if (!rtpamrdepay->negotiated)
-    goto not_negotiated;
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto invalid_packet;
 
   /* setup frame size pointer */
   if (rtpamrdepay->mode == GST_RTP_AMR_DP_MODE_NB)
@@ -421,14 +414,11 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;
 
     if (marker) {
-      /* marker bit marks a discont buffer */
+      /* marker bit marks a discont buffer after a talkspurt. */
       GST_DEBUG_OBJECT (depayload, "marker bit was set");
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       marker = FALSE;
     }
-
-    gst_buffer_set_caps (outbuf,
-        GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload)));
 
     GST_DEBUG_OBJECT (depayload, "pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
@@ -436,18 +426,6 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   return outbuf;
 
   /* ERRORS */
-invalid_packet:
-  {
-    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-        (NULL), ("AMR RTP packet did not validate"));
-    goto bad_packet;
-  }
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (rtpamrdepay, STREAM, NOT_IMPLEMENTED,
-        (NULL), ("not negotiated"));
-    return NULL;
-  }
 too_small:
   {
     GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,

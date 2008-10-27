@@ -333,14 +333,14 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   hstr = g_strdup_printf ("%d", rtpvrawpay->height);
 
   gst_basertppayload_set_options (payload, "video", TRUE, "RAW", 90000);
-  gst_basertppayload_set_outcaps (payload, "sampling", G_TYPE_STRING,
+  res = gst_basertppayload_set_outcaps (payload, "sampling", G_TYPE_STRING,
       samplingstr, "depth", G_TYPE_STRING, depthstr, "width", G_TYPE_STRING,
       wstr, "height", G_TYPE_STRING, hstr, "colorimetry", G_TYPE_STRING,
       colorimetrystr, NULL);
   g_free (wstr);
   g_free (hstr);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 unknown_mask:

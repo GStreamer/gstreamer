@@ -168,7 +168,6 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (rtph263ppay_debug, "rtph263ppay",
       0, "rtph263ppay (RFC 4629)");
-
 }
 
 static void
@@ -195,10 +194,12 @@ gst_rtp_h263p_pay_finalize (GObject * object)
 static gboolean
 gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  gst_basertppayload_set_options (payload, "video", TRUE, "H263-1998", 90000);
-  gst_basertppayload_set_outcaps (payload, NULL);
+  gboolean res;
 
-  return TRUE;
+  gst_basertppayload_set_options (payload, "video", TRUE, "H263-1998", 90000);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
+
+  return res;
 }
 
 static void
@@ -236,8 +237,6 @@ gst_rtp_h263p_pay_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-
 
 static GstFlowReturn
 gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
@@ -332,7 +331,9 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     payload[0] = (fragmented && !found_gob) ? 0x00 : 0x04;
     payload[1] = 0;
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtph263ppay->first_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = rtph263ppay->first_timestamp;
+    GST_BUFFER_DURATION (outbuf) = rtph263ppay->first_duration;
+
     gst_adapter_flush (rtph263ppay->adapter, towrite);
 
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263ppay), outbuf);
@@ -355,7 +356,8 @@ gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload * payload,
   rtph263ppay = GST_RTP_H263P_PAY (payload);
 
   size = GST_BUFFER_SIZE (buffer);
-  rtph263ppay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263ppay->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263ppay->first_duration = GST_BUFFER_DURATION (buffer);
 
   /* we always encode and flush a full picture */
   gst_adapter_push (rtph263ppay->adapter, buffer);

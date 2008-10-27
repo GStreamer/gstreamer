@@ -156,10 +156,12 @@ gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
   GstCaps *srccaps = NULL;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
   const gchar *encoding_name = NULL;
+  gboolean res;
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   filter->clock_rate = clock_rate;
 
   encoding_name = gst_structure_get_string (structure, "encoding-name");
@@ -216,10 +218,10 @@ gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
   if (!srccaps)
     goto no_caps;
 
-  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
+  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_encoding_name:
@@ -237,14 +239,10 @@ no_caps:
 static GstBuffer *
 gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-
   GstRtpH263PDepay *rtph263pdepay;
   GstBuffer *outbuf;
 
   rtph263pdepay = GST_RTP_H263P_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -266,7 +264,7 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     header_len = 2;
 
     if (payload_len < header_len)
-      goto bad_packet;
+      goto too_small;
 
     M = gst_rtp_buffer_get_marker (buf);
 
@@ -292,7 +290,7 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
 
     if ((!P && payload_len < header_len) || (P && payload_len < header_len - 2))
-      goto bad_packet;
+      goto too_small;
 
     if (P) {
       /* FIXME, have to make the packet writable hear. Better to reset these
@@ -353,12 +351,6 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
   return NULL;
 
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
-    return NULL;
-  }
 too_small:
   {
     GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,

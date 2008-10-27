@@ -225,19 +225,20 @@ gst_rtp_mp4g_depay_parse_int (GstStructure * structure, const gchar * field,
 static gboolean
 gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
-
   GstStructure *structure;
   GstRtpMP4GDepay *rtpmp4gdepay;
   GstCaps *srccaps = NULL;
   const gchar *str;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
   gint someint;
+  gboolean res;
 
   rtpmp4gdepay = GST_RTP_MP4G_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
   if ((str = gst_structure_get_string (structure, "media"))) {
@@ -299,10 +300,10 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     }
   }
 
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 unknown_media:
@@ -423,9 +424,6 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstClockTime timestamp;
 
   rtpmp4gdepay = GST_RTP_MP4G_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -628,7 +626,6 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         avail = gst_adapter_available (rtpmp4gdepay->adapter);
 
         outbuf = gst_adapter_take_buffer (rtpmp4gdepay->adapter, avail);
-        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
         GST_DEBUG ("gst_rtp_mp4g_depay_chain: pushing buffer of size %d",
             GST_BUFFER_SIZE (outbuf));
@@ -640,12 +637,6 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   return NULL;
 
   /* ERRORS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,
-        ("Packet did not validate."), (NULL));
-    return NULL;
-  }
 short_payload:
   {
     GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,

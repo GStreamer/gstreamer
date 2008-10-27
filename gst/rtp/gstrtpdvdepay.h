@@ -51,7 +51,6 @@ struct _GstRTPDVDepay
 
   gint width, height;
   gint rate_num, rate_denom;
-  gboolean negotiated;
 };
 
 struct _GstRTPDVDepayClass

@@ -172,6 +172,7 @@ gst_rtp_mp4g_pay_finalize (GObject * object)
 
   g_object_unref (rtpmp4gpay->adapter);
   rtpmp4gpay->adapter = NULL;
+
   g_free (rtpmp4gpay->params);
   rtpmp4gpay->params = NULL;
 
@@ -326,11 +327,12 @@ too_short:
   }
 }
 
-static void
+static gboolean
 gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
 {
   gchar *config;
   GValue v = { 0 };
+  gboolean res;
 
 #define MP4GCAPS						\
   "streamtype", G_TYPE_STRING, rtpmp4gpay->streamtype, 		\
@@ -348,10 +350,10 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
 
   /* hmm, silly */
   if (rtpmp4gpay->params) {
-    gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
         "encoding-params", G_TYPE_STRING, rtpmp4gpay->params, MP4GCAPS);
   } else {
-    gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
+    res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
         MP4GCAPS);
   }
 
@@ -359,6 +361,7 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
   g_free (config);
 
 #undef MP4GCAPS
+  return res;
 }
 
 static gboolean
@@ -368,6 +371,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstStructure *structure;
   const GValue *codec_data;
   gchar *media_type = NULL;
+  gboolean res;
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (payload);
 
@@ -379,7 +383,6 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
       const gchar *name;
-      gboolean res;
 
       buffer = gst_value_get_buffer (codec_data);
       GST_LOG_OBJECT (rtpmp4gpay, "configuring codec_data");
@@ -412,9 +415,9 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   gst_basertppayload_set_options (payload, media_type, TRUE, "MPEG4-GENERIC",
       rtpmp4gpay->rate);
 
-  gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);
+  res = gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 config_failed:

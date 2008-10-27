@@ -123,31 +123,26 @@ gst_rtp_sv3v_depay_finalize (GObject * object)
 gboolean
 gst_rtp_sv3v_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
-
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gint clock_rate = 90000;      // default
+  gint clock_rate;
 
-  if (gst_structure_has_field (structure, "clock-rate"))
-    gst_structure_get_int (structure, "clock-rate", &clock_rate);
-
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         // default
   filter->clock_rate = clock_rate;
+
+  /* will set caps later */
 
   return TRUE;
 }
 
-
 static GstBuffer *
 gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-
   GstRtpSV3VDepay *rtpsv3vdepay;
   GstBuffer *outbuf;
   guint16 seq;
 
   rtpsv3vdepay = GST_RTP_SV3V_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush on sequence number gaps */
   seq = gst_rtp_buffer_get_seq (buf);
@@ -236,9 +231,6 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       avail = gst_adapter_available (rtpsv3vdepay->adapter);
       outbuf = gst_adapter_take_buffer (rtpsv3vdepay->adapter, avail);
 
-      /* timestamp for complete buffer is that of last buffer as well */
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-
       return outbuf;
     }
   }
@@ -248,7 +240,7 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpsv3vdepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
+        (NULL), ("Packet was too short"));
     return NULL;
   }
 }

@@ -145,6 +145,7 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gint clock_rate, payload;
   gint channels;
   GstCaps *srccaps;
+  gboolean res;
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 
@@ -170,7 +171,12 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   /* caps can overwrite defaults */
   clock_rate =
       gst_rtp_L16_depay_parse_int (structure, "clock-rate", clock_rate);
+  if (clock_rate == 0)
+    goto no_clockrate;
+
   channels = gst_rtp_L16_depay_parse_int (structure, "channels", channels);
+  if (channels == 0)
+    goto no_channels;
 
   depayload->clock_rate = clock_rate;
   rtpL16depay->rate = clock_rate;
@@ -183,10 +189,22 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       "depth", G_TYPE_INT, 16,
       "rate", G_TYPE_INT, clock_rate, "channels", G_TYPE_INT, channels, NULL);
 
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
+
+  /* ERRORS */
+no_clockrate:
+  {
+    GST_ERROR_OBJECT (depayload, "no clock-rate specified");
+    return FALSE;
+  }
+no_channels:
+  {
+    GST_ERROR_OBJECT (depayload, "no channels specified");
+    return FALSE;
+  }
 }
 
 static GstBuffer *
@@ -194,34 +212,29 @@ gst_rtp_L16_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpL16Depay *rtpL16depay;
   GstBuffer *outbuf;
+  gint payload_len;
+  gboolean marker;
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
+  payload_len = gst_rtp_buffer_get_payload_len (buf);
 
-  {
-    gint payload_len;
+  if (payload_len <= 0)
+    goto empty_packet;
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
+  GST_DEBUG_OBJECT (rtpL16depay, "got payload of %d bytes", payload_len);
 
-    if (payload_len <= 0)
-      goto empty_packet;
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  marker = gst_rtp_buffer_get_marker (buf);
 
-    GST_DEBUG_OBJECT (rtpL16depay, "got payload of %d bytes", payload_len);
-
-    outbuf = gst_rtp_buffer_get_payload_buffer (buf);
-
-    return outbuf;
+  if (marker) {
+    /* mark talk spurt with DISCONT */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
-  return NULL;
 
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
-        ("Packet did not validate."), (NULL));
-    return NULL;
-  }
+  return outbuf;
+
+  /* ERRORS */
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,

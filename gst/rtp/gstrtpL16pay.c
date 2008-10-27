@@ -163,6 +163,7 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   GstRtpL16Pay *rtpL16pay;
   GstStructure *structure;
   gint channels, rate;
+  gboolean res;
 
   rtpL16pay = GST_RTP_L16_PAY (basepayload);
 
@@ -176,13 +177,13 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     goto no_channels;
 
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "L16", rate);
-  gst_basertppayload_set_outcaps (basepayload,
+  res = gst_basertppayload_set_outcaps (basepayload,
       "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
 
   rtpL16pay->rate = rate;
   rtpL16pay->channels = channels;
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_rate:

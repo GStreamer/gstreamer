@@ -111,20 +111,26 @@ gst_rtp_gsm_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   const char *stname;
   GstStructure *structure;
+  gboolean res;
 
   structure = gst_caps_get_structure (caps, 0);
 
   stname = gst_structure_get_name (structure);
 
-  if (0 == strcmp ("audio/x-gsm", stname)) {
-    gst_basertppayload_set_options (payload, "audio", FALSE, "GSM", 8000);
-  } else {
+  if (strcmp ("audio/x-gsm", stname))
+    goto invalid_type;
+
+  gst_basertppayload_set_options (payload, "audio", FALSE, "GSM", 8000);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
+
+  return res;
+
+  /* ERRORS */
+invalid_type:
+  {
+    GST_WARNING_OBJECT (payload, "invalid media type received");
     return FALSE;
   }
-
-  gst_basertppayload_set_outcaps (payload, NULL);
-
-  return TRUE;
 }
 
 static GstFlowReturn

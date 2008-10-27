@@ -110,12 +110,14 @@ gst_rtp_pcma_pay_init (GstRtpPmcaPay * rtppcmapay, GstRtpPmcaPayClass * klass)
 static gboolean
 gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
+  gboolean res;
+
   payload->pt = GST_RTP_PAYLOAD_PCMA;
+
   gst_basertppayload_set_options (payload, "audio", FALSE, "PCMA", 8000);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
 
-  gst_basertppayload_set_outcaps (payload, NULL);
-
-  return TRUE;
+  return res;
 }
 
 gboolean

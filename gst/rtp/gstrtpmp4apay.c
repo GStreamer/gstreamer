@@ -254,21 +254,24 @@ wrong_channels:
   }
 }
 
-static void
+static gboolean
 gst_rtp_mp4a_pay_new_caps (GstRtpMP4APay * rtpmp4apay)
 {
   gchar *config;
   GValue v = { 0 };
+  gboolean res;
 
   g_value_init (&v, GST_TYPE_BUFFER);
   gst_value_set_buffer (&v, rtpmp4apay->config);
   config = gst_value_serialize (&v);
 
-  gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4apay),
+  res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4apay),
       "cpresent", G_TYPE_STRING, "0", "config", G_TYPE_STRING, config, NULL);
 
   g_value_unset (&v);
   g_free (config);
+
+  return res;
 }
 
 static gboolean
@@ -277,6 +280,7 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstRtpMP4APay *rtpmp4apay;
   GstStructure *structure;
   const GValue *codec_data;
+  gboolean res;
 
   rtpmp4apay = GST_RTP_MP4A_PAY (payload);
 
@@ -290,7 +294,6 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
       guint8 *config;
       guint8 *data;
       guint size, i;
-      gboolean res;
 
       buffer = gst_value_get_buffer (codec_data);
       GST_LOG_OBJECT (rtpmp4apay, "configuring codec_data");
@@ -339,9 +342,9 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   gst_basertppayload_set_options (payload, "audio", TRUE, "MP4A-LATM",
       rtpmp4apay->rate);
 
-  gst_rtp_mp4a_pay_new_caps (rtpmp4apay);
+  res = gst_rtp_mp4a_pay_new_caps (rtpmp4apay);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 config_failed:

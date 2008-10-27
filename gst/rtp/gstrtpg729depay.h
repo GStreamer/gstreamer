@@ -46,8 +46,6 @@ struct _GstRtpG729Depay
 {
   GstBaseRTPDepayload depayload;
 
-  gboolean negotiated;
-
   gint     channels;
 };
 

@@ -1,5 +1,221 @@
 2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_setcaps),
+	(gst_rtp_L16_depay_process):
+	Check if clock-rate and channels are valid.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpac3depay.c: (gst_rtp_ac3_depay_setcaps),
+	(gst_rtp_ac3_depay_process):
+	Don't ignore the return value of set_caps.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_setcaps),
+	(gst_rtp_amr_depay_process):
+	* gst/rtp/gstrtpamrdepay.h:
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	No need to set output caps on the buffers, the base class does that for
+	us.
+	The subclass will make sure we are negotiated.
+	
+	* gst/rtp/gstrtpdvdepay.c: (gst_rtp_dv_depay_setcaps),
+	(gst_rtp_dv_depay_process), (gst_rtp_dv_depay_reset):
+	* gst/rtp/gstrtpdvdepay.h:
+	Clean up caps negotiation.
+	The subclass will make sure we are negotiated.
+
+	* gst/rtp/gstrtpg726depay.c: (gst_rtp_g726_depay_setcaps),
+	(gst_rtp_g726_depay_process):
+	Clean up caps negotiation.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtpg729depay.c: (gst_rtp_g729_depay_init),
+	(gst_rtp_g729_depay_setcaps), (gst_rtp_g729_depay_process):
+	* gst/rtp/gstrtpg729depay.h:
+	The subclass will make sure we are negotiated.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtpgsmdepay.c: (gst_rtp_gsm_depay_setcaps),
+	(gst_rtp_gsm_depay_process):
+	Clean up caps negotiation.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtpgsmpay.c: (gst_rtp_gsm_pay_setcaps):
+	Clean up caps negotiation.
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_setcaps),
+	(gst_rtp_h263_depay_process):
+	Clean up caps negotiation.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtph263pay.c: (gst_rtp_h263_pay_setcaps),
+	(gst_rtp_h263_pay_flush), (gst_rtp_h263_pay_handle_buffer):
+	* gst/rtp/gstrtph263pay.h:
+	Don't ignore the return value of set_outcaps.
+	Do some more timestamps.
+
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_setcaps),
+	(gst_rtp_h263p_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtph263ppay.c: (gst_rtp_h263p_pay_class_init),
+	(gst_rtp_h263p_pay_setcaps), (gst_rtp_h263p_pay_flush),
+	(gst_rtp_h263p_pay_handle_buffer):
+	* gst/rtp/gstrtph263ppay.h:
+	Don't ignore the return value of set_outcaps.
+	Do some more timestamps.
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_setcaps),
+	(gst_rtp_h264_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	Fix possible caps leak.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_setcaps):
+	Add some more debug info.
+
+	* gst/rtp/gstrtpilbcdepay.c: (gst_rtp_ilbc_depay_setcaps),
+	(gst_rtp_ilbc_depay_process):
+	Clean up caps negotiation.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtpilbcpay.c: (gst_rtpilbcpay_sink_setcaps):
+	Clean up caps negotiation.
+
+	* gst/rtp/gstrtpmp1sdepay.c: (gst_rtp_mp1s_depay_setcaps),
+	(gst_rtp_mp1s_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	No need to set caps on buffers, subclass does that for us.
+
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_setcaps),
+	(gst_rtp_mp2t_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	No need to set caps on buffers, subclass does that for us.
+
+	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_setcaps),
+	(gst_rtp_mp4a_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtpmp4apay.c: (gst_rtp_mp4a_pay_new_caps),
+	(gst_rtp_mp4a_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_setcaps),
+	(gst_rtp_mp4g_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	No need to set caps on buffers, subclass does that for us.
+
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_finalize),
+	(gst_rtp_mp4g_pay_new_caps), (gst_rtp_mp4g_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_setcaps),
+	(gst_rtp_mp4v_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	No need to set caps on buffers, subclass does that for us.
+
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_new_caps),
+	(gst_rtp_mp4v_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_setcaps),
+	(gst_rtp_mpa_depay_process):
+	Clean up caps negotiation.
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtpmpapay.c: (gst_rtp_mpa_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpmpvdepay.c: (gst_rtp_mpv_depay_setcaps),
+	(gst_rtp_mpv_depay_process):
+	Clean up caps negotiation.
+	Actually set output caps.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtpmpvpay.c: (gst_rtp_mpv_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtppcmadepay.c: (gst_rtp_pcma_depay_setcaps),
+	(gst_rtp_pcma_depay_process):
+	Clean up caps negotiation.
+	Set output buffer duration because we can.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtppcmapay.c: (gst_rtp_pcma_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtppcmudepay.c: (gst_rtp_pcmu_depay_setcaps),
+	(gst_rtp_pcmu_depay_process):
+	Clean up caps negotiation.
+	Use the marker bit to set the DISCONT flag on outgoing buffers.
+
+	* gst/rtp/gstrtppcmupay.c: (gst_rtp_pcmu_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_init),
+	(gst_rtp_speex_depay_setcaps), (gst_rtp_speex_depay_process):
+	Clean up caps negotiation.
+	Set output caps on the pad and header buffers.
+	Set duration on output buffers because we can.
+
+	* gst/rtp/gstrtpspeexpay.c: (gst_rtp_speex_pay_parse_ident):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpsv3vdepay.c: (gst_rtp_sv3v_depay_setcaps),
+	(gst_rtp_sv3v_depay_process):
+	Clean up caps negotiation.
+	No need to validate the buffer, the base class does that for us.
+	No need to set caps out output buffers, subclass does that.
+
+	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_setcaps),
+	(gst_rtp_theora_depay_process):
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtptheorapay.c: (gst_rtp_theora_pay_class_init),
+	(gst_rtp_theora_pay_flush_packet), (encode_base64),
+	(gst_rtp_theora_pay_finish_headers), (gst_rtp_theora_pay_parse_id),
+	(gst_rtp_theora_pay_handle_buffer):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_setcaps),
+	(gst_rtp_vorbis_depay_process):
+	Don't ignore the return value of setcaps.
+	No need to validate the buffer, the base class does that for us.
+
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_finish_headers):
+	Don't ignore the return value of set_outcaps.
+
+	* gst/rtp/gstrtpvrawdepay.c: (gst_rtp_vraw_depay_setcaps):
+	Clean up caps negotiation, don't ignore setcaps return.
+
+	* gst/rtp/gstrtpvrawpay.c: (gst_rtp_vraw_pay_setcaps):
+	Don't ignore the return value of set_outcaps.
+
+2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_handle_src_event):
 	Forward unknown events upstream.

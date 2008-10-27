@@ -130,13 +130,14 @@ gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   GstStructure *structure;
   gboolean ret;
-  gint clock_rate = 8000;       /* default */
+  gint clock_rate;
   const gchar *encoding_name;
   gint bitrate;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 8000;          /* default */
   depayload->clock_rate = clock_rate;
 
   encoding_name = gst_structure_get_string (structure, "encoding-name");
@@ -175,26 +176,21 @@ done:
 static GstBuffer *
 gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-  GstCaps *srccaps;
   GstBuffer *outbuf = NULL;
+  gboolean marker;
+
+  marker = gst_rtp_buffer_get_marker (buf);
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
-      GST_BUFFER_SIZE (buf),
-      gst_rtp_buffer_get_marker (buf),
+      GST_BUFFER_SIZE (buf), marker,
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
-  srccaps = GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
-  if (!srccaps) {
-    /* Set the default caps */
-    srccaps = gst_caps_new_simple ("audio/x-adpcm",
-        "channels", G_TYPE_INT, 1,
-        "rate", G_TYPE_INT, SAMPLE_RATE,
-        "bitrate", G_TYPE_INT, DEFAULT_BIT_RATE,
-        "layout", G_TYPE_STRING, LAYOUT_G726, NULL);
-    gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
-    gst_caps_unref (srccaps);
-  }
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+
+  if (marker) {
+    /* mark start of talkspurt with discont */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+  }
 
   return outbuf;
 }

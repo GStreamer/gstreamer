@@ -331,6 +331,7 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   const gchar *delivery_method;
   const gchar *configuration;
+  gboolean res;
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 
@@ -362,13 +363,13 @@ gst_rtp_theora_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   /* set caps on pad and on header */
   srccaps = gst_caps_new_simple ("video/x-theora", NULL);
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
   /* Clock rate is always 90000 according to draft-barbato-avt-rtp-theora-01 */
   depayload->clock_rate = 90000;
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 unsupported_delivery_method:
@@ -443,9 +444,6 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   gboolean free_payload;
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   payload_len = gst_rtp_buffer_get_payload_len (buf);
 
@@ -614,12 +612,6 @@ no_output:
     return NULL;
   }
   /* ERORRS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
-        (NULL), ("Packet did not validate"));
-    return NULL;
-  }
 switch_failed:
   {
     GST_ELEMENT_ERROR (rtptheoradepay, STREAM, DECODE,

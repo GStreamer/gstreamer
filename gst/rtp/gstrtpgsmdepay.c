@@ -118,11 +118,12 @@ gst_rtp_gsm_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   gboolean ret;
   GstStructure *structure;
-  gint clock_rate = 8000;       /* default */
+  gint clock_rate;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 8000;          /* default */
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("audio/x-gsm",
@@ -137,13 +138,20 @@ static GstBuffer *
 gst_rtp_gsm_depay_process (GstBaseRTPDepayload * _depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
+  gboolean marker;
+
+  marker = gst_rtp_buffer_get_marker (buf);
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
-      GST_BUFFER_SIZE (buf),
-      gst_rtp_buffer_get_marker (buf),
+      GST_BUFFER_SIZE (buf), marker,
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+
+  if (marker) {
+    /* mark start of talkspurt with DISCONT */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+  }
 
   return outbuf;
 }

@@ -257,6 +257,7 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
   gchar *cstr, *configuration;
   guint8 *data, *config;
   guint32 ident;
+  gboolean res;
 
   GST_DEBUG_OBJECT (rtpvorbispay, "finish headers");
 
@@ -404,12 +405,13 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
   cstr = g_strdup_printf ("%d", rtpvorbispay->channels);
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "VORBIS",
       rtpvorbispay->rate);
-  gst_basertppayload_set_outcaps (basepayload, "encoding-params", G_TYPE_STRING,
-      cstr, "configuration", G_TYPE_STRING, configuration, NULL);
+  res =
+      gst_basertppayload_set_outcaps (basepayload, "encoding-params",
+      G_TYPE_STRING, cstr, "configuration", G_TYPE_STRING, configuration, NULL);
   g_free (cstr);
   g_free (configuration);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_headers:

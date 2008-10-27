@@ -118,15 +118,16 @@ gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   const char *stname;
   GstStructure *structure;
+  gboolean res;
 
   structure = gst_caps_get_structure (caps, 0);
 
   stname = gst_structure_get_name (structure);
 
   gst_basertppayload_set_options (payload, "video", FALSE, "MPV", 90000);
-  gst_basertppayload_set_outcaps (payload, NULL);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
 
-  return TRUE;
+  return res;
 }
 
 static GstFlowReturn

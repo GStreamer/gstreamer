@@ -104,7 +104,6 @@ static void
 gst_rtp_speex_depay_init (GstRtpSPEEXDepay * rtpspeexdepay,
     GstRtpSPEEXDepayClass * klass)
 {
-  GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay)->clock_rate = 8000;
 }
 
 static gint
@@ -134,12 +133,15 @@ gst_rtp_speex_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstBuffer *buf;
   guint8 *data;
   const gchar *params;
+  GstCaps *srccaps;
+  gboolean res;
 
   rtpspeexdepay = GST_RTP_SPEEX_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    goto no_clockrate;
   depayload->clock_rate = clock_rate;
 
   if (!(params = gst_structure_get_string (structure, "encoding-params")))
@@ -181,15 +183,28 @@ gst_rtp_speex_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   data += 4;
   GST_WRITE_UINT32_LE (data, 0);        /* reserved2 */
 
+  srccaps = gst_caps_new_simple ("audio/x-speex", NULL);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
+  gst_caps_unref (srccaps);
+
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (depayload->srcpad));
   gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay), buf);
 
   buf = gst_buffer_new_and_alloc (sizeof (gst_rtp_speex_comment));
   memcpy (GST_BUFFER_DATA (buf), gst_rtp_speex_comment,
       sizeof (gst_rtp_speex_comment));
 
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (depayload->srcpad));
   gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay), buf);
 
-  return TRUE;
+  return res;
+
+  /* ERRORS */
+no_clockrate:
+  {
+    GST_DEBUG_OBJECT (depayload, "no clock-rate specified");
+    return FALSE;
+  }
 }
 
 static GstBuffer *
@@ -204,6 +219,8 @@ gst_rtp_speex_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   /* nothing special to be done */
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+
+  GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
 
   return outbuf;
 }

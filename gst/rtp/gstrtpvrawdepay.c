@@ -112,12 +112,13 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpVRawDepay *rtpvrawdepay;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
   const gchar *str, *type;
   gint format, width, height, pgroup, xinc, yinc;
   guint ystride, uvstride, yp, up, vp, outsize;
   GstCaps *srccaps;
   guint32 fourcc = 0;
+  gboolean res;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
@@ -126,7 +127,8 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   yp = up = vp = uvstride = 0;
   xinc = yinc = 1;
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
   if (!(str = gst_structure_get_string (structure, "width")))
@@ -223,7 +225,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       "format", GST_TYPE_FOURCC, fourcc,
       "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
 
-  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   GST_DEBUG_OBJECT (depayload, "width %d, height %d, format %d", width, height,
@@ -233,7 +235,7 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       ystride, uvstride);
   GST_DEBUG_OBJECT (depayload, "outsize %u", outsize);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_width:

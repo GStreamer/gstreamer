@@ -136,14 +136,15 @@ gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRtpMP4VDepay *rtpmp4vdepay;
   GstCaps *srccaps;
   const gchar *str;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
+  gboolean res;
 
   rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_field (structure, "clock-rate"))
-    gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/mpeg",
@@ -167,10 +168,10 @@ gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       g_warning ("cannot convert config to buffer");
     }
   }
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 }
 
 static GstBuffer *
@@ -180,9 +181,6 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf;
 
   rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf))
@@ -198,7 +196,6 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     avail = gst_adapter_available (rtpmp4vdepay->adapter);
 
     outbuf = gst_adapter_take_buffer (rtpmp4vdepay->adapter, avail);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
     GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
@@ -206,13 +203,6 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     return outbuf;
   }
   return NULL;
-
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmp4vdepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
-    return NULL;
-  }
 }
 
 static GstStateChangeReturn

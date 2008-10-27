@@ -110,16 +110,23 @@ gst_rtp_ac3_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpAC3Depay *rtpac3depay;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
+  GstCaps *srccaps;
+  gboolean res;
 
   rtpac3depay = GST_RTP_AC3_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
-  return TRUE;
+  srccaps = gst_caps_new_simple ("audio/ac3", NULL);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
+  gst_caps_unref (srccaps);
+
+  return res;
 }
 
 struct frmsize_s
@@ -177,9 +184,6 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   rtpac3depay = GST_RTP_AC3_DEPAY (depayload);
 
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
-
   {
     gint payload_len;
     guint8 *payload;
@@ -218,20 +222,7 @@ gst_rtp_ac3_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   return NULL;
 
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpac3depay, STREAM, DECODE,
-        ("Packet did not validate."), (NULL));
-    return NULL;
-  }
-#if 0
-bad_payload:
-  {
-    GST_ELEMENT_WARNING (rtpac3depay, STREAM, DECODE,
-        ("Unexpected payload type."), (NULL));
-    return NULL;
-  }
-#endif
+  /* ERRORS */
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpac3depay, STREAM, DECODE,

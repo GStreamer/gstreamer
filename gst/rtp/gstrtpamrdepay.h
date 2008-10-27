@@ -49,7 +49,6 @@ struct _GstRtpAMRDepay
 {
   GstBaseRTPDepayload depayload;
 
-  gboolean negotiated;
   GstRtpAMRDepayMode mode;
 
   gboolean octet_align;

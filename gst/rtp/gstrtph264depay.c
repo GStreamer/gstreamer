@@ -253,17 +253,19 @@ decode_base64 (gchar * in, guint8 * out)
 static gboolean
 gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
-  GstCaps *srccaps = NULL;
-  gint clock_rate = 90000;
+  GstCaps *srccaps;
+  gint clock_rate;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstRtpH264Depay *rtph264depay;
   const gchar *ps, *profile;
   GstBuffer *codec_data;
   guint8 *b64;
+  gboolean res;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/x-h264", NULL);
@@ -395,15 +397,16 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
         "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
   }
 
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 incomplete_caps:
   {
     GST_DEBUG_OBJECT (depayload, "we have incomplete caps");
+    gst_caps_unref (srccaps);
     return FALSE;
   }
 }
@@ -418,9 +421,6 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint8 nal_unit_type;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -668,12 +668,6 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   return NULL;
 
   /* ERRORS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
-        (NULL), ("Packet did not validate"));
-    return NULL;
-  }
 undefined_type:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,

@@ -147,9 +147,10 @@ gst_rtp_h263_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   filter->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/x-h263",
@@ -164,21 +165,16 @@ gst_rtp_h263_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 static GstBuffer *
 gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-
   GstRtpH263Depay *rtph263depay;
   GstBuffer *outbuf;
   gint payload_len;
   guint8 *payload;
   guint header_len;
-
   guint SBIT, EBIT;
   gboolean F, P, M;
   gboolean I;
 
   rtph263depay = GST_RTP_H263_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -326,13 +322,6 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   return NULL;
-
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtph263depay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
-    return NULL;
-  }
 }
 
 static GstStateChangeReturn

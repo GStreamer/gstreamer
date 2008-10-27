@@ -263,11 +263,12 @@ gst_rtp_h263_pay_finalize (GObject * object)
 static gboolean
 gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  payload->pt = GST_RTP_PAYLOAD_H263;
-  gst_basertppayload_set_options (payload, "video", TRUE, "H263", 90000);
-  gst_basertppayload_set_outcaps (payload, NULL);
+  gboolean res;
 
-  return TRUE;
+  gst_basertppayload_set_options (payload, "video", TRUE, "H263", 90000);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
+
+  return res;
 }
 
 static guint
@@ -350,7 +351,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     memcpy (payload, data + curpos, payload_len);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtph263pay->first_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = rtph263pay->first_timestamp;
+    GST_BUFFER_DURATION (outbuf) = rtph263pay->first_duration;
 
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtph263pay), outbuf);
 
@@ -373,7 +375,8 @@ gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   rtph263pay = GST_RTP_H263_PAY (payload);
 
   size = GST_BUFFER_SIZE (buffer);
-  rtph263pay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263pay->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  rtph263pay->first_duration = GST_BUFFER_DURATION (buffer);
 
   /* we always encode and flush a full picture */
   gst_adapter_push (rtph263pay->adapter, buffer);

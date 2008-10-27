@@ -51,7 +51,8 @@ struct _GstRtpH263PPay
   GstBaseRTPPayload    payload;
 
   GstAdapter          *adapter;
-  GstClockTime         first_ts;
+  GstClockTime         first_timestamp;
+  GstClockTime         first_duration;
   GstFragmentationMode fragmentation_mode;
 };
 

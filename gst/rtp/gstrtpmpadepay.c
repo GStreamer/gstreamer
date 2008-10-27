@@ -115,16 +115,23 @@ gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpMPADepay *rtpmpadepay;
-  gint clock_rate = 90000;      /* default */
+  GstCaps *outcaps;
+  gint clock_rate;
+  gboolean res;
 
   rtpmpadepay = GST_RTP_MPA_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
-  return TRUE;
+  outcaps = gst_caps_new_simple ("audio/mpeg", NULL);
+  res = gst_pad_set_caps (depayload->srcpad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return res;
 }
 
 static GstBuffer *
@@ -135,20 +142,18 @@ gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   rtpmpadepay = GST_RTP_MPA_DEPAY (depayload);
 
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
-
   {
     gint payload_len;
     guint8 *payload;
     guint16 frag_offset;
+    gboolean marker;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
 
     if (payload_len <= 4)
       goto empty_packet;
 
+    payload = gst_rtp_buffer_get_payload (buf);
     /* strip off header
      *
      *  0                   1                   2                   3
@@ -161,7 +166,12 @@ gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     /* subbuffer skipping the 4 header bytes */
     outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 4, -1);
+    marker = gst_rtp_buffer_get_marker (buf);
 
+    if (marker) {
+      /* mark start of talkspurt with discont */
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    }
     GST_DEBUG_OBJECT (rtpmpadepay,
         "gst_rtp_mpa_depay_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
@@ -173,20 +183,7 @@ gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   return NULL;
 
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmpadepay, STREAM, DECODE,
-        ("Packet did not validate."), (NULL));
-    return NULL;
-  }
-#if 0
-bad_payload:
-  {
-    GST_ELEMENT_WARNING (rtpmpadepay, STREAM, DECODE,
-        ("Unexpected payload type."), (NULL));
-    return NULL;
-  }
-#endif
+  /* ERRORS */
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmpadepay, STREAM, DECODE,

@@ -118,16 +118,25 @@ gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpMPVDepay *rtpmpvdepay;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
+  GstCaps *outcaps;
+  gboolean res;
 
   rtpmpvdepay = GST_RTP_MPV_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
-  return TRUE;
+  outcaps = gst_caps_new_simple ("video/mpeg",
+      "mpegversion", G_TYPE_INT, 2,
+      "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+  res = gst_pad_set_caps (depayload->srcpad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return res;
 }
 
 static GstBuffer *
@@ -137,9 +146,6 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf;
 
   rtpmpvdepay = GST_RTP_MPV_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   {
     gint payload_len, payload_header;
@@ -197,12 +203,7 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   return NULL;
 
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmpvdepay, STREAM, DECODE,
-        (NULL), ("Packet did not validate."));
-    return NULL;
-  }
+  /* ERRORS */
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmpvdepay, STREAM, DECODE,

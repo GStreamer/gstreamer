@@ -304,6 +304,8 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
       data += 2;
       size -= 2;
 
+      GST_LOG_OBJECT (rtph264pay, "SPS %d size %d", i, nal_size);
+
       if (size < nal_size)
         goto avcc_error;
 
@@ -334,6 +336,8 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
       nal_size = (data[0] << 8) | data[1];
       data += 2;
       size -= 2;
+
+      GST_LOG_OBJECT (rtph264pay, "PPS %d size %d", i, nal_size);
 
       if (size < nal_size)
         goto avcc_error;

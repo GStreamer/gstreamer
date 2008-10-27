@@ -102,9 +102,7 @@ static void
 gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstElementClass *gstelement_class;
-
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -191,9 +189,7 @@ static GstFlowReturn
 gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
 {
   GstFlowReturn ret;
-
   guint8 *payload;
-
   guint hlen;
 
   /* check for empty packet */
@@ -241,7 +237,6 @@ static gchar *
 encode_base64 (const guint8 * in, guint size, guint * len)
 {
   gchar *ret, *d;
-
   static const gchar *v =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -267,16 +262,12 @@ static gboolean
 gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
 {
   GstRtpTheoraPay *rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
-
   GList *walk;
-
   guint length, size, n_headers, configlen;
-
   gchar *wstr, *hstr, *configuration;
-
   guint8 *data, *config;
-
   guint32 ident;
+  gboolean res;
 
   GST_DEBUG_OBJECT (rtptheorapay, "finish headers");
 
@@ -428,7 +419,7 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   wstr = g_strdup_printf ("%d", rtptheorapay->width);
   hstr = g_strdup_printf ("%d", rtptheorapay->height);
   gst_basertppayload_set_options (basepayload, "video", TRUE, "THEORA", 90000);
-  gst_basertppayload_set_outcaps (basepayload,
+  res = gst_basertppayload_set_outcaps (basepayload,
       "sampling", G_TYPE_STRING, "YCbCr-4:2:0",
       "width", G_TYPE_STRING, wstr,
       "height", G_TYPE_STRING, hstr,
@@ -441,7 +432,7 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   g_free (hstr);
   g_free (configuration);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_headers:
@@ -456,7 +447,6 @@ gst_rtp_theora_pay_parse_id (GstBaseRTPPayload * basepayload, guint8 * data,
     guint size)
 {
   GstRtpTheoraPay *rtptheorapay;
-
   gint width, height;
 
   rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
@@ -514,25 +504,15 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpTheoraPay *rtptheorapay;
-
   GstFlowReturn ret;
-
   guint size, newsize;
-
   guint8 *data;
-
   guint packet_len;
-
   GstClockTime duration, newduration, timestamp;
-
   gboolean flush;
-
   guint8 TDT;
-
   guint plen;
-
   guint8 *ppos, *payload;
-
   gboolean fragmented;
 
   rtptheorapay = GST_RTP_THEORA_PAY (basepayload);

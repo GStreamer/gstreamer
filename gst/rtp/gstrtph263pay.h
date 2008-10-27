@@ -45,7 +45,8 @@ struct _GstRtpH263Pay
   GstBaseRTPPayload payload;
 
   GstAdapter *adapter;
-  GstClockTime first_ts;
+  GstClockTime first_timestamp;
+  GstClockTime first_duration;
 };
 
 struct _GstRtpH263PayClass

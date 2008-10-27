@@ -327,6 +327,7 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   const gchar *configuration;
   gint clock_rate;
+  gboolean res;
 
   rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (depayload);
 
@@ -351,10 +352,10 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   /* set caps on pad and on header */
   srccaps = gst_caps_new_simple ("audio/x-vorbis", NULL);
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 
   /* ERRORS */
 invalid_configuration:
@@ -419,9 +420,6 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   gboolean free_payload;
 
   rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   payload_len = gst_rtp_buffer_get_payload_len (buf);
 
@@ -593,12 +591,6 @@ no_output:
     return NULL;
   }
   /* ERORRS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
-        (NULL), ("Packet did not validate"));
-    return NULL;
-  }
 switch_failed:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,

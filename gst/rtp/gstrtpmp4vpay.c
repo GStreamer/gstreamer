@@ -192,18 +192,19 @@ gst_rtp_mp4v_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
+static gboolean
 gst_rtp_mp4v_pay_new_caps (GstRtpMP4VPay * rtpmp4vpay)
 {
   gchar *profile, *config;
   GValue v = { 0 };
+  gboolean res;
 
   profile = g_strdup_printf ("%d", rtpmp4vpay->profile);
   g_value_init (&v, GST_TYPE_BUFFER);
   gst_value_set_buffer (&v, rtpmp4vpay->config);
   config = gst_value_serialize (&v);
 
-  gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4vpay),
+  res = gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4vpay),
       "profile-level-id", G_TYPE_STRING, profile,
       "config", G_TYPE_STRING, config, NULL);
 
@@ -211,6 +212,8 @@ gst_rtp_mp4v_pay_new_caps (GstRtpMP4VPay * rtpmp4vpay)
 
   g_free (profile);
   g_free (config);
+
+  return res;
 }
 
 static gboolean
@@ -219,11 +222,14 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstRtpMP4VPay *rtpmp4vpay;
   GstStructure *structure;
   const GValue *codec_data;
+  gboolean res;
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (payload);
 
   gst_basertppayload_set_options (payload, "video", TRUE, "MP4V-ES",
       rtpmp4vpay->rate);
+
+  res = TRUE;
 
   structure = gst_caps_get_structure (caps, 0);
   codec_data = gst_structure_get_value (structure, "codec_data");
@@ -249,12 +255,12 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
       if (rtpmp4vpay->config)
         gst_buffer_unref (rtpmp4vpay->config);
       rtpmp4vpay->config = gst_buffer_copy (buffer);
-      gst_rtp_mp4v_pay_new_caps (rtpmp4vpay);
+      res = gst_rtp_mp4v_pay_new_caps (rtpmp4vpay);
     }
   }
 
 done:
-  return TRUE;
+  return res;
 }
 
 static void

@@ -134,20 +134,22 @@ gst_rtp_mp1s_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   GstStructure *structure;
   GstRtpMP1SDepay *rtpmp1sdepay;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
+  gboolean res;
 
   rtpmp1sdepay = GST_RTP_MP1S_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/mpeg",
       "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 }
 
 static GstBuffer *
@@ -155,30 +157,15 @@ gst_rtp_mp1s_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpMP1SDepay *rtpmp1sdepay;
   GstBuffer *outbuf;
-  gint payload_len;
 
   rtpmp1sdepay = GST_RTP_MP1S_DEPAY (depayload);
 
-  if (G_UNLIKELY (!gst_rtp_buffer_validate (buf)))
-    goto bad_packet;
-
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-
-  outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 0, -1);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
   GST_DEBUG ("gst_rtp_mp1s_depay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
 
   return outbuf;
-
-  /* ERRORS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmp1sdepay, STREAM, DECODE,
-        (NULL), ("Packet did not validate"));
-    return NULL;
-  }
 }
 
 static void

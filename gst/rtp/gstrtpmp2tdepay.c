@@ -148,21 +148,23 @@ gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   GstStructure *structure;
   GstRtpMP2TDepay *rtpmp2tdepay;
-  gint clock_rate = 90000;      /* default */
+  gint clock_rate;
+  gboolean res;
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/mpegts",
       "packetsize", G_TYPE_INT, 188,
       "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  res = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 }
 
 static GstBuffer *
@@ -174,9 +176,6 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 
-  if (G_UNLIKELY (!gst_rtp_buffer_validate (buf)))
-    goto bad_packet;
-
   payload_len = gst_rtp_buffer_get_payload_len (buf);
 
   if (G_UNLIKELY (payload_len <= rtpmp2tdepay->skip_first_bytes))
@@ -185,7 +184,6 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   outbuf =
       gst_rtp_buffer_get_payload_subbuffer (buf, rtpmp2tdepay->skip_first_bytes,
       -1);
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
   GST_DEBUG ("gst_rtp_mp2t_depay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
@@ -193,12 +191,6 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   return outbuf;
 
   /* ERRORS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmp2tdepay, STREAM, DECODE,
-        (NULL), ("Packet did not validate"));
-    return NULL;
-  }
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmp2tdepay, STREAM, DECODE,

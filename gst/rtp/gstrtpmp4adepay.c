@@ -138,20 +138,21 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRtpMP4ADepay *rtpmp4adepay;
   GstCaps *srccaps;
   const gchar *str;
-  gint clock_rate = 90000;      /* default */
-  gint object_type = 2;         /* AAC LC default */
+  gint clock_rate;
+  gint object_type;
   gint channels = 2;            /* default */
+  gboolean res;
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_field (structure, "clock-rate"))
-    gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
+    clock_rate = 90000;         /* default */
   depayload->clock_rate = clock_rate;
 
-  if (gst_structure_has_field (structure, "object"))
-    gst_structure_get_int (structure, "object", &object_type);
+  if (!gst_structure_get_int (structure, "object", &object_type))
+    object_type = 2;            /* AAC LC default */
 
   srccaps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 4,
@@ -219,10 +220,10 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     }
   }
 bad_config:
-  gst_pad_set_caps (depayload->srcpad, srccaps);
+  res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
-  return TRUE;
+  return res;
 }
 
 static GstBuffer *
@@ -232,9 +233,6 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstBuffer *outbuf;
 
   rtpmp4adepay = GST_RTP_MP4A_DEPAY (depayload);
-
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
@@ -322,12 +320,6 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   return NULL;
 
   /* ERRORS */
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
-    return NULL;
-  }
 wrong_size:
   {
     GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,

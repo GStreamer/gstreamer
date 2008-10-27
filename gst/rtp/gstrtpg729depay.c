@@ -120,7 +120,6 @@ gst_rtp_g729_depay_init (GstRtpG729Depay * rtpg729depay,
 
   depayload = GST_BASE_RTP_DEPAYLOAD (rtpg729depay);
 
-  depayload->clock_rate = 8000;
   gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
 }
 
@@ -153,12 +152,12 @@ gst_rtp_g729_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (clock_rate != 8000)
     goto wrong_clock_rate;
 
+  depayload->clock_rate = clock_rate;
+
   srccaps = gst_caps_new_simple ("audio/G729",
       "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, clock_rate, NULL);
   ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
-
-  rtpg729depay->negotiated = ret;
 
   return ret;
 
@@ -184,17 +183,9 @@ gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstRtpG729Depay *rtpg729depay;
   GstBuffer *outbuf = NULL;
   gint payload_len;
+  gboolean marker;
 
   rtpg729depay = GST_RTP_G729_DEPAY (depayload);
-
-  if (!rtpg729depay->negotiated)
-    goto not_negotiated;
-
-  if (!gst_rtp_buffer_validate (buf)) {
-    GST_ELEMENT_WARNING (rtpg729depay, STREAM, DECODE,
-        (NULL), ("G729 RTP packet did not validate"));
-    goto bad_packet;
-  }
 
   payload_len = gst_rtp_buffer_get_payload_len (buf);
 
@@ -212,6 +203,12 @@ gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  marker = gst_rtp_buffer_get_marker (buf);
+
+  if (marker) {
+    /* marker bit starts talkspurt */
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+  }
 
   GST_DEBUG ("gst_rtp_g729_depay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));
@@ -219,12 +216,6 @@ gst_rtp_g729_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   return outbuf;
 
   /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (rtpg729depay, STREAM, NOT_IMPLEMENTED,
-        (NULL), ("not negotiated"));
-    return NULL;
-  }
 bad_packet:
   {
     /* no fatal error */
