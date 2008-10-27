@@ -1,3 +1,17 @@
+2008-10-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/autodetect/Makefile.am:
+	* gst/autodetect/gstautoaudiosink.c:
+	* gst/autodetect/gstautoaudiosrc.c:
+	* gst/autodetect/gstautoaudiosrc.h:
+	* gst/autodetect/gstautodetect.c:
+	* gst/autodetect/gstautovideosink.c:
+	* gst/autodetect/gstautovideosrc.c:
+	* gst/autodetect/gstautovideosrc.h:
+	  Implement src plugins. Little code/string cleanup in the sinks.
+	  Fixes #523813.
+
+
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Peter Kjellerstedt <pkj at axis com>

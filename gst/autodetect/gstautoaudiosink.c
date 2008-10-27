@@ -22,19 +22,16 @@
  * SECTION:element-autoaudiosink
  * @see_also: autovideosink, alsasink, osssink
  *
- * <refsect2>
- * <para>
  * autoaudiosink is an audio sink that automatically detects an appropriate
  * audio sink to use.  It does so by scanning the registry for all elements
  * that have <quote>Sink</quote> and <quote>Audio</quote> in the class field
  * of their element information, and also have a non-zero autoplugging rank.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v -m audiotestsrc ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 
@@ -71,7 +68,7 @@ GST_ELEMENT_DETAILS ("Auto audio sink",
     "Sink/Audio",
     "Wrapper audio sink for automatically detected audio sink",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
-    "Jan Schmidt <thaytan@noraisin.net");
+    "Jan Schmidt <thaytan@noraisin.net>");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -349,9 +346,8 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
 
   /* find element */
   GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!(esink = gst_auto_audio_sink_find_best (sink))) {
-    return FALSE;
-  }
+  if (!(esink = gst_auto_audio_sink_find_best (sink)))
+    goto no_sink;
 
   sink->kid = esink;
   /* Ensure the child is brought up to the right state to match the parent
@@ -370,6 +366,14 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   GST_DEBUG_OBJECT (sink, "done changing auto audio sink");
 
   return TRUE;
+
+  /* ERRORS */
+no_sink:
+  {
+    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
+        ("Failed to find a supported audio sink"));
+    return FALSE;
+  }
 }
 
 static GstStateChangeReturn

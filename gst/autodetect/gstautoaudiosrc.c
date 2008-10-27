@@ -1,6 +1,7 @@
 /* GStreamer
  * (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * (c) 2006 Jan Schmidt <thaytan@noraisin.net>
+ * (c) 2008 Stefan Kost <ensonic@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,18 +20,18 @@
  */
 
 /**
- * SECTION:element-autovideosink
- * @see_also: autoaudiosink, ximagesink, xvimagesink, sdlvideosink
+ * SECTION:element-autoaudiosrc
+ * @see_also: autovideosrc, alsasrc, osssrc
  *
- * autovideosink is a video sink that automatically detects an appropriate
- * video sink to use.  It does so by scanning the registry for all elements
- * that have <quote>Sink</quote> and <quote>Video</quote> in the class field
+ * autoaudiosrc is an audio source that automatically detects an appropriate
+ * audio source to use.  It does so by scanning the registry for all elements
+ * that have <quote>Source</quote> and <quote>Audio</quote> in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m videotestsrc ! autovideosink
+ * gst-launch -v -m autoaudiosrc ! audioconvert ! audioresample ! autoaudiosink
  * ]|
  * </refsect2>
  */
@@ -41,7 +42,7 @@
 
 #include <string.h>
 
-#include "gstautovideosink.h"
+#include "gstautoaudiosrc.h"
 #include "gstautodetect.h"
 
 /* Properties */
@@ -52,65 +53,68 @@ enum
 };
 
 static GstStateChangeReturn
-gst_auto_video_sink_change_state (GstElement * element,
+gst_auto_audio_src_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_auto_video_sink_dispose (GstAutoVideoSink * sink);
-static void gst_auto_video_sink_clear_kid (GstAutoVideoSink * sink);
-
-static void gst_auto_video_sink_set_property (GObject * object, guint prop_id,
+static void gst_auto_audio_src_dispose (GstAutoAudioSrc * src);
+static void gst_auto_audio_src_clear_kid (GstAutoAudioSrc * src);
+static void gst_auto_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_auto_video_sink_get_property (GObject * object, guint prop_id,
+static void gst_auto_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstAutoVideoSink, gst_auto_video_sink, GstBin, GST_TYPE_BIN);
+GST_BOILERPLATE (GstAutoAudioSrc, gst_auto_audio_src, GstBin, GST_TYPE_BIN);
 
-static const GstElementDetails gst_auto_video_sink_details =
-GST_ELEMENT_DETAILS ("Auto video sink",
-    "Sink/Video",
-    "Wrapper video sink for automatically detected video sink",
+static const GstElementDetails gst_auto_audio_src_details =
+GST_ELEMENT_DETAILS ("Auto audio source",
+    "Sink/Audio",
+    "Wrapper audio source for automatically detected audio source",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
-    "Jan Schmidt <thaytan@noraisin.net>");
+    "Jan Schmidt <thaytan@noraisin.net>\n"
+    "Stefan Kost <ensonic@users.sf.net>");
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
 static void
-gst_auto_video_sink_base_init (gpointer klass)
+gst_auto_audio_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (eklass,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details (eklass, &gst_auto_video_sink_details);
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details (eklass, &gst_auto_audio_src_details);
 }
 
 static void
-gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
+gst_auto_audio_src_class_init (GstAutoAudioSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
+  GstElementClass *eklass;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  eklass = GST_ELEMENT_CLASS (klass);
+
   gobject_class->dispose =
-      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_auto_video_sink_dispose);
-  eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_video_sink_change_state);
+      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_auto_audio_src_dispose);
+  eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_src_change_state);
   gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_auto_video_sink_set_property);
+      GST_DEBUG_FUNCPTR (gst_auto_audio_src_set_property);
   gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_auto_video_sink_get_property);
+      GST_DEBUG_FUNCPTR (gst_auto_audio_src_get_property);
 
   /**
-   * GstAutoVideoSink:filter-caps
+   * GstAutoAudioSrc:filter-caps
    *
    * This property will filter out candidate sinks that can handle the specified
-   * caps. By default only video sinks that support raw rgb and yuv video
-   * are selected.
+   * caps. By default only audio sinks that support raw floating point and
+   * integer audio are selected.
    *
    * This property can only be set before the element goes to the READY state.
    *
-   * Since: 0.10.7
+   * Since: 0.10.11
    **/
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("filter-caps", "Filter caps",
@@ -119,9 +123,9 @@ gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
 }
 
 static void
-gst_auto_video_sink_dispose (GstAutoVideoSink * sink)
+gst_auto_audio_src_dispose (GstAutoAudioSrc * sink)
 {
-  gst_auto_video_sink_clear_kid (sink);
+  gst_auto_audio_src_clear_kid (sink);
 
   if (sink->filter_caps)
     gst_caps_unref (sink->filter_caps);
@@ -131,7 +135,7 @@ gst_auto_video_sink_dispose (GstAutoVideoSink * sink)
 }
 
 static void
-gst_auto_video_sink_clear_kid (GstAutoVideoSink * sink)
+gst_auto_audio_src_clear_kid (GstAutoAudioSrc * sink)
 {
   if (sink->kid) {
     gst_element_set_state (sink->kid, GST_STATE_NULL);
@@ -144,46 +148,43 @@ gst_auto_video_sink_clear_kid (GstAutoVideoSink * sink)
  * Hack to make initial linking work; ideally, this'd work even when
  * no target has been assigned to the ghostpad yet.
  */
-
 static void
-gst_auto_video_sink_reset (GstAutoVideoSink * sink)
+gst_auto_audio_src_reset (GstAutoAudioSrc * src)
 {
   GstPad *targetpad;
 
-  /* Remove any existing element */
-  gst_auto_video_sink_clear_kid (sink);
+  gst_auto_audio_src_clear_kid (src);
 
   /* fakesink placeholder */
-  sink->kid = gst_element_factory_make ("fakesink", "tempsink");
-  gst_bin_add (GST_BIN (sink), sink->kid);
+  src->kid = gst_element_factory_make ("fakesrc", "tempsrc");
+  gst_bin_add (GST_BIN (src), src->kid);
 
   /* pad */
-  targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
+  targetpad = gst_element_get_static_pad (src->kid, "src");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
   gst_object_unref (targetpad);
 }
 
 static GstStaticCaps raw_caps =
-    GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb");
+    GST_STATIC_CAPS ("audio/x-raw-int; audio/x-raw-float");
 
 static void
-gst_auto_video_sink_init (GstAutoVideoSink * sink,
-    GstAutoVideoSinkClass * g_class)
+gst_auto_audio_src_init (GstAutoAudioSrc * src, GstAutoAudioSrcClass * g_class)
 {
-  sink->pad = gst_ghost_pad_new_no_target ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (sink), sink->pad);
+  src->pad = gst_ghost_pad_new_no_target ("src", GST_PAD_SRC);
+  gst_element_add_pad (GST_ELEMENT (src), src->pad);
 
-  gst_auto_video_sink_reset (sink);
+  gst_auto_audio_src_reset (src);
 
-  /* set the default raw video caps */
-  sink->filter_caps = gst_static_caps_get (&raw_caps);
+  /* set the default raw audio caps */
+  src->filter_caps = gst_static_caps_get (&raw_caps);
 
-  /* mark as sink */
-  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
+  /* mark as source */
+  GST_OBJECT_FLAG_UNSET (src, GST_ELEMENT_IS_SINK);
 }
 
 static gboolean
-gst_auto_video_sink_factory_filter (GstPluginFeature * feature, gpointer data)
+gst_auto_audio_src_factory_filter (GstPluginFeature * feature, gpointer data)
 {
   guint rank;
   const gchar *klass;
@@ -192,9 +193,9 @@ gst_auto_video_sink_factory_filter (GstPluginFeature * feature, gpointer data)
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
 
-  /* video sinks */
+  /* audio sinks */
   klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  if (!(strstr (klass, "Sink") && strstr (klass, "Video")))
+  if (!(strstr (klass, "Source") && strstr (klass, "Audio")))
     return FALSE;
 
   /* only select elements with autoplugging rank */
@@ -206,7 +207,7 @@ gst_auto_video_sink_factory_filter (GstPluginFeature * feature, gpointer data)
 }
 
 static gint
-gst_auto_video_sink_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
+gst_auto_audio_src_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 {
   gint diff;
 
@@ -218,18 +219,18 @@ gst_auto_video_sink_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 }
 
 static GstElement *
-gst_auto_video_sink_create_element_with_pretty_name (GstAutoVideoSink * sink,
+gst_auto_audio_src_create_element_with_pretty_name (GstAutoAudioSrc * src,
     GstElementFactory * factory)
 {
   GstElement *element;
   gchar *name, *marker;
 
   marker = g_strdup (GST_PLUGIN_FEATURE (factory)->name);
-  if (g_str_has_suffix (marker, "sink"))
+  if (g_str_has_suffix (marker, "src"))
     marker[strlen (marker) - 4] = '\0';
   if (g_str_has_prefix (marker, "gst"))
     g_memmove (marker, marker + 3, strlen (marker + 3) + 1);
-  name = g_strdup_printf ("%s-actual-sink-%s", GST_OBJECT_NAME (sink), marker);
+  name = g_strdup_printf ("%s-actual-src-%s", GST_OBJECT_NAME (src), marker);
   g_free (marker);
 
   element = gst_element_factory_create (factory, name);
@@ -239,7 +240,7 @@ gst_auto_video_sink_create_element_with_pretty_name (GstAutoVideoSink * sink,
 }
 
 static GstElement *
-gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
+gst_auto_audio_src_find_best (GstAutoAudioSrc * src)
 {
   GList *list, *item;
   GstElement *choice = NULL;
@@ -251,54 +252,57 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
   gboolean no_match = TRUE;
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
-      (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
-  list = g_list_sort (list, (GCompareFunc) gst_auto_video_sink_compare_ranks);
+      (GstPluginFeatureFilter) gst_auto_audio_src_factory_filter, FALSE, src);
+  list = g_list_sort (list, (GCompareFunc) gst_auto_audio_src_compare_ranks);
 
-  GST_LOG_OBJECT (sink, "Trying to find usable video devices ...");
+  /* We don't treat sound server sources special. Our policy is that sound
+   * server sources that have a rank must not auto-spawn a daemon under any
+   * circumstances, so there's nothing for us to worry about here */
+  GST_LOG_OBJECT (src, "Trying to find usable audio devices ...");
 
   for (item = list; item != NULL; item = item->next) {
     GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
     GstElement *el;
 
-    if ((el = gst_auto_video_sink_create_element_with_pretty_name (sink, f))) {
+    if ((el = gst_auto_audio_src_create_element_with_pretty_name (src, f))) {
       GstStateChangeReturn ret;
 
-      GST_DEBUG_OBJECT (sink, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
+      GST_DEBUG_OBJECT (src, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
 
-      /* If autovideosink has been provided with filter caps,
-       * accept only sinks that match with the filter caps */
-      if (sink->filter_caps) {
-        el_pad = gst_element_get_static_pad (GST_ELEMENT (el), "sink");
+      /* If autoAudioSrc has been provided with filter caps,
+       * accept only sources that match with the filter caps */
+      if (src->filter_caps) {
+        el_pad = gst_element_get_static_pad (GST_ELEMENT (el), "src");
         el_caps = gst_pad_get_caps (el_pad);
         gst_object_unref (el_pad);
-        GST_DEBUG_OBJECT (sink,
+        GST_DEBUG_OBJECT (src,
             "Checking caps: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
-            sink->filter_caps, el_caps);
-        intersect = gst_caps_intersect (sink->filter_caps, el_caps);
+            src->filter_caps, el_caps);
+        intersect = gst_caps_intersect (src->filter_caps, el_caps);
         no_match = gst_caps_is_empty (intersect);
         gst_caps_unref (el_caps);
         gst_caps_unref (intersect);
 
         if (no_match) {
-          GST_DEBUG_OBJECT (sink, "Incompatible caps");
+          GST_DEBUG_OBJECT (src, "Incompatible caps");
           gst_object_unref (el);
           continue;
         } else {
-          GST_DEBUG_OBJECT (sink, "Found compatible caps");
+          GST_DEBUG_OBJECT (src, "Found compatible caps");
         }
       }
 
       gst_element_set_bus (el, bus);
       ret = gst_element_set_state (el, GST_STATE_READY);
       if (ret == GST_STATE_CHANGE_SUCCESS) {
-        GST_DEBUG_OBJECT (sink, "This worked!");
+        GST_DEBUG_OBJECT (src, "This worked!");
         choice = el;
         break;
       }
 
       /* collect all error messages */
       while ((message = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR))) {
-        GST_DEBUG_OBJECT (sink, "error message %" GST_PTR_FORMAT, message);
+        GST_DEBUG_OBJECT (src, "error message %" GST_PTR_FORMAT, message);
         errors = g_slist_append (errors, message);
       }
 
@@ -307,19 +311,19 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
     }
   }
 
-  GST_DEBUG_OBJECT (sink, "done trying");
+  GST_DEBUG_OBJECT (src, "done trying");
   if (!choice) {
     if (errors) {
       /* FIXME: we forward the first error for now; but later on it might make
        * sense to actually analyse them */
       gst_message_ref (GST_MESSAGE (errors->data));
-      GST_DEBUG_OBJECT (sink, "reposting message %p", errors->data);
-      gst_element_post_message (GST_ELEMENT (sink), GST_MESSAGE (errors->data));
+      GST_DEBUG_OBJECT (src, "reposting message %p", errors->data);
+      gst_element_post_message (GST_ELEMENT (src), GST_MESSAGE (errors->data));
     } else {
-      /* send warning message to application and use a fakesink */
-      GST_ELEMENT_WARNING (sink, RESOURCE, NOT_FOUND, (NULL),
-          ("Failed to find a usable video sink"));
-      choice = gst_element_factory_make ("fakesink", "fake-video-sink");
+      /* send warning message to application and use a fakesrc */
+      GST_ELEMENT_WARNING (src, RESOURCE, NOT_FOUND, (NULL),
+          ("Failed to find a usable audio source"));
+      choice = gst_element_factory_make ("fakesrc", "fake-audio-src");
       if (g_object_class_find_property (G_OBJECT_GET_CLASS (choice), "sync"))
         g_object_set (choice, "sync", TRUE, NULL);
       gst_element_set_state (choice, GST_STATE_READY);
@@ -334,49 +338,55 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 }
 
 static gboolean
-gst_auto_video_sink_detect (GstAutoVideoSink * sink)
+gst_auto_audio_src_detect (GstAutoAudioSrc * src)
 {
-  GstElement *esink;
+  GstElement *esrc;
   GstPad *targetpad;
 
-  gst_auto_video_sink_clear_kid (sink);
+  gst_auto_audio_src_clear_kid (src);
 
   /* find element */
-  GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!(esink = gst_auto_video_sink_find_best (sink)))
-    goto no_sink;
+  GST_DEBUG_OBJECT (src, "Creating new kid");
+  if (!(esrc = gst_auto_audio_src_find_best (src)))
+    goto no_src;
 
-  sink->kid = esink;
-  gst_bin_add (GST_BIN (sink), esink);
+  src->kid = esrc;
+  /* Ensure the child is brought up to the right state to match the parent
+   * although it's currently always in READY and 
+   * we're always doing NULL->READY. */
+  if (GST_STATE (src->kid) < GST_STATE (src))
+    gst_element_set_state (src->kid, GST_STATE (src));
+
+  gst_bin_add (GST_BIN (src), esrc);
 
   /* attach ghost pad */
-  GST_DEBUG_OBJECT (sink, "Re-assigning ghostpad");
-  targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
+  GST_DEBUG_OBJECT (src, "Re-assigning ghostpad");
+  targetpad = gst_element_get_static_pad (src->kid, "src");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
   gst_object_unref (targetpad);
-  GST_DEBUG_OBJECT (sink, "done changing auto video sink");
+  GST_DEBUG_OBJECT (src, "done changing auto audio source");
 
   return TRUE;
 
   /* ERRORS */
-no_sink:
+no_src:
   {
-    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
-        ("Failed to find a supported video sink"));
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Failed to find a supported audio source"));
     return FALSE;
   }
 }
 
 static GstStateChangeReturn
-gst_auto_video_sink_change_state (GstElement * element,
+gst_auto_audio_src_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstAutoVideoSink *sink = GST_AUTO_VIDEO_SINK (element);
+  GstAutoAudioSrc *src = GST_AUTO_AUDIO_SRC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_auto_video_sink_detect (sink))
+      if (!gst_auto_audio_src_detect (src))
         return GST_STATE_CHANGE_FAILURE;
       break;
     default:
@@ -384,10 +394,12 @@ gst_auto_video_sink_change_state (GstElement * element,
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_auto_video_sink_reset (sink);
+      gst_auto_audio_src_reset (src);
       break;
     default:
       break;
@@ -397,16 +409,16 @@ gst_auto_video_sink_change_state (GstElement * element,
 }
 
 static void
-gst_auto_video_sink_set_property (GObject * object, guint prop_id,
+gst_auto_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAutoVideoSink *sink = GST_AUTO_VIDEO_SINK (object);
+  GstAutoAudioSrc *src = GST_AUTO_AUDIO_SRC (object);
 
   switch (prop_id) {
     case PROP_CAPS:
-      if (sink->filter_caps)
-        gst_caps_unref (sink->filter_caps);
-      sink->filter_caps = gst_caps_copy (gst_value_get_caps (value));
+      if (src->filter_caps)
+        gst_caps_unref (src->filter_caps);
+      src->filter_caps = gst_caps_copy (gst_value_get_caps (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -415,14 +427,14 @@ gst_auto_video_sink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_auto_video_sink_get_property (GObject * object, guint prop_id,
+gst_auto_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAutoVideoSink *sink = GST_AUTO_VIDEO_SINK (object);
+  GstAutoAudioSrc *src = GST_AUTO_AUDIO_SRC (object);
 
   switch (prop_id) {
     case PROP_CAPS:{
-      gst_value_set_caps (value, sink->filter_caps);
+      gst_value_set_caps (value, src->filter_caps);
       break;
     }
     default:
