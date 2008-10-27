@@ -449,6 +449,34 @@ gst_flv_demux_push_src_event (GstFLVDemux * demux, GstEvent * event)
 }
 
 static void
+gst_flv_demux_create_index (GstFLVDemux * demux)
+{
+  gint64 size;
+  GstFormat fmt = GST_FORMAT_BYTES;
+  size_t tag_size;
+  guint64 old_offset;
+  GstBuffer *buffer;
+  GstFlowReturn ret;
+
+  if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &size) ||
+      fmt != GST_FORMAT_BYTES)
+    return;
+
+  old_offset = demux->offset;
+
+  while ((ret =
+          gst_flv_demux_pull_range (demux, demux->sinkpad, demux->offset, 12,
+              &buffer)) == GST_FLOW_OK) {
+    if (gst_flv_parse_tag_timestamp (demux, GST_BUFFER_DATA (buffer),
+            GST_BUFFER_SIZE (buffer), &tag_size) == GST_CLOCK_TIME_NONE)
+      break;
+    demux->offset += tag_size;
+  }
+
+  demux->offset = old_offset;
+}
+
+static void
 gst_flv_demux_loop (GstPad * pad)
 {
   GstFLVDemux *demux = NULL;
@@ -467,38 +495,9 @@ gst_flv_demux_loop (GstPad * pad)
         break;
       default:
         ret = gst_flv_demux_pull_header (pad, demux);
+        if (ret == GST_FLOW_OK)
+          gst_flv_demux_create_index (demux);
 
-        /* If we parsed the header successfully try to get an
-         * approximate duration by looking at the last tag's timestamp */
-        if (ret == GST_FLOW_OK) {
-          gint64 size;
-          GstFormat fmt = GST_FORMAT_BYTES;
-
-          if (gst_pad_query_peer_duration (pad, &fmt, &size) &&
-              fmt == GST_FORMAT_BYTES && size != -1 && size > FLV_HEADER_SIZE) {
-            GstBuffer *buffer;
-
-            if (gst_flv_demux_pull_range (demux, pad, size - 4, 4,
-                    &buffer) == GST_FLOW_OK) {
-              guint32 prev_tag_size =
-                  GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer));
-
-              gst_buffer_unref (buffer);
-
-              if (size - 4 - prev_tag_size > FLV_HEADER_SIZE &&
-                  prev_tag_size >= 8 &&
-                  gst_flv_demux_pull_range (demux, pad,
-                      size - prev_tag_size - 4, prev_tag_size,
-                      &buffer) == GST_FLOW_OK) {
-                demux->duration =
-                    gst_flv_parse_tag_timestamp (demux,
-                    GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
-
-                gst_buffer_unref (buffer);
-              }
-            }
-          }
-        }
     }
 
     /* pause if something went wrong */
@@ -527,6 +526,8 @@ gst_flv_demux_loop (GstPad * pad)
         break;
       default:
         ret = gst_flv_demux_pull_header (pad, demux);
+        if (ret == GST_FLOW_OK)
+          gst_flv_demux_create_index (demux);
     }
 
     /* pause if something went wrong */

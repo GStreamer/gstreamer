@@ -371,8 +371,9 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
 
     g_free (function_name);
 
-    if (demux->index && demux->times && demux->filepositions) {
-      /* If an index was found, insert associations */
+    if (demux->index && demux->times && demux->filepositions
+        && !demux->random_access) {
+      /* If an index was found and we're in push mode, insert associations */
       for (i = 0; i < MIN (demux->times->len, demux->filepositions->len); i++) {
         guint64 time, fileposition;
 
@@ -676,17 +677,20 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   GST_BUFFER_OFFSET (buffer) = demux->audio_offset++;
   GST_BUFFER_OFFSET_END (buffer) = demux->audio_offset;
 
-  /* Only add audio frames to the index if we have no video */
-  if (!demux->has_video) {
-    if (demux->index) {
-      GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
-          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-          demux->cur_tag_offset);
-      gst_index_add_association (demux->index, demux->index_id,
-          GST_ASSOCIATION_FLAG_KEY_UNIT,
-          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
-          GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
-    }
+  if (demux->duration == GST_CLOCK_TIME_NONE ||
+      demux->duration < GST_BUFFER_TIMESTAMP (buffer))
+    demux->duration = GST_BUFFER_TIMESTAMP (buffer);
+
+  /* Only add audio frames to the index if we have no video 
+   * and if we don't have random access */
+  if (!demux->has_video && demux->index && !demux->random_access) {
+    GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+        G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        demux->cur_tag_offset);
+    gst_index_add_association (demux->index, demux->index_id,
+        GST_ASSOCIATION_FLAG_KEY_UNIT,
+        GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+        GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
   }
 
   if (G_UNLIKELY (demux->audio_need_discont)) {
@@ -978,9 +982,13 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   GST_BUFFER_OFFSET (buffer) = demux->video_offset++;
   GST_BUFFER_OFFSET_END (buffer) = demux->video_offset;
 
+  if (demux->duration == GST_CLOCK_TIME_NONE ||
+      demux->duration < GST_BUFFER_TIMESTAMP (buffer))
+    demux->duration = GST_BUFFER_TIMESTAMP (buffer);
+
   if (!keyframe) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-    if (demux->index) {
+    if (demux->index && !demux->random_access) {
       GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
           G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
           demux->cur_tag_offset);
@@ -990,7 +998,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
           GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
     }
   } else {
-    if (demux->index) {
+    if (demux->index && !demux->random_access) {
       GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
           G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
           demux->cur_tag_offset);
@@ -1049,19 +1057,34 @@ beach:
 
 GstClockTime
 gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+    size_t data_size, size_t * tag_size)
 {
   guint32 pts = 0, pts_ext = 0;
+  guint32 tag_data_size;
+  guint8 type;
+  gboolean keyframe = TRUE;
+  GstClockTime ret;
 
-  if (data[0] != 9 && data[0] != 8 && data[0] != 18) {
+  g_return_val_if_fail (data_size >= 12, GST_CLOCK_TIME_NONE);
+
+  type = data[0];
+
+  if (type != 9 && type != 8 && type != 18) {
     GST_WARNING_OBJECT (demux, "Unsupported tag type %u", data[0]);
     return GST_CLOCK_TIME_NONE;
   }
 
-  if (FLV_GET_BEUI24 (data + 1, data_size - 1) != data_size - 11) {
-    GST_WARNING_OBJECT (demux, "Invalid tag");
-    return GST_CLOCK_TIME_NONE;
+  tag_data_size = FLV_GET_BEUI24 (data + 1, data_size - 1);
+
+  if (data_size >= tag_data_size + 11 + 4) {
+    if (GST_READ_UINT32_BE (data + tag_data_size + 11) != tag_data_size + 11) {
+      GST_WARNING_OBJECT (demux, "Invalid tag size");
+      return GST_CLOCK_TIME_NONE;
+    }
   }
+
+  if (tag_size)
+    *tag_size = tag_data_size + 11 + 4;
 
   data += 4;
 
@@ -1075,7 +1098,26 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
   /* Combine them */
   pts |= pts_ext << 24;
 
-  return pts * GST_MSECOND;
+  if (type == 9) {
+    data += 7;
+
+    keyframe = ((data[0] >> 4) == 1);
+  }
+
+  ret = pts * GST_MSECOND;
+
+  if (demux->index && (type == 9 || (type == 8 && !demux->has_video))) {
+    GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+        G_GUINT64_FORMAT, GST_TIME_ARGS (ret), demux->offset);
+    gst_index_add_association (demux->index, demux->index_id,
+        (keyframe) ? GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+        GST_FORMAT_TIME, ret, GST_FORMAT_BYTES, demux->offset, NULL);
+  }
+
+  if (demux->duration == GST_CLOCK_TIME_NONE || demux->duration < ret)
+    demux->duration = ret;
+
+  return ret;
 }
 
 GstFlowReturn
