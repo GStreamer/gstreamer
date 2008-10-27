@@ -59,6 +59,7 @@ struct _GstFLVDemux
   
   GstIndex *index;
   gint index_id;
+  gboolean own_index;
   
   GArray * times;
   GArray * filepositions;
