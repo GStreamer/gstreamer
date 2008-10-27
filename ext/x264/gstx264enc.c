@@ -541,7 +541,12 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.i_frame_reference = encoder->ref;
   encoder->x264param.i_bframe = encoder->bframes;
   encoder->x264param.b_bframe_pyramid = encoder->b_pyramid;
+#if X264_BUILD < 63
   encoder->x264param.b_bframe_adaptive = encoder->b_adapt;
+#else
+  encoder->x264param.i_bframe_adaptive =
+      encoder->b_adapt ? X264_B_ADAPT_FAST : X264_B_ADAPT_NONE;
+#endif
   encoder->x264param.b_interlaced = encoder->interlaced;
   encoder->x264param.b_deblocking_filter = 1;
   encoder->x264param.i_deblocking_filter_alphac0 = 0;

@@ -1,5 +1,10 @@
 2008-10-27  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/x264/gstx264enc.c: (gst_x264_enc_init_encoder):
+	Adapt to slightly modified x264 API.  Fixes #555238.
+
+2008-10-27  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* ext/faac/gstfaac.c: (gst_faac_sink_event):
 	Prevent endless loop if buffer alloc error.
 
