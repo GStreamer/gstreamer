@@ -446,7 +446,7 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
 
     //init unvisible opengl context
     gst_gl_display_create_context (upload->display,
-        upload->gl_width, upload->gl_height, 0);
+        upload->gl_width, upload->gl_height);
 
     //init colorspace conversion if needed
     gst_gl_display_init_upload (upload->display, upload->video_format,

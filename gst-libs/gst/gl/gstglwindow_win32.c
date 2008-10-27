@@ -33,6 +33,7 @@
 
 void gst_gl_window_set_pixel_format (GstGLWindow *window);
 LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #define GST_GL_WINDOW_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
@@ -65,6 +66,8 @@ G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 #define G_LOG_DOMAIN "GstGLWindow"
 
 gboolean _gst_gl_window_debug = FALSE;
+
+HHOOK hHook;
 
 /* Must be called in the gl thread */
 static void
@@ -193,7 +196,6 @@ gst_gl_window_new (gint width, gint height)
   //device is set in the window_proc 
   g_assert (priv->device);
 
-  UpdateWindow (priv->internal_win_id);
   ShowCursor (TRUE);
 
   return window;
@@ -208,7 +210,20 @@ gst_gl_window_error_quark (void)
 void 
 gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 {
-  g_warning ("gst_gl_window_set_external_window_id: not implemented\n");
+  GstGLWindowPrivate *priv = window->priv;
+  WNDPROC window_parent_proc = (WNDPROC) (guint64) SetWindowLongPtr ((HWND)id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
+  RECT rect;
+  GetClientRect ((HWND)id, &rect);
+  SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
+  SetParent (priv->internal_win_id, (HWND)id);  
+  SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
+  SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
+  priv->has_external_window_id = TRUE;
+
+  //take changes into account: SWP_FRAMECHANGED
+  SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
+    SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
+  MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right, rect.bottom, FALSE);
 }
 
 void 
@@ -253,24 +268,18 @@ gst_gl_window_has_external_window_id (GstGLWindow *window)
 {
   gboolean has_internal_window_id = TRUE;
   GstGLWindowPrivate *priv = window->priv;
-  
-  has_internal_window_id = priv->has_external_window_id;
 
-  return has_internal_window_id;
+  return priv->has_external_window_id;
 }
 
 /* Must be called in the gl thread */
 gboolean
-gst_gl_window_has_internal_gl_context (GstGLWindow *window)
+gst_gl_window_has_external_gl_context (GstGLWindow *window)
 {
   gboolean has_external_gl_context = TRUE;
   GstGLWindowPrivate *priv = window->priv;
-  
-  
-  has_external_gl_context = priv->has_external_gl_context;
-  
 
-  return has_external_gl_context;
+  return priv->has_external_gl_context;
 }
 
 /* Must be called in the gl thread */
@@ -300,9 +309,9 @@ gst_gl_window_visible (GstGLWindow *window, gboolean visible)
   g_debug ("set visible %d\n", priv->internal_win_id);
   
   if (visible)
-    ret = ShowWindow (priv->internal_win_id, SW_SHOW);
+    ret = ShowWindowAsync (priv->internal_win_id, SW_SHOW);
   else
-    ret = ShowWindow (priv->internal_win_id, SW_HIDE);
+    ret = ShowWindowAsync (priv->internal_win_id, SW_HIDE);
 }
 
 /* Thread safe */
@@ -310,60 +319,8 @@ void
 gst_gl_window_draw (GstGLWindow *window)
 {
   GstGLWindowPrivate *priv = window->priv;
-  
-  if (!priv->has_external_window_id)
-    RedrawWindow (priv->internal_win_id, NULL, NULL,
-      RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
-  else
-  {
-    PAINTSTRUCT ps;
-    
-    /*RECT destsurf_rect;
-    POINT dest_surf_point;
-
-    dest_surf_point.x = 0;
-    dest_surf_point.y = 0;
-    ClientToScreen (priv->external_win_id, &dest_surf_point);
-    GetClientRect (priv->external_win_id, &destsurf_rect);
-    OffsetRect (&destsurf_rect, dest_surf_point.x, dest_surf_point.y);
-
-    if (window->State.Width != (destsurf_rect.right - destsurf_rect.left) ||
-        window->State.Height != (destsurf_rect.bottom - destsurf_rect.top))
-    {
-        window->State.Width = destsurf_rect.right - destsurf_rect.left;
-        window->State.Height = destsurf_rect.bottom - destsurf_rect.top;
-        window->State.NeedToResize = GL_FALSE;
-        if( FETCH_WCB( *window, Reshape ) )
-            INVOKE_WCB( *window, Reshape, ( window->State.Width, window->State.Height ) );
-        glViewport( 0, 0, window->State.Width, window->State.Height );
-    }*/
-
-    BeginPaint (priv->external_win_id, &ps);
-    priv->draw_cb (priv->draw_data);  //FIXME: wrong thread caller
-    glFlush();
-    SwapBuffers (priv->device);
-    EndPaint (priv->external_win_id, &ps);
-  }
-}
-
-/* Thread safe */
-void
-gst_gl_window_resize (GstGLWindow *window, gint width, gint height)
-{
-  GstGLWindowPrivate *priv = window->priv;
-  gint x = 0;
-  gint y = 0;
-  RECT winRect;
-
-  GetWindowRect (priv->internal_win_id, &winRect);
-  x = winRect.left;
-  y = winRect.top;
-
-  width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-  height += 2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
-
-  SetWindowPos (priv->internal_win_id, HWND_TOP, x, y, width, height,
-    SWP_ASYNCWINDOWPOS | SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING | SWP_NOZORDER);
+  RedrawWindow (priv->internal_win_id, NULL, NULL,
+    RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
 }
 
 void
@@ -515,7 +472,11 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       case WM_SIZE:
       {
         if (priv->resize_cb)
+        {
+          if (priv->has_external_window_id)
+            MoveWindow (hWnd, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
           priv->resize_cb (priv->resize_data, LOWORD(lParam), HIWORD(lParam));
+        }
         break;
       }
 
@@ -589,3 +550,17 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
   else
     return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
+
+LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  WNDPROC window_parent_proc = GetProp (hWnd, "gl_window_parent_proc");
+  
+  if (uMsg == WM_SIZE)
+  {
+      HWND gl_window_id = GetProp (hWnd, "gl_window_id");
+      PostMessage (gl_window_id, WM_SIZE, wParam, lParam);
+  }
+
+  return CallWindowProc (window_parent_proc, hWnd, uMsg, wParam, lParam);
+}
+

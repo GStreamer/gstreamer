@@ -68,15 +68,14 @@ void gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callbac
 void gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback, gpointer data);
 void gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
-gboolean gst_gl_window_has_internal_window_id (GstGLWindow *window);
-gboolean gst_gl_window_has_internal_gl_context (GstGLWindow *window);
+gboolean gst_gl_window_has_external_window_id (GstGLWindow *window);
+gboolean gst_gl_window_has_external_gl_context (GstGLWindow *window);
 
 guint64 gst_gl_window_get_window_id (GstGLWindow *window);
 guint64 gst_gl_window_get_gl_context (GstGLWindow *window);
 
 void gst_gl_window_visible (GstGLWindow *window, gboolean visible);
 void gst_gl_window_draw (GstGLWindow *window);
-void gst_gl_window_resize (GstGLWindow *window, gint width, gint height);
 void gst_gl_window_run_loop (GstGLWindow *window);
 void gst_gl_window_quit_loop (GstGLWindow *window);
 

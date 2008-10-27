@@ -508,8 +508,6 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
 
-            gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
-
             gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
         }
     }
@@ -524,8 +522,10 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
             //init opengl context
             gst_gl_display_create_context (glimage_sink->display,
-                glimage_sink->width, glimage_sink->height,
-                glimage_sink->window_id);
+                glimage_sink->width, glimage_sink->height);
+
+            if (glimage_sink->window_id)
+                gst_gl_display_set_window_id (glimage_sink->display, glimage_sink->window_id); 
 
             //init colorspace conversion if needed
             gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format,
@@ -538,9 +538,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
 
-            gst_gl_display_resize_context (glimage_sink->display, glimage_sink->width, glimage_sink->height);
-
-            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
+            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);          
         }
 
         //blocking call

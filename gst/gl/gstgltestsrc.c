@@ -368,7 +368,7 @@ gst_gl_test_src_setcaps (GstBaseSrc* bsrc, GstCaps* caps)
         gltestsrc->display = gst_gl_display_new ();
 
         gst_gl_display_create_context (gltestsrc->display, 
-            gltestsrc->width, gltestsrc->height, 0);
+            gltestsrc->width, gltestsrc->height);
 
         gst_gl_display_gen_fbo (gltestsrc->display, gltestsrc->width, gltestsrc->height,
             &gltestsrc->fbo, &gltestsrc->depthbuffer);

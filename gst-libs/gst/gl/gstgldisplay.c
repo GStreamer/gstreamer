@@ -47,7 +47,6 @@ static void gst_gl_display_finalize (GObject* object);
 /* Called in the gl thread, protected by lock and unlock */
 gpointer gst_gl_display_thread_create_context (GstGLDisplay* display);
 void gst_gl_display_thread_destroy_context (GstGLDisplay* display);
-void gst_gl_display_thread_change_context (GstGLDisplay* display);
 void gst_gl_display_thread_run_generic (GstGLDisplay *display);
 void gst_gl_display_thread_gen_texture (GstGLDisplay* display);
 void gst_gl_display_thread_del_texture (GstGLDisplay* display);
@@ -107,7 +106,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   //gl context
   display->gl_thread = NULL;
   display->gl_window = NULL;
-  display->winId = 0;
   display->visible = FALSE;
   display->isAlive = TRUE;
   display->texture_pool = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -119,10 +117,6 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
   display->redisplay_texture = 0;
   display->redisplay_texture_width = 0;
   display->redisplay_texture_height = 0;
-
-  //action resize
-  display->resize_width = 0;
-  display->resize_height = 0;
 
   //action gen and del texture
   display->gen_texture = 0;
@@ -385,7 +379,7 @@ gst_gl_display_finalize (GObject* object)
 
 
 //------------------------------------------------------------
-//------------------ BEGIN GL THREAD ACTIONS -----------------
+//------------------ BEGIN GL THREAD PROCS -------------------
 //------------------------------------------------------------
 
 /* Called in the gl thread */
@@ -1399,7 +1393,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
     guint key = (gint)width;
     key <<= 16;
     key |= (gint)height;
-    sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER(key));
+    sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER((guint64)key));
 
     //if there is a sub texture pool associated to th given key
     if (sub_texture_pool && g_queue_get_length(sub_texture_pool) > 0)
@@ -1494,13 +1488,13 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   guint key = (gint)width;
   key <<= 16;
   key |= (gint)height;
-  sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER(key));
+  sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER((guint64)key));
 
   //if the size is known
   if (!sub_texture_pool)
   {
     sub_texture_pool = g_queue_new ();
-    g_hash_table_insert (display->texture_pool, GUINT_TO_POINTER(key), sub_texture_pool);
+    g_hash_table_insert (display->texture_pool, GUINT_TO_POINTER((guint64)key), sub_texture_pool);
 
     GST_INFO ("one more sub texture pool inserted: %d ", key);
     GST_INFO ("nb sub texture pools: %d", g_hash_table_size (display->texture_pool));
@@ -1582,12 +1576,10 @@ gst_gl_display_new (void)
  * Called by the first gl element of a video/x-raw-gl flow */
 void
 gst_gl_display_create_context (GstGLDisplay *display,
-                               GLint width, GLint height,
-                               gulong winId)
+                               GLint width, GLint height)
 {
   gst_gl_display_lock (display);
 
-  display->winId = winId;
   display->upload_width = width;
   display->upload_height = height;
 
@@ -1615,18 +1607,6 @@ gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible)
 
 
 /* Called by the glimagesink element */
-void
-gst_gl_display_resize_context (GstGLDisplay* display, gint width, gint height)
-{
-  gst_gl_display_lock (display);
-  display->resize_width = width;
-  display->resize_height = height;
-  gst_gl_window_resize (display->gl_window, display->resize_width, display->resize_height);
-  gst_gl_display_unlock (display);
-}
-
-
-/* Called by the glimagesink element */
 gboolean
 gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height)
 {
@@ -1642,7 +1622,8 @@ gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gin
       display->redisplay_texture_width = width;
       display->redisplay_texture_height = height;
     }
-    gst_gl_window_draw (display->gl_window);
+    if (display->gl_window)
+      gst_gl_window_draw (display->gl_window);
   }
   gst_gl_display_unlock (display);
 
@@ -1878,13 +1859,10 @@ gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader)
 
 /* Called by the glimagesink */
 void
-gst_gl_display_set_window_id (GstGLDisplay* display, gulong winId)
+gst_gl_display_set_window_id (GstGLDisplay* display, gulong window_id)
 {
-  //used only when glimagesink is connected to a gl flow
-  //otehrwise it can directly create the gl context using the winId
   gst_gl_display_lock (display);
-  display->winId = winId;
-  gst_gl_window_set_external_window_id (display->gl_window, display->winId);
+  gst_gl_window_set_external_window_id (display->gl_window, window_id);
   gst_gl_display_unlock (display);
 }
 
