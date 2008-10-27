@@ -1,5 +1,15 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvmux.c: (gst_flv_mux_audio_pad_setcaps),
+	(gst_flv_mux_request_new_pad), (gst_flv_mux_write_buffer),
+	(gst_flv_mux_collected):
+	* gst/flv/gstflvmux.h:
+	* gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate):
+	Add support for Speex audio and allow buffers without valid
+	timestamp in the muxer.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_loop),
 	(gst_flv_demux_find_offset), (gst_flv_demux_handle_seek_push),
 	(gst_flv_demux_handle_seek_pull):
