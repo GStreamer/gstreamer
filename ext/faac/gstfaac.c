@@ -501,7 +501,8 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
             gst_buffer_unref (outbuf);
             ret = FALSE;
           }
-        }
+        } else
+          ret = FALSE;
       }
       ret = gst_pad_event_default (pad, event);
       break;

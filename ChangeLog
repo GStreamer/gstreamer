@@ -1,3 +1,8 @@
+2008-10-27  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/faac/gstfaac.c: (gst_faac_sink_event):
+	Prevent endless loop if buffer alloc error.
+
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_chain),
