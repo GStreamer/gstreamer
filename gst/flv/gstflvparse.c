@@ -19,45 +19,39 @@
 
 #include "gstflvparse.h"
 
+#include <gst/base/gstbytereader.h>
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
 
-static guint32
-FLV_GET_BEUI24 (const guint8 * data, size_t data_size)
-{
-  guint32 ret = 0;
-
-  g_return_val_if_fail (data != NULL, 0);
-  g_return_val_if_fail (data_size >= 3, 0);
-
-  ret = GST_READ_UINT16_BE (data) << 8;
-  ret |= GST_READ_UINT8 (data + 2);
-
-  return ret;
-}
-
 static gchar *
-FLV_GET_STRING (const guint8 * data, size_t data_size)
+FLV_GET_STRING (GstByteReader * reader)
 {
-  guint32 string_size = 0;
+  guint16 string_size = 0;
   gchar *string = NULL;
+  const guint8 *str;
 
-  g_return_val_if_fail (data != NULL, NULL);
-  g_return_val_if_fail (data_size >= 2, NULL);
+  g_return_val_if_fail (reader != NULL, NULL);
 
-  string_size = GST_READ_UINT16_BE (data);
-  if (G_UNLIKELY (string_size > data_size - 2)) {
+  if (G_UNLIKELY (!gst_byte_reader_get_uint16_be (reader, &string_size)))
     return NULL;
-  }
+
+  if (G_UNLIKELY (string_size > gst_byte_reader_get_remaining (reader)))
+    return NULL;
 
   string = g_try_malloc0 (string_size + 1);
   if (G_UNLIKELY (!string)) {
     return NULL;
   }
 
-  memcpy (string, data + 2, string_size);
+  if (G_UNLIKELY (!gst_byte_reader_get_data (reader, string_size, &str))) {
+    g_free (string);
+    return NULL;
+  }
+
+  memcpy (string, str, string_size);
 
   return string;
 }
@@ -73,61 +67,51 @@ gst_flv_demux_query_types (GstPad * pad)
   return query_types;
 }
 
-static size_t
-gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size, gboolean * end_marker)
+static gboolean
+gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
+    gboolean * end_marker)
 {
   gchar *tag_name = NULL;
   guint8 tag_type = 0;
-  size_t offset = 0;
 
   /* Initialize the end_marker flag to FALSE */
   *end_marker = FALSE;
 
   /* Name of the tag */
-  tag_name = FLV_GET_STRING (data, data_size);
+  tag_name = FLV_GET_STRING (reader);
   if (G_UNLIKELY (!tag_name)) {
     GST_WARNING_OBJECT (demux, "failed reading tag name");
-    goto beach;
+    return FALSE;
   }
 
-  offset += strlen (tag_name) + 2;
-
   /* What kind of object is that */
-  tag_type = GST_READ_UINT8 (data + offset);
-
-  offset++;
+  if (!gst_byte_reader_get_uint8 (reader, &tag_type))
+    goto error;
 
   GST_DEBUG_OBJECT (demux, "tag name %s, tag type %d", tag_name, tag_type);
 
   switch (tag_type) {
     case 0:                    // Double
     {                           /* Use a union to read the uint64 and then as a double */
-      union
-      {
-        guint64 value_uint64;
-        gdouble value_double;
-      } value_union;
+      gdouble d;
 
-      value_union.value_uint64 = GST_READ_UINT64_BE (data + offset);
+      if (!gst_byte_reader_get_float64_be (reader, &d))
+        goto error;
 
-      offset += 8;
-
-      GST_DEBUG_OBJECT (demux, "%s => (double) %f", tag_name,
-          value_union.value_double);
+      GST_DEBUG_OBJECT (demux, "%s => (double) %f", tag_name, d);
 
       if (!strcmp (tag_name, "duration")) {
-        demux->duration = value_union.value_double * GST_SECOND;
+        demux->duration = d * GST_SECOND;
 
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_DURATION, demux->duration, NULL);
       } else {
         if (tag_name) {
           if (!strcmp (tag_name, "AspectRatioX")) {
-            demux->par_x = value_union.value_double;
+            demux->par_x = d;
             demux->got_par = TRUE;
           } else if (!strcmp (tag_name, "AspectRatioY")) {
-            demux->par_y = value_union.value_double;
+            demux->par_y = d;
             demux->got_par = TRUE;
           }
           if (!gst_tag_exists (tag_name)) {
@@ -137,7 +121,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
 
           if (gst_tag_get_type (tag_name) == G_TYPE_DOUBLE) {
             gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-                tag_name, value_union.value_double, NULL);
+                tag_name, d, NULL);
           } else {
             GST_WARNING_OBJECT (demux, "tag %s already registered with a "
                 "different type", tag_name);
@@ -149,11 +133,12 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
     }
     case 1:                    // Boolean
     {
-      gboolean value = GST_READ_UINT8 (data + offset);
+      guint8 b;
 
-      offset++;
+      if (!gst_byte_reader_get_uint8 (reader, &b))
+        goto error;
 
-      GST_DEBUG_OBJECT (demux, "%s => (boolean) %d", tag_name, value);
+      GST_DEBUG_OBJECT (demux, "%s => (boolean) %d", tag_name, b);
 
       if (tag_name) {
         if (!gst_tag_exists (tag_name)) {
@@ -163,7 +148,7 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
 
         if (gst_tag_get_type (tag_name) == G_TYPE_BOOLEAN) {
           gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-              tag_name, value, NULL);
+              tag_name, b, NULL);
         } else {
           GST_WARNING_OBJECT (demux, "tag %s already registered with a "
               "different type", tag_name);
@@ -174,16 +159,13 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
     }
     case 2:                    // String
     {
-      gchar *value = NULL;
+      gchar *s = NULL;
 
-      value = FLV_GET_STRING (data + offset, data_size - offset);
+      s = FLV_GET_STRING (reader);
+      if (s == NULL)
+        goto error;
 
-      if (value == NULL)
-        break;
-
-      offset += strlen (value) + 2;
-
-      GST_DEBUG_OBJECT (demux, "%s => (string) %s", tag_name, value);
+      GST_DEBUG_OBJECT (demux, "%s => (string) %s", tag_name, s);
 
       if (tag_name) {
         if (!gst_tag_exists (tag_name)) {
@@ -193,14 +175,14 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
 
         if (gst_tag_get_type (tag_name) == G_TYPE_STRING) {
           gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-              tag_name, value, NULL);
+              tag_name, s, NULL);
         } else {
           GST_WARNING_OBJECT (demux, "tag %s already registered with a "
               "different type", tag_name);
         }
       }
 
-      g_free (value);
+      g_free (s);
 
       break;
     }
@@ -208,16 +190,14 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
     {
       gboolean end_of_object_marker = FALSE;
 
-      while (!end_of_object_marker && offset < data_size) {
-        size_t read = gst_flv_parse_metadata_item (demux, data + offset,
-            data_size - offset, &end_of_object_marker);
+      while (!end_of_object_marker) {
+        gboolean ok =
+            gst_flv_parse_metadata_item (demux, reader, &end_of_object_marker);
 
-        if (G_UNLIKELY (!read)) {
+        if (G_UNLIKELY (!ok)) {
           GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
-          break;
+          goto error;
         }
-
-        offset += read;
       }
 
       break;
@@ -236,9 +216,10 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
     }
     case 10:                   // Array
     {
-      guint32 nb_elems = GST_READ_UINT32_BE (data + offset);
+      guint32 nb_elems;
 
-      offset += 4;
+      if (!gst_byte_reader_get_uint32_be (reader, &nb_elems))
+        goto error;
 
       GST_DEBUG_OBJECT (demux, "array has %d elements", nb_elems);
 
@@ -255,32 +236,26 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
       }
 
       while (nb_elems--) {
-        guint8 elem_type = GST_READ_UINT8 (data + offset);
+        guint8 elem_type;
 
-        offset++;
+        if (!gst_byte_reader_get_uint8 (reader, &elem_type))
+          goto error;
 
         switch (elem_type) {
           case 0:
           {
-            union
-            {
-              guint64 value_uint64;
-              gdouble value_double;
-            } value_union;
+            gdouble d;
 
-            value_union.value_uint64 = GST_READ_UINT64_BE (data + offset);
+            if (!gst_byte_reader_get_float64_be (reader, &d))
+              goto error;
 
-            offset += 8;
-
-            GST_DEBUG_OBJECT (demux, "element is a double %f",
-                value_union.value_double);
+            GST_DEBUG_OBJECT (demux, "element is a double %f", d);
 
             if (!strcmp (tag_name, "times") && demux->times) {
-              g_array_append_val (demux->times, value_union.value_double);
+              g_array_append_val (demux->times, d);
             } else if (!strcmp (tag_name, "filepositions") &&
                 demux->filepositions) {
-              g_array_append_val (demux->filepositions,
-                  value_union.value_double);
+              g_array_append_val (demux->filepositions, d);
             }
             break;
           }
@@ -294,21 +269,16 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
     }
     case 11:                   // Date
     {
-      union
-      {
-        guint64 value_uint64;
-        gdouble value_double;
-      } value_union;
+      gdouble d;
 
-      value_union.value_uint64 = GST_READ_UINT64_BE (data + offset);
-
-      offset += 8;
+      if (!gst_byte_reader_get_float64_be (reader, &d))
+        goto error;
 
       /* There are 2 additional bytes */
-      offset += 2;
+      if (!gst_byte_reader_skip (reader, 2))
+        goto error;
 
-      GST_DEBUG_OBJECT (demux, "%s => (date as a double) %f", tag_name,
-          value_union.value_double);
+      GST_DEBUG_OBJECT (demux, "%s => (date as a double) %f", tag_name, d);
 
       break;
     }
@@ -318,8 +288,12 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
 
   g_free (tag_name);
 
-beach:
-  return offset;
+  return TRUE;
+
+error:
+  g_free (tag_name);
+
+  return FALSE;
 }
 
 GstFlowReturn
@@ -327,15 +301,22 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
     size_t data_size)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  size_t offset = 7;
+  GstByteReader reader = GST_BYTE_READER_INIT (data + 7, data_size - 7);
+  guint8 type;
+
+  g_return_val_if_fail (data_size >= 7, GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (demux, "parsing a script tag");
 
-  if (GST_READ_UINT8 (data + offset++) == 2) {
+  if (!gst_byte_reader_get_uint8 (&reader, &type))
+    return GST_FLOW_OK;
+
+  /* Must be string */
+  if (type == 2) {
     gchar *function_name;
     guint i;
 
-    function_name = FLV_GET_STRING (data + offset, data_size - offset);
+    function_name = FLV_GET_STRING (&reader);
 
     GST_LOG_OBJECT (demux, "function name is %s", GST_STR_NULL (function_name));
 
@@ -345,25 +326,27 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
 
       GST_DEBUG_OBJECT (demux, "we have a metadata script object");
 
-      /* Jump over the onMetaData string and the array indicator */
-      offset += 13;
+      /* Next type must be a ECMA array */
+      if (!gst_byte_reader_get_uint8 (&reader, &type) || type != 8) {
+        g_free (function_name);
+        return GST_FLOW_OK;
+      }
 
-      nb_elems = GST_READ_UINT32_BE (data + offset);
+      if (!gst_byte_reader_get_uint32_be (&reader, &nb_elems)) {
+        g_free (function_name);
+        return GST_FLOW_OK;
+      }
 
-      /* Jump over the number of elements */
-      offset += 4;
-
-      GST_DEBUG_OBJECT (demux, "there are %d elements in the array", nb_elems);
+      GST_DEBUG_OBJECT (demux, "there are approx. %d elements in the array",
+          nb_elems);
 
       while (nb_elems-- && !end_marker) {
-        size_t read = gst_flv_parse_metadata_item (demux, data + offset,
-            data_size - offset, &end_marker);
+        gboolean ok = gst_flv_parse_metadata_item (demux, &reader, &end_marker);
 
-        if (G_UNLIKELY (!read)) {
+        if (G_UNLIKELY (!ok)) {
           GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
           break;
         }
-        offset += read;
       }
 
       demux->push_tags = TRUE;
@@ -510,7 +493,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       data[2], data[3]);
 
   /* Grab information about audio tag */
-  pts = FLV_GET_BEUI24 (data, data_size);
+  pts = GST_READ_UINT24_BE (data);
   /* read the pts extension to 32 bits integer */
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
@@ -842,7 +825,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       data[2], data[3]);
 
   /* Grab information about video tag */
-  pts = FLV_GET_BEUI24 (data, data_size);
+  pts = GST_READ_UINT24_BE (data);
   /* read the pts extension to 32 bits integer */
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
@@ -1101,7 +1084,7 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
     return GST_CLOCK_TIME_NONE;
   }
 
-  tag_data_size = FLV_GET_BEUI24 (data + 1, data_size - 1);
+  tag_data_size = GST_READ_UINT24_BE (data + 1);
 
   if (data_size >= tag_data_size + 11 + 4) {
     if (GST_READ_UINT32_BE (data + tag_data_size + 11) != tag_data_size + 11) {
@@ -1119,7 +1102,7 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, const guint8 * data,
       data[2], data[3]);
 
   /* Grab timestamp of tag tag */
-  pts = FLV_GET_BEUI24 (data, data_size);
+  pts = GST_READ_UINT24_BE (data);
   /* read the pts extension to 32 bits integer */
   pts_ext = GST_READ_UINT8 (data + 3);
   /* Combine them */
@@ -1176,7 +1159,7 @@ gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
 
   /* Tag size is 1 byte of type + 3 bytes of size + 7 bytes + tag data size +
    * 4 bytes of previous tag size */
-  demux->tag_data_size = FLV_GET_BEUI24 (data + 1, data_size - 1);
+  demux->tag_data_size = GST_READ_UINT24_BE (data + 1);
   demux->tag_size = demux->tag_data_size + 11;
 
   GST_LOG_OBJECT (demux, "tag data size is %" G_GUINT64_FORMAT,
