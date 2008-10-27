@@ -583,13 +583,8 @@ pause:
           /* normal playback, send EOS to all linked pads */
           gst_element_no_more_pads (GST_ELEMENT (demux));
           GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          if (!gst_flv_demux_push_src_event (demux, gst_event_new_eos ())) {
+          if (!gst_flv_demux_push_src_event (demux, gst_event_new_eos ()))
             GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
-            GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-                ("Internal data stream error."),
-                ("Can't push EOS downstream (empty/invalid file "
-                    "with no streams/tags ?)"));
-          }
         }
       } else {
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
@@ -617,8 +612,10 @@ gst_flv_demux_find_offset (GstFLVDemux * demux, GstSegment * segment)
   if (demux->index) {
     /* Let's check if we have an index entry for that seek time */
     entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
-        GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME,
-        time);
+        GST_INDEX_LOOKUP_BEFORE,
+        (segment->flags & GST_SEEK_FLAG_KEY_UNIT) ?
+        GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+        GST_FORMAT_TIME, time);
 
     if (entry) {
       gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
@@ -662,8 +659,8 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = flags & GST_SEEK_FLAG_FLUSH;
-  keyframe = flags & GST_SEEK_FLAG_KEY_UNIT;
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, demux->segment, sizeof (GstSegment));
@@ -686,7 +683,7 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
         G_GUINT64_FORMAT, offset);
     ret = gst_pad_push_event (demux->sinkpad,
         gst_event_new_seek (seeksegment.rate, GST_FORMAT_BYTES,
-            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
+            seeksegment.flags | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
             offset, GST_SEEK_TYPE_NONE, 0));
     if (G_UNLIKELY (!ret)) {
       GST_WARNING_OBJECT (demux, "upstream seek failed");
@@ -699,13 +696,6 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
     /* Ok seek succeeded, take the newly configured segment */
     memcpy (demux->segment, &seeksegment, sizeof (GstSegment));
 
-    /* Notify about the start of a new segment */
-    if (demux->segment->flags & GST_SEEK_FLAG_SEGMENT) {
-      gst_element_post_message (GST_ELEMENT (demux),
-          gst_message_new_segment_start (GST_OBJECT (demux),
-              demux->segment->format, demux->segment->last_stop));
-    }
-
     /* Tell all the stream a new segment is needed */
     {
       demux->audio_need_segment = TRUE;
@@ -717,6 +707,9 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
         demux->new_seg_event = NULL;
       }
     }
+    gst_event_unref (event);
+  } else {
+    ret = gst_pad_push_event (demux->sinkpad, event);
   }
 
   return ret;
@@ -725,7 +718,7 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
 wrong_format:
   {
     GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
-    return FALSE;
+    return gst_pad_push_event (demux->sinkpad, event);
   }
 }
 
@@ -743,11 +736,13 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
 
+  gst_event_unref (event);
+
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = flags & GST_SEEK_FLAG_FLUSH;
-  keyframe = flags & GST_SEEK_FLAG_KEY_UNIT;
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are
@@ -943,13 +938,8 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
         gst_index_commit (demux->index, demux->index_id);
       }
       gst_element_no_more_pads (GST_ELEMENT (demux));
-      if (!gst_flv_demux_push_src_event (demux, event)) {
+      if (!gst_flv_demux_push_src_event (demux, event))
         GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
-        GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            ("Internal data stream error."),
-            ("Can't push EOS downstream (empty/invalid file "
-                "with no streams/tags ?)"));
-      }
       ret = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:

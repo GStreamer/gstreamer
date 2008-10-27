@@ -1,5 +1,18 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_loop),
+	(gst_flv_demux_find_offset), (gst_flv_demux_handle_seek_push),
+	(gst_flv_demux_handle_seek_pull):
+	Don't post an error message on the bus if sending EOS downstream
+	didn't work. Fixes bug #550454.
+
+	Fix seek event handling to look at the flags of the seek event
+	instead of assuming some random flags, don't send segment-start
+	messages when operating in push mode and push seek events upstream
+	if we couldn't handle them.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag):
 	Error out early if pulling a tag failed.
 
