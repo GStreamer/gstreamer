@@ -442,6 +442,10 @@ gst_flv_parse_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
       caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
       codec_name = "Mu-Law";
       break;
+    case 11:
+      caps = gst_caps_new_simple ("audio/x-speex", NULL);
+      codec_name = "Speex";
+      break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
   }

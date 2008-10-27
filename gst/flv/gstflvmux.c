@@ -59,7 +59,8 @@ static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",
         "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 8, depth = (int) 8, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) FALSE; "
         "audio/x-raw-int, endianness = (int) LITTLE_ENDIAN, channels = (int) { 1, 2 }, width = (int) 16, depth = (int) 16, rate = (int) { 5512, 11025, 22050, 44100 }, signed = (boolean) TRUE; "
         "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
+        "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
+        "audio/x-speex, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 };")
     );
 
 GST_BOILERPLATE (GstFlvMux, gst_flv_mux, GstElement, GST_TYPE_ELEMENT);
@@ -313,6 +314,8 @@ gst_flv_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     cpad->audio_codec = 7;
   } else if (strcmp (gst_structure_get_name (s), "audio/x-mulaw") == 0) {
     cpad->audio_codec = 8;
+  } else if (strcmp (gst_structure_get_name (s), "audio/x-speex") == 0) {
+    cpad->audio_codec = 11;
   } else {
     ret = FALSE;
   }
@@ -456,6 +459,8 @@ gst_flv_mux_request_new_pad (GstElement * element,
 
   cpad->sent_codec_data = FALSE;
 
+  cpad->last_timestamp = 0;
+
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
    * element no access to events.
@@ -521,8 +526,11 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvPad * cpad)
   guint size;
   GstBuffer *buffer =
       gst_collect_pads_pop (mux->collect, (GstCollectData *) cpad);
-  guint32 timestamp = GST_BUFFER_TIMESTAMP (buffer) / GST_MSECOND;
+  guint32 timestamp =
+      (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) ? GST_BUFFER_TIMESTAMP (buffer) /
+      GST_MSECOND : cpad->last_timestamp / GST_MSECOND;
   gboolean second_run = FALSE;
+  GstFlowReturn ret;
 
 next:
   size = 11;
@@ -617,8 +625,6 @@ next:
   gst_buffer_set_caps (tag, GST_PAD_CAPS (mux->srcpad));
 
   if (second_run) {
-    GstFlowReturn ret;
-
     second_run = FALSE;
     cpad->sent_codec_data = TRUE;
 
@@ -627,6 +633,8 @@ next:
       gst_buffer_unref (buffer);
       return ret;
     }
+
+    cpad->last_timestamp = timestamp;
 
     tag = NULL;
     goto next;
@@ -638,7 +646,12 @@ next:
 
   gst_buffer_unref (buffer);
 
-  return gst_pad_push (mux->srcpad, tag);
+  ret = gst_pad_push (mux->srcpad, tag);
+
+  if (ret == GST_FLOW_OK)
+    cpad->last_timestamp = timestamp;
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -684,11 +697,13 @@ gst_flv_mux_collected (GstCollectPads * pads, gpointer user_data)
     time = GST_BUFFER_TIMESTAMP (buffer);
     gst_buffer_unref (buffer);
 
+    /* Use buffers without valid timestamp first */
     if (!GST_CLOCK_TIME_IS_VALID (time)) {
-      GST_WARNING_OBJECT (pads, "Buffer without valid timestamp, dropping");
+      GST_WARNING_OBJECT (pads, "Buffer without valid timestamp");
 
-      gst_buffer_unref (gst_collect_pads_pop (pads, (GstCollectData *) cpad));
-      continue;
+      best_time = cpad->last_timestamp;
+      best = cpad;
+      break;
     }
 
 
