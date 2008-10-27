@@ -1,5 +1,20 @@
 2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_chain),
+	(gst_flv_demux_pull_tag), (gst_flv_demux_pull_header),
+	(gst_flv_demux_create_index):
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_script),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	(gst_flv_parse_tag_timestamp), (gst_flv_parse_tag_type),
+	(gst_flv_parse_header):
+	* gst/flv/gstflvparse.h:
+	Don't memcpy() all data we want to push downstream, instead just
+	create subbuffers and push them downstream.
+
+	Fix some minor memory leaks.
+
+2008-10-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	Require CVS of core for the last change.
 
