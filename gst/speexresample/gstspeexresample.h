@@ -63,10 +63,10 @@ struct _GstSpeexResample {
   GstClockTime prev_ts, prev_duration;
   
   gboolean fp;
-  int channels;
-  int inrate;
-  int outrate;
-  int quality;
+  gint channels;
+  gint inrate;
+  gint outrate;
+  gint quality;
 
   SpeexResamplerState *state;
 };
