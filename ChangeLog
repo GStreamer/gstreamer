@@ -1,3 +1,10 @@
+2008-10-27  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/aiffparse/aiffparse.c:
+	* gst/aiffparse/aiffparse.h:
+	  Calculate width from depth correctly.
+	  Read SSND header properly (fixes 24 bit AIFF reading).
+
 2008-10-27  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/x264/gstx264enc.c: (gst_x264_enc_init_encoder):

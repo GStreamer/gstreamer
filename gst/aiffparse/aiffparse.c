@@ -142,6 +142,7 @@ gst_aiffparse_reset (AIFFParse * aiff)
   /* These will all be set correctly in the fmt chunk */
   aiff->rate = 0;
   aiff->width = 0;
+  aiff->depth = 0;
   aiff->channels = 0;
   aiff->bps = 0;
   aiff->offset = 0;
@@ -567,6 +568,16 @@ gst_aiffparse_peek_chunk (AIFFParse * aiff, guint32 * tag, guint32 * size)
   }
 }
 
+static gboolean
+gst_aiffparse_peek_data (AIFFParse * aiff, guint32 size, const guint8 ** data)
+{
+  if (gst_adapter_available (aiff->adapter) < size)
+    return FALSE;
+
+  *data = gst_adapter_peek (aiff->adapter, size);
+  return TRUE;
+}
+
 /*
  * gst_aiffparse_calculate_duration:
  * @aiff: aiffparse object
@@ -658,7 +669,8 @@ gst_aiffparse_parse_comm (AIFFParse * aiff, GstBuffer * buf)
 
   aiff->channels = GST_READ_UINT16_BE (data);
   aiff->total_frames = GST_READ_UINT32_BE (data + 2);
-  aiff->width = GST_READ_UINT16_BE (data + 6);
+  aiff->depth = GST_READ_UINT16_BE (data + 6);
+  aiff->width = GST_ROUND_UP_8 (aiff->depth);
   aiff->rate = (int) gst_aiffparse_read_IEEE80 (data + 8);
 
   if (aiff->is_aifc) {
@@ -727,7 +739,7 @@ gst_aiffparse_create_caps (AIFFParse * aiff)
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "width", G_TYPE_INT, aiff->width,
-      "depth", G_TYPE_INT, aiff->width,
+      "depth", G_TYPE_INT, aiff->depth,
       "channels", G_TYPE_INT, aiff->channels,
       "endianness", G_TYPE_INT, aiff->endianness,
       "rate", G_TYPE_INT, aiff->rate,
@@ -821,16 +833,36 @@ gst_aiffparse_stream_headers (AIFFParse * aiff)
       }
       case GST_MAKE_FOURCC ('S', 'S', 'N', 'D'):{
         GstFormat fmt;
+        GstBuffer *ssndbuf = NULL;
+        const guint8 *ssnddata = NULL;
 
         GST_DEBUG_OBJECT (aiff, "Got 'SSND' TAG, size : %d", size);
-        gotdata = TRUE;
+
+        /* Now, read the 8-byte header in the SSND chunk */
         if (aiff->streaming) {
-          gst_adapter_flush (aiff->adapter, 8);
+          if (!gst_aiffparse_peek_data (aiff, 16, &ssnddata))
+            return GST_FLOW_OK;
         } else {
           gst_buffer_unref (buf);
+          if ((res =
+                  gst_pad_pull_range (aiff->sinkpad, aiff->offset, 16,
+                      &ssndbuf)) != GST_FLOW_OK)
+            goto header_read_error;
+          ssnddata = GST_BUFFER_DATA (ssndbuf);
         }
-        aiff->offset += 8;
-        aiff->datastart = aiff->offset;
+
+        aiff->ssnd_offset = GST_READ_UINT32_BE (ssnddata + 8);
+        aiff->ssnd_blocksize = GST_READ_UINT32_BE (ssnddata + 12);
+
+        gotdata = TRUE;
+        if (aiff->streaming) {
+          gst_adapter_flush (aiff->adapter, 16);
+        } else {
+          gst_buffer_unref (ssndbuf);
+        }
+        aiff->offset += 16;
+
+        aiff->datastart = aiff->offset + aiff->ssnd_offset;
         /* file might be truncated */
         fmt = GST_FORMAT_BYTES;
         if (upstream_size) {
