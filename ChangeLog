@@ -1,3 +1,10 @@
+2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_class_init), (gst_speex_resample_fixate_caps),
+	(gst_speex_resample_process):
+	Fixate to the nearest supported rate instead of the first one.
+
 2008-10-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/speexresample/README:
