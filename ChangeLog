@@ -1,5 +1,11 @@
 2008-10-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtpchannels.c: (gst_rtp_channels_get_by_index):
+	* gst/rtp/gstrtpchannels.h:
+	Add method to get possible channel positions.
+
+2008-10-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/Makefile.am:
 	Also commit updated makefile
 

@@ -181,5 +181,6 @@ const GstRTPChannelOrder *   gst_rtp_channels_get_by_pos     (gint channels,
                                                               const GstAudioChannelPosition *pos);
 const GstRTPChannelOrder *   gst_rtp_channels_get_by_order   (gint channels,
                                                               const gchar *order);
+const GstRTPChannelOrder *   gst_rtp_channels_get_by_index   (gint channels, guint idx);
 
 GstAudioChannelPosition *    gst_rtp_channels_create_default (gint channels);

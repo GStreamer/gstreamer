@@ -111,6 +111,37 @@ gst_rtp_channels_get_by_order (gint channels, const gchar * order)
 }
 
 /**
+ * gst_rtp_channels_get_by_index:
+ * @channels: the amount of channels
+ * @idx: the channel index to retrieve
+ *
+ * Get the allowed channel order descriptions for @channels. @idx can be used to
+ * retrieve the desired index.
+ *
+ * Returns: a #GstRTPChannelOrder at @idx, NULL when there are no valid channel
+ * orders.
+ */
+const GstRTPChannelOrder *
+gst_rtp_channels_get_by_index (gint channels, guint idx)
+{
+  gint i;
+  const GstRTPChannelOrder *res = NULL;
+
+  for (i = 0; channel_orders[i].pos; i++) {
+    if (channel_orders[i].channels != channels)
+      continue;
+
+    if (idx == 0) {
+      res = &channel_orders[i];
+      break;
+    }
+    idx--;
+  }
+  return res;
+}
+
+
+/**
  * gst_rtp_channels_create_default:
  * @channels: the amount of channels
  *
