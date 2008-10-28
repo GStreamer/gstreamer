@@ -46,11 +46,8 @@ enum
 struct _GstGLWindowPrivate
 {
   HWND internal_win_id;
-  HWND external_win_id;
   HDC device;
   HGLRC gl_context;
-  gboolean has_external_window_id;
-  gboolean has_external_gl_context;
   GstGLWindowCB draw_cb;
   gpointer draw_data;
   GstGLWindowCB2 resize_cb;
@@ -157,11 +154,8 @@ gst_gl_window_new (gint width, gint height)
   y += 20;
 
   priv->internal_win_id = 0;
-  priv->external_win_id = 0;
   priv->device = 0;
   priv->gl_context = 0;
-  priv->has_external_window_id = FALSE;
-  priv->has_external_gl_context = FALSE;
   priv->draw_cb = NULL;
   priv->draw_data = NULL;
   priv->resize_cb = NULL;
@@ -218,7 +212,6 @@ gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
   SetParent (priv->internal_win_id, (HWND)id);  
   SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
   SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
-  priv->has_external_window_id = TRUE;
 
   //take changes into account: SWP_FRAMECHANGED
   SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
@@ -260,43 +253,6 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
 
   priv->close_cb = callback;
   priv->close_data = data;
-}
-
-/* Must be called in the gl thread */
-gboolean
-gst_gl_window_has_external_window_id (GstGLWindow *window)
-{
-  gboolean has_internal_window_id = TRUE;
-  GstGLWindowPrivate *priv = window->priv;
-
-  return priv->has_external_window_id;
-}
-
-/* Must be called in the gl thread */
-gboolean
-gst_gl_window_has_external_gl_context (GstGLWindow *window)
-{
-  gboolean has_external_gl_context = TRUE;
-  GstGLWindowPrivate *priv = window->priv;
-
-  return priv->has_external_gl_context;
-}
-
-/* Must be called in the gl thread */
-guint64 gst_gl_window_get_window_id (GstGLWindow *window)
-{
-  g_warning ("gst_gl_window_get_window_id: not implemented\n");
-
-  return 0;
-}
-
-/* Must be called in the gl thread */
-guint64
-gst_gl_window_get_gl_context (GstGLWindow *window)
-{
-  g_warning ("gst_gl_window_get_gl_context: not implemented\n");
-
-  return 0;
 }
 
 /* Thread safe */
@@ -472,11 +428,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       case WM_SIZE:
       {
         if (priv->resize_cb)
-        {
-          if (priv->has_external_window_id)
-            MoveWindow (hWnd, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
           priv->resize_cb (priv->resize_data, LOWORD(lParam), HIWORD(lParam));
-        }
         break;
       }
 
@@ -558,7 +510,7 @@ LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
   if (uMsg == WM_SIZE)
   {
       HWND gl_window_id = GetProp (hWnd, "gl_window_id");
-      PostMessage (gl_window_id, WM_SIZE, wParam, lParam);
+      MoveWindow (gl_window_id, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
   }
 
   return CallWindowProc (window_parent_proc, hWnd, uMsg, wParam, lParam);
