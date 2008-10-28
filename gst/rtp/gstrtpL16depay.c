@@ -24,7 +24,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <gst/audio/audio.h>
+#include <gst/audio/multichannel.h>
+
 #include "gstrtpL16depay.h"
+#include "gstrtpchannels.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpL16depay_debug);
 #define GST_CAT_DEFAULT (rtpL16depay_debug)
@@ -146,6 +150,8 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gint channels;
   GstCaps *srccaps;
   gboolean res;
+  const gchar *channel_order;
+  const GstRTPChannelOrder *order;
 
   rtpL16depay = GST_RTP_L16_DEPAY (depayload);
 
@@ -163,6 +169,7 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       clock_rate = 44100;
       break;
     default:
+      /* no fixed mapping, we need channels and clock-rate */
       channels = 0;
       clock_rate = 0;
       break;
@@ -188,6 +195,25 @@ gst_rtp_L16_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
       "rate", G_TYPE_INT, clock_rate, "channels", G_TYPE_INT, channels, NULL);
+
+  /* add channel positions */
+  channel_order = gst_structure_get_string (structure, "channel-order");
+
+  order = gst_rtp_channels_get_by_order (channels, channel_order);
+  if (order) {
+    gst_audio_set_channel_positions (gst_caps_get_structure (srccaps, 0),
+        order->pos);
+  } else {
+    GstAudioChannelPosition *pos;
+
+    GST_ELEMENT_WARNING (rtpL16depay, STREAM, DECODE,
+        (NULL), ("Unknown channel order '%s' for %d channels",
+            GST_STR_NULL (channel_order), channels));
+    /* create default NONE layout */
+    pos = gst_rtp_channels_create_default (channels);
+    gst_audio_set_channel_positions (gst_caps_get_structure (srccaps, 0), pos);
+    g_free (pos);
+  }
 
   res = gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);

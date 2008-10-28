@@ -23,9 +23,12 @@
 
 #include <string.h>
 
+#include <gst/audio/audio.h>
+#include <gst/audio/multichannel.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include "gstrtpL16pay.h"
+#include "gstrtpchannels.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpL16pay_debug);
 #define GST_CAT_DEFAULT (rtpL16pay_debug)
@@ -173,6 +176,8 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   gint channels, rate;
   gboolean res;
   gchar *params;
+  GstAudioChannelPosition *pos;
+  const GstRTPChannelOrder *order;
 
   rtpL16pay = GST_RTP_L16_PAY (basepayload);
 
@@ -185,13 +190,33 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   if (!gst_structure_get_int (structure, "channels", &channels))
     goto no_channels;
 
+  /* get the channel order */
+  pos = gst_audio_get_channel_positions (structure);
+  if (pos)
+    order = gst_rtp_channels_get_by_pos (channels, pos);
+  else
+    order = NULL;
 
   gst_basertppayload_set_options (basepayload, "audio", TRUE, "L16", rate);
   params = g_strdup_printf ("%d", channels);
-  res = gst_basertppayload_set_outcaps (basepayload,
-      "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
-      channels, NULL);
+
+  if (!order && channels > 2) {
+    GST_ELEMENT_WARNING (rtpL16pay, STREAM, DECODE,
+        (NULL), ("Unknown channel order for %d channels", channels));
+  }
+
+  if (order && order->name) {
+    res = gst_basertppayload_set_outcaps (basepayload,
+        "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
+        channels, "channel-order", G_TYPE_STRING, order->name, NULL);
+  } else {
+    res = gst_basertppayload_set_outcaps (basepayload,
+        "encoding-params", G_TYPE_STRING, params, "channels", G_TYPE_INT,
+        channels, NULL);
+  }
+
   g_free (params);
+  g_free (pos);
 
   rtpL16pay->rate = rate;
   rtpL16pay->channels = channels;

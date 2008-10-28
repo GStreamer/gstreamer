@@ -1,3 +1,16 @@
+2008-10-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_setcaps):
+	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_setcaps),
+	(gst_rtp_L16_pay_getcaps):
+	* gst/rtp/gstrtpchannels.c: (check_channels),
+	(gst_rtp_channels_get_by_pos), (gst_rtp_channels_get_by_order),
+	(gst_rtp_channels_create_default):
+	* gst/rtp/gstrtpchannels.h:
+	Add mappings for multichannel support. Does not completely just work
+	because the getcaps function does not yet return the allowed channel
+	mappings. See #556641.
+
 2008-10-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/goom/Makefile.am:
