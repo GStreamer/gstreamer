@@ -1,3 +1,27 @@
+2008-10-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/speexresample/README:
+	* gst/speexresample/arch.h:
+	* gst/speexresample/fixed_arm4.h:
+	* gst/speexresample/fixed_arm5e.h:
+	* gst/speexresample/fixed_bfin.h:
+	* gst/speexresample/fixed_debug.h:
+	* gst/speexresample/fixed_generic.h:
+	* gst/speexresample/resample.c: (compute_func), (main), (sinc),
+	(cubic_coef), (resampler_basic_direct_single),
+	(resampler_basic_direct_double),
+	(resampler_basic_interpolate_single),
+	(resampler_basic_interpolate_double), (update_filter),
+	(speex_resampler_init_frac), (speex_resampler_process_native),
+	(speex_resampler_magic), (speex_resampler_process_float),
+	(speex_resampler_process_int),
+	(speex_resampler_process_interleaved_float),
+	(speex_resampler_process_interleaved_int),
+	(speex_resampler_set_rate_frac), (speex_resampler_skip_zeros),
+	(speex_resampler_reset_mem):
+	* gst/speexresample/speex_resampler.h:
+	Update Speex resampler with latest version from Speex GIT.
+
 2008-10-27  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/aiffparse/aiffparse.c:
