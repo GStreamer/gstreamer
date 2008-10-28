@@ -1,5 +1,21 @@
-;// file : mmx_zoom.s
-;// author : JC Hoelt <jeko@free.fr>
+; Goom Project
+; Copyright (C) <2001> Jean-Christophe Hoelt <jeko@free.fr>
+;
+; This library is free software; you can redistribute it and/or
+; modify it under the terms of the GNU Library General Public
+; License as published by the Free Software Foundation; either
+; version 2 of the License, or (at your option) any later version.
+;
+; This library is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+; Library General Public License for more details.
+;
+; You should have received a copy of the GNU Library General Public
+; License along with this library; if not, write to the
+; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+; Boston, MA 02111-1307, USA.
+;
 ;//
 ;// history
 ;// 07/01/2001 : Changing FEMMS to EMMS : slower... but run on intel machines
@@ -53,7 +69,7 @@ mmx_zoom:
 		sarl $4,%eax
 		movl %eax,-8(%ebp)
 
-;// initialisation du mm7 à zero
+;// initialisation du mm7 ï¿½ zero
 		movq (thezero), %mm7
 
 movl mmx_zoom_size, %ecx
@@ -170,7 +186,7 @@ decl %ecx
 	pmullw %mm4, %mm1
 	pmullw %mm5, %mm2
 	
-	;// ajout des valeurs obtenues à la valeur finale
+	;// ajout des valeurs obtenues ï¿½ la valeur finale
 	paddw %mm1, %mm0
 	paddw %mm2, %mm0
 

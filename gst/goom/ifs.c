@@ -1,9 +1,7 @@
-/*
- * ifs.c --- modified iterated functions system for goom.
- */
-
 /*-
  * Copyright (c) 1997 by Massimino Pascal <Pascal.Massimon@ens.fr>
+ *
+ * ifs.c: modified iterated functions system for goom.
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,

@@ -1,3 +1,21 @@
+/* Goom Project
+ * Copyright (C) <2003> iOS-Software
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
 #include "sound_tester.h"
 
 #include <stdlib.h>
@@ -93,7 +111,7 @@ evaluate_sound (gint16 data[2][512], SoundInfo * info)
   if (info->goom_limit > 1)
     info->goom_limit = 1;
 
-  /* toute les 2 secondes : vérifier si le taux de goom est correct
+  /* toute les 2 secondes : vï¿½rifier si le taux de goom est correct
    * et le modifier sinon.. */
   if (info->cycle % 64 == 0) {
     if (info->speedvar < 0.01f)

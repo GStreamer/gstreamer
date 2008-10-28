@@ -1,3 +1,52 @@
+2008-10-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/goom/Makefile.am:
+	* gst/goom/README:
+	* gst/goom/config_param.c:
+	* gst/goom/convolve_fx.c:
+	* gst/goom/drawmethods.c:
+	* gst/goom/drawmethods.h:
+	* gst/goom/filters.c:
+	* gst/goom/filters_mmx.s:
+	* gst/goom/flying_stars_fx.c:
+	* gst/goom/goom.h:
+	* gst/goom/goom_config.h:
+	* gst/goom/goom_config_param.h:
+	* gst/goom/goom_core.c:
+	* gst/goom/goom_filters.h:
+	* gst/goom/goom_fx.h:
+	* gst/goom/goom_graphic.h:
+	* gst/goom/goom_plugin_info.h:
+	* gst/goom/goom_tools.c:
+	* gst/goom/goom_tools.h:
+	* gst/goom/goom_typedefs.h:
+	* gst/goom/goom_visual_fx.h:
+	* gst/goom/graphic.c:
+	* gst/goom/ifs.c:
+	* gst/goom/ifs.h:
+	* gst/goom/lines.c:
+	* gst/goom/lines.h:
+	* gst/goom/mathtools.c:
+	* gst/goom/mathtools.h:
+	* gst/goom/mmx.c:
+	* gst/goom/motif_goom1.h:
+	* gst/goom/motif_goom2.h:
+	* gst/goom/plugin_info.c:
+	* gst/goom/ppc_drawings.h:
+	* gst/goom/ppc_zoom_ultimate.h:
+	* gst/goom/sound_tester.c:
+	* gst/goom/sound_tester.h:
+	* gst/goom/surf3d.c:
+	* gst/goom/surf3d.h:
+	* gst/goom/tentacle3d.c:
+	* gst/goom/tentacle3d.h:
+	* gst/goom/v3d.c:
+	* gst/goom/v3d.h:
+	* gst/goom/xmmx.c:
+	  Add license headers in all source files. Remove filter.c from
+	  EXTRA_DIST, as its in SOURCES already. Mention the files in the REDME
+	  which are not used right now. Fixes #557709.
+
 2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>

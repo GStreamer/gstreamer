@@ -1,10 +1,22 @@
-/**
-* file: goom_core.c
- * author: Jean-Christophe Hoelt (which is not so proud of it)
+/* Goom Project
+ * Copyright (C) <2003> Jean-Christophe Hoelt <jeko@free.fr>
  *
- * Contains the core of goom's work.
+ * goom_core.c:Contains the core of goom's work.
  *
- * (c)2000-2003, by iOS-software.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -155,7 +167,7 @@ goom_update (PluginInfo * goomInfo, gint16 data[2][512], int forceMode,
   guint32 pointWidth;
   guint32 pointHeight;
   int i;
-  float largfactor;             /* elargissement de l'intervalle d'évolution des points */
+  float largfactor;             /* elargissement de l'intervalle d'ï¿½volution des points */
   Pixel *tmp;
 
   ZoomFilterData *pzfd;
@@ -221,7 +233,7 @@ goom_update (PluginInfo * goomInfo, gint16 data[2][512], int forceMode,
     }
   }
 
-  /* par défaut pas de changement de zoom */
+  /* par dï¿½faut pas de changement de zoom */
   pzfd = NULL;
 
   /* 
@@ -575,7 +587,7 @@ goom_update (PluginInfo * goomInfo, gint16 data[2][512], int forceMode,
   }
 
   /*
-   * arreter de decrémenter au bout d'un certain temps
+   * arreter de decrï¿½menter au bout d'un certain temps
    */
   if ((goomInfo->cycle % 101 == 0)
       && (goomInfo->update.zoomFilterData.pertedec == 7)) {
