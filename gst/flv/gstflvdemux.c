@@ -1036,6 +1036,28 @@ gst_flv_demux_query (GstPad * pad, GstQuery * query)
 
       break;
     }
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+
+      gst_query_parse_position (query, &format, NULL);
+
+      /* position is time only */
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (demux, "position query only supported for time "
+            "format");
+        res = FALSE;
+        goto beach;
+      }
+
+      GST_DEBUG_OBJECT (pad, "position query, replying %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (demux->segment.last_stop));
+
+      gst_query_set_duration (query, GST_FORMAT_TIME, demux->segment.last_stop);
+
+      break;
+    }
+
     case GST_QUERY_LATENCY:
     default:
     {
