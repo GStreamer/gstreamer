@@ -1,3 +1,8 @@
+2008-10-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/Makefile.am:
+	Also commit updated makefile
+
 2008-10-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_chain):

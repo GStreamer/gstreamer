@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstrtp.la
 libgstrtp_la_SOURCES = \
 	fnv1hash.c \
 	gstrtp.c \
+	gstrtpchannels.c \
 	gstrtpdepay.c \
 	gstrtpac3depay.c \
 	gstrtpdvdepay.c \
@@ -62,12 +63,14 @@ endif
 
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+		-lgstaudio-@GST_MAJORMINOR@ \
                 -lgsttag-@GST_MAJORMINOR@ \
                 -lgstrtp-@GST_MAJORMINOR@ $(WINSOCK2_LIBS)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
 noinst_HEADERS =			\
 		 fnv1hash.h 		\
+                 gstrtpchannels.h       \
 		 gstrtpL16depay.h 	\
 		 gstrtpL16pay.h 	\
 		 gstrtpac3depay.h 	\
