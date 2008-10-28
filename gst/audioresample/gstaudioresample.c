@@ -112,6 +112,8 @@ static gboolean audioresample_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, guint * size);
 static GstCaps *audioresample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
+static void audioresample_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean audioresample_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * incaps, guint insize,
     GstCaps * outcaps, guint * outsize);
@@ -172,6 +174,8 @@ gst_audioresample_class_init (GstAudioresampleClass * klass)
       GST_DEBUG_FUNCPTR (audioresample_get_unit_size);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       GST_DEBUG_FUNCPTR (audioresample_transform_caps);
+  GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps =
+      GST_DEBUG_FUNCPTR (audioresample_fixate_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
       GST_DEBUG_FUNCPTR (audioresample_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
@@ -270,6 +274,22 @@ audioresample_transform_caps (GstBaseTransform * base,
   gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   return res;
+}
+
+/* Fixate rate to the allowed rate that has the smallest difference */
+static void
+audioresample_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *s;
+  gint rate;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (s, "rate", &rate))
+    return;
+
+  s = gst_caps_get_structure (othercaps, 0);
+  gst_structure_fixate_field_nearest_int (s, "rate", rate);
 }
 
 static gboolean
