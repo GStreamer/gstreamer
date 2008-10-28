@@ -607,7 +607,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
   }
 
   /* Push taglist if present */
-  if ((demux->has_audio && !demux->audio_pad) ||
+  if ((demux->has_audio && !demux->audio_pad) &&
       (demux->has_video && !demux->video_pad)) {
     GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
         "before we can push tags");
@@ -686,7 +686,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
     demux->audio_need_discont = FALSE;
   }
 
-  gst_segment_set_last_stop (demux->segment, GST_FORMAT_TIME,
+  gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (outbuf));
 
   /* Do we need a newsegment event ? */
@@ -698,12 +698,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, GstBuffer * buffer)
     if (!demux->new_seg_event) {
       GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment->last_stop),
-          GST_TIME_ARGS (demux->segment->stop));
+          GST_TIME_ARGS (demux->segment.last_stop),
+          GST_TIME_ARGS (demux->segment.stop));
       demux->new_seg_event =
-          gst_event_new_new_segment (FALSE, demux->segment->rate,
-          demux->segment->format, demux->segment->last_stop,
-          demux->segment->stop, demux->segment->last_stop);
+          gst_event_new_new_segment (FALSE, demux->segment.rate,
+          demux->segment.format, demux->segment.last_stop,
+          demux->segment.stop, demux->segment.last_stop);
     } else {
       GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
     }
@@ -922,7 +922,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
   }
 
   /* Push taglist if present */
-  if ((demux->has_audio && !demux->audio_pad) ||
+  if ((demux->has_audio && !demux->audio_pad) &&
       (demux->has_video && !demux->video_pad)) {
     GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
         "before we can push tags");
@@ -1012,7 +1012,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
     demux->video_need_discont = FALSE;
   }
 
-  gst_segment_set_last_stop (demux->segment, GST_FORMAT_TIME,
+  gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (outbuf));
 
   /* Do we need a newsegment event ? */
@@ -1024,12 +1024,12 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, GstBuffer * buffer)
     if (!demux->new_seg_event) {
       GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment->last_stop),
-          GST_TIME_ARGS (demux->segment->stop));
+          GST_TIME_ARGS (demux->segment.last_stop),
+          GST_TIME_ARGS (demux->segment.stop));
       demux->new_seg_event =
-          gst_event_new_new_segment (FALSE, demux->segment->rate,
-          demux->segment->format, demux->segment->last_stop,
-          demux->segment->stop, demux->segment->last_stop);
+          gst_event_new_new_segment (FALSE, demux->segment.rate,
+          demux->segment.format, demux->segment.last_stop,
+          demux->segment.stop, demux->segment.last_stop);
     } else {
       GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
     }
@@ -1084,6 +1084,11 @@ gst_flv_parse_tag_timestamp (GstFLVDemux * demux, GstBuffer * buffer,
     GST_WARNING_OBJECT (demux, "Unsupported tag type %u", data[0]);
     return GST_CLOCK_TIME_NONE;
   }
+
+  if (type == 9)
+    demux->has_video = TRUE;
+  else if (type == 8)
+    demux->has_audio = TRUE;
 
   tag_data_size = GST_READ_UINT24_BE (data + 1);
 

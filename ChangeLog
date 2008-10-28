@@ -1,5 +1,23 @@
 2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	(gst_flv_demux_loop), (gst_flv_demux_handle_seek_push),
+	(gst_flv_demux_handle_seek_pull), (gst_flv_demux_sink_event),
+	(gst_flv_demux_dispose), (gst_flv_demux_init):
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video), (gst_flv_parse_tag_timestamp):
+	Put the GstSegment directly into the instance struct instead of
+	allocating and free'ing it again.
+
+	Push tags already if only one pad was added, no need to wait for
+	the second one.
+
+	When generating our index set has_video and has_audio if we find
+	video or audio in case the FLV header has incorrect data.
+
+2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/speexresample/gstspeexresample.c:
 	(gst_speex_resample_class_init), (gst_speex_resample_fixate_caps),
 	(gst_speex_resample_process):

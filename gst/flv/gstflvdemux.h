@@ -66,7 +66,7 @@ struct _GstFLVDemux
 
   GstAdapter *adapter;
 
-  GstSegment *segment;
+  GstSegment segment;
 
   GstEvent *close_seg_event;
   GstEvent *new_seg_event;
