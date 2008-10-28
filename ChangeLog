@@ -1,5 +1,10 @@
 2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_query):
+	Implement position query in time format.
+
+2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
 	(gst_flv_demux_loop), (gst_flv_demux_handle_seek_push),
 	(gst_flv_demux_handle_seek_pull), (gst_flv_demux_sink_event),
