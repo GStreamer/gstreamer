@@ -1,3 +1,10 @@
+2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/audioresample/gstaudioresample.c:
+	(gst_audioresample_class_init), (audioresample_fixate_caps):
+	Fixate the rate to the nearest supported rate instead of
+	the first one. Fixes bug #549510.
+
 2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* win32/common/libgstaudio.def:
