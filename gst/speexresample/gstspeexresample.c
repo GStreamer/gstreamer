@@ -88,6 +88,8 @@ static gboolean gst_speex_resample_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, guint * size);
 static GstCaps *gst_speex_resample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
+static void gst_speex_resample_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_speex_resample_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * incaps, guint insize,
     GstCaps * outcaps, guint * outsize);
@@ -148,6 +150,8 @@ gst_speex_resample_class_init (GstSpeexResampleClass * klass)
       GST_DEBUG_FUNCPTR (gst_speex_resample_get_unit_size);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       GST_DEBUG_FUNCPTR (gst_speex_resample_transform_caps);
+  GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps =
+      GST_DEBUG_FUNCPTR (gst_speex_resample_fixate_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
       GST_DEBUG_FUNCPTR (gst_speex_resample_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
@@ -237,6 +241,22 @@ gst_speex_resample_transform_caps (GstBaseTransform * base,
   gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   return res;
+}
+
+/* Fixate rate to the allowed rate that has the smallest difference */
+static void
+gst_speex_resample_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstStructure *s;
+  gint rate;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (s, "rate", &rate))
+    return;
+
+  s = gst_caps_get_structure (othercaps, 0);
+  gst_structure_fixate_field_nearest_int (s, "rate", rate);
 }
 
 static SpeexResamplerState *
@@ -735,9 +755,11 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
       }
 
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
-    } else if (out_len - out_processed != 1)
+    } else if (out_len - out_processed != 1) {
       GST_WARNING ("Converted to %d instead of %d output samples",
           out_processed, out_len);
+    }
+
     if (out_len > out_processed) {
       gst_speex_fix_output_buffer (resample, outbuf, out_len - out_processed);
     } else {
@@ -757,6 +779,7 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
         GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
+
     return GST_FLOW_OK;
   }
 }
