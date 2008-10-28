@@ -1,3 +1,12 @@
+2008-10-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/resindvd/resin-play:
+	  Remove $@ to fix parse_launch warning
+
+	* ext/resindvd/resin-play2:
+	  Add a version that uses deinterlace and xvimagesink.
+	  
+
 2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/speexresample/gstspeexresample.c:
