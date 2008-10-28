@@ -205,15 +205,19 @@ void
 gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 {
   GstGLWindowPrivate *priv = window->priv;
-  WNDPROC window_parent_proc = (WNDPROC) (guint64) SetWindowLongPtr ((HWND)id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
+  WNDPROC window_parent_proc = (WNDPROC) (guint64) GetWindowLongPtr((HWND)id, GWL_WNDPROC);
   RECT rect;
-  GetClientRect ((HWND)id, &rect);
+
+  SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND)id);
+  SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
+  SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
+  SetWindowLongPtr ((HWND)id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
+  
   SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
   SetParent (priv->internal_win_id, (HWND)id);  
-  SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-  SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
 
   //take changes into account: SWP_FRAMECHANGED
+  GetClientRect ((HWND)id, &rect);
   SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
     SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
   MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right, rect.bottom, FALSE);
@@ -404,13 +408,13 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         g_debug ("failed to make opengl context current %d, %x\r\n", hWnd, GetLastError());
     }
 
-    SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG)(guint64)(gpointer) window);
+    SetProp (hWnd, "gl_window", window);
 
     return 0;
   }
-  else if (GetWindowLongPtr(hWnd, GWLP_USERDATA)) {
+  else if (GetProp(hWnd, "gl_window")) {
 
-    GstGLWindow *window = (GstGLWindow *) (guint64) GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    GstGLWindow *window = GetProp(hWnd, "gl_window");
     GstGLWindowPrivate *priv = NULL;
 
     g_assert (window);
@@ -447,9 +451,26 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
       case WM_CLOSE:
       {
+        HWND parent_id = 0;
+
         g_debug ("WM_CLOSE\n");
+
+        parent_id = GetProp (hWnd, "gl_window_parent_id");
+        if (parent_id)
+        {
+          WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
+          
+          g_assert (parent_proc);
+
+          SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) (guint64) parent_proc);
+          SetParent (hWnd, NULL);
+
+          RemoveProp (parent_id, "gl_window_parent_proc");
+          RemoveProp (hWnd, "gl_window_parent_id");
+        }
+
         priv->is_closed = TRUE;
-        SetWindowLongPtr (hWnd, GWLP_USERDATA, 0);
+        RemoveProp (hWnd, "gl_window");
 
         if (!wglMakeCurrent (NULL, NULL))
           g_debug ("failed to make current %d, %x\r\n", hWnd, GetLastError());
@@ -462,8 +483,10 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         if (priv->internal_win_id)
         {
+          g_debug ("BEFORE\n");
           if (!DestroyWindow(priv->internal_win_id))
             g_debug ("failed to destroy window %d, %x\r\n", hWnd, GetLastError());
+          g_debug ("AFTER\n");
         }
           
         PostQuitMessage (0);
@@ -509,8 +532,8 @@ LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
   
   if (uMsg == WM_SIZE)
   {
-      HWND gl_window_id = GetProp (hWnd, "gl_window_id");
-      MoveWindow (gl_window_id, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
+    HWND gl_window_id = GetProp (hWnd, "gl_window_id");
+    MoveWindow (gl_window_id, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
   }
 
   return CallWindowProc (window_parent_proc, hWnd, uMsg, wParam, lParam);

@@ -1326,7 +1326,7 @@ void gst_gl_display_on_draw(GstGLDisplay* display)
     return;
 
   //opengl scene
-  GST_INFO ("on draw");
+  GST_DEBUG ("on draw");
 
   //make sure that the environnement is clean
   if (display->upload_colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
