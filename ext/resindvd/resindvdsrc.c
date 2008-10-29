@@ -130,9 +130,10 @@ static void rsn_dvdsrc_enqueue_nav_block (resinDvdSrc * src,
 static void rsn_dvdsrc_activate_nav_block (resinDvdSrc * src,
     GstBuffer * nav_buf);
 static void rsn_dvdsrc_clear_nav_blocks (resinDvdSrc * src);
-static void rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src);
+static void rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src,
+    gboolean changing_to_playing);
 static void rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src,
-    RsnDvdPendingNav * next_nav);
+    RsnDvdPendingNav * next_nav, gboolean changing_to_playing);
 
 static GstFlowReturn rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** buf);
 static gboolean rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event);
@@ -707,6 +708,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 
         src->next_is_nav_block = TRUE;
         src->next_nav_ts = new_start_ptm;
+        GST_LOG_OBJECT (src, "Storing NAV pack with TS %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (src->next_nav_ts));
       } else {
         src->next_is_nav_block = FALSE;
         src->next_nav_ts = GST_CLOCK_TIME_NONE;
@@ -937,8 +940,10 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   if (src->next_buf != NULL) {
     /* Now that we're in the new segment, we can enqueue any nav packet
      * correctly */
-    if (src->next_is_nav_block)
+    if (src->next_is_nav_block) {
       rsn_dvdsrc_enqueue_nav_block (src, src->next_buf, src->next_nav_ts);
+      src->next_is_nav_block = FALSE;
+    }
 
     *outbuf = src->next_buf;
     src->next_buf = NULL;
@@ -954,7 +959,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   src->highlight_event = NULL;
 
   /* Schedule a clock callback for the any pending nav packet */
-  rsn_dvdsrc_check_nav_blocks (src);
+  rsn_dvdsrc_check_nav_blocks (src, FALSE);
 
   g_mutex_unlock (src->dvd_lock);
 
@@ -1530,12 +1535,10 @@ rsn_dvdsrc_enqueue_nav_block (resinDvdSrc * src, GstBuffer * nav_buf,
     src->pending_nav_blocks_end = g_slist_next (src->pending_nav_blocks_end);
   }
 
-#if 0
-  g_print ("Enqueued nav with TS %" GST_TIME_FORMAT " with run ts %"
-      GST_TIME_FORMAT ". %d packs pending\n", GST_TIME_ARGS (ts),
-      GST_TIME_ARGS (pend_nav->running_ts),
+  GST_LOG_OBJECT (src, "Enqueued nav with TS %" GST_TIME_FORMAT
+      " with run ts %" GST_TIME_FORMAT ". %d packs pending",
+      GST_TIME_ARGS (ts), GST_TIME_ARGS (pend_nav->running_ts),
       g_slist_length (src->pending_nav_blocks));
-#endif
 }
 
 static void
@@ -1616,7 +1619,7 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
     /* Schedule a next packet, if any */
     RsnDvdPendingNav *next_nav =
         (RsnDvdPendingNav *) src->pending_nav_blocks->data;
-    rsn_dvdsrc_schedule_nav_cb (src, next_nav);
+    rsn_dvdsrc_schedule_nav_cb (src, next_nav, FALSE);
   }
 
   g_mutex_unlock (src->dvd_lock);
@@ -1625,13 +1628,15 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
 }
 
 static void
-rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
+rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav,
+    gboolean changing_to_playing)
 {
   GstClock *clock;
   GstClockTime base_ts;
 
   GST_OBJECT_LOCK (src);
-  if (GST_STATE (src) != GST_STATE_PLAYING) {
+  if (GST_STATE (src) != GST_STATE_PLAYING && !changing_to_playing) {
+    GST_LOG_OBJECT (src, "Not scheduling NAV block - state != PLAYING");
     GST_OBJECT_UNLOCK (src);
     return;                     /* Not in playing state yet */
   }
@@ -1640,6 +1645,7 @@ rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
   base_ts = GST_ELEMENT (src)->base_time;
 
   if (clock == NULL) {
+    GST_LOG_OBJECT (src, "Not scheduling NAV block - no clock yet");
     GST_OBJECT_UNLOCK (src);
     return;
   }
@@ -1658,19 +1664,23 @@ rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
 }
 
 static void
-rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
+rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src, gboolean changing_to_playing)
 {
   RsnDvdPendingNav *next_nav;
 
   /* Make sure a callback is scheduled for the first nav packet */
-  if (src->nav_clock_id != NULL)
+  if (src->nav_clock_id != NULL) {
+    GST_LOG_OBJECT (src, "NAV callback already scheduled");
     return;                     /* Something already scheduled */
-  if (src->pending_nav_blocks == NULL)
+  }
+  if (src->pending_nav_blocks == NULL) {
+    GST_LOG_OBJECT (src, "No NAV blocks to schedule");
     return;                     /* No nav blocks available yet */
+  }
 
   next_nav = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
 
-  rsn_dvdsrc_schedule_nav_cb (src, next_nav);
+  rsn_dvdsrc_schedule_nav_cb (src, next_nav, changing_to_playing);
 }
 
 /* Use libdvdread to read and cache info from the IFO file about
@@ -1709,7 +1719,7 @@ rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* Kick off the NAV packet callback if needed */
       g_mutex_lock (src->dvd_lock);
-      rsn_dvdsrc_check_nav_blocks (src);
+      rsn_dvdsrc_check_nav_blocks (src, TRUE);
       g_mutex_unlock (src->dvd_lock);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

@@ -1,3 +1,11 @@
+2008-10-29  Jan Schmidt  <thaytan@noraisin.net>
+
+	* ext/resindvd/resindvdsrc.c:
+	Make sure to start the NAV packet processing when changing
+	state to PLAYING  by passing a flag that indicates the state
+	change is in progress.
+	Fixes: #546319
+
 2008-10-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/resindvd/resin-play:
