@@ -232,7 +232,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * This signal is emited from the steaming thread and only when the
    * "emit-signals" property is %TRUE. 
    *
-   * The new preroll buffer can be retrieved with the "pull-buffer" action
+   * The new buffer can be retrieved with the "pull-buffer" action
    * signal or gst_app_sink_pull_buffer() either from this signal callback
    * or from any other thread.
    *
