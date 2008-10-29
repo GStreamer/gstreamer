@@ -1,3 +1,8 @@
+2008-10-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstpipeline.c: (gst_pipeline_provide_clock_func):
+	Some more comments.
+
 2008-10-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:
