@@ -4,17 +4,18 @@ add_definitions(-DHAVE_CONFIG_H)
 include_directories(AFTER
   ../../../win32/common
   ${GLEW_INCLUDE_DIR}
-  ../freeglut
+  .
   ${GSTREAMER_INCLUDE_DIR}
   ${GLIB2_INCLUDE_DIR}
   ${LIBXML2_INCLUDE_DIR}
   ${LIBICONV_INCLUDE_DIR})
 
 add_library (gstgl STATIC
+  gstglwindow_win32.c
   gstgldisplay.c
-	gstglbuffer.c
-	gstglfilter.c
-	gstglshader.c)
+  gstglbuffer.c
+  gstglfilter.c
+  gstglshader.c)
 
 #FIXME: get ride of this condition
 if (WIN32)
