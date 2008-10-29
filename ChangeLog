@@ -1,5 +1,10 @@
 2008-10-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_class_init):
+	Fix the docs.
+
+2008-10-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Robin Stocker <robin at nibor dot org>
 
 	* gst/real/gstrealvideodec.c: (gst_real_video_dec_setcaps):
