@@ -1,3 +1,11 @@
+2008-10-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Robin Stocker <robin at nibor dot org>
+
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_setcaps):
+	A RealVideo video inside a container (for example MKV) should use the
+	PAR which is specified on the sinkpad caps. Fixes #558416.
+
 2008-10-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/speexresample/gstspeexresample.c: (gst_speex_resample_start),
@@ -353,7 +361,7 @@
 	* gst/rtpmanager/gstrtpsession.c:
 	(gst_rtp_session_event_send_rtcp_src), (create_send_rtcp_src):
 	Install event handler on the rtcp_src pad, make LATENCY event return
-	TRUE.
+	TRUE. Fixes #556338.
 
 2008-10-16  Edward Hervey  <edward.hervey@collabora.co.uk>
 

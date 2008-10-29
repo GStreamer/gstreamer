@@ -380,6 +380,13 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
       "framerate", GST_TYPE_FRACTION, framerate_num, framerate_denom,
       "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+
+  /* set PAR if one was specified in the sink caps */
+  if ((v = gst_structure_get_value (s, "pixel-aspect-ratio"))) {
+    gst_structure_set_value (gst_caps_get_structure (caps, 0),
+        "pixel-aspect-ratio", v);
+  }
+
   bres = gst_pad_set_caps (GST_PAD (dec->src), caps);
   gst_caps_unref (caps);
   if (!bres)
