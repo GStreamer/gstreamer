@@ -245,6 +245,10 @@ gst_rtp_L16_pay_flush (GstRtpL16Pay * rtpL16pay, guint len)
   guint samples;
   GstClockTime duration;
 
+  /* calculate the amount of samples and round down the length */
+  samples = len / (2 * rtpL16pay->channels);
+  len = samples * (2 * rtpL16pay->channels);
+
   /* now alloc output buffer */
   outbuf = gst_rtp_buffer_new_allocate (len, 0, 0);
 
@@ -255,7 +259,6 @@ gst_rtp_L16_pay_flush (GstRtpL16Pay * rtpL16pay, guint len)
   gst_adapter_copy (rtpL16pay->adapter, payload, 0, len);
   gst_adapter_flush (rtpL16pay->adapter, len);
 
-  samples = len / (2 * rtpL16pay->channels);
   duration = gst_util_uint64_scale_int (samples, GST_SECOND, rtpL16pay->rate);
 
   GST_BUFFER_TIMESTAMP (outbuf) = rtpL16pay->first_ts;
@@ -348,7 +351,6 @@ gst_rtp_L16_pay_getcaps (GstBaseRTPPayload * rtppayload, GstPad * pad)
     }
     gst_caps_unref (otherpadcaps);
   }
-
   return caps;
 }
 

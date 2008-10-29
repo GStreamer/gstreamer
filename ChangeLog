@@ -1,3 +1,10 @@
+2008-10-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_flush),
+	(gst_rtp_L16_pay_getcaps):
+	Only put an integral amount of samples in the RTP packet.
+	Fixes #556641.
+
 2008-10-28  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpchannels.c: (gst_rtp_channels_get_by_index):
