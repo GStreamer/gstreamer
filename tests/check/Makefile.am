@@ -88,6 +88,7 @@ check_PROGRAMS = \
 	$(check_timidity)  \
 	$(check_x264enc)   \
 	elements/selector \
+	elements/speexresample \
 	elements/y4menc   \
 	$(check_metadata)
 
@@ -101,3 +102,5 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
+elements_speexresample_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
+elements_speexresample_LDADD = $(GST_PLUGINS_BASE_LIBS) $(LDADD) -lgstaudio-$(GST_MAJORMINOR)

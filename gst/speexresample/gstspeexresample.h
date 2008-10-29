@@ -57,10 +57,9 @@ struct _GstSpeexResample {
 
   gboolean need_discont;
 
-  guint64 offset;
-  guint64 ts_offset;
+  guint64 next_offset;
   GstClockTime next_ts;
-  GstClockTime prev_ts, prev_duration;
+  GstClockTime next_upstream_ts;
   
   gboolean fp;
   gint channels;

@@ -1,3 +1,23 @@
+2008-10-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/speexresample/gstspeexresample.c: (gst_speex_resample_start),
+	(gst_speex_resample_get_unit_size),
+	(gst_speex_resample_push_drain), (gst_speex_resample_event),
+	(gst_speex_resample_check_discont), (gst_speex_resample_process),
+	(gst_speex_resample_transform):
+	* gst/speexresample/gstspeexresample.h:
+	Rewrite timestamp tracking to make it more robust and guarantee
+	a continous stream.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/speexresample.c: (setup_speexresample),
+	(cleanup_speexresample), (fail_unless_perfect_stream),
+	(test_perfect_stream_instance), (GST_START_TEST),
+	(test_discont_stream_instance), (live_switch_alloc_only_48000),
+	(live_switch_get_sink_caps), (live_switch_push),
+	(speexresample_suite):
+	Add unit tests for speexresample based on the audioresample unit tests.
+
 2008-10-29  Jan Schmidt  <thaytan@noraisin.net>
 
 	* ext/resindvd/resindvdsrc.c:

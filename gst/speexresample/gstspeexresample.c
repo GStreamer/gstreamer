@@ -183,9 +183,9 @@ gst_speex_resample_start (GstBaseTransform * base)
 {
   GstSpeexResample *resample = GST_SPEEX_RESAMPLE (base);
 
-  resample->ts_offset = -1;
-  resample->offset = -1;
+  resample->next_offset = -1;
   resample->next_ts = -1;
+  resample->next_upstream_ts = -1;
 
   return TRUE;
 }
@@ -224,7 +224,7 @@ gst_speex_resample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   if (G_UNLIKELY (!ret))
     return FALSE;
 
-  *size = width * channels / 8;
+  *size = gst_util_uint64_scale (width, channels, 8);
 
   return TRUE;
 }
@@ -595,26 +595,18 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
     return;
   }
 
-  GST_BUFFER_OFFSET (buf) = resample->offset;
-  GST_BUFFER_TIMESTAMP (buf) = resample->next_ts;
+  GST_BUFFER_DURATION (buf) =
+      GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
   GST_BUFFER_SIZE (buf) =
       out_processed * resample->channels * ((resample->fp) ? 4 : 2);
 
-  if (resample->ts_offset != -1) {
-    resample->offset += out_processed;
-    resample->ts_offset += out_processed;
-    resample->next_ts =
-        GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
-    GST_BUFFER_OFFSET_END (buf) = resample->offset;
+  if (GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
+    GST_BUFFER_OFFSET (buf) = resample->next_offset;
+    GST_BUFFER_OFFSET_END (buf) = resample->next_offset + out_processed;
+    GST_BUFFER_TIMESTAMP (buf) = resample->next_ts;
 
-    /* we calculate DURATION as the difference between "next" timestamp
-     * and current timestamp so we ensure a contiguous stream, instead of
-     * having rounding errors. */
-    GST_BUFFER_DURATION (buf) = resample->next_ts - GST_BUFFER_TIMESTAMP (buf);
-  } else {
-    /* no valid offset know, we can still sortof calculate the duration though */
-    GST_BUFFER_DURATION (buf) =
-        GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
+    resample->next_ts += GST_BUFFER_DURATION (buf);
+    resample->next_offset += out_processed;
   }
 
   GST_LOG_OBJECT (resample,
@@ -644,15 +636,15 @@ gst_speex_resample_event (GstBaseTransform * base, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       gst_speex_resample_reset_state (resample);
-      resample->ts_offset = -1;
+      resample->next_offset = -1;
       resample->next_ts = -1;
-      resample->offset = -1;
+      resample->next_upstream_ts = -1;
     case GST_EVENT_NEWSEGMENT:
       gst_speex_resample_push_drain (resample);
       gst_speex_resample_reset_state (resample);
-      resample->ts_offset = -1;
+      resample->next_offset = -1;
       resample->next_ts = -1;
-      resample->offset = -1;
+      resample->next_upstream_ts = -1;
       break;
     case GST_EVENT_EOS:{
       gst_speex_resample_push_drain (resample);
@@ -671,45 +663,23 @@ gst_speex_resample_check_discont (GstSpeexResample * resample,
     GstClockTime timestamp)
 {
   if (timestamp != GST_CLOCK_TIME_NONE &&
-      resample->prev_ts != GST_CLOCK_TIME_NONE &&
-      resample->prev_duration != GST_CLOCK_TIME_NONE &&
-      timestamp != resample->prev_ts + resample->prev_duration) {
+      resample->next_upstream_ts != GST_CLOCK_TIME_NONE &&
+      timestamp != resample->next_upstream_ts) {
     /* Potentially a discontinuous buffer. However, it turns out that many
      * elements generate imperfect streams due to rounding errors, so we permit
      * a small error (up to one sample) without triggering a filter 
      * flush/restart (if triggered incorrectly, this will be audible) */
-    GstClockTimeDiff diff = timestamp -
-        (resample->prev_ts + resample->prev_duration);
+    GstClockTimeDiff diff = timestamp - resample->next_upstream_ts;
 
-    if (ABS (diff) > GST_SECOND / resample->inrate) {
+    if (ABS (diff) > (GST_SECOND + resample->inrate - 1) / resample->inrate) {
       GST_WARNING_OBJECT (resample,
-          "encountered timestamp discontinuity of %" G_GINT64_FORMAT, diff);
+          "encountered timestamp discontinuity of %s%" GST_TIME_FORMAT,
+          (diff < 0) ? "-" : "", ABS (diff));
       return TRUE;
     }
   }
 
   return FALSE;
-}
-
-static void
-gst_speex_fix_output_buffer (GstSpeexResample * resample, GstBuffer * outbuf,
-    guint diff)
-{
-  GstClockTime timediff = GST_FRAMES_TO_CLOCK_TIME (diff, resample->outrate);
-
-  GST_LOG_OBJECT (resample, "Adjusting buffer by %d samples", diff);
-
-  GST_BUFFER_DURATION (outbuf) -= timediff;
-  GST_BUFFER_SIZE (outbuf) -=
-      diff * ((resample->fp) ? 4 : 2) * resample->channels;
-
-  if (resample->ts_offset != -1) {
-    GST_BUFFER_OFFSET_END (outbuf) -= diff;
-    resample->offset -= diff;
-    resample->ts_offset -= diff;
-    resample->next_ts =
-        GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
-  }
 }
 
 static GstFlowReturn
@@ -753,14 +723,6 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
     if (out_processed == 0) {
       GST_DEBUG_OBJECT (resample, "Converted to 0 samples, buffer dropped");
 
-      if (resample->ts_offset != -1) {
-        GST_BUFFER_OFFSET_END (outbuf) -= out_len;
-        resample->offset -= out_len;
-        resample->ts_offset -= out_len;
-        resample->next_ts =
-            GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
-      }
-
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
     } else if (out_len - out_processed != 1) {
       GST_WARNING_OBJECT (resample,
@@ -768,9 +730,7 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
           out_len);
     }
 
-    if (G_LIKELY (out_len > out_processed)) {
-      gst_speex_fix_output_buffer (resample, outbuf, out_len - out_processed);
-    } else {
+    if (G_UNLIKELY (out_len < out_processed)) {
       GST_ERROR_OBJECT (resample, "Wrote more output than allocated!");
       return GST_FLOW_ERROR;
     }
@@ -781,6 +741,20 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
         resample_resampler_strerror (err));
     return GST_FLOW_ERROR;
   } else {
+    GST_BUFFER_DURATION (outbuf) =
+        GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
+    GST_BUFFER_SIZE (outbuf) =
+        out_processed * resample->channels * ((resample->fp) ? 4 : 2);
+
+    if (GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
+      GST_BUFFER_TIMESTAMP (outbuf) = resample->next_ts;
+      GST_BUFFER_OFFSET (outbuf) = resample->next_offset;
+      GST_BUFFER_OFFSET_END (outbuf) = resample->next_offset + out_processed;
+
+      resample->next_ts += GST_BUFFER_DURATION (outbuf);
+      resample->next_offset += out_processed;
+    }
+
     GST_LOG_OBJECT (resample,
         "Converted to buffer of %u bytes with timestamp %" GST_TIME_FORMAT
         ", duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
@@ -801,7 +775,8 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   guint8 *data;
   gulong size;
   GstClockTime timestamp;
-  gint outsamples;
+  guint outsamples, insamples;
+  GstFlowReturn ret;
 
   if (resample->state == NULL)
     if (G_UNLIKELY (!(resample->state =
@@ -828,53 +803,23 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     gst_speex_resample_reset_state (resample);
     /* Inform downstream element about discontinuity */
     resample->need_discont = TRUE;
-    /* We want to recalculate the offset */
-    resample->ts_offset = -1;
+    /* We want to recalculate the timestamps */
+    resample->next_ts = -1;
+    resample->next_upstream_ts = -1;
+    resample->next_offset = -1;
   }
+
+  insamples = GST_BUFFER_SIZE (inbuf) / resample->channels;
+  insamples /= (resample->fp) ? 4 : 2;
 
   outsamples = GST_BUFFER_SIZE (outbuf) / resample->channels;
   outsamples /= (resample->fp) ? 4 : 2;
 
-  if (resample->ts_offset == -1) {
-    /* if we don't know the initial offset yet, calculate it based on the 
-     * input timestamp. */
-    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      GstClockTime stime;
-
-      /* offset used to calculate the timestamps. We use the sample offset for
-       * this to make it more accurate. We want the first buffer to have the
-       * same timestamp as the incoming timestamp. */
-      resample->next_ts = timestamp;
-      resample->ts_offset =
-          GST_CLOCK_TIME_TO_FRAMES (timestamp, resample->outrate);
-      /* offset used to set as the buffer offset, this offset is always
-       * relative to the stream time, note that timestamp is not... */
-      stime = (timestamp - base->segment.start) + base->segment.time;
-      resample->offset = GST_CLOCK_TIME_TO_FRAMES (stime, resample->outrate);
-    }
-  }
-  resample->prev_ts = timestamp;
-  resample->prev_duration = GST_BUFFER_DURATION (inbuf);
-
-  GST_BUFFER_OFFSET (outbuf) = resample->offset;
-  GST_BUFFER_TIMESTAMP (outbuf) = resample->next_ts;
-
-  if (resample->ts_offset != -1) {
-    resample->offset += outsamples;
-    resample->ts_offset += outsamples;
-    resample->next_ts =
-        GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
-    GST_BUFFER_OFFSET_END (outbuf) = resample->offset;
-
-    /* we calculate DURATION as the difference between "next" timestamp
-     * and current timestamp so we ensure a contiguous stream, instead of
-     * having rounding errors. */
-    GST_BUFFER_DURATION (outbuf) = resample->next_ts -
-        GST_BUFFER_TIMESTAMP (outbuf);
-  } else {
-    /* no valid offset know, we can still sortof calculate the duration though */
-    GST_BUFFER_DURATION (outbuf) =
-        GST_FRAMES_TO_CLOCK_TIME (outsamples, resample->outrate);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)
+      && !GST_CLOCK_TIME_IS_VALID (resample->next_ts)) {
+    resample->next_ts = timestamp;
+    resample->next_offset =
+        GST_CLOCK_TIME_TO_FRAMES (timestamp, resample->outrate);
   }
 
   if (G_UNLIKELY (resample->need_discont)) {
@@ -883,7 +828,19 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     resample->need_discont = FALSE;
   }
 
-  return gst_speex_resample_process (resample, inbuf, outbuf);
+  ret = gst_speex_resample_process (resample, inbuf, outbuf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    return ret;
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)
+      && !GST_CLOCK_TIME_IS_VALID (resample->next_upstream_ts))
+    resample->next_upstream_ts = timestamp;
+
+  if (GST_CLOCK_TIME_IS_VALID (resample->next_upstream_ts))
+    resample->next_upstream_ts +=
+        GST_FRAMES_TO_CLOCK_TIME (insamples, resample->inrate);
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
