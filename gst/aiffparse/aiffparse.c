@@ -742,8 +742,7 @@ gst_aiffparse_create_caps (AIFFParse * aiff)
       "depth", G_TYPE_INT, aiff->depth,
       "channels", G_TYPE_INT, aiff->channels,
       "endianness", G_TYPE_INT, aiff->endianness,
-      "rate", G_TYPE_INT, aiff->rate,
-      "signed", G_TYPE_BOOLEAN, aiff->width != 8, NULL);
+      "rate", G_TYPE_INT, aiff->rate, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   GST_DEBUG_OBJECT (aiff, "Created caps: %" GST_PTR_FORMAT, caps);
   return caps;
