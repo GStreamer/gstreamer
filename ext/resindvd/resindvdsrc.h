@@ -89,6 +89,7 @@ struct _resinDvdSrc
   gboolean	need_segment;
   gboolean	active_highlight;
   gboolean      in_still_state;
+  gboolean      in_playing;
 
   GstBuffer	*alloc_buf;
   GstBuffer	*next_buf;

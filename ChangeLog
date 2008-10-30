@@ -1,3 +1,10 @@
+2008-10-30  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	Better fix for #546319 and similar cases by explicitly
+	registering when we're in playing state or not.
+
 2008-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ladspa/gstladspa.c:

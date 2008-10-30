@@ -130,10 +130,9 @@ static void rsn_dvdsrc_enqueue_nav_block (resinDvdSrc * src,
 static void rsn_dvdsrc_activate_nav_block (resinDvdSrc * src,
     GstBuffer * nav_buf);
 static void rsn_dvdsrc_clear_nav_blocks (resinDvdSrc * src);
-static void rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src,
-    gboolean changing_to_playing);
+static void rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src);
 static void rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src,
-    RsnDvdPendingNav * next_nav, gboolean changing_to_playing);
+    RsnDvdPendingNav * next_nav);
 
 static GstFlowReturn rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** buf);
 static gboolean rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event);
@@ -959,7 +958,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   src->highlight_event = NULL;
 
   /* Schedule a clock callback for the any pending nav packet */
-  rsn_dvdsrc_check_nav_blocks (src, FALSE);
+  rsn_dvdsrc_check_nav_blocks (src);
 
   g_mutex_unlock (src->dvd_lock);
 
@@ -1619,7 +1618,7 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
     /* Schedule a next packet, if any */
     RsnDvdPendingNav *next_nav =
         (RsnDvdPendingNav *) src->pending_nav_blocks->data;
-    rsn_dvdsrc_schedule_nav_cb (src, next_nav, FALSE);
+    rsn_dvdsrc_schedule_nav_cb (src, next_nav);
   }
 
   g_mutex_unlock (src->dvd_lock);
@@ -1628,14 +1627,13 @@ rsn_dvdsrc_nav_clock_cb (GstClock * clock, GstClockTime time, GstClockID id,
 }
 
 static void
-rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav,
-    gboolean changing_to_playing)
+rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav)
 {
   GstClock *clock;
   GstClockTime base_ts;
 
   GST_OBJECT_LOCK (src);
-  if (GST_STATE (src) != GST_STATE_PLAYING && !changing_to_playing) {
+  if (!src->in_playing) {
     GST_LOG_OBJECT (src, "Not scheduling NAV block - state != PLAYING");
     GST_OBJECT_UNLOCK (src);
     return;                     /* Not in playing state yet */
@@ -1664,7 +1662,7 @@ rsn_dvdsrc_schedule_nav_cb (resinDvdSrc * src, RsnDvdPendingNav * next_nav,
 }
 
 static void
-rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src, gboolean changing_to_playing)
+rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
 {
   RsnDvdPendingNav *next_nav;
 
@@ -1680,7 +1678,7 @@ rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src, gboolean changing_to_playing)
 
   next_nav = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
 
-  rsn_dvdsrc_schedule_nav_cb (src, next_nav, changing_to_playing);
+  rsn_dvdsrc_schedule_nav_cb (src, next_nav);
 }
 
 /* Use libdvdread to read and cache info from the IFO file about
@@ -1711,25 +1709,34 @@ rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
   resinDvdSrc *src = RESINDVDSRC (element);
 
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_DEBUG_OBJECT (element, "Switching to PAUSED");
+      /* Unschedule any NAV packet callback */
+      g_mutex_lock (src->dvd_lock);
+      src->in_playing = FALSE;
+      if (src->nav_clock_id) {
+        gst_clock_id_unschedule (src->nav_clock_id);
+        gst_clock_id_unref (src->nav_clock_id);
+        src->nav_clock_id = NULL;
+      }
+      g_mutex_unlock (src->dvd_lock);
+      break;
+    default:
+      break;
+  }
+
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_DEBUG_OBJECT (element, "Switching to PLAYING");
       /* Kick off the NAV packet callback if needed */
       g_mutex_lock (src->dvd_lock);
-      rsn_dvdsrc_check_nav_blocks (src, TRUE);
-      g_mutex_unlock (src->dvd_lock);
-      break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      /* Unschedule any NAV packet callback */
-      g_mutex_lock (src->dvd_lock);
-      if (src->nav_clock_id) {
-        gst_clock_id_unschedule (src->nav_clock_id);
-        gst_clock_id_unref (src->nav_clock_id);
-        src->nav_clock_id = NULL;
-      }
+      src->in_playing = TRUE;
+      rsn_dvdsrc_check_nav_blocks (src);
       g_mutex_unlock (src->dvd_lock);
       break;
     default:
