@@ -1,3 +1,30 @@
+2008-10-30  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/audiobuffer/Makefile.am:
+	* gst/audiobuffer/gstaudioringbuffer.c:
+	(gst_int_ring_buffer_acquire), (gst_int_ring_buffer_release),
+	(gst_int_ring_buffer_start), (gst_int_ring_buffer_base_init),
+	(gst_int_ring_buffer_class_init), (gst_int_ring_buffer_init),
+	(gst_int_ring_buffer_new), (gst_audio_ringbuffer_get_type),
+	(gst_audio_ringbuffer_class_init), (gst_audio_ringbuffer_init),
+	(gst_audio_ringbuffer_finalize), (gst_audio_ringbuffer_getcaps),
+	(gst_audio_ringbuffer_setcaps), (gst_audio_ringbuffer_bufferalloc),
+	(gst_audio_ringbuffer_handle_sink_event),
+	(gst_audio_ringbuffer_render), (gst_audio_ringbuffer_chain),
+	(gst_audio_ringbuffer_handle_src_event),
+	(gst_audio_ringbuffer_handle_src_query),
+	(gst_audio_ringbuffer_get_range),
+	(gst_audio_ringbuffer_src_checkgetrange_function),
+	(gst_audio_ringbuffer_sink_activate_push),
+	(gst_audio_ringbuffer_src_activate_push),
+	(gst_audio_ringbuffer_src_activate_pull),
+	(gst_audio_ringbuffer_change_state),
+	(gst_audio_ringbuffer_set_property),
+	(gst_audio_ringbuffer_get_property), (plugin_init):
+	Add first version of an audioringbuffer element that can be inserted in
+	the pipeline to convert push-based upstream into a pull-based
+	downstream.
+
 2008-10-29  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/aiffparse/aiffparse.c:
