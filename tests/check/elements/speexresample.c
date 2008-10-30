@@ -32,8 +32,14 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
+#define RESAMPLE_CAPS_FLOAT		\
+    "audio/x-raw-float, "               \
+    "channels = (int) [ 1, MAX ], "     \
+    "rate = (int) [ 1,  MAX ], "        \
+    "endianness = (int) BYTE_ORDER, "   \
+    "width = (int) { 32, 64 }"
 
-#define RESAMPLE_CAPS_TEMPLATE_STRING   \
+#define RESAMPLE_CAPS_INT		\
     "audio/x-raw-int, "                 \
     "channels = (int) [ 1, MAX ], "     \
     "rate = (int) [ 1,  MAX ], "        \
@@ -41,6 +47,10 @@ static GstPad *mysrcpad, *mysinkpad;
     "width = (int) 16, "                \
     "depth = (int) 16, "                \
     "signed = (bool) TRUE"
+
+#define RESAMPLE_CAPS_TEMPLATE_STRING   \
+    RESAMPLE_CAPS_FLOAT " ; " \
+    RESAMPLE_CAPS_INT
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -54,7 +64,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstElement *
-setup_speexresample (int channels, int inrate, int outrate)
+setup_speexresample (int channels, int inrate, int outrate, int width,
+    gboolean fp)
 {
   GstElement *speexresample;
   GstCaps *caps;
@@ -63,10 +74,15 @@ setup_speexresample (int channels, int inrate, int outrate)
   GST_DEBUG ("setup_speexresample");
   speexresample = gst_check_setup_element ("speexresample");
 
-  caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
+  if (fp)
+    caps = gst_caps_from_string (RESAMPLE_CAPS_FLOAT);
+  else
+    caps = gst_caps_from_string (RESAMPLE_CAPS_INT);
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set (structure, "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, inrate, NULL);
+      "rate", G_TYPE_INT, inrate, "width", G_TYPE_INT, width, NULL);
+  if (!fp)
+    gst_structure_set (structure, "depth", G_TYPE_INT, width, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (speexresample,
@@ -77,10 +93,15 @@ setup_speexresample (int channels, int inrate, int outrate)
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
-  caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
+  if (fp)
+    caps = gst_caps_from_string (RESAMPLE_CAPS_FLOAT);
+  else
+    caps = gst_caps_from_string (RESAMPLE_CAPS_INT);
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set (structure, "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, outrate, NULL);
+      "rate", G_TYPE_INT, outrate, "width", G_TYPE_INT, width, NULL);
+  if (!fp)
+    gst_structure_set (structure, "depth", G_TYPE_INT, width, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
   mysinkpad = gst_check_setup_sink_pad (speexresample, &sinktemplate, caps);
@@ -157,7 +178,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   int i, j;
   gint16 *p;
 
-  speexresample = setup_speexresample (2, inrate, outrate);
+  speexresample = setup_speexresample (2, inrate, outrate, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -212,7 +233,6 @@ GST_START_TEST (test_perfect_stream)
 {
   /* integral scalings */
   test_perfect_stream_instance (48000, 24000, 500, 20);
-#if 0
   test_perfect_stream_instance (48000, 12000, 500, 20);
   test_perfect_stream_instance (12000, 24000, 500, 20);
   test_perfect_stream_instance (12000, 48000, 500, 20);
@@ -224,7 +244,6 @@ GST_START_TEST (test_perfect_stream)
   /* wacky scalings */
   test_perfect_stream_instance (12345, 54321, 500, 20);
   test_perfect_stream_instance (101, 99, 500, 20);
-#endif
 }
 
 GST_END_TEST;
@@ -246,7 +265,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
   GST_DEBUG ("inrate:%d outrate:%d samples:%d numbuffers:%d",
       inrate, outrate, samples, numbuffers);
 
-  speexresample = setup_speexresample (2, inrate, outrate);
+  speexresample = setup_speexresample (2, inrate, outrate, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -332,7 +351,7 @@ GST_START_TEST (test_reuse)
   GstBuffer *inbuffer;
   GstCaps *caps;
 
-  speexresample = setup_speexresample (1, 9343, 48000);
+  speexresample = setup_speexresample (1, 9343, 48000, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -525,7 +544,7 @@ GST_START_TEST (test_live_switch)
   GstEvent *newseg;
   GstCaps *caps;
 
-  speexresample = setup_speexresample (4, 48000, 48000);
+  speexresample = setup_speexresample (4, 48000, 48000, 16, FALSE);
 
   /* Let the sinkpad act like something that can only handle things of
    * rate 48000- and can only allocate buffers for that rate, but if someone

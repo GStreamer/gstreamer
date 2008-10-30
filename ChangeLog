@@ -1,3 +1,26 @@
+2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/speexresample/Makefile.am:
+	* gst/speexresample/arch.h:
+	* gst/speexresample/gstspeexresample.c: (gst_speex_resample_stop),
+	(gst_speex_resample_get_unit_size), (gst_speex_resample_get_funcs),
+	(gst_speex_resample_init_state), (gst_speex_resample_update_state),
+	(gst_speex_resample_reset_state), (gst_speex_resample_parse_caps),
+	(_gcd), (gst_speex_resample_transform_size),
+	(gst_speex_resample_set_caps), (gst_speex_resample_push_drain),
+	(gst_speex_resample_process), (gst_speex_resample_transform),
+	(gst_speex_resample_query), (gst_speex_resample_set_property):
+	* gst/speexresample/gstspeexresample.h:
+	* gst/speexresample/resample.c:
+	* gst/speexresample/speex_resampler.h:
+	* gst/speexresample/speex_resampler_double.c:
+	* gst/speexresample/speex_resampler_wrapper.h:
+	* tests/check/elements/speexresample.c: (setup_speexresample),
+	(test_perfect_stream_instance), (GST_START_TEST),
+	(test_discont_stream_instance):
+	Add support for double samples as input and refactor the usage
+	of the different compilation flavors of the speex resampler.
+
 2008-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/scaletempo/gstscaletempo.c:

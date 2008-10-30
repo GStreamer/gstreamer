@@ -162,10 +162,17 @@ extern "C"
  * @param out Output buffer
  * @param out_len Size of the output buffer. Returns the number of samples written
  */
+#ifdef DOUBLE_PRECISION
+  int speex_resampler_process_float (SpeexResamplerState * st,
+      spx_uint32_t channel_index,
+      const double *in,
+      spx_uint32_t * in_len, double *out, spx_uint32_t * out_len);
+#else
   int speex_resampler_process_float (SpeexResamplerState * st,
       spx_uint32_t channel_index,
       const float *in,
       spx_uint32_t * in_len, float *out, spx_uint32_t * out_len);
+#endif
 
 /** Resample an int array. The input and output buffers must *not* overlap.
  * @param st Resampler state
@@ -191,9 +198,15 @@ extern "C"
  * @param out_len Size of the output buffer. Returns the number of samples written.
  * This is all per-channel.
  */
+#ifdef DOUBLE_PRECISION
+  int speex_resampler_process_interleaved_float (SpeexResamplerState * st,
+      const double *in,
+      spx_uint32_t * in_len, double *out, spx_uint32_t * out_len);
+#else
   int speex_resampler_process_interleaved_float (SpeexResamplerState * st,
       const float *in,
       spx_uint32_t * in_len, float *out, spx_uint32_t * out_len);
+#endif
 
 /** Resample an interleaved int array. The input and output buffers must *not* overlap.
  * @param st Resampler state

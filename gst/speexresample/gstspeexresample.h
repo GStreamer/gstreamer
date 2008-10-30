@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/audio/audio.h>
 
 #include "speex_resampler_wrapper.h"
 
@@ -61,13 +62,15 @@ struct _GstSpeexResample {
   GstClockTime next_ts;
   GstClockTime next_upstream_ts;
   
-  gboolean fp;
   gint channels;
   gint inrate;
   gint outrate;
   gint quality;
+  gint width;
+  gboolean fp;
 
   SpeexResamplerState *state;
+  const SpeexResampleFuncs *funcs;
 };
 
 struct _GstSpeexResampleClass {

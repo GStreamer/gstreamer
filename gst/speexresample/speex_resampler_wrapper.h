@@ -39,48 +39,119 @@ enum
 
 typedef struct SpeexResamplerState_ SpeexResamplerState;
 
+typedef struct {
+  SpeexResamplerState *(*init) (guint32 nb_channels,
+    guint32 in_rate, guint32 out_rate, gint quality, gint * err);
+  void (*destroy) (SpeexResamplerState * st);
+  int (*process) (SpeexResamplerState *
+    st, const guint8 * in, guint32 * in_len, guint8 * out, guint32 * out_len);
+  int (*set_rate) (SpeexResamplerState * st,
+    guint32 in_rate, guint32 out_rate);
+  void (*get_rate) (SpeexResamplerState * st,
+    guint32 * in_rate, guint32 * out_rate);
+  void (*get_ratio) (SpeexResamplerState * st,
+    guint32 * ratio_num, guint32 * ratio_den);
+  int (*get_input_latency) (SpeexResamplerState * st);
+  int (*set_quality) (SpeexResamplerState * st, gint quality);
+  int (*reset_mem) (SpeexResamplerState * st);
+  int (*skip_zeros) (SpeexResamplerState * st);
+  const char * (*strerror) (gint err);
+} SpeexResampleFuncs;
+
 SpeexResamplerState *resample_float_resampler_init (guint32 nb_channels,
     guint32 in_rate, guint32 out_rate, gint quality, gint * err);
-SpeexResamplerState *resample_int_resampler_init (guint32 nb_channels,
-    guint32 in_rate, guint32 out_rate, gint quality, gint * err);
-
-#define resample_resampler_destroy resample_int_resampler_destroy
-void resample_resampler_destroy (SpeexResamplerState * st);
-
+void resample_float_resampler_destroy (SpeexResamplerState * st);
 int resample_float_resampler_process_interleaved_float (SpeexResamplerState *
-    st, const gfloat * in, guint32 * in_len, gfloat * out, guint32 * out_len);
-int resample_int_resampler_process_interleaved_int (SpeexResamplerState * st,
-    const gint16 * in, guint32 * in_len, gint16 * out, guint32 * out_len);
-
+    st, const guint8 * in, guint32 * in_len, guint8 * out, guint32 * out_len);
 int resample_float_resampler_set_rate (SpeexResamplerState * st,
     guint32 in_rate, guint32 out_rate);
-int resample_int_resampler_set_rate (SpeexResamplerState * st,
-    guint32 in_rate, guint32 out_rate);
-
 void resample_float_resampler_get_rate (SpeexResamplerState * st,
     guint32 * in_rate, guint32 * out_rate);
-void resample_int_resampler_get_rate (SpeexResamplerState * st,
-    guint32 * in_rate, guint32 * out_rate);
-
 void resample_float_resampler_get_ratio (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
+int resample_float_resampler_get_input_latency (SpeexResamplerState * st);
+int resample_float_resampler_set_quality (SpeexResamplerState * st, gint quality);
+int resample_float_resampler_reset_mem (SpeexResamplerState * st);
+int resample_float_resampler_skip_zeros (SpeexResamplerState * st);
+const char * resample_float_resampler_strerror (gint err);
+
+static const SpeexResampleFuncs float_funcs =
+{
+  resample_float_resampler_init,
+  resample_float_resampler_destroy,
+  resample_float_resampler_process_interleaved_float,
+  resample_float_resampler_set_rate,
+  resample_float_resampler_get_rate,
+  resample_float_resampler_get_ratio,
+  resample_float_resampler_get_input_latency,
+  resample_float_resampler_set_quality,
+  resample_float_resampler_reset_mem,
+  resample_float_resampler_skip_zeros,
+  resample_float_resampler_strerror
+};
+
+SpeexResamplerState *resample_double_resampler_init (guint32 nb_channels,
+    guint32 in_rate, guint32 out_rate, gint quality, gint * err);
+void resample_double_resampler_destroy (SpeexResamplerState * st);
+int resample_double_resampler_process_interleaved_float (SpeexResamplerState *
+    st, const guint8 * in, guint32 * in_len, guint8 * out, guint32 * out_len);
+int resample_double_resampler_set_rate (SpeexResamplerState * st,
+    guint32 in_rate, guint32 out_rate);
+void resample_double_resampler_get_rate (SpeexResamplerState * st,
+    guint32 * in_rate, guint32 * out_rate);
+void resample_double_resampler_get_ratio (SpeexResamplerState * st,
+    guint32 * ratio_num, guint32 * ratio_den);
+int resample_double_resampler_get_input_latency (SpeexResamplerState * st);
+int resample_double_resampler_set_quality (SpeexResamplerState * st, gint quality);
+int resample_double_resampler_reset_mem (SpeexResamplerState * st);
+int resample_double_resampler_skip_zeros (SpeexResamplerState * st);
+const char * resample_double_resampler_strerror (gint err);
+
+static const SpeexResampleFuncs double_funcs =
+{
+  resample_double_resampler_init,
+  resample_double_resampler_destroy,
+  resample_double_resampler_process_interleaved_float,
+  resample_double_resampler_set_rate,
+  resample_double_resampler_get_rate,
+  resample_double_resampler_get_ratio,
+  resample_double_resampler_get_input_latency,
+  resample_double_resampler_set_quality,
+  resample_double_resampler_reset_mem,
+  resample_double_resampler_skip_zeros,
+  resample_double_resampler_strerror
+};
+
+SpeexResamplerState *resample_int_resampler_init (guint32 nb_channels,
+    guint32 in_rate, guint32 out_rate, gint quality, gint * err);
+void resample_int_resampler_destroy (SpeexResamplerState * st);
+int resample_int_resampler_process_interleaved_int (SpeexResamplerState *
+    st, const guint8 * in, guint32 * in_len, guint8 * out, guint32 * out_len);
+int resample_int_resampler_set_rate (SpeexResamplerState * st,
+    guint32 in_rate, guint32 out_rate);
+void resample_int_resampler_get_rate (SpeexResamplerState * st,
+    guint32 * in_rate, guint32 * out_rate);
 void resample_int_resampler_get_ratio (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
-
-int resample_float_resampler_get_input_latency (SpeexResamplerState * st);
 int resample_int_resampler_get_input_latency (SpeexResamplerState * st);
-
-int resample_float_resampler_set_quality (SpeexResamplerState * st,
-    gint quality);
 int resample_int_resampler_set_quality (SpeexResamplerState * st, gint quality);
-
-int resample_float_resampler_reset_mem (SpeexResamplerState * st);
 int resample_int_resampler_reset_mem (SpeexResamplerState * st);
-
-int resample_float_resampler_skip_zeros (SpeexResamplerState * st);
 int resample_int_resampler_skip_zeros (SpeexResamplerState * st);
+const char * resample_int_resampler_strerror (gint err);
 
-#define resample_resampler_strerror resample_int_resampler_strerror
-const char *resample_resampler_strerror (gint err);
+static const SpeexResampleFuncs int_funcs =
+{
+  resample_int_resampler_init,
+  resample_int_resampler_destroy,
+  resample_int_resampler_process_interleaved_int,
+  resample_int_resampler_set_rate,
+  resample_int_resampler_get_rate,
+  resample_int_resampler_get_ratio,
+  resample_int_resampler_get_input_latency,
+  resample_int_resampler_set_quality,
+  resample_int_resampler_reset_mem,
+  resample_int_resampler_skip_zeros,
+  resample_int_resampler_strerror
+};
 
 #endif /* __SPEEX_RESAMPLER_WRAPPER_H__ */
