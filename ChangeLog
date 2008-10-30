@@ -1,3 +1,11 @@
+2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),
+	(gst_wavenc_sink_setcaps), (gst_wavenc_change_state):
+	* gst/wavenc/gstwavenc.h:
+	Add support for float/double as input and remove the (nowadays)
+	useless parsing of the depth as we require width==depth.
+
 2008-10-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_setcaps):
