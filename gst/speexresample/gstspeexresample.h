@@ -69,6 +69,12 @@ struct _GstSpeexResample {
   gint width;
   gboolean fp;
 
+  guint8 *tmp_in;
+  guint tmp_in_size;
+
+  guint8 *tmp_out;
+  guint tmp_out_size;
+
   SpeexResamplerState *state;
   const SpeexResampleFuncs *funcs;
 };

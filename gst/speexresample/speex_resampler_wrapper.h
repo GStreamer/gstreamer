@@ -56,6 +56,7 @@ typedef struct {
   int (*reset_mem) (SpeexResamplerState * st);
   int (*skip_zeros) (SpeexResamplerState * st);
   const char * (*strerror) (gint err);
+  unsigned int width;
 } SpeexResampleFuncs;
 
 SpeexResamplerState *resample_float_resampler_init (guint32 nb_channels,
@@ -87,7 +88,8 @@ static const SpeexResampleFuncs float_funcs =
   resample_float_resampler_set_quality,
   resample_float_resampler_reset_mem,
   resample_float_resampler_skip_zeros,
-  resample_float_resampler_strerror
+  resample_float_resampler_strerror,
+  16
 };
 
 SpeexResamplerState *resample_double_resampler_init (guint32 nb_channels,
@@ -119,7 +121,8 @@ static const SpeexResampleFuncs double_funcs =
   resample_double_resampler_set_quality,
   resample_double_resampler_reset_mem,
   resample_double_resampler_skip_zeros,
-  resample_double_resampler_strerror
+  resample_double_resampler_strerror,
+  64
 };
 
 SpeexResamplerState *resample_int_resampler_init (guint32 nb_channels,
@@ -151,7 +154,8 @@ static const SpeexResampleFuncs int_funcs =
   resample_int_resampler_set_quality,
   resample_int_resampler_reset_mem,
   resample_int_resampler_skip_zeros,
-  resample_int_resampler_strerror
+  resample_int_resampler_strerror,
+  32
 };
 
 #endif /* __SPEEX_RESAMPLER_WRAPPER_H__ */

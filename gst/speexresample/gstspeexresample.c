@@ -65,8 +65,29 @@ GST_STATIC_CAPS ( \
       "rate = (int) [ 1, MAX ], " \
       "channels = (int) [ 1, MAX ], " \
       "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 32, " \
+      "depth = (int) 32, " \
+      "signed = (boolean) true; " \
+    "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 24, " \
+      "depth = (int) 24, " \
+      "signed = (boolean) true; " \
+    "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
       "width = (int) 16, " \
       "depth = (int) 16, " \
+      "signed = (boolean) true; " \
+    "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 8, " \
+      "depth = (int) 8, " \
       "signed = (boolean) true" \
 )
 
@@ -202,6 +223,14 @@ gst_speex_resample_stop (GstBaseTransform * base)
 
   resample->funcs = NULL;
 
+  g_free (resample->tmp_in);
+  resample->tmp_in = NULL;
+  resample->tmp_in_size = 0;
+
+  g_free (resample->tmp_out);
+  resample->tmp_out = NULL;
+  resample->tmp_out_size = 0;
+
   gst_caps_replace (&resample->sinkcaps, NULL);
   gst_caps_replace (&resample->srccaps, NULL);
 
@@ -268,11 +297,11 @@ gst_speex_resample_get_funcs (gint width, gboolean fp)
 {
   const SpeexResampleFuncs *funcs = NULL;
 
-  if (width == 16 && !fp)
+  if ((width == 8 || width == 16) && !fp)
     funcs = &int_funcs;
   else if (width == 32 && fp)
     funcs = &float_funcs;
-  else if (width == 64 && fp)
+  else if ((width == 64 && fp) || ((width == 32 || width == 24) && !fp))
     funcs = &double_funcs;
   else
     g_assert_not_reached ();
@@ -474,7 +503,6 @@ gst_speex_resample_transform_size (GstBaseTransform * base,
 
     /* asked to convert size of an incoming buffer */
     size /= fac;
-    //*othersize = (size * ratio_den + (ratio_num >> 1)) / ratio_num;
     *othersize = (size * ratio_den + ratio_num - 1) / ratio_num;
     *othersize *= fac;
     size *= fac;
@@ -483,7 +511,6 @@ gst_speex_resample_transform_size (GstBaseTransform * base,
 
     /* asked to convert size of an outgoing buffer */
     size /= fac;
-    //*othersize = (size * ratio_num + (ratio_den >> 1)) / ratio_den;
     *othersize = (size * ratio_num + ratio_den - 1) / ratio_den;
     *othersize *= fac;
     size *= fac;
@@ -527,6 +554,105 @@ gst_speex_resample_set_caps (GstBaseTransform * base, GstCaps * incaps,
   return TRUE;
 }
 
+#define GST_MAXINT24 (8388607)
+#define GST_MININT24 (-8388608)
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+#define GST_READ_UINT24 GST_READ_UINT24_LE
+#define GST_WRITE_UINT24 GST_WRITE_UINT24_LE
+#else
+#define GST_READ_UINT24 GST_READ_UINT24_BE
+#define GST_WRITE_UINT24 GST_WRITE_UINT24_BE
+#endif
+
+static void
+gst_speex_resample_convert_buffer (GstSpeexResample * resample,
+    const guint8 * in, guint8 * out, guint len, gboolean inverse)
+{
+  if (inverse) {
+    if (resample->width == 8 && !resample->fp) {
+      gint8 *o = (gint8 *) out;
+      gint16 *i = (gint16 *) in;
+      gint32 tmp;
+
+      while (len) {
+        tmp = *i + (G_MAXINT8 >> 1);
+        *o = CLAMP (tmp >> 8, G_MININT8, G_MAXINT8);
+        o++;
+        i++;
+        len--;
+      }
+    } else if (resample->width == 24 && !resample->fp) {
+      guint8 *o = (guint8 *) out;
+      gdouble *i = (gdouble *) in;
+      gdouble tmp;
+
+      while (len) {
+        tmp = *i;
+        GST_WRITE_UINT24 (o, CLAMP (tmp * GST_MAXINT24 + 0.5, GST_MININT24,
+                GST_MAXINT24));
+        o += 3;
+        i++;
+        len--;
+      }
+    } else if (resample->width == 32 && !resample->fp) {
+      gint32 *o = (gint32 *) out;
+      gdouble *i = (gdouble *) in;
+      gdouble tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = CLAMP (tmp * G_MAXINT32 + 0.5, G_MININT32, G_MAXINT32);
+        o++;
+        i++;
+        len--;
+      }
+    }
+  } else {
+    if (resample->width == 8 && !resample->fp) {
+      gint8 *i = (gint8 *) in;
+      gint16 *o = (gint16 *) out;
+      gint32 tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = tmp << 8;
+        o++;
+        i++;
+        len--;
+      }
+    } else if (resample->width == 24 && !resample->fp) {
+      guint8 *i = (guint8 *) in;
+      gdouble *o = (gdouble *) out;
+      gdouble tmp;
+      guint32 tmp2;
+
+      while (len) {
+        tmp2 = GST_READ_UINT24 (i);
+        if (tmp2 & 0x00800000)
+          tmp2 |= 0xff000000;
+        tmp = (gint32) tmp2;
+        *o = tmp / GST_MAXINT24;
+        o++;
+        i += 3;
+        len--;
+      }
+    } else if (resample->width == 32 && !resample->fp) {
+      gint32 *i = (gint32 *) in;
+      gdouble *o = (gdouble *) out;
+      gdouble tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = tmp / G_MAXINT32;
+        o++;
+        i++;
+        len--;
+      }
+    }
+  }
+}
+
 static void
 gst_speex_resample_push_drain (GstSpeexResample * resample)
 {
@@ -537,15 +663,30 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
   guint out_len, out_processed;
   gint err;
   guint num, den, len;
+  guint8 *outtmp = NULL;
+  gboolean need_convert = FALSE;
 
   if (!resample->state)
     return;
 
+  need_convert = (resample->funcs->width != resample->width);
+
   resample->funcs->get_ratio (resample->state, &num, &den);
 
   out_len = resample->funcs->get_input_latency (resample->state);
-  out_len = out_processed = (out_len * den + (num >> 1)) / num;
+  out_len = out_processed = (out_len * den + num - 1) / num;
   outsize = (resample->width / 8) * out_len * resample->channels;
+
+  if (need_convert) {
+    guint outsize_tmp =
+        (resample->funcs->width / 8) * out_len * resample->channels;
+    if (outsize_tmp <= resample->tmp_out_size) {
+      outtmp = resample->tmp_out;
+    } else {
+      resample->tmp_out_size = outsize_tmp;
+      resample->tmp_out = outtmp = g_realloc (resample->tmp_out, outsize_tmp);
+    }
+  }
 
   res =
       gst_pad_alloc_buffer_and_set_caps (trans->srcpad, GST_BUFFER_OFFSET_NONE,
@@ -561,7 +702,8 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
 
   err =
       resample->funcs->process (resample->state,
-      NULL, &len, (guint8 *) GST_BUFFER_DATA (buf), &out_processed);
+      NULL, &len, (need_convert) ? outtmp : GST_BUFFER_DATA (buf),
+      &out_processed);
 
   if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {
     GST_WARNING_OBJECT (resample, "Failed to process drain: %s",
@@ -575,6 +717,10 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
     gst_buffer_unref (buf);
     return;
   }
+
+  if (need_convert)
+    gst_speex_resample_convert_buffer (resample, outtmp, GST_BUFFER_DATA (buf),
+        out_processed, TRUE);
 
   GST_BUFFER_DURATION (buf) =
       GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
@@ -670,6 +816,8 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
   guint32 in_len, in_processed;
   guint32 out_len, out_processed;
   gint err = RESAMPLER_ERR_SUCCESS;
+  guint8 *in_tmp, *out_tmp;
+  gboolean need_convert = (resample->funcs->width != resample->width);
 
   in_len = GST_BUFFER_SIZE (inbuf) / resample->channels;
   out_len = GST_BUFFER_SIZE (outbuf) / resample->channels;
@@ -680,9 +828,38 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
   in_processed = in_len;
   out_processed = out_len;
 
-  err = resample->funcs->process (resample->state,
-      (const guint8 *) GST_BUFFER_DATA (inbuf), &in_processed,
-      (guint8 *) GST_BUFFER_DATA (outbuf), &out_processed);
+  if (need_convert) {
+    guint in_size_tmp =
+        in_len * resample->channels * (resample->funcs->width / 8);
+    guint out_size_tmp =
+        out_len * resample->channels * (resample->funcs->width / 8);
+
+    if (in_size_tmp <= resample->tmp_in_size) {
+      in_tmp = resample->tmp_in;
+    } else {
+      resample->tmp_in = in_tmp = g_realloc (resample->tmp_in, in_size_tmp);
+      resample->tmp_in_size = in_size_tmp;
+    }
+
+    gst_speex_resample_convert_buffer (resample, GST_BUFFER_DATA (inbuf),
+        in_tmp, in_len, FALSE);
+
+    if (out_size_tmp <= resample->tmp_out_size) {
+      out_tmp = resample->tmp_out;
+    } else {
+      resample->tmp_out = out_tmp = g_realloc (resample->tmp_out, out_size_tmp);
+      resample->tmp_out_size = out_size_tmp;
+    }
+  }
+
+  if (need_convert) {
+    err = resample->funcs->process (resample->state,
+        in_tmp, &in_processed, out_tmp, &out_processed);
+  } else {
+    err = resample->funcs->process (resample->state,
+        (const guint8 *) GST_BUFFER_DATA (inbuf), &in_processed,
+        (guint8 *) GST_BUFFER_DATA (outbuf), &out_processed);
+  }
 
   if (G_UNLIKELY (in_len != in_processed))
     GST_WARNING_OBJECT (resample, "Converted %d of %d input samples",
@@ -712,6 +889,11 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
         resample->funcs->strerror (err));
     return GST_FLOW_ERROR;
   } else {
+
+    if (need_convert)
+      gst_speex_resample_convert_buffer (resample, out_tmp,
+          GST_BUFFER_DATA (outbuf), out_processed, TRUE);
+
     GST_BUFFER_DURATION (outbuf) =
         GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
     GST_BUFFER_SIZE (outbuf) =
