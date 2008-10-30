@@ -718,6 +718,10 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
     return;
   }
 
+  /* If we wrote more than allocated something is really wrong now
+   * and we should better abort immediately */
+  g_assert (out_len >= out_processed);
+
   if (need_convert)
     gst_speex_resample_convert_buffer (resample, outtmp, GST_BUFFER_DATA (buf),
         out_processed, TRUE);
@@ -816,7 +820,7 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
   guint32 in_len, in_processed;
   guint32 out_len, out_processed;
   gint err = RESAMPLER_ERR_SUCCESS;
-  guint8 *in_tmp, *out_tmp;
+  guint8 *in_tmp = NULL, *out_tmp = NULL;
   gboolean need_convert = (resample->funcs->width != resample->width);
 
   in_len = GST_BUFFER_SIZE (inbuf) / resample->channels;
@@ -866,22 +870,15 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
         in_processed, in_len);
 
   if (out_len != out_processed) {
-    /* One sample difference is allowed as this will happen
-     * because of rounding errors */
     if (out_processed == 0) {
       GST_DEBUG_OBJECT (resample, "Converted to 0 samples, buffer dropped");
 
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
-    } else if (out_len - out_processed != 1) {
-      GST_WARNING_OBJECT (resample,
-          "Converted to %d instead of %d output samples", out_processed,
-          out_len);
     }
 
-    if (G_UNLIKELY (out_len < out_processed)) {
-      GST_ERROR_OBJECT (resample, "Wrote more output than allocated!");
-      return GST_FLOW_ERROR;
-    }
+    /* If we wrote more than allocated something is really wrong now
+     * and we should better abort immediately */
+    g_assert (out_len >= out_processed);
   }
 
   if (G_UNLIKELY (err != RESAMPLER_ERR_SUCCESS)) {

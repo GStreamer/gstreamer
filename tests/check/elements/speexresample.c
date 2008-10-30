@@ -579,7 +579,116 @@ GST_START_TEST (test_live_switch)
   gst_caps_unref (caps);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST;
+
+#ifndef GST_DISABLE_PARSE
+
+static GMainLoop *loop;
+static gint messages = 0;
+
+static void
+element_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  gchar *s;
+
+  s = gst_structure_to_string (gst_message_get_structure (message));
+  GST_DEBUG ("Received message: %s", s);
+  g_free (s);
+
+  messages++;
+}
+
+static void
+eos_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  GST_DEBUG ("Received eos");
+  g_main_loop_quit (loop);
+}
+
+static void
+test_pipeline (gint width, gboolean fp, gint inrate, gint outrate, gint quality)
+{
+  GstElement *pipeline;
+  GstBus *bus;
+  GError *error = NULL;
+  gchar *pipe_str;
+
+  pipe_str =
+      g_strdup_printf
+      ("audiotestsrc num-buffers=100 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! speexresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
+      (fp) ? "float" : "int", inrate, width, quality, (fp) ? "float" : "int",
+      outrate, width);
+
+  pipeline = gst_parse_launch (pipe_str, &error);
+  fail_unless (pipeline != NULL, "Error parsing pipeline: %s",
+      error ? error->message : "(invalid error)");
+  g_free (pipe_str);
+
+  bus = gst_element_get_bus (pipeline);
+  fail_if (bus == NULL);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message::element", (GCallback) element_message_cb,
+      NULL);
+  g_signal_connect (bus, "message::eos", (GCallback) eos_message_cb, NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* run until we receive EOS */
+  loop = g_main_loop_new (NULL, FALSE);
+
+  g_main_loop_run (loop);
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  fail_if (messages > 0, "Received imperfect timestamp messages");
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_pipelines)
+{
+  gint quality;
+
+  /* Test qualities 0, 5 and 10 */
+  for (quality = 0; quality < 11; quality += 5) {
+    test_pipeline (8, FALSE, 44100, 48000, quality);
+    test_pipeline (8, FALSE, 48000, 44100, quality);
+    test_pipeline (8, FALSE, 40000, 80000, quality);
+    test_pipeline (8, FALSE, 80000, 40000, quality);
+
+    test_pipeline (16, FALSE, 44100, 48000, quality);
+    test_pipeline (16, FALSE, 48000, 44100, quality);
+    test_pipeline (16, FALSE, 40000, 80000, quality);
+    test_pipeline (16, FALSE, 80000, 40000, quality);
+
+    test_pipeline (24, FALSE, 44100, 48000, quality);
+    test_pipeline (24, FALSE, 48000, 44100, quality);
+    test_pipeline (24, FALSE, 40000, 80000, quality);
+    test_pipeline (24, FALSE, 80000, 40000, quality);
+
+    test_pipeline (32, FALSE, 44100, 48000, quality);
+    test_pipeline (32, FALSE, 48000, 44100, quality);
+    test_pipeline (32, FALSE, 40000, 80000, quality);
+    test_pipeline (32, FALSE, 80000, 40000, quality);
+
+    test_pipeline (32, TRUE, 44100, 48000, quality);
+    test_pipeline (32, TRUE, 48000, 44100, quality);
+    test_pipeline (32, TRUE, 40000, 80000, quality);
+    test_pipeline (32, TRUE, 80000, 40000, quality);
+
+    test_pipeline (64, TRUE, 44100, 48000, quality);
+    test_pipeline (64, TRUE, 48000, 44100, quality);
+    test_pipeline (64, TRUE, 40000, 80000, quality);
+    test_pipeline (64, TRUE, 80000, 40000, quality);
+  }
+}
+
+GST_END_TEST;
+#endif
+
+static Suite *
 speexresample_suite (void)
 {
   Suite *s = suite_create ("speexresample");
@@ -591,6 +700,11 @@ speexresample_suite (void)
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_shutdown);
   tcase_add_test (tc_chain, test_live_switch);
+
+#ifndef GST_DISABLE_PARSE
+  tcase_set_timeout (tc_chain, 360);
+  tcase_add_test (tc_chain, test_pipelines);
+#endif
 
   return s;
 }
