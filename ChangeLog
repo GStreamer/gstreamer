@@ -1,3 +1,8 @@
+2008-10-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/Makefile.am:
+	  Blacklist cdiocddasrc from state-change tests. Fixes #558277.
+
 2008-10-24  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

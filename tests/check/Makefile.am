@@ -9,7 +9,7 @@ TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)  \
-	STATE_IGNORE_ELEMENTS="siddec dvdreadsrc"
+	STATE_IGNORE_ELEMENTS="siddec dvdreadsrc cdiocddasrc"
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
