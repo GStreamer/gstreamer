@@ -350,7 +350,7 @@ gst_registry_binary_cache_finish (GstRegistry * registry,
 
 fail_after_close:
   {
-    g_remove (cache->tmp_location);
+    g_unlink (cache->tmp_location);
     g_free (cache->tmp_location);
     g_free (cache);
     return FALSE;

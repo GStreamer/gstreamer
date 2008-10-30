@@ -921,7 +921,7 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
   if (g_file_test (tmp_location, G_FILE_TEST_EXISTS)) {
 #ifdef WIN32
-    g_remove (location);
+    g_unlink (location);
 #endif
     if (g_rename (tmp_location, location) < 0)
       goto rename_failed;
@@ -941,7 +941,7 @@ fail:
   }
 fail_after_close:
   {
-    g_remove (tmp_location);
+    g_unlink (tmp_location);
     g_free (tmp_location);
     return FALSE;
   }
