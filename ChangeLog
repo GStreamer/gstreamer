@@ -1,5 +1,14 @@
 2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_convert_buffer):
+	The length for the buffer conversion function is the number of
+	audio frames, i.e. we need to multiply it by the number of channels
+	to get the number of values. Also spotted by the unit test after
+	running in valgrind.
+
+2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/speexresample.c: (element_message_cb),
 	(eos_message_cb), (test_pipeline), (GST_START_TEST),
 	(speexresample_suite):

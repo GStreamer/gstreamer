@@ -569,6 +569,8 @@ static void
 gst_speex_resample_convert_buffer (GstSpeexResample * resample,
     const guint8 * in, guint8 * out, guint len, gboolean inverse)
 {
+  len *= resample->channels;
+
   if (inverse) {
     if (resample->width == 8 && !resample->fp) {
       gint8 *o = (gint8 *) out;
