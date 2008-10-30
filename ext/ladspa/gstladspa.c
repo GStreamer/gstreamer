@@ -574,7 +574,6 @@ ladspa_describe_plugin (const char *pcFullFilename,
   const LADSPA_Descriptor *desc;
   gint i;
 
-
   /* walk through all the plugins in this pluginlibrary */
   i = 0;
   while ((desc = pfDescriptorFunction (i++))) {

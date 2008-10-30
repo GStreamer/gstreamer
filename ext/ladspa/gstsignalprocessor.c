@@ -501,8 +501,9 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
   bclass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
-  /* this probably isn't the correct interface: what about return values, what
-     about overriding event_default */
+  /* FIXME, this probably isn't the correct interface: what about return values, what
+   * about overriding event_default
+   * Sync with GstBaseTransform::gst_base_transform_sink_event */
   if (bclass->event)
     bclass->event (self, event);
 

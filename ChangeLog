@@ -1,3 +1,10 @@
+2008-10-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ladspa/gstladspa.c:
+	  Whitespace.
+	* ext/ladspa/gstsignalprocessor.c:
+	  Add a FIXME:. not sure if this code does the forwarding correctly.
+
 2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/speexresample/Makefile.am:
