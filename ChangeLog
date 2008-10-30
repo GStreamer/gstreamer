@@ -1,3 +1,16 @@
+2008-10-30  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/qtwrapper/audiodecoders.c:
+	  Add ALAC support.
+	  Fix decode of mono AAC files created by itunes.
+	  Set output format correctly (don't ask quicktime to
+	  resample for us).
+	  Use a larger decode buffer to avoid problems with large
+	  ALAC packets.
+	  Fix decode to loop until we have all output data.
+	* sys/qtwrapper/qtutils.c:
+	  Fix includes so we compile on more OSes.
+
 2008-10-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:
