@@ -40,7 +40,7 @@ static GstStaticPadTemplate gst_rtp_mpa_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg")
+    GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) 1")
     );
 
 static GstStaticPadTemplate gst_rtp_mpa_depay_sink_template =
@@ -127,7 +127,8 @@ gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     clock_rate = 90000;
   depayload->clock_rate = clock_rate;
 
-  outcaps = gst_caps_new_simple ("audio/mpeg", NULL);
+  outcaps =
+      gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1, NULL);
   res = gst_pad_set_caps (depayload->srcpad, outcaps);
   gst_caps_unref (outcaps);
 
