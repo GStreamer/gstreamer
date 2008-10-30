@@ -26,7 +26,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
-#include <ffmpeg/avcodec.h>
+#include <libavcodec/avcodec.h>
 #endif
 #include <string.h>
 
@@ -456,7 +456,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "depth", G_TYPE_INT, context->bits_per_sample, NULL);
+            "depth", G_TYPE_INT, context->bits_per_coded_sample, NULL);
       }
       break;
 
@@ -636,7 +636,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-huffyuv", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "bpp", G_TYPE_INT, context->bits_per_sample, NULL);
+            "bpp", G_TYPE_INT, context->bits_per_coded_sample, NULL);
       }
       break;
 
@@ -752,7 +752,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "layout", G_TYPE_STRING, "microsoft", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
+            "depth", G_TYPE_INT, (gint) context->bits_per_coded_sample, NULL);
       } else {
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
       }
@@ -763,7 +763,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "layout", G_TYPE_STRING, "quicktime", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
+            "depth", G_TYPE_INT, (gint) context->bits_per_coded_sample, NULL);
       } else {
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 1, 64, NULL);
       }
@@ -813,7 +813,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-camtasia", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
+            "depth", G_TYPE_INT, (gint) context->bits_per_coded_sample, NULL);
       } else {
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 8, 32, NULL);
       }
@@ -851,21 +851,22 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-qdrw", NULL);
       break;
 
-  case CODEC_ID_DNXHD:
-    caps = gst_ff_vid_caps_new (context, codec_id, "video/x-dnxhd", NULL);
-    break;
+    case CODEC_ID_DNXHD:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-dnxhd", NULL);
+      break;
 
-  case CODEC_ID_MIMIC:
-    caps = gst_ff_vid_caps_new (context, codec_id, "video/x-mimic", NULL);
-    break;
+    case CODEC_ID_MIMIC:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-mimic", NULL);
+      break;
 
-  case CODEC_ID_VMNC:
-    caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vmnc", NULL);
-    break;
+    case CODEC_ID_VMNC:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vmnc", NULL);
+      break;
 
     case CODEC_ID_TRUESPEECH:
-    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-truespeech", NULL);
-    break;
+      caps =
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-truespeech", NULL);
+      break;
 
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
@@ -1166,7 +1167,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-alac", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "samplesize", G_TYPE_INT, context->bits_per_sample, NULL);
+            "samplesize", G_TYPE_INT, context->bits_per_coded_sample, NULL);
       }
       break;
 
@@ -1189,7 +1190,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-tta", NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "samplesize", G_TYPE_INT, context->bits_per_sample, NULL);
+            "samplesize", G_TYPE_INT, context->bits_per_coded_sample, NULL);
       }
       break;
     default:
@@ -1354,25 +1355,24 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
   if (caps == NULL) {
     if (bpp != 0) {
       if (r_mask != 0) {
-	if (a_mask) {
+        if (a_mask) {
           caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
-            "bpp", G_TYPE_INT, bpp,
-            "depth", G_TYPE_INT, depth,
-            "red_mask", G_TYPE_INT, r_mask,
-            "green_mask", G_TYPE_INT, g_mask,
-            "blue_mask", G_TYPE_INT, b_mask,
-            "alpha_mask", G_TYPE_INT, a_mask, 
-            "endianness", G_TYPE_INT, endianness, NULL);
-	}
-	else {
+              "bpp", G_TYPE_INT, bpp,
+              "depth", G_TYPE_INT, depth,
+              "red_mask", G_TYPE_INT, r_mask,
+              "green_mask", G_TYPE_INT, g_mask,
+              "blue_mask", G_TYPE_INT, b_mask,
+              "alpha_mask", G_TYPE_INT, a_mask,
+              "endianness", G_TYPE_INT, endianness, NULL);
+        } else {
           caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
-            "bpp", G_TYPE_INT, bpp,
-            "depth", G_TYPE_INT, depth,
-            "red_mask", G_TYPE_INT, r_mask,
-            "green_mask", G_TYPE_INT, g_mask,
-            "blue_mask", G_TYPE_INT, b_mask,
-            "endianness", G_TYPE_INT, endianness, NULL);
-	}
+              "bpp", G_TYPE_INT, bpp,
+              "depth", G_TYPE_INT, depth,
+              "red_mask", G_TYPE_INT, r_mask,
+              "green_mask", G_TYPE_INT, g_mask,
+              "blue_mask", G_TYPE_INT, b_mask,
+              "endianness", G_TYPE_INT, endianness, NULL);
+        }
       } else {
         caps = gst_ff_vid_caps_new (context, codec_id, "video/x-raw-rgb",
             "bpp", G_TYPE_INT, bpp,
@@ -1462,8 +1462,7 @@ gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
   switch (codec_type) {
     case CODEC_TYPE_VIDEO:
       if (context) {
-        caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt,
-            context, codec_id);
+        caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt, context, codec_id);
       } else {
         GstCaps *temp;
         enum PixelFormat i;
@@ -1567,7 +1566,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 
   gst_structure_get_int (structure, "width", &context->width);
   gst_structure_get_int (structure, "height", &context->height);
-  gst_structure_get_int (structure, "bpp", &context->bits_per_sample);
+  gst_structure_get_int (structure, "bpp", &context->bits_per_coded_sample);
 
   fps = gst_structure_get_value (structure, "framerate");
   if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
@@ -1710,7 +1709,7 @@ gst_ffmpeg_caps_with_codectype (enum CodecType type,
 }
 
 static void
-nal_escape (guint8 *dst, guint8 *src, guint size, guint *destsize)
+nal_escape (guint8 * dst, guint8 * src, guint size, guint * destsize)
 {
   guint8 *dstp = dst;
   guint8 *srcp = src;
@@ -1718,7 +1717,7 @@ nal_escape (guint8 *dst, guint8 *src, guint size, guint *destsize)
   gint count = 0;
 
   while (srcp < end) {
-    if (count == 2 && *srcp <= 0x03 ) {
+    if (count == 2 && *srcp <= 0x03) {
       GST_DEBUG ("added escape code");
       *dstp++ = 0x03;
       count = 0;
@@ -1737,7 +1736,7 @@ nal_escape (guint8 *dst, guint8 *src, guint size, guint *destsize)
 /* copy the config, escaping NAL units as we iterate them, if something fails we
  * copy everything and hope for the best. */
 static void
-copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
+copy_config (guint8 * dst, guint8 * src, guint size, guint * destsize)
 {
   guint8 *dstp = dst;
   guint8 *srcp = src;
@@ -1748,11 +1747,11 @@ copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
   if (size < 7)
     goto full_copy;
 
-   /* check version */
+  /* check version */
   if (*srcp != 1)
     goto full_copy;
 
-  cnt = *(srcp + 5) & 0x1f;  /* Number of sps */
+  cnt = *(srcp + 5) & 0x1f;     /* Number of sps */
 
   GST_DEBUG ("num SPS %d", cnt);
 
@@ -1770,7 +1769,7 @@ copy_config (guint8 *dst, guint8 *src, guint size, guint *destsize)
     srcp += nalsize + 2;
   }
 
-  cnt = *(dstp++) = *(srcp++); /* Number of pps */
+  cnt = *(dstp++) = *(srcp++);  /* Number of pps */
 
   GST_DEBUG ("num PPS %d", cnt);
 
@@ -1837,12 +1836,12 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
        * reason for this but let's just escape it for now. Start by allocating
        * enough space, x2 is more than enough. */
       context->extradata =
-          av_mallocz (GST_ROUND_UP_16 (size * 2 + FF_INPUT_BUFFER_PADDING_SIZE));
+          av_mallocz (GST_ROUND_UP_16 (size * 2 +
+              FF_INPUT_BUFFER_PADDING_SIZE));
       copy_config (context->extradata, data, size, &extrasize);
       GST_DEBUG ("escaped size: %d", extrasize);
       context->extradata_size = extrasize;
-    }
-    else {
+    } else {
       /* allocate with enough padding */
       GST_DEBUG ("copy codec_data");
       context->extradata =
@@ -1921,7 +1920,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       gint depth;
 
       if (gst_structure_get_int (str, "depth", &depth)) {
-        context->bits_per_sample = depth;
+        context->bits_per_coded_sample = depth;
       } else {
         GST_WARNING ("No depth field in caps %" GST_PTR_FORMAT, caps);
       }
@@ -1954,7 +1953,8 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
         context->bit_rate = bitrate;
     }
     case CODEC_ID_ALAC:
-      gst_structure_get_int (str, "samplesize", &context->bits_per_sample);
+      gst_structure_get_int (str, "samplesize",
+          &context->bits_per_coded_sample);
       break;
 
     case CODEC_ID_DVVIDEO:
@@ -2110,7 +2110,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
       CODEC_ID_NONE
     };
     static enum CodecID mp4_audio_list[] = {
-      CODEC_ID_AAC, CODEC_ID_MP3, 
+      CODEC_ID_AAC, CODEC_ID_MP3,
       CODEC_ID_NONE
     };
 

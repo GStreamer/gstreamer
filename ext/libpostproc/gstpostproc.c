@@ -32,8 +32,8 @@
 #include <avcodec.h>
 #include <postprocess.h>
 #else
-#include <ffmpeg/avcodec.h>
-#include <postproc/postprocess.h>
+#include <libavcodec/avcodec.h>
+#include <libpostproc/postprocess.h>
 #endif
 
 

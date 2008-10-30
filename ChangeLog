@@ -1,3 +1,32 @@
+2008-10-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Based on a patch by: Alexis Ballier <aballier at gentoo dot org>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_flags_get_type),
+	(gst_ffmpeg_cfg_init):
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_pixfmt), (gst_ffmpeg_caps_with_codecid):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_setcaps), (gst_ffmpegenc_register):
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_seek):
+	* ext/libpostproc/gstpostproc.c:
+	* ffmpegrev:
+	Update ffmpeg/swscale snapshot to the latest revision and adjust
+	to API changes. Fixes bug #556405.
+
+	Require libavutil for swscale too when building with an external
+	ffmpeg and fix includes for external ffmpeg.
+
 2008-10-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Robin Stocker <robin at nibor dot org>

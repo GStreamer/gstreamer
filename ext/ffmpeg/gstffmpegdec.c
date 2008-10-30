@@ -27,7 +27,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
-#include <ffmpeg/avcodec.h>
+#include <libavcodec/avcodec.h>
 #endif
 
 #include <gst/gst.h>
@@ -697,7 +697,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
-  ffmpegdec->context->error_resilience = 1;
+  ffmpegdec->context->error_recognition = 1;
 
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;
@@ -2449,7 +2449,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
   AVCodec *in_plugin;
   gint rank;
 
-  in_plugin = first_avcodec;
+  in_plugin = av_codec_next (NULL);
 
   GST_LOG ("Registering decoders");
 
@@ -2559,7 +2559,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       gst_caps_unref (sinkcaps);
     if (srccaps)
       gst_caps_unref (srccaps);
-    in_plugin = in_plugin->next;
+    in_plugin = av_codec_next (in_plugin);
   }
 
   GST_LOG ("Finished Registering decoders");

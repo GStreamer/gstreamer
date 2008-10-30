@@ -26,7 +26,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avformat.h>
 #else
-#include <ffmpeg/avformat.h>
+#include <libavformat/avformat.h>
 #endif
 
 #include <gst/gst.h>
@@ -175,8 +175,8 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
   return size;
 }
 
-static offset_t
-gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
+static int64_t
+gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
 {
   GstProtocolInfo *info;
   guint64 newpos;

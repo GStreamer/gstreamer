@@ -27,7 +27,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
-#include <ffmpeg/avcodec.h>
+#include <libavcodec/avcodec.h>
 #endif
 
 #include <gst/gst.h>

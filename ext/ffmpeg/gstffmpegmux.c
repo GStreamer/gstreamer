@@ -25,7 +25,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avformat.h>
 #else
-#include <ffmpeg/avformat.h>
+#include <libavformat/avformat.h>
 #endif
 
 #include <gst/gst.h>
@@ -570,7 +570,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       pkt.duration =
           gst_ffmpeg_time_gst_to_ff (GST_BUFFER_DURATION (buf),
-              ffmpegmux->context->streams[best_pad->padnum]->time_base);
+          ffmpegmux->context->streams[best_pad->padnum]->time_base);
     else
       pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);

@@ -211,7 +211,7 @@ AC_ARG_WITH(system-ffmpeg,
 
 if test "x$with_system_ffmpeg" = "xyes"; then
   PKG_CHECK_MODULES(FFMPEG, libavutil libavcodec libavformat)
-  PKG_CHECK_MODULES(POSTPROC, libavcodec libpostproc)
+  PKG_CHECK_MODULES(POSTPROC, libavutil libavcodec libpostproc)
   PKG_CHECK_MODULES(SWSCALE, libavutil libswcale)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $FFMPEG_CFLAGS"

@@ -31,7 +31,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
 #else
-#include <ffmpeg/avcodec.h>
+#include <libavcodec/avcodec.h>
 #endif
 
 #include <gst/gst.h>
@@ -132,7 +132,7 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s encoder",
-				      params->in_plugin->long_name);
+      params->in_plugin->long_name);
   details.klass = g_strdup_printf ("Codec/Encoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
   details.description = g_strdup_printf ("FFMPEG %s encoder",
@@ -294,7 +294,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
 
-    GST_DEBUG_OBJECT (ffmpegenc, "audio caps, return template %"GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (ffmpegenc, "audio caps, return template %" GST_PTR_FORMAT,
+        caps);
 
     return caps;
   }
@@ -302,7 +303,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   /* cached */
   if (oclass->sinkcaps) {
     caps = gst_caps_copy (oclass->sinkcaps);
-    GST_DEBUG_OBJECT (ffmpegenc, "return cached caps %"GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (ffmpegenc, "return cached caps %" GST_PTR_FORMAT, caps);
     return caps;
   }
 
@@ -343,8 +344,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     /* set some default properties */
     ctx->width = DEFAULT_WIDTH;
     ctx->height = DEFAULT_HEIGHT;
-    ctx->time_base.num = DEFAULT_FRAME_RATE_BASE;
-    ctx->time_base.den = 25 * DEFAULT_FRAME_RATE_BASE;
+    ctx->time_base.num = 1;
+    ctx->time_base.den = 25;
     ctx->bit_rate = DEFAULT_VIDEO_BITRATE;
     /* makes it silent */
     ctx->strict_std_compliance = -1;
@@ -381,7 +382,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     return caps;
   }
 
-  GST_DEBUG_OBJECT (ffmpegenc, "probed caps gave %"GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (ffmpegenc, "probed caps gave %" GST_PTR_FORMAT, caps);
   oclass->sinkcaps = gst_caps_copy (caps);
 
   return caps;
@@ -420,7 +421,6 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 
   /* RTP payload used for GOB production (for Asterisk) */
   if (ffmpegenc->rtp_payload_size) {
-    ffmpegenc->context->rtp_mode = 1;
     ffmpegenc->context->rtp_payload_size = ffmpegenc->rtp_payload_size;
   }
 
@@ -985,13 +985,13 @@ gst_ffmpegenc_register (GstPlugin * plugin)
   GType type;
   AVCodec *in_plugin;
 
-  in_plugin = first_avcodec;
 
   GST_LOG ("Registering encoders");
 
   /* build global ffmpeg param/property info */
   gst_ffmpeg_cfg_init ();
 
+  in_plugin = av_codec_next (NULL);
   while (in_plugin) {
     gchar *type_name;
     GstCaps *srccaps = NULL, *sinkcaps = NULL;
@@ -1010,8 +1010,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
-    GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name,
-	       in_plugin->long_name);
+    GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
     if (!strcmp (in_plugin->name, "vorbis") ||
@@ -1034,8 +1033,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
           in_plugin->id, TRUE);
     }
     if (!sinkcaps) {
-      GST_WARNING ("Couldn't get sink caps for encoder %s",
-          in_plugin->name);
+      GST_WARNING ("Couldn't get sink caps for encoder %s", in_plugin->name);
       goto next;
     }
     /* construct the type */
@@ -1068,7 +1066,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       gst_caps_unref (sinkcaps);
     if (srccaps)
       gst_caps_unref (srccaps);
-    in_plugin = in_plugin->next;
+    in_plugin = av_codec_next (in_plugin);
   }
 
   GST_LOG ("Finished registering encoders");

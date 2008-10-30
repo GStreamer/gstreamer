@@ -30,7 +30,7 @@
 #include <avi.h>
 #endif
 #else
-#include <ffmpeg/avformat.h>
+#include <libavformat/avformat.h>
 #ifdef HAVE_AVI_H
 #include <ffmpeg/avi.h>
 #endif

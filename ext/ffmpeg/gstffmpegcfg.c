@@ -272,7 +272,6 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
       {CODEC_FLAG_NORMALIZE_AQP,
           "Normalize Adaptive Quantization (masking, etc)", "aqp"},
-      {CODEC_FLAG_TRELLIS_QUANT, "Trellis Quantization", "trellis"},
       {CODEC_FLAG_GLOBAL_HEADER,
             "Global headers in extradata instead of every keyframe",
           "global-headers"},
@@ -669,6 +668,9 @@ gst_ffmpeg_cfg_init ()
       "Prediction Method",
       GST_TYPE_FFMPEG_PRED_METHOD, FF_PRED_LEFT, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.prediction_method, FALSE, huffyuv, NULL);
+  pspec = g_param_spec_int ("trellis", "Trellis Quantization",
+      "Trellis RD quantization", 0, 1, 1, G_PARAM_READWRITE);
+  gst_ffmpeg_add_pspec (pspec, config.trellis, FALSE, mpeg, NULL);
 }
 
 /* ==== END CONFIGURATION SECTION ==== */

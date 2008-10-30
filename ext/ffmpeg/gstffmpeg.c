@@ -31,8 +31,8 @@
 #include <avcodec.h>
 #include <avformat.h>
 #else
-#include <ffmpeg/avcodec.h>
-#include <ffmpeg/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
 #endif
 
 #include "gstffmpeg.h"
