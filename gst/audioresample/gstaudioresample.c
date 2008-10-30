@@ -503,9 +503,7 @@ audioresample_event (GstBaseTransform * base, GstEvent * event)
     default:
       break;
   }
-  parent_class->event (base, event);
-
-  return TRUE;
+  return parent_class->event (base, event);
 }
 
 static GstFlowReturn

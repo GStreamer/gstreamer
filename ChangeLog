@@ -1,3 +1,8 @@
+2008-10-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audioresample/gstaudioresample.c:
+	  Return the result of parent_class->event().
+
 2008-10-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audioresample/gstaudioresample.c:
