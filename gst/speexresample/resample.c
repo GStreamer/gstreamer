@@ -267,10 +267,17 @@ static const struct QualityMapping quality_map[11] = {
 };
 
 /*8,24,40,56,80,104,128,160,200,256,320*/
+#ifdef DOUBLE_PRECISION
+static double
+compute_func (double x, struct FuncDef *func)
+{
+  double y, frac;
+#else
 static double
 compute_func (float x, struct FuncDef *func)
 {
   float y, frac;
+#endif
   double interp[4];
   int ind;
   y = x * func->oversample;
@@ -321,11 +328,19 @@ sinc (float cutoff, float x, int N, struct FuncDef *window_func)
 }
 #else
 /* The slow way of computing a sinc for the table. Should improve that some day */
+#ifdef DOUBLE_PRECISION
+static spx_word16_t
+sinc (double cutoff, double x, int N, struct FuncDef *window_func)
+{
+  /*fprintf (stderr, "%f ", x); */
+  double xx = x * cutoff;
+#else
 static spx_word16_t
 sinc (float cutoff, float x, int N, struct FuncDef *window_func)
 {
   /*fprintf (stderr, "%f ", x); */
   float xx = x * cutoff;
+#endif
   if (fabs (x) < 1e-6)
     return cutoff;
   else if (fabs (x) > .5 * N)
@@ -376,6 +391,7 @@ cubic_coef (spx_word16_t frac, spx_word16_t interp[4])
 }
 #endif
 
+#ifndef DOUBLE_PRECISION
 static int
 resampler_basic_direct_single (SpeexResamplerState * st,
     spx_uint32_t channel_index, const spx_word16_t * in, spx_uint32_t * in_len,
@@ -425,6 +441,7 @@ resampler_basic_direct_single (SpeexResamplerState * st,
   st->samp_frac_num[channel_index] = samp_frac_num;
   return out_sample;
 }
+#endif
 
 #ifdef FIXED_POINT
 #else
@@ -480,6 +497,7 @@ resampler_basic_direct_double (SpeexResamplerState * st,
 }
 #endif
 
+#ifndef DOUBLE_PRECISION
 static int
 resampler_basic_interpolate_single (SpeexResamplerState * st,
     spx_uint32_t channel_index, const spx_word16_t * in, spx_uint32_t * in_len,
@@ -558,6 +576,7 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
   st->samp_frac_num[channel_index] = samp_frac_num;
   return out_sample;
 }
+#endif
 
 #ifdef FIXED_POINT
 #else
@@ -588,9 +607,15 @@ resampler_basic_interpolate_double (SpeexResamplerState * st,
         PDIV32 (SHL32 ((samp_frac_num * st->oversample) % st->den_rate, 15),
         st->den_rate);
 #else
+#ifdef DOUBLE_PRECISION
+    const spx_word16_t frac =
+        ((double) ((samp_frac_num * st->oversample) % st->den_rate)) /
+        st->den_rate;
+#else
     const spx_word16_t frac =
         ((float) ((samp_frac_num * st->oversample) % st->den_rate)) /
         st->den_rate;
+#endif
 #endif
     spx_word16_t interp[4];
 
@@ -692,19 +717,26 @@ update_filter (SpeexResamplerState * st)
       spx_int32_t j;
       for (j = 0; j < st->filt_len; j++) {
         st->sinc_table[i * st->filt_len + j] =
-            sinc (st->cutoff,
-            ((j - (spx_int32_t) st->filt_len / 2 + 1) -
+            sinc (st->cutoff, ((j - (spx_int32_t) st->filt_len / 2 + 1) -
+#ifdef DOUBLE_PRECISION
+                ((double) i) / st->den_rate), st->filt_len,
+#else
                 ((float) i) / st->den_rate), st->filt_len,
+#endif
             quality_map[st->quality].window_func);
       }
     }
 #ifdef FIXED_POINT
     st->resampler_ptr = resampler_basic_direct_single;
 #else
+#ifdef DOUBLE_PRECISION
+    st->resampler_ptr = resampler_basic_direct_double;
+#else
     if (st->quality > 8)
       st->resampler_ptr = resampler_basic_direct_double;
     else
       st->resampler_ptr = resampler_basic_direct_single;
+#endif
 #endif
     /*fprintf (stderr, "resampler uses direct sinc table and normalised cutoff %f\n", cutoff); */
   } else {
@@ -721,15 +753,23 @@ update_filter (SpeexResamplerState * st)
     }
     for (i = -4; i < (spx_int32_t) (st->oversample * st->filt_len + 4); i++)
       st->sinc_table[i + 4] =
+#ifdef DOUBLE_PRECISION
+          sinc (st->cutoff, (i / (double) st->oversample - st->filt_len / 2),
+#else
           sinc (st->cutoff, (i / (float) st->oversample - st->filt_len / 2),
+#endif
           st->filt_len, quality_map[st->quality].window_func);
 #ifdef FIXED_POINT
     st->resampler_ptr = resampler_basic_interpolate_single;
+#else
+#ifdef DOUBLE_PRECISION
+    st->resampler_ptr = resampler_basic_interpolate_double;
 #else
     if (st->quality > 8)
       st->resampler_ptr = resampler_basic_interpolate_double;
     else
       st->resampler_ptr = resampler_basic_interpolate_single;
+#endif
 #endif
     /*fprintf (stderr, "resampler uses interpolated sinc table and normalised cutoff %f\n", cutoff); */
   }
@@ -960,10 +1000,17 @@ speex_resampler_process_int (SpeexResamplerState * st,
     spx_uint32_t channel_index, const spx_int16_t * in, spx_uint32_t * in_len,
     spx_int16_t * out, spx_uint32_t * out_len)
 #else
+#ifdef DOUBLE_PRECISION
+EXPORT int
+speex_resampler_process_float (SpeexResamplerState * st,
+    spx_uint32_t channel_index, const double *in, spx_uint32_t * in_len,
+    double *out, spx_uint32_t * out_len)
+#else
 EXPORT int
 speex_resampler_process_float (SpeexResamplerState * st,
     spx_uint32_t channel_index, const float *in, spx_uint32_t * in_len,
     float *out, spx_uint32_t * out_len)
+#endif
 #endif
 {
   int j;
@@ -1082,9 +1129,16 @@ speex_resampler_process_int (SpeexResamplerState * st,
   return RESAMPLER_ERR_SUCCESS;
 }
 
+#ifdef DOUBLE_PRECISION
+EXPORT int
+speex_resampler_process_interleaved_float (SpeexResamplerState * st,
+    const double *in, spx_uint32_t * in_len, double *out,
+    spx_uint32_t * out_len)
+#else
 EXPORT int
 speex_resampler_process_interleaved_float (SpeexResamplerState * st,
     const float *in, spx_uint32_t * in_len, float *out, spx_uint32_t * out_len)
+#endif
 {
   spx_uint32_t i;
   int istride_save, ostride_save;

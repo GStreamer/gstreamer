@@ -3,7 +3,8 @@ plugin_LTLIBRARIES = libgstspeexresample.la
 libgstspeexresample_la_SOURCES = \
 	gstspeexresample.c \
 	speex_resampler_int.c \
-	speex_resampler_float.c
+	speex_resampler_float.c \
+	speex_resampler_double.c
 
 libgstspeexresample_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

@@ -137,6 +137,28 @@ typedef spx_word32_t spx_sig_t;
 
 #else
 
+#ifdef DOUBLE_PRECISION
+typedef double spx_mem_t;
+typedef double spx_coef_t;
+typedef double spx_lsp_t;
+typedef double spx_sig_t;
+typedef double spx_word16_t;
+typedef double spx_word32_t;
+
+#define Q15ONE 1.0
+#define LPC_SCALING  1.
+#define SIG_SCALING  1.
+#define LSP_SCALING  1.
+#define GAMMA_SCALING 1.
+#define GAIN_SCALING 1.
+#define GAIN_SCALING_1 1.
+
+
+#define VERY_SMALL 1e-20
+#define VERY_LARGE32 1e20
+#define VERY_LARGE16 1e20
+#define Q15_ONE ((spx_word16_t)1.)
+#else /* !DOUBLE_PRECISION */
 typedef float spx_mem_t;
 typedef float spx_coef_t;
 typedef float spx_lsp_t;
@@ -157,6 +179,7 @@ typedef float spx_word32_t;
 #define VERY_LARGE32 1e15f
 #define VERY_LARGE16 1e15f
 #define Q15_ONE ((spx_word16_t)1.f)
+#endif /* DOUBLE_PRECISION */
 
 #define QCONST16(x,bits) (x)
 #define QCONST32(x,bits) (x)
