@@ -1,3 +1,13 @@
+2008-10-30  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	  Require at least Gtk 2.8.0 for the demos (that's the oldest I can
+	  test with; I'm fairly certain Gtk 2.0.0 is not good enough any
+	  longer); clean up some unused Gtk-related configure cruft.
+
+	* examples/scaletempo/demo-gui.c:
+	  Define Gtk 2.12 function to noop when compiling against older Gtk.
+
 2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/speexresample/gstspeexresample.c:
