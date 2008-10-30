@@ -560,8 +560,7 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
       return FALSE;
     }
   }
-  parent_class->event (trans, event);
-  return TRUE;
+  return parent_class->event (trans, event);
 }
 
 static gboolean

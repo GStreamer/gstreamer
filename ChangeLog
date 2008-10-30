@@ -1,3 +1,8 @@
+2008-10-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/scaletempo/gstscaletempo.c:
+	  Return the result of parent_class->event().
+
 2008-10-30  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/audiobuffer/Makefile.am:
