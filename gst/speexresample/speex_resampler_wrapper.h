@@ -89,7 +89,7 @@ static const SpeexResampleFuncs float_funcs =
   resample_float_resampler_reset_mem,
   resample_float_resampler_skip_zeros,
   resample_float_resampler_strerror,
-  16
+  32
 };
 
 SpeexResamplerState *resample_double_resampler_init (guint32 nb_channels,
@@ -155,7 +155,7 @@ static const SpeexResampleFuncs int_funcs =
   resample_int_resampler_reset_mem,
   resample_int_resampler_skip_zeros,
   resample_int_resampler_strerror,
-  32
+  16
 };
 
 #endif /* __SPEEX_RESAMPLER_WRAPPER_H__ */
