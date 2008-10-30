@@ -1,5 +1,14 @@
 2008-10-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/Makefile.am:
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/running.xml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	  Change to xinclude based build - its faster and easier to maintain.
+
+2008-10-30  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstregistrybinary.c:
 	* gst/gstregistryxml.c:
 	  Use g_unlink() as none of these are directories.

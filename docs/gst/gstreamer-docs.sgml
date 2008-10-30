@@ -1,67 +1,12 @@
 <?xml version="1.0"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
-<!ENTITY Gst SYSTEM "xml/gst.xml">
-<!ENTITY GstBin SYSTEM "xml/gstbin.xml">
-<!ENTITY GstBuffer SYSTEM "xml/gstbuffer.xml">
-<!ENTITY GstBus SYSTEM "xml/gstbus.xml">
-<!ENTITY GstCaps SYSTEM "xml/gstcaps.xml">
-<!ENTITY GstChildProxy SYSTEM "xml/gstchildproxy.xml">
-<!ENTITY GstClock SYSTEM "xml/gstclock.xml">
-<!--
-<!ENTITY GstCompat SYSTEM "xml/gstcompat.xml">
--->
-<!ENTITY GstConfig SYSTEM "xml/gstconfig.xml">
-<!ENTITY GstElement SYSTEM "xml/gstelement.xml">
-<!ENTITY GstElementFactory SYSTEM "xml/gstelementfactory.xml">
-<!ENTITY GstError SYSTEM "xml/gsterror.xml">
-<!ENTITY GstEvent SYSTEM "xml/gstevent.xml">
-<!ENTITY GstFilter SYSTEM "xml/gstfilter.xml">
-<!ENTITY GstFormat SYSTEM "xml/gstformat.xml">
-<!ENTITY GstGhostPad SYSTEM "xml/gstghostpad.xml">
-<!ENTITY GstImplementsInterface SYSTEM "xml/gstimplementsinterface.xml">
-<!ENTITY GstIndex SYSTEM "xml/gstindex.xml">
-<!ENTITY GstIndexFactory SYSTEM "xml/gstindexfactory.xml">
-<!ENTITY GstInfo SYSTEM "xml/gstinfo.xml">
-<!ENTITY GstIterator SYSTEM "xml/gstiterator.xml">
-<!ENTITY GstMessage SYSTEM "xml/gstmessage.xml">
-<!ENTITY GstMiniObject SYSTEM "xml/gstminiobject.xml">
-<!ENTITY GstObject SYSTEM "xml/gstobject.xml">
-<!ENTITY GstPad SYSTEM "xml/gstpad.xml">
-<!ENTITY GstPadTemplate SYSTEM "xml/gstpadtemplate.xml">
-<!ENTITY GstParamSpec SYSTEM "xml/gstparamspec.xml">
-<!ENTITY GstParse SYSTEM "xml/gstparse.xml">
-<!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
-<!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
-<!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
-<!ENTITY GstPoll SYSTEM "xml/gstpoll.xml">
-<!ENTITY GstPreset SYSTEM "xml/gstpreset.xml">
-<!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
-<!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
-<!ENTITY GstSegment SYSTEM "xml/gstsegment.xml">
-<!ENTITY GstStructure SYSTEM "xml/gststructure.xml">
-<!ENTITY GstSystemClock SYSTEM "xml/gstsystemclock.xml">
-<!ENTITY GstTagList SYSTEM "xml/gsttaglist.xml">
-<!ENTITY GstTagSetter SYSTEM "xml/gsttagsetter.xml">
-<!ENTITY GstTask SYSTEM "xml/gsttask.xml">
-<!ENTITY GstTrace SYSTEM "xml/gsttrace.xml">
-<!ENTITY GstTypeFind SYSTEM "xml/gsttypefind.xml">
-<!ENTITY GstTypeFindFactory SYSTEM "xml/gsttypefindfactory.xml">
-<!ENTITY GstUriHandler SYSTEM "xml/gsturihandler.xml">
-<!ENTITY GstUtils SYSTEM "xml/gstutils.xml">
-<!ENTITY GstValue SYSTEM "xml/gstvalue.xml">
-<!ENTITY GstVersion SYSTEM "xml/gstversion.xml">
-<!ENTITY GstXML SYSTEM "xml/gstxml.xml">
-
-<!ENTITY gstreamer-tree-index SYSTEM "xml/tree_index.sgml">
-
-<!ENTITY gst-Running SYSTEM "running.xml">
-
+<!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
 <!ENTITY hash "#">
 ]>
-<book id="index">
+<book id="index" xmlns:xi="http://www.w3.org/2003/XInclude">
   <bookinfo>
     <title>GStreamer &GST_MAJORMINOR; Core Reference Manual</title>
     <releaseinfo>
@@ -88,7 +33,7 @@ Windows.  It is released under the GNU Library General Public License
 (GNU LGPL).
     </para>
 
-    &gst-Running;
+    <xi:include href="running.xml" />
   </chapter>
 
   <chapter id="libgstreamer">
@@ -101,52 +46,52 @@ Windows.  It is released under the GNU Library General Public License
       along with some more specialized elements.
     </para>
 
-    &Gst;
-    &GstBin;
-    &GstBuffer;
-    &GstBus;
-    &GstCaps;
-    &GstChildProxy;
-    &GstClock;
-    &GstConfig;
-    &GstElement;
-    &GstElementFactory;
-    &GstError;
-    &GstEvent;
-    &GstFilter;
-    &GstFormat;
-    &GstGhostPad;
-    &GstImplementsInterface;
-    &GstIndex;
-    &GstIndexFactory;
-    &GstIterator;
-    &GstMessage;
-    &GstMiniObject;
-    &GstObject;
-    &GstPad;
-    &GstPadTemplate;
-    &GstParamSpec;
-    &GstParse;
-    &GstPipeline;
-    &GstPlugin;
-    &GstPluginFeature;
-    &GstPoll;
-    &GstPreset;
-    &GstQuery;
-    &GstRegistry;
-    &GstSegment;
-    &GstStructure;
-    &GstSystemClock;
-    &GstTagList;
-    &GstTagSetter;
-    &GstTask;
-    &GstTypeFind;
-    &GstTypeFindFactory;
-    &GstUriHandler;
-    &GstUtils;
-    &GstValue;
-    &GstVersion;
-    &GstXML;
+    <xi:include href="xml/gst.xml" />
+    <xi:include href="xml/gstbin.xml" />
+    <xi:include href="xml/gstbuffer.xml" />
+    <xi:include href="xml/gstbus.xml" />
+    <xi:include href="xml/gstcaps.xml" />
+    <xi:include href="xml/gstchildproxy.xml" />
+    <xi:include href="xml/gstclock.xml" />
+    <xi:include href="xml/gstconfig.xml" />
+    <xi:include href="xml/gstelement.xml" />
+    <xi:include href="xml/gstelementfactory.xml" />
+    <xi:include href="xml/gsterror.xml" />
+    <xi:include href="xml/gstevent.xml" />
+    <xi:include href="xml/gstfilter.xml" />
+    <xi:include href="xml/gstformat.xml" />
+    <xi:include href="xml/gstghostpad.xml" />
+    <xi:include href="xml/gstimplementsinterface.xml" />
+    <xi:include href="xml/gstindex.xml" />
+    <xi:include href="xml/gstindexfactory.xml" />
+    <xi:include href="xml/gstiterator.xml" />
+    <xi:include href="xml/gstmessage.xml" />
+    <xi:include href="xml/gstminiobject.xml" />
+    <xi:include href="xml/gstobject.xml" />
+    <xi:include href="xml/gstpad.xml" />
+    <xi:include href="xml/gstpadtemplate.xml" />
+    <xi:include href="xml/gstparamspec.xml" />
+    <xi:include href="xml/gstparse.xml" />
+    <xi:include href="xml/gstpipeline.xml" />
+    <xi:include href="xml/gstplugin.xml" />
+    <xi:include href="xml/gstpluginfeature.xml" />
+    <xi:include href="xml/gstpoll.xml" />
+    <xi:include href="xml/gstpreset.xml" />
+    <xi:include href="xml/gstquery.xml" />
+    <xi:include href="xml/gstregistry.xml" />
+    <xi:include href="xml/gstsegment.xml" />
+    <xi:include href="xml/gststructure.xml" />
+    <xi:include href="xml/gstsystemclock.xml" />
+    <xi:include href="xml/gsttaglist.xml" />
+    <xi:include href="xml/gsttagsetter.xml" />
+    <xi:include href="xml/gsttask.xml" />
+    <xi:include href="xml/gsttypefind.xml" />
+    <xi:include href="xml/gsttypefindfactory.xml" />
+    <xi:include href="xml/gsturihandler.xml" />
+    <xi:include href="xml/gstutils.xml" />
+    <xi:include href="xml/gstvalue.xml" />
+    <xi:include href="xml/gstversion.xml" />
+    <xi:include href="xml/gstxml.xml" />
 
   </chapter>
 
@@ -157,41 +102,23 @@ Windows.  It is released under the GNU Library General Public License
       Application developers will rarely need to know about it.
     </para>
 
-    &GstInfo;
-    &GstTrace;
+    <xi:include href="xml/gstinfo.xml" />
+    <xi:include href="xml/gsttrace.xml" />
 
   </chapter>
-
-<!--
-  <chapter id="gstreamer-compat">
-    <title>GStreamer Core Compatibility</title>
-    <para>
-      These elements are defined for compatibility with older code.
-      They must not be used in new code!
-    </para>
-
-    &GstCompat;
-
-  </chapter>
--->
 
   <chapter id="gstreamer-hierarchy">
     <title>Object Hierarchy</title>
-    &gstreamer-tree-index;
+    <xi:include href="xml/tree_index.sgml"/>
   </chapter>
 
-  <index id="api-index">
-    <title>Index</title>
+  <index id="api-index-full">
+    <title>API Index</title>
+    <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
   </index>
-  <index role="deprecated">
-    <title>Index of deprecated symbols</title>
+  <index id="api-index-deprecated" role="deprecated">
+    <title>Index of deprecated API</title>
+    <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
   </index>
-  <!-- disable, as
-     - index generation is extremly slow in xslt
-     - we have not tagged lots of symbols this way anyway
-  <index role="0.9">
-    <title>Index of new symbols in 0.9</title>
-  </index>
-  -->
 
 </book>
