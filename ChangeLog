@@ -1,3 +1,15 @@
+2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/speexresample/gstspeexresample.c: (gst_speex_resample_stop),
+	(gst_speex_resample_get_funcs),
+	(gst_speex_resample_transform_size),
+	(gst_speex_resample_convert_buffer),
+	(gst_speex_resample_push_drain), (gst_speex_resample_process):
+	* gst/speexresample/gstspeexresample.h:
+	* gst/speexresample/speex_resampler_wrapper.h:
+	Add support for int8, int24 and int32 input by converting internally
+	to/from int16 or double.
+
 2008-10-30  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/resindvdsrc.c:
