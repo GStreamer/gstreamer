@@ -1,5 +1,11 @@
 2008-10-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_format_get_rank):
+	Guard more uncommon formats with ifdefs so that we can compile on older
+	versions.
+
+2008-10-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Nick Haddad <nick at haddads dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_is_uncompressed),

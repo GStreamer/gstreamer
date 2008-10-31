@@ -469,16 +469,24 @@ gst_v4l2src_format_get_rank (guint32 fourcc)
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       return 0;
 
+#ifdef V4L2_PIX_FMT_SBGGR8
     case V4L2_PIX_FMT_SBGGR8:
       return BAYER_BASE_RANK;
+#endif
 
+#ifdef V4L2_PIX_FMT_SN9C10X
     case V4L2_PIX_FMT_SN9C10X:
       return S910_BASE_RANK;
+#endif
 
+#ifdef V4L2_PIX_FMT_PWC1
     case V4L2_PIX_FMT_PWC1:
       return PWC_BASE_RANK;
+#endif
+#ifdef V4L2_PIX_FMT_PWC2
     case V4L2_PIX_FMT_PWC2:
       return PWC_BASE_RANK;
+#endif
 
     default:
       break;
