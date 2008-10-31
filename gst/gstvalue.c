@@ -2346,8 +2346,8 @@ gst_value_intersect_fraction_fraction_range (GValue * dest, const GValue * src1,
 }
 
 static gboolean
-    gst_value_intersect_fraction_range_fraction_range
-    (GValue * dest, const GValue * src1, const GValue * src2)
+gst_value_intersect_fraction_range_fraction_range (GValue * dest,
+    const GValue * src1, const GValue * src2)
 {
   GValue *min;
   GValue *max;

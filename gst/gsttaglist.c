@@ -811,9 +811,7 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   GstTagInfo *info;
-
   GQuark quark;
-
   gchar *error = NULL;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
@@ -858,7 +856,6 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
   GstTagInfo *info;
-
   GQuark quark;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));

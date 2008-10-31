@@ -620,7 +620,7 @@ no_presets:
     GST_WARNING_OBJECT (preset,
         "no presets, trying to unlink possibly existing preset file: '%s'",
         preset_path);
-    unlink (preset_path);
+    g_unlink (preset_path);
     return FALSE;
   }
 convert_failed:

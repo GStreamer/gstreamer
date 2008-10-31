@@ -1,5 +1,21 @@
 2008-10-31  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstpreset.c:
+	  Use g_unlink instead of unlink.
+
+	* gst/gststructure.c:
+	  Use glib type.
+
+	* gst/gstutils.c:
+	  Add a FIXME:.
+
+	* gst/gsttaglist.c:
+	* gst/gsttypefind.c:
+	* gst/gstvalue.c:
+	  Formatting & whitespaces.
+
+2008-10-31  Stefan Kost  <ensonic@users.sf.net>
+
 	* plugins/elements/gstidentity.c:
 	  Doc typo. Use return value of parent_class->event.
   
