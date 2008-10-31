@@ -135,6 +135,8 @@ G_BEGIN_DECLS
 #define GST_RIFF_WHAM GST_MAKE_FOURCC ('W', 'H', 'A', 'M')
 #define GST_RIFF_rgb  GST_MAKE_FOURCC (0x00,0x00,0x00,0x00)
 #define GST_RIFF_RGB  GST_MAKE_FOURCC ('R', 'G', 'B', ' ')
+#define GST_RIFF_RAW  GST_MAKE_FOURCC ('R', 'A', 'W', ' ')
+#define GST_RIFF_DIB  GST_MAKE_FOURCC ('D', 'I', 'B', ' ')
 #define GST_RIFF_rle8 GST_MAKE_FOURCC (0x01,0x00,0x00,0x00)
 #define GST_RIFF_RLE8 GST_MAKE_FOURCC ('R', 'L', 'E', '8')
 #define GST_RIFF_rle4 GST_MAKE_FOURCC (0x02,0x00,0x00,0x00)

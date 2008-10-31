@@ -59,7 +59,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   GST_DEBUG ("video fourcc %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (codec_fcc));
 
   switch (codec_fcc) {
-    case GST_MAKE_FOURCC ('D', 'I', 'B', ' '):{
+    case GST_MAKE_FOURCC ('D', 'I', 'B', ' '): /* uncompressed RGB */
+    case GST_MAKE_FOURCC (0x00, 0x00, 0x00, 0x00):
+    case GST_MAKE_FOURCC ('R', 'G', 'B', ' '):
+    case GST_MAKE_FOURCC ('R', 'A', 'W', ' '):
+    {
       gint bpp = (strf && strf->bit_cnt != 0) ? strf->bit_cnt : 8;
 
       if (strf) {

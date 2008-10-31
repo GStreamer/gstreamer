@@ -1,3 +1,13 @@
+2008-10-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Nick Haddad <nick at haddads dot net>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	Add support for other fourcc codes that are commonly used for
+	'uncompressed RGB', including 'RGB ', 'RAW ', and 0.
+	Fixes #558553.
+
 2008-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audioresample/gstaudioresample.c:
