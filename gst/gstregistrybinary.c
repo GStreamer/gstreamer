@@ -768,7 +768,6 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
       int ret;
       struct stat statbuf;
 
-      ret = g_stat (plugin->filename, &statbuf);
       if ((ret = g_stat (plugin->filename, &statbuf)) < 0 ||
           plugin->file_mtime != statbuf.st_mtime ||
           plugin->file_size != statbuf.st_size)

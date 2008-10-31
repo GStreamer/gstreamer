@@ -1,5 +1,10 @@
 2008-10-31  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstregistrybinary.c:
+	  Oh my, studip, stupid me. Remove double stat() call.
+
+2008-10-31  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstpreset.c:
 	  Use g_unlink instead of unlink.
 
