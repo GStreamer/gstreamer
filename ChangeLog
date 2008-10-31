@@ -1,3 +1,10 @@
+2008-10-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	Use AC_TRY_COMPILE instead of AC_TRY_RUN as the result of the linking
+	is what is interesting, not that it actually runs.
+	Fixes cross-compilation and fixes bug #558639.
+
 2008-10-30  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/qtwrapper/audiodecoders.c:

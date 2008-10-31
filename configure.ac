@@ -392,10 +392,11 @@ AG_GST_CHECK_FEATURE(APEXSINK, [AirPort Express Wireless sink], apexsink, [
 
                   # Basic test to check for compatible version and correct linking
                   # *does not* test for RSA - that comes later.
-                  AC_TRY_RUN(
+                  AC_TRY_COMPILE(
                           [
 #include <string.h>
 #include <openssl/rand.h>
+],[
 int main(void)
 {
         char a[2048];
