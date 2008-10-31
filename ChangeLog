@@ -1,3 +1,10 @@
+2008-10-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/flac/Makefile.am:
+	Include $(FLAC_CFLAGS) in CFLAGS to make sure to find the FLAC headers.
+	This fixes compilation if FLAC is installed in an uncommon location
+	that is not already handled by other CFLAGS. Fixes bug #558711.
+
 2008-10-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_format_get_rank):
