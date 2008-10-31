@@ -1,3 +1,11 @@
+2008-10-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gstidentity.c:
+	  Doc typo. Use return value of parent_class->event.
+  
+	* plugins/elements/gsttypefindelement.c:
+	  Chain up at the end for consistency.
+  
 2008-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/Makefile.am:
