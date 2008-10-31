@@ -1,3 +1,12 @@
+2008-10-31  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Nick Haddad <nick at haddads dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_is_uncompressed),
+	(gst_avi_demux_invert), (gst_avi_demux_process_next_entry),
+	(gst_avi_demux_stream_data):
+	Invert other uncompressed RGB formats. Fixes #558554.
+
 2008-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),

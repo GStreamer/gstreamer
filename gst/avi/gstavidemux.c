@@ -3584,6 +3584,17 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 }
 
 /*
+ * Helper for gst_avi_demux_insert()
+ */
+static gboolean
+gst_avi_demux_is_uncompressed (guint32 fourcc)
+{
+  return fourcc == GST_RIFF_DIB ||
+      fourcc == GST_RIFF_rgb ||
+      fourcc == GST_RIFF_RGB || fourcc == GST_RIFF_RAW;
+}
+
+/*
  * Invert DIB buffers... Takes existing buffer and
  * returns either the buffer or a new one (with old
  * one dereferenced).
@@ -3596,6 +3607,10 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
   gint y, h = stream->strf.vids->height;
   gint bpp, stride;
   guint8 *tmp = NULL;
+
+  if (!gst_avi_demux_is_uncompressed (stream->strh->fcc_handler)) {
+    return buf;                 /* Ignore non DIB buffers */
+  }
 
   s = gst_caps_get_structure (GST_PAD_CAPS (stream->pad), 0);
   if (!gst_structure_get_int (s, "bpp", &bpp)) {
@@ -3770,8 +3785,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       goto short_buffer;
 
     /* invert the picture if needed */
-    if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' '))
-      buf = gst_avi_demux_invert (stream, buf);
+    buf = gst_avi_demux_invert (stream, buf);
 
     /* mark non-keyframes */
     if (!(entry->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME))
@@ -3997,9 +4011,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GstClockTime dur_ts = 0;
 
         /* invert the picture if needed */
-        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
-          buf = gst_avi_demux_invert (stream, buf);
-        }
+        buf = gst_avi_demux_invert (stream, buf);
 
         gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
         if (format != GST_FORMAT_TIME)
