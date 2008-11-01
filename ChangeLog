@@ -1,3 +1,25 @@
+2008-11-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/speexresample/Makefile.am:
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_base_init), (gst_speex_resample_get_funcs),
+	(gst_speex_resample_convert_buffer), (_benchmark_int_float),
+	(_benchmark_int_int), (_benchmark_integer_resampling),
+	(plugin_init):
+	* gst/speexresample/gstspeexresample.h:
+	* gst/speexresample/resample.c:
+	* gst/speexresample/speex_resampler_double.c:
+	* gst/speexresample/speex_resampler_float.c:
+	* gst/speexresample/speex_resampler_int.c:
+	* gst/speexresample/speex_resampler_wrapper.h:
+	Add missing headers to Makefile.am.
+
+	Update copyright, years and my mail address.
+
+	Benchmark the integer resampling implementation against the
+	float implementation and use the faster one for 8/16 bit integer
+	input. On most recent systems the floating point version is faster.
+
 2008-10-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

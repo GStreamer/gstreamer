@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2003,2004 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007-2008 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,6 +44,10 @@
 #include "gstspeexresample.h"
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
+
+#define OIL_ENABLE_UNSTABLE_API
+#include <liboil/liboilprofile.h>
+#include <liboil/liboil.h>
 
 GST_DEBUG_CATEGORY (speex_resample_debug);
 #define GST_CAT_DEFAULT speex_resample_debug
@@ -91,6 +95,9 @@ GST_STATIC_CAPS ( \
       "signed = (boolean) true" \
 )
 
+/* If TRUE integer arithmetic resampling is faster and will be used if appropiate */
+static gboolean gst_speex_resample_use_int = FALSE;
+
 static GstStaticPadTemplate gst_speex_resample_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK, GST_PAD_ALWAYS, SUPPORTED_CAPS);
@@ -125,11 +132,8 @@ static gboolean gst_speex_resample_stop (GstBaseTransform * base);
 static gboolean gst_speex_resample_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_speex_resample_query_type (GstPad * pad);
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (speex_resample_debug, "speex_resample", 0, "audio resampling element");
-
-GST_BOILERPLATE_FULL (GstSpeexResample, gst_speex_resample, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+GST_BOILERPLATE (GstSpeexResample, gst_speex_resample, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_speex_resample_base_init (gpointer g_class)
@@ -143,7 +147,7 @@ gst_speex_resample_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (gstelement_class, "Audio resampler",
       "Filter/Converter/Audio", "Resamples audio",
-      "Sebastian Dröge <slomo@circular-chaos.org>");
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }
 
 static void
@@ -297,9 +301,10 @@ gst_speex_resample_get_funcs (gint width, gboolean fp)
 {
   const SpeexResampleFuncs *funcs = NULL;
 
-  if ((width == 8 || width == 16) && !fp)
+  if (gst_speex_resample_use_int && (width == 8 || width == 16) && !fp)
     funcs = &int_funcs;
-  else if (width == 32 && fp)
+  else if ((!gst_speex_resample_use_int && (width == 8 || width == 16) && !fp)
+      || (width == 32 && fp))
     funcs = &float_funcs;
   else if ((width == 64 && fp) || ((width == 32 || width == 24) && !fp))
     funcs = &double_funcs;
@@ -572,7 +577,7 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
   len *= resample->channels;
 
   if (inverse) {
-    if (resample->width == 8 && !resample->fp) {
+    if (gst_speex_resample_use_int && resample->width == 8 && !resample->fp) {
       gint8 *o = (gint8 *) out;
       gint16 *i = (gint16 *) in;
       gint32 tmp;
@@ -584,6 +589,32 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
         i++;
         len--;
       }
+    } else if (!gst_speex_resample_use_int && resample->width == 8
+        && !resample->fp) {
+      gint8 *o = (gint8 *) out;
+      gfloat *i = (gfloat *) in;
+      gfloat tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = (gint8) CLAMP (tmp * G_MAXINT8 + 0.5, G_MININT8, G_MAXINT8);
+        o++;
+        i++;
+        len--;
+      }
+    } else if (!gst_speex_resample_use_int && resample->width == 16
+        && !resample->fp) {
+      gint16 *o = (gint16 *) out;
+      gfloat *i = (gfloat *) in;
+      gfloat tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = (gint16) CLAMP (tmp * G_MAXINT16 + 0.5, G_MININT16, G_MAXINT16);
+        o++;
+        i++;
+        len--;
+      }
     } else if (resample->width == 24 && !resample->fp) {
       guint8 *o = (guint8 *) out;
       gdouble *i = (gdouble *) in;
@@ -591,8 +622,8 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
 
       while (len) {
         tmp = *i;
-        GST_WRITE_UINT24 (o, CLAMP (tmp * GST_MAXINT24 + 0.5, GST_MININT24,
-                GST_MAXINT24));
+        GST_WRITE_UINT24 (o, (gint32) CLAMP (tmp * GST_MAXINT24 + 0.5,
+                GST_MININT24, GST_MAXINT24));
         o += 3;
         i++;
         len--;
@@ -604,14 +635,14 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
 
       while (len) {
         tmp = *i;
-        *o = CLAMP (tmp * G_MAXINT32 + 0.5, G_MININT32, G_MAXINT32);
+        *o = (gint32) CLAMP (tmp * G_MAXINT32 + 0.5, G_MININT32, G_MAXINT32);
         o++;
         i++;
         len--;
       }
     }
   } else {
-    if (resample->width == 8 && !resample->fp) {
+    if (gst_speex_resample_use_int && resample->width == 8 && !resample->fp) {
       gint8 *i = (gint8 *) in;
       gint16 *o = (gint16 *) out;
       gint32 tmp;
@@ -619,6 +650,32 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
       while (len) {
         tmp = *i;
         *o = tmp << 8;
+        o++;
+        i++;
+        len--;
+      }
+    } else if (!gst_speex_resample_use_int && resample->width == 8
+        && !resample->fp) {
+      gint8 *i = (gint8 *) in;
+      gfloat *o = (gfloat *) out;
+      gfloat tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = tmp / G_MAXINT8;
+        o++;
+        i++;
+        len--;
+      }
+    } else if (!gst_speex_resample_use_int && resample->width == 16
+        && !resample->fp) {
+      gint16 *i = (gint16 *) in;
+      gfloat *o = (gfloat *) out;
+      gfloat tmp;
+
+      while (len) {
+        tmp = *i;
+        *o = tmp / G_MAXINT16;
         o++;
         i++;
         len--;
@@ -1117,10 +1174,134 @@ gst_speex_resample_get_property (GObject * object, guint prop_id,
   }
 }
 
+#define BENCHMARK_SIZE 512
+
+static gboolean
+_benchmark_int_float (SpeexResamplerState * st)
+{
+  gint16 in[BENCHMARK_SIZE] = { 0, }, out[BENCHMARK_SIZE / 2];
+  gfloat in_tmp[BENCHMARK_SIZE], out_tmp[BENCHMARK_SIZE / 2];
+  gint i;
+  guint32 inlen = BENCHMARK_SIZE, outlen = BENCHMARK_SIZE / 2;
+
+  for (i = 0; i < BENCHMARK_SIZE; i++) {
+    gfloat tmp = in[i];
+    in_tmp[i] = tmp / G_MAXINT16;
+  }
+
+  resample_float_resampler_process_interleaved_float (st,
+      (const guint8 *) in_tmp, &inlen, (guint8 *) out_tmp, &outlen);
+
+  if (outlen == 0) {
+    GST_ERROR ("Failed to use float resampler");
+    return FALSE;
+  }
+
+  for (i = 0; i < outlen; i++) {
+    gfloat tmp = out_tmp[i];
+    out[i] = CLAMP (tmp * G_MAXINT16 + 0.5, G_MININT16, G_MAXINT16);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_benchmark_int_int (SpeexResamplerState * st)
+{
+  gint16 in[BENCHMARK_SIZE] = { 0, }, out[BENCHMARK_SIZE / 2];
+  guint32 inlen = BENCHMARK_SIZE, outlen = BENCHMARK_SIZE / 2;
+
+  resample_int_resampler_process_interleaved_int (st, (const guint8 *) in,
+      &inlen, (guint8 *) out, &outlen);
+
+  if (outlen == 0) {
+    GST_ERROR ("Failed to use int resampler");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_benchmark_integer_resampling (void)
+{
+  OilProfile a, b;
+  gdouble av, bv;
+  SpeexResamplerState *sta, *stb;
+
+  oil_profile_init (&a);
+  oil_profile_init (&b);
+
+  sta = resample_float_resampler_init (1, 48000, 24000, 4, NULL);
+  if (sta == NULL) {
+    GST_ERROR ("Failed to create float resampler state");
+    return FALSE;
+  }
+
+  stb = resample_int_resampler_init (1, 48000, 24000, 4, NULL);
+  if (stb == NULL) {
+    resample_float_resampler_destroy (sta);
+    GST_ERROR ("Failed to create int resampler state");
+    return FALSE;
+  }
+
+  /* Warm up cache */
+  if (!_benchmark_int_float (sta))
+    goto error;
+  if (!_benchmark_int_float (sta))
+    goto error;
+
+  /* Benchmark */
+  oil_profile_start (&a);
+  if (!_benchmark_int_float (sta))
+    goto error;
+  oil_profile_stop (&a);
+
+  /* Warm up cache */
+  if (!_benchmark_int_int (stb))
+    goto error;
+  if (!_benchmark_int_int (stb))
+    goto error;
+
+  /* Benchmark */
+  oil_profile_start (&b);
+  if (!_benchmark_int_int (stb))
+    goto error;
+  oil_profile_stop (&b);
+
+  /* Handle results */
+  oil_profile_get_ave_std (&a, &av, NULL);
+  oil_profile_get_ave_std (&b, &bv, NULL);
+
+  gst_speex_resample_use_int = (av > bv);
+  resample_float_resampler_destroy (sta);
+  resample_float_resampler_destroy (stb);
+
+  if (av > bv)
+    GST_DEBUG ("Using integer resampler if appropiate: %lf < %lf", bv, av);
+  else
+    GST_DEBUG ("Using float resampler for everything: %lf <= %lf", av, bv);
+
+  return TRUE;
+
+error:
+  resample_float_resampler_destroy (sta);
+  resample_float_resampler_destroy (stb);
+
+  return FALSE;
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (speex_resample_debug, "speex_resample", 0,
+      "audio resampling element");
+
+  oil_init ();
+
+  if (!_benchmark_integer_resampling ())
+    return FALSE;
+
   if (!gst_element_register (plugin, "speexresample", GST_RANK_NONE,
           GST_TYPE_SPEEX_RESAMPLE)) {
     return FALSE;
