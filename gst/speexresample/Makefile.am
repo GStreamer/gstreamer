@@ -9,24 +9,29 @@ libgstspeexresample_la_SOURCES = \
 libgstspeexresample_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS)
+	$(GST_CFLAGS) \
+	$(LIBOIL_CFLAGS)
 
 libgstspeexresample_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	-lgstaudio-$(GST_MAJORMINOR) \
+	$(LIBOIL_LIBS) \
 	$(LIBM)
 
 libgstspeexresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
 	arch.h \
+	fixed_arm4.h \
+	fixed_arm5e.h \
+	fixed_bfin.h \
+	fixed_debug.h \
 	fixed_generic.h \
 	gstspeexresample.h \
+	resample.c \
+	resample_sse.h \
 	speex_resampler.h \
 	speex_resampler_wrapper.h
-
-EXTRA_DIST = \
-	resample.c
 

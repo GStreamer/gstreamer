@@ -66,7 +66,7 @@
 
 #include <glib.h>
 
-#define EXPORT
+#define EXPORT G_GNUC_INTERNAL
 
 static inline void *
 speex_alloc (int size)
