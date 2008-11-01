@@ -33,3 +33,5 @@ noinst_HEADERS = resindvdbin.h \
 	rsnparsetter.h \
 	rsnwrappedbuffer.h
 
+EXTRA_DIST = resin-play resin-play2
+

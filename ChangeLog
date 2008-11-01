@@ -1,3 +1,8 @@
+2008-11-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/resindvd/Makefile.am:
+	  Dist the play scripts.
+
 2008-11-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/speexresample/Makefile.am:
