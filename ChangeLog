@@ -1,3 +1,12 @@
+2008-11-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_check_discont):
+	Fix format string and arguments.
+
+	* gst/speexresample/resample_sse.h:
+	Add missing file.
+
 2008-11-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/resindvd/Makefile.am:
