@@ -864,7 +864,7 @@ gst_speex_resample_check_discont (GstSpeexResample * resample,
     if (ABS (diff) > (GST_SECOND + resample->inrate - 1) / resample->inrate) {
       GST_WARNING_OBJECT (resample,
           "encountered timestamp discontinuity of %s%" GST_TIME_FORMAT,
-          (diff < 0) ? "-" : "", ABS (diff));
+          (diff < 0) ? "-" : "", GST_TIME_ARGS ((GstClockTime) ABS (diff)));
       return TRUE;
     }
   }
