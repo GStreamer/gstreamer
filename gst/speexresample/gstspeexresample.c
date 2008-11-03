@@ -34,6 +34,10 @@
  * </refsect2>
  */
 
+/* TODO:
+ *  - Enable SSE/ARM optimizations and select at runtime
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -640,6 +644,8 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
         i++;
         len--;
       }
+    } else {
+      g_assert_not_reached ();
     }
   } else {
     if (gst_speex_resample_use_int && resample->width == 8 && !resample->fp) {
@@ -708,6 +714,8 @@ gst_speex_resample_convert_buffer (GstSpeexResample * resample,
         i++;
         len--;
       }
+    } else {
+      g_assert_not_reached ();
     }
   }
 }

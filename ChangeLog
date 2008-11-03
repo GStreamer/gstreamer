@@ -1,3 +1,13 @@
+2008-11-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_convert_buffer):
+	Add TODO at the top of the file for enabling SSE/ARM specific
+	optimizations and choosing the fastest implementation at runtime.
+
+	Add g_assert_not_reached() at two places that should really never
+	be reached.
+
 2008-11-02  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/speexresample/gstspeexresample.c:
