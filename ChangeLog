@@ -1,3 +1,14 @@
+2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Tal Shalif <tshalif at nargila dot org>
+
+	* gst/mpegstream/gstdvddemux.c:
+	(gst_dvd_demux_get_subpicture_stream):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_get_video_stream),
+	(gst_mpeg_demux_get_audio_stream):
+	Fix memmory corruption due to not storing the new updated pointer
+	after a g_renew(). Fixes #558896.
+
 2008-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/Makefile.am:

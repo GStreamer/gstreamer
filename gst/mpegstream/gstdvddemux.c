@@ -710,13 +710,13 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
     str->type = GST_DVD_DEMUX_SUBP_UNKNOWN;
     g_free (name);
     add_pad = TRUE;
-
-    dvd_demux->subpicture_stream[stream_nr] = str;
   } else {
     /* This stream may have been created by a derived class, reset the
        size. */
     str = g_renew (GstMPEGStream, str, 1);
   }
+
+  dvd_demux->subpicture_stream[stream_nr] = str;
 
   if (str->type != GST_DVD_DEMUX_SUBP_DVD) {
     /* We need to set new caps for this pad. */

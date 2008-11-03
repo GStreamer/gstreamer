@@ -358,15 +358,15 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
         CLASS (mpeg_demux)->video_template);
     g_free (name);
 
-    mpeg_demux->video_stream[stream_nr] = str;
-
     set_caps = TRUE;
   } else {
     /* This stream may have been created by a derived class, reset the
        size. */
     video_str = g_renew (GstMPEGVideoStream, str, 1);
-    mpeg_demux->video_stream[stream_nr] = str = (GstMPEGStream *) video_str;
+    str = (GstMPEGStream *) video_str;
   }
+
+  mpeg_demux->video_stream[stream_nr] = str;
 
   if (set_caps || video_str->mpeg_version != mpeg_version) {
     gchar *codec;
@@ -416,6 +416,7 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
       type < GST_MPEG_DEMUX_AUDIO_LAST, NULL);
 
   str = mpeg_demux->audio_stream[stream_nr];
+
   if (str && str->type != type) {
     gst_element_remove_pad (GST_ELEMENT (mpeg_demux), str->pad);
     g_free (str);
@@ -430,8 +431,6 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
         CLASS (mpeg_demux)->audio_template);
     g_free (name);
 
-    mpeg_demux->audio_stream[stream_nr] = str;
-
     /* new pad, set caps */
     set_caps = TRUE;
   } else {
@@ -439,6 +438,8 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
        size. */
     str = g_renew (GstMPEGStream, str, 1);
   }
+
+  mpeg_demux->audio_stream[stream_nr] = str;
 
   if (set_caps) {
     GstTagList *list;
