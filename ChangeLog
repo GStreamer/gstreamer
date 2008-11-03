@@ -1,3 +1,12 @@
+2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Damien Lespiau  <damien.lespiau gmail com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_write):
+	Make the next call to poll not depend on previous calls to poll with or
+	without reading from the active descriptor. Fixes #544293.
+
 2008-10-31  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Nick Haddad <nick at haddads dot net>
