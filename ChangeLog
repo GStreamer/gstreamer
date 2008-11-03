@@ -1,5 +1,15 @@
 2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on patch by: Matthias Kretz <kretz at kde dot org>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open),
+	(gst_alsasink_prepare), (gst_alsasink_unprepare),
+	(gst_alsasink_write):
+	Make all access non-blocking so that we can better handle unplugging
+	of usb devices. Fixes #559111
+
+2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Damien Lespiau  <damien.lespiau gmail com>
 
 	* gst-libs/gst/rtsp/gstrtspconnection.c:

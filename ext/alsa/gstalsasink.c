@@ -671,6 +671,8 @@ gst_alsasink_open (GstAudioSink * asink)
 
   alsa = GST_ALSA_SINK (asink);
 
+  /* open in non-blocking mode, we'll use snd_pcm_wait() for space to become
+   * available. */
   CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_PLAYBACK,
           SND_PCM_NONBLOCK), open_error);
   GST_LOG_OBJECT (alsa, "Opened device %s", alsa->device);
@@ -714,8 +716,6 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   if (!alsasink_parse_spec (alsa, spec))
     goto spec_parse;
 
-  CHECK (snd_pcm_nonblock (alsa->handle, 0), non_block);
-
   CHECK (set_hwparams (alsa), hw_params_failed);
   CHECK (set_swparams (alsa), sw_params_failed);
 
@@ -754,12 +754,6 @@ spec_parse:
         ("Error parsing spec"));
     return FALSE;
   }
-non_block:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not set device to blocking: %s", snd_strerror (err)));
-    return FALSE;
-  }
 hw_params_failed:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
@@ -786,8 +780,6 @@ gst_alsasink_unprepare (GstAudioSink * asink)
 
   CHECK (snd_pcm_hw_free (alsa->handle), hw_free);
 
-  CHECK (snd_pcm_nonblock (alsa->handle, 1), non_block);
-
   return TRUE;
 
   /* ERRORS */
@@ -801,12 +793,6 @@ hw_free:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Could not free hw params: %s", snd_strerror (err)));
-    return FALSE;
-  }
-non_block:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Could not set device to nonblocking: %s", snd_strerror (err)));
     return FALSE;
   }
 }
@@ -891,7 +877,14 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
 
   GST_ALSA_SINK_LOCK (asink);
   while (cptr > 0) {
-    err = snd_pcm_writei (alsa->handle, ptr, cptr);
+    /* start by doing a blocking wait for free space. Set the timeout
+     * to 4 times the period time */
+    err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
+    if (err < 0) {
+      GST_DEBUG_OBJECT (asink, "wait timeout, %d", err);
+    } else {
+      err = snd_pcm_writei (alsa->handle, ptr, cptr);
+    }
 
     GST_DEBUG_OBJECT (asink, "written %d frames out of %d", err, cptr);
     if (err < 0) {
