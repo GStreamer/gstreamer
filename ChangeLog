@@ -1,3 +1,10 @@
+2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: David Schleef  <ds@schleef.org>
+
+	* libs/gst/net/Makefile.am:
+	Add WIN32_LIBS to libgstnet LIBADD. Fixes #557300.
+
 2008-10-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistrybinary.c:
