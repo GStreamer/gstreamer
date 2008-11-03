@@ -1,3 +1,8 @@
+2008-11-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c:
+	  Don't bother with the GTimer if we don't output the results.
+
 2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: David Schleef  <ds@schleef.org>

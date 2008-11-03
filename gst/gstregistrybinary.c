@@ -1161,21 +1161,25 @@ gboolean
 gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 {
   GMappedFile *mapped = NULL;
-  GTimer *timer = NULL;
   gchar *contents = NULL;
   gchar *in = NULL;
-  gdouble seconds;
   gsize size;
   GError *err = NULL;
   gboolean res = FALSE;
   gint check_magic_result;
+#ifndef GST_DISABLE_GST_DEBUG
+  GTimer *timer = NULL;
+  gdouble seconds;
+#endif
 
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
   GST_TYPE_TYPE_FIND_FACTORY;
   GST_TYPE_INDEX_FACTORY;
 
+#ifndef GST_DISABLE_GST_DEBUG
   timer = g_timer_new ();
+#endif
 
   mapped = g_mapped_file_new (location, FALSE, &err);
   if (err != NULL) {
@@ -1235,8 +1239,10 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     }
   }
 
+#ifndef GST_DISABLE_GST_DEBUG
   g_timer_stop (timer);
   seconds = g_timer_elapsed (timer, NULL);
+#endif
 
   GST_INFO ("loaded %s in %lf seconds", location, seconds);
 
@@ -1244,7 +1250,9 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   /* TODO: once we re-use the pointers to registry contents return here */
 
 Error:
+#ifndef GST_DISABLE_GST_DEBUG
   g_timer_destroy (timer);
+#endif
   if (mapped) {
     g_mapped_file_free (mapped);
   } else {
