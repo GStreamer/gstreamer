@@ -1,3 +1,9 @@
+2008-11-03  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/qtwrapper/audiodecoders.c:
+	(open_decoder):
+	Fix mismatched signedness compiler warning.
+
 2008-11-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/speexresample/gstspeexresample.c:

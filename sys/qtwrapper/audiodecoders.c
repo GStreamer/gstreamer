@@ -431,7 +431,7 @@ open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
     /* QuickTime/iTunes creates AAC files with the wrong channel count in the header,
        so parse that out of the codec data if we can.
      */
-    aac_parse_codec_data (codec_data, &channels);
+    aac_parse_codec_data (codec_data, (guint *) & channels);
   }
 
   /* If the quicktime demuxer gives us a full esds atom, use that instead of 
