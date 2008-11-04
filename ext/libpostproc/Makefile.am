@@ -9,3 +9,5 @@ libgstpostproc_la_LIBADD = -lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LIBOIL_LIBS)
 
 libgstpostproc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
+libgstpostproc_la_LIBTOOLFLAGS = --tag=disable-static
+

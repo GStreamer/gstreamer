@@ -1,3 +1,10 @@
+2008-11-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/libpostproc/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	  Don't install static libs for plugins. Fixes #550851 for -ffmpeg.
+
 2008-10-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Based on a patch by: Alexis Ballier <aballier at gentoo dot org>
