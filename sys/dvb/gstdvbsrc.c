@@ -523,6 +523,8 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
         char **tmp;
 
         tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
+        if (pid_string)
+          g_free (pid_string);
 
         /* always add the PAT and CAT pids */
         object->pids[0] = 0;

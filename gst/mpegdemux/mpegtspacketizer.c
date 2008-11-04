@@ -1018,6 +1018,11 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
         gst_structure_set (transport, "delivery", GST_TYPE_STRUCTURE,
             delivery_structure, NULL);
       }
+      /* free the temporary delivery structure */
+      if (delivery_structure != NULL) {
+        gst_structure_free (delivery_structure);
+        delivery_structure = NULL;
+      }
       if ((delivery =
               gst_mpeg_descriptor_find (mpegdescriptor,
                   DESC_DTG_LOGICAL_CHANNEL))) {
