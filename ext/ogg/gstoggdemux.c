@@ -1047,6 +1047,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
             GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
             chain->begin_time);
+        gst_event_set_seqnum (event, ogg->seqnum);
 
         gst_ogg_demux_activate_chain (ogg, chain, event);
 
@@ -1745,11 +1746,14 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   /* send EOS on all the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+    GstEvent *event;
 
     if (pad->is_skeleton)
       continue;
 
-    gst_pad_push_event (GST_PAD_CAST (pad), gst_event_new_eos ());
+    event = gst_event_new_eos ();
+    gst_event_set_seqnum (event, ogg->seqnum);
+    gst_pad_push_event (GST_PAD_CAST (pad), event);
 
     GST_DEBUG_OBJECT (ogg, "removing pad %" GST_PTR_FORMAT, pad);
 
@@ -2040,6 +2044,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
   gboolean update;
+  guint32 seqnum;
+  GstEvent *tevent;
 
   if (event) {
     GST_DEBUG_OBJECT (ogg, "seek with event");
@@ -2052,11 +2058,13 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       GST_DEBUG_OBJECT (ogg, "can only seek on TIME");
       goto error;
     }
+    seqnum = gst_event_get_seqnum (event);
   } else {
     GST_DEBUG_OBJECT (ogg, "seek without event");
 
     flags = 0;
     rate = 1.0;
+    seqnum = gst_util_seqnum_next ();
   }
 
   GST_DEBUG_OBJECT (ogg, "seek, rate %g", rate);
@@ -2071,7 +2079,11 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   if (flush) {
     gint i;
 
-    gst_pad_push_event (ogg->sinkpad, gst_event_new_flush_start ());
+    tevent = gst_event_new_flush_start ();
+    gst_event_set_seqnum (tevent, seqnum);
+
+    gst_event_ref (tevent);
+    gst_pad_push_event (ogg->sinkpad, tevent);
 
     GST_CHAIN_LOCK (ogg);
     for (i = 0; i < ogg->chains->len; i++) {
@@ -2081,10 +2093,13 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       for (j = 0; j < chain->streams->len; j++) {
         GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, j);
 
-        gst_pad_push_event (GST_PAD (pad), gst_event_new_flush_start ());
+        gst_event_ref (tevent);
+        gst_pad_push_event (GST_PAD (pad), tevent);
       }
     }
     GST_CHAIN_UNLOCK (ogg);
+
+    gst_event_unref (tevent);
   } else {
     gst_pad_pause_task (ogg->sinkpad);
   }
@@ -2106,6 +2121,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       newseg = gst_event_new_new_segment (TRUE, ogg->segment.rate,
           GST_FORMAT_TIME, ogg->segment.start + chain_start,
           ogg->segment.last_stop + chain_start, ogg->segment.time);
+      /* set the seqnum of the running segment */
+      gst_event_set_seqnum (newseg, ogg->seqnum);
 
       /* send segment on old chain, FIXME, must be sent from streaming thread. */
       gst_ogg_demux_send_event (ogg, newseg);
@@ -2123,7 +2140,11 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 
   /* we need to stop flushing on the srcpad as we're going to use it
    * next. We can do this as we have the STREAM lock now. */
-  gst_pad_push_event (ogg->sinkpad, gst_event_new_flush_stop ());
+  if (flush) {
+    tevent = gst_event_new_flush_stop ();
+    gst_event_set_seqnum (tevent, seqnum);
+    gst_pad_push_event (ogg->sinkpad, tevent);
+  }
 
   {
     gint i;
@@ -2136,6 +2157,10 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       gst_ogg_chain_reset (chain);
     }
   }
+
+  /* for reverse we will already seek accurately */
+  if (rate < 0.0)
+    accurate = FALSE;
 
   res = gst_ogg_demux_do_seek (ogg, ogg->segment.last_stop, accurate, &chain);
 
@@ -2155,8 +2180,11 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
     gint64 last_stop, begin_time;
 
     /* we have to send the flush to the old chain, not the new one */
-    if (flush)
-      gst_ogg_demux_send_event (ogg, gst_event_new_flush_stop ());
+    if (flush) {
+      tevent = gst_event_new_flush_stop ();
+      gst_event_set_seqnum (tevent, seqnum);
+      gst_ogg_demux_send_event (ogg, tevent);
+    }
 
     /* we need this to see how far inside the chain we need to start */
     if (chain->begin_time != GST_CLOCK_TIME_NONE)
@@ -2198,6 +2226,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
           ogg->segment.format, start, last_stop, ogg->segment.time);
 
+    gst_event_set_seqnum (event, seqnum);
+
     if (chain != ogg->current_chain) {
       /* switch to different chain, send segment on new chain */
       gst_ogg_demux_activate_chain (ogg, chain, event);
@@ -2212,12 +2242,17 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 
     /* notify start of new segment */
     if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-      gst_element_post_message (GST_ELEMENT (ogg),
-          gst_message_new_segment_start (GST_OBJECT (ogg),
-              GST_FORMAT_TIME, ogg->segment.last_stop));
+      GstMessage *message;
+
+      message = gst_message_new_segment_start (GST_OBJECT (ogg),
+          GST_FORMAT_TIME, ogg->segment.last_stop);
+      gst_message_set_seqnum (message, seqnum);
+
+      gst_element_post_message (GST_ELEMENT (ogg), message);
     }
 
     ogg->segment_running = TRUE;
+    ogg->seqnum = seqnum;
     /* restart our task since it might have been stopped when we did the 
      * flush. */
     gst_pad_start_task (ogg->sinkpad, (GstTaskFunction) gst_ogg_demux_loop,
@@ -2781,6 +2816,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       /* create the newsegment event we are going to send out */
       event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
           GST_FORMAT_TIME, start, chain->segment_stop, chain->begin_time);
+      gst_event_set_seqnum (event, ogg->seqnum);
 
       GST_DEBUG_OBJECT (ogg,
           "segment: start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
@@ -3096,6 +3132,7 @@ seek_failed:
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
+    GstEvent *event = NULL;
 
     GST_LOG_OBJECT (ogg, "pausing task, reason %s", reason);
     ogg->segment_running = FALSE;
@@ -3106,6 +3143,7 @@ pause:
         /* perform EOS logic */
         if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
           gint64 stop;
+          GstMessage *message;
 
           /* for segment playback we need to post when (in stream time)
            * we stopped, this is either stop (when set) or the duration. */
@@ -3113,19 +3151,26 @@ pause:
             stop = ogg->segment.duration;
 
           GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
-          gst_element_post_message (GST_ELEMENT (ogg),
+          message =
               gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
-                  stop));
+              stop);
+          gst_message_set_seqnum (message, ogg->seqnum);
+
+          gst_element_post_message (GST_ELEMENT (ogg), message);
         } else {
           /* normal playback, send EOS to all linked pads */
           GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
-          gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
+          event = gst_event_new_eos ();
         }
       } else {
         GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
             (_("Internal data stream error.")),
             ("stream stopped, reason %s", reason));
-        gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
+        event = gst_event_new_eos ();
+      }
+      if (event) {
+        gst_event_set_seqnum (event, ogg->seqnum);
+        gst_ogg_demux_send_event (ogg, event);
       }
     }
     return;

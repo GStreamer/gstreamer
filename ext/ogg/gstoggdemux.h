@@ -157,6 +157,7 @@ struct _GstOggDemux
   /* playback start/stop positions */
   GstSegment segment;
   gboolean segment_running;
+  guint32  seqnum;
 
   GstEvent *event;
   GstEvent *newsegment;         /* pending newsegment to be sent from _loop */

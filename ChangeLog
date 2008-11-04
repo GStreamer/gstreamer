@@ -1,3 +1,12 @@
+2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_handle_page),
+	(gst_ogg_demux_loop):
+	* ext/ogg/gstoggdemux.h:
+	Copy seqnums around to track playback segments and messages.
+
 2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on patch by: Matthias Kretz <kretz at kde dot org>
