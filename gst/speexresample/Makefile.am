@@ -21,6 +21,7 @@ libgstspeexresample_la_LIBADD = \
 	$(LIBM)
 
 libgstspeexresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstspeexresample_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	arch.h \
