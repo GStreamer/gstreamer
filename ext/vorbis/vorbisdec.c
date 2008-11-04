@@ -188,6 +188,7 @@ gst_vorbis_dec_reset (GstVorbisDec * dec)
   dec->prev_timestamp = GST_CLOCK_TIME_NONE;
   dec->granulepos = -1;
   dec->discont = TRUE;
+  dec->seqnum = gst_util_seqnum_next ();
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
 
   g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
@@ -443,9 +444,11 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
       gint64 tcur, tstop;
+      guint32 seqnum;
 
       gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
           &stop_type, &stop);
+      seqnum = gst_event_get_seqnum (event);
       gst_event_unref (event);
 
       /* we have to ask our peer to seek to time here as we know
@@ -463,9 +466,9 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       /* then seek with time on the peer */
       real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
           flags, cur_type, tcur, stop_type, tstop);
+      gst_event_set_seqnum (real_seek, seqnum);
 
       res = gst_pad_push_event (dec->sinkpad, real_seek);
-
       break;
     }
     default:
@@ -532,6 +535,7 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       /* now configure the values */
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
+      dec->seqnum = gst_event_get_seqnum (event);
 
       if (dec->initialized)
         /* and forward */

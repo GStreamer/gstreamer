@@ -71,6 +71,7 @@ struct _GstVorbisDec {
 
   GstSegment        segment;
   gboolean          discont;
+  guint32           seqnum;
 
   GstClockTime      cur_timestamp; /* only used with non-ogg container formats */
   GstClockTime      prev_timestamp; /* only used with non-ogg container formats */

@@ -1,5 +1,20 @@
 2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/theoradec.c: (gst_theora_dec_init),
+	(gst_theora_dec_reset), (theora_dec_src_event),
+	(theora_dec_sink_event), (theora_handle_type_packet):
+	Copy seqnum.
+	Keep events in a pending list, like vorbisdec, instead of trying
+	to construct a segment event ourselves.
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_reset),
+	(vorbis_dec_src_event), (vorbis_dec_sink_event):
+	* ext/vorbis/vorbisdec.h:
+	Copy seqnum.
+
+2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
 	(gst_ogg_demux_deactivate_current_chain),
 	(gst_ogg_demux_perform_seek), (gst_ogg_demux_handle_page),

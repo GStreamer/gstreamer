@@ -164,17 +164,18 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
   dec->gather = NULL;
   dec->decode = NULL;
   dec->queued = NULL;
+  dec->pendingevents = NULL;
 }
 
 static void
 gst_theora_dec_reset (GstTheoraDec * dec)
 {
   dec->need_keyframe = TRUE;
-  dec->sent_newsegment = FALSE;
   dec->last_timestamp = -1;
   dec->granulepos = -1;
   dec->discont = TRUE;
   dec->frame_nr = -1;
+  dec->seqnum = gst_util_seqnum_next ();
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
 
   GST_OBJECT_LOCK (dec);
@@ -191,6 +192,9 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   g_list_foreach (dec->decode, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->decode);
   dec->decode = NULL;
+  g_list_foreach (dec->pendingevents, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->pendingevents);
+  dec->pendingevents = NULL;
 
   if (dec->tags) {
     gst_tag_list_free (dec->tags);
@@ -599,9 +603,11 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
       gint64 tcur, tstop;
+      guint32 seqnum;
 
       gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
           &stop_type, &stop);
+      seqnum = gst_event_get_seqnum (event);
       gst_event_unref (event);
 
       /* we have to ask our peer to seek to time here as we know
@@ -619,6 +625,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       /* then seek with time on the peer */
       real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
           flags, cur_type, tcur, stop_type, tstop);
+      gst_event_set_seqnum (real_seek, seqnum);
 
       res = gst_pad_push_event (dec->sinkpad, real_seek);
       break;
@@ -700,13 +707,13 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       /* now configure the values */
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
+      dec->seqnum = gst_event_get_seqnum (event);
 
       /* We don't forward this unless/until the decoder is initialised */
       if (dec->have_header) {
         ret = gst_pad_push_event (dec->srcpad, event);
-        dec->sent_newsegment = TRUE;
       } else {
-        gst_event_unref (event);
+        dec->pendingevents = g_list_append (dec->pendingevents, event);
         ret = TRUE;
       }
       break;
@@ -796,9 +803,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   GstCaps *caps;
   gint par_num, par_den;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean eret;
-  GstEvent *event;
   guint32 bitstream_version;
+  GList *walk;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -886,15 +892,12 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   gst_caps_unref (caps);
 
   dec->have_header = TRUE;
-  if (!dec->sent_newsegment) {
-    GST_DEBUG_OBJECT (dec, "Sending newsegment event");
 
-    event = gst_event_new_new_segment_full (FALSE,
-        dec->segment.rate, dec->segment.applied_rate,
-        dec->segment.format, dec->segment.start, dec->segment.stop,
-        dec->segment.time);
-    eret = gst_pad_push_event (dec->srcpad, event);
-    dec->sent_newsegment = TRUE;
+  if (dec->pendingevents) {
+    for (walk = dec->pendingevents; walk; walk = g_list_next (walk))
+      gst_pad_push_event (dec->srcpad, GST_EVENT_CAST (walk->data));
+    g_list_free (dec->pendingevents);
+    dec->pendingevents = NULL;
   }
 
   if (dec->tags) {

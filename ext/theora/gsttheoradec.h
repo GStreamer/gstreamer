@@ -63,7 +63,6 @@ struct _GstTheoraDec
   theora_comment comment;
 
   gboolean have_header;
-  gboolean sent_newsegment;
   gboolean is_old_bitstream;
   guint64 granulepos;
   guint64 granule_shift;
@@ -83,12 +82,14 @@ struct _GstTheoraDec
   /* gather/decode queues for reverse playback */
   GList *gather;
   GList *decode;
+  GList *pendingevents;
 
   GstTagList *tags;
 
   /* segment info */ /* with STREAM_LOCK */
   GstSegment segment;
   gboolean discont;
+  guint32 seqnum;
 
   /* QoS stuff */ /* with LOCK*/
   gdouble proportion;
