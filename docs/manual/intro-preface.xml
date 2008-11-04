@@ -32,7 +32,7 @@
 
       Especially,
       <itemizedlist>
-        <listitem><para>GObject instentiation</para></listitem>
+        <listitem><para>GObject instantiation</para></listitem>
         <listitem><para>GObject properties (set/get)</para></listitem>
         <listitem><para>GObject casting</para></listitem>
         <listitem><para>GObject referecing/dereferencing</para></listitem>

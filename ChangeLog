@@ -1,3 +1,14 @@
+2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-position.xml:
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-bus.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/intro-gstreamer.xml:
+	* docs/manual/intro-preface.xml:
+	Some Application Development Manual fixes thanks to
+	Andrew Feren. Fixes #558459.
+
 2008-11-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistrybinary.c:

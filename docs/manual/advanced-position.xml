@@ -192,10 +192,21 @@ seek_to_time (GstElement *pipeline,
 }
     </programlisting>
     <para>
-      Seeks should usually be done when the pipeline is in PAUSED or PLAYING
-      state (when it is in PLAYING state the pipeline will pause itself, issue
-      the seek, and then set itself back to PLAYING again itself).
-      returns. 
+      Seeks with the GST_SEEK_FLAG_FLUSH should be done when the pipeline is
+      in PAUSED or PLAYING state. The pipeline will automatically go to preroll
+      state until the new data after the seek will cause the pipeline to preroll
+      again. After the pipeline is prerolled, it will go back to the state
+      (PAUSED or PLAYING) it was in when the seek was executed. You can wait
+      (blocking) for the seek to complete with
+      <function>gst_element_get_state()</function> or by waiting for the
+      ASYNC_DONE message to appear on the bus.
+    </para>
+
+    <para>
+      Seeks without the GST_SEEK_FLAG_FLUSH should only be done when the
+      pipeline is in the PLAYING state. Executing a non-flushing seek in the
+      PAUSED state might deadlock because the pipeline streaming threads might
+      be blocked in the sinks.
     </para>
 
     <para>

@@ -544,7 +544,8 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
       gst_element_link_filtered ()</function> it will automatically create
       a <classname>capsfilter</classname> element for you and insert it into
       your bin or pipeline between the two elements you want to connect (this
-      is important if you ever want to disconnect those elements).
+      is important if you ever want to disconnect those elements because then
+      you will have to disconnect both elements from the capsfilter instead).
       </para>
       <para>
         In some cases, you will want to create a more elaborate set of
