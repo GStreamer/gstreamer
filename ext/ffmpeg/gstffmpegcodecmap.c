@@ -205,7 +205,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
     const gint *rates = NULL;
     gint n_rates = 0;
 
-    if (context)
+    if (context) {
       /* so we must be after restricted caps in this particular case */
       switch (codec_id) {
         case CODEC_ID_MP2:
@@ -221,7 +221,6 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
           const static gint l_rates[] = { 48000, 44100, 32000 };
           n_rates = G_N_ELEMENTS (l_rates);
           rates = l_rates;
-          maxchannels = 6;
           break;
         }
         case CODEC_ID_ADPCM_SWF:
@@ -241,15 +240,23 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
         case CODEC_ID_ADPCM_G726:
           maxchannels = 1;
           break;
-        case CODEC_ID_AAC:
-        case CODEC_ID_DTS:
-          /* Until decoders/encoders expose the maximum number of channels
-           * they support, we whitelist them here. */
-          maxchannels = 6;
-          break;
         default:
           break;
       }
+    }
+
+    /* regardless of encode/decode, open up channels if applicable */
+    /* Until decoders/encoders expose the maximum number of channels
+     * they support, we whitelist them here. */
+    switch (codec_id) {
+      case CODEC_ID_AC3:
+      case CODEC_ID_AAC:
+      case CODEC_ID_DTS:
+        maxchannels = 6;
+        break;
+      default:
+        break;
+    }
 
     if (maxchannels == 1)
       caps = gst_caps_new_simple (mimetype,
