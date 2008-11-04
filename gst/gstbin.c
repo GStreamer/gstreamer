@@ -2519,7 +2519,6 @@ bin_handle_async_start (GstBin * bin, gboolean new_base_time)
   if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_NO_PREROLL)
     goto was_no_preroll;
 
-
   old_state = GST_STATE (bin);
 
   /* when we PLAYING we go back to PAUSED, when preroll happens, we go back to
@@ -2763,6 +2762,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 {
   GstObject *src;
   GstMessageType type;
+  GstMessage *tmessage;
+  guint32 seqnum;
 
   src = GST_MESSAGE_SRC (message);
   type = GST_MESSAGE_TYPE (message);
@@ -2784,9 +2785,13 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       /* if we are completely EOS, we forward an EOS message */
       if (eos) {
-        GST_DEBUG_OBJECT (bin, "all sinks posted EOS");
-        gst_element_post_message (GST_ELEMENT_CAST (bin),
-            gst_message_new_eos (GST_OBJECT_CAST (bin)));
+        seqnum = gst_message_get_seqnum (message);
+        tmessage = gst_message_new_eos (GST_OBJECT_CAST (bin));
+        gst_message_set_seqnum (tmessage, seqnum);
+
+        GST_DEBUG_OBJECT (bin,
+            "all sinks posted EOS, posting seqnum #%" G_GUINT32_FORMAT, seqnum);
+        gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
       }
       break;
     }
@@ -2827,10 +2832,13 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       }
       GST_OBJECT_UNLOCK (bin);
       if (post) {
+        seqnum = gst_message_get_seqnum (message);
+        tmessage = gst_message_new_segment_done (GST_OBJECT_CAST (bin),
+            format, position);
+        gst_message_set_seqnum (tmessage, seqnum);
+
         /* post segment done with latest format and position. */
-        gst_element_post_message (GST_ELEMENT_CAST (bin),
-            gst_message_new_segment_done (GST_OBJECT_CAST (bin),
-                format, position));
+        gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
       }
       break;
     }
@@ -3245,6 +3253,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
 
   fold_data.query = query;
 
+  /* set the result of the query to FALSE initially */
   g_value_init (&ret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&ret, res);
 

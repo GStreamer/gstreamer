@@ -229,6 +229,9 @@ struct _GstBaseSrcPrivate
   GstClockTimeDiff ts_offset;
 
   gboolean do_timestamp;
+
+  /* stream sequence number */
+  guint32 seqnum;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1154,6 +1157,8 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   gboolean relative_seek = FALSE;
   gboolean seekseg_configured = FALSE;
   GstSegment seeksegment;
+  guint32 seqnum;
+  GstEvent *tevent;
 
   GST_DEBUG_OBJECT (src, "doing seek");
 
@@ -1180,14 +1185,19 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     }
 
     flush = flags & GST_SEEK_FLAG_FLUSH;
+    seqnum = gst_event_get_seqnum (event);
   } else {
     flush = FALSE;
+    /* get next seqnum */
+    seqnum = gst_util_seqnum_next ();
   }
 
   /* send flush start */
-  if (flush)
-    gst_pad_push_event (src->srcpad, gst_event_new_flush_start ());
-  else
+  if (flush) {
+    tevent = gst_event_new_flush_start ();
+    gst_event_set_seqnum (tevent, seqnum);
+    gst_pad_push_event (src->srcpad, tevent);
+  } else
     gst_pad_pause_task (src->srcpad);
 
   /* unblock streaming thread. */
@@ -1197,6 +1207,14 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
    * because the task is paused, our streaming thread stopped 
    * or because our peer is flushing. */
   GST_PAD_STREAM_LOCK (src->srcpad);
+  if (G_UNLIKELY (src->priv->seqnum == seqnum)) {
+    /* we have seen this event before, issue a warning for now */
+    GST_WARNING_OBJECT (src, "duplicate event found %" G_GUINT32_FORMAT,
+        seqnum);
+  } else {
+    src->priv->seqnum = seqnum;
+    GST_DEBUG_OBJECT (src, "seek with seqnum %" G_GUINT32_FORMAT, seqnum);
+  }
 
   gst_base_src_set_flushing (src, FALSE, playing, unlock, NULL);
 
@@ -1239,9 +1257,11 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 
   /* and prepare to continue streaming */
   if (flush) {
+    tevent = gst_event_new_flush_stop ();
+    gst_event_set_seqnum (tevent, seqnum);
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
-    gst_pad_push_event (src->srcpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (src->srcpad, tevent);
   } else if (res && src->data.ABI.running) {
     /* we are running the current segment and doing a non-flushing seek, 
      * close the segment first based on the last_stop. */
@@ -1255,6 +1275,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
         gst_event_new_new_segment_full (TRUE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
+    gst_event_set_seqnum (src->priv->close_segment, seqnum);
   }
 
   /* The subclass must have converted the segment to the processing format 
@@ -1271,9 +1292,13 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
 
     if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-      gst_element_post_message (GST_ELEMENT (src),
-          gst_message_new_segment_start (GST_OBJECT (src),
-              src->segment.format, src->segment.last_stop));
+      GstMessage *message;
+
+      message = gst_message_new_segment_start (GST_OBJECT (src),
+          src->segment.format, src->segment.last_stop);
+      gst_message_set_seqnum (message, seqnum);
+
+      gst_element_post_message (GST_ELEMENT (src), message);
     }
 
     /* for deriving a stop position for the playback segment from the seek
@@ -1301,6 +1326,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
           src->segment.rate, src->segment.applied_rate, src->segment.format,
           src->segment.start, src->segment.last_stop, src->segment.time);
     }
+    gst_event_set_seqnum (src->priv->start_segment, seqnum);
   }
 
   src->priv->discont = TRUE;
@@ -2273,6 +2299,7 @@ flushing:
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
+    GstEvent *event;
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
     src->data.ABI.running = FALSE;
@@ -2281,20 +2308,27 @@ pause:
       if (ret == GST_FLOW_UNEXPECTED) {
         /* perform EOS logic */
         if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT_CAST (src),
-              gst_message_new_segment_done (GST_OBJECT_CAST (src),
-                  src->segment.format, src->segment.last_stop));
+          GstMessage *message;
+
+          message = gst_message_new_segment_done (GST_OBJECT_CAST (src),
+              src->segment.format, src->segment.last_stop);
+          gst_message_set_seqnum (message, src->priv->seqnum);
+          gst_element_post_message (GST_ELEMENT_CAST (src), message);
         } else {
-          gst_pad_push_event (pad, gst_event_new_eos ());
+          event = gst_event_new_eos ();
+          gst_event_set_seqnum (event, src->priv->seqnum);
+          gst_pad_push_event (pad, event);
           src->priv->last_sent_eos = TRUE;
         }
       } else {
+        event = gst_event_new_eos ();
+        gst_event_set_seqnum (event, src->priv->seqnum);
         /* for fatal errors we post an error message, post the error
          * first so the app knows about the error first. */
         GST_ELEMENT_ERROR (src, STREAM, FAILED,
             (_("Internal data flow error.")),
             ("streaming task paused, reason %s (%d)", reason, ret));
-        gst_pad_push_event (pad, gst_event_new_eos ());
+        gst_pad_push_event (pad, event);
         src->priv->last_sent_eos = TRUE;
       }
     }
@@ -2793,7 +2827,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      GstEvent **event_p;
+      GstEvent **event_p, *event;
 
       /* we don't need to unblock anything here, the pad deactivation code
        * already did this */
@@ -2803,7 +2837,9 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
        * the EOS event to the element */
       if (!basesrc->priv->last_sent_eos) {
         GST_DEBUG_OBJECT (basesrc, "Sending EOS event");
-        gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
+        event = gst_event_new_eos ();
+        gst_event_set_seqnum (event, basesrc->priv->seqnum);
+        gst_pad_push_event (basesrc->srcpad, event);
         basesrc->priv->last_sent_eos = TRUE;
       }
       g_atomic_int_set (&basesrc->priv->pending_eos, FALSE);

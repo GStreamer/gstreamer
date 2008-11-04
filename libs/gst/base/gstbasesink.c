@@ -215,9 +215,13 @@ struct _GstBaseSinkPrivate
   /* caps for pull based scheduling */
   GstCaps *pull_caps;
 
+  /* blocksize for pulling */
   guint blocksize;
 
   gboolean discont;
+
+  /* seqnum of the stream */
+  guint32 seqnum;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -2350,8 +2354,16 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
       goto flushing;
 
     if (G_LIKELY (event_res)) {
+      guint32 seqnum;
+
+      seqnum = basesink->priv->seqnum = gst_event_get_seqnum (event);
+      GST_DEBUG_OBJECT (basesink, "Got seqnum #%" G_GUINT32_FORMAT, seqnum);
+
       switch (type) {
         case GST_EVENT_EOS:
+        {
+          GstMessage *message;
+
           /* the EOS event is completely handled so we mark
            * ourselves as being in the EOS state. eos is also 
            * protected by the object lock so we can read it when 
@@ -2359,11 +2371,15 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
           GST_OBJECT_LOCK (basesink);
           basesink->eos = TRUE;
           GST_OBJECT_UNLOCK (basesink);
+
           /* ok, now we can post the message */
           GST_DEBUG_OBJECT (basesink, "Now posting EOS");
-          gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_eos (GST_OBJECT_CAST (basesink)));
+
+          message = gst_message_new_eos (GST_OBJECT_CAST (basesink));
+          gst_message_set_seqnum (message, seqnum);
+          gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
           break;
+        }
         case GST_EVENT_NEWSEGMENT:
           /* configure the segment */
           gst_base_sink_configure_segment (basesink, pad, event,
@@ -2665,7 +2681,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
         gst_event_unref (event);
       } else {
         /* we set the received EOS flag here so that we can use it when testing if
-         * we are prerolled and to refure more buffers. */
+         * we are prerolled and to refuse more buffers. */
         basesink->priv->received_eos = TRUE;
 
         /* EOS is a prerollable object, we call the unlocked version because it
@@ -3998,10 +4014,13 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         basesink->playing_async = FALSE;
         basesink->need_preroll = FALSE;
         if (basesink->eos) {
+          GstMessage *message;
+
           /* need to post EOS message here */
           GST_DEBUG_OBJECT (basesink, "Now posting EOS");
-          gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_eos (GST_OBJECT_CAST (basesink)));
+          message = gst_message_new_eos (GST_OBJECT_CAST (basesink));
+          gst_message_set_seqnum (message, basesink->priv->seqnum);
+          gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
         } else {
           GST_DEBUG_OBJECT (basesink, "signal preroll");
           GST_PAD_PREROLL_SIGNAL (basesink->sinkpad);
