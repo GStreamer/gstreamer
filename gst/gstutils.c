@@ -594,11 +594,8 @@ overflow:
 guint32
 gst_util_seqnum_next (void)
 {
-  static gint counter = -1;
-  gint ret;
-
-  ret = g_atomic_int_exchange_and_add (&counter, 1);
-  return (guint32) (ret + 1);
+  static gint counter = 0;
+  return g_atomic_int_exchange_and_add (&counter, 1);
 }
 
 /**

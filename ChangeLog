@@ -1,15 +1,24 @@
 2008-11-04  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstutils.c (gst_util_seqnum_next): Refactor for clarity.
+
+2008-11-04  Andy Wingo  <wingo@pobox.com>
+
+	Add sequence numbers to events and messages. See #559250.
+
+	* gst/gstutils.c (gst_util_seqnum_next, gst_util_seqnum_compare):
+	API: New functions.
+
 	* gst/gstevent.h:
 	* gst/gstevent.c (_gst_event_copy, gst_event_new): Initialize new
 	events with a new sequence number, and copy it when copying.
-	(gst_event_get_seqnum, gst_event_set_seqnum): Accessors for an
-	event's sequence number.
+	(gst_event_get_seqnum, gst_event_set_seqnum): API: Accessors for
+	an event's sequence number.
 
 	* gst/gstmessage.h:
 	* gst/gstmessage.c (_gst_message_copy, gst_message_new_custom):
-	(gst_event_get_seqnum, gst_event_set_seqnum): As with events, so
-	with messages.
+	(gst_event_get_seqnum, gst_event_set_seqnum): API: As with events,
+	so with messages.
 
 	* docs/gst/gstreamer-sections.txt: Add new functions to the docs.
 
