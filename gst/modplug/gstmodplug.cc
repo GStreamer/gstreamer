@@ -609,7 +609,9 @@ gst_modplug_loop (GstModPlug * modplug)
     /* actually load it */
     if (modplug->offset == modplug->song_size) {
       GstEvent *newsegment;
+      GstTagList *tags;
       gboolean ok;
+      gchar comment[16384];
 
       ok = gst_modplug_load_song (modplug);
       gst_buffer_unref (modplug->buffer);
@@ -623,6 +625,21 @@ gst_modplug_loop (GstModPlug * modplug)
       newsegment = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
           0, modplug->song_length, 0);
       gst_pad_push_event (modplug->srcpad, newsegment);
+
+      /* get and send metadata */
+      tags = gst_tag_list_new ();
+      gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_TITLE, modplug->mSoundFile->GetTitle (),
+          GST_TAG_BEATS_PER_MINUTE,
+          (gdouble) modplug->mSoundFile->GetMusicTempo (), NULL);
+
+      if (modplug->mSoundFile->GetSongComments ((gchar *) & comment, 16384, 32)) {
+        gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
+            GST_TAG_COMMENT, comment, NULL);
+      }
+
+
+      gst_element_found_tags (GST_ELEMENT (modplug), tags);
     } else {
       /* not fully loaded yet */
       return;
