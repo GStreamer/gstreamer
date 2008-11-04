@@ -5,6 +5,7 @@ libgstjack_la_SOURCES = gstjack.c gstjackaudiosrc.c gstjackaudiosink.c gstjackau
 libgstjack_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(JACK_CFLAGS)
 libgstjack_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(JACK_LIBS)
 libgstjack_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstjack_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstjackaudiosrc.h gstjackaudiosink.h gstjackaudioclient.h gstjack.h gstjackringbuffer.h
 
