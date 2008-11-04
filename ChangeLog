@@ -1,3 +1,8 @@
+2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tools/gst-launch.c: (event_loop):
+	Print the message seqnums.
+
 2008-11-04  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstutils.c (gst_util_seqnum_next): Refactor for clarity.
