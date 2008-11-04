@@ -665,6 +665,9 @@ gst_event_new_custom
 gst_event_get_structure
 gst_event_has_name
 
+gst_event_get_seqnum
+gst_event_set_seqnum
+
 gst_event_new_flush_start
 gst_event_new_flush_stop
 
@@ -1044,6 +1047,8 @@ gst_message_unref
 gst_message_copy
 gst_message_get_structure
 gst_message_make_writable
+gst_message_get_seqnum
+gst_message_set_seqnum
 
 gst_message_new_eos
 gst_message_new_error
@@ -2335,6 +2340,8 @@ gst_type_register_static_full
 gst_util_dump_mem
 gst_util_uint64_scale
 gst_util_uint64_scale_int
+gst_util_seqnum_next
+gst_util_seqnum_compare
 gst_util_set_object_arg
 gst_util_set_value_from_string
 gst_util_get_timestamp

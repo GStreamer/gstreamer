@@ -85,6 +85,8 @@
 #include "gstutils.h"
 #include "gstquark.h"
 
+#define GST_EVENT_SEQNUM(e) ((GstEvent*)e)->abidata.seqnum
+
 static void gst_event_init (GTypeInstance * instance, gpointer g_class);
 static void gst_event_class_init (gpointer g_class, gpointer class_data);
 static void gst_event_finalize (GstEvent * event);
@@ -270,6 +272,7 @@ _gst_event_copy (GstEvent * event)
 
   GST_EVENT_TYPE (copy) = GST_EVENT_TYPE (event);
   GST_EVENT_TIMESTAMP (copy) = GST_EVENT_TIMESTAMP (event);
+  GST_EVENT_SEQNUM (copy) = GST_EVENT_SEQNUM (event);
 
   if (GST_EVENT_SRC (event)) {
     GST_EVENT_SRC (copy) = gst_object_ref (GST_EVENT_SRC (event));
@@ -295,6 +298,7 @@ gst_event_new (GstEventType type)
   event->type = type;
   event->src = NULL;
   event->structure = NULL;
+  GST_EVENT_SEQNUM (event) = gst_util_seqnum_next ();
 
   return event;
 }
@@ -376,6 +380,60 @@ gst_event_has_name (GstEvent * event, const gchar * name)
     return FALSE;
 
   return gst_structure_has_name (event->structure, name);
+}
+
+/**
+ * gst_event_get_seqnum:
+ * @event: A #GstEvent.
+ *
+ * Retrieve the sequence number of a event.
+ *
+ * Events have ever-incrementing sequence numbers, which may also be set
+ * explicitly via gst_event_set_seqnum(). Sequence numbers are typically used to
+ * indicate that a event corresponds to some other set of events or messages,
+ * for example an EOS event corresponding to a SEEK event. It is considered good
+ * practice to make this correspondence when possible, though it is not
+ * required.
+ *
+ * Note that events and messages share the same sequence number incrementor;
+ * two events or messages will never not have the same sequence number unless
+ * that correspondence was made explicitly.
+ *
+ * Returns: The event's sequence number.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.22
+ */
+guint32
+gst_event_get_seqnum (GstEvent * event)
+{
+  g_return_val_if_fail (GST_IS_EVENT (event), -1);
+
+  return GST_EVENT_SEQNUM (event);
+}
+
+/**
+ * gst_event_set_seqnum:
+ * @event: A #GstEvent.
+ * @seqnum: A sequence number.
+ *
+ * Set the sequence number of a event.
+ *
+ * This function might be called by the creator of a event to indicate that the
+ * event relates to other events or messages. See gst_event_get_seqnum() for
+ * more information.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.22
+ */
+void
+gst_event_set_seqnum (GstEvent * event, guint32 seqnum)
+{
+  g_return_if_fail (GST_IS_EVENT (event));
+
+  GST_EVENT_SEQNUM (event) = seqnum;
 }
 
 /**

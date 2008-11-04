@@ -305,7 +305,10 @@ struct _GstEvent {
   GstStructure	*structure;
 
   /*< private >*/
-  gpointer _gst_reserved;
+  union {
+    guint32 seqnum;
+    gpointer _gst_reserved;
+  } abidata;
 };
 
 struct _GstEventClass {
@@ -368,6 +371,10 @@ const GstStructure *
 		gst_event_get_structure		(GstEvent *event);
 
 gboolean        gst_event_has_name              (GstEvent *event, const gchar *name);
+
+/* identifiers for events and messages */
+guint32         gst_event_get_seqnum            (GstEvent *event);
+void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum);
 
 /* flush events */
 GstEvent *	gst_event_new_flush_start	(void);

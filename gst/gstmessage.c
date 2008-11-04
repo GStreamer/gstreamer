@@ -60,6 +60,8 @@
 #include "gstquark.h"
 
 
+#define GST_MESSAGE_SEQNUM(e) ((GstMessage*)e)->abidata.ABI.seqnum
+
 static void gst_message_init (GTypeInstance * instance, gpointer g_class);
 static void gst_message_class_init (gpointer g_class, gpointer class_data);
 static void gst_message_finalize (GstMessage * message);
@@ -247,6 +249,7 @@ _gst_message_copy (GstMessage * message)
   GST_MESSAGE_COND (copy) = GST_MESSAGE_COND (message);
   GST_MESSAGE_TYPE (copy) = GST_MESSAGE_TYPE (message);
   GST_MESSAGE_TIMESTAMP (copy) = GST_MESSAGE_TIMESTAMP (message);
+  GST_MESSAGE_SEQNUM (copy) = GST_MESSAGE_SEQNUM (message);
 
   if (GST_MESSAGE_SRC (message)) {
     GST_MESSAGE_SRC (copy) = gst_object_ref (GST_MESSAGE_SRC (message));
@@ -300,7 +303,63 @@ gst_message_new_custom (GstMessageType type, GstObject * src,
   }
   message->structure = structure;
 
+  GST_MESSAGE_SEQNUM (message) = gst_util_seqnum_next ();
+
   return message;
+}
+
+/**
+ * gst_message_get_seqnum:
+ * @message: A #GstMessage.
+ *
+ * Retrieve the sequence number of a message.
+ *
+ * Messages have ever-incrementing sequence numbers, which may also be set
+ * explicitly via gst_message_set_seqnum(). Sequence numbers are typically used
+ * to indicate that a message corresponds to some other set of messages or
+ * events, for example a SEGMENT_DONE message corresponding to a SEEK event. It
+ * is considered good practice to make this correspondence when possible, though
+ * it is not required.
+ *
+ * Note that events and messages share the same sequence number incrementor;
+ * two events or messages will never not have the same sequence number unless
+ * that correspondence was made explicitly.
+ *
+ * Returns: The message's sequence number.
+ *
+ * Since: 0.10.22
+ *
+ * MT safe.
+ */
+guint32
+gst_message_get_seqnum (GstMessage * message)
+{
+  g_return_val_if_fail (GST_IS_MESSAGE (message), -1);
+
+  return GST_MESSAGE_SEQNUM (message);
+}
+
+/**
+ * gst_message_set_seqnum:
+ * @message: A #GstMessage.
+ * @seqnum: A sequence number.
+ *
+ * Set the sequence number of a message.
+ *
+ * This function might be called by the creator of a message to indicate that
+ * the message relates to other messages or events. See gst_message_get_seqnum()
+ * for more information.
+ *
+ * Since: 0.10.22
+ *
+ * MT safe.
+ */
+void
+gst_message_set_seqnum (GstMessage * message, guint32 seqnum)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+
+  GST_MESSAGE_SEQNUM (message) = seqnum;
 }
 
 /**

@@ -575,6 +575,52 @@ overflow:
   }
 }
 
+/**
+ * gst_util_seqnum_next:
+ *
+ * Return a constantly incrementing sequence number.
+ *
+ * This function is used internally to GStreamer to be able to determine which
+ * events and messages are "the same". For example, elements may set the seqnum
+ * on a segment-done message to be the same as that of the last seek event, to
+ * indicate that event and the message correspond to the same segment.
+ *
+ * Returns: A constantly incrementing 32-bit unsigned integer, which might
+ * overflow back to 0 at some point. Use gst_util_seqnum_compare() to make sure
+ * you handle wraparound correctly.
+ *
+ * Since: 0.10.22
+ */
+guint32
+gst_util_seqnum_next (void)
+{
+  static gint counter = -1;
+  gint ret;
+
+  ret = g_atomic_int_exchange_and_add (&counter, 1);
+  return (guint32) (ret + 1);
+}
+
+/**
+ * gst_util_seqnum_compare:
+ * @s1: A sequence number.
+ * @s2: Another sequence number.
+ *
+ * Compare two sequence numbers, handling wraparound.
+ * 
+ * The current implementation just returns (gint32)(@s1 - @s2).
+ *
+ * Returns: A negative number if @s1 is before @s2, 0 if they are equal, or a
+ * positive number if @s1 is after @s2.
+ *
+ * Since: 0.10.22
+ */
+gint32
+gst_util_seqnum_compare (guint32 s1, guint32 s2)
+{
+  return (gint32) (s1 - s2);
+}
+
 /* -----------------------------------------------------
  *
  *  The following code will be moved out of the main

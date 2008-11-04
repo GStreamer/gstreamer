@@ -219,7 +219,13 @@ struct _GstMessage
   GstStructure *structure;
 
   /*< private > */
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      guint32 seqnum;
+    } ABI;
+    /* + 0 to mark ABI change for future greppage */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  } abidata;
 };
 
 struct _GstMessageClass {
@@ -283,6 +289,10 @@ gst_message_ref (GstMessage * msg)
  * MT safe
  */
 #define         gst_message_make_writable(msg)	GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
+
+/* identifiers for events and messages */
+guint32         gst_message_get_seqnum          (GstMessage *message);
+void            gst_message_set_seqnum          (GstMessage *message, guint32 seqnum);
 
 /* EOS */
 GstMessage *	gst_message_new_eos		(GstObject * src);
