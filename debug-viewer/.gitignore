@@ -1,0 +1,14 @@
+
+*.pyc
+*.pyo
+
+*.glade.bak
+*.gladep
+*.gladep.bak
+
+/build
+/dist
+/MANIFEST
+
+po/*.pot
+po/mo
