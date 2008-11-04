@@ -1,3 +1,29 @@
+2008-11-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Bastien Nocera <hadess at hadess dot net>,
+	          Hans de Goede <jwrdegoede at fedoraproject dot org>
+
+	* configure.ac:
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_read):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_fill_lists), (gst_v4l2_open), (gst_v4l2_close),
+	(gst_v4l2_get_norm), (gst_v4l2_set_norm), (gst_v4l2_get_frequency),
+	(gst_v4l2_set_frequency), (gst_v4l2_signal_strength),
+	(gst_v4l2_get_attribute), (gst_v4l2_set_attribute),
+	(gst_v4l2_get_input), (gst_v4l2_set_input):
+	* sys/v4l2/v4l2_calls.h:
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2_buffer_finalize),
+	(gst_v4l2_buffer_new), (gst_v4l2_buffer_pool_finalize),
+	(gst_v4l2_buffer_pool_new), (gst_v4l2_buffer_pool_activate),
+	(gst_v4l2src_fill_format_list),
+	(gst_v4l2src_probe_caps_for_format_and_size),
+	(gst_v4l2src_probe_caps_for_format), (gst_v4l2src_grab_frame),
+	(gst_v4l2src_set_capture), (gst_v4l2src_capture_init),
+	(gst_v4l2src_capture_start), (gst_v4l2src_capture_stop),
+	(gst_v4l2src_get_nearest_size):
+	Optionally use libv4l to access v4l2 devices. Fixes bug #545033.
+
 2008-11-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/aalib/Makefile.am:

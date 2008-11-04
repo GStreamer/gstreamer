@@ -550,6 +550,16 @@ return 0;
   fi
 ])
 
+if test x$HAVE_GST_V4L2 = xyes; then
+  PKG_CHECK_MODULES(LIBV4L2, libv4l2,
+      [ have_libv4l2=yes
+        AC_DEFINE(HAVE_LIBV4L2, 1,
+	    [Whether libv4l2 is available for video buffer conversion])
+      ], [
+      have_libv4l2=no
+      ])
+fi
+
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],

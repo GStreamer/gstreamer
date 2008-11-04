@@ -88,7 +88,7 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
     pool->num_live_buffers--;
 
   if (pool->running) {
-    if (ioctl (pool->video_fd, VIDIOC_QBUF, &buffer->vbuffer) < 0) {
+    if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, &buffer->vbuffer) < 0) {
       GST_WARNING ("could not requeue buffer %p %d", buffer, index);
     } else {
       /* FIXME: check that the caps didn't change */
@@ -106,7 +106,7 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
   if (!resuscitated) {
     GST_LOG ("buffer %p not recovered, unmapping", buffer);
     gst_mini_object_unref (GST_MINI_OBJECT (pool));
-    munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
+    v4l2_munmap ((void *) GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
 
     GST_MINI_OBJECT_CLASS (v4l2buffer_parent_class)->finalize (GST_MINI_OBJECT
         (buffer));
@@ -165,7 +165,7 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
   ret->vbuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   ret->vbuffer.memory = V4L2_MEMORY_MMAP;
 
-  if (ioctl (pool->video_fd, VIDIOC_QUERYBUF, &ret->vbuffer) < 0)
+  if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &ret->vbuffer) < 0)
     goto querybuf_failed;
 
   GST_LOG ("  index:     %u", ret->vbuffer.index);
@@ -179,7 +179,7 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
   GST_LOG ("  length:    %u", ret->vbuffer.length);
   GST_LOG ("  input:     %u", ret->vbuffer.input);
 
-  data = (guint8 *) mmap (0, ret->vbuffer.length,
+  data = (guint8 *) v4l2_mmap (0, ret->vbuffer.length,
       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
       ret->vbuffer.m.offset);
 
@@ -229,7 +229,7 @@ gst_v4l2_buffer_pool_finalize (GstV4l2BufferPool * pool)
   pool->lock = NULL;
 
   if (pool->video_fd >= 0)
-    close (pool->video_fd);
+    v4l2_close (pool->video_fd);
 
   if (pool->buffers) {
     g_free (pool->buffers);
@@ -292,7 +292,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Src * v4l2src, gint fd, gint num_buffers,
 
   pool = (GstV4l2BufferPool *) gst_mini_object_new (GST_TYPE_V4L2_BUFFER_POOL);
 
-  pool->video_fd = dup (fd);
+  pool->video_fd = v4l2_dup (fd);
   if (pool->video_fd < 0)
     goto dup_failed;
 
@@ -344,7 +344,7 @@ gst_v4l2_buffer_pool_activate (GstV4l2BufferPool * pool, GstV4l2Src * v4l2src)
 
     GST_LOG ("enqueue pool buffer %d", n);
 
-    if (ioctl (pool->video_fd, VIDIOC_QBUF, buf) < 0)
+    if (v4l2_ioctl (pool->video_fd, VIDIOC_QBUF, buf) < 0)
       goto queue_failed;
   }
   pool->running = TRUE;
@@ -527,7 +527,7 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
     format->index = n;
     format->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
+    if (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
       if (errno == EINVAL) {
         g_free (format);
         break;                  /* end of enumeration */
@@ -603,7 +603,7 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
 
   /* keep in mind that v4l2 gives us frame intervals (durations); we invert the
    * fraction to get framerate */
-  if (ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) < 0)
+  if (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) < 0)
     goto enum_frameintervals_failed;
 
   if (ival.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
@@ -629,7 +629,7 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
       gst_value_list_append_value (&rates, &rate);
 
       ival.index++;
-    } while (ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) >= 0);
+    } while (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) >= 0);
   } else if (ival.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
     GValue min = { 0, };
     GValue step = { 0, };
@@ -790,7 +790,7 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
 
   GST_DEBUG_OBJECT (v4l2src, "Enumerating frame sizes");
 
-  if (ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
+  if (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
     goto enum_framesizes_failed;
 
   if (size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
@@ -810,7 +810,7 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
         results = g_list_prepend (results, tmp);
 
       size.index++;
-    } while (ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
+    } while (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
     GST_DEBUG_OBJECT (v4l2src, "done iterating discrete frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
     GST_DEBUG_OBJECT (v4l2src, "we have stepwise frame sizes:");
@@ -980,7 +980,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   buffer.memory = V4L2_MEMORY_MMAP;
 
-  while (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
+  while (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
 
     GST_WARNING_OBJECT (v4l2src,
         "problem grabbing frame %d (ix=%d), trials=%d, pool-ct=%d, buf.flags=%d",
@@ -1198,7 +1198,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-  if (ioctl (fd, VIDIOC_G_FMT, &format) < 0)
+  if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
     goto get_fmt_failed;
 
   format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -1210,7 +1210,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
    *  combined, there are other modes for requesting fields individually) */
   format.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
-  if (ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
+  if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0) {
     if (errno != EINVAL)
       goto set_fmt_failed;
 
@@ -1219,7 +1219,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
     format.fmt.pix.height = height;
     format.fmt.pix.pixelformat = pixelformat;
     format.fmt.pix.field = V4L2_FIELD_NONE;
-    if (ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
       goto set_fmt_failed;
   }
 
@@ -1234,7 +1234,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
 
   memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl (fd, VIDIOC_G_PARM, &stream) < 0) {
+  if (v4l2_ioctl (fd, VIDIOC_G_PARM, &stream) < 0) {
     GST_ELEMENT_WARNING (v4l2src, RESOURCE, SETTINGS,
         (_("Could not get parameters on device '%s'"),
             v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
@@ -1264,7 +1264,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
   stream.parm.capture.timeperframe.denominator = fps_n;
 
   /* some cheap USB cam's won't accept any change */
-  if (ioctl (fd, VIDIOC_S_PARM, &stream) < 0) {
+  if (v4l2_ioctl (fd, VIDIOC_S_PARM, &stream) < 0) {
     GST_ELEMENT_WARNING (v4l2src, RESOURCE, SETTINGS,
         (_("Video input device did not accept new frame rate setting.")),
         GST_ERROR_SYSTEM);
@@ -1346,7 +1346,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src, GstCaps * caps)
     breq.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     breq.memory = V4L2_MEMORY_MMAP;
 
-    if (ioctl (fd, VIDIOC_REQBUFS, &breq) < 0)
+    if (v4l2_ioctl (fd, VIDIOC_REQBUFS, &breq) < 0)
       goto reqbufs_failed;
 
     GST_LOG_OBJECT (v4l2src, " count:  %u", breq.count);
@@ -1441,7 +1441,7 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
     if (!gst_v4l2_buffer_pool_activate (v4l2src->pool, v4l2src))
       goto pool_activate_failed;
 
-    if (ioctl (fd, VIDIOC_STREAMON, &type) < 0)
+    if (v4l2_ioctl (fd, VIDIOC_STREAMON, &type) < 0)
       goto streamon_failed;
   }
 
@@ -1486,7 +1486,7 @@ gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
   if (v4l2src->use_mmap) {
     /* we actually need to sync on all queued buffers but not
      * on the non-queued ones */
-    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMOFF, &type) < 0)
+    if (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMOFF, &type) < 0)
       goto streamoff_failed;
   }
 
@@ -1562,14 +1562,14 @@ gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
   fmt.fmt.pix.pixelformat = pixelformat;
   fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
 
-  r = ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+  r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
   if (r < 0 && errno == EINVAL) {
     /* try again with progressive video */
     fmt.fmt.pix.width = *width;
     fmt.fmt.pix.height = *height;
     fmt.fmt.pix.pixelformat = pixelformat;
     fmt.fmt.pix.field = V4L2_FIELD_NONE;
-    r = ioctl (fd, VIDIOC_TRY_FMT, &fmt);
+    r = v4l2_ioctl (fd, VIDIOC_TRY_FMT, &fmt);
   }
 
   if (r < 0) {
@@ -1589,14 +1589,14 @@ gst_v4l2src_get_nearest_size (GstV4l2Src * v4l2src, guint32 pixelformat,
     fmt.fmt.pix.width = *width;
     fmt.fmt.pix.height = *height;
 
-    r = ioctl (fd, VIDIOC_S_FMT, &fmt);
+    r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
     if (r < 0 && errno == EINVAL) {
       /* try again with progressive video */
       fmt.fmt.pix.width = *width;
       fmt.fmt.pix.height = *height;
       fmt.fmt.pix.pixelformat = pixelformat;
       fmt.fmt.pix.field = V4L2_FIELD_NONE;
-      r = ioctl (fd, VIDIOC_S_FMT, &fmt);
+      r = v4l2_ioctl (fd, VIDIOC_S_FMT, &fmt);
     }
 
     if (r < 0)

@@ -1194,7 +1194,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   do {
     amount =
-        read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
+        v4l2_read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
         buffersize);
     if (amount == buffersize) {
       break;

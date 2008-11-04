@@ -27,6 +27,17 @@
 #include "gstv4l2object.h"
 #include "gst/gst-i18n-plugin.h"
 
+#ifdef HAVE_LIBV4L2
+#include <libv4l2.h>
+#else
+#define v4l2_fd_open(fd, flags) (fd)
+#define v4l2_close close
+#define v4l2_dup dup
+#define v4l2_ioctl ioctl
+#define v4l2_read read
+#define v4l2_mmap mmap
+#define v4l2_munmap munmap
+#endif
 
 /* simple check whether the device is open */
 #define GST_V4L2_IS_OPEN(v4l2object) \
