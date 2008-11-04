@@ -613,6 +613,7 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   pad = mpegts_parse_create_tspad (parse, name)->pad;
   gst_pad_set_active (pad, TRUE);
   gst_element_add_pad (element, pad);
+  g_free (name);
 
   return pad;
 }
