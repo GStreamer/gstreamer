@@ -6,6 +6,7 @@ libgstdeinterlace_la_CFLAGS = \
 libgstdeinterlace_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS)
 libgstdeinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdeinterlace_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstdeinterlace.h 
 

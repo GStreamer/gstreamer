@@ -10,5 +10,6 @@ libgstfbdevsink_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(LIBFBDEV_LIBS)
 libgstfbdevsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstfbdevsink_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstfbdevsink.h

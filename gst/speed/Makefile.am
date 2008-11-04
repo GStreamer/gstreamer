@@ -5,6 +5,7 @@ libgstspeed_la_SOURCES = gstspeed.c
 libgstspeed_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstspeed_la_LIBADD = $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) $(LIBM)
 libgstspeed_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstspeed_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstspeed.h
 

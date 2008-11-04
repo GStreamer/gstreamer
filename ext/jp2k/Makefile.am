@@ -7,6 +7,7 @@ libgstjp2k_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_LIBS) $(JP2K_LIBS)
 libgstjp2k_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstjp2k_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstjasperdec.h

@@ -6,4 +6,5 @@ libgstacmencsink_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstacmencsink_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 	-lgstriff-$(GST_MAJORMINOR) -lmsacm32
 libgstacmencsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstacmencsink_la_LIBTOOLFLAGS = --tag=disable-static
 

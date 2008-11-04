@@ -42,6 +42,7 @@ libgstrtpmanager_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstnetbuffer-@GST_MAJORMINOR@ -lgstrtp-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) $(GST_LIBS_LIBS)
 libgstrtpmanager_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstrtpmanager_la_LIBTOOLFLAGS = --tag=disable-static
 
 CLEANFILES = $(BUILT_SOURCES)
 

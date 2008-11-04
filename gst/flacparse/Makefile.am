@@ -7,5 +7,6 @@ libgstflacparse_la_LIBADD = \
 	-lgstaudio-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstflacparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstflacparse_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstbitreader.h gstbytereader.h gstbaseparse.h gstflacparse.h

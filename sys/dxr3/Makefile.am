@@ -7,6 +7,7 @@ nodist_libgstdxr3_la_SOURCES = dxr3marshal.c
 libgstdxr3_la_CFLAGS = $(GST_CFLAGS)
 libgstdxr3_la_LIBADD =
 libgstdxr3_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdxr3_la_LIBTOOLFLAGS = --tag=disable-static
 
 BUILT_SOURCES = dxr3marshal.c dxr3marshal.h
 built_headers =	dxr3marshal.h

@@ -16,6 +16,7 @@ libgstmpegdemux_la_SOURCES = \
 libgstmpegdemux_la_CFLAGS = $(GST_CFLAGS) $(LIBOIL_CFLAGS)
 libgstmpegdemux_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
 libgstmpegdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmpegdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstmpegdefs.h   \

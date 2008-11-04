@@ -10,5 +10,6 @@ libgsttarkin_la_CFLAGS = $(GST_CFLAGS) $(VORBIS_CFLAGS) -DTYPE_BITS=10 -DTYPE=in
 ## AM_PATH_VORBIS also sets VORBISENC_LIBS
 libgsttarkin_la_LIBADD = $(VORBIS_LIBS) $(VORBISENC_LIBS)
 libgsttarkin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsttarkin_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gsttarkinenc.h mem.h tarkin.h yuv.h wavelet.h

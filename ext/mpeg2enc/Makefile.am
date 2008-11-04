@@ -12,6 +12,7 @@ libgstmpeg2enc_la_CXXFLAGS = \
 libgstmpeg2enc_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) $(MPEG2ENC_LIBS)
 libgstmpeg2enc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmpeg2enc_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstmpeg2enc.hh \

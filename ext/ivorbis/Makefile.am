@@ -8,5 +8,6 @@ libgstivorbis_la_LIBADD = $(IVORBIS_LIBS)		\
 			  $(GST_PLUGINS_BASE_LIBS)	\
 			  -lgstaudio-@GST_MAJORMINOR@
 libgstivorbis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstivorbis_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = vorbisdec.h vorbisenc.h

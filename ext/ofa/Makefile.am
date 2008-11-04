@@ -14,5 +14,6 @@ libgstofa_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(OFA_LIBS)
 
 libgstofa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstofa_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstofa.h

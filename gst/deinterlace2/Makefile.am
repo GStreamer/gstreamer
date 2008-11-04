@@ -18,6 +18,7 @@ libgstdeinterlace2_la_CFLAGS = $(GST_CFLAGS) \
 libgstdeinterlace2_la_LIBADD = $(GST_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) $(GST_BASE_LIBS) $(LIBOIL_LIBS)
 libgstdeinterlace2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdeinterlace2_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstdeinterlace2.h \

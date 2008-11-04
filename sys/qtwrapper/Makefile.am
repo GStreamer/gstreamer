@@ -14,7 +14,7 @@ libgstqtwrapper_la_SOURCES = \
 libgstqtwrapper_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstqtwrapper_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstqtwrapper_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,CoreAudio,-framework,AudioToolbox,-framework,Carbon,-framework,QuickTime,-framework,QuartzCore
-
+libgstqtwrapper_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 noinst_HEADERS = 		\

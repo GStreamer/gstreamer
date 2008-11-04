@@ -5,5 +5,6 @@ libgstdtsdec_la_CFLAGS = $(GST_CFLAGS) $(LIBOIL_CFLAGS) $(GST_PLUGINS_BASE_CFLAG
 libgstdtsdec_la_LIBADD = $(DTS_LIBS) $(LIBOIL_LIBS) $(GST_PLUGINS_BASE_LIBS)  \
 	-lgstaudio-@GST_MAJORMINOR@
 libgstdtsdec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdtsdec_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstdtsdec.h

@@ -10,5 +10,6 @@ libgstaiffparse_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(LIBM)
 libgstaiffparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaiffparse_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = aiffparse.h

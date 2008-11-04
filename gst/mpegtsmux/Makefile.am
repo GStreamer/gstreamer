@@ -10,6 +10,7 @@ libgstmpegtsmux_la_SOURCES = \
 libgstmpegtsmux_la_CFLAGS = $(GST_CFLAGS)
 libgstmpegtsmux_la_LIBADD = $(top_builddir)/gst/mpegtsmux/tsmux/libtsmux.la $(GST_LIBS) $(GST_BASE_LIBS)
 libgstmpegtsmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmpegtsmux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	mpegtsmux.h \

@@ -10,6 +10,7 @@ libgstmythtvsrc_la_CFLAGS = \
 
 libgstmythtvsrc_la_LDFLAGS = \
 	$(GST_PLUGIN_LDFLAGS)
+libgstmythtvsrc_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstmythtvsrc_la_LIBADD = \
 	$(GST_BASE_LIBS) \

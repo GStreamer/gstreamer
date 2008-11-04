@@ -10,6 +10,7 @@ libgstdfbvideosink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 			       -lgstinterfaces-$(GST_MAJORMINOR) \
 			       $(DIRECTFB_LIBS) $(LIBOIL_LIBS)
 libgstdfbvideosink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstdfbvideosink_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = dfbvideosink.h
 

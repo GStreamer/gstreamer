@@ -12,3 +12,5 @@ libgsttheoraexp_la_LIBADD = \
 	$(GST_LIBS) \
 	$(THEORADEC_LIBS)
 libgsttheoraexp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsttheoraexp_la_LIBTOOLFLAGS = --tag=disable-static
+

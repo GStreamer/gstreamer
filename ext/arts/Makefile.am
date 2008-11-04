@@ -20,6 +20,7 @@ libgstarts_la_CFLAGS = $(GST_CFLAGS)
 libgstarts_la_CXXFLAGS = $(ARTS_CXXFLAGS) $(GST_CFLAGS)
 libgstarts_la_LIBADD = $(ARTS_LIBS) -lartsflow -lartsflow_idl
 libgstarts_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstarts_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gst_arts.h gst_artsio_impl.h
 

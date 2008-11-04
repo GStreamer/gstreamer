@@ -12,5 +12,6 @@ libgstfilter_la_LIBADD = \
 	$(LIBM)
 
 libgstfilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstfilter_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstfilter.h gstiir.h iir.h

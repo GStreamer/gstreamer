@@ -5,6 +5,7 @@ libgstsmoothwave_la_SOURCES = gstsmoothwave.c
 libgstsmoothwave_la_CFLAGS = $(GST_CFLAGS) 
 libgstsmoothwave_la_LIBADD = 
 libgstsmoothwave_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstsmoothwave_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstsmoothwave.h
 

@@ -7,6 +7,7 @@ libgstmpeg1systemencode_la_SOURCES = gstmpeg1systemencode.c \
 libgstmpeg1systemencode_la_CFLAGS = $(GST_CFLAGS)
 libgstmpeg1systemencode_la_LIBADD =
 libgstmpeg1systemencode_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmpeg1systemencode_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstmpeg1systemencode.h \
 		 main.h \

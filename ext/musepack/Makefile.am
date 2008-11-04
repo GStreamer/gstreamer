@@ -6,6 +6,7 @@ libgstmusepack_la_SOURCES = \
 libgstmusepack_la_CFLAGS = $(MUSEPACK_CFLAGS) $(GST_CFLAGS)
 libgstmusepack_la_LIBADD = $(MUSEPACK_LIBS) $(GST_LIBS)
 libgstmusepack_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmusepack_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstmusepackdec.h \
