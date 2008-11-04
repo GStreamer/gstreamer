@@ -2817,6 +2817,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gint64 position;
 
       gst_message_parse_segment_done (message, &format, &position);
+      seqnum = gst_message_get_seqnum (message);
 
       GST_OBJECT_LOCK (bin);
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
@@ -2832,7 +2833,6 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       }
       GST_OBJECT_UNLOCK (bin);
       if (post) {
-        seqnum = gst_message_get_seqnum (message);
         tmessage = gst_message_new_segment_done (GST_OBJECT_CAST (bin),
             format, position);
         gst_message_set_seqnum (tmessage, seqnum);

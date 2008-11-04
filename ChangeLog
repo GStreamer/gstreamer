@@ -1,5 +1,10 @@
 2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstbin.c: (gst_bin_handle_message_func):
+	Get the seqnum before we dispose the message.
+
+2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-TODO.txt:
 	Refer to the framestepping document.
 
