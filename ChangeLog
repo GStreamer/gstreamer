@@ -1,3 +1,75 @@
+2008-11-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/aalib/Makefile.am:
+	* ext/annodex/Makefile.am:
+	* ext/cairo/Makefile.am:
+	* ext/dv/Makefile.am:
+	* ext/esd/Makefile.am:
+	* ext/flac/Makefile.am:
+	* ext/gconf/Makefile.am:
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/hal/Makefile.am:
+	* ext/jpeg/Makefile.am:
+	* ext/ladspa/Makefile.am:
+	* ext/libcaca/Makefile.am:
+	* ext/libmng/Makefile.am:
+	* ext/libpng/Makefile.am:
+	* ext/mikmod/Makefile.am:
+	* ext/pulse/Makefile.am:
+	* ext/raw1394/Makefile.am:
+	* ext/shout2/Makefile.am:
+	* ext/soup/Makefile.am:
+	* ext/speex/Makefile.am:
+	* ext/taglib/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* gst/alpha/Makefile.am:
+	* gst/apetag/Makefile.am:
+	* gst/audiofx/Makefile.am:
+	* gst/auparse/Makefile.am:
+	* gst/autodetect/Makefile.am:
+	* gst/avi/Makefile.am:
+	* gst/cutter/Makefile.am:
+	* gst/debug/Makefile.am:
+	* gst/effectv/Makefile.am:
+	* gst/equalizer/Makefile.am:
+	* gst/flx/Makefile.am:
+	* gst/goom/Makefile.am:
+	* gst/goom2k1/Makefile.am:
+	* gst/icydemux/Makefile.am:
+	* gst/id3demux/Makefile.am:
+	* gst/interleave/Makefile.am:
+	* gst/law/Makefile.am:
+	* gst/level/Makefile.am:
+	* gst/matroska/Makefile.am:
+	* gst/median/Makefile.am:
+	* gst/monoscope/Makefile.am:
+	* gst/multifile/Makefile.am:
+	* gst/multipart/Makefile.am:
+	* gst/oldcore/Makefile.am:
+	* gst/qtdemux/Makefile.am:
+	* gst/replaygain/Makefile.am:
+	* gst/rtp/Makefile.am:
+	* gst/rtsp/Makefile.am:
+	* gst/smpte/Makefile.am:
+	* gst/spectrum/Makefile.am:
+	* gst/udp/Makefile.am:
+	* gst/videobox/Makefile.am:
+	* gst/videocrop/Makefile.am:
+	* gst/videofilter/Makefile.am:
+	* gst/videomixer/Makefile.am:
+	* gst/wavenc/Makefile.am:
+	* gst/wavparse/Makefile.am:
+	* sys/directdraw/Makefile.am:
+	* sys/directsound/Makefile.am:
+	* sys/oss/Makefile.am:
+	* sys/osxaudio/Makefile.am:
+	* sys/osxvideo/Makefile.am:
+	* sys/sunaudio/Makefile.am:
+	* sys/v4l2/Makefile.am:
+	* sys/waveform/Makefile.am:
+	* sys/ximage/Makefile.am:
+	  Don't install static libs for plugins. Fixes #550851 for -good.
+
 2008-10-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/flac/Makefile.am:

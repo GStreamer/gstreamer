@@ -20,5 +20,6 @@ libgstavi_la_LIBADD = \
 	$(GST_LIBS) \
 	-lgstriff-@GST_MAJORMINOR@
 libgstavi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstavi_la_LIBTOOLFLAGS = --tag=disable-static
 
 EXTRA_DIST = README

@@ -33,3 +33,5 @@ libgstmatroska_la_LIBADD = \
 	$(BZ2_LIBS) \
 	$(LIBM)
 libgstmatroska_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmatroska_la_LIBTOOLFLAGS = --tag=disable-static
+

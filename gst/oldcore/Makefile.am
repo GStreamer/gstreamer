@@ -14,6 +14,7 @@ libgststandardelements_la_SOURCES =	\
 libgststandardelements_la_CFLAGS = $(GST_CFLAGS)
 libgststandardelements_la_LIBADD = $(GST_LIBS)
 libgststandardelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgststandardelements_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS =		\
 	gstaggregator.h		\

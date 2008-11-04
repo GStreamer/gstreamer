@@ -12,5 +12,6 @@ libgst1394_la_LIBADD = \
 	$(GST_LIBS) \
 	$(DV1394_LIBS)
 libgst1394_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgst1394_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstdv1394src.h gst1394probe.h gsthdv1394src.h

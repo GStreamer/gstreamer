@@ -9,3 +9,5 @@ libgstsmpte_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LIBM) \
 			-lgstvideo-$(GST_MAJORMINOR) \
 		        $(GST_CONTROLLER_LIBS) 
 libgstsmpte_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstsmpte_la_LIBTOOLFLAGS = --tag=disable-static
+

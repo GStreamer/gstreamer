@@ -7,5 +7,6 @@ libgstflac_la_LIBADD = \
 	-lgstaudio-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(FLAC_LIBS)
 libgstflac_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstflac_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstflacenc.h gstflacdec.h gstflactag.h

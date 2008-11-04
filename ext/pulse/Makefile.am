@@ -13,6 +13,7 @@ libgstpulse_la_SOURCES = \
 libgstpulse_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(PULSE_CFLAGS)
 libgstpulse_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) -lgstinterfaces-$(GST_MAJORMINOR) $(PULSE_LIBS)
 libgstpulse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstpulse_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	pulsemixerctrl.h \

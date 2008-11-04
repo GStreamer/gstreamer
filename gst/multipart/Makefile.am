@@ -4,6 +4,7 @@ libgstmultipart_la_SOURCES = multipart.c multipartdemux.c multipartmux.c
 libgstmultipart_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstmultipart_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstmultipart_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstmultipart__la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = multipartdemux.h multipartmux.h
 

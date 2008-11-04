@@ -9,6 +9,7 @@ libgsthalelements_la_SOURCES = \
 libgsthalelements_la_CFLAGS = $(GST_CFLAGS) $(HAL_CFLAGS)
 libgsthalelements_la_LIBADD = $(GST_LIBS) $(HAL_LIBS)
 libgsthalelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsthalelements_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gsthalaudiosink.h \

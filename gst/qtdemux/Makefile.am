@@ -7,6 +7,7 @@ libgstqtdemux_la_LIBADD = \
 	$(GST_BASE_LIBS) $(ZLIB_LIBS)
 libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
 libgstqtdemux_la_SOURCES = quicktime.c gstrtpxqtdepay.c qtdemux.c qtdemux_types.c qtdemux_dump.c
+libgstqtdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	qtdemux.h        \

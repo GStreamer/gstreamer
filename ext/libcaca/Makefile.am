@@ -10,5 +10,6 @@ libgstcacasink_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(LIBCACA_LIBS)
 libgstcacasink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstcacasink_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstcacasink.h

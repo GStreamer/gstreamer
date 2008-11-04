@@ -9,6 +9,7 @@ libgstautodetect_la_SOURCES = \
 libgstautodetect_la_CFLAGS = $(GST_CFLAGS)
 libgstautodetect_la_LIBADD = $(GST_LIBS)
 libgstautodetect_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstautodetect_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstautoaudiosink.h \

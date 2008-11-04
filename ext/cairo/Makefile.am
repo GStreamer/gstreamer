@@ -15,3 +15,5 @@ libgstcairo_la_LIBADD = \
   $(GST_BASE_LIBS) \
   $(GST_LIBS) $(CAIRO_LIBS) $(LIBM)
 libgstcairo_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstcairo_la_LIBTOOLFLAGS = --tag=disable-static
+

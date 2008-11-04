@@ -20,6 +20,7 @@ libgstudp_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) -D_GNU_SOURCE
 libgstudp_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) $(WIN32_LIBS)\
 		      -lgstnetbuffer-@GST_MAJORMINOR@
 libgstudp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstudp_la_LIBTOOLFLAGS = --tag=disable-static
 
 nodist_libgstudp_la_SOURCES = \
         $(built_sources)

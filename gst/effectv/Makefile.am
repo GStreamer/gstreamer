@@ -14,5 +14,6 @@ libgsteffectv_la_LIBADD = \
 	$(GST_LIBS) \
 	$(LIBM)
 libgsteffectv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgsteffectv_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gsteffectv.h

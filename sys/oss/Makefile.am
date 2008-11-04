@@ -15,6 +15,7 @@ libgstossaudio_la_LIBADD = \
 	-lgstaudio-$(GST_MAJORMINOR) \
 	$(GST_LIBS)
 libgstossaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
+libgstossaudio_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = common.h            \
 		gstosssink.h	     \
