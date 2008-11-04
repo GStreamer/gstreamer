@@ -20,7 +20,8 @@ API/ABI
   doing the seek.
   Idea is that frame stepping forwards can be done in the sinks, ie, just
   dropping N frames/time, sending more complicated queries upstream which can
-  ideally handle those cases more efficiently too.
+  ideally handle those cases more efficiently too. Some ideas are in
+  docs/design/draft-framestep.txt
 
 - use | instead of + as divider in serialization of Flags
   (gstvalue/gststructure)

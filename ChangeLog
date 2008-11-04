@@ -1,5 +1,10 @@
 2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/design/part-TODO.txt:
+	Refer to the framestepping document.
+
+2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstbin.c: (bin_handle_async_start),
 	(gst_bin_handle_message_func), (gst_bin_query):
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_render_object),
