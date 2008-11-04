@@ -10,5 +10,6 @@ libgstx264_la_LIBADD = \
 	$(GST_LIBS) \
 	$(X264_LIBS)
 libgstx264_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstx264_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstx264enc.h
