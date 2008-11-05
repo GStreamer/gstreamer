@@ -23,9 +23,9 @@
 #ifndef __GST_GL_H__
 #define __GST_GL_H__
 
-#include <gstglwindow.h>
 #include <gst/video/video.h>
 
+#include "gstglwindow.h"
 #include "gstglshader.h"
 
 #define GST_TYPE_GL_DISPLAY			\
@@ -241,7 +241,7 @@ gboolean gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, 
 void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
                              GLuint depth_buffer);
 
-void gst_gl_display_gen_shader (GstGLDisplay* display, 
+void gst_gl_display_gen_shader (GstGLDisplay* display,
                                 const gchar* shader_vertex_source,
                                 const gchar* shader_fragment_source,
                                 GstGLShader** shader);

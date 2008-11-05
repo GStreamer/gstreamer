@@ -2,6 +2,7 @@
 lib_LTLIBRARIES = libgstgl-@GST_MAJORMINOR@.la
 
 libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
+  gstglwindow_x11.c \
 	gstgldisplay.c \
 	gstglbuffer.c \
 	gstglfilter.c \
@@ -9,6 +10,7 @@ libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
 
 libgstgl_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/gl
 libgstgl_@GST_MAJORMINOR@include_HEADERS = \
+  gstglwindow.h \
 	gstgldisplay.h \
 	gstglbuffer.h \
 	gstglfilter.h \

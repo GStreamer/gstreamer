@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
  *
@@ -139,12 +139,6 @@ gst_gl_shader_log_handler (const gchar *domain, GLogLevelFlags flags,
     g_log_default_handler (domain, flags, message, user_data);
   }
 }
-
-static void
-gst_gl_shader_base_init (gpointer g_class)
-{
-}
-
 
 static void
 gst_gl_shader_class_init (GstGLShaderClass * klass)
@@ -516,7 +510,7 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
   glUniform1iARB (location, value);
 }
 
-GLint 
+GLint
 gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar *name)
 {
   GstGLShaderPrivate *priv;

@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Color space conversion</title>
  * <para>
- * Depends on the driver and when needed, the color space conversion is made 
+ * Depends on the driver and when needed, the color space conversion is made
  * in a fragment shader using one frame buffer object instance, or using
  * mesa ycbcr .
  * </para>
@@ -42,7 +42,7 @@
  * |[
  * gst-launch -v videotestsrc ! "video/x-raw-yuv, format=(fourcc)I420" ! glupload ! glimagesink
  * ]| A pipeline to test hardware scaling and hardware colorspace conversion.
- * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1), 
+ * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1),
  * the 4 following format YUY2, UYVY, I420, YV12 and AYUV are converted to RGB32
  * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
  * If your driver does not support GLSL but supports MESA_YCbCr extension then
@@ -59,7 +59,7 @@
  *    "video/x-raw-gl, width=640, height=480" ! glimagesink
  * ]| A pipeline to test hardware scaling.
  * Frame buffer extension is required. Inded one FBO is used bettween glupload and glimagesink,
- * because the texture needs to be resized. Depends on your driver the color space conversion 
+ * because the texture needs to be resized. Depends on your driver the color space conversion
  * is made in a fragment shader using one frame buffer object instance, or using mesa ycbcr .
  * </refsect2>
  */
@@ -425,7 +425,6 @@ gst_gl_upload_set_caps (GstBaseTransform* bt, GstCaps* incaps,
     GstGLUpload* upload = GST_GL_UPLOAD (bt);
     gboolean ret = FALSE;
     GstVideoFormat video_format = GST_VIDEO_FORMAT_UNKNOWN;
-    static gint y_pos = 0;
 
     GST_DEBUG ("called with %" GST_PTR_FORMAT, incaps);
 
