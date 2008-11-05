@@ -21,6 +21,13 @@ G_BEGIN_DECLS enum
 #define ENCODING_TYPE_COPYRECT              1
 #define ENCODING_TYPE_RRE                   2
 #define ENCODING_TYPE_CORRE                 4
+#define ENCODING_TYPE_HEXTILE               5
+
+#define SUBENCODING_RAW                     1
+#define SUBENCODING_BACKGROUND              2
+#define SUBENCODING_FOREGROUND              4
+#define SUBENCODING_ANYSUBRECTS             8
+#define SUBENCODING_SUBRECTSCOLORED         16
 
 typedef struct _RfbDecoder RfbDecoder;
 
@@ -33,6 +40,8 @@ struct _RfbDecoder
 
   gint fd;
 
+  guint8 *data;
+  guint32 data_len;
   gpointer decoder_private;
   guint8 *frame;
   guint8 *prev_frame;

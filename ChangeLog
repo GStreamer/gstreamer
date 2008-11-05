@@ -1,3 +1,10 @@
+2008-11-05  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	Add Hextile encoding
+
 2008-11-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Josep Torra

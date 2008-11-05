@@ -49,6 +49,7 @@ enum
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
+GST_DEBUG_CATEGORY (rfbdecoder_debug);
 #define GST_CAT_DEFAULT rfbsrc_debug
 
 static const GstElementDetails gst_rfb_src_details =
@@ -88,11 +89,7 @@ static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static GstFlowReturn gst_rfb_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 
-#define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (rfbsrc_debug, "rfbsrc", 0, "rfb src element");
-
-GST_BOILERPLATE_FULL (GstRfbSrc, gst_rfb_src, GstPushSrc, GST_TYPE_PUSH_SRC,
-    DEBUG_INIT);
+GST_BOILERPLATE (GstRfbSrc, gst_rfb_src, GstPushSrc, GST_TYPE_PUSH_SRC);
 
 static void
 gst_rfb_src_base_init (gpointer g_class)
@@ -111,6 +108,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   GObjectClass *gobject_class;
   GstBaseSrcClass *gstbasesrc_class;
   GstPushSrcClass *gstpushsrc_class;
+
+  GST_DEBUG_CATEGORY_INIT (rfbsrc_debug, "rfbsrc", 0, "rfb src element");
+  GST_DEBUG_CATEGORY_INIT (rfbdecoder_debug, "rfbdecoder", 0, "rfb decoder");
 
   gobject_class = (GObjectClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
@@ -231,18 +231,7 @@ gst_rfb_property_set_version (GstRfbSrc * src, gchar * value)
 static gchar *
 gst_rfb_property_get_version (GstRfbSrc * src)
 {
-  gchar *version = g_malloc (8);
-  gchar *major = g_strdup_printf ("%d", src->version_major);
-  gchar *minor = g_strdup_printf ("%d", src->version_minor);
-
-  g_stpcpy (version, major);
-  g_strlcat (version, ".", 8);
-  g_strlcat (version, minor, 8);
-
-  g_free (major);
-  g_free (minor);
-
-  return version;
+  return g_strdup_printf ("%d.%d", src->version_major, src->version_minor);
 }
 
 static void
@@ -355,7 +344,7 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "connecting to host %s on port %d",
       src->host, src->port);
   if (!rfb_decoder_connect_tcp (decoder, src->host, src->port)) {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not connect to host %s on port %d", src->host, src->port));
     rfb_decoder_free (decoder);
     return FALSE;
