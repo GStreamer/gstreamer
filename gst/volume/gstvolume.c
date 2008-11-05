@@ -275,7 +275,7 @@ volume_update_real_volume (GstVolume * this)
   }
   if (this->real_vol_f != 0.0)
     this->silent_buffer = FALSE;
-  volume_choose_func (this);
+  this->negotiated = volume_choose_func (this);
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (this), passthrough);
 }
 
@@ -313,13 +313,17 @@ gst_volume_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
   g_return_if_fail (this != NULL);
   g_return_if_fail (GST_IS_VOLUME (this));
 
+  GST_BASE_TRANSFORM_LOCK (this);
+  GST_OBJECT_LOCK (this);
   this->volume_f = (gfloat) volumes[0] / VOLUME_STEPS;
+  GST_OBJECT_UNLOCK (this);
   this->volume_i32 = this->volume_f * VOLUME_UNITY_INT32;
   this->volume_i24 = this->volume_f * VOLUME_UNITY_INT24;
   this->volume_i16 = this->volume_f * VOLUME_UNITY_INT16;
   this->volume_i8 = this->volume_f * VOLUME_UNITY_INT8;
 
   volume_update_real_volume (this);
+  GST_BASE_TRANSFORM_UNLOCK (this);
 }
 
 static void
@@ -330,7 +334,9 @@ gst_volume_get_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
   g_return_if_fail (this != NULL);
   g_return_if_fail (GST_IS_VOLUME (this));
 
+  GST_OBJECT_LOCK (this);
   volumes[0] = (gint) this->volume_f * VOLUME_STEPS;
+  GST_OBJECT_UNLOCK (this);
 }
 
 static void
@@ -341,9 +347,11 @@ gst_volume_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
   g_return_if_fail (this != NULL);
   g_return_if_fail (GST_IS_VOLUME (this));
 
+  GST_BASE_TRANSFORM_LOCK (this);
   this->mute = mute;
 
   volume_update_real_volume (this);
+  GST_BASE_TRANSFORM_UNLOCK (this);
 }
 
 static void
@@ -432,6 +440,7 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
   this->volume_i32 = this->real_vol_i32 = VOLUME_UNITY_INT32;
   this->volume_f = this->real_vol_f = 1.0;
   this->tracklist = NULL;
+  this->negotiated = FALSE;
 
   track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
 
@@ -664,15 +673,19 @@ volume_process_int8_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
 static gboolean
 volume_setup (GstAudioFilter * filter, GstRingBufferSpec * format)
 {
+  gboolean res;
   GstVolume *this = GST_VOLUME (filter);
 
   if (volume_choose_func (this)) {
-    return TRUE;
+    res = TRUE;
   } else {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION,
         ("Invalid incoming format"), (NULL));
-    return FALSE;
+    res = FALSE;
   }
+  this->negotiated = res;
+
+  return res;
 }
 
 /* call the plugged-in process function for this instance
@@ -685,7 +698,8 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstVolume *this = GST_VOLUME (base);
   GstClockTime timestamp;
 
-  g_return_val_if_fail (this->process != NULL, GST_FLOW_NOT_NEGOTIATED);
+  if (G_UNLIKELY (!this->negotiated))
+    goto not_negotiated;
 
   /* FIXME: if controllers are bound, subdivide GST_BUFFER_SIZE into small
    * chunks for smooth fades, what is small? 1/10th sec.
@@ -717,6 +731,14 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   this->silent_buffer = FALSE;
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (this, CORE, NEGOTIATION,
+        ("No format was negotiated"), (NULL));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static void
@@ -726,13 +748,16 @@ volume_update_mute (const GValue * value, gpointer data)
 
   g_return_if_fail (GST_IS_VOLUME (this));
 
+  GST_BASE_TRANSFORM_LOCK (this);
+  GST_OBJECT_LOCK (this);
   if (G_VALUE_HOLDS_BOOLEAN (value)) {
     this->mute = g_value_get_boolean (value);
   } else if (G_VALUE_HOLDS_INT (value)) {
     this->mute = (g_value_get_int (value) == 1);
   }
-
+  GST_OBJECT_UNLOCK (this);
   volume_update_real_volume (this);
+  GST_BASE_TRANSFORM_UNLOCK (this);
 }
 
 static void
@@ -742,13 +767,19 @@ volume_update_volume (const GValue * value, gpointer data)
 
   g_return_if_fail (GST_IS_VOLUME (this));
 
+  GST_BASE_TRANSFORM_LOCK (this);
+
+  GST_OBJECT_LOCK (this);
   this->volume_f = g_value_get_double (value);
+  GST_OBJECT_UNLOCK (this);
+
   this->volume_i8 = this->volume_f * VOLUME_UNITY_INT8;
   this->volume_i16 = this->volume_f * VOLUME_UNITY_INT16;
   this->volume_i24 = this->volume_f * VOLUME_UNITY_INT24;
   this->volume_i32 = this->volume_f * VOLUME_UNITY_INT32;
 
   volume_update_real_volume (this);
+  GST_BASE_TRANSFORM_UNLOCK (this);
 }
 
 static void
@@ -778,10 +809,14 @@ volume_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_MUTE:
+      GST_OBJECT_LOCK (this);
       g_value_set_boolean (value, this->mute);
+      GST_OBJECT_UNLOCK (this);
       break;
     case PROP_VOLUME:
+      GST_OBJECT_LOCK (this);
       g_value_set_double (value, this->volume_f);
+      GST_OBJECT_UNLOCK (this);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

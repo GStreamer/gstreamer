@@ -1,5 +1,17 @@
 2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/volume/gstvolume.c: (volume_update_real_volume),
+	(gst_volume_set_volume), (gst_volume_get_volume),
+	(gst_volume_set_mute), (gst_volume_init), (volume_setup),
+	(volume_transform_ip), (volume_update_mute),
+	(volume_update_volume), (volume_get_property):
+	* gst/volume/gstvolume.h:
+	Keep negotiated state in a separate variable.
+	Protect the volume and mute properties with the object lock.
+	Protect modifying the transform with the transform lock.
+
+2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_pixfmt_to_caps):
 	Only convert caps to string when debug is enabled.

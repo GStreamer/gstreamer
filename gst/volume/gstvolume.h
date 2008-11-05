@@ -63,6 +63,7 @@ struct _GstVolume {
   
   GList *tracklist;
   gboolean silent_buffer;       /* flag for silent buffers */
+  gboolean negotiated;
 };
 
 struct _GstVolumeClass {
