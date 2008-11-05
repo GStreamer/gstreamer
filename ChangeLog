@@ -1,3 +1,9 @@
+2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps):
+	Only convert caps to string when debug is enabled.
+
 2008-11-04  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/theora/gsttheoradec.h:
