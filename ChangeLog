@@ -1,5 +1,12 @@
 2008-11-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	patch by: Josep Torra
+
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	Heuristic approach when resyncing.
+
+2008-11-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	patch by: Sebastian Pölsterl
 
 	* gst/mpegdemux/gstmpegdesc.c:

@@ -2458,6 +2458,33 @@ gst_fluts_demux_src_pad_query (GstPad * pad, GstQuery * query)
 }
 #endif
 
+
+static FORCE_INLINE gint
+is_mpegts_sync (const guint8 * in_data, const guint8 * end_data,
+    guint packetsize)
+{
+  guint ret = 0;
+  if (G_LIKELY (IS_MPEGTS_SYNC (in_data)))
+    return 100;
+
+  if (in_data + packetsize < end_data - 5) {
+    if (G_LIKELY (IS_MPEGTS_SYNC (in_data + packetsize)))
+      ret += 50;
+  }
+
+  if (in_data[0] == 0x47) {
+    ret += 25;
+
+    if ((in_data[1] & 0x80) == 0x00)
+      ret += 10;
+
+    if ((in_data[3] & 0x10) == 0x10)
+      ret += 5;
+  }
+  return ret;
+}
+
+
 static FORCE_INLINE guint
 gst_fluts_demux_sync_scan (GstFluTSDemux * demux, const guint8 * in_data,
     guint size, guint * flush)
@@ -2468,7 +2495,8 @@ gst_fluts_demux_sync_scan (GstFluTSDemux * demux, const guint8 * in_data,
 
   while (ptr_data <= end_scan && sync_count < LENGHT_SYNC_LUT) {
     /* if sync code is found try to store it in the LUT */
-    if (G_LIKELY (IS_MPEGTS_SYNC (ptr_data))) {
+    guint chance = is_mpegts_sync (ptr_data, end_scan, demux->packetsize);
+    if (G_LIKELY (chance > 50)) {
       /* skip paketsize bytes and try find next */
       guint8 *next_sync = ptr_data + demux->packetsize;
       if (next_sync < end_scan) {
