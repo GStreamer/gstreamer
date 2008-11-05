@@ -68,9 +68,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "bpp = (int) [1, 255], "
         "depth = (int) [1, 255], "
         "endianness = (int) [1234, 4321], "
-        "red_mask = (int) 0x0000ff00, "
-        "green_mask = (int) 0x00ff0000, "
-        "blue_mask = (int) 0xff000000, "
+        "red_mask = (int) [min, max], "
+        "green_mask = (int) [min, max], "
+        "blue_mask = (int) [min, max], "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], " "framerate = (fraction) 0/1")
     );
@@ -338,6 +338,7 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
   RfbDecoder *decoder;
   GstCaps *caps;
+  guint32 red_mask, green_mask, blue_mask;
 
   decoder = src->decoder;
 
@@ -377,10 +378,20 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
 
   caps =
       gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc)));
-  gst_caps_set_simple (caps, "width", G_TYPE_INT, decoder->rect_width, "height",
-      G_TYPE_INT, decoder->rect_height, "bpp", G_TYPE_INT, decoder->bpp,
-      "depth", G_TYPE_INT, decoder->depth, "endianness", G_TYPE_INT,
-      (decoder->big_endian ? 1234 : 4321), NULL);
+
+  red_mask = decoder->red_max << decoder->red_shift;
+  green_mask = decoder->green_max << decoder->green_shift;
+  blue_mask = decoder->blue_max << decoder->blue_shift;
+
+  gst_caps_set_simple (caps, "width", G_TYPE_INT, decoder->rect_width,
+      "height", G_TYPE_INT, decoder->rect_height,
+      "bpp", G_TYPE_INT, decoder->bpp,
+      "depth", G_TYPE_INT, decoder->depth,
+      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+      "red_mask", G_TYPE_INT, GST_READ_UINT32_BE (&red_mask),
+      "green_mask", G_TYPE_INT, GST_READ_UINT32_BE (&green_mask),
+      "blue_mask", G_TYPE_INT, GST_READ_UINT32_BE (&blue_mask), NULL);
+
   gst_pad_set_caps (GST_BASE_SRC_PAD (bsrc), caps);
   gst_caps_unref (caps);
 

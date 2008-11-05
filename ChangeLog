@@ -1,3 +1,8 @@
+2008-11-06  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
+	Fix RGB mask in caps
+
 2008-11-05  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:
