@@ -364,6 +364,16 @@ static void
 gst_matroska_pad_free (GstMatroskaPad * collect_pad)
 {
   /* free track information */
+  if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+    GstMatroskaTrackVideoContext *ctx =
+        (GstMatroskaTrackVideoContext *) collect_pad->track;
+
+    if (ctx->dirac_unit) {
+      gst_buffer_unref (ctx->dirac_unit);
+      ctx->dirac_unit = NULL;
+    }
+  }
+
   if (collect_pad->track != NULL) {
     g_free (collect_pad->track->codec_id);
     g_free (collect_pad->track->codec_name);
@@ -1939,6 +1949,61 @@ gst_matroska_mux_create_buffer_header (GstMatroskaTrackContext * track,
   return hdr;
 }
 
+static GstBuffer *
+gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
+    GstMatroskaPad * collect_pad, GstBuffer * buf)
+{
+  GstMatroskaTrackVideoContext *ctx =
+      (GstMatroskaTrackVideoContext *) collect_pad->track;
+  const guint8 *data = GST_BUFFER_DATA (buf);
+  guint8 parse_code;
+  GstBuffer *ret = NULL;
+
+  if (GST_BUFFER_SIZE (buf) < 13) {
+    gst_buffer_unref (buf);
+    return ret;
+  }
+
+  if (GST_READ_UINT32_BE (data) != 0x42424344) {
+    gst_buffer_unref (buf);
+    return ret;
+  }
+
+  parse_code = GST_READ_UINT8 (data + 4);
+
+  switch (parse_code) {
+    case 0x00:
+      if (ctx->dirac_unit) {
+        gst_buffer_unref (ctx->dirac_unit);
+      }
+      ctx->dirac_unit = buf;
+      break;
+    case 0x10:
+    case 0x20:
+    case 0x30:
+      if (ctx->dirac_unit)
+        ctx->dirac_unit = gst_buffer_join (ctx->dirac_unit, buf);
+      else
+        ctx->dirac_unit = buf;
+      break;
+    default:
+      /* picture */
+      if (ctx->dirac_unit) {
+        ret = gst_buffer_join (ctx->dirac_unit, gst_buffer_ref (buf));
+        ctx->dirac_unit = NULL;
+        ret = gst_buffer_make_metadata_writable (ret);
+        gst_buffer_copy_metadata (ret, buf,
+            GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
+            GST_BUFFER_COPY_CAPS);
+      } else {
+        ret = buf;
+      }
+      break;
+  }
+
+  return ret;
+}
+
 /**
  * gst_matroska_mux_write_data:
  * @mux: #GstMatroskaMux
@@ -1970,6 +2035,14 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
     gst_buffer_unref (buf);
     --collect_pad->track->xiph_headers_to_skip;
     return GST_FLOW_OK;
+  }
+
+  /* for dirac we have to queue up everything up to a picture unit */
+  if (strcmp (collect_pad->track->codec_id,
+          GST_MATROSKA_CODEC_ID_VIDEO_DIRAC) == 0) {
+    buf = gst_matroska_mux_handle_dirac_packet (mux, collect_pad, buf);
+    if (!buf)
+      return GST_FLOW_OK;
   }
 
   /* hm, invalid timestamp (due to --to be fixed--- element upstream);

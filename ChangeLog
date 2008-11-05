@@ -1,3 +1,16 @@
+2008-11-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-ids.h:
+	* gst/matroska/matroska-mux.c: (gst_matroska_pad_free),
+	(gst_matroska_mux_handle_dirac_packet),
+	(gst_matroska_mux_write_data):
+	Implement Dirac muxing into Matroska comforming to the spec, i.e.
+	put all Dirac packages up to a picture into a Matroska block.
+
+	TODO: Implement writing of the ReferenceBlock Matroska elements,
+	currently the Dirac muxing is only 100% correct if Matroska version 2
+	is selected for muxing.
+
 2008-11-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Bastien Nocera <hadess at hadess dot net>,

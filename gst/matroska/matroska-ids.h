@@ -517,6 +517,8 @@ typedef struct _GstMatroskaTrackVideoContext {
   gdouble       default_fps;
   GstMatroskaAspectRatioMode asr_mode;
   guint32       fourcc;
+
+  GstBuffer     *dirac_unit;
 } GstMatroskaTrackVideoContext;
 
 typedef struct _GstMatroskaTrackAudioContext {
