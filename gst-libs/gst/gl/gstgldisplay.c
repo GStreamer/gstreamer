@@ -439,9 +439,9 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   }
 
   //setup callbacks
-  gst_gl_window_set_resize_callback (display->gl_window, gst_gl_display_on_resize, display);
-  gst_gl_window_set_draw_callback (display->gl_window, gst_gl_display_on_draw, display);
-  gst_gl_window_set_close_callback (display->gl_window, gst_gl_display_on_close, display);
+  gst_gl_window_set_resize_callback (display->gl_window, GST_GL_WINDOW_CB2 (gst_gl_display_on_resize), display);
+  gst_gl_window_set_draw_callback (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_on_draw), display);
+  gst_gl_window_set_close_callback (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_on_close), display);
 
   g_cond_signal (display->cond_create_context);
 
@@ -578,7 +578,7 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
   gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
   gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
-  
+
   GST_INFO ("Context destroyed");
 }
 
@@ -646,7 +646,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       GST_INFO ("Context, ARB_fragment_shader supported: yes");
 
       display->upload_colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
-      
+
       gst_gl_display_thread_init_upload_fbo (display);
       if (!display->isAlive)
         break;
@@ -1393,7 +1393,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
     guint key = (gint)width;
     key <<= 16;
     key |= (gint)height;
-    sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER((guint64)key));
+    sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER (key));
 
     //if there is a sub texture pool associated to th given key
     if (sub_texture_pool && g_queue_get_length(sub_texture_pool) > 0)
@@ -1410,7 +1410,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
       //sub texture pool does not exist yet or empty
       glGenTextures (1, pTexture);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
-      
+
       switch (display->upload_video_format)
       {
         case GST_VIDEO_FORMAT_RGB:
@@ -1457,7 +1457,7 @@ gst_gl_display_glgen_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
         default:
             g_assert_not_reached ();
       }
-      
+
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1488,13 +1488,13 @@ gst_gl_display_gldel_texture (GstGLDisplay* display, GLuint* pTexture, GLint wid
   guint key = (gint)width;
   key <<= 16;
   key |= (gint)height;
-  sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER((guint64)key));
+  sub_texture_pool = g_hash_table_lookup (display->texture_pool, GUINT_TO_POINTER (key));
 
   //if the size is known
   if (!sub_texture_pool)
   {
     sub_texture_pool = g_queue_new ();
-    g_hash_table_insert (display->texture_pool, GUINT_TO_POINTER((guint64)key), sub_texture_pool);
+    g_hash_table_insert (display->texture_pool, GUINT_TO_POINTER (key), sub_texture_pool);
 
     GST_INFO ("one more sub texture pool inserted: %d ", key);
     GST_INFO ("nb sub texture pools: %d", g_hash_table_size (display->texture_pool));
@@ -1637,7 +1637,7 @@ gst_gl_display_thread_add (GstGLDisplay *display,
   gst_gl_display_lock (display);
   display->data = data;
   display->generic_callback = func;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_run_generic, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_run_generic), display);
   gst_gl_display_unlock (display);
 }
 
@@ -1648,7 +1648,7 @@ gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width
   gst_gl_display_lock (display);
   display->gen_texture_width = width;
   display->gen_texture_height = height;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_gen_texture, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_gen_texture), display);
   *pTexture = display->gen_texture;
   gst_gl_display_unlock (display);
 }
@@ -1664,7 +1664,7 @@ gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, 
     display->del_texture = texture;
     display->del_texture_width = width;
     display->del_texture_height = height;
-    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_del_texture, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_del_texture), display);
   }
   gst_gl_display_unlock (display);
 }
@@ -1682,7 +1682,7 @@ gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
   display->upload_height = gl_height;
   display->upload_data_width = video_width;
   display->upload_data_height = video_height;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_init_upload, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_init_upload), display);
   gst_gl_display_unlock (display);
 }
 
@@ -1703,7 +1703,7 @@ gst_gl_display_do_upload (GstGLDisplay *display, GLuint texture,
     display->upload_data_width = data_width;
     display->upload_data_height = data_height;
     display->upload_data = data;
-    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_do_upload, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_do_upload), display);
   }
   gst_gl_display_unlock (display);
 
@@ -1720,7 +1720,7 @@ gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format
   display->download_video_format = video_format;
   display->download_width = width;
   display->download_height = height;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_init_download, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_init_download), display);
   gst_gl_display_unlock (display);
 }
 
@@ -1742,7 +1742,7 @@ gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
     display->ouput_texture = texture;
     display->ouput_texture_width = width;
     display->ouput_texture_height = height;
-    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_do_download, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_do_download), display);
   }
   gst_gl_display_unlock (display);
 
@@ -1760,7 +1760,7 @@ gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
   {
     display->gen_fbo_width = width;
     display->gen_fbo_height = height;
-    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_gen_fbo, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_gen_fbo), display);
     *fbo = display->generated_fbo;
     *depthbuffer = display->generated_depth_buffer;
   }
@@ -1805,7 +1805,7 @@ gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint text
     display->input_texture_width = input_texture_width;
     display->input_texture_height = input_texture_height;
     display->input_texture = input_texture;
-    gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_use_fbo, display);
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_use_fbo), display);
   }
   gst_gl_display_unlock (display);
 
@@ -1821,7 +1821,7 @@ gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
   gst_gl_display_lock (display);
   display->del_fbo = fbo;
   display->del_depth_buffer = depth_buffer;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_del_fbo, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_del_fbo), display);
   gst_gl_display_unlock (display);
 }
 
@@ -1836,7 +1836,7 @@ gst_gl_display_gen_shader (GstGLDisplay* display,
   gst_gl_display_lock (display);
   display->gen_shader_vertex_source = shader_vertex_source;
   display->gen_shader_fragment_source = shader_fragment_source;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_gen_shader, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_gen_shader), display);
   if (shader)
     *shader = display->gen_shader;
   display->gen_shader = NULL;
@@ -1852,7 +1852,7 @@ gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader)
 {
   gst_gl_display_lock (display);
   display->del_shader = shader;
-  gst_gl_window_send_message (display->gl_window, gst_gl_display_thread_del_shader, display);
+  gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_del_shader), display);
   gst_gl_display_unlock (display);
 }
 

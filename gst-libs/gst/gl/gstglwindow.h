@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -39,6 +39,9 @@ G_BEGIN_DECLS
 
 typedef void (* GstGLWindowCB) ( gpointer );
 typedef void (* GstGLWindowCB2) ( gpointer, gint, gint );
+
+#define	GST_GL_WINDOW_CB(f)			 ((GstGLWindowCB) (f))
+#define	GST_GL_WINDOW_CB2(f)		 ((GstGLWindowCB2) (f))
 
 typedef struct _GstGLWindow        GstGLWindow;
 typedef struct _GstGLWindowPrivate GstGLWindowPrivate;
