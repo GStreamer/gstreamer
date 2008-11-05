@@ -1396,10 +1396,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
   }
 
   if (caps != NULL) {
-    char *str = gst_caps_to_string (caps);
-
-    GST_DEBUG ("caps for pix_fmt=%d: %s", pix_fmt, str);
-    g_free (str);
+    GST_DEBUG ("caps for pix_fmt=%d: %"GST_PTR_FORMAT, pix_fmt, caps);
   } else {
     GST_LOG ("No caps found for pix_fmt=%d", pix_fmt);
   }
@@ -1442,10 +1439,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
   }
 
   if (caps != NULL) {
-    char *str = gst_caps_to_string (caps);
-
-    GST_LOG ("caps for sample_fmt=%d: %s", sample_fmt, str);
-    g_free (str);
+    GST_LOG ("caps for sample_fmt=%d: %"GST_PTR_FORMAT, sample_fmt, caps);
   } else {
     GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
   }
@@ -2775,15 +2769,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   }
 
   if (id != CODEC_ID_NONE) {
-    char *str = gst_caps_to_string (caps);
-
-    GST_DEBUG ("The id=%d belongs to the caps %s", id, str);
-    g_free (str);
+    GST_DEBUG ("The id=%d belongs to the caps %"GST_PTR_FORMAT, id, caps);
   } else {
-    gchar *str = gst_caps_to_string (caps);
-
-    GST_WARNING ("Couldn't figure out the id for caps %s", str);
-    g_free (str);
+    GST_WARNING ("Couldn't figure out the id for caps %"GST_PTR_FORMAT, caps);
   }
 
   return id;
@@ -3027,6 +3015,8 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->linesize[0] = stride;
       picture->linesize[1] = stride2;
       picture->linesize[2] = stride2;
+      GST_DEBUG ("planes %d %d %d", 0, size, size + size2);
+      GST_DEBUG ("strides %d %d %d", stride, stride2, stride2);
       return size + 2 * size2;
     case PIX_FMT_RGB24:
     case PIX_FMT_BGR24:

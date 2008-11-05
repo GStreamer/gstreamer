@@ -1,3 +1,10 @@
+2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_pixfmt_to_caps),
+	(gst_ffmpeg_smpfmt_to_caps), (gst_ffmpeg_caps_to_codecid),
+	(gst_ffmpeg_avpicture_fill):
+	Don't convert caps to strings when we don't have debugging enabled.
+
 2008-11-04  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new):
