@@ -1,3 +1,13 @@
+2008-11-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Sebastian Pölsterl
+
+	* gst/mpegdemux/gstmpegdesc.c:
+	Length should be a guint8 not a gint.
+	* gst/mpegdemux/mpegtspacketizer.c:
+	Convert text to utf8 for each descriptor separately and not
+	concatenate them first and convert after.
+	
 2008-11-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/modplug/gstmodplug.cc:

@@ -1545,7 +1545,6 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
         guint8 *extended_descriptor;
         /*GValue extended_items = { 0 }; */
         gchar *extended_text = NULL;
-        gchar *extended_text_tmp;
         /*g_value_init (&extended_items, GST_TYPE_LIST); */
         for (i = 0; i < extended_event_descriptors->len; i++) {
           extended_descriptor = g_array_index (extended_event_descriptors,
@@ -1555,26 +1554,22 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
             if (extended_text) {
               gchar *tmp;
               gchar *old_extended_text = extended_text;
-              tmp = g_strndup ((gchar *)
+              tmp = get_encoding_and_convert ((gchar *)
                   DESC_DVB_EXTENDED_EVENT_text (extended_descriptor),
                   DESC_DVB_EXTENDED_EVENT_text_length (extended_descriptor));
               extended_text = g_strdup_printf ("%s%s", extended_text, tmp);
               g_free (old_extended_text);
               g_free (tmp);
             } else {
-              extended_text = g_strndup ((gchar *)
+              extended_text = get_encoding_and_convert ((gchar *)
                   DESC_DVB_EXTENDED_EVENT_text (extended_descriptor),
                   DESC_DVB_EXTENDED_EVENT_text_length (extended_descriptor));
             }
           }
         }
         if (extended_text) {
-          extended_text_tmp = get_encoding_and_convert (extended_text,
-              strlen (extended_text));
-
           gst_structure_set (event, "extended-text", G_TYPE_STRING,
-              extended_text_tmp, NULL);
-          g_free (extended_text_tmp);
+              extended_text, NULL);
           g_free (extended_text);
         }
         g_array_free (extended_event_descriptors, TRUE);

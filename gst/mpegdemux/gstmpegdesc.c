@@ -119,7 +119,7 @@ gst_mpeg_descriptor_n_desc (GstMPEGDescriptor * desc)
 guint8 *
 gst_mpeg_descriptor_find (GstMPEGDescriptor * desc, gint tag)
 {
-  gint length;
+  guint8 length;
   guint8 *current;
   guint size;
 
@@ -146,7 +146,7 @@ gst_mpeg_descriptor_find_all (GstMPEGDescriptor * desc, gint tag)
 {
   GArray *all;
 
-  gint length;
+  guint8 length;
   guint8 *current;
   guint size;
 
@@ -165,13 +165,15 @@ gst_mpeg_descriptor_find_all (GstMPEGDescriptor * desc, gint tag)
     length -= size;
   }
 
+  GST_DEBUG ("found tag 0x%02x %d times", tag, all->len);
+
   return all;
 }
 
 guint8 *
 gst_mpeg_descriptor_nth (GstMPEGDescriptor * desc, guint i)
 {
-  gint length;
+  guint8 length;
   guint8 *current;
   guint size;
 
