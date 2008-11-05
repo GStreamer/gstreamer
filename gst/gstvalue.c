@@ -148,20 +148,25 @@ gst_value_transform_any_list_string (const GValue * src_value,
  * there. Do not export, since it doesn't work for types where the content
  * decides the fixedness (e.g. GST_TYPE_ARRAY).
  */
-
 static gboolean
 gst_type_is_fixed (GType type)
 {
-  if (type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
-      type == GST_TYPE_LIST) {
-    return FALSE;
-  }
-  if (G_TYPE_FUNDAMENTAL (type) <=
-      G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
+  /* the basic int, string, double types */
+  if (type <= G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
     return TRUE;
   }
-  if (type == GST_TYPE_BUFFER || type == GST_TYPE_FOURCC
-      || type == GST_TYPE_ARRAY || type == GST_TYPE_FRACTION) {
+  /* our fundamental types that are certainly not fixed */
+  if (type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
+      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE) {
+    return FALSE;
+  }
+  /* other (boxed) types that are fixed */
+  if (type == GST_TYPE_BUFFER) {
+    return TRUE;
+  }
+  /* heavy checks */
+  if (G_TYPE_IS_FUNDAMENTAL (type) || G_TYPE_FUNDAMENTAL (type) <=
+      G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
     return TRUE;
   }
 
@@ -2795,15 +2800,22 @@ gst_value_get_compare_func (const GValue * value1)
   GstValueTable *table, *best = NULL;
   guint i;
 
+  /* this is a fast check */
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
     if (table->type == G_VALUE_TYPE (value1) && table->compare != NULL) {
       best = table;
       break;
     }
-    if (g_type_is_a (G_VALUE_TYPE (value1), table->type)) {
-      if (!best || g_type_is_a (table->type, best->type))
-        best = table;
+  }
+  /* slower checks */
+  if (!best) {
+    for (i = 0; i < gst_value_table->len; i++) {
+      table = &g_array_index (gst_value_table, GstValueTable, i);
+      if (g_type_is_a (G_VALUE_TYPE (value1), table->type)) {
+        if (!best || g_type_is_a (table->type, best->type))
+          best = table;
+      }
     }
   }
   if (best) {

@@ -1,5 +1,21 @@
 2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gststructure.c: (gst_structure_id_empty_new_with_size):
+	No need to memset, we can clear the value ourselves.
+
+	* gst/gstvalue.c: (gst_type_is_fixed),
+	(gst_value_get_compare_func):
+	Some optimisations from a few callgrind sessions:
+	When checking if a type is fixed, check for trivial fundamental types
+	first before checking types for which we need to get the type followed
+	by the heavy duty type checks, this reduces the amount of
+	g_type_fundamental() calls a lot.
+	When getting the compare function, first check for our registered types.
+	If that fails, do the heavy duty g_type_is_a() checks, reduces the
+	amount of g_type_is_a() considerably.
+
+2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/design/part-TODO.txt:
 	Mumble something about removing GstXML.
 
