@@ -58,9 +58,42 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_amrnbdec_debug);
 #define GST_CAT_DEFAULT gst_amrnbdec_debug
 
-static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
+static const gint block_size_if1[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
   0, 0, 0, 0, 0, 0, 0
 };
+static const gint block_size_if2[16] = { 12, 13, 15, 17, 18, 20, 25, 30, 5,
+  0, 0, 0, 0, 0, 0, 0
+};
+
+static GType
+gst_amrnb_variant_get_type ()
+{
+  static GType gst_amrnb_variant_type = 0;
+  static const GEnumValue gst_amrnb_variant[] = {
+    {GST_AMRNB_VARIANT_IF1, "IF1", "IF1"},
+    {GST_AMRNB_VARIANT_IF2, "IF2", "IF2"},
+    {0, NULL, NULL},
+  };
+  if (!gst_amrnb_variant_type) {
+    gst_amrnb_variant_type =
+        g_enum_register_static ("GstAmrnbVariant", gst_amrnb_variant);
+  }
+  return gst_amrnb_variant_type;
+}
+
+#define GST_AMRNB_VARIANT_TYPE (gst_amrnb_variant_get_type())
+
+#define VARIANT_DEFAULT GST_AMRNB_VARIANT_IF1
+enum
+{
+  PROP_0,
+  PROP_VARIANT
+};
+
+static void gst_amrnbdec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_amrnbdec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_amrnbdec_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer);
@@ -99,7 +132,14 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  object_class->set_property = gst_amrnbdec_set_property;
+  object_class->get_property = gst_amrnbdec_get_property;
   object_class->finalize = gst_amrnbdec_finalize;
+
+  g_object_class_install_property (object_class, PROP_VARIANT,
+      g_param_spec_enum ("variant", "Variant",
+          "The decoder variant", GST_AMRNB_VARIANT_TYPE,
+          VARIANT_DEFAULT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbdec_state_change);
 }
@@ -136,6 +176,40 @@ gst_amrnbdec_finalize (GObject * object)
   g_object_unref (amrnbdec->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_amrnbdec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAmrnbDec *self = GST_AMRNBDEC (object);
+
+  switch (prop_id) {
+    case PROP_VARIANT:
+      self->variant = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  return;
+}
+
+static void
+gst_amrnbdec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAmrnbDec *self = GST_AMRNBDEC (object);
+
+  switch (prop_id) {
+    case PROP_VARIANT:
+      g_value_set_enum (value, self->variant);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  return;
 }
 
 static gboolean
@@ -275,8 +349,18 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
     data = (guint8 *) gst_adapter_peek (amrnbdec->adapter, 1);
 
     /* get size */
-    mode = (data[0] >> 3) & 0x0F;
-    block = block_size[mode] + 1;
+    switch (amrnbdec->variant) {
+      case GST_AMRNB_VARIANT_IF1:
+        mode = (data[0] >> 3) & 0x0F;
+        block = block_size_if1[mode] + 1;
+        break;
+      case GST_AMRNB_VARIANT_IF2:
+        mode = data[0] & 0x0F;
+        block = block_size_if2[mode] + 1;
+        break;
+      default:
+        goto invalid_variant;
+    }
 
     GST_DEBUG_OBJECT (amrnbdec, "mode %d, block %d", mode, block);
 
@@ -321,6 +405,13 @@ not_negotiated:
         ("Decoder is not initialized"));
     gst_object_unref (amrnbdec);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+invalid_variant:
+  {
+    GST_ELEMENT_ERROR (amrnbdec, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Invalid variant"));
+    gst_object_unref (amrnbdec);
+    return GST_FLOW_ERROR;
   }
 }
 

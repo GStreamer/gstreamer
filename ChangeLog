@@ -1,3 +1,11 @@
+2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnb_variant_get_type),
+	(gst_amrnbdec_class_init), (gst_amrnbdec_set_property),
+	(gst_amrnbdec_get_property), (gst_amrnbdec_chain):
+	* ext/amrnb/amrnbdec.h:
+	Add a property to select the amr variant. Fixes #424070.
+
 2008-11-03  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Tal Shalif <tshalif at nargila dot org>

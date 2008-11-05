@@ -40,12 +40,20 @@ G_BEGIN_DECLS
 typedef struct _GstAmrnbDec GstAmrnbDec;
 typedef struct _GstAmrnbDecClass GstAmrnbDecClass;
 
+typedef enum
+{
+  GST_AMRNB_VARIANT_IF1,
+  GST_AMRNB_VARIANT_IF2
+} GstAmrnbVariant;
+
 struct _GstAmrnbDec {
   GstElement element;
 
   /* pads */
   GstPad *sinkpad, *srcpad;
   guint64 ts;
+
+  GstAmrnbVariant variant;
 
   GstAdapter *adapter;
 
