@@ -139,7 +139,7 @@ struct _GstFFMpegDecClassParams
 
 #define DEFAULT_LOWRES			0
 #define DEFAULT_SKIPFRAME		0
-#define DEFAULT_DIRECT_RENDERING	FALSE
+#define DEFAULT_DIRECT_RENDERING	TRUE
 #define DEFAULT_DO_PADDING		TRUE
 #define DEFAULT_DEBUG_MV		FALSE
 
@@ -634,9 +634,13 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegdec->ts_is_dts = FALSE;
   ffmpegdec->has_b_frames = FALSE;
 
+  GST_LOG_OBJECT (ffmpegdec, "size %dx%d", ffmpegdec->context->width, ffmpegdec->context->height);
+
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
+
+  GST_LOG_OBJECT (ffmpegdec, "size after %dx%d", ffmpegdec->context->width, ffmpegdec->context->height);
 
   if (!ffmpegdec->context->time_base.den || !ffmpegdec->context->time_base.num) {
     GST_DEBUG_OBJECT (ffmpegdec, "forcing 25/1 framerate");
@@ -801,6 +805,9 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstBuffer *buf = NULL;
   GstFFMpegDec *ffmpegdec;
+  gint width, height;
+  gint coded_width, coded_height;
+  gint res;
 
   ffmpegdec = (GstFFMpegDec *) context->opaque;
 
@@ -814,9 +821,23 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* make sure we don't free the buffer when it's not ours */
   picture->opaque = NULL;
 
+  /* take width and height before clipping */
+  width = context->width;
+  height = context->height;
+  coded_width = context->coded_width;
+  coded_height = context->coded_height;
+
+  GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height, coded_width, coded_height);
+
   if (!ffmpegdec->current_dr) {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
-    return avcodec_default_get_buffer (context, picture);
+    res = avcodec_default_get_buffer (context, picture);
+
+    GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
+	    picture->linesize[1], picture->linesize[2]);
+    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0, picture->data[1] - picture->data[0],
+	    picture->data[2] - picture->data[0]);
+    return res;
   }
 
   switch (context->codec_type) {
@@ -825,17 +846,15 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
     case CODEC_TYPE_UNKNOWN:
     {
       GstFlowReturn ret;
-      gint width, height;
       gint clip_width, clip_height;
 
-      /* take width and height before clipping */
-      width = context->width;
-      height = context->height;
       /* take final clipped output size */
       if ((clip_width = ffmpegdec->format.video.clip_width) == -1)
         clip_width = width;
       if ((clip_height = ffmpegdec->format.video.clip_height) == -1)
         clip_height = height;
+
+      GST_LOG_OBJECT (ffmpegdec, "raw outsize %d/%d", width, height);
 
       /* this is the size ffmpeg needs for the buffer */
       avcodec_align_dimensions (context, &width, &height);
@@ -1325,7 +1344,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     gst_buffer_ref (*outbuf);
 #endif
   } else {
-    AVPicture pic;
+    AVPicture pic, *outpic;
     gint width, height;
 
     GST_LOG_OBJECT (ffmpegdec, "get output buffer");
@@ -1337,6 +1356,8 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     if ((height = ffmpegdec->format.video.clip_height) == -1)
       height = ffmpegdec->context->height;
 
+    GST_LOG_OBJECT (ffmpegdec, "clip width %d/ height %d", width, height);
+
     ret = alloc_output_buffer (ffmpegdec, outbuf, width, height);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
@@ -1346,7 +1367,14 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     gst_ffmpeg_avpicture_fill (&pic, GST_BUFFER_DATA (*outbuf),
         ffmpegdec->context->pix_fmt, width, height);
 
-    av_picture_copy (&pic, (AVPicture *) ffmpegdec->picture,
+    outpic = (AVPicture *) ffmpegdec->picture;
+
+    GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", outpic->linesize[0],
+	    outpic->linesize[1], outpic->linesize[2]);
+    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0, outpic->data[1] - outpic->data[0],
+	    outpic->data[2] - outpic->data[0]);
+
+    av_picture_copy (&pic, outpic,
         ffmpegdec->context->pix_fmt, width, height);
   }
   ffmpegdec->picture->pts = -1;
