@@ -80,6 +80,8 @@ API/ABI
   to let upstream renegotiate a new format just like it did when it started.
   This could, for example, easily be triggered with a RENEGOTIATE event.
 
+- Remove the XML serialisation stuff.
+
 
 IMPLEMENTATION
 --------------
