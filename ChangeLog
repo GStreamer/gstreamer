@@ -1,5 +1,10 @@
 2008-11-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* sys/dvb/gstdvbsrc.c:
+	Set filters in PAUSED or PLAYING.
+
+2008-11-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegdemux/gstmpegtsdemux.c:
 	Make private section pads have a caps set so they are not tried
 	to be linked in parse_launch for example.

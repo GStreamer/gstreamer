@@ -543,9 +543,10 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
 
         g_strfreev (tmp);
       }
-      /* if we are in playing, then set filters now */
+      /* if we are in playing or paused, then set filters now */
       GST_INFO_OBJECT (object, "checking if playing for setting pes filters");
-      if (GST_ELEMENT (object)->current_state == GST_STATE_PLAYING) {
+      if (GST_ELEMENT (object)->current_state == GST_STATE_PLAYING ||
+          GST_ELEMENT (object)->current_state == GST_STATE_PAUSED) {
         GST_INFO_OBJECT (object, "Setting pes filters now");
         gst_dvbsrc_set_pes_filters (object);
       }
