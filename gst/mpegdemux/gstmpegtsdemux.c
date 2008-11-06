@@ -1307,11 +1307,18 @@ gst_fluts_stream_parse_pmt (GstFluTSStream * stream,
       if (stream_type == ST_PRIVATE_SECTIONS) {
         /* not really an ES, so use section filter not pes filter */
         /* initialise section filter */
+        GstCaps *caps;
         gst_section_filter_init (&ES_stream->section_filter);
         ES_stream->PID_type = PID_TYPE_PRIVATE_SECTION;
         ES_stream->pad = gst_pad_new_from_static_template (&private_template,
             g_strdup_printf ("private_%04x", entry.PID));
         gst_pad_set_active (ES_stream->pad, TRUE);
+        caps = gst_caps_new_simple ("application/x-mpegts-private-section",
+            NULL);
+        gst_pad_use_fixed_caps (ES_stream->pad);
+        gst_pad_set_caps (ES_stream->pad, caps);
+        gst_caps_unref (caps);
+
         gst_element_add_pad (GST_ELEMENT_CAST (demux), ES_stream->pad);
       } else {
         /* Recognise video streams based on stream_type */
