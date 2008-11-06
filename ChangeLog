@@ -1,5 +1,11 @@
 2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstvalue.c: (gst_type_is_fixed), (gst_value_is_fixed):
+	Reorganize some more, be more conservative with the GST_TYPE_ARRAY not
+	being fixed and inline the trivial check.
+
+2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstcaps.c: (gst_caps_copy), (_gst_caps_free),
 	(gst_caps_merge_structure), (gst_caps_get_structure),
 	(gst_caps_copy_nth), (gst_caps_set_simple),

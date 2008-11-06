@@ -157,8 +157,7 @@ gst_type_is_fixed (GType type)
   }
   /* our fundamental types that are certainly not fixed */
   if (type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
-      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE ||
-      type == GST_TYPE_ARRAY) {
+      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE) {
     return FALSE;
   }
   /* other (boxed) types that are fixed */
@@ -3342,8 +3341,10 @@ gst_value_is_fixed (const GValue * value)
 {
   GType type = G_VALUE_TYPE (value);
 
-  if (gst_type_is_fixed (type))
+  /* the most common types are just basic plain glib types */
+  if (type <= G_TYPE_MAKE_FUNDAMENTAL (G_TYPE_RESERVED_GLIB_LAST)) {
     return TRUE;
+  }
 
   if (type == GST_TYPE_ARRAY) {
     gint size, n;
@@ -3358,8 +3359,7 @@ gst_value_is_fixed (const GValue * value)
     }
     return TRUE;
   }
-
-  return FALSE;
+  return gst_type_is_fixed (type);
 }
 
 /************
