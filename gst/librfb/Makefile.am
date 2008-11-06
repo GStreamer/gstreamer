@@ -4,8 +4,8 @@ noinst_LTLIBRARIES = librfb.la
 plugin_LTLIBRARIES = libgstrfbsrc.la
 
 libgstrfbsrc_la_SOURCES = gstrfbsrc.c
-libgstrfbsrc_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) -I$(srcdir)/..
-libgstrfbsrc_la_LIBADD = $(GST_BASE_LIBS) librfb.la
+libgstrfbsrc_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X11_CFLAGS) -I$(srcdir)/..
+libgstrfbsrc_la_LIBADD = $(GST_BASE_LIBS) $(X11_LIBS) librfb.la
 libgstrfbsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrfbsrc_la_LIBTOOLFLAGS = --tag=disable-static
 

@@ -201,6 +201,17 @@ AC_SUBST(GLADE_CFLAGS)
 AC_SUBST(HAVE_GLADE)
 AM_CONDITIONAL(HAVE_GLADE, test "x$HAVE_GLADE" = "xyes")
 
+dnl x11 is optional for librfb
+HAVE_X11=NO
+PKG_CHECK_MODULES(X11, x11, HAVE_X11=yes, HAVE_X11=no)
+AC_SUBST(X11_LIBS)
+AC_SUBST(X11_CFLAGS)
+AC_SUBST(HAVE_X11)
+AM_CONDITIONAL(HAVE_X11, test "x$HAVE_X11" = "xyes")
+if test "x$HAVE_X11" = "xyes"; then
+  AC_DEFINE(HAVE_X11, 1, [Define if you have X11 library])
+fi
+
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
 AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])

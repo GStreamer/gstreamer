@@ -1,3 +1,10 @@
+2008-11-06  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* configure.ac:
+	* gst/librfb/Makefile.am:
+	* gst/librfb/gstrfbsrc.c:
+	Fix basic navigation events
+
 2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/deinterlace2/gstdeinterlace2.c:
