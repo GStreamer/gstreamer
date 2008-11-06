@@ -2493,7 +2493,7 @@ gst_fluts_demux_sync_scan (GstFluTSDemux * demux, const guint8 * in_data,
   const guint8 *end_scan = in_data + size - demux->packetsize;
   guint8 *ptr_data = (guint8 *) in_data;
 
-  while (ptr_data <= end_scan && sync_count < LENGHT_SYNC_LUT) {
+  while (ptr_data <= end_scan && sync_count < LENGTH_SYNC_LUT) {
     /* if sync code is found try to store it in the LUT */
     guint chance = is_mpegts_sync (ptr_data, end_scan, demux->packetsize);
     if (G_LIKELY (chance > 50)) {
@@ -2583,7 +2583,7 @@ gst_fluts_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       demux->adapter = gst_adapter_new ();
-      demux->sync_lut = g_new0 (guint8 *, LENGHT_SYNC_LUT);
+      demux->sync_lut = g_new0 (guint8 *, LENGTH_SYNC_LUT);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;

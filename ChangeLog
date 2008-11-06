@@ -1,3 +1,9 @@
+2008-11-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	* gst/mpegdemux/gstmpegtsdemux.h:
+	Fix typo.
+
 2008-11-06  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:

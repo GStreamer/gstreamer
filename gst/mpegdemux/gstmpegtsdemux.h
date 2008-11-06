@@ -64,7 +64,7 @@ G_BEGIN_DECLS
 #define FLUTS_NORMAL_TS_PACKETSIZE  188
 #define FLUTS_M2TS_TS_PACKETSIZE    192
 
-#define LENGHT_SYNC_LUT             256
+#define LENGTH_SYNC_LUT             256
 
 #define IS_MPEGTS_SYNC(data) (((data)[0] == 0x47) && \
                                     (((data)[1] & 0x80) == 0x00) && \
