@@ -39,7 +39,7 @@
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	  Calculate samples per frame correctly for "MPEG 2.5" layer 3.
-	  Fixes skipping on these files.
+	  Fixes skipping on these files. Fixes bug #558564.
 
 2008-10-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
