@@ -387,289 +387,325 @@ gst_ffmpeg_cfg_init ()
 
   /* list properties here */
   pspec = g_param_spec_enum ("pass", "Encoding pass/type",
-      "Encoding pass/type", GST_TYPE_FFMPEG_PASS, 0, G_PARAM_READWRITE);
+      "Encoding pass/type", GST_TYPE_FFMPEG_PASS, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, pass, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("quantizer", "Constant Quantizer",
-      "Constant Quantizer", 0, 30, 0.01f, G_PARAM_READWRITE);
+      "Constant Quantizer", 0, 30, 0.01f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, quantizer, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_string ("statsfile", "Statistics Filename",
       "Filename to store data for 2-pass encoding", "stats.log",
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, filename, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("bitrate-tolerance", "Bitrate Tolerance",
       "Number of bits the bitstream is allowed to diverge from the reference",
-      0, 100000000, 8000000, G_PARAM_READWRITE);
+      0, 100000000, 8000000, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.bit_rate_tolerance, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("mb-decision", "Macroblock Decision",
       "Macroblok Decision Mode",
-      GST_TYPE_FFMPEG_MB_DECISION, FF_CMP_SAD, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_MB_DECISION, FF_CMP_SAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.mb_decision, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("mb-cmp", "Macroblock Compare Function",
       "Macroblok Compare Function",
-      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.mb_cmp, FALSE, mpeg, NULL);
 
   pspec =
       g_param_spec_enum ("me-pre-cmp",
       "Motion Estimation Pre Pass Compare Function",
       "Motion Estimation Pre Pass Compare Function",
-      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.me_pre_cmp, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("me-cmp", "Motion Estimation Compare Function",
       "Motion Estimation Compare Function",
-      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.me_cmp, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("me-sub-cmp",
       "Subpixel Motion Estimation Compare Function",
       "Subpixel Motion Estimation Compare Function",
-      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.me_sub_cmp, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("ildct-cmp", "Interlaced DCT Compare Function",
       "Interlaced DCT Compare Function",
-      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_VSAD, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_VSAD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.ildct_cmp, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("dct-algo", "DCT Algorithm",
       "DCT Algorithm",
-      GST_TYPE_FFMPEG_DCT_ALGO, FF_DCT_AUTO, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_DCT_ALGO, FF_DCT_AUTO,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.dct_algo, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("idct-algo", "IDCT Algorithm",
       "IDCT Algorithm",
-      GST_TYPE_FFMPEG_IDCT_ALGO, FF_IDCT_AUTO, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_IDCT_ALGO, FF_IDCT_AUTO,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.idct_algo, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("quant-type", "Quantizer Type",
-      "Quantizer Type", GST_TYPE_FFMPEG_QUANT_TYPE, 0, G_PARAM_READWRITE);
+      "Quantizer Type", GST_TYPE_FFMPEG_QUANT_TYPE, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.mpeg_quant, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("qmin", "Minimum Quantizer",
-      "Minimum Quantizer", 1, 31, 2, G_PARAM_READWRITE);
+      "Minimum Quantizer", 1, 31, 2,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.qmin, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("qmax", "Maximum Quantizer",
-      "Maximum Quantizer", 1, 31, 31, G_PARAM_READWRITE);
+      "Maximum Quantizer", 1, 31, 31,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.qmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("max-qdiff", "Maximum Quantizer Difference",
       "Maximum Quantizer Difference between frames",
-      1, 31, 3, G_PARAM_READWRITE);
+      1, 31, 3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.max_qdiff, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_int ("mb_qmin", "Minimum MB Quantizer",
-      "Minimum MB Quantizer", 0, 31, 2, G_PARAM_READWRITE);
+  pspec = g_param_spec_int ("mb-qmin", "Minimum MB Quantizer",
+      "Minimum MB Quantizer", 0, 31, 2,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.mb_qmin, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_int ("mb_qmax", "Maximum MB Quantizer",
-      "Maximum MB Quantizer", 0, 31, 31, G_PARAM_READWRITE);
+  pspec = g_param_spec_int ("mb-qmax", "Maximum MB Quantizer",
+      "Maximum MB Quantizer", 0, 31, 31,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.mb_qmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("lmin", "Minimum Lagrange Multiplier",
-      "Minimum Lagrange Multiplier", 1, 31, 2, G_PARAM_READWRITE);
+      "Minimum Lagrange Multiplier", 1, 31, 2,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, lmin, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("lmax", "Maximum Lagrange Multiplier",
-      "Maximum Lagrange Multiplier", 1, 31, 31, G_PARAM_READWRITE);
+      "Maximum Lagrange Multiplier", 1, 31, 31,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, lmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("qcompress", "Quantizer Change",
       "Quantizer Change between easy and hard scenes",
-      0, 1.0f, 0.5f, G_PARAM_READWRITE);
+      0, 1.0f, 0.5f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.qcompress, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("qblur", "Quantizer Smoothing",
-      "Quantizer Smoothing over time", 0, 1.0f, 0.5f, G_PARAM_READWRITE);
+      "Quantizer Smoothing over time", 0, 1.0f, 0.5f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.qblur, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("rc-qsquish", "Ratecontrol Limiting Method",
       "0 means limit by clipping, otherwise use nice continuous function",
-      0, 99.0f, 1.0f, G_PARAM_READWRITE);
+      0, 99.0f, 1.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_qsquish, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("rc-qmod-amp", "Ratecontrol Mod",
-      "Ratecontrol Mod", 0, 99.0f, 0, G_PARAM_READWRITE);
+      "Ratecontrol Mod", 0, 99.0f, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_qmod_amp, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("rc-qmod-freq", "Ratecontrol Freq",
-      "Ratecontrol Freq", 0, 0, 0, G_PARAM_READWRITE);
+      "Ratecontrol Freq", 0, 0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_qmod_freq, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("rc-buffer-size", "Ratecontrol Buffer Size",
-      "Decoder bitstream buffer size", 0, G_MAXINT, 0, G_PARAM_READWRITE);
+      "Decoder bitstream buffer size", 0, G_MAXINT, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_buffer_size, FALSE, mpeg, NULL);
 
   pspec =
       g_param_spec_float ("rc-buffer-aggressivity",
       "Ratecontrol Buffer Aggressivity", "Ratecontrol Buffer Aggressivity", 0,
-      99.0f, 1.0f, G_PARAM_READWRITE);
+      99.0f, 1.0f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_buffer_aggressivity, FALSE, mpeg,
       NULL);
 
   pspec = g_param_spec_int ("rc-max-rate", "Ratecontrol Maximum Bitrate",
-      "Ratecontrol Maximum Bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE);
+      "Ratecontrol Maximum Bitrate", 0, G_MAXINT, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_max_rate, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("rc-min-rate", "Ratecontrol Minimum Bitrate",
-      "Ratecontrol Minimum Bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE);
+      "Ratecontrol Minimum Bitrate", 0, G_MAXINT, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_min_rate, FALSE, mpeg, NULL);
 
   pspec =
       g_param_spec_float ("rc-initial-cplx",
       "Initial Complexity for Pass 1 Ratecontrol",
       "Initial Complexity for Pass 1 Ratecontrol", 0, 9999999.0f, 0,
-      G_PARAM_READWRITE);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_initial_cplx, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_string ("rc-eq", "Ratecontrol Equation",
-      "Ratecontrol Equation", "tex^qComp", G_PARAM_READWRITE);
+      "Ratecontrol Equation", "tex^qComp",
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.rc_eq, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("b-quant-factor", "B-Quantizer Factor",
       "Factor in B-Frame Quantizer Computation",
-      -31.0f, 31.0f, 1.25f, G_PARAM_READWRITE);
+      -31.0f, 31.0f, 1.25f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.b_quant_factor, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("b-quant-offset", "B-Quantizer Offset",
       "Offset in B-Frame Quantizer Computation",
-      0.0f, 31.0f, 1.25f, G_PARAM_READWRITE);
+      0.0f, 31.0f, 1.25f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.b_quant_offset, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("i-quant-factor", "I-Quantizer Factor",
       "Factor in P-Frame Quantizer Computation",
-      -31.0f, 31.0f, 0.8f, G_PARAM_READWRITE);
+      -31.0f, 31.0f, 0.8f, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.i_quant_factor, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("i-quant-offset", "I-Quantizer Offset",
       "Offset in P-Frame Quantizer Computation",
-      0.0f, 31.0f, 0, G_PARAM_READWRITE);
+      0.0f, 31.0f, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.i_quant_offset, FALSE, mpeg, NULL);
 
   /* note overlap with gop-size; 0 means do not override */
   pspec = g_param_spec_int ("max-key-interval", "Maximum Key Interval",
       "Maximum number of frames between two keyframes (< 0 is in sec)",
-      -100, G_MAXINT, 0, G_PARAM_READWRITE);
+      -100, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, max_key_interval, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("luma-elim-threshold",
       "Luma Elimination Threshold",
       "Luma Single Coefficient Elimination Threshold",
-      -99, 99, 0, G_PARAM_READWRITE);
+      -99, 99, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.luma_elim_threshold, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("chroma-elim-threshold",
       "Chroma Elimination Threshold",
       "Chroma Single Coefficient Elimination Threshold",
-      -99, 99, 0, G_PARAM_READWRITE);
+      -99, 99, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.chroma_elim_threshold, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("lumi-masking", "Luminance Masking",
-      "Luminance Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Luminance Masking", -1.0f, 1.0f, 0.0f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.lumi_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("dark-masking", "Darkness Masking",
-      "Darkness Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Darkness Masking", -1.0f, 1.0f, 0.0f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.dark_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("temporal-cplx-masking",
       "Temporal Complexity Masking",
-      "Temporal Complexity Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Temporal Complexity Masking", -1.0f, 1.0f, 0.0f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.temporal_cplx_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("spatial-cplx-masking",
       "Spatial Complexity Masking",
-      "Spatial Complexity Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Spatial Complexity Masking", -1.0f, 1.0f, 0.0f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.spatial_cplx_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("p-masking", "P Block Masking",
-      "P Block  Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "P Block  Masking", -1.0f, 1.0f, 0.0f,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.p_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("dia-size",
       "Motion Estimation Diamond Size/Shape",
       "Motion Estimation Diamond Size/Shape",
-      -2000, 2000, 0, G_PARAM_READWRITE);
+      -2000, 2000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.dia_size, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("pre-dia-size",
       "Motion Estimation Pre Pass Diamond Size/Shape",
       "Motion Estimation Diamond Size/Shape",
-      -2000, 2000, 0, G_PARAM_READWRITE);
+      -2000, 2000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.pre_dia_size, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("last-predictor-count",
       "Last Predictor Count",
       "Amount of previous Motion Vector predictors",
-      0, 2000, 0, G_PARAM_READWRITE);
+      0, 2000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.last_predictor_count, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("pre-me",
       "Pre Pass for Motion Estimation",
       "Pre Pass for Motion Estimation",
-      GST_TYPE_FFMPEG_PRE_ME, 1, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_PRE_ME, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.pre_me, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("me-subpel-quality",
       "Motion Estimation Subpixel Quality",
       "Motion Estimation Subpixel Refinement Quality",
-      0, 8, 8, G_PARAM_READWRITE);
+      0, 8, 8, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.me_subpel_quality, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("me-range",
       "Motion Estimation Range",
       "Motion Estimation search range in subpel units",
-      0, 16000, 0, G_PARAM_READWRITE);
+      0, 16000, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.me_range, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("intra-quant-bias",
       "Intra Quantizer Bias",
       "Intra Quantizer Bias",
-      -1000000, 1000000, FF_DEFAULT_QUANT_BIAS, G_PARAM_READWRITE);
+      -1000000, 1000000, FF_DEFAULT_QUANT_BIAS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.intra_quant_bias, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("inter-quant-bias",
       "Inter Quantizer Bias",
       "Inter Quantizer Bias",
-      -1000000, 1000000, FF_DEFAULT_QUANT_BIAS, G_PARAM_READWRITE);
+      -1000000, 1000000, FF_DEFAULT_QUANT_BIAS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.inter_quant_bias, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("noise-reduction",
       "Noise Reduction",
-      "Noise Reduction Strength", 0, 1000000, 0, G_PARAM_READWRITE);
+      "Noise Reduction Strength", 0, 1000000, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.noise_reduction, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("intra-dc-precision",
       "Intra DC precision",
-      "Precision of the Intra DC coefficient - 8", 0, 16, 0, G_PARAM_READWRITE);
+      "Precision of the Intra DC coefficient - 8", 0, 16, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.intra_dc_precision, FALSE, mpeg, NULL);
 
   /* TODO skipped coder_type, context_model, inter_threshold, scenechange_threshold */
 
   pspec = g_param_spec_flags ("flags", "Flags",
-      "Flags", GST_TYPE_FFMPEG_FLAGS, 0, G_PARAM_READWRITE);
+      "Flags", GST_TYPE_FFMPEG_FLAGS, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.flags, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_boolean ("interlaced", "Interlaced Material",
-      "Interlaced Material", FALSE, G_PARAM_READWRITE);
+      "Interlaced Material", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, interlaced, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("max-bframes", "Max B-Frames",
-      "Maximum B-frames in a row", 0, FF_MAX_B_FRAMES, 0, G_PARAM_READWRITE);
+      "Maximum B-frames in a row", 0, FF_MAX_B_FRAMES, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.max_b_frames, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("prediction-method", "Prediction Method",
       "Prediction Method",
-      GST_TYPE_FFMPEG_PRED_METHOD, FF_PRED_LEFT, G_PARAM_READWRITE);
+      GST_TYPE_FFMPEG_PRED_METHOD, FF_PRED_LEFT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.prediction_method, FALSE, huffyuv, NULL);
   pspec = g_param_spec_int ("trellis", "Trellis Quantization",
-      "Trellis RD quantization", 0, 1, 1, G_PARAM_READWRITE);
+      "Trellis RD quantization", 0, 1, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, config.trellis, FALSE, mpeg, NULL);
 }
 

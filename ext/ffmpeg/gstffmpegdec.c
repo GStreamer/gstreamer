@@ -94,6 +94,7 @@ struct _GstFFMpegDec
   gboolean direct_rendering;
   gboolean do_padding;
   gboolean debug_mv;
+  gboolean crop;
 
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
@@ -142,6 +143,7 @@ struct _GstFFMpegDecClassParams
 #define DEFAULT_DIRECT_RENDERING	TRUE
 #define DEFAULT_DO_PADDING		TRUE
 #define DEFAULT_DEBUG_MV		FALSE
+#define DEFAULT_CROP			TRUE
 
 enum
 {
@@ -151,6 +153,7 @@ enum
   PROP_DIRECT_RENDERING,
   PROP_DO_PADDING,
   PROP_DEBUG_MV,
+  PROP_CROP,
   PROP_LAST
 };
 
@@ -289,23 +292,30 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
     g_object_class_install_property (gobject_class, PROP_SKIPFRAME,
         g_param_spec_enum ("skip-frame", "Skip frames",
             "Which types of frames to skip during decoding",
-            GST_FFMPEGDEC_TYPE_SKIPFRAME, 0, G_PARAM_READWRITE));
+            GST_FFMPEGDEC_TYPE_SKIPFRAME, 0,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (gobject_class, PROP_LOWRES,
         g_param_spec_enum ("lowres", "Low resolution",
-            "At which resolution to decode images",
-            GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
+            "At which resolution to decode images", GST_FFMPEGDEC_TYPE_LOWRES,
+            0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (gobject_class, PROP_DIRECT_RENDERING,
         g_param_spec_boolean ("direct-rendering", "Direct Rendering",
-            "Enable direct rendering",
-            DEFAULT_DIRECT_RENDERING, G_PARAM_READWRITE));
+            "Enable direct rendering", DEFAULT_DIRECT_RENDERING,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (gobject_class, PROP_DO_PADDING,
         g_param_spec_boolean ("do-padding", "Do Padding",
-            "Add 0 padding before decoding data",
-            DEFAULT_DO_PADDING, G_PARAM_READWRITE));
+            "Add 0 padding before decoding data", DEFAULT_DO_PADDING,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
     g_object_class_install_property (gobject_class, PROP_DEBUG_MV,
         g_param_spec_boolean ("debug-mv", "Debug motion vectors",
             "Whether ffmpeg should print motion vectors on top of the image",
-            DEFAULT_DEBUG_MV, G_PARAM_READWRITE));
+            DEFAULT_DEBUG_MV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#if 0
+    g_object_class_install_property (gobject_class, PROP_CROP,
+        g_param_spec_boolean ("crop", "Crop",
+            "Crop images to the display region",
+            DEFAULT_CROP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
   }
 
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -348,6 +358,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->do_padding = DEFAULT_DO_PADDING;
   ffmpegdec->debug_mv = DEFAULT_DEBUG_MV;
+  ffmpegdec->crop = DEFAULT_CROP;
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
@@ -634,13 +645,15 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegdec->ts_is_dts = FALSE;
   ffmpegdec->has_b_frames = FALSE;
 
-  GST_LOG_OBJECT (ffmpegdec, "size %dx%d", ffmpegdec->context->width, ffmpegdec->context->height);
+  GST_LOG_OBJECT (ffmpegdec, "size %dx%d", ffmpegdec->context->width,
+      ffmpegdec->context->height);
 
   /* get size and so */
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
       oclass->in_plugin->type, caps, ffmpegdec->context);
 
-  GST_LOG_OBJECT (ffmpegdec, "size after %dx%d", ffmpegdec->context->width, ffmpegdec->context->height);
+  GST_LOG_OBJECT (ffmpegdec, "size after %dx%d", ffmpegdec->context->width,
+      ffmpegdec->context->height);
 
   if (!ffmpegdec->context->time_base.den || !ffmpegdec->context->time_base.num) {
     GST_DEBUG_OBJECT (ffmpegdec, "forcing 25/1 framerate");
@@ -723,10 +736,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height",
       &ffmpegdec->format.video.clip_height);
 
-
   /* take into account the lowres property */
-  ffmpegdec->format.video.clip_width >>= ffmpegdec->lowres;
-  ffmpegdec->format.video.clip_height >>= ffmpegdec->lowres;
+  if (ffmpegdec->format.video.clip_width != -1)
+    ffmpegdec->format.video.clip_width >>= ffmpegdec->lowres;
+  if (ffmpegdec->format.video.clip_height != -1)
+    ffmpegdec->format.video.clip_height >>= ffmpegdec->lowres;
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
@@ -827,16 +841,18 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
   coded_width = context->coded_width;
   coded_height = context->coded_height;
 
-  GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height, coded_width, coded_height);
+  GST_LOG_OBJECT (ffmpegdec, "dimension %dx%d, coded %dx%d", width, height,
+      coded_width, coded_height);
 
   if (!ffmpegdec->current_dr) {
     GST_LOG_OBJECT (ffmpegdec, "direct rendering disabled, fallback alloc");
     res = avcodec_default_get_buffer (context, picture);
 
     GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", picture->linesize[0],
-	    picture->linesize[1], picture->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0, picture->data[1] - picture->data[0],
-	    picture->data[2] - picture->data[0]);
+        picture->linesize[1], picture->linesize[2]);
+    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0,
+        picture->data[1] - picture->data[0],
+        picture->data[2] - picture->data[0]);
     return res;
   }
 
@@ -1356,7 +1372,7 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     if ((height = ffmpegdec->format.video.clip_height) == -1)
       height = ffmpegdec->context->height;
 
-    GST_LOG_OBJECT (ffmpegdec, "clip width %d/ height %d", width, height);
+    GST_LOG_OBJECT (ffmpegdec, "clip width %d/height %d", width, height);
 
     ret = alloc_output_buffer (ffmpegdec, outbuf, width, height);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -1370,12 +1386,11 @@ get_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf)
     outpic = (AVPicture *) ffmpegdec->picture;
 
     GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", outpic->linesize[0],
-	    outpic->linesize[1], outpic->linesize[2]);
-    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0, outpic->data[1] - outpic->data[0],
-	    outpic->data[2] - outpic->data[0]);
+        outpic->linesize[1], outpic->linesize[2]);
+    GST_LOG_OBJECT (ffmpegdec, "data %d %d %d", 0,
+        outpic->data[1] - outpic->data[0], outpic->data[2] - outpic->data[0]);
 
-    av_picture_copy (&pic, outpic,
-        ffmpegdec->context->pix_fmt, width, height);
+    av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt, width, height);
   }
   ffmpegdec->picture->pts = -1;
 
@@ -2425,6 +2440,9 @@ gst_ffmpegdec_set_property (GObject * object,
       ffmpegdec->debug_mv = ffmpegdec->context->debug_mv =
           g_value_get_boolean (value);
       break;
+    case PROP_CROP:
+      ffmpegdec->crop = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2452,6 +2470,9 @@ gst_ffmpegdec_get_property (GObject * object,
       break;
     case PROP_DEBUG_MV:
       g_value_set_boolean (value, ffmpegdec->context->debug_mv);
+      break;
+    case PROP_CROP:
+      g_value_set_boolean (value, ffmpegdec->crop);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
