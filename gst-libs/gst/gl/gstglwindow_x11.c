@@ -29,7 +29,6 @@
 
 //#define WM_GSTGLWINDOW (WM_APP+1)
 
-//void gst_gl_window_set_pixel_format (GstGLWindow *window);
 //LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 //LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -318,15 +317,16 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
 void
 gst_gl_window_visible (GstGLWindow *window, gboolean visible)
 {
-  /*GstGLWindowPrivate *priv = window->priv;
-  BOOL ret = FALSE;
+  GstGLWindowPrivate *priv = window->priv;
 
-  g_debug ("set visible %d\n", priv->internal_win_id);
+  g_debug ("set visible %lld\n", (guint64) priv->internal_win_id);
 
   if (visible)
-    ret = ShowWindowAsync (priv->internal_win_id, SW_SHOW);
+    XMapWindow (priv->device, priv->internal_win_id);
   else
-    ret = ShowWindowAsync (priv->internal_win_id, SW_HIDE);*/
+    XUnmapWindow (priv->device, priv->internal_win_id);
+
+  XSync(priv->device, FALSE);
 }
 
 /* Thread safe */
@@ -341,28 +341,83 @@ gst_gl_window_draw (GstGLWindow *window)
 void
 gst_gl_window_run_loop (GstGLWindow *window)
 {
-  /*GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowPrivate *priv = window->priv;
   gboolean running = TRUE;
   gboolean bRet = FALSE;
-  MSG msg;
+  XEvent event;
 
   g_debug ("begin loop\n");
 
-  while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0)
+  while (running && (bRet = XNextEvent(priv->device, &event)) != 0)
   {
       if (bRet == -1)
       {
-          g_error ("Failed to get message %x\r\n", GetLastError());
+          //g_error ("Failed to get message %x\r\n", GetLastError());  -> check status
           running = FALSE;
       }
       else
       {
-          TranslateMessage (&msg);
-          DispatchMessage (&msg);
+
+        switch (event.type)
+        {
+
+          case ClientMessage:
+          {
+
+              if( (Atom) event.xclient.data.l[ 0 ] == priv->atom_delete_window)
+              {
+                //priv->is_closed = TRUE;
+              }
+              break;
+          }
+
+          case CreateNotify:
+          case ConfigureNotify:
+          {
+            //int width = event.xconfigure.width;
+            //int height = event.xconfigure.height;
+            //call resize cb
+            break;
+          }
+
+          case DestroyNotify:
+            break;
+
+          case Expose:
+            //call draw cb
+            break;
+
+          case VisibilityNotify:
+          {
+            switch (event.xvisibility.state)
+            {
+              case VisibilityUnobscured:
+                //call draw cb
+                break;
+
+              case VisibilityPartiallyObscured:
+                //call draw cb
+                break;
+
+              case VisibilityFullyObscured:
+                break;
+
+              default:
+                g_debug("unknown xvisibility event: %d\n", event.xvisibility.state);
+                break;
+            }
+            break;
+          }
+
+          default:
+            break;
+
+        }
+
       }
   }
 
-  g_debug ("end loop\n");*/
+  g_debug ("end loop\n");
 }
 
 /* Thread safe */
@@ -391,52 +446,7 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
 }
 
 /* PRIVATE */
-/*
-void
-gst_gl_window_set_pixel_format (GstGLWindow *window)
-{
-    GstGLWindowPrivate *priv = window->priv;
-    PIXELFORMATDESCRIPTOR pfd;
-    gint pixelformat = 0;
-    gboolean res = FALSE;
 
-    pfd.nSize           = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion        = 1;
-    pfd.dwFlags         = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-    pfd.iPixelType      = PFD_TYPE_RGBA;
-    pfd.cColorBits      = 24;
-    pfd.cRedBits        = 0;
-    pfd.cRedShift       = 0;
-    pfd.cGreenBits      = 0;
-    pfd.cGreenShift     = 0;
-    pfd.cBlueBits       = 0;
-    pfd.cBlueShift      = 0;
-    pfd.cAlphaBits      = 0;
-    pfd.cAlphaShift     = 0;
-    pfd.cAccumBits      = 0;
-    pfd.cAccumRedBits   = 0;
-    pfd.cAccumGreenBits = 0;
-    pfd.cAccumBlueBits  = 0;
-    pfd.cAccumAlphaBits = 0;
-    pfd.cDepthBits      = 32;
-    pfd.cStencilBits    = 8;
-    pfd.cAuxBuffers     = 0;
-    pfd.iLayerType      = PFD_MAIN_PLANE;
-    pfd.bReserved       = 0;
-    pfd.dwLayerMask     = 0;
-    pfd.dwVisibleMask   = 0;
-    pfd.dwDamageMask    = 0;
-
-    pfd.cColorBits = (BYTE) GetDeviceCaps (priv->device, BITSPIXEL);
-
-    pixelformat = ChoosePixelFormat (priv->device, &pfd );
-
-    g_assert (pixelformat);
-
-    res = SetPixelFormat (priv->device, pixelformat, &pfd);
-
-    g_assert (res);
-}*/
 /*
 LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
