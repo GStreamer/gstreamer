@@ -1,3 +1,9 @@
+2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstevent.h:
+	Add a SKIP seek flag for use with advanced trickmodes.
+	API: GstSeekFlags::GST_SEEK_FLAG_SKIP
+
 2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gststructure.c: (gst_structure_id_empty_new_with_size):

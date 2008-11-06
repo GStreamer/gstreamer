@@ -257,6 +257,9 @@ typedef enum {
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
  *		       faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
+ * @GST_SEEK_FLAG_SKIP: when doing fast foward or fast reverse playback, allow
+ *                     elements to skip frames instead of generating all
+ *                     frames. Since 0.10.22.
  *
  * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
  * can be used together.
@@ -274,15 +277,20 @@ typedef enum {
  * When this message is posted, it is possible to send a new seek event to
  * continue playback. With this seek method it is possible to perform seemless
  * looping or simple linear editing.
+ *
+ * When doing fast forward (rate > 1.0) or fast reverse (rate < -1.0) trickmode
+ * playback, the @GST_SEEK_FLAG_SKIP flag can be used to instruct decoders
+ * and demuxers to adjust the playback rate by skipping frames. This can improve
+ * performance and decrease CPU usage because not all frames need to be decoded. 
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,
   GST_SEEK_FLAG_FLUSH		= (1 << 0),
   GST_SEEK_FLAG_ACCURATE	= (1 << 1),
   GST_SEEK_FLAG_KEY_UNIT	= (1 << 2),
-  GST_SEEK_FLAG_SEGMENT		= (1 << 3)
+  GST_SEEK_FLAG_SEGMENT		= (1 << 3),
+  GST_SEEK_FLAG_SKIP		= (1 << 4)
 } GstSeekFlags;
-
 
 /**
  * GstEvent:
