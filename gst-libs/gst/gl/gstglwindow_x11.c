@@ -26,12 +26,6 @@
 
 #include <GL/glx.h>
 
-
-//#define WM_GSTGLWINDOW (WM_APP+1)
-
-//LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-//LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 #define GST_GL_WINDOW_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
 
@@ -51,6 +45,7 @@ struct _GstGLWindowPrivate
   gint device_height;
   gint connection;
   Atom atom_delete_window;
+  Atom atom_custom;
   XVisualInfo *visual_info;
 
   Window internal_win_id;
@@ -77,6 +72,19 @@ gboolean _gst_gl_window_debug = FALSE;
 static void
 gst_gl_window_finalize (GObject * object)
 {
+  GstGLWindow *window = GST_GL_WINDOW (object);
+  GstGLWindowPrivate *priv = window->priv;
+
+  XUnmapWindow (priv->device, priv->internal_win_id);
+
+  glXMakeCurrent (priv->device, None, NULL);
+
+  glXDestroyContext (priv->device, priv->gl_context);
+
+  XDestroyWindow (priv->device, priv->internal_win_id);
+
+  XCloseDisplay (priv->device);
+
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
 
@@ -85,7 +93,7 @@ gst_gl_window_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGLWindow *window;
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowPrivate *priv;
 
   g_return_if_fail (GST_GL_IS_WINDOW (object));
 
@@ -108,7 +116,7 @@ gst_gl_window_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstGLWindow *window;
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowPrivate *priv;
 
   g_return_if_fail (GST_GL_IS_WINDOW (object));
 
@@ -200,6 +208,7 @@ gst_gl_window_new (gint width, gint height)
 
   priv->connection = ConnectionNumber (priv->device);
   priv->atom_delete_window = XInternAtom (priv->device, "WM_DELETE_WINDOW", FALSE);
+  priv->atom_custom = XInternAtom (priv->device, "WM_GSTGLWINDOW", FALSE);
 
   priv->visual_info = glXChooseVisual (priv->device, priv->screen, attrib);
 
@@ -333,9 +342,26 @@ gst_gl_window_visible (GstGLWindow *window, gboolean visible)
 void
 gst_gl_window_draw (GstGLWindow *window)
 {
-  /*GstGLWindowPrivate *priv = window->priv;
-  RedrawWindow (priv->internal_win_id, NULL, NULL,
-    RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);*/
+  GstGLWindowPrivate *priv = window->priv;
+  XEvent event;
+  XWindowAttributes attr;
+
+  g_debug ("DRAW\n");
+
+  XGetWindowAttributes (priv->device, priv->internal_win_id, &attr);
+
+  event.xexpose.type = Expose;
+  event.xexpose.send_event = TRUE;
+  event.xexpose.display = priv->device;
+  event.xexpose.window = priv->internal_win_id;
+  event.xexpose.x = attr.x;
+  event.xexpose.y = attr.y;
+  event.xexpose.width = attr.width;
+  event.xexpose.height = attr.height;
+  event.xexpose.count = 0;
+  XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
+
+  g_debug ("AFTER DRAW\n");
 }
 
 void
@@ -343,78 +369,91 @@ gst_gl_window_run_loop (GstGLWindow *window)
 {
   GstGLWindowPrivate *priv = window->priv;
   gboolean running = TRUE;
-  gboolean bRet = FALSE;
   XEvent event;
 
   g_debug ("begin loop\n");
 
-  while (running && (bRet = XNextEvent(priv->device, &event)) != 0)
+  while (running)
   {
-      if (bRet == -1)
-      {
-          //g_error ("Failed to get message %x\r\n", GetLastError());  -> check status
-          running = FALSE;
-      }
-      else
+    XNextEvent(priv->device, &event);
+
+    switch (event.type)
+    {
+      case ClientMessage:
       {
 
-        switch (event.type)
+        if (event.xclient.message_type == priv->atom_custom)
         {
+          g_debug ("Custom message\n");
 
-          case ClientMessage:
+          if (priv->is_closed && priv->close_cb)
+            priv->close_cb (priv->close_data);
+          else
           {
-
-              if( (Atom) event.xclient.data.l[ 0 ] == priv->atom_delete_window)
-              {
-                //priv->is_closed = TRUE;
-              }
-              break;
+            GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
+            gpointer custom_data = (gpointer) event.xclient.data.l[1];
+            custom_cb (custom_data);
           }
+        }
+        else if (event.xclient.message_type == priv->atom_delete_window)
+        {
+          g_debug ("Close\n");
+          priv->is_closed = TRUE;
+        }
+        break;
+      }
 
-          case CreateNotify:
-          case ConfigureNotify:
-          {
-            //int width = event.xconfigure.width;
-            //int height = event.xconfigure.height;
-            //call resize cb
+      case CreateNotify:
+      case ConfigureNotify:
+      {
+        g_debug ("CreateNotify or ConfigureNotify\n");
+        gint width = event.xconfigure.width;
+        gint height = event.xconfigure.height;
+        if (priv->resize_cb)
+          priv->resize_cb (priv->resize_data, width, height);
+        break;
+      }
+
+      case DestroyNotify:
+        g_debug ("DestroyNotify\n");
+        break;
+
+      case Expose:
+        g_debug ("Expose\n");
+        if (priv->draw_cb)
+          priv->draw_cb (priv->draw_data);
+        break;
+
+      case VisibilityNotify:
+      {
+        g_debug ("VisibilityNotify\n");
+
+        switch (event.xvisibility.state)
+        {
+          case VisibilityUnobscured:
+            if (priv->draw_cb)
+              priv->draw_cb (priv->draw_data);
             break;
-          }
 
-          case DestroyNotify:
+          case VisibilityPartiallyObscured:
+            if (priv->draw_cb)
+              priv->draw_cb (priv->draw_data);
             break;
 
-          case Expose:
-            //call draw cb
+          case VisibilityFullyObscured:
             break;
-
-          case VisibilityNotify:
-          {
-            switch (event.xvisibility.state)
-            {
-              case VisibilityUnobscured:
-                //call draw cb
-                break;
-
-              case VisibilityPartiallyObscured:
-                //call draw cb
-                break;
-
-              case VisibilityFullyObscured:
-                break;
-
-              default:
-                g_debug("unknown xvisibility event: %d\n", event.xvisibility.state);
-                break;
-            }
-            break;
-          }
 
           default:
+            g_debug("unknown xvisibility event: %d\n", event.xvisibility.state);
             break;
-
         }
-
+        break;
       }
+
+      default:
+        break;
+
+    }
   }
 
   g_debug ("end loop\n");
@@ -437,170 +476,21 @@ gst_gl_window_quit_loop (GstGLWindow *window)
 void
 gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
-  /*if (window)
+  if (window)
   {
+    g_debug ("CUSTOM\n");
+
     GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = SendMessage (priv->internal_win_id, WM_GSTGLWINDOW, (WPARAM) data, (LPARAM) callback);
-    g_assert (SUCCEEDED (res));
-  }*/
-}
-
-/* PRIVATE */
-
-/*
-LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-  if (uMsg == WM_CREATE) {
-
-    GstGLWindow *window = (GstGLWindow *) (((LPCREATESTRUCT) lParam)->lpCreateParams);
-
-    g_debug ("WM_CREATE\n");
-
-    g_assert (window);
-
-    {
-      GstGLWindowPrivate *priv = window->priv;
-      priv->device = GetDC (hWnd);
-      gst_gl_window_set_pixel_format (window);
-      priv->gl_context = wglCreateContext (priv->device);
-      if (priv->gl_context)
-        g_debug ("gl context created: %d\n", priv->gl_context);
-      else
-        g_debug ("failed to create glcontext %d, %x\r\n", hWnd, GetLastError());
-      g_assert (priv->gl_context);
-      ReleaseDC (hWnd, priv->device);
-      if (!wglMakeCurrent (priv->device, priv->gl_context))
-        g_debug ("failed to make opengl context current %d, %x\r\n", hWnd, GetLastError());
-    }
-
-    SetProp (hWnd, "gl_window", window);
-
-    return 0;
+    XEvent event;
+    event.xclient.type = ClientMessage;
+    event.xclient.send_event = TRUE;
+    event.xclient.display = priv->device;
+    event.xclient.window = priv->internal_win_id;
+    event.xclient.message_type = priv->atom_custom;
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = (long) callback;
+    event.xclient.data.l[1] = (long) data;
+    XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
+    g_debug ("AFTER CUSTOM\n");
   }
-  else if (GetProp(hWnd, "gl_window")) {
-
-    GstGLWindow *window = GetProp(hWnd, "gl_window");
-    GstGLWindowPrivate *priv = NULL;
-
-    g_assert (window);
-
-    priv = window->priv;
-
-    g_assert (priv);
-
-    g_assert (priv->internal_win_id == hWnd);
-
-    g_assert (priv->gl_context == wglGetCurrentContext());
-
-    switch ( uMsg ) {
-
-      case WM_SIZE:
-      {
-        if (priv->resize_cb)
-          priv->resize_cb (priv->resize_data, LOWORD(lParam), HIWORD(lParam));
-        break;
-      }
-
-      case WM_PAINT:
-      {
-        if (priv->draw_cb)
-        {
-          PAINTSTRUCT ps;
-          BeginPaint (hWnd, &ps);
-          priv->draw_cb (priv->draw_data);
-          SwapBuffers (priv->device);
-          EndPaint (hWnd, &ps);
-        }
-        break;
-      }
-
-      case WM_CLOSE:
-      {
-        HWND parent_id = 0;
-
-        g_debug ("WM_CLOSE\n");
-
-        parent_id = GetProp (hWnd, "gl_window_parent_id");
-        if (parent_id)
-        {
-          WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
-
-          g_assert (parent_proc);
-
-          SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) (guint64) parent_proc);
-          SetParent (hWnd, NULL);
-
-          RemoveProp (parent_id, "gl_window_parent_proc");
-          RemoveProp (hWnd, "gl_window_parent_id");
-        }
-
-        priv->is_closed = TRUE;
-        RemoveProp (hWnd, "gl_window");
-
-        if (!wglMakeCurrent (NULL, NULL))
-          g_debug ("failed to make current %d, %x\r\n", hWnd, GetLastError());
-
-        if (priv->gl_context)
-        {
-          if (!wglDeleteContext (priv->gl_context))
-            g_debug ("failed to destroy context %d, %x\r\n", priv->gl_context, GetLastError());
-        }
-
-        if (priv->internal_win_id)
-        {
-          g_debug ("BEFORE\n");
-          if (!DestroyWindow(priv->internal_win_id))
-            g_debug ("failed to destroy window %d, %x\r\n", hWnd, GetLastError());
-          g_debug ("AFTER\n");
-        }
-
-        PostQuitMessage (0);
-        break;
-      }
-
-      case WM_CAPTURECHANGED:
-      {
-        g_debug ("WM_CAPTURECHANGED\n");
-        if (priv->draw_cb)
-          priv->draw_cb (priv->draw_data);
-        break;
-      }
-
-      case WM_GSTGLWINDOW:
-      {
-        if (priv->is_closed && priv->close_cb)
-          priv->close_cb (priv->close_data);
-        else
-        {
-          GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
-          custom_cb ((gpointer) wParam);
-        }
-        break;
-      }
-
-      case WM_ERASEBKGND:
-        return TRUE;
-
-      default:
-        return DefWindowProc( hWnd, uMsg, wParam, lParam );
-    }
-
-    return 0;
-  }
-  else
-    return DefWindowProc( hWnd, uMsg, wParam, lParam );
 }
-
-LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-  WNDPROC window_parent_proc = GetProp (hWnd, "gl_window_parent_proc");
-
-  if (uMsg == WM_SIZE)
-  {
-    HWND gl_window_id = GetProp (hWnd, "gl_window_id");
-    MoveWindow (gl_window_id, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
-  }
-
-  return CallWindowProc (window_parent_proc, hWnd, uMsg, wParam, lParam);
-}
-*/
