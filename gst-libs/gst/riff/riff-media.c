@@ -1408,9 +1408,16 @@ gst_riff_create_audio_caps (guint16 codec_id,
     }
   } else {
     if (rate_chan) {
-      gst_caps_set_simple (caps,
-          "rate", GST_TYPE_INT_RANGE, rate_min, rate_max,
-          "channels", GST_TYPE_INT_RANGE, 1, channels_max, NULL);
+      if (rate_min == rate_max)
+        gst_caps_set_simple (caps, "rate", G_TYPE_INT, rate_min, NULL);
+      else
+        gst_caps_set_simple (caps,
+            "rate", GST_TYPE_INT_RANGE, rate_min, rate_max, NULL);
+      if (channels_max == 1)
+        gst_caps_set_simple (caps, "channels", G_TYPE_INT, 1, NULL);
+      else
+        gst_caps_set_simple (caps,
+            "channels", GST_TYPE_INT_RANGE, 1, channels_max, NULL);
     }
     if (block_align) {
       gst_caps_set_simple (caps,

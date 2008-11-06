@@ -1,3 +1,9 @@
+2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Fix case where we don't have a range for the rates or channels as is the
+	case with truespeech.
+
 2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/volume/gstvolume.c: (volume_update_real_volume),
