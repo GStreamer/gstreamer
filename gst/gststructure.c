@@ -118,7 +118,7 @@ gst_structure_id_empty_new_with_size (GQuark quark, guint prealloc)
   structure->name = quark;
   structure->parent_refcount = NULL;
   structure->fields =
-      g_array_sized_new (FALSE, TRUE, sizeof (GstStructureField), prealloc);
+      g_array_sized_new (FALSE, FALSE, sizeof (GstStructureField), prealloc);
 
   return structure;
 }

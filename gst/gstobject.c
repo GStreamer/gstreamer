@@ -621,7 +621,7 @@ gst_object_set_name_default (GstObject * object)
   if (strncmp (type_name, "Gst", 3) == 0)
     type_name += 3;
   tmp = g_strdup_printf ("%s%d", type_name, count);
-  name = g_ascii_strdown (tmp, strlen (tmp));
+  name = g_ascii_strdown (tmp, -1);
   g_free (tmp);
 
   result = gst_object_set_name (object, name);

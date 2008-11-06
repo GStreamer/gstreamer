@@ -157,7 +157,8 @@ gst_type_is_fixed (GType type)
   }
   /* our fundamental types that are certainly not fixed */
   if (type == GST_TYPE_INT_RANGE || type == GST_TYPE_DOUBLE_RANGE ||
-      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE) {
+      type == GST_TYPE_LIST || type == GST_TYPE_FRACTION_RANGE ||
+      type == GST_TYPE_ARRAY) {
     return FALSE;
   }
   /* other (boxed) types that are fixed */
@@ -3341,6 +3342,9 @@ gst_value_is_fixed (const GValue * value)
 {
   GType type = G_VALUE_TYPE (value);
 
+  if (gst_type_is_fixed (type))
+    return TRUE;
+
   if (type == GST_TYPE_ARRAY) {
     gint size, n;
     const GValue *kid;
@@ -3355,7 +3359,7 @@ gst_value_is_fixed (const GValue * value)
     return TRUE;
   }
 
-  return gst_type_is_fixed (type);
+  return FALSE;
 }
 
 /************

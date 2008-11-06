@@ -1,5 +1,29 @@
 2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstcaps.c: (gst_caps_copy), (_gst_caps_free),
+	(gst_caps_merge_structure), (gst_caps_get_structure),
+	(gst_caps_copy_nth), (gst_caps_set_simple),
+	(gst_caps_set_simple_valist), (gst_caps_is_fixed),
+	(gst_caps_is_equal_fixed), (gst_caps_intersect),
+	(gst_caps_subtract), (gst_caps_normalize), (gst_caps_do_simplify),
+	(gst_caps_to_string):
+	Callgrind micro optimisations.
+	Avoid array bounds checks and force inline of trivial function.
+
+	* gst/gstobject.c: (gst_object_set_name_default):
+	-1 is equivalent to letting glib to the strlen but then there is more
+	room for optimisations and it's not our fault.
+
+	* gst/gststructure.c: (gst_structure_id_empty_new_with_size):
+	no need to clear the array, we're cool.
+
+	* gst/gstvalue.c: (gst_type_is_fixed), (gst_value_is_fixed):
+	The most common _is_fixed() check is done on fundamental glib base
+	types so we check this first instead of doing a huge amount of
+	useless GST_TYPE_ARRAY calls.
+
+2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstevent.h:
 	Add a SKIP seek flag for use with advanced trickmodes.
 	API: GstSeekFlags::GST_SEEK_FLAG_SKIP
