@@ -1,5 +1,13 @@
 2008-11-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	patch by: Josep Torra
+
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	No need to reclaculate flush in this case.
+	Fixes some bad decode errors introduced.
+
+2008-11-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegdemux/gstmpegtsdemux.c:
 	* gst/mpegdemux/gstmpegtsdemux.h:
 	Fix typo.

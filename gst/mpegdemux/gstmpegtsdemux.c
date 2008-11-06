@@ -664,6 +664,7 @@ gst_fluts_demux_fill_stream (GstFluTSStream * stream, guint8 id,
 
   stream->stream_type = stream_type;
   stream->id = id;
+  GST_DEBUG ("creating new pad %s", name);
   stream->pad = gst_pad_new_from_template (template, name);
   gst_pad_use_fixed_caps (stream->pad);
   gst_pad_set_caps (stream->pad, caps);
@@ -2550,7 +2551,6 @@ gst_fluts_demux_chain (GstPad * pad, GstBuffer * buffer)
   for (i = 0; i < sync_count; i++) {
     ret = gst_fluts_demux_parse_transport_packet (demux, demux->sync_lut[i]);
     if (G_UNLIKELY (ret == GST_FLOW_LOST_SYNC)) {
-      flush = demux->sync_lut[i] - data + 1;
       ret = GST_FLOW_OK;
       continue;
     }
