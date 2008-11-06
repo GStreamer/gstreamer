@@ -1,3 +1,10 @@
+2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace2/gstdeinterlace2.c:
+	(gst_deinterlace2_class_init), (gst_deinterlace2_init),
+	(gst_deinterlace2_set_property), (gst_deinterlace2_get_property):
+	Bring properties into this century.
+
 2008-11-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:

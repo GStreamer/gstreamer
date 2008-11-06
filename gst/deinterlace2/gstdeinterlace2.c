@@ -41,13 +41,19 @@ enum
   LAST_SIGNAL
 };
 
-/* Arguments */
+/* Properties */
+
+#define DEFAULT_METHOD          GST_DEINTERLACE2_GREEDY_H
+#define DEFAULT_FIELDS          GST_DEINTERLACE2_ALL
+#define DEFAULT_FIELD_LAYOUT    GST_DEINTERLACE2_LAYOUT_AUTO
+
 enum
 {
-  ARG_0,
-  ARG_METHOD,
-  ARG_FIELDS,
-  ARG_FIELD_LAYOUT
+  PROP_0,
+  PROP_METHOD,
+  PROP_FIELDS,
+  PROP_FIELD_LAYOUT,
+  PROP_LAST
 };
 
 G_DEFINE_TYPE (GstDeinterlaceMethod, gst_deinterlace_method, GST_TYPE_OBJECT);
@@ -453,30 +459,28 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
   gobject_class->get_property = gst_deinterlace2_get_property;
   gobject_class->finalize = gst_deinterlace2_finalize;
 
-  g_object_class_install_property (gobject_class, ARG_METHOD,
+  g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method",
           "Method",
           "Deinterlace Method",
           GST_TYPE_DEINTERLACE2_METHODS,
-          GST_DEINTERLACE2_TOMSMOCOMP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          DEFAULT_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
-  g_object_class_install_property (gobject_class, ARG_FIELDS,
+  g_object_class_install_property (gobject_class, PROP_FIELDS,
       g_param_spec_enum ("fields",
           "fields",
           "Fields to use for deinterlacing",
           GST_TYPE_DEINTERLACE2_FIELDS,
-          GST_DEINTERLACE2_ALL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          DEFAULT_FIELDS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
-  g_object_class_install_property (gobject_class, ARG_FIELD_LAYOUT,
+  g_object_class_install_property (gobject_class, PROP_FIELD_LAYOUT,
       g_param_spec_enum ("tff",
           "tff",
           "Deinterlace top field first",
           GST_TYPE_DEINTERLACE2_FIELD_LAYOUT,
-          GST_DEINTERLACE2_LAYOUT_AUTO,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          DEFAULT_FIELD_LAYOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
   element_class->change_state =
@@ -539,9 +543,9 @@ gst_deinterlace2_init (GstDeinterlace2 * self, GstDeinterlace2Class * klass)
 
   gst_element_no_more_pads (GST_ELEMENT (self));
 
-  gst_deinterlace2_set_method (self, GST_DEINTERLACE2_GREEDY_H);
-  self->field_layout = GST_DEINTERLACE2_LAYOUT_AUTO;
-  self->fields = GST_DEINTERLACE2_ALL;
+  gst_deinterlace2_set_method (self, DEFAULT_METHOD);
+  self->fields = DEFAULT_FIELDS;
+  self->field_layout = DEFAULT_FIELD_LAYOUT;
 
   gst_deinterlace2_reset (self);
 }
@@ -591,10 +595,10 @@ gst_deinterlace2_set_property (GObject * object, guint prop_id,
   self = GST_DEINTERLACE2 (object);
 
   switch (prop_id) {
-    case ARG_METHOD:
+    case PROP_METHOD:
       gst_deinterlace2_set_method (self, g_value_get_enum (value));
       break;
-    case ARG_FIELDS:{
+    case PROP_FIELDS:{
       gint oldfields;
 
       GST_OBJECT_LOCK (self);
@@ -605,7 +609,7 @@ gst_deinterlace2_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (self);
       break;
     }
-    case ARG_FIELD_LAYOUT:
+    case PROP_FIELD_LAYOUT:
       self->field_layout = g_value_get_enum (value);
       break;
     default:
@@ -624,13 +628,13 @@ gst_deinterlace2_get_property (GObject * object, guint prop_id,
   self = GST_DEINTERLACE2 (object);
 
   switch (prop_id) {
-    case ARG_METHOD:
+    case PROP_METHOD:
       g_value_set_enum (value, self->method_id);
       break;
-    case ARG_FIELDS:
+    case PROP_FIELDS:
       g_value_set_enum (value, self->fields);
       break;
-    case ARG_FIELD_LAYOUT:
+    case PROP_FIELD_LAYOUT:
       g_value_set_enum (value, self->field_layout);
       break;
     default:
