@@ -44,7 +44,7 @@ typedef struct _GstAppSrcClass GstAppSrcClass;
  * @GST_APP_STREAM_TYPE_STREAM: No seeking is supported in the stream, such as a
  * live stream.
  * @GST_APP_STREAM_TYPE_SEEKABLE: The stream is seekable but seeking might not
- * be very fast, such as data from a webserver.
+ * be very fast, such as data from a webserver. 
  * @GST_APP_STREAM_TYPE_RANDOM_ACCESS: The stream is seekable and seeking is fast,
  * such as in a local file.
  *

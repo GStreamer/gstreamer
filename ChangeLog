@@ -1,3 +1,12 @@
+2008-11-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
+	(gst_app_src_init), (gst_app_src_set_property),
+	(gst_app_src_get_property), (gst_app_src_push_buffer):
+	* gst-libs/gst/app/gstappsrc.h:
+	Add is-live property.
+	Add some more docs.
+
 2008-11-06  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* configure.ac:

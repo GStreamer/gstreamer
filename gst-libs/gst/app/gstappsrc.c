@@ -18,6 +18,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-appsrc
+ *
+ * The appsrc element can be used by applications to insert data into a
+ * GStreamer pipeline.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -58,6 +65,7 @@ enum
 #define DEFAULT_PROP_MAX_BYTES     200000
 #define DEFAULT_PROP_FORMAT        GST_FORMAT_BYTES
 #define DEFAULT_PROP_BLOCK         FALSE
+#define DEFAULT_PROP_IS_LIVE       FALSE
 
 enum
 {
@@ -68,6 +76,7 @@ enum
   PROP_MAX_BYTES,
   PROP_FORMAT,
   PROP_BLOCK,
+  PROP_IS_LIVE,
 
   PROP_LAST
 };
@@ -161,38 +170,82 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gobject_class->set_property = gst_app_src_set_property;
   gobject_class->get_property = gst_app_src_get_property;
 
+  /**
+   * GstAppSrc::caps
+   *
+   * The GstCaps that will negotiated downstream and will be put
+   * on outgoing buffers.
+   */
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "The allowed caps for the src pad", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  /**
+   * GstAppSrc::format
+   *
+   * The format to use for segment events. When the source is producing
+   * timestamped buffers this property should be set to GST_FORMAT_TIME.
+   */
   g_object_class_install_property (gobject_class, PROP_FORMAT,
       g_param_spec_enum ("format", "Format",
           "The format of the segment events and seek", GST_TYPE_FORMAT,
           DEFAULT_PROP_FORMAT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  /**
+   * GstAppSrc::size
+   *
+   * The total size in bytes of the data stream. If the total size is known, it
+   * is recommended to configure it with this property.
+   */
   g_object_class_install_property (gobject_class, PROP_SIZE,
       g_param_spec_int64 ("size", "Size",
           "The size of the data stream (-1 if unknown)",
           -1, G_MAXINT64, DEFAULT_PROP_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  /**
+   * GstAppSrc::stream-type
+   *
+   * The type of stream that this source is producing.  For seekable streams the
+   * application should connect to the seek-data signal.
+   */
   g_object_class_install_property (gobject_class, PROP_STREAM_TYPE,
       g_param_spec_enum ("stream-type", "Stream Type",
           "the type of the stream", GST_TYPE_APP_STREAM_TYPE,
           DEFAULT_PROP_STREAM_TYPE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  /**
+   * GstAppSrc::max-bytes
+   *
+   * The maximum amount of bytes that can be queued internally.
+   * After the maximum amount of bytes are queued, appsrc will emit the
+   * "enough-data" signal.
+   */
   g_object_class_install_property (gobject_class, PROP_MAX_BYTES,
       g_param_spec_uint64 ("max-bytes", "Max bytes",
           "The maximum number of bytes to queue internally (0 = unlimited)",
           0, G_MAXUINT64, DEFAULT_PROP_MAX_BYTES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
+  /**
+   * GstAppSrc::block
+   *
+   * When max-bytes are queued and after the enough-data signal has been emited,
+   * block any further push-buffer calls until the amount of queued bytes drops
+   * below the max-bytes limit.
+   */
   g_object_class_install_property (gobject_class, PROP_BLOCK,
       g_param_spec_boolean ("block", "Block",
           "Block push-buffer when max-bytes are queued",
           DEFAULT_PROP_BLOCK, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAppSrc::is-live
+   *
+   * Instruct the source to behave like a live source. This includes that it
+   * will only push out buffers in the PLAYING state.
+   */
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is Live",
+          "Whether to act as a live source",
+          DEFAULT_PROP_IS_LIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAppSrc::need-data:
@@ -250,6 +303,9 @@ gst_app_src_class_init (GstAppSrcClass * klass)
     *
     * Adds a buffer to the queue of buffers that the appsrc element will
     * push to its source pad. This function will take ownership of @buffer.
+    *
+    * When the block property is TRUE, this function can block until free space
+    * becomes available in the queue.
     */
   gst_app_src_signals[SIGNAL_PUSH_BUFFER] =
       g_signal_new ("push-buffer", G_TYPE_FROM_CLASS (klass),
@@ -295,6 +351,8 @@ gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
   appsrc->max_bytes = DEFAULT_PROP_MAX_BYTES;
   appsrc->format = DEFAULT_PROP_FORMAT;
   appsrc->block = DEFAULT_PROP_BLOCK;
+
+  gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
 
 static void
@@ -357,6 +415,10 @@ gst_app_src_set_property (GObject * object, guint prop_id,
     case PROP_BLOCK:
       appsrc->block = g_value_get_boolean (value);
       break;
+    case PROP_IS_LIVE:
+      gst_base_src_set_live (GST_BASE_SRC (appsrc),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -395,6 +457,9 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BLOCK:
       g_value_set_boolean (value, appsrc->block);
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (appsrc)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -882,7 +947,7 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
     if (appsrc->is_eos)
       goto eos;
 
-    if (appsrc->queued_bytes >= appsrc->max_bytes) {
+    if (appsrc->max_bytes && appsrc->queued_bytes >= appsrc->max_bytes) {
       GST_DEBUG_OBJECT (appsrc, "queue filled (%" G_GUINT64_FORMAT " >= %"
           G_GUINT64_FORMAT ")", appsrc->queued_bytes, appsrc->max_bytes);
 
@@ -904,7 +969,9 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
          * flush. */
         g_cond_wait (appsrc->cond, appsrc->mutex);
       } else {
-        /* no need to wait for free space, we just pump data into the queue */
+        /* no need to wait for free space, we just pump more data into the
+         * queue hoping that the caller reacts to the enough-data signal and
+         * stops pushing buffers. */
         break;
       }
     } else
