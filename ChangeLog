@@ -1,3 +1,8 @@
+2008-11-07  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/gst.override:
+	Fix compiler warning about missing format string.
+
 2008-10-05  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

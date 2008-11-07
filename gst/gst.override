@@ -1558,7 +1558,7 @@ _wrap_g_error_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 
     self->gtype = GST_TYPE_G_ERROR;
     self->free_on_dealloc = FALSE;
-    self->boxed = g_error_new(domainq, code, message);
+    self->boxed = g_error_new(domainq, code, "%s", message);
 
     if (!self->boxed) {
         PyErr_SetString(PyExc_RuntimeError, "could not create GError object");
