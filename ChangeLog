@@ -1,3 +1,13 @@
+2008-11-07  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
+	Initialize some more variables.
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps),
+	(alloc_output_buffer):
+	Disable direct rendering for h264, some functions just seem to read from
+	invalid memory.
+
 2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_init):

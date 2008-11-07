@@ -3012,9 +3012,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = picture->data[0] + size;
       picture->data[2] = picture->data[1] + size2;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
       picture->linesize[1] = stride2;
       picture->linesize[2] = stride2;
+      picture->linesize[3] = 0;
       GST_DEBUG ("planes %d %d %d", 0, size, size + size2);
       GST_DEBUG ("strides %d %d %d", stride, stride2, stride2);
       return size + 2 * size2;
@@ -3025,7 +3027,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
+      picture->linesize[1] = 0;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size;
       /*case PIX_FMT_AYUV4444:
          case PIX_FMT_BGR32:
@@ -3037,7 +3043,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
+      picture->linesize[1] = 0;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size;
     case PIX_FMT_RGB555:
     case PIX_FMT_RGB565:
@@ -3048,7 +3058,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
+      picture->linesize[1] = 0;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size;
     case PIX_FMT_UYVY411:
       /* FIXME, probably not the right stride */
@@ -3057,7 +3071,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = width + width / 2;
+      picture->linesize[1] = 0;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size + size / 2;
     case PIX_FMT_GRAY8:
       stride = ROUND_UP_4 (width);
@@ -3065,7 +3083,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
+      picture->linesize[1] = 0;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size;
     case PIX_FMT_MONOWHITE:
     case PIX_FMT_MONOBLACK:
@@ -3074,7 +3096,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = NULL;
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
+      picture->linesize[1] = 0;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size;
     case PIX_FMT_PAL8:
       /* already forced to be with stride, so same result as other function */
@@ -3083,8 +3109,11 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->data[0] = ptr;
       picture->data[1] = ptr + size;    /* palette is stored here as 256 32 bit words */
       picture->data[2] = NULL;
+      picture->data[3] = NULL;
       picture->linesize[0] = stride;
       picture->linesize[1] = 4;
+      picture->linesize[2] = 0;
+      picture->linesize[3] = 0;
       return size + 256 * 4;
     default:
       picture->data[0] = NULL;

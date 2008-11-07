@@ -694,21 +694,24 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   ffmpegdec->extra_ref = FALSE;
   if (ffmpegdec->direct_rendering) {
     GST_DEBUG_OBJECT (ffmpegdec, "trying to enable direct rendering");
-    if (!oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
-      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
+    if (oclass->in_plugin->capabilities & CODEC_CAP_DR1) {
+      if (oclass->in_plugin->id == CODEC_ID_H264) {
+        GST_DEBUG_OBJECT (ffmpegdec, "disable direct rendering setup for H264");
+        /* does not work, many stuff reads outside of the planes */
+        ffmpegdec->current_dr = FALSE;
+        ffmpegdec->extra_ref = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
+        ffmpegdec->current_dr = TRUE;
+      }
     }
-    if (oclass->in_plugin->id == CODEC_ID_H264) {
-      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering setup for H264");
-      ffmpegdec->current_dr = TRUE;
-      ffmpegdec->extra_ref = TRUE;
-    } else {
-      GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
-      /* do *not* draw edges when in direct rendering, for some reason it draws
-       * outside of the memory. */
-      ffmpegdec->current_dr = TRUE;
+    else {
+      GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
     }
   }
   if (ffmpegdec->current_dr) {
+    /* do *not* draw edges when in direct rendering, for some reason it draws
+     * outside of the memory. */
     ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
   }
 
@@ -784,6 +787,7 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
       width, height);
 
   if (!ffmpegdec->context->palctrl) {
+    GST_LOG_OBJECT (ffmpegdec, "calling pad_alloc");
     /* no pallete, we can use the buffer size to alloc */
     ret = gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
         GST_BUFFER_OFFSET_NONE, fsize,
@@ -791,6 +795,7 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
   } else {
+    GST_LOG_OBJECT (ffmpegdec, "not calling pad_alloc, we have a pallete");
     /* for paletted data we can't use pad_alloc_buffer(), because
      * fsize contains the size of the palette, so the overall size
      * is bigger than ffmpegcolorspace's unit size, which will
