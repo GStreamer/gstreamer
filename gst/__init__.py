@@ -146,9 +146,13 @@ class Fraction(Value):
         return float(self.num) / float(self.denom)
 
 import sys
-dlsave = sys.getdlopenflags()
 try:
+    dlsave = sys.getdlopenflags()
     from DLFCN import RTLD_GLOBAL, RTLD_LAZY
+except AttributeError:
+    # windows doesn't have sys.getdlopenflags()
+    RTLD_GLOBAL = -1
+    RTLD_LAZY = -1
 except ImportError:
     RTLD_GLOBAL = -1
     RTLD_LAZY = -1
@@ -172,17 +176,19 @@ except:
 
 if RTLD_GLOBAL != -1 and RTLD_LAZY != -1:
     sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
-    try:
-        import libxml2
-    except:
-        pass
-    from _gst import *
-    import interfaces
+
+try:
+    import libxml2
+except:
+    pass
+from _gst import *
+import interfaces
+
+if RTLD_GLOBAL != -1 and RTLD_LAZY != -1:
+    sys.setdlopenflags(dlsave)
+del sys
 
 version = get_gst_version
-
-sys.setdlopenflags(dlsave)
-del sys
 
 # Fixes for API cleanups that would cause an API breakage.
 # See #446674
