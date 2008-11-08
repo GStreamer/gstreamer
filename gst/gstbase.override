@@ -561,6 +561,129 @@ _wrap_GstBaseTransform__do_get_unit_size (PyObject *cls, PyObject *args, PyObjec
     return py_ret;
 }
 %%
+override GstBaseTransform__proxy_do_transform_size
+static gboolean
+_wrap_GstBaseTransform__proxy_do_transform_size (GstBaseTransform * self,
+    GstPadDirection direction,
+    GstCaps * caps,
+    guint size,
+    GstCaps * othercaps,
+    guint * othersize)
+{
+    PyGILState_STATE __py_state;
+    PyObject *py_self = NULL;
+    PyObject *py_direction = NULL;
+    PyObject *py_caps = NULL;
+    PyObject *py_size = NULL;
+    PyObject *py_othercaps = NULL;
+    PyObject *py_args = NULL;
+    PyObject *py_method = NULL;
+    PyObject *py_ret = NULL;
+    gboolean ret = FALSE;
+
+    __py_state = pyg_gil_state_ensure();
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        goto beach;
+    }
+
+    py_direction = pyg_enum_from_gtype(GST_TYPE_PAD_DIRECTION, direction);
+
+    if (caps)
+        py_caps = pyg_boxed_new(GST_TYPE_CAPS, caps, FALSE, FALSE); // should copyval be TRUE instead?
+    else {
+        Py_INCREF (Py_None);
+        py_caps = Py_None;
+    }
+    
+    py_size = PyInt_FromLong(size);
+
+    if (othercaps)
+        py_othercaps = pyg_boxed_new(GST_TYPE_CAPS, caps, FALSE, FALSE); // should copyval be TRUE instead?
+    else {
+        Py_INCREF (Py_None);
+        py_othercaps = Py_None;
+    }
+
+    py_args = PyTuple_New(4);
+    PyTuple_SET_ITEM(py_args, 0, py_direction);
+    PyTuple_SET_ITEM(py_args, 1, py_caps);
+    PyTuple_SET_ITEM(py_args, 2, py_size);
+    PyTuple_SET_ITEM(py_args, 3, py_othercaps);
+
+    py_method = PyObject_GetAttrString(py_self, "do_transform_size");
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        goto beach;
+    }
+    
+    py_ret = PyObject_CallObject(py_method, py_args);
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        goto beach;
+    }
+
+    if (PyInt_Check(py_ret)) {
+        *othersize = PyInt_AsLong(py_ret);
+        ret = TRUE;
+    }
+
+beach:
+    Py_XDECREF(py_self);
+    Py_XDECREF(py_args);
+    Py_XDECREF(py_method);
+    Py_XDECREF(py_ret);
+
+    pyg_gil_state_release(__py_state);
+    return ret;
+}
+%%
+override GstBaseTransform__do_transform_size kwargs
+static PyObject *
+_wrap_GstBaseTransform__do_transform_size (PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", "direction", "caps", "size", "othercaps", NULL };
+    PyGObject *self;
+    PyGObject *py_direction;
+    PyGObject *py_caps;
+    PyGObject *py_othercaps;
+    gboolean ret;
+    GstPadDirection direction;
+    guint size = 0;
+    guint othersize = 0;
+    PyObject *py_ret;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!O!iO!:GstBaseTransform.get_unit_size",
+        kwlist, &PyGstBaseTransform_Type, &self, &PyGEnum_Type, &py_direction,
+        &PyGstCaps_Type, &py_caps, &size, &PyGstCaps_Type, &py_othercaps))
+        return NULL;
+    
+    pyg_enum_get_value(GST_TYPE_PAD_DIRECTION,
+        (PyObject *) py_direction, (gint *) &direction);
+
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BASE_TRANSFORM_CLASS(klass)->transform_size) {
+      pyg_begin_allow_threads;
+      ret = GST_BASE_TRANSFORM_CLASS(klass)->transform_size(GST_BASE_TRANSFORM(self->obj),
+          direction, GST_CAPS(py_caps->obj), size, 
+          GST_CAPS(py_othercaps->obj), &othersize);
+      pyg_end_allow_threads;
+    } else {
+      PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseTransform.transform_size not implemented");
+      g_type_class_unref(klass);
+      return NULL;
+    }
+    g_type_class_unref(klass);
+
+    py_ret = PyLong_FromUnsignedLongLong(othersize);
+    return py_ret;
+}
+%%
 override GstBaseSink__proxy_do_get_times
 static void
 _wrap_GstBaseSink__proxy_do_get_times (GstBaseSink * self,

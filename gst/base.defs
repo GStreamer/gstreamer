@@ -682,6 +682,17 @@
   )
 )
 
+(define-virtual transform_size
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+  (parameters
+   '("GstCaps*" "caps")
+   '("guint*" "size")
+   '("GstCaps*" "othercaps")
+   '("guint*" "othersize")
+  )
+)
+
 (define-virtual set_caps
   (of-object "GstBaseTransform")
   (return-type "gboolean")

@@ -1,5 +1,11 @@
 2008-11-08  Alessandro Decina  <alessandro.d@gmail.com>
 
+	* gst/base.defs:
+	* gst/gstbase.override:
+	Add GstBaseTransform::transform_size virtual.
+
+2008-11-08  Alessandro Decina  <alessandro.d@gmail.com>
+
 	reviewed by: Edward Hervey <edward.hervey@collabora.co.uk>
 
 	* gst/__init__.py:
