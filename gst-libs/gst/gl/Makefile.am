@@ -19,13 +19,11 @@ libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
-	${top_builddir}/gst-libs/gst/freeglut/libgstfreeglut-$(GST_MAJORMINOR).la \
 	-lGLU -lGLEW $(GL_LIBS) $(X_LIBS)
 
 libgstgl_@GST_MAJORMINOR@_la_CFLAGS = \
 	$(GL_CFLAGS) $(X_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs/gst/freeglut
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 
 libgstgl_@GST_MAJORMINOR@_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
