@@ -88,6 +88,9 @@ gst_gl_window_finalize (GObject * object)
 
   XCloseDisplay (priv->device);
 
+
+  g_cond_signal (priv->cond_send_message);
+
   if (priv->cond_send_message)
     g_cond_free (priv->cond_send_message);
 
@@ -202,6 +205,8 @@ gst_gl_window_new (gint width, gint height)
   unsigned long mask;
   const gchar *title = "OpenGL renderer";
 
+  Bool ret = FALSE;
+
   static gint x = 0;
   static gint y = 0;
 
@@ -239,7 +244,11 @@ gst_gl_window_new (gint width, gint height)
     width, height, 0, priv->visual_info->depth, InputOutput,
     priv->visual_info->visual, mask, &win_attr);
 
+  g_debug ("gl window id: %lld\n", (guint64) priv->internal_win_id);
+
   priv->gl_context = glXCreateContext (priv->device, priv->visual_info, NULL, TRUE);
+
+  g_debug ("gl context id: %ld\n", (gulong) priv->gl_context);
 
   if (!glXIsDirect(priv->device, priv->gl_context))
     g_debug ("direct rendering failed\n");
@@ -262,11 +271,16 @@ gst_gl_window_new (gint width, gint height)
 
   XSetWMProtocols (priv->device, priv->internal_win_id, &priv->atom_delete_window, 1);
 
-  glXMakeCurrent (priv->device, priv->internal_win_id, priv->gl_context);
+  ret = glXMakeCurrent (priv->device, priv->internal_win_id, priv->gl_context);
+
+  if (!ret)
+    g_debug ("failed to make opengl context current\n");
 
   priv->mutex = g_mutex_new ();
   priv->cond_send_message = g_cond_new ();
   priv->is_closed = FALSE;
+
+  XResizeWindow (priv->device, priv->internal_win_id, width, height);
 
   return window;
 }
@@ -359,8 +373,6 @@ gst_gl_window_draw (GstGLWindow *window)
   XEvent event;
   XWindowAttributes attr;
 
-  g_debug ("DRAW\n");
-
   XGetWindowAttributes (priv->device, priv->internal_win_id, &attr);
 
   event.xexpose.type = Expose;
@@ -373,8 +385,6 @@ gst_gl_window_draw (GstGLWindow *window)
   event.xexpose.height = attr.height;
   event.xexpose.count = 0;
   XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
-
-  g_debug ("AFTER DRAW\n");
 }
 
 void
@@ -390,17 +400,13 @@ gst_gl_window_run_loop (GstGLWindow *window)
   {
     XNextEvent(priv->device, &event);
 
-    g_debug ("Next\n");
-
     switch (event.type)
     {
       case ClientMessage:
       {
 
-        g_debug ("Client Message\n");
         if (event.xclient.message_type == priv->atom_custom)
         {
-          g_debug ("Custom message\n");
 
           if (priv->is_closed && priv->close_cb)
           {
@@ -414,9 +420,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
             custom_cb (custom_data);
           }
 
-          g_mutex_lock (priv->mutex);
           g_cond_signal (priv->cond_send_message);
-          g_mutex_unlock (priv->mutex);
         }
         else if ( (Atom) event.xclient.data.l[0] == priv->atom_delete_window)
         {
@@ -430,7 +434,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
       case CreateNotify:
       case ConfigureNotify:
       {
-        g_debug ("CreateNotify or ConfigureNotify\n");
         gint width = event.xconfigure.width;
         gint height = event.xconfigure.height;
         if (priv->resize_cb)
@@ -443,15 +446,12 @@ gst_gl_window_run_loop (GstGLWindow *window)
         break;
 
       case Expose:
-        g_debug ("Expose\n");
         if (priv->draw_cb)
           priv->draw_cb (priv->draw_data);
         break;
 
       case VisibilityNotify:
       {
-        g_debug ("VisibilityNotify\n");
-
         switch (event.xvisibility.state)
         {
           case VisibilityUnobscured:
@@ -487,13 +487,22 @@ gst_gl_window_run_loop (GstGLWindow *window)
 void
 gst_gl_window_quit_loop (GstGLWindow *window)
 {
-  /*if (window)
+  if (window)
   {
     GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = PostMessage(priv->internal_win_id, WM_CLOSE, 0, 0);
-    g_assert (SUCCEEDED (res));
-    g_debug ("end loop requested\n");
-  }*/
+    XEvent event;
+
+    event.xclient.type = ClientMessage;
+    event.xclient.send_event = TRUE;
+    event.xclient.display = priv->device;
+    event.xclient.window = priv->internal_win_id;
+    event.xclient.message_type = 0;
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = priv->atom_delete_window;
+
+    XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
+    XFlush (priv->device);
+  }
 }
 
 /* Thread safe */
@@ -504,23 +513,28 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
   {
 
     GstGLWindowPrivate *priv = window->priv;
-    XEvent event;
 
-    g_mutex_lock (priv->mutex);
+    if (!priv->is_closed)
+    {
+      XEvent event;
 
-    g_debug ("CUSTOM\n");
-    event.xclient.type = ClientMessage;
-    event.xclient.send_event = FALSE;
-    event.xclient.display = priv->device;
-    event.xclient.window = priv->internal_win_id;
-    event.xclient.message_type = priv->atom_custom;
-    event.xclient.format = 32;
-    event.xclient.data.l[0] = (long) callback;
-    event.xclient.data.l[1] = (long) data;
-    XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
-    g_debug ("CUSTOM sent\n");
-    g_cond_wait (priv->cond_send_message, priv->mutex);
-    g_debug ("AFTER CUSTOM\n");
-    g_mutex_unlock (priv->mutex);
+      g_mutex_lock (priv->mutex);
+
+      event.xclient.type = ClientMessage;
+      event.xclient.send_event = TRUE;
+      event.xclient.display = priv->device;
+      event.xclient.window = priv->internal_win_id;
+      event.xclient.message_type = priv->atom_custom;
+      event.xclient.format = 32;
+      event.xclient.data.l[0] = (long) callback;
+      event.xclient.data.l[1] = (long) data;
+
+      XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
+      XFlush (priv->device);
+
+      g_cond_wait (priv->cond_send_message, priv->mutex);
+
+      g_mutex_unlock (priv->mutex);
+    }
   }
 }
