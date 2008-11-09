@@ -56,9 +56,12 @@ struct _GstGLWindowPrivate
   GstGLWindowCB2 resize_cb;
   gpointer resize_data;
   GstGLWindowCB close_cb;
-
   gpointer close_data;
+
   gboolean is_closed;
+
+  GMutex *mutex;
+  GCond *cond_send_message;
 };
 
 G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
@@ -84,6 +87,12 @@ gst_gl_window_finalize (GObject * object)
   XDestroyWindow (priv->device, priv->internal_win_id);
 
   XCloseDisplay (priv->device);
+
+  if (priv->cond_send_message)
+    g_cond_free (priv->cond_send_message);
+
+  if (priv->mutex)
+    g_mutex_free (priv->mutex);
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
@@ -255,6 +264,10 @@ gst_gl_window_new (gint width, gint height)
 
   glXMakeCurrent (priv->device, priv->internal_win_id, priv->gl_context);
 
+  priv->mutex = g_mutex_new ();
+  priv->cond_send_message = g_cond_new ();
+  priv->is_closed = FALSE;
+
   return window;
 }
 
@@ -377,28 +390,39 @@ gst_gl_window_run_loop (GstGLWindow *window)
   {
     XNextEvent(priv->device, &event);
 
+    g_debug ("Next\n");
+
     switch (event.type)
     {
       case ClientMessage:
       {
 
+        g_debug ("Client Message\n");
         if (event.xclient.message_type == priv->atom_custom)
         {
           g_debug ("Custom message\n");
 
           if (priv->is_closed && priv->close_cb)
+          {
             priv->close_cb (priv->close_data);
+            g_debug ("is closed\n");
+          }
           else
           {
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
             custom_cb (custom_data);
           }
+
+          g_mutex_lock (priv->mutex);
+          g_cond_signal (priv->cond_send_message);
+          g_mutex_unlock (priv->mutex);
         }
-        else if (event.xclient.message_type == priv->atom_delete_window)
+        else if ( (Atom) event.xclient.data.l[0] == priv->atom_delete_window)
         {
           g_debug ("Close\n");
           priv->is_closed = TRUE;
+          running = FALSE;
         }
         break;
       }
@@ -478,12 +502,15 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
 {
   if (window)
   {
-    g_debug ("CUSTOM\n");
 
     GstGLWindowPrivate *priv = window->priv;
     XEvent event;
+
+    g_mutex_lock (priv->mutex);
+
+    g_debug ("CUSTOM\n");
     event.xclient.type = ClientMessage;
-    event.xclient.send_event = TRUE;
+    event.xclient.send_event = FALSE;
     event.xclient.display = priv->device;
     event.xclient.window = priv->internal_win_id;
     event.xclient.message_type = priv->atom_custom;
@@ -491,6 +518,9 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
     event.xclient.data.l[0] = (long) callback;
     event.xclient.data.l[1] = (long) data;
     XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
+    g_debug ("CUSTOM sent\n");
+    g_cond_wait (priv->cond_send_message, priv->mutex);
     g_debug ("AFTER CUSTOM\n");
+    g_mutex_unlock (priv->mutex);
   }
 }
