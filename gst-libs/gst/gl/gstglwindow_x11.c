@@ -447,7 +447,10 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
       case Expose:
         if (priv->draw_cb)
+        {
           priv->draw_cb (priv->draw_data);
+          glXSwapBuffers (priv->device, priv->internal_win_id);
+        }
         break;
 
       case VisibilityNotify:
