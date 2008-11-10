@@ -1082,7 +1082,7 @@ gst_base_audio_sink_handle_slaving (GstBaseAudioSink * sink,
 
 /* must be called with LOCK */
 static GstFlowReturn
-gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
+gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
 {
   GstClock *clock;
   GstClockReturn status;
@@ -1108,12 +1108,9 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink)
   do {
     GST_DEBUG_OBJECT (sink, "checking preroll");
 
-    /* first wait for the playing state before we can continue */
-    if (G_UNLIKELY (bsink->need_preroll)) {
-      ret = gst_base_sink_wait_preroll (bsink);
-      if (ret != GST_FLOW_OK)
-        goto flushing;
-    }
+    ret = gst_base_sink_do_preroll (bsink, obj);
+    if (ret != GST_FLOW_OK)
+      goto flushing;
 
     GST_OBJECT_LOCK (sink);
     time = sink->priv->us_latency;
@@ -1242,12 +1239,12 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_OBJECT_LOCK (sink);
   base_time = GST_ELEMENT_CAST (sink)->base_time;
   if (G_UNLIKELY (sink->priv->sync_latency)) {
-    /* only do this once until we are set back to PLAYING */
-    sink->priv->sync_latency = FALSE;
-    ret = gst_base_audio_sink_sync_latency (bsink);
+    ret = gst_base_audio_sink_sync_latency (bsink, GST_MINI_OBJECT_CAST (buf));
     GST_OBJECT_UNLOCK (sink);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto sync_latency_failed;
+    /* only do this once until we are set back to PLAYING */
+    sink->priv->sync_latency = FALSE;
   } else {
     GST_OBJECT_UNLOCK (sink);
   }
@@ -1644,8 +1641,8 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
 
 error:
   {
-    GST_WARNING_OBJECT (basesink, "Got flow error but can't return it: %d",
-        ret);
+    GST_WARNING_OBJECT (basesink, "Got flow '%s' but can't return it: %d",
+        gst_flow_get_name (ret), ret);
     gst_ring_buffer_pause (rbuf);
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
     return;

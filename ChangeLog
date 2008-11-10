@@ -1,3 +1,11 @@
+2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_sync_latency), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_callback):
+	Use gst_base_sink_do_preroll() to wait for PLAYING and before waiting
+	for the latency to expire, fixes #559567.
+
 2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/adder/gstadder.c:
