@@ -1,3 +1,8 @@
+2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/filter/gstiir.c:
+	  Fix name tag.
+
 2008-11-07  David Schleef  <ds@schleef.org>
 
 	patch by: Thiago Sousa Santos <thiagossantos@gmail.com>

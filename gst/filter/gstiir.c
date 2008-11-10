@@ -40,7 +40,7 @@ GST_ELEMENT_DETAILS ("Infinite Impulse Response (IIR) filter",
     "Filter/Effect/Audio",
     "IIR filter based on vorbis code",
     "Monty <monty@xiph.org>, "
-    "Thomas <thomas@apestaart.org>, "
+    "Thomas Vander Stichele <thomas at apestaart dot org>, "
     "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>");
 
 /* Filter signals and args */
