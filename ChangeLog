@@ -1,5 +1,11 @@
 2008-11-10  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* gst/matroska/matroska-mux.c: (aac_codec_data_to_codec_id),
+	(gst_matroska_mux_audio_pad_setcaps):
+	Fix mapping AAC profile to Matroska codec id.
+
+2008-11-10  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),
 	(qtdemux_video_caps), (qtdemux_audio_caps):
 	Refactor some raw audio caps building, and handle >16-bit cases.

@@ -1053,6 +1053,42 @@ flac_streamheader_to_codecdata (const GValue * streamheader,
   return TRUE;
 }
 
+static gchar *
+aac_codec_data_to_codec_id (const GstBuffer * buf)
+{
+  gchar *result;
+  gint profile;
+
+  /* default to MAIN */
+  profile = 1;
+
+  if (GST_BUFFER_SIZE (buf) >= 2) {
+    profile = GST_READ_UINT8 (GST_BUFFER_DATA (buf));
+    profile >>= 3;
+  }
+
+  switch (profile) {
+    case 1:
+      result = "MAIN";
+      break;
+    case 2:
+      result = "LC";
+      break;
+    case 3:
+      result = "SSR";
+      break;
+    case 4:
+      result = "LTP";
+      break;
+    default:
+      GST_WARNING ("unknown AAC profile, defaulting to MAIN");
+      result = "MAIN";
+      break;
+  }
+
+  return result;
+}
+
 /**
  * gst_matroska_mux_audio_pad_setcaps:
  * @pad: Pad which got the caps.
@@ -1102,6 +1138,12 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   if (!strcmp (mimetype, "audio/mpeg")) {
     gint mpegversion = 0;
+    const GValue *codec_data;
+    const GstBuffer *buf = NULL;
+
+    codec_data = gst_structure_get_value (structure, "codec_data");
+    if (codec_data)
+      buf = gst_value_get_buffer (codec_data);
 
     gst_structure_get_int (structure, "mpegversion", &mpegversion);
     switch (mpegversion) {
@@ -1146,12 +1188,24 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         break;
       }
       case 2:
-        context->codec_id =
-            g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2 "MAIN");
+        if (buf) {
+          context->codec_id =
+              g_strdup_printf (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG2 "%s",
+              aac_codec_data_to_codec_id (buf));
+        } else {
+          GST_DEBUG_OBJECT (mux, "no AAC codec_data; not packetized");
+          return FALSE;
+        }
         break;
       case 4:
-        context->codec_id =
-            g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4 "MAIN");
+        if (buf) {
+          context->codec_id =
+              g_strdup_printf (GST_MATROSKA_CODEC_ID_AUDIO_AAC_MPEG4 "%s",
+              aac_codec_data_to_codec_id (buf));
+        } else {
+          GST_DEBUG_OBJECT (mux, "no AAC codec_data; not packetized");
+          return FALSE;
+        }
         break;
       default:
         return FALSE;
