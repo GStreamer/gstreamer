@@ -79,7 +79,7 @@ static const GstElementDetails audio_wsinclimit_details =
 GST_ELEMENT_DETAILS ("Low pass & high pass filter",
     "Filter/Effect/Audio",
     "Low pass and high pass windowed sinc filter",
-    "Thomas <thomas@apestaart.org>, "
+    "Thomas Vander Stichele <thomas at apestaart dot org>, "
     "Steven W. Smith, "
     "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
     "Sebastian Dröge <slomo@circular-chaos.org>");

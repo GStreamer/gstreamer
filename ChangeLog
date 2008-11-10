@@ -1,3 +1,10 @@
+2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audiofx/audiowsincband.c:
+	* gst/audiofx/audiowsinclimit.c:
+	* gst/cutter/gstcutter.c:
+	  Make author name consistent with others.
+
 2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on patch by: Eric Zhang <chao.zhang at access-company dot com>

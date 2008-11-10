@@ -38,7 +38,7 @@ static const GstElementDetails cutter_details =
 GST_ELEMENT_DETAILS ("Audio cutter",
     "Filter/Editor/Audio",
     "Audio Cutter to split audio into non-silent bits",
-    "Thomas <thomas@apestaart.org>");
+    "Thomas Vander Stichele <thomas at apestaart dot org>");
 
 static GstStaticPadTemplate cutter_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

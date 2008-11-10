@@ -81,7 +81,7 @@ static const GstElementDetails audio_wsincband_details =
 GST_ELEMENT_DETAILS ("Band pass & band reject filter",
     "Filter/Effect/Audio",
     "Band pass and band reject windowed sinc filter",
-    "Thomas <thomas@apestaart.org>, "
+    "Thomas Vander Stichele <thomas at apestaart dot org>, "
     "Steven W. Smith, "
     "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
     "Sebastian Dröge <slomo@circular-chaos.org>");
