@@ -1321,6 +1321,8 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if ((stop = seeksegment.stop) == -1)
     stop = seeksegment.duration;
 
+  gst_rtspsrc_pause (src);
+
   res = gst_rtspsrc_do_seek (src, &seeksegment);
 
   /* prepare for streaming again */
@@ -2098,6 +2100,9 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
     g_object_set (G_OBJECT (stream->udpsink), "sockfd", sockfd, NULL);
     g_object_set (G_OBJECT (stream->udpsink), "closefd", FALSE, NULL);
   }
+
+  /* we don't want to consider this a sink */
+  GST_OBJECT_FLAG_UNSET (stream->udpsink, GST_ELEMENT_IS_SINK);
 
   /* we keep this playing always */
   gst_element_set_locked_state (stream->udpsink, TRUE);

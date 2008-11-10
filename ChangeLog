@@ -1,3 +1,13 @@
+2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on patch by: Eric Zhang <chao.zhang at access-company dot com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_perform_seek),
+	(gst_rtspsrc_stream_configure_udp_sink):
+	Pause the RTSP stream before doing a new play request.
+	Make sure that adding the udpsinks does not cause the rtspsrc to become
+	a sink. Fixes #559547.
+
 2008-11-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/matroska/matroska-ids.h:
