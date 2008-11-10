@@ -1,3 +1,9 @@
+2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_reconfigure):
+	Don't try to do crazy things when we only have a text pad without a
+	video pad. Fixes #559478.
+
 2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):

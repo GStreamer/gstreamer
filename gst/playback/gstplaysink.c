@@ -1175,6 +1175,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   /* figure out which components we need */
   if (flags & GST_PLAY_FLAG_TEXT && playsink->text_pad) {
+    /* we need video too */
+    if (!playsink->video_pad)
+      goto subs_but_no_video;
+
     /* we have subtitles and we are requested to show it, we also need to show
      * video in this case. */
     need_video = TRUE;
@@ -1311,6 +1315,16 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   GST_PLAY_SINK_UNLOCK (playsink);
 
   return TRUE;
+
+  /* ERRORS */
+subs_but_no_video:
+  {
+    GST_ELEMENT_ERROR (playsink, STREAM, FORMAT,
+        (_("Can't play a text file without video.")),
+        ("Have text pad but no video pad"));
+    GST_PLAY_SINK_UNLOCK (playsink);
+    return FALSE;
+  }
 }
 
 /**
