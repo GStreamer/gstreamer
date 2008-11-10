@@ -1,3 +1,10 @@
+2008-11-10  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),
+	(qtdemux_video_caps), (qtdemux_audio_caps):
+	Refactor some raw audio caps building, and handle >16-bit cases.
+	Fix/replace building caps from a string description.
+
 2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/audiofx/audiowsincband.c:

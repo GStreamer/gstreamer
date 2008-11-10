@@ -302,10 +302,10 @@ static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GNode * esds, GstTagList * list);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * stsd_data,
-    const gchar ** codec_name);
+    gchar ** codec_name);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data, int len,
-    const gchar ** codec_name);
+    gchar ** codec_name);
 
 GType
 gst_qtdemux_get_type (void)
@@ -3276,7 +3276,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *esds;
   QtDemuxStream *stream;
   GstTagList *list = NULL;
-  const gchar *codec = NULL;
+  gchar *codec = NULL;
   const guint8 *stsd_data;
   guint32 version;
 
@@ -3394,6 +3394,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       list = gst_tag_list_new ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_VIDEO_CODEC, codec, NULL);
+      g_free (codec);
+      codec = NULL;
     }
 
     esds = NULL;
@@ -3705,6 +3707,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       list = gst_tag_list_new ();
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_AUDIO_CODEC, codec, NULL);
+      g_free (codec);
+      codec = NULL;
     }
 
     mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4a);
@@ -4516,13 +4520,13 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 #define _codec(name) \
   do { \
     if (codec_name) { \
-      *codec_name = name; \
+      *codec_name = g_strdup (name); \
     } \
   } while (0)
 
 static GstCaps *
 qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    guint32 fourcc, const guint8 * stsd_data, const gchar ** codec_name)
+    guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
 {
   GstCaps *caps;
   const GstStructure *s;
@@ -4531,21 +4535,21 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   switch (fourcc) {
     case GST_MAKE_FOURCC ('p', 'n', 'g', ' '):
       _codec ("PNG still images");
-      caps = gst_caps_from_string ("image/png");
+      caps = gst_caps_new_simple ("image/png", NULL);
       break;
     case GST_MAKE_FOURCC ('j', 'p', 'e', 'g'):
       _codec ("JPEG still images");
-      caps = gst_caps_from_string ("image/jpeg");
+      caps = gst_caps_new_simple ("image/jpeg", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'a'):
     case GST_MAKE_FOURCC ('A', 'V', 'D', 'J'):
     case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'):
       _codec ("Motion-JPEG");
-      caps = gst_caps_from_string ("image/jpeg");
+      caps = gst_caps_new_simple ("image/jpeg", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):
       _codec ("Motion-JPEG format B");
-      caps = gst_caps_from_string ("video/x-mjpeg-b");
+      caps = gst_caps_new_simple ("video/x-mjpeg-b", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'j', 'p', '2'):
       _codec ("JPEG-2000");
@@ -4555,12 +4559,14 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case GST_MAKE_FOURCC ('S', 'V', 'Q', '3'):
       _codec ("Sorensen video v.3");
-      caps = gst_caps_from_string ("video/x-svq, " "svqversion = (int) 3");
+      caps = gst_caps_new_simple ("video/x-svq",
+          "svqversion", G_TYPE_INT, 3, NULL);
       break;
     case GST_MAKE_FOURCC ('s', 'v', 'q', 'i'):
     case GST_MAKE_FOURCC ('S', 'V', 'Q', '1'):
       _codec ("Sorensen video v.1");
-      caps = gst_caps_from_string ("video/x-svq, " "svqversion = (int) 1");
+      caps = gst_caps_new_simple ("video/x-svq",
+          "svqversion", G_TYPE_INT, 1, NULL);
       break;
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
     {
@@ -4615,24 +4621,27 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
     case GST_MAKE_FOURCC ('y', 'v', '1', '2'):
       _codec ("Raw planar YUV 4:2:0");
-      caps = gst_caps_from_string ("video/x-raw-yuv, "
-          "format = (fourcc) I420");
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+          NULL);
       break;
     case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):
     case GST_MAKE_FOURCC ('Y', 'u', 'v', '2'):
       _codec ("Raw packed YUV 4:2:2");
-      caps = gst_caps_from_string ("video/x-raw-yuv, "
-          "format = (fourcc) YUY2");
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'),
+          NULL);
       break;
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
       _codec ("Raw packed YUV 4:2:0");
-      caps = gst_caps_from_string ("video/x-raw-yuv, "
-          "format = (fourcc) UYVY");
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
+          NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
       _codec ("MPEG-1 video");
-      caps = gst_caps_from_string ("video/mpeg, "
-          "systemstream = (boolean) false, " "mpegversion = (int) 1");
+      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('h', 'd', 'v', '1'): // HDV 720p30
     case GST_MAKE_FOURCC ('h', 'd', 'v', '2'): // HDV 1080i60
@@ -4648,12 +4657,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('x', 'd', 'v', '2'): // XDCAM HD 1080i60
     case GST_MAKE_FOURCC ('A', 'V', 'm', 'p'): // AVID IMX PAL
       _codec ("MPEG-2 video");
-      caps = gst_caps_from_string ("video/mpeg, "
-          "systemstream = (boolean) false, " "mpegversion = (int) 2");
+      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('g', 'i', 'f', ' '):
       _codec ("GIF still images");
-      caps = gst_caps_from_string ("image/gif");
+      caps = gst_caps_new_simple ("image/gif", NULL);
       break;
     case GST_MAKE_FOURCC ('h', '2', '6', '3'):
     case GST_MAKE_FOURCC ('H', '2', '6', '3'):
@@ -4661,65 +4670,71 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('U', '2', '6', '3'):
       _codec ("H.263");
       /* ffmpeg uses the height/width props, don't know why */
-      caps = gst_caps_from_string ("video/x-h263");
+      caps = gst_caps_new_simple ("video/x-h263", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
       _codec ("MPEG-4 video");
-      caps = gst_caps_from_string ("video/mpeg, "
-          "mpegversion = (int) 4, " "systemstream = (boolean) false");
+      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('3', 'i', 'v', 'd'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', 'D'):
       _codec ("Microsoft MPEG-4 4.3");  /* FIXME? */
-      caps = gst_caps_from_string ("video/x-msmpeg, msmpegversion = (int) 43");
+      caps = gst_caps_new_simple ("video/x-msmpeg",
+          "msmpegversion", G_TYPE_INT, 43, NULL);
       break;
     case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
     case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
       _codec ("3ivX video");
-      caps = gst_caps_from_string ("video/x-3ivx");
+      caps = gst_caps_new_simple ("video/x-3ivx", NULL);
       break;
     case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
       _codec ("DivX 3");
-      caps = gst_caps_from_string ("video/x-divx," "divxversion= (int) 3");
+      caps = gst_caps_new_simple ("video/x-divx",
+          "divxversion", G_TYPE_INT, 3, NULL);
       break;
     case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
     case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
       _codec ("DivX 4");
-      caps = gst_caps_from_string ("video/x-divx," "divxversion= (int) 4");
+      caps = gst_caps_new_simple ("video/x-divx",
+          "divxversion", G_TYPE_INT, 4, NULL);
       break;
-
     case GST_MAKE_FOURCC ('D', 'X', '5', '0'):
       _codec ("DivX 5");
-      caps = gst_caps_from_string ("video/x-divx," "divxversion= (int) 5");
+      caps = gst_caps_new_simple ("video/x-divx",
+          "divxversion", G_TYPE_INT, 5, NULL);
       break;
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
       _codec ("Cinepak");
-      caps = gst_caps_from_string ("video/x-cinepak");
+      caps = gst_caps_new_simple ("video/x-cinepak", NULL);
       break;
     case GST_MAKE_FOURCC ('q', 'd', 'r', 'w'):
       _codec ("Apple QuickDraw");
-      caps = gst_caps_from_string ("video/x-qdrw");
+      caps = gst_caps_new_simple ("video/x-qdrw", NULL);
       break;
     case GST_MAKE_FOURCC ('r', 'p', 'z', 'a'):
       _codec ("Apple video");
-      caps = gst_caps_from_string ("video/x-apple-video");
+      caps = gst_caps_new_simple ("video/x-apple-video", NULL);
       break;
     case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
       _codec ("H.264 / AVC");
-      caps = gst_caps_from_string ("video/x-h264");
+      caps = gst_caps_new_simple ("video/x-h264", NULL);
       break;
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
       _codec ("Run-length encoding");
-      caps = gst_caps_from_string ("video/x-rle, layout=(string)quicktime");
+      caps = gst_caps_new_simple ("video/x-rle",
+          "layout", G_TYPE_STRING, "quicktime", NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
       _codec ("Indeo Video 3");
-      caps = gst_caps_from_string ("video/x-indeo, indeoversion=(int)3");
+      caps = gst_caps_new_simple ("video/x-indeo",
+          "indeoversion", G_TYPE_INT, 3, NULL);
       break;
     case GST_MAKE_FOURCC ('I', 'V', '4', '1'):
     case GST_MAKE_FOURCC ('i', 'v', '4', '1'):
       _codec ("Intel Video 4");
-      caps = gst_caps_from_string ("video/x-indeo, indeoversion=(int)4");
+      caps = gst_caps_new_simple ("video/x-indeo",
+          "indeoversion", G_TYPE_INT, 4, NULL);
       break;
     case GST_MAKE_FOURCC ('d', 'v', 'c', 'p'):
     case GST_MAKE_FOURCC ('d', 'v', 'c', ' '):
@@ -4730,46 +4745,43 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('d', 'v', '2', '5'):
     case GST_MAKE_FOURCC ('d', 'v', 'p', 'p'):
       _codec ("DV Video");
-      caps =
-          gst_caps_from_string
-          ("video/x-dv, dvversion=(int)25, systemstream=(boolean)false");
+      caps = gst_caps_new_simple ("video/x-dv", "dvversion", G_TYPE_INT, 25,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('d', 'v', '5', 'n'): //DVCPRO50 NTSC
     case GST_MAKE_FOURCC ('d', 'v', '5', 'p'): //DVCPRO50 PAL
       _codec ("DVCPro50 Video");
-      caps =
-          gst_caps_from_string
-          ("video/x-dv, dvversion=(int)50, systemstream=(boolean)false");
+      caps = gst_caps_new_simple ("video/x-dv", "dvversion", G_TYPE_INT, 50,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('d', 'v', 'h', '5'): //DVCPRO HD 50i produced by FCP
     case GST_MAKE_FOURCC ('d', 'v', 'h', '6'): //DVCPRO HD 60i produced by FCP
       _codec ("DVCProHD Video");
-      caps =
-          gst_caps_from_string
-          ("video/x-dv, dvversion=(int)100, systemstream=(boolean)false");
+      caps = gst_caps_new_simple ("video/x-dv", "dvversion", G_TYPE_INT, 100,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
       _codec ("Apple Graphics (SMC)");
-      caps = gst_caps_from_string ("video/x-smc");
+      caps = gst_caps_new_simple ("video/x-smc", NULL);
       break;
     case GST_MAKE_FOURCC ('V', 'P', '3', '1'):
       _codec ("VP3");
-      caps = gst_caps_from_string ("video/x-vp3");
+      caps = gst_caps_new_simple ("video/x-vp3", NULL);
       break;
     case GST_MAKE_FOURCC ('X', 'i', 'T', 'h'):
       _codec ("Theora");
-      caps = gst_caps_from_string ("video/x-theora");
+      caps = gst_caps_new_simple ("video/x-theora", NULL);
       /* theora uses one byte of padding in the data stream because it does not
        * allow 0 sized packets while theora does */
       stream->padding = 1;
       break;
     case GST_MAKE_FOURCC ('d', 'r', 'a', 'c'):
       _codec ("Dirac");
-      caps = gst_caps_from_string ("video/x-dirac");
+      caps = gst_caps_new_simple ("video/x-dirac", NULL);
       break;
     case GST_MAKE_FOURCC ('t', 'i', 'f', 'f'):
       _codec ("TIFF still images");
-      caps = gst_caps_from_string ("image/tiff");
+      caps = gst_caps_new_simple ("image/tiff", NULL);
       break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
@@ -4794,11 +4806,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
 static GstCaps *
 qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    guint32 fourcc, const guint8 * data, int len, const gchar ** codec_name)
+    guint32 fourcc, const guint8 * data, int len, gchar ** codec_name)
 {
   GstCaps *caps;
   const GstStructure *s;
   const gchar *name;
+  gint endian = 0;
 
   GST_DEBUG_OBJECT (qtdemux, "resolve fourcc %08x", fourcc);
 
@@ -4806,95 +4819,83 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
       _codec ("Raw 8-bit PCM audio");
-      /* FIXME */
-      caps = gst_caps_from_string ("audio/x-raw-int, "
-          "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) false");
+      caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 8,
+          "depth", G_TYPE_INT, 8, "signed", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
-      if (stream->bytes_per_sample == 1) {
-        _codec ("Raw 8-bit PCM audio");
-        caps = gst_caps_from_string ("audio/x-raw-int, "
-            "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true");
-      } else {
-        _codec ("Raw 16-bit PCM audio");
-        /* FIXME */
-        caps = gst_caps_from_string ("audio/x-raw-int, "
-            "width = (int) 16, "
-            "depth = (int) 16, "
-            "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
-      }
-      break;
+      endian = BIG_ENDIAN;
+      /* fall-through */
     case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
-      if (stream->bytes_per_sample == 1) {
-        _codec ("Raw 8-bit PCM audio");
-        caps = gst_caps_from_string ("audio/x-raw-int, "
-            "width = (int) 8, " "depth = (int) 8, " "signed = (boolean) true");
-      } else {
-        _codec ("Raw 16-bit PCM audio");
-        /* FIXME */
-        caps = gst_caps_from_string ("audio/x-raw-int, "
-            "width = (int) 16, "
-            "depth = (int) 16, "
-            "endianness = (int) LITTLE_ENDIAN, " "signed = (boolean) true");
-      }
+    {
+      gchar *str;
+      gint depth;
+
+      if (!endian)
+        endian = LITTLE_ENDIAN;
+
+      depth = stream->bytes_per_packet * 8;
+      str = g_strdup_printf ("Raw %d-bit PCM audio", depth);
+      _codec (str);
+      g_free (str);
+      caps = gst_caps_new_simple ("audio/x-raw-int",
+          "width", G_TYPE_INT, depth, "depth", G_TYPE_INT, depth,
+          "endianness", G_TYPE_INT, endian,
+          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
+    }
     case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
       _codec ("Raw 64-bit floating-point audio");
-      caps = gst_caps_from_string ("audio/x-raw-float, "
-          "width = (int) 64, " "endianness = (int) BIG_ENDIAN");
+      caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 64,
+          "endianness", G_TYPE_INT, BIG_ENDIAN, NULL);
       break;
     case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
       _codec ("Raw 32-bit floating-point audio");
-      caps = gst_caps_from_string ("audio/x-raw-float, "
-          "width = (int) 32, " "endianness = (int) BIG_ENDIAN");
+      caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 32,
+          "endianness", G_TYPE_INT, BIG_ENDIAN, NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'n', '2', '4'):
       _codec ("Raw 24-bit PCM audio");
-      /* FIXME */
-      caps = gst_caps_from_string ("audio/x-raw-int, "
-          "width = (int) 24, "
-          "depth = (int) 24, "
-          "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
+      caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 24,
+          "depth", G_TYPE_INT, 24,
+          "endianness", G_TYPE_INT, BIG_ENDIAN,
+          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
-      /* FIXME */
-      caps = gst_caps_from_string ("audio/x-raw-int, "
-          "width = (int) 32, "
-          "depth = (int) 32, "
-          "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
+      caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 32,
+          "depth", G_TYPE_INT, 32,
+          "endianness", G_TYPE_INT, BIG_ENDIAN,
+          "signed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case GST_MAKE_FOURCC ('u', 'l', 'a', 'w'):
       _codec ("Mu-law audio");
-      /* FIXME */
-      caps = gst_caps_from_string ("audio/x-mulaw");
+      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
       break;
     case GST_MAKE_FOURCC ('a', 'l', 'a', 'w'):
       _codec ("A-law audio");
-      /* FIXME */
-      caps = gst_caps_from_string ("audio/x-alaw");
+      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
       break;
     case 0x0200736d:
     case 0x6d730002:
       _codec ("Microsoft ADPCM");
       /* Microsoft ADPCM-ACM code 2 */
-      caps = gst_caps_from_string ("audio/x-adpcm, "
-          "layout = (string) microsoft");
+      caps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "microsoft", NULL);
       break;
     case 0x1100736d:
     case 0x6d730011:
       _codec ("IMA Loki SDL MJPEG ADPCM");
       /* Loki ADPCM, See #550288 for a file that only decodes
        * with the smjpeg variant of the ADPCM decoder. */
-      caps = gst_caps_from_string ("audio/x-adpcm, "
-          "layout = (string) smjpeg");
+      caps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "smjpeg", NULL);
       break;
     case 0x1700736d:
     case 0x6d730017:
       _codec ("DVI/Intel IMA ADPCM");
       /* FIXME DVI/Intel IMA ADPCM/ACM code 17 */
-      caps = gst_caps_from_string ("audio/x-adpcm, "
-          "layout = (string) quicktime");
+      caps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "quicktime", NULL);
       break;
     case 0x5500736d:
     case 0x6d730055:
@@ -4902,24 +4903,26 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('.', 'm', 'p', '3'):
       _codec ("MPEG-1 layer 3");
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
-      caps = gst_caps_from_string ("audio/mpeg, "
-          "layer = (int) 3, " "mpegversion = (int) 1");
+      caps = gst_caps_new_simple ("audio/mpeg", "layer", G_TYPE_INT, 3,
+          "mpegversion", G_TYPE_INT, 1, NULL);
       break;
     case GST_MAKE_FOURCC ('M', 'A', 'C', '3'):
       _codec ("MACE-3");
-      caps = gst_caps_from_string ("audio/x-mace, " "maceversion = (int) 3");
+      caps = gst_caps_new_simple ("audio/x-mace",
+          "maceversion", G_TYPE_INT, 3, NULL);
       break;
     case GST_MAKE_FOURCC ('M', 'A', 'C', '6'):
       _codec ("MACE-6");
-      caps = gst_caps_from_string ("audio/x-mace, " "maceversion = (int) 6");
+      caps = gst_caps_new_simple ("audio/x-mace",
+          "maceversion", G_TYPE_INT, 6, NULL);
       break;
     case GST_MAKE_FOURCC ('O', 'g', 'g', 'V'):
       /* ogg/vorbis */
-      caps = gst_caps_from_string ("application/ogg");
+      caps = gst_caps_new_simple ("application/ogg", NULL);
       break;
     case GST_MAKE_FOURCC ('d', 'v', 'c', 'a'):
       _codec ("DV audio");
-      caps = gst_caps_from_string ("audio/x-dv");
+      caps = gst_caps_new_simple ("audio/x-dv", NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', '4', 'a'):
       _codec ("MPEG-4 AAC audio");
