@@ -26,7 +26,7 @@
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <swscale.h>
 #else
-#include <ffmpeg/swscale.h>
+#include <libswscale/swscale.h>
 #endif
 
 #include <gst/gst.h>

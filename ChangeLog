@@ -1,3 +1,12 @@
+2008-11-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	Fix typo: libswcale -> libswscale for the pkg-config check.
+
+	* ext/libswscale/gstffmpegscale.c:
+	Fix include path, newer ffmpeg installs the headers for all
+	libraries into separate directories. Fixes bug #560137.
+
 2008-11-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
