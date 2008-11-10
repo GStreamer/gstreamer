@@ -1,3 +1,8 @@
+2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/adder/gstadder.c:
+	  Change author string after seeing output of gst-inspector.
+
 2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaysink.c: (gst_play_sink_reconfigure):

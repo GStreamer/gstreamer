@@ -679,7 +679,8 @@ gst_adder_class_init (GstAdderClass * klass)
       gst_static_pad_template_get (&gst_adder_sink_template));
   gst_element_class_set_details_simple (gstelement_class, "Adder",
       "Generic/Audio",
-      "Add N audio channels together", "Thomas <thomas@apestaart.org>");
+      "Add N audio channels together",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
 
   parent_class = g_type_class_peek_parent (klass);
 
