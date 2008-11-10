@@ -140,7 +140,8 @@ gst_file_sink_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (gstelement_class,
       "File Sink",
-      "Sink/File", "Write stream to a file", "Thomas <thomas@apestaart.org>");
+      "Sink/File", "Write stream to a file",
+      "Thomas Vander Stichele <thomas at apestaart dot org>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 }

@@ -1,3 +1,8 @@
+2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* plugins/elements/gstfilesink.c:
+	  Update Author string to match others.
+
 2008-11-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstvalue.c: (gst_type_is_fixed), (gst_value_is_fixed):
