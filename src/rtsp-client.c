@@ -398,6 +398,7 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
   guint n_streams, i;
   gchar *sdptext;
   GstRTSPMedia *media;
+  GstElement *pipeline = NULL;
 
   /* check what kind of format is accepted */
 
@@ -407,12 +408,12 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
     goto no_media;
 
   /* create a pipeline if we have to */
-  if (client->pipeline == NULL) {
-    client->pipeline = gst_pipeline_new ("client-pipeline");
+  if (pipeline == NULL) {
+    pipeline = gst_pipeline_new ("client-pipeline");
   }
 
   /* prepare the media into the pipeline */
-  if (!gst_rtsp_media_prepare (media, GST_BIN (client->pipeline)))
+  if (!gst_rtsp_media_prepare (media, GST_BIN (pipeline)))
     goto no_media;
 
   /* link fakesink to all stream pads and set the pipeline to PLAYING */
@@ -425,7 +426,7 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
     stream = gst_rtsp_media_get_stream (media, i);
 
     sink = gst_element_factory_make ("fakesink", NULL);
-    gst_bin_add (GST_BIN (client->pipeline), sink);
+    gst_bin_add (GST_BIN (pipeline), sink);
 
     sinkpad = gst_element_get_static_pad (sink, "sink");
     gst_pad_link (stream->srcpad, sinkpad);
@@ -434,10 +435,10 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
 
   /* now play and wait till we get the pads blocked. At that time the pipeline
    * is prerolled and we have the caps on the streams too. */
-  gst_element_set_state (client->pipeline, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* wait for state change to complete */
-  gst_element_get_state (client->pipeline, NULL, NULL, -1);
+  gst_element_get_state (pipeline, NULL, NULL, -1);
 
   /* we should now be able to construct the SDP message */
   gst_sdp_message_new (&sdp);
@@ -545,12 +546,12 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
     gst_sdp_message_add_media (sdp, smedia);
   }
   /* go back to NULL */
-  gst_element_set_state (client->pipeline, GST_STATE_NULL);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   g_object_unref (media);
 
-  gst_object_unref (client->pipeline);
-  client->pipeline = NULL;
+  gst_object_unref (pipeline);
+  pipeline = NULL;
 
   gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, 
 	gst_rtsp_status_as_text (GST_RTSP_STS_OK), request);

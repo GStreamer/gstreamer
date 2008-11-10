@@ -61,7 +61,6 @@ struct _GstRTSPClient {
   struct sockaddr_in address;
 
   GstRTSPMedia *media;
-  GstElement   *pipeline;
 
   GstRTSPSessionPool *pool;
   GstRTSPSession     *session;
