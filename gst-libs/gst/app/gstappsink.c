@@ -48,7 +48,7 @@ static const GstElementDetails app_sink_details =
 GST_ELEMENT_DETAILS ("AppSink",
     "Generic/Sink",
     "Allow the application to get access to raw buffer",
-    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com");
+    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
 enum
 {

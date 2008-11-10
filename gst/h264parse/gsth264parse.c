@@ -48,7 +48,7 @@ GST_ELEMENT_DETAILS ("H264Parse",
     "Codec/Parser",
     "Parses raw h264 stream",
     "Michal Benes <michal.benes@itonis.tv>,"
-    "Wim Taymans <wim.taymans@gmail.com");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 #define DEFAULT_SPLIT_PACKETIZED     FALSE
 

@@ -44,7 +44,7 @@ GST_DEBUG_CATEGORY (app_src_debug);
 static const GstElementDetails app_src_details = GST_ELEMENT_DETAILS ("AppSrc",
     "Generic/Src",
     "Allow the application to feed buffers to a pipeline",
-    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com");
+    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
 enum
 {

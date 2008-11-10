@@ -1,3 +1,10 @@
+2008-11-10  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsrc.c:
+	* gst/h264parse/gsth264parse.c:
+	 Wim, you're a bad boy. You don't want people to contact you or what?
+
 2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/filter/gstiir.c:
