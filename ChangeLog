@@ -1,3 +1,10 @@
+2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_chain):
+	Also configure the next expected output seqnum when we get a seqnum-base
+	on the caps.
+
 2008-11-10  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/app/gstappsink.c:
