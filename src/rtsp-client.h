@@ -63,7 +63,6 @@ struct _GstRTSPClient {
   GstRTSPMedia *media;
 
   GstRTSPSessionPool *pool;
-  GstRTSPSession     *session;
 
   GThread *thread;
 };
