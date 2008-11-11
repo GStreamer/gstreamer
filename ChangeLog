@@ -1,5 +1,12 @@
 2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/rtp/gstbasertpdepayload.c: (create_segment_event),
+	(gst_base_rtp_depayload_push_full),
+	(gst_base_rtp_depayload_set_gst_timestamp):
+	Fix some cases where a newsegment event was not sent.
+
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (activate_group):
 	Catch state change errors and stop from the uridecodebin elements
 	instead of trying to continue in vain.

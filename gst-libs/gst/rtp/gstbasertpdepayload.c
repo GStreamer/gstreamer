@@ -450,6 +450,28 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static GstEvent *
+create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
+    GstClockTime position)
+{
+  GstEvent *event;
+  GstClockTime stop;
+  GstBaseRTPDepayloadPrivate *priv;
+
+  priv = filter->priv;
+
+  if (priv->npt_stop != -1)
+    stop = priv->npt_stop - priv->npt_start;
+  else
+    stop = -1;
+
+  event = gst_event_new_new_segment_full (update, priv->play_speed,
+      priv->play_scale, GST_FORMAT_TIME, position, stop,
+      position + priv->npt_start);
+
+  return event;
+}
+
 static GstFlowReturn
 gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
     gboolean do_ts, guint32 rtptime, GstBuffer * out_buf)
@@ -471,6 +493,18 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
   /* set the timestamp if we must and can */
   if (bclass->set_gst_timestamp && do_ts)
     bclass->set_gst_timestamp (filter, rtptime, out_buf);
+
+  /* if this is the first buffer send a NEWSEGMENT */
+  if (G_UNLIKELY (filter->need_newsegment)) {
+    GstEvent *event;
+
+    event = create_segment_event (filter, FALSE, 0);
+
+    gst_pad_push_event (filter->srcpad, event);
+
+    filter->need_newsegment = FALSE;
+    GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
+  }
 
   if (G_UNLIKELY (priv->discont)) {
     GST_LOG_OBJECT (filter, "Marking DISCONT on output buffer");
@@ -529,28 +563,6 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
   return gst_base_rtp_depayload_push_full (filter, FALSE, 0, out_buf);
 }
 
-static GstEvent *
-create_segment_event (GstBaseRTPDepayload * filter, gboolean update,
-    GstClockTime position)
-{
-  GstEvent *event;
-  GstClockTime stop;
-  GstBaseRTPDepayloadPrivate *priv;
-
-  priv = filter->priv;
-
-  if (priv->npt_stop != -1)
-    stop = priv->npt_stop - priv->npt_start;
-  else
-    stop = -1;
-
-  event = gst_event_new_new_segment_full (update, priv->play_speed,
-      priv->play_scale, GST_FORMAT_TIME, position, stop,
-      position + priv->npt_start);
-
-  return event;
-}
-
 /* convert the PacketLost event form a jitterbuffer to a segment update.
  * subclasses can override this.  */
 static gboolean
@@ -601,18 +613,6 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     GST_BUFFER_TIMESTAMP (buf) = priv->timestamp;
   if (!GST_CLOCK_TIME_IS_VALID (duration))
     GST_BUFFER_DURATION (buf) = priv->duration;
-
-  /* if this is the first buffer send a NEWSEGMENT */
-  if (G_UNLIKELY (filter->need_newsegment)) {
-    GstEvent *event;
-
-    event = create_segment_event (filter, FALSE, 0);
-
-    gst_pad_push_event (filter->srcpad, event);
-
-    filter->need_newsegment = FALSE;
-    GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
-  }
 }
 
 static GstStateChangeReturn
