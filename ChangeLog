@@ -1,3 +1,10 @@
+2008-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_handle_dirac_packet):
+	Fix muxing of Dirac streams if the input already has the format
+	we need, i.e. is the output of matroskademux.
+
 2008-11-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:

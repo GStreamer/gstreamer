@@ -2010,49 +2010,56 @@ gst_matroska_mux_handle_dirac_packet (GstMatroskaMux * mux,
   GstMatroskaTrackVideoContext *ctx =
       (GstMatroskaTrackVideoContext *) collect_pad->track;
   const guint8 *data = GST_BUFFER_DATA (buf);
+  guint size = GST_BUFFER_SIZE (buf);
   guint8 parse_code;
+  guint32 next_parse_offset;
   GstBuffer *ret = NULL;
+  gboolean is_picture = FALSE;
 
   if (GST_BUFFER_SIZE (buf) < 13) {
     gst_buffer_unref (buf);
     return ret;
   }
 
-  if (GST_READ_UINT32_BE (data) != 0x42424344) {
-    gst_buffer_unref (buf);
-    return ret;
-  }
+  /* Check if this buffer contains a picture packet */
+  while (size >= 13) {
+    if (GST_READ_UINT32_BE (data) != 0x42424344) {
+      gst_buffer_unref (buf);
+      return ret;
+    }
 
-  parse_code = GST_READ_UINT8 (data + 4);
-
-  switch (parse_code) {
-    case 0x00:
+    parse_code = GST_READ_UINT8 (data + 4);
+    if (parse_code == 0x00) {
       if (ctx->dirac_unit) {
         gst_buffer_unref (ctx->dirac_unit);
-      }
-      ctx->dirac_unit = buf;
-      break;
-    case 0x10:
-    case 0x20:
-    case 0x30:
-      if (ctx->dirac_unit)
-        ctx->dirac_unit = gst_buffer_join (ctx->dirac_unit, buf);
-      else
-        ctx->dirac_unit = buf;
-      break;
-    default:
-      /* picture */
-      if (ctx->dirac_unit) {
-        ret = gst_buffer_join (ctx->dirac_unit, gst_buffer_ref (buf));
         ctx->dirac_unit = NULL;
-        ret = gst_buffer_make_metadata_writable (ret);
-        gst_buffer_copy_metadata (ret, buf,
-            GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
-            GST_BUFFER_COPY_CAPS);
-      } else {
-        ret = buf;
       }
+    } else if (parse_code & 0x08) {
+      is_picture = TRUE;
       break;
+    }
+
+    next_parse_offset = GST_READ_UINT32_BE (data + 5);
+
+    data += next_parse_offset;
+    size -= next_parse_offset;
+  }
+
+  if (ctx->dirac_unit)
+    ctx->dirac_unit = gst_buffer_join (ctx->dirac_unit, gst_buffer_ref (buf));
+  else
+    ctx->dirac_unit = gst_buffer_ref (buf);
+
+  if (is_picture) {
+    ret = gst_buffer_make_metadata_writable (ctx->dirac_unit);
+    ctx->dirac_unit = NULL;
+    gst_buffer_copy_metadata (ret, buf,
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
+        GST_BUFFER_COPY_CAPS);
+    gst_buffer_unref (buf);
+  } else {
+    gst_buffer_unref (buf);
+    ret = NULL;
   }
 
   return ret;
