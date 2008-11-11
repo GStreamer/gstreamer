@@ -1,3 +1,8 @@
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_add_video_stream):
+	Only copy sane aspect ratio values on the caps. Fixes #559682.
+
 2008-11-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/amrnb/amrnbdec.c: (gst_amrnb_variant_get_type),

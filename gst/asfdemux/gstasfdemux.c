@@ -1782,8 +1782,11 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     s = gst_asf_demux_get_metadata_for_stream (demux, id);
     if (gst_structure_get_int (s, "AspectRatioX", &ax) &&
         gst_structure_get_int (s, "AspectRatioY", &ay)) {
-      gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          ax, ay, NULL);
+      /* only copy sane values */
+      if (ax > 0 && ay > 0) {
+        gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+            ax, ay, NULL);
+      }
     }
     /* remove the framerate we will guess and add it later */
     s = gst_caps_get_structure (caps, 0);
