@@ -126,6 +126,7 @@ gst_rtp_g729_pay_init (GstRTPG729Pay * pay, GstRTPG729PayClass * klass)
 static gboolean
 gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
+  gboolean res;
   GstStructure *structure;
   gint pt;
 
@@ -136,9 +137,9 @@ gst_rtp_g729_pay_set_caps (GstBaseRTPPayload * payload, GstCaps * caps)
   payload->pt = pt;
   payload->dynamic = pt != GST_RTP_PAYLOAD_G729;
 
-  gst_basertppayload_set_outcaps (payload, NULL);
+  res = gst_basertppayload_set_outcaps (payload, NULL);
 
-  return TRUE;
+  return res;
 }
 
 static GstFlowReturn
