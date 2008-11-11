@@ -1,3 +1,8 @@
+2008-11-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtmux/gstqtmux.c: (gst_qt_mux_add_metadata_tags):
+	Add some more safety/sanity checks in tag manipulation.
+
 2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:

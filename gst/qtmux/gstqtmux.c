@@ -360,9 +360,9 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
         /* strings */
       case G_TYPE_STRING:
       {
-        gchar *str;
+        gchar *str = NULL;
 
-        if (!gst_tag_list_get_string (list, tag, &str))
+        if (!gst_tag_list_get_string (list, tag, &str) || !str)
           break;
         GST_DEBUG_OBJECT (qtmux, "Adding tag %" GST_FOURCC_FORMAT " -> %s",
             GST_FOURCC_ARGS (fourcc), str);
@@ -400,13 +400,13 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
       default:
       {
         if (gst_tag_get_type (tag) == GST_TYPE_DATE) {
-          GDate *date;
+          GDate *date = NULL;
           GDateYear year;
           GDateMonth month;
           GDateDay day;
           gchar *str;
 
-          if (!gst_tag_list_get_date (list, tag, &date))
+          if (!gst_tag_list_get_date (list, tag, &date) || !date)
             break;
           year = g_date_get_year (date);
           month = g_date_get_month (date);
