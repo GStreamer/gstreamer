@@ -1,3 +1,9 @@
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c: (activate_group):
+	Catch state change errors and stop from the uridecodebin elements
+	instead of trying to continue in vain.
+
 2008-11-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

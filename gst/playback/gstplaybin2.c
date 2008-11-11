@@ -2056,9 +2056,13 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
     /* we have 2 pending no-more-pads */
     group->pending = 2;
 
-    gst_element_set_state (suburidecodebin, GST_STATE_PAUSED);
+    if (gst_element_set_state (suburidecodebin,
+            GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
+      goto suburidecodebin_failure;
   }
-  gst_element_set_state (uridecodebin, GST_STATE_PAUSED);
+  if (gst_element_set_state (uridecodebin,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
+    goto uridecodebin_failure;
 
   group->active = TRUE;
   GST_SOURCE_GROUP_UNLOCK (group);
@@ -2068,6 +2072,18 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   /* ERRORS */
 no_decodebin:
   {
+    GST_SOURCE_GROUP_UNLOCK (group);
+    return FALSE;
+  }
+suburidecodebin_failure:
+  {
+    GST_DEBUG_OBJECT (playbin, "failed state change of subtitle uridecodebin");
+    GST_SOURCE_GROUP_UNLOCK (group);
+    return FALSE;
+  }
+uridecodebin_failure:
+  {
+    GST_DEBUG_OBJECT (playbin, "failed state change of uridecodebin");
     GST_SOURCE_GROUP_UNLOCK (group);
     return FALSE;
   }
