@@ -1,3 +1,12 @@
+2008-11-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_tag_add_tmpo),
+	(qtdemux_tag_add_covr), (qtdemux_parse_udta):
+	* gst/qtdemux/qtdemux_fourcc.h:
+	* gst/qtdemux/qtdemux_types.c:
+	Add cover and alternative copyright tag, and enhance some existing
+	ones by marking them as container atoms.
+
 2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpg729pay.c: (gst_rtp_g729_pay_set_caps):
