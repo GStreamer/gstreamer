@@ -1,3 +1,8 @@
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/random/wtay/poll-timeout:
+	Some pseudo code for how we could implement clock timeouts with GstPoll.
+
 2008-11-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* plugins/elements/gstfilesink.c:
