@@ -1,3 +1,10 @@
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_do_seek),
+	(gst_rtspsrc_perform_seek):
+	Only pause/play in the seek handler when the source was playing.
+	Fixes #529379.
+
 2008-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/matroska/matroska-mux.c:

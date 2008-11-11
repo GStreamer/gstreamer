@@ -1233,15 +1233,11 @@ gst_rtspsrc_connection_receive (GstRTSPSrc * src, GstRTSPMessage * message,
 static gboolean
 gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
 {
-  gboolean res;
-
   src->state = GST_RTSP_STATE_SEEKING;
   /* PLAY will add the range header now. */
   src->need_range = TRUE;
 
-  res = gst_rtspsrc_play (src, segment);
-
-  return res;
+  return TRUE;
 }
 
 static gboolean
@@ -1255,6 +1251,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   gint64 cur, stop;
   gboolean flush;
   gboolean update;
+  gboolean playing;
   GstSegment seeksegment = { 0, };
 
   if (event) {
@@ -1321,9 +1318,17 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if ((stop = seeksegment.stop) == -1)
     stop = seeksegment.duration;
 
-  gst_rtspsrc_pause (src);
+  playing = (src->state == GST_RTSP_STATE_PLAYING);
+
+  /* if we were playing, pause first */
+  if (playing)
+    gst_rtspsrc_pause (src);
 
   res = gst_rtspsrc_do_seek (src, &seeksegment);
+
+  /* and continue playing */
+  if (playing)
+    res = gst_rtspsrc_play (src, &seeksegment);
 
   /* prepare for streaming again */
   if (flush) {
