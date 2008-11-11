@@ -1,5 +1,15 @@
 2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtp/gstrtpg729pay.c: (gst_rtp_g729_pay_base_init),
+	(gst_rtp_g729_pay_class_init), (gst_rtp_g729_pay_init),
+	(gst_rtp_g729_pay_set_caps), (gst_rtp_g729_pay_handle_buffer):
+	* gst/rtp/gstrtpg729pay.h:
+	Replace G729 payloader with an improved version. Fixes #532409.
+
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_transports_string),
 	(gst_rtspsrc_change_state):
 	Only send one transport at a time for improved compatibility with some

@@ -1,4 +1,6 @@
 /* GStreamer
+ * Copyright (C) <2007> Nokia Corporation
+ * Copyright (C) <2007> Collabora Ltd
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,25 +27,25 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_RTP_G729_PAY \
-  (gst_rtpg729pay_get_type())
+  (gst_rtp_g729_pay_get_type())
 #define GST_RTP_G729_PAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_G729_PAY,GstRtpG729Pay))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_G729_PAY,GstRTPG729Pay))
 #define GST_RTP_G729_PAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_G729_PAY,GstRtpG729PayClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_G729_PAY,GstRTPG729PayClass))
 #define GST_IS_RTP_G729_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_G729_PAY))
 #define GST_IS_RTP_G729_PAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_G729_PAY))
 
-typedef struct _GstRtpG729Pay GstRtpG729Pay;
-typedef struct _GstRtpG729PayClass GstRtpG729PayClass;
+typedef struct _GstRTPG729Pay GstRTPG729Pay;
+typedef struct _GstRTPG729PayClass GstRTPG729PayClass;
 
-struct _GstRtpG729Pay
+struct _GstRTPG729Pay
 {
   GstBaseRTPAudioPayload audiopayload;
 };
 
-struct _GstRtpG729PayClass
+struct _GstRTPG729PayClass
 {
   GstBaseRTPAudioPayloadClass parent_class;
 };
