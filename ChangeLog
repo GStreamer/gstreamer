@@ -1,5 +1,13 @@
 2008-11-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/qtmux.c: (setup_src_pad),
+	(teardown_src_pad), (setup_qtmux), (cleanup_qtmux),
+	(check_qtmux_pad), (GST_START_TEST), (qtmux_suite), (main):
+	Add unit test for qtmux.
+
+2008-11-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* gst/qtmux/gstqtmux.c: (gst_qt_mux_add_metadata_tags):
 	Add some more safety/sanity checks in tag manipulation.
 
