@@ -1,3 +1,9 @@
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_setcaps):
+	Copy the codec aspect ratio to the stream, ffmpeg expects them to be the
+	same. Fixes #560305.
+
 2008-11-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

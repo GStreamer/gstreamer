@@ -316,13 +316,22 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
-  if (gst_ffmpeg_caps_to_codecid (caps, st->codec) != CODEC_ID_NONE) {
-    GST_LOG_OBJECT (pad, "accepted caps %" GST_PTR_FORMAT, caps);
-    return TRUE;
-  }
+  if (gst_ffmpeg_caps_to_codecid (caps, st->codec) == CODEC_ID_NONE)
+    goto not_accepted;
+  
+  /* copy over the aspect ratios, ffmpeg expects the stream aspect to match the
+   * codec aspect. */
+  st->sample_aspect_ratio = st->codec->sample_aspect_ratio;
+  
+  GST_LOG_OBJECT (pad, "accepted caps %" GST_PTR_FORMAT, caps);
+  return TRUE;
 
-  GST_LOG_OBJECT (pad, "rejecting caps %" GST_PTR_FORMAT, caps);
-  return FALSE;
+  /* ERRORS */
+not_accepted:
+  {
+    GST_LOG_OBJECT (pad, "rejecting caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
 }
 
 
