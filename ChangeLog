@@ -1,3 +1,8 @@
+2008-11-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
+	  Don't segfault on string typed tags being NULL. Fixes #560155.
+
 2008-11-10  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/matroska/matroska-mux.c: (aac_codec_data_to_codec_id),

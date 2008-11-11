@@ -930,7 +930,7 @@ gst_avi_mux_write_tag (const GstTagList * list, const gchar * tag,
 
   for (n = 0; rifftags[n].fcc != 0; n++) {
     if (!strcmp (rifftags[n].tag, tag) &&
-        gst_tag_list_get_string (list, tag, &str)) {
+        gst_tag_list_get_string (list, tag, &str) && str) {
       len = strlen (str);
       plen = len + 1;
       if (plen & 1)
