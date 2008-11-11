@@ -1,5 +1,12 @@
 2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_change_state):
+	Only send one transport at a time for improved compatibility with some
+	broken servers. See #537832.
+
+2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_do_seek),
 	(gst_rtspsrc_perform_seek):
 	Only pause/play in the seek handler when the source was playing.

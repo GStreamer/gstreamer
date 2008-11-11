@@ -3626,8 +3626,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
     if (add_udp_str)
       g_string_append (result, "/UDP");
     g_string_append (result, ";unicast;client_port=%%u1-%%u2");
-  }
-  if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+  } else if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     GST_DEBUG_OBJECT (src, "adding UDP multicast");
 
     /* we don't have to allocate any UDP ports yet, if the selected transport
@@ -3639,8 +3638,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
     if (add_udp_str)
       g_string_append (result, "/UDP");
     g_string_append (result, ";multicast");
-  }
-  if (protocols & GST_RTSP_LOWER_TRANS_TCP) {
+  } else if (protocols & GST_RTSP_LOWER_TRANS_TCP) {
     GST_DEBUG_OBJECT (src, "adding TCP");
 
     if (result->len > 0)
@@ -4829,6 +4827,7 @@ done:
 
 open_failed:
   {
+    GST_DEBUG_OBJECT (rtspsrc, "open failed");
     return GST_STATE_CHANGE_FAILURE;
   }
 }
