@@ -1318,6 +1318,7 @@ int
 main (int argc, char *argv[])
 {
   gboolean print_all = FALSE;
+  gboolean plugin_name = FALSE;
   gboolean print_aii = FALSE;
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
@@ -1327,6 +1328,8 @@ main (int argc, char *argv[])
               "provides.\n                                       "
               "Useful in connection with external automatic plugin "
               "installation mechanisms"), NULL},
+    {"plugin", '\0', 0, G_OPTION_ARG_NONE, &plugin_name,
+        N_("List the plugin contents"), NULL},
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
@@ -1368,13 +1371,18 @@ main (int argc, char *argv[])
     const char *arg = argv[argc - 1];
     int retval;
 
-    factory = gst_element_factory_find (arg);
-    /* if there's a factory, print out the info */
-    if (factory) {
-      retval = print_element_info (factory, print_all);
-      gst_object_unref (factory);
+    if (!plugin_name) {
+      factory = gst_element_factory_find (arg);
+
+      /* if there's a factory, print out the info */
+      if (factory) {
+        retval = print_element_info (factory, print_all);
+        gst_object_unref (factory);
+      } else {
+        retval = print_element_features (arg);
+      }
     } else {
-      retval = print_element_features (arg);
+      retval = -1;
     }
 
     /* otherwise check if it's a plugin */
