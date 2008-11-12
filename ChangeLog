@@ -1,3 +1,8 @@
+2008-11-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.5.3 pre-release
+
 2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_setcaps):
