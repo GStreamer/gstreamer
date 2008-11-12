@@ -784,6 +784,7 @@ rfb_decoder_hextile_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
   guint8 subencoding, nr_subrect, xy, wh;
   guint32 background, foreground;
 
+  foreground = background = 0;
   x_end = rect_w % 16;
   x_count = rect_w / 16 + (x_end > 0 ? 1 : 0);
   y_end = rect_h % 16;
