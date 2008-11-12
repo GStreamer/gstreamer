@@ -554,6 +554,16 @@ gst_qtdemux_push_event (GstQTDemux * qtdemux, GstEvent * event)
   gst_event_unref (event);
 }
 
+/* push a pending newsegment event, if any from the streaming thread */
+static void
+gst_qtdemux_push_pending_newsegment (GstQTDemux * qtdemux)
+{
+  if (qtdemux->pending_newsegment) {
+    gst_qtdemux_push_event (qtdemux, qtdemux->pending_newsegment);
+    qtdemux->pending_newsegment = NULL;
+  }
+}
+
 /* find the index of the sample that includes the data for @media_time
  *
  * Returns the index of the sample or n_samples when the sample was not
@@ -884,23 +894,21 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
         qtdemux->segment.last_stop);
 
     if (qtdemux->segment.rate >= 0) {
-      /* FIXME, needs to be done from the streaming thread. Also, the rate is the
-       * product of the global rate and the (quicktime) segment rate. */
-      gst_qtdemux_push_event (qtdemux,
-          gst_event_new_new_segment (TRUE,
-              qtdemux->segment.rate, qtdemux->segment.format,
-              qtdemux->segment.start, qtdemux->segment.last_stop,
-              qtdemux->segment.time));
+      /* FIXME, rate is the product of the global rate and the (quicktime)
+       * segment rate. */
+      qtdemux->pending_newsegment = gst_event_new_new_segment (TRUE,
+          qtdemux->segment.rate, qtdemux->segment.format,
+          qtdemux->segment.start, qtdemux->segment.last_stop,
+          qtdemux->segment.time);
     } else {                    /* For Reverse Playback */
       guint64 stop;
 
       if ((stop = qtdemux->segment.stop) == -1)
         stop = qtdemux->segment.duration;
       /* for reverse playback, we played from stop to last_stop. */
-      gst_qtdemux_push_event (qtdemux,
-          gst_event_new_new_segment (TRUE,
-              qtdemux->segment.rate, qtdemux->segment.format,
-              qtdemux->segment.last_stop, stop, qtdemux->segment.last_stop));
+      qtdemux->pending_newsegment = gst_event_new_new_segment (TRUE,
+          qtdemux->segment.rate, qtdemux->segment.format,
+          qtdemux->segment.last_stop, stop, qtdemux->segment.last_stop);
     }
   }
 
@@ -1763,6 +1771,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   guint size;
   gint index;
   gint i;
+
+  gst_qtdemux_push_pending_newsegment (qtdemux);
 
   /* Figure out the next stream sample to output, min_time is expressed in
    * global time and runs over the edit list segments. */

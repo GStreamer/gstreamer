@@ -1,3 +1,15 @@
+2008-11-12  Andy Wingo  <wingo@pobox.com>
+
+	* gst/qtdemux/qtdemux.h (struct _GstQTDemux):
+	* gst/qtdemux/qtdemux.c (gst_qtdemux_do_seek): Queue up new
+	segment events instead of sending them from the seeking thread.
+	Fixes #559288.
+	(gst_qtdemux_push_pending_newsegment): New helper, sends out
+	queued newsegment events.
+	(gst_qtdemux_loop_state_movie): Voilà, call it here. Only need to
+	call it here, as we only seek when looping, and only push in the
+	movie state.
+
 2008-11-11  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_tag_add_tmpo),
