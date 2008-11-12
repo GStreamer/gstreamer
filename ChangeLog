@@ -1,3 +1,8 @@
+2008-11-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/random/wtay/poll-timeout:
+	Quick braindump for a possible (not totally verified) atomic case.
+
 2008-11-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write_chunk),
