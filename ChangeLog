@@ -1,3 +1,8 @@
+2008-11-12  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/rtp/gstrtpg729pay.c: (gst_rtp_g729_pay_handle_buffer):
+	Fix compiler warning about printf formatting.
+
 2008-11-12  Andy Wingo  <wingo@pobox.com>
 
 	* gst/qtdemux/qtdemux.h (struct _GstQTDemux):

@@ -173,8 +173,8 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf)
         (int) (ptime_ms / G729_FRAME_DURATION_MS);
 
     if (maxptime_octets < G729_FRAME_SIZE) {
-      GST_WARNING_OBJECT (basertpaudiopayload, "Given ptime %d is smaller than"
-          " minimum %d ns, overwriting to minimum",
+      GST_WARNING_OBJECT (basertpaudiopayload, "Given ptime %" G_GINT64_FORMAT
+          " is smaller than minimum %d ns, overwriting to minimum",
           payload->max_ptime, G729_FRAME_DURATION_MS);
       maxptime_octets = G729_FRAME_SIZE;
     }
