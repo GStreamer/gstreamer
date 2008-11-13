@@ -24,10 +24,10 @@
  * SECTION:element-glimagesink
  *
  * glimagesink renders video frames to a drawable on a local or remote
- * display using OpenGL. This element can receive a Window ID from the 
- * application through the XOverlay interface and will then render video 
+ * display using OpenGL. This element can receive a Window ID from the
+ * application through the XOverlay interface and will then render video
  * frames in this drawable.
- * If no Window ID was provided by the application, the element will 
+ * If no Window ID was provided by the application, the element will
  * create its own internal window and render into it.
  *
  * <refsect2>
@@ -46,7 +46,7 @@
  * <para>
  * Through the gl thread, glimagesink handle some events coming from the drawable
  * to manage its appearance even when the data is not flowing (GST_STATE_PAUSED).
- * That means that even when the element is paused, it will receive expose events 
+ * That means that even when the element is paused, it will receive expose events
  * from the drawable and draw the latest frame with correct borders/aspect-ratio.
  * </para>
  * </refsect2>
@@ -60,7 +60,7 @@
  * |[
  * gst-launch -v videotestsrc ! "video/x-raw-yuv, format=(fourcc)I420" ! glimagesink
  * ]| A pipeline to test hardware scaling and hardware colorspace conversion.
- * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1), 
+ * When your driver supports GLSL (OpenGL Shading Language needs OpenGL >= 2.1),
  * the 4 following format YUY2, UYVY, I420, YV12 and AYUV are converted to RGB32
  * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
  * If your driver does not support GLSL but supports MESA_YCbCr extension then
@@ -74,7 +74,7 @@
  * |[
  * gst-plugins-gl/tests/examples/generic/cube
  * ]| The graphic FPS scene can be greater than the input video FPS.
- * The graphic scene can be written from a client code through the 
+ * The graphic scene can be written from a client code through the
  * two glfilterapp properties.
  * </refsect2>
  */
@@ -108,7 +108,6 @@ static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
 static gboolean gst_glimage_sink_start (GstBaseSink * bsink);
 static gboolean gst_glimage_sink_stop (GstBaseSink * bsink);
-static gboolean gst_glimage_sink_unlock (GstBaseSink * bsink);
 
 static void gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface);
 static void gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay,
@@ -223,7 +222,6 @@ gst_glimage_sink_class_init (GstGLImageSinkClass* klass)
     gstbasesink_class->render = gst_glimage_sink_render;
     gstbasesink_class->start = gst_glimage_sink_start;
     gstbasesink_class->stop = gst_glimage_sink_stop;
-    gstbasesink_class->unlock = gst_glimage_sink_unlock;
 }
 
 static void
@@ -285,6 +283,8 @@ gst_glimage_sink_finalize (GObject* object)
         gst_caps_unref (glimage_sink->caps);
 
     g_free (glimage_sink->display_name);
+
+    GST_DEBUG ("finalized");
 }
 
 static void
@@ -395,16 +395,6 @@ gst_glimage_sink_stop (GstBaseSink* bsink)
     return TRUE;
 }
 
-static gboolean
-gst_glimage_sink_unlock (GstBaseSink* bsink)
-{
-    //GstGLImageSink* glimage_sink = GST_GLIMAGE_SINK (bsink);
-
-    GST_DEBUG ("unlock");
-
-    return TRUE;
-}
-
 static void
 gst_glimage_sink_get_times (GstBaseSink* bsink, GstBuffer* buf,
     GstClockTime* start, GstClockTime* end)
@@ -428,7 +418,6 @@ gst_glimage_sink_get_times (GstBaseSink* bsink, GstBuffer* buf,
         }
     }
 }
-
 
 static gboolean
 gst_glimage_sink_set_caps (GstBaseSink* bsink, GstCaps* caps)
@@ -525,7 +514,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
                 glimage_sink->width, glimage_sink->height);
 
             if (glimage_sink->window_id)
-                gst_gl_display_set_window_id (glimage_sink->display, glimage_sink->window_id); 
+                gst_gl_display_set_window_id (glimage_sink->display, glimage_sink->window_id);
 
             //init colorspace conversion if needed
             gst_gl_display_init_upload (glimage_sink->display, glimage_sink->format,
@@ -538,7 +527,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
 
-            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);          
+            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
         }
 
         //blocking call
@@ -568,7 +557,7 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
             gl_buffer->texture, gl_buffer->width, gl_buffer->height))
         return GST_FLOW_OK;
     else
-        return GST_FLOW_UNEXPECTED;;
+        return GST_FLOW_UNEXPECTED;
 }
 
 
