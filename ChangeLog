@@ -1,3 +1,12 @@
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_parse_caps),
+	(gst_rtp_jitter_buffer_flush_stop), (gst_rtp_jitter_buffer_chain):
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),
+	(calculate_skew):
+	Small cleanups and some more debug info.
+
 2008-11-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/Makefile.am:
