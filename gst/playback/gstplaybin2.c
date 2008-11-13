@@ -2110,11 +2110,14 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
       continue;
 
     GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media);
-    gst_pad_unlink (select->srcpad, select->sinkpad);
 
-    /* release back */
-    gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
-    select->sinkpad = NULL;
+    if (select->sinkpad) {
+      gst_pad_unlink (select->srcpad, select->sinkpad);
+
+      /* release back */
+      gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
+      select->sinkpad = NULL;
+    }
 
     gst_object_unref (select->srcpad);
     select->srcpad = NULL;

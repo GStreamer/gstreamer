@@ -1,5 +1,11 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaybin2.c: (deactivate_group):
+	don't try to unlink the selector sinkpad when we don't have it yet. This
+	can happen if an error occured before the group was complete.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data),
 	(gst_rtp_buffer_set_packet_len), (gst_rtp_buffer_get_packet_len),
 	(gst_rtp_buffer_get_header_len), (gst_rtp_buffer_get_version),
