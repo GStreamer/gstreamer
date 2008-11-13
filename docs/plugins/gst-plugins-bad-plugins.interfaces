@@ -2,21 +2,25 @@ GstBin GstChildProxy
 GstPipeline GstChildProxy
 RsnDvdBin GstChildProxy GstURIHandler
 DvbBaseBin GstChildProxy GstURIHandler
-GstRgVolume GstChildProxy
 GstRtpBin GstChildProxy
 GstRtpClient GstChildProxy
+GstRgVolume GstChildProxy
 GstSDPDemux GstChildProxy
-GstNeonhttpSrc GstURIHandler
+GstMetadataMux GstTagSetter
+GstApExSink GstImplementsInterface GstMixer
+GstOss4Sink GstPropertyProbe
+GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
+GstGLImageSink GstImplementsInterface GstXOverlay
 GstMythtvSrc GstURIHandler
+GstNeonhttpSrc GstURIHandler
 GstMMS GstURIHandler
 GstOss4Source GstImplementsInterface GstMixer GstPropertyProbe
 GstVCDSrc GstURIHandler
 GstAppSrc GstURIHandler
 GstCDAudio GstURIHandler
-GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
-GstSDLVideoSink GstImplementsInterface GstNavigation GstXOverlay
-GstApExSink GstImplementsInterface GstMixer
-GstOss4Sink GstPropertyProbe
-GstMetadataMux GstTagSetter
 GstOss4Mixer GstImplementsInterface GstMixer GstPropertyProbe
+GstQTMux GstTagSetter
+GstMP4Mux GstTagSetter
+GstGPPMux GstTagSetter
+GstMJ2Mux GstTagSetter
 GstDeinterlace2 GstChildProxy

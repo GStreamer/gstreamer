@@ -1,0 +1,34 @@
+<plugin>
+  <name>amrparse</name>
+  <description>Adaptive Multi-Rate Parser</description>
+  <filename>../../gst/amrparse/.libs/libgstamrparse.so</filename>
+  <basename>libgstamrparse.so</basename>
+  <version>0.10.9.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+    <element>
+      <name>amrparse</name>
+      <longname>AMR audio stream parser</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>Adaptive Multi-Rate audio parser</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1; audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-amr-nb-sh; audio/x-amr-wb-sh</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

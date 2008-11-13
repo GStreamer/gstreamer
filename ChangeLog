@@ -1,5 +1,18 @@
 2008-11-13  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-aacparse.xml:
+	* docs/plugins/inspect/plugin-amrparse.xml:
+	  Update docs.
+
+2008-11-13  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/aacparse/gstbaseparse.c:
 	* gst/amrparse/gstbaseparse.c:
 	  Fix baseparse type name.

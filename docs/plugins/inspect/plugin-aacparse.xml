@@ -1,0 +1,34 @@
+<plugin>
+  <name>aacparse</name>
+  <description>Advanced Audio Coding Parser</description>
+  <filename>../../gst/aacparse/.libs/libgstaacparse.so</filename>
+  <basename>libgstaacparse.so</basename>
+  <version>0.10.9.1</version>
+  <license>unknown</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+    <element>
+      <name>aacparse</name>
+      <longname>AAC audio stream parser</longname>
+      <class>Codec/Parser/Audio</class>
+      <description>Advanced Audio Coding parser</description>
+      <author>Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, framed=(boolean)true, mpegversion=(int){ 2, 4 }</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/mpeg, framed=(boolean)false, mpegversion=(int){ 2, 4 }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

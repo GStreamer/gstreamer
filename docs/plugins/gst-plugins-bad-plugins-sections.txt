@@ -1,4 +1,32 @@
 <SECTION>
+<FILE>element-aacparse</FILE>
+<TITLE>aacparse</TITLE>
+GstAacParse
+<SUBSECTION Standard>
+GstAacParseClass
+GST_AACPARSE
+GST_AACPARSE_CLASS
+GST_IS_AACPARSE
+GST_IS_AACPARSE_CLASS
+GST_TYPE_AACPARSE
+gst_aacparse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-amrparse</FILE>
+<TITLE>amrparse</TITLE>
+GstAmrParse
+<SUBSECTION Standard>
+GstAmrParseClass
+GST_AMRPARSE
+GST_AMRPARSE_CLASS
+GST_IS_AMRPARSE
+GST_IS_AMRPARSE_CLASS
+GST_TYPE_AMRPARSE
+gst_amrparse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-amrwbdec</FILE>
 <TITLE>amrwbdec</TITLE>
 GstAmrwbDec

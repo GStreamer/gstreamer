@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,10]</RANGE>
+<RANGE>[0,1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0.1,40]</RANGE>
+<RANGE>[0,1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -16855,7 +16855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17115,7 +17115,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>IP-Factor</NICK>
 <BLURB>Quantizer factor between I- and P-frames.</BLURB>
-<DEFAULT>1.4</DEFAULT>
+<DEFAULT>1,4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17135,7 +17135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>PB-Factor</NICK>
 <BLURB>Quantizer factor between P- and B-frames.</BLURB>
-<DEFAULT>1.3</DEFAULT>
+<DEFAULT>1,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17825,7 +17825,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0.3</DEFAULT>
+<DEFAULT>0,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17865,7 +17865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0.5</DEFAULT>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18015,7 +18015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0.1</DEFAULT>
+<DEFAULT>0,1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19440,6 +19440,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Block</NICK>
 <BLURB>Block push-buffer when max-bytes are queued.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -22030,7 +22040,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Method</NICK>
 <BLURB>Deinterlace Method.</BLURB>
-<DEFAULT>Motion Adaptive: Motion Search</DEFAULT>
+<DEFAULT>Motion Adaptive: Advanced Detection</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22530,13 +22540,13 @@
 <FLAGS>rw</FLAGS>
 <NICK>Overlap Length</NICK>
 <BLURB>Percentage of stride to overlap.</BLURB>
-<DEFAULT>0.2</DEFAULT>
+<DEFAULT>0,2</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstScaletempo::rate</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
+<RANGE>[-2,14748e+09,2,14748e+09]</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Playback Rate</NICK>
 <BLURB>Current playback rate.</BLURB>
@@ -22661,5 +22671,205 @@
 <NICK>Volume</NICK>
 <BLURB>AirPort Express target volume.</BLURB>
 <DEFAULT>75</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formated for faststart (headers first). .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::large-file</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Support for large files</NICK>
+<BLURB>Uses 64bits to some fields instead of 32bits, providing support for large files.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>600</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formated for faststart (headers first). .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::large-file</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Support for large files</NICK>
+<BLURB>Uses 64bits to some fields instead of 32bits, providing support for large files.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>600</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGPPMux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formated for faststart (headers first). .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::large-file</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Support for large files</NICK>
+<BLURB>Uses 64bits to some fields instead of 32bits, providing support for large files.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>600</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMP4Mux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::faststart</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format file to faststart</NICK>
+<BLURB>If the file should be formated for faststart (headers first). .</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::faststart-file</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>File to use for storing buffers</NICK>
+<BLURB>File that will be used temporarily to store data from the stream when creating a faststart file. If null a filepath will be created automatically.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::large-file</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Support for large files</NICK>
+<BLURB>Uses 64bits to some fields instead of 32bits, providing support for large files.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::movie-timescale</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Movie timescale</NICK>
+<BLURB>Timescale to use in the movie (units per second).</BLURB>
+<DEFAULT>600</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQTMux::presentation-time</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Include presentation-time info</NICK>
+<BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

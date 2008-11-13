@@ -12,6 +12,8 @@
 
   <chapter>
     <title>gst-plugins-bad Elements</title>
+    <xi:include href="xml/element-aacparse.xml" />
+    <xi:include href="xml/element-amrparse.xml" />
     <xi:include href="xml/element-amrwbdec.xml" />
     <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-amrwbparse.xml" />
@@ -68,6 +70,8 @@
 
   <chapter>
     <title>gst-plugins-bad Plugins</title>
+    <xi:include href="xml/plugin-aacparse.xml" />
+    <xi:include href="xml/plugin-amrparse.xml" />
     <xi:include href="xml/plugin-alsaspdif.xml" />
     <xi:include href="xml/plugin-amrwb.xml" />
     <xi:include href="xml/plugin-app.xml" />
