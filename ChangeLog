@@ -1,5 +1,21 @@
 2008-11-13  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* ext/jp2k/Makefile.am:
+	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_class_init),
+	(gst_jasper_dec_change_state):
+	* ext/jp2k/gstjasperenc.c: (gst_jasper_enc_base_init),
+	(gst_jasper_enc_class_init), (gst_jasper_enc_init),
+	(gst_jasper_enc_reset), (gst_jasper_enc_set_src_caps),
+	(gst_jasper_enc_init_encoder), (gst_jasper_enc_sink_setcaps),
+	(gst_jasper_enc_get_data), (gst_jasper_enc_chain),
+	(gst_jasper_enc_set_property), (gst_jasper_enc_get_property),
+	(gst_jasper_enc_change_state):
+	* ext/jp2k/gstjasperenc.h:
+	* ext/jp2k/gstjp2k.c: (plugin_init):
+	Add jp2kenc to jp2k plugin.
+
+2008-11-13  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_init),
 	(gst_jasper_dec_reset), (gst_jasper_dec_negotiate),
 	(gst_jasper_dec_get_picture):

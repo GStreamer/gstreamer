@@ -114,6 +114,9 @@ gst_jasper_dec_class_init (GstJasperDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (gst_jasper_dec_debug, "jp2kdec", 0,
+      "Jasper JPEG2000 decoder");
+
   gobject_class->set_property = gst_jasper_dec_set_property;
   gobject_class->get_property = gst_jasper_dec_get_property;
 
@@ -676,31 +679,3 @@ fail_init:
     return GST_STATE_CHANGE_FAILURE;
   }
 }
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and pad templates
- * register the features
- */
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_jasper_dec_debug, "jp2kdec", 0,
-      "Jasper JPEG2000 decoder");
-
-  if (!gst_element_register (plugin, "jp2kdec", GST_RANK_MARGINAL,
-          GST_TYPE_JASPER_DEC))
-    return FALSE;
-
-  /* plugin initialisation succeeded */
-  return TRUE;
-}
-
-
-/* this is the structure that gst-register looks for
- * so keep the name plugin_desc, or you cannot get your plug-in registered */
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "jp2k",
-    "Jasper-based JPEG2000 image decoder",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
