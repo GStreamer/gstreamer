@@ -310,8 +310,8 @@ gst_rtp_buffer_validate_data (guint8 * data, guint len)
     goto wrong_length;
 
   /* check version */
-  version = (data[0] & 0xc0) >> 6;
-  if (G_UNLIKELY (version != GST_RTP_VERSION))
+  version = (data[0] & 0xc0);
+  if (G_UNLIKELY (version != (GST_RTP_VERSION << 6)))
     goto wrong_version;
 
   /* calc header length with csrc */
@@ -375,6 +375,8 @@ wrong_padding:
  *
  * Check if the data pointed to by @buffer is a valid RTP packet using
  * gst_rtp_buffer_validate_data().
+ * Use this function to validate a packet before using the other functions in
+ * this module.
  *
  * Returns: TRUE if @buffer is a valid RTP packet.
  */
@@ -405,8 +407,6 @@ gst_rtp_buffer_set_packet_len (GstBuffer * buffer, guint len)
 {
   guint oldlen;
 
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-
   oldlen = GST_BUFFER_SIZE (buffer);
 
   if (oldlen < len) {
@@ -433,8 +433,6 @@ gst_rtp_buffer_set_packet_len (GstBuffer * buffer, guint len)
 guint
 gst_rtp_buffer_get_packet_len (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-
   return GST_BUFFER_SIZE (buffer);
 }
 
@@ -451,8 +449,6 @@ guint
 gst_rtp_buffer_get_header_len (GstBuffer * buffer)
 {
   guint len;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
 
   len = GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer);
   if (GST_RTP_HEADER_EXTENSION (buffer))
@@ -472,9 +468,6 @@ gst_rtp_buffer_get_header_len (GstBuffer * buffer)
 guint8
 gst_rtp_buffer_get_version (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   return GST_RTP_HEADER_VERSION (buffer);
 }
 
@@ -488,9 +481,7 @@ gst_rtp_buffer_get_version (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_version (GstBuffer * buffer, guint8 version)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (version < 0x04);
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
 
   GST_RTP_HEADER_VERSION (buffer) = version;
 }
@@ -506,9 +497,6 @@ gst_rtp_buffer_set_version (GstBuffer * buffer, guint8 version)
 gboolean
 gst_rtp_buffer_get_padding (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
-
   return GST_RTP_HEADER_PADDING (buffer);
 }
 
@@ -522,9 +510,6 @@ gst_rtp_buffer_get_padding (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_padding (GstBuffer * buffer, gboolean padding)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   GST_RTP_HEADER_PADDING (buffer) = padding;
 }
 
@@ -541,9 +526,6 @@ gst_rtp_buffer_set_padding (GstBuffer * buffer, gboolean padding)
 void
 gst_rtp_buffer_pad_to (GstBuffer * buffer, guint len)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   if (len > 0)
     GST_RTP_HEADER_PADDING (buffer) = TRUE;
   else
@@ -563,9 +545,6 @@ gst_rtp_buffer_pad_to (GstBuffer * buffer, guint len)
 gboolean
 gst_rtp_buffer_get_extension (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
-
   return GST_RTP_HEADER_EXTENSION (buffer);
 }
 
@@ -579,9 +558,6 @@ gst_rtp_buffer_get_extension (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_extension (GstBuffer * buffer, gboolean extension)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   GST_RTP_HEADER_EXTENSION (buffer) = extension;
 }
 
@@ -609,9 +585,6 @@ gst_rtp_buffer_get_extension_data (GstBuffer * buffer, guint16 * bits,
 {
   guint len;
   guint8 *pdata;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
 
   if (!GST_RTP_HEADER_EXTENSION (buffer))
     return FALSE;
@@ -652,9 +625,6 @@ gst_rtp_buffer_set_extension_data (GstBuffer * buffer, guint16 bits,
   guint32 min_size = 0;
   guint8 *data;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
-
   /* check if the buffer is big enough to hold the extension */
   min_size =
       GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer) + 4 +
@@ -693,9 +663,6 @@ too_small:
 guint32
 gst_rtp_buffer_get_ssrc (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   return g_ntohl (GST_RTP_HEADER_SSRC (buffer));
 }
 
@@ -709,9 +676,6 @@ gst_rtp_buffer_get_ssrc (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_ssrc (GstBuffer * buffer, guint32 ssrc)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   GST_RTP_HEADER_SSRC (buffer) = g_htonl (ssrc);
 }
 
@@ -726,9 +690,6 @@ gst_rtp_buffer_set_ssrc (GstBuffer * buffer, guint32 ssrc)
 guint8
 gst_rtp_buffer_get_csrc_count (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   return GST_RTP_HEADER_CSRC_COUNT (buffer);
 }
 
@@ -744,8 +705,6 @@ gst_rtp_buffer_get_csrc_count (GstBuffer * buffer)
 guint32
 gst_rtp_buffer_get_csrc (GstBuffer * buffer, guint8 idx)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
   g_return_val_if_fail (idx < GST_RTP_HEADER_CSRC_COUNT (buffer), 0);
 
   return GST_READ_UINT32_BE (GST_RTP_HEADER_CSRC_LIST_OFFSET (buffer, idx));
@@ -762,8 +721,6 @@ gst_rtp_buffer_get_csrc (GstBuffer * buffer, guint8 idx)
 void
 gst_rtp_buffer_set_csrc (GstBuffer * buffer, guint8 idx, guint32 csrc)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
   g_return_if_fail (idx < GST_RTP_HEADER_CSRC_COUNT (buffer));
 
   GST_WRITE_UINT32_BE (GST_RTP_HEADER_CSRC_LIST_OFFSET (buffer, idx), csrc);
@@ -780,9 +737,6 @@ gst_rtp_buffer_set_csrc (GstBuffer * buffer, guint8 idx, guint32 csrc)
 gboolean
 gst_rtp_buffer_get_marker (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
-
   return GST_RTP_HEADER_MARKER (buffer);
 }
 
@@ -796,9 +750,6 @@ gst_rtp_buffer_get_marker (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_marker (GstBuffer * buffer, gboolean marker)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   GST_RTP_HEADER_MARKER (buffer) = marker;
 }
 
@@ -813,9 +764,6 @@ gst_rtp_buffer_set_marker (GstBuffer * buffer, gboolean marker)
 guint8
 gst_rtp_buffer_get_payload_type (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   return GST_RTP_HEADER_PAYLOAD_TYPE (buffer);
 }
 
@@ -829,8 +777,6 @@ gst_rtp_buffer_get_payload_type (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_payload_type (GstBuffer * buffer, guint8 payload_type)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
   g_return_if_fail (payload_type < 0x80);
 
   GST_RTP_HEADER_PAYLOAD_TYPE (buffer) = payload_type;
@@ -847,9 +793,6 @@ gst_rtp_buffer_set_payload_type (GstBuffer * buffer, guint8 payload_type)
 guint16
 gst_rtp_buffer_get_seq (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   return g_ntohs (GST_RTP_HEADER_SEQ (buffer));
 }
 
@@ -863,9 +806,6 @@ gst_rtp_buffer_get_seq (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_seq (GstBuffer * buffer, guint16 seq)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   GST_RTP_HEADER_SEQ (buffer) = g_htons (seq);
 }
 
@@ -880,9 +820,6 @@ gst_rtp_buffer_set_seq (GstBuffer * buffer, guint16 seq)
 guint32
 gst_rtp_buffer_get_timestamp (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   return g_ntohl (GST_RTP_HEADER_TIMESTAMP (buffer));
 }
 
@@ -896,9 +833,6 @@ gst_rtp_buffer_get_timestamp (GstBuffer * buffer)
 void
 gst_rtp_buffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
 {
-  g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-
   GST_RTP_HEADER_TIMESTAMP (buffer) = g_htonl (timestamp);
 }
 
@@ -921,9 +855,6 @@ gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
     guint len)
 {
   guint poffset, plen;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, NULL);
 
   plen = gst_rtp_buffer_get_payload_len (buffer);
   /* we can't go past the length */
@@ -977,9 +908,6 @@ gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
 {
   guint len, size;
 
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
   size = GST_BUFFER_SIZE (buffer);
 
   len = size - gst_rtp_buffer_get_header_len (buffer);
@@ -1002,9 +930,6 @@ gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
 gpointer
 gst_rtp_buffer_get_payload (GstBuffer * buffer)
 {
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, NULL);
-
   return GST_BUFFER_DATA (buffer) + gst_rtp_buffer_get_header_len (buffer);
 }
 

@@ -1,3 +1,25 @@
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data),
+	(gst_rtp_buffer_set_packet_len), (gst_rtp_buffer_get_packet_len),
+	(gst_rtp_buffer_get_header_len), (gst_rtp_buffer_get_version),
+	(gst_rtp_buffer_set_version), (gst_rtp_buffer_get_padding),
+	(gst_rtp_buffer_set_padding), (gst_rtp_buffer_pad_to),
+	(gst_rtp_buffer_get_extension), (gst_rtp_buffer_set_extension),
+	(gst_rtp_buffer_get_extension_data),
+	(gst_rtp_buffer_set_extension_data), (gst_rtp_buffer_get_ssrc),
+	(gst_rtp_buffer_set_ssrc), (gst_rtp_buffer_get_csrc_count),
+	(gst_rtp_buffer_get_csrc), (gst_rtp_buffer_set_csrc),
+	(gst_rtp_buffer_get_marker), (gst_rtp_buffer_set_marker),
+	(gst_rtp_buffer_get_payload_type),
+	(gst_rtp_buffer_set_payload_type), (gst_rtp_buffer_get_seq),
+	(gst_rtp_buffer_set_seq), (gst_rtp_buffer_get_timestamp),
+	(gst_rtp_buffer_set_timestamp),
+	(gst_rtp_buffer_get_payload_subbuffer),
+	(gst_rtp_buffer_get_payload_len), (gst_rtp_buffer_get_payload):
+	Avoid expensive type checks we already did as part of the 
+	_validate() function that should be called first.
+
 2008-11-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c: (create_segment_event),
