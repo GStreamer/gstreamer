@@ -15,18 +15,18 @@ noinst_HEADERS = \
 	rtsp-session.h
 
 lib_LTLIBRARIES = \
-	libgstrtspserver.la
+	libgstrtspserver-@GST_MAJORMINOR@.la
 
-libgstrtspserver_la_SOURCES = \
+libgstrtspserver_@GST_MAJORMINOR@_la_SOURCES = \
     $(c_sources)
     
-libgstrtspserver_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtspserver_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrtspserver_la_LIBADD = \
+libgstrtspserver_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtspserver_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstrtspserver_@GST_MAJORMINOR@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
     -lgstrtp-@GST_MAJORMINOR@ -lgstrtsp-@GST_MAJORMINOR@ \
             -lgstsdp-@GST_MAJORMINOR@ $(GST_LIBS) $(LIBM)
-libgstrtspserver_la_LIBTOOLFLAGS = --tag=disable-static
+libgstrtspserver_@GST_MAJORMINOR@_la_LIBTOOLFLAGS = --tag=disable-static
 
-libgstrtspserver_includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/rtsp-server
-libgstrtspserver_include_HEADERS = $(public_headers)
+libgstrtspserver_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/rtsp-server
+libgstrtspserver_@GST_MAJORMINOR@include_HEADERS = $(public_headers)

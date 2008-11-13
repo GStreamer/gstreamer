@@ -9,5 +9,5 @@ gst_rtsp_server_SOURCES = \
 gst_rtsp_server_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 gst_rtsp_server_LDFLAGS = \
 	$(GST_LIBS) \
-	$(top_builddir)/gst/rtsp-server/libgstrtspserver.la
+	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la
 
