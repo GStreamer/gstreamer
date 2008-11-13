@@ -571,6 +571,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->next_in_seqnum = -1;
   priv->clock_rate = -1;
   priv->eos = FALSE;
+  GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
   JBUF_UNLOCK (priv);
@@ -836,6 +837,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime timestamp;
   guint64 latency_ts;
   gboolean tail;
+  guint8 pt;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -844,10 +846,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 
   priv = jitterbuffer->priv;
 
-  if (G_UNLIKELY (priv->last_pt != gst_rtp_buffer_get_payload_type (buffer))) {
+  pt = gst_rtp_buffer_get_payload_type (buffer);
+
+  if (G_UNLIKELY (priv->last_pt != pt)) {
     GstCaps *caps;
 
-    priv->last_pt = gst_rtp_buffer_get_payload_type (buffer);
+    priv->last_pt = pt;
     /* reset clock-rate so that we get a new one */
     priv->clock_rate = -1;
     /* Try to get the clock-rate from the caps first if we can. If there are no
@@ -858,11 +862,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (G_UNLIKELY (priv->clock_rate == -1)) {
-    guint8 pt;
-
     /* no clock rate given on the caps, try to get one with the signal */
-    pt = gst_rtp_buffer_get_payload_type (buffer);
-
     gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
     if (G_UNLIKELY (priv->clock_rate == -1))
       goto not_negotiated;
@@ -912,6 +912,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
     if (G_UNLIKELY (reset)) {
+      GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
       rtp_jitter_buffer_flush (priv->jbuf);
       rtp_jitter_buffer_reset_skew (priv->jbuf);
       priv->last_popped_seqnum = -1;

@@ -111,6 +111,7 @@ rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
   jbuf->window_min = 0;
   jbuf->skew = 0;
   jbuf->prev_send_diff = -1;
+  GST_DEBUG ("reset skew correction");
 }
 
 /* For the clock skew we use a windowed low point averaging algorithm as can be
@@ -187,11 +188,15 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   gstrtptime = gst_util_uint64_scale_int (ext_rtptime, GST_SECOND, clock_rate);
 
   /* first time, lock on to time and gstrtptime */
-  if (G_UNLIKELY (jbuf->base_time == -1))
+  if (G_UNLIKELY (jbuf->base_time == -1)) {
     jbuf->base_time = time;
+    GST_DEBUG ("Taking new base time %" GST_TIME_FORMAT, GST_TIME_ARGS (time));
+  }
   if (G_UNLIKELY (jbuf->base_rtptime == -1)) {
     jbuf->base_rtptime = gstrtptime;
     jbuf->base_extrtp = ext_rtptime;
+    GST_DEBUG ("Taking new base rtptime %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (gstrtptime));
   }
 
   if (G_LIKELY (gstrtptime >= jbuf->base_rtptime))
