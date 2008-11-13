@@ -208,6 +208,7 @@ static GstVideoSinkClass *parent_class = NULL;
 
 #define GST_IS_XVIMAGE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XVIMAGE_BUFFER))
 #define GST_XVIMAGE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XVIMAGE_BUFFER, GstXvImageBuffer))
+#define GST_XVIMAGE_BUFFER_CAST(obj) ((GstXvImageBuffer *)(obj))
 
 /* This function destroys a GstXvImage handling XShm availability */
 static void
@@ -319,7 +320,7 @@ gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage)
     /* In that case we can reuse the image and add it to our image pool. */
     GST_LOG_OBJECT (xvimage, "recycling image in pool");
     /* need to increment the refcount again to recycle */
-    gst_buffer_ref (GST_BUFFER (xvimage));
+    gst_buffer_ref (GST_BUFFER_CAST (xvimage));
     g_mutex_lock (xvimagesink->pool_lock);
     xvimagesink->image_pool = g_slist_prepend (xvimagesink->image_pool,
         xvimage);
@@ -752,8 +753,6 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
   GstVideoRectangle src, dst, result;
   gboolean draw_border = FALSE;
 
-  g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), FALSE);
-
   /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
   g_mutex_lock (xvimagesink->flow_lock);
@@ -777,7 +776,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
     }
     GST_LOG_OBJECT (xvimagesink, "reffing %p as our current image", xvimage);
     xvimagesink->cur_image =
-        GST_XVIMAGE_BUFFER (gst_buffer_ref (GST_BUFFER (xvimage)));
+        GST_XVIMAGE_BUFFER_CAST (gst_buffer_ref (GST_BUFFER_CAST (xvimage)));
   }
 
   /* Expose sends a NULL image, we take the latest frame */
@@ -829,7 +828,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
         xvimagesink->xwindow->gc, xvimage->xvimage,
-        0, 0, xvimage->width, xvimage->height,
+        xvimagesink->disp_x, xvimagesink->disp_y,
+        xvimagesink->disp_width, xvimagesink->disp_height,
         result.x, result.y, result.w, result.h, FALSE);
   } else
 #endif /* HAVE_XSHM */
@@ -838,7 +838,8 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
         xvimagesink->xwindow->gc, xvimage->xvimage,
-        0, 0, xvimage->width, xvimage->height,
+        xvimagesink->disp_x, xvimagesink->disp_y,
+        xvimagesink->disp_width, xvimagesink->disp_height,
         result.x, result.y, result.w, result.h);
   }
 
@@ -1963,9 +1964,12 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   guint32 im_format = 0;
   gboolean ret;
   gint video_width, video_height;
+  gint disp_x, disp_y;
+  gint disp_width, disp_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n, display_par_d;    /* display's PAR */
   const GValue *caps_par;
+  const GValue *caps_disp_reg;
   const GValue *fps;
   guint num, den;
 
@@ -1978,10 +1982,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
   GST_DEBUG_OBJECT (xvimagesink, "intersection returned %" GST_PTR_FORMAT,
       intersection);
-  if (gst_caps_is_empty (intersection)) {
-    gst_caps_unref (intersection);
-    return FALSE;
-  }
+  if (gst_caps_is_empty (intersection))
+    goto incompatible_caps;
 
   gst_caps_unref (intersection);
 
@@ -1991,23 +1993,18 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   fps = gst_structure_get_value (structure, "framerate");
   ret &= (fps != NULL);
 
-  if (!ret) {
-    GST_DEBUG_OBJECT (xvimagesink, "Failed to retrieve either width, "
-        "height or framerate from intersected caps");
-    return FALSE;
-  }
+  if (!ret)
+    goto incomplete_caps;
 
   xvimagesink->fps_n = gst_value_get_fraction_numerator (fps);
   xvimagesink->fps_d = gst_value_get_fraction_denominator (fps);
 
   xvimagesink->video_width = video_width;
   xvimagesink->video_height = video_height;
+
   im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
-  if (im_format == -1) {
-    GST_DEBUG_OBJECT (xvimagesink,
-        "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
+  if (im_format == -1)
+    goto invalid_format;
 
   /* get aspect ratio from caps if it's present, and
    * convert video width and height to a display width and height
@@ -2031,13 +2028,28 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     display_par_d = 1;
   }
 
-  if (!gst_video_calculate_display_ratio (&num, &den, video_width,
-          video_height, video_par_n, video_par_d, display_par_n,
-          display_par_d)) {
-    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-        ("Error calculating the output display ratio of the video."));
-    return FALSE;
+  /* get the display region */
+  caps_disp_reg = gst_structure_get_value (structure, "display-region");
+  if (caps_disp_reg) {
+    disp_x = g_value_get_int (gst_value_array_get_value (caps_disp_reg, 0));
+    disp_y = g_value_get_int (gst_value_array_get_value (caps_disp_reg, 1));
+    disp_width = g_value_get_int (gst_value_array_get_value (caps_disp_reg, 2));
+    disp_height =
+        g_value_get_int (gst_value_array_get_value (caps_disp_reg, 3));
+  } else {
+    disp_x = disp_y = 0;
+    disp_width = video_width;
+    disp_height = video_height;
   }
+
+  if (!gst_video_calculate_display_ratio (&num, &den, video_width,
+          video_height, video_par_n, video_par_d, display_par_n, display_par_d))
+    goto no_disp_ratio;
+
+  xvimagesink->disp_x = disp_x;
+  xvimagesink->disp_y = disp_y;
+  xvimagesink->disp_width = disp_width;
+  xvimagesink->disp_height = disp_height;
 
   GST_DEBUG_OBJECT (xvimagesink,
       "video width/height: %dx%d, calculated display ratio: %d/%d",
@@ -2079,11 +2091,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* Creating our window and our image with the display size in pixels */
   if (GST_VIDEO_SINK_WIDTH (xvimagesink) <= 0 ||
-      GST_VIDEO_SINK_HEIGHT (xvimagesink) <= 0) {
-    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-        ("Error calculating the output display ratio of the video."));
-    return FALSE;
-  }
+      GST_VIDEO_SINK_HEIGHT (xvimagesink) <= 0)
+    goto no_display_size;
 
   g_mutex_lock (xvimagesink->flow_lock);
   if (!xvimagesink->xwindow) {
@@ -2114,6 +2123,38 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   g_mutex_unlock (xvimagesink->flow_lock);
 
   return TRUE;
+
+  /* ERRORS */
+incompatible_caps:
+  {
+    GST_ERROR_OBJECT (xvimagesink, "caps incompatible");
+    gst_caps_unref (intersection);
+    return FALSE;
+  }
+incomplete_caps:
+  {
+    GST_DEBUG_OBJECT (xvimagesink, "Failed to retrieve either width, "
+        "height or framerate from intersected caps");
+    return FALSE;
+  }
+invalid_format:
+  {
+    GST_DEBUG_OBJECT (xvimagesink,
+        "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+no_disp_ratio:
+  {
+    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output display ratio of the video."));
+    return FALSE;
+  }
+no_display_size:
+  {
+    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output display ratio of the video."));
+    return FALSE;
+  }
 }
 
 static GstStateChangeReturn
@@ -2216,7 +2257,8 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
      put the ximage which is in the PRIVATE pointer */
   if (GST_IS_XVIMAGE_BUFFER (buf)) {
     GST_LOG_OBJECT (xvimagesink, "fast put of bufferpool buffer %p", buf);
-    if (!gst_xvimagesink_xvimage_put (xvimagesink, GST_XVIMAGE_BUFFER (buf)))
+    if (!gst_xvimagesink_xvimage_put (xvimagesink,
+            GST_XVIMAGE_BUFFER_CAST (buf)))
       goto no_window;
   } else {
     GST_LOG_OBJECT (xvimagesink, "slow copy into bufferpool buffer %p", buf);
@@ -2290,6 +2332,8 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
         "buffer alloc for same last_caps, reusing caps");
     intersection = gst_caps_ref (caps);
     image_format = xvimagesink->xcontext->last_format;
+    width = xvimagesink->xcontext->last_width;
+    height = xvimagesink->xcontext->last_height;
 
     goto reuse_last_caps;
   }
@@ -2363,13 +2407,6 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   image_format = gst_xvimagesink_get_format_from_caps (xvimagesink,
       intersection);
 
-  /* Store our caps and format as the last_caps to avoid expensive
-   * caps intersection next time */
-  gst_caps_replace (&xvimagesink->xcontext->last_caps, intersection);
-  xvimagesink->xcontext->last_format = image_format;
-
-reuse_last_caps:
-
   /* Get geometry from caps */
   structure = gst_caps_get_structure (intersection, 0);
   if (!gst_structure_get_int (structure, "width", &width) ||
@@ -2380,6 +2417,15 @@ reuse_last_caps:
     ret = GST_FLOW_UNEXPECTED;
     goto beach;
   }
+
+  /* Store our caps and format as the last_caps to avoid expensive
+   * caps intersection next time */
+  gst_caps_replace (&xvimagesink->xcontext->last_caps, intersection);
+  xvimagesink->xcontext->last_format = image_format;
+  xvimagesink->xcontext->last_width = width;
+  xvimagesink->xcontext->last_height = height;
+
+reuse_last_caps:
 
   g_mutex_lock (xvimagesink->pool_lock);
 
@@ -2423,10 +2469,10 @@ reuse_last_caps:
   }
 
   if (xvimage) {
-    gst_buffer_set_caps (GST_BUFFER (xvimage), intersection);
+    gst_buffer_set_caps (GST_BUFFER_CAST (xvimage), intersection);
   }
 
-  *buf = GST_BUFFER (xvimage);
+  *buf = GST_BUFFER_CAST (xvimage);
 
 beach:
   if (intersection) {

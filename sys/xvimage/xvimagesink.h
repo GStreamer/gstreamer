@@ -128,6 +128,8 @@ struct _GstXContext {
   /* Optimisation storage for buffer_alloc return */
   GstCaps *last_caps;
   gint last_format;
+  gint last_width;
+  gint last_height;
 };
 
 /*
@@ -265,6 +267,10 @@ struct _GstXvImageSink {
 
   /* size of incoming video, used as the size for XvImage */
   guint video_width, video_height;
+
+  /* display sizes, used for clipping the image */
+  gint disp_x, disp_y;
+  gint disp_width, disp_height;
 
   /* port attributes */
   gboolean autopaint_colorkey;

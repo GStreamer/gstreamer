@@ -1,5 +1,17 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_finalize),
+	(gst_xvimagesink_xvimage_put), (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_show_frame), (gst_xvimagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.h:
+	Avoid typechecking when we do trivial casts.
+	Move error handling out of the main program flow.
+	Sneak in the display-region caps property, not completely correct yet.
+	Cache the width/height in buffer_alloc instead of parsing it from the
+	caps all the time.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (deactivate_group):
 	don't try to unlink the selector sinkpad when we don't have it yet. This
 	can happen if an error occured before the group was complete.
