@@ -1946,6 +1946,38 @@ q3gp_type_find (GstTypeFind * tf, gpointer unused)
 
 }
 
+/*** video/mj2 and image/jp2 ***/
+static GstStaticCaps mj2_caps = GST_STATIC_CAPS ("video/mj2");
+
+#define MJ2_CAPS gst_static_caps_get(&mj2_caps)
+
+static GstStaticCaps jp2_caps = GST_STATIC_CAPS ("image/jp2");
+
+#define JP2_CAPS gst_static_caps_get(&jp2_caps)
+
+static void
+jp2_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 24);
+  if (!data)
+    return;
+
+  /* jp2 signature */
+  if (memcmp (data, "\000\000\000\014jP  \015\012\207\012", 12) != 0)
+    return;
+
+  /* check ftyp box */
+  data += 12;
+  if (memcmp (data + 4, "ftyp", 4) == 0) {
+    if (memcmp (data + 8, "jp2 ", 4) == 0)
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, JP2_CAPS);
+    else if (memcmp (data + 8, "mjp2", 4) == 0)
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MJ2_CAPS);
+  }
+}
+
 /*** video/quicktime ***/
 
 static GstStaticCaps qt_caps = GST_STATIC_CAPS ("video/quicktime");
@@ -3173,12 +3205,10 @@ plugin_init (GstPlugin * plugin)
       qt_type_find, qt_exts, QT_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/x-quicktime", GST_RANK_SECONDARY,
       qtif_type_find, qtif_exts, QTIF_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "image/jp2", GST_RANK_PRIMARY,
-      jp2_exts, "\000\000\000\014jP  \015\012\207\012\000\000\000\024ftypjp2 ",
-      24, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "video/mj2", GST_RANK_PRIMARY,
-      mj2_exts, "\000\000\000\014jP  \015\012\207\012\000\000\000\024ftypmjp2",
-      24, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "image/jp2", GST_RANK_PRIMARY,
+      jp2_type_find, jp2_exts, JP2_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/mj2", GST_RANK_PRIMARY,
+      jp2_type_find, mj2_exts, MJ2_CAPS, NULL, NULL);
 
   TYPE_FIND_REGISTER (plugin, "text/html", GST_RANK_SECONDARY, html_type_find,
       html_exts, HTML_CAPS, NULL, NULL);
