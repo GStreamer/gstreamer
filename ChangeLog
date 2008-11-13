@@ -1,5 +1,26 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on patch by: Eric Zhang <chao.zhang at access-company dot com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_nat_method_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_set_property),
+	(gst_rtspsrc_get_property), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_stream_free),
+	(gst_rtspsrc_stream_configure_udp_sinks),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_send_dummy_packets),
+	(gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Add property to configure NAT traversal method.
+	Ignore EOS from the internal sinks.
+	Implement sending dummy packets as a (simple) method to open up
+	some firewalls.
+	Send PLAY request to the server after we started the udp sources.
+	Fixes #559545.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Yotam <sh dot yotam at gmail dot com>
 
 	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_event):

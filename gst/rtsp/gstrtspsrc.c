@@ -152,6 +152,7 @@ enum
 #define DEFAULT_TCP_TIMEOUT      20000000
 #define DEFAULT_LATENCY_MS       3000
 #define DEFAULT_CONNECTION_SPEED 0
+#define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
 
 enum
 {
@@ -163,7 +164,9 @@ enum
   PROP_TIMEOUT,
   PROP_TCP_TIMEOUT,
   PROP_LATENCY,
-  PROP_CONNECTION_SPEED
+  PROP_CONNECTION_SPEED,
+  PROP_NAT_METHOD,
+  PROP_LAST
 };
 
 #define GST_TYPE_RTSP_LOWER_TRANS (gst_rtsp_lower_trans_get_type())
@@ -183,6 +186,24 @@ gst_rtsp_lower_trans_get_type (void)
         g_flags_register_static ("GstRTSPLowerTrans", rtsp_lower_trans);
   }
   return rtsp_lower_trans_type;
+}
+
+#define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
+static GType
+gst_rtsp_nat_method_get_type (void)
+{
+  static GType rtsp_nat_method_type = 0;
+  static const GEnumValue rtsp_nat_method[] = {
+    {GST_RTSP_NAT_NONE, "None", "none"},
+    {GST_RTSP_NAT_DUMMY, "Send Dummy packets", "dummy"},
+    {0, NULL, NULL},
+  };
+
+  if (!rtsp_nat_method_type) {
+    rtsp_nat_method_type =
+        g_enum_register_static ("GstRTSPNatMethod", rtsp_nat_method);
+  }
+  return rtsp_nat_method_type;
 }
 
 static void gst_rtspsrc_base_init (gpointer g_class);
@@ -315,6 +336,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  g_object_class_install_property (gobject_class, PROP_NAT_METHOD,
+      g_param_spec_enum ("nat-method", "NAT Method",
+          "Method to use for traversing firewalls and NAT",
+          GST_TYPE_RTSP_NAT_METHOD, DEFAULT_NAT_METHOD,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -431,6 +458,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_CONNECTION_SPEED:
       rtspsrc->connection_speed = g_value_get_uint (value);
       break;
+    case PROP_NAT_METHOD:
+      rtspsrc->nat_method = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -475,6 +505,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CONNECTION_SPEED:
       g_value_set_uint (value, rtspsrc->connection_speed);
+      break;
+    case PROP_NAT_METHOD:
+      g_value_set_enum (value, rtspsrc->nat_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -656,7 +689,6 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * the RTP-Info header field returned from PLAY. */
   control_url = gst_sdp_media_get_attribute_val (media, "control");
 
-
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
   GST_DEBUG_OBJECT (src, " container: %d", stream->container);
@@ -703,19 +735,17 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
   g_free (stream->setup_url);
 
   for (i = 0; i < 2; i++) {
-    GstElement *udpsrc = stream->udpsrc[i];
-
-    if (udpsrc) {
+    if (stream->udpsrc[i]) {
       GstPad *pad;
 
       /* unlink the pad */
-      pad = gst_element_get_static_pad (udpsrc, "src");
+      pad = gst_element_get_static_pad (stream->udpsrc[i], "src");
       if (stream->channelpad[i]) {
         gst_pad_unlink (pad, stream->channelpad[i]);
       }
 
-      gst_element_set_state (udpsrc, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (src), udpsrc);
+      gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (src), stream->udpsrc[i]);
       gst_object_unref (stream->udpsrc[i]);
       stream->udpsrc[i] = NULL;
     }
@@ -723,12 +753,18 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       gst_object_unref (stream->channelpad[i]);
       stream->channelpad[i] = NULL;
     }
+    if (stream->udpsink[i]) {
+      gst_element_set_state (stream->udpsink[i], GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (src), stream->udpsink[i]);
+      gst_object_unref (stream->udpsink[i]);
+      stream->udpsink[i] = NULL;
+    }
   }
-  if (stream->udpsink) {
-    gst_element_set_state (stream->udpsink, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (src), stream->udpsink);
-    gst_object_unref (stream->udpsink);
-    stream->udpsink = NULL;
+  if (stream->fakesrc) {
+    gst_element_set_state (stream->fakesrc, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (src), stream->fakesrc);
+    gst_object_unref (stream->fakesrc);
+    stream->fakesrc = NULL;
   }
   if (stream->srcpad) {
     gst_pad_set_active (stream->srcpad, FALSE);
@@ -2052,28 +2088,22 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
 
 /* configure the UDP sink back to the server for status reports */
 static gboolean
-gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
-    GstRTSPTransport * transport)
+gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
+    GstRTSPStream * stream, GstRTSPTransport * transport)
 {
   GstPad *pad;
-  gint port, sockfd = -1;
+  gint rtp_port, rtcp_port, sockfd = -1;
   const gchar *destination;
   gchar *uri, *name;
 
-  /* no session, we're done */
-  if (src->session == NULL)
-    return TRUE;
-
   /* get host and port */
-  if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST)
-    port = transport->port.max;
-  else
-    port = transport->server_port.max;
-
-  /* it's possible that the server does not want us to send RTCP in which case
-   * the port is -1 */
-  if (port == -1)
-    goto no_port;
+  if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    rtp_port = transport->port.min;
+    rtcp_port = transport->port.max;
+  } else {
+    rtp_port = transport->server_port.min;
+    rtcp_port = transport->server_port.max;
+  }
 
   /* first take the source, then the endpoint to figure out where to send
    * the RTCP. */
@@ -2081,51 +2111,108 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
   if (destination == NULL)
     destination = gst_rtsp_connection_get_ip (src->connection);
 
-  GST_DEBUG_OBJECT (src, "configure UDP sink for %s:%d", destination, port);
+  /* try to construct the fakesrc to the RTP port of the server to open up any
+   * NAT firewalls */
+  if (rtp_port != -1) {
+    GST_DEBUG_OBJECT (src, "configure RTP UDP sink for %s:%d", destination,
+        rtp_port);
 
-  uri = g_strdup_printf ("udp://%s:%d", destination, port);
-  stream->udpsink = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
-  g_free (uri);
-  if (stream->udpsink == NULL)
-    goto no_sink_element;
+    uri = g_strdup_printf ("udp://%s:%d", destination, rtp_port);
+    stream->udpsink[0] = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+    g_free (uri);
+    if (stream->udpsink[0] == NULL)
+      goto no_sink_element;
 
-  /* no sync needed */
-  g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
-  /* no async state changes needed */
-  g_object_set (G_OBJECT (stream->udpsink), "async", FALSE, NULL);
+    /* no sync or async state changes needed */
+    g_object_set (G_OBJECT (stream->udpsink[0]), "sync", FALSE, "async", FALSE,
+        NULL);
 
-  if (stream->udpsrc[1]) {
-    /* configure socket, we give it the same UDP socket as the udpsrc for RTCP
-     * because some servers check the port number of where it sends RTCP to identify
-     * the RTCP packets it receives */
-    g_object_get (G_OBJECT (stream->udpsrc[1]), "sock", &sockfd, NULL);
-    GST_DEBUG_OBJECT (src, "UDP src has sock %d", sockfd);
-    /* configure socket and make sure udpsink does not close it when shutting
-     * down, it belongs to udpsrc after all. */
-    g_object_set (G_OBJECT (stream->udpsink), "sockfd", sockfd, NULL);
-    g_object_set (G_OBJECT (stream->udpsink), "closefd", FALSE, NULL);
+    if (stream->udpsrc[0]) {
+      /* configure socket, we give it the same UDP socket as the udpsrc for RTP
+       * so that NAT firewalls will open a hole for us */
+      g_object_get (G_OBJECT (stream->udpsrc[0]), "sock", &sockfd, NULL);
+      GST_DEBUG_OBJECT (src, "RTP UDP src has sock %d", sockfd);
+      /* configure socket and make sure udpsink does not close it when shutting
+       * down, it belongs to udpsrc after all. */
+      g_object_set (G_OBJECT (stream->udpsink[0]), "sockfd", sockfd, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[0]), "closefd", FALSE, NULL);
+    }
+
+    /* the source for the dummy packets to open up NAT */
+    stream->fakesrc = gst_element_factory_make ("fakesrc", NULL);
+    if (stream->fakesrc == NULL)
+      goto no_fakesrc_element;
+
+    /* random data in 5 buffers, a size of 200 bytes should be fine */
+    g_object_set (G_OBJECT (stream->fakesrc), "filltype", 3, "num-buffers", 5,
+        NULL);
+    g_object_set (G_OBJECT (stream->fakesrc), "sizetype", 2, "sizemax", 200,
+        NULL);
+
+    /* we don't want to consider this a sink */
+    GST_OBJECT_FLAG_UNSET (stream->udpsink[0], GST_ELEMENT_IS_SINK);
+
+    /* keep everything locked */
+    gst_element_set_locked_state (stream->udpsink[0], TRUE);
+    gst_element_set_locked_state (stream->fakesrc, TRUE);
+
+    gst_object_ref (stream->udpsink[0]);
+    gst_bin_add (GST_BIN_CAST (src), stream->udpsink[0]);
+    gst_object_ref (stream->fakesrc);
+    gst_bin_add (GST_BIN_CAST (src), stream->fakesrc);
+
+    gst_element_link (stream->fakesrc, stream->udpsink[0]);
   }
+  /* it's possible that the server does not want us to send RTCP in which case
+   * the port is -1 */
+  if (rtcp_port != -1 && src->session != NULL) {
+    GST_DEBUG_OBJECT (src, "configure RTCP UDP sink for %s:%d", destination,
+        rtcp_port);
 
-  /* we don't want to consider this a sink */
-  GST_OBJECT_FLAG_UNSET (stream->udpsink, GST_ELEMENT_IS_SINK);
+    uri = g_strdup_printf ("udp://%s:%d", destination, rtcp_port);
+    stream->udpsink[1] = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+    g_free (uri);
+    if (stream->udpsink[1] == NULL)
+      goto no_sink_element;
 
-  /* we keep this playing always */
-  gst_element_set_locked_state (stream->udpsink, TRUE);
-  gst_element_set_state (stream->udpsink, GST_STATE_PLAYING);
+    /* no sync needed */
+    g_object_set (G_OBJECT (stream->udpsink[1]), "sync", FALSE, NULL);
+    /* no async state changes needed */
+    g_object_set (G_OBJECT (stream->udpsink[1]), "async", FALSE, NULL);
 
-  gst_object_ref (stream->udpsink);
-  gst_bin_add (GST_BIN_CAST (src), stream->udpsink);
+    if (stream->udpsrc[1]) {
+      /* configure socket, we give it the same UDP socket as the udpsrc for RTCP
+       * because some servers check the port number of where it sends RTCP to identify
+       * the RTCP packets it receives */
+      g_object_get (G_OBJECT (stream->udpsrc[1]), "sock", &sockfd, NULL);
+      GST_DEBUG_OBJECT (src, "RTCP UDP src has sock %d", sockfd);
+      /* configure socket and make sure udpsink does not close it when shutting
+       * down, it belongs to udpsrc after all. */
+      g_object_set (G_OBJECT (stream->udpsink[1]), "sockfd", sockfd, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[1]), "closefd", FALSE, NULL);
+    }
 
-  stream->rtcppad = gst_element_get_static_pad (stream->udpsink, "sink");
+    /* we don't want to consider this a sink */
+    GST_OBJECT_FLAG_UNSET (stream->udpsink[1], GST_ELEMENT_IS_SINK);
 
-  /* get session RTCP pad */
-  name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
-  pad = gst_element_get_request_pad (src->session, name);
-  g_free (name);
+    /* we keep this playing always */
+    gst_element_set_locked_state (stream->udpsink[1], TRUE);
+    gst_element_set_state (stream->udpsink[1], GST_STATE_PLAYING);
 
-  /* and link */
-  if (pad)
-    gst_pad_link (pad, stream->rtcppad);
+    gst_object_ref (stream->udpsink[1]);
+    gst_bin_add (GST_BIN_CAST (src), stream->udpsink[1]);
+
+    stream->rtcppad = gst_element_get_static_pad (stream->udpsink[1], "sink");
+
+    /* get session RTCP pad */
+    name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
+    pad = gst_element_get_request_pad (src->session, name);
+    g_free (name);
+
+    /* and link */
+    if (pad)
+      gst_pad_link (pad, stream->rtcppad);
+  }
 
   return TRUE;
 
@@ -2135,10 +2222,10 @@ no_sink_element:
     GST_DEBUG_OBJECT (src, "no UDP sink element found");
     return FALSE;
   }
-no_port:
+no_fakesrc_element:
   {
-    GST_DEBUG_OBJECT (src, "no valid port, ignoring RTCP for this stream");
-    return TRUE;
+    GST_DEBUG_OBJECT (src, "no fakesrc element found");
+    return FALSE;
   }
 }
 
@@ -2192,8 +2279,9 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     case GST_RTSP_LOWER_TRANS_UDP:
       if (!gst_rtspsrc_stream_configure_udp (src, stream, transport, &outpad))
         goto transport_failed;
-      /* configure udpsink back to the server for RTCP messages. */
-      if (!gst_rtspsrc_stream_configure_udp_sink (src, stream, transport))
+      /* configure udpsinks back to the server for RTCP messages and for the
+       * dummy RTP messages to open NAT. */
+      if (!gst_rtspsrc_stream_configure_udp_sinks (src, stream, transport))
         goto transport_failed;
       break;
     default:
@@ -2238,6 +2326,31 @@ no_manager:
     GST_DEBUG_OBJECT (src, "cannot get a session manager");
     return FALSE;
   }
+}
+
+/* send a couple of dummy random packets on the receiver RTP port to the server,
+ * this should make a firewall think we initiated the data transfer and
+ * hopefully allow packets to go from the sender port to our RTP receiver port */
+static gboolean
+gst_rtspsrc_send_dummy_packets (GstRTSPSrc * src)
+{
+  GList *walk;
+
+  if (!src->nat_method != GST_RTSP_NAT_DUMMY)
+    return TRUE;
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+    if (stream->fakesrc && stream->udpsink[0]) {
+      GST_DEBUG_OBJECT (src, "sending dummy packet to stream %p", stream);
+      gst_element_set_state (stream->udpsink[0], GST_STATE_NULL);
+      gst_element_set_state (stream->fakesrc, GST_STATE_NULL);
+      gst_element_set_state (stream->udpsink[0], GST_STATE_PLAYING);
+      gst_element_set_state (stream->fakesrc, GST_STATE_PLAYING);
+    }
+  }
+  return TRUE;
 }
 
 /* Adds the source pads of all configured streams to the element.
@@ -4698,6 +4811,9 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
   rtspsrc = GST_RTSPSRC (bin);
 
   switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_EOS:
+      gst_message_unref (message);
+      break;
     case GST_MESSAGE_ELEMENT:
     {
       const GstStructure *s = gst_message_get_structure (message);
@@ -4788,9 +4904,9 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (rtspsrc, "PAUSED->PLAYING: stop connection flush");
       gst_rtsp_connection_flush (rtspsrc->connection, FALSE);
-      /* FIXME, the server might send UDP packets before we activate the UDP
-       * ports */
-      gst_rtspsrc_play (rtspsrc, &rtspsrc->segment);
+      /* send some dummy packets before we chain up to the parent to activate
+       * the receive in the udp sources */
+      gst_rtspsrc_send_dummy_packets (rtspsrc);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -4806,11 +4922,15 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     goto done;
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      ret = GST_STATE_CHANGE_NO_PREROLL;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* chained up to parent so the udp sources are activated and receiving */
+      gst_rtspsrc_play (rtspsrc, &rtspsrc->segment);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_rtspsrc_pause (rtspsrc);
+      ret = GST_STATE_CHANGE_NO_PREROLL;
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:

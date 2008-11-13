@@ -106,9 +106,12 @@ struct _GstRTSPStream {
   GstElement   *udpsrc[2];
   GstPad       *blockedpad;
 
-  /* our udp sink back to the server */
-  GstElement   *udpsink;
+  /* our udp sinks back to the server */
+  GstElement   *udpsink[2];
   GstPad       *rtcppad;
+
+  /* fakesrc for sending dummy data */
+  GstElement   *fakesrc;
 
   /* state */
   gint          pt;
@@ -126,6 +129,19 @@ struct _GstRTSPStream {
   guint         rs_bandwidth;
   guint         rr_bandwidth;
 };
+
+/**
+ * GstRTSPNatMethod:
+ * @GST_RTSP_NAT_NONE: none
+ * @GST_RTSP_NAT_DUMMY: send dummy packets
+ *
+ * Different methods for trying to traverse firewalls.
+ */
+typedef enum
+{
+  GST_RTSP_NAT_NONE,
+  GST_RTSP_NAT_DUMMY
+} GstRTSPNatMethod;
 
 struct _GstRTSPSrc {
   GstBin           parent;
@@ -169,6 +185,7 @@ struct _GstRTSPSrc {
   GTimeVal         *ptcp_timeout;
   guint             latency;
   guint             connection_speed;
+  GstRTSPNatMethod  nat_method;
 
   /* state */
   GstRTSPState       state;
