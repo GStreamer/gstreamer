@@ -87,6 +87,8 @@ check_PROGRAMS = \
 	$(check_ofa)        \
 	$(check_timidity)  \
 	$(check_x264enc)   \
+	elements/aacparse \
+	elements/amrparse \
 	elements/qtmux \
 	elements/selector \
 	elements/speexresample \
