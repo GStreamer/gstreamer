@@ -1,5 +1,10 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/random/wtay/poll-timeout:
+	Small tweaks.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/old/testsuite/caps/intersection.c: (main):
 	* tests/old/testsuite/plugin/loading.c: (main):
 	Remove references to deprecated API g_mem_chunk*.

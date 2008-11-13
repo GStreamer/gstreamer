@@ -76,12 +76,14 @@ waiting for id:
        /* we got unscheduled, see if it was because we timed out or some other
 	* id got unscheduled */
        if (ret != 0) {
-         lock
-         /* some other id got unlocked */ 
-	 /* wait until it reads the fd and signals us */
-	 while (waiters) 
-           cond_wait ()
-         unlock
+         if (g_atomic_int_get (&waiters) > 0) {
+           lock
+           /* some other id got unlocked */ 
+  	   /* wait until it reads the fd and signals us */
+  	   while (waiters) 
+             cond_wait ()
+           unlock
+	 }
        }
        else {
          /* we timed out update the status. */
@@ -89,15 +91,17 @@ waiting for id:
          break;
        }
      }
-     else if (g_atomic_int_compare_and_exchange (&id->state, UNSCHEDULED, OK) {
+     else if (g_atomic_int_get (&id->state) == UNSCHEDULED) {
        /* id became unscheduled, read the fd and broadcast */
        lock
        read (fd)
-       waiters--
+       g_atomic_int_dec (&waiters);
        cond_broadcast ()
        unlock
-       id->state = UNSCHEDULED;
        break;
+     }
+     else {
+       g_assert_not_reached ();
      }
    }
 
@@ -109,7 +113,7 @@ unschedule id:
    if (g_atomic_int_compare_and_exchange (&id->state, BUSY, UNSCHEDULED) {
      /* if it's busy waiting in poll, write to the fd */
      lock
-     waiters++
+     g_atomic_int_inc (&waiters)
      write (fd)
      unlock
    }
