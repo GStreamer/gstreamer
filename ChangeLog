@@ -1,5 +1,14 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/gstrtsp.c: (plugin_init):
+	* gst/rtsp/gstrtspgoogle.c:
+	* gst/rtsp/gstrtspgoogle.h:
+	Remove google extension again, it's not needed anymore because we never
+	send multiple transports anymore.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: Eric Zhang <chao.zhang at access-company dot com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_nat_method_get_type),

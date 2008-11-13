@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstrtsp.la
 
 libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
-			gstrtpdec.c gstrtspext.c gstrtspgoogle.c
+			gstrtpdec.c gstrtspext.c
 
 libgstrtsp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtsp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
@@ -14,5 +14,4 @@ libgstrtsp_la_LIBTOOLFLAGS = --tag=disable-static
 noinst_HEADERS = gstrtspsrc.h     \
 		 gstrtsp.h        \
 		 gstrtpdec.h      \
-		 gstrtspext.h     \
-		 gstrtspgoogle.h
+		 gstrtspext.h
