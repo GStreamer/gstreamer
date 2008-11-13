@@ -57,12 +57,10 @@ main (int argc, char *argv[])
       xmlNewDocNode (doc, NULL, (const xmlChar *) "Capabilities", NULL);
 
   /*
-     g_mem_chunk_info ();
      for (i = 0; i<100000; i++) {
      caps = gst_caps_intersect (gst_static_caps_get (rawcaps3), GST_CAPS_GET (rawcaps4));
      gst_caps_unref (caps);
      }
-     g_mem_chunk_info ();
    */
 
   caps = gst_caps_intersect (gst_static_caps_get (&sinkcaps),

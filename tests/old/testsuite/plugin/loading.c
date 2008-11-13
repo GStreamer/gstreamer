@@ -12,7 +12,6 @@ main (int argc, char *argv[])
 
   numplugins = g_list_length (gst_registry_pool_plugin_list ());
   g_print ("%d plugins loaded\n", numplugins);
-  g_mem_chunk_info ();
 
   plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
@@ -30,8 +29,6 @@ main (int argc, char *argv[])
   numplugins = g_list_length (gst_registry_pool_plugin_list ());
   g_print ("%d plugins loaded\n", numplugins);
 
-  g_mem_chunk_info ();
-
   plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
   g_print ("testplugin: %p  loaded: %s\n", plugin,
@@ -48,8 +45,6 @@ main (int argc, char *argv[])
 
   g_print ("%d features in plugin\n",
       g_list_length (gst_plugin_get_feature_list (plugin)));
-
-  g_mem_chunk_info ();
 
   plugin = gst_registry_pool_find_plugin ("testplugin");
   g_assert (plugin != NULL);
