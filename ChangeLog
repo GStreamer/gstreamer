@@ -1,5 +1,11 @@
 2008-11-13  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/aacparse/gstbaseparse.c:
+	* gst/amrparse/gstbaseparse.c:
+	  Fix baseparse type name.
+
+2008-11-13  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* gst/aacparse/Makefile.am:
 	* gst/aacparse/gstaacparse.c:
