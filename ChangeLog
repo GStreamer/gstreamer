@@ -1,3 +1,18 @@
+2008-11-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/aacparse/Makefile.am:
+	* gst/aacparse/gstaacparse.c:
+	* gst/aacparse/gstaacparse.h:
+	* gst/aacparse/gstbaseparse.c:
+	* gst/aacparse/gstbaseparse.h:
+	* gst/amrparse/Makefile.am:
+	* gst/amrparse/gstamrparse.c:
+	* gst/amrparse/gstamrparse.h:
+	* gst/amrparse/gstbaseparse.c:
+	* gst/amrparse/gstbaseparse.h:
+	  Add two new baseparse based parsers (aac and amr) from Bug #518857.
+
 2008-11-12  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/rfbdecoder.c:

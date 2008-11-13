@@ -232,7 +232,9 @@ AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
+AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(aiffparse)
+AG_GST_CHECK_PLUGIN(amrparse)
 AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
@@ -1385,7 +1387,9 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/aacparse/Makefile
 gst/aiffparse/Makefile
+gst/amrparse/Makefile
 gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
