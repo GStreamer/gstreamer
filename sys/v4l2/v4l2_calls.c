@@ -251,7 +251,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
           break;
       } else {
         GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
-            (_("Failed getting controls attributes on device '%s.'"),
+            (_("Failed getting controls attributes on device '%s'."),
                 v4l2object->videodev),
             ("Failed querying control %d on device '%s'. (%d - %s)",
                 n, v4l2object->videodev, errno, strerror (errno)));

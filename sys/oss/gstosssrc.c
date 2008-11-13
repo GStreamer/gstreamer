@@ -378,7 +378,7 @@ gst_oss_src_open (GstAudioSrc * asrc)
 no_permission:
   {
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
-        (_("Could not open audio device for recording."
+        (_("Could not open audio device for recording. "
                 "You don't have permission to open the device.")),
         GST_ERROR_SYSTEM);
     return FALSE;

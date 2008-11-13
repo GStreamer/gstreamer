@@ -1304,7 +1304,7 @@ done:
 size_error:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Error read()ing %d bytes on device '%s'."),
+        (_("Error reading %d bytes on device '%s'."),
             v4l2src->frame_byte_size, v4l2src->v4l2object->videodev), (NULL));
     return GST_FLOW_ERROR;
   }

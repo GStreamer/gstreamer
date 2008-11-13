@@ -1,3 +1,13 @@
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Fabricio Godoy <skarllot at gmail dot com>
+
+	* sys/oss/gstosssink.c: (gst_oss_sink_open):
+	* sys/oss/gstosssrc.c: (gst_oss_src_open):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_mmap):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_fill_lists):
+	Fix some spelling mistakes. Fixes #556802.
+
 2008-11-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/GstIirEqualizer10Bands.prs:
