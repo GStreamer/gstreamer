@@ -310,25 +310,23 @@ gst_dirac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   dirac_enc->enc_ctx.src_params.width = dirac_enc->width;
   dirac_enc->enc_ctx.src_params.height = dirac_enc->height;
-#if 0
-  /* FIXME */
-  dirac_enc->enc_ctx.src_params.clean_width = dirac_enc->width;
-  dirac_enc->enc_ctx.src_params.clean_height = dirac_enc->height;
-#endif
 
-#if 0
-  /* FIXME */
-  dirac_enc->enc_ctx.src_params.aspect_ratio_numerator = dirac_enc->par_n;
-  dirac_enc->enc_ctx.src_params.aspect_ratio_denominator = dirac_enc->par_d;
-#endif
+  dirac_enc->enc_ctx.src_params.clean_area.width = dirac_enc->width;
+  dirac_enc->enc_ctx.src_params.clean_area.height = dirac_enc->height;
+  dirac_enc->enc_ctx.src_params.clean_area.left_offset = 0;
+  dirac_enc->enc_ctx.src_params.clean_area.top_offset = 0;
 
-#if 0
-  /* FIXME */
-  dirac_video_format_set_std_signal_range (dirac_enc->video_format,
-      DIRAC_SIGNAL_RANGE_8BIT_VIDEO);
-  dirac_video_format_set_std_colour_spec (dirac_enc->video_format,
-      DIRAC_COLOUR_SPEC_HDTV);
-#endif
+  dirac_enc->enc_ctx.src_params.pix_asr.numerator = dirac_enc->par_n;
+  dirac_enc->enc_ctx.src_params.pix_asr.denominator = dirac_enc->par_d;
+
+  dirac_enc->enc_ctx.src_params.signal_range.luma_offset = 16;
+  dirac_enc->enc_ctx.src_params.signal_range.luma_excursion = 219;
+  dirac_enc->enc_ctx.src_params.signal_range.chroma_offset = 128;
+  dirac_enc->enc_ctx.src_params.signal_range.chroma_excursion = 224;
+  dirac_enc->enc_ctx.src_params.colour_spec.col_primary = CP_HDTV_COMP_INTERNET;
+  dirac_enc->enc_ctx.src_params.colour_spec.col_matrix.kr = 0.2126;
+  dirac_enc->enc_ctx.src_params.colour_spec.col_matrix.kb = 0.0722;
+  dirac_enc->enc_ctx.src_params.colour_spec.trans_func = TF_TV;
 
   dirac_enc->enc_ctx.decode_flag = 0;
   dirac_enc->enc_ctx.instr_flag = 0;

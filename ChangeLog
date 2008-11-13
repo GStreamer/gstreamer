@@ -1,3 +1,10 @@
+2008-11-13  David Schleef  <ds@schleef.org>
+
+	* ext/dirac/gstdiracenc.cc:
+	Set pixel-aspect-ratio correctly in the encoder API, as well
+	as some default gstreamerish colorspace properties.  Also,
+	apparently, change a bunch of indentation.
+
 2008-11-13  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/jp2k/Makefile.am:
