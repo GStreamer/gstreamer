@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,7 +35,7 @@ static const GstElementDetails gst_rtp_mp4vpay_details =
 GST_ELEMENT_DETAILS ("RTP MPEG-4 Video packet payloader",
     "Codec/Payloader/Network",
     "Payload MPEG-4 video as RTP packets (RFC 3016)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -495,6 +495,9 @@ gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_EOS:
+      /* This flush call makes sure that the last buffer is always pushed
+       * to the base payloader */
       gst_rtp_mp4v_pay_flush (rtpmp4vpay);
       break;
     case GST_EVENT_FLUSH_STOP:
