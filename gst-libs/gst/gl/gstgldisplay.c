@@ -449,6 +449,8 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   GST_INFO ("loop exited\n");
 
+  gst_gl_display_lock (display);
+
   display->isAlive = FALSE;
 
   gst_gl_display_thread_destroy_context (display);
@@ -456,6 +458,8 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
   g_object_unref (G_OBJECT (display->gl_window));
 
   display->gl_window = NULL;
+
+  gst_gl_display_unlock (display);
 
   return NULL;
 }
