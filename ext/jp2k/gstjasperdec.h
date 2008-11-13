@@ -21,6 +21,9 @@
 #define __GST_JASPER_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+
+#include <jasper/jasper.h>
 
 G_BEGIN_DECLS
 
@@ -64,7 +67,7 @@ struct _GstJasperDec
   gint offset[GST_JASPER_DEC_MAX_COMPONENT];
   gint inc[GST_JASPER_DEC_MAX_COMPONENT];
   gboolean alpha;
-  jas_matrix_t *mat;
+  glong *buf;
 
   /* image cmpt indexed */
   gint cwidth[GST_JASPER_DEC_MAX_COMPONENT];
@@ -81,7 +84,7 @@ struct _GstJasperDecClass
   GstElementClass parent_class;
 };
 
-static GType gst_jasper_dec_get_type (void);
+GType gst_jasper_dec_get_type (void);
 
 G_END_DECLS
 

@@ -62,11 +62,9 @@ static GstStaticPadTemplate gst_jasper_dec_src_template =
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_BGR "; "
-        GST_VIDEO_CAPS_RGBA "; " GST_VIDEO_CAPS_ARGB "; "
-        GST_VIDEO_CAPS_BGRA "; " GST_VIDEO_CAPS_ABGR "; "
         GST_VIDEO_CAPS_RGBx "; " GST_VIDEO_CAPS_xRGB "; "
         GST_VIDEO_CAPS_BGRx "; " GST_VIDEO_CAPS_xBGR "; "
-        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV, Y41B, Y42B }"))
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, Y41B, Y42B }"))
     );
 
 static void gst_jasper_dec_base_init (gpointer g_class);
@@ -140,7 +138,7 @@ gst_jasper_dec_init (GstJasperDec * dec, GstJasperDecClass * klass)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->codec_data = NULL;
-  dec->mat = NULL;
+  dec->buf = NULL;
   gst_jasper_dec_reset (dec);
 }
 
@@ -150,9 +148,9 @@ gst_jasper_dec_reset (GstJasperDec * dec)
   if (dec->codec_data)
     gst_buffer_unref (dec->codec_data);
   dec->codec_data = NULL;
-  if (dec->mat)
-    jas_matrix_destroy (dec->mat);
-  dec->mat = NULL;
+  if (dec->buf)
+    g_free (dec->buf);
+  dec->buf = NULL;
   dec->fmt = -1;
   dec->clrspc = JAS_CLRSPC_UNKNOWN;
   dec->format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -251,6 +249,8 @@ gst_jasper_dec_negotiate (GstJasperDec * dec, jas_image_t * image)
   width = jas_image_width (image);
   height = jas_image_height (image);
   channels = jas_image_numcmpts (image);
+
+  GST_LOG_OBJECT (dec, "%d x %d, %d components", width, height, channels);
 
   /* jp2c bitstream has no real colour space info (kept in container),
    * so decoder may only pretend to know, where it really does not */
@@ -391,14 +391,9 @@ gst_jasper_dec_negotiate (GstJasperDec * dec, jas_image_t * image)
     dec->image_size = gst_video_format_get_size (dec->format, width, height);
     dec->alpha = gst_video_format_has_alpha (dec->format);
 
-    if (dec->mat)
-      jas_matrix_destroy (dec->mat);
-    dec->mat = jas_matrix_create (1, dec->width);
-    if (!dec->mat) {
-      dec->format = GST_VIDEO_FORMAT_UNKNOWN;
-      GST_DEBUG_OBJECT (dec, "failed to create helper buffer");
-      goto fail_image;
-    }
+    if (dec->buf)
+      g_free (dec->buf);
+    dec->buf = g_new0 (glong, dec->width);
 
     caps = gst_video_format_new_caps (dec->format, dec->width, dec->height,
         dec->framerate_numerator, dec->framerate_denominator, 1, 1);
@@ -462,6 +457,7 @@ gst_jasper_dec_get_picture (GstJasperDec * dec, guint8 * data,
   for (i = 0; i < dec->channels; ++i) {
     gint x, y, cwidth, cheight, inc, stride, cmpt;
     guint8 *row_pix, *out_pix;
+    glong *tb;
 
     inc = dec->inc[i];
     stride = dec->stride[i];
@@ -469,7 +465,7 @@ gst_jasper_dec_get_picture (GstJasperDec * dec, guint8 * data,
     cheight = dec->cheight[cmpt];
     cwidth = dec->cwidth[cmpt];
 
-    GST_DEBUG_OBJECT (dec,
+    GST_LOG_OBJECT (dec,
         "retrieve component %d<=%d, size %dx%d, offset %d, inc %d, stride %d",
         i, cmpt, cwidth, cheight, dec->offset[i], inc, stride);
 
@@ -477,10 +473,12 @@ gst_jasper_dec_get_picture (GstJasperDec * dec, guint8 * data,
 
     for (y = 0; y < cheight; y++) {
       row_pix = out_pix;
-      if (jas_image_readcmpt (image, i, 0, y, cwidth, 1, dec->mat))
+      tb = dec->buf;
+      if (jas_image_readcmpt2 (image, i, 0, y, cwidth, 1, dec->buf))
         goto fail_image;
       for (x = 0; x < cwidth; x++) {
-        *out_pix = (guint8) jas_matrix_get (dec->mat, 0, x);
+        *out_pix = *tb;
+        tb++;
         out_pix += inc;
       }
       out_pix = row_pix + stride;

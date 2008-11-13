@@ -1,3 +1,13 @@
+2008-11-13  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_init),
+	(gst_jasper_dec_reset), (gst_jasper_dec_negotiate),
+	(gst_jasper_dec_get_picture):
+	* ext/jp2k/gstjasperdec.h:
+	Make pad template caps reflect the supported formats.
+	Add or modify some debug statements, and slightly simplify image
+	passing to encoding library.
+
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/aacparse/gstaacparse.c: (plugin_init):
