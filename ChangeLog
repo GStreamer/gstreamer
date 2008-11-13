@@ -1,3 +1,12 @@
+2008-11-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/equalizer/GstIirEqualizer10Bands.prs:
+	* gst/equalizer/GstIirEqualizer3Bands.prs:
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	  Add presets for equalizer. Fixes #522183.
+
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/Makefile.am:

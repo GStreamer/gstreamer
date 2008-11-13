@@ -16,3 +16,8 @@ libgstequalizer_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstiirequalizer.h
 
+presetdir = $(datadir)/gstreamer-$(GST_MAJORMINOR)/presets
+preset_DATA = GstIirEqualizer3Bands.prs GstIirEqualizer10Bands.prs
+
+EXTRA_DIST = $(preset_DATA)
+

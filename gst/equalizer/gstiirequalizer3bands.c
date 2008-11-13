@@ -58,8 +58,22 @@ static void gst_iir_equalizer_3bands_get_property (GObject * object,
 GST_DEBUG_CATEGORY_EXTERN (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
-GST_BOILERPLATE (GstIirEqualizer3Bands, gst_iir_equalizer_3bands,
-    GstIirEqualizer, GST_TYPE_IIR_EQUALIZER);
+
+static void
+_do_init (GType object_type)
+{
+  const GInterfaceInfo preset_interface_info = {
+    NULL,                       /* interface_init */
+    NULL,                       /* interface_finalize */
+    NULL                        /* interface_data */
+  };
+
+  g_type_add_interface_static (object_type, GST_TYPE_PRESET,
+      &preset_interface_info);
+}
+
+GST_BOILERPLATE_FULL (GstIirEqualizer3Bands, gst_iir_equalizer_3bands,
+    GstIirEqualizer, GST_TYPE_IIR_EQUALIZER, _do_init);
 
 /* equalizer implementation */
 
