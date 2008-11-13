@@ -1,5 +1,10 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/aacparse/gstaacparse.c: (plugin_init):
+	Don't autoplug aacparse until it works.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_jitter_buffer_sink_parse_caps),
 	(gst_rtp_jitter_buffer_flush_stop), (gst_rtp_jitter_buffer_chain):

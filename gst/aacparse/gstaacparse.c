@@ -845,7 +845,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "aacparse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_AACPARSE);
+      GST_RANK_NONE, GST_TYPE_AACPARSE);
 }
 
 
