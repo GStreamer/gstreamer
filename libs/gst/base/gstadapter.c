@@ -197,16 +197,23 @@ gst_adapter_clear (GstAdapter * adapter)
 void
 gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
 {
+  guint size;
+
   g_return_if_fail (GST_IS_ADAPTER (adapter));
   g_return_if_fail (GST_IS_BUFFER (buf));
 
-  adapter->size += GST_BUFFER_SIZE (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  adapter->size += size;
 
   /* Note: merging buffers at this point is premature. */
   if (G_UNLIKELY (adapter->buflist == NULL)) {
+    GST_LOG_OBJECT (adapter, "pushing first %u bytes", size);
     adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
   } else {
     /* Otherwise append to the end, and advance our end pointer */
+    GST_LOG_OBJECT (adapter, "pushing %u bytes at end, size now %u", size,
+        adapter->size);
     adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
     adapter->buflist_end = g_slist_next (adapter->buflist_end);
   }

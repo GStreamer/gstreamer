@@ -1038,11 +1038,11 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
   g_mutex_lock (set->lock);
 
   /* we cannot wait from multiple threads */
-  if (set->waiting)
+  if (G_UNLIKELY (set->waiting))
     goto already_waiting;
 
   /* flushing, exit immediatly */
-  if (set->flushing)
+  if (G_UNLIKELY (set->flushing))
     goto flushing;
 
   set->waiting = TRUE;
@@ -1208,18 +1208,19 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
 
     g_mutex_lock (set->lock);
 
+    /* FIXME, can we only do this check when (res > 0)? */
     gst_poll_check_ctrl_commands (set, res, &restarting);
 
     /* update the controllable state if needed */
     set->controllable = set->new_controllable;
 
-    if (set->flushing) {
+    if (G_UNLIKELY (set->flushing)) {
       /* we got woken up and we are flushing, we need to stop */
       errno = EBUSY;
       res = -1;
       break;
     }
-  } while (restarting);
+  } while (G_UNLIKELY (restarting));
 
   set->waiting = FALSE;
 

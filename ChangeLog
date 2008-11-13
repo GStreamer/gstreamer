@@ -1,5 +1,16 @@
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstbuffer.c: (gst_buffer_finalize):
+	Avoid costly typechecking for trivially correct pointers.
+
+	* gst/gstpoll.c: (gst_poll_wait):
+	Add some G_LIKELY here and there.
+
+	* libs/gst/base/gstadapter.c: (gst_adapter_push):
+	Add some debug info.
+
+2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/random/wtay/poll-timeout:
 	Small tweaks.
 
