@@ -1,3 +1,8 @@
+2008-11-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2.c:
+	  Give it a primary rank for autovideosrc.
+
 2008-11-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Bjorn Ostby <bjornos at axis dot com>

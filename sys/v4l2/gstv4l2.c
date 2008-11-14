@@ -43,7 +43,7 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (v4l2_debug, "v4l2", 0, "V4L2 API calls");
 
-  if (!gst_element_register (plugin, "v4l2src", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "v4l2src", GST_RANK_PRIMARY,
           GST_TYPE_V4L2SRC))
     /*       !gst_element_register (plugin, "v4l2jpegsrc", */
     /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
