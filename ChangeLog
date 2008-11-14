@@ -1,3 +1,20 @@
+2008-11-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpjpegdepay.c: (gst_rtp_jpeg_depay_base_init),
+	(gst_rtp_jpeg_depay_class_init), (gst_rtp_jpeg_depay_init),
+	(gst_rtp_jpeg_depay_finalize), (MakeTables), (MakeQuantHeader),
+	(MakeHuffmanHeader), (MakeDRIHeader), (MakeHeaders),
+	(gst_rtp_jpeg_depay_setcaps), (gst_rtp_jpeg_depay_process),
+	(gst_rtp_jpeg_depay_change_state),
+	(gst_rtp_jpeg_depay_plugin_init):
+	* gst/rtp/gstrtpjpegdepay.h:
+	Add a jpeg depayloader.
+
+	* gst/rtp/gstrtpjpegpay.c:
+	Set the default properties on the payloader to better defaults.
+
 2008-11-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/gstv4l2.c:

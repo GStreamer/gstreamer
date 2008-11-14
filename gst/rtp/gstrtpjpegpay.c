@@ -45,9 +45,9 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_jpeg_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP JPEG payloader",
     "Codec/Payloader/Network",
-    "Payload-encodes JPEG pictures into a RTP packet",
+    "Payload-encodes JPEG pictures into RTP packets (RFC 2435)",
     "Axis Communications <dev-gstreamer@axis.com>");
 
 static GstStaticPadTemplate gst_rtp_jpeg_pay_sink_template =
@@ -86,13 +86,13 @@ GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
  * DEFAULT_JPEG_QUALITY:
  *
  */
-#define DEFAULT_JPEG_QUALITY 0
+#define DEFAULT_JPEG_QUALITY 255
 
 /**
  * DEFAULT_JPEG_TYPE:
  *
  */
-#define DEFAULT_JPEG_TYPE    0
+#define DEFAULT_JPEG_TYPE    1
 
 typedef enum _RtpJpegMarker RtpJpegMarker;
 
