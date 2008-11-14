@@ -39,6 +39,7 @@ struct _GstGLWindowPrivate
 {
   GMutex *glwin_lock;
   GMutex *x_lock;
+  GCond *cond_x_event;
   GCond *cond_send_message;
   gboolean running;
 
@@ -116,14 +117,30 @@ gst_gl_window_finalize (GObject * object)
   g_mutex_unlock (priv->glwin_lock);
   g_mutex_unlock (priv->x_lock);
 
+
   if (priv->cond_send_message)
+  {
     g_cond_free (priv->cond_send_message);
+    priv->cond_send_message = NULL;
+  }
 
   if (priv->x_lock)
+  {
     g_mutex_free (priv->x_lock);
+    priv->x_lock = NULL;
+  }
+
+  if (priv->cond_x_event)
+  {
+    g_cond_free (priv->cond_x_event);
+    priv->cond_x_event = NULL;
+  }
 
   if (priv->glwin_lock)
+  {
     g_mutex_free (priv->glwin_lock);
+    priv->glwin_lock = NULL;
+  }
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 
@@ -242,6 +259,7 @@ gst_gl_window_new (gint width, gint height)
 
   priv->glwin_lock = g_mutex_new ();
   priv->x_lock = g_mutex_new ();
+  priv->cond_x_event = g_cond_new ();
   priv->cond_send_message = g_cond_new ();
   priv->running = TRUE;
 
@@ -421,6 +439,8 @@ gst_gl_window_visible (GstGLWindow *window, gboolean visible)
 
       XSync(priv->device, FALSE);
 
+      g_cond_signal (priv->cond_x_event);
+
       g_mutex_unlock (priv->x_lock);
     }
 
@@ -460,6 +480,10 @@ gst_gl_window_draw (GstGLWindow *window)
 
       XSendEvent (priv->device, priv->internal_win_id, FALSE, ExposureMask, &event);
 
+      XSync (priv->device, FALSE);
+
+      g_cond_signal (priv->cond_x_event);
+
       g_mutex_unlock (priv->x_lock);
     }
 
@@ -479,6 +503,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
   while (priv->running)
   {
+    gboolean running = priv->running;
 
     g_mutex_unlock (priv->glwin_lock);
 
@@ -486,6 +511,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
     while (XPending (priv->device))
     {
+
       XEvent event;
 
       XNextEvent(priv->device, &event);
@@ -497,8 +523,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
           if (event.xclient.message_type == priv->atom_custom)
           {
-
-            if (priv->running)
+            if (running)
             {
               GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
               gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -514,7 +539,10 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
             g_debug ("Close\n");
 
-            priv->running = FALSE;
+            g_mutex_lock (priv->glwin_lock);
+            running = priv->running = FALSE;
+            g_mutex_unlock (priv->glwin_lock);
+
             if (priv->close_cb)
               priv->close_cb (priv->close_data);
 
@@ -582,9 +610,12 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
     }// while XPending
 
-    g_mutex_unlock (priv->x_lock);
+    g_debug ("wait loop\n");
+    if (running && !XPending (priv->device))
+      g_cond_wait (priv->cond_x_event, priv->x_lock);
+    g_debug ("wake loop\n");
 
-    g_usleep (10000);
+    g_mutex_unlock (priv->x_lock);
 
     g_mutex_lock (priv->glwin_lock);
 
@@ -607,6 +638,8 @@ gst_gl_window_quit_loop (GstGLWindow *window)
     g_mutex_lock (priv->glwin_lock);
 
     priv->running = FALSE;
+
+    g_cond_signal (priv->cond_x_event);
 
     g_mutex_unlock (priv->glwin_lock);
   }
@@ -642,10 +675,16 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
 
       XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
       XFlush (priv->device);
+      XSync (priv->device, FALSE);
 
       g_mutex_unlock (priv->x_lock);
 
+      g_cond_signal (priv->cond_x_event);
+
+      g_debug("signal\n");
+
       g_cond_wait (priv->cond_send_message, priv->glwin_lock);
+
     }
 
     g_mutex_unlock (priv->glwin_lock);
