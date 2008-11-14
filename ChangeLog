@@ -1,3 +1,10 @@
+2008-11-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/play/.cvsignore:
+	* gst-libs/gst/play/play.h:
+	* gst-libs/gst/play/play.vcproj:
+	  Remove cruft. This is not entered by make and its not even compilable.
+
 2008-11-13  David Schleef  <ds@schleef.org>
 
 	* ext/dirac/gstdiracenc.cc:
