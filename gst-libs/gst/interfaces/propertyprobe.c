@@ -79,7 +79,7 @@ gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
   if (!initialized) {
     /**
      * GstPropertyProbe::probe-needed
-     * %pspec: #GParamSpec that needs a probe
+     * @pspec: #GParamSpec that needs a probe
      *
      */
     /* FIXME:
