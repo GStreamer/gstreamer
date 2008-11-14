@@ -1,3 +1,19 @@
+2008-11-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Bjorn Ostby <bjornos at axis dot com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpjpegpay.c: (gst_rtp_jpeg_pay_base_init),
+	(gst_rtp_jpeg_pay_class_init), (gst_rtp_jpeg_pay_init),
+	(gst_rtp_jpeg_pay_setcaps), (gst_rtp_jpeg_pay_header_size),
+	(gst_rtp_jpeg_pay_read_quant_table),
+	(gst_rtp_jpeg_pay_scan_marker), (gst_rtp_jpeg_pay_handle_buffer),
+	(gst_rtp_jpeg_pay_set_property), (gst_rtp_jpeg_pay_get_property),
+	(gst_rtp_jpeg_pay_plugin_init):
+	* gst/rtp/gstrtpjpegpay.h:
+	Add JPEG payloader. Fixes #560756.
+
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Fabricio Godoy <skarllot at gmail dot com>
