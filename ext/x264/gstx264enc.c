@@ -204,7 +204,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264")
+    GST_STATIC_CAPS ("video/x-h264, "
+        "framerate = (fraction) [0/1, MAX], "
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 static void gst_x264_enc_finalize (GObject * object);
@@ -712,15 +714,14 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 static gboolean
 gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
 {
-  GstStructure *structure;
   GstBuffer *buf;
   GstCaps *outcaps;
   gboolean res;
 
-  structure = gst_caps_get_structure (caps, 0);
-  structure = gst_structure_copy (structure);
-  gst_structure_set_name (structure, "video/x-h264");
-  outcaps = gst_caps_new_full (structure, NULL);
+  outcaps = gst_caps_new_simple ("video/x-h264",
+      "width", G_TYPE_INT, encoder->width,
+      "height", G_TYPE_INT, encoder->height,
+      "framerate", GST_TYPE_FRACTION, encoder->fps_num, encoder->fps_den, NULL);
 
   if (!encoder->byte_stream) {
     buf = gst_x264_enc_header_buf (encoder);
