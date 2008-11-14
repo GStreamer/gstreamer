@@ -1150,7 +1150,6 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   AudioSampleEntry entry = { 0, };
   AtomInfo *ext_atom = NULL;
   gint constant_size = 0;
-  guint esds_type = 0;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -1208,7 +1207,9 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
               entry.fourcc = FOURCC__mp3;
             else {
               entry.fourcc = FOURCC_mp4a;
-              esds_type = ESDS_OBJECT_TYPE_MPEG1_P3;
+              ext_atom =
+                  build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG1_P3,
+                  ESDS_STREAM_TYPE_AUDIO, codec_data);
             }
             entry.samples_per_packet = 1152;
             entry.bytes_per_sample = 2;
@@ -1218,7 +1219,6 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
       case 4:
         /* AAC */
         entry.fourcc = FOURCC_mp4a;
-        esds_type = ESDS_OBJECT_TYPE_MPEG4_P3;
         if (!codec_data || GST_BUFFER_SIZE (codec_data) < 2)
           GST_WARNING_OBJECT (qtmux, "no (valid) codec_data for AAC audio");
         else {
@@ -1230,6 +1230,12 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
             GST_WARNING_OBJECT (qtmux,
                 "non-LC AAC may not run well on (Apple) QuickTime/iTunes");
         }
+        if (format == GST_QT_MUX_FORMAT_QT)
+          ext_atom = build_mov_aac_extension (qtpad->trak, codec_data);
+        else
+          ext_atom =
+              build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG4_P3,
+              ESDS_STREAM_TYPE_AUDIO, codec_data);
         break;
       default:
         break;
@@ -1306,9 +1312,6 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;
   qtpad->sample_size = constant_size;
-  /* collect optional extensions */
-  ext_atom = build_sample_entry_extension (qtpad->trak, qtmux->context->flavor,
-      entry.fourcc, esds_type, codec_data);
   atom_trak_set_audio_type (qtpad->trak, qtmux->context, &entry,
       entry.sample_rate, ext_atom, constant_size);
 
@@ -1362,7 +1365,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   VisualSampleEntry entry = { 0, };
   GstQTMuxFormat format;
   AtomInfo *ext_atom = NULL;
-  guint esds_type = 0;
   gboolean sync = FALSE;
 
   /* find stream data */
@@ -1382,12 +1384,16 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   /* required parts */
   if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) ||
-      !gst_structure_get_fraction (structure, "framerate", &framerate_num,
-          &framerate_den))
+      !gst_structure_get_int (structure, "height", &height))
     goto refuse_caps;
 
   /* optional */
+  depth = -1;
+  /* works as a default timebase */
+  framerate_num = 10000;
+  framerate_den = 1;
+  gst_structure_get_fraction (structure, "framerate", &framerate_num,
+      &framerate_den);
   gst_structure_get_int (structure, "depth", &depth);
   value = gst_structure_get_value (structure, "codec_data");
   if (value != NULL)
@@ -1450,7 +1456,9 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     }
     if (version) {
       entry.fourcc = FOURCC_mp4v;
-      esds_type = ESDS_OBJECT_TYPE_MPEG4_P2;
+      ext_atom =
+          build_esds_extension (qtpad->trak, ESDS_OBJECT_TYPE_MPEG4_P2,
+          ESDS_STREAM_TYPE_VISUAL, codec_data);
       if (!codec_data)
         GST_WARNING_OBJECT (qtmux, "no codec_data for MPEG4 video; "
             "output might not play in Apple QuickTime (try global-headers?)");
@@ -1460,6 +1468,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     qtpad->is_out_of_order = TRUE;
     if (!codec_data)
       GST_WARNING_OBJECT (qtmux, "no codec_data in h264 caps");
+    ext_atom = build_codec_data_extension (FOURCC_avcC, codec_data);
   } else if (strcmp (mimetype, "video/x-dv") == 0) {
     gint version = 0;
     gboolean pal = TRUE;
@@ -1491,6 +1500,17 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mimetype, "image/jpeg") == 0) {
     entry.fourcc = FOURCC_jpeg;
     sync = FALSE;
+  } else if (strcmp (mimetype, "image/x-j2c") == 0) {
+    guint32 fourcc;
+
+    entry.fourcc = FOURCC_mjp2;
+    sync = FALSE;
+    if (!gst_structure_get_fourcc (structure, "fourcc", &fourcc) ||
+        !(ext_atom =
+            build_jp2h_extension (qtpad->trak, width, height, fourcc))) {
+      GST_DEBUG_OBJECT (qtmux, "missing or invalid fourcc in jp2 caps");
+      goto refuse_caps;
+    }
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
     guint32 fourcc;
 
@@ -1505,9 +1525,6 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   /* ok, set the pad info accordingly */
   qtpad->fourcc = entry.fourcc;
   qtpad->sync = sync;
-  /* collect optional extensions */
-  ext_atom = build_sample_entry_extension (qtpad->trak, qtmux->context->flavor,
-      entry.fourcc, esds_type, codec_data);
   atom_trak_set_video_type (qtpad->trak, qtmux->context, &entry, rate,
       ext_atom);
 

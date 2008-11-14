@@ -142,6 +142,8 @@ G_BEGIN_DECLS
 #define FOURCC_ctts     GST_MAKE_FOURCC('c','t','t','s')
 #define FOURCC_drac     GST_MAKE_FOURCC('d','r','a','c')
 #define FOURCC_jpeg     GST_MAKE_FOURCC('j','p','e','g')
+#define FOURCC_mjp2     GST_MAKE_FOURCC('m','j','p','2')
+#define FOURCC_jp2h     GST_MAKE_FOURCC('j','p','2','h')
 
 /* Xiph fourcc */
 #define FOURCC_XiTh     GST_MAKE_FOURCC('X','i','T','h')

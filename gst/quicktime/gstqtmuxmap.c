@@ -193,7 +193,7 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
   static guint8 mjp2_prefix[] =
       { 0, 0, 0, 12, 'j', 'P', ' ', ' ', 0x0D, 0x0A, 0x87, 0x0A };
   guint32 *comp = NULL;
-  guint32 major = 0, version;
+  guint32 major = 0, version = 0;
   GstBuffer *prefix = NULL;
   GList *result = NULL;
 
@@ -202,7 +202,6 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
   g_return_if_fail (_version != NULL);
   g_return_if_fail (_compatible != NULL);
 
-  version = 1;
   switch (format) {
     case GST_QT_MUX_FORMAT_QT:
       major = FOURCC_qt__;
@@ -220,6 +219,7 @@ gst_qt_mux_map_format_to_header (GstQTMuxFormat format, GstBuffer ** _prefix,
     case GST_QT_MUX_FORMAT_MJ2:
       major = FOURCC_mjp2;
       comp = mjp2_brands;
+      version = 0;
       prefix = gst_buffer_new_and_alloc (sizeof (mjp2_prefix));
       memcpy (GST_BUFFER_DATA (prefix), mjp2_prefix, GST_BUFFER_SIZE (prefix));
       break;
