@@ -136,6 +136,12 @@ fourcc_to_caps (guint32 fourcc)
     case QT_MAKE_FOURCC_LE ('u', 'l', 'a', 'w'):
       caps = audio_caps_from_string ("audio/x-mulaw");
       break;
+    case QT_MAKE_FOURCC_LE ('A', 'V', 'd', 'n'):
+      caps = audio_caps_from_string ("video/x-dnxhd");
+      break;
+    case QT_MAKE_FOURCC_LE ('i', 'c', 'o', 'd'):
+      caps = audio_caps_from_string ("video/x-apple-intermediate-codec");
+      break;
       /* TO FILL !! */
     case QT_MAKE_FOURCC_LE ('M', 'A', 'C', '3'):
     case QT_MAKE_FOURCC_LE ('M', 'A', 'C', '6'):
