@@ -1,3 +1,12 @@
+2008-11-14  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* configure.ac: remove experimental build check, -bad is experimental
+	in itself and putting a plugin with a low rank, in the -bad sandbox
+	module demanding people pass --enable-experimental to build is just
+	like putting butter on lard (Rob tells me the English equivalent to
+	that expression is 'over egging the pudding').
+	* gst-plugins-bad.spec.in: add three latest plugin additions
+	
 2008-11-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/play/.cvsignore:

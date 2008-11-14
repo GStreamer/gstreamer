@@ -115,7 +115,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstflv.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
-
+%{_libdir}/gstreamer-%{majorminor}/libgstaacparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstamrparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstqtmux.so
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h

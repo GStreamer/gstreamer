@@ -634,7 +634,6 @@ return 0;
 ])
 
 dnl *** dvdnav for resindvd ***
-USE_DVDNAV=$BUILD_EXPERIMENTAL
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
 AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
   translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
