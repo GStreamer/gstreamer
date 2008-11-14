@@ -2802,11 +2802,14 @@ atom_trak_set_video_type (AtomTRAK * trak, AtomsContext * context,
 
 /* some sample description construction helpers */
 
-static AtomInfo *
-build_esds_atom (guint32 track_id, guint8 object_type, guint8 stream_type,
+AtomInfo *
+build_esds_extension (AtomTRAK * trak, guint8 object_type, guint8 stream_type,
     const GstBuffer * codec_data)
 {
+  guint32 track_id;
   AtomESDS *esds;
+
+  track_id = trak->tkhd.track_ID;
 
   esds = atom_esds_new ();
   esds->es.id = track_id & 0xFFFF;
@@ -2829,13 +2832,16 @@ build_esds_atom (guint32 track_id, guint8 object_type, guint8 stream_type,
       atom_esds_free);
 }
 
-static AtomInfo *
-build_mov_aac_extension (guint32 track_id, const GstBuffer * codec_data)
+AtomInfo *
+build_mov_aac_extension (AtomTRAK * trak, const GstBuffer * codec_data)
 {
+  guint32 track_id;
   AtomWAVE *wave;
   AtomFRMA *frma;
   Atom *ext_atom;
   GstBuffer *buf;
+
+  track_id = trak->tkhd.track_ID;
 
   /* Add WAVE atom to the MP4A sample table entry */
   wave = atom_wave_new ();
@@ -2848,7 +2854,7 @@ build_mov_aac_extension (guint32 track_id, const GstBuffer * codec_data)
 
   /* Add ESDS atom to WAVE */
   wave->extension_atoms = g_list_prepend (wave->extension_atoms,
-      build_esds_atom (track_id, ESDS_OBJECT_TYPE_MPEG4_P3,
+      build_esds_extension (trak, ESDS_OBJECT_TYPE_MPEG4_P3,
           ESDS_STREAM_TYPE_AUDIO, codec_data));
 
   /* Add MP4A atom to the WAVE:
@@ -2874,60 +2880,69 @@ build_mov_aac_extension (guint32 track_id, const GstBuffer * codec_data)
       atom_wave_free);
 }
 
-/* if applicable, construct Sample Table Entry extension atoms for a trak,
- * typically wrapping codec data;
- * for the given flavor of the format, fourcc type of the sample entry,
- * and in case of MP4 covered streams, the ESDS type */
 AtomInfo *
-build_sample_entry_extension (AtomTRAK * trak, AtomsTreeFlavor flavor,
-    guint32 fourcc, guint esds_type, const GstBuffer * codec_data)
+build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc)
 {
+  AtomData *atom_data;
+  GstBuffer *buf;
+  guint8 *data;
+  guint8 cenum;
+
+  if (fourcc == GST_MAKE_FOURCC ('s', 'R', 'G', 'B')) {
+    cenum = 0x10;
+  } else if (fourcc == GST_MAKE_FOURCC ('s', 'Y', 'U', 'V')) {
+    cenum = 0x12;
+  } else
+    return FALSE;
+
+  buf = gst_buffer_new_and_alloc (22 + 12);
+  data = GST_BUFFER_DATA (buf);
+
+  /* ihdr = image header box */
+  GST_WRITE_UINT32_BE (data, 22);
+  GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('i', 'h', 'd', 'r'));
+  GST_WRITE_UINT32_BE (data + 8, height);
+  GST_WRITE_UINT32_BE (data + 12, width);
+  /* FIXME perhaps parse from stream,
+   * though exactly 3 in any respectable colourspace */
+  GST_WRITE_UINT16_BE (data + 16, 3);
+  /* 8 bits per component, unsigned */
+  GST_WRITE_UINT8 (data + 18, 0x7);
+  /* compression type; reserved */
+  GST_WRITE_UINT8 (data + 19, 0x7);
+  /* colour space (un)known */
+  GST_WRITE_UINT8 (data + 20, 0x0);
+  /* intellectual property right (box present) */
+  GST_WRITE_UINT8 (data + 21, 0x0);
+
+  /* colour specification box */
+  data += 22;
+  GST_WRITE_UINT32_BE (data, 12);
+  GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('c', 'o', 'l', 'r'));
+  /* specification method: enumerated */
+  GST_WRITE_UINT8 (data + 8, 0x1);
+  /* precedence; reserved */
+  GST_WRITE_UINT8 (data + 9, 0x0);
+  /* approximation; reserved */
+  GST_WRITE_UINT8 (data + 10, 0x0);
+  /* enumerated colourspace */
+  GST_WRITE_UINT8 (data + 11, cenum);
+
+  atom_data = atom_data_new_from_gst_buffer (FOURCC_jp2h, buf);
+  gst_buffer_unref (buf);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}
+
+AtomInfo *
+build_codec_data_extension (guint32 fourcc, const GstBuffer * codec_data)
+{
+  AtomData *data;
   AtomInfo *result = NULL;
-  guint32 ext_fourcc = 0;
-  guint32 track_id;
 
-  g_return_val_if_fail (trak != NULL, NULL);
-  track_id = trak->tkhd.track_ID;
-
-  /* extension varies depending on format */
-  if (flavor == ATOMS_TREE_FLAVOR_ISOM) {
-    guint8 stream_type = 0;
-
-    if (fourcc == FOURCC_mp4a)
-      stream_type = ESDS_STREAM_TYPE_AUDIO;
-    else if (fourcc == FOURCC_mp4v)
-      stream_type = ESDS_STREAM_TYPE_VISUAL;
-    if (stream_type)
-      result = build_esds_atom (track_id, esds_type, stream_type, codec_data);
-  } else {
-    switch (fourcc) {
-      case FOURCC_mp4a:
-        if (esds_type != ESDS_OBJECT_TYPE_MPEG1_P3) {
-          result = build_mov_aac_extension (track_id, codec_data);
-        }
-        break;
-      case FOURCC_mp4v:
-      {
-        guint8 stream_type = ESDS_STREAM_TYPE_VISUAL;
-
-        result = build_esds_atom (track_id, esds_type, stream_type, codec_data);
-        break;
-      }
-    }
-  }
-
-  /* stable extension across format (or only relevant for particular format) */
-  switch (fourcc) {
-    case FOURCC_avc1:
-      ext_fourcc = FOURCC_avcC;
-      break;
-  }
-
-  /* simply wrap codec data in some atom */
-  if (ext_fourcc && codec_data) {
-    AtomData *data;
-
-    data = atom_data_new_from_gst_buffer (ext_fourcc, codec_data);
+  if (codec_data) {
+    data = atom_data_new_from_gst_buffer (fourcc, codec_data);
     result = build_atom_info_wrapper ((Atom *) data, atom_data_copy_data,
         atom_data_free);
   }
