@@ -484,7 +484,8 @@ audioresample_event (GstBaseTransform * base, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       break;
     case GST_EVENT_FLUSH_STOP:
-      resample_input_flush (audioresample->resample);
+      if (audioresample->resample)
+        resample_input_flush (audioresample->resample);
       audioresample->ts_offset = -1;
       audioresample->next_ts = -1;
       audioresample->offset = -1;
