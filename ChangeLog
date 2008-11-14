@@ -1,3 +1,8 @@
+2008-11-14  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps):
+	Construct source caps in more conventional (and correct) manner.
+
 2008-11-14  Christian Schaller <christian.schaller@collabora.co.uk>
 
 	* configure.ac: remove experimental build check, -bad is experimental
