@@ -1994,6 +1994,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
   guint64 size;
 
   while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
+    guint64 new_offset;
+
     /* box/atom types that are in common with ISO base media file format */
     if (STRNCMP (&data[4], "moov", 4) == 0 ||
         STRNCMP (&data[4], "mdat", 4) == 0 ||
@@ -2031,7 +2033,10 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       if (size < 8)
         break;
     }
-    offset += size;
+    new_offset = offset + size;
+    if (new_offset <= offset)
+      break;
+    offset = new_offset;
   }
   if (tip > 0) {
     gst_type_find_suggest (tf, tip, QT_CAPS);

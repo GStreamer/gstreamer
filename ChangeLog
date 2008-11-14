@@ -1,5 +1,15 @@
 2008-11-14  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst/audioresample/gstaudioresample.c:
+	Guard against a NULL dereference I somehow encountered -
+	with a FLUSH_STOP arriving either before basetransform _start(),
+	or after _stop().
+
+	* gst/typefind/gsttypefindfunctions.c:
+	Make sure we never jump backwards when typefinding corrupt mov files.
+
+2008-11-14  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst-libs/gst/interfaces/propertyprobe.c:
 	Fix random type causing a docs warning.
 
