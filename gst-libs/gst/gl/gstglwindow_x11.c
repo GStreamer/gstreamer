@@ -45,13 +45,16 @@ struct _GstGLWindowPrivate
 
   gchar *display_name;
   Display *device;
-  gint screen;
+  Screen *screen;
+  gint screen_num;
+  Visual *visual;
   Window root;
+  gulong white;
+  gulong black;
+  gint depth;
   gint device_width;
   gint device_height;
   gint connection;
-  Atom atom_delete_window;
-  Atom atom_custom;
   XVisualInfo *visual_info;
 
   Window internal_win_id;
@@ -93,10 +96,12 @@ gst_gl_window_finalize (GObject * object)
 
   XDestroyWindow (priv->device, priv->internal_win_id);
 
+  XSync (priv->device, FALSE);
+
   XFlush (priv->device);
   while (XCheckTypedEvent (priv->device, ClientMessage, &event))
   {
-      g_debug ("discared custom x event\n");
+      g_debug ("last discared custom x events\n");
       g_cond_signal (priv->cond_send_message);
   }
 
@@ -114,9 +119,8 @@ gst_gl_window_finalize (GObject * object)
 
   g_debug ("display closed\n");
 
-  g_mutex_unlock (priv->glwin_lock);
   g_mutex_unlock (priv->x_lock);
-
+  g_mutex_unlock (priv->glwin_lock);
 
   if (priv->cond_send_message)
   {
@@ -253,6 +257,7 @@ gst_gl_window_new (gint width, gint height)
   XWMHints wm_hints;
   unsigned long mask;
   const gchar *title = "OpenGL renderer";
+  Atom wm_delete_and_gl[2];
 
   static gint x = 0;
   static gint y = 0;
@@ -273,20 +278,23 @@ gst_gl_window_new (gint width, gint height)
 
   g_debug ("gl device id: %ld\n", (gulong) priv->device);
 
-  priv->screen = DefaultScreen (priv->device);
-  priv->root = RootWindow (priv->device, priv->screen);
+  priv->screen = DefaultScreenOfDisplay (priv->device);
+  priv->screen_num = DefaultScreen (priv->device);
+  priv->visual = DefaultVisual (priv->device, priv->screen_num);
+  priv->root = DefaultRootWindow (priv->device);
+  priv->white = XWhitePixel (priv->device, priv->screen_num);
+  priv->black = XBlackPixel (priv->device, priv->screen_num);
+  priv->depth = DefaultDepthOfScreen (priv->screen);
 
-  priv->device_width = DisplayWidth (priv->device, priv->screen);
-  priv->device_height = DisplayHeight (priv->device, priv->screen);
+
+  priv->device_width = DisplayWidth (priv->device, priv->screen_num);
+  priv->device_height = DisplayHeight (priv->device, priv->screen_num);
 
   priv->connection = ConnectionNumber (priv->device);
-  priv->atom_delete_window = XInternAtom (priv->device, "WM_DELETE_WINDOW", FALSE);
-  priv->atom_custom = XInternAtom (priv->device, "WM_GSTGLWINDOW", FALSE);
 
-  priv->visual_info = glXChooseVisual (priv->device, priv->screen, attrib);
+  priv->visual_info = glXChooseVisual (priv->device, priv->screen_num, attrib);
 
-  win_attr.event_mask =
-    StructureNotifyMask | SubstructureNotifyMask | ExposureMask | VisibilityChangeMask;
+  win_attr.event_mask = StructureNotifyMask | ExposureMask | VisibilityChangeMask;
 
   win_attr.background_pixmap = None;
   win_attr.background_pixel = 0;
@@ -302,7 +310,21 @@ gst_gl_window_new (gint width, gint height)
 
   XSync (priv->device, FALSE);
 
+  XSetWindowBackgroundPixmap (priv->device, priv->internal_win_id, None);
+
   g_debug ("gl window id: %lld\n", (guint64) priv->internal_win_id);
+
+  wm_delete_and_gl[0] = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
+  if (wm_delete_and_gl[0] == None)
+    g_debug ("Cannot create WM_DELETE_WINDOW\n");
+
+  //XSetWMProtocols (priv->device, priv->internal_win_id, &wm_delete, 1);
+
+  wm_delete_and_gl[1] = XInternAtom (priv->device, "WM_GL_WINDOW", False);
+  if (wm_delete_and_gl[1] == None)
+    g_debug ("Cannot create WM_GL_WINDOW\n");
+
+  XSetWMProtocols (priv->device, priv->internal_win_id, wm_delete_and_gl, 2);
 
   priv->gl_context = glXCreateContext (priv->device, priv->visual_info, NULL, TRUE);
 
@@ -326,8 +348,6 @@ gst_gl_window_new (gint width, gint height)
     &size_hints, &wm_hints, NULL);
 
   XFree (text_property.value);
-
-  XSetWMProtocols (priv->device, priv->internal_win_id, &priv->atom_delete_window, 1);
 
   ret = glXMakeCurrent (priv->device, priv->internal_win_id, priv->gl_context);
 
@@ -521,19 +541,31 @@ gst_gl_window_run_loop (GstGLWindow *window)
         case ClientMessage:
         {
 
-          if (event.xclient.message_type == priv->atom_custom)
+          Atom wm_delete = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
+          Atom wm_gl = XInternAtom (priv->device, "WM_GL_WINDOW", True);
+
+          if (wm_delete == None)
+            g_debug ("Cannot create WM_DELETE_WINDOW\n");
+          if (wm_gl == None)
+            g_debug ("Cannot create WM_GL_WINDOW\n");
+
+          if (wm_gl != None && event.xclient.message_type == wm_gl)
           {
             if (running)
             {
               GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
               gpointer custom_data = (gpointer) event.xclient.data.l[1];
+
+              if (!custom_cb || !custom_data)
+                g_debug ("custom cb not initialized\n");
+
               custom_cb (custom_data);
             }
 
             g_cond_signal (priv->cond_send_message);
           }
 
-          else if ( (Atom) event.xclient.data.l[0] == priv->atom_delete_window)
+          else if (wm_delete != None && (Atom) event.xclient.data.l[0] == wm_delete)
           {
             XEvent event;
 
@@ -552,6 +584,10 @@ gst_gl_window_run_loop (GstGLWindow *window)
               g_debug ("discared custom x event\n");
               g_cond_signal (priv->cond_send_message);
             }
+          }
+          else
+          {
+            g_debug("not reconized client message\n");
           }
           break;
         }
@@ -668,20 +704,17 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
       event.xclient.send_event = TRUE;
       event.xclient.display = priv->device;
       event.xclient.window = priv->internal_win_id;
-      event.xclient.message_type = priv->atom_custom;
+      event.xclient.message_type = XInternAtom (priv->device, "WM_GL_WINDOW", True);
       event.xclient.format = 32;
       event.xclient.data.l[0] = (long) callback;
       event.xclient.data.l[1] = (long) data;
 
       XSendEvent (priv->device, priv->internal_win_id, FALSE, NoEventMask, &event);
-      XFlush (priv->device);
       XSync (priv->device, FALSE);
 
       g_mutex_unlock (priv->x_lock);
 
       g_cond_signal (priv->cond_x_event);
-
-      g_debug("signal\n");
 
       g_cond_wait (priv->cond_send_message, priv->glwin_lock);
 
