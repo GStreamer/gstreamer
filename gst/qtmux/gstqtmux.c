@@ -206,6 +206,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
 {
   qtpad->fourcc = 0;
   qtpad->is_out_of_order = FALSE;
+  qtpad->have_dts = FALSE;
   qtpad->sample_size = 0;
   qtpad->sync = FALSE;
   qtpad->last_dts = 0;
@@ -921,7 +922,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   GstClockTime duration;
   guint nsamples, sample_size;
   guint64 scaled_duration, chunk_offset;
-  guint64 last_dts;
+  gint64 last_dts;
   gint64 pts_offset = 0;
   gboolean sync = FALSE, do_pts = FALSE;
 
@@ -960,8 +961,9 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
       GST_WARNING_OBJECT (qtmux, "no duration for last buffer");
       /* iso spec recommends some small value, try 0 */
       duration = 0;
-    } else
+    } else {
       duration = GST_BUFFER_DURATION (last_buf);
+    }
   } else {
     duration = GST_BUFFER_TIMESTAMP (buf) - GST_BUFFER_TIMESTAMP (last_buf);
   }
@@ -982,17 +984,32 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     duration = GST_BUFFER_DURATION (last_buf) / nsamples;
     /* timescale = samplerate */
     scaled_duration = 1;
+    pad->last_dts += duration * nsamples;
   } else {
     nsamples = 1;
     sample_size = GST_BUFFER_SIZE (last_buf);
-    /* first convert intended timestamp (in GstClockTime resolution) to
-     * trak timescale, then derive delta;
-     * this ensures sums of (scale)delta add up to converted timestamp,
-     * which only deviates at most 1/scale from timestamp itself */
-    scaled_duration = gst_util_uint64_scale (pad->last_dts + duration,
-        atom_trak_get_timescale (pad->trak), GST_SECOND) - last_dts;
+    if (pad->have_dts) {
+      gint64 scaled_dts;
+      pad->last_dts = GST_BUFFER_OFFSET_END (last_buf);
+      if ((gint64) (pad->last_dts) < 0) {
+        scaled_dts = -gst_util_uint64_scale (-pad->last_dts,
+            atom_trak_get_timescale (pad->trak), GST_SECOND);
+      } else {
+        scaled_dts = gst_util_uint64_scale (pad->last_dts,
+            atom_trak_get_timescale (pad->trak), GST_SECOND);
+      }
+      scaled_duration = scaled_dts - last_dts;
+      last_dts = scaled_dts;
+    } else {
+      /* first convert intended timestamp (in GstClockTime resolution) to
+       * trak timescale, then derive delta;
+       * this ensures sums of (scale)delta add up to converted timestamp,
+       * which only deviates at most 1/scale from timestamp itself */
+      scaled_duration = gst_util_uint64_scale (pad->last_dts + duration,
+          atom_trak_get_timescale (pad->trak), GST_SECOND) - last_dts;
+      pad->last_dts += duration;
+    }
   }
-  pad->last_dts += duration * nsamples;
   chunk_offset = qtmux->mdat_size;
 
   GST_LOG_OBJECT (qtmux,
@@ -1020,14 +1037,14 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
    *   buffer timestamps in case of multiple segment, non-perfect streams
    *  (and just perhaps maybe with some luck segment_to_running_time
    *   or segment_to_media_time might get near to it) */
-  if (qtmux->do_ctts && pad->is_out_of_order) {
+  if ((pad->have_dts || qtmux->guess_pts) && pad->is_out_of_order) {
     guint64 pts;
 
     pts = gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (last_buf),
         atom_trak_get_timescale (pad->trak), GST_SECOND);
     pts_offset = (gint64) (pts - last_dts);
     do_pts = TRUE;
-    GST_LOG_OBJECT (qtmux, "Adding ctts entry for pad %s: %" G_GUINT64_FORMAT,
+    GST_ERROR_OBJECT (qtmux, "Adding ctts entry for pad %s: %" G_GINT64_FORMAT,
         GST_PAD_NAME (pad->collect.pad), pts_offset);
   }
 
@@ -1178,6 +1195,7 @@ gst_qt_mux_audio_sink_set_caps (GstPad * pad, GstCaps * caps)
     codec_data = gst_value_get_buffer (value);
 
   qtpad->is_out_of_order = FALSE;
+  qtpad->have_dts = FALSE;
 
   /* set common properties */
   entry.sample_rate = rate;
@@ -1517,6 +1535,14 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
     gst_structure_get_fourcc (structure, "format", &fourcc);
     entry.fourcc = fourcc;
     qtpad->is_out_of_order = TRUE;
+    qtpad->have_dts = TRUE;
+  } else if (strcmp (mimetype, "video/x-mp4-part") == 0) {
+    guint32 fourcc;
+
+    gst_structure_get_fourcc (structure, "format", &fourcc);
+    entry.fourcc = fourcc;
+    qtpad->is_out_of_order = TRUE;
+    qtpad->have_dts = TRUE;
   }
 
   if (!entry.fourcc)
@@ -1661,7 +1687,7 @@ gst_qt_mux_get_property (GObject * object,
       g_value_set_uint (value, qtmux->timescale);
       break;
     case PROP_DO_CTTS:
-      g_value_set_boolean (value, qtmux->do_ctts);
+      g_value_set_boolean (value, qtmux->guess_pts);
       break;
     case PROP_FAST_START:
       g_value_set_boolean (value, qtmux->fast_start);
@@ -1706,7 +1732,7 @@ gst_qt_mux_set_property (GObject * object,
       qtmux->timescale = g_value_get_uint (value);
       break;
     case PROP_DO_CTTS:
-      qtmux->do_ctts = g_value_get_boolean (value);
+      qtmux->guess_pts = g_value_get_boolean (value);
       break;
     case PROP_FAST_START:
       qtmux->fast_start = g_value_get_boolean (value);

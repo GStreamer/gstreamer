@@ -1,5 +1,11 @@
 2008-11-14  David Schleef  <ds@schleef.org>
 
+	* gst/qtmux/gstqtmux.c:
+	* gst/qtmux/gstqtmux.h:
+	  Use dts from GST_BUFFER_OFFSET_END() for video/x-qt-part.
+
+2008-11-14  David Schleef  <ds@schleef.org>
+
 	* sys/qtwrapper/codecmapping.c: Add some of our favorite codecs.
 
 2008-11-14  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>

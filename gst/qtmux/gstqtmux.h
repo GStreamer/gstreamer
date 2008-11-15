@@ -48,6 +48,8 @@ typedef struct _GstQTPad
   guint32 fourcc;
   /* whether using format that have out of order buffers */
   gboolean is_out_of_order;
+  /* whether upstream provides valid PTS data */
+  gboolean have_dts;
   /* if not 0, track with constant sized samples, e.g. raw audio */
   guint sample_size;
   /* make sync table entry */
@@ -102,7 +104,7 @@ struct _GstQTMux
   AtomsTreeFlavor flavor;
   gboolean fast_start;
   gboolean large_file;
-  gboolean do_ctts;
+  gboolean guess_pts;
   gchar *fast_start_file_path;
 
   /* for collect pads event handling function */
