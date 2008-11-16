@@ -1,3 +1,9 @@
+2008-11-16  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps):
+	* gst/matroska/matroska-ids.h:
+	Make mkvdemux aware of E-AC3.
+
 2008-11-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/Makefile.am:

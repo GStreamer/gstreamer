@@ -5330,6 +5330,10 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_AC3))) {
     caps = gst_caps_new_simple ("audio/x-ac3", NULL);
     *codec_name = g_strdup ("AC-3 audio");
+  } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_EAC3,
+          strlen (GST_MATROSKA_CODEC_ID_AUDIO_EAC3))) {
+    caps = gst_caps_new_simple ("audio/x-eac3", NULL);
+    *codec_name = g_strdup ("E-AC-3 audio");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_DTS)) {
     caps = gst_caps_new_simple ("audio/x-dts", NULL);
     *codec_name = g_strdup ("DTS audio");
