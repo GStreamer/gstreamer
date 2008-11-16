@@ -490,7 +490,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
   while (priv->running)
   {
-    gboolean running = priv->running;
     XEvent event;
 
     g_mutex_unlock (priv->x_lock);
@@ -519,7 +518,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
         if (wm_gl != None && event.xclient.message_type == wm_gl)
         {
-          if (running)
+          if (priv->running)
           {
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -541,10 +540,17 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
           g_debug ("Close\n");
 
-          running = priv->running = FALSE;
+          priv->running = FALSE;
 
           if (priv->close_cb)
             priv->close_cb (priv->close_data);
+
+          priv->draw_cb = NULL;
+          priv->draw_data = NULL;
+          priv->resize_cb = NULL;
+          priv->resize_data = NULL;
+          priv->close_cb = NULL;
+          priv->close_data = NULL;
 
           XFlush (priv->device);
           while (XCheckTypedEvent (priv->device, ClientMessage, &event))
@@ -563,10 +569,8 @@ gst_gl_window_run_loop (GstGLWindow *window)
       case CreateNotify:
       case ConfigureNotify:
       {
-        gint width = event.xconfigure.width;
-        gint height = event.xconfigure.height;
         if (priv->resize_cb)
-          priv->resize_cb (priv->resize_data, width, height);
+          priv->resize_cb (priv->resize_data, event.xconfigure.width, event.xconfigure.height);
         break;
       }
 
