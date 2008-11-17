@@ -1,3 +1,10 @@
+2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/sidplay/Makefile.am:
+	Use GST_CXXFLAGS for C++ code instead of GST_CFLAGS. The latter could
+	contain CFLAGS that do not exist for C++, like -Wvla or
+	-Wdeclaration-after-statement. Fixes bug #561161.
+
 2008-11-12  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
