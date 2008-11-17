@@ -353,7 +353,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_set_active (srcpad, TRUE);
     gst_element_add_pad (element, srcpad);
 
-    GST_DEBUG ("emitting new-payload_type for pt %d", pt);
+    GST_DEBUG ("emitting new-payload-type for pt %d", pt);
     g_signal_emit (G_OBJECT (rtpdemux),
         gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE], 0, pt, srcpad);
   }

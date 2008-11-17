@@ -721,18 +721,23 @@ push_packet (RTPSource * src, GstBuffer * buffer)
 static gint
 get_clock_rate (RTPSource * src, guint8 payload)
 {
+  if (payload != src->payload) {
+    GST_DEBUG ("new payload %d", payload);
+    src->payload = payload;
+    src->clock_rate = -1;
+    src->stats.transit = -1;
+  }
+
   if (src->clock_rate == -1) {
     gint clock_rate = -1;
 
     if (src->callbacks.clock_rate)
       clock_rate = src->callbacks.clock_rate (src, payload, src->user_data);
 
-    GST_DEBUG ("new payload %d, got clock-rate %d", payload, clock_rate);
+    GST_DEBUG ("got clock-rate %d", payload, clock_rate);
 
     src->clock_rate = clock_rate;
   }
-  src->payload = payload;
-
   return src->clock_rate;
 }
 

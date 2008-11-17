@@ -851,6 +851,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   if (G_UNLIKELY (priv->last_pt != pt)) {
     GstCaps *caps;
 
+    GST_DEBUG_OBJECT (jitterbuffer, "pt changed from %u to %u", priv->last_pt,
+        pt);
+
     priv->last_pt = pt;
     /* reset clock-rate so that we get a new one */
     priv->clock_rate = -1;
@@ -865,7 +868,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     /* no clock rate given on the caps, try to get one with the signal */
     gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
     if (G_UNLIKELY (priv->clock_rate == -1))
-      goto not_negotiated;
+      goto no_clock_rate;
   }
 
   /* take the timestamp of the buffer. This is the time when the packet was
@@ -997,9 +1000,10 @@ invalid_buffer:
     gst_object_unref (jitterbuffer);
     return GST_FLOW_OK;
   }
-not_negotiated:
+no_clock_rate:
   {
-    GST_WARNING_OBJECT (jitterbuffer, "No clock-rate in caps!");
+    GST_WARNING_OBJECT (jitterbuffer,
+        "No clock-rate in caps!, dropping buffer");
     gst_buffer_unref (buffer);
     gst_object_unref (jitterbuffer);
     return GST_FLOW_OK;
@@ -1484,7 +1488,7 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
 
 void
 gst_rtp_jitter_buffer_get_sync (GstRtpJitterBuffer * buffer, guint64 * rtptime,
-    guint64 * timestamp)
+    guint64 * timestamp, guint32 * clock_rate)
 {
   GstRtpJitterBufferPrivate *priv;
 
@@ -1493,6 +1497,6 @@ gst_rtp_jitter_buffer_get_sync (GstRtpJitterBuffer * buffer, guint64 * rtptime,
   priv = buffer->priv;
 
   JBUF_LOCK (priv);
-  rtp_jitter_buffer_get_sync (priv->jbuf, rtptime, timestamp);
+  rtp_jitter_buffer_get_sync (priv->jbuf, rtptime, timestamp, clock_rate);
   JBUF_UNLOCK (priv);
 }

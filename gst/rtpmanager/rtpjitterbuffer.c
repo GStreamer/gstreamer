@@ -105,6 +105,7 @@ rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
   jbuf->base_time = -1;
   jbuf->base_rtptime = -1;
   jbuf->base_extrtp = -1;
+  jbuf->clock_rate = -1;
   jbuf->ext_rtptime = -1;
   jbuf->window_pos = 0;
   jbuf->window_filling = TRUE;
@@ -187,6 +188,13 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
 
   gstrtptime = gst_util_uint64_scale_int (ext_rtptime, GST_SECOND, clock_rate);
 
+  if (jbuf->clock_rate != -1 && jbuf->clock_rate != clock_rate) {
+    GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
+        G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+    jbuf->base_time = -1;
+    jbuf->base_rtptime = -1;
+  }
+
   /* first time, lock on to time and gstrtptime */
   if (G_UNLIKELY (jbuf->base_time == -1)) {
     jbuf->base_time = time;
@@ -194,6 +202,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   }
   if (G_UNLIKELY (jbuf->base_rtptime == -1)) {
     jbuf->base_rtptime = gstrtptime;
+    jbuf->clock_rate = clock_rate;
     jbuf->base_extrtp = ext_rtptime;
     GST_DEBUG ("Taking new base rtptime %" GST_TIME_FORMAT,
         GST_TIME_ARGS (gstrtptime));
@@ -207,6 +216,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
     GST_DEBUG ("backward timestamps at server, taking new base time");
     jbuf->base_time = time;
     jbuf->base_rtptime = gstrtptime;
+    jbuf->clock_rate = clock_rate;
     jbuf->base_extrtp = ext_rtptime;
     send_diff = 0;
   }
@@ -218,7 +228,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
 
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
-  if (time == -1)
+  if (time == -1 || jbuf->base_time == -1)
     goto no_skew;
 
   /* elapsed time at receiver, includes the jitter */
@@ -240,6 +250,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
     jbuf->base_time = time;
     jbuf->base_rtptime = gstrtptime;
     jbuf->base_extrtp = ext_rtptime;
+    jbuf->clock_rate = clock_rate;
     send_diff = 0;
     delta = 0;
   }
@@ -320,7 +331,10 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
 no_skew:
   /* the output time is defined as the base timestamp plus the RTP time
    * adjusted for the clock skew .*/
-  out_time = jbuf->base_time + send_diff + jbuf->skew;
+  if (jbuf->base_time != -1)
+    out_time = jbuf->base_time + send_diff + jbuf->skew;
+  else
+    out_time = -1;
 
   GST_DEBUG ("skew %" G_GINT64_FORMAT ", out %" GST_TIME_FORMAT,
       jbuf->skew, GST_TIME_ARGS (out_time));
@@ -521,16 +535,19 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
  * @jbuf: an #RTPJitterBuffer
  * @rtptime: result RTP time
  * @timestamp: result GStreamer timestamp
+ * @clock_rate: clock-rate of @rtptime
  *
  * Returns the relation between the RTP timestamp and the GStreamer timestamp
  * used for constructing timestamps.
  */
 void
 rtp_jitter_buffer_get_sync (RTPJitterBuffer * jbuf, guint64 * rtptime,
-    guint64 * timestamp)
+    guint64 * timestamp, guint32 * clock_rate)
 {
   if (rtptime)
     *rtptime = jbuf->base_extrtp;
   if (timestamp)
     *timestamp = jbuf->base_time + jbuf->skew;
+  if (clock_rate)
+    *clock_rate = jbuf->clock_rate;
 }

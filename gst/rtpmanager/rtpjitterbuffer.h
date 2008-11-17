@@ -56,6 +56,7 @@ struct _RTPJitterBuffer {
   /* for calculating skew */
   GstClockTime   base_time;
   GstClockTime   base_rtptime;
+  guint32        clock_rate;
   GstClockTime   base_extrtp;
   guint64        ext_rtptime;
   gint64         window[RTP_JITTER_BUFFER_MAX_WINDOW];
@@ -91,7 +92,7 @@ guint                 rtp_jitter_buffer_num_packets      (RTPJitterBuffer *jbuf)
 guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf);
 
 void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf, guint64 *rtptime,
-                                                          guint64 *timestamp);
+                                                          guint64 *timestamp, guint32 *clock_rate);
 
 
 #endif /* __RTP_JITTER_BUFFER_H__ */
