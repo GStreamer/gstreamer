@@ -1,3 +1,9 @@
+2008-11-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/aacparse_data.h:
+	* tests/check/elements/amrparse_data.h:
+	  Add missing files.
+
 2008-11-14  David Schleef  <ds@schleef.org>
 
 	* gst/qtmux/gstqtmux.c:
