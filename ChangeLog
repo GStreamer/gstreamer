@@ -1,3 +1,10 @@
+2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/controller/gstinterpolation.c:
+	* libs/gst/controller/gstlfocontrolsource.c:
+	Use gst_guint64_to_gdouble instead of gst_util_guint64_to_gdouble
+	as it is mapped to a cast on non-win32 platforms.
+
 2008-11-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:

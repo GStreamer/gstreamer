@@ -73,7 +73,7 @@ _sine_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
   gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, self->priv->period); \
   \
-  ret = sin (2.0 * M_PI * (self->priv->frequency / GST_SECOND) * gst_util_guint64_to_gdouble (pos)); \
+  ret = sin (2.0 * M_PI * (self->priv->frequency / GST_SECOND) * gst_guint64_to_gdouble (pos)); \
   ret *= amp; \
   ret += off; \
   \
@@ -119,7 +119,7 @@ DEFINE_SINE (long, TRUE, EMPTY);
 
 DEFINE_SINE (ulong, TRUE, EMPTY);
 DEFINE_SINE (int64, TRUE, EMPTY);
-DEFINE_SINE (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_SINE (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_SINE (float, FALSE, EMPTY);
 DEFINE_SINE (double, FALSE, EMPTY);
 
@@ -205,7 +205,7 @@ DEFINE_SQUARE (long, TRUE, EMPTY);
 
 DEFINE_SQUARE (ulong, TRUE, EMPTY);
 DEFINE_SQUARE (int64, TRUE, EMPTY);
-DEFINE_SQUARE (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_SQUARE (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_SQUARE (float, FALSE, EMPTY);
 DEFINE_SQUARE (double, FALSE, EMPTY);
 
@@ -241,7 +241,7 @@ _saw_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
   \
-  ret = - ((gst_util_guint64_to_gdouble (pos) - gst_util_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_util_guint64_to_gdouble (period)));\
+  ret = - ((gst_guint64_to_gdouble (pos) - gst_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_guint64_to_gdouble (period)));\
   \
   ret += off; \
   \
@@ -288,7 +288,7 @@ DEFINE_SAW (long, TRUE, EMPTY);
 
 DEFINE_SAW (ulong, TRUE, EMPTY);
 DEFINE_SAW (int64, TRUE, EMPTY);
-DEFINE_SAW (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_SAW (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_SAW (float, FALSE, EMPTY);
 DEFINE_SAW (double, FALSE, EMPTY);
 
@@ -324,7 +324,7 @@ _rsaw_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
   \
-  ret = ((gst_util_guint64_to_gdouble (pos) - gst_util_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_util_guint64_to_gdouble (period)));\
+  ret = ((gst_guint64_to_gdouble (pos) - gst_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_guint64_to_gdouble (period)));\
   \
   ret += off; \
   \
@@ -371,7 +371,7 @@ DEFINE_RSAW (long, TRUE, EMPTY);
 
 DEFINE_RSAW (ulong, TRUE, EMPTY);
 DEFINE_RSAW (int64, TRUE, EMPTY);
-DEFINE_RSAW (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_RSAW (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_RSAW (float, FALSE, EMPTY);
 DEFINE_RSAW (double, FALSE, EMPTY);
 
@@ -407,12 +407,12 @@ _triangle_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
   \
-  if (gst_util_guint64_to_gdouble (pos) <= gst_util_guint64_to_gdouble (period) / 4.0) \
-    ret = gst_util_guint64_to_gdouble (pos) * ((4.0 * amp) / gst_util_guint64_to_gdouble (period)); \
-  else if (gst_util_guint64_to_gdouble (pos) <= (3.0 * gst_util_guint64_to_gdouble (period)) / 4.0) \
-    ret = -(gst_util_guint64_to_gdouble (pos) - gst_util_guint64_to_gdouble (period) / 2.0) * ((4.0 * amp) / gst_util_guint64_to_gdouble (period)); \
+  if (gst_guint64_to_gdouble (pos) <= gst_guint64_to_gdouble (period) / 4.0) \
+    ret = gst_guint64_to_gdouble (pos) * ((4.0 * amp) / gst_guint64_to_gdouble (period)); \
+  else if (gst_guint64_to_gdouble (pos) <= (3.0 * gst_guint64_to_gdouble (period)) / 4.0) \
+    ret = -(gst_guint64_to_gdouble (pos) - gst_guint64_to_gdouble (period) / 2.0) * ((4.0 * amp) / gst_guint64_to_gdouble (period)); \
   else \
-    ret = gst_util_guint64_to_gdouble (period) - gst_util_guint64_to_gdouble (pos) * ((4.0 * amp) / gst_util_guint64_to_gdouble (period)); \
+    ret = gst_guint64_to_gdouble (period) - gst_guint64_to_gdouble (pos) * ((4.0 * amp) / gst_guint64_to_gdouble (period)); \
   \
   ret += off; \
   \
@@ -459,7 +459,7 @@ DEFINE_TRIANGLE (long, TRUE, EMPTY);
 
 DEFINE_TRIANGLE (ulong, TRUE, EMPTY);
 DEFINE_TRIANGLE (int64, TRUE, EMPTY);
-DEFINE_TRIANGLE (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_TRIANGLE (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_TRIANGLE (float, FALSE, EMPTY);
 DEFINE_TRIANGLE (double, FALSE, EMPTY);
 

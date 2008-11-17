@@ -596,7 +596,7 @@ DEFINE_LINEAR_GET (long, TRUE, EMPTY);
 
 DEFINE_LINEAR_GET (ulong, TRUE, EMPTY);
 DEFINE_LINEAR_GET (int64, TRUE, EMPTY);
-DEFINE_LINEAR_GET (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_LINEAR_GET (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_LINEAR_GET (float, FALSE, EMPTY);
 DEFINE_LINEAR_GET (double, FALSE, EMPTY);
 
@@ -672,7 +672,7 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
   cp = node->data; \
   x_next = cp->timestamp; \
   y_next = g_value_get_##vtype (&cp->value); \
-  h[0] = gst_util_guint64_to_gdouble (x_next - x); \
+  h[0] = gst_guint64_to_gdouble (x_next - x); \
   \
   for (i = 1; i < n-1; i++) { \
     /* Shuffle x and y values */ \
@@ -685,7 +685,7 @@ _interpolate_cubic_update_cache_##vtype (GstInterpolationControlSource *self) \
     x_next = cp->timestamp; \
     y_next = g_value_get_##vtype (&cp->value); \
     \
-    h[i] = gst_util_guint64_to_gdouble (x_next - x); \
+    h[i] = gst_guint64_to_gdouble (x_next - x); \
     o[i] = h[i-1]; \
     p[i] = 2.0 * (h[i-1] + h[i]); \
     q[i] = h[i]; \
@@ -820,7 +820,7 @@ DEFINE_CUBIC_GET (long, TRUE, EMPTY);
 
 DEFINE_CUBIC_GET (ulong, TRUE, EMPTY);
 DEFINE_CUBIC_GET (int64, TRUE, EMPTY);
-DEFINE_CUBIC_GET (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_CUBIC_GET (uint64, TRUE, gst_guint64_to_gdouble);
 DEFINE_CUBIC_GET (float, FALSE, EMPTY);
 DEFINE_CUBIC_GET (double, FALSE, EMPTY);
 
