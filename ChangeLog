@@ -1,3 +1,8 @@
+2008-11-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstvalue.c:
+	  Don't crash if either of the string GValues is empty.
+
 2008-11-17  Andy Wingo  <wingo@pobox.com>
 
 	* tools/gst-inspect.c (print_all_uri_handlers): New function,

@@ -1764,13 +1764,17 @@ gst_value_deserialize_float (GValue * dest, const gchar * s)
 static gint
 gst_value_compare_string (const GValue * value1, const GValue * value2)
 {
-  int x = strcmp (value1->data[0].v_pointer, value2->data[0].v_pointer);
+  if (!value1->data[0].v_pointer || !value2->data[0].v_pointer) {
+    return GST_VALUE_UNORDERED;
+  } else {
+    int x = strcmp (value1->data[0].v_pointer, value2->data[0].v_pointer);
 
-  if (x < 0)
-    return GST_VALUE_LESS_THAN;
-  if (x > 0)
-    return GST_VALUE_GREATER_THAN;
-  return GST_VALUE_EQUAL;
+    if (x < 0)
+      return GST_VALUE_LESS_THAN;
+    if (x > 0)
+      return GST_VALUE_GREATER_THAN;
+    return GST_VALUE_EQUAL;
+  }
 }
 
 /* keep in sync with gststructure.c */
