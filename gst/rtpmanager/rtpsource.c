@@ -734,7 +734,7 @@ get_clock_rate (RTPSource * src, guint8 payload)
     if (src->callbacks.clock_rate)
       clock_rate = src->callbacks.clock_rate (src, payload, src->user_data);
 
-    GST_DEBUG ("got clock-rate %d", payload, clock_rate);
+    GST_DEBUG ("got clock-rate %d", clock_rate);
 
     src->clock_rate = clock_rate;
   }
