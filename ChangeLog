@@ -1,5 +1,14 @@
 2008-11-17  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.c:
+	* libs/gst/controller/gstcontrollerprivate.h:
+	  Keep last-value and only call set_property if value has changed. This
+	  supresses all the g_object_notifies we would trigger otherwise. It
+	  also allows the user to chage the value while there is no controller
+	  change.
+
+2008-11-17  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstvalue.c:
 	  Don't crash if either of the string GValues is empty.
 

@@ -146,6 +146,8 @@ gst_controlled_property_new (GObject * object, const gchar * name)
       prop->pspec = pspec;
       prop->name = pspec->name;
       prop->disabled = FALSE;
+      memset (&prop->last_value, 0, sizeof (GValue));
+      g_value_init (&prop->last_value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
     }
   } else {
     GST_WARNING ("class '%s' has no property '%s'", G_OBJECT_TYPE_NAME (object),
@@ -166,6 +168,7 @@ gst_controlled_property_free (GstControlledProperty * prop)
 {
   if (prop->csource)
     g_object_unref (prop->csource);
+  g_value_unset (&prop->last_value);
   g_free (prop);
 }
 
@@ -691,7 +694,10 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
     ret = gst_control_source_get_value (prop->csource, timestamp, &value);
     if (G_LIKELY (ret)) {
-      g_object_set_property (self->object, prop->name, &value);
+      if (gst_value_compare (&value, &prop->last_value) != GST_VALUE_EQUAL) {
+        g_object_set_property (self->object, prop->name, &value);
+        g_value_copy (&value, &prop->last_value);
+      }
     } else {
       GST_LOG ("no control value");
     }
