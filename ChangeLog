@@ -1,3 +1,9 @@
+2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c: (get_clock_rate):
+	Fix GST_DEBUG call to only have as many arguments as required
+	by the format string. Fixes a compiler warning.
+
 2008-11-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
