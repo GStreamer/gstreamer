@@ -1,3 +1,9 @@
+2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstutils.h:
+	Add G_GNUC_PURE to gst_util_uint64_scale* and the double<->uint64
+	conversion functions.
+
 2008-11-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbuffer.c: (gst_buffer_finalize):
