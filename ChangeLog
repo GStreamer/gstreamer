@@ -1,3 +1,15 @@
+2008-11-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* sys/v4l2/v4l2src_calls.c:
+	  (gst_v4l2src_probe_caps_for_format_and_size), (sort_by_frame_size),
+	  (gst_v4l2src_probe_caps_for_format):
+	  Turns out we don't always get the frame sizes in a predefined
+	  order from lowest to highest resolution, so let's just sort the
+	  list by frame size once we've queried the possible resolutions
+	  rather than assume any particular order. Fixes probed caps for
+	  the camera in my HP2133 mini notebook and makes v4l2src default
+	  to a decent size.
+
 2008-11-16  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps):

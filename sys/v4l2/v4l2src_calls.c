@@ -771,6 +771,20 @@ unknown_type:
 }
 #endif /* defined VIDIOC_ENUM_FRAMEINTERVALS */
 
+static gint
+sort_by_frame_size (GstStructure * s1, GstStructure * s2)
+{
+  int w1, h1, w2, h2;
+
+  gst_structure_get_int (s1, "width", &w1);
+  gst_structure_get_int (s1, "height", &h1);
+  gst_structure_get_int (s2, "width", &w2);
+  gst_structure_get_int (s2, "height", &h2);
+
+  /* I think it's safe to assume that this won't overflow for a while */
+  return ((w2 * h2) - (w1 * h1));
+}
+
 GstCaps *
 gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     const GstStructure * template)
@@ -804,8 +818,6 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
       tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
           w, h, template);
 
-      /* we get low res to high res, but want high res to low res in caps, so
-       * prepend structs to results list, we'll reverse the order later then */
       if (tmp)
         results = g_list_prepend (results, tmp);
 
@@ -830,8 +842,6 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
       tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
           w, h, template);
 
-      /* we get low res to high res, but want high res to low res in caps, so
-       * prepend structs to results list, we'll reverse the order later then */
       if (tmp)
         results = g_list_prepend (results, tmp);
     }
@@ -864,12 +874,12 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     goto unknown_type;
   }
 
-  /* we use an intermediary list to store the results of the probing because
-   * we probe from lowest resolution to highest resolution, but want the caps
-   * to contain the results in reverse order starting with the highest
-   * resolution, as order in caps matters for things like fixation.  However,
-   * there's no gst_caps_prepend_structure(), so we use the list as helper to
-   * reverse the order */
+  /* we use an intermediary list to store and then sort the results of the
+   * probing because we can't make any assumptions about the order in which
+   * the driver will give us the sizes, but we want the final caps to contain
+   * the results starting with the highest resolution and having the lowest
+   * resolution last, since order in caps matters for things like fixation. */
+  results = g_list_sort (results, (GCompareFunc) sort_by_frame_size);
   while (results != NULL) {
     gst_caps_append_structure (ret, GST_STRUCTURE (results->data));
     results = g_list_delete_link (results, results);
