@@ -40,6 +40,7 @@ struct _GstGLWindowPrivate
   GMutex *x_lock;
   GCond *cond_send_message;
   gboolean running;
+  gboolean visible;
 
   gchar *display_name;
   Display *device;
@@ -228,7 +229,6 @@ gst_gl_window_new (gint width, gint height)
 
   XSetWindowAttributes win_attr;
   XTextProperty text_property;
-  XSizeHints size_hints;
   XWMHints wm_hints;
   unsigned long mask;
   const gchar *title = "OpenGL renderer";
@@ -240,11 +240,9 @@ gst_gl_window_new (gint width, gint height)
   priv->x_lock = g_mutex_new ();
   priv->cond_send_message = g_cond_new ();
   priv->running = TRUE;
+  priv->visible = FALSE;
 
   g_mutex_lock (priv->x_lock);
-
-  x += 20;
-  y += 20;
 
   priv->device = XOpenDisplay (priv->display_name);
 
@@ -258,6 +256,7 @@ gst_gl_window_new (gint width, gint height)
   priv->black = XBlackPixel (priv->device, priv->screen_num);
   priv->depth = DefaultDepthOfScreen (priv->screen);
 
+  g_debug ("gl root id: %lld\n", (guint64) priv->root);
 
   priv->device_width = DisplayWidth (priv->device, priv->screen_num);
   priv->device_height = DisplayHeight (priv->device, priv->screen_num);
@@ -279,6 +278,9 @@ gst_gl_window_new (gint width, gint height)
   priv->internal_win_id = XCreateWindow (priv->device, priv->root, x, y,
     width, height, 0, priv->visual_info->depth, InputOutput,
     priv->visual_info->visual, mask, &win_attr);
+
+  x += 20;
+  y += 20;
 
   XSync (priv->device, FALSE);
 
@@ -303,12 +305,6 @@ gst_gl_window_new (gint width, gint height)
   if (!glXIsDirect(priv->device, priv->gl_context))
     g_debug ("direct rendering failed\n");
 
-  size_hints.flags = USPosition | USSize;
-  size_hints.x = x; //FIXME: not working
-  size_hints.y = y; //FIXME: not working
-  size_hints.width = width;
-  size_hints.height= height;
-
   wm_hints.flags = StateHint;
   wm_hints.initial_state = NormalState;
   wm_hints.input = False;
@@ -316,7 +312,7 @@ gst_gl_window_new (gint width, gint height)
   XStringListToTextProperty ((char**)&title, 1, &text_property);
 
   XSetWMProperties (priv->device, priv->internal_win_id, &text_property, &text_property, 0, 0,
-    &size_hints, &wm_hints, NULL);
+    NULL, &wm_hints, NULL);
 
   XFree (text_property.value);
 
@@ -416,21 +412,8 @@ gst_gl_window_visible (GstGLWindow *window, gboolean visible)
 
     g_mutex_lock (priv->x_lock);
 
-    if (priv->running)
-    {
-      Display *disp = XOpenDisplay (priv->display_name);
-
-      g_debug ("set visible %lld\n", (guint64) priv->internal_win_id);
-
-      if (visible)
-        XMapWindow (disp, priv->internal_win_id);
-      else
-        XUnmapWindow (disp, priv->internal_win_id);
-
-      XSync(disp, FALSE);
-
-      XCloseDisplay (disp);
-    }
+    if (priv->visible != visible)
+      priv->visible = visible;
 
     g_mutex_unlock (priv->x_lock);
   }
@@ -454,6 +437,12 @@ gst_gl_window_draw (GstGLWindow *window)
       XWindowAttributes attr;
 
       disp = XOpenDisplay (priv->display_name);
+
+      if (priv->visible)
+      {
+        XMapWindow (disp, priv->internal_win_id);
+        priv->visible = FALSE;
+      }
 
       XGetWindowAttributes (disp, priv->internal_win_id, &attr);
 
@@ -538,7 +527,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
         {
           XEvent event;
 
-          g_debug ("Close\n");
+          g_debug ("Close %lld\n", (guint64) priv->internal_win_id);
 
           priv->running = FALSE;
 
@@ -582,6 +571,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
         if (priv->draw_cb)
         {
           priv->draw_cb (priv->draw_data);
+          glFlush();
           glXSwapBuffers (priv->device, priv->internal_win_id);
         }
         break;
@@ -670,6 +660,8 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
     GstGLWindowPrivate *priv = window->priv;
 
     g_mutex_lock (priv->x_lock);
+
+    g_debug ("AA CUSTOM IN: %lld\n", (guint64)priv->internal_win_id);
 
     if (priv->running)
     {
