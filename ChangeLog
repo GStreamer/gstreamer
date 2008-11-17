@@ -1,3 +1,33 @@
+2008-11-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
+	(gst_rtp_bin_sync_chain), (create_stream), (new_ssrc_pad_found):
+	Do not try to keep track of the clock-rate ourselves but simply get the
+	value from the jitterbuffer. 
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_get_sync):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	Add some debug info.
+	Pass the clock-rate to the jitterbuffer.
+	Also pass the clock-rate along with the rtp timestamp when getting the
+	sync parameters.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_chain):
+	Fix some debug.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),
+	(calculate_skew), (rtp_jitter_buffer_get_sync):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Keep track of clock-rate changes and return the clock-rate together with
+	the rtp timestamps used for sync.
+	Don't try to construct timestamps when we have no base_time.
+
+	* gst/rtpmanager/rtpsource.c: (get_clock_rate):
+	Request a new clock-rate when the payload type changes.
+	Reset the jitter calculation when the clock-rate changes.
+
 2008-11-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/aacparse_data.h:

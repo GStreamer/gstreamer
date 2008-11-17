@@ -327,7 +327,6 @@ struct _GstRtpBinStream
   guint64 clock_base_time;
   gint clock_rate;
   gint64 ts_offset;
-  gint last_pt;
 };
 
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock ((sess)->lock)
@@ -856,29 +855,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   if (stream->clock_base == -1)
     goto no_clock_base;
 
-  if (stream->clock_rate <= 0) {
-    gint pt = -1;
-    GstCaps *caps = NULL;
-    GstStructure *s = NULL;
-
-    GST_RTP_SESSION_LOCK (stream->session);
-    pt = stream->last_pt;
-    GST_RTP_SESSION_UNLOCK (stream->session);
-
-    if (pt < 0)
-      goto no_clock_rate;
-
-    caps = get_pt_map (stream->session, pt);
-    if (!caps)
-      goto no_clock_rate;
-
-    s = gst_caps_get_structure (caps, 0);
-    gst_structure_get_int (s, "clock-rate", &stream->clock_rate);
-    gst_caps_unref (caps);
-
-    if (stream->clock_rate <= 0)
-      goto no_clock_rate;
-  }
+  if (stream->clock_rate <= 0)
+    goto no_clock_rate;
 
   /* take the extended rtptime we found in the SR packet and map it to the
    * local rtptime. The local rtp time is used to construct timestamps on the
@@ -1021,6 +999,7 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
   gboolean more;
   guint64 clock_base;
   guint64 clock_base_time;
+  guint clock_rate;
 
   stream = gst_pad_get_element_private (pad);
   bin = stream->bin;
@@ -1035,7 +1014,7 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
    * constructs gstreamer timestamps from rtp timestamps and so it know exactly
    * what the current situation is. */
   gst_rtp_jitter_buffer_get_sync (GST_RTP_JITTER_BUFFER (stream->buffer),
-      &clock_base, &clock_base_time);
+      &clock_base, &clock_base_time, &clock_rate);
 
   /* clock base changes when there is a huge gap in the timestamps or seqnum.
    * When this happens we don't want to calculate the extended timestamp based
@@ -1098,6 +1077,7 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
             if (type == GST_RTCP_SDES_CNAME) {
               stream->clock_base = clock_base;
               stream->clock_base_time = clock_base_time;
+              stream->clock_rate = clock_rate;
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data);
             }
@@ -1150,7 +1130,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   stream->buffer = buffer;
   stream->demux = demux;
   stream->last_extrtptime = -1;
-  stream->last_pt = -1;
+  stream->clock_rate = -1;
   stream->have_sync = FALSE;
   session->streams = g_slist_prepend (session->streams, stream);
 
@@ -1961,15 +1941,6 @@ caps_changed (GstPad * pad, GParamSpec * pspec, GstRtpBinSession * session)
   GST_RTP_SESSION_UNLOCK (session);
 }
 
-/* Stores the last payload type received on a particular stream */
-static void
-payload_type_change (GstElement * element, guint pt, GstRtpBinStream * stream)
-{
-  GST_RTP_SESSION_LOCK (stream->session);
-  stream->last_pt = pt;
-  GST_RTP_SESSION_UNLOCK (stream->session);
-}
-
 /* a new pad (SSRC) was created in @session */
 static void
 new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
@@ -2003,14 +1974,6 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     GST_DEBUG_OBJECT (rtpbin, "pad has caps %" GST_PTR_FORMAT, caps);
 
     s = gst_caps_get_structure (caps, 0);
-
-    if (!gst_structure_get_int (s, "clock-rate", &stream->clock_rate)) {
-      stream->clock_rate = -1;
-
-      GST_WARNING_OBJECT (rtpbin,
-          "Caps have no clock rate %s from pad %s:%s",
-          gst_caps_to_string (caps), GST_DEBUG_PAD_NAME (pad));
-    }
 
     stream->last_clock_base = -1;
     if (gst_structure_get_uint (s, "clock-base", &val))
@@ -2048,11 +2011,6 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
    * depayloaders. */
   stream->demux_ptreq_sig = g_signal_connect (stream->demux,
       "request-pt-map", (GCallback) pt_map_requested, session);
-  /* connect to the payload-type-change signal so that we can know which
-   * PT is the current PT so that the jitterbuffer can be matched to the right
-   * offset. */
-  stream->demux_pt_change_sig = g_signal_connect (stream->demux,
-      "payload-type-change", (GCallback) payload_type_change, stream);
 
   GST_RTP_SESSION_UNLOCK (session);
   GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
