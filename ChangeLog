@@ -1,3 +1,11 @@
+2008-11-17  Andy Wingo  <wingo@pobox.com>
+
+	* tools/gst-inspect.c (print_all_uri_handlers): New function,
+	prints a summary of what URI schemes are supported by what
+	elements.
+	(main): Plumb in support for --uri-handlers or -u, and fix the
+	argc check for -a and -u.
+
 2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstutils.h:
