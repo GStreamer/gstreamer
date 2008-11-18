@@ -92,6 +92,8 @@ gst_gl_window_finalize (GObject * object)
 
   glXDestroyContext (priv->device, priv->gl_context);
 
+  XFree (priv->visual_info);
+
   XDestroyWindow (priv->device, priv->internal_win_id);
 
   XSync (priv->device, FALSE);
@@ -219,13 +221,25 @@ gst_gl_window_new (gint width, gint height)
 
   gint attrib[] = {
     GLX_RGBA,
-    GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1,
+    GLX_RED_SIZE, 8, GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8,
     GLX_DOUBLEBUFFER,
-    GLX_DEPTH_SIZE, 1,
+    GLX_DEPTH_SIZE, 8,
+    GLX_ALPHA_SIZE, 8,
+    GLX_STENCIL_SIZE, 8,
+    GLX_ACCUM_RED_SIZE, 8,
+    GLX_ACCUM_GREEN_SIZE, 8,
+    GLX_ACCUM_BLUE_SIZE, 8,
+    GLX_ACCUM_ALPHA_SIZE, 8,
+    GLX_LEVEL, 0,
     None
   };
 
   Bool ret = FALSE;
+  gint error_base;
+  gint event_base;
+
+  //XVisualInfo templ;
+  //gint unused;
 
   XSetWindowAttributes win_attr;
   XTextProperty text_property;
@@ -263,7 +277,29 @@ gst_gl_window_new (gint width, gint height)
 
   priv->connection = ConnectionNumber (priv->device);
 
+  ret = glXQueryExtension (priv->device, &error_base, &event_base);
+  if (!ret)
+    g_debug ("No GLX extension");
+
   priv->visual_info = glXChooseVisual (priv->device, priv->screen_num, attrib);
+
+  //priv->visual_info = XGetVisualInfo(priv->device, VisualNoMask, &templ, &unused);
+
+  if (priv->visual_info->visual != priv->visual)
+    g_debug ("selected visual is different from the default\n");
+
+  if (priv->visual_info->class == TrueColor)
+    g_debug ("visual is using TrueColor\n");
+
+  g_debug ("visual ID: %d\n", (gint)XVisualIDFromVisual(priv->visual_info->visual));
+  g_debug ("visual info screen: %d\n", priv->visual_info->screen);
+  g_debug ("visual info visualid: %d\n", (gint) priv->visual_info->visualid);
+  g_debug ("visual info depth: %d\n", priv->visual_info->depth);
+  g_debug ("visual info class: %d\n", priv->visual_info->class);
+  g_debug ("visual info red_mask: %ld\n", priv->visual_info->red_mask);
+  g_debug ("visual info green_mask: %ld\n", priv->visual_info->green_mask);
+  g_debug ("visual info blue_mask: %ld\n", priv->visual_info->blue_mask);
+  g_debug ("visual info bits_per_rgb: %d\n", priv->visual_info->bits_per_rgb);
 
   win_attr.event_mask = StructureNotifyMask | ExposureMask | VisibilityChangeMask;
 
