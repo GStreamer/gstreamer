@@ -1,5 +1,10 @@
 2008-11-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* win32/common/libgstreamer.def:
+	Add new symbols to .def file.
+
+2008-11-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstbin.c: (gst_bin_recalculate_latency),
 	(gst_bin_change_state_func):

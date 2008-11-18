@@ -71,6 +71,7 @@ EXPORTS
 	gst_bin_iterate_sorted
 	gst_bin_iterate_sources
 	gst_bin_new
+	gst_bin_recalculate_latency
 	gst_bin_remove
 	gst_bin_remove_many
 	gst_buffer_copy_flags_get_type
@@ -315,6 +316,7 @@ EXPORTS
 	gst_element_unlink_many
 	gst_element_unlink_pads
 	gst_error_get_message
+	gst_event_get_seqnum
 	gst_event_get_structure
 	gst_event_get_type
 	gst_event_has_name
@@ -337,6 +339,7 @@ EXPORTS
 	gst_event_parse_qos
 	gst_event_parse_seek
 	gst_event_parse_tag
+	gst_event_set_seqnum
 	gst_event_type_flags_get_type
 	gst_event_type_get_flags
 	gst_event_type_get_name
@@ -439,6 +442,7 @@ EXPORTS
 	gst_marshal_VOID__OBJECT_STRING
 	gst_marshal_VOID__POINTER_OBJECT
 	gst_marshal_VOID__UINT_BOXED
+	gst_message_get_seqnum
 	gst_message_get_structure
 	gst_message_get_type
 	gst_message_new_application
@@ -478,6 +482,7 @@ EXPORTS
 	gst_message_parse_tag
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
+	gst_message_set_seqnum
 	gst_message_type_get_name
 	gst_message_type_get_type
 	gst_message_type_to_quark
@@ -955,6 +960,8 @@ EXPORTS
 	gst_util_gdouble_to_guint64
 	gst_util_get_timestamp
 	gst_util_guint64_to_gdouble
+	gst_util_seqnum_compare
+	gst_util_seqnum_next
 	gst_util_set_object_arg
 	gst_util_set_value_from_string
 	gst_util_uint64_scale
