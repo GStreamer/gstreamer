@@ -1044,7 +1044,7 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
         atom_trak_get_timescale (pad->trak), GST_SECOND);
     pts_offset = (gint64) (pts - last_dts);
     do_pts = TRUE;
-    GST_ERROR_OBJECT (qtmux, "Adding ctts entry for pad %s: %" G_GINT64_FORMAT,
+    GST_LOG_OBJECT (qtmux, "Adding ctts entry for pad %s: %" G_GINT64_FORMAT,
         GST_PAD_NAME (pad->collect.pad), pts_offset);
   }
 
@@ -1384,6 +1384,7 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   GstQTMuxFormat format;
   AtomInfo *ext_atom = NULL;
   gboolean sync = FALSE;
+  int par_num, par_den;
 
   /* find stream data */
   qtpad = (GstQTPad *) gst_pad_get_element_private (pad);
@@ -1417,6 +1418,10 @@ gst_qt_mux_video_sink_set_caps (GstPad * pad, GstCaps * caps)
   if (value != NULL)
     codec_data = gst_value_get_buffer (value);
 
+  par_num = 1;
+  par_den = 1;
+  gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_num,
+      &par_den);
   /* FIXME: pixel-aspect-ratio */
 
   qtpad->is_out_of_order = FALSE;
