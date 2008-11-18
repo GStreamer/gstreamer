@@ -1,3 +1,8 @@
+2008-11-17  David Schleef  <ds@schleef.org>
+
+	* gst/qtmux/gstqtmux.c: Quiet a debugging message that I recently
+	  added.
+
 2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/rtpmanager/rtpsource.c: (get_clock_rate):
