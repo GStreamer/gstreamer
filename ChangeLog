@@ -1,3 +1,8 @@
+2008-11-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbuffer.h:
+	Document the free_func.
+
 2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* libs/gst/controller/gstinterpolation.c:
