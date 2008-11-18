@@ -1,3 +1,9 @@
+2008-11-18  Alessandro Decina  <alessandro.d@gmail.com>
+
+	* ext/metadata/gstbasemetadata.c:
+	Avoid deadlock during pad activation.
+	Fixes #561241.
+
 2008-11-17  David Schleef  <ds@schleef.org>
 
 	* gst/qtmux/gstqtmux.c: Quiet a debugging message that I recently

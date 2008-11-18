@@ -1807,16 +1807,24 @@ gst_base_metadata_sink_activate (GstPad * pad)
   }
 
   if (ret) {
-    gst_pad_activate_pull (pad, FALSE);
-    gst_pad_activate_push (filter->srcpad, FALSE);
-    if (!gst_pad_is_active (pad)) {
-      ret = gst_pad_activate_push (filter->srcpad, TRUE);
-      ret = ret && gst_pad_activate_push (pad, TRUE);
+    GstActivateMode mode;
+
+    /* in gst_base_metadata_pull_range_parse() we could have triggered
+     * negotiation and plugged new downstream elements.
+     * If GST_PAD_ACTIVATE_MODE (filter->srcpad) is GST_ACTIVATE_PULL it means
+     * that downstream is active in pull mode so we don't deactivate pull mode.
+     */
+    GST_OBJECT_LOCK (filter->srcpad);
+    mode = GST_PAD_ACTIVATE_MODE (filter->srcpad);
+    GST_OBJECT_UNLOCK (filter->srcpad);
+
+    if (mode != GST_ACTIVATE_PULL) {
+      /* change from PULL to PUSH */
+      gst_pad_activate_push (pad, TRUE);
     }
   }
 
   return ret;
-
 }
 
 static gboolean
