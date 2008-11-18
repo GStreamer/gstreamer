@@ -56,6 +56,8 @@ gst_bin_iterate_sorted
 gst_bin_iterate_sources
 gst_bin_iterate_all_by_interface
 
+gst_bin_recalculate_latency
+
 <SUBSECTION>
 gst_bin_add_many
 gst_bin_remove_many

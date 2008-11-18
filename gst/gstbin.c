@@ -2076,14 +2076,31 @@ failed:
   }
 }
 
-/* do latency correction. We do a latency query on the bin, and then send a
- * LATENCY event on the elements fo configure them */
-static gboolean
-do_bin_latency (GstElement * element)
+/**
+ * gst_bin_recalculate_latency:
+ * @bin: a #GstBin
+ *
+ * Query @bin for the current latency using and reconfigures this latency to all the
+ * elements with a LATENCY event.
+ *
+ * This method is typically called on the pipeline when a #GST_MESSAGE_LATENCY
+ * is posted on the bus.
+ *
+ * Returns: %TRUE if the latency could be queried and reconfigured.
+ *
+ * Since: 0.10.22.
+ */
+gboolean
+gst_bin_recalculate_latency (GstBin * bin)
 {
   GstQuery *query;
+  GstElement *element;
   GstClockTime min_latency, max_latency;
   gboolean res;
+
+  g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
+
+  element = GST_ELEMENT_CAST (bin);
 
   GST_DEBUG_OBJECT (element, "querying latency");
 
@@ -2161,7 +2178,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (bin);
 
       if (toplevel)
-        do_bin_latency (element);
+        gst_bin_recalculate_latency (bin);
       break;
     }
     case GST_STATE_PAUSED:

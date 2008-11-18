@@ -1,5 +1,14 @@
 2008-11-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbin.c: (gst_bin_recalculate_latency),
+	(gst_bin_change_state_func):
+	* gst/gstbin.h:
+	Add method to recalculate and redistribute the latency on a bin.
+	API: gst_bin_recalculate_latency().
+
+2008-11-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstbuffer.h:
 	Document the free_func.
 
