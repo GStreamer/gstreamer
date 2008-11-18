@@ -477,6 +477,8 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
     glimage_sink = GST_GLIMAGE_SINK (bsink);
 
+    GST_INFO ("buffer size: %d", GST_BUFFER_SIZE (buf));
+
     //is gl
     if (glimage_sink->is_gl)
     {
@@ -534,9 +536,9 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
         gl_buffer = gst_gl_buffer_new (glimage_sink->display,
             glimage_sink->width, glimage_sink->height);
 
-		//blocking call
-		gst_gl_display_do_upload(glimage_sink->display, gl_buffer->texture,
-			glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf));
+        //blocking call
+        gst_gl_display_do_upload(glimage_sink->display, gl_buffer->texture,
+          glimage_sink->width, glimage_sink->height, GST_BUFFER_DATA (buf));
 
         //gl_buffer is created in this block, so the gl buffer is already referenced
     }
