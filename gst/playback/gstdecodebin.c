@@ -108,6 +108,13 @@ enum
   LAST_SIGNAL
 };
 
+/* Properties */
+enum
+{
+  PROP_0,
+  PROP_SINK_CAPS,
+};
+
 
 typedef struct
 {
@@ -133,6 +140,10 @@ GstDynamic;
 
 static void gst_decode_bin_class_init (GstDecodeBinClass * klass);
 static void gst_decode_bin_init (GstDecodeBin * decode_bin);
+static void gst_decode_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_decode_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_decode_bin_dispose (GObject * object);
 static void gst_decode_bin_finalize (GObject * object);
 
@@ -212,6 +223,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_klass->set_property = GST_DEBUG_FUNCPTR (gst_decode_bin_set_property);
+  gobject_klass->get_property = GST_DEBUG_FUNCPTR (gst_decode_bin_get_property);
+  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_decode_bin_finalize);
+
   /**
    * GstDecodeBin::new-decoded-pad:
    * @bin: The decodebin
@@ -255,8 +271,10 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       NULL, NULL, gst_marshal_VOID__OBJECT_BOXED, G_TYPE_NONE, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
-  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_decode_bin_finalize);
+  g_object_class_install_property (gobject_klass, PROP_SINK_CAPS,
+      g_param_spec_boxed ("sink-caps", "Sink Caps",
+          "The caps of the input data. (NULL = use typefind element)",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_sink_template));
@@ -409,6 +427,61 @@ gst_decode_bin_dispose (GObject * object)
    * etc. clean up the mess here. */
   /* FIXME do proper cleanup when going to NULL */
   free_dynamics (decode_bin);
+}
+
+static void
+gst_decode_bin_set_sink_caps (GstDecodeBin * dbin, GstCaps * caps)
+{
+  GST_DEBUG_OBJECT (dbin, "Setting new caps: %" GST_PTR_FORMAT, caps);
+
+  g_object_set (dbin->typefind, "force-caps", caps, NULL);
+}
+
+static GstCaps *
+gst_decode_bin_get_sink_caps (GstDecodeBin * dbin)
+{
+  GstCaps *caps;
+
+  GST_DEBUG_OBJECT (dbin, "Getting currently set caps");
+
+  g_object_get (dbin->typefind, "force-caps", &caps, NULL);
+
+  return caps;
+}
+
+static void
+gst_decode_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstDecodeBin *dbin;
+
+  dbin = GST_DECODE_BIN (object);
+
+  switch (prop_id) {
+    case PROP_SINK_CAPS:
+      gst_decode_bin_set_sink_caps (dbin, g_value_get_boxed (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_decode_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDecodeBin *dbin;
+
+  dbin = GST_DECODE_BIN (object);
+  switch (prop_id) {
+    case PROP_SINK_CAPS:
+      g_value_take_boxed (value, gst_decode_bin_get_sink_caps (dbin));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void

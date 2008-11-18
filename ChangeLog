@@ -1,3 +1,9 @@
+2008-11-18  Alessandro Decina  <alessandro.d@gmail.com>
+
+	* gst/playback/gstdecodebin.c:
+	Add a "sink-caps" property to decodebin like it's done for decodebin2.
+	Fixes #560380.
+
 2008-11-14  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/audioresample/gstaudioresample.c:
