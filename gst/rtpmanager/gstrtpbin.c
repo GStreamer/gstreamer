@@ -176,14 +176,6 @@ GST_STATIC_PAD_TEMPLATE ("send_rtp_src_%d",
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
-/* padtemplate for the internal pad */
-static GstStaticPadTemplate rtpbin_sync_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink_%d",
-    GST_PAD_SINK,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("application/x-rtcp")
-    );
-
 #define GST_RTP_BIN_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BIN, GstRtpBinPrivate))
 
@@ -310,8 +302,7 @@ struct _GstRtpBinStream
   gulong demux_ptreq_sig;
   gulong demux_pt_change_sig;
 
-  /* the internal pad we use to get RTCP sync messages */
-  GstPad *sync_pad;
+  /* data for the RTCP sync signal */
   gboolean have_sync;
   guint64 last_unix;
   guint64 last_extrtptime;
@@ -818,7 +809,8 @@ free_client (GstRtpBinClient * client)
 }
 
 /* associate a stream to the given CNAME. This will make sure all streams for
- * that CNAME are synchronized together. */
+ * that CNAME are synchronized together.
+ * Must be called with GST_RTP_BIN_LOCK */
 static void
 gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     guint8 * data)
@@ -828,7 +820,6 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   GSList *walk;
 
   /* first find or create the CNAME */
-  GST_RTP_BIN_LOCK (bin);
   client = get_client (bin, len, data, &created);
 
   /* find stream in the client */
@@ -850,13 +841,6 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         "found association of SSRC %08x with client %p with CNAME %s",
         stream->ssrc, client, client->cname);
   }
-
-  /* we can only continue if we know the local clock-base and clock-rate */
-  if (stream->clock_base == -1)
-    goto no_clock_base;
-
-  if (stream->clock_rate <= 0)
-    goto no_clock_rate;
 
   /* take the extended rtptime we found in the SR packet and map it to the
    * local rtptime. The local rtp time is used to construct timestamps on the
@@ -897,7 +881,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
      * offsets to streams, delaying their playback instead of trying to speed up
      * other streams (which might be imposible when we have to create negative
      * latencies).
-     * The stream that has the smalest diff is selected as the reference stream,
+     * The stream that has the smallest diff is selected as the reference stream,
      * all other streams will have a positive offset to this difference. */
     min = G_MAXINT64;
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
@@ -955,22 +939,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
           ostream->ssrc, ostream->ts_offset);
     }
   }
-  GST_RTP_BIN_UNLOCK (bin);
-
   return;
-
-no_clock_base:
-  {
-    GST_WARNING_OBJECT (bin, "we have no clock-base");
-    GST_RTP_BIN_UNLOCK (bin);
-    return;
-  }
-no_clock_rate:
-  {
-    GST_WARNING_OBJECT (bin, "we have no clock-rate");
-    GST_RTP_BIN_UNLOCK (bin);
-    return;
-  }
 }
 
 #define GST_RTCP_BUFFER_FOR_PACKETS(b,buffer,packet) \
@@ -985,44 +954,37 @@ no_clock_rate:
   for ((b) = gst_rtcp_packet_sdes_first_entry ((packet)); (b); \
           (b) = gst_rtcp_packet_sdes_next_entry ((packet)))
 
-static GstFlowReturn
-gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
+static void
+gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
+    GstRtpBinStream * stream)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstRtpBinStream *stream;
   GstRtpBin *bin;
   GstRTCPPacket packet;
   guint32 ssrc;
   guint64 ntptime;
-  guint32 rtptime;
   gboolean have_sr, have_sdes;
   gboolean more;
   guint64 clock_base;
   guint64 clock_base_time;
   guint clock_rate;
+  guint64 extrtptime;
+  GstBuffer *buffer;
 
-  stream = gst_pad_get_element_private (pad);
   bin = stream->bin;
 
-  GST_DEBUG_OBJECT (bin, "received sync packet");
-
-  if (!gst_rtcp_buffer_validate (buffer))
-    goto invalid_rtcp;
+  GST_DEBUG_OBJECT (bin, "sync handler called");
 
   /* get the last relation between the rtp timestamps and the gstreamer
    * timestamps. We get this info directly from the jitterbuffer which
    * constructs gstreamer timestamps from rtp timestamps and so it know exactly
    * what the current situation is. */
-  gst_rtp_jitter_buffer_get_sync (GST_RTP_JITTER_BUFFER (stream->buffer),
-      &clock_base, &clock_base_time, &clock_rate);
-
-  /* clock base changes when there is a huge gap in the timestamps or seqnum.
-   * When this happens we don't want to calculate the extended timestamp based
-   * on the previous one but reset the calculation. */
-  if (stream->last_clock_base != clock_base) {
-    stream->last_extrtptime = -1;
-    stream->last_clock_base = clock_base;
-  }
+  clock_base = g_value_get_uint64 (gst_structure_get_value (s, "base-rtptime"));
+  clock_base_time =
+      g_value_get_uint64 (gst_structure_get_value (s, "base-time"));
+  clock_rate = g_value_get_uint (gst_structure_get_value (s, "clock-rate"));
+  extrtptime =
+      g_value_get_uint64 (gst_structure_get_value (s, "sr-ext-rtptime"));
+  buffer = gst_value_get_buffer (gst_structure_get_value (s, "sr-buffer"));
 
   have_sr = FALSE;
   have_sdes = FALSE;
@@ -1035,7 +997,7 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
         if (have_sr)
           break;
         /* get NTP and RTP times */
-        gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntptime, &rtptime,
+        gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntptime, NULL,
             NULL, NULL);
 
         GST_DEBUG_OBJECT (bin, "received sync packet from SSRC %08x", ssrc);
@@ -1044,12 +1006,6 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
           continue;
 
         have_sr = TRUE;
-
-        /* store values in the stream */
-        stream->have_sync = TRUE;
-        stream->last_unix = gst_rtcp_ntp_to_unix (ntptime);
-        /* use extended timestamp */
-        gst_rtp_buffer_ext_timestamp (&stream->last_extrtptime, rtptime);
         break;
       case GST_RTCP_TYPE_SDES:
       {
@@ -1075,11 +1031,17 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
             gst_rtcp_packet_sdes_get_entry (&packet, &type, &len, &data);
 
             if (type == GST_RTCP_SDES_CNAME) {
+              GST_RTP_BIN_LOCK (bin);
+              /* store values in the stream */
+              stream->have_sync = TRUE;
+              stream->last_unix = gst_rtcp_ntp_to_unix (ntptime);
+              stream->last_extrtptime = extrtptime;
               stream->clock_base = clock_base;
               stream->clock_base_time = clock_base_time;
               stream->clock_rate = clock_rate;
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data);
+              GST_RTP_BIN_UNLOCK (bin);
             }
           }
         }
@@ -1091,20 +1053,6 @@ gst_rtp_bin_sync_chain (GstPad * pad, GstBuffer * buffer)
         break;
     }
   }
-
-  gst_buffer_unref (buffer);
-
-  return ret;
-
-  /* ERRORS */
-invalid_rtcp:
-  {
-    /* this is fatal and should be filtered earlier */
-    GST_ELEMENT_ERROR (bin, STREAM, DECODE, (NULL),
-        ("invalid RTCP packet received"));
-    gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
-  }
 }
 
 /* create a new stream with @ssrc in @session. Must be called with
@@ -1114,8 +1062,6 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 {
   GstElement *buffer, *demux;
   GstRtpBinStream *stream;
-  GstPadTemplate *templ;
-  gchar *padname;
 
   if (!(buffer = gst_element_factory_make ("gstrtpjitterbuffer", NULL)))
     goto no_jitterbuffer;
@@ -1133,19 +1079,6 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   stream->clock_rate = -1;
   stream->have_sync = FALSE;
   session->streams = g_slist_prepend (session->streams, stream);
-
-  /* make an internal sinkpad for RTCP sync packets. Take ownership of the
-   * pad. We will link this pad later. */
-  padname = g_strdup_printf ("sync_%d", ssrc);
-  templ = gst_static_pad_template_get (&rtpbin_sync_sink_template);
-  stream->sync_pad = gst_pad_new_from_template (templ, padname);
-  gst_object_unref (templ);
-  g_free (padname);
-  gst_object_ref (stream->sync_pad);
-  gst_object_sink (stream->sync_pad);
-  gst_pad_set_element_private (stream->sync_pad, stream);
-  gst_pad_set_chain_function (stream->sync_pad, gst_rtp_bin_sync_chain);
-  gst_pad_set_active (stream->sync_pad, TRUE);
 
   /* provide clock_rate to the jitterbuffer when needed */
   g_signal_connect (buffer, "request-pt-map",
@@ -1191,8 +1124,6 @@ free_stream (GstRtpBinStream * stream)
 
   gst_bin_remove (GST_BIN_CAST (session->bin), stream->buffer);
   gst_bin_remove (GST_BIN_CAST (session->bin), stream->demux);
-
-  gst_object_unref (stream->sync_pad);
 
   session->streams = g_slist_remove (session->streams, stream);
 
@@ -1985,7 +1916,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   }
 
   /* get pad and link */
-  GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer");
+  GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer RTP");
   padname = g_strdup_printf ("src_%d", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
@@ -1994,13 +1925,19 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
 
-  /* get the RTCP sync pad */
-  GST_DEBUG_OBJECT (rtpbin, "linking sync pad");
+  GST_DEBUG_OBJECT (rtpbin, "linking jitterbuffer RTCP");
   padname = g_strdup_printf ("rtcp_src_%d", ssrc);
   srcpad = gst_element_get_static_pad (element, padname);
   g_free (padname);
-  gst_pad_link (srcpad, stream->sync_pad);
+  sinkpad = gst_element_get_request_pad (stream->buffer, "sink_rtcp");
+  gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (sinkpad);
   gst_object_unref (srcpad);
+
+  /* connect to the RTCP sync signal from the jitterbuffer */
+  GST_DEBUG_OBJECT (rtpbin, "connecting sync signal");
+  g_signal_connect (stream->buffer,
+      "handle-sync", (GCallback) gst_rtp_bin_handle_sync, stream);
 
   /* connect to the new-pad signal of the payload demuxer, this will expose the
    * new pad by ghosting it. */

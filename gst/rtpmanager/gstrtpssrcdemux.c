@@ -137,7 +137,6 @@ struct _GstRtpSsrcDemuxPad
   GstPad *rtp_pad;
   GstCaps *caps;
   GstPad *rtcp_pad;
-  GstClockTime first_ts;
 };
 
 /* find a src pad for a given SSRC, returns NULL if the SSRC was not found
@@ -190,7 +189,6 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   demuxpad->ssrc = ssrc;
   demuxpad->rtp_pad = rtp_pad;
   demuxpad->rtcp_pad = rtcp_pad;
-  demuxpad->first_ts = timestamp;
 
   GST_DEBUG_OBJECT (demux, "first timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
@@ -484,9 +482,6 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
       gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, NULL, NULL, NULL,
           NULL);
       break;
-    case GST_RTCP_TYPE_RR:
-      ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
-      break;
     default:
       goto invalid_rtcp;
   }
@@ -599,9 +594,7 @@ gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
         GST_DEBUG_OBJECT (demux, "peer min latency %" GST_TIME_FORMAT,
             GST_TIME_ARGS (min_latency));
 
-        GST_DEBUG_OBJECT (demux,
-            "latency for SSRC %08x, latency %" GST_TIME_FORMAT, demuxpad->ssrc,
-            GST_TIME_ARGS (demuxpad->first_ts));
+        GST_DEBUG_OBJECT (demux, "latency for SSRC %08x", demuxpad->ssrc);
 
         gst_query_set_latency (query, live, min_latency, max_latency);
       }

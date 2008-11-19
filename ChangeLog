@@ -1,3 +1,36 @@
+2008-11-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
+	(gst_rtp_bin_handle_sync), (create_stream), (free_stream),
+	(new_ssrc_pad_found):
+	Remove internal sync pad, use signals instead to get lip-sync
+	notifications.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_base_init),
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_rtp_jitter_buffer_internal_links), (create_rtcp_sink),
+	(remove_rtcp_sink), (gst_rtp_jitter_buffer_request_new_pad),
+	(gst_rtp_jitter_buffer_release_pad),
+	(gst_rtp_jitter_buffer_sink_rtcp_event),
+	(gst_rtp_jitter_buffer_chain_rtcp),
+	(gst_rtp_jitter_buffer_get_property):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	Make it possible to send SR packets to the jitterbuffer.
+	Check if the SR timestamps are valid by comparing them to the RTP
+	timestamps.
+	Signal the SR packet and the timing information to listeners.
+
+	* gst/rtpmanager/gstrtpssrcdemux.c: (create_demux_pad_for_ssrc),
+	(gst_rtp_ssrc_demux_rtcp_chain), (gst_rtp_ssrc_demux_src_query):
+	Remove some unused code.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),
+	(calculate_skew), (rtp_jitter_buffer_get_sync):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Keep track of the last seen RTP timestamp so that we can filter out
+	invalid SR packets.
+
 2008-11-18  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* ext/metadata/gstbasemetadata.c:
