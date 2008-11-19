@@ -1,3 +1,9 @@
+2008-11-19  Alessandro Decina  <alessandro.d@gmail.com>
+
+	* gst/gst.override:
+	* testsuite/test_typefind.py:
+	Wrap gst_type_find_peek.
+
 2008-11-08  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* gst/base.defs:

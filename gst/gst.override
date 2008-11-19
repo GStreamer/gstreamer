@@ -1277,6 +1277,33 @@ out:
 }
 
 %%
+override gst_type_find_peek kwargs
+static PyObject *
+_wrap_gst_type_find_peek (PyObject * self, PyObject * args, PyObject * kwargs)
+{
+    static char *kwlist[] = { "offset", "size", NULL };
+    gint64 offset;
+    guint size;
+    GstTypeFind *typefind;  
+    guint8 *data;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"LI:GstTypeFind.peek",
+            kwlist, &offset, &size))
+        return NULL;
+    
+    typefind = pyg_pointer_get(self, GstTypeFind);
+    pyg_begin_allow_threads;
+    data = gst_type_find_peek(typefind, offset, size);
+    pyg_end_allow_threads;
+ 
+    if (data == NULL)
+        /* return the empty string */
+        return PyString_FromStringAndSize(NULL, 0);
+
+    return PyString_FromStringAndSize((char *) data, size);
+}
+
+%%
 override gst_segment_set_seek kwargs
 static PyObject *
 _wrap_gst_segment_set_seek (PyObject * self, PyObject * args, PyObject * kwargs)
