@@ -241,6 +241,8 @@ static GstBusSyncReply bin_bus_handler (GstBus * bus,
     GstMessage * message, GstBin * bin);
 static gboolean gst_bin_query (GstElement * element, GstQuery * query);
 
+static gboolean gst_bin_do_latency_func (GstBin * bin);
+
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_bin_save_thyself (GstObject * object, xmlNodePtr parent);
 static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
@@ -259,6 +261,7 @@ enum
 {
   ELEMENT_ADDED,
   ELEMENT_REMOVED,
+  DO_LATENCY,
   LAST_SIGNAL
 };
 
@@ -378,6 +381,22 @@ gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data)
   iface->get_child_by_index = gst_bin_child_proxy_get_child_by_index;
 }
 
+static gboolean
+_gst_boolean_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gboolean myboolean;
+
+  myboolean = g_value_get_boolean (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boolean (return_accu, myboolean);
+
+  GST_DEBUG ("invocation %d, %d", ihint->run_type, myboolean);
+
+  /* stop emission */
+  return FALSE;
+}
+
 static void
 gst_bin_class_init (GstBinClass * klass)
 {
@@ -433,6 +452,29 @@ gst_bin_class_init (GstBinClass * klass)
       g_signal_new ("element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_removed), NULL,
       NULL, gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+  /**
+   * GstBin::do-latency:
+   * @bin: the #GstBin
+   *
+   * Will be emitted when the bin needs to perform latency calculations. This
+   * signal is only emited for toplevel bins or when async-handling is
+   * enabled.
+   *
+   * Only one signal handler is invoked. If no signals are connected, the
+   * default handler is invoked, which will query and distribute the lowest
+   * possible latency to all sinks.
+   *
+   * Connect to this signal if the default latency calculations are not
+   * sufficient, like when you need different latencies for different sinks in
+   * the same pipeline.
+   *
+   * Since: 0.10.22
+   */
+  gst_bin_signals[DO_LATENCY] =
+      g_signal_new ("do-latency", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstBinClass, do_latency),
+      _gst_boolean_accumulator, NULL, gst_marshal_BOOLEAN__VOID,
+      G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_bin_dispose);
 
@@ -456,6 +498,8 @@ gst_bin_class_init (GstBinClass * klass)
   klass->add_element = GST_DEBUG_FUNCPTR (gst_bin_add_func);
   klass->remove_element = GST_DEBUG_FUNCPTR (gst_bin_remove_func);
   klass->handle_message = GST_DEBUG_FUNCPTR (gst_bin_handle_message_func);
+
+  klass->do_latency = GST_DEBUG_FUNCPTR (gst_bin_do_latency_func);
 
   GST_DEBUG ("creating bin thread pool");
   err = NULL;
@@ -2086,12 +2130,26 @@ failed:
  * This method is typically called on the pipeline when a #GST_MESSAGE_LATENCY
  * is posted on the bus.
  *
+ * This function simply emits the 'do-latency' signal so any custom latency
+ * calculations will be performed.
+ *
  * Returns: %TRUE if the latency could be queried and reconfigured.
  *
  * Since: 0.10.22.
  */
 gboolean
 gst_bin_recalculate_latency (GstBin * bin)
+{
+  gboolean res;
+
+  g_signal_emit (G_OBJECT (bin), gst_bin_signals[DO_LATENCY], 0, &res);
+  GST_DEBUG_OBJECT (bin, "latency returned %d", res);
+
+  return res;
+}
+
+static gboolean
+gst_bin_do_latency_func (GstBin * bin)
 {
   GstQuery *query;
   GstElement *element;

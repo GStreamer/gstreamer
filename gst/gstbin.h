@@ -151,7 +151,11 @@ struct _GstBinClass {
   void		(*handle_message)	(GstBin *bin, GstMessage *message);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  /* signal added 0.10.22 */
+  gboolean	(*do_latency)           (GstBin *bin);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 GType		gst_bin_get_type		(void);

@@ -1,3 +1,14 @@
+2008-11-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c: (_gst_boolean_accumulator), (gst_bin_class_init),
+	(gst_bin_recalculate_latency), (gst_bin_do_latency_func),
+	(gst_bin_change_state_func):
+	* gst/gstbin.h:
+	Add do-latency signal with the old default fallback implementation. This
+	allows for custom latency calculations for when the default is not
+	sufficient.
+	API: GstBin::do-latency signal.
+
 2008-11-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* win32/common/libgstreamer.def:
