@@ -1,14 +1,14 @@
 # Vietnamese translation for GST Plugins Ugly.
 # Copyright © 2008 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins-ugly-0.10.7.2 package.
+# This file is distributed under the same license as the gst-plugins-ugly package.
 # Clytie Siddall <clytie@riverland.net.au>, 2007-2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-05-11 20:55+0930\n"
+"PO-Revision-Date: 2008-09-08 22:30+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -18,18 +18,16 @@ msgstr ""
 "X-Generator: LocFactoryEditor 1.7b3\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Không thể đọc thông tin tựa đề đối với đĩa DVD."
+msgstr "Không thể đọc từ đĩa CD."
 
 #: ext/cdio/gstcdiocddasrc.c:280
-#, fuzzy
 msgid "Could not open CD device for reading."
-msgstr "Không thể mở đĩa DVD tên %d"
+msgstr "Không thể mở thiết bị đĩa CD để đọc."
 
 #: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "Đĩa không phải là một đĩa CD âm thanh."
 
 #: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
@@ -90,7 +88,4 @@ msgstr "Luồng này không chứa dữ liệu."
 
 #: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
-msgstr ""
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Tập tin này bị mật mã nên không chạy được."
+msgstr "Lỗi luồng dữ liệu nội bộ."

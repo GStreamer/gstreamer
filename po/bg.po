@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.7.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-07-21 11:12+0300\n"
+"PO-Revision-Date: 2008-09-12 09:56+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -17,18 +17,16 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Заглавната информация в DVD не може да бъде прочетена."
+msgstr "CD-то не може да бъде прочетено."
 
 #: ext/cdio/gstcdiocddasrc.c:280
-#, fuzzy
 msgid "Could not open CD device for reading."
-msgstr "Част %d от DVD-то не може да бъде отворена"
+msgstr "Не може да се чете от устройството за CD-та."
 
 #: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "Дискът не е аудио CD."
 
 #: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
@@ -92,7 +90,4 @@ msgstr "Потокът не съдържа данни."
 
 #: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
-msgstr ""
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Този файл е шифриран и не може да бъде пуснат."
+msgstr "Вътрешна грешка в потока от данни."

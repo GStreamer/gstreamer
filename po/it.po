@@ -1,14 +1,14 @@
 # Italian translation for gst-plugins-ugly package of GStreamer project.
 # Copyright (C) 2004-2008 GStreamer core team
-# This file is distributed under the same license as the gstreamer package.
+# This file is distributed under the same license as the gst-plugins-ugly package.
 # Luca Ferretti <elle.uca@infinito.it>, 2007-2008
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-02-09 22:16+0100\n"
+"PO-Revision-Date: 2008-11-13 09:28+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -16,18 +16,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Impossibile leggere le informazioni sul titolo per il DVD."
+msgstr "Impossibile leggere dal CD."
 
 #: ext/cdio/gstcdiocddasrc.c:280
-#, fuzzy
 msgid "Could not open CD device for reading."
-msgstr "Impossibile aprire il titolo %d del DVD"
+msgstr "Impossibile aprire il dispositivo CD in lettura."
 
 #: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "Il disco non è un CD audio."
 
 #: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
@@ -36,20 +34,20 @@ msgstr "Impossibile aprire il DVD"
 
 #: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
-msgstr "Informazioni titolo non valide sul DVD."
+msgstr "Informazioni del titolo non valide sul DVD."
 
 #: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
-msgstr "Impossibile leggere le informazioni sul titolo per il DVD."
+msgstr "Impossibile leggere le informazioni del titolo per il DVD."
 
 #: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Apertura del device DVD «%s» fallita."
+msgstr "Apertura del device DVD «%s» non riuscita."
 
 #: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
-msgstr "Impostazione del posizionamento basato su PGC fallita."
+msgstr "Impostazione del posizionamento basato su PGC non riuscita."
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -61,7 +59,7 @@ msgstr "Impossibile aprire il titolo %d del DVD"
 #: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Fallita l'apertura del capitolo %d del titolo %d del DVD"
+msgstr "Apertura del capitolo %d del titolo %d del DVD non riuscita"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
@@ -75,7 +73,7 @@ msgstr ""
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
-"Fallita la configurazione dell'encoder LAME. Verificare i propri parametri "
+"Configurazione dell'encoder LAME non riuscita. Verificare i propri parametri "
 "di codifica."
 
 # NEW
@@ -95,7 +93,4 @@ msgstr "Questo stream non contiene alcun dato."
 
 #: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
-msgstr ""
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Questo file è cifrato e non può essere riprodotto."
+msgstr "Errore interno dello stream di dati."

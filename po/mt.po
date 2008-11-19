@@ -1,63 +1,66 @@
-# Indonesian translations for gst-plugins-ugly package.
-# This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2008.
-#
+# Maltese translation for gst-plugins-ugly.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# NAME OF AUTHOR <michelbugeja@rabatmalta.com>, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-ugly-0.10.9.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-08-13 20:19+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
-"Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
+"PO-Revision-Date: 2008-11-13 18:18+0100\n"
+"Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
+"Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Maltese\n"
+"X-Poedit-Country: Malta\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
-msgstr "Tak dapat membaca dari CD."
+msgstr "Ma nistax naqra mis-CD."
 
 #: ext/cdio/gstcdiocddasrc.c:280
 msgid "Could not open CD device for reading."
-msgstr "Tak dapat membuka divais CD untuk dibaca."
+msgstr "Ma nistax niftaħ is-CD biex naqra."
 
 #: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr "Cakram bukan CD Audio."
+msgstr "Id-diska mijhiex CD tal-awdjo."
 
 #: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
-msgstr "Tak dapat membuka DVD"
+msgstr "Ma nistax niftaħ DVD."
 
 #: ext/dvdnav/dvdnavsrc.c:1822
 msgid "Invalid title information on DVD."
-msgstr "Informasi judul tidak sah pada DVD."
+msgstr "L-informazzjoni tat-titlu tad-DVD mhux validu."
 
 #: ext/dvdnav/dvdnavsrc.c:1968
 msgid "Could not read title information for DVD."
-msgstr "Tak dapat membaca informasi judul untuk DVD."
+msgstr "Ma nistax naqra l-informazzjoni tat-titlu tad-DVD."
 
 #: ext/dvdnav/dvdnavsrc.c:1990
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Gagal membuka divais DVD '%s'."
+msgstr "Problema biex niftaħ l-apparat tad-DVD '%s'."
 
 #: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
-msgstr "Gagal mengatur pencarian berbasis PGC."
+msgstr "Problema biex nissettja tfittxija bbażata fuq PGC."
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "Tak dapat membuka judul DVD %d"
+msgstr "Ma nistax niftaħ titlu %d tad-DVD"
 
 #: ext/dvdread/dvdreadsrc.c:248
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Gagal pergi ke bab %d dari judul DVD %d"
+msgstr "Problema biex immur kapitlu %d mit-titlu %d tad-DVD"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
@@ -65,12 +68,13 @@ msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
-"Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen "
-"ini"
+"Ma nistax niftaħ titlu %d tad-DVD. Titli nterattivi mhux issapportjati minn "
+"dan l-element"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
+msgstr ""
+"Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
 
 #: ext/lame/gstlame.c:718
 #, c-format
@@ -78,13 +82,13 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi "
-"diubah ke %d kbit/s."
+"Mhux permess il-bitrate %d kbit/s rikjesta għal '%s'. Għalhekk il-bitrate "
+"ġiet mibdula għal %d kbit/s."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
-msgstr "Arus ini tidak berisi data."
+msgstr "L-istream ma fiha l-ebda data."
 
 #: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
-msgstr "Galat arus data internal."
+msgstr "Problema interna fid-data stream."
