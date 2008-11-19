@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.9 "Back The Way It Was"
+Release notes for GStreamer Ugly Plug-ins 0.10.10 "Under the House"
         
 
 The GStreamer team is proud to announce a new release
@@ -50,28 +50,32 @@ contains a set of less supported plug-ins that haven't passed the
     rigorous quality testing we expect
 
 
+
   
 
 Features of this release
     
-      * Improvements in a52 and mp3 decoding
-      * Bug fixes in Xing header muxer
-      * MPEG demuxer improvements and dvdreadsrc bug-fixes
-      * Fix build with LAME 3.97 and above
-      * Fix LAME parameter settings to allow setting the bitrate properly
+      * asfdemux and rmdemux fixes
+      * RDT support
+      * AMR-NB parser improvements
+      * Fix a52dec channel output negotiation
+      * Compilation fixes for mad, mpeg2dec
 
 Bugs fixed in this release
      
-      * 476149 : Fix and add needed features to dvdnavsrc
-      * 490372 : Variable bit rates are limited to 160 kbps in higher qual...
-      * 498004 : preset is ignored by lame plugin
-      * 540194 : [mpegdemux] Doesn't handle files with a non-zero start ti...
-      * 542646 : gstreamer endless loop by zzuf sample
-      * 544039 : [lame] Doesn't build with 3.97
-      * 545370 : playing some mp3s segfaults
       * 546859 : Asfdemux doesn't properly error out on not-linked
-      * 548194 : a52dec doesn't set up segment for raw files correctly.
-      * 537235 : [mp3parse] some mp3 files do not play with gstreamer
+      * 536274 : handle flush seeking in amrnbparse
+      * 554142 : mad plugin with disable index seeking issue
+      * 554150 : mpeg2dec plugin with disable index seeking issue
+      * 556184 : [PATCH] mpeg2dec: prefer container's pixel aspect ratio o...
+      * 556277 : mp3parse generate discontinuities.
+      * 558277 : generic states test fails
+      * 559569 : GStreamer mp3 consistent and regular stuttering
+      * 559682 : negotiation problem
+      * 561161 : [sidplay] Uses GST_CFLAGS for C++
+      * 424070 : [amrnbdec] add IF2 handling
+      * 536226 : fix query duration
+      * 558896 : DVD playing on Vista using dvddemux element seg-faults on...
 
 Download
 
@@ -101,11 +105,12 @@ Applications
   
 Contributors to this release
     
+      * Benoit Fouet
       * Edward Hervey
-      * Frederic Crozat
       * Jan Schmidt
-      * Mark Nauwelaerts
       * Michael Smith
+      * Robin Stocker
+      * Sameer Naik
       * Sebastian Dröge
       * Stefan Kost
       * Tal Shalif

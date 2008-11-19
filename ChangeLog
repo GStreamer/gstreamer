@@ -1,3 +1,10 @@
+=== release 0.10.10 ===
+
+2008-11-19  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.10, "Under the House"
+
 2008-11-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/sidplay/Makefile.am:

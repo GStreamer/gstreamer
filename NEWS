@@ -1,4 +1,28 @@
-This is GStreamer Ugly Plug-ins 0.10.9 "Back The Way It Was"
+This is GStreamer Ugly Plug-ins 0.10.10 "Under the House"
+
+Changes since 0.10.9:
+    
+      * asfdemux and rmdemux fixes
+      * RDT support
+      * AMR-NB parser improvements
+      * Fix a52dec channel output negotiation
+      * Compilation fixes for mad, mpeg2dec
+
+Bugs fixed since 0.10.9:
+     
+      * 546859 : Asfdemux doesn't properly error out on not-linked
+      * 536274 : handle flush seeking in amrnbparse
+      * 554142 : mad plugin with disable index seeking issue
+      * 554150 : mpeg2dec plugin with disable index seeking issue
+      * 556184 : [PATCH] mpeg2dec: prefer container's pixel aspect ratio o...
+      * 556277 : mp3parse generate discontinuities.
+      * 558277 : generic states test fails
+      * 559569 : GStreamer mp3 consistent and regular stuttering
+      * 559682 : negotiation problem
+      * 561161 : [sidplay] Uses GST_CFLAGS for C++
+      * 424070 : [amrnbdec] add IF2 handling
+      * 536226 : fix query duration
+      * 558896 : DVD playing on Vista using dvddemux element seg-faults on...
 
 Changes since 0.10.8:
 
