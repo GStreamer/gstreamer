@@ -1,5 +1,11 @@
 2008-11-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init):
+	Mark signal arg as static scope.
+
+2008-11-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_associate),
 	(gst_rtp_bin_handle_sync), (create_stream), (free_stream),
 	(new_ssrc_pad_found):
