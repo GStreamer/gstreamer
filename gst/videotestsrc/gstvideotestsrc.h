@@ -52,6 +52,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_CHECKERS8: Checkers pattern (8px)
  * @GST_VIDEO_TEST_SRC_CIRCULAR: Circular pattern
  * @GST_VIDEO_TEST_SRC_BLINK: Alternate between black and white
+ * @GST_VIDEO_TEST_SRC_SMPTE75: SMPTE test pattern (75% color bars)
  *
  * The test pattern to produce.
  */
@@ -68,8 +69,21 @@ typedef enum {
   GST_VIDEO_TEST_SRC_CHECKERS4,
   GST_VIDEO_TEST_SRC_CHECKERS8,
   GST_VIDEO_TEST_SRC_CIRCULAR,
-  GST_VIDEO_TEST_SRC_BLINK
+  GST_VIDEO_TEST_SRC_BLINK,
+  GST_VIDEO_TEST_SRC_SMPTE75
 } GstVideoTestSrcPattern;
+
+/**
+ * GstVideoTestSrcColorSpec:
+ * @GST_VIDEO_TEST_SRC_BT601: ITU-R Rec. BT.601
+ * @GST_VIDEO_TEST_SRC_BT709: ITU-R Rec. BT.601
+ *
+ * The color specification to use.
+ */
+typedef enum {
+  GST_VIDEO_TEST_SRC_BT601,
+  GST_VIDEO_TEST_SRC_BT709
+} GstVideoTestSrcColorSpec;
 
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
 typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
@@ -86,6 +100,9 @@ struct _GstVideoTestSrc {
 
   /* type of output */
   GstVideoTestSrcPattern pattern_type;
+
+  /* Color spec of output */
+  GstVideoTestSrcColorSpec color_spec;
 
   /* video state */
   char *format_name;

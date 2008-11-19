@@ -56,6 +56,7 @@ GST_ELEMENT_DETAILS ("Video test source",
 #define DEFAULT_TIMESTAMP_OFFSET   0
 #define DEFAULT_IS_LIVE            FALSE
 #define DEFAULT_PEER_ALLOC         TRUE
+#define DEFAULT_COLOR_SPEC         GST_VIDEO_TEST_SRC_BT601
 
 enum
 {
@@ -64,6 +65,7 @@ enum
   PROP_TIMESTAMP_OFFSET,
   PROP_IS_LIVE,
   PROP_PEER_ALLOC,
+  PROP_COLOR_SPEC,
   PROP_LAST
 };
 
@@ -113,6 +115,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
     {GST_VIDEO_TEST_SRC_CIRCULAR, "Circular", "circular"},
     {GST_VIDEO_TEST_SRC_BLINK, "Blink", "blink"},
+    {GST_VIDEO_TEST_SRC_SMPTE75, "SMPTE 75% color bars", "smpte75"},
     {0, NULL, NULL}
   };
 
@@ -121,6 +124,24 @@ gst_video_test_src_pattern_get_type (void)
         g_enum_register_static ("GstVideoTestSrcPattern", pattern_types);
   }
   return video_test_src_pattern_type;
+}
+
+#define GST_TYPE_VIDEO_TEST_SRC_COLOR_SPEC (gst_video_test_src_color_spec_get_type ())
+static GType
+gst_video_test_src_color_spec_get_type (void)
+{
+  static GType video_test_src_color_spec_type = 0;
+  static const GEnumValue color_spec_types[] = {
+    {GST_VIDEO_TEST_SRC_BT601, "ITU-R Rec. BT.601", "bt601"},
+    {GST_VIDEO_TEST_SRC_BT709, "ITU-R Rec. BT.709", "bt709"},
+    {0, NULL, NULL}
+  };
+
+  if (!video_test_src_color_spec_type) {
+    video_test_src_color_spec_type =
+        g_enum_register_static ("GstVideoTestSrcColorSpec", color_spec_types);
+  }
+  return video_test_src_color_spec_type;
 }
 
 static void
@@ -165,6 +186,11 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
       g_param_spec_boolean ("peer-alloc", "Peer Alloc",
           "Ask the peer to allocate an output buffer", DEFAULT_PEER_ALLOC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_COLOR_SPEC,
+      g_param_spec_enum ("colorspec", "Color Specification",
+          "Generate video in the given color specification",
+          GST_TYPE_VIDEO_TEST_SRC_COLOR_SPEC,
+          DEFAULT_COLOR_SPEC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
@@ -254,6 +280,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     case GST_VIDEO_TEST_SRC_BLINK:
       videotestsrc->make_image = gst_video_test_src_black;
       break;
+    case GST_VIDEO_TEST_SRC_SMPTE75:
+      videotestsrc->make_image = gst_video_test_src_smpte75;
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -278,6 +307,9 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_PEER_ALLOC:
       src->peer_alloc = g_value_get_boolean (value);
       break;
+    case PROP_COLOR_SPEC:
+      src->color_spec = g_value_get_enum (value);
+      break;
     default:
       break;
   }
@@ -301,6 +333,9 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PEER_ALLOC:
       g_value_set_boolean (value, src->peer_alloc);
+      break;
+    case PROP_COLOR_SPEC:
+      g_value_set_enum (value, src->color_spec);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

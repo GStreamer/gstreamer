@@ -1,3 +1,16 @@
+2008-11-18  David Schleef  <ds@schleef.org>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  Add "colorspec" property, specifying whether to generate BT.601
+	  or BT.709 video.  This only affects YCbCr values, not RGB, since
+	  if you're generating a 709 test pattern, presumably you want
+	  709 RGB primaries, not 601.  Also add "smpte75" pattern, which
+	  uses 75% colors instead of 100%, since this is often more useful
+	  for testing (and also follows the SMPTE EG-1 guideline).
+
 2008-11-18  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* gst/playback/gstdecodebin.c:
