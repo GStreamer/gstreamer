@@ -87,6 +87,7 @@ enum
 {
   SIGNAL_REQUEST_PT_MAP,
   SIGNAL_CLEAR_PT_MAP,
+  SIGNAL_HANDLE_SYNC,
   LAST_SIGNAL
 };
 
@@ -127,6 +128,7 @@ enum
 struct _GstRtpJitterBufferPrivate
 {
   GstPad *sinkpad, *srcpad;
+  GstPad *rtcpsinkpad;
 
   RTPJitterBuffer *jbuf;
   GMutex *jbuf_lock;
@@ -190,6 +192,13 @@ GST_STATIC_PAD_TEMPLATE ("sink",
          */ )
     );
 
+static GstStaticPadTemplate gst_rtp_jitter_buffer_sink_rtcp_template =
+GST_STATIC_PAD_TEMPLATE ("sink_rtcp",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS ("application/x-rtcp")
+    );
+
 static GstStaticPadTemplate gst_rtp_jitter_buffer_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -216,20 +225,30 @@ static void gst_rtp_jitter_buffer_finalize (GObject * object);
 /* element overrides */
 static GstStateChangeReturn gst_rtp_jitter_buffer_change_state (GstElement
     * element, GstStateChange transition);
+static GstPad *gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name);
+static void gst_rtp_jitter_buffer_release_pad (GstElement * element,
+    GstPad * pad);
 
 /* pad overrides */
 static GstCaps *gst_rtp_jitter_buffer_getcaps (GstPad * pad);
+static GList *gst_rtp_jitter_buffer_internal_links (GstPad * pad);
 
 /* sinkpad overrides */
 static gboolean gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_rtp_jitter_buffer_src_event (GstPad * pad,
-    GstEvent * event);
 static gboolean gst_rtp_jitter_buffer_sink_event (GstPad * pad,
     GstEvent * event);
 static GstFlowReturn gst_rtp_jitter_buffer_chain (GstPad * pad,
     GstBuffer * buffer);
 
+static gboolean gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad,
+    GstEvent * event);
+static GstFlowReturn gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad,
+    GstBuffer * buffer);
+
 /* srcpad overrides */
+static gboolean gst_rtp_jitter_buffer_src_event (GstPad * pad,
+    GstEvent * event);
 static gboolean
 gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active);
 static void gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer);
@@ -247,6 +266,9 @@ gst_rtp_jitter_buffer_base_init (gpointer klass)
       gst_static_pad_template_get (&gst_rtp_jitter_buffer_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_rtp_jitter_buffer_sink_rtcp_template));
+
   gst_element_class_set_details (element_class, &gst_rtp_jitter_buffer_details);
 }
 
@@ -321,6 +343,19 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           request_pt_map), NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT,
       GST_TYPE_CAPS, 1, G_TYPE_UINT);
   /**
+   * GstRtpJitterBuffer::handle-sync:
+   * @buffer: the object which received the signal
+   * @struct: a GstStructure containing sync values.
+   *
+   * Be notified of new sync values.
+   */
+  gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC] =
+      g_signal_new ("handle-sync", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
+          handle_sync), NULL, NULL, g_cclosure_marshal_VOID__BOXED,
+      G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
+
+  /**
    * GstRtpJitterBuffer::clear-pt-map:
    * @buffer: the object which received the signal
    *
@@ -329,11 +364,16 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
-          clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstRtpJitterBufferClass, clear_pt_map), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
-  gstelement_class->change_state = gst_rtp_jitter_buffer_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_change_state);
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_request_new_pad);
+  gstelement_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_release_pad);
 
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_clear_pt_map);
 
@@ -401,6 +441,139 @@ gst_rtp_jitter_buffer_finalize (GObject * object)
   g_object_unref (jitterbuffer->priv->jbuf);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GList *
+gst_rtp_jitter_buffer_internal_links (GstPad * pad)
+{
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
+  GList *res = NULL;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  priv = jitterbuffer->priv;
+
+  if (pad == priv->sinkpad) {
+    res = g_list_prepend (res, priv->srcpad);
+  } else if (pad == priv->srcpad) {
+    res = g_list_prepend (res, priv->sinkpad);
+  } else if (pad == priv->rtcpsinkpad) {
+    res = NULL;
+  }
+
+  gst_object_unref (jitterbuffer);
+
+  return res;
+}
+
+static GstPad *
+create_rtcp_sink (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+
+  GST_DEBUG_OBJECT (jitterbuffer, "creating RTCP sink pad");
+
+  priv->rtcpsinkpad =
+      gst_pad_new_from_static_template
+      (&gst_rtp_jitter_buffer_sink_rtcp_template, "sink_rtcp");
+  gst_pad_set_chain_function (priv->rtcpsinkpad,
+      gst_rtp_jitter_buffer_chain_rtcp);
+  gst_pad_set_event_function (priv->rtcpsinkpad,
+      (GstPadEventFunction) gst_rtp_jitter_buffer_sink_rtcp_event);
+  gst_pad_set_internal_link_function (priv->rtcpsinkpad,
+      gst_rtp_jitter_buffer_internal_links);
+  gst_pad_set_active (priv->rtcpsinkpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT_CAST (jitterbuffer), priv->rtcpsinkpad);
+
+  return priv->rtcpsinkpad;
+}
+
+static void
+remove_rtcp_sink (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+
+  GST_DEBUG_OBJECT (jitterbuffer, "removing RTCP sink pad");
+
+  gst_pad_set_active (priv->rtcpsinkpad, FALSE);
+
+  gst_element_remove_pad (GST_ELEMENT_CAST (jitterbuffer), priv->rtcpsinkpad);
+  priv->rtcpsinkpad = NULL;
+}
+
+static GstPad *
+gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name)
+{
+  GstRtpJitterBuffer *jitterbuffer;
+  GstElementClass *klass;
+  GstPad *result;
+  GstRtpJitterBufferPrivate *priv;
+
+  g_return_val_if_fail (templ != NULL, NULL);
+  g_return_val_if_fail (GST_IS_RTP_JITTER_BUFFER (element), NULL);
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (element);
+  priv = jitterbuffer->priv;
+  klass = GST_ELEMENT_GET_CLASS (element);
+
+  GST_DEBUG_OBJECT (element, "requesting pad %s", GST_STR_NULL (name));
+
+  /* figure out the template */
+  if (templ == gst_element_class_get_pad_template (klass, "sink_rtcp")) {
+    if (priv->rtcpsinkpad != NULL)
+      goto exists;
+
+    result = create_rtcp_sink (jitterbuffer);
+  } else
+    goto wrong_template;
+
+  return result;
+
+  /* ERRORS */
+wrong_template:
+  {
+    g_warning ("gstrtpjitterbuffer: this is not our template");
+    return NULL;
+  }
+exists:
+  {
+    g_warning ("gstrtpjitterbuffer: pad already requested");
+    return NULL;
+  }
+}
+
+static void
+gst_rtp_jitter_buffer_release_pad (GstElement * element, GstPad * pad)
+{
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTP_JITTER_BUFFER (element));
+  g_return_if_fail (GST_IS_PAD (pad));
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (element);
+  priv = jitterbuffer->priv;
+
+  GST_DEBUG_OBJECT (element, "releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  if (priv->rtcpsinkpad == pad) {
+    remove_rtcp_sink (jitterbuffer);
+  } else
+    goto wrong_pad;
+
+  return;
+
+  /* ERRORS */
+wrong_pad:
+  {
+    g_warning ("gstjitterbuffer: asked to release an unknown pad");
+    return;
+  }
 }
 
 static void
@@ -784,6 +957,31 @@ newseg_wrong_format:
     ret = FALSE;
     goto done;
   }
+}
+
+static gboolean
+gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  priv = jitterbuffer->priv;
+
+  GST_DEBUG_OBJECT (jitterbuffer, "received %s", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      break;
+    default:
+      break;
+  }
+  gst_event_unref (event);
+  gst_object_unref (jitterbuffer);
+
+  return TRUE;
 }
 
 static gboolean
@@ -1335,6 +1533,124 @@ pause:
   }
 }
 
+static GstFlowReturn
+gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
+{
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
+  GstFlowReturn ret;
+  guint64 base_rtptime, timestamp;
+  guint32 clock_rate;
+  guint64 last_rtptime;
+  guint32 ssrc;
+  GstRTCPPacket packet;
+  guint64 ext_rtptime, diff;
+  guint32 rtptime;
+  gboolean drop = FALSE;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+
+  if (G_UNLIKELY (!gst_rtcp_buffer_validate (buffer)))
+    goto invalid_buffer;
+
+  priv = jitterbuffer->priv;
+
+  if (!gst_rtcp_buffer_get_first_packet (buffer, &packet))
+    goto invalid_buffer;
+
+  /* first packet must be SR or RR or else the validate would have failed */
+  switch (gst_rtcp_packet_get_type (&packet)) {
+    case GST_RTCP_TYPE_SR:
+      gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, NULL, &rtptime,
+          NULL, NULL);
+      break;
+    default:
+      goto ignore_buffer;
+  }
+
+  GST_DEBUG_OBJECT (jitterbuffer, "received RTCP of SSRC %08x", ssrc);
+
+  JBUF_LOCK (priv);
+  /* convert the RTP timestamp to our extended timestamp, using the same offset
+   * we used in the jitterbuffer */
+  ext_rtptime = priv->jbuf->ext_rtptime;
+  ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
+
+  /* get the last values from the jitterbuffer */
+  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &timestamp,
+      &clock_rate, &last_rtptime);
+
+  GST_DEBUG_OBJECT (jitterbuffer, "ext SR %" G_GUINT64_FORMAT ", base %"
+      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT,
+      ext_rtptime, base_rtptime, clock_rate);
+
+  if (base_rtptime == -1 || clock_rate == -1 || timestamp == -1) {
+    GST_DEBUG_OBJECT (jitterbuffer, "dropping, no RTP values");
+    drop = TRUE;
+  } else {
+    /* we can't accept anything that happened before we did the last resync */
+    if (base_rtptime > ext_rtptime) {
+      GST_DEBUG_OBJECT (jitterbuffer, "dropping, older than base time");
+      drop = TRUE;
+    } else {
+      /* the SR RTP timestamp must be something close to what we last observed
+       * in the jitterbuffer */
+      if (ext_rtptime > last_rtptime) {
+        /* check how far ahead it is to our RTP timestamps */
+        diff = ext_rtptime - last_rtptime;
+        /* if bigger than 1 second, we drop it */
+        if (diff > clock_rate) {
+          GST_DEBUG_OBJECT (jitterbuffer, "dropping, too far ahead");
+          drop = TRUE;
+        }
+        GST_DEBUG_OBJECT (jitterbuffer, "ext last %" G_GUINT64_FORMAT ", diff %"
+            G_GUINT64_FORMAT, last_rtptime, diff);
+      }
+    }
+  }
+  JBUF_UNLOCK (priv);
+
+  if (!drop) {
+    GstStructure *s;
+
+    s = gst_structure_new ("application/x-rtp-sync",
+        "base-rtptime", G_TYPE_UINT64, base_rtptime,
+        "base-time", G_TYPE_UINT64, timestamp,
+        "clock-rate", G_TYPE_UINT, clock_rate,
+        "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
+        "sr-buffer", GST_TYPE_BUFFER, buffer, NULL);
+
+    GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
+    g_signal_emit (jitterbuffer,
+        gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
+    gst_structure_free (s);
+  } else {
+    GST_DEBUG_OBJECT (jitterbuffer, "dropping RTCP packet");
+    ret = GST_FLOW_OK;
+  }
+
+done:
+  gst_buffer_unref (buffer);
+  gst_object_unref (jitterbuffer);
+
+  return ret;
+
+invalid_buffer:
+  {
+    /* this is not fatal but should be filtered earlier */
+    GST_ELEMENT_WARNING (jitterbuffer, STREAM, DECODE, (NULL),
+        ("Received invalid RTCP payload, dropping"));
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+ignore_buffer:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer, "ignoring RTCP packet");
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+}
+
 static gboolean
 gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
 {
@@ -1484,19 +1800,4 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-void
-gst_rtp_jitter_buffer_get_sync (GstRtpJitterBuffer * buffer, guint64 * rtptime,
-    guint64 * timestamp, guint32 * clock_rate)
-{
-  GstRtpJitterBufferPrivate *priv;
-
-  g_return_if_fail (GST_IS_RTP_JITTER_BUFFER (buffer));
-
-  priv = buffer->priv;
-
-  JBUF_LOCK (priv);
-  rtp_jitter_buffer_get_sync (priv->jbuf, rtptime, timestamp, clock_rate);
-  JBUF_UNLOCK (priv);
 }

@@ -71,6 +71,9 @@ struct _GstRtpJitterBufferClass
   /* signals */
   GstCaps* (*request_pt_map) (GstRtpJitterBuffer *buffer, guint pt);
 
+  void     (*handle_sync)    (GstRtpJitterBuffer *buffer, GstStructure *s);
+
+  /* actions */
   void     (*clear_pt_map)   (GstRtpJitterBuffer *buffer);
 
   /*< private > */
@@ -78,10 +81,6 @@ struct _GstRtpJitterBufferClass
 };
 
 GType gst_rtp_jitter_buffer_get_type (void);
-
-void        gst_rtp_jitter_buffer_get_sync            (GstRtpJitterBuffer *buffer,
-                                                       guint64 *rtptime, guint64 *timestamp,
-						       guint32 *clock_rate);
 
 G_END_DECLS
 
