@@ -353,7 +353,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       g_signal_new ("handle-sync", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
           handle_sync), NULL, NULL, g_cclosure_marshal_VOID__BOXED,
-      G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
+      G_TYPE_NONE, 1, GST_TYPE_STRUCTURE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstRtpJitterBuffer::clear-pt-map:
