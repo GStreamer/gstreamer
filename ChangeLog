@@ -1,3 +1,10 @@
+2008-11-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Andrew Feren <acferen at yahoo dot com>
+
+	* gst/gstobject.c: (gst_object_default_deep_notify):
+	Unref the GEnumClass after usage again. Fixes bug #561501.
+
 2008-11-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/gstbin.c: (_gst_boolean_accumulator), (gst_bin_class_init),

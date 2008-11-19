@@ -571,13 +571,13 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
     /* FIXME: handle flags */
     if (G_IS_PARAM_SPEC_ENUM (pspec)) {
       GEnumValue *enum_value;
+      GEnumClass *klass = G_ENUM_CLASS (g_type_class_ref (pspec->value_type));
 
-      enum_value =
-          g_enum_get_value (G_ENUM_CLASS (g_type_class_ref (pspec->value_type)),
-          g_value_get_enum (&value));
+      enum_value = g_enum_get_value (klass, g_value_get_enum (&value));
 
       str = g_strdup_printf ("%s (%d)", enum_value->value_nick,
           enum_value->value);
+      g_type_class_unref (klass);
     } else {
       str = g_strdup_value_contents (&value);
     }
