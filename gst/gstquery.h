@@ -48,6 +48,8 @@ G_BEGIN_DECLS
  * @GST_QUERY_FORMATS: query supported formats for convert
  * @GST_QUERY_BUFFERING: query available media for efficient seeking. Since
  * 0.10.20.
+ * @GST_QUERY_CUSTOM: a custom application or element defined query. Since
+ * 0.10.22.
  *
  * Standard predefined Query types
  */
@@ -64,7 +66,8 @@ typedef enum {
   GST_QUERY_SEGMENT,
   GST_QUERY_CONVERT,
   GST_QUERY_FORMATS,
-  GST_QUERY_BUFFERING
+  GST_QUERY_BUFFERING,
+  GST_QUERY_CUSTOM
 } GstQueryType;
 
 /**

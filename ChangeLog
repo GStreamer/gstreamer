@@ -1,3 +1,11 @@
+2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	Add GstQueryType for custom queries instead of having to use the
+	not-so-very-convenient registration infrastructure to register new
+	types.
+
 2008-11-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Andrew Feren <acferen at yahoo dot com>

@@ -92,6 +92,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_CONVERT, "convert", "Converting between formats", 0},
   {GST_QUERY_FORMATS, "formats", "Supported formats for conversion", 0},
   {GST_QUERY_BUFFERING, "buffering", "Buffering status", 0},
+  {GST_QUERY_CUSTOM, "custom", "Custom query", 0},
   {0, NULL, NULL, 0}
 };
 
