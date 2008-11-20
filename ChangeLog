@@ -1,3 +1,12 @@
+2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c: (uint64_ceiling_scale_int),
+	(uint64_ceiling_scale), (gst_wavparse_calculate_duration),
+	(gst_wavparse_stream_headers):
+	Fix the scaling code.
+	Fix parsing of the INFO chunks, we were reading the wrong number of
+	bytes.  Fixes #561580.
+
 2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/matroska/matroska-mux.c:

@@ -248,7 +248,7 @@ gst_wavparse_create_sourcepad (GstWavParse * wavparse)
 static guint64
 uint64_ceiling_scale_int (guint64 val, gint num, gint denom)
 {
-  guint64 result = gst_util_uint64_scale (val, num, denom);
+  guint64 result = gst_util_uint64_scale_int (val, num, denom);
 
   if (uint64_scale_modulo (val, num, denom) == 0)
     return result;
@@ -260,7 +260,7 @@ uint64_ceiling_scale_int (guint64 val, gint num, gint denom)
 static guint64
 uint64_ceiling_scale (guint64 val, guint64 num, guint64 denom)
 {
-  guint64 result = gst_util_uint64_scale_int (val, num, denom);
+  guint64 result = gst_util_uint64_scale (val, num, denom);
 
   if (uint64_scale_modulo (val, num, denom) == 0)
     return result;
@@ -1046,6 +1046,7 @@ gst_wavparse_calculate_duration (GstWavParse * wav)
     return TRUE;
 
   if (wav->bps > 0) {
+    GST_INFO_OBJECT (wav, "Got datasize %" G_GUINT64_FORMAT, wav->datasize);
     wav->duration =
         uint64_ceiling_scale (wav->datasize, GST_SECOND, (guint64) wav->bps);
     GST_INFO_OBJECT (wav, "Got duration (bps) %" GST_TIME_FORMAT,
@@ -1371,7 +1372,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         }
         switch (ltag) {
           case GST_RIFF_LIST_INFO:{
-            const guint data_size = size - 12;
+            const guint data_size = size - 4;
             GstTagList *new;
 
             GST_INFO_OBJECT (wav, "Have LIST chunk INFO");
