@@ -1,5 +1,14 @@
 2008-11-20  Michael Smith <msmith@songbirdnest.com>
 
+	* gst/playback/gstdecodebin2.c:
+	  If the top-level type of the stream is plain text, don't try to decode
+	  it, matching behaviour of decodebin.
+	* gst/playback/gstplaysink.c:
+	  If we fail to generate a text chain (e.g. due to missing optional
+	  plugins), don't crash.
+
+2008-11-20  Michael Smith <msmith@songbirdnest.com>
+
 	* gst-libs/gst/rtsp/gstrtspdefs.c:
 	  Fix win32 build. Oops.
 

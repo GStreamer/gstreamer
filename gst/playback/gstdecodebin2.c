@@ -1416,6 +1416,16 @@ type_found (GstElement * typefind, guint probability,
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
+  /* If the typefinder (but not something else) finds text/plain - i.e. that's
+   * the top-level type of the file - then error out.
+   */
+  if (gst_structure_has_name (gst_caps_get_structure (caps, 0), "text/plain")) {
+    GST_ELEMENT_ERROR (decode_bin, STREAM, WRONG_TYPE,
+        (_("This appears to be a text file")),
+        ("decodebin2 cannot decode plain text files"));
+    goto exit;
+  }
+
   /* we can only deal with one type, we don't yet support dynamically changing
    * caps from the typefind element */
   if (decode_bin->have_type)
@@ -1425,7 +1435,7 @@ type_found (GstElement * typefind, guint probability,
 
   pad = gst_element_get_static_pad (typefind, "src");
 
-  analyze_new_pad (decode_bin, typefind, pad, caps, NULL);
+  analyze_new_paypefind, pad, caps, NULL);
 
   gst_object_unref (pad);
 
@@ -1434,7 +1444,8 @@ exit:
 }
 
 static void
-pad_added_group_cb (GstElement * element, GstPad * pad, GstDecodeGroup * group)
+    pad_added_group_cb (GstElement * element, GstPad * pad,
+    GstDecodeGroup * group)
 {
   GstCaps *caps;
   gboolean expose = FALSE;
@@ -1463,7 +1474,7 @@ pad_added_group_cb (GstElement * element, GstPad * pad, GstDecodeGroup * group)
 }
 
 static void
-pad_removed_group_cb (GstElement * element, GstPad * pad,
+    pad_removed_group_cb (GstElement * element, GstPad * pad,
     GstDecodeGroup * group)
 {
   GST_LOG_OBJECT (pad, "pad removed, group:%p", group);
@@ -1472,8 +1483,7 @@ pad_removed_group_cb (GstElement * element, GstPad * pad,
    * removed when the group's multiqueue is drained */
 }
 
-static void
-no_more_pads_group_cb (GstElement * element, GstDecodeGroup * group)
+static void no_more_pads_group_cb (GstElement * element, GstDecodeGroup * group)
 {
   GST_LOG_OBJECT (element, "no more pads, setting group %p to complete", group);
 
@@ -1482,7 +1492,7 @@ no_more_pads_group_cb (GstElement * element, GstDecodeGroup * group)
 }
 
 static void
-pad_added_cb (GstElement * element, GstPad * pad, GstDecodeBin * dbin)
+    pad_added_cb (GstElement * element, GstPad * pad, GstDecodeBin * dbin)
 {
   GstCaps *caps;
 
@@ -1495,13 +1505,12 @@ pad_added_cb (GstElement * element, GstPad * pad, GstDecodeBin * dbin)
 }
 
 static void
-pad_removed_cb (GstElement * element, GstPad * pad, GstDecodeBin * dbin)
+    pad_removed_cb (GstElement * element, GstPad * pad, GstDecodeBin * dbin)
 {
   GST_LOG_OBJECT (pad, "Pad removed from non-grouped element");
 }
 
-static void
-no_more_pads_cb (GstElement * element, GstDecodeBin * dbin)
+static void no_more_pads_cb (GstElement * element, GstDecodeBin * dbin)
 {
   GstDecodeGroup *group;
 
@@ -1522,7 +1531,7 @@ no_group:
 }
 
 static void
-caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeBin * dbin)
+    caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeBin * dbin)
 {
   GstElement *element;
 
@@ -1537,7 +1546,8 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeBin * dbin)
 }
 
 static void
-caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
+    caps_notify_group_cb (GstPad * pad, GParamSpec * unused,
+    GstDecodeGroup * group)
 {
   GstElement *element;
 
@@ -1552,8 +1562,7 @@ caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
 
 /* Decide whether an element is a demuxer based on the 
  * klass and number/type of src pad templates it has */
-static gboolean
-is_demuxer_element (GstElement * srcelement)
+static gboolean is_demuxer_element (GstElement * srcelement)
 {
   GstElementFactory *srcfactory;
   GstElementClass *elemclass;
@@ -1605,8 +1614,7 @@ is_demuxer_element (GstElement * srcelement)
  * 
  * The decodebin_lock should be taken !
  */
-static gboolean
-are_raw_caps (GstDecodeBin * dbin, GstCaps * caps)
+static gboolean are_raw_caps (GstDecodeBin * dbin, GstCaps * caps)
 {
   GstCaps *intersection;
   gboolean res;
@@ -1632,8 +1640,7 @@ are_raw_caps (GstDecodeBin * dbin, GstCaps * caps)
  * GstDecodeGroup functions
  ****/
 
-static void
-multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
+static void multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
 {
   GST_LOG_OBJECT (group->dbin, "multiqueue is full");
 
@@ -1648,8 +1655,8 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
  * Creates a new GstDecodeGroup. It is up to the caller to add it to the list
  * of groups.
  */
-static GstDecodeGroup *
-gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
+static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * dbin,
+    gboolean use_queue)
 {
   GstDecodeGroup *group;
   GstElement *mq;
@@ -1703,8 +1710,7 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
  *
  * Returns: %NULL if no groups are available, or all groups are completed.
  */
-static GstDecodeGroup *
-get_current_group (GstDecodeBin * dbin)
+static GstDecodeGroup *get_current_group (GstDecodeBin * dbin)
 {
   GList *tmp;
   GstDecodeGroup *group = NULL;
@@ -1734,8 +1740,8 @@ get_current_group (GstDecodeBin * dbin)
  * Returns the srcpad of the multiqueue corresponding the given pad.
  * Returns NULL if there was an error.
  */
-static GstPad *
-gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
+static GstPad *gst_decode_group_control_demuxer_pad (GstDecodeGroup * group,
+    GstPad * pad)
 {
   GstPad *srcpad, *sinkpad;
   gchar *nb, *sinkname, *srcname;
@@ -1778,7 +1784,7 @@ beach:
 }
 
 static gboolean
-gst_decode_group_control_source_pad (GstDecodeGroup * group,
+    gst_decode_group_control_source_pad (GstDecodeGroup * group,
     GstDecodePad * dpad)
 {
   g_return_val_if_fail (group != NULL, FALSE);
@@ -1803,8 +1809,7 @@ gst_decode_group_control_source_pad (GstDecodeGroup * group,
  *
  * Call with the group lock taken ! MT safe
  */
-static void
-gst_decode_group_check_if_blocked (GstDecodeGroup * group)
+static void gst_decode_group_check_if_blocked (GstDecodeGroup * group)
 {
   GList *tmp;
   gboolean blocked = TRUE;
@@ -1842,8 +1847,7 @@ gst_decode_group_check_if_blocked (GstDecodeGroup * group)
   DECODE_BIN_UNLOCK (group->dbin);
 }
 
-static void
-gst_decode_group_check_if_drained (GstDecodeGroup * group)
+static void gst_decode_group_check_if_drained (GstDecodeGroup * group)
 {
   GList *tmp;
   GstDecodeBin *dbin = group->dbin;
@@ -1906,8 +1910,7 @@ done:
  * Return: negative if a<b, 0 if a==b, positive if a>b
  */
 
-static gint
-sort_end_pads (GstDecodePad * da, GstDecodePad * db)
+static gint sort_end_pads (GstDecodePad * da, GstDecodePad * db)
 {
   gint va, vb;
   GstCaps *capsa, *capsb;
@@ -1957,8 +1960,7 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
  *
  * Not MT safe, please take the group lock
  */
-static gboolean
-gst_decode_group_expose (GstDecodeGroup * group)
+static gboolean gst_decode_group_expose (GstDecodeGroup * group)
 {
   GList *tmp;
   GList *next = NULL;
@@ -2080,8 +2082,7 @@ name_problem:
   return FALSE;
 }
 
-static void
-gst_decode_group_hide (GstDecodeGroup * group)
+static void gst_decode_group_hide (GstDecodeGroup * group)
 {
   GList *tmp;
 
@@ -2107,7 +2108,7 @@ gst_decode_group_hide (GstDecodeGroup * group)
 }
 
 static void
-deactivate_free_recursive (GstDecodeGroup * group, GstElement * element)
+    deactivate_free_recursive (GstDecodeGroup * group, GstElement * element)
 {
   GstIterator *it;
   GstIteratorResult res;
@@ -2174,8 +2175,7 @@ beach:
   return;
 }
 
-static void
-gst_decode_group_free (GstDecodeGroup * group)
+static void gst_decode_group_free (GstDecodeGroup * group)
 {
   GList *tmp;
 
@@ -2223,8 +2223,7 @@ gst_decode_group_free (GstDecodeGroup * group)
  *
  * MT safe
  */
-static void
-gst_decode_group_set_complete (GstDecodeGroup * group)
+static void gst_decode_group_set_complete (GstDecodeGroup * group)
 {
   GST_LOG_OBJECT (group->dbin, "Setting group %p to COMPLETE", group);
 
@@ -2240,13 +2239,11 @@ gst_decode_group_set_complete (GstDecodeGroup * group)
  * GstDecodePad functions
  *************************/
 
-static void
-gst_decode_pad_class_init (GstDecodePadClass * klass)
+static void gst_decode_pad_class_init (GstDecodePadClass * klass)
 {
 }
 
-static void
-gst_decode_pad_init (GstDecodePad * pad)
+static void gst_decode_pad_init (GstDecodePad * pad)
 {
   pad->group = NULL;
   pad->blocked = FALSE;
@@ -2256,7 +2253,8 @@ gst_decode_pad_init (GstDecodePad * pad)
 }
 
 static void
-source_pad_blocked_cb (GstDecodePad * dpad, gboolean blocked, gpointer unused)
+    source_pad_blocked_cb (GstDecodePad * dpad, gboolean blocked,
+    gpointer unused)
 {
   GST_LOG_OBJECT (dpad, "blocked:%d, dpad->group:%p", blocked, dpad->group);
 
@@ -2271,7 +2269,7 @@ source_pad_blocked_cb (GstDecodePad * dpad, gboolean blocked, gpointer unused)
 }
 
 static gboolean
-source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
+    source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
 {
   GST_LOG_OBJECT (pad, "%s dpad:%p", GST_EVENT_TYPE_NAME (event), dpad);
 
@@ -2290,22 +2288,20 @@ source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
   return TRUE;
 }
 
-static void
-gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
+static void gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
 {
   gst_pad_set_blocked_async (GST_PAD (dpad), blocked,
       (GstPadBlockCallback) source_pad_blocked_cb, NULL);
 }
 
-static void
-gst_decode_pad_add_drained_check (GstDecodePad * dpad)
+static void gst_decode_pad_add_drained_check (GstDecodePad * dpad)
 {
   gst_pad_add_event_probe (GST_PAD (dpad),
       G_CALLBACK (source_pad_event_probe), dpad);
 }
 
 static void
-gst_decode_pad_activate (GstDecodePad * dpad, GstDecodeGroup * group)
+    gst_decode_pad_activate (GstDecodePad * dpad, GstDecodeGroup * group)
 {
   g_return_if_fail (group != NULL);
 
@@ -2315,8 +2311,7 @@ gst_decode_pad_activate (GstDecodePad * dpad, GstDecodeGroup * group)
   gst_decode_pad_add_drained_check (dpad);
 }
 
-static void
-gst_decode_pad_unblock (GstDecodePad * dpad)
+static void gst_decode_pad_unblock (GstDecodePad * dpad)
 {
   gst_decode_pad_set_blocked (dpad, FALSE);
 }
@@ -2325,8 +2320,8 @@ gst_decode_pad_unblock (GstDecodePad * dpad)
  *
  * Creates a new GstDecodePad for the given pad.
  */
-static GstDecodePad *
-gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeGroup * group)
+static GstDecodePad *gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad,
+    GstDecodeGroup * group)
 {
   GstDecodePad *dpad;
 
@@ -2345,8 +2340,7 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeGroup * group)
  * Element add/remove
  *****/
 
-static void
-do_async_start (GstDecodeBin * dbin)
+static void do_async_start (GstDecodeBin * dbin)
 {
   GstMessage *message;
 
@@ -2356,8 +2350,7 @@ do_async_start (GstDecodeBin * dbin)
   parent_class->handle_message (GST_BIN_CAST (dbin), message);
 }
 
-static void
-do_async_done (GstDecodeBin * dbin)
+static void do_async_done (GstDecodeBin * dbin)
 {
   GstMessage *message;
 
@@ -2379,8 +2372,7 @@ do_async_done (GstDecodeBin * dbin)
  * any.
  */
 
-static GstPad *
-find_sink_pad (GstElement * element)
+static GstPad *find_sink_pad (GstElement * element)
 {
   GstIterator *it;
   GstPad *pad = NULL;
@@ -2397,7 +2389,8 @@ find_sink_pad (GstElement * element)
 }
 
 static GstStateChangeReturn
-gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
+    gst_decode_bin_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstDecodeBin *dbin = GST_DECODE_BIN (element);
@@ -2449,9 +2442,7 @@ activate_failed:
   }
 }
 
-gboolean
-gst_decode_bin_plugin_init (GstPlugin * plugin)
-{
+gboolean gst_decode_bin_plugin_init (GstPlugin * plugin) {
   GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin2", 0,
       "decoder bin");
 
