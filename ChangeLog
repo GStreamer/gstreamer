@@ -1,3 +1,9 @@
+2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/libpng/gstpngenc.c:
+	Don't flush downstream after every buffer - that's not what
+	this libpng callback is for at all!
+
 2008-11-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* sys/v4l2/v4l2src_calls.c:
