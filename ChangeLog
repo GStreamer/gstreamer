@@ -1,5 +1,10 @@
 2008-11-20  Michael Smith <msmith@songbirdnest.com>
 
+	* gst-libs/gst/rtsp/gstrtspdefs.c:
+	  Use WSAGetLastError() rather than errno/h_errno on win32.
+
+2008-11-20  Michael Smith <msmith@songbirdnest.com>
+
 	* gst-libs/gst/riff/riff-media.c:
 	  Support WMA Lossless properly.
 
