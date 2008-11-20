@@ -1,5 +1,11 @@
 2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_render_delay):
+	Changing the render delay changes the latency and so we must post a
+	latency message.
+
+2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstquery.c:
 	* gst/gstquery.h:
 	Add GstQueryType for custom queries instead of having to use the
