@@ -329,6 +329,7 @@ rtp_session_init (RTPSession * sess)
   /* create an active SSRC for this session manager */
   sess->source = rtp_session_create_source (sess);
   sess->source->validated = TRUE;
+  sess->source->internal = TRUE;
   sess->stats.active_sources++;
 
   /* default UDP header length */
@@ -1329,11 +1330,11 @@ rtp_session_create_source (RTPSession * sess)
 static void
 update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
     gboolean rtp, GstBuffer * buffer, GstClockTime current_time,
-    guint64 ntpnstime)
+    GstClockTime running_time, guint64 ntpnstime)
 {
   /* get time of arrival */
   arrival->time = current_time;
-  arrival->timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  arrival->running_time = running_time;
   arrival->ntpnstime = ntpnstime;
 
   /* get packet size including header overhead */
@@ -1368,7 +1369,7 @@ update_arrival_stats (RTPSession * sess, RTPArrivalStats * arrival,
  */
 GstFlowReturn
 rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
-    GstClockTime current_time, guint64 ntpnstime)
+    GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
   GstFlowReturn result;
   guint32 ssrc;
@@ -1385,7 +1386,8 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
   /* update arrival stats */
-  update_arrival_stats (sess, &arrival, TRUE, buffer, current_time, ntpnstime);
+  update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
+      running_time, ntpnstime);
 
   /* ignore more RTP packets when we left the session */
   if (sess->source->received_bye)
@@ -1629,6 +1631,8 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       j++;
     }
 
+    source->validated = TRUE;
+
     if (created)
       on_new_ssrc (sess, source);
     if (changed)
@@ -1759,7 +1763,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
   /* update arrival stats */
-  update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1);
+  update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1, -1);
 
   if (sess->sent_bye)
     goto ignore;
@@ -2097,8 +2101,8 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
     rtp_source_get_new_sr (own, data->ntpnstime, &ntptime, &rtptime,
         &packet_count, &octet_count);
     /* store stats */
-    rtp_source_process_sr (own, data->ntpnstime, ntptime, rtptime, packet_count,
-        octet_count);
+    rtp_source_process_sr (own, data->current_time, ntptime, rtptime,
+        packet_count, octet_count);
 
     /* fill in sender report info */
     gst_rtcp_packet_sr_set_sender_info (packet, own->ssrc,
@@ -2331,6 +2335,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   GstFlowReturn result = GST_FLOW_OK;
   GList *item;
   ReportData data;
+  RTPSource *own;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
@@ -2344,6 +2349,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.is_bye = FALSE;
   data.has_sdes = FALSE;
 
+  own = sess->source;
+
   RTP_SESSION_LOCK (sess);
   /* get a new interval, we need this for various cleanups etc */
   data.interval = calculate_rtcp_interval (sess, TRUE, sess->first_rtcp);
@@ -2354,7 +2361,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* see if we need to generate SR or RR packets */
   if (is_rtcp_time (sess, current_time, &data)) {
-    if (sess->source->received_bye) {
+    if (own->received_bye) {
       /* generate BYE instead */
       GST_DEBUG ("generating BYE message");
       session_bye (sess, &data);
@@ -2401,21 +2408,21 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   }
 
   if (sess->change_ssrc) {
-    GST_DEBUG ("need to change our SSRC (%08x)", sess->source->ssrc);
+    GST_DEBUG ("need to change our SSRC (%08x)", own->ssrc);
     g_hash_table_steal (sess->ssrcs[sess->mask_idx],
-        GINT_TO_POINTER (sess->source->ssrc));
+        GINT_TO_POINTER (own->ssrc));
 
-    sess->source->ssrc = rtp_session_create_new_ssrc (sess);
-    rtp_source_reset (sess->source);
+    own->ssrc = rtp_session_create_new_ssrc (sess);
+    rtp_source_reset (own);
 
     g_hash_table_insert (sess->ssrcs[sess->mask_idx],
-        GINT_TO_POINTER (sess->source->ssrc), sess->source);
+        GINT_TO_POINTER (own->ssrc), own);
 
     g_free (sess->bye_reason);
     sess->bye_reason = NULL;
     sess->sent_bye = FALSE;
     sess->change_ssrc = FALSE;
-    GST_DEBUG ("changed our SSRC to %08x", sess->source->ssrc);
+    GST_DEBUG ("changed our SSRC to %08x", own->ssrc);
   }
   RTP_SESSION_UNLOCK (sess);
 
@@ -2426,7 +2433,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
     GST_DEBUG ("sending packet");
     if (sess->callbacks.send_rtcp)
-      result = sess->callbacks.send_rtcp (sess, sess->source, data.rtcp,
+      result = sess->callbacks.send_rtcp (sess, own, data.rtcp,
           sess->sent_bye, sess->send_rtcp_user_data);
     else {
       GST_DEBUG ("freeing packet");

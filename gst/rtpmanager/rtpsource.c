@@ -60,6 +60,7 @@ enum
   PROP_SDES_LOCATION,
   PROP_SDES_TOOL,
   PROP_SDES_NOTE,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -89,55 +90,73 @@ rtp_source_class_init (RTPSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
           "The SSRC of this source", 0, G_MAXUINT,
-          DEFAULT_SSRC, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+          DEFAULT_SSRC,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IS_CSRC,
       g_param_spec_boolean ("is-csrc", "Is CSRC",
           "If this SSRC is acting as a contributing source",
-          DEFAULT_IS_CSRC, G_PARAM_READABLE));
+          DEFAULT_IS_CSRC, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IS_VALIDATED,
       g_param_spec_boolean ("is-validated", "Is Validated",
-          "If this SSRC is validated", DEFAULT_IS_VALIDATED, G_PARAM_READABLE));
+          "If this SSRC is validated", DEFAULT_IS_VALIDATED,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_IS_SENDER,
       g_param_spec_boolean ("is-sender", "Is Sender",
-          "If this SSRC is a sender", DEFAULT_IS_SENDER, G_PARAM_READABLE));
+          "If this SSRC is a sender", DEFAULT_IS_SENDER,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
       g_param_spec_string ("sdes-cname", "SDES CNAME",
           "The CNAME to put in SDES messages of this source",
-          DEFAULT_SDES_CNAME, G_PARAM_READWRITE));
+          DEFAULT_SDES_CNAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_NAME,
       g_param_spec_string ("sdes-name", "SDES NAME",
           "The NAME to put in SDES messages of this source",
-          DEFAULT_SDES_NAME, G_PARAM_READWRITE));
+          DEFAULT_SDES_NAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_EMAIL,
       g_param_spec_string ("sdes-email", "SDES EMAIL",
           "The EMAIL to put in SDES messages of this source",
-          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE));
+          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_PHONE,
       g_param_spec_string ("sdes-phone", "SDES PHONE",
           "The PHONE to put in SDES messages of this source",
-          DEFAULT_SDES_PHONE, G_PARAM_READWRITE));
+          DEFAULT_SDES_PHONE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_LOCATION,
       g_param_spec_string ("sdes-location", "SDES LOCATION",
           "The LOCATION to put in SDES messages of this source",
-          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE));
+          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_TOOL,
       g_param_spec_string ("sdes-tool", "SDES TOOL",
           "The TOOL to put in SDES messages of this source",
-          DEFAULT_SDES_TOOL, G_PARAM_READWRITE));
+          DEFAULT_SDES_TOOL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_NOTE,
       g_param_spec_string ("sdes-note", "SDES NOTE",
           "The NOTE to put in SDES messages of this source",
-          DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
+          DEFAULT_SDES_NOTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * RTPSource::stats
+   *
+   * The statistics of the source. This property returns a GstStructure with
+   * name application/x-rtp-source-stats with the following fields:
+   *
+   *  
+   *
+   * 
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Stats",
+          "The stats of this source", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (rtp_source_debug, "rtpsource", 0, "RTP Source");
 }
@@ -166,6 +185,7 @@ rtp_source_init (RTPSource * src)
   /* sources are initialy on probation until we receive enough valid RTP
    * packets or a valid RTCP packet */
   src->validated = FALSE;
+  src->internal = FALSE;
   src->probation = RTP_DEFAULT_PROBATION;
 
   src->payload = 0;
@@ -198,6 +218,84 @@ rtp_source_finalize (GObject * object)
   gst_caps_replace (&src->caps, NULL);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
+}
+
+static GstStructure *
+rtp_source_create_stats (RTPSource * src)
+{
+  GstStructure *s;
+  gboolean is_sender = src->is_sender;
+  gboolean internal = src->internal;
+
+  /* common data for all types of sources */
+  s = gst_structure_new ("application/x-rtp-source-stats",
+      "ssrc", G_TYPE_UINT, (guint) src->ssrc,
+      "internal", G_TYPE_BOOLEAN, internal,
+      "validated", G_TYPE_BOOLEAN, src->validated,
+      "received-bye", G_TYPE_BOOLEAN, src->received_bye,
+      "is-csrc", G_TYPE_BOOLEAN, src->is_csrc,
+      "is-sender", G_TYPE_BOOLEAN, is_sender, NULL);
+
+  if (internal) {
+    /* our internal source */
+    if (is_sender) {
+      /* if we are sending, report about how much we sent, other sources will
+       * have a RB with info on reception. */
+      gst_structure_set (s,
+          "octets-sent", G_TYPE_UINT64, src->stats.octets_sent,
+          "packets-sent", G_TYPE_UINT64, src->stats.packets_sent,
+          "bitrate", G_TYPE_UINT64, src->bitrate, NULL);
+    } else {
+      /* if we are not sending we have nothing more to report */
+    }
+  } else {
+    gboolean have_rb;
+    guint8 fractionlost = 0;
+    gint32 packetslost = 0;
+    guint32 exthighestseq = 0;
+    guint32 jitter = 0;
+    guint32 lsr = 0;
+    guint32 dlsr = 0;
+    guint32 round_trip = 0;
+
+    /* other sources */
+    if (is_sender) {
+      gboolean have_sr;
+      GstClockTime time = 0;
+      guint64 ntptime = 0;
+      guint32 rtptime = 0;
+      guint32 packet_count = 0;
+      guint32 octet_count = 0;
+
+      /* this source is sending to us, get the last SR. */
+      have_sr = rtp_source_get_last_sr (src, &time, &ntptime, &rtptime,
+          &packet_count, &octet_count);
+      gst_structure_set (s,
+          "octets-received", G_TYPE_UINT64, src->stats.octets_received,
+          "packets-received", G_TYPE_UINT64, src->stats.packets_received,
+          "have-sr", G_TYPE_BOOLEAN, have_sr,
+          "sr-ntptime", G_TYPE_UINT64, ntptime,
+          "sr-rtptime", G_TYPE_UINT, (guint) rtptime,
+          "sr-octet-count", G_TYPE_UINT, (guint) octet_count,
+          "sr-packet-count", G_TYPE_UINT, (guint) packet_count, NULL);
+    }
+    /* we might be sending to this SSRC so we report about how it is
+     * receiving our data */
+    have_rb = rtp_source_get_last_rb (src, &fractionlost, &packetslost,
+        &exthighestseq, &jitter, &lsr, &dlsr, &round_trip);
+
+    gst_structure_set (s,
+        "have-rb", G_TYPE_BOOLEAN, have_rb,
+        "rb-fractionlost", G_TYPE_UINT, (guint) fractionlost,
+        "rb-packetslost", G_TYPE_INT, (gint) packetslost,
+        "rb-exthighestseq", G_TYPE_UINT, (guint) exthighestseq,
+        "rb-jitter", G_TYPE_UINT, (guint) jitter,
+        "rb-lsr", G_TYPE_UINT, (guint) lsr,
+        "rb-dlsr", G_TYPE_UINT, (guint) dlsr,
+        "rb-round-trip", G_TYPE_UINT, (guint) round_trip, NULL);
+  }
+
+  return s;
 }
 
 static void
@@ -294,6 +392,9 @@ rtp_source_get_property (GObject * object, guint prop_id,
     case PROP_SDES_NOTE:
       g_value_take_string (value, rtp_source_get_sdes_string (src,
               GST_RTCP_SDES_NOTE));
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value, rtp_source_create_stats (src));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -992,6 +1093,7 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
   guint32 rtptime;
   guint64 ext_rtptime;
   guint64 ntp_diff, rtp_diff;
+  guint64 elapsed;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -1006,6 +1108,34 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
   /* update stats for the SR */
   src->stats.packets_sent++;
   src->stats.octets_sent += len;
+  src->bytes_sent += len;
+
+  if (src->prev_ntpnstime) {
+    elapsed = ntpnstime - src->prev_ntpnstime;
+
+    if (elapsed > (G_GINT64_CONSTANT (1) << 31)) {
+      guint64 rate;
+
+      rate =
+          gst_util_uint64_scale (src->bytes_sent, elapsed,
+          (G_GINT64_CONSTANT (1) << 29));
+
+      GST_LOG ("Elapsed %" G_GUINT64_FORMAT ", bytes %" G_GUINT64_FORMAT
+          ", rate %" G_GUINT64_FORMAT, elapsed, src->bytes_sent, rate);
+
+      if (src->bitrate == 0)
+        src->bitrate = rate;
+      else
+        src->bitrate = ((src->bitrate * 3) + rate) / 4;
+
+      src->prev_ntpnstime = ntpnstime;
+      src->bytes_sent = 0;
+    }
+  } else {
+    GST_LOG ("Reset bitrate measurement");
+    src->prev_ntpnstime = ntpnstime;
+    src->bitrate = 0;
+  }
 
   rtptime = gst_rtp_buffer_get_timestamp (buffer);
   ext_rtptime = src->last_rtptime;
@@ -1140,10 +1270,13 @@ rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
   curr->lsr = lsr;
   curr->dlsr = dlsr;
 
-  /* calculate round trip */
-  ntp = (gst_rtcp_unix_to_ntp (time) >> 16) & 0xffffffff;
-  A = ntp - dlsr;
-  A -= lsr;
+  /* calculate round trip, round the time up */
+  ntp = ((gst_rtcp_unix_to_ntp (time) + 0xffff) >> 16) & 0xffffffff;
+  A = dlsr + lsr;
+  if (A > 0 && ntp > A)
+    A = ntp - A;
+  else
+    A = 0;
   curr->round_trip = A;
 
   GST_DEBUG ("NTP %04x:%04x, round trip %04x:%04x", ntp >> 16, ntp & 0xffff,
@@ -1229,7 +1362,7 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
 /**
  * rtp_source_get_new_rb:
  * @src: an #RTPSource
- * @ntpnstime: the current time in nanoseconds since 1970
+ * @time: the current time of the system clock
  * @fractionlost: fraction lost since last SR/RR
  * @packetslost: the cumululative number of packets lost
  * @exthighestseq: the extended last sequence number received
@@ -1242,7 +1375,7 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
  * Returns: %TRUE on success.
  */
 gboolean
-rtp_source_get_new_rb (RTPSource * src, guint64 ntpnstime,
+rtp_source_get_new_rb (RTPSource * src, GstClockTime time,
     guint8 * fractionlost, gint32 * packetslost, guint32 * exthighestseq,
     guint32 * jitter, guint32 * lsr, guint32 * dlsr)
 {
@@ -1288,7 +1421,7 @@ rtp_source_get_new_rb (RTPSource * src, guint64 ntpnstime,
 
     /* LSR is middle 32 bits of the last ntptime */
     LSR = (ntptime >> 16) & 0xffffffff;
-    diff = ntpnstime - sr_time;
+    diff = time - sr_time;
     GST_DEBUG ("last SR time diff %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
     /* DLSR, delay since last SR is expressed in 1/65536 second units */
     DLSR = gst_util_uint64_scale_int (diff, 65536, GST_SECOND);
@@ -1365,6 +1498,7 @@ rtp_source_get_last_sr (RTPSource * src, GstClockTime * time, guint64 * ntptime,
  * @jitter: the interarrival jitter
  * @lsr: the last SR packet from this source
  * @dlsr: the delay since last SR packet
+ * @round_trip: the round trip time
  *
  * Get the values of the last RB report set with rtp_source_process_rb().
  *
@@ -1373,7 +1507,7 @@ rtp_source_get_last_sr (RTPSource * src, GstClockTime * time, guint64 * ntptime,
 gboolean
 rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
     gint32 * packetslost, guint32 * exthighestseq, guint32 * jitter,
-    guint32 * lsr, guint32 * dlsr)
+    guint32 * lsr, guint32 * dlsr, guint32 * round_trip)
 {
   RTPReceiverReport *curr;
 
@@ -1395,6 +1529,8 @@ rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
     *lsr = curr->lsr;
   if (dlsr)
     *dlsr = curr->dlsr;
+  if (round_trip)
+    *round_trip = curr->round_trip;
 
   return TRUE;
 }

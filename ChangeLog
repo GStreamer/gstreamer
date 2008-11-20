@@ -1,3 +1,36 @@
+2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c: (get_current_times),
+	(rtcp_thread), (gst_rtp_session_chain_recv_rtp):
+	Pass the running time to the session when processing RTP packets.
+	Improve the time function to provide more info.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_init), (update_arrival_stats),
+	(rtp_session_process_rtp), (rtp_session_process_sdes),
+	(rtp_session_process_rtcp), (session_start_rtcp),
+	(rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Mark the internal source with a flag.
+	Use running_time instead of the more useless timestamp.
+	Validate a source when a valid SDES has been received.
+	Pass the current system time when processing SR packets.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_class_init),
+	(rtp_source_init), (rtp_source_create_stats),
+	(rtp_source_get_property), (rtp_source_send_rtp),
+	(rtp_source_process_rb), (rtp_source_get_new_rb),
+	(rtp_source_get_last_rb):
+	* gst/rtpmanager/rtpsource.h:
+	Add property to get source stats.
+	Mark params as STATIC_STRINGS.
+	Calculate the bitrate at the sender SSRC.
+	Avoid negative values in the round trip time calculations.
+
+	* gst/rtpmanager/rtpstats.h:
+	Update some docs and change some variable name to more closely reflect
+	what it contains.
+
 2008-11-20  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Leandro Melo de Sales <leandroal@gmail.com>
