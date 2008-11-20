@@ -1136,6 +1136,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
     case GST_RIFF_WAVE_FORMAT_WMAV1:
     case GST_RIFF_WAVE_FORMAT_WMAV2:
     case GST_RIFF_WAVE_FORMAT_WMAV3:
+    case GST_RIFF_WAVE_FORMAT_WMAV3_L:
     {
       gint version = (codec_id - GST_RIFF_WAVE_FORMAT_WMAV1) + 1;
 
@@ -1145,8 +1146,12 @@ gst_riff_create_audio_caps (guint16 codec_id,
       caps = gst_caps_new_simple ("audio/x-wma",
           "wmaversion", G_TYPE_INT, version, NULL);
 
-      if (codec_name)
-        *codec_name = g_strdup_printf ("WMA Version %d", version + 6);
+      if (codec_name) {
+        if (codec_id == GST_RIFF_WAVE_FORMAT_WMAV3_L)
+          *codec_name = g_strdup ("WMA Lossless");
+        else
+          *codec_name = g_strdup_printf ("WMA Version %d", version + 6);
+      }
 
       if (strf != NULL) {
         gst_caps_set_simple (caps,
@@ -1157,11 +1162,6 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
       }
       break;
-    }
-    case GST_RIFF_WAVE_FORMAT_WMAV3_L:
-    {
-      /* WMA Version 9 Lossless */
-      goto unknown;
     }
     case GST_RIFF_WAVE_FORMAT_SONY_ATRAC3:
       caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
