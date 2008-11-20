@@ -98,6 +98,13 @@ GST_BOILERPLATE (GstDCCPServerSink, gst_dccp_server_sink, GstBaseSink,
 
 static guint gst_dccp_server_sink_signals[LAST_SIGNAL] = { 0 };
 
+/*
+ * Create a new client with the socket and the MTU
+ *
+ * @param element - the gstdccpserversink instance
+ * @param socket - the client socket
+ * @return the client
+ */
 static Client *
 gst_dccp_server_create_client (GstElement * element, int socket)
 {
@@ -106,6 +113,9 @@ gst_dccp_server_create_client (GstElement * element, int socket)
   client->pksize = gst_dccp_get_max_packet_size (element, client->socket);
   client->flow_status = GST_FLOW_OK;
 
+  GST_DEBUG_OBJECT (element, "Creating a new client with fd %d and MTU %d.",
+      client->socket, client->pksize);
+
   /* the socket is connected */
   g_signal_emit (element, gst_dccp_server_sink_signals[SIGNAL_CONNECTED], 0,
       socket);
@@ -113,6 +123,11 @@ gst_dccp_server_create_client (GstElement * element, int socket)
   return client;
 }
 
+/*
+ * Wait connections of new clients
+ *
+ * @param arg - the gstdccpserversink instance
+ */
 static void *
 gst_dccp_server_accept_new_clients (void *arg)
 {
@@ -132,6 +147,11 @@ gst_dccp_server_accept_new_clients (void *arg)
   }
 }
 
+/*
+ * Send the buffer to a client
+ *
+ * @param arg - the client
+ */
 static void *
 gst_dccp_server_send_buffer (void *arg)
 {
@@ -148,7 +168,10 @@ gst_dccp_server_send_buffer (void *arg)
   return NULL;
 }
 
-/* Remove clients with problems to send */
+/* Remove clients with problems to send.
+ *
+ * @param arg - the gstdccpserversink instance
+ */
 static void *
 gst_dccp_server_delete_dead_clients (void *arg)
 {
@@ -185,23 +208,25 @@ gst_dccp_server_sink_init (GstDCCPServerSink * this,
   this->clients = NULL;
 }
 
+/*
+ * Starts the element. If the sockfd property was not the default, this method
+ * will wait for a client connection.  If wait-connections property is true, it
+ * creates a thread to wait for new client connections.
+ *
+ * @param bsink - the element
+ * @return TRUE if the send operation was successful, FALSE otherwise.
+ */
 static gboolean
 gst_dccp_server_sink_start (GstBaseSink * bsink)
 {
   GstDCCPServerSink *sink = GST_DCCP_SERVER_SINK (bsink);
-  int ret = 1;
   Client *client;
 
-  /* create socket */
   if ((sink->sock_fd = gst_dccp_create_new_socket (GST_ELEMENT (sink))) < 0) {
     return FALSE;
   }
 
-  /* make address reusable */
-  if (setsockopt (sink->sock_fd, SOL_SOCKET, SO_REUSEADDR,
-          (void *) &ret, sizeof (ret)) < 0) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not setsockopt: %s", g_strerror (errno)));
+  if (!gst_dccp_make_address_reusable (GST_ELEMENT (sink), sink->sock_fd)) {
     return FALSE;
   }
 
@@ -290,16 +315,14 @@ gst_dccp_server_sink_stop (GstBaseSink * bsink)
     pthread_cancel (accept_thread_id);
   }
 
-  if (sink->sock_fd != -1 && sink->closed == TRUE) {
-    GST_DEBUG_OBJECT (sink, "closing socket");
-    close (sink->sock_fd);
-    sink->sock_fd = -1;
-  }
+  gst_dccp_socket_close (GST_ELEMENT (sink), &(sink->sock_fd));
 
   pthread_mutex_lock (&lock);
   for (i = 0; i < g_list_length (sink->clients); i++) {
     Client *client = (Client *) g_list_nth_data (sink->clients, i);
-    close (client->socket);
+    if (client->socket != DCCP_DEFAULT_CLIENT_SOCK_FD && sink->closed == TRUE) {
+      gst_dccp_socket_close (GST_ELEMENT (sink), &(client->socket));
+    }
     g_free (client);
   }
   pthread_mutex_unlock (&lock);
@@ -391,7 +414,7 @@ gst_dccp_server_sink_class_init (GstDCCPServerSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
-          "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
+          "The port to listen to", 0, G_MAXUINT16,
           DCCP_DEFAULT_PORT, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_SOCK_FD,
@@ -401,7 +424,7 @@ gst_dccp_server_sink_class_init (GstDCCPServerSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_CLOSED,
       g_param_spec_boolean ("close-socket", "Close",
-          "Close socket at end of stream",
+          "Close the client sockets at end of stream",
           DCCP_DEFAULT_CLOSED, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_CCID,
@@ -418,8 +441,8 @@ gst_dccp_server_sink_class_init (GstDCCPServerSinkClass * klass)
   /* signals */
   /**
    * GstDccpServerSink::connected:
-   * @src: the gstdccpserversink instance
-   * @fd: the connected socket fd
+   * @sink: the gstdccpserversink element that emitted this signal
+   * @fd: the connected socket file descriptor
    *
    * Reports that the element has connected, giving the fd of the socket
    */

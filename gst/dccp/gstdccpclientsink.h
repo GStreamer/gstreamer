@@ -47,6 +47,11 @@ typedef struct _GstDCCPClientSink GstDCCPClientSink;
 typedef struct _GstDCCPClientSinkClass GstDCCPClientSinkClass;
 
 
+/**
+ * GstDCCPClientSink:
+ *
+ * dccpclientsink object structure.
+ */
 struct _GstDCCPClientSink
 {
   GstBaseSink element;

@@ -53,7 +53,6 @@ struct _GstDCCPServerSrc
 
   /* server information */
   int port;
-  gchar *host;
   struct sockaddr_in server_sin;
 
   /* socket */

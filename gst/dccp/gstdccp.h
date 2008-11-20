@@ -90,7 +90,6 @@ GstFlowReturn gst_dccp_send_buffer (GstElement * element, GstBuffer * buffer,
 					int client_sock_fd, int packet_size);
 
 gboolean gst_dccp_make_address_reusable (GstElement * element, int sock_fd);
-gboolean gst_dccp_set_sock_windowsize(GstElement * element, int sock, int winSize,
-															gboolean inSend);
+void gst_dccp_socket_close (GstElement * element, int * socket);
 
 #endif /* __GST_DCCP_H__ */

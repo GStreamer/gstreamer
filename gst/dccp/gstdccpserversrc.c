@@ -56,7 +56,6 @@
 #include <fcntl.h>
 
 #define DCCP_DEFAULT_CAPS        NULL
-#define DCCP_DEFAULT_LISTEN_HOST NULL   /* listen on all interfaces */
 
 /* signals */
 enum
@@ -70,7 +69,6 @@ enum
 {
   PROP_0,
   PROP_PORT,
-  PROP_HOST,
   PROP_CLIENT_SOCK_FD,
   PROP_CLOSED,
   PROP_CCID,
@@ -97,6 +95,11 @@ GST_BOILERPLATE (GstDCCPServerSrc, gst_dccp_server_src, GstPushSrc,
 
 static guint gst_dccp_server_src_signals[LAST_SIGNAL] = { 0 };
 
+/*
+ * Read a buffer from the server socket
+ *
+ * @return GST_FLOW_OK if the send operation was successful, GST_FLOW_ERROR otherwise.
+ */
 static GstFlowReturn
 gst_dccp_server_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
@@ -137,14 +140,6 @@ gst_dccp_server_src_set_property (GObject * object, guint prop_id,
   GstDCCPServerSrc *src = GST_DCCP_SERVER_SRC (object);
 
   switch (prop_id) {
-    case PROP_HOST:
-      if (!g_value_get_string (value)) {
-        g_warning ("host property cannot be NULL");
-        break;
-      }
-      g_free (src->host);
-      src->host = g_strdup (g_value_get_string (value));
-      break;
     case PROP_PORT:
       src->port = g_value_get_int (value);
       break;
@@ -193,9 +188,6 @@ gst_dccp_server_src_get_property (GObject * object, guint prop_id,
   GstDCCPServerSrc *src = GST_DCCP_SERVER_SRC (object);
 
   switch (prop_id) {
-    case PROP_HOST:
-      g_value_set_string (value, src->host);
-      break;
     case PROP_PORT:
       g_value_set_int (value, src->port);
       break;
@@ -217,7 +209,13 @@ gst_dccp_server_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-
+/*
+ * Starts the element. If the sockfd property was not the default, this method
+ * will create a new server socket and wait for a client connection.
+ *
+ * @param bsrc - the element
+ * @return TRUE if the send operation was successful, FALSE otherwise.
+ */
 static gboolean
 gst_dccp_server_src_start (GstBaseSrc * bsrc)
 {
@@ -229,7 +227,9 @@ gst_dccp_server_src_start (GstBaseSrc * bsrc)
       return FALSE;
     }
 
-    gst_dccp_make_address_reusable (GST_ELEMENT (src), src->sock_fd);
+    if (!gst_dccp_make_address_reusable (GST_ELEMENT (src), src->sock_fd)) {
+      return FALSE;
+    }
 
     /* name the server socket */
     memset (&src->server_sin, 0, sizeof (src->server_sin));
@@ -283,7 +283,6 @@ gst_dccp_server_src_init (GstDCCPServerSrc * this,
     GstDCCPServerSrcClass * g_class)
 {
   this->port = DCCP_DEFAULT_PORT;
-  this->host = g_strdup (DCCP_DEFAULT_HOST);
   this->sock_fd = DCCP_DEFAULT_SOCK_FD;
   this->client_sock_fd = DCCP_DEFAULT_CLIENT_SOCK_FD;
   this->closed = DCCP_DEFAULT_CLOSED;
@@ -314,8 +313,6 @@ gst_dccp_server_src_finalize (GObject * gobject)
     this->caps = NULL;
   }
 
-  g_free (this->host);
-
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
@@ -327,10 +324,9 @@ gst_dccp_server_src_stop (GstBaseSrc * bsrc)
 
   src = GST_DCCP_SERVER_SRC (bsrc);
 
-  if (src->sock_fd != -1 && src->closed == TRUE) {
-    GST_DEBUG_OBJECT (src, "closing socket");
-    close (src->sock_fd);
-    src->sock_fd = -1;
+  gst_dccp_socket_close (GST_ELEMENT (src), &(src->sock_fd));
+  if (src->client_sock_fd != DCCP_DEFAULT_CLIENT_SOCK_FD && src->closed == TRUE) {
+    gst_dccp_socket_close (GST_ELEMENT (src), &(src->client_sock_fd));
   }
 
   return TRUE;
@@ -354,12 +350,8 @@ gst_dccp_server_src_class_init (GstDCCPServerSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
-          "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
+          "The port to listen to", 0, G_MAXUINT16,
           DCCP_DEFAULT_PORT, G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_class, PROP_HOST,
-      g_param_spec_string ("host", "Host", "The hostname to listen as",
-          DCCP_DEFAULT_LISTEN_HOST, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_SOCK_FD,
       g_param_spec_int ("sockfd", "Socket fd",
@@ -368,7 +360,7 @@ gst_dccp_server_src_class_init (GstDCCPServerSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_CLOSED,
       g_param_spec_boolean ("close-socket", "Close socket",
-          "Close socket at the end of stream", DCCP_DEFAULT_CLOSED,
+          "Close client socket at the end of stream", DCCP_DEFAULT_CLOSED,
           G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_CCID,
@@ -383,8 +375,8 @@ gst_dccp_server_src_class_init (GstDCCPServerSrcClass * klass)
   /* signals */
   /**
    * GstDccpServerSrc::connected:
-   * @src: the gstdccpserversrc instance
-   * @fd: the connected socket fd
+   * @src: the gstdccpserversrc element that emitted this signal
+   * @fd: the connected socket file descriptor
    *
    * Reports that the element has connected, giving the fd of the socket
    */

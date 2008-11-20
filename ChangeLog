@@ -1,3 +1,18 @@
+2008-11-20  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Leandro Melo de Sales <leandroal@gmail.com>
+
+	* gst/dccp/gstdccp.c:
+	* gst/dccp/gstdccp.h:
+	* gst/dccp/gstdccpclientsink.c:
+	* gst/dccp/gstdccpclientsink.h:
+	* gst/dccp/gstdccpclientsrc.c:
+	* gst/dccp/gstdccpserversink.c:
+	* gst/dccp/gstdccpserversrc.c:
+	* gst/dccp/gstdccpserversrc.h:
+	  CodeStyle improvements and minor fixes to the DCCP plugin.
+	  Fixes #553823.
+
 2008-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:

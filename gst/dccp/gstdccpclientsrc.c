@@ -102,6 +102,11 @@ GST_BOILERPLATE (GstDCCPClientSrc, gst_dccp_client_src, GstPushSrc,
 
 static guint gst_dccp_client_src_signals[LAST_SIGNAL] = { 0 };
 
+/*
+ * Read a buffer from the client socket
+ *
+ * @return GST_FLOW_OK if the send operation was successful, GST_FLOW_ERROR otherwise.
+ */
 static GstFlowReturn
 gst_dccp_client_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
@@ -220,6 +225,13 @@ gst_dccp_client_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+/*
+ * Starts the element. If the sockfd property was not the default, this method
+ * will create a new socket and connect to the server.
+ *
+ * @param bsrc - the element
+ * @return TRUE if the send operation was successful, FALSE otherwise.
+ */
 static gboolean
 gst_dccp_client_src_start (GstBaseSrc * bsrc)
 {
@@ -323,10 +335,8 @@ gst_dccp_client_src_stop (GstBaseSrc * bsrc)
 
   src = GST_DCCP_CLIENT_SRC (bsrc);
 
-  if (src->sock_fd != -1 && src->closed) {
-    GST_DEBUG_OBJECT (src, "closing socket");
-    close (src->sock_fd);
-    src->sock_fd = -1;
+  if (src->sock_fd != DCCP_DEFAULT_SOCK_FD && src->closed) {
+    gst_dccp_socket_close (GST_ELEMENT (src), &(src->sock_fd));
   }
 
   return TRUE;
@@ -353,7 +363,7 @@ gst_dccp_client_src_class_init (GstDCCPClientSrcClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
-          "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
+          "The port to receive packets from", 0, G_MAXUINT16,
           DCCP_DEFAULT_PORT, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_HOST,
@@ -383,8 +393,8 @@ gst_dccp_client_src_class_init (GstDCCPClientSrcClass * klass)
   /* signals */
   /**
    * GstDccpClientSrc::connected:
-   * @src: the gstdccpclientsrc instance
-   * @fd: the connected socket fd
+   * @src: the gstdccpclientsrc element that emitted this signal
+   * @fd: the connected socket file descriptor
    *
    * Reports that the element has connected, giving the fd of the socket
    */

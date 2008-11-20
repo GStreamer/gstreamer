@@ -96,6 +96,11 @@ GST_BOILERPLATE (GstDCCPClientSink, gst_dccp_client_sink, GstBaseSink,
 
 static guint gst_dccp_client_sink_signals[LAST_SIGNAL] = { 0 };
 
+/*
+ * Write buffer to client socket.
+ *
+ * @return GST_FLOW_OK if the send operation was successful, GST_FLOW_ERROR otherwise.
+ */
 static GstFlowReturn
 gst_dccp_client_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
@@ -172,6 +177,13 @@ gst_dccp_client_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+/*
+ * Starts the element. If the sockfd property was not the default, this method
+ * will create a new socket and connect to the server.
+ *
+ * @param bsink - the element
+ * @return TRUE if the send operation was successful, FALSE otherwise.
+ */
 static gboolean
 gst_dccp_client_sink_start (GstBaseSink * bsink)
 {
@@ -250,10 +262,8 @@ gst_dccp_client_sink_stop (GstBaseSink * bsink)
 
   sink = GST_DCCP_CLIENT_SINK (bsink);
 
-  if (sink->sock_fd != -1 && sink->closed) {
-    GST_DEBUG_OBJECT (sink, "closing socket");
-    close (sink->sock_fd);
-    sink->sock_fd = -1;
+  if (sink->sock_fd != DCCP_DEFAULT_SOCK_FD && sink->closed) {
+    gst_dccp_socket_close (GST_ELEMENT (sink), &(sink->sock_fd));
   }
 
   return TRUE;
@@ -276,10 +286,9 @@ gst_dccp_client_sink_class_init (GstDCCPClientSinkClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
-          "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
+          "The port to send the packets to", 0, G_MAXUINT16,
           DCCP_DEFAULT_PORT, G_PARAM_READWRITE));
 
-/* FIXME property server_ip */
   g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "Host",
           "The host IP address to send packets to", DCCP_DEFAULT_HOST,
@@ -303,8 +312,8 @@ gst_dccp_client_sink_class_init (GstDCCPClientSinkClass * klass)
   /* signals */
   /**
    * GstDccpClientSink::connected:
-   * @sink: the gstdccpclientsink instance
-   * @fd: the connected socket fd
+   * @sink: the gstdccpclientsink element that emitted this signal
+   * @fd: the connected socket file descriptor
    *
    * Sign that the element has connected, return the fd of the socket.
    */
