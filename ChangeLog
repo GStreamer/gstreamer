@@ -1,5 +1,12 @@
 2008-11-20  Michael Smith <msmith@songbirdnest.com>
 
+	* plugins/elements/gstfilesrc.c:
+	  Use g_filename_from_uri() for URI parsing in filesrc rather than rolling
+	  out own slightly incorrect version. Fixes use of some paths on
+	  win32.
+
+2008-11-20  Michael Smith <msmith@songbirdnest.com>
+
 	* gst/gstregistrybinary.c:
 	  In win32 codepath, if we fail to write the registry, create the
 	  directory for it and try again, matching the behaviour in non-win32

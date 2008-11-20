@@ -1100,45 +1100,43 @@ gst_file_src_uri_get_uri (GstURIHandler * handler)
 static gboolean
 gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  gchar *protocol, *location;
+  gchar *location, *hostname = NULL;
   gboolean ret;
   GstFileSrc *src = GST_FILE_SRC (handler);
 
-  protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "file") != 0) {
-    g_free (protocol);
-    return FALSE;
-  }
-  g_free (protocol);
-
-  /* allow file://localhost/foo/bar by stripping localhost but fail
-   * for every other hostname */
-  if (g_str_has_prefix (uri, "file://localhost/")) {
-    char *tmp;
-
-    /* 16 == strlen ("file://localhost") */
-    tmp = g_strconcat ("file://", uri + 16, NULL);
-    /* we use gst_uri_get_location() although we already have the
-     * "location" with uri + 16 because it provides unescaping */
-    location = gst_uri_get_location (tmp);
-    g_free (tmp);
-  } else if (strcmp (uri, "file://") == 0) {
+  if (strcmp (uri, "file://") == 0) {
     /* Special case for "file://" as this is used by some applications
      *  to test with gst_element_make_from_uri if there's an element
      *  that supports the URI protocol. */
     gst_file_src_set_location (src, NULL);
     return TRUE;
-  } else {
-    location = gst_uri_get_location (uri);
-    GST_LOG_OBJECT (src, "Location '%s' found from uri '%s'", location, uri);
   }
 
-  if (!location)
-    return FALSE;
-  if (!g_path_is_absolute (location)) {
-    g_free (location);
+  location = g_filename_from_uri (uri, &hostname, NULL);
+
+  if (!location) {
+    GST_WARNING_OBJECT (src, "Invalid URI '%s' for filesrc", uri);
     return FALSE;
   }
+
+  if (hostname) {
+    if (!strcmp (hostname, "localhost")) {
+      /* Only 'localhost' is permitted */
+      GST_WARNING_OBJECT (src, "Invalid hostname '%s' for filesrc", hostname);
+      g_free (hostname);
+      return FALSE;
+    }
+    g_free (hostname);
+  }
+#ifdef G_OS_WIN32
+  /* Unfortunately, g_filename_from_uri() doesn't handle some UNC paths
+   * correctly on windows, it leaves them with an extra backslash
+   * at the start if they're of the mozilla-style file://///host/path/file 
+   * form. Correct this.
+   */
+  if (location[0] == '\\' && location[1] == '\\' && location[2] == '\\')
+    g_memmove (location, location + 1, strlen (location + 1) + 1);
+#endif
 
   ret = gst_file_src_set_location (src, location);
   g_free (location);
