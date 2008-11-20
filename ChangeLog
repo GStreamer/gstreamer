@@ -1,3 +1,9 @@
+2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_chain):
+	Remove duplicate and broken code for the streaming case and simply reuse
+	the much better working pull based code. Fixes #560348.
+
 2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
