@@ -81,6 +81,7 @@ gst_gl_window_finalize (GObject * object)
   GstGLWindow *window = GST_GL_WINDOW (object);
   GstGLWindowPrivate *priv = window->priv;
   XEvent event;
+  Bool ret = TRUE;
 
   g_mutex_lock (priv->x_lock);
 
@@ -88,11 +89,15 @@ gst_gl_window_finalize (GObject * object)
 
   XUnmapWindow (priv->device, priv->internal_win_id);
 
-  glXMakeCurrent (priv->device, None, NULL);
+  ret = glXMakeCurrent (priv->device, None, NULL);
+  if (!ret)
+    g_debug ("failed to release opengl context\n");
 
   glXDestroyContext (priv->device, priv->gl_context);
 
   XFree (priv->visual_info);
+
+  XReparentWindow (priv->device, priv->internal_win_id, priv->root, 0, 0);
 
   XDestroyWindow (priv->device, priv->internal_win_id);
 
@@ -238,9 +243,6 @@ gst_gl_window_new (gint width, gint height)
   gint error_base;
   gint event_base;
 
-  //XVisualInfo templ;
-  //gint unused;
-
   XSetWindowAttributes win_attr;
   XTextProperty text_property;
   XWMHints wm_hints;
@@ -259,6 +261,8 @@ gst_gl_window_new (gint width, gint height)
   g_mutex_lock (priv->x_lock);
 
   priv->device = XOpenDisplay (priv->display_name);
+
+  XSynchronize (priv->device, FALSE);
 
   g_debug ("gl device id: %ld\n", (gulong) priv->device);
 
@@ -282,8 +286,6 @@ gst_gl_window_new (gint width, gint height)
     g_debug ("No GLX extension");
 
   priv->visual_info = glXChooseVisual (priv->device, priv->screen_num, attrib);
-
-  //priv->visual_info = XGetVisualInfo(priv->device, VisualNoMask, &templ, &unused);
 
   if (priv->visual_info->visual != priv->visual)
     g_debug ("selected visual is different from the default\n");
@@ -356,6 +358,11 @@ gst_gl_window_new (gint width, gint height)
 
   if (!ret)
     g_debug ("failed to make opengl context current\n");
+
+  if (glXIsDirect (priv->device, priv->gl_context))
+    g_debug ("Direct Rendering: yes\n");
+  else
+    g_debug ("Direct Rendering: no\n");
 
   g_mutex_unlock (priv->x_lock);
 
@@ -580,7 +587,16 @@ gst_gl_window_run_loop (GstGLWindow *window)
           XFlush (priv->device);
           while (XCheckTypedEvent (priv->device, ClientMessage, &event))
           {
+            GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
+            gpointer custom_data = (gpointer) event.xclient.data.l[1];
+
             g_debug ("discared custom x event\n");
+
+            if (!custom_cb || !custom_data)
+              g_debug ("custom cb not initialized\n");
+
+            custom_cb (custom_data);
+
             g_cond_signal (priv->cond_send_message);
           }
         }
@@ -606,6 +622,8 @@ gst_gl_window_run_loop (GstGLWindow *window)
       case Expose:
         if (priv->draw_cb)
         {
+          if (glXGetCurrentContext () != priv->gl_context)
+            g_warning ("current gl context has changed\n");
           priv->draw_cb (priv->draw_data);
           glFlush();
           glXSwapBuffers (priv->device, priv->internal_win_id);
