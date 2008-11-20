@@ -257,9 +257,9 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "  y=1.1643*(y-0.0625);\n"
     "  u=u-0.5;\n"
     "  v=v-0.5;\n"
-    "  r=y+1.5958*v;\n"
-    "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n"
+    "  r=clamp(y+1.5958*v+0.8, 0, 1);\n"
+    "  g=clamp(y-0.39173*u-0.81290*v, 0, 1);\n"
+    "  b=clamp(y+2.017*u, 0, 1);\n"
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
@@ -2246,6 +2246,10 @@ void
 gst_gl_display_thread_do_upload_draw (GstGLDisplay *display)
 {
   glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, display->upload_fbo);
+
+  //setup a texture to render to
+  glEnable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture(GL_TEXTURE_RECTANGLE_ARB, display->upload_outtex);
 
   //attach the texture to the FBO to renderer to
   glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
