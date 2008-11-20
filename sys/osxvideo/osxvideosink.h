@@ -73,9 +73,6 @@ struct _GstOSXVideoSink {
   GstVideoSink videosink;
   GstOSXWindow *osxwindow;
   
-  gint fps_n;
-  gint fps_d;
-  
   GstTask *event_task;
   GStaticRecMutex event_task_lock;
 

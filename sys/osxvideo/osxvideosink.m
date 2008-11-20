@@ -228,10 +228,11 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     gint height)
 {
   NSRect rect;
-
   GstOSXWindow *osxwindow = NULL;
 
   g_return_val_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink), NULL);
+
+  GST_DEBUG_OBJECT (osxvideosink, "Creating new OSX window");
 
   osxwindow = g_new0 (GstOSXWindow, 1);
 
@@ -266,6 +267,7 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
                          backing: NSBackingStoreBuffered
                          defer: NO
                          screen: nil];
+    GST_DEBUG("VideoSinkWindow created, %p", osxwindow->win);
     [osxwindow->win autorelease];
     [NSApplication sharedApplication];
     [osxwindow->win makeKeyAndOrderFront:NSApp];
@@ -303,8 +305,8 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
 			   nil);
 
     tmp = gst_structure_to_string (s);
-    GST_DEBUG_OBJECT (osxvideosink, "Sending message %s",
-		      tmp);
+    GST_DEBUG_OBJECT (osxvideosink, "Sending message %s (with view %p)",
+		      tmp, osxwindow->gstview);
     g_free (tmp);
 
     msg = gst_message_new_element (GST_OBJECT (osxvideosink), s);
@@ -340,7 +342,6 @@ static void
 gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
     GstOSXWindow * osxwindow, guint width, guint height)
 {
-  NSSize size;
   NSAutoreleasePool *subPool = [[NSAutoreleasePool alloc] init];
   g_return_if_fail (osxwindow != NULL);
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
@@ -348,11 +349,23 @@ gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
   osxwindow->width = width;
   osxwindow->height = height;
 
-  size.width = width;
-  size.height = height;
-  /* Call relevant cocoa function to resize window */
- [osxwindow->win setContentSize:size];
- [subPool release];
+  GST_DEBUG_OBJECT (osxvideosink, "Resizing window to (%d,%d)", width, height);
+  if (osxwindow->win) {
+    /* Call relevant cocoa function to resize window */
+    NSSize size;
+    size.width = width;
+    size.height = height;
+
+    NSLog(@"osxwindow->win = %@", osxwindow->win);
+    GST_DEBUG_OBJECT (osxvideosink, "Calling setContentSize on %p", osxwindow->win); 
+    [osxwindow->win setContentSize:size];
+  }
+  else {
+    /* Directly resize the underlying view */
+    GST_DEBUG_OBJECT (osxvideosink, "Calling setVideoSize on %p", osxwindow->gstview); 
+    [osxwindow->gstview setVideoSize:width :height];
+  }
+  [subPool release];
 }
 
 static void
@@ -374,7 +387,6 @@ gst_osx_video_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstStructure *structure;
   gboolean res, result = FALSE;
   gint video_width, video_height;
-  const GValue *framerate;
 
   osxvideosink = GST_OSX_VIDEO_SINK (bsink);
 
@@ -383,18 +395,13 @@ gst_osx_video_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   res = gst_structure_get_int (structure, "width", &video_width);
   res &= gst_structure_get_int (structure, "height", &video_height);
-  framerate = gst_structure_get_value (structure, "framerate");
-  res &= (framerate != NULL);
 
   if (!res) {
     goto beach;
   }
 
-  osxvideosink->fps_n = gst_value_get_fraction_numerator (framerate);
-  osxvideosink->fps_d = gst_value_get_fraction_denominator (framerate);
-
-  GST_DEBUG_OBJECT (osxvideosink, "our format is: %dx%d video at %d/%d fps",
-      video_width, video_height, osxvideosink->fps_n, osxvideosink->fps_d);
+  GST_DEBUG_OBJECT (osxvideosink, "our format is: %dx%d video",
+      video_width, video_height);
 
   GST_VIDEO_SINK_WIDTH (osxvideosink) = video_width;
   GST_VIDEO_SINK_HEIGHT (osxvideosink) = video_height;
@@ -451,8 +458,6 @@ gst_osx_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      osxvideosink->fps_n = 0;
-      osxvideosink->fps_d = 0;
       osxvideosink->sw_scaling_failed = FALSE;
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 0;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 0;
@@ -548,9 +553,6 @@ gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
 {
 
   osxvideosink->osxwindow = NULL;
-
-  osxvideosink->fps_n = 0;
-  osxvideosink->fps_d = 0;
 
   osxvideosink->pixel_width = osxvideosink->pixel_height = 1;
   osxvideosink->sw_scaling_failed = FALSE;
