@@ -1,3 +1,10 @@
+2008-11-20  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/gstregistrybinary.c:
+	  In win32 codepath, if we fail to write the registry, create the
+	  directory for it and try again, matching the behaviour in non-win32
+	  codepaths.
+
 2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_render_delay):
