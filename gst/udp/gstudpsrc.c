@@ -777,19 +777,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
 
-    /* Mac OS is picky about the size for the bind so we switch on the family */
-    switch (src->myaddr.ss_family) {
-      case AF_INET:
-        len = sizeof (struct sockaddr_in);
-        break;
-      case AF_INET6:
-        len = sizeof (struct sockaddr_in6);
-        break;
-      default:
-        /* don't know, Screw MacOS and use the full length */
-        len = sizeof (src->myaddr);
-        break;
-    }
+    len = gst_udp_get_sockaddr_length (&src->myaddr);
     if ((ret = bind (src->sock.fd, (struct sockaddr *) &src->myaddr, len)) < 0)
       goto bind_error;
 

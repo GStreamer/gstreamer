@@ -74,6 +74,8 @@ gboolean gst_udp_net_utils_win32_wsa_startup (GstObject * obj);
 
 #endif
 
+int gst_udp_get_sockaddr_length(struct sockaddr_storage *addr);
+
 int gst_udp_get_addr      (const char *hostname, int port, struct sockaddr_storage *addr);
 int gst_udp_is_multicast  (struct sockaddr_storage *addr);
 

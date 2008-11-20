@@ -1,3 +1,12 @@
+2008-11-20  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstudpnetutils.c:
+	* gst/udp/gstudpnetutils.h:
+	* gst/udp/gstudpsrc.c:
+	  Fix multiudpsink on OSX by passing the specific length of the socket,
+	  refactor that into a function shared with the same thing in udpsrc.
+
 2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/wavparse/gstwavparse.c: (uint64_ceiling_scale_int),

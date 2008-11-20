@@ -60,6 +60,23 @@ gst_udp_net_utils_win32_wsa_startup (GstObject * obj)
 #endif
 
 int
+gst_udp_get_sockaddr_length (struct sockaddr_storage *addr)
+{
+  /* MacOS is picky about passing precisely the correct length,
+   * so we calculate it here for the given socket type.
+   */
+  switch (addr->ss_family) {
+    case AF_INET:
+      return sizeof (struct sockaddr_in);
+    case AF_INET6:
+      return sizeof (struct sockaddr_in6);
+    default:
+      /* don't know, Screw MacOS and use the full length */
+      return sizeof (*addr);
+  }
+}
+
+int
 gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
 {
   struct addrinfo hints, *res, *nres;
