@@ -1,5 +1,11 @@
 2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* tests/check/Makefile.am:
+	Just keep disabling elements that hang the states test until it
+	works.
+
+2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* ext/libpng/gstpngenc.c:
 	Don't flush downstream after every buffer - that's not what
 	this libpng callback is for at all!
