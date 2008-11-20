@@ -1538,7 +1538,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 {
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   guint64 base_rtptime, timestamp;
   guint32 clock_rate;
   guint64 last_rtptime;

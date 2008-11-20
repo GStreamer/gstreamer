@@ -1,3 +1,10 @@
+2008-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain_rtcp):
+	Initialize return value to fix compiler warning about uninitialized
+	variable.
+
 2008-11-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
