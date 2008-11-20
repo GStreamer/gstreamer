@@ -2099,7 +2099,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   }
 
   /* for dirac we have to queue up everything up to a picture unit */
-  if (strcmp (collect_pad->track->codec_id,
+  if (collect_pad->track->codec_id != NULL &&
+      strcmp (collect_pad->track->codec_id,
           GST_MATROSKA_CODEC_ID_VIDEO_DIRAC) == 0) {
     buf = gst_matroska_mux_handle_dirac_packet (mux, collect_pad, buf);
     if (!buf)

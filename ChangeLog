@@ -1,5 +1,11 @@
 2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* gst/matroska/matroska-mux.c:
+	Fix NULL pointer dereference of an unset codec_id in the recently 
+	added Dirac paths
+
+2008-11-20  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* tests/check/Makefile.am:
 	Just keep disabling elements that hang the states test until it
 	works.
