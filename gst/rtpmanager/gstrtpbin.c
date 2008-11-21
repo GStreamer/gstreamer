@@ -2429,27 +2429,33 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
 {
   GstRtpBinSession *session;
   GstRtpBin *rtpbin;
+  GstPad *target = NULL;
 
-  g_return_if_fail (GST_IS_PAD (pad));
+  g_return_if_fail (GST_IS_GHOST_PAD (pad));
   g_return_if_fail (GST_IS_RTP_BIN (element));
 
   rtpbin = GST_RTP_BIN (element);
 
+  target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+  g_return_if_fail (target);
+
   GST_RTP_BIN_LOCK (rtpbin);
-  if (!(session = find_session_by_pad (rtpbin, pad)))
+  if (!(session = find_session_by_pad (rtpbin, target)))
     goto unknown_pad;
 
-  if (session->recv_rtp_sink == pad) {
+  if (session->recv_rtp_sink == target) {
     remove_recv_rtp (rtpbin, session, pad);
-  } else if (session->recv_rtcp_sink == pad) {
+  } else if (session->recv_rtcp_sink == target) {
     remove_recv_rtcp (rtpbin, session, pad);
-  } else if (session->send_rtp_sink == pad) {
+  } else if (session->send_rtp_sink == target) {
     remove_send_rtp (rtpbin, session, pad);
-  } else if (session->send_rtcp_src == pad) {
+  } else if (session->send_rtcp_src == target) {
     remove_rtcp (rtpbin, session, pad);
   }
 
   GST_RTP_BIN_UNLOCK (rtpbin);
+
+  gst_object_unref (target);
 
   return;
 
