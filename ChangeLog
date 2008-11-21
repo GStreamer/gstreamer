@@ -1,5 +1,13 @@
 2008-11-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_init),
+	(gst_base_transform_getcaps), (gst_base_transform_find_transform),
+	(gst_base_transform_acceptcaps), (gst_base_transform_getrange):
+	Add beginnings of a more optimized acceptcaps function than the default
+	core one.
+
+2008-11-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstpad.c: (gst_pad_accept_caps):
 	Avoid getting the acceptcaps function too early.
 
