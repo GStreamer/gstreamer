@@ -565,6 +565,9 @@ gst_gl_window_run_loop (GstGLWindow *window)
             if (!custom_cb || !custom_data)
               g_debug ("custom cb not initialized\n");
 
+            if (glXGetCurrentContext () != priv->gl_context)
+              g_warning ("current gl context has changed\n");
+
             custom_cb (custom_data);
           }
 
@@ -590,19 +593,21 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
         else if (wm_quit_loop != None && event.xclient.message_type == wm_quit_loop)
         {
-          XEvent event;
+          XEvent pending_event;
+          GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
+          gpointer destroy_data = (gpointer) event.xclient.data.l[1];
 
           g_debug ("Quit loop message %lld\n", (guint64) priv->internal_win_id);
 
           priv->running = FALSE;
 
           XFlush (priv->device);
-          while (XCheckTypedEvent (priv->device, ClientMessage, &event))
+          while (XCheckTypedEvent (priv->device, ClientMessage, &pending_event))
           {
-            GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
-            gpointer custom_data = (gpointer) event.xclient.data.l[1];
+            GstGLWindowCB custom_cb = (GstGLWindowCB) pending_event.xclient.data.l[0];
+            gpointer custom_data = (gpointer) pending_event.xclient.data.l[1];
 
-            g_debug ("discared custom x event\n");
+            g_debug ("execute last pending custom x events\n");
 
             if (!custom_cb || !custom_data)
               g_debug ("custom cb not initialized\n");
@@ -611,6 +616,15 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
             g_cond_signal (priv->cond_send_message);
           }
+
+          if (!destroy_cb || !destroy_data)
+            g_debug ("destroy cb not initialized\n");
+
+          if (glXGetCurrentContext () != priv->gl_context)
+            g_warning ("current gl context has changed\n");
+
+          destroy_cb (destroy_data);
+
         }
         else
         {
@@ -680,7 +694,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
 /* Thread safe */
 void
-gst_gl_window_quit_loop (GstGLWindow *window)
+gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
   if (window)
   {
@@ -701,6 +715,8 @@ gst_gl_window_quit_loop (GstGLWindow *window)
       event.xclient.window = priv->internal_win_id;
       event.xclient.message_type = XInternAtom (disp, "WM_QUIT_LOOP", True);;
       event.xclient.format = 32;
+      event.xclient.data.l[0] = (long) callback;
+      event.xclient.data.l[1] = (long) data;
 
       XSendEvent (disp, priv->internal_win_id, FALSE, NoEventMask, &event);
       XSync (disp, FALSE);
