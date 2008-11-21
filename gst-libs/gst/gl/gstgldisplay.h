@@ -86,6 +86,7 @@ struct _GstGLDisplay {
 
   //conditions
   GCond* cond_create_context;
+  GCond* cond_destroy_context;
 
   //generic gl code
   GstGLDisplayThreadFunc generic_callback;
