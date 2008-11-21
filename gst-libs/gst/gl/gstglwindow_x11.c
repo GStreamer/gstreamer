@@ -56,6 +56,8 @@ struct _GstGLWindowPrivate
   gint connection;
   XVisualInfo *visual_info;
 
+  Display *disp_send;
+
   Window internal_win_id;
   GLXContext gl_context;
 
@@ -112,6 +114,8 @@ gst_gl_window_finalize (GObject * object)
   XSetCloseDownMode (priv->device, DestroyAll);
 
   XCloseDisplay (priv->device);
+
+  XCloseDisplay (priv->disp_send);
 
   g_debug ("display closed\n");
 
@@ -265,6 +269,12 @@ gst_gl_window_new (gint width, gint height)
   XSynchronize (priv->device, FALSE);
 
   g_debug ("gl device id: %ld\n", (gulong) priv->device);
+
+  priv->disp_send = XOpenDisplay (priv->display_name);
+
+  XSynchronize (priv->disp_send, FALSE);
+
+  g_debug ("gl display sender: %ld\n", (gulong) priv->disp_send);
 
   priv->screen = DefaultScreenOfDisplay (priv->device);
   priv->screen_num = DefaultScreen (priv->device);
@@ -479,23 +489,20 @@ gst_gl_window_draw (GstGLWindow *window)
 
     if (priv->running)
     {
-      Display *disp;
       XEvent event;
       XWindowAttributes attr;
 
-      disp = XOpenDisplay (priv->display_name);
-
       if (priv->visible)
       {
-        XMapWindow (disp, priv->internal_win_id);
+        XMapWindow (priv->disp_send, priv->internal_win_id);
         priv->visible = FALSE;
       }
 
-      XGetWindowAttributes (disp, priv->internal_win_id, &attr);
+      XGetWindowAttributes (priv->disp_send, priv->internal_win_id, &attr);
 
       event.xexpose.type = Expose;
       event.xexpose.send_event = TRUE;
-      event.xexpose.display = disp;
+      event.xexpose.display = priv->disp_send;
       event.xexpose.window = priv->internal_win_id;
       event.xexpose.x = attr.x;
       event.xexpose.y = attr.y;
@@ -503,10 +510,8 @@ gst_gl_window_draw (GstGLWindow *window)
       event.xexpose.height = attr.height;
       event.xexpose.count = 0;
 
-      XSendEvent (disp, priv->internal_win_id, FALSE, ExposureMask, &event);
-      XSync (disp, FALSE);
-
-      XCloseDisplay (disp);
+      XSendEvent (priv->disp_send, priv->internal_win_id, FALSE, ExposureMask, &event);
+      XSync (priv->disp_send, FALSE);
     }
 
     g_mutex_unlock (priv->x_lock);
@@ -704,24 +709,19 @@ gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer d
 
     if (priv->running)
     {
-      Display *disp;
       XEvent event;
-
-      disp = XOpenDisplay (priv->display_name);
 
       event.xclient.type = ClientMessage;
       event.xclient.send_event = TRUE;
-      event.xclient.display = disp;
+      event.xclient.display = priv->disp_send;
       event.xclient.window = priv->internal_win_id;
-      event.xclient.message_type = XInternAtom (disp, "WM_QUIT_LOOP", True);;
+      event.xclient.message_type = XInternAtom (priv->disp_send, "WM_QUIT_LOOP", True);;
       event.xclient.format = 32;
       event.xclient.data.l[0] = (long) callback;
       event.xclient.data.l[1] = (long) data;
 
-      XSendEvent (disp, priv->internal_win_id, FALSE, NoEventMask, &event);
-      XSync (disp, FALSE);
-
-      XCloseDisplay (disp);
+      XSendEvent (priv->disp_send, priv->internal_win_id, FALSE, NoEventMask, &event);
+      XSync (priv->disp_send, FALSE);
     }
 
     g_mutex_unlock (priv->x_lock);
@@ -746,24 +746,19 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
 
     if (priv->running)
     {
-      Display *disp;
       XEvent event;
-
-      disp = XOpenDisplay (priv->display_name);
 
       event.xclient.type = ClientMessage;
       event.xclient.send_event = TRUE;
-      event.xclient.display = disp;
+      event.xclient.display = priv->disp_send;
       event.xclient.window = priv->internal_win_id;
-      event.xclient.message_type = XInternAtom (disp, "WM_GL_WINDOW", True);
+      event.xclient.message_type = XInternAtom (priv->disp_send, "WM_GL_WINDOW", True);
       event.xclient.format = 32;
       event.xclient.data.l[0] = (long) callback;
       event.xclient.data.l[1] = (long) data;
 
-      XSendEvent (disp, priv->internal_win_id, FALSE, NoEventMask, &event);
-      XSync (disp, FALSE);
-
-      XCloseDisplay (disp);
+      XSendEvent (priv->disp_send, priv->internal_win_id, FALSE, NoEventMask, &event);
+      XSync (priv->disp_send, FALSE);
 
       g_cond_wait (priv->cond_send_message, priv->x_lock);
 
