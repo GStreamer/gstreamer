@@ -1,3 +1,11 @@
+2008-11-20  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/dshowdecwrapper/gstdshowaudiodec.cpp:
+	  Fix flushing/seeking problems returning error code.
+	  Fix mp3 decoding with winXP (crashed randomly, occasionally).
+	* sys/dshowdecwrapper/gstdshowvideodec.cpp:
+	  Fix problems when framerate is missing from video.
+
 2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpsession.c: (get_current_times),

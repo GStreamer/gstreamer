@@ -539,13 +539,16 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
     goto end;
   }
   fps = gst_structure_get_value (s, "framerate");
-  if (!fps) {
-    GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,
-        ("error getting video framerate from caps"), (NULL));
-    goto end;
+  if (fps) {
+    vdec->fps_n = gst_value_get_fraction_numerator (fps);
+    vdec->fps_d = gst_value_get_fraction_denominator (fps);
   }
-  vdec->fps_n = gst_value_get_fraction_numerator (fps);
-  vdec->fps_d = gst_value_get_fraction_denominator (fps);
+  else {
+    /* Invent a sane default framerate; the timestamps matter
+     * more anyway. */
+    vdec->fps_n = 25;
+    vdec->fps_d = 1;
+  }
 
   if ((v = gst_structure_get_value (s, "codec_data")))
     extradata = gst_value_get_buffer (v);
@@ -691,8 +694,13 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
   caps_out = gst_caps_from_string (klass->entry->srccaps);
   gst_caps_set_simple (caps_out,
       "width", G_TYPE_INT, vdec->width,
-      "height", G_TYPE_INT, vdec->height,
-      "framerate", GST_TYPE_FRACTION, vdec->fps_n, vdec->fps_d, NULL);
+      "height", G_TYPE_INT, vdec->height, NULL);
+
+  if (vdec->fps_n && vdec->fps_d) {
+      gst_caps_set_simple (caps_out, 
+          "framerate", GST_TYPE_FRACTION, vdec->fps_n, vdec->fps_d, NULL);
+  }
+
   if (!gst_pad_set_caps (vdec->srcpad, caps_out)) {
     gst_caps_unref (caps_out);
     GST_ELEMENT_ERROR (vdec, CORE, NEGOTIATION,

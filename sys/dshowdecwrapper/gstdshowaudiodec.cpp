@@ -619,7 +619,9 @@ gst_dshowaudiodec_flush (GstDshowAudioDec * adec)
 
   /* flush dshow decoder and reset timestamp */
   adec->fakesrc->GetOutputPin()->Flush();
+
   adec->timestamp = GST_CLOCK_TIME_NONE;
+  adec->last_ret = GST_FLOW_OK;
 
   return TRUE;
 }
@@ -651,7 +653,7 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
    * decoder which doesn't need this */
   if (adec->layer == 1 || adec->layer == 2) {
     MPEG1WAVEFORMAT *mpeg1_format;
-    int version, samples;
+    int samples, version;
     GstStructure *structure = gst_caps_get_structure (caps, 0);
 
     size = sizeof (MPEG1WAVEFORMAT);
@@ -702,12 +704,44 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
   {
     size = sizeof (WAVEFORMATEX) +
         (adec->codec_data ? GST_BUFFER_SIZE (adec->codec_data) : 0);
-    format = (WAVEFORMATEX *)g_malloc0 (size);
-    if (adec->codec_data) {     /* Codec data is appended after our header */
-      memcpy (((guchar *) format) + sizeof (WAVEFORMATEX),
-          GST_BUFFER_DATA (adec->codec_data),
-          GST_BUFFER_SIZE (adec->codec_data));
-      format->cbSize = GST_BUFFER_SIZE (adec->codec_data);
+
+    if (adec->layer == 3) {
+      MPEGLAYER3WAVEFORMAT *mp3format;
+
+      /* The WinXP mp3 decoder doesn't actually check the size of this structure, 
+       * but requires that this be allocated and filled out (or we get obscure
+       * random crashes)
+       */
+      size = sizeof (MPEGLAYER3WAVEFORMAT);
+      mp3format = (MPEGLAYER3WAVEFORMAT *)g_malloc0 (size);
+      format = (WAVEFORMATEX *)mp3format;
+      format->cbSize = MPEGLAYER3_WFX_EXTRA_BYTES;
+
+      mp3format->wID = MPEGLAYER3_ID_MPEG;
+      mp3format->fdwFlags = MPEGLAYER3_FLAG_PADDING_ISO; /* No idea what this means for a decoder */
+
+      /* The XP decoder divides by nBlockSize, so we must set this to a
+         non-zero value, but it doesn't matter what - this is meaningless
+         for VBR mp3 anyway */
+      mp3format->nBlockSize = 1;
+      mp3format->nFramesPerBlock = 1;
+      mp3format->nCodecDelay = 0;
+
+      /* The XP decoder also has problems with some MP3 frames. If it tries
+       * to decode one, then forever after it outputs silence.
+       * If we recognise such a frame, just skip decoding it.
+       */
+     if (adec->decoder_is_xp_mp3)
+        adec->check_mp3_frames = TRUE;
+    }
+    else {
+      format = (WAVEFORMATEX *)g_malloc0 (size);
+      if (adec->codec_data) {     /* Codec data is appended after our header */
+        memcpy (((guchar *) format) + sizeof (WAVEFORMATEX),
+            GST_BUFFER_DATA (adec->codec_data),
+            GST_BUFFER_SIZE (adec->codec_data));
+        format->cbSize = GST_BUFFER_SIZE (adec->codec_data);
+      }
     }
 
     format->wFormatTag = codec_entry->format;
