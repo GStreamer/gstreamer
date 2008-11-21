@@ -940,6 +940,8 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src)
           *cookie);
     }
   }
+  soup_message_headers_append (src->msg->request_headers,
+      "transferMode.dlna.org", "Streaming");
   src->retry = FALSE;
 
   g_signal_connect (src->msg, "got_headers",
