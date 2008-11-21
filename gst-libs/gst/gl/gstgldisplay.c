@@ -112,6 +112,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
 
   //conditions
   display->cond_create_context = g_cond_new ();
+  display->cond_destroy_context = g_cond_new ();
 
   //action redisplay
   display->redisplay_texture = 0;
@@ -338,12 +339,29 @@ gst_gl_display_finalize (GObject* object)
 {
   GstGLDisplay* display = GST_GL_DISPLAY (object);
 
-  //leave gl window loop
-  gst_gl_display_lock (display);
-  GST_INFO ("send quit gl window loop");
-  gst_gl_window_quit_loop (display->gl_window);
-  GST_INFO ("quit sent to gl window loop");
-  gst_gl_display_unlock (display);
+  if (display->mutex && display->gl_window)
+  {
+
+    gst_gl_display_lock (display);
+    GST_INFO ("send message thread destroy context");
+    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_destroy_context), display);
+
+    gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
+    gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
+    gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
+
+    //leave gl window loop
+
+    GST_INFO ("send quit gl window loop");
+
+    gst_gl_window_quit_loop (display->gl_window);
+
+    GST_INFO ("quit sent to gl window loop");
+
+    g_cond_wait (display->cond_destroy_context, display->mutex);
+    GST_INFO ("quit received from gl window");
+    gst_gl_display_unlock (display);
+  }
 
   if (display->gl_thread)
   {
@@ -362,6 +380,10 @@ gst_gl_display_finalize (GObject* object)
   if (display->mutex) {
     g_mutex_free (display->mutex);
     display->mutex = NULL;
+  }
+  if (display->cond_destroy_context) {
+    g_cond_free (display->cond_destroy_context);
+    display->cond_destroy_context = NULL;
   }
   if (display->cond_create_context) {
     g_cond_free (display->cond_create_context);
@@ -453,11 +475,11 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
 
   display->isAlive = FALSE;
 
-  gst_gl_display_thread_destroy_context (display);
-
   g_object_unref (G_OBJECT (display->gl_window));
 
   display->gl_window = NULL;
+
+  g_cond_signal (display->cond_destroy_context);
 
   gst_gl_display_unlock (display);
 
@@ -578,10 +600,6 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
   //clean up the texture pool
   g_hash_table_foreach_remove (display->texture_pool, gst_gl_display_texture_pool_func_clean,
     NULL);
-
-  gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
-  gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
-  gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
 
   GST_INFO ("Context destroyed");
 }

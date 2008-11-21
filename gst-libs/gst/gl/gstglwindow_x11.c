@@ -248,7 +248,7 @@ gst_gl_window_new (gint width, gint height)
   XWMHints wm_hints;
   unsigned long mask;
   const gchar *title = "OpenGL renderer";
-  Atom wm_delete_and_gl[2];
+  Atom wm_atoms[3];
 
   static gint x = 0;
   static gint y = 0;
@@ -326,15 +326,19 @@ gst_gl_window_new (gint width, gint height)
 
   g_debug ("gl window id: %lld\n", (guint64) priv->internal_win_id);
 
-  wm_delete_and_gl[0] = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
-  if (wm_delete_and_gl[0] == None)
+  wm_atoms[0] = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
+  if (wm_atoms[0] == None)
     g_debug ("Cannot create WM_DELETE_WINDOW\n");
 
-  wm_delete_and_gl[1] = XInternAtom (priv->device, "WM_GL_WINDOW", False);
-  if (wm_delete_and_gl[1] == None)
+  wm_atoms[1] = XInternAtom (priv->device, "WM_GL_WINDOW", False);
+  if (wm_atoms[1] == None)
     g_debug ("Cannot create WM_GL_WINDOW\n");
 
-  XSetWMProtocols (priv->device, priv->internal_win_id, wm_delete_and_gl, 2);
+  wm_atoms[2] = XInternAtom (priv->device, "WM_QUIT_LOOP", False);
+  if (wm_atoms[2] == None)
+    g_debug ("Cannot create WM_QUIT_LOOP\n");
+
+  XSetWMProtocols (priv->device, priv->internal_win_id, wm_atoms, 2);
 
   priv->gl_context = glXCreateContext (priv->device, priv->visual_info, NULL, TRUE);
 
@@ -542,11 +546,14 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
         Atom wm_delete = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
         Atom wm_gl = XInternAtom (priv->device, "WM_GL_WINDOW", True);
+        Atom wm_quit_loop = XInternAtom (priv->device, "WM_QUIT_LOOP", True);
 
         if (wm_delete == None)
           g_debug ("Cannot create WM_DELETE_WINDOW\n");
         if (wm_gl == None)
           g_debug ("Cannot create WM_GL_WINDOW\n");
+        if (wm_quit_loop == None)
+          g_debug ("Cannot create WM_QUIT_LOOP\n");
 
         if (wm_gl != None && event.xclient.message_type == wm_gl)
         {
@@ -568,11 +575,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
         else if (wm_delete != None && (Atom) event.xclient.data.l[0] == wm_delete)
         {
-          XEvent event;
-
           g_debug ("Close %lld\n", (guint64) priv->internal_win_id);
-
-          priv->running = FALSE;
 
           if (priv->close_cb)
             priv->close_cb (priv->close_data);
@@ -583,6 +586,15 @@ gst_gl_window_run_loop (GstGLWindow *window)
           priv->resize_data = NULL;
           priv->close_cb = NULL;
           priv->close_data = NULL;
+        }
+
+        else if (wm_quit_loop != None && event.xclient.message_type == wm_quit_loop)
+        {
+          XEvent event;
+
+          g_debug ("Quit loop message %lld\n", (guint64) priv->internal_win_id);
+
+          priv->running = FALSE;
 
           XFlush (priv->device);
           while (XCheckTypedEvent (priv->device, ClientMessage, &event))
@@ -687,9 +699,8 @@ gst_gl_window_quit_loop (GstGLWindow *window)
       event.xclient.send_event = TRUE;
       event.xclient.display = disp;
       event.xclient.window = priv->internal_win_id;
-      event.xclient.message_type = 0;
+      event.xclient.message_type = XInternAtom (disp, "WM_QUIT_LOOP", True);;
       event.xclient.format = 32;
-      event.xclient.data.l[0] = XInternAtom (disp, "WM_DELETE_WINDOW", True);
 
       XSendEvent (disp, priv->internal_win_id, FALSE, NoEventMask, &event);
       XSync (disp, FALSE);
