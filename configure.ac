@@ -289,9 +289,8 @@ if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
 fi
 
 dnl disable experimental plug-ins
-if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(deinterlace2)
-fi
+#if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+#fi
 
 dnl disable gst plugins we might not be able to build on this
 dnl platform: librfb (ugly but minimally invasive)

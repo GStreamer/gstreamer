@@ -1,6 +1,11 @@
 2008-11-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
+	Remove the "experimental" flag from the deinterlace2 plugin.
+
+2008-11-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
 	* gst/mxf/Makefile.am:
 	* gst/mxf/mxf.c: (plugin_init):
 	* gst/mxf/mxfaes-bwf.c:
