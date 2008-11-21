@@ -1,3 +1,15 @@
+2008-11-21  David Schleef  <ds@schleef.org>
+
+	Patch by: Jonathan Rosser <jonathan.rosser@rd.bbc.co.uk>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  Add a zone plate pattern generator based on BBC R&D Report
+	  1978/23 (yeah *that* 1978).  Try 'videotestsrc pattern=zone-plate
+	  kx2=20 ky2=20 kt=1'.
+
 2008-11-20  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/playback/gstdecodebin2.c:

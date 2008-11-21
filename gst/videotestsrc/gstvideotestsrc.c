@@ -66,6 +66,18 @@ enum
   PROP_IS_LIVE,
   PROP_PEER_ALLOC,
   PROP_COLOR_SPEC,
+  PROP_K0,
+  PROP_KX,
+  PROP_KY,
+  PROP_KT,
+  PROP_KXT,
+  PROP_KYT,
+  PROP_KXY,
+  PROP_KX2,
+  PROP_KY2,
+  PROP_KT2,
+  PROP_XOFFSET,
+  PROP_YOFFSET,
   PROP_LAST
 };
 
@@ -116,6 +128,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_CIRCULAR, "Circular", "circular"},
     {GST_VIDEO_TEST_SRC_BLINK, "Blink", "blink"},
     {GST_VIDEO_TEST_SRC_SMPTE75, "SMPTE 75% color bars", "smpte75"},
+    {GST_VIDEO_TEST_SRC_ZONE_PLATE, "Zone plate", "zone-plate"},
     {0, NULL, NULL}
   };
 
@@ -191,6 +204,61 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           "Generate video in the given color specification",
           GST_TYPE_VIDEO_TEST_SRC_COLOR_SPEC,
           DEFAULT_COLOR_SPEC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_K0,
+      g_param_spec_int ("k0", "Zoneplate zero order phase",
+          "Zoneplate zero order phase, for generating plain fields or phase offsets",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KX,
+      g_param_spec_int ("kx", "Zoneplate 1st order x phase",
+          "Zoneplate 1st order x phase, for generating constant horizontal frequencies",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KY,
+      g_param_spec_int ("ky", "Zoneplate 1st order y phase",
+          "Zoneplate 1st order y phase, for generating contant vertical frequencies",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KT,
+      g_param_spec_int ("kt", "Zoneplate 1st order t phase",
+          "Zoneplate 1st order t phase, for generating phase rotation as a function of time",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KXT,
+      g_param_spec_int ("kxt", "Zoneplate x*t product phase",
+          "Zoneplate x*t product phase, normalised to kxy/256 cycles per vertical pixel at width/2 from origin",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KYT,
+      g_param_spec_int ("kyt", "Zoneplate y*t product phase",
+          "Zoneplate y*t product phase", G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KXY,
+      g_param_spec_int ("kxy", "Zoneplate x*y product phase",
+          "Zoneplate x*t product phase", G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KX2,
+      g_param_spec_int ("kx2", "Zoneplate 2nd order x phase",
+          "Zoneplate 2nd order x phase, normalised to kx2/256 cycles per horizontal pixel at width/2 from origin",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KY2,
+      g_param_spec_int ("ky2", "Zoneplate 2nd order y phase",
+          "Zoneplate 2nd order y phase, normailsed to ky2/256 cycles per vertical pixel at height/2 from origin",
+          G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_KT2,
+      g_param_spec_int ("kt2", "Zoneplate 2nd order t phase",
+          "Zoneplate 2nd order t phase, t*t/256 cycles per picture", G_MININT32,
+          G_MAXINT32, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_XOFFSET,
+      g_param_spec_int ("xoffset", "Zoneplate 2nd order products x offset",
+          "Zoneplate 2nd order products x offset", G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_YOFFSET,
+      g_param_spec_int ("yoffset", "Zoneplate 2nd order products y offset",
+          "Zoneplate 2nd order products y offset", G_MININT32, G_MAXINT32, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->get_caps = gst_video_test_src_getcaps;
   gstbasesrc_class->set_caps = gst_video_test_src_setcaps;
@@ -283,6 +351,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
     case GST_VIDEO_TEST_SRC_SMPTE75:
       videotestsrc->make_image = gst_video_test_src_smpte75;
       break;
+    case GST_VIDEO_TEST_SRC_ZONE_PLATE:
+      videotestsrc->make_image = gst_video_test_src_zoneplate;
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -310,6 +381,42 @@ gst_video_test_src_set_property (GObject * object, guint prop_id,
     case PROP_COLOR_SPEC:
       src->color_spec = g_value_get_enum (value);
       break;
+    case PROP_K0:
+      src->k0 = g_value_get_int (value);
+      break;
+    case PROP_KX:
+      src->kx = g_value_get_int (value);
+      break;
+    case PROP_KY:
+      src->ky = g_value_get_int (value);
+      break;
+    case PROP_KT:
+      src->kt = g_value_get_int (value);
+      break;
+    case PROP_KXT:
+      src->kxt = g_value_get_int (value);
+      break;
+    case PROP_KYT:
+      src->kyt = g_value_get_int (value);
+      break;
+    case PROP_KXY:
+      src->kxy = g_value_get_int (value);
+      break;
+    case PROP_KX2:
+      src->kx2 = g_value_get_int (value);
+      break;
+    case PROP_KY2:
+      src->ky2 = g_value_get_int (value);
+      break;
+    case PROP_KT2:
+      src->kt2 = g_value_get_int (value);
+      break;
+    case PROP_XOFFSET:
+      src->xoffset = g_value_get_int (value);
+      break;
+    case PROP_YOFFSET:
+      src->yoffset = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -336,6 +443,42 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_COLOR_SPEC:
       g_value_set_enum (value, src->color_spec);
+      break;
+    case PROP_K0:
+      g_value_set_int (value, src->k0);
+      break;
+    case PROP_KX:
+      g_value_set_int (value, src->kx);
+      break;
+    case PROP_KY:
+      g_value_set_int (value, src->ky);
+      break;
+    case PROP_KT:
+      g_value_set_int (value, src->kt);
+      break;
+    case PROP_KXT:
+      g_value_set_int (value, src->kxt);
+      break;
+    case PROP_KYT:
+      g_value_set_int (value, src->kyt);
+      break;
+    case PROP_KXY:
+      g_value_set_int (value, src->kxy);
+      break;
+    case PROP_KX2:
+      g_value_set_int (value, src->kx2);
+      break;
+    case PROP_KY2:
+      g_value_set_int (value, src->ky2);
+      break;
+    case PROP_KT2:
+      g_value_set_int (value, src->kt2);
+      break;
+    case PROP_XOFFSET:
+      g_value_set_int (value, src->xoffset);
+      break;
+    case PROP_YOFFSET:
+      g_value_set_int (value, src->yoffset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
