@@ -1,5 +1,10 @@
 2008-11-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstpad.c: (gst_pad_accept_caps):
+	Avoid getting the acceptcaps function too early.
+
+2008-11-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tools/gst-launch.c: (event_loop):
 	Make gst-launch handle LATENCY messages and make it recalculate the
 	latency.

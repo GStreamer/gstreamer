@@ -2311,13 +2311,13 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
 
   /* lock for checking the existing caps */
   GST_OBJECT_LOCK (pad);
-  acceptfunc = GST_PAD_ACCEPTCAPSFUNC (pad);
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "accept caps of %p", caps);
   /* The current caps on a pad are trivially acceptable */
   if (G_LIKELY ((existing = GST_PAD_CAPS (pad)))) {
     if (caps == existing || gst_caps_is_equal (caps, existing))
       goto is_same_caps;
   }
+  acceptfunc = GST_PAD_ACCEPTCAPSFUNC (pad);
   GST_OBJECT_UNLOCK (pad);
 
   if (G_LIKELY (acceptfunc)) {
