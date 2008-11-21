@@ -254,6 +254,7 @@ AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpeg4videoparse)
 AG_GST_CHECK_PLUGIN(mpegvideoparse)
 AG_GST_CHECK_PLUGIN(mve)
+AG_GST_CHECK_PLUGIN(mxf)
 AG_GST_CHECK_PLUGIN(nsf)
 AG_GST_CHECK_PLUGIN(nuvdemux)
 AG_GST_CHECK_PLUGIN(pcapparse)
@@ -1410,6 +1411,7 @@ gst/mpegtsmux/tsmux/Makefile
 gst/mpeg4videoparse/Makefile
 gst/mpegvideoparse/Makefile
 gst/mve/Makefile
+gst/mxf/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
 gst/pcapparse/Makefile
