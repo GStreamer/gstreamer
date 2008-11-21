@@ -343,18 +343,14 @@ gst_gl_display_finalize (GObject* object)
   {
 
     gst_gl_display_lock (display);
-    GST_INFO ("send message thread destroy context");
-    gst_gl_window_send_message (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_destroy_context), display);
 
     gst_gl_window_set_resize_callback (display->gl_window, NULL, NULL);
     gst_gl_window_set_draw_callback (display->gl_window, NULL, NULL);
     gst_gl_window_set_close_callback (display->gl_window, NULL, NULL);
 
-    //leave gl window loop
-
     GST_INFO ("send quit gl window loop");
 
-    gst_gl_window_quit_loop (display->gl_window);
+    gst_gl_window_quit_loop (display->gl_window, GST_GL_WINDOW_CB (gst_gl_display_thread_destroy_context), display);
 
     GST_INFO ("quit sent to gl window loop");
 
@@ -367,13 +363,15 @@ gst_gl_display_finalize (GObject* object)
   {
     gpointer ret = g_thread_join (display->gl_thread);
     GST_INFO ("gl thread joined");
-    g_assert (ret == NULL);
+    if (ret != NULL)
+      GST_ERROR ("gl thread returned a not null pointer");
     display->gl_thread = NULL;
   }
 
   if (display->texture_pool) {
     //texture pool is empty after destroying the gl context
-    g_assert (g_hash_table_size (display->texture_pool) == 0);
+    if (g_hash_table_size (display->texture_pool) != 0)
+      GST_ERROR ("texture pool is not empty");
     g_hash_table_unref (display->texture_pool);
     display->texture_pool = NULL;
   }
@@ -596,6 +594,8 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     glDeleteTextures (1, &display->upload_intex_v);
     display->upload_intex = 0;
   }
+
+  GST_INFO ("Cleaning texture pool");
 
   //clean up the texture pool
   g_hash_table_foreach_remove (display->texture_pool, gst_gl_display_texture_pool_func_clean,
@@ -1397,6 +1397,7 @@ void gst_gl_display_on_draw(GstGLDisplay* display)
 void gst_gl_display_on_close (GstGLDisplay* display)
 {
   GST_INFO ("on close");
+
   display->isAlive = FALSE;
 }
 
@@ -1544,6 +1545,7 @@ gboolean gst_gl_display_texture_pool_func_clean (gpointer key, gpointer value, g
   while (g_queue_get_length (sub_texture_pool) > 0)
   {
     GstGLDisplayTex* tex = g_queue_pop_head (sub_texture_pool);
+    GST_INFO ("trying to delete texture id: %d deleted", tex->texture);
     glDeleteTextures (1, &tex->texture);
     GST_INFO ("texture id: %d deleted", tex->texture);
     g_free (tex);
