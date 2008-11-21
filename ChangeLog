@@ -1,3 +1,8 @@
+2008-11-21  Michael Smith <msmith@songbirdnest.com>
+
+	* plugins/elements/gstfilesrc.c:
+	  Check for localhost in URI was backwards, fix it. Fixes unit test.
+
 2008-11-21  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c: (gst_base_transform_init),

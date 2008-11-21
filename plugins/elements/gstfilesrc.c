@@ -1120,7 +1120,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   }
 
   if (hostname) {
-    if (!strcmp (hostname, "localhost")) {
+    if (strcmp (hostname, "localhost")) {
       /* Only 'localhost' is permitted */
       GST_WARNING_OBJECT (src, "Invalid hostname '%s' for filesrc", hostname);
       g_free (hostname);
