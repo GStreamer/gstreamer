@@ -549,6 +549,12 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         }
         break;
       }
+      case GST_MESSAGE_LATENCY:
+      {
+        fprintf (stderr, _("Redistribute latency...\n"));
+        gst_bin_recalculate_latency (GST_BIN (pipeline));
+        break;
+      }
       case GST_MESSAGE_APPLICATION:{
         const GstStructure *s;
 

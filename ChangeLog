@@ -1,3 +1,9 @@
+2008-11-21  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tools/gst-launch.c: (event_loop):
+	Make gst-launch handle LATENCY messages and make it recalculate the
+	latency.
+
 2008-11-20  Michael Smith <msmith@songbirdnest.com>
 
 	* plugins/elements/gstfilesrc.c:
