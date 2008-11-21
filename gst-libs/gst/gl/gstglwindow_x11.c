@@ -55,6 +55,7 @@ struct _GstGLWindowPrivate
   gint device_height;
   gint connection;
   XVisualInfo *visual_info;
+  Window parent;
 
   Display *disp_send;
 
@@ -89,6 +90,8 @@ gst_gl_window_finalize (GObject * object)
 
   g_debug ("gl window finalizing\n");
 
+  priv->parent = 0;
+
   XUnmapWindow (priv->device, priv->internal_win_id);
 
   ret = glXMakeCurrent (priv->device, None, NULL);
@@ -116,6 +119,10 @@ gst_gl_window_finalize (GObject * object)
   XCloseDisplay (priv->device);
 
   XCloseDisplay (priv->disp_send);
+
+  /*XAddToSaveSet (display, w)
+  Display *display;
+  Window w;*/
 
   g_debug ("display closed\n");
 
@@ -261,6 +268,7 @@ gst_gl_window_new (gint width, gint height)
   priv->cond_send_message = g_cond_new ();
   priv->running = TRUE;
   priv->visible = FALSE;
+  priv->parent = 0;
 
   g_mutex_lock (priv->x_lock);
 
@@ -314,6 +322,7 @@ gst_gl_window_new (gint width, gint height)
   g_debug ("visual info bits_per_rgb: %d\n", priv->visual_info->bits_per_rgb);
 
   win_attr.event_mask = StructureNotifyMask | ExposureMask | VisibilityChangeMask;
+  win_attr.do_not_propagate_mask = NoEventMask;
 
   win_attr.background_pixmap = None;
   win_attr.background_pixel = 0;
@@ -400,11 +409,13 @@ gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 
     g_mutex_lock (priv->x_lock);
 
-    XGetWindowAttributes (priv->disp_send, (Window) id, &attr);
+    priv->parent = (Window) id;
+
+    XGetWindowAttributes (priv->disp_send, priv->parent, &attr);
 
     XResizeWindow (priv->disp_send, priv->internal_win_id, attr.width, attr.height);
 
-    XReparentWindow (priv->disp_send, priv->internal_win_id, (Window) id, attr.x, attr.y);
+    XReparentWindow (priv->disp_send, priv->internal_win_id, priv->parent, attr.x, attr.y);
 
     XSync (priv->disp_send, FALSE);
 
@@ -501,6 +512,21 @@ gst_gl_window_draw (GstGLWindow *window)
       }
 
       XGetWindowAttributes (priv->disp_send, priv->internal_win_id, &attr);
+
+      if (priv->parent)
+      {
+        XWindowAttributes attr_parent;
+        XGetWindowAttributes (priv->disp_send, priv->parent, &attr_parent);
+
+        if (attr.width != attr_parent.width || attr.height != attr_parent.height)
+        {
+          XResizeWindow (priv->disp_send, priv->internal_win_id, attr_parent.width, attr_parent.height);
+          XSync (priv->disp_send, FALSE);
+
+          attr.width = attr_parent.width;
+          attr.height = attr_parent.height;
+        }
+      }
 
       event.xexpose.type = Expose;
       event.xexpose.send_event = TRUE;
@@ -688,6 +714,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
       }
 
       default:
+        g_print("unknow\n");
         break;
 
     }// switch
