@@ -410,7 +410,9 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
       }
 
       offset = GST_BUFFER_OFFSET (buf);
-      if (identity->prev_offset_end != offset) {
+      if (identity->prev_offset_end != offset &&
+          identity->prev_offset_end != GST_BUFFER_OFFSET_NONE &&
+          offset != GST_BUFFER_OFFSET_NONE) {
         GST_WARNING_OBJECT (identity,
             "Buffer not data-contiguous with previous one: "
             "prev offset_end %" G_GINT64_FORMAT ", new offset %"
