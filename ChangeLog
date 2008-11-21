@@ -1,5 +1,13 @@
 2008-11-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_class_init), (gst_speex_resample_set_property),
+	(gst_speex_resample_get_property):
+	Add a "filter-length" property that maps to the quality values
+	for compatibilty with audioresample.
+
+2008-11-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	Remove the "experimental" flag from the deinterlace2 plugin.
 
