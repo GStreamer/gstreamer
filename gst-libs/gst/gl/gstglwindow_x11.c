@@ -392,23 +392,25 @@ gst_gl_window_error_quark (void)
 void
 gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 {
-  /*stGLWindowPrivate *priv = window->priv;
-  WNDPROC window_parent_proc = (WNDPROC) (guint64) GetWindowLongPtr((HWND)id, GWL_WNDPROC);
-  RECT rect;
+  g_debug ("SET EXTERNAL WIN IN\n");
+  if (window)
+  {
+    GstGLWindowPrivate *priv = window->priv;
+    XWindowAttributes attr;
 
-  SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND)id);
-  SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
-  SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-  SetWindowLongPtr ((HWND)id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
+    g_mutex_lock (priv->x_lock);
 
-  SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
-  SetParent (priv->internal_win_id, (HWND)id);
+    XGetWindowAttributes (priv->disp_send, (Window) id, &attr);
 
-  //take changes into account: SWP_FRAMECHANGED
-  GetClientRect ((HWND)id, &rect);
-  SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
-    SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
-  MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right, rect.bottom, FALSE);*/
+    XResizeWindow (priv->disp_send, priv->internal_win_id, attr.width, attr.height);
+
+    XReparentWindow (priv->disp_send, priv->internal_win_id, (Window) id, attr.x, attr.y);
+
+    XSync (priv->disp_send, FALSE);
+
+    g_mutex_unlock (priv->x_lock);
+  }
+  g_debug ("SET EXTERNAL WIN OUT\n");
 }
 
 void
