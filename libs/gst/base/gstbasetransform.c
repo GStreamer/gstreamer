@@ -982,20 +982,24 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
   /* we need fixed caps for the check, fall back to the default implementation
    * if we don't */
   if (!gst_caps_is_fixed (caps)) {
-    GstCaps *intersect;
+    GstCaps *allowed, *intersect;
 
     GST_DEBUG_OBJECT (pad, "non fixed accept caps %" GST_PTR_FORMAT, caps);
 
-    othercaps = gst_pad_get_caps (pad);
-    if (!othercaps)
+    /* get all the formats we can handle on this pad */
+    allowed = gst_pad_get_caps (pad);
+    if (!allowed)
       goto no_transform_possible;
 
-    intersect = gst_caps_intersect (othercaps, caps);
+    /* intersect with the requested format */
+    intersect = gst_caps_intersect (allowed, caps);
 
     GST_DEBUG_OBJECT (pad, "intersection %" GST_PTR_FORMAT, intersect);
 
+    /* we can accept if the intersection is not empty  */
     ret = !gst_caps_is_empty (intersect);
     gst_caps_unref (intersect);
+    gst_caps_unref (allowed);
 
     if (!ret)
       goto no_transform_possible;
