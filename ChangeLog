@@ -1,6 +1,13 @@
 2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_init), (rtp_session_set_property),
+	(rtp_session_get_property):
+	Add property to configure the RTCP MTU.
+
+2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
 	(copy_source), (rtp_session_create_sources),
 	(rtp_session_get_property):
 	Add G_PARAM_STATIC_STRINGS.
