@@ -1,5 +1,11 @@
 2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/elements/speexresample.c: (GST_START_TEST):
+	Make the unit test a bit faster to prevent timeouts, especially
+	with valgrind.
+
+2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_push_src_event),
 	(gst_mxf_demux_handle_header_metadata_update_streams):
 	* gst/mxf/mxfparse.c: (gst_mxf_ul_hash),

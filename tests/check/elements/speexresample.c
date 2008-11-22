@@ -655,33 +655,21 @@ GST_START_TEST (test_pipelines)
   for (quality = 0; quality < 11; quality += 5) {
     test_pipeline (8, FALSE, 44100, 48000, quality);
     test_pipeline (8, FALSE, 48000, 44100, quality);
-    test_pipeline (8, FALSE, 40000, 80000, quality);
-    test_pipeline (8, FALSE, 80000, 40000, quality);
 
     test_pipeline (16, FALSE, 44100, 48000, quality);
     test_pipeline (16, FALSE, 48000, 44100, quality);
-    test_pipeline (16, FALSE, 40000, 80000, quality);
-    test_pipeline (16, FALSE, 80000, 40000, quality);
 
     test_pipeline (24, FALSE, 44100, 48000, quality);
     test_pipeline (24, FALSE, 48000, 44100, quality);
-    test_pipeline (24, FALSE, 40000, 80000, quality);
-    test_pipeline (24, FALSE, 80000, 40000, quality);
 
     test_pipeline (32, FALSE, 44100, 48000, quality);
     test_pipeline (32, FALSE, 48000, 44100, quality);
-    test_pipeline (32, FALSE, 40000, 80000, quality);
-    test_pipeline (32, FALSE, 80000, 40000, quality);
 
     test_pipeline (32, TRUE, 44100, 48000, quality);
     test_pipeline (32, TRUE, 48000, 44100, quality);
-    test_pipeline (32, TRUE, 40000, 80000, quality);
-    test_pipeline (32, TRUE, 80000, 40000, quality);
 
     test_pipeline (64, TRUE, 44100, 48000, quality);
     test_pipeline (64, TRUE, 48000, 44100, quality);
-    test_pipeline (64, TRUE, 40000, 80000, quality);
-    test_pipeline (64, TRUE, 80000, 40000, quality);
   }
 }
 
