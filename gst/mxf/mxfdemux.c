@@ -43,19 +43,19 @@ static GstStaticPadTemplate mxf_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate audio_src_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%d",
+GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate video_src_template =
-GST_STATIC_PAD_TEMPLATE ("video_%d",
+GST_STATIC_PAD_TEMPLATE ("video_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate data_src_template =
-GST_STATIC_PAD_TEMPLATE ("data_%d",
+GST_STATIC_PAD_TEMPLATE ("data_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -399,7 +399,7 @@ static gboolean
 gst_mxf_demux_push_src_event (GstMXFDemux * demux, GstEvent * event)
 {
   gboolean ret = TRUE;
-  gint i;
+  guint i;
 
   GST_DEBUG_OBJECT (demux, "Pushing '%s' event downstream",
       GST_EVENT_TYPE_NAME (event));
@@ -1127,8 +1127,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1519,7 +1520,7 @@ choose_package:
     GstMXFPad *pad = NULL;
     GstCaps *caps = NULL;
 
-    GST_DEBUG_OBJECT (demux, "Handling track %d", i);
+    GST_DEBUG_OBJECT (demux, "Handling track %u", i);
 
     if (!track) {
       GST_WARNING_OBJECT (demux, "Unresolved track");
@@ -1607,20 +1608,20 @@ choose_package:
         case MXF_METADATA_TRACK_PICTURE_ESSENCE:
           templ =
               gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-              "video_%d");
-          pad_name = g_strdup_printf ("video_%d", source_track->track_id);
+              "video_%u");
+          pad_name = g_strdup_printf ("video_%u", source_track->track_id);
           break;
         case MXF_METADATA_TRACK_SOUND_ESSENCE:
           templ =
               gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-              "audio_%d");
-          pad_name = g_strdup_printf ("audio_%d", source_track->track_id);
+              "audio_%u");
+          pad_name = g_strdup_printf ("audio_%u", source_track->track_id);
           break;
         case MXF_METADATA_TRACK_DATA_ESSENCE:
           templ =
               gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-              "data_%d");
-          pad_name = g_strdup_printf ("data_%d", source_track->track_id);
+              "data_%u");
+          pad_name = g_strdup_printf ("data_%u", source_track->track_id);
           break;
         default:
           g_assert_not_reached ();

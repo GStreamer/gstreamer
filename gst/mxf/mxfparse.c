@@ -264,7 +264,7 @@ static guint
 gst_mxf_ul_hash (const MXFUL * key)
 {
   guint32 ret = 0;
-  gint i;
+  guint i;
 
   for (i = 0; i < 4; i++)
     ret ^=
@@ -393,7 +393,7 @@ gboolean
 mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
     const guint8 * data, guint size)
 {
-  gint i;
+  guint i;
   gchar str[48];
 
   g_return_val_if_fail (data != NULL, FALSE);
@@ -503,7 +503,7 @@ mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
       pack->n_essence_containers);
 
   for (i = 0; i < pack->n_essence_containers; i++) {
-    GST_DEBUG ("  essence container %d = %s", i,
+    GST_DEBUG ("  essence container %u = %s", i,
         mxf_ul_to_string (&pack->essence_containers[i], str));
   }
 
@@ -538,7 +538,7 @@ gboolean
 mxf_primer_pack_parse (const MXFUL * key, MXFPrimerPack * pack,
     const guint8 * data, guint size)
 {
-  gint i;
+  guint i;
   guint32 n;
 
   g_return_val_if_fail (data != NULL, FALSE);
@@ -682,7 +682,7 @@ mxf_metadata_preface_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
   gchar str[48];
-  gint i;
+  guint i;
 
   g_return_val_if_fail (data != NULL, FALSE);
 
@@ -845,15 +845,15 @@ mxf_metadata_preface_parse (const MXFUL * key,
   GST_DEBUG ("  number of DM schemes = %u", preface->n_dm_schemes);
 
   for (i = 0; i < preface->n_identifications; i++)
-    GST_DEBUG ("  identification %d = %s", i,
+    GST_DEBUG ("  identification %u = %s", i,
         mxf_ul_to_string (&preface->identifications_uids[i], str));
 
   for (i = 0; i < preface->n_essence_containers; i++)
-    GST_DEBUG ("  essence container %d = %s", i,
+    GST_DEBUG ("  essence container %u = %s", i,
         mxf_ul_to_string (&preface->essence_containers[i], str));
 
   for (i = 0; i < preface->n_dm_schemes; i++)
-    GST_DEBUG ("  DM schemes %d = %s", i,
+    GST_DEBUG ("  DM schemes %u = %s", i,
         mxf_ul_to_string (&preface->dm_schemes[i], str));
 
   return TRUE;
@@ -1036,7 +1036,7 @@ mxf_metadata_content_storage_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
   gchar str[48];
-  gint i;
+  guint i;
 
   g_return_val_if_fail (data != NULL, FALSE);
 
@@ -1124,10 +1124,10 @@ mxf_metadata_content_storage_parse (const MXFUL * key,
       content_storage->n_essence_container_data);
 
   for (i = 0; i < content_storage->n_packages; i++)
-    GST_DEBUG ("  package %i = %s", i,
+    GST_DEBUG ("  package %u = %s", i,
         mxf_ul_to_string (&content_storage->packages_uids[i], str));
   for (i = 0; i < content_storage->n_packages; i++)
-    GST_DEBUG ("  essence container data %i = %s", i,
+    GST_DEBUG ("  essence container data %u = %s", i,
         mxf_ul_to_string (&content_storage->essence_container_data_uids[i],
             str));
 
@@ -1255,7 +1255,7 @@ mxf_metadata_generic_package_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
   gchar str[96];
-  gint i;
+  guint i;
 
   g_return_val_if_fail (data != NULL, FALSE);
 
@@ -1368,7 +1368,7 @@ mxf_metadata_generic_package_parse (const MXFUL * key,
   GST_DEBUG ("  number of tracks = %u", generic_package->n_tracks);
 
   for (i = 0; i < generic_package->n_tracks; i++)
-    GST_DEBUG ("  track %d = %s", i,
+    GST_DEBUG ("  track %u = %s", i,
         mxf_ul_to_string (&generic_package->tracks_uids[i], str));
 
   return TRUE;
@@ -1561,7 +1561,7 @@ mxf_metadata_sequence_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
   gchar str[48];
-  gint i;
+  guint i;
 
   g_return_val_if_fail (data != NULL, FALSE);
 
@@ -1642,7 +1642,7 @@ mxf_metadata_sequence_parse (const MXFUL * key,
       sequence->n_structural_components);
 
   for (i = 0; i < sequence->n_structural_components; i++)
-    GST_DEBUG ("  structural component %d = %s", i,
+    GST_DEBUG ("  structural component %u = %s", i,
         mxf_ul_to_string (&sequence->structural_components_uids[i], str));
 
 
@@ -1837,7 +1837,7 @@ mxf_metadata_generic_descriptor_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
   gchar str[48];
-  gint i;
+  guint i;
 
   g_return_val_if_fail (data != NULL, FALSE);
 
@@ -1899,7 +1899,7 @@ mxf_metadata_generic_descriptor_parse (const MXFUL * key,
   GST_DEBUG ("  number of locators = %u", descriptor->n_locators);
 
   for (i = 0; i < descriptor->n_locators; i++)
-    GST_DEBUG ("  locator %d = %s", i,
+    GST_DEBUG ("  locator %u = %s", i,
         mxf_ul_to_string (&descriptor->locators_uids[i], str));
 
   return TRUE;
@@ -2528,7 +2528,7 @@ mxf_metadata_multiple_descriptor_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
   gchar str[48];
-  gint i;
+  guint i;
 
   g_return_val_if_fail (data != NULL, FALSE);
 
@@ -2583,7 +2583,7 @@ mxf_metadata_multiple_descriptor_parse (const MXFUL * key,
   GST_DEBUG ("Parsed multiple descriptor:");
   GST_DEBUG ("  number of sub descriptors = %u", descriptor->n_sub_descriptors);
   for (i = 0; i < descriptor->n_sub_descriptors; i++)
-    GST_DEBUG ("  sub descriptor %d = %s", i,
+    GST_DEBUG ("  sub descriptor %u = %s", i,
         mxf_ul_to_string (&descriptor->sub_descriptors_uids[i], str));
 
   return TRUE;

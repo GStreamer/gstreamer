@@ -1,5 +1,19 @@
 2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_push_src_event),
+	(gst_mxf_demux_handle_header_metadata_update_streams):
+	* gst/mxf/mxfparse.c: (gst_mxf_ul_hash),
+	(mxf_partition_pack_parse), (mxf_primer_pack_parse),
+	(mxf_metadata_preface_parse), (mxf_metadata_content_storage_parse),
+	(mxf_metadata_generic_package_parse),
+	(mxf_metadata_sequence_parse),
+	(mxf_metadata_generic_descriptor_parse),
+	(mxf_metadata_multiple_descriptor_parse):
+	Some more format string fixes and usage of guint instead of gint
+	where negative values don't make sense.
+
+2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfaes-bwf.c:
 	(mxf_metadata_wave_audio_essence_descriptor_parse):
 	* gst/mxf/mxfaes-bwf.h:
