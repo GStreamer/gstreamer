@@ -48,6 +48,7 @@ enum
 #define DEFAULT_INTERNAL_SOURCE      NULL
 #define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
 #define DEFAULT_RTCP_FRACTION        RTP_STATS_RTCP_BANDWIDTH
+#define DEFAULT_RTCP_MTU             1400
 #define DEFAULT_SDES_CNAME           NULL
 #define DEFAULT_SDES_NAME            NULL
 #define DEFAULT_SDES_EMAIL           NULL
@@ -65,6 +66,7 @@ enum
   PROP_INTERNAL_SOURCE,
   PROP_BANDWIDTH,
   PROP_RTCP_FRACTION,
+  PROP_RTCP_MTU,
   PROP_SDES_CNAME,
   PROP_SDES_NAME,
   PROP_SDES_EMAIL,
@@ -259,6 +261,12 @@ rtp_session_class_init (RTPSessionClass * klass)
           0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_RTCP_MTU,
+      g_param_spec_uint ("rtcp-mtu", "RTCP MTU",
+          "The maximum size of the RTCP packets",
+          16, G_MAXINT16, DEFAULT_RTCP_MTU,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
       g_param_spec_string ("sdes-cname", "SDES CNAME",
           "The CNAME to put in SDES messages of this session",
@@ -369,7 +377,7 @@ rtp_session_init (RTPSession * sess)
 
   /* default UDP header length */
   sess->header_len = 28;
-  sess->mtu = 1400;
+  sess->mtu = DEFAULT_RTCP_MTU;
 
   /* some default SDES entries */
   str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
@@ -449,6 +457,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_RTCP_FRACTION:
       rtp_session_set_rtcp_fraction (sess, g_value_get_double (value));
       break;
+    case PROP_RTCP_MTU:
+      sess->mtu = g_value_get_uint (value);
+      break;
     case PROP_SDES_CNAME:
       rtp_session_set_sdes_string (sess, GST_RTCP_SDES_CNAME,
           g_value_get_string (value));
@@ -500,6 +511,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RTCP_FRACTION:
       g_value_set_double (value, rtp_session_get_rtcp_fraction (sess));
+      break;
+    case PROP_RTCP_MTU:
+      g_value_set_uint (value, sess->mtu);
       break;
     case PROP_SDES_CNAME:
       g_value_take_string (value, rtp_session_get_sdes_string (sess,
