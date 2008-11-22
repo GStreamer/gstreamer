@@ -91,7 +91,7 @@ static const guint8 _profile_and_level_ul[] = {
 gboolean
 mxf_metadata_mpeg_video_descriptor_parse (const MXFUL * key,
     MXFMetadataMPEGVideoDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;

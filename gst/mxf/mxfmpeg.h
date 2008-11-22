@@ -49,7 +49,7 @@ typedef struct {
   guint8 profile_and_level;
 } MXFMetadataMPEGVideoDescriptor;
 
-gboolean mxf_metadata_mpeg_video_descriptor_parse (const MXFUL *key, MXFMetadataMPEGVideoDescriptor *descriptor, const MXFPrimerPack *primer, guint16 type, const guint8 *data, gsize size);
+gboolean mxf_metadata_mpeg_video_descriptor_parse (const MXFUL *key, MXFMetadataMPEGVideoDescriptor *descriptor, const MXFPrimerPack *primer, guint16 type, const guint8 *data, guint size);
 void mxf_metadata_mpeg_video_descriptor_reset (MXFMetadataMPEGVideoDescriptor *descriptor);
 
 gboolean mxf_is_mpeg_video_essence_track (const MXFMetadataTrack *track);

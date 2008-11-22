@@ -376,7 +376,7 @@ gst_mxf_demux_pull_range (GstMXFDemux * demux, guint64 offset,
   ret = gst_pad_pull_range (demux->sinkpad, offset, size, buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (demux,
-        "failed when pulling %d bytes from offset %" G_GUINT64_FORMAT ": %s",
+        "failed when pulling %u bytes from offset %" G_GUINT64_FORMAT ": %s",
         size, offset, gst_flow_get_name (ret));
     *buffer = NULL;
     return ret;
@@ -384,7 +384,7 @@ gst_mxf_demux_pull_range (GstMXFDemux * demux, guint64 offset,
 
   if (G_UNLIKELY (*buffer && GST_BUFFER_SIZE (*buffer) != size)) {
     GST_WARNING_OBJECT (demux,
-        "partial pull got %d when expecting %d from offset %" G_GUINT64_FORMAT,
+        "partial pull got %u when expecting %u from offset %" G_GUINT64_FORMAT,
         GST_BUFFER_SIZE (*buffer), size, offset);
     gst_buffer_unref (*buffer);
     ret = GST_FLOW_UNEXPECTED;
@@ -1127,9 +1127,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1414,8 +1413,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
               continue;
 
             type =
-                mxf_metadata_track_identifier_parse (&component->
-                data_definition);
+                mxf_metadata_track_identifier_parse
+                (&component->data_definition);
             break;
           }
         } else {
@@ -1977,12 +1976,12 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
 
 static GstFlowReturn
 gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
-    GstBuffer ** outbuf, guint64 * read)
+    GstBuffer ** outbuf, guint * read)
 {
   GstBuffer *buffer = NULL;
   const guint8 *data;
   guint64 data_offset = 0;
-  guint64 length;
+  guint length;
   gchar key_str[48];
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2015,10 +2014,14 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
 
     gst_buffer_unref (buffer);
 
-    /* Must be at most 8 according to SMPTE-379M 5.3.4 */
+    /* Must be at most 8 according to SMPTE-379M 5.3.4 and
+     * GStreamer buffers can only have a 4 bytes length */
     if (slen > 8) {
-      GST_ERROR_OBJECT (demux, "Invalid KLV packet length: %" G_GUINT64_FORMAT,
-          slen);
+      GST_ERROR_OBJECT (demux, "Invalid KLV packet length: %u", slen);
+      ret = GST_FLOW_ERROR;
+      goto beach;
+    } else if (slen > 4) {
+      GST_ERROR_OBJECT (demux, "Unsupported KLV packet length: %u", slen);
       ret = GST_FLOW_ERROR;
       goto beach;
     }
@@ -2064,7 +2067,7 @@ gst_mxf_demux_parse_footer_metadata (GstMXFDemux * demux)
   guint64 offset, old_offset = demux->offset;
   MXFUL key;
   GstBuffer *buffer = NULL;
-  guint64 read = 0;
+  guint read = 0;
   GstFlowReturn ret = GST_FLOW_OK;
 
   memcpy (&partition, &demux->partition, sizeof (MXFPartitionPack));
@@ -2253,11 +2256,11 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
     ret = gst_mxf_demux_handle_index_table_segment (demux, key, buffer);
   } else if (mxf_is_fill (key)) {
     GST_DEBUG_OBJECT (demux,
-        "Skipping filler packet of size %" G_GUINT64_FORMAT " at offset %"
+        "Skipping filler packet of size %u at offset %"
         G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
   } else {
     GST_DEBUG_OBJECT (demux,
-        "Skipping unknown packet of size %" G_GUINT64_FORMAT " at offset %"
+        "Skipping unknown packet of size %u at offset %"
         G_GUINT64_FORMAT ", key: %s", GST_BUFFER_SIZE (buffer), demux->offset,
         mxf_ul_to_string (key, key_str));
   }
@@ -2272,7 +2275,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   GstBuffer *buffer = NULL;
   MXFUL key;
   GstFlowReturn ret = GST_FLOW_OK;
-  guint64 read = 0;
+  guint read = 0;
 
   ret =
       gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
@@ -2402,14 +2405,14 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   GstMXFDemux *demux = NULL;
   MXFUL key;
   const guint8 *data = NULL;
-  guint64 length = 0;
+  guint length = 0;
   guint64 offset = 0;
   GstBuffer *buffer = NULL;
   gchar key_str[48];
 
   demux = GST_MXF_DEMUX (gst_pad_get_parent (pad));
 
-  GST_LOG_OBJECT (demux, "received buffer of %d bytes at offset %"
+  GST_LOG_OBJECT (demux, "received buffer of %u bytes at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (inbuf), GST_BUFFER_OFFSET (inbuf));
 
   if (G_UNLIKELY (GST_BUFFER_OFFSET (inbuf) == 0)) {
@@ -2497,10 +2500,14 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
 
       offset = 16 + 1 + slen;
 
-      /* Must be at most 8 according to SMPTE-379M 5.3.4 */
+      /* Must be at most 8 according to SMPTE-379M 5.3.4 and
+       * GStreamer buffers can only have a 4 bytes length */
       if (slen > 8) {
-        GST_ERROR_OBJECT (demux,
-            "Invalid KLV packet length: %" G_GUINT64_FORMAT, slen);
+        GST_ERROR_OBJECT (demux, "Invalid KLV packet length: %u", slen);
+        ret = GST_FLOW_ERROR;
+        break;
+      } else if (slen > 4) {
+        GST_ERROR_OBJECT (demux, "Unsupported KLV packet length: %u", slen);
         ret = GST_FLOW_ERROR;
         break;
       }

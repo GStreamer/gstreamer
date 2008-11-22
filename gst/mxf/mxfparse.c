@@ -281,7 +281,7 @@ gst_mxf_ul_equal (const MXFUL * a, const MXFUL * b)
 }
 
 gboolean
-mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, gsize size)
+mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, guint size)
 {
   g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (timestamp != NULL, FALSE);
@@ -332,7 +332,7 @@ mxf_timestamp_compare (const MXFTimestamp * a, const MXFTimestamp * b)
 }
 
 gboolean
-mxf_fraction_parse (MXFFraction * fraction, const guint8 * data, guint16 size)
+mxf_fraction_parse (MXFFraction * fraction, const guint8 * data, guint size)
 {
   g_return_val_if_fail (fraction != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
@@ -349,7 +349,7 @@ mxf_fraction_parse (MXFFraction * fraction, const guint8 * data, guint16 size)
 }
 
 gchar *
-mxf_utf16_to_utf8 (const guint8 * data, guint16 size)
+mxf_utf16_to_utf8 (const guint8 * data, guint size)
 {
   gchar *ret;
   GError *error = NULL;
@@ -369,7 +369,7 @@ mxf_utf16_to_utf8 (const guint8 * data, guint16 size)
 
 gboolean
 mxf_product_version_parse (MXFProductVersion * product_version,
-    const guint8 * data, gsize size)
+    const guint8 * data, guint size)
 {
   g_return_val_if_fail (product_version != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
@@ -391,7 +391,7 @@ mxf_product_version_parse (MXFProductVersion * product_version,
 /* SMPTE 377M 6.1, Table 2 */
 gboolean
 mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
-    const guint8 * data, gsize size)
+    const guint8 * data, guint size)
 {
   gint i;
   gchar str[48];
@@ -536,7 +536,7 @@ _mxf_mapping_ul_free (MXFUL * ul)
 
 gboolean
 mxf_primer_pack_parse (const MXFUL * key, MXFPrimerPack * pack,
-    const guint8 * data, gsize size)
+    const guint8 * data, guint size)
 {
   gint i;
   guint32 n;
@@ -604,7 +604,7 @@ mxf_primer_pack_reset (MXFPrimerPack * pack)
 /* structural metadata parsing */
 
 gboolean
-mxf_local_tag_parse (const guint8 * data, gsize size, guint16 * tag,
+mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
     guint16 * tag_size, const guint8 ** tag_data)
 {
   g_return_val_if_fail (data != NULL, FALSE);
@@ -677,7 +677,7 @@ gst_metadata_add_custom_tag (const MXFPrimerPack * primer,
 gboolean
 mxf_metadata_preface_parse (const MXFUL * key,
     MXFMetadataPreface * preface, const MXFPrimerPack * primer,
-    const guint8 * data, gsize size)
+    const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -884,7 +884,7 @@ mxf_metadata_preface_reset (MXFMetadataPreface * preface)
 gboolean
 mxf_metadata_identification_parse (const MXFUL * key,
     MXFMetadataIdentification * identification,
-    const MXFPrimerPack * primer, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1031,7 +1031,7 @@ void mxf_metadata_identification_reset
 gboolean
 mxf_metadata_content_storage_parse (const MXFUL * key,
     MXFMetadataContentStorage * content_storage,
-    const MXFPrimerPack * primer, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1159,7 +1159,7 @@ void mxf_metadata_content_storage_reset
 gboolean
 mxf_metadata_essence_container_data_parse (const MXFUL * key,
     MXFMetadataEssenceContainerData * essence_container_data,
-    const MXFPrimerPack * primer, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1250,7 +1250,7 @@ void mxf_metadata_essence_container_data_reset
 gboolean
 mxf_metadata_generic_package_parse (const MXFUL * key,
     MXFMetadataGenericPackage * generic_package,
-    const MXFPrimerPack * primer, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1401,7 +1401,7 @@ void mxf_metadata_generic_package_reset
 gboolean
 mxf_metadata_track_parse (const MXFUL * key,
     MXFMetadataTrack * track, const MXFPrimerPack * primer,
-    const guint8 * data, gsize size)
+    const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1556,7 +1556,7 @@ mxf_metadata_track_identifier_parse (const MXFUL * track_identifier)
 gboolean
 mxf_metadata_sequence_parse (const MXFUL * key,
     MXFMetadataSequence * sequence, const MXFPrimerPack * primer,
-    const guint8 * data, gsize size)
+    const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1672,7 +1672,7 @@ mxf_metadata_sequence_reset (MXFMetadataSequence * sequence)
 gboolean
 mxf_metadata_structural_component_parse (const MXFUL * key,
     MXFMetadataStructuralComponent * component,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1832,7 +1832,7 @@ void mxf_metadata_structural_component_reset
 gboolean
 mxf_metadata_generic_descriptor_parse (const MXFUL * key,
     MXFMetadataGenericDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1936,7 +1936,7 @@ void mxf_metadata_generic_descriptor_reset
 gboolean
 mxf_metadata_file_descriptor_parse (const MXFUL * key,
     MXFMetadataFileDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -2035,7 +2035,7 @@ mxf_metadata_file_descriptor_reset (MXFMetadataFileDescriptor * descriptor)
 gboolean
 mxf_metadata_generic_sound_essence_descriptor_parse (const MXFUL * key,
     MXFMetadataGenericSoundEssenceDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -2152,7 +2152,7 @@ void mxf_metadata_generic_sound_essence_descriptor_reset
 gboolean
 mxf_metadata_generic_picture_essence_descriptor_parse (const MXFUL * key,
     MXFMetadataGenericPictureEssenceDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -2392,7 +2392,7 @@ void mxf_metadata_generic_picture_essence_descriptor_reset
 gboolean
 mxf_metadata_cdci_picture_essence_descriptor_parse (const MXFUL * key,
     MXFMetadataCDCIPictureEssenceDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -2523,7 +2523,7 @@ void mxf_metadata_cdci_picture_essence_descriptor_reset
 gboolean
 mxf_metadata_multiple_descriptor_parse (const MXFUL * key,
     MXFMetadataMultipleDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -2611,7 +2611,7 @@ void mxf_metadata_multiple_descriptor_reset
 gboolean
 mxf_metadata_locator_parse (const MXFUL * key,
     MXFMetadataLocator * locator, const MXFPrimerPack * primer,
-    guint16 type, const guint8 * data, gsize size)
+    guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;

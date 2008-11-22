@@ -43,7 +43,7 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 gboolean
 mxf_metadata_wave_audio_essence_descriptor_parse (const MXFUL * key,
     MXFMetadataWaveAudioEssenceDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, gsize size)
+    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -256,6 +256,7 @@ static const MXFUL mxf_sound_essence_compression_uncompressed =
     { {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x02, 0x02, 0x01,
     0x7F, 0x00, 0x00, 0x00}
 };
+
 static const MXFUL mxf_sound_essence_compression_aiff =
     { {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x07, 0x04, 0x02, 0x02, 0x01,
     0x7E, 0x00, 0x00, 0x00}

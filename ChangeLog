@@ -1,3 +1,41 @@
+2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c:
+	(mxf_metadata_wave_audio_essence_descriptor_parse):
+	* gst/mxf/mxfaes-bwf.h:
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_range),
+	(gst_mxf_demux_pull_klv_packet),
+	(gst_mxf_demux_parse_footer_metadata),
+	(gst_mxf_demux_handle_klv_packet),
+	(gst_mxf_demux_pull_and_handle_klv_packet), (gst_mxf_demux_chain):
+	* gst/mxf/mxfmpeg.c: (mxf_metadata_mpeg_video_descriptor_parse):
+	* gst/mxf/mxfmpeg.h:
+	* gst/mxf/mxfparse.c: (mxf_timestamp_parse), (mxf_fraction_parse),
+	(mxf_utf16_to_utf8), (mxf_product_version_parse),
+	(mxf_partition_pack_parse), (mxf_primer_pack_parse),
+	(mxf_local_tag_parse), (mxf_metadata_preface_parse),
+	(mxf_metadata_identification_parse),
+	(mxf_metadata_content_storage_parse),
+	(mxf_metadata_essence_container_data_parse),
+	(mxf_metadata_generic_package_parse), (mxf_metadata_track_parse),
+	(mxf_metadata_sequence_parse),
+	(mxf_metadata_structural_component_parse),
+	(mxf_metadata_generic_descriptor_parse),
+	(mxf_metadata_file_descriptor_parse),
+	(mxf_metadata_generic_sound_essence_descriptor_parse),
+	(mxf_metadata_generic_picture_essence_descriptor_parse),
+	(mxf_metadata_cdci_picture_essence_descriptor_parse),
+	(mxf_metadata_multiple_descriptor_parse),
+	(mxf_metadata_locator_parse):
+	* gst/mxf/mxfparse.h:
+	Use guint instead of guint64 or gsize for all buffer sizes and
+	use correct format strings for them. Only local tag set sizes
+	are still guint16 as they can't be larger.
+
+	Only allow KLV packets of sizes below 1<<32 as GStreamer only uses
+	guint for buffer sizes. The MXF standard allows packet sizes up
+	to 1<<64.
+
 2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_release_pad):

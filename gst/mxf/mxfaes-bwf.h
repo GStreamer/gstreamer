@@ -55,7 +55,7 @@ typedef struct {
   guint16 peak_envelope_data_length;
 } MXFMetadataWaveAudioEssenceDescriptor;
 
-gboolean mxf_metadata_wave_audio_essence_descriptor_parse (const MXFUL *key, MXFMetadataWaveAudioEssenceDescriptor *descriptor, const MXFPrimerPack *primer, guint16 type, const guint8 *data, gsize size);
+gboolean mxf_metadata_wave_audio_essence_descriptor_parse (const MXFUL *key, MXFMetadataWaveAudioEssenceDescriptor *descriptor, const MXFPrimerPack *primer, guint16 type, const guint8 *data, guint size);
 void mxf_metadata_wave_audio_essence_descriptor_reset (MXFMetadataWaveAudioEssenceDescriptor *descriptor);
 
 gboolean mxf_is_aes_bwf_essence_track (const MXFMetadataTrack *track);
