@@ -57,6 +57,7 @@ enum
 #define DEFAULT_SDES_NOTE            NULL
 #define DEFAULT_NUM_SOURCES          0
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
+#define DEFAULT_SOURCES              NULL
 
 enum
 {
@@ -73,6 +74,7 @@ enum
   PROP_SDES_NOTE,
   PROP_NUM_SOURCES,
   PROP_NUM_ACTIVE_SOURCES,
+  PROP_SOURCES,
   PROP_LAST
 };
 
@@ -243,62 +245,95 @@ rtp_session_class_init (RTPSessionClass * klass)
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SOURCE,
       g_param_spec_object ("internal-source", "Internal Source",
           "The internal source element of the session",
-          RTP_TYPE_SOURCE, G_PARAM_READABLE));
+          RTP_TYPE_SOURCE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
       g_param_spec_double ("bandwidth", "Bandwidth",
           "The bandwidth of the session",
-          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
+          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
           "The fraction of the bandwidth used for RTCP",
-          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
+          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
       g_param_spec_string ("sdes-cname", "SDES CNAME",
           "The CNAME to put in SDES messages of this session",
-          DEFAULT_SDES_CNAME, G_PARAM_READWRITE));
+          DEFAULT_SDES_CNAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_NAME,
       g_param_spec_string ("sdes-name", "SDES NAME",
           "The NAME to put in SDES messages of this session",
-          DEFAULT_SDES_NAME, G_PARAM_READWRITE));
+          DEFAULT_SDES_NAME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_EMAIL,
       g_param_spec_string ("sdes-email", "SDES EMAIL",
           "The EMAIL to put in SDES messages of this session",
-          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE));
+          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_PHONE,
       g_param_spec_string ("sdes-phone", "SDES PHONE",
           "The PHONE to put in SDES messages of this session",
-          DEFAULT_SDES_PHONE, G_PARAM_READWRITE));
+          DEFAULT_SDES_PHONE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_LOCATION,
       g_param_spec_string ("sdes-location", "SDES LOCATION",
           "The LOCATION to put in SDES messages of this session",
-          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE));
+          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_TOOL,
       g_param_spec_string ("sdes-tool", "SDES TOOL",
           "The TOOL to put in SDES messages of this session",
-          DEFAULT_SDES_TOOL, G_PARAM_READWRITE));
+          DEFAULT_SDES_TOOL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SDES_NOTE,
       g_param_spec_string ("sdes-note", "SDES NOTE",
           "The NOTE to put in SDES messages of this session",
-          DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
+          DEFAULT_SDES_NOTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_SOURCES,
       g_param_spec_uint ("num-sources", "Num Sources",
           "The number of sources in the session", 0, G_MAXUINT,
-          DEFAULT_NUM_SOURCES, G_PARAM_READABLE));
+          DEFAULT_NUM_SOURCES, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_ACTIVE_SOURCES,
       g_param_spec_uint ("num-active-sources", "Num Active Sources",
           "The number of active sources in the session", 0, G_MAXUINT,
-          DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE));
+          DEFAULT_NUM_ACTIVE_SOURCES,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * RTPSource::sources
+   *
+   * Get a GValue Array of all sources in the session.
+   *
+   * <example>
+   * <title>Getting the #RTPSources of a session
+   * <programlisting>
+   * {
+   *   GValueArray *arr;
+   *   GValue *val;
+   *   guint i;
+   *
+   *   g_object_get (sess, "sources", &arr, NULL);
+   *
+   *   for (i = 0; i < arr->n_values; i++) {
+   *     RTPSource *source;
+   *
+   *     val = g_value_array_get_nth (arr, i);
+   *     source = g_value_get_object (val);
+   *   }
+   *   g_value_array_free (arr);
+   * }
+   * </programlisting>
+   * </example>
+   */
+  g_object_class_install_property (gobject_class, PROP_SOURCES,
+      g_param_spec_boxed ("sources", "Sources",
+          "An array of all known sources in the session",
+          G_TYPE_VALUE_ARRAY, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
@@ -368,6 +403,35 @@ rtp_session_finalize (GObject * object)
   g_object_unref (sess->source);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
+}
+
+static void
+copy_source (gpointer key, RTPSource * source, GValueArray * arr)
+{
+  GValue value = { 0 };
+
+  g_value_init (&value, RTP_TYPE_SOURCE);
+  g_value_take_object (&value, source);
+  g_value_array_append (arr, &value);
+}
+
+static GValueArray *
+rtp_session_create_sources (RTPSession * sess)
+{
+  GValueArray *res;
+  guint size;
+
+  RTP_SESSION_LOCK (sess);
+  /* get number of elements in the table */
+  size = g_hash_table_size (sess->ssrcs[sess->mask_idx]);
+  /* create the result value array */
+  res = g_value_array_new (size);
+
+  /* and copy all values into the array */
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx], (GHFunc) copy_source, res);
+  RTP_SESSION_UNLOCK (sess);
+
+  return res;
 }
 
 static void
@@ -470,6 +534,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_NUM_ACTIVE_SOURCES:
       g_value_set_uint (value, rtp_session_get_num_active_sources (sess));
+      break;
+    case PROP_SOURCES:
+      g_value_take_boxed (value, rtp_session_create_sources (sess));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

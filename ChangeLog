@@ -1,3 +1,20 @@
+2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(copy_source), (rtp_session_create_sources),
+	(rtp_session_get_property):
+	Add G_PARAM_STATIC_STRINGS.
+	Add property to return a GValueArray of all known RTPSources in the
+	session.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_class_init),
+	(rtp_source_create_sdes), (rtp_source_set_property),
+	(rtp_source_get_property):
+	Remove properties to set the various SDES items, an application is never
+	supposed to change the RTPSource data.
+	Change the SDES getter properties to one SDES property that returns all
+	SDES items in a GstStructure.
+
 2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/elements/speexresample.c: (GST_START_TEST):
