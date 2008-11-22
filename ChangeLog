@@ -1,5 +1,10 @@
 2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/videorate/gstvideorate.c:
+	Add jpeg and png image media types to the caps. Fixes #561436.
+
+2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaysink.c: (gen_audio_chain):
 	Don't post an error when we can't configure the volume but post a
 	warning instead. Fixes #561780.
