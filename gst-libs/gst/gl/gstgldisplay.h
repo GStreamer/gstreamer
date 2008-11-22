@@ -210,7 +210,6 @@ GstGLDisplay* gst_gl_display_new (void);
 
 void gst_gl_display_create_context (GstGLDisplay* display,
                                     GLint width, GLint height);
-void gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible);
 gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
 
 void gst_gl_display_thread_add (GstGLDisplay *display,

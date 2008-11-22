@@ -71,7 +71,6 @@ void gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callbac
 void gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback, gpointer data);
 void gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
-void gst_gl_window_visible (GstGLWindow *window, gboolean visible);
 void gst_gl_window_draw (GstGLWindow *window);
 void gst_gl_window_run_loop (GstGLWindow *window);
 void gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer data);

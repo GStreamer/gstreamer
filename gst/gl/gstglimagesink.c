@@ -498,8 +498,6 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
             gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
-
-            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
         }
     }
     //is not gl
@@ -528,8 +526,6 @@ gst_glimage_sink_render (GstBaseSink* bsink, GstBuffer* buf)
 
             gst_gl_display_set_client_draw_callback (glimage_sink->display,
                 glimage_sink->clientDrawCallback);
-
-            gst_gl_display_set_visible_context (glimage_sink->display, TRUE);
         }
 
         //blocking call
