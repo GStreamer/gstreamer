@@ -2452,7 +2452,6 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
   } else if (session->send_rtcp_src == target) {
     remove_rtcp (rtpbin, session, pad);
   }
-
   GST_RTP_BIN_UNLOCK (rtpbin);
 
   gst_object_unref (target);
@@ -2463,6 +2462,7 @@ gst_rtp_bin_release_pad (GstElement * element, GstPad * pad)
 unknown_pad:
   {
     GST_RTP_BIN_UNLOCK (rtpbin);
+    gst_object_unref (target);
     g_warning ("gstrtpbin: %s:%s is not one of our request pads",
         GST_DEBUG_PAD_NAME (pad));
     return;

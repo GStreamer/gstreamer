@@ -1,3 +1,8 @@
+2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_release_pad):
+	Also unref the target pad for unknown pads.
+
 2008-11-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/dccp/gstdccp.c: (gst_dccp_socket_write):
