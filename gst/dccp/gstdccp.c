@@ -343,7 +343,7 @@ gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
   if (bytes_written != size) {
     GST_ELEMENT_ERROR (element, RESOURCE, WRITE,
         ("Error while sending data to socket %d.", socket),
-        ("Only %" G_GSIZE_FORMAT " of %u bytes written: %s",
+        ("Only %" G_GSIZE_FORMAT " of %" G_GSIZE_FORMAT " bytes written: %s",
             bytes_written, size, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
