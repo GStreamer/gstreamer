@@ -985,7 +985,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   }
   /* post a warning if we have no way to configure the volume */
   if (!have_volume) {
-    GST_ELEMENT_ERROR (playsink, STREAM, NOT_IMPLEMENTED,
+    GST_ELEMENT_WARNING (playsink, STREAM, NOT_IMPLEMENTED,
         (_("No volume control found")), ("No volume control found"));
   }
   chain->sinkpad = gst_ghost_pad_new ("sink", pad);

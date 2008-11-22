@@ -1,3 +1,9 @@
+2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c: (gen_audio_chain):
+	Don't post an error when we can't configure the volume but post a
+	warning instead. Fixes #561780.
+
 2008-11-21  David Schleef  <ds@schleef.org>
 
 	Patch by: Jonathan Rosser <jonathan.rosser@rd.bbc.co.uk>
