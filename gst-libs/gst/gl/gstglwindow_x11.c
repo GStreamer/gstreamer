@@ -474,23 +474,6 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
 
 /* Thread safe */
 void
-gst_gl_window_visible (GstGLWindow *window, gboolean visible)
-{
-  if (window)
-  {
-    GstGLWindowPrivate *priv = window->priv;
-
-    g_mutex_lock (priv->x_lock);
-
-    if (priv->visible != visible)
-      priv->visible = visible;
-
-    g_mutex_unlock (priv->x_lock);
-  }
-}
-
-/* Thread safe */
-void
 gst_gl_window_draw (GstGLWindow *window)
 {
   g_debug ("DRAW IN\n");
@@ -505,10 +488,10 @@ gst_gl_window_draw (GstGLWindow *window)
       XEvent event;
       XWindowAttributes attr;
 
-      if (priv->visible)
+      if (!priv->visible)
       {
         XMapWindow (priv->disp_send, priv->internal_win_id);
-        priv->visible = FALSE;
+        priv->visible = TRUE;
       }
 
       XGetWindowAttributes (priv->disp_send, priv->internal_win_id, &attr);

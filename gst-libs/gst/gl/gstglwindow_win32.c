@@ -29,7 +29,8 @@
 #include "gstglwindow.h"
 
 
-#define WM_GSTGLWINDOW (WM_APP+1)
+#define WM_GST_GL_WINDOW_CUSTOM (WM_APP+1)
+#define WM_GST_GL_WINDOW_QUIT (WM_APP+2)
 
 void gst_gl_window_set_pixel_format (GstGLWindow *window);
 LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -55,6 +56,7 @@ struct _GstGLWindowPrivate
   GstGLWindowCB close_cb;
   gpointer close_data;
   gboolean is_closed;
+  gboolean visible;
 };
 
 G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
@@ -163,6 +165,7 @@ gst_gl_window_new (gint width, gint height)
   priv->close_cb = NULL;
   priv->close_data = NULL;
   priv->is_closed = FALSE;
+  priv->visible = FALSE;
 
   width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
   height += 2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
@@ -261,24 +264,16 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
 
 /* Thread safe */
 void
-gst_gl_window_visible (GstGLWindow *window, gboolean visible)
-{
-  GstGLWindowPrivate *priv = window->priv;
-  BOOL ret = FALSE; 
-
-  g_debug ("set visible %d\n", priv->internal_win_id);
-  
-  if (visible)
-    ret = ShowWindowAsync (priv->internal_win_id, SW_SHOW);
-  else
-    ret = ShowWindowAsync (priv->internal_win_id, SW_HIDE);
-}
-
-/* Thread safe */
-void
 gst_gl_window_draw (GstGLWindow *window)
 {
   GstGLWindowPrivate *priv = window->priv;
+
+  if (!priv->visible)
+  {
+    ShowWindowAsync (priv->internal_win_id, SW_SHOW);
+    priv->visible = TRUE;
+  }
+
   RedrawWindow (priv->internal_win_id, NULL, NULL,
     RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
 }
@@ -312,12 +307,12 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
 /* Thread safe */
 void
-gst_gl_window_quit_loop (GstGLWindow *window)
+gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
   if (window)
   {
     GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = PostMessage(priv->internal_win_id, WM_CLOSE, 0, 0);
+    LRESULT res = PostMessage(priv->internal_win_id, WM_GST_GL_WINDOW_QUIT, (WPARAM) data, (LPARAM) callback);
     g_assert (SUCCEEDED (res));
     g_debug ("end loop requested\n");
   }
@@ -330,7 +325,7 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
   if (window)
   {
     GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = SendMessage (priv->internal_win_id, WM_GSTGLWINDOW, (WPARAM) data, (LPARAM) callback);
+    LRESULT res = SendMessage (priv->internal_win_id, WM_GST_GL_WINDOW_CUSTOM, (WPARAM) data, (LPARAM) callback);
     g_assert (SUCCEEDED (res));
   }
 }
@@ -451,9 +446,28 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
       case WM_CLOSE:
       {
+        ShowWindowAsync (priv->internal_win_id, SW_HIDE);
+        
+        if (priv->close_cb)
+            priv->close_cb (priv->close_data);
+
+          priv->draw_cb = NULL;
+          priv->draw_data = NULL;
+          priv->resize_cb = NULL;
+          priv->resize_data = NULL;
+          priv->close_cb = NULL;
+          priv->close_data = NULL;
+        break;
+      }
+
+      case WM_GST_GL_WINDOW_QUIT:
+      {
         HWND parent_id = 0;
+        GstGLWindowCB destroy_cb = (GstGLWindowCB) lParam;
 
         g_debug ("WM_CLOSE\n");
+
+        destroy_cb ((gpointer) wParam);
 
         parent_id = GetProp (hWnd, "gl_window_parent_id");
         if (parent_id)
@@ -501,11 +515,9 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         break;
       }
 
-      case WM_GSTGLWINDOW:
+      case WM_GST_GL_WINDOW_CUSTOM:
       {
-        if (priv->is_closed && priv->close_cb)
-          priv->close_cb (priv->close_data);
-        else
+        if (!priv->is_closed)
         {
           GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
           custom_cb ((gpointer) wParam);

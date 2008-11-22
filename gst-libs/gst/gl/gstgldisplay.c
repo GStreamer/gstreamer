@@ -1619,20 +1619,6 @@ gst_gl_display_create_context (GstGLDisplay *display,
 
 
 /* Called by the glimagesink element */
-void
-gst_gl_display_set_visible_context (GstGLDisplay* display, gboolean visible)
-{
-  gst_gl_display_lock (display);
-  if (display->visible != visible)
-  {
-    display->visible = visible;
-    gst_gl_window_visible (display->gl_window, visible);
-  }
-  gst_gl_display_unlock (display);
-}
-
-
-/* Called by the glimagesink element */
 gboolean
 gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height)
 {
