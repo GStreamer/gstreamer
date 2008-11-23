@@ -2,13 +2,18 @@
 add_definitions(-DHAVE_CONFIG_H)
 
 include_directories(AFTER
-  ../../../win32/common
-  ${GLEW_INCLUDE_DIR}
   .
+  ${GLEW_INCLUDE_DIR}
   ${GSTREAMER_INCLUDE_DIR}
   ${GLIB2_INCLUDE_DIR}
   ${LIBXML2_INCLUDE_DIR}
   ${LIBICONV_INCLUDE_DIR})
+
+
+if (WIN32)
+
+include_directories(AFTER
+  ../../../win32/common)
 
 add_library (gstgl STATIC
   gstglwindow_win32.c
@@ -17,8 +22,6 @@ add_library (gstgl STATIC
   gstglfilter.c
   gstglshader.c)
 
-#FIXME: get ride of this condition
-if (WIN32)
 target_link_libraries(gstgl
   general ${OPENGL_LIBRARIES}
   general ${GLEW_LIBRARY}
@@ -26,7 +29,19 @@ target_link_libraries(gstgl
   general ${GSTREAMER_LIBRARIES}
   gdi32
   winmm)
+
 else (WIN32)
+
+include_directories(AFTER
+  ../../..)
+
+add_library (gstgl STATIC
+  gstglwindow_x11.c
+  gstgldisplay.c
+  gstglbuffer.c
+  gstglfilter.c
+  gstglshader.c)
+
 target_link_libraries(gstgl
   general ${OPENGL_LIBRARIES}
   general ${GLEW_LIBRARY}
