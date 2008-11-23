@@ -61,6 +61,12 @@
 GST_DEBUG_CATEGORY_EXTERN (pulse_debug);
 #define GST_CAT_DEFAULT pulse_debug
 
+/* according to
+ * http://www.pulseaudio.org/ticket/314
+ * we need pulse-0.9.12 to use sink volume properties
+ */
+/*#define HAVE_PULSE_0_9_12 */
+
 enum
 {
   PROP_SERVER = 1,
@@ -239,7 +245,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
       g_param_spec_string ("device-name", "Device name",
           "Human-readable name of the sound device", NULL,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-#if 0
+#ifdef HAVE_PULSE_0_9_12
   g_object_class_install_property (gobject_class,
       PROP_VOLUME,
       g_param_spec_double ("volume", "Volume",
@@ -329,7 +335,7 @@ gst_pulsesink_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-#if 0
+#ifdef HAVE_PULSE_0_9_12
 static void
 gst_pulsesink_set_volume (GstPulseSink * pulsesink, gdouble volume)
 {
@@ -401,7 +407,7 @@ gst_pulsesink_set_property (GObject * object,
       pulsesink->device = g_value_dup_string (value);
       break;
 
-#if 0
+#ifdef HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       gst_pulsesink_set_volume (pulsesink, g_value_get_double (value));
       break;
@@ -436,7 +442,7 @@ gst_pulsesink_get_property (GObject * object,
         g_value_set_string (value, NULL);
       break;
 
-#if 0
+#ifdef HAVE_PULSE_0_9_12
     case PROP_VOLUME:
       g_value_set_double (value, gst_pulsesink_get_volume (pulsesink));
       break;
@@ -637,7 +643,7 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   pa_threaded_mainloop_unlock (pulsesink->mainloop);
 
-#if 0
+#ifdef HAVE_PULSE_0_9_12
   gst_pulsesink_set_volume (pulsesink, pulsesink->volume);
 #endif
 
@@ -911,7 +917,7 @@ gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_NULL:
 
       if (this->mixer) {
-#if 0
+#ifdef HAVE_PULSE_0_9_12
         this->volume = gst_pulsesink_get_volume (this);
 #endif
         gst_pulsemixer_ctrl_free (this->mixer);

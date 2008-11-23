@@ -1,3 +1,9 @@
+2008-11-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/pulse/pulsesink.c:
+	  Change #if 0 to something more expresive and add pointer to related
+	  bug ticket.
+
 2008-11-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Tal Shalif <tshalif at nargila dot org>
