@@ -4,7 +4,7 @@
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_audio_caps):
 	Use G_{BIG,LITTLE}_ENDIAN instead of the non-GLib variants as
-	the latter don't exist on some systems (mingw). Fixes bug #561992.
+	the latter don't exist on some systems (mingw). Fixes bug #561990.
 
 2008-11-21  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
