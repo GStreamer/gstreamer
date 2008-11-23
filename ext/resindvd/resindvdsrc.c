@@ -1350,7 +1350,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
 
       GST_DEBUG_OBJECT (src, "Audio stream %d is language %s", i, lang_code);
     } else
-      GST_DEBUG_OBJECT (src, "Audio stream %d - no language", i, lang_code);
+      GST_DEBUG_OBJECT (src, "Audio stream %d - no language %s", i, lang_code);
   }
 
   if (have_audio == FALSE) {

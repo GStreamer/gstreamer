@@ -1,3 +1,11 @@
+2008-11-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Tal Shalif <tshalif at nargila dot org>
+
+	* ext/resindvd/resindvdsrc.c:
+	(rsn_dvdsrc_prepare_streamsinfo_event):
+	Fix format string. Fixes bug #561992.
+
 2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
