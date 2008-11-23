@@ -1363,8 +1363,8 @@ void gst_gl_display_on_draw(GstGLDisplay* display)
       display->clientDrawCallback (display->redisplay_texture,
 				  display->redisplay_texture_width, display->redisplay_texture_height);
 
-    if (doRedisplay)
-      gst_gl_window_draw (display->gl_window);
+    if (doRedisplay && display->gl_window)
+      gst_gl_window_draw_unlocked (display->gl_window);
   }
   //default opengl scene
   else

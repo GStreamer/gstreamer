@@ -41,6 +41,7 @@ struct _GstGLWindowPrivate
   GCond *cond_send_message;
   gboolean running;
   gboolean visible;
+  gboolean allow_extra_expose_events;
 
   gchar *display_name;
   Display *device;
@@ -116,13 +117,19 @@ gst_gl_window_finalize (GObject * object)
 
   XSetCloseDownMode (priv->device, DestroyAll);
 
-  XCloseDisplay (priv->device);
-
-  XCloseDisplay (priv->disp_send);
-
   /*XAddToSaveSet (display, w)
   Display *display;
   Window w;*/
+
+  //FIXME: it seems it causes destroy all created windows, even by other display connection:
+  //This is case in: gst-launch-0.10 videotestsrc ! tee name=t t. ! queue ! glimagesink t. ! queue ! glimagesink
+  //When the first window is closed and so its display is closed by the following line, then the other Window managed by the
+  //other glimagesink, is not useable and so each opengl call causes a segmentation fault.
+  //Maybe the solution is to use: XAddToSaveSet
+  //The following line is commented to avoid the disagreement explained before.
+  //XCloseDisplay (priv->device);
+
+  XCloseDisplay (priv->disp_send);
 
   g_debug ("display closed\n");
 
@@ -269,6 +276,7 @@ gst_gl_window_new (gint width, gint height)
   priv->running = TRUE;
   priv->visible = FALSE;
   priv->parent = 0;
+  priv->allow_extra_expose_events = TRUE;
 
   g_mutex_lock (priv->x_lock);
 
@@ -472,6 +480,33 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
   g_mutex_unlock (priv->x_lock);
 }
 
+void
+gst_gl_window_draw_unlocked (GstGLWindow *window)
+{
+  GstGLWindowPrivate *priv = window->priv;
+
+  if (priv->running && priv->allow_extra_expose_events)
+  {
+    XEvent event;
+    XWindowAttributes attr;
+
+    XGetWindowAttributes (priv->device, priv->internal_win_id, &attr);
+
+    event.xexpose.type = Expose;
+    event.xexpose.send_event = TRUE;
+    event.xexpose.display = priv->device;
+    event.xexpose.window = priv->internal_win_id;
+    event.xexpose.x = attr.x;
+    event.xexpose.y = attr.y;
+    event.xexpose.width = attr.width;
+    event.xexpose.height = attr.height;
+    event.xexpose.count = 0;
+
+    XSendEvent (priv->device, priv->internal_win_id, FALSE, ExposureMask, &event);
+    XSync (priv->disp_send, FALSE);
+  }
+}
+
 /* Thread safe */
 void
 gst_gl_window_draw (GstGLWindow *window)
@@ -535,7 +570,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
 {
   GstGLWindowPrivate *priv = window->priv;
 
-
   g_debug ("begin loop\n");
 
   g_mutex_lock (priv->x_lock);
@@ -543,6 +577,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
   while (priv->running)
   {
     XEvent event;
+    XEvent pending_event;
 
     g_mutex_unlock (priv->x_lock);
 
@@ -609,7 +644,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
         else if (wm_quit_loop != None && event.xclient.message_type == wm_quit_loop)
         {
-          XEvent pending_event;
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
 
@@ -701,6 +735,25 @@ gst_gl_window_run_loop (GstGLWindow *window)
         break;
 
     }// switch
+
+    // use in cube example
+    if (XPending (priv->device) > 10)
+    {
+        XEvent extra_expose_event;
+        priv->allow_extra_expose_events = FALSE;
+        while (XCheckTypedWindowEvent (priv->device, priv->internal_win_id, Expose, &extra_expose_event))
+        {
+          if (priv->draw_cb)
+          {
+            if (glXGetCurrentContext () != priv->gl_context)
+              g_warning ("current gl context has changed\n");
+            priv->draw_cb (priv->draw_data);
+            glFlush();
+            glXSwapBuffers (priv->device, priv->internal_win_id);
+          }
+        }
+        priv->allow_extra_expose_events = TRUE;
+    }
 
   }// while running
 

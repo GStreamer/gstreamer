@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -190,7 +190,7 @@ gst_gl_window_new (gint width, gint height)
 
   g_debug ("gl window created: %d\n", priv->internal_win_id);
 
-  //device is set in the window_proc 
+  //device is set in the window_proc
   g_assert (priv->device);
 
   ShowCursor (TRUE);
@@ -204,7 +204,7 @@ gst_gl_window_error_quark (void)
   return g_quark_from_static_string ("gst-gl-window-error");
 }
 
-void 
+void
 gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 {
   GstGLWindowPrivate *priv = window->priv;
@@ -215,9 +215,9 @@ gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
   SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
   SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
   SetWindowLongPtr ((HWND)id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
-  
+
   SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
-  SetParent (priv->internal_win_id, (HWND)id);  
+  SetParent (priv->internal_win_id, (HWND)id);
 
   //take changes into account: SWP_FRAMECHANGED
   GetClientRect ((HWND)id, &rect);
@@ -226,7 +226,7 @@ gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
   MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right, rect.bottom, FALSE);
 }
 
-void 
+void
 gst_gl_window_set_external_gl_context (GstGLWindow *window, guint64 context)
 {
   g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
@@ -237,7 +237,7 @@ void
 gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
   GstGLWindowPrivate *priv = window->priv;
-  
+
   priv->draw_cb = callback;
   priv->draw_data = data;
 }
@@ -260,6 +260,12 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
 
   priv->close_cb = callback;
   priv->close_data = data;
+}
+
+void
+gst_gl_window_draw_unlocked (GstGLWindow *window)
+{
+  gst_gl_window_draw (window);
 }
 
 /* Thread safe */
@@ -289,7 +295,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
   g_debug ("begin loop\n");
 
   while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0)
-  { 
+  {
       if (bRet == -1)
       {
           g_error ("Failed to get message %x\r\n", GetLastError());
@@ -297,8 +303,8 @@ gst_gl_window_run_loop (GstGLWindow *window)
       }
       else
       {
-          TranslateMessage (&msg); 
-          DispatchMessage (&msg); 
+          TranslateMessage (&msg);
+          DispatchMessage (&msg);
       }
   }
 
@@ -370,7 +376,7 @@ gst_gl_window_set_pixel_format (GstGLWindow *window)
     pfd.cColorBits = (BYTE) GetDeviceCaps (priv->device, BITSPIXEL);
 
     pixelformat = ChoosePixelFormat (priv->device, &pfd );
-    
+
     g_assert (pixelformat);
 
     res = SetPixelFormat (priv->device, pixelformat, &pfd);
@@ -432,7 +438,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       }
 
       case WM_PAINT:
-      { 
+      {
         if (priv->draw_cb)
         {
           PAINTSTRUCT ps;
@@ -447,7 +453,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       case WM_CLOSE:
       {
         ShowWindowAsync (priv->internal_win_id, SW_HIDE);
-        
+
         if (priv->close_cb)
             priv->close_cb (priv->close_data);
 
@@ -473,7 +479,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         if (parent_id)
         {
           WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
-          
+
           g_assert (parent_proc);
 
           SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) (guint64) parent_proc);
@@ -502,7 +508,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             g_debug ("failed to destroy window %d, %x\r\n", hWnd, GetLastError());
           g_debug ("AFTER\n");
         }
-          
+
         PostQuitMessage (0);
         break;
       }
@@ -541,7 +547,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   WNDPROC window_parent_proc = GetProp (hWnd, "gl_window_parent_proc");
-  
+
   if (uMsg == WM_SIZE)
   {
     HWND gl_window_id = GetProp (hWnd, "gl_window_id");
