@@ -337,7 +337,7 @@ static void
 shutdown (void *arg)
 {
 /*    GstJackClient *client = (GstJackClient*) arg; */
-  printf ("shutdown %p\n", arg);
+  JACK_DEBUG ("shutdown %p\n", arg);
 /*    gst_element_set_state (GST_ELEMENT (client->manager), GST_STATE_READY); */
 }
 

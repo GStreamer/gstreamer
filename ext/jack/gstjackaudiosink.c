@@ -594,9 +594,17 @@ static guint
 gst_jack_ring_buffer_delay (GstRingBuffer * buf)
 {
   GstJackAudioSink *sink;
-  guint res = 0;
+  guint i, res = 0, latency;
+  jack_client_t *client;
 
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
+  client = gst_jack_audio_client_get_client (sink->client);
+
+  for (i = 0; i < sink->port_count; i++) {
+    latency = jack_port_get_total_latency (client, sink->ports[i]);
+    if (latency > res)
+      res = latency;
+  }
 
   GST_DEBUG_OBJECT (sink, "delay %u", res);
 

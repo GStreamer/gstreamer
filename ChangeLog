@@ -1,3 +1,12 @@
+2008-11-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/jack/gstjackaudiosink.c:
+	* ext/jack/gstjackaudiosrc.c:
+	  Query port latencies for sink/src delays.
+
+	* ext/jack/gstjackbin.c:
+	  No printf please.
+
 2008-11-23  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_klv_packet),
