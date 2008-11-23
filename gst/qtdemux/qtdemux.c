@@ -4866,7 +4866,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "depth", G_TYPE_INT, 8, "signed", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
     case GST_MAKE_FOURCC ('t', 'w', 'o', 's'):
-      endian = BIG_ENDIAN;
+      endian = G_BIG_ENDIAN;
       /* fall-through */
     case GST_MAKE_FOURCC ('s', 'o', 'w', 't'):
     {
@@ -4874,7 +4874,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       gint depth;
 
       if (!endian)
-        endian = LITTLE_ENDIAN;
+        endian = G_LITTLE_ENDIAN;
 
       depth = stream->bytes_per_packet * 8;
       str = g_strdup_printf ("Raw %d-bit PCM audio", depth);
@@ -4889,25 +4889,25 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('f', 'l', '6', '4'):
       _codec ("Raw 64-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 64,
-          "endianness", G_TYPE_INT, BIG_ENDIAN, NULL);
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
       break;
     case GST_MAKE_FOURCC ('f', 'l', '3', '2'):
       _codec ("Raw 32-bit floating-point audio");
       caps = gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, BIG_ENDIAN, NULL);
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN, NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'n', '2', '4'):
       _codec ("Raw 24-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 24,
           "depth", G_TYPE_INT, 24,
-          "endianness", G_TYPE_INT, BIG_ENDIAN,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
           "signed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
       caps = gst_caps_new_simple ("audio/x-raw-int", "width", G_TYPE_INT, 32,
           "depth", G_TYPE_INT, 32,
-          "endianness", G_TYPE_INT, BIG_ENDIAN,
+          "endianness", G_TYPE_INT, G_BIG_ENDIAN,
           "signed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case GST_MAKE_FOURCC ('u', 'l', 'a', 'w'):
