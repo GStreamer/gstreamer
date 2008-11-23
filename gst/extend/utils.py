@@ -4,14 +4,14 @@ import gobject
 import gst
 
 def gst_dump(bin):
-    dump_element (bin, 0)
+    dump_element(bin, 0)
 
-def dump_bin (bin, indent):
+def dump_bin(bin, indent):
         # Iterate the children
         for child in bin.get_list():
-            dump_element (child, indent + 2)
+            dump_element(child, indent + 2)
 
-def dump_element (element, indent):
+def dump_element(element, indent):
         states = { 1: 'NULL', 2: 'READY',
             4: 'PAUSED', 8: 'PLAYING' }
 
@@ -28,7 +28,7 @@ def dump_element (element, indent):
             clock_str = "clock - %s" % (c.get_name())
 
         out = "%s (%s): state %s, %s" % (element.get_name(),
-             gobject.type_name (element.__gtype__), state, clock_str)
+             gobject.type_name(element.__gtype__), state, clock_str)
 
         print out.rjust(len(out) + indent)
 
@@ -46,12 +46,14 @@ def dump_element (element, indent):
 
                     print out.rjust(len(out) + indent)
 
-        if isinstance (element, gst.Bin):
-            dump_bin (element, indent + 2)
-        elif isinstance (element, gst.Queue):
-            out = " - time_level: %ld" % (element.get_property('current-level-time'))
+        if isinstance(element, gst.Bin):
+            dump_bin(element, indent + 2)
+        elif isinstance(element, gst.Queue):
+            out = " - time_level: %ld" % (
+                element.get_property('current-level-time'))
             print out.rjust(len(out) + indent)
-            out = " - bytes_level: %ld" % (element.get_property('current-level-bytes'))
+            out = " - bytes_level: %ld" % (
+                element.get_property('current-level-bytes'))
             print out.rjust(len(out) + indent)
 
 def gc_collect(reason=None):
