@@ -1127,9 +1127,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1982,7 +1981,7 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
   GstBuffer *buffer = NULL;
   const guint8 *data;
   guint64 data_offset = 0;
-  guint length;
+  guint64 length;
   gchar key_str[48];
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -2014,15 +2013,11 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
     data_offset = 16 + 1 + slen;
 
     gst_buffer_unref (buffer);
+    buffer = NULL;
 
-    /* Must be at most 8 according to SMPTE-379M 5.3.4 and
-     * GStreamer buffers can only have a 4 bytes length */
+    /* Must be at most 8 according to SMPTE-379M 5.3.4 */
     if (slen > 8) {
       GST_ERROR_OBJECT (demux, "Invalid KLV packet length: %u", slen);
-      ret = GST_FLOW_ERROR;
-      goto beach;
-    } else if (slen > 4) {
-      GST_ERROR_OBJECT (demux, "Unsupported KLV packet length: %u", slen);
       ret = GST_FLOW_ERROR;
       goto beach;
     }
@@ -2042,6 +2037,16 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
   }
 
   gst_buffer_unref (buffer);
+  buffer = NULL;
+
+  /* GStreamer's buffer sizes are stored in a guint so we
+   * limit ourself to G_MAXUINT large buffers */
+  if (length > G_MAXUINT) {
+    GST_ERROR_OBJECT (demux,
+        "Unsupported KLV packet length: %" G_GUINT64_FORMAT, length);
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
 
   /* Pull the complete KLV packet */
   if ((ret = gst_mxf_demux_pull_range (demux, offset + data_offset, length,
@@ -2406,7 +2411,7 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   GstMXFDemux *demux = NULL;
   MXFUL key;
   const guint8 *data = NULL;
-  guint length = 0;
+  guint64 length = 0;
   guint64 offset = 0;
   GstBuffer *buffer = NULL;
   gchar key_str[48];
@@ -2507,10 +2512,6 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
         GST_ERROR_OBJECT (demux, "Invalid KLV packet length: %u", slen);
         ret = GST_FLOW_ERROR;
         break;
-      } else if (slen > 4) {
-        GST_ERROR_OBJECT (demux, "Unsupported KLV packet length: %u", slen);
-        ret = GST_FLOW_ERROR;
-        break;
       }
 
       if (gst_adapter_available (demux->adapter) < 17 + slen)
@@ -2525,6 +2526,15 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
         data++;
         slen--;
       }
+    }
+
+    /* GStreamer's buffer sizes are stored in a guint so we
+     * limit ourself to G_MAXUINT large buffers */
+    if (length > G_MAXUINT) {
+      GST_ERROR_OBJECT (demux,
+          "Unsupported KLV packet length: %" G_GUINT64_FORMAT, length);
+      ret = GST_FLOW_ERROR;
+      break;
     }
 
     if (gst_adapter_available (demux->adapter) < offset + length)
