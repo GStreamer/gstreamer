@@ -751,6 +751,7 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
     gst_base_sink_wait_eos (GST_BASE_SINK (sink), time, NULL);
 
     sink->next_sample = -1;
+    GST_DEBUG_OBJECT (sink, "drained audio");
   }
   return TRUE;
 }
@@ -857,8 +858,8 @@ clock_convert_external (GstClockTime external, GstClockTime cinternal,
         gst_util_uint64_scale (external - cexternal, crate_denom, crate_num);
     external += cinternal;
   } else {
-    external = gst_util_uint64_scale (cexternal - external,
-        crate_denom, crate_num);
+    external =
+        gst_util_uint64_scale (cexternal - external, crate_denom, crate_num);
     if (cinternal > external)
       external = cinternal - external;
     else
@@ -1625,8 +1626,9 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     goto preroll_error;
 
   if (len != GST_BUFFER_SIZE (buf)) {
-    GST_INFO_OBJECT (basesink, "short read pulling from sink pad: %d<%d",
-        len, GST_BUFFER_SIZE (buf));
+    GST_INFO_OBJECT (basesink,
+        "got different size than requested from sink pad: %u != %u", len,
+        GST_BUFFER_SIZE (buf));
     len = MIN (GST_BUFFER_SIZE (buf), len);
   }
 
@@ -1653,10 +1655,10 @@ eos:
      * the sink gets shut down; maybe we should set a flag somewhere, or
      * set segment.stop and segment.duration to the last sample or so */
     GST_DEBUG_OBJECT (sink, "EOS");
-    gst_element_post_message (GST_ELEMENT_CAST (sink),
-        gst_message_new_eos (GST_OBJECT_CAST (sink)));
     gst_base_audio_sink_drain (sink);
     gst_ring_buffer_pause (rbuf);
+    gst_element_post_message (GST_ELEMENT_CAST (sink),
+        gst_message_new_eos (GST_OBJECT_CAST (sink)));
     GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
   }
 flushing:

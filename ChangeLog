@@ -1,3 +1,9 @@
+2008-11-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  Add one log message to check for audio_drained. Sync one log message
+	  with the condition. Send EOS after draining audio in pull mode.
+
 2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_create):
