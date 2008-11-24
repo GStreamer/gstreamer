@@ -1,3 +1,12 @@
+2008-11-24  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/playback/gstplaybin2.c:
+	  Add notification of current stream. Add ability to configure buffer
+	  sizes.
+	* gst/playback/gsturidecodebin.c:
+	  Add ability to configure buffer sizes for streaming mode.
+	  Bug #561734.
+
 2008-11-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

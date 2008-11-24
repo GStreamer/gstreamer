@@ -74,6 +74,9 @@ struct _GstURIDecodeBin
   gchar *encoding;
 
   gboolean is_stream;
+  guint64 buffer_duration;      /* When streaming, buffer duration (ns) */
+  guint buffer_size;            /* When streaming, buffer size (bytes) */
+
   GstElement *source;
   GstElement *typefind;
   guint have_type_id;           /* have-type signal id from typefind */
@@ -141,6 +144,8 @@ enum
 #define DEFAULT_CONNECTION_SPEED    0
 #define DEFAULT_CAPS                NULL
 #define DEFAULT_SUBTITLE_ENCODING   NULL
+#define DEFAULT_BUFFER_DURATION     -1
+#define DEFAULT_BUFFER_SIZE         -1
 
 enum
 {
@@ -150,6 +155,8 @@ enum
   PROP_CONNECTION_SPEED,
   PROP_CAPS,
   PROP_SUBTITLE_ENCODING,
+  PROP_BUFFER_SIZE,
+  PROP_BUFFER_DURATION,
   PROP_LAST
 };
 
@@ -289,6 +296,17 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           "ISO-8859-15 will be assumed.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
+      g_param_spec_int ("buffer-size", "Buffer size (bytes)",
+          "Buffer size when buffering network streams",
+          -1, G_MAXINT, DEFAULT_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_BUFFER_DURATION,
+      g_param_spec_int64 ("buffer-duration", "Buffer duration (ns)",
+          "Buffer duration when buffering network streams",
+          -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstURIDecodeBin::unknown-type:
    * @pad: the new pad containing caps that cannot be resolved to a 'final'
@@ -401,6 +419,9 @@ gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
   dec->connection_speed = DEFAULT_CONNECTION_SPEED;
   dec->caps = DEFAULT_CAPS;
   dec->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
+
+  dec->buffer_duration = DEFAULT_BUFFER_DURATION;
+  dec->buffer_size = DEFAULT_BUFFER_SIZE;
 }
 
 static void
@@ -465,6 +486,12 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_SUBTITLE_ENCODING:
       gst_uri_decode_bin_set_encoding (dec, g_value_get_string (value));
       break;
+    case PROP_BUFFER_SIZE:
+      dec->buffer_size = g_value_get_int (value);
+      break;
+    case PROP_BUFFER_DURATION:
+      dec->buffer_duration = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -501,6 +528,16 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
     case PROP_SUBTITLE_ENCODING:
       GST_OBJECT_LOCK (dec);
       g_value_set_string (value, dec->encoding);
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_BUFFER_SIZE:
+      GST_OBJECT_LOCK (dec);
+      g_value_set_int (value, dec->buffer_size);
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_BUFFER_DURATION:
+      GST_OBJECT_LOCK (dec);
+      g_value_set_int64 (value, dec->buffer_duration);
       GST_OBJECT_UNLOCK (dec);
       break;
     default:
@@ -1101,6 +1138,17 @@ type_found (GstElement * typefind, guint probability,
 
   g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
 //  g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL);
+
+  /* Disable max-size-buffers */
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);
+
+  /* If buffer size or duration are set, set them on the queue2 element */
+  if (decoder->buffer_size != -1)
+    g_object_set (G_OBJECT (queue), "max-size-bytes",
+        decoder->buffer_size, NULL);
+  if (decoder->buffer_duration != -1)
+    g_object_set (G_OBJECT (queue), "max-size-time",
+        decoder->buffer_duration, NULL);
 
   gst_bin_add (GST_BIN_CAST (decoder), queue);
 

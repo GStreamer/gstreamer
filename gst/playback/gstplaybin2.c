@@ -336,6 +336,9 @@ struct _GstPlayBin
   gint current_text;            /* the currently selected stream */
   gchar *encoding;              /* subtitle encoding */
 
+  guint64 buffer_duration;      /* When buffering, the max buffer duration (ns) */
+  guint buffer_size;            /* When buffering, the max buffer size (bytes) */
+
   /* our play sink */
   GstPlaySink *playsink;
 
@@ -393,6 +396,8 @@ struct _GstPlayBinClass
 #define DEFAULT_FRAME             NULL
 #define DEFAULT_FONT_DESC         NULL
 #define DEFAULT_CONNECTION_SPEED  0
+#define DEFAULT_BUFFER_DURATION   -1
+#define DEFAULT_BUFFER_SIZE       -1
 
 enum
 {
@@ -415,7 +420,9 @@ enum
   PROP_MUTE,
   PROP_FRAME,
   PROP_FONT_DESC,
-  PROP_CONNECTION_SPEED
+  PROP_CONNECTION_SPEED,
+  PROP_BUFFER_SIZE,
+  PROP_BUFFER_DURATION
 };
 
 /* signals */
@@ -696,6 +703,18 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Network connection speed in kbps (0 = unknown)",
           0, G_MAXUINT, DEFAULT_CONNECTION_SPEED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_klass, PROP_BUFFER_SIZE,
+      g_param_spec_int ("buffer-size", "Buffer size (bytes)",
+          "Buffer size when buffering network streams",
+          -1, G_MAXINT, DEFAULT_BUFFER_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_BUFFER_DURATION,
+      g_param_spec_int64 ("buffer-duration", "Buffer duration (ns)",
+          "Buffer duration when buffering network streams",
+          -1, G_MAXINT64, DEFAULT_BUFFER_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstPlayBin2::about-to-finish
    * @playbin: a #GstPlayBin2
@@ -955,6 +974,9 @@ gst_play_bin_init (GstPlayBin * playbin)
   playbin->current_video = DEFAULT_CURRENT_VIDEO;
   playbin->current_audio = DEFAULT_CURRENT_AUDIO;
   playbin->current_text = DEFAULT_CURRENT_TEXT;
+
+  playbin->buffer_duration = DEFAULT_BUFFER_DURATION;
+  playbin->buffer_size = DEFAULT_BUFFER_SIZE;
 }
 
 static void
@@ -1158,6 +1180,34 @@ gst_play_bin_convert_frame (GstPlayBin * playbin, GstCaps * caps)
     result = temp;
   }
   return result;
+}
+
+/* Returns current stream number, or -1 if none has been selected yet */
+static int
+get_current_stream_number (GstPlayBin * playbin, GPtrArray * channels)
+{
+  /* Internal API cleanup would make this easier... */
+  int i;
+  GstPad *pad, *current;
+  GstObject *selector = NULL;
+  int ret = -1;
+
+  for (i = 0; i < channels->len; i++) {
+    pad = g_ptr_array_index (channels, i);
+    if ((selector = gst_pad_get_parent (pad))) {
+      g_object_get (selector, "active-pad", &current, NULL);
+
+      if (pad == current) {
+        ret = i;
+        break;
+      }
+    }
+  }
+
+  if (selector)
+    gst_object_unref (selector);
+
+  return ret;
 }
 
 static gboolean
@@ -1365,6 +1415,12 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       playbin->connection_speed = g_value_get_uint (value) * 1000;
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
+    case PROP_BUFFER_SIZE:
+      playbin->buffer_size = g_value_get_int (value);
+      break;
+    case PROP_BUFFER_DURATION:
+      playbin->buffer_duration = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1496,6 +1552,16 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint (value, playbin->connection_speed / 1000);
       GST_PLAY_BIN_UNLOCK (playbin);
       break;
+    case PROP_BUFFER_SIZE:
+      GST_OBJECT_LOCK (playbin);
+      g_value_set_int (value, playbin->buffer_size);
+      GST_OBJECT_UNLOCK (playbin);
+      break;
+    case PROP_BUFFER_DURATION:
+      GST_OBJECT_LOCK (playbin);
+      g_value_set_int64 (value, playbin->buffer_duration);
+      GST_OBJECT_UNLOCK (playbin);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1530,6 +1596,51 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 }
 
 static void
+selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
+    GstPlayBin * playbin)
+{
+  gchar *property;
+  GstSourceGroup *group;
+  GstSourceSelect *select = NULL;
+  int i;
+
+  GST_PLAY_BIN_LOCK (playbin);
+  group = get_group (playbin);
+
+  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+    if (selector == G_OBJECT (group->selector[i].selector)) {
+      select = &group->selector[i];
+    }
+  }
+
+  switch (select->type) {
+    case GST_PLAY_SINK_TYPE_VIDEO:
+    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+      property = "current-video";
+      playbin->current_video = get_current_stream_number (playbin,
+          group->video_channels);
+      break;
+    case GST_PLAY_SINK_TYPE_AUDIO:
+    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+      property = "current-audio";
+      playbin->current_audio = get_current_stream_number (playbin,
+          group->audio_channels);
+      break;
+    case GST_PLAY_SINK_TYPE_TEXT:
+      property = "current-text";
+      playbin->current_text = get_current_stream_number (playbin,
+          group->text_channels);
+      break;
+    default:
+      property = NULL;
+  }
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  if (property)
+    g_object_notify (G_OBJECT (playbin), property);
+}
+
+static void
 selector_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
 {
   /* no nothing */
@@ -1537,7 +1648,7 @@ selector_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
 }
 
 /* this function is called when a new pad is added to decodebin. We check the
- * type of the pad and add it to the selecter element of the group. 
+ * type of the pad and add it to the selector element of the group. 
  */
 static void
 pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
@@ -1550,6 +1661,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GstPadLinkReturn res;
   GstSourceSelect *select = NULL;
   gint i;
+  gboolean changed = FALSE;
 
   playbin = group->playbin;
 
@@ -1580,6 +1692,9 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     select->selector = gst_element_factory_make ("input-selector", NULL);
     if (select->selector == NULL)
       goto no_selector;
+
+    g_signal_connect (select->selector, "notify::active-pad",
+        G_CALLBACK (selector_active_pad_changed), playbin);
 
     GST_DEBUG_OBJECT (playbin, "adding new selector %p", select->selector);
     gst_bin_add (GST_BIN_CAST (playbin), select->selector);
@@ -1612,10 +1727,34 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
     /* store selector pad so we can release it */
     g_object_set_data (G_OBJECT (pad), "playbin2.sinkpad", sinkpad);
+
+    changed = TRUE;
   }
   GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to selector %p",
       GST_DEBUG_PAD_NAME (pad), select->selector);
   GST_SOURCE_GROUP_UNLOCK (group);
+
+  if (changed) {
+    int signal;
+    switch (select->type) {
+      case GST_PLAY_SINK_TYPE_VIDEO:
+      case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+        signal = SIGNAL_VIDEO_CHANGED;
+        break;
+      case GST_PLAY_SINK_TYPE_AUDIO:
+      case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+        signal = SIGNAL_AUDIO_CHANGED;
+        break;
+      case GST_PLAY_SINK_TYPE_TEXT:
+        signal = SIGNAL_TEXT_CHANGED;
+        break;
+      default:
+        signal = -1;
+    }
+
+    if (signal >= 0)
+      g_signal_emit (G_OBJECT (playbin), gst_play_bin_signals[signal], 0, NULL);
+  }
 
   return;
 
@@ -1992,6 +2131,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
   g_object_set (uridecodebin, "uri", group->uri, NULL);
+  g_object_set (uridecodebin, "buffer-time", playbin->buffer_duration, NULL);
+  g_object_set (uridecodebin, "buffer-size", playbin->buffer_size, NULL);
 
   /* connect pads and other things */
   g_signal_connect (uridecodebin, "pad-added", G_CALLBACK (pad_added_cb),
