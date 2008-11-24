@@ -100,6 +100,8 @@
 #include <stdio.h>
 #include <string.h>
 
+/* For g_stat () */
+#include <glib/gstdio.h>
 
 #include "gstinfo.h"
 #include "gstregistry.h"
@@ -808,9 +810,17 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
     return FALSE;
 
   while ((dirent = g_dir_read_name (dir))) {
-    filename = g_strjoin ("/", path, dirent, NULL);
+    struct stat file_status;
 
-    if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
+    filename = g_strjoin ("/", path, dirent, NULL);
+    if (g_stat (filename, &file_status) < 0) {
+      /* Plugin will be removed from cache after the scan completes if it
+       * is still marked 'cached' */
+      g_free (filename);
+      continue;
+    }
+
+    if (file_status.st_mode & S_IFDIR) {
       /* skip the .debug directory, these contain elf files that are not
        * useful or worse, can crash dlopen () */
       if (g_str_equal (dirent, ".debug")) {
@@ -831,7 +841,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       g_free (filename);
       continue;
     }
-    if (!g_file_test (filename, G_FILE_TEST_IS_REGULAR)) {
+    if (!(file_status.st_mode & S_IFREG)) {
       GST_LOG_OBJECT (registry, "%s is not a regular file, ignoring", filename);
       g_free (filename);
       continue;
@@ -853,15 +863,6 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
      * was already seen by the registry, we ignore it */
     plugin = gst_registry_lookup (registry, filename);
     if (plugin) {
-      struct stat file_status;
-
-      if (stat (filename, &file_status)) {
-        /* Plugin will be removed from cache after the scan completes if it
-         * is still marked 'cached' */
-        g_free (filename);
-        gst_object_unref (plugin);
-        continue;
-      }
       if (plugin->registered) {
         GST_DEBUG_OBJECT (registry,
             "plugin already registered from path \"%s\"",
