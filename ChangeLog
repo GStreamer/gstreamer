@@ -1,3 +1,11 @@
+2008-11-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c: (new_session_pad),
+	(gst_rtspsrc_parse_range):
+	Add some more debugging.
+	Use the reanges received from the server unconditionally.
+	Fixes #561625.
+
 2008-11-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/pulse/pulsesink.c:

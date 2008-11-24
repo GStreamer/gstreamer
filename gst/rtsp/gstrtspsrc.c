@@ -1667,6 +1667,10 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
   all_added = TRUE;
   for (lstream = src->streams; lstream; lstream = g_list_next (lstream)) {
     stream = (GstRTSPStream *) lstream->data;
+
+    GST_DEBUG_OBJECT (src, "stream %p, container %d, disabled %d, added %d",
+        stream, stream->container, stream->disabled, stream->added);
+
     /* a container stream only needs one pad added. Also disabled streams don't
      * count */
     if (!stream->container && !stream->disabled && !stream->added) {
@@ -4117,7 +4121,10 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
     GST_DEBUG_OBJECT (src, "range: min %" GST_TIME_FORMAT,
         GST_TIME_ARGS (seconds));
 
-    gst_segment_set_last_stop (segment, GST_FORMAT_TIME, seconds);
+    /* we need to start playback without clipping from the position reported by
+     * the server */
+    segment->start = seconds;
+    segment->last_stop = seconds;
 
     if (therange->max.type == GST_RTSP_TIME_NOW)
       seconds = -1;
@@ -4959,6 +4966,7 @@ gst_rtspsrc_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_rtspsrc_uri_get_protocols (void)
 {
