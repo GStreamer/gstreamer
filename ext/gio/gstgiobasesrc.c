@@ -317,9 +317,7 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
     GstBuffer ** buf_return)
 {
   GstGioBaseSrc *src = GST_GIO_BASE_SRC (base_src);
-
   GstBuffer *buf;
-
   GstFlowReturn ret = GST_FLOW_OK;
 
   g_return_val_if_fail (G_IS_INPUT_STREAM (src->stream), GST_FLOW_ERROR);
@@ -369,7 +367,11 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
         return ret;
     }
 
-    src->cache = gst_buffer_new_and_alloc (cachesize);
+    src->cache = gst_buffer_try_new_and_alloc (cachesize);
+    if (G_UNLIKELY (src->cache == NULL)) {
+      GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", cachesize);
+      return GST_FLOW_ERROR;
+    }
 
     GST_LOG_OBJECT (src, "Reading %u bytes from offset %" G_GUINT64_FORMAT,
         cachesize, offset);

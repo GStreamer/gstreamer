@@ -1,3 +1,11 @@
+2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_create):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create):
+	Use gst_buffer_try_new_and_alloc() and fail properly if the
+	allocation failed. This prevents abort() if downstream elements
+	request an insane amount of memory.
+
 2008-11-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/volume/gstvolume.c: (volume_choose_func),
