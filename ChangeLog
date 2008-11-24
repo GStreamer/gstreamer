@@ -1,3 +1,11 @@
+2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_generic_container_essence_element):
+	Make sure to only output generic container essence elements
+	for a track if the body SID of the surrounding partition is
+	the same as the body SID of the track's source package.
+
 2008-11-24  Julien Moutte  <julien@fluendo.com>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_find_offset),

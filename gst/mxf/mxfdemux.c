@@ -1127,9 +1127,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1862,7 +1861,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 track_number;
-  guint i;
+  guint i, j;
   GstMXFPad *pad = NULL;
   GstBuffer *inbuf;
   GstBuffer *outbuf = NULL;
@@ -1890,8 +1889,24 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         (p->source_track->track_number == 0 &&
             demux->src->len == 1 &&
             demux->current_package->n_essence_tracks == 1)) {
-      pad = p;
-      break;
+      if (demux->essence_container_data) {
+        for (j = 0; j < demux->essence_container_data->len; j++) {
+          MXFMetadataEssenceContainerData *edata =
+              &g_array_index (demux->essence_container_data,
+              MXFMetadataEssenceContainerData, j);
+
+          if (p->source_package == edata->linked_package
+              && demux->partition.body_sid == edata->body_sid) {
+            pad = p;
+            break;
+          }
+        }
+      } else {
+        pad = p;
+      }
+
+      if (pad)
+        break;
     }
   }
 
