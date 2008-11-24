@@ -393,7 +393,8 @@ gst_flv_parse_audio_negotiate (GstFLVDemux * demux, guint32 codec_tag,
     case 2:
     case 14:
       caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
+          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3,
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       codec_name = "MPEG 1 Audio, Layer 3 (MP3)";
       break;
     case 0:

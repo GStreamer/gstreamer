@@ -612,9 +612,7 @@ gst_flv_demux_find_offset (GstFLVDemux * demux, GstSegment * segment)
   if (demux->index) {
     /* Let's check if we have an index entry for that seek time */
     entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
-        GST_INDEX_LOOKUP_BEFORE,
-        (segment->flags & GST_SEEK_FLAG_KEY_UNIT) ?
-        GST_ASSOCIATION_FLAG_KEY_UNIT : GST_ASSOCIATION_FLAG_NONE,
+        GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT,
         GST_FORMAT_TIME, time);
 
     if (entry) {
@@ -688,6 +686,10 @@ gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
     if (G_UNLIKELY (!ret)) {
       GST_WARNING_OBJECT (demux, "upstream seek failed");
     }
+
+    /* Tell all the stream we moved to a different position (discont) */
+    demux->audio_need_discont = TRUE;
+    demux->video_need_discont = TRUE;
   } else {
     ret = TRUE;
   }
@@ -776,6 +778,10 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
   if (flush || seeksegment.last_stop != demux->segment.last_stop) {
     /* Do the actual seeking */
     demux->offset = gst_flv_demux_find_offset (demux, &seeksegment);
+
+    /* Tell all the stream we moved to a different position (discont) */
+    demux->audio_need_discont = TRUE;
+    demux->video_need_discont = TRUE;
 
     /* If we seeked at the beginning of the file parse the header again */
     if (G_UNLIKELY (!demux->offset)) {

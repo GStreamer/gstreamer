@@ -1,3 +1,12 @@
+2008-11-24  Julien Moutte  <julien@fluendo.com>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_find_offset),
+	(gst_flv_demux_handle_seek_push), (gst_flv_demux_handle_seek_pull):
+	Fix non key unit seeking by always going to the previous keyframe. Mark
+	the discont flag when we've moved in the file.
+	* gst/flv/gstflvparse.c: (gst_flv_parse_audio_negotiate): MP3 streams
+	are parsed already, makes autoplugged pipelines shorter.
+
 2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: vanista <vanista at gmail dot com>
