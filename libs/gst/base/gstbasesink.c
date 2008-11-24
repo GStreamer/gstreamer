@@ -1599,7 +1599,8 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
   return time;
 }
 
-/* gst_base_sink_wait_clock:
+/**
+ * gst_base_sink_wait_clock:
  * @sink: the sink
  * @time: the running_time to be reached
  * @jitter: the jitter to be filled with time diff (can be NULL)

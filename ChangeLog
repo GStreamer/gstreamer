@@ -1,3 +1,8 @@
+2008-11-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesink.c:
+	  Turn comment into gtk-doc comment.
+
 2008-11-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasetransform.c:
