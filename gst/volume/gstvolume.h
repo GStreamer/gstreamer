@@ -55,14 +55,17 @@ struct _GstVolume {
   void (*process)(GstVolume*, gpointer, guint);
 
   gboolean mute;
-  gint   volume_i32, real_vol_i32;
-  gint   volume_i24, real_vol_i24; /* the _i(nt) values get synchronized with the */
-  gint   volume_i16, real_vol_i16; /* the _i(nt) values get synchronized with the */
-  gint   volume_i8, real_vol_i8;   /* the _i(nt) values get synchronized with the */
-  gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
+  gfloat volume;
+
+  gboolean current_mute;
+  gfloat current_volume;
+
+  gint   current_vol_i32;
+  gint   current_vol_i24; /* the _i(nt) values get synchronized with the */
+  gint   current_vol_i16; /* the _i(nt) values get synchronized with the */
+  gint   current_vol_i8;   /* the _i(nt) values get synchronized with the */
   
   GList *tracklist;
-  gboolean silent_buffer;       /* flag for silent buffers */
   gboolean negotiated;
 };
 

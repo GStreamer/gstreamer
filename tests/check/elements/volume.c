@@ -1334,8 +1334,7 @@ GST_START_TEST (test_passthrough)
   gint16 *res;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 2.0, NULL);
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (volume), TRUE);
+  g_object_set (G_OBJECT (volume), "volume", 1.0, NULL);
   fail_unless (gst_element_set_state (volume,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -1401,6 +1400,58 @@ GST_START_TEST (test_controller_usability)
 
 GST_END_TEST;
 
+GST_START_TEST (test_controller_processing)
+{
+  GstInterpolationControlSource *csource;
+  GstController *c;
+  GstElement *volume;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gint16 in[2] = { 16384, -256 };
+  gint16 *res;
+
+  volume = setup_volume ();
+
+  c = gst_controller_new (G_OBJECT (volume), "volume", NULL);
+
+  fail_unless (GST_IS_CONTROLLER (c));
+
+  csource = gst_interpolation_control_source_new ();
+  gst_interpolation_control_source_set_interpolation_mode (csource,
+      GST_INTERPOLATE_CUBIC);
+  gst_controller_set_control_source (c, "volume", GST_CONTROL_SOURCE (csource));
+  g_object_unref (csource);
+
+  fail_unless (gst_element_set_state (volume,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (4);
+  memcpy (GST_BUFFER_DATA (inbuffer), in, 4);
+  caps = gst_caps_from_string (VOLUME_CAPS_STRING_S16);
+  gst_buffer_set_caps (inbuffer, caps);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... but it ends up being collected on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
+  res = (gint16 *) GST_BUFFER_DATA (outbuffer);
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], res[0], res[1]);
+  fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
+
+  g_object_unref (c);
+
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
 static Suite *
 volume_suite (void)
 {
@@ -1435,6 +1486,7 @@ volume_suite (void)
   tcase_add_test (tc_chain, test_wrong_caps);
   tcase_add_test (tc_chain, test_passthrough);
   tcase_add_test (tc_chain, test_controller_usability);
+  tcase_add_test (tc_chain, test_controller_processing);
 
   return s;
 }

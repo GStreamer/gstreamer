@@ -1,3 +1,24 @@
+2008-11-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/volume/gstvolume.c: (volume_choose_func),
+	(volume_update_volume), (gst_volume_set_volume),
+	(gst_volume_get_volume), (gst_volume_set_mute),
+	(gst_volume_class_init), (gst_volume_init),
+	(volume_process_double), (volume_process_float),
+	(volume_process_int32), (volume_process_int32_clamp),
+	(volume_process_int24), (volume_process_int24_clamp),
+	(volume_process_int16), (volume_process_int16_clamp),
+	(volume_process_int8), (volume_process_int8_clamp), (volume_setup),
+	(volume_transform_ip), (volume_set_property),
+	(volume_get_property):
+	* gst/volume/gstvolume.h:
+	Cleanup volume, define and use default values.
+	Recalculate new volume and mute setup before processing. Fixes #561789.
+
+	* tests/check/elements/volume.c: (GST_START_TEST), (volume_suite):
+	Add controller unit test. Patch by: Jonathan Matthew
+	Fix bogus test that messed with basetransform's internal state.
+
 2008-11-22  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/videorate/gstvideorate.c:
