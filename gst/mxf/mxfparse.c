@@ -376,14 +376,19 @@ mxf_product_version_parse (MXFProductVersion * product_version,
 
   memset (product_version, 0, sizeof (MXFProductVersion));
 
-  if (size < 10)
+  if (size < 9)
     return FALSE;
 
   product_version->major = GST_READ_UINT16_BE (data);
   product_version->minor = GST_READ_UINT16_BE (data + 2);
   product_version->patch = GST_READ_UINT16_BE (data + 4);
   product_version->build = GST_READ_UINT16_BE (data + 6);
-  product_version->release = GST_READ_UINT16_BE (data + 8);
+
+  /* Avid writes a 9 byte product version */
+  if (size == 9)
+    product_version->release = GST_READ_UINT8 (data + 8);
+  else
+    product_version->release = GST_READ_UINT16_BE (data + 8);
 
   return TRUE;
 }
@@ -921,8 +926,6 @@ mxf_metadata_identification_parse (const MXFUL * key,
         break;
       case 0x3c03:
         GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 10)
-          goto error;
         if (!mxf_product_version_parse (&identification->product_version,
                 tag_data, tag_size))
           goto error;
@@ -939,16 +942,12 @@ mxf_metadata_identification_parse (const MXFUL * key,
         break;
       case 0x3c06:
         GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 8)
-          goto error;
         if (!mxf_timestamp_parse (&identification->modification_date, tag_data,
                 tag_size))
           goto error;
         break;
       case 0x3c07:
         GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 10)
-          goto error;
         if (!mxf_product_version_parse (&identification->toolkit_version,
                 tag_data, tag_size))
           goto error;
@@ -1126,7 +1125,7 @@ mxf_metadata_content_storage_parse (const MXFUL * key,
   for (i = 0; i < content_storage->n_packages; i++)
     GST_DEBUG ("  package %u = %s", i,
         mxf_ul_to_string (&content_storage->packages_uids[i], str));
-  for (i = 0; i < content_storage->n_packages; i++)
+  for (i = 0; i < content_storage->n_essence_container_data; i++)
     GST_DEBUG ("  essence container data %u = %s", i,
         mxf_ul_to_string (&content_storage->essence_container_data_uids[i],
             str));

@@ -1,3 +1,17 @@
+2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_klv_packet),
+	(gst_mxf_demux_handle_klv_packet), (gst_mxf_demux_chain):
+	* gst/mxf/mxfparse.c: (mxf_product_version_parse),
+	(mxf_metadata_identification_parse),
+	(mxf_metadata_content_storage_parse):
+	Allow non-MXF KLV packets and just drop them instead of throwing
+	an error and handle 9 byte product versions as written by Avid.
+	This doesn't add support for the non-standard Avid MXF files
+	but at least makes it possible to parse their header metadata.
+
+	Fix a copy&paste error in debug output.
+
 2008-11-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/jack/gstjackaudiosink.c:

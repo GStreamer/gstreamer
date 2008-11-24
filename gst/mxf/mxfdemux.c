@@ -1127,8 +1127,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1982,7 +1983,6 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
   const guint8 *data;
   guint64 data_offset = 0;
   guint64 length;
-  gchar key_str[48];
   GstFlowReturn ret = GST_FLOW_OK;
 
   memset (key, 0, sizeof (MXFUL));
@@ -1993,13 +1993,6 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
     goto beach;
 
   data = GST_BUFFER_DATA (buffer);
-
-  if (!mxf_is_mxf_packet ((const MXFUL *) data)) {
-    GST_ERROR_OBJECT (demux, "Not an MXF packet, skipping. Key: %s",
-        mxf_ul_to_string ((const MXFUL *) data, key_str));
-    ret = GST_FLOW_ERROR;
-    goto beach;
-  }
 
   memcpy (key, GST_BUFFER_DATA (buffer), 16);
 
@@ -2243,7 +2236,12 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
       goto beach;
   }
 
-  if (mxf_is_partition_pack (key)) {
+  if (!mxf_is_mxf_packet (key)) {
+    GST_WARNING_OBJECT (demux,
+        "Skipping non-MXF packet of size %u at offset %"
+        G_GUINT64_FORMAT ", key: %s", GST_BUFFER_SIZE (buffer), demux->offset,
+        mxf_ul_to_string (key, key_str));
+  } else if (mxf_is_partition_pack (key)) {
     ret = gst_mxf_demux_handle_partition_pack (demux, key, buffer);
   } else if (mxf_is_primer_pack (key)) {
     ret = gst_mxf_demux_handle_primer_pack (demux, key, buffer);
@@ -2414,7 +2412,6 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   guint64 length = 0;
   guint64 offset = 0;
   GstBuffer *buffer = NULL;
-  gchar key_str[48];
 
   demux = GST_MXF_DEMUX (gst_pad_get_parent (pad));
 
@@ -2487,13 +2484,6 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
 
     /* Pull 16 byte key and first byte of BER encoded length */
     data = gst_adapter_peek (demux->adapter, 17);
-
-    if (!mxf_is_mxf_packet ((const MXFUL *) data)) {
-      GST_ERROR_OBJECT (demux, "Not an MXF packet, skipping. Key: %s",
-          mxf_ul_to_string ((const MXFUL *) data, key_str));
-      ret = GST_FLOW_ERROR;
-      break;
-    }
 
     memcpy (&key, data, 16);
 
