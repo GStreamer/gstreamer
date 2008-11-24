@@ -1101,7 +1101,7 @@ static gboolean
 gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   gchar *location, *hostname = NULL;
-  gboolean ret;
+  gboolean ret = FALSE;
   GstFileSrc *src = GST_FILE_SRC (handler);
 
   if (strcmp (uri, "file://") == 0) {
@@ -1116,17 +1116,13 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 
   if (!location) {
     GST_WARNING_OBJECT (src, "Invalid URI '%s' for filesrc", uri);
-    return FALSE;
+    goto beach;
   }
 
-  if (hostname) {
-    if (strcmp (hostname, "localhost")) {
-      /* Only 'localhost' is permitted */
-      GST_WARNING_OBJECT (src, "Invalid hostname '%s' for filesrc", hostname);
-      g_free (hostname);
-      return FALSE;
-    }
-    g_free (hostname);
+  if ((hostname) && (strcmp (hostname, "localhost"))) {
+    /* Only 'localhost' is permitted */
+    GST_WARNING_OBJECT (src, "Invalid hostname '%s' for filesrc", hostname);
+    goto beach;
   }
 #ifdef G_OS_WIN32
   /* Unfortunately, g_filename_from_uri() doesn't handle some UNC paths
@@ -1139,7 +1135,12 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 #endif
 
   ret = gst_file_src_set_location (src, location);
-  g_free (location);
+
+beach:
+  if (location)
+    g_free (location);
+  if (hostname)
+    g_free (hostname);
 
   return ret;
 }

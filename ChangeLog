@@ -1,3 +1,8 @@
+2008-11-24  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):
+	Fix memory leak.
+
 2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Simon Holm Thøgersen <odie at cs dot aau dot dk>
