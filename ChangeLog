@@ -1,3 +1,9 @@
+2008-11-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	  Time is already in running_time. Remove base_time handling. Fixes
+	  audiosinks not draining and thus chopping some audio in the end.
+
 2008-11-24  David Schleef  <ds@schleef.org>
 
 	* ext/ogg/gstoggmux.c:

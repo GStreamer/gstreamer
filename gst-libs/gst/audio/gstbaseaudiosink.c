@@ -709,8 +709,6 @@ gst_base_audio_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
 static gboolean
 gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 {
-  GstClockTime base_time;
-
   if (!sink->ringbuffer)
     return TRUE;
   if (!sink->ringbuffer->spec.rate)
@@ -733,18 +731,6 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
     GST_DEBUG_OBJECT (sink,
         "last sample %" G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT,
         sink->next_sample, GST_TIME_ARGS (time));
-
-    /* our time already includes the base_time, _wait_eos() wants a running_time
-     * so we have to subtract the base_time again here. FIXME, store an
-     * unadjusted EOS time so that we don't have to do this. */
-    GST_OBJECT_LOCK (sink);
-    base_time = GST_ELEMENT_CAST (sink)->base_time;
-    GST_OBJECT_UNLOCK (sink);
-
-    if (time > base_time)
-      time -= base_time;
-    else
-      time = 0;
 
     /* wait for the EOS time to be reached, this is the time when the last
      * sample is played. */
