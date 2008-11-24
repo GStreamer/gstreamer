@@ -1,3 +1,11 @@
+2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Simon Holm Thøgersen <odie at cs dot aau dot dk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_chain):
+	Add support for the STATE_SEQUENCE_MODIFIED state in mpeg2dec
+	>= 0.5.0. Fixes bug #562065.
+
 2008-11-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_chain):

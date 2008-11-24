@@ -1122,6 +1122,11 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (mpeg2dec, "parse state %d", state);
 
     switch (state) {
+#if MPEG2_RELEASE >= MPEG2_VERSION (0, 5, 0)
+      case STATE_SEQUENCE_MODIFIED:
+        GST_DEBUG_OBJECT (mpeg2dec, "sequence modified");
+        /* fall through */
+#endif
       case STATE_SEQUENCE:
         ret = handle_sequence (mpeg2dec, info);
         /* if there is an error handling the sequence
