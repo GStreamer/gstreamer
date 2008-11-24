@@ -1,3 +1,10 @@
+2008-11-24  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_acceptcaps):
+	Revert quick accepcaps attempt, it's not fully equivalent to the old
+	behaviour and thus causes regressions.
+
 2008-11-24  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):

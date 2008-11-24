@@ -979,9 +979,12 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
+#if 0
   /* we need fixed caps for the check, fall back to the default implementation
    * if we don't */
-  if (!gst_caps_is_fixed (caps)) {
+  if (!gst_caps_is_fixed (caps))
+#endif
+  {
     GstCaps *allowed, *intersect;
 
     GST_DEBUG_OBJECT (pad, "non fixed accept caps %" GST_PTR_FORMAT, caps);
@@ -1003,7 +1006,9 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
 
     if (!ret)
       goto no_transform_possible;
-  } else {
+  }
+#if 0
+  else {
     GST_DEBUG_OBJECT (pad, "accept caps %" GST_PTR_FORMAT, caps);
 
     /* find best possible caps for the other pad as a way to see if we can
@@ -1014,6 +1019,7 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
 
     GST_DEBUG_OBJECT (pad, "we can transform to %" GST_PTR_FORMAT, othercaps);
   }
+#endif
 
 done:
   if (othercaps)
