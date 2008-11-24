@@ -79,6 +79,8 @@ typedef struct
   gboolean prev_delta;          /* was the previous buffer a delta frame */
 
   GstPadEventFunction collect_event;
+
+  gboolean always_flush_page;
 }
 GstOggPad;
 

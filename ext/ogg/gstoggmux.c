@@ -876,6 +876,7 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
       res = g_list_append (res, pad->buffer);
       pad->buffer = pad->next_buffer;
       pad->next_buffer = NULL;
+      pad->always_flush_page = TRUE;
     } else {
       GST_LOG_OBJECT (thepad, "caps don't have streamheader");
     }
@@ -1040,9 +1041,11 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
     if (gst_structure_has_name (structure, "video/x-theora")) {
       GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Theora");
       hbufs = g_list_prepend (hbufs, hbuf);
+      pad->always_flush_page = TRUE;
     } else if (gst_structure_has_name (structure, "video/x-dirac")) {
       GST_DEBUG_OBJECT (thepad, "putting %s page at the front", "Dirac");
       hbufs = g_list_prepend (hbufs, hbuf);
+      pad->always_flush_page = TRUE;
     } else {
       hbufs = g_list_append (hbufs, hbuf);
     }
@@ -1279,7 +1282,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
     tmpbuf = NULL;
 
     /* we flush when we see a new keyframe */
-    force_flush = (pad->prev_delta && !delta_unit);
+    force_flush = (pad->prev_delta && !delta_unit) || pad->always_flush_page;
     if (duration != -1) {
       pad->duration += duration;
       /* if page duration exceeds max, flush page */
