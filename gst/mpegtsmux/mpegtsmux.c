@@ -103,11 +103,20 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("video/mpeg, mpegversion=(int) { 1, 2, 4 }, "
+    GST_STATIC_CAPS ("video/mpeg, "
+        "mpegversion = (int) { 1, 2, 4 }, "
         "systemstream = (boolean) false; "
         "video/x-dirac;"
-        "video/x-h264;" "audio/mpeg, mpegversion = (int) { 1, 2, 4 }")
-    );
+        "video/x-h264;"
+        "audio/mpeg, "
+        "mpegversion = (int) { 1, 2, 4 };"
+        "audio/x-lpcm, "
+        "width = (int) { 16, 20, 24 }, "
+        "rate = (int) { 48000, 96000 }, "
+        "channels = (int) [ 1, 8 ], "
+        "dynamic_range = (int) [ 0, 255 ], "
+        "emphasis = (boolean) { FALSE, TRUE }, "
+        "mute = (boolean) { FALSE, TRUE }; " "audio/x-ac3;" "audio/x-dts"));
 
 static GstStaticPadTemplate mpegtsmux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -284,6 +293,19 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
     GST_DEBUG_OBJECT (pad, "Creating Dirac stream with PID 0x%04x",
         ts_data->pid);
     ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_VIDEO_DIRAC,
+        ts_data->pid);
+  } else if (gst_structure_has_name (s, "audio/x-ac3")) {
+    GST_DEBUG_OBJECT (pad, "Creating AC3 stream with PID 0x%04x", ts_data->pid);
+    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_PS_AUDIO_AC3,
+        ts_data->pid);
+  } else if (gst_structure_has_name (s, "audio/x-dts")) {
+    GST_DEBUG_OBJECT (pad, "Creating DTS stream with PID 0x%04x", ts_data->pid);
+    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_PS_AUDIO_DTS,
+        ts_data->pid);
+  } else if (gst_structure_has_name (s, "audio/x-lpcm")) {
+    GST_DEBUG_OBJECT (pad, "Creating LPCM stream with PID 0x%04x",
+        ts_data->pid);
+    ts_data->stream = tsmux_create_stream (mux->tsmux, TSMUX_ST_PS_AUDIO_LPCM,
         ts_data->pid);
   } else if (gst_structure_has_name (s, "video/x-h264")) {
     const GValue *value;

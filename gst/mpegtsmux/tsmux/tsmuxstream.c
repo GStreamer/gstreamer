@@ -143,14 +143,31 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
     case TSMUX_ST_VIDEO_DIRAC:
+    case TSMUX_ST_PS_AUDIO_LPCM:
+    case TSMUX_ST_PS_AUDIO_AC3:
+    case TSMUX_ST_PS_AUDIO_DTS:
       stream->id = 0xFD;
       /* FIXME: assign sequential extended IDs? */
-      stream->id_extended = 0x60;
-
+      switch (stream_type) {
+        case TSMUX_ST_VIDEO_DIRAC:
+          stream->id_extended = 0x60;
+          stream->is_video_stream = TRUE;
+          break;
+        case TSMUX_ST_PS_AUDIO_LPCM:
+          stream->id_extended = 0x80;
+          break;
+        case TSMUX_ST_PS_AUDIO_AC3:
+          stream->id_extended = 0x81;
+          break;
+        case TSMUX_ST_PS_AUDIO_DTS:
+          stream->id_extended = 0x82;
+          break;
+        default:
+          break;
+      }
       stream->pi.flags |=
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_EXT_STREAMID;
-      stream->is_video_stream = TRUE;
       break;
     default:
       g_critical ("Stream type 0x%0x not yet implemented", stream_type);

@@ -1,5 +1,14 @@
 2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: vanista <vanista at gmail dot com>
+
+	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_create_stream):
+	* gst/mpegtsmux/tsmux/tsmuxstream.c: (tsmux_stream_new):
+	Add initial support for muxing AC3/DTS/LPCM into MPEG TS.
+	Fixes bug #550613.
+
+2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_klv_packet),
 	(gst_mxf_demux_handle_klv_packet), (gst_mxf_demux_chain):
 	* gst/mxf/mxfparse.c: (mxf_product_version_parse),
