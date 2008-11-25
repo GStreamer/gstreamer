@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <2007> Nokia Corporation (contact <stefan.kost@nokia.com>)
- *               <2007> Wim Taymans <wim@fluendo.com>
+ *               <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -31,11 +31,11 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4adepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp4adepay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP MPEG4 audio depayloader",
     "Codec/Depayloader/Network",
     "Extracts MPEG4 audio from RTP packets (RFC 3016)",
     "Nokia Corporation (contact <stefan.kost@nokia.com>), "
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_mp4a_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

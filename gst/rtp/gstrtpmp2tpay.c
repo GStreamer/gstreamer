@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,10 +29,10 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp2t_pay_details =
-GST_ELEMENT_DETAILS ("RTP MP2T audio payloader",
+GST_ELEMENT_DETAILS ("RTP MPEG2 Transport Stream payloader",
     "Codec/Payloader/Network",
     "Payload-encodes MPEG2 TS into RTP packets (RFC 2250)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_mp2t_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

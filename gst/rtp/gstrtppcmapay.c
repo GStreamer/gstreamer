@@ -31,7 +31,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_pcma_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP PCMA payloader",
     "Codec/Payloader/Network",
     "Payload-encodes PCMA audio into a RTP packet",
     "Edgard Lima <edgard.lima@indt.org.br>");

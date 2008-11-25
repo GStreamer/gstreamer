@@ -33,9 +33,9 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_g729depay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP G.729 depayloader",
     "Codec/Depayloader/Network",
-    "Extracts G729 audio from RTP packets (RFC 3551)",
+    "Extracts G.729 audio from RTP packets (RFC 3551)",
     "Laurent Glayal <spglegle@yahoo.fr>");
 
 enum

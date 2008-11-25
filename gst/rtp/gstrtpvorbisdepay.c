@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -36,10 +36,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbis_depay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP Vorbis depayloader",
     "Codec/Depayloader/Network",
     "Extracts Vorbis Audio from RTP packets (RFC 5215)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_vorbis_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

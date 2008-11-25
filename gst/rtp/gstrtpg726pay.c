@@ -31,7 +31,7 @@
 #include "gstrtpg726pay.h"
 
 static const GstElementDetails gst_rtp_g726_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP G.726 payloader",
     "Codec/Payloader/Network",
     "Payload-encodes G.726 audio into a RTP packet",
     "Axis Communications <dev-gstreamer@axis.com>");

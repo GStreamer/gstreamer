@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,10 +28,10 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263pdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP H263 depayloader",
     "Codec/Depayloader/Network",
     "Extracts H263/+/++ video from RTP packets (RFC 4629)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_h263p_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

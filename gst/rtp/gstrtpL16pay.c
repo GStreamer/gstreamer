@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,10 +35,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpL16pay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_L16_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP audio payloader",
     "Codec/Payloader/Network",
     "Payload-encode Raw audio into RTP packets (RFC 3551)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_L16_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

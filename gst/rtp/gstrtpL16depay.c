@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,10 +35,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpL16depay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_L16_depay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP audio depayloader",
     "Codec/Depayloader/Network",
     "Extracts raw audio from RTP packets",
-    "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim@fluendo.com>");
+    "Zeeshan Ali <zak147@yahoo.com>," "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_L16_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

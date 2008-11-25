@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,10 +44,10 @@ static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h264depay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP H264 depayloader",
     "Codec/Depayloader/Network",
     "Extracts H264 video from RTP packets (RFC 3984)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_h264_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

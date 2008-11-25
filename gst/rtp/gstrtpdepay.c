@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,10 +25,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails rtpdepay_details =
-GST_ELEMENT_DETAILS ("RTP depayloader",
+GST_ELEMENT_DETAILS ("Dummy RTP session manager",
     "Codec/Depayloader/Network",
     "Accepts raw RTP and RTCP packets and sends them forward",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_depay_src_rtp_template =
 GST_STATIC_PAD_TEMPLATE ("srcrtp",

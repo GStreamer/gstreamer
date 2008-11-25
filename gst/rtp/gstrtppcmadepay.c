@@ -29,7 +29,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_pcmadepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP PCMA depayloader",
     "Codec/Depayloader/Network",
     "Extracts PCMA audio from RTP packets",
     "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");

@@ -37,7 +37,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_g726depay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP G.726 depayloader",
     "Codec/Depayloader/Network",
     "Extracts G.726 audio from RTP packets",
     "Axis Communications <dev-gstreamer@axis.com>");

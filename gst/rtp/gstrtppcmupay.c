@@ -31,7 +31,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_pcmu_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP PCMU payloader",
     "Codec/Payloader/Network",
     "Payload-encodes PCMU audio into a RTP packet",
     "Edgard Lima <edgard.lima@indt.org.br>");

@@ -27,7 +27,7 @@
 
 /* elementfactory information */
 static GstElementDetails gst_rtpilbcpay_details = {
-  "RTP Payloader for iLBC Audio",
+  "RTP iLBC Payloader",
   "Codec/Payloader/Network",
   "Packetize iLBC audio streams into RTP packets",
   "Philippe Kalaf <philippe.kalaf@collabora.co.uk>"

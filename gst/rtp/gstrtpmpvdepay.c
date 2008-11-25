@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -31,10 +31,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpmpvdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mpvdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP MPEG video depayloader",
     "Codec/Depayloader/Network",
     "Extracts MPEG video from RTP packets (RFC 2250)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* FIXME, we set the mpeg version to 2, we should ideally be looking at contents
  * of the stream to figure out the version */

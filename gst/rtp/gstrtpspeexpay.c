@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpspeexpay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_speex_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP Speex payloader",
     "Codec/Payloader/Network",
     "Payload-encodes Speex audio into a RTP packet",
     "Edgard Lima <edgard.lima@indt.org.br>");

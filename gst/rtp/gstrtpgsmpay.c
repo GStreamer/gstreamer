@@ -33,7 +33,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpgsmpay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_gsm_pay_details =
-GST_ELEMENT_DETAILS ("RTP GSM audio payloader",
+GST_ELEMENT_DETAILS ("RTP GSM payloader",
     "Codec/Payloader/Network",
     "Payload-encodes GSM audio into a RTP packet",
     "Zeeshan Ali <zeenix@gmail.com>");

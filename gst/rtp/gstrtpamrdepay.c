@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -39,10 +39,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpamrdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_amrdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP AMR depayloader",
     "Codec/Depayloader/Network",
     "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* RtpAMRDepay signals and args */
 enum

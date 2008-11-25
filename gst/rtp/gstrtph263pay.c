@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -145,7 +145,7 @@ typedef struct _GstH263PictureLayer
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP H263 payloader",
     "Codec/Payloader/Network",
     "Payload-encodes H263 video in RTP packets (RFC 2190)",
     "Neil Stratford <neils@vipadia.com>");

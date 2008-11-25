@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,10 +28,10 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp2tdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP MPEG Transport Stream depayloader",
     "Codec/Depayloader/Network",
     "Extracts MPEG2 TS from RTP packets (RFC 2250)",
-    "Wim Taymans <wim@fluendo.com>\n"
+    "Wim Taymans <wim.taymans@gmail.com>\n"
     "Thijs Vermeir <thijs.vermeir@barco.com>");
 
 /* RtpMP2TDepay signals and args */

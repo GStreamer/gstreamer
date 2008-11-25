@@ -1,3 +1,84 @@
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstasteriskh263.c:
+	* gst/rtp/gstasteriskh263.h:
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_setcaps):
+	* gst/rtp/gstrtpL16depay.h:
+	* gst/rtp/gstrtpL16pay.c:
+	* gst/rtp/gstrtpL16pay.h:
+	* gst/rtp/gstrtpac3depay.c: (gst_rtp_ac3_depay_setcaps):
+	* gst/rtp/gstrtpac3depay.h:
+	* gst/rtp/gstrtpamrdepay.c:
+	* gst/rtp/gstrtpamrdepay.h:
+	* gst/rtp/gstrtpamrpay.c:
+	* gst/rtp/gstrtpamrpay.h:
+	* gst/rtp/gstrtpdepay.c:
+	* gst/rtp/gstrtpdepay.h:
+	* gst/rtp/gstrtpdvdepay.c: (gst_rtp_dv_depay_setcaps):
+	* gst/rtp/gstrtpg726depay.c:
+	* gst/rtp/gstrtpg726pay.c:
+	* gst/rtp/gstrtpg729depay.c:
+	* gst/rtp/gstrtpg729pay.c:
+	* gst/rtp/gstrtpgsmdepay.c:
+	* gst/rtp/gstrtpgsmpay.c: (gst_rtp_gsm_pay_setcaps):
+	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_setcaps):
+	* gst/rtp/gstrtph263depay.h:
+	* gst/rtp/gstrtph263pay.c:
+	* gst/rtp/gstrtph263pay.h:
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_setcaps):
+	* gst/rtp/gstrtph263pdepay.h:
+	* gst/rtp/gstrtph263ppay.c:
+	* gst/rtp/gstrtph263ppay.h:
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtph264depay.h:
+	* gst/rtp/gstrtph264pay.c:
+	* gst/rtp/gstrtph264pay.h:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpilbcpay.c:
+	* gst/rtp/gstrtpjpegdepay.h:
+	* gst/rtp/gstrtpmp1sdepay.c: (gst_rtp_mp1s_depay_setcaps):
+	* gst/rtp/gstrtpmp1sdepay.h:
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_setcaps):
+	* gst/rtp/gstrtpmp2tdepay.h:
+	* gst/rtp/gstrtpmp2tpay.c:
+	* gst/rtp/gstrtpmp2tpay.h:
+	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_setcaps):
+	* gst/rtp/gstrtpmp4apay.c:
+	* gst/rtp/gstrtpmp4apay.h:
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_setcaps):
+	* gst/rtp/gstrtpmp4gdepay.h:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4gpay.h:
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_setcaps):
+	* gst/rtp/gstrtpmp4vdepay.h:
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_event):
+	* gst/rtp/gstrtpmp4vpay.h:
+	* gst/rtp/gstrtpmpadepay.c:
+	* gst/rtp/gstrtpmpadepay.h:
+	* gst/rtp/gstrtpmpapay.c:
+	* gst/rtp/gstrtpmpapay.h:
+	* gst/rtp/gstrtpmpvdepay.c:
+	* gst/rtp/gstrtpmpvdepay.h:
+	* gst/rtp/gstrtppcmadepay.c: (gst_rtp_pcma_depay_process):
+	* gst/rtp/gstrtppcmapay.c:
+	* gst/rtp/gstrtppcmudepay.c:
+	* gst/rtp/gstrtppcmupay.c:
+	* gst/rtp/gstrtpspeexdepay.c:
+	* gst/rtp/gstrtpspeexpay.c:
+	* gst/rtp/gstrtpsv3vdepay.c:
+	* gst/rtp/gstrtpsv3vdepay.h:
+	* gst/rtp/gstrtptheoradepay.c:
+	* gst/rtp/gstrtptheoradepay.h:
+	* gst/rtp/gstrtptheorapay.c:
+	* gst/rtp/gstrtptheorapay.h:
+	* gst/rtp/gstrtpvorbisdepay.c:
+	* gst/rtp/gstrtpvorbisdepay.h:
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_finish_headers):
+	* gst/rtp/gstrtpvorbispay.h:
+	* gst/rtp/gstrtpvrawdepay.c: (gst_rtp_vraw_depay_setcaps):
+	* gst/rtp/gstrtpvrawpay.c:
+	Fix the descriptions and fix some email addresses.
+
 2008-11-25  Julien Moutte  <julien@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps): Add MPG1 and MPG2 fourcc

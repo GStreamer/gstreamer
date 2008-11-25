@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,7 +49,7 @@ typedef struct _GstAsteriskH263Header
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263p_depaydetails =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP Asterisk H263 depayloader",
     "Codec/Depayloader/Network",
     "Extracts H263 video from RTP and encodes in Asterisk H263 format",
     "Neil Stratford <neils@vipadia.com>");

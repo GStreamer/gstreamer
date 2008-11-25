@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,10 +45,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpamrpay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_amrpay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP AMR payloader",
     "Codec/Payloader/Network",
     "Payload-encode AMR or AMR-WB audio into RTP packets (RFC 3267)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_amr_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",

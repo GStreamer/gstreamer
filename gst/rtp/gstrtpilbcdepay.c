@@ -28,7 +28,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_ilbc_depay_details =
-GST_ELEMENT_DETAILS ("RTP iLBC packet depayloader",
+GST_ELEMENT_DETAILS ("RTP iLBC depayloader",
     "Codec/Depayloader/Network",
     "Extracts iLBC audio from RTP packets (RFC 3952)",
     "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");

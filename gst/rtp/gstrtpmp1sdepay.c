@@ -28,7 +28,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp1sdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP MPEG1 System Stream depayloader",
     "Codec/Depayloader/Network",
     "Extracts MPEG1 System Streams from RTP packets (RFC 3555)",
     "Wim Taymans <wim.taymans@gmail.com>");

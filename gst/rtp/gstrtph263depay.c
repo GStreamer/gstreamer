@@ -4,7 +4,7 @@
  * Copyright 2007 Collabora Ltd,
  *  @author: Philippe Kalaf <philippe.kalaf@collabora.co.uk>
  *
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005> Wim Taymans <wim.taymans@gmail.com>
  *               <2007> Edward Hervey <bilboed@bilboed.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (rtph263depay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263depay_details =
-GST_ELEMENT_DETAILS ("RTP H263 packet depayloader",
+GST_ELEMENT_DETAILS ("RTP H263 depayloader",
     "Codec/Depayloader/Network",
     "Extracts H263 video from RTP packets (RFC 2190)",
     "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "

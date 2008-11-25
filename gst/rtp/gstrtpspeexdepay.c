@@ -29,7 +29,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_speexdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP Speex depayloader",
     "Codec/Depayloader/Network",
     "Extracts Speex audio from RTP packets",
     "Edgard Lima <edgard.lima@indt.org.br>");

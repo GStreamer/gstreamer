@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,10 +32,10 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4gpay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp4gpay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP MPEG4 ES payloader",
     "Codec/Payloader/Network",
     "Payload MPEG4 elementary streams as RTP packets (RFC 3640)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_mp4g_pay_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",

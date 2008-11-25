@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpgsmdepay_debug);
 
 /* elementfactory information */
 static GstElementDetails gst_rtp_gsmdepay_details = {
-  "RTP packet depayloader",
+  "RTP GSM depayloader",
   "Codec/Depayloader/Network",
   "Extracts GSM audio from RTP packets",
   "Zeeshan Ali <zeenix@gmail.com>"

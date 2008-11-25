@@ -53,9 +53,9 @@ gst_rtp_g729_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buf);
 
 
 static const GstElementDetails gst_rtp_g729_pay_details =
-GST_ELEMENT_DETAILS ("G729 RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP G.729 payloader",
     "Codec/Payloader/Network",
-    "Packetize G729 audio into RTP packets",
+    "Packetize G.729 audio into RTP packets",
     "Olivier Crete <olivier.crete@collabora.co.uk>");
 
 static GstStaticPadTemplate gst_rtp_g729_pay_sink_template =

@@ -42,7 +42,7 @@ GST_DEBUG_CATEGORY_STATIC (rtph264pay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h264pay_details =
-GST_ELEMENT_DETAILS ("RTP packet payloader",
+GST_ELEMENT_DETAILS ("RTP H264 payloader",
     "Codec/Payloader/Network",
     "Payload-encode H264 video into RTP packets (RFC 3984)",
     "Laurent Glayal <spglegle@yahoo.fr>");

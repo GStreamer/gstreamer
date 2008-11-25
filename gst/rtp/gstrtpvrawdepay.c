@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpvrawdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vrawdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet depayloader",
+GST_ELEMENT_DETAILS ("RTP Raw Video depayloader",
     "Codec/Depayloader/Network",
     "Extracts raw video from RTP packets (RFC 4175)",
     "Wim Taymans <wim.taymans@gmail.com>");
