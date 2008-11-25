@@ -1,3 +1,9 @@
+2008-11-25  Julien Moutte  <julien@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps): Add MPG1 and MPG2 fourcc
+	to supported qtdemux video codecs as I found some video clips using 
+	those.
+
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_detect):

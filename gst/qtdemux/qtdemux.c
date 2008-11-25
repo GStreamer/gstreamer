@@ -4682,6 +4682,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           NULL);
       break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
+    case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
       _codec ("MPEG-1 video");
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -4699,6 +4700,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('m', 'x', '3', 'p'): // MPEG2 IMX PAL 625/50 30mb/s produced by FCP
     case GST_MAKE_FOURCC ('x', 'd', 'v', '2'): // XDCAM HD 1080i60
     case GST_MAKE_FOURCC ('A', 'V', 'm', 'p'): // AVID IMX PAL
+    case GST_MAKE_FOURCC ('m', 'p', 'g', '2'): // AVID IMX PAL
       _codec ("MPEG-2 video");
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
