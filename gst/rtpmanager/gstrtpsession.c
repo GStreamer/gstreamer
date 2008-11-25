@@ -1373,6 +1373,7 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
   return ret;
 
 }
+
 static GList *
 gst_rtp_session_internal_links (GstPad * pad)
 {
@@ -1551,7 +1552,7 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
-  gboolean ret = FALSE;
+  gboolean ret;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
@@ -1560,10 +1561,13 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_LATENCY:
+      gst_event_unref (event);
       ret = TRUE;
       break;
     default:
       /* other events simply fail for now */
+      gst_event_unref (event);
+      ret = FALSE;
       break;
   }
 

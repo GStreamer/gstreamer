@@ -1,3 +1,9 @@
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_event_send_rtcp_src):
+	Fix event leak.
+
 2008-11-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfmpeg.c: (mxf_mpeg_video_create_caps):
