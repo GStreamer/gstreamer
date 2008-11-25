@@ -1,5 +1,10 @@
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/icles/.cvsignore:
+	cvsignore newly generated file.
+
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/gstasteriskh263.c:
 	* gst/rtp/gstasteriskh263.h:
 	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_setcaps):
