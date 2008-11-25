@@ -126,6 +126,7 @@ void mxf_metadata_generic_sound_essence_descriptor_reset (MXFMetadataGenericSoun
 gboolean mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
     const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
 void mxf_metadata_generic_picture_essence_descriptor_reset (MXFMetadataGenericPictureEssenceDescriptor *descriptor);
+void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor *descriptor, GstCaps *caps);
 
 gboolean mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
     const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);

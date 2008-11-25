@@ -2278,11 +2278,38 @@ void mxf_metadata_generic_picture_essence_descriptor_reset
   memset (descriptor, 0, sizeof (MXFMetadataGenericPictureEssenceDescriptor));
 }
 
+void mxf_metadata_generic_picture_essence_descriptor_set_caps
+    (MXFMetadataGenericPictureEssenceDescriptor * descriptor, GstCaps * caps)
+{
+  guint par_n, par_d;
+  guint width, height;
+
+  g_return_if_fail (descriptor != NULL);
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  width = descriptor->stored_width;
+  height = descriptor->stored_height;
+
+  if (width == 0 || height == 0)
+    return;
+
+  gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height", G_TYPE_INT,
+      height, NULL);
+
+  if (descriptor->aspect_ratio.n == 0 || descriptor->aspect_ratio.d == 0)
+    return;
+
+  par_n = height * descriptor->aspect_ratio.n;
+  par_d = width * descriptor->aspect_ratio.d;
+
+  gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+      par_n, par_d, NULL);
+}
+
 gboolean
     mxf_metadata_cdci_picture_essence_descriptor_handle_tag
     (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
-    guint16 tag, const guint8 * tag_data, guint16 tag_size)
-{
+    guint16 tag, const guint8 * tag_data, guint16 tag_size) {
   MXFMetadataCDCIPictureEssenceDescriptor *descriptor =
       (MXFMetadataCDCIPictureEssenceDescriptor *) d;
   gboolean ret = FALSE;

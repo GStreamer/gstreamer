@@ -23,6 +23,7 @@
 
 /* TODO:
  * - Handle PES streams
+ * - Fix TS/PS demuxers to forward timestamps
  */
 
 #ifdef HAVE_CONFIG_H
@@ -242,7 +243,9 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
 {
   MXFMetadataMPEGVideoDescriptor *d = NULL;
   MXFMetadataFileDescriptor *f = NULL;
+  MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
   guint i;
+  GstCaps *caps = NULL;
 
   g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
@@ -257,12 +260,16 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
         MXF_METADATA_MPEG_VIDEO_DESCRIPTOR) {
       d = (MXFMetadataMPEGVideoDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       break;
     } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR
-        || ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
-        || ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
+        MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR ||
+        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
+        MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR) {
+      f = track->descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
+      break;
+    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
         MXF_METADATA_FILE_DESCRIPTOR) {
       f = track->descriptor[i];
     }
@@ -278,7 +285,7 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
   if (f->essence_container.u[13] == 0x04) {
     /* FIXME: get mpeg version somehow */
     GST_DEBUG ("Found MPEG ES stream");
-    return gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
+    caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
   } else if (f->essence_container.u[13] == 0x07) {
     GST_ERROR ("MPEG PES streams not supported yet");
@@ -286,11 +293,16 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
   } else if (f->essence_container.u[13] == 0x08) {
     /* FIXME: get mpeg version somehow */
     GST_DEBUG ("Found MPEG PS stream");
-    return gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
+    caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (f->essence_container.u[13] == 0x09) {
     GST_DEBUG ("Found MPEG TS stream");
-    return gst_caps_new_simple ("video/mpegts", NULL);
+    caps = gst_caps_new_simple ("video/mpegts", NULL);
+
   }
-  return NULL;
+
+  if (p)
+    mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
+
+  return caps;
 }
