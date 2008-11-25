@@ -1,3 +1,45 @@
+2008-11-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c:
+	(mxf_metadata_wave_audio_essence_descriptor_handle_tag):
+	* gst/mxf/mxfaes-bwf.h:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_metadata_generic_descriptor),
+	(gst_mxf_demux_handle_metadata_file_descriptor),
+	(gst_mxf_demux_handle_metadata_multiple_descriptor),
+	(gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_mpeg_video_descriptor),
+	(gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor),
+	(gst_mxf_demux_handle_header_metadata_resolve_references),
+	(gst_mxf_demux_handle_metadata):
+	* gst/mxf/mxfmpeg.c:
+	(mxf_metadata_mpeg_video_descriptor_handle_tag):
+	* gst/mxf/mxfmpeg.h:
+	* gst/mxf/mxfparse.c: (mxf_partition_pack_parse),
+	(mxf_primer_pack_parse), (mxf_metadata_preface_parse),
+	(mxf_metadata_identification_parse),
+	(mxf_metadata_content_storage_parse),
+	(mxf_metadata_essence_container_data_parse),
+	(mxf_metadata_generic_package_parse), (mxf_metadata_track_parse),
+	(mxf_metadata_sequence_parse),
+	(mxf_metadata_structural_component_parse),
+	(mxf_metadata_descriptor_parse),
+	(mxf_metadata_generic_descriptor_handle_tag),
+	(mxf_metadata_generic_descriptor_reset),
+	(mxf_metadata_file_descriptor_handle_tag),
+	(mxf_metadata_generic_sound_essence_descriptor_handle_tag),
+	(mxf_metadata_generic_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_cdci_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_multiple_descriptor_handle_tag),
+	(mxf_metadata_locator_parse):
+	* gst/mxf/mxfparse.h:
+	Rewrite parsing of descriptors to go top-down instead of bottom-up
+	which makes it possible to have the buffer data non-writable.
+
+	Improve debugging a bit.
+
 2008-11-24  Michael Smith <msmith@songbirdnest.com>
 
 	* configure.ac:

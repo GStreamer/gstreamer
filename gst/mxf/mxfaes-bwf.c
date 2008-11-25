@@ -41,154 +41,134 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 
 /* SMPTE 382M Annex 1 */
 gboolean
-mxf_metadata_wave_audio_essence_descriptor_parse (const MXFUL * key,
-    MXFMetadataWaveAudioEssenceDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
+    mxf_metadata_wave_audio_essence_descriptor_handle_tag
+    (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
+    guint16 tag, const guint8 * tag_data, guint16 tag_size)
 {
-  guint16 tag, tag_size;
-  const guint8 *tag_data;
+  MXFMetadataWaveAudioEssenceDescriptor *descriptor =
+      (MXFMetadataWaveAudioEssenceDescriptor *) d;
+  gboolean ret = FALSE;
   gchar str[48];
 
-  g_return_val_if_fail (data != NULL, FALSE);
-
-  memset (descriptor, 0, sizeof (MXFMetadataWaveAudioEssenceDescriptor));
-
-  if (!mxf_metadata_generic_sound_essence_descriptor_parse (key,
-          (MXFMetadataGenericSoundEssenceDescriptor *) descriptor, primer, type,
-          data, size))
-    goto error;
-
-  while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
-    if (tag_size == 0 || tag == 0x0000)
-      goto next;
-
-    switch (tag) {
-      case 0x3d0a:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 2)
-          goto error;
-        descriptor->block_align = GST_READ_UINT16_BE (tag_data);
-        break;
-      case 0x3d0b:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 1)
-          goto error;
-        descriptor->sequence_offset = GST_READ_UINT8 (tag_data);
-        break;
-      case 0x3d09:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->avg_bps = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d32:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 16)
-          goto error;
-        memcpy (&descriptor->channel_assignment, tag_data, 16);
-        break;
-      case 0x3d29:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->peak_envelope_version = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d2a:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->peak_envelope_format = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d2b:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->points_per_peak_value = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d2c:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->peak_envelope_block_size = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d2d:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->peak_channels = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d2e:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 4)
-          goto error;
-        descriptor->peak_frames = GST_READ_UINT32_BE (tag_data);
-        break;
-      case 0x3d2f:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (tag_size != 8)
-          goto error;
-        descriptor->peak_of_peaks_position = GST_READ_UINT64_BE (tag_data);
-        break;
-      case 0x3d30:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (!mxf_timestamp_parse (&descriptor->peak_envelope_timestamp,
-                tag_data, tag_size))
-          goto error;
-        break;
-      case 0x3d31:
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        descriptor->peak_envelope_data = g_memdup (tag_data, tag_size);
-        descriptor->peak_envelope_data_length = tag_size;
-        break;
-      default:
-        if (type != MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR)
-          goto next;
-        GST_WRITE_UINT16_BE (data, 0x0000);
-        if (!gst_metadata_add_custom_tag (primer, tag, tag_data, tag_size,
-                &((MXFMetadataGenericDescriptor *) descriptor)->other_tags))
-          goto error;
-        break;
-    }
-
-  next:
-    data += 4 + tag_size;
-    size -= 4 + tag_size;
+  switch (tag) {
+    case 0x3d0a:
+      if (tag_size != 2)
+        goto error;
+      descriptor->block_align = GST_READ_UINT16_BE (tag_data);
+      GST_DEBUG ("  block align = %u", descriptor->block_align);
+      ret = TRUE;
+      break;
+    case 0x3d0b:
+      if (tag_size != 1)
+        goto error;
+      descriptor->sequence_offset = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  sequence offset = %u", descriptor->sequence_offset);
+      ret = TRUE;
+      break;
+    case 0x3d09:
+      if (tag_size != 4)
+        goto error;
+      descriptor->avg_bps = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  average bps = %u", descriptor->avg_bps);
+      ret = TRUE;
+      break;
+    case 0x3d32:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&descriptor->channel_assignment, tag_data, 16);
+      GST_DEBUG ("  channel assignment = %s",
+          mxf_ul_to_string (&descriptor->channel_assignment, str));
+      ret = TRUE;
+      break;
+    case 0x3d29:
+      if (tag_size != 4)
+        goto error;
+      descriptor->peak_envelope_version = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak envelope version = %u",
+          descriptor->peak_envelope_version);
+      ret = TRUE;
+      break;
+    case 0x3d2a:
+      if (tag_size != 4)
+        goto error;
+      descriptor->peak_envelope_format = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak envelope format = %u",
+          descriptor->peak_envelope_format);
+      ret = TRUE;
+      break;
+    case 0x3d2b:
+      if (tag_size != 4)
+        goto error;
+      descriptor->points_per_peak_value = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  points per peak value = %u",
+          descriptor->points_per_peak_value);
+      ret = TRUE;
+      break;
+    case 0x3d2c:
+      if (tag_size != 4)
+        goto error;
+      descriptor->peak_envelope_block_size = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak envelope block size = %u",
+          descriptor->peak_envelope_block_size);
+      ret = TRUE;
+      break;
+    case 0x3d2d:
+      if (tag_size != 4)
+        goto error;
+      descriptor->peak_channels = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak channels = %u", descriptor->peak_channels);
+      ret = TRUE;
+      break;
+    case 0x3d2e:
+      if (tag_size != 4)
+        goto error;
+      descriptor->peak_frames = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak frames = %u", descriptor->peak_frames);
+      ret = TRUE;
+      break;
+    case 0x3d2f:
+      if (tag_size != 8)
+        goto error;
+      descriptor->peak_of_peaks_position = GST_READ_UINT64_BE (tag_data);
+      GST_DEBUG ("  peak of peaks position = %" G_GINT64_FORMAT,
+          descriptor->peak_of_peaks_position);
+      ret = TRUE;
+      break;
+    case 0x3d30:
+      if (!mxf_timestamp_parse (&descriptor->peak_envelope_timestamp,
+              tag_data, tag_size))
+        goto error;
+      GST_DEBUG ("  peak envelope timestamp = %d/%u/%u %u:%u:%u.%u",
+          descriptor->peak_envelope_timestamp.year,
+          descriptor->peak_envelope_timestamp.month,
+          descriptor->peak_envelope_timestamp.day,
+          descriptor->peak_envelope_timestamp.hour,
+          descriptor->peak_envelope_timestamp.minute,
+          descriptor->peak_envelope_timestamp.second,
+          (descriptor->peak_envelope_timestamp.quarter_msecond * 1000) / 256);
+      ret = TRUE;
+      break;
+    case 0x3d31:
+      descriptor->peak_envelope_data = g_memdup (tag_data, tag_size);
+      descriptor->peak_envelope_data_length = tag_size;
+      GST_DEBUG ("  peak evelope data size = %u",
+          descriptor->peak_envelope_data_length);
+      ret = TRUE;
+      break;
+    default:
+      ret =
+          mxf_metadata_generic_sound_essence_descriptor_handle_tag (d, primer,
+          tag, tag_data, tag_size);
+      break;
   }
 
-  GST_DEBUG ("Parsed wave audio essence descriptor:");
-  GST_DEBUG ("  block align = %u", descriptor->block_align);
-  GST_DEBUG ("  sequence offset = %u", descriptor->sequence_offset);
-  GST_DEBUG ("  average bps = %u", descriptor->avg_bps);
-  GST_DEBUG ("  channel assignment = %s",
-      mxf_ul_to_string (&descriptor->channel_assignment, str));
-  GST_DEBUG ("  peak envelope version = %u", descriptor->peak_envelope_version);
-  GST_DEBUG ("  peak envelope format = %u", descriptor->peak_envelope_format);
-  GST_DEBUG ("  points per peak value = %u", descriptor->points_per_peak_value);
-  GST_DEBUG ("  peak envelope block size = %u",
-      descriptor->peak_envelope_block_size);
-  GST_DEBUG ("  peak channels = %u", descriptor->peak_channels);
-  GST_DEBUG ("  peak frames = %u", descriptor->peak_frames);
-  GST_DEBUG ("  peak of peaks position = %" G_GINT64_FORMAT,
-      descriptor->peak_of_peaks_position);
-  GST_DEBUG ("  peak envelope timestamp = %d/%u/%u %u:%u:%u.%u",
-      descriptor->peak_envelope_timestamp.year,
-      descriptor->peak_envelope_timestamp.month,
-      descriptor->peak_envelope_timestamp.day,
-      descriptor->peak_envelope_timestamp.hour,
-      descriptor->peak_envelope_timestamp.minute,
-      descriptor->peak_envelope_timestamp.second,
-      (descriptor->peak_envelope_timestamp.quarter_msecond * 1000) / 256);
-
-  GST_DEBUG ("  peak evelope data size = %u",
-      descriptor->peak_envelope_data_length);
-
-  return TRUE;
+  return ret;
 
 error:
-  GST_ERROR ("Invalid wave audio essence descriptor");
-  mxf_metadata_wave_audio_essence_descriptor_reset (descriptor);
+  GST_ERROR ("Invalid wave audio essence descriptor tag 0x%04x of size %u", tag,
+      tag_size);
 
-  return FALSE;
+  return TRUE;
 }
 
 void mxf_metadata_wave_audio_essence_descriptor_reset

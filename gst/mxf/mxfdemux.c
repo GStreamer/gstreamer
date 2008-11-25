@@ -703,21 +703,26 @@ gst_mxf_demux_handle_metadata_generic_descriptor (GstMXFDemux * demux,
 {
   MXFMetadataGenericDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata generic descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_generic_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_generic_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset) mxf_metadata_generic_descriptor_reset)) {
     GST_ERROR_OBJECT (demux, "Parsing metadata generic descriptor failed");
     return GST_FLOW_ERROR;
   }
 
   if (!demux->generic_descriptor)
     demux->generic_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataGenericDescriptor));
+        g_array_new (FALSE, TRUE, sizeof (MXFMetadataGenericDescriptor));
 
   g_array_append_val (demux->generic_descriptor, descriptor);
 
@@ -730,21 +735,26 @@ gst_mxf_demux_handle_metadata_file_descriptor (GstMXFDemux * demux,
 {
   MXFMetadataFileDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata file descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_file_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_file_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset) mxf_metadata_file_descriptor_reset)) {
     GST_ERROR_OBJECT (demux, "Parsing metadata file descriptor failed");
     return GST_FLOW_ERROR;
   }
 
   if (!demux->file_descriptor)
     demux->file_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataFileDescriptor));
+        g_array_new (FALSE, TRUE, sizeof (MXFMetadataFileDescriptor));
 
   g_array_append_val (demux->file_descriptor, descriptor);
 
@@ -757,21 +767,27 @@ gst_mxf_demux_handle_metadata_multiple_descriptor (GstMXFDemux * demux,
 {
   MXFMetadataMultipleDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata multiple descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_multiple_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_multiple_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset) mxf_metadata_multiple_descriptor_reset))
+  {
     GST_ERROR_OBJECT (demux, "Parsing metadata multiple descriptor failed");
     return GST_FLOW_ERROR;
   }
 
   if (!demux->multiple_descriptor)
     demux->multiple_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMultipleDescriptor));
+        g_array_new (FALSE, TRUE, sizeof (MXFMetadataMultipleDescriptor));
 
   g_array_append_val (demux->multiple_descriptor, descriptor);
 
@@ -784,14 +800,20 @@ gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor (GstMXFDemux *
 {
   MXFMetadataGenericPictureEssenceDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata generic picture essence descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_generic_picture_essence_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_generic_picture_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_generic_picture_essence_descriptor_reset)) {
     GST_ERROR_OBJECT (demux,
         "Parsing metadata generic picture essence descriptor failed");
     return GST_FLOW_ERROR;
@@ -799,7 +821,7 @@ gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor (GstMXFDemux *
 
   if (!demux->generic_picture_essence_descriptor)
     demux->generic_picture_essence_descriptor =
-        g_array_new (FALSE, FALSE,
+        g_array_new (FALSE, TRUE,
         sizeof (MXFMetadataGenericPictureEssenceDescriptor));
 
   g_array_append_val (demux->generic_picture_essence_descriptor, descriptor);
@@ -813,14 +835,20 @@ gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor (GstMXFDemux *
 {
   MXFMetadataCDCIPictureEssenceDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata CDCI picture essence descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_cdci_picture_essence_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_cdci_picture_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_cdci_picture_essence_descriptor_reset)) {
     GST_ERROR_OBJECT (demux,
         "Parsing metadata CDCI picture essence descriptor failed");
     return GST_FLOW_ERROR;
@@ -828,7 +856,7 @@ gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor (GstMXFDemux *
 
   if (!demux->cdci_picture_essence_descriptor)
     demux->cdci_picture_essence_descriptor =
-        g_array_new (FALSE, FALSE,
+        g_array_new (FALSE, TRUE,
         sizeof (MXFMetadataCDCIPictureEssenceDescriptor));
 
   g_array_append_val (demux->cdci_picture_essence_descriptor, descriptor);
@@ -842,21 +870,27 @@ gst_mxf_demux_handle_metadata_mpeg_video_descriptor (GstMXFDemux * demux,
 {
   MXFMetadataMPEGVideoDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata MPEG video descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_mpeg_video_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_mpeg_video_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_mpeg_video_descriptor_reset)) {
     GST_ERROR_OBJECT (demux, "Parsing metadata MPEG video descriptor failed");
     return GST_FLOW_ERROR;
   }
 
   if (!demux->mpeg_video_descriptor)
     demux->mpeg_video_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMPEGVideoDescriptor));
+        g_array_new (FALSE, TRUE, sizeof (MXFMetadataMPEGVideoDescriptor));
 
   g_array_append_val (demux->mpeg_video_descriptor, descriptor);
 
@@ -869,14 +903,20 @@ gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor (GstMXFDemux *
 {
   MXFMetadataGenericSoundEssenceDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata generic sound essence descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_generic_sound_essence_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_generic_sound_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_generic_sound_essence_descriptor_reset)) {
     GST_ERROR_OBJECT (demux,
         "Parsing metadata generic sound essence descriptor failed");
     return GST_FLOW_ERROR;
@@ -884,7 +924,7 @@ gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor (GstMXFDemux *
 
   if (!demux->generic_sound_essence_descriptor)
     demux->generic_sound_essence_descriptor =
-        g_array_new (FALSE, FALSE,
+        g_array_new (FALSE, TRUE,
         sizeof (MXFMetadataGenericSoundEssenceDescriptor));
 
   g_array_append_val (demux->generic_sound_essence_descriptor, descriptor);
@@ -898,14 +938,20 @@ gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (GstMXFDemux *
 {
   MXFMetadataWaveAudioEssenceDescriptor descriptor;
 
+  memset (&descriptor, 0, sizeof (descriptor));
+
   GST_DEBUG_OBJECT (demux,
       "Handling metadata wave sound essence descriptor of size %u"
       " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
       GST_BUFFER_SIZE (buffer), demux->offset, type);
 
-  if (!mxf_metadata_wave_audio_essence_descriptor_parse (key, &descriptor,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_wave_audio_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_wave_audio_essence_descriptor_reset)) {
     GST_ERROR_OBJECT (demux,
         "Parsing metadata wave sound essence descriptor failed");
     return GST_FLOW_ERROR;
@@ -913,7 +959,7 @@ gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (GstMXFDemux *
 
   if (!demux->wave_audio_essence_descriptor)
     demux->wave_audio_essence_descriptor =
-        g_array_new (FALSE, FALSE,
+        g_array_new (FALSE, TRUE,
         sizeof (MXFMetadataWaveAudioEssenceDescriptor));
 
   g_array_append_val (demux->wave_audio_essence_descriptor, descriptor);
@@ -1748,12 +1794,6 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_OK;
   }
 
-  /* Make writable as the parsing of descriptors sets already read local tags to 0x0000 */
-  if (!gst_buffer_is_writable (buffer))
-    buffer = gst_buffer_copy (buffer);
-  else
-    buffer = gst_buffer_ref (buffer);
-
   switch (type) {
     case MXF_METADATA_PREFACE:
       ret = gst_mxf_demux_handle_metadata_preface (demux, key, buffer);
@@ -1837,8 +1877,6 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
           "Unknown or unhandled metadata type 0x%04x", type);
       break;
   }
-
-  gst_buffer_unref (buffer);
 
   return ret;
 }

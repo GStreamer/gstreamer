@@ -89,116 +89,94 @@ static const guint8 _profile_and_level_ul[] = {
 };
 
 gboolean
-mxf_metadata_mpeg_video_descriptor_parse (const MXFUL * key,
-    MXFMetadataMPEGVideoDescriptor * descriptor,
-    const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size)
+mxf_metadata_mpeg_video_descriptor_handle_tag (MXFMetadataGenericDescriptor * d,
+    const MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
+    guint16 tag_size)
 {
-  guint16 tag, tag_size;
-  const guint8 *tag_data;
+  MXFMetadataMPEGVideoDescriptor *descriptor =
+      (MXFMetadataMPEGVideoDescriptor *) d;
+  gboolean ret = FALSE;
+  MXFUL *tag_ul = NULL;
 
-  g_return_val_if_fail (data != NULL, FALSE);
+  if (!(tag_ul =
+          (MXFUL *) g_hash_table_lookup (primer->mappings,
+              GUINT_TO_POINTER (((guint) tag)))))
+    return FALSE;
 
-  memset (descriptor, 0, sizeof (MXFMetadataMPEGVideoDescriptor));
-
-  if (!mxf_metadata_cdci_picture_essence_descriptor_parse (key,
-          (MXFMetadataCDCIPictureEssenceDescriptor *) descriptor, primer, type,
-          data, size))
-    goto error;
-
-  while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
-    MXFUL *tag_ul = NULL;
-
-    if (tag_size == 0 || tag == 0x0000)
-      goto next;
-
-    if (!(tag_ul =
-            (MXFUL *) g_hash_table_lookup (primer->mappings,
-                GUINT_TO_POINTER (((guint) tag)))))
-      goto next;
-
-    if (memcmp (tag_ul, &_single_sequence_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->single_sequence = GST_READ_UINT8 (tag_data);
-    } else if (memcmp (tag_ul, &_constant_b_frames_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->const_b_frames = GST_READ_UINT8 (tag_data);
-    } else if (memcmp (tag_ul, &_coded_content_type_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->coded_content_type = GST_READ_UINT8 (tag_data);
-    } else if (memcmp (tag_ul, &_low_delay_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->low_delay = GST_READ_UINT8 (tag_data);
-    } else if (memcmp (tag_ul, &_closed_gop_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->closed_gop = GST_READ_UINT8 (tag_data);
-    } else if (memcmp (tag_ul, &_identical_gop_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->identical_gop = GST_READ_UINT8 (tag_data);
-    } else if (memcmp (tag_ul, &_max_gop_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 2)
-        goto error;
-      descriptor->max_gop = GST_READ_UINT16_BE (tag_data);
-    } else if (memcmp (tag_ul, &_b_picture_count_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 2)
-        goto error;
-      descriptor->b_picture_count = GST_READ_UINT16_BE (tag_data);
-    } else if (memcmp (tag_ul, &_bitrate_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 4)
-        goto error;
-      descriptor->bitrate = GST_READ_UINT32_BE (tag_data);
-    } else if (memcmp (tag_ul, &_profile_and_level_ul, 16) == 0) {
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (tag_size != 1)
-        goto error;
-      descriptor->profile_and_level = GST_READ_UINT8 (tag_data);
-    } else {
-      if (type != MXF_METADATA_MPEG_VIDEO_DESCRIPTOR)
-        goto next;
-      GST_WRITE_UINT16_BE (data, 0x0000);
-      if (!gst_metadata_add_custom_tag (primer, tag, tag_data, tag_size,
-              &((MXFMetadataGenericDescriptor *) descriptor)->other_tags))
-        goto error;
-    }
-  next:
-    data += 4 + tag_size;
-    size -= 4 + tag_size;
+  if (memcmp (tag_ul, &_single_sequence_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->single_sequence = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  single sequence = %s",
+        (descriptor->single_sequence) ? "yes" : "no");
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_constant_b_frames_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->const_b_frames = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  constant b frames = %s",
+        (descriptor->single_sequence) ? "yes" : "no");
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_coded_content_type_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->coded_content_type = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  coded content type = %u", descriptor->coded_content_type);
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_low_delay_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->low_delay = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  low delay = %s", (descriptor->low_delay) ? "yes" : "no");
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_closed_gop_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->closed_gop = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  closed gop = %s", (descriptor->closed_gop) ? "yes" : "no");
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_identical_gop_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->identical_gop = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  identical gop = %s",
+        (descriptor->identical_gop) ? "yes" : "no");
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_max_gop_ul, 16) == 0) {
+    if (tag_size != 2)
+      goto error;
+    descriptor->max_gop = GST_READ_UINT16_BE (tag_data);
+    GST_DEBUG ("  max gop = %u", descriptor->max_gop);
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_b_picture_count_ul, 16) == 0) {
+    if (tag_size != 2)
+      goto error;
+    descriptor->b_picture_count = GST_READ_UINT16_BE (tag_data);
+    GST_DEBUG ("  b picture count = %u", descriptor->b_picture_count);
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_bitrate_ul, 16) == 0) {
+    if (tag_size != 4)
+      goto error;
+    descriptor->bitrate = GST_READ_UINT32_BE (tag_data);
+    GST_DEBUG ("  bitrate = %u", descriptor->bitrate);
+    ret = TRUE;
+  } else if (memcmp (tag_ul, &_profile_and_level_ul, 16) == 0) {
+    if (tag_size != 1)
+      goto error;
+    descriptor->profile_and_level = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  profile & level = %u", descriptor->profile_and_level);
+    ret = TRUE;
+  } else {
+    ret =
+        mxf_metadata_cdci_picture_essence_descriptor_handle_tag (d, primer, tag,
+        tag_data, tag_size);
   }
 
-  GST_DEBUG ("Parsed mpeg video descriptors:");
-  GST_DEBUG ("  single sequence = %s",
-      (descriptor->single_sequence) ? "yes" : "no");
-  GST_DEBUG ("  constant b frames = %s",
-      (descriptor->single_sequence) ? "yes" : "no");
-  GST_DEBUG ("  coded content type = %u", descriptor->coded_content_type);
-  GST_DEBUG ("  low delay = %s", (descriptor->low_delay) ? "yes" : "no");
-  GST_DEBUG ("  closed gop = %s", (descriptor->closed_gop) ? "yes" : "no");
-  GST_DEBUG ("  identical gop = %s",
-      (descriptor->identical_gop) ? "yes" : "no");
-  GST_DEBUG ("  max gop = %u", descriptor->max_gop);
-  GST_DEBUG ("  b picture count = %u", descriptor->b_picture_count);
-  GST_DEBUG ("  bitrate = %u", descriptor->bitrate);
-  GST_DEBUG ("  profile & level = %u", descriptor->profile_and_level);
-
-  return TRUE;
+  return ret;
 
 error:
-  GST_ERROR ("Invalid mpeg video descriptor");
-  mxf_metadata_mpeg_video_descriptor_reset (descriptor);
+  GST_ERROR ("Invalid mpeg video descriptor tag 0x%04x of size %u", tag,
+      tag_size);
 
   return FALSE;
 }
