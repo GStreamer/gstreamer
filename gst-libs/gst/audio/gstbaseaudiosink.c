@@ -54,6 +54,8 @@ struct _GstBaseAudioSinkPrivate
   gint64 last_align;
 
   gboolean sync_latency;
+
+  GstClockTime eos_time;
 };
 
 /* BaseAudioSink signals and args */
@@ -720,23 +722,15 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
   if (gst_ring_buffer_is_acquired (sink->ringbuffer))
     gst_ring_buffer_start (sink->ringbuffer);
 
-  if (sink->next_sample != -1) {
-    GstClockTime time;
-
-    /* convert next expected sample to time */
-    time =
-        gst_util_uint64_scale_int (sink->next_sample, GST_SECOND,
-        sink->ringbuffer->spec.rate);
-
+  if (sink->priv->eos_time != -1) {
     GST_DEBUG_OBJECT (sink,
-        "last sample %" G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT,
-        sink->next_sample, GST_TIME_ARGS (time));
+        "last sample time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (sink->priv->eos_time));
 
     /* wait for the EOS time to be reached, this is the time when the last
      * sample is played. */
-    gst_base_sink_wait_eos (GST_BASE_SINK (sink), time, NULL);
+    gst_base_sink_wait_eos (GST_BASE_SINK (sink), sink->priv->eos_time, NULL);
 
-    sink->next_sample = -1;
     GST_DEBUG_OBJECT (sink, "drained audio");
   }
   return TRUE;
@@ -756,6 +750,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       /* always resync on sample after a flush */
       sink->priv->avg_skew = -1;
       sink->next_sample = -1;
+      sink->priv->eos_time = -1;
       if (sink->ringbuffer)
         gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
@@ -1169,6 +1164,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
 
   sink->priv->avg_skew = -1;
   sink->next_sample = -1;
+  sink->priv->eos_time = -1;
 
   return GST_FLOW_OK;
 
@@ -1354,12 +1350,13 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       "running: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
-  GST_DEBUG_OBJECT (sink, "adding base_time %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (base_time));
-
-  /* add base time to sync against the clock */
-  render_start += base_time;
-  render_stop += base_time;
+  /* store the time of the last sample, we'll use this to perform sync on the
+   * last sample when draining the buffer */
+  if (bsink->segment.rate >= 0.0) {
+    sink->priv->eos_time = render_stop;
+  } else {
+    sink->priv->eos_time = render_start;
+  }
 
   /* compensate for ts-offset and delay we know this will not underflow because we
    * clipped above. */
@@ -1368,6 +1365,13 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_TIME_ARGS (sync_offset));
   render_start += sync_offset;
   render_stop += sync_offset;
+
+  GST_DEBUG_OBJECT (sink, "adding base_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (base_time));
+
+  /* add base time to sync against the clock */
+  render_start += base_time;
+  render_stop += base_time;
 
   GST_DEBUG_OBJECT (sink,
       "after compensation: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
@@ -1737,6 +1741,7 @@ gst_base_audio_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       sink->next_sample = -1;
       sink->priv->last_align = -1;
+      sink->priv->eos_time = -1;
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       break;
