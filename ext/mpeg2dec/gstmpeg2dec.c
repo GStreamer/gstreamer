@@ -57,6 +57,7 @@ GST_ELEMENT_DETAILS ("mpeg1 and mpeg2 video decoder",
  */
 #define WARN_THRESHOLD (5)
 
+//#define enable_user_data
 #ifdef enable_user_data
 static GstStaticPadTemplate user_data_template_factory =
 GST_STATIC_PAD_TEMPLATE ("user_data",
@@ -78,7 +79,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { YV12, I420, Y42B }, "
+        "format = (fourcc) { YV12, I420, Y42B, Y444 }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0/1, 2147483647/1 ]")
@@ -404,7 +405,7 @@ crop_copy_i422_buffer (GstMpeg2dec * mpeg2dec, GstBuffer * input)
 static gboolean
 crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
 {
-  gboolean result = FALSE;
+  gboolean result = TRUE;
   GstBuffer *input = *buf;
   GstBuffer *outbuf = input;
 
@@ -450,8 +451,9 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
 
     ret = gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
         GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (mpeg2dec->srcpad), obuf);
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
       return ret;
+    }
 
     /* libmpeg2 needs 16 byte aligned buffers... test for this here
      * and if it fails only a single time create our own buffers from
@@ -547,8 +549,8 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
     mpeg2dec->v_offs =
         I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
 
-  } else if (sequence->width == sequence->chroma_width ||
-      sequence->height == sequence->chroma_height) {
+  } else if (sequence->width == sequence->chroma_width &&
+      sequence->height != sequence->chroma_height) {
     gint halfsize;
 
     fourcc = GST_STR_FOURCC ("Y42B");
@@ -558,8 +560,15 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
     mpeg2dec->u_offs = halfsize;
     mpeg2dec->v_offs = halfsize + (halfsize / 2);
   } else {
-    g_warning ("mpeg2dec: 4:4:4 format not yet supported");
-    return (FALSE);
+    gint size;
+
+    size = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
+
+    fourcc = GST_STR_FOURCC ("Y444");
+    mpeg2dec->format = MPEG2DEC_FORMAT_Y444;
+    mpeg2dec->size = size * 3;
+    mpeg2dec->u_offs = size;
+    mpeg2dec->v_offs = size * 2;
   }
 
   if (mpeg2dec->pixel_width == 0 || mpeg2dec->pixel_height == 0) {

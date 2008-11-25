@@ -1,3 +1,9 @@
+2008-11-24  David Schleef  <ds@schleef.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  Add support for 4:4:4 video.  Fixes #562086
+
 2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Simon Holm Thøgersen <odie at cs dot aau dot dk>
