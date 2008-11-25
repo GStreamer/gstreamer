@@ -1,5 +1,11 @@
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_sink_event):
+	If no stream was found before receiving EOS, post an error message.
+	Fixes #561924.
+
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/theora/gsttheoraenc.h:
 	* ext/theora/theoraenc.c: (gst_theora_enc_init),
 	(theora_buffer_from_packet), (theora_push_packet),

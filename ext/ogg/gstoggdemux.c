@@ -1484,6 +1484,15 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
       res = TRUE;
       break;
     case GST_EVENT_EOS:
+    {
+      GST_DEBUG_OBJECT (ogg, "got an EOS event");
+      res = gst_pad_event_default (pad, event);
+      if (ogg->current_chain == NULL) {
+        GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+            ("can't get first chain"));
+      }
+      break;
+    }
     default:
       res = gst_pad_event_default (pad, event);
       break;
