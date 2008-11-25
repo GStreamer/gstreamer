@@ -615,7 +615,7 @@ test_pipeline (gint width, gboolean fp, gint inrate, gint outrate, gint quality)
 
   pipe_str =
       g_strdup_printf
-      ("audiotestsrc num-buffers=100 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! speexresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
+      ("audiotestsrc num-buffers=10 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! speexresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
       (fp) ? "float" : "int", inrate, width, quality, (fp) ? "float" : "int",
       outrate, width);
 

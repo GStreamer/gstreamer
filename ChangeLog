@@ -1,3 +1,8 @@
+2008-11-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/speexresample.c: (test_pipeline):
+	Make unit test again faster to prevent timeouts with valgrind.
+
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpsession.c:
