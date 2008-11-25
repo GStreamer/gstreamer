@@ -70,8 +70,6 @@ struct _GstVideoCrop
   GstBaseTransform basetransform;
 
   /*< private >*/
-  gboolean noop;                /* TRUE if crop_left,_right,_top and _bottom are all 0 */
-
   gint crop_left;
   gint crop_right;
   gint crop_top;

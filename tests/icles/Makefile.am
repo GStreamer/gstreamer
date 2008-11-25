@@ -40,5 +40,10 @@ videobox_test_CFLAGS  = $(GST_CFLAGS)
 videobox_test_LDADD   = $(GST_LIBS)
 videobox_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_PROGRAMS = $(GTK_TESTS) $(V4L2_TESTS) $(X_TESTS) videocrop-test videobox-test
+videocrop2_test_SOURCES = videocrop2-test.c
+videocrop2_test_CFLAGS  = $(GST_CFLAGS)
+videocrop2_test_LDADD   = $(GST_LIBS)
+videocrop2_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+noinst_PROGRAMS = $(GTK_TESTS) $(V4L2_TESTS) $(X_TESTS) videocrop-test videobox-test videocrop2-test
 

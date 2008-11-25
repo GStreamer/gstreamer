@@ -1,3 +1,16 @@
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_init),
+	(gst_video_crop_transform), (gst_video_crop_transform_caps),
+	(gst_video_crop_set_caps), (gst_video_crop_set_property):
+	* gst/videocrop/gstvideocrop.h:
+	Fix renegotiation when changing properties using the new basetransform
+	features. Fixes #561502.
+
+	* tests/icles/Makefile.am:
+	* tests/icles/videocrop2-test.c: (make_pipeline), (main):
+	Add crazy interactive test unit for dynamically changing properties.
+
 2008-11-24  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtsp/gstrtspsrc.c: (new_session_pad),
