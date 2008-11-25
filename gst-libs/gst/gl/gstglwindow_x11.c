@@ -29,6 +29,11 @@
 #define GST_GL_WINDOW_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
 
+
+/* A gl window is created and deleted in a thread dedicated to opengl calls
+   The name contains "window" because an opengl context is used in cooperation
+   with a window */
+
 enum
 {
   ARG_0,
@@ -37,12 +42,14 @@ enum
 
 struct _GstGLWindowPrivate
 {
+  /* X is not thread safe */
   GMutex *x_lock;
   GCond *cond_send_message;
   gboolean running;
   gboolean visible;
   gboolean allow_extra_expose_events;
 
+  /* opengl context */
   gchar *display_name;
   Display *device;
   Screen *screen;
@@ -58,11 +65,14 @@ struct _GstGLWindowPrivate
   XVisualInfo *visual_info;
   Window parent;
 
+  /* We use a specific connection to send events */
   Display *disp_send;
 
+  /* X window */
   Window internal_win_id;
   GLXContext gl_context;
 
+  /* frozen callbacks */
   GstGLWindowCB draw_cb;
   gpointer draw_data;
   GstGLWindowCB2 resize_cb;
@@ -89,8 +99,6 @@ gst_gl_window_finalize (GObject * object)
 
   g_mutex_lock (priv->x_lock);
 
-  g_debug ("gl window finalizing\n");
-
   priv->parent = 0;
 
   XUnmapWindow (priv->device, priv->internal_win_id);
@@ -110,10 +118,7 @@ gst_gl_window_finalize (GObject * object)
   XSync (priv->device, FALSE);
 
   while(XPending (priv->device))
-  {
-    g_debug ("one more last pending x msg\n");
     XNextEvent (priv->device, &event);
-  }
 
   XSetCloseDownMode (priv->device, DestroyAll);
 
@@ -129,9 +134,11 @@ gst_gl_window_finalize (GObject * object)
   //The following line is commented to avoid the disagreement explained before.
   //XCloseDisplay (priv->device);
 
+  g_debug ("display receiver closed\n");
+
   XCloseDisplay (priv->disp_send);
 
-  g_debug ("display closed\n");
+  g_debug ("display sender closed\n");
 
   if (priv->cond_send_message)
   {
@@ -148,8 +155,6 @@ gst_gl_window_finalize (GObject * object)
   }
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
-
-  g_debug ("lock deleted\n");
 }
 
 static void
@@ -406,10 +411,10 @@ gst_gl_window_error_quark (void)
   return g_quark_from_static_string ("gst-gl-window-error");
 }
 
+/* Not called by the gl thread */
 void
 gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 {
-  g_debug ("SET EXTERNAL WIN IN\n");
   if (window)
   {
     GstGLWindowPrivate *priv = window->priv;
@@ -429,7 +434,6 @@ gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
 
     g_mutex_unlock (priv->x_lock);
   }
-  g_debug ("SET EXTERNAL WIN OUT\n");
 }
 
 void
@@ -438,7 +442,6 @@ gst_gl_window_set_external_gl_context (GstGLWindow *window, guint64 context)
   g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
 }
 
-/* Must be called in the gl thread */
 void
 gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
@@ -452,7 +455,6 @@ gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gp
   g_mutex_unlock (priv->x_lock);
 }
 
-/* Must be called in the gl thread */
 void
 gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback , gpointer data)
 {
@@ -466,7 +468,6 @@ gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback 
   g_mutex_unlock (priv->x_lock);
 }
 
-/* Must be called in the gl thread */
 void
 gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
@@ -480,6 +481,7 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
   g_mutex_unlock (priv->x_lock);
 }
 
+/* Called in the gl thread */
 void
 gst_gl_window_draw_unlocked (GstGLWindow *window)
 {
@@ -507,11 +509,10 @@ gst_gl_window_draw_unlocked (GstGLWindow *window)
   }
 }
 
-/* Thread safe */
+/* Not called by the gl thread */
 void
 gst_gl_window_draw (GstGLWindow *window)
 {
-  g_debug ("DRAW IN\n");
   if (window)
   {
     GstGLWindowPrivate *priv = window->priv;
@@ -562,9 +563,9 @@ gst_gl_window_draw (GstGLWindow *window)
 
     g_mutex_unlock (priv->x_lock);
   }
-  g_debug ("DRAW OUT\n");
 }
 
+/* Called in the gl thread */
 void
 gst_gl_window_run_loop (GstGLWindow *window)
 {
@@ -581,14 +582,13 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
     g_mutex_unlock (priv->x_lock);
 
-    g_debug("Before XNextEvent\n");
-
     /* XSendEvent (which are called in other threads) are done from another display structure */
     XNextEvent(priv->device, &event);
 
-    g_debug("After XNextEvent\n");
-
     g_mutex_lock (priv->x_lock);
+
+    // use in generic/cube and other related uses
+    priv->allow_extra_expose_events = XPending (priv->device) <= 2;
 
     switch (event.type)
     {
@@ -606,6 +606,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
         if (wm_quit_loop == None)
           g_debug ("Cannot create WM_QUIT_LOOP\n");
 
+        /* Message sent with gst_gl_window_send_message */
         if (wm_gl != None && event.xclient.message_type == wm_gl)
         {
           if (priv->running)
@@ -616,9 +617,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
             if (!custom_cb || !custom_data)
               g_debug ("custom cb not initialized\n");
 
-            if (glXGetCurrentContext () != priv->gl_context)
-              g_warning ("current gl context has changed\n");
-
             custom_cb (custom_data);
           }
 
@@ -627,6 +625,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
           g_cond_signal (priv->cond_send_message);
         }
 
+        /* User clicked on the cross */
         else if (wm_delete != None && (Atom) event.xclient.data.l[0] == wm_delete)
         {
           g_debug ("Close %lld\n", (guint64) priv->internal_win_id);
@@ -642,6 +641,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
           priv->close_data = NULL;
         }
 
+        /* message sent with gst_gl_window_quit_loop */
         else if (wm_quit_loop != None && event.xclient.message_type == wm_quit_loop)
         {
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
@@ -649,8 +649,10 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
           g_debug ("Quit loop message %lld\n", (guint64) priv->internal_win_id);
 
+          /* exit loop */
           priv->running = FALSE;
 
+          /* make sure last pendings send message calls are executed */
           XFlush (priv->device);
           while (XCheckTypedEvent (priv->device, ClientMessage, &pending_event))
           {
@@ -667,19 +669,15 @@ gst_gl_window_run_loop (GstGLWindow *window)
             g_cond_signal (priv->cond_send_message);
           }
 
+          /* Finally we can destroy opengl ressources (texture/shaders/fbo) */
           if (!destroy_cb || !destroy_data)
-            g_debug ("destroy cb not initialized\n");
-
-          if (glXGetCurrentContext () != priv->gl_context)
-            g_warning ("current gl context has changed\n");
+            g_debug ("destroy cb not correclty set\n");
 
           destroy_cb (destroy_data);
 
         }
         else
-        {
-          g_debug("not reconized client message\n");
-        }
+          g_debug("client message not reconized \n");
         break;
       }
 
@@ -698,8 +696,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
       case Expose:
         if (priv->draw_cb)
         {
-          if (glXGetCurrentContext () != priv->gl_context)
-            g_warning ("current gl context has changed\n");
           priv->draw_cb (priv->draw_data);
           glFlush();
           glXSwapBuffers (priv->device, priv->internal_win_id);
@@ -731,29 +727,10 @@ gst_gl_window_run_loop (GstGLWindow *window)
       }
 
       default:
-        g_print("unknow\n");
+        g_debug ("unknow\n");
         break;
 
     }// switch
-
-    // use in cube example
-    if (XPending (priv->device) > 10)
-    {
-        XEvent extra_expose_event;
-        priv->allow_extra_expose_events = FALSE;
-        while (XCheckTypedWindowEvent (priv->device, priv->internal_win_id, Expose, &extra_expose_event))
-        {
-          if (priv->draw_cb)
-          {
-            if (glXGetCurrentContext () != priv->gl_context)
-              g_warning ("current gl context has changed\n");
-            priv->draw_cb (priv->draw_data);
-            glFlush();
-            glXSwapBuffers (priv->device, priv->internal_win_id);
-          }
-        }
-        priv->allow_extra_expose_events = TRUE;
-    }
 
   }// while running
 
@@ -762,7 +739,7 @@ gst_gl_window_run_loop (GstGLWindow *window)
   g_debug ("end loop\n");
 }
 
-/* Thread safe */
+/* Not called by the gl thread */
 void
 gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
@@ -790,24 +767,18 @@ gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer d
     }
 
     g_mutex_unlock (priv->x_lock);
-
   }
-  g_debug ("QUIT LOOP OUT\n");
 }
 
-/* Thread safe */
+/* Not called by the gl thread */
 void
 gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
 {
-  g_debug ("CUSTOM IN\n");
   if (window)
   {
-
     GstGLWindowPrivate *priv = window->priv;
 
     g_mutex_lock (priv->x_lock);
-
-    g_debug ("AA CUSTOM IN: %lld\n", (guint64)priv->internal_win_id);
 
     if (priv->running)
     {
@@ -825,12 +796,10 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
       XSendEvent (priv->disp_send, priv->internal_win_id, FALSE, NoEventMask, &event);
       XSync (priv->disp_send, FALSE);
 
+      /* block until opengl calls have been executed in the gl thread */
       g_cond_wait (priv->cond_send_message, priv->x_lock);
-
     }
 
     g_mutex_unlock (priv->x_lock);
-
   }
-  g_debug ("CUSTOM OUT\n");
 }
