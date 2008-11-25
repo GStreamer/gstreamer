@@ -1,5 +1,10 @@
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	Fix typo in the docs.
+
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_sink_event):
 	If no stream was found before receiving EOS, post an error message.
 	Fixes #561924.

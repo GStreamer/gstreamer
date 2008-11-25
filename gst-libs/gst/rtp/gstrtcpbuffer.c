@@ -1656,7 +1656,7 @@ gst_rtcp_ntp_to_unix (guint64 ntptime)
  * bits, the fractional seconds. The resulting value can be used as an ntptime
  * for constructing SR RTCP packets.
  *
- * Returns: the NTP time for @gsttime.
+ * Returns: the NTP time for @unixtime.
  */
 guint64
 gst_rtcp_unix_to_ntp (guint64 unixtime)
