@@ -353,7 +353,9 @@ gst_auto_video_src_detect (GstAutoVideoSrc * src)
   /* attach ghost pad */
   GST_DEBUG_OBJECT (src, "Re-assigning ghostpad");
   targetpad = gst_element_get_static_pad (src->kid, "src");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad);
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (src->pad), targetpad))
+    goto target_failed;
+
   gst_object_unref (targetpad);
   GST_DEBUG_OBJECT (src, "done changing auto video source");
 
@@ -364,6 +366,13 @@ no_src:
   {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Failed to find a supported video source"));
+    return FALSE;
+  }
+target_failed:
+  {
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Failed to set target pad"));
+    gst_object_unref (targetpad);
     return FALSE;
   }
 }

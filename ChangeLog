@@ -1,5 +1,14 @@
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_detect):
+	* gst/autodetect/gstautoaudiosrc.c: (gst_auto_audio_src_detect):
+	* gst/autodetect/gstautovideosink.c: (gst_auto_video_sink_reset),
+	(gst_auto_video_sink_detect):
+	* gst/autodetect/gstautovideosrc.c: (gst_auto_video_src_detect):
+	Post an error when we can't set the internal ghostpad target.
+
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/videocrop/gstvideocrop.c: (gst_video_crop_init),
 	(gst_video_crop_transform), (gst_video_crop_transform_caps),
 	(gst_video_crop_set_caps), (gst_video_crop_set_property):

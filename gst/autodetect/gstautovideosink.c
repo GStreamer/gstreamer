@@ -157,7 +157,7 @@ gst_auto_video_sink_reset (GstAutoVideoSink * sink)
   sink->kid = gst_element_factory_make ("fakesink", "tempsink");
   gst_bin_add (GST_BIN (sink), sink->kid);
 
-  /* pad */
+  /* pad, setting this target should always work */
   targetpad = gst_element_get_static_pad (sink->kid, "sink");
   gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
   gst_object_unref (targetpad);
@@ -352,7 +352,9 @@ gst_auto_video_sink_detect (GstAutoVideoSink * sink)
   /* attach ghost pad */
   GST_DEBUG_OBJECT (sink, "Re-assigning ghostpad");
   targetpad = gst_element_get_static_pad (sink->kid, "sink");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad);
+  if (!gst_ghost_pad_set_target (GST_GHOST_PAD (sink->pad), targetpad))
+    goto target_failed;
+
   gst_object_unref (targetpad);
   GST_DEBUG_OBJECT (sink, "done changing auto video sink");
 
@@ -363,6 +365,13 @@ no_sink:
   {
     GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
         ("Failed to find a supported video sink"));
+    return FALSE;
+  }
+target_failed:
+  {
+    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
+        ("Failed to set target pad"));
+    gst_object_unref (targetpad);
     return FALSE;
   }
 }
