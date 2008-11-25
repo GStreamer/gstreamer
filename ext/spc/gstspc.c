@@ -195,20 +195,27 @@ gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
 {
   GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
   gboolean result = TRUE;
+  gboolean forward = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      result = spc_setup (spc);
-      break;
-    case GST_EVENT_NEWSEGMENT:
-      result = FALSE;
+      /* we get EOS when we loaded the complete file, now try to initialize the
+       * decoding */
+      if (!(result = spc_setup (spc))) {
+        /* can't start, post an ERROR and push EOS downstream */
+        GST_ELEMENT_ERROR (spc, STREAM, DEMUX, (NULL),
+            ("can't start playback"));
+        forward = TRUE;
+      }
       break;
     default:
-      result = FALSE;
       break;
   }
+  if (forward)
+    result = gst_pad_push_event (spc->srcpad, event);
+  else
+    gst_event_unref (event);
 
-  gst_event_unref (event);
   gst_object_unref (spc);
 
   return result;
@@ -453,18 +460,18 @@ spc_play (GstPad * pad)
 static gboolean
 spc_setup (GstSpcDec * spc)
 {
-  guchar *data = GST_BUFFER_DATA (spc->buf);
   spc_tag_info *info;
   GstTagList *taglist;
   guint64 total_duration;
 
-  if (!spc_negotiate (spc)) {
+  if (!spc->buf || !spc_negotiate (spc)) {
     return FALSE;
   }
 
   info = &(spc->tag_info);
 
-  spc_tag_get_info (data, GST_BUFFER_SIZE (spc->buf), info);
+  spc_tag_get_info (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf),
+      info);
 
   taglist = gst_tag_list_new ();
 

@@ -1,3 +1,11 @@
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Jonathan Matthew <notverysmart at gmail dot com>
+
+	* ext/spc/gstspc.c: (gst_spc_dec_sink_event), (spc_setup):
+	Post an error and push EOS when we can't start playback for some reason.
+	also avoid a crash when fed an empty file. Fixes #480543.
+
 2008-11-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/elements/speexresample.c: (test_pipeline):
