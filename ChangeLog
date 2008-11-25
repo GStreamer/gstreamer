@@ -1,3 +1,12 @@
+2008-11-24  Michael Smith <msmith@songbirdnest.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	  Add new directory for new acmmp3dec plugin
+	* sys/acmenc/Makefile.am:
+	* sys/acmenc/acmmp3dec.c:
+	  Add new acmmp3dec plugin, which uses ACM for decoding mp3 on windows.
+
 2008-11-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c:
