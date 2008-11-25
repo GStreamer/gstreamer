@@ -286,6 +286,8 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
       gst_pad_new_from_static_template (&theora_enc_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
+  gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
+
   enc->center = THEORA_DEF_CENTER;
   enc->border = THEORA_DEF_BORDER;
 
@@ -430,7 +432,8 @@ granulepos_add (guint64 granulepos, guint64 addend, gint shift)
 /* prepare a buffer for transmission by passing data through libtheora */
 static GstFlowReturn
 theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
-    GstClockTime timestamp, GstClockTime duration, GstBuffer ** buffer)
+    GstClockTime timestamp, GstClockTime running_time,
+    GstClockTime duration, GstBuffer ** buffer)
 {
   GstBuffer *buf;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -452,7 +455,7 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   GST_BUFFER_OFFSET (buf) = granulepos_to_timestamp (enc,
       GST_BUFFER_OFFSET_END (buf));
 
-  GST_BUFFER_TIMESTAMP (buf) = timestamp + enc->timestamp_offset;
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
 
   if (enc->next_discont) {
@@ -489,12 +492,14 @@ theora_push_buffer (GstTheoraEnc * enc, GstBuffer * buffer)
 
 static GstFlowReturn
 theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet,
-    GstClockTime timestamp, GstClockTime duration)
+    GstClockTime timestamp, GstClockTime running_time, GstClockTime duration)
 {
   GstBuffer *buf;
   GstFlowReturn ret;
 
-  ret = theora_buffer_from_packet (enc, packet, timestamp, duration, &buf);
+  ret =
+      theora_buffer_from_packet (enc, packet, timestamp, running_time, duration,
+      &buf);
   if (ret == GST_FLOW_OK)
     ret = theora_push_buffer (enc, buf);
 
@@ -581,17 +586,38 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate, applied_rate;
+      GstFormat format;
+      gint64 start, stop, time;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &time);
+
+      gst_segment_set_newsegment_full (&enc->segment, update, rate,
+          applied_rate, format, start, stop, time);
+
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    }
     case GST_EVENT_EOS:
       if (enc->initialised) {
-        /* push last packet with eos flag */
+        /* push last packet with eos flag, should not be called */
         while (theora_encode_packetout (&enc->state, 1, &op)) {
           GstClockTime next_time =
               theora_enc_get_ogg_packet_end_time (enc, &op);
 
-          theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
+          theora_push_packet (enc, &op, GST_CLOCK_TIME_NONE, enc->next_ts,
+              next_time - enc->next_ts);
           enc->next_ts = next_time;
         }
       }
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
       res = gst_pad_push_event (enc->srcpad, event);
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -624,9 +650,9 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-theora_enc_is_discontinuous (GstTheoraEnc * enc, GstBuffer * buffer)
+theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
+    GstClockTime duration)
 {
-  GstClockTime ts = GST_BUFFER_TIMESTAMP (buffer);
   GstClockTimeDiff max_diff;
   gboolean ret = FALSE;
 
@@ -634,18 +660,19 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstBuffer * buffer)
   max_diff = (enc->info.fps_denominator * GST_SECOND * 3) /
       (enc->info.fps_numerator * 4);
 
-  if (ts != GST_CLOCK_TIME_NONE && enc->expected_ts != GST_CLOCK_TIME_NONE) {
-    if ((GstClockTimeDiff) (ts - enc->expected_ts) > max_diff) {
+  if (timestamp != GST_CLOCK_TIME_NONE
+      && enc->expected_ts != GST_CLOCK_TIME_NONE) {
+    if ((GstClockTimeDiff) (timestamp - enc->expected_ts) > max_diff) {
       GST_DEBUG_OBJECT (enc, "Incoming TS %" GST_TIME_FORMAT
           " exceeds expected value %" GST_TIME_FORMAT
           " by too much, marking discontinuity",
-          GST_TIME_ARGS (ts), GST_TIME_ARGS (enc->expected_ts));
+          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (enc->expected_ts));
       ret = TRUE;
     }
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
-    enc->expected_ts = ts + GST_BUFFER_DURATION (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (duration))
+    enc->expected_ts = timestamp + duration;
   else
     enc->expected_ts = GST_CLOCK_TIME_NONE;
 
@@ -657,12 +684,28 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstTheoraEnc *enc;
   ogg_packet op;
-  GstClockTime in_time;
+  GstClockTime timestamp, duration, running_time;
   GstFlowReturn ret;
 
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
-  in_time = GST_BUFFER_TIMESTAMP (buffer);
+  /* we keep track of two timelines.
+   * - The timestamps from the incomming buffers, which we copy to the outgoing
+   *   encoded buffers as-is. We need to do this as we simply forward the
+   *   newsegment events.
+   * - The running_time of the buffers, which we use to construct the granulepos
+   *   in the packets.
+   */
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  running_time =
+      gst_segment_to_running_time (&enc->segment, GST_FORMAT_TIME, timestamp);
+
+  /* make sure we copy the discont flag to the next outgoing buffer when it's
+   * set on the incomming buffer */
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    enc->next_discont = TRUE;
+  }
 
   if (enc->packetno == 0) {
     /* no packets written yet, setup headers */
@@ -684,8 +727,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (theora_encode_header (&enc->state, &op) != 0)
       goto encoder_disabled;
 
-    ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
-        GST_CLOCK_TIME_NONE, &buf1);
+    ret =
+        theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf1);
     if (ret != GST_FLOW_OK) {
       goto header_buffer_alloc;
     }
@@ -697,8 +741,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (theora_encode_comment (&enc->comment, &op) != 0)
       goto encoder_disabled;
 
-    ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
-        GST_CLOCK_TIME_NONE, &buf2);
+    ret =
+        theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf2);
     /* Theora expects us to put this packet buffer into an ogg page,
      * in which case it becomes the ogg library's responsibility to
      * free it. Since we're copying and outputting a gst_buffer,
@@ -714,8 +759,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (theora_encode_tables (&enc->state, &op) != 0)
       goto encoder_disabled;
 
-    ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
-        GST_CLOCK_TIME_NONE, &buf3);
+    ret =
+        theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
+        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE, &buf3);
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buf1);
       gst_buffer_unref (buf2);
@@ -749,8 +795,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     enc->granulepos_offset =
-        gst_util_uint64_scale (in_time, enc->fps_n, GST_SECOND * enc->fps_d);
-    enc->timestamp_offset = in_time;
+        gst_util_uint64_scale (running_time, enc->fps_n,
+        GST_SECOND * enc->fps_d);
+    enc->timestamp_offset = running_time;
     enc->next_ts = 0;
   }
 
@@ -903,11 +950,12 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       buffer = newbuf;
     }
 
-    if (theora_enc_is_discontinuous (enc, buffer)) {
+    if (theora_enc_is_discontinuous (enc, running_time, duration)) {
       theora_enc_reset (enc);
       enc->granulepos_offset =
-          gst_util_uint64_scale (in_time, enc->fps_n, GST_SECOND * enc->fps_d);
-      enc->timestamp_offset = in_time;
+          gst_util_uint64_scale (running_time, enc->fps_n,
+          GST_SECOND * enc->fps_d);
+      enc->timestamp_offset = running_time;
       enc->next_ts = 0;
       enc->next_discont = TRUE;
     }
@@ -916,10 +964,14 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = GST_FLOW_OK;
     while (theora_encode_packetout (&enc->state, 0, &op)) {
-      GstClockTime next_time = theora_enc_get_ogg_packet_end_time (enc, &op);
+      GstClockTime next_time;
+
+      next_time = theora_enc_get_ogg_packet_end_time (enc, &op);
 
       ret =
-          theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
+          theora_push_packet (enc, &op, timestamp, enc->next_ts,
+          next_time - enc->next_ts);
+
       enc->next_ts = next_time;
       if (ret != GST_FLOW_OK)
         goto data_push;

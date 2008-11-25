@@ -1,5 +1,17 @@
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* ext/theora/gsttheoraenc.h:
+	* ext/theora/theoraenc.c: (gst_theora_enc_init),
+	(theora_buffer_from_packet), (theora_push_packet),
+	(theora_enc_sink_event), (theora_enc_is_discontinuous),
+	(theora_enc_chain):
+	Parse segment events.
+	Pass incomming buffer timestamps to outgoing buffers.
+	Use the running_time to construct the granulepos.
+	Fixes #562163.
+
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (activate_group):
 	Fix buffer-duration property.
 

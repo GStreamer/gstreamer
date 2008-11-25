@@ -67,6 +67,8 @@ struct _GstTheoraEnc
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  GstSegment segment;
+
   ogg_stream_state to;
 
   theora_state state;
