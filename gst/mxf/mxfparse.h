@@ -131,6 +131,10 @@ gboolean mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataGen
     const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
 void mxf_metadata_cdci_picture_essence_descriptor_reset (MXFMetadataCDCIPictureEssenceDescriptor *descriptor);
 
+gboolean mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
+    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
+void mxf_metadata_rgba_picture_essence_descriptor_reset (MXFMetadataRGBAPictureEssenceDescriptor *descriptor);
+
 gboolean mxf_metadata_multiple_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
     const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
 void mxf_metadata_multiple_descriptor_reset (MXFMetadataMultipleDescriptor *descriptor);

@@ -88,6 +88,7 @@ struct _GstMXFDemux
   GArray *generic_sound_essence_descriptor;
   GArray *generic_picture_essence_descriptor;
   GArray *cdci_picture_essence_descriptor;
+  GArray *rgba_picture_essence_descriptor;
   GArray *mpeg_video_descriptor;
   GArray *wave_audio_essence_descriptor;
   GArray *multiple_descriptor;

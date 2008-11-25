@@ -149,6 +149,7 @@ typedef struct _MXFMetadataGenericDescriptor MXFMetadataGenericDescriptor;
 typedef struct _MXFMetadataFileDescriptor MXFMetadataFileDescriptor;
 typedef struct _MXFMetadataGenericPictureEssenceDescriptor MXFMetadataGenericPictureEssenceDescriptor;
 typedef struct _MXFMetadataCDCIPictureEssenceDescriptor MXFMetadataCDCIPictureEssenceDescriptor;
+typedef struct _MXFMetadataRGBAPictureEssenceDescriptor MXFMetadataRGBAPictureEssenceDescriptor;
 typedef struct _MXFMetadataGenericSoundEssenceDescriptor MXFMetadataGenericSoundEssenceDescriptor;
 typedef struct _MXFMetadataMultipleDescriptor MXFMetadataMultipleDescriptor;
 typedef struct _MXFMetadataLocator MXFMetadataLocator;
@@ -420,6 +421,18 @@ struct _MXFMetadataCDCIPictureEssenceDescriptor {
   guint32 black_ref_level;
   guint32 white_ref_level;
   guint32 color_range;
+};
+
+struct _MXFMetadataRGBAPictureEssenceDescriptor {
+  MXFMetadataGenericPictureEssenceDescriptor parent;
+
+  guint32 component_max_ref;
+  guint32 component_min_ref;
+  guint32 alpha_max_ref;
+  guint32 alpha_min_ref;
+  guint8 scanning_direction;
+
+  /* TODO: pixel layout, palette & palette layout */
 };
 
 struct _MXFMetadataGenericSoundEssenceDescriptor {

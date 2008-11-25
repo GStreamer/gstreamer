@@ -289,6 +289,15 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
     demux->cdci_picture_essence_descriptor = NULL;
   }
 
+  if (demux->rgba_picture_essence_descriptor) {
+    for (i = 0; i < demux->rgba_picture_essence_descriptor->len; i++)
+      mxf_metadata_rgba_picture_essence_descriptor_reset (&g_array_index
+          (demux->rgba_picture_essence_descriptor,
+              MXFMetadataRGBAPictureEssenceDescriptor, i));
+    g_array_free (demux->rgba_picture_essence_descriptor, TRUE);
+    demux->rgba_picture_essence_descriptor = NULL;
+  }
+
   if (demux->mpeg_video_descriptor) {
     for (i = 0; i < demux->mpeg_video_descriptor->len; i++)
       mxf_metadata_mpeg_video_descriptor_reset (&g_array_index
@@ -722,7 +731,7 @@ gst_mxf_demux_handle_metadata_generic_descriptor (GstMXFDemux * demux,
 
   if (!demux->generic_descriptor)
     demux->generic_descriptor =
-        g_array_new (FALSE, TRUE, sizeof (MXFMetadataGenericDescriptor));
+        g_array_new (FALSE, FALSE, sizeof (MXFMetadataGenericDescriptor));
 
   g_array_append_val (demux->generic_descriptor, descriptor);
 
@@ -754,7 +763,7 @@ gst_mxf_demux_handle_metadata_file_descriptor (GstMXFDemux * demux,
 
   if (!demux->file_descriptor)
     demux->file_descriptor =
-        g_array_new (FALSE, TRUE, sizeof (MXFMetadataFileDescriptor));
+        g_array_new (FALSE, FALSE, sizeof (MXFMetadataFileDescriptor));
 
   g_array_append_val (demux->file_descriptor, descriptor);
 
@@ -787,7 +796,7 @@ gst_mxf_demux_handle_metadata_multiple_descriptor (GstMXFDemux * demux,
 
   if (!demux->multiple_descriptor)
     demux->multiple_descriptor =
-        g_array_new (FALSE, TRUE, sizeof (MXFMetadataMultipleDescriptor));
+        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMultipleDescriptor));
 
   g_array_append_val (demux->multiple_descriptor, descriptor);
 
@@ -821,7 +830,7 @@ gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor (GstMXFDemux *
 
   if (!demux->generic_picture_essence_descriptor)
     demux->generic_picture_essence_descriptor =
-        g_array_new (FALSE, TRUE,
+        g_array_new (FALSE, FALSE,
         sizeof (MXFMetadataGenericPictureEssenceDescriptor));
 
   g_array_append_val (demux->generic_picture_essence_descriptor, descriptor);
@@ -856,10 +865,45 @@ gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor (GstMXFDemux *
 
   if (!demux->cdci_picture_essence_descriptor)
     demux->cdci_picture_essence_descriptor =
-        g_array_new (FALSE, TRUE,
+        g_array_new (FALSE, FALSE,
         sizeof (MXFMetadataCDCIPictureEssenceDescriptor));
 
   g_array_append_val (demux->cdci_picture_essence_descriptor, descriptor);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mxf_demux_handle_metadata_rgba_picture_essence_descriptor (GstMXFDemux *
+    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
+{
+  MXFMetadataRGBAPictureEssenceDescriptor descriptor;
+
+  memset (&descriptor, 0, sizeof (descriptor));
+
+  GST_DEBUG_OBJECT (demux,
+      "Handling metadata RGBA picture essence descriptor of size %u"
+      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
+      GST_BUFFER_SIZE (buffer), demux->offset, type);
+
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_rgba_picture_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_rgba_picture_essence_descriptor_reset)) {
+    GST_ERROR_OBJECT (demux,
+        "Parsing metadata RGBA picture essence descriptor failed");
+    return GST_FLOW_ERROR;
+  }
+
+  if (!demux->rgba_picture_essence_descriptor)
+    demux->rgba_picture_essence_descriptor =
+        g_array_new (FALSE, FALSE,
+        sizeof (MXFMetadataRGBAPictureEssenceDescriptor));
+
+  g_array_append_val (demux->rgba_picture_essence_descriptor, descriptor);
 
   return GST_FLOW_OK;
 }
@@ -890,7 +934,7 @@ gst_mxf_demux_handle_metadata_mpeg_video_descriptor (GstMXFDemux * demux,
 
   if (!demux->mpeg_video_descriptor)
     demux->mpeg_video_descriptor =
-        g_array_new (FALSE, TRUE, sizeof (MXFMetadataMPEGVideoDescriptor));
+        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMPEGVideoDescriptor));
 
   g_array_append_val (demux->mpeg_video_descriptor, descriptor);
 
@@ -924,7 +968,7 @@ gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor (GstMXFDemux *
 
   if (!demux->generic_sound_essence_descriptor)
     demux->generic_sound_essence_descriptor =
-        g_array_new (FALSE, TRUE,
+        g_array_new (FALSE, FALSE,
         sizeof (MXFMetadataGenericSoundEssenceDescriptor));
 
   g_array_append_val (demux->generic_sound_essence_descriptor, descriptor);
@@ -959,7 +1003,7 @@ gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (GstMXFDemux *
 
   if (!demux->wave_audio_essence_descriptor)
     demux->wave_audio_essence_descriptor =
-        g_array_new (FALSE, TRUE,
+        g_array_new (FALSE, FALSE,
         sizeof (MXFMetadataWaveAudioEssenceDescriptor));
 
   g_array_append_val (demux->wave_audio_essence_descriptor, descriptor);
@@ -1031,6 +1075,13 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
       g_ptr_array_add (demux->descriptor,
           &g_array_index (demux->cdci_picture_essence_descriptor,
               MXFMetadataCDCIPictureEssenceDescriptor, i));
+    }
+  }
+  if (demux->rgba_picture_essence_descriptor) {
+    for (i = 0; i < demux->rgba_picture_essence_descriptor->len; i++) {
+      g_ptr_array_add (demux->descriptor,
+          &g_array_index (demux->rgba_picture_essence_descriptor,
+              MXFMetadataRGBAPictureEssenceDescriptor, i));
     }
   }
   if (demux->mpeg_video_descriptor) {
@@ -1173,8 +1224,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1827,7 +1879,6 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
           gst_mxf_demux_handle_metadata_structural_component (demux,
           key, type, buffer);
       break;
-    case MXF_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR:
     case MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR:
       ret =
           gst_mxf_demux_handle_metadata_generic_descriptor (demux,
@@ -1846,6 +1897,11 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     case MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR:
       ret =
           gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor (demux,
+          key, type, buffer);
+      break;
+    case MXF_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR:
+      ret =
+          gst_mxf_demux_handle_metadata_rgba_picture_essence_descriptor (demux,
           key, type, buffer);
       break;
     case MXF_METADATA_MPEG_VIDEO_DESCRIPTOR:

@@ -2389,6 +2389,79 @@ void mxf_metadata_cdci_picture_essence_descriptor_reset
 }
 
 gboolean
+    mxf_metadata_rgba_picture_essence_descriptor_handle_tag
+    (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
+    guint16 tag, const guint8 * tag_data, guint16 tag_size)
+{
+  MXFMetadataRGBAPictureEssenceDescriptor *descriptor =
+      (MXFMetadataRGBAPictureEssenceDescriptor *) d;
+  gboolean ret = FALSE;
+
+  switch (tag) {
+    case 0x3406:
+      if (tag_size != 4)
+        goto error;
+      descriptor->component_max_ref = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  component max ref = %u", descriptor->component_max_ref);
+      break;
+    case 0x3407:
+      if (tag_size != 4)
+        goto error;
+      descriptor->component_min_ref = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  component min ref = %u", descriptor->component_min_ref);
+      break;
+    case 0x3408:
+      if (tag_size != 4)
+        goto error;
+      descriptor->alpha_max_ref = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  alpha max ref = %u", descriptor->alpha_max_ref);
+      break;
+    case 0x3409:
+      if (tag_size != 4)
+        goto error;
+      descriptor->alpha_min_ref = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  alpha min ref = %u", descriptor->alpha_min_ref);
+      break;
+    case 0x3405:
+      if (tag_size != 1)
+        goto error;
+      descriptor->scanning_direction = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  scanning direction = %u", descriptor->scanning_direction);
+      break;
+    case 0x3401:
+    case 0x3403:
+    case 0x3404:
+      /* TODO: handle this */
+      GST_WARNING ("  tag 0x%04x not implemented yet", tag);
+      break;
+    default:
+      ret =
+          mxf_metadata_generic_picture_essence_descriptor_handle_tag (d, primer,
+          tag, tag_data, tag_size);
+      break;
+  }
+
+  return ret;
+
+error:
+  GST_ERROR ("Invalid RGBA picture essence descriptor tag 0x%04x of size %u",
+      tag, tag_size);
+
+  return TRUE;
+}
+
+void mxf_metadata_rgba_picture_essence_descriptor_reset
+    (MXFMetadataRGBAPictureEssenceDescriptor * descriptor)
+{
+  g_return_if_fail (descriptor != NULL);
+
+  mxf_metadata_generic_picture_essence_descriptor_reset (
+      (MXFMetadataGenericPictureEssenceDescriptor *) descriptor);
+
+  memset (descriptor, 0, sizeof (MXFMetadataRGBAPictureEssenceDescriptor));
+}
+
+gboolean
 mxf_metadata_multiple_descriptor_handle_tag (MXFMetadataGenericDescriptor * d,
     const MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
     guint16 tag_size)

@@ -1,5 +1,29 @@
 2008-11-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset_metadata),
+	(gst_mxf_demux_handle_metadata_generic_descriptor),
+	(gst_mxf_demux_handle_metadata_file_descriptor),
+	(gst_mxf_demux_handle_metadata_multiple_descriptor),
+	(gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_rgba_picture_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_mpeg_video_descriptor),
+	(gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor),
+	(gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor),
+	(gst_mxf_demux_handle_header_metadata_resolve_references),
+	(gst_mxf_demux_handle_metadata):
+	* gst/mxf/mxfdemux.h:
+	* gst/mxf/mxfparse.c:
+	(mxf_metadata_rgba_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_rgba_picture_essence_descriptor_reset):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxftypes.h:
+	Add initial parsing of RGBA descriptors.
+
+	Don't initialize descriptor GArray with zeroes.
+
+2008-11-25  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfaes-bwf.c:
 	(mxf_metadata_wave_audio_essence_descriptor_handle_tag):
 	* gst/mxf/mxfaes-bwf.h:
