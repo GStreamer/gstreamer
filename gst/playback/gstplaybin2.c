@@ -2131,7 +2131,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_object_set (uridecodebin, "subtitle-encoding", playbin->encoding, NULL);
   /* configure uri */
   g_object_set (uridecodebin, "uri", group->uri, NULL);
-  g_object_set (uridecodebin, "buffer-time", playbin->buffer_duration, NULL);
+  g_object_set (uridecodebin, "buffer-duration", playbin->buffer_duration,
+      NULL);
   g_object_set (uridecodebin, "buffer-size", playbin->buffer_size, NULL);
 
   /* connect pads and other things */

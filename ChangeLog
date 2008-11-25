@@ -1,5 +1,10 @@
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaybin2.c: (activate_group):
+	Fix buffer-duration property.
+
+2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_drain), (gst_base_audio_sink_event),
 	(gst_base_audio_sink_sync_latency), (gst_base_audio_sink_render),
