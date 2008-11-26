@@ -1,3 +1,16 @@
+2008-11-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (get_client),
+	(gst_rtp_bin_reset_sync), (gst_rtp_bin_associate),
+	(gst_rtp_bin_handle_sync), (create_stream),
+	(gst_rtp_bin_class_init), (new_ssrc_pad_found):
+	* gst/rtpmanager/gstrtpbin.h:
+	Remove a lot of per stream state that is not needed and pass new info in
+	the method call.
+	Add signal to reset sync parameters.
+	Avoid parsing the caps to get a clock_base, we get this from the sync
+	signal now. 
+
 2008-11-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c: (gst_mxf_pad_init),
