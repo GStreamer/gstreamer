@@ -1,5 +1,16 @@
 2008-11-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/rtpsession.c: (obtain_source),
+	(rtp_session_create_source), (rtp_session_process_rtp),
+	(rtp_session_process_sr), (rtp_session_process_rr),
+	(rtp_session_process_sdes), (rtp_session_process_bye):
+	Make obtain_source return an aditional ref so that we don't lose our ref
+	to it when a session cleanup occurs when we are emiting a signal.
+	Emit the on_new_ssrc signal for the CSRC, not the SSRC.
+	Fixes #562319.
+
+2008-11-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_reset_sync),
 	(gst_rtp_bin_clear_pt_map):
 	Reset the sync parameters when clearing the payload type map too.

@@ -1107,7 +1107,8 @@ check_collision (RTPSession * sess, RTPSource * source,
 }
 
 
-/* must be called with the session lock */
+/* must be called with the session lock, the returned source needs to be
+ * unreffed after usage. */
 static RTPSource *
 obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     RTPArrivalStats * arrival, gboolean rtp)
@@ -1156,6 +1157,7 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
   source->last_activity = arrival->time;
   if (rtp)
     source->last_rtp_activity = arrival->time;
+  g_object_ref (source);
 
   return source;
 }
@@ -1392,8 +1394,9 @@ rtp_session_create_source (RTPSession * sess)
   RTP_SESSION_LOCK (sess);
   ssrc = rtp_session_create_new_ssrc (sess);
   source = rtp_source_new (ssrc);
-  g_object_ref (source);
   rtp_source_set_callbacks (source, &callbacks, sess);
+  /* we need an additional ref for the source in the hashtable */
+  g_object_ref (source);
   g_hash_table_insert (sess->ssrcs[sess->mask_idx], GINT_TO_POINTER (ssrc),
       source);
   /* we have one more source now */
@@ -1477,7 +1480,6 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   /* get SSRC and look up in session database */
   ssrc = gst_rtp_buffer_get_ssrc (buffer);
   source = obtain_source (sess, ssrc, &created, &arrival, TRUE);
-
   if (!source)
     goto collision;
 
@@ -1521,16 +1523,20 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
       /* get source */
       csrc_src = obtain_source (sess, csrc, &created, &arrival, TRUE);
+      if (!csrc_src)
+        continue;
 
       if (created) {
         GST_DEBUG ("created new CSRC: %08x", csrc);
         rtp_source_set_as_csrc (csrc_src);
         if (RTP_SOURCE_IS_ACTIVE (csrc_src))
           sess->stats.active_sources++;
-        on_new_ssrc (sess, source);
+        on_new_ssrc (sess, csrc_src);
       }
+      g_object_unref (csrc_src);
     }
   }
+  g_object_unref (source);
   gst_buffer_unref (buffer);
 
   RTP_SESSION_UNLOCK (sess);
@@ -1614,7 +1620,6 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
       senderssrc, GST_TIME_ARGS (arrival->time));
 
   source = obtain_source (sess, senderssrc, &created, arrival, FALSE);
-
   if (!source)
     return;
 
@@ -1634,6 +1639,7 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
     on_new_ssrc (sess, source);
 
   rtp_session_process_rb (sess, source, packet, arrival);
+  g_object_unref (source);
 }
 
 /* A receiver report contains statistics about how a receiver is doing. It
@@ -1655,7 +1661,6 @@ rtp_session_process_rr (RTPSession * sess, GstRTCPPacket * packet,
   GST_DEBUG ("got RR packet: SSRC %08x", senderssrc);
 
   source = obtain_source (sess, senderssrc, &created, arrival, FALSE);
-
   if (!source)
     return;
 
@@ -1663,6 +1668,7 @@ rtp_session_process_rr (RTPSession * sess, GstRTCPPacket * packet,
     on_new_ssrc (sess, source);
 
   rtp_session_process_rb (sess, source, packet, arrival);
+  g_object_unref (source);
 }
 
 /* Get SDES items and store them in the SSRC */
@@ -1687,10 +1693,10 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
 
     GST_DEBUG ("item %d, SSRC %08x", i, ssrc);
 
-    /* find src, no probation when dealing with RTCP */
-    source = obtain_source (sess, ssrc, &created, arrival, FALSE);
     changed = FALSE;
 
+    /* find src, no probation when dealing with RTCP */
+    source = obtain_source (sess, ssrc, &created, arrival, FALSE);
     if (!source)
       return;
 
@@ -1718,6 +1724,8 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       on_new_ssrc (sess, source);
     if (changed)
       on_ssrc_sdes (sess, source);
+
+    g_object_unref (source);
 
     more_items = gst_rtcp_packet_sdes_next_item (packet);
     i++;
@@ -1748,7 +1756,6 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 
     /* find src and mark bye, no probation when dealing with RTCP */
     source = obtain_source (sess, ssrc, &created, arrival, FALSE);
-
     if (!source)
       return;
 
@@ -1803,6 +1810,8 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
       on_new_ssrc (sess, source);
 
     on_bye_ssrc (sess, source);
+
+    g_object_unref (source);
   }
   g_free (reason);
 }
