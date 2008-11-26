@@ -53,10 +53,6 @@
 
 G_BEGIN_DECLS
 
-#if (POST_10_12)
-#define HAVE_LATENCY
-#endif
-
 #define FLUTS_MIN_PES_BUFFER_SIZE     4 * 1024
 #define FLUTS_MAX_PES_BUFFER_SIZE   256 * 1024
 
@@ -207,11 +203,9 @@ struct _GstFluTSDemux {
   gboolean          need_no_more_pads;
   guint16           packetsize;
   gboolean          m2ts_mode;
-#ifdef HAVE_LATENCY
   /* clocking */
   GstClock          * clock;
   GstClockTime      clock_base;
-#endif
 };
 
 struct _GstFluTSDemuxClass {

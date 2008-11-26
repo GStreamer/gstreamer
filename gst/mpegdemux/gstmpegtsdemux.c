@@ -192,10 +192,8 @@ static gboolean gst_fluts_demux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_fluts_demux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_fluts_demux_sink_setcaps (GstPad * pad, GstCaps * caps);
 
-#ifdef HAVE_LATENCY
 static GstClock *gst_fluts_demux_provide_clock (GstElement * element);
 static gboolean gst_fluts_demux_src_pad_query (GstPad * pad, GstQuery * query);
-#endif
 
 static GstStateChangeReturn gst_fluts_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -305,9 +303,7 @@ gst_fluts_demux_class_init (GstFluTSDemuxClass * klass)
           "or Blue-Ray Format ie .m2ts(192 bytes).", FALSE, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_fluts_demux_change_state;
-#ifdef HAVE_LATENCY
   gstelement_class->provide_clock = gst_fluts_demux_provide_clock;
-#endif
 }
 
 static void
@@ -382,12 +378,10 @@ gst_fluts_demux_reset (GstFluTSDemux * demux)
     }
   }
 
-#ifdef HAVE_LATENCY
   if (demux->clock) {
     g_object_unref (demux->clock);
     demux->clock = NULL;
   }
-#endif
 }
 
 #if 0
@@ -669,10 +663,8 @@ gst_fluts_demux_fill_stream (GstFluTSStream * stream, guint8 id,
   gst_pad_use_fixed_caps (stream->pad);
   gst_pad_set_caps (stream->pad, caps);
   gst_caps_unref (caps);
-#ifdef HAVE_LATENCY
   gst_pad_set_query_function (stream->pad,
       GST_DEBUG_FUNCPTR (gst_fluts_demux_src_pad_query));
-#endif
   g_free (name);
 
   return TRUE;
@@ -740,13 +732,11 @@ gst_fluts_demux_send_new_segment (GstFluTSDemux * demux,
   GST_DEBUG_OBJECT (demux, "segment PTS to (%" G_GUINT64_FORMAT ") time: %"
       G_GUINT64_FORMAT, base_PCR, time);
 
-#ifdef HAVE_LATENCY
   if (demux->clock && demux->clock_base == GST_CLOCK_TIME_NONE) {
     demux->clock_base = gst_clock_get_time (demux->clock);
     gst_clock_set_calibration (demux->clock,
         gst_clock_get_internal_time (demux->clock), demux->clock_base, 1, 1);
   }
-#endif
 
   gst_pad_push_event (stream->pad,
       gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, time, -1, 0));
@@ -1686,7 +1676,6 @@ gst_fluts_demux_parse_adaptation_field (GstFluTSStream * stream,
 
         stream->last_PCR = pcr;
 
-#ifdef HAVE_LATENCY
         if (demux->clock && demux->clock_base != GST_CLOCK_TIME_NONE) {
           gdouble r_squared;
           GstFluTSStream *PMT_stream;
@@ -1710,7 +1699,6 @@ gst_fluts_demux_parse_adaptation_field (GstFluTSStream * stream,
                 MPEGTIME_TO_GSTTIME (stream->base_PCR), &r_squared);
           }
         }
-#endif
       }
       data += 6;
     }
@@ -2387,7 +2375,6 @@ gst_fluts_demux_sink_event (GstPad * pad, GstEvent * event)
   return TRUE;
 }
 
-#ifdef HAVE_LATENCY
 static gboolean
 gst_fluts_demux_provides_clock (GstElement * element)
 {
@@ -2464,7 +2451,6 @@ gst_fluts_demux_src_pad_query (GstPad * pad, GstQuery * query)
 
   return res;
 }
-#endif
 
 
 static FORCE_INLINE gint

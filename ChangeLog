@@ -1,3 +1,9 @@
+2008-11-25  David Schleef  <ds@schleef.org>
+
+	* gst/mpegdemux/gstmpegtsdemux.c:
+	* gst/mpegdemux/gstmpegtsdemux.h:
+	  Enable latency code, since we're definitely after 0.10.12
+
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Jonathan Matthew <notverysmart at gmail dot com>
