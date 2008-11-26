@@ -1,3 +1,9 @@
+2008-11-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/level/level-example.c:
+	  Set fakesink to sync. Otherwise people might question the message
+	  interval. Nevertheless the timestamp in the message is what matters.
+
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/icles/.cvsignore:

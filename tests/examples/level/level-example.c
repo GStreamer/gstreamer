@@ -108,6 +108,8 @@ main (int argc, char *argv[])
 
   /* make sure we'll get messages */
   g_object_set (G_OBJECT (level), "message", TRUE, NULL);
+  /* run synced and not as fast as we can */
+  g_object_set (G_OBJECT (fakesink), "sync", TRUE, NULL);
 
   bus = gst_element_get_bus (pipeline);
   watch_id = gst_bus_add_watch (bus, message_handler, NULL);
