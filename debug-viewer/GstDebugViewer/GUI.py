@@ -1964,14 +1964,9 @@ class Window (object):
 
     def handle_edit_copy_line_action_activate (self, action):
 
-        line_index = self.get_active_line_index ()
-        line = self.log_file.get_full_line (line_index)
-
-        # FIXME:
-        level = self.log_filter[(line_index,)][LogModelBase.COL_LEVEL]
-        line[LogModelBase.COL_LEVEL] = level
-
-        self.clipboard.set_text (line.line_string ())
+        line = self.get_active_line ()
+        log_line = Data.LogLine (line)
+        self.clipboard.set_text (log_line.line_string ())
 
     def handle_edit_copy_message_action_activate (self, action):
 
