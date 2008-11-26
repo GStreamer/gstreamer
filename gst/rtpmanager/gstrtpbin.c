@@ -686,6 +686,30 @@ return_true (gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
+gst_rtp_bin_reset_sync (GstRtpBin * rtpbin)
+{
+  GSList *clients, *streams;
+
+  GST_DEBUG_OBJECT (rtpbin, "Reset sync on all clients");
+
+  GST_RTP_BIN_LOCK (rtpbin);
+  for (clients = rtpbin->clients; clients; clients = g_slist_next (clients)) {
+    GstRtpBinClient *client = (GstRtpBinClient *) clients->data;
+
+    /* reset sync on all streams for this client */
+    for (streams = client->streams; streams; streams = g_slist_next (streams)) {
+      GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
+
+      /* make use require a new SR packet for this stream before we attempt new
+       * lip-sync */
+      stream->have_sync = FALSE;
+      stream->unix_delta = 0;
+    }
+  }
+  GST_RTP_BIN_UNLOCK (rtpbin);
+}
+
+static void
 gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
 {
   GSList *sessions, *streams;
@@ -711,6 +735,9 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
     GST_RTP_SESSION_UNLOCK (session);
   }
   GST_RTP_BIN_UNLOCK (bin);
+
+  /* reset sync too */
+  gst_rtp_bin_reset_sync (bin);
 }
 
 static RTPSession *
@@ -792,30 +819,6 @@ free_client (GstRtpBinClient * client)
   g_slist_free (client->streams);
   g_free (client->cname);
   g_free (client);
-}
-
-static void
-gst_rtp_bin_reset_sync (GstRtpBin * rtpbin)
-{
-  GSList *clients, *streams;
-
-  GST_DEBUG_OBJECT (rtpbin, "Reset sync on all clients");
-
-  GST_RTP_BIN_LOCK (rtpbin);
-  for (clients = rtpbin->clients; clients; clients = g_slist_next (clients)) {
-    GstRtpBinClient *client = (GstRtpBinClient *) clients->data;
-
-    /* reset sync on all streams for this client */
-    for (streams = client->streams; streams; streams = g_slist_next (streams)) {
-      GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
-
-      /* make use require a new SR packet for this stream before we attempt new
-       * lip-sync */
-      stream->have_sync = FALSE;
-      stream->unix_delta = 0;
-    }
-  }
-  GST_RTP_BIN_UNLOCK (rtpbin);
 }
 
 /* associate a stream to the given CNAME. This will make sure all streams for

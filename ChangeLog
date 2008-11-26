@@ -1,5 +1,12 @@
 2008-11-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_reset_sync),
+	(gst_rtp_bin_clear_pt_map):
+	Reset the sync parameters when clearing the payload type map too.
+	Fixes #562312.
+
+2008-11-26  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (get_client),
 	(gst_rtp_bin_reset_sync), (gst_rtp_bin_associate),
 	(gst_rtp_bin_handle_sync), (create_stream),
