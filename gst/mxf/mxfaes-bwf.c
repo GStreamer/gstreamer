@@ -179,7 +179,9 @@ void mxf_metadata_wave_audio_essence_descriptor_reset
   mxf_metadata_generic_sound_essence_descriptor_reset (
       (MXFMetadataGenericSoundEssenceDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataWaveAudioEssenceDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataWaveAudioEssenceDescriptor,
+      MXFMetadataGenericSoundEssenceDescriptor);
 }
 
 gboolean

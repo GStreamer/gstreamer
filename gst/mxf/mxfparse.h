@@ -20,6 +20,8 @@
 #ifndef __MXF_PARSE_H__
 #define __MXF_PARSE_H__
 
+#include <string.h>
+
 #include "mxftypes.h"
 
 typedef GstFlowReturn (*MXFEssenceElementHandler) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataGenericPackage *package, MXFMetadataTrack *track, MXFMetadataStructuralComponent *component, gpointer mapping_data, GstBuffer **outbuf);
@@ -110,6 +112,12 @@ void mxf_metadata_structural_component_reset (MXFMetadataStructuralComponent *co
 
 gboolean
 mxf_metadata_descriptor_parse (const MXFUL * key, MXFMetadataGenericDescriptor * descriptor, const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size, MXFMetadataDescriptorHandleTag handle_tag, MXFMetadataDescriptorReset reset);
+
+#define MXF_METADATA_DESCRIPTOR_CLEAR(descriptor, type, parent_type) \
+  G_STMT_START { \
+    guint8 *___data = (guint8 *) descriptor + sizeof (parent_type); \
+    memset (___data, 0, sizeof (type) - sizeof (parent_type)); \
+  } G_STMT_END
 
 gboolean mxf_metadata_generic_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
     const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);

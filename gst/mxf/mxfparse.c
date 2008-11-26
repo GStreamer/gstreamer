@@ -1894,8 +1894,6 @@ mxf_metadata_file_descriptor_handle_tag (MXFMetadataGenericDescriptor * d,
   gboolean ret = FALSE;
   gchar str[48];
 
-  descriptor->parent.is_file_descriptor = TRUE;
-
   switch (tag) {
     case 0x3006:
       if (tag_size != 4)
@@ -1957,7 +1955,10 @@ mxf_metadata_file_descriptor_reset (MXFMetadataFileDescriptor * descriptor)
   mxf_metadata_generic_descriptor_reset ((MXFMetadataGenericDescriptor *)
       descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataFileDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor, MXFMetadataFileDescriptor,
+      MXFMetadataGenericDescriptor);
+
+  descriptor->parent.is_file_descriptor = TRUE;
 }
 
 gboolean
@@ -2053,7 +2054,11 @@ void mxf_metadata_generic_sound_essence_descriptor_reset
 
   mxf_metadata_file_descriptor_reset ((MXFMetadataFileDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataGenericSoundEssenceDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataGenericSoundEssenceDescriptor, MXFMetadataFileDescriptor);
+
+  descriptor->audio_sampling_rate.n = 48000;
+  descriptor->audio_sampling_rate.d = 1;
 }
 
 gboolean
@@ -2275,7 +2280,10 @@ void mxf_metadata_generic_picture_essence_descriptor_reset
 
   mxf_metadata_file_descriptor_reset ((MXFMetadataFileDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataGenericPictureEssenceDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataGenericPictureEssenceDescriptor, MXFMetadataFileDescriptor);
+
+  descriptor->signal_standard = 1;
 }
 
 void mxf_metadata_generic_picture_essence_descriptor_set_caps
@@ -2412,7 +2420,9 @@ void mxf_metadata_cdci_picture_essence_descriptor_reset
   mxf_metadata_generic_picture_essence_descriptor_reset (
       (MXFMetadataGenericPictureEssenceDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataCDCIPictureEssenceDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataCDCIPictureEssenceDescriptor,
+      MXFMetadataGenericPictureEssenceDescriptor);
 }
 
 gboolean
@@ -2485,7 +2495,12 @@ void mxf_metadata_rgba_picture_essence_descriptor_reset
   mxf_metadata_generic_picture_essence_descriptor_reset (
       (MXFMetadataGenericPictureEssenceDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataRGBAPictureEssenceDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataRGBAPictureEssenceDescriptor,
+      MXFMetadataGenericPictureEssenceDescriptor);
+
+  descriptor->component_max_ref = 255;
+  descriptor->alpha_max_ref = 255;
 }
 
 gboolean
@@ -2550,7 +2565,8 @@ void mxf_metadata_multiple_descriptor_reset
 
   mxf_metadata_file_descriptor_reset ((MXFMetadataFileDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataMultipleDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor, MXFMetadataMultipleDescriptor,
+      MXFMetadataFileDescriptor);
 }
 
 gboolean

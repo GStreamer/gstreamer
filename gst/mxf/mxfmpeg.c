@@ -190,7 +190,8 @@ void mxf_metadata_mpeg_video_descriptor_reset
   mxf_metadata_cdci_picture_essence_descriptor_reset (
       (MXFMetadataCDCIPictureEssenceDescriptor *) descriptor);
 
-  memset (descriptor, 0, sizeof (MXFMetadataMPEGVideoDescriptor));
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor, MXFMetadataMPEGVideoDescriptor,
+      MXFMetadataCDCIPictureEssenceDescriptor);
 }
 
 gboolean

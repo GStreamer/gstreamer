@@ -1,3 +1,21 @@
+2008-11-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c:
+	(mxf_metadata_wave_audio_essence_descriptor_reset):
+	* gst/mxf/mxfmpeg.c: (mxf_metadata_mpeg_video_descriptor_reset):
+	* gst/mxf/mxfparse.c: (mxf_metadata_file_descriptor_handle_tag),
+	(mxf_metadata_file_descriptor_reset),
+	(mxf_metadata_generic_sound_essence_descriptor_reset),
+	(mxf_metadata_generic_picture_essence_descriptor_reset),
+	(mxf_metadata_cdci_picture_essence_descriptor_reset),
+	(mxf_metadata_rgba_picture_essence_descriptor_reset),
+	(mxf_metadata_multiple_descriptor_reset):
+	* gst/mxf/mxfparse.h:
+	When memset'ing the descriptors to zeroes only touch the part
+	of this descriptor, not it's parent type.
+
+	Set correct default values for all metadata fields.
+
 2008-11-25  David Schleef  <ds@schleef.org>
 
 	* gst/mpegdemux/gstmpegtsdemux.c:
