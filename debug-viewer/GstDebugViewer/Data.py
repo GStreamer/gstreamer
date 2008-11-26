@@ -277,6 +277,7 @@ class LogLine (list):
         if isinstance (message_offset, str):
             message = message_offset
 
+        # FIXME: Regarding object_, this doesn't fully replicate the formatting!
         return "%s %5d 0x%x %s %20s %s:%d:%s:<%s> %s" % (time_args (ts), pid, thread, level.name.ljust (5),
                                                          category, filename, line, function,
                                                          object_, message,)

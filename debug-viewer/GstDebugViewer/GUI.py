@@ -1964,6 +1964,8 @@ class Window (object):
 
     def handle_edit_copy_line_action_activate (self, action):
 
+        # TODO: Should probably copy the _exact_ line as taken from the file.
+
         line = self.get_active_line ()
         log_line = Data.LogLine (line)
         self.clipboard.set_text (log_line.line_string ())
