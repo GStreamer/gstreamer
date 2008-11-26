@@ -1,5 +1,18 @@
 2008-11-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_pad_init),
+	(gst_mxf_demux_reset_metadata), (gst_mxf_demux_combine_flows),
+	(gst_mxf_demux_handle_generic_container_essence_element):
+	Properly combine flow returns of the source pads.
+
+	Improve debugging and reset pad fields together with the
+	metadata to prevent invalid memory references.
+
+	* gst/mxf/mxfparse.c: (mxf_metadata_preface_parse):
+	Fix typo.
+
+2008-11-26  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfaes-bwf.c:
 	(mxf_metadata_wave_audio_essence_descriptor_reset):
 	* gst/mxf/mxfmpeg.c: (mxf_metadata_mpeg_video_descriptor_reset):

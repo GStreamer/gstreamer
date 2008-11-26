@@ -76,6 +76,8 @@ typedef struct
   MXFMetadataTrackType track_type;
   gboolean need_segment;
 
+  GstFlowReturn last_flow;
+
   guint64 essence_element_count;
   MXFEssenceElementHandler handle_essence_element;
   gpointer mapping_data;
@@ -130,7 +132,7 @@ gst_mxf_pad_class_init (GstMXFPadClass * klass)
 static void
 gst_mxf_pad_init (GstMXFPad * pad)
 {
-
+  pad->last_flow = GST_FLOW_OK;
 }
 
 static gboolean gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event);
@@ -181,6 +183,18 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
   demux->final_metadata = FALSE;
 
   demux->current_package = NULL;
+
+  if (demux->src) {
+    for (i = 0; i < demux->src->len; i++) {
+      GstMXFPad *pad = g_ptr_array_index (demux->src, i);
+
+      pad->material_track = NULL;
+      pad->material_package = NULL;
+      pad->component = NULL;
+      pad->source_track = NULL;
+      pad->source_package = NULL;
+    }
+  }
 
   mxf_metadata_preface_reset (&demux->preface);
 
@@ -374,6 +388,40 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   gst_mxf_demux_reset_mxf_state (demux);
   gst_mxf_demux_reset_metadata (demux);
+}
+
+static GstFlowReturn
+gst_mxf_demux_combine_flows (GstMXFDemux * demux,
+    GstMXFPad * pad, GstFlowReturn ret)
+{
+  guint i;
+
+  /* store the value */
+  pad->last_flow = ret;
+
+  /* any other error that is not-linked can be returned right away */
+  if (ret != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  g_assert (demux->src->len != 0);
+  for (i = 0; i < demux->src->len; i++) {
+    GstMXFPad *opad = g_ptr_array_index (demux->src, i);
+
+    if (opad == NULL)
+      continue;
+
+    ret = opad->last_flow;
+    /* some other return value (must be SUCCESS but we can return
+     * other values as well) */
+    if (ret != GST_FLOW_NOT_LINKED)
+      goto done;
+  }
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+done:
+  GST_LOG_OBJECT (demux, "combined return %s", gst_flow_get_name (ret));
+  return ret;
 }
 
 static GstFlowReturn
@@ -1224,9 +1272,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1964,6 +2011,11 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       "Handling generic container essence element of size %u"
       " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
+  GST_DEBUG_OBJECT (demux, "  type = 0x%02x", key->u[12]);
+  GST_DEBUG_OBJECT (demux, "  essence element count = 0x%02x", key->u[13]);
+  GST_DEBUG_OBJECT (demux, "  essence element type = 0x%02x", key->u[14]);
+  GST_DEBUG_OBJECT (demux, "  essence element number = 0x%02x", key->u[15]);
+
   if (!demux->current_package) {
     GST_ERROR_OBJECT (demux, "No package selected yet");
     return GST_FLOW_ERROR;
@@ -2055,6 +2107,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
   if (outbuf) {
     ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
+    ret = gst_mxf_demux_combine_flows (demux, pad, ret);
   }
 
   return ret;

@@ -769,8 +769,7 @@ mxf_metadata_preface_parse (const MXFUL * key,
         if (tag_size < 8)
           goto error;
         len = GST_READ_UINT32_BE (tag_data);
-        GST_DEBUG ("  number of identifications = %u",
-            preface->n_identifications);
+        GST_DEBUG ("  number of identifications = %u", len);
         if (len == 0)
           break;
         if (GST_READ_UINT32_BE (tag_data + 4) != 16)
