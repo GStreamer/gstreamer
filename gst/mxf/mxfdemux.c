@@ -389,6 +389,11 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
     demux->src = NULL;
   }
 
+  if (demux->partition_index) {
+    g_array_free (demux->partition_index, TRUE);
+    demux->partition_index = NULL;
+  }
+
   gst_mxf_demux_reset_mxf_state (demux);
   gst_mxf_demux_reset_metadata (demux);
 }
@@ -1275,8 +1280,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2136,7 +2142,17 @@ gst_mxf_demux_handle_random_index_pack (GstMXFDemux * demux, const MXFUL * key,
       "Handling random index pack of size %u at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  /* TODO: Parse this */
+  if (demux->partition_index) {
+    GST_DEBUG_OBJECT (demux, "Already parsed random index pack");
+    return GST_FLOW_OK;
+  }
+
+  if (!mxf_random_index_pack_parse (key, GST_BUFFER_DATA (buffer),
+          GST_BUFFER_SIZE (buffer), &demux->partition_index)) {
+    GST_ERROR_OBJECT (demux, "Parsing random index pack failed");
+    return GST_FLOW_ERROR;
+  }
+
   return GST_FLOW_OK;
 }
 
@@ -2233,6 +2249,74 @@ beach:
     gst_buffer_unref (buffer);
 
   return ret;
+}
+
+void
+gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
+{
+  GstBuffer *buffer;
+  GstFlowReturn ret;
+  gint64 filesize = -1;
+  GstFormat fmt = GST_FORMAT_BYTES;
+  guint32 pack_size;
+  MXFUL key;
+
+  if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &filesize) ||
+      fmt != GST_FORMAT_BYTES || filesize == -1) {
+    GST_DEBUG_OBJECT (demux, "Can't query upstream size");
+    return;
+  }
+
+  g_assert (filesize > 4);
+
+  if ((ret =
+          gst_mxf_demux_pull_range (demux, filesize - 4, 4,
+              &buffer)) != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (demux, "Failed pulling last 4 bytes");
+    return;
+  }
+
+  pack_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer));
+
+  gst_buffer_unref (buffer);
+
+  if (pack_size < 20) {
+    GST_DEBUG_OBJECT (demux, "Too small pack size");
+    return;
+  } else if (pack_size > filesize - 20) {
+    GST_DEBUG_OBJECT (demux, "Too large pack size");
+    return;
+  }
+
+  if ((ret =
+          gst_mxf_demux_pull_range (demux, filesize - pack_size, 16,
+              &buffer)) != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (demux, "Failed pulling random index pack key");
+    return;
+  }
+
+  memcpy (&key, GST_BUFFER_DATA (buffer), 16);
+  gst_buffer_unref (buffer);
+
+  if (!mxf_is_random_index_pack (&key)) {
+    GST_DEBUG_OBJECT (demux, "No random index pack");
+    return;
+  }
+
+  if ((ret =
+          gst_mxf_demux_pull_klv_packet (demux, filesize - pack_size, &key,
+              &buffer, NULL)) != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (demux, "Failed pulling random index pack");
+    return;
+  }
+
+
+  gst_mxf_demux_handle_random_index_pack (demux, &key, buffer);
+  gst_buffer_unref (buffer);
+
+  if (!demux->partition_index)
+    demux->partition_index =
+        g_array_new (FALSE, FALSE, sizeof (MXFRandomIndexPackEntry));
 }
 
 static void
@@ -2519,6 +2603,11 @@ gst_mxf_demux_loop (GstPad * pad)
     GST_ERROR_OBJECT (demux, "No valid header partition pack found");
     ret = GST_FLOW_ERROR;
     goto pause;
+  }
+
+  /* First of all pull&parse the random index pack at EOF */
+  if (!demux->partition_index) {
+    gst_mxf_demux_pull_random_index_pack (demux);
   }
 
   /* Now actually do something */

@@ -63,6 +63,12 @@ typedef struct {
   guint8 *data;
 } MXFLocalTag;
 
+/* SMPTE 377M 11.1 */
+typedef struct {
+  guint32 body_sid;
+  guint64 offset;
+} MXFRandomIndexPackEntry;
+
 typedef enum {
   MXF_PARTITION_PACK_HEADER,
   MXF_PARTITION_PACK_BODY,

@@ -556,6 +556,46 @@ mxf_partition_pack_reset (MXFPartitionPack * pack)
   memset (pack, 0, sizeof (MXFPartitionPack));
 }
 
+/* SMPTE 377M 11.1 */
+gboolean
+mxf_random_index_pack_parse (const MXFUL * key, const guint8 * data, guint size,
+    GArray ** array)
+{
+  guint len, i;
+  MXFRandomIndexPackEntry entry;
+
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (array != NULL, FALSE);
+
+  if (size < 4)
+    return FALSE;
+
+  if ((size - 4) % 12 != 0)
+    return FALSE;
+
+  GST_DEBUG ("Parsing random index pack:");
+
+  len = (size - 4) / 12;
+
+  GST_DEBUG ("  number of entries = %u", len);
+
+  *array =
+      g_array_sized_new (FALSE, FALSE, sizeof (MXFRandomIndexPackEntry), len);
+
+  for (i = 0; i < len; i++) {
+    entry.body_sid = GST_READ_UINT32_BE (data);
+    entry.offset = GST_READ_UINT64_BE (data + 4);
+    data += 12;
+
+    GST_DEBUG ("  entry %u = body sid %u at offset %" G_GUINT64_FORMAT, i,
+        entry.body_sid, entry.offset);
+
+    g_array_append_val (*array, entry);
+  }
+
+  return TRUE;
+}
+
 /* SMPTE 377M 8.2 Table 1 and 2 */
 
 static void

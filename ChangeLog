@@ -1,5 +1,19 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset),
+	(gst_mxf_demux_handle_random_index_pack),
+	(gst_mxf_demux_pull_random_index_pack), (gst_mxf_demux_loop):
+	* gst/mxf/mxfdemux.h:
+	* gst/mxf/mxfparse.c: (mxf_random_index_pack_parse):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxftypes.h:
+	Implement parsing of the random index pack, which provides a seek
+	table (including body sid) to the start of partition packs.
+	Later this will be used for reading all index table segments of
+	the complete file efficiently.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/Makefile.am:
 	* gst/mxf/mxfdemux.c:
 	(gst_mxf_demux_handle_header_metadata_update_streams),
