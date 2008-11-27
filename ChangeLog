@@ -1,5 +1,10 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* docs/plugins/inspect/plugin-speexresample.xml:
+	Remove old file.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/plugins/inspect/plugin-legacyresample.xml:
 	Add missing file.
 
