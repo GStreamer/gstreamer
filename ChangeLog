@@ -1,5 +1,10 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	Regenerated for library filename change.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:

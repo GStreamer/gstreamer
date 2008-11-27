@@ -1,8 +1,8 @@
 <plugin>
   <name>audioresample</name>
   <description>Resamples audio</description>
-  <filename>../../gst/speexresample/.libs/libgstspeexresample.so</filename>
-  <basename>libgstspeexresample.so</basename>
+  <filename>../../gst/speexresample/.libs/libgstaudioresample.so</filename>
+  <basename>libgstaudioresample.so</basename>
   <version>0.10.21.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
