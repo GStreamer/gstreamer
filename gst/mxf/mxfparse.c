@@ -141,6 +141,18 @@ mxf_is_metadata (const MXFUL * key)
   return (memcmp (key, metadata_key, 13) == 0 && key->u[15] == 0x00);
 }
 
+/* SMPTE 377M 8.7.3 */
+gboolean
+mxf_is_descriptive_metadata (const MXFUL * key)
+{
+  return (memcmp (key, mxf_key, 4) == 0 &&
+      key->u[4] == 0x02 &&
+      key->u[6] == 0x01 &&
+      key->u[7] == 0x01 &&
+      key->u[8] == 0x0d &&
+      key->u[9] == 0x01 && key->u[10] == 0x04 && key->u[11] == 0x01);
+}
+
 gboolean
 mxf_is_random_index_pack (const MXFUL * key)
 {

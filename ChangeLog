@@ -1,5 +1,20 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_handle_klv_packet):
+	* gst/mxf/mxfdv-dif.c: (mxf_is_dv_dif_essence_track),
+	(mxf_dv_dif_handle_essence_element), (mxf_dv_dif_create_caps):
+	* gst/mxf/mxfdv-dif.h:
+	* gst/mxf/mxfparse.c: (mxf_is_descriptive_metadata):
+	* gst/mxf/mxfparse.h:
+	Add fundamental support for DV-DIF essence streams.
+
+	Handle descriptive metadata packets as metadata packets.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset),
 	(gst_mxf_demux_handle_klv_packet):
 	* gst/mxf/mxfdemux.h:

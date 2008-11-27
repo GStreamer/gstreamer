@@ -33,6 +33,7 @@
 #include "mxfparse.h"
 #include "mxfaes-bwf.h"
 #include "mxfmpeg.h"
+#include "mxfdv-dif.h"
 
 #include <string.h>
 
@@ -1274,9 +1275,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1812,14 +1812,26 @@ choose_package:
           caps =
               mxf_mpeg_video_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_dv_dif_essence_track (source_track))
+          caps =
+              mxf_dv_dif_create_caps (source_package, source_track,
+              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
         break;
       case MXF_METADATA_TRACK_SOUND_ESSENCE:
         if (mxf_is_aes_bwf_essence_track (source_track))
           caps =
               mxf_aes_bwf_create_caps (source_package, source_track, &pad->tags,
               &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_dv_dif_essence_track (source_track))
+          caps =
+              mxf_dv_dif_create_caps (source_package, source_track,
+              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
         break;
       case MXF_METADATA_TRACK_DATA_ESSENCE:
+        if (mxf_is_dv_dif_essence_track (source_track))
+          caps =
+              mxf_dv_dif_create_caps (source_package, source_track,
+              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
         break;
       default:
         g_assert_not_reached ();
@@ -2391,7 +2403,7 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
 
   if (demux->update_metadata
       && !mxf_timestamp_is_unknown (&demux->preface.last_modified_date)
-      && !mxf_is_metadata (key)
+      && !mxf_is_metadata (key) && !mxf_is_descriptive_metadata (key)
       && !mxf_is_fill (key)) {
     if ((ret =
             gst_mxf_demux_handle_header_metadata_resolve_references (demux)) !=

@@ -48,6 +48,7 @@ gboolean mxf_is_footer_partition_pack (const MXFUL *key);
 gboolean mxf_is_primer_pack (const MXFUL *key);
 
 gboolean mxf_is_metadata (const MXFUL *key);
+gboolean mxf_is_descriptive_metadata (const MXFUL *key);
 
 gboolean mxf_is_random_index_pack (const MXFUL *key);
 gboolean mxf_is_index_table_segment (const MXFUL *key);

@@ -5,7 +5,8 @@ libgstmxf_la_SOURCES = \
 	mxfdemux.c \
 	mxfparse.c \
 	mxfaes-bwf.c \
-	mxfmpeg.c
+	mxfmpeg.c \
+	mxfdv-dif.c
 
 libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
@@ -16,5 +17,6 @@ noinst_HEADERS = \
 	mxfparse.h \
 	mxfaes-bwf.h \
 	mxfmpeg.h \
+	mxfdv-dif.h \
 	mxftypes.h
 
