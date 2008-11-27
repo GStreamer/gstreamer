@@ -267,7 +267,6 @@ AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(selector)
 AG_GST_CHECK_PLUGIN(speed)
-AG_GST_CHECK_PLUGIN(speexresample)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
@@ -1423,7 +1422,6 @@ gst/scaletempo/Makefile
 gst/sdp/Makefile
 gst/selector/Makefile
 gst/speed/Makefile
-gst/speexresample/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
