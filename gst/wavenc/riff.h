@@ -300,6 +300,7 @@ struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_UNKNOWN        (0x0000)
 #define GST_RIFF_WAVE_FORMAT_PCM            (0x0001)
 #define GST_RIFF_WAVE_FORMAT_ADPCM          (0x0002)
+#define GST_RIFF_WAVE_FORMAT_FLOAT          (0x0003)
 #define GST_RIFF_WAVE_FORMAT_IBM_CVSD       (0x0005)
 #define GST_RIFF_WAVE_FORMAT_ALAW           (0x0006)
 #define GST_RIFF_WAVE_FORMAT_MULAW          (0x0007)

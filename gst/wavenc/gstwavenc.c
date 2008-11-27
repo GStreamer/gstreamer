@@ -31,9 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (wavenc_debug);
 #define GST_CAT_DEFAULT wavenc_debug
 
-#define WAVE_FORMAT_PCM 0x0001
-#define WAVE_FORMAT_FLOAT 0x0003
-
 struct riff_struct
 {
   guint8 id[4];                 /* RIFF */
@@ -110,7 +107,20 @@ GST_ELEMENT_DETAILS ("WAV audio muxer",
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) [ 1, 2 ], "        \
     "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) { 32, 64 } "
+    "width = (int) { 32, 64 }; "         \
+    "audio/x-alaw, "                     \
+    "rate = (int) [ 8000, 192000 ], "    \
+    "channels = (int) [ 1, 2 ], "        \
+    "width = (int) 8, "                  \
+    "depth = (int) 8, "                  \
+    "signed = (boolean) false; "         \
+    "audio/x-mulaw, "                    \
+    "rate = (int) [ 8000, 192000 ], "    \
+    "channels = (int) [ 1, 2 ], "        \
+    "width = (int) 8, "                  \
+    "depth = (int) 8, "                  \
+    "signed = (boolean) false"
+
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -201,7 +211,7 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   memcpy (wave.format.id, "fmt ", 4);
   wave.format.len = 16;
 
-  wave.common.wFormatTag = (wavenc->fp) ? WAVE_FORMAT_FLOAT : WAVE_FORMAT_PCM;
+  wave.common.wFormatTag = wavenc->format;
   wave.common.wBlockAlign = (wavenc->width / 8) * wave.common.wChannels;
   wave.common.dwAvgBytesPerSec =
       wave.common.wBlockAlign * wave.common.dwSamplesPerSec;
@@ -259,6 +269,7 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstWavEnc *wavenc;
   GstStructure *structure;
+  const gchar *name;
   gint chans, rate, width;
 
   wavenc = GST_WAVENC (gst_pad_get_parent (pad));
@@ -271,23 +282,45 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (wavenc, "got caps: %" GST_PTR_FORMAT, caps);
 
   structure = gst_caps_get_structure (caps, 0);
+  name = gst_structure_get_name (structure);
+
   if (!gst_structure_get_int (structure, "channels", &chans) ||
-      !gst_structure_get_int (structure, "rate", &rate) ||
-      !gst_structure_get_int (structure, "width", &width)) {
+      !gst_structure_get_int (structure, "rate", &rate)) {
     GST_WARNING_OBJECT (wavenc, "caps incomplete");
     goto fail;
   }
 
-  wavenc->fp =
-      (g_str_equal (gst_structure_get_name (structure), "audio/x-raw-float"));
+  if (strcmp (name, "audio/x-raw-int") == 0) {
+    if (!gst_structure_get_int (structure, "width", &width)) {
+      GST_WARNING_OBJECT (wavenc, "caps incomplete");
+      goto fail;
+    }
+    wavenc->format = GST_RIFF_WAVE_FORMAT_PCM;
+    wavenc->width = width;
+  } else if (strcmp (name, "audio/x-raw-float") == 0) {
+    if (!gst_structure_get_int (structure, "width", &width)) {
+      GST_WARNING_OBJECT (wavenc, "caps incomplete");
+      goto fail;
+    }
+    wavenc->format = GST_RIFF_WAVE_FORMAT_FLOAT;
+    wavenc->width = width;
+  } else if (strcmp (name, "audio/x-alaw") == 0) {
+    wavenc->format = GST_RIFF_WAVE_FORMAT_ALAW;
+    wavenc->width = 8;
+  } else if (strcmp (name, "audio/x-mulaw") == 0) {
+    wavenc->format = GST_RIFF_WAVE_FORMAT_MULAW;
+    wavenc->width = 8;
+  } else {
+    GST_WARNING_OBJECT (wavenc, "Unsupported format %s", name);
+    goto fail;
+  }
 
   wavenc->channels = chans;
-  wavenc->width = width;
   wavenc->rate = rate;
 
   GST_LOG_OBJECT (wavenc,
-      "accepted caps: chans=%u width=%u rate=%u floating point=%d",
-      wavenc->channels, wavenc->width, wavenc->rate, wavenc->fp);
+      "accepted caps: format=0x%04x chans=%u width=%u rate=%u",
+      wavenc->format, wavenc->channels, wavenc->width, wavenc->rate);
 
   gst_object_unref (wavenc);
   return TRUE;
@@ -661,11 +694,11 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      wavenc->format = 0;
       wavenc->channels = 0;
       wavenc->width = 0;
       wavenc->rate = 0;
       wavenc->length = 0;
-      wavenc->fp = FALSE;
       wavenc->sent_header = FALSE;
       break;
     default:

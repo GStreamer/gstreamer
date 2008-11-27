@@ -47,11 +47,11 @@ struct _GstWavEnc {
   GstPad    *srcpad;
 
   /* useful audio data */
+  guint16    format;
   guint      width;
   guint      rate;
   guint      channels;
   guint32    length;
-  gboolean   fp;
 
   gboolean   sent_header;
 };

@@ -1,3 +1,14 @@
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Pepijn Van Eeckhoudt
+	              <pepijn dot vaneeckhoudt at luciad dot com>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),
+	(gst_wavenc_sink_setcaps), (gst_wavenc_change_state):
+	* gst/wavenc/gstwavenc.h:
+	* gst/wavenc/riff.h:
+	Add support for a-law and mu-law encoded wav files. Fixes bug #562434.
+
 2008-11-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: 이문형 <iwings at gmail dot com>
