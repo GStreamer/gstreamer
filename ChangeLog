@@ -1,3 +1,10 @@
+2008-11-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: 이문형 <iwings at gmail dot com>
+
+	* gst/gstpoll.c: (gst_poll_fd_ctl_write), (gst_poll_fd_has_error):
+	Adds support for FD_CONNECT event (win32). See #562258.
+
 2008-11-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesink.c:

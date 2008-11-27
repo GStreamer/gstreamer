@@ -695,7 +695,8 @@ gst_poll_fd_ctl_write (GstPoll * set, GstPollFD * fd, gboolean active)
     else
       pfd->events &= ~POLLOUT;
 #else
-    gst_poll_update_winsock_event_mask (set, idx, FD_WRITE, active);
+    gst_poll_update_winsock_event_mask (set, idx, FD_WRITE | FD_CONNECT,
+        active);
 #endif
   }
 
@@ -873,7 +874,8 @@ gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
     res = (wfd->events.iErrorCode[FD_CLOSE_BIT] != 0) ||
         (wfd->events.iErrorCode[FD_READ_BIT] != 0) ||
         (wfd->events.iErrorCode[FD_WRITE_BIT] != 0) ||
-        (wfd->events.iErrorCode[FD_ACCEPT_BIT] != 0);
+        (wfd->events.iErrorCode[FD_ACCEPT_BIT] != 0) ||
+        (wfd->events.iErrorCode[FD_CONNECT_BIT] != 0);
 #endif
   }
 
