@@ -1,5 +1,13 @@
 2008-11-27  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_get_offset), (gst_base_audio_src_create):
+	Avoid nasty int overflows after about 12 hours and 25 minutes when these
+	code paths are triggered. 
+	A free beer to Håvard Graff for finding this!
+
+2008-11-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: 이문형 <iwings at gmail dot com>
 
 	* gst-libs/gst/rtsp/gstrtspconnection.c:

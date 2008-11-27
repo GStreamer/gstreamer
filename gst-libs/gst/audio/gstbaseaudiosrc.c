@@ -718,7 +718,7 @@ gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
   if (diff >= segtotal) {
     GST_DEBUG_OBJECT (src, "dropped, align to segment %d", segdone);
     /* sample would be dropped, position to next playable position */
-    sample = (segdone - segtotal + 1) * sps;
+    sample = ((guint64) (segdone - segtotal + 1)) * sps;
   }
 
   return sample;
@@ -922,7 +922,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
           ringbuffer->segbase -= segment_diff;
 
           /* we calculate the new sample value */
-          new_sample = new_first_segment * sps;
+          new_sample = ((guint64) new_first_segment) * sps;
 
           /* and get the relative time to this -> our new timestamp */
           timestamp =
