@@ -1,5 +1,20 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Ron McOuat <rmcouat at smartt dot com>
+
+	* ext/soup/gstsouphttpsrc.c: (gst_soup_http_src_class_init),
+	(gst_soup_http_src_init), (gst_soup_http_src_dispose),
+	(gst_soup_http_src_set_property), (gst_soup_http_src_get_property),
+	(gst_soup_http_src_authenticate_cb), (gst_soup_http_src_start):
+	* ext/soup/gstsouphttpsrc.h:
+	* tests/check/elements/souphttpsrc.c: (basic_auth_cb),
+	(digest_auth_cb), (run_test), (GST_START_TEST),
+	(souphttpsrc_suite), (run_server):
+	Add support for basic and digest authentication in souphttpsrc.
+	Fixes bug #561775.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Pepijn Van Eeckhoudt
 	              <pepijn dot vaneeckhoudt at luciad dot com>
 

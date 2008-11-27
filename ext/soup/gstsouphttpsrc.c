@@ -121,6 +121,10 @@ enum
   PROP_USER_AGENT,
   PROP_AUTOMATIC_REDIRECT,
   PROP_PROXY,
+  PROP_USER_ID,
+  PROP_USER_PW,
+  PROP_PROXY_ID,
+  PROP_PROXY_PW,
   PROP_COOKIES,
   PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
@@ -195,7 +199,9 @@ static void gst_soup_http_src_got_body_cb (SoupMessage * msg,
     GstSoupHTTPSrc * src);
 static void gst_soup_http_src_finished_cb (SoupMessage * msg,
     GstSoupHTTPSrc * src);
-
+static void gst_soup_http_src_authenticate_cb (SoupSession * session,
+    SoupMessage * msg, SoupAuth * auth, gboolean retrying,
+    GstSoupHTTPSrc * src);
 
 static void
 _do_init (GType type)
@@ -262,12 +268,27 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       g_param_spec_string ("proxy", "Proxy",
           "HTTP proxy server URI", "", G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class,
-      PROP_COOKIES, g_param_spec_boxed ("cookies", "Cookies",
-          "HTTP request cookies", G_TYPE_STRV, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class,
-      PROP_IS_LIVE,
-      g_param_spec_boolean ("is-live", "is-live",
-          "Act like a live source", FALSE, G_PARAM_READWRITE));
+      PROP_USER_ID,
+      g_param_spec_string ("user-id", "user-id",
+          "HTTP location URI user id for authentication", "",
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_USER_PW,
+      g_param_spec_string ("user-pw", "user-pw",
+          "HTTP location URI user password for authentication", "",
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_PROXY_ID,
+      g_param_spec_string ("proxy-id", "proxy-id",
+          "HTTP proxy URI user id for authentication", "", G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_PROXY_PW,
+      g_param_spec_string ("proxy-pw", "proxy-pw",
+          "HTTP proxy URI user password for authentication", "",
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_COOKIES,
+      g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
+          G_TYPE_STRV, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "is-live", "Act like a live source",
+          FALSE, G_PARAM_READWRITE));
 
   /* icecast stuff */
   g_object_class_install_property (gobject_class,
@@ -319,6 +340,10 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src, GstSoupHTTPSrcClass * g_class)
   src->location = NULL;
   src->automatic_redirect = TRUE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
+  src->user_id = NULL;
+  src->user_pw = NULL;
+  src->proxy_id = NULL;
+  src->proxy_pw = NULL;
   src->cookies = NULL;
   src->icy_caps = NULL;
   src->iradio_mode = FALSE;
@@ -358,6 +383,14 @@ gst_soup_http_src_dispose (GObject * gobject)
     soup_uri_free (src->proxy);
     src->proxy = NULL;
   }
+  g_free (src->user_id);
+  src->user_id = NULL;
+  g_free (src->user_pw);
+  src->user_pw = NULL;
+  g_free (src->proxy_id);
+  src->proxy_id = NULL;
+  g_free (src->proxy_pw);
+  src->proxy_pw = NULL;
   g_strfreev (src->cookies);
   g_free (src->iradio_name);
   src->iradio_name = NULL;
@@ -435,6 +468,26 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (src), g_value_get_boolean (value));
       break;
+    case PROP_USER_ID:
+      if (src->user_id)
+        g_free (src->user_id);
+      src->user_id = g_value_dup_string (value);
+      break;
+    case PROP_USER_PW:
+      if (src->user_pw)
+        g_free (src->user_pw);
+      src->user_pw = g_value_dup_string (value);
+      break;
+    case PROP_PROXY_ID:
+      if (src->proxy_id)
+        g_free (src->proxy_id);
+      src->proxy_id = g_value_dup_string (value);
+      break;
+    case PROP_PROXY_PW:
+      if (src->proxy_pw)
+        g_free (src->proxy_pw);
+      src->proxy_pw = g_value_dup_string (value);
+      break;
   }
 done:
   return;
@@ -486,6 +539,18 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_IRADIO_TITLE:
       g_value_set_string (value, src->iradio_title);
+      break;
+    case PROP_USER_ID:
+      g_value_set_string (value, src->user_id);
+      break;
+    case PROP_USER_PW:
+      g_value_set_string (value, src->user_pw);
+      break;
+    case PROP_PROXY_ID:
+      g_value_set_string (value, src->proxy_id);
+      break;
+    case PROP_PROXY_PW:
+      g_value_set_string (value, src->proxy_pw);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -560,6 +625,20 @@ gst_soup_http_src_session_close (GstSoupHTTPSrc * src)
     g_object_unref (src->session);
     src->session = NULL;
     src->msg = NULL;
+  }
+}
+
+static void
+gst_soup_http_src_authenticate_cb (SoupSession * session, SoupMessage * msg,
+    SoupAuth * auth, gboolean retrying, GstSoupHTTPSrc * src)
+{
+  if (!retrying) {
+    /* First time authentication only, if we fail and are called again with retry true fall through */
+    if (msg->status_code == SOUP_STATUS_UNAUTHORIZED) {
+      soup_auth_authenticate (auth, src->user_id, src->user_pw);
+    } else if (msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED) {
+      soup_auth_authenticate (auth, src->proxy_id, src->proxy_pw);
+    }
   }
 }
 
@@ -1063,6 +1142,8 @@ gst_soup_http_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
+  g_signal_connect (src->session, "authenticate",
+      G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
   return TRUE;
 }
 

@@ -28,6 +28,9 @@
 #include <libsoup/soup-address.h>
 #include <libsoup/soup-message.h>
 #include <libsoup/soup-server.h>
+#include <libsoup/soup-auth-domain.h>
+#include <libsoup/soup-auth-domain-basic.h>
+#include <libsoup/soup-auth-domain-digest.h>
 #include <gst/check/gstcheck.h>
 
 static int http_port = 0, https_port = 0;
@@ -35,6 +38,17 @@ static int http_port = 0, https_port = 0;
 gboolean redirect = TRUE;
 
 static const char **cookies = NULL;
+
+/* Variables for authentication tests */
+static const char *user_id = NULL;
+static const char *user_pw = NULL;
+static const char *good_user = "good_user";
+static const char *bad_user = "bad_user";
+static const char *good_pw = "good_pw";
+static const char *bad_pw = "bad_pw";
+static const char *realm = "SOUPHTTPSRC_REALM";
+static const char *basic_auth_path = "/basic_auth";
+static const char *digest_auth_path = "/digest_auth";
 
 static int run_server (int *http_port, int *https_port);
 
@@ -46,6 +60,26 @@ handoff_cb (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
   GST_LOG ("handoff, buf = %p", buf);
   if (*p_outbuf == NULL)
     *p_outbuf = gst_buffer_ref (buf);
+}
+
+static gboolean
+basic_auth_cb (SoupAuthDomain * domain, SoupMessage * msg,
+    const char *username, const char *password, gpointer user_data)
+{
+  /* There is only one good login for testing */
+  return (strcmp (username, good_user) == 0)
+      && (strcmp (password, good_pw) == 0);
+}
+
+
+static char *
+digest_auth_cb (SoupAuthDomain * domain, SoupMessage * msg,
+    const char *username, gpointer user_data)
+{
+  /* There is only one good login for testing */
+  if (strcmp (username, good_user) == 0)
+    return soup_auth_domain_digest_encode_password (good_user, realm, good_pw);
+  return NULL;
 }
 
 int
@@ -94,6 +128,11 @@ run_test (const char *format, ...)
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (sink, "preroll-handoff", G_CALLBACK (handoff_cb), &buf);
 
+  if (user_id != NULL)
+    g_object_set (src, "user-id", user_id, NULL);
+  if (user_pw != NULL)
+    g_object_set (src, "user-pw", user_pw, NULL);
+
   ret = gst_element_set_state (pipe, GST_STATE_PAUSED);
   if (ret != GST_STATE_CHANGE_ASYNC) {
     GST_DEBUG ("failed to start up soup http src, ret = %d", ret);
@@ -114,6 +153,8 @@ run_test (const char *format, ...)
       rc = 404;
     else if (g_str_has_suffix (err->message, "Forbidden"))
       rc = 403;
+    else if (g_str_has_suffix (err->message, "Unauthorized"))
+      rc = 401;
     else if (g_str_has_suffix (err->message, "Found"))
       rc = 302;
     GST_INFO ("debug: %s", debug);
@@ -206,6 +247,90 @@ GST_START_TEST (test_cookies)
   rc = run_test ("http://127.0.0.1:%d/", http_port);
   cookies = NULL;
   fail_unless (rc == 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_good_user_basic_auth)
+{
+  int res;
+
+  user_id = good_user;
+  user_pw = good_pw;
+  res = run_test ("http://127.0.0.1:%d%s", http_port, basic_auth_path);
+  GST_DEBUG ("Basic Auth user %s password %s res = %d", user_id, user_pw, res);
+  user_id = user_pw = NULL;
+  fail_unless (res == 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_bad_user_basic_auth)
+{
+  int res;
+
+  user_id = bad_user;
+  user_pw = good_pw;
+  res = run_test ("http://127.0.0.1:%d%s", http_port, basic_auth_path);
+  GST_DEBUG ("Basic Auth user %s password %s res = %d", user_id, user_pw, res);
+  user_id = user_pw = NULL;
+  fail_unless (res == 401);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_bad_password_basic_auth)
+{
+  int res;
+
+  user_id = good_user;
+  user_pw = bad_pw;
+  res = run_test ("http://127.0.0.1:%d%s", http_port, basic_auth_path);
+  GST_DEBUG ("Basic Auth user %s password %s res = %d", user_id, user_pw, res);
+  user_id = user_pw = NULL;
+  fail_unless (res == 401);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_good_user_digest_auth)
+{
+  int res;
+
+  user_id = good_user;
+  user_pw = good_pw;
+  res = run_test ("http://127.0.0.1:%d%s", http_port, digest_auth_path);
+  GST_DEBUG ("Digest Auth user %s password %s res = %d", user_id, user_pw, res);
+  user_id = user_pw = NULL;
+  fail_unless (res == 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_bad_user_digest_auth)
+{
+  int res;
+
+  user_id = bad_user;
+  user_pw = good_pw;
+  res = run_test ("http://127.0.0.1:%d%s", http_port, digest_auth_path);
+  GST_DEBUG ("Digest Auth user %s password %s res = %d", user_id, user_pw, res);
+  user_id = user_pw = NULL;
+  fail_unless (res == 401);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_bad_password_digest_auth)
+{
+  int res;
+
+  user_id = good_user;
+  user_pw = bad_pw;
+  res = run_test ("http://127.0.0.1:%d%s", http_port, digest_auth_path);
+  GST_DEBUG ("Digest Auth user %s password %s res = %d", user_id, user_pw, res);
+  user_id = user_pw = NULL;
+  fail_unless (res == 401);
 }
 
 GST_END_TEST;
@@ -331,6 +456,12 @@ souphttpsrc_suite (void)
   tcase_add_test (tc_chain, test_not_found);
   tcase_add_test (tc_chain, test_forbidden);
   tcase_add_test (tc_chain, test_cookies);
+  tcase_add_test (tc_chain, test_good_user_basic_auth);
+  tcase_add_test (tc_chain, test_bad_user_basic_auth);
+  tcase_add_test (tc_chain, test_bad_password_basic_auth);
+  tcase_add_test (tc_chain, test_good_user_digest_auth);
+  tcase_add_test (tc_chain, test_bad_user_digest_auth);
+  tcase_add_test (tc_chain, test_bad_password_digest_auth);
 
   suite_add_tcase (s, tc_internet);
   tcase_set_timeout (tc_internet, 250);
@@ -440,6 +571,8 @@ run_server (int *http_port, int *https_port)
 
   static int server_running = 0;
 
+  SoupAuthDomain *domain = NULL;
+
   if (server_running)
     return 0;
   server_running = 1;
@@ -454,6 +587,16 @@ run_server (int *http_port, int *https_port)
   *http_port = soup_server_get_port (server);
   GST_INFO ("HTTP server listening on port %d", *http_port);
   soup_server_add_handler (server, NULL, server_callback, NULL, NULL);
+  domain = soup_auth_domain_basic_new (SOUP_AUTH_DOMAIN_REALM, realm,
+      SOUP_AUTH_DOMAIN_BASIC_AUTH_CALLBACK, basic_auth_cb,
+      SOUP_AUTH_DOMAIN_ADD_PATH, basic_auth_path, NULL);
+  soup_server_add_auth_domain (server, domain);
+  g_object_unref (domain);
+  domain = soup_auth_domain_digest_new (SOUP_AUTH_DOMAIN_REALM, realm,
+      SOUP_AUTH_DOMAIN_DIGEST_AUTH_CALLBACK, digest_auth_cb,
+      SOUP_AUTH_DOMAIN_ADD_PATH, digest_auth_path, NULL);
+  soup_server_add_auth_domain (server, domain);
+  g_object_unref (domain);
   soup_server_run_async (server);
 
   if (ssl_cert_file && ssl_key_file) {

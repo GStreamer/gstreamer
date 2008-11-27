@@ -52,6 +52,10 @@ struct _GstSoupHTTPSrc {
   gchar *user_agent;           /* User-Agent HTTP header. */
   gboolean automatic_redirect; /* Follow redirects. */
   SoupURI *proxy;              /* HTTP proxy URI. */
+  gchar *user_id;              /* Authentication user id for location URI. */
+  gchar *user_pw;              /* Authentication user password for location URI. */
+  gchar *proxy_id;             /* Authentication user id for proxy URI. */
+  gchar *proxy_pw;             /* Authentication user password for proxy URI. */
   gchar **cookies;             /* HTTP request cookies. */
   GMainContext *context;       /* I/O context. */
   GMainLoop *loop;             /* Event loop. */
