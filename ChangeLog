@@ -1,5 +1,24 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/audioresample/Makefile.am:
+	* gst/audioresample/buffer.c:
+	* gst/audioresample/buffer.h:
+	* gst/audioresample/debug.c:
+	* gst/audioresample/debug.h:
+	* gst/audioresample/functable.c:
+	* gst/audioresample/functable.h:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audioresample/gstaudioresample.h:
+	* gst/audioresample/resample.c:
+	* gst/audioresample/resample.h:
+	* gst/audioresample/resample_chunk.c:
+	* gst/audioresample/resample_functable.c:
+	* gst/audioresample/resample_ref.c:
+	* tests/check/elements/audioresample.c:
+	Remove audioresample files.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/plugins/inspect/plugin-audioresample.xml:
 	Regenerated for library filename change.
 
