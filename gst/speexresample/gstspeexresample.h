@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2007-2008> Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) <2007> Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,7 +24,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
-#include <gst/audio/audio.h>
 
 #include "speex_resampler_wrapper.h"
 
@@ -58,25 +57,18 @@ struct _GstSpeexResample {
 
   gboolean need_discont;
 
-  guint64 next_offset;
+  guint64 offset;
+  guint64 ts_offset;
   GstClockTime next_ts;
-  GstClockTime next_upstream_ts;
+  GstClockTime prev_ts, prev_duration;
   
-  gint channels;
-  gint inrate;
-  gint outrate;
-  gint quality;
-  gint width;
   gboolean fp;
-
-  guint8 *tmp_in;
-  guint tmp_in_size;
-
-  guint8 *tmp_out;
-  guint tmp_out_size;
+  int channels;
+  int inrate;
+  int outrate;
+  int quality;
 
   SpeexResamplerState *state;
-  const SpeexResampleFuncs *funcs;
 };
 
 struct _GstSpeexResampleClass {

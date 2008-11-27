@@ -40,7 +40,7 @@
 #define SPEEX_MINOR_VERSION 1         /**< Minor Speex version. */
 #define SPEEX_MICRO_VERSION 15        /**< Micro Speex version. */
 #define SPEEX_EXTRA_VERSION ""        /**< Extra Speex version. */
-#define SPEEX_VERSION "speex-1.2beta3"  /**< Speex version string. */
+#define SPEEX_VERSION "speex-1.2beta4"  /**< Speex version string. */
 #endif
 
 /* A couple test to catch stupid option combinations */
@@ -75,13 +75,12 @@
 #endif
 
 #ifndef OUTSIDE_SPEEX
-#include "../include/speex/speex_types.h"
+#include "speex/speex_types.h"
 #endif
 
 #ifndef ABS
 #define ABS(x) ((x) < 0 ? (-(x)) : (x))      /**< Absolute integer value. */
 #endif
-
 #define ABS16(x) ((x) < 0 ? (-(x)) : (x))    /**< Absolute 16-bit value.  */
 #define MIN16(a,b) ((a) < (b) ? (a) : (b))   /**< Maximum 16-bit value.   */
 #define MAX16(a,b) ((a) > (b) ? (a) : (b))   /**< Maximum 16-bit value.   */
@@ -92,7 +91,7 @@
 #ifdef FIXED_POINT
 
 typedef spx_int16_t spx_word16_t;
-typedef spx_int32_t spx_word32_t;
+typedef spx_int32_t   spx_word32_t;
 typedef spx_word32_t spx_mem_t;
 typedef spx_word16_t spx_coef_t;
 typedef spx_word16_t spx_lsp_t;
@@ -137,28 +136,6 @@ typedef spx_word32_t spx_sig_t;
 
 #else
 
-#ifdef DOUBLE_PRECISION
-typedef double spx_mem_t;
-typedef double spx_coef_t;
-typedef double spx_lsp_t;
-typedef double spx_sig_t;
-typedef double spx_word16_t;
-typedef double spx_word32_t;
-
-#define Q15ONE 1.0
-#define LPC_SCALING  1.
-#define SIG_SCALING  1.
-#define LSP_SCALING  1.
-#define GAMMA_SCALING 1.
-#define GAIN_SCALING 1.
-#define GAIN_SCALING_1 1.
-
-
-#define VERY_SMALL 1e-20
-#define VERY_LARGE32 1e20
-#define VERY_LARGE16 1e20
-#define Q15_ONE ((spx_word16_t)1.)
-#else /* !DOUBLE_PRECISION */
 typedef float spx_mem_t;
 typedef float spx_coef_t;
 typedef float spx_lsp_t;
@@ -179,7 +156,6 @@ typedef float spx_word32_t;
 #define VERY_LARGE32 1e15f
 #define VERY_LARGE16 1e15f
 #define Q15_ONE ((spx_word16_t)1.f)
-#endif /* DOUBLE_PRECISION */
 
 #define QCONST16(x,bits) (x)
 #define QCONST32(x,bits) (x)
@@ -243,11 +219,11 @@ typedef float spx_word32_t;
 #if defined (CONFIG_TI_C54X) || defined (CONFIG_TI_C55X)
 
 /* 2 on TI C5x DSP */
-#define BYTES_PER_CHAR 2
+#define BYTES_PER_CHAR 2 
 #define BITS_PER_CHAR 16
 #define LOG2_BITS_PER_CHAR 4
 
-#else
+#else 
 
 #define BYTES_PER_CHAR 1
 #define BITS_PER_CHAR 8
@@ -258,7 +234,7 @@ typedef float spx_word32_t;
 
 
 #ifdef FIXED_DEBUG
-extern long long spx_mips;
+long long spx_mips=0;
 #endif
 
 

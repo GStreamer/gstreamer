@@ -1,5 +1,27 @@
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/speexresample/Makefile.am:
+	* gst/speexresample/README:
+	* gst/speexresample/arch.h:
+	* gst/speexresample/fixed_arm4.h:
+	* gst/speexresample/fixed_arm5e.h:
+	* gst/speexresample/fixed_bfin.h:
+	* gst/speexresample/fixed_debug.h:
+	* gst/speexresample/fixed_generic.h:
+	* gst/speexresample/gstspeexresample.c:
+	* gst/speexresample/gstspeexresample.h:
+	* gst/speexresample/resample.c:
+	* gst/speexresample/resample_sse.h:
+	* gst/speexresample/speex_resampler.h:
+	* gst/speexresample/speex_resampler_double.c:
+	* gst/speexresample/speex_resampler_float.c:
+	* gst/speexresample/speex_resampler_int.c:
+	* gst/speexresample/speex_resampler_wrapper.h:
+	* tests/check/elements/speexresample.c:
+	Remove old speexresample files.
+
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/plugins/inspect/plugin-speexresample.xml:
 	Remove old file.
 
