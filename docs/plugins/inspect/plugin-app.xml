@@ -3,10 +3,10 @@
   <description>Elements used to communicate with applications</description>
   <filename>../../gst/app/.libs/libgstapp.so</filename>
   <basename>libgstapp.so</basename>
-  <version>0.10.9</version>
+  <version>0.10.9.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>AppSink</longname>
       <class>Generic/Sink</class>
       <description>Allow the application to get access to raw buffer</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim.taymans@gmail.com</author>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -29,7 +29,7 @@
       <longname>AppSrc</longname>
       <class>Generic/Src</class>
       <description>Allow the application to feed buffers to a pipeline</description>
-      <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim.taymans@gmail.com</author>
+      <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>

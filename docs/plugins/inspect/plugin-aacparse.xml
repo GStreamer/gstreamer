@@ -7,7 +7,7 @@
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>aacparse</name>

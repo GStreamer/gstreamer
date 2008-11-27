@@ -59,7 +59,7 @@ setup_audioresample (int channels, int inrate, int outrate)
   GstStructure *structure;
 
   GST_DEBUG ("setup_audioresample");
-  audioresample = gst_check_setup_element ("audioresample");
+  audioresample = gst_check_setup_element ("legacyresample");
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
   structure = gst_caps_get_structure (caps, 0);
@@ -393,7 +393,7 @@ GST_START_TEST (test_shutdown)
 
   src = gst_check_setup_element ("audiotestsrc");
   cf1 = gst_check_setup_element ("capsfilter");
-  ar = gst_check_setup_element ("audioresample");
+  ar = gst_check_setup_element ("legacyresample");
   cf2 = gst_check_setup_element ("capsfilter");
   g_object_set (cf2, "name", "capsfilter2", NULL);
   sink = gst_check_setup_element ("fakesink");

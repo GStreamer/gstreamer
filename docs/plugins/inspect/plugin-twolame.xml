@@ -3,7 +3,7 @@
   <description>Encode MP2s with TwoLAME</description>
   <filename>../../ext/twolame/.libs/libgsttwolame.so</filename>
   <basename>libgsttwolame.so</basename>
-  <version>0.10.8.1</version>
+  <version>0.10.9.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw-float, endianness=(int)1234, width=(int)32, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]; audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int){ 16000, 22050, 24000, 32000, 44100, 48000 }, channels=(int)[ 1, 2 ]</details>
         </caps>
         <caps>
           <name>src</name>

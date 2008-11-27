@@ -68,12 +68,7 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
 SCANOBJ_DEPS =
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = \
-	arch.h \
-	speex_resampler.h \
-	speex_resampler_wrapper.h \
-	fixed_generic.h
-
+IGNORE_HFILES = 
 IGNORE_CFILES =
 
 # we add all .h files of elements that have signals/args we want
@@ -120,6 +115,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/x264/gstx264enc.h \
 	$(top_srcdir)/gst/aacparse/gstaacparse.h \
 	$(top_srcdir)/gst/amrparse/gstamrparse.h \
+	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
@@ -142,7 +138,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/selector/gstinputselector.h \
 	$(top_srcdir)/gst/selector/gstoutputselector.h \
 	$(top_srcdir)/gst/speed/gstspeed.h \
-	$(top_srcdir)/gst/speexresample/gstspeexresample.h \
 	$(top_srcdir)/gst/stereo/gststereo.h \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \

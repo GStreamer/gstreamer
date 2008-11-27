@@ -3,10 +3,10 @@
   <description>IIR audio filter element</description>
   <filename>../../gst/filter/.libs/libgstfilter.so</filename>
   <basename>libgstfilter.so</basename>
-  <version>0.10.9</version>
+  <version>0.10.9.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>Infinite Impulse Response (IIR) filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>IIR filter based on vorbis code</description>
-      <author>Monty &lt;monty@xiph.org&gt;, Thomas &lt;thomas@apestaart.org&gt;, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;</author>
+      <author>Monty &lt;monty@xiph.org&gt;, Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

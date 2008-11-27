@@ -11,7 +11,7 @@
 <ARG>
 <NAME>GstPitch::pitch</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Pitch</NICK>
 <BLURB>Audio stream pitch.</BLURB>
@@ -21,7 +21,7 @@
 <ARG>
 <NAME>GstPitch::rate</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate</NICK>
 <BLURB>Audio stream rate.</BLURB>
@@ -31,7 +31,7 @@
 <ARG>
 <NAME>GstPitch::tempo</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,10]</RANGE>
+<RANGE>[0.1,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Tempo</NICK>
 <BLURB>Audio stream tempo.</BLURB>
@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -1681,7 +1681,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -16855,7 +16855,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17455,7 +17455,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17495,7 +17495,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17825,7 +17825,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
 <BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17865,7 +17865,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
 <BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18015,7 +18015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>stereo</NICK>
 <BLURB>stereo.</BLURB>
-<DEFAULT>0,1</DEFAULT>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18431,7 +18431,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -19396,7 +19396,7 @@
 <ARG>
 <NAME>GstAppSrc::size</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Size</NICK>
 <BLURB>The size of the data stream (-1 if unknown).</BLURB>
@@ -22156,7 +22156,7 @@
 <ARG>
 <NAME>GstTwoLame::psymodel</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,4]</RANGE>
+<RANGE>[G_MAXULONG,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Psychoacoustic Model</NICK>
 <BLURB>Psychoacoustic model used to encode the audio.</BLURB>
@@ -22299,14 +22299,14 @@
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
-<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<BLURB>The port to receive packets from.</BLURB>
 <DEFAULT>5001</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22329,7 +22329,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Close</NICK>
-<BLURB>Close socket at end of stream.</BLURB>
+<BLURB>Close the client sockets at end of stream.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -22339,14 +22339,14 @@
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
-<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<BLURB>The port to listen to.</BLURB>
 <DEFAULT>5001</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22399,14 +22399,14 @@
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
-<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<BLURB>The port to send the packets to.</BLURB>
 <DEFAULT>5001</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22439,7 +22439,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Close socket</NICK>
-<BLURB>Close socket at the end of stream.</BLURB>
+<BLURB>Close client socket at the end of stream.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -22459,14 +22459,14 @@
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
-<BLURB>The port to receive the packets from, 0=allocate.</BLURB>
+<BLURB>The port to listen to.</BLURB>
 <DEFAULT>5001</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22526,7 +22526,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22540,13 +22540,13 @@
 <FLAGS>rw</FLAGS>
 <NICK>Overlap Length</NICK>
 <BLURB>Percentage of stride to overlap.</BLURB>
-<DEFAULT>0,2</DEFAULT>
+<DEFAULT>0.2</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstScaletempo::rate</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-2,14748e+09,2,14748e+09]</RANGE>
+<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Playback Rate</NICK>
 <BLURB>Current playback rate.</BLURB>
@@ -22586,7 +22586,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22606,7 +22606,7 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,65535]</RANGE>
+<RANGE>[G_MAXULONG,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>
@@ -22871,5 +22871,15 @@
 <NICK>Include presentation-time info</NICK>
 <BLURB>Calculate and include presentation/composition time (in addition to decoding time) (use with caution).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioresample::filter-length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>filter length</NICK>
+<BLURB>Length of the resample filter.</BLURB>
+<DEFAULT>16</DEFAULT>
 </ARG>
 

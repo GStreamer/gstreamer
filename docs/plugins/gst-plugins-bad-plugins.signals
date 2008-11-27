@@ -158,7 +158,7 @@ guint  arg2
 <SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
+<FLAGS>la</FLAGS>
 GstRtpJitterBuffer *gstrtpjitterbuffer
 </SIGNAL>
 
@@ -168,6 +168,14 @@ GstRtpJitterBuffer *gstrtpjitterbuffer
 <FLAGS>l</FLAGS>
 GstRtpJitterBuffer *gstrtpjitterbuffer
 guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpJitterBuffer::handle-sync</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpJitterBuffer *gstrtpjitterbuffer
+GstStructure *arg1
 </SIGNAL>
 
 <SIGNAL>

@@ -236,6 +236,7 @@ AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(aiffparse)
 AG_GST_CHECK_PLUGIN(amrparse)
 AG_GST_CHECK_PLUGIN(app)
+AG_GST_CHECK_PLUGIN(audioresample)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(dccp)
@@ -1390,6 +1391,7 @@ gst/aacparse/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
 gst/app/Makefile
+gst/audioresample/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/dccp/Makefile

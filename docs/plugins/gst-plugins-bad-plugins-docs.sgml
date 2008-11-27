@@ -40,6 +40,7 @@
     <xi:include href="xml/element-ivorbisdec.xml" />
     <xi:include href="xml/element-jackaudiosrc.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
+    <xi:include href="xml/element-legacyresample.xml" />
     <xi:include href="xml/element-metadatademux.xml" />
     <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />
@@ -53,7 +54,6 @@
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
     <xi:include href="xml/element-speed.xml" />
-    <xi:include href="xml/element-speexresample.xml" />
     <xi:include href="xml/element-stereo.xml" />
     <!--xi:include href="xml/element-theoradecexp.xml" /-->
     <xi:include href="xml/element-timidity.xml" />
@@ -72,6 +72,7 @@
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aacparse.xml" />
     <xi:include href="xml/plugin-amrparse.xml" />
+    <xi:include href="xml/plugin-legacyresample.xml" />
     <xi:include href="xml/plugin-alsaspdif.xml" />
     <xi:include href="xml/plugin-amrwb.xml" />
     <xi:include href="xml/plugin-app.xml" />
@@ -125,7 +126,6 @@
     <xi:include href="xml/plugin-soundtouch.xml" />
     <xi:include href="xml/plugin-spcdec.xml" />
     <xi:include href="xml/plugin-speed.xml" />
-    <xi:include href="xml/plugin-speexresample.xml" />
     <xi:include href="xml/plugin-stereo.xml" />
     <xi:include href="xml/plugin-swfdec.xml" />
     <xi:include href="xml/plugin-timidity.xml" />

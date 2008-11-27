@@ -89,9 +89,9 @@ check_PROGRAMS = \
 	$(check_x264enc)   \
 	elements/aacparse \
 	elements/amrparse \
+	elements/audioresample \
 	elements/qtmux \
 	elements/selector \
-	elements/speexresample \
 	elements/y4menc   \
 	$(check_metadata)
 

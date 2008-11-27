@@ -845,7 +845,7 @@ plugin_init (GstPlugin * plugin)
 {
   resample_init ();
 
-  if (!gst_element_register (plugin, "audioresample", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "legacyresample", GST_RANK_MARGINAL,
           GST_TYPE_AUDIORESAMPLE)) {
     return FALSE;
   }
@@ -855,6 +855,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "audioresample",
+    "legacyresample",
     "Resamples audio", plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN);

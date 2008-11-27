@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libgstaudioresample.la
+plugin_LTLIBRARIES = libgstlegacyresample.la
 
 resample_SOURCES = \
 	functable.c \
@@ -15,9 +15,9 @@ noinst_HEADERS = \
 	debug.h \
 	buffer.h
 
-libgstaudioresample_la_SOURCES = gstaudioresample.c $(resample_SOURCES)
-libgstaudioresample_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBOIL_CFLAGS)
-libgstaudioresample_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
-libgstaudioresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstaudioresample_la_LIBTOOLFLAGS = --tag=disable-static
+libgstlegacyresample_la_SOURCES = gstaudioresample.c $(resample_SOURCES)
+libgstlegacyresample_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBOIL_CFLAGS)
+libgstlegacyresample_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
+libgstlegacyresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstlegacyresample_la_LIBTOOLFLAGS = --tag=disable-static
 
