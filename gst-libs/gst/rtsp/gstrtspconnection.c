@@ -287,6 +287,10 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   else if (retval == -1)
     goto sys_error;
 
+  /* we can still have an error connecting on windows */
+  if (gst_poll_fd_has_error (conn->fdset, &conn->fd))
+    goto sys_error;
+
   gst_poll_fd_ignored (conn->fdset, &conn->fd);
 
 done:

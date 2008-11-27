@@ -1,3 +1,13 @@
+2008-11-27  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: 이문형 <iwings at gmail dot com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_connect):
+	A successful gst_poll_wait() doesn't always mean successful connect() on
+	Windows.  We should check errors by calling gst_poll_fd_has_error().
+	See #561924.
+
 2008-11-25  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstrtcpbuffer.c:
