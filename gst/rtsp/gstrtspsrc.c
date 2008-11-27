@@ -2914,7 +2914,10 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
               ("The server closed the connection."));
           gst_rtsp_connection_close (src->connection);
-          gst_rtsp_connection_connect (src->connection, src->ptcp_timeout);
+          res =
+              gst_rtsp_connection_connect (src->connection, src->ptcp_timeout);
+          if (res < 0)
+            goto connect_error;
           continue;
         default:
           goto receive_error;
@@ -3025,11 +3028,20 @@ handle_request_failed:
     g_free (str);
     return GST_FLOW_ERROR;
   }
+connect_error:
+  {
+    gchar *str = gst_rtsp_strresult (res);
+
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("Could not connect to server. (%s)", str));
+    g_free (str);
+    return GST_FLOW_ERROR;
+  }
 no_protocols:
   {
     src->cur_protocols = 0;
     /* no transport possible, post an error and stop */
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Could not connect to server, no protocols left"));
     return GST_FLOW_ERROR;
   }
