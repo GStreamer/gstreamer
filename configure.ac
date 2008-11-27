@@ -291,11 +291,11 @@ dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(adder)
 AG_GST_CHECK_PLUGIN(audioconvert)
 AG_GST_CHECK_PLUGIN(audiorate)
-AG_GST_CHECK_PLUGIN(audioresample)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(ffmpegcolorspace)
 AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(playback)
+AG_GST_CHECK_PLUGIN(speexresample)
 AG_GST_CHECK_PLUGIN(subparse)
 AG_GST_CHECK_PLUGIN(tcp)
 AG_GST_CHECK_PLUGIN(typefind)
@@ -639,11 +639,11 @@ gst/Makefile
 gst/adder/Makefile
 gst/audioconvert/Makefile
 gst/audiorate/Makefile
-gst/audioresample/Makefile
 gst/audiotestsrc/Makefile
 gst/ffmpegcolorspace/Makefile
 gst/gdp/Makefile
 gst/playback/Makefile
+gst/speexresample/Makefile
 gst/subparse/Makefile
 gst/tcp/Makefile
 gst/typefind/Makefile

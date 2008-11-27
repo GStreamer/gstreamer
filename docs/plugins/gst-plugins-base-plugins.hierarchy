@@ -12,51 +12,9 @@ GObject
           GstPlayBaseBin
             GstPlayBin
           GstPlayBin2
+        GstDecodeBin
         GstDecodeBin2
         GstURIDecodeBin
-        GstDecodeBin
-      GstBaseSrc
-        GstGnomeVFSSrc
-        GstPushSrc
-          GstCddaBaseSrc
-            GstCdParanoiaSrc
-          GstBaseAudioSrc
-            GstAudioSrc
-              GstAlsaSrc
-          GstV4lElement
-            GstV4lSrc
-          GstTCPClientSrc
-          GstTCPServerSrc
-          GstVideoTestSrc
-        GstGioBaseSrc
-          GstGioSrc
-          GstGioStreamSrc
-        GstAudioTestSrc
-      GstBaseSink
-        GstGnomeVFSSink
-        GstGioBaseSink
-          GstGioSink
-          GstGioStreamSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstAlsaSink
-        GstVideoSink
-          GstXImageSink
-          GstXvImageSink
-        GstTCPClientSink
-        GstMultiFdSink
-          GstTCPServerSink
-      GstTheoraDec
-      GstTheoraEnc
-      GstTheoraParse
-      GstVorbisEnc
-      GstVorbisDec
-      GstVorbisParse
-        GstVorbisTag
-      GstTextOverlay
-        GstTimeOverlay
-        GstClockOverlay
-      GstTextRender
       GstOggDemux
       GstOggMux
       GstOgmParse
@@ -65,23 +23,74 @@ GObject
         GstOgmTextParse
       GstOggParse
       GstOggAviParse
+      GstBaseSink
+        GstGioBaseSink
+          GstGioSink
+          GstGioStreamSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstAlsaSink
+        GstGnomeVFSSink
+        GstVideoSink
+          GstXvImageSink
+          GstXImageSink
+        GstTCPClientSink
+        GstMultiFdSink
+          GstTCPServerSink
+      GstBaseSrc
+        GstGioBaseSrc
+          GstGioSrc
+          GstGioStreamSrc
+        GstPushSrc
+          GstBaseAudioSrc
+            GstAudioSrc
+              GstAlsaSrc
+          GstCddaBaseSrc
+            GstCdParanoiaSrc
+          GstV4lElement
+            GstV4lSrc
+          GstTCPClientSrc
+          GstTCPServerSrc
+          GstVideoTestSrc
+        GstGnomeVFSSrc
+        GstAudioTestSrc
+      GstVorbisEnc
+      GstVorbisDec
+      GstVorbisParse
+        GstVorbisTag
+      GstTextOverlay
+        GstTimeOverlay
+        GstClockOverlay
+      GstTextRender
+      GstTheoraDec
+      GstTheoraEnc
+      GstTheoraParse
       GstAlsaMixerElement
-      GstBaseTransform
-        GstFFMpegCsp
-        GstVideoScale
-        GstAudioresample
-        GstAudioConvert
-        GstAudioFilter
-          GstVolume
-      GstGDPDepay
-      GstGDPPay
-      GstVideoRate
-      GstQueue2
-      GstStreamSelector
+      GstVisual
+        GstVisualjess
+        GstVisualbumpscope
+        GstVisualcorona
+        GstVisualinfinite
+        GstVisualjakdaw
+        GstVisuallv_analyzer
+        GstVisuallv_scope
+        GstVisualoinksie
       GstSubParse
       GstSsaParse
-      GstAdder
       GstAudioRate
+      GstBaseTransform
+        GstAudioConvert
+        GstFFMpegCsp
+        GstSpeexResample
+        GstAudioFilter
+          GstVolume
+        GstVideoScale
+      GstAdder
+      GstGDPDepay
+      GstGDPPay
+      GstStreamSelector
+      GstQueue2
+      GstVideoRate
     GstBus
     GstTask
     GstClock
@@ -91,17 +100,10 @@ GObject
     GstRegistry
     GstRingBuffer
   GstSignalObject
-  LinkConnection
-    GIOPConnection
-  LinkServer
-    GIOPServer
-  GConfClient
   GFileMonitor
     GLocalDirectoryMonitor
-      GFamDirectoryMonitor
       GInotifyDirectoryMonitor
     GLocalFileMonitor
-      GFamFileMonitor
       GInotifyFileMonitor
   GVolumeMonitor
     GNativeVolumeMonitor
@@ -113,26 +115,30 @@ GObject
     GLocalVfs
   GTypeModule
     GIOModule
+  GVfsUriMapper
+    GVfsUriMapperSmb
+    GVfsUriMapperHttp
+  GAppLookupGConf
   HalDevice
   HalPool
   GHalDrive
   GHalMount
   GHalVolume
-  GVfsUriMapper
-    GVfsUriMapperSmb
-    GVfsUriMapperHttp
-  GAppLookupGConf
   GOutputStream
   GInputStream
   PangoFontMap
     PangoFcFontMap
       PangoFT2FontMap
   PangoContext
-  GstMixerTrack
-    GstMixerOptions
+  LinkConnection
+    GIOPConnection
+  LinkServer
+    GIOPServer
+  GConfClient
+  GstColorBalanceChannel
   GstTunerNorm
   GstTunerChannel
-  GstColorBalanceChannel
+  GstMixerTrack
   GstStreamInfo
 GInterface
   GTypePlugin
@@ -149,5 +155,5 @@ GInterface
   GstPropertyProbe
   GstNavigation
   GstXOverlay
-  GstTuner
   GstColorBalance
+  GstTuner

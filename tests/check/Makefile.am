@@ -91,7 +91,6 @@ check_PROGRAMS = \
 	elements/adder	\
 	elements/audioconvert \
 	elements/audiorate \
-	elements/audioresample \
 	elements/audiotestsrc \
 	elements/decodebin \
 	elements/ffmpegcolorspace \
@@ -100,6 +99,7 @@ check_PROGRAMS = \
 	elements/multifdsink \
 	elements/playbin \
 	$(check_subparse) \
+	elements/speexresample \
 	elements/videorate \
 	elements/videotestsrc \
 	elements/volume \
@@ -123,7 +123,6 @@ check_PROGRAMS = \
 
 # ffmpegcolorspace takes too long, so disabled for now
 VALGRIND_TO_FIX = \
-	elements/audioresample \
 	elements/ffmpegcolorspace \
 	libs/video
 
@@ -241,6 +240,17 @@ elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
+
+elements_speexresample_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+elements_speexresample_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
 
 elements_textoverlay_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)

@@ -1389,7 +1389,7 @@ plugin_init (GstPlugin * plugin)
   if (!_benchmark_integer_resampling ())
     return FALSE;
 
-  if (!gst_element_register (plugin, "speexresample", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "audioresample", GST_RANK_PRIMARY,
           GST_TYPE_SPEEX_RESAMPLE)) {
     return FALSE;
   }
@@ -1399,6 +1399,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "speexresample",
+    "audioresample",
     "Resamples audio", plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN);

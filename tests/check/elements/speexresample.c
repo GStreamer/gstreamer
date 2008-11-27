@@ -72,7 +72,7 @@ setup_speexresample (int channels, int inrate, int outrate, int width,
   GstStructure *structure;
 
   GST_DEBUG ("setup_speexresample");
-  speexresample = gst_check_setup_element ("speexresample");
+  speexresample = gst_check_setup_element ("audioresample");
 
   if (fp)
     caps = gst_caps_from_string (RESAMPLE_CAPS_FLOAT);
@@ -418,7 +418,7 @@ GST_START_TEST (test_shutdown)
 
   src = gst_check_setup_element ("audiotestsrc");
   cf1 = gst_check_setup_element ("capsfilter");
-  ar = gst_check_setup_element ("speexresample");
+  ar = gst_check_setup_element ("audioresample");
   cf2 = gst_check_setup_element ("capsfilter");
   g_object_set (cf2, "name", "capsfilter2", NULL);
   sink = gst_check_setup_element ("fakesink");
@@ -615,7 +615,7 @@ test_pipeline (gint width, gboolean fp, gint inrate, gint outrate, gint quality)
 
   pipe_str =
       g_strdup_printf
-      ("audiotestsrc num-buffers=10 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! speexresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
+      ("audiotestsrc num-buffers=10 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! audioresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
       (fp) ? "float" : "int", inrate, width, quality, (fp) ? "float" : "int",
       outrate, width);
 

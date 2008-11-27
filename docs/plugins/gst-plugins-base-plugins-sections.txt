@@ -95,15 +95,15 @@ audio_convert_prepare_context
 <SECTION>
 <FILE>element-audioresample</FILE>
 <TITLE>audioresample</TITLE>
-GstAudioresample
+GstSpeexResample
 <SUBSECTION Standard>
-GST_AUDIORESAMPLE
-GST_IS_AUDIORESAMPLE
-GST_TYPE_AUDIORESAMPLE
-gst_audioresample_get_type
-GST_AUDIORESAMPLE_CLASS
-GST_IS_AUDIORESAMPLE_CLASS
-GstAudioresampleClass
+GST_SPEEX_RESAMPLE
+GST_IS_SPEEX_RESAMPLE
+GST_TYPE_SPEEX_RESAMPLE
+gst_speex_resample_get_type
+GST_SPEEX_RESAMPLE_CLASS
+GST_IS_SPEEX_RESAMPLE_CLASS
+GstSpeexResampleClass
 </SECTION>
 
 <SECTION>

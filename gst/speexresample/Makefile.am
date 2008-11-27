@@ -1,18 +1,18 @@
-plugin_LTLIBRARIES = libgstspeexresample.la
+plugin_LTLIBRARIES = libgstaudioresample.la
 
-libgstspeexresample_la_SOURCES = \
+libgstaudioresample_la_SOURCES = \
 	gstspeexresample.c \
 	speex_resampler_int.c \
 	speex_resampler_float.c \
 	speex_resampler_double.c
 
-libgstspeexresample_la_CFLAGS = \
+libgstaudioresample_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(LIBOIL_CFLAGS)
 
-libgstspeexresample_la_LIBADD = \
+libgstaudioresample_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
@@ -20,8 +20,8 @@ libgstspeexresample_la_LIBADD = \
 	$(LIBOIL_LIBS) \
 	$(LIBM)
 
-libgstspeexresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstspeexresample_la_LIBTOOLFLAGS = --tag=disable-static
+libgstaudioresample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstaudioresample_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	arch.h \
