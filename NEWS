@@ -1,4 +1,24 @@
-This is GStreamer FFmpeg Plug-ins 0.10.5, "This little piggy went to market"
+This is GStreamer FFmpeg Plug-ins 0.10.6, "A little itching in our bones"
+
+Changes since 0.10.5:
+    
+      * Update ffmpeg and libswscale snapshot
+      * Prefer aspect ratios prescribed by the container over the codec
+      * Improve ffmpeg encoders wrapping
+      * Rewrite ffvideoscale to use libswscale
+      * Improve H.264 wrapping
+
+Bugs fixed since 0.10.5:
+     
+      * 350738 : [ffvideoscale] GStreamer-Critical when pixel-aspects-rati...
+      * 504056 : [ffvideoscale] Switch to using libswscale
+      * 542216 : cross compilation and mingw32 support
+      * 548304 : missing check for bz2 library and header
+      * 551046 : gst-ffmpeg configure complains about libz2, should be libbz2
+      * 556336 : [PATCH] gstffmpegdec.c: prefer demuxer's pixel aspect rat...
+      * 556405 : gst-ffmpeg fails to build against 20081014 ffmpeg snapshot
+      * 560137 : Two build fixes for using system ffmpeg
+      * 560305 : x264enc & ffmux_* doesnt link
 
 Changes since 0.10.4:
 

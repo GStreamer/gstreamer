@@ -1,3 +1,10 @@
+=== release 0.10.6 ===
+
+2008-11-27  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.6, "A little itching in our bones"
+
 2008-11-19  Jan Schmidt  <jan.schmidt@sun.com>
 
 	Unfreeze gst-ffmpeg pending resolution of #559467 and an out-of-cycle
