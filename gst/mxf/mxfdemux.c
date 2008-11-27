@@ -363,6 +363,8 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
   demux->footer_partition_pack_offset = 0;
   demux->offset = 0;
 
+  demux->pull_footer_metadata = TRUE;
+
   demux->run_in = -1;
 
   memset (&demux->current_package_uid, 0, sizeof (MXFUMID));
@@ -1272,8 +1274,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2369,13 +2372,15 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* In pull mode try to get the last metadata */
-  if (!demux->final_metadata && demux->random_access && demux->partition.valid
+  if (demux->pull_footer_metadata && !demux->final_metadata
+      && demux->random_access && demux->partition.valid
       && demux->partition.type == MXF_PARTITION_PACK_HEADER
       && (!demux->partition.closed || !demux->partition.complete)
       && demux->footer_partition_pack_offset != 0) {
     GST_DEBUG_OBJECT (demux,
         "Open or incomplete header partition, trying to get final metadata from the last partitions");
     gst_mxf_demux_parse_footer_metadata (demux);
+    demux->pull_footer_metadata = FALSE;
   }
 
   /* TODO: - Pull random index pack from footer partition?

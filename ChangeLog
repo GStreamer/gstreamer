@@ -1,3 +1,11 @@
+2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset),
+	(gst_mxf_demux_handle_klv_packet):
+	* gst/mxf/mxfdemux.h:
+	Only try to pull the footer metadata once and not on every KLV packet
+	if it failed before.
+
 2008-11-26  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/rtpsession.c: (obtain_source),
