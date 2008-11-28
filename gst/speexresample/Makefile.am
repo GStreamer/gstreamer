@@ -16,7 +16,6 @@ libgstaudioresample_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR) \
 	$(LIBOIL_LIBS) \
 	$(LIBM)
 
