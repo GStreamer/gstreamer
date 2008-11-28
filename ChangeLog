@@ -1,5 +1,11 @@
 2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_random_index_pack):
+	Only try to pull the random index pack at the end of file one time
+	and not for every single packet if it fails.
+
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/Makefile.am:
 	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps):
 	* gst/mxf/mxfalaw.c: (mxf_is_alaw_audio_essence_track),

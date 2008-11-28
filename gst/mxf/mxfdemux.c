@@ -1292,9 +1292,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2301,7 +2300,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &filesize) ||
       fmt != GST_FORMAT_BYTES || filesize == -1) {
     GST_DEBUG_OBJECT (demux, "Can't query upstream size");
-    return;
+    goto out;
   }
 
   g_assert (filesize > 4);
@@ -2310,7 +2309,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
           gst_mxf_demux_pull_range (demux, filesize - 4, 4,
               &buffer)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling last 4 bytes");
-    return;
+    goto out;
   }
 
   pack_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer));
@@ -2319,17 +2318,17 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 
   if (pack_size < 20) {
     GST_DEBUG_OBJECT (demux, "Too small pack size");
-    return;
+    goto out;
   } else if (pack_size > filesize - 20) {
     GST_DEBUG_OBJECT (demux, "Too large pack size");
-    return;
+    goto out;
   }
 
   if ((ret =
           gst_mxf_demux_pull_range (demux, filesize - pack_size, 16,
               &buffer)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling random index pack key");
-    return;
+    goto out;
   }
 
   memcpy (&key, GST_BUFFER_DATA (buffer), 16);
@@ -2337,20 +2336,21 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 
   if (!mxf_is_random_index_pack (&key)) {
     GST_DEBUG_OBJECT (demux, "No random index pack");
-    return;
+    goto out;
   }
 
   if ((ret =
           gst_mxf_demux_pull_klv_packet (demux, filesize - pack_size, &key,
               &buffer, NULL)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling random index pack");
-    return;
+    goto out;
   }
 
 
   gst_mxf_demux_handle_random_index_pack (demux, &key, buffer);
   gst_buffer_unref (buffer);
 
+out:
   if (!demux->partition_index)
     demux->partition_index =
         g_array_new (FALSE, FALSE, sizeof (MXFRandomIndexPackEntry));
