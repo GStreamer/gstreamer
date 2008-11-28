@@ -1,3 +1,11 @@
+2008-11-28  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render):
+	Make gst_multiudpsink_render() ignore errors from sendto() instead of
+	breaking streaming. Emit a warning instead. Fixes #562572.
+
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Ron McOuat <rmcouat at smartt dot com>

@@ -371,7 +371,7 @@ static GstFlowReturn
 gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstMultiUDPSink *sink;
-  gint ret, size, num = 0;
+  gint ret, size, num = 0, no_clients = 0;
   guint8 *data;
   GList *clients;
   gint len;
@@ -392,26 +392,30 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
     GstUDPClient *client;
 
     client = (GstUDPClient *) clients->data;
-    num++;
+    no_clients++;
     GST_LOG_OBJECT (sink, "sending %d bytes to client %p", size, client);
 
     while (TRUE) {
       len = gst_udp_get_sockaddr_length (&client->theiraddr);
+
+      ret = sendto (*client->sock,
 #ifdef G_OS_WIN32
-      ret = sendto (*client->sock, (char *) data, size, 0,
+          (char *) data,
 #else
-      ret = sendto (*client->sock, data, size, 0,
+          data,
 #endif
-          (struct sockaddr *) &client->theiraddr, len);
+          size, 0, (struct sockaddr *) &client->theiraddr, len);
+
       if (ret < 0) {
-        /* we get a non-posix EPERM on Linux when a firewall rule blocks this
-         * destination. We will simply ignore this. */
-        if (errno == EPERM)
-          break;
+        /* some error, just warn, it's likely recoverable and we don't want to
+         * break streaming. We break so that we stop retrying for this client. */
         if (errno != EINTR && errno != EAGAIN) {
-          goto send_error;
+          GST_WARNING_OBJECT (sink, "client %p gave error %d (%s)", errno,
+              g_strerror (errno));
+          break;
         }
       } else {
+        num++;
         client->bytes_sent += ret;
         client->packets_sent++;
         sink->bytes_served += ret;
@@ -421,20 +425,10 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   }
   g_mutex_unlock (sink->client_lock);
 
-  GST_LOG_OBJECT (sink, "sent %d bytes to %d clients", size, num);
+  GST_LOG_OBJECT (sink, "sent %d bytes to %d (of %d) clients", size, num,
+      no_clients);
 
   return GST_FLOW_OK;
-
-  /* ERRORS */
-send_error:
-  {
-    /* if sendto returns an error, something is seriously wrong */
-    g_mutex_unlock (sink->client_lock);
-    GST_DEBUG_OBJECT (sink, "got send error %d: %s", errno, g_strerror (errno));
-    GST_ELEMENT_ERROR (sink, STREAM, FAILED, (NULL),
-        ("Got send error %d: %s", errno, g_strerror (errno)));
-    return GST_FLOW_ERROR;
-  }
 }
 
 static void
