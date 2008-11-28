@@ -131,7 +131,7 @@ static gboolean audioresample_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *audioresample_query_type (GstPad * pad);
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (audioresample_debug, "audioresample", 0, "audio resampling element");
+  GST_DEBUG_CATEGORY_INIT (audioresample_debug, "legacyresample", 0, "audio resampling element");
 
 GST_BOILERPLATE_FULL (GstAudioresample, gst_audioresample, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);

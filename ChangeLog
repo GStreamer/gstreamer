@@ -1,3 +1,9 @@
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/audioresample/gstaudioresample.c:
+	And now also update the debug category from audioresample
+	to legacyresample.
+
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
