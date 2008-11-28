@@ -596,6 +596,246 @@ mxf_random_index_pack_parse (const MXFUL * key, const guint8 * data, guint size,
   return TRUE;
 }
 
+/* SMPTE 377M 10.2.3 */
+gboolean
+mxf_index_table_segment_parse (const MXFUL * key,
+    MXFIndexTableSegment * segment, const MXFPrimerPack * primer,
+    const guint8 * data, guint size)
+{
+  gchar str[48];
+  guint16 tag, tag_size;
+  const guint8 *tag_data;
+
+  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (primer != NULL, FALSE);
+
+  memset (segment, 0, sizeof (MXFIndexTableSegment));
+
+  if (size < 70)
+    return FALSE;
+
+  GST_DEBUG ("Parsing index table segment:");
+
+  while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
+    if (tag_size == 0 || tag == 0x0000)
+      goto next;
+
+    switch (tag) {
+      case 0x3c0a:
+        if (tag_size != 16)
+          goto error;
+        memcpy (&segment->instance_id, tag_data, 16);
+        GST_DEBUG ("  instance id = %s",
+            mxf_ul_to_string (&segment->instance_id, str));
+        break;
+      case 0x3f0b:
+        if (!mxf_fraction_parse (&segment->index_edit_rate, tag_data, tag_size))
+          goto error;
+        GST_DEBUG ("  index edit rate = %d/%d", segment->index_edit_rate.n,
+            segment->index_edit_rate.d);
+        break;
+      case 0x3f0c:
+        if (tag_size != 8)
+          goto error;
+        segment->index_start_position = GST_READ_UINT64_BE (tag_data);
+        GST_DEBUG ("  index start position = %" G_GINT64_FORMAT,
+            segment->index_start_position);
+        break;
+      case 0x3f0d:
+        if (tag_size != 8)
+          goto error;
+        segment->index_duration = GST_READ_UINT64_BE (tag_data);
+        GST_DEBUG ("  index duration = %" G_GINT64_FORMAT,
+            segment->index_duration);
+        break;
+      case 0x3f05:
+        if (tag_size != 4)
+          goto error;
+        segment->edit_unit_byte_count = GST_READ_UINT32_BE (tag_data);
+        GST_DEBUG ("  edit unit byte count = %u",
+            segment->edit_unit_byte_count);
+        break;
+      case 0x3f06:
+        if (tag_size != 4)
+          goto error;
+        segment->index_sid = GST_READ_UINT32_BE (tag_data);
+        GST_DEBUG ("  index sid = %u", segment->index_sid);
+        break;
+      case 0x3f07:
+        if (tag_size != 4)
+          goto error;
+        segment->body_sid = GST_READ_UINT32_BE (tag_data);
+        GST_DEBUG ("  body sid = %u", segment->body_sid);
+        break;
+      case 0x3f08:
+        if (tag_size != 1)
+          goto error;
+        segment->slice_count = GST_READ_UINT8 (tag_data);
+        GST_DEBUG ("  slice count = %u", segment->slice_count);
+        break;
+      case 0x3f0e:
+        if (tag_size != 1)
+          goto error;
+        segment->pos_table_count = GST_READ_UINT8 (tag_data);
+        GST_DEBUG ("  pos table count = %u", segment->pos_table_count);
+        break;
+      case 0x3f09:{
+        guint len, i;
+
+        if (tag_size < 8)
+          goto error;
+
+        len = GST_READ_UINT32_BE (tag_data);
+        segment->n_delta_entries = len;
+        GST_DEBUG ("  number of delta entries = %u", segment->n_delta_entries);
+        if (len == 0)
+          goto next;
+        tag_data += 4;
+        tag_size -= 4;
+
+        if (GST_READ_UINT32_BE (tag_data) != 6)
+          goto error;
+
+        tag_data += 4;
+        tag_size -= 4;
+
+        if (tag_size < len * 6)
+          goto error;
+
+        segment->delta_entries = g_new (MXFDeltaEntry, len);
+
+        for (i = 0; i < len; i++) {
+          GST_DEBUG ("    delta entry %u:", i);
+
+          segment->delta_entries[i].pos_table_index = GST_READ_UINT8 (tag_data);
+          tag_data += 1;
+          tag_size -= 1;
+          GST_DEBUG ("    pos table index = %d",
+              segment->delta_entries[i].pos_table_index);
+
+          segment->delta_entries[i].slice = GST_READ_UINT8 (tag_data);
+          tag_data += 1;
+          tag_size -= 1;
+          GST_DEBUG ("    slice = %u", segment->delta_entries[i].slice);
+
+          segment->delta_entries[i].element_delta =
+              GST_READ_UINT32_BE (tag_data);
+          tag_data += 4;
+          tag_size -= 4;
+          GST_DEBUG ("    element delta = %u",
+              segment->delta_entries[i].element_delta);
+        }
+        break;
+      }
+      case 0x3f0a:{
+        guint len, i, j;
+
+        if (tag_size < 8)
+          goto error;
+
+        len = GST_READ_UINT32_BE (tag_data);
+        segment->n_index_entries = len;
+        GST_DEBUG ("  number of index entries = %u", segment->n_index_entries);
+        if (len == 0)
+          goto next;
+        tag_data += 4;
+        tag_size -= 4;
+
+        if (GST_READ_UINT32_BE (tag_data) !=
+            (11 + 4 * segment->slice_count + 8 * segment->pos_table_count))
+          goto error;
+
+        tag_data += 4;
+        tag_size -= 4;
+
+        if (tag_size <
+            len * (11 + 4 * segment->slice_count +
+                8 * segment->pos_table_count))
+          goto error;
+
+        segment->index_entries = g_new (MXFIndexEntry, len);
+
+        for (i = 0; i < len; i++) {
+          MXFIndexEntry *entry = &segment->index_entries[i];
+
+          GST_DEBUG ("    index entry %u:", i);
+
+          entry->temporal_offset = GST_READ_UINT8 (tag_data);
+          tag_data += 1;
+          tag_size -= 1;
+          GST_DEBUG ("    temporal offset = %d", entry->temporal_offset);
+
+          entry->key_frame_offset = GST_READ_UINT8 (tag_data);
+          tag_data += 1;
+          tag_size -= 1;
+          GST_DEBUG ("    keyframe offset = %d", entry->key_frame_offset);
+
+          entry->flags = GST_READ_UINT8 (tag_data);
+          tag_data += 1;
+          tag_size -= 1;
+          GST_DEBUG ("    flags = 0x%02x", entry->flags);
+
+          entry->stream_offset = GST_READ_UINT64_BE (tag_data);
+          tag_data += 8;
+          tag_size -= 8;
+          GST_DEBUG ("    stream offset = %" G_GUINT64_FORMAT,
+              entry->stream_offset);
+
+          for (j = 0; j < segment->slice_count; j++) {
+            entry->slice_offset[j] = GST_READ_UINT32_BE (tag_data);
+            tag_data += 4;
+            tag_size -= 4;
+            GST_DEBUG ("    slice %u offset = %u", j, entry->slice_offset[j]);
+          }
+
+          for (j = 0; j < segment->pos_table_count; j++) {
+            mxf_fraction_parse (&entry->pos_table[j], tag_data, tag_size);
+            tag_data += 8;
+            tag_size -= 8;
+            GST_DEBUG ("    pos table %u = %d/%d", j, entry->pos_table[j].n,
+                entry->pos_table[j].d);
+          }
+        }
+        break;
+      }
+      default:
+        if (!gst_metadata_add_custom_tag (primer, tag, tag_data, tag_size,
+                &segment->other_tags))
+          goto error;
+        break;
+    }
+
+  next:
+    data += 4 + tag_size;
+    size -= 4 + tag_size;
+  }
+  return TRUE;
+
+error:
+  GST_ERROR ("Invalid index table segment");
+  return FALSE;
+}
+
+void
+mxf_index_table_segment_reset (MXFIndexTableSegment * segment)
+{
+  guint i;
+  g_return_if_fail (segment != NULL);
+
+  for (i = 0; i < segment->n_index_entries; i++) {
+    g_free (segment->index_entries[i].slice_offset);
+    g_free (segment->index_entries[i].pos_table);
+  }
+  g_free (segment->index_entries);
+  g_free (segment->delta_entries);
+
+  if (segment->other_tags)
+    g_hash_table_destroy (segment->other_tags);
+
+  memset (segment, 0, sizeof (MXFIndexTableSegment));
+}
+
 /* SMPTE 377M 8.2 Table 1 and 2 */
 
 static void

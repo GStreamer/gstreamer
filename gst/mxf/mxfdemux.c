@@ -394,6 +394,17 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
     demux->partition_index = NULL;
   }
 
+  if (demux->index_table) {
+    guint i;
+
+    for (i = 0; i < demux->index_table->len; i++)
+      mxf_index_table_segment_reset (&g_array_index (demux->index_table,
+              MXFIndexTableSegment, i));
+
+    g_array_free (demux->index_table, TRUE);
+    demux->index_table = NULL;
+  }
+
   gst_mxf_demux_reset_mxf_state (demux);
   gst_mxf_demux_reset_metadata (demux);
 }
@@ -1280,9 +1291,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2160,11 +2170,32 @@ static GstFlowReturn
 gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
     const MXFUL * key, GstBuffer * buffer)
 {
+  MXFIndexTableSegment segment;
+
+  memset (&segment, 0, sizeof (segment));
+
   GST_DEBUG_OBJECT (demux,
       "Handling index table segment of size %u at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  /* TODO: Parse this */
+  if (!demux->primer.valid) {
+    GST_WARNING_OBJECT (demux, "Invalid primer pack");
+    return GST_FLOW_OK;
+  }
+
+  if (!mxf_index_table_segment_parse (key, &segment, &demux->primer,
+          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
+
+    GST_ERROR_OBJECT (demux, "Parsing index table segment failed");
+    return GST_FLOW_ERROR;
+  }
+
+  if (!demux->index_table)
+    demux->index_table =
+        g_array_new (FALSE, FALSE, sizeof (MXFIndexTableSegment));
+
+  g_array_append_val (demux->index_table, segment);
+
   return GST_FLOW_OK;
 }
 

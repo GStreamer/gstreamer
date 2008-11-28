@@ -1,5 +1,17 @@
 2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset),
+	(gst_mxf_demux_handle_index_table_segment):
+	* gst/mxf/mxfdemux.h:
+	* gst/mxf/mxfparse.c: (mxf_index_table_segment_parse),
+	(mxf_index_table_segment_reset):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxftypes.h:
+	Implement parsing of index table segments, which will later be
+	used for seeking.
+
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/plugins/gst-plugins-bad-plugins.args:
 	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
 	* docs/plugins/gst-plugins-bad-plugins.interfaces:

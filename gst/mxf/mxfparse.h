@@ -79,6 +79,9 @@ void mxf_primer_pack_reset (MXFPrimerPack *pack);
 
 gboolean mxf_random_index_pack_parse (const MXFUL *key, const guint8 *data, guint size, GArray **array);
 
+gboolean mxf_index_table_segment_parse (const MXFUL *key, MXFIndexTableSegment *segment, const MXFPrimerPack *primer, const guint8 *data, guint size);
+void mxf_index_table_segment_reset (MXFIndexTableSegment *segment);
+
 gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
     guint16 * tag_size, const guint8 ** tag_data);
 void gst_mxf_local_tag_free (MXFLocalTag *tag);

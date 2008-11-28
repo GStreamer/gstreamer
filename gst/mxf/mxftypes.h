@@ -115,6 +115,44 @@ typedef struct {
   GHashTable *mappings;
 } MXFPrimerPack;
 
+/* SMPTE 377M 10.2.3 */
+typedef struct {
+  gint8 pos_table_index;
+  guint8 slice;
+  guint32 element_delta;
+} MXFDeltaEntry;
+
+typedef struct {
+  gint8 temporal_offset;
+  gint8 key_frame_offset;
+
+  guint8 flags;
+  guint64 stream_offset;
+  
+  guint32 *slice_offset;
+  MXFFraction *pos_table;
+} MXFIndexEntry;
+
+typedef struct {
+  MXFUL instance_id;
+  MXFFraction index_edit_rate;
+  gint64 index_start_position;
+  gint64 index_duration;
+  guint32 edit_unit_byte_count;
+  guint32 index_sid;
+  guint32 body_sid;
+  guint8 slice_count;
+  guint8 pos_table_count;
+
+  guint32 n_delta_entries;
+  MXFDeltaEntry *delta_entries;
+
+  guint32 n_index_entries;
+  MXFIndexEntry *index_entries;
+
+  GHashTable *other_tags;
+} MXFIndexTableSegment;
+
 /* SMPTE 377M 8.6 table 14 */
 #define MXF_METADATA_PREFACE (0x012f)
 #define MXF_METADATA_IDENTIFICATION (0x0130)

@@ -68,6 +68,7 @@ struct _GstMXFDemux
   MXFPrimerPack primer;
 
   GArray *partition_index;
+  GArray *index_table;
 
   /* Structural metadata */
   gboolean update_metadata;
