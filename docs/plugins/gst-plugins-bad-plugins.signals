@@ -156,6 +156,13 @@ guint  arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::reset-sync</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstRtpBin *gstrtpbin
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>

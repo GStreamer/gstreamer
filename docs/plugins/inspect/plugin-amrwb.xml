@@ -3,11 +3,11 @@
   <description>Adaptive Multi-Rate Wide-Band</description>
   <filename>../../ext/amrwb/.libs/libgstamrwb.so</filename>
   <basename>libgstamrwb.so</basename>
-  <version>0.10.7.1</version>
+  <version>0.10.9.1</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>amrwbdec</name>
@@ -17,16 +17,16 @@
       <author>Renato Araujo &lt;renato.filho@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -38,16 +38,16 @@
       <author>Renato Araujo &lt;renato.filho@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)16000, channels=(int)1</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)16000, channels=(int)1</details>
         </caps>
       </pads>
     </element>
@@ -59,16 +59,16 @@
       <author>Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-amr-wb-sh</details>
-        </caps>
-        <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-amr-wb-sh</details>
         </caps>
       </pads>
     </element>

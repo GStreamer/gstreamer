@@ -1,5 +1,24 @@
 2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-amrwb.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-ladspa.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	* docs/plugins/inspect/plugin-spcdec.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xvid.xml:
+	* gst/audioresample/gstaudioresample.c:
+	Update audioresample documentation for the new element name.
+
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/audioresample/gstaudioresample.c:
 	And now also update the debug category from audioresample
 	to legacyresample.

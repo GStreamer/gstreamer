@@ -20,15 +20,15 @@
 /* Element-Checklist-Version: 5 */
 
 /**
- * SECTION:element-audioresample
+ * SECTION:element-legacyresample
  *
- * Audioresample resamples raw audio buffers to different sample rates using
+ * legacyresample resamples raw audio buffers to different sample rates using
  * a configurable windowing function to enhance quality.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! audio/x-raw-int, rate=8000 ! alsasink
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! legacyresample ! audio/x-raw-int, rate=8000 ! alsasink
  * ]| Decode an Ogg/Vorbis downsample to 8Khz and play sound through alsa. 
  * To create the Ogg/Vorbis file refer to the documentation of vorbisenc.
  * </refsect2>
