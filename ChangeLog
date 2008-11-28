@@ -1,3 +1,8 @@
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/speexresample/gstspeexresample.c: (plugin_init):
+	Update the debug category from speex_resample to audioresample.
+
 2008-11-27  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audioresample/Makefile.am:

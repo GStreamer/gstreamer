@@ -1381,7 +1381,7 @@ error:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (speex_resample_debug, "speex_resample", 0,
+  GST_DEBUG_CATEGORY_INIT (speex_resample_debug, "audioresample", 0,
       "audio resampling element");
 
   oil_init ();
