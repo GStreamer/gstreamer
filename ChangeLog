@@ -1,5 +1,15 @@
 2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/gst-plugins-base-plugins.hierarchy:
+	* docs/plugins/gst-plugins-base-plugins.interfaces:
+	* docs/plugins/gst-plugins-base-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* gst/speexresample/gstspeexresample.c:
+	Update documentation of speexresample for the new element name.
+
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/speexresample/README:
 	Update README with the latest diff between the Speex resampler
 	and our copy.
