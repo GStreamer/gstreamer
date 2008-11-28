@@ -1,5 +1,16 @@
 2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps):
+	* gst/mxf/mxfalaw.c: (mxf_is_alaw_audio_essence_track),
+	(mxf_alaw_handle_essence_element), (mxf_alaw_create_caps):
+	* gst/mxf/mxfalaw.h:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams):
+	Add support for A-Law encoded audio essence (SMPTE 388M and 382M).
+
+2008-11-28  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset),
 	(gst_mxf_demux_handle_index_table_segment):
 	* gst/mxf/mxfdemux.h:

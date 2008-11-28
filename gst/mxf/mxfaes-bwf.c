@@ -244,6 +244,11 @@ static const MXFUL mxf_sound_essence_compression_aiff =
     0x7E, 0x00, 0x00, 0x00}
 };
 
+static const MXFUL mxf_sound_essence_compression_alaw =
+    { {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x03, 0x04, 0x02, 0x02, 0x02,
+    0x03, 0x01, 0x01, 0x00}
+};
+
 static GstCaps *
 mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
     MXFMetadataTrack * track,
@@ -313,6 +318,19 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
         (block_align != 1), "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+  } else if (mxf_ul_is_equal (&descriptor->sound_essence_compression,
+          &mxf_sound_essence_compression_alaw)) {
+
+    if (descriptor->audio_sampling_rate.n != 0 ||
+        descriptor->audio_sampling_rate.d != 0 ||
+        descriptor->channel_count != 0) {
+      GST_ERROR ("Invalid descriptor");
+      return NULL;
+    }
+    ret = gst_caps_new_simple ("audio/x-alaw", "rate", G_TYPE_INT,
+        (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
+            ((gdouble) descriptor->audio_sampling_rate.d) + 0.5),
+        "channels", G_TYPE_INT, descriptor->channel_count);
   } else {
     GST_ERROR ("Unsupported sound essence compression: %s",
         mxf_ul_to_string (&descriptor->sound_essence_compression, str));
