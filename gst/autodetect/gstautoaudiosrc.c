@@ -66,7 +66,7 @@ GST_BOILERPLATE (GstAutoAudioSrc, gst_auto_audio_src, GstBin, GST_TYPE_BIN);
 
 static const GstElementDetails gst_auto_audio_src_details =
 GST_ELEMENT_DETAILS ("Auto audio source",
-    "Sink/Audio",
+    "Source/Audio",
     "Wrapper audio source for automatically detected audio source",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
     "Jan Schmidt <thaytan@noraisin.net>\n"
