@@ -19,7 +19,7 @@
 
 /* TODO:
  *   - start at correct position of the component, switch components
- *   - RandomIndex / IndexSegment support
+ *   - seeking support
  *   - timecode tracks
  *   - descriptive metadata
  *   - generic container system items
@@ -35,6 +35,7 @@
 #include "mxfmpeg.h"
 #include "mxfdv-dif.h"
 #include "mxfalaw.h"
+#include "mxfjpeg2000.h"
 
 #include <string.h>
 
@@ -1292,8 +1293,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1832,6 +1834,10 @@ choose_package:
         else if (mxf_is_dv_dif_essence_track (source_track))
           caps =
               mxf_dv_dif_create_caps (source_package, source_track,
+              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_jpeg2000_video_essence_track (source_track))
+          caps =
+              mxf_jpeg2000_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
         break;
       case MXF_METADATA_TRACK_SOUND_ESSENCE:

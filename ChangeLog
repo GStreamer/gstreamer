@@ -1,5 +1,19 @@
 2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams):
+	* gst/mxf/mxfjpeg2000.c: (mxf_is_jpeg2000_video_essence_track),
+	(mxf_jpeg2000_handle_essence_element), (mxf_jpeg2000_create_caps):
+	* gst/mxf/mxfjpeg2000.h:
+	Add initial support for JPEG2000 encoded video essence.
+
+	* gst/mxf/mxfparse.c:
+	(mxf_metadata_generic_picture_essence_descriptor_set_caps):
+	Set the framerate in the video caps.
+
+2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_sink_setcaps):
 	Don't unref the element instance if we don't own a reference.
 

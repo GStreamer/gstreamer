@@ -2582,9 +2582,13 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
 {
   guint par_n, par_d;
   guint width, height;
+  MXFMetadataFileDescriptor *f = (MXFMetadataFileDescriptor *) descriptor;
 
   g_return_if_fail (descriptor != NULL);
   g_return_if_fail (GST_IS_CAPS (caps));
+
+  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, f->sample_rate.n,
+      f->sample_rate.d, NULL);
 
   width = descriptor->stored_width;
   height = descriptor->stored_height;
