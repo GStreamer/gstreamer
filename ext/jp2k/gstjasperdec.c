@@ -235,7 +235,6 @@ gst_jasper_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
 refuse_caps:
   {
     GST_WARNING_OBJECT (dec, "refused caps %" GST_PTR_FORMAT, caps);
-    gst_object_unref (dec);
     return FALSE;
   }
 }

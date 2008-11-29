@@ -1,5 +1,10 @@
 2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_sink_setcaps):
+	Don't unref the element instance if we don't own a reference.
+
+2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Cygwin Ports maintainer
 	          <yselkowitz at users dot sourceforge dot net>
 
