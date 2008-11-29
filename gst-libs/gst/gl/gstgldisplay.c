@@ -258,7 +258,7 @@ gst_gl_display_init (GstGLDisplay *display, GstGLDisplayClass *klass)
     "  y=1.1643*(y-0.0625);\n"
     "  u=u-0.5;\n"
     "  v=v-0.5;\n"
-    "  r=clamp(y+1.5958*v+0.8, 0, 1);\n"
+    "  r=clamp(y+1.5958*v, 0, 1);\n"
     "  g=clamp(y-0.39173*u-0.81290*v, 0, 1);\n"
     "  b=clamp(y+2.017*u, 0, 1);\n"
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
@@ -584,15 +584,15 @@ gst_gl_display_thread_destroy_context (GstGLDisplay *display)
     glDeleteTextures (1, &display->upload_intex);
     display->upload_intex = 0;
   }
-  if (display->upload_intex_v != 0)
+  if (display->upload_intex_u != 0)
   {
-    glDeleteTextures (1, &display->upload_intex_v);
-    display->upload_intex = 0;
+    glDeleteTextures (1, &display->upload_intex_u);
+    display->upload_intex_u = 0;
   }
   if (display->upload_intex_v != 0)
   {
     glDeleteTextures (1, &display->upload_intex_v);
-    display->upload_intex = 0;
+    display->upload_intex_v = 0;
   }
 
   GST_INFO ("Cleaning texture pool");
@@ -2201,22 +2201,15 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
       offsetV = 2;
       break;
     case GST_VIDEO_FORMAT_YV12:
-      //WIN32
+
 #if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
+      //WIN32
       offsetU = 2;
       offsetV = 1;
-      //LINUX
 #else
-      if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
-      {
-        offsetU = 2;
-        offsetV = 1;
-      }
-      else
-      {
-        offsetU = 1;
-        offsetV = 2;
-      }
+      //LINUX
+      offsetU = 1;
+      offsetV = 2;
 #endif
       break;
     default:
@@ -2661,22 +2654,14 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display)
       offsetV = 2;
       break;
     case GST_VIDEO_FORMAT_YV12:
-      //WIN32
 #if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
+      //WIN32
       offsetU = 2;
       offsetV = 1;
-      //LINUX
 #else
-      if (g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR), 3) == 0)
-      {
-        offsetU = 2;
-        offsetV = 1;
-      }
-      else
-      {
-        offsetU = 1;
-        offsetV = 2;
-      }
+      //LINUX
+      offsetU = 1;
+      offsetV = 2;
 #endif
       break;
     default:

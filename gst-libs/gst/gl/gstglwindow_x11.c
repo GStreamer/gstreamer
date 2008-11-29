@@ -24,6 +24,8 @@
 
 #include "gstglwindow.h"
 
+#include <locale.h>
+
 #include <GL/glx.h>
 
 #define GST_GL_WINDOW_GET_PRIVATE(o)  \
@@ -275,6 +277,8 @@ gst_gl_window_new (gint width, gint height)
 
   static gint x = 0;
   static gint y = 0;
+
+  setlocale(LC_NUMERIC, "C");
 
   priv->x_lock = g_mutex_new ();
   priv->cond_send_message = g_cond_new ();
