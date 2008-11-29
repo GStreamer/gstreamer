@@ -323,7 +323,7 @@ class LogFile (Producer):
 
         self.path = os.path.normpath (os.path.abspath (filename))
         self.__real_fileobj = file (filename, "rb")
-        self.fileobj = mmap.mmap (self.__real_fileobj.fileno (), 0, prot = mmap.PROT_READ)
+        self.fileobj = mmap.mmap (self.__real_fileobj.fileno (), 0, access = mmap.ACCESS_READ)
         self.line_cache = LineCache (self.fileobj, dispatcher)
         self.line_cache.consumers.append (self)
 
