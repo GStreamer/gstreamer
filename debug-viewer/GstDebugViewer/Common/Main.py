@@ -400,15 +400,15 @@ class LogOptionParser (OptionParser):
         try:
             level = int (arg)
         except ValueError:
-            level = {"off" : logging.NOTSET,
-                     "none" : logging.NOTSET,
+            level = {"off" : None,
+                     "none" : None,
                      "debug" : logging.DEBUG,
                      "info" : logging.INFO,
                      "warning" : logging.WARNING,
                      "error" : logging.ERROR,
                      "critical" : logging.CRITICAL}.get (arg.strip ().lower ())
             if level is None:
-                return logging.NOTSET
+                return None
             else:
                 return level
         else:
@@ -416,7 +416,7 @@ class LogOptionParser (OptionParser):
                 level = 0
             elif level > 5:
                 level = 5
-            return {0 : logging.NOTSET,
+            return {0 : None,
                     1 : logging.DEBUG,
                     2 : logging.INFO,
                     3 : logging.WARNING,
@@ -461,7 +461,7 @@ def _init_options (option_parser = None):
 
     return option_parser.options
 
-def _init_logging (level = logging.NOTSET):
+def _init_logging (level = None):
 
     logging.basicConfig (level = level,
                          format = '%(asctime)s.%(msecs)03d %(levelname)8s %(name)20s: %(message)s',
