@@ -57,7 +57,7 @@ namespace Gst {
 		[NoAccessorMethod]
 		public int port { get; construct; }
 	}
-	[CCode (cheader_filename = "gst/gst.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSession : GLib.Object {
 		public weak GLib.List medias;
 		public weak string sessionid;
@@ -67,7 +67,7 @@ namespace Gst {
 		public RTSPSession (string sessionid);
 	}
 	[Compact]
-	[CCode (cheader_filename = "gst/gst.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSessionMedia {
 		public weak Gst.Element fdsink;
 		public weak Gst.RTSPMedia media;
@@ -79,7 +79,7 @@ namespace Gst {
 		public Gst.StateChangeReturn play ();
 		public Gst.StateChangeReturn stop ();
 	}
-	[CCode (cheader_filename = "gst/gst.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSessionPool : GLib.Object {
 		public weak GLib.Mutex @lock;
 		public weak GLib.HashTable sessions;
@@ -90,7 +90,7 @@ namespace Gst {
 		public void remove (Gst.RTSPSession sess);
 	}
 	[Compact]
-	[CCode (cheader_filename = "gst/gst.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
 	public class RTSPSessionStream {
 		public weak Gst.RTSPTransport client_trans;
 		public weak string destination;
@@ -108,6 +108,4 @@ namespace Gst {
 		public weak Gst.Element[] udpsrc;
 		public weak Gst.RTSPTransport set_transport (string destination, Gst.RTSPTransport ct);
 	}
-	[CCode (cheader_filename = "gst/gst.h")]
-	public const int HAVE_RTSP_URL_BOXED;
 }

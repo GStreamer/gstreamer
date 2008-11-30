@@ -59,8 +59,6 @@
 			<field name="udpsrc" type="GstElement*[]"/>
 			<field name="udpsink" type="GstElement*[]"/>
 		</struct>
-		<boxed name="GstRTSPUrl" type-name="GstRTSPUrl" get-type="gst_rtsp_url_get_type">
-		</boxed>
 		<object name="GstRTSPClient" parent="GObject" type-name="GstRTSPClient" get-type="gst_rtsp_client_get_type">
 			<method name="accept" symbol="gst_rtsp_client_accept">
 				<return-type type="gboolean"/>
@@ -208,6 +206,5 @@
 			<field name="lock" type="GMutex*"/>
 			<field name="sessions" type="GHashTable*"/>
 		</object>
-		<constant name="HAVE_RTSP_URL_BOXED" type="int" value="1"/>
 	</namespace>
 </api>
