@@ -1,0 +1,5 @@
+Gst cprefix="Gst" lower_case_cprefix="gst_" cheader_filename="gst/gst.h"
+GstRTSPMediaStream cheader_filename="gst/rtsp-server/rstp-media.h"
+GstRTSPMedia cheader_filename="gst/rtsp-server/rstp-media.h"
+GstRTSPClient cheader_filename="gst/rtsp-server/rstp-client.h"
+GstRTSPServer cheader_filename="gst/rtsp-server/rstp-server.h"

@@ -1,0 +1,2 @@
+include/gstreamer-0.10/gst/rtsp-server
+lib/libgstrtspserver-0.10.so
