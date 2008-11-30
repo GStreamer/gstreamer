@@ -138,6 +138,12 @@ gst_mxf_pad_init (GstMXFPad * pad)
   pad->last_flow = GST_FLOW_OK;
 }
 
+enum
+{
+  PROP_0,
+  PROP_PACKAGE
+};
+
 static gboolean gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_mxf_demux_src_event (GstPad * pad, GstEvent * event);
 static const GstQueryType *gst_mxf_demux_src_query_type (GstPad * pad);
@@ -165,6 +171,17 @@ static void
 gst_mxf_demux_remove_pad (GstMXFPad * pad, GstMXFDemux * demux)
 {
   gst_element_remove_pad (GST_ELEMENT (demux), GST_PAD (pad));
+}
+
+static void
+gst_mxf_demux_remove_pads (GstMXFDemux * demux)
+{
+  if (demux->src) {
+    g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
+    g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
+    g_ptr_array_free (demux->src, TRUE);
+    demux->src = NULL;
+  }
 }
 
 static void
@@ -384,12 +401,7 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   gst_adapter_clear (demux->adapter);
 
-  if (demux->src) {
-    g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
-    g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
-    g_ptr_array_free (demux->src, TRUE);
-    demux->src = NULL;
-  }
+  gst_mxf_demux_remove_pads (demux);
 
   if (demux->partition_index) {
     g_array_free (demux->partition_index, TRUE);
@@ -1293,8 +1305,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1608,6 +1621,77 @@ error:
   return ret;
 }
 
+static MXFMetadataGenericPackage *
+gst_mxf_demux_find_package (GstMXFDemux * demux, const MXFUMID * umid)
+{
+  MXFMetadataGenericPackage *ret = NULL;
+  guint i;
+
+  if (demux->package) {
+    for (i = 0; i < demux->package->len; i++) {
+      MXFMetadataGenericPackage *p = g_ptr_array_index (demux->package, i);
+
+      if (mxf_umid_is_equal (&p->package_uid, umid)) {
+        ret = p;
+        break;
+      }
+    }
+  }
+
+  return ret;
+}
+
+static MXFMetadataGenericPackage *
+gst_mxf_demux_choose_package (GstMXFDemux * demux)
+{
+  MXFMetadataGenericPackage *ret = NULL;
+
+  if (demux->requested_package_string) {
+    MXFUMID umid;
+
+    if (!mxf_umid_from_string (demux->requested_package_string, &umid)) {
+      GST_ERROR_OBJECT (demux, "Invalid requested package");
+    } else {
+      if (memcmp (&umid, &demux->current_package_uid, 32) != 0) {
+        if (demux->src)
+          gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+        gst_mxf_demux_remove_pads (demux);
+        memcpy (&demux->current_package_uid, &umid, 32);
+      }
+    }
+    g_free (demux->requested_package_string);
+    demux->requested_package_string = NULL;
+  }
+
+  if (!mxf_umid_is_zero (&demux->current_package_uid))
+    ret = gst_mxf_demux_find_package (demux, &demux->current_package_uid);
+  if (ret && (ret->type == MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE
+          || ret->type == MXF_METADATA_GENERIC_PACKAGE_MATERIAL))
+    return ret;
+  else if (ret && ret->type == MXF_METADATA_GENERIC_PACKAGE_SOURCE)
+    GST_WARNING_OBJECT (demux,
+        "Current package is not a material package or top-level source package, choosing the first best");
+  else if (!mxf_umid_is_zero (&demux->current_package_uid))
+    GST_WARNING_OBJECT (demux,
+        "Current package not found, choosing the first best");
+
+  if (!demux->material_package) {
+    GST_ERROR_OBJECT (demux, "No material package");
+    return NULL;
+  } else {
+    MXFMetadataGenericPackage *p =
+        (MXFMetadataGenericPackage *) demux->material_package->data;
+    memcpy (&demux->current_package_uid, &p->package_uid, 32);
+
+    ret = gst_mxf_demux_find_package (demux, &demux->current_package_uid);
+  }
+
+  if (!ret)
+    GST_ERROR_OBJECT (demux, "No suitable package found");
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
 {
@@ -1617,52 +1701,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Updating streams");
 
-choose_package:
-  /* If no package was selected, select the first material package */
-  if (mxf_umid_is_zero (&demux->current_package_uid)
-      && !demux->material_package) {
-    GST_ERROR_OBJECT (demux, "No material package");
-    return GST_FLOW_ERROR;
-  } else if (mxf_umid_is_zero (&demux->current_package_uid)) {
-    MXFMetadataGenericPackage *p =
-        (MXFMetadataGenericPackage *) demux->material_package->data;
-    memcpy (&demux->current_package_uid, &p->package_uid, 32);
-    current_package = p;
-    if (demux->src) {
-      for (i = 0; i < demux->src->len; i++) {
-        GstMXFPad *pad = g_ptr_array_index (demux->src, i);
-        gst_element_remove_pad (GST_ELEMENT_CAST (demux), GST_PAD_CAST (pad));
-        gst_object_unref (pad);
-      }
-      g_ptr_array_free (demux->src, TRUE);
-      demux->src = NULL;
-    }
-  }
-
-  if (!current_package && demux->package) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *p = g_ptr_array_index (demux->package, i);
-
-      if (mxf_umid_is_equal (&p->package_uid, &demux->current_package_uid)) {
-        current_package = p;
-        break;
-      }
-    }
-  }
-
-  if (!current_package) {
-    GST_WARNING_OBJECT (demux,
-        "Selected package not found in header metadata, choosing the first best");
-    memset (&demux->current_package_uid, 0, sizeof (MXFUMID));
-    goto choose_package;
-  }
-
-  if (current_package->type == MXF_METADATA_GENERIC_PACKAGE_SOURCE) {
-    GST_WARNING_OBJECT (demux,
-        "Selected package is not a material package or top-level source package, choosing the first best");
-    memset (&demux->current_package_uid, 0, sizeof (MXFUMID));
-    goto choose_package;
-  }
+  current_package = gst_mxf_demux_choose_package (demux);
 
   if (!current_package->tracks) {
     GST_ERROR_OBJECT (demux, "Current package has no (resolved) tracks");
@@ -2541,6 +2580,11 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
             gst_mxf_demux_handle_header_metadata_update_streams (demux)) !=
         GST_FLOW_OK)
       goto beach;
+  } else if (!demux->update_metadata && demux->requested_package_string) {
+    if ((ret =
+            gst_mxf_demux_handle_header_metadata_update_streams (demux)) !=
+        GST_FLOW_OK)
+      goto beach;
   }
 
   if (!mxf_is_mxf_packet (key)) {
@@ -3091,6 +3135,39 @@ gst_mxf_demux_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
+gst_mxf_demux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMXFDemux *demux = GST_MXF_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_PACKAGE:
+      g_free (demux->requested_package_string);
+      demux->requested_package_string = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mxf_demux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMXFDemux *demux = GST_MXF_DEMUX (object);
+
+  switch (prop_id) {
+    case PROP_PACKAGE:
+      g_value_set_string (value, demux->current_package_string);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_mxf_demux_finalize (GObject * object)
 {
   GstMXFDemux *demux = GST_MXF_DEMUX (object);
@@ -3110,12 +3187,12 @@ gst_mxf_demux_finalize (GObject * object)
     demux->close_seg_event = NULL;
   }
 
-  if (demux->src) {
-    g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
-    g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
-    g_ptr_array_free (demux->src, TRUE);
-    demux->src = NULL;
-  }
+  g_free (demux->current_package_string);
+  demux->current_package_string = NULL;
+  g_free (demux->requested_package_string);
+  demux->requested_package_string = NULL;
+
+  gst_mxf_demux_remove_pads (demux);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -3146,7 +3223,14 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (mxfdemux_debug, "mxfdemux", 0, "MXF demuxer");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_mxf_demux_finalize);
+  gobject_class->finalize = gst_mxf_demux_finalize;
+  gobject_class->set_property = gst_mxf_demux_set_property;
+  gobject_class->get_property = gst_mxf_demux_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PACKAGE,
+      g_param_spec_string ("package", "Package",
+          "Material or Source package to use for playback", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mxf_demux_change_state);

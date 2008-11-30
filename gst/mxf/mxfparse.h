@@ -35,6 +35,7 @@ gboolean mxf_ul_is_equal (const MXFUL *a, const MXFUL *b);
 gboolean mxf_ul_is_zero (const MXFUL *ul);
 
 gchar *mxf_umid_to_string (const MXFUMID * umid, gchar str[96]);
+MXFUMID *mxf_umid_from_string (const gchar *str, MXFUMID * umid);
 gboolean mxf_umid_is_equal (const MXFUMID *a, const MXFUMID *b);
 gboolean mxf_umid_is_zero (const MXFUMID *umid);
 

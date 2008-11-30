@@ -1,5 +1,20 @@
 2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_remove_pads),
+	(gst_mxf_demux_reset), (gst_mxf_demux_find_package),
+	(gst_mxf_demux_choose_package),
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_handle_klv_packet), (gst_mxf_demux_set_property),
+	(gst_mxf_demux_get_property), (gst_mxf_demux_finalize),
+	(gst_mxf_demux_class_init):
+	* gst/mxf/mxfdemux.h:
+	* gst/mxf/mxfparse.c: (mxf_umid_from_string):
+	* gst/mxf/mxfparse.h:
+	Add property to select the top-level source package or material
+	package that should be used for playback.
+
+2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_random_index_pack):
 	Make sure that demux->offset has the correct value before
 	calling any gst_mxf_demux_handle_* functions.

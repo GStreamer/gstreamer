@@ -99,6 +99,8 @@ struct _GstMXFDemux
   
   MXFUMID current_package_uid;
   MXFMetadataGenericPackage *current_package;
+  gchar *current_package_string;
+  gchar *requested_package_string;
 };
 
 struct _GstMXFDemuxClass

@@ -271,6 +271,37 @@ mxf_umid_to_string (const MXFUMID * key, gchar str[96])
   return str;
 }
 
+MXFUMID *
+mxf_umid_from_string (const gchar * str, MXFUMID * umid)
+{
+  gint len;
+  guint i, j;
+
+  g_return_val_if_fail (str != NULL, NULL);
+  len = strlen (str);
+
+  memset (umid, 0, 32);
+
+  if (len != 95) {
+    GST_ERROR ("Invalid UMID string length %d", len);
+    return NULL;
+  }
+
+  for (i = 0, j = 0; i < 32; i++) {
+    if (!g_ascii_isxdigit (str[j]) ||
+        !g_ascii_isxdigit (str[j + 1]) ||
+        (str[j + 2] != '.' && str[j + 2] != '\0')) {
+      GST_ERROR ("Invalid UMID string '%s'", str);
+      return NULL;
+    }
+
+    umid->u[i] =
+        (g_ascii_xdigit_value (str[j]) << 4) | (g_ascii_xdigit_value (str[j +
+                1]));
+    j += 3;
+  }
+  return umid;
+}
 
 static guint
 gst_mxf_ul_hash (const MXFUL * key)
