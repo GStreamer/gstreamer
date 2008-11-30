@@ -410,8 +410,8 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
         /* some error, just warn, it's likely recoverable and we don't want to
          * break streaming. We break so that we stop retrying for this client. */
         if (errno != EINTR && errno != EAGAIN) {
-          GST_WARNING_OBJECT (sink, "client %p gave error %d (%s)", errno,
-              g_strerror (errno));
+          GST_WARNING_OBJECT (sink, "client %p gave error %d (%s)", client,
+              errno, g_strerror (errno));
           break;
         }
       } else {

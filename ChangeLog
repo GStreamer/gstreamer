@@ -1,3 +1,9 @@
+2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_render):
+	Provide the parameters that are required for the format string
+	to fix a compiler warning.
+
 2008-11-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/autodetect/gstautoaudiosrc.c:
