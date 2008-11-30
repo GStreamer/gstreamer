@@ -1,5 +1,13 @@
 2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_resolve_references):
+	If there's no descriptor for the track in the track's source
+	package and there's a single descriptor without a linked track
+	assume that it belongs to this track.
+
+2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfalaw.c: (mxf_is_alaw_essence_track):
 	* gst/mxf/mxfalaw.h:
 	* gst/mxf/mxfdemux.c:

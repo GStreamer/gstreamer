@@ -1305,8 +1305,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1392,7 +1393,7 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
       if (package->tracks && package->descriptors) {
         for (j = 0; j < package->n_tracks; j++) {
           MXFMetadataTrack *track = package->tracks[j];
-          guint n_descriptor = 0;
+          guint i, n_descriptor = 0;
 
           if (!track)
             continue;
@@ -1406,14 +1407,15 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
 
             e = (MXFMetadataFileDescriptor *) d;
 
-            if (e->linked_track_id == track->track_id)
+            if (e->linked_track_id == track->track_id ||
+                e->linked_track_id == 0)
               n_descriptor++;
           }
 
           track->n_descriptor = n_descriptor;
           track->descriptor =
               g_new0 (MXFMetadataFileDescriptor *, n_descriptor);
-          n_descriptor = 0;
+          i = 0;
 
           for (k = 0; k < package->n_descriptors; k++) {
             MXFMetadataGenericDescriptor *d = package->descriptors[k];
@@ -1424,8 +1426,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
 
             e = (MXFMetadataFileDescriptor *) d;
 
-            if (e->linked_track_id == track->track_id)
-              track->descriptor[n_descriptor++] = e;
+            if (e->linked_track_id == track->track_id ||
+                (e->linked_track_id == 0 && n_descriptor == 1))
+              track->descriptor[i++] = e;
           }
         }
       }
