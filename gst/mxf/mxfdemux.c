@@ -1293,9 +1293,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2301,6 +2300,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   gint64 filesize = -1;
   GstFormat fmt = GST_FORMAT_BYTES;
   guint32 pack_size;
+  guint64 old_offset = demux->offset;
   MXFUL key;
 
   if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &filesize) ||
@@ -2323,10 +2323,10 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   gst_buffer_unref (buffer);
 
   if (pack_size < 20) {
-    GST_DEBUG_OBJECT (demux, "Too small pack size");
+    GST_DEBUG_OBJECT (demux, "Too small pack size (%u bytes)", pack_size);
     goto out;
   } else if (pack_size > filesize - 20) {
-    GST_DEBUG_OBJECT (demux, "Too large pack size");
+    GST_DEBUG_OBJECT (demux, "Too large pack size (%u bytes)", pack_size);
     goto out;
   }
 
@@ -2345,6 +2345,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
     goto out;
   }
 
+  demux->offset = filesize - pack_size;
   if ((ret =
           gst_mxf_demux_pull_klv_packet (demux, filesize - pack_size, &key,
               &buffer, NULL)) != GST_FLOW_OK) {
@@ -2352,9 +2353,9 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
     goto out;
   }
 
-
   gst_mxf_demux_handle_random_index_pack (demux, &key, buffer);
   gst_buffer_unref (buffer);
+  demux->offset = old_offset;
 
 out:
   if (!demux->partition_index)

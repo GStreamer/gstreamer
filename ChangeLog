@@ -1,5 +1,11 @@
 2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pull_random_index_pack):
+	Make sure that demux->offset has the correct value before
+	calling any gst_mxf_demux_handle_* functions.
+
+2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
 	* gst/mxf/mxfmpeg.c: (mxf_mpeg_video_create_caps):
 	Set the correct MPEG video version if possible and add support
