@@ -52,9 +52,9 @@ typedef struct {
 gboolean mxf_metadata_mpeg_video_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor, const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
 void mxf_metadata_mpeg_video_descriptor_reset (MXFMetadataMPEGVideoDescriptor *descriptor);
 
-gboolean mxf_is_mpeg_video_essence_track (const MXFMetadataTrack *track);
+gboolean mxf_is_mpeg_essence_track (const MXFMetadataTrack *track);
 
 GstCaps *
-mxf_mpeg_video_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
+mxf_mpeg_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
 
 #endif /* __MXF_MPEG_H__ */

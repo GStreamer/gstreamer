@@ -1,5 +1,18 @@
 2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfalaw.c: (mxf_is_alaw_essence_track):
+	* gst/mxf/mxfalaw.h:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams):
+	* gst/mxf/mxfjpeg2000.c: (mxf_is_jpeg2000_essence_track):
+	* gst/mxf/mxfjpeg2000.h:
+	* gst/mxf/mxfmpeg.c: (mxf_is_mpeg_essence_track),
+	(mxf_mpeg_es_create_caps), (mxf_mpeg_create_caps):
+	* gst/mxf/mxfmpeg.h:
+	Some random cleanup.
+
+2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_remove_pads),
 	(gst_mxf_demux_reset), (gst_mxf_demux_find_package),
 	(gst_mxf_demux_choose_package),

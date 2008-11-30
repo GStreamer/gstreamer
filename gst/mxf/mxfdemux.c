@@ -1305,9 +1305,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1865,15 +1864,15 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
 
     switch (track_type) {
       case MXF_METADATA_TRACK_PICTURE_ESSENCE:
-        if (mxf_is_mpeg_video_essence_track (source_track))
+        if (mxf_is_mpeg_essence_track (source_track))
           caps =
-              mxf_mpeg_video_create_caps (source_package, source_track,
+              mxf_mpeg_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
         else if (mxf_is_dv_dif_essence_track (source_track))
           caps =
               mxf_dv_dif_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_jpeg2000_video_essence_track (source_track))
+        else if (mxf_is_jpeg2000_essence_track (source_track))
           caps =
               mxf_jpeg2000_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
@@ -1887,9 +1886,13 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
           caps =
               mxf_dv_dif_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_alaw_audio_essence_track (source_track))
+        else if (mxf_is_alaw_essence_track (source_track))
           caps =
               mxf_alaw_create_caps (source_package, source_track,
+              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_mpeg_essence_track (source_track))
+          caps =
+              mxf_mpeg_create_caps (source_package, source_track,
               &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
         break;
       case MXF_METADATA_TRACK_DATA_ESSENCE:

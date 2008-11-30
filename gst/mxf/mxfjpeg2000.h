@@ -28,7 +28,7 @@
 
 #include "mxfparse.h"
 
-gboolean mxf_is_jpeg2000_video_essence_track (const MXFMetadataTrack *track);
+gboolean mxf_is_jpeg2000_essence_track (const MXFMetadataTrack *track);
 
 GstCaps *
 mxf_jpeg2000_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);

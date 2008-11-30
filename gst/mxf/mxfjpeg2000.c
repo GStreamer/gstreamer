@@ -38,7 +38,7 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
 gboolean
-mxf_is_jpeg2000_video_essence_track (const MXFMetadataTrack * track)
+mxf_is_jpeg2000_essence_track (const MXFMetadataTrack * track)
 {
   guint i;
 
@@ -106,8 +106,8 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->
-            descriptor[i])->is_file_descriptor
+    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
+        is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];

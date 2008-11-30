@@ -24,6 +24,7 @@
 /* TODO:
  * - Handle PES streams
  * - Fix TS/PS demuxers to forward timestamps
+ * - Handle sound/data somehow
  */
 
 #ifdef HAVE_CONFIG_H
@@ -195,7 +196,7 @@ void mxf_metadata_mpeg_video_descriptor_reset
 }
 
 gboolean
-mxf_is_mpeg_video_essence_track (const MXFMetadataTrack * track)
+mxf_is_mpeg_essence_track (const MXFMetadataTrack * track)
 {
   guint i;
 
@@ -243,14 +244,84 @@ static const guint8 sony_mpeg4_extradata[] = {
   0x01, 0x00, 0x00
 };
 
+static GstCaps *
+mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
+    MXFMetadataTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandler * handler, gpointer * mapping_data,
+    MXFMetadataFileDescriptor * f,
+    MXFMetadataGenericPictureEssenceDescriptor * p,
+    MXFMetadataGenericSoundEssenceDescriptor * s,
+    MXFMetadataMPEGVideoDescriptor * d)
+{
+  GstCaps *caps = NULL;
+
+  /* SMPTE RP224 */
+  if (!p || mxf_ul_is_zero (&p->picture_essence_coding)) {
+    GST_WARNING
+        ("No picture essence descriptor or no picture essence coding defined");
+    caps =
+        gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+  } else if (p->picture_essence_coding.u[0] != 0x06
+      || p->picture_essence_coding.u[1] != 0x0e
+      || p->picture_essence_coding.u[2] != 0x2b
+      || p->picture_essence_coding.u[3] != 0x34
+      || p->picture_essence_coding.u[4] != 0x04
+      || p->picture_essence_coding.u[5] != 0x01
+      || p->picture_essence_coding.u[6] != 0x01
+      || p->picture_essence_coding.u[8] != 0x04
+      || p->picture_essence_coding.u[9] != 0x01
+      || p->picture_essence_coding.u[10] != 0x02
+      || p->picture_essence_coding.u[11] != 0x02
+      || p->picture_essence_coding.u[12] != 0x01) {
+    GST_ERROR ("No MPEG picture essence coding");
+    caps = NULL;
+  } else if (p->picture_essence_coding.u[13] >= 0x01 &&
+      p->picture_essence_coding.u[13] <= 0x08) {
+    caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+  } else if (p->picture_essence_coding.u[13] == 0x10) {
+    caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+  } else if (p->picture_essence_coding.u[13] == 0x20) {
+    MXFLocalTag *local_tag =
+        (((MXFMetadataGenericDescriptor *) f)->other_tags) ?
+        g_hash_table_lookup (((MXFMetadataGenericDescriptor *)
+            f)->other_tags, &sony_mpeg4_extradata) : NULL;
+
+    caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+
+    if (local_tag) {
+      GstBuffer *codec_data = NULL;
+      codec_data = gst_buffer_new_and_alloc (local_tag->size);
+      memcpy (GST_BUFFER_DATA (codec_data), local_tag->data, local_tag->size);
+      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
+          NULL);
+      gst_buffer_unref (codec_data);
+    }
+
+  } else {
+    GST_ERROR ("Unsupported MPEG picture essence coding 0x%02x",
+        p->picture_essence_coding.u[13]);
+    caps = NULL;
+  }
+
+  if (caps)
+    *handler = mxf_mpeg_video_handle_essence_element;
+
+  return caps;
+}
+
 GstCaps *
-mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
+mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
     MXFMetadataTrack * track, GstTagList ** tags,
     MXFEssenceElementHandler * handler, gpointer * mapping_data)
 {
   MXFMetadataMPEGVideoDescriptor *d = NULL;
   MXFMetadataFileDescriptor *f = NULL;
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
+  MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
   guint i;
   GstCaps *caps = NULL;
 
@@ -277,6 +348,11 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       break;
     } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
+        MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR) {
+      f = track->descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+      break;
+    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
         MXF_METADATA_FILE_DESCRIPTOR) {
       f = track->descriptor[i];
     }
@@ -287,62 +363,13 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
     return NULL;
   }
 
-  *handler = mxf_mpeg_video_handle_essence_element;
   /* SMPTE 381M 7 */
   if (f->essence_container.u[13] == 0x04) {
     GST_DEBUG ("Found MPEG ES stream");
 
-    /* SMPTE RP224 */
-    if (!p || mxf_ul_is_zero (&p->picture_essence_coding)) {
-      GST_WARNING
-          ("No picture essence descriptor or no picture essence coding defined");
-      caps =
-          gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
-          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-    } else if (p->picture_essence_coding.u[0] != 0x06
-        || p->picture_essence_coding.u[1] != 0x0e
-        || p->picture_essence_coding.u[2] != 0x2b
-        || p->picture_essence_coding.u[3] != 0x34
-        || p->picture_essence_coding.u[4] != 0x04
-        || p->picture_essence_coding.u[5] != 0x01
-        || p->picture_essence_coding.u[6] != 0x01
-        || p->picture_essence_coding.u[8] != 0x04
-        || p->picture_essence_coding.u[9] != 0x01
-        || p->picture_essence_coding.u[10] != 0x02
-        || p->picture_essence_coding.u[11] != 0x02
-        || p->picture_essence_coding.u[12] != 0x01) {
-      GST_ERROR ("No MPEG picture essence coding");
-      caps = NULL;
-    } else if (p->picture_essence_coding.u[13] >= 0x01 &&
-        p->picture_essence_coding.u[13] <= 0x08) {
-      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
-          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-    } else if (p->picture_essence_coding.u[13] == 0x10) {
-      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
-          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-    } else if (p->picture_essence_coding.u[13] == 0x20) {
-      MXFLocalTag *local_tag =
-          (((MXFMetadataGenericDescriptor *) f)->
-          other_tags) ? g_hash_table_lookup (((MXFMetadataGenericDescriptor *)
-              f)->other_tags, &sony_mpeg4_extradata) : NULL;
-
-      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
-          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-
-      if (local_tag) {
-        GstBuffer *codec_data = NULL;
-        codec_data = gst_buffer_new_and_alloc (local_tag->size);
-        memcpy (GST_BUFFER_DATA (codec_data), local_tag->data, local_tag->size);
-        gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
-            NULL);
-        gst_buffer_unref (codec_data);
-      }
-
-    } else {
-      GST_ERROR ("Unsupported MPEG picture essence coding 0x%02x",
-          p->picture_essence_coding.u[13]);
-      caps = NULL;
-    }
+    caps =
+        mxf_mpeg_es_create_caps (package, track, tags, handler, mapping_data, f,
+        p, s, d);
   } else if (f->essence_container.u[13] == 0x07) {
     GST_ERROR ("MPEG PES streams not supported yet");
     return NULL;
@@ -354,7 +381,6 @@ mxf_mpeg_video_create_caps (MXFMetadataGenericPackage * package,
   } else if (f->essence_container.u[13] == 0x09) {
     GST_DEBUG ("Found MPEG TS stream");
     caps = gst_caps_new_simple ("video/mpegts", NULL);
-
   }
 
   if (p)

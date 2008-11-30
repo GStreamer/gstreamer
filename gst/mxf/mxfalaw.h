@@ -28,7 +28,7 @@
 
 #include "mxfparse.h"
 
-gboolean mxf_is_alaw_audio_essence_track (const MXFMetadataTrack *track);
+gboolean mxf_is_alaw_essence_track (const MXFMetadataTrack *track);
 
 GstCaps *
 mxf_alaw_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
