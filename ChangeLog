@@ -1,3 +1,10 @@
+2008-11-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_video_create_caps):
+	Set the correct MPEG video version if possible and add support
+	for MPEG4 video, including codec_data.
+
 2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/Makefile.am:
