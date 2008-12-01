@@ -1,3 +1,8 @@
+2008-12-01  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtmux/atoms.c: (build_jp2h_extension):
+	Fix mj2 sample description metadata construction.
+
 2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
