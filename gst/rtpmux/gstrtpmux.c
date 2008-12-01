@@ -104,6 +104,8 @@ static void gst_rtp_mux_set_property (GObject * object, guint prop_id,
 static void gst_rtp_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_rtp_mux_src_event (GstPad * pad, GstEvent * event);
+
 static GstElementClass *parent_class = NULL;
 
 GType
@@ -211,6 +213,7 @@ static gboolean gst_rtp_mux_src_event (GstPad * pad,
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
+        result = FALSE;
         break;
       case GST_ITERATOR_ERROR:
         GST_WARNING_OBJECT (rtp_mux, "Error iterating sinkpads");
@@ -219,7 +222,8 @@ static gboolean gst_rtp_mux_src_event (GstPad * pad,
         break;
     }
   }
-
+  gst_iterator_free (iter);
+  gst_object_unref (rtp_mux);
   gst_event_unref (event);
 
   return result;

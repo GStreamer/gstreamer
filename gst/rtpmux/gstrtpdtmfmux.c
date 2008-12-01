@@ -172,8 +172,10 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
     GST_OBJECT_UNLOCK (mux);
     if (parent_class->chain_func)
       ret = parent_class->chain_func (pad, buffer);
-    else
+    else {
+      gst_buffer_unref (buffer);
       ret = GST_FLOW_ERROR;
+    }
   }
 
   gst_object_unref (mux);
