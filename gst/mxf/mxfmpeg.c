@@ -254,6 +254,7 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
     MXFMetadataMPEGVideoDescriptor * d)
 {
   GstCaps *caps = NULL;
+  const gchar *codec_name = NULL;
 
   /* SMPTE RP224 */
   if (!p || mxf_ul_is_zero (&p->picture_essence_coding)) {
@@ -262,6 +263,7 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
     caps =
         gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+    codec_name = "MPEG-2 Video";
   } else if (p->picture_essence_coding.u[0] != 0x06
       || p->picture_essence_coding.u[1] != 0x0e
       || p->picture_essence_coding.u[2] != 0x2b
@@ -280,9 +282,11 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
       p->picture_essence_coding.u[13] <= 0x08) {
     caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+    codec_name = "MPEG-2 Video";
   } else if (p->picture_essence_coding.u[13] == 0x10) {
     caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+    codec_name = "MPEG-1 Video";
   } else if (p->picture_essence_coding.u[13] == 0x20) {
     MXFLocalTag *local_tag =
         (((MXFMetadataGenericDescriptor *) f)->other_tags) ?
@@ -300,15 +304,21 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
           NULL);
       gst_buffer_unref (codec_data);
     }
-
+    codec_name = "MPEG-4 Video";
   } else {
     GST_ERROR ("Unsupported MPEG picture essence coding 0x%02x",
         p->picture_essence_coding.u[13]);
     caps = NULL;
   }
 
-  if (caps)
+  if (caps) {
     *handler = mxf_mpeg_video_handle_essence_element;
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+    if (codec_name)
+      gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+          codec_name, NULL);
+  }
 
   return caps;
 }
@@ -378,9 +388,19 @@ mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
     GST_DEBUG ("Found MPEG PS stream");
     caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+        "MPEG PS", NULL);
   } else if (f->essence_container.u[13] == 0x09) {
     GST_DEBUG ("Found MPEG TS stream");
     caps = gst_caps_new_simple ("video/mpegts", NULL);
+
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+        "MPEG TS", NULL);
   }
 
   if (p)

@@ -106,8 +106,8 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
-        is_file_descriptor
+    } else if (((MXFMetadataGenericDescriptor *) track->
+            descriptor[i])->is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];
@@ -128,6 +128,11 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   } else {
     GST_WARNING ("Only a generic file descriptor found");
   }
+
+  if (!*tags)
+    *tags = gst_tag_list_new ();
+  gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+      "JPEG 2000", NULL);
 
   return caps;
 }

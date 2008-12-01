@@ -91,8 +91,8 @@ mxf_dv_dif_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
-        is_file_descriptor
+    if (((MXFMetadataGenericDescriptor *) track->
+            descriptor[i])->is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];
@@ -115,6 +115,12 @@ mxf_dv_dif_create_caps (MXFMetadataGenericPackage * package,
     GST_DEBUG ("Found DV-DIF stream");
     caps =
         gst_caps_new_simple ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
+        NULL);
+
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_CODEC, "DV-DIF",
         NULL);
   }
 

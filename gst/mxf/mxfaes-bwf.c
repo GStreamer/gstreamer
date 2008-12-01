@@ -258,6 +258,7 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
   GstCaps *ret = NULL;
   MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
   gchar str[48];
+  gchar *codec_name = NULL;
 
   if (((MXFMetadataGenericDescriptor *) descriptor)->type ==
       MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR)
@@ -293,6 +294,10 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
         (block_align != 1), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "depth",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+
+    codec_name =
+        g_strdup_printf ("Uncompressed %u-bit little endian integer PCM audio",
+        (block_align / descriptor->channel_count) * 8);
   } else if (mxf_ul_is_equal (&descriptor->sound_essence_compression,
           &mxf_sound_essence_compression_aiff)) {
     guint block_align;
@@ -318,6 +323,10 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
         (block_align != 1), "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+
+    codec_name =
+        g_strdup_printf ("Uncompressed %u-bit big endian integer PCM audio",
+        (block_align / descriptor->channel_count) * 8);
   } else if (mxf_ul_is_equal (&descriptor->sound_essence_compression,
           &mxf_sound_essence_compression_alaw)) {
 
@@ -331,10 +340,24 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
         (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
             ((gdouble) descriptor->audio_sampling_rate.d) + 0.5),
         "channels", G_TYPE_INT, descriptor->channel_count);
+    codec_name = g_strdup ("A-law encoded audio");
   } else {
     GST_ERROR ("Unsupported sound essence compression: %s",
         mxf_ul_to_string (&descriptor->sound_essence_compression, str));
   }
+
+  if (!*tags)
+    *tags = gst_tag_list_new ();
+
+  if (codec_name) {
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+        codec_name, NULL);
+    g_free (codec_name);
+  }
+
+  if (wa_descriptor && wa_descriptor->avg_bps)
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
+        wa_descriptor->avg_bps * 8, NULL);
 
   *handler = mxf_bwf_handle_essence_element;
 

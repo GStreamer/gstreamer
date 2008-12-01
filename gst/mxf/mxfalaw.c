@@ -80,7 +80,6 @@ mxf_alaw_create_caps (MXFMetadataGenericPackage * package,
     MXFMetadataTrack * track, GstTagList ** tags,
     MXFEssenceElementHandler * handler, gpointer * mapping_data)
 {
-  MXFMetadataFileDescriptor *f = NULL;
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
   guint i;
   GstCaps *caps = NULL;
@@ -97,37 +96,32 @@ mxf_alaw_create_caps (MXFMetadataGenericPackage * package,
     if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
         MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR) {
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
-      f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
-        is_file_descriptor
-        && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
-        MXF_METADATA_MULTIPLE_DESCRIPTOR) {
-      f = track->descriptor[i];
     }
   }
 
-  if (!f) {
-    GST_ERROR ("No descriptor found for this track");
+  if (!s) {
+    GST_ERROR ("No generic sound essence descriptor found for this track");
     return NULL;
   }
 
   *handler = mxf_alaw_handle_essence_element;
 
-  caps = gst_caps_new_simple ("audio/x-alaw", NULL);
-  if (s) {
-    if (s->audio_sampling_rate.n != 0 && s->audio_sampling_rate.d != 0)
-      gst_caps_set_simple (caps, "rate", G_TYPE_INT,
-          (gint) (((gdouble) s->audio_sampling_rate.n) /
-              ((gdouble) s->audio_sampling_rate.d) + 0.5), NULL);
+  if (s && s->audio_sampling_rate.n != 0 && s->audio_sampling_rate.d != 0 &&
+      s->channel_count != 0) {
 
-    if (s->channel_count != 0)
-      gst_caps_set_simple (caps, "channels", G_TYPE_INT, s->channel_count,
-          NULL);
+    caps = gst_caps_new_simple ("audio/x-alaw", "rate", G_TYPE_INT,
+        (gint) (((gdouble) s->audio_sampling_rate.n) /
+            ((gdouble) s->audio_sampling_rate.d) + 0.5),
+        "channels", G_TYPE_INT, s->channel_count, NULL);
 
     /* TODO: Handle channel layout somehow? */
-  } else {
-    GST_WARNING ("Only a generic sound essence descriptor found");
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+        "A-law encoded audio", NULL);
+
   }
 
   return caps;

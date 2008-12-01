@@ -1,5 +1,17 @@
 2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps):
+	* gst/mxf/mxfalaw.c: (mxf_alaw_create_caps):
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_generic_container_essence_element):
+	* gst/mxf/mxfdv-dif.c: (mxf_dv_dif_create_caps):
+	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_es_create_caps),
+	(mxf_mpeg_create_caps):
+	Add the codec name, and if possible the avg bitrate, to the pad's taglist.
+
+2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_choose_package):
 	If the preface references a primary package use this as the default
 	playback package unless one was specified by the "package" property.

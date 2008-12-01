@@ -1305,8 +1305,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2152,11 +2153,16 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
-  /* TODO: Use a better start value */
   if (pad->need_segment) {
     gst_pad_push_event (GST_PAD_CAST (pad),
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
     pad->need_segment = FALSE;
+  }
+
+  if (pad->tags) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (demux),
+        GST_PAD_CAST (pad), pad->tags);
+    pad->tags = NULL;
   }
 
   /* Create subbuffer to be able to change metadata */
@@ -2197,6 +2203,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   }
 
   if (outbuf) {
+    /* TODO: handle timestamp gaps */
     ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
     ret = gst_mxf_demux_combine_flows (demux, pad, ret);
   }
