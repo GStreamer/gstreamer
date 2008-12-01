@@ -53,6 +53,7 @@ struct _GstRtpDTMFDepay
   guint32		previous_ts;
   guint16		previous_duration;
   GstClockTime		first_gst_ts;
+  guint unit_time;
 
 };
 

@@ -49,6 +49,9 @@
 #define MIN_PULSE_DURATION       250
 #define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
+#define MIN_UNIT_TIME            0
+#define MAX_UNIT_TIME            1000
+#define DEFAULT_UNIT_TIME        0
 
 typedef struct st_dtmf_key {
         char *event_name;
@@ -109,8 +112,16 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_depay_debug);
 
 enum
 {
+
+
   /* FILL ME */
   LAST_SIGNAL
+};
+
+enum
+{
+  PROP_0,
+  PROP_UNIT_TIME
 };
 
 enum
@@ -145,7 +156,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_BOILERPLATE (GstRtpDTMFDepay, gst_rtp_dtmf_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
-
+static void gst_rtp_dtmf_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_rtp_dtmf_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static GstBuffer *gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 gboolean gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter,
@@ -180,8 +194,20 @@ gst_rtp_dtmf_depay_class_init (GstRtpDTMFDepayClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstbasertpdepayload_class->process = gst_rtp_dtmf_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_dtmf_depay_setcaps;
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_get_property);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_UNIT_TIME,
+    g_param_spec_uint ("unit-time", "Duration unittime",
+        "The smallest unit (ms) the duration must be a multiple of (0 disables it)", MIN_UNIT_TIME,
+        MAX_UNIT_TIME, DEFAULT_UNIT_TIME, G_PARAM_READWRITE));
+
+  gstbasertpdepayload_class->process =
+    GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_process);
+  gstbasertpdepayload_class->set_caps =
+    GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_setcaps);
 
 }
 
@@ -189,9 +215,44 @@ static void
 gst_rtp_dtmf_depay_init (GstRtpDTMFDepay * rtpdtmfdepay,
     GstRtpDTMFDepayClass * klass)
 {
-
+  rtpdtmfdepay->unit_time = DEFAULT_UNIT_TIME;
 }
 
+static void
+gst_rtp_dtmf_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpDTMFDepay * rtpdtmfdepay;
+
+  rtpdtmfdepay = GST_RTP_DTMF_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_UNIT_TIME:
+      rtpdtmfdepay->unit_time = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_dtmf_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpDTMFDepay * rtpdtmfdepay;
+
+  rtpdtmfdepay = GST_RTP_DTMF_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_UNIT_TIME:
+      g_value_set_uint (value, rtpdtmfdepay->unit_time);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 gboolean
 gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
@@ -307,6 +368,11 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   timestamp = gst_rtp_buffer_get_timestamp (buf);
 
   dtmf_payload.duration = g_ntohs (dtmf_payload.duration);
+
+  /* clip to whole units of unit_time */
+  if (rtpdtmfdepay->unit_time)
+    dtmf_payload.duration -= dtmf_payload.duration %
+        ((rtpdtmfdepay->unit_time * depayload->clock_rate) / 1000);
 
   GST_DEBUG_OBJECT (depayload, "Received new RTP DTMF packet : "
       "marker=%d - timestamp=%u - event=%d - duration=%d",
