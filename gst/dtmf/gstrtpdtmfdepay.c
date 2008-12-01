@@ -228,6 +228,7 @@ gst_dtmf_src_generate_tone(GstRtpDTMFDepay *rtpdtmfdepay,
   DTMF_KEY key = DTMF_KEYS[payload.event];
   guint32 clock_rate = 8000 /* default */;
   GstBaseRTPDepayload * depayload = GST_BASE_RTP_DEPAYLOAD (rtpdtmfdepay);
+  gint volume;
 
   clock_rate = depayload->clock_rate;
 
@@ -237,10 +238,11 @@ gst_dtmf_src_generate_tone(GstRtpDTMFDepay *rtpdtmfdepay,
   GST_BUFFER_MALLOCDATA (buffer) = g_malloc(tone_size);
   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
   GST_BUFFER_DURATION (buffer) = payload.duration * GST_SECOND / clock_rate;
+  volume = payload.volume;
 
   p = (gint16 *) GST_BUFFER_MALLOCDATA (buffer);
 
-  volume_factor = pow (10, (-payload.volume) / 20);
+  volume_factor = pow (10, (-volume) / 20);
 
   /*
    * For each sample point we calculate 'x' as the
