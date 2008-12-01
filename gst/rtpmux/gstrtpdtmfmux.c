@@ -280,6 +280,7 @@ gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event)
   switch (type) {
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
       ret = gst_rtp_dtmf_mux_handle_downstream_event (mux, pad, event);
+      gst_event_unref (event);
       break;
     default:
       ret = gst_rtp_dtmf_mux_ignore_event (pad, event);
