@@ -2895,7 +2895,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc)
   } else
     return FALSE;
 
-  buf = gst_buffer_new_and_alloc (22 + 12);
+  buf = gst_buffer_new_and_alloc (22 + 15);
   data = GST_BUFFER_DATA (buf);
 
   /* ihdr = image header box */
@@ -2917,7 +2917,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc)
 
   /* colour specification box */
   data += 22;
-  GST_WRITE_UINT32_BE (data, 12);
+  GST_WRITE_UINT32_BE (data, 15);
   GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('c', 'o', 'l', 'r'));
   /* specification method: enumerated */
   GST_WRITE_UINT8 (data + 8, 0x1);
@@ -2926,7 +2926,7 @@ build_jp2h_extension (AtomTRAK * trak, gint width, gint height, guint32 fourcc)
   /* approximation; reserved */
   GST_WRITE_UINT8 (data + 10, 0x0);
   /* enumerated colourspace */
-  GST_WRITE_UINT8 (data + 11, cenum);
+  GST_WRITE_UINT32_BE (data + 11, cenum);
 
   atom_data = atom_data_new_from_gst_buffer (FOURCC_jp2h, buf);
   gst_buffer_unref (buf);
