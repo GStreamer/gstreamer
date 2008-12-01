@@ -549,8 +549,10 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
     mpeg2dec->v_offs =
         I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
 
-  } else if (sequence->width == sequence->chroma_width &&
-      sequence->height != sequence->chroma_height) {
+  } else if ((sequence->width == sequence->chroma_width &&
+          sequence->height != sequence->chroma_height) ||
+      (sequence->width != sequence->chroma_width &&
+          sequence->height == sequence->chroma_height)) {
     gint halfsize;
 
     fourcc = GST_STR_FOURCC ("Y42B");

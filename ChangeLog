@@ -1,3 +1,9 @@
+2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_negotiate_format):
+	Last change introduced a regression that made mpeg2dec handle
+	some 4:2:2 videos as 4:4:4. Fixes bug #562086.
+
 2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Cygwin Ports maintainer
