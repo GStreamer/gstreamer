@@ -1,5 +1,12 @@
 2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
+	Use new image/x-jpc caps for the raw JPEG2000 codestream.
+	For now assume sRGB as colorspace, has to be read from the descriptor
+	somehow later.
+
+2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_sink_setcaps):
 	* ext/jp2k/gstjasperenc.c: (gst_jasper_enc_reset),
 	(gst_jasper_enc_set_src_caps), (gst_jasper_enc_init_encoder),

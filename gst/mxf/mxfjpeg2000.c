@@ -106,8 +106,8 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->
-            descriptor[i])->is_file_descriptor
+    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
+        is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];
@@ -122,7 +122,10 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   *handler = mxf_jpeg2000_handle_essence_element;
 
   /* TODO: What about other field values? */
-  caps = gst_caps_new_simple ("image/x-j2c", "fields", G_TYPE_INT, 1, NULL);
+  /* FIXME: For now assume sRGB but get the correct value from the descriptor */
+  caps =
+      gst_caps_new_simple ("image/x-jpc", "fields", G_TYPE_INT, 1, "fourcc",
+      GST_TYPE_FOURCC, GST_MAKE_FOURCC ('s', 'R', 'G', 'B'), NULL);
   if (p) {
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
   } else {
