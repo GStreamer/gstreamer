@@ -1,5 +1,20 @@
 2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/jp2k/gstjasperdec.c: (gst_jasper_dec_sink_setcaps):
+	* ext/jp2k/gstjasperenc.c: (gst_jasper_enc_reset),
+	(gst_jasper_enc_set_src_caps), (gst_jasper_enc_init_encoder),
+	(gst_jasper_enc_sink_setcaps), (gst_jasper_enc_get_data):
+	* ext/jp2k/gstjasperenc.h:
+	Add image/x-jpc caps name for real, raw JPEG2000 codestream data.
+	In 0.11 we should merge image/x-j2c and image/x-jpc and simply drop
+	the non-standard boxing in the jasper elements and handle it in
+	qtmux/qtdemux.
+	image/x-jpc will be used by mxfdemux later.
+
+	Also add support for JP2 output in jp2kenc.
+
+2008-12-01  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps):
 	* gst/mxf/mxfalaw.c: (mxf_alaw_create_caps):
 	* gst/mxf/mxfdemux.c:

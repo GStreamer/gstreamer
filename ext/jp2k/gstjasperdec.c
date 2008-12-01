@@ -48,11 +48,18 @@ enum
   ARG_0,
 };
 
+/* FIXME 0.11: Use a single caps name for jpeg2000 codestreams
+ * and drop the "boxed" variant
+ */
+
 static GstStaticPadTemplate gst_jasper_dec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-j2c, "
+        "framerate = " GST_VIDEO_FPS_RANGE ", "
+        "fields = (int) 1; "
+        "image/x-jpc, "
         "framerate = " GST_VIDEO_FPS_RANGE ", "
         "fields = (int) 1; " "image/jp2")
     );
@@ -181,7 +188,7 @@ gst_jasper_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
     dec->codec_data = NULL;
   }
 
-  if (!strcmp (mimetype, "image/x-j2c")) {
+  if (!strcmp (mimetype, "image/x-j2c") || !strcmp (mimetype, "image/x-jpc")) {
     const GValue *codec_data;
     gint fields;
 
@@ -207,7 +214,11 @@ gst_jasper_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
 
     dec->fmt = jas_image_strtofmt ("jpc");
     /* strip the j2c box stuff it is embedded in */
-    dec->strip = 8;
+    if (!strcmp (mimetype, "image/x-jpc"))
+      dec->strip = 0;
+    else
+      dec->strip = 8;
+
     codec_data = gst_structure_get_value (s, "codec_data");
     if (codec_data) {
       dec->codec_data = gst_value_get_buffer (codec_data);

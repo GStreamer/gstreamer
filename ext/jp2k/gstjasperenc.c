@@ -59,11 +59,14 @@ static GstStaticPadTemplate gst_jasper_enc_sink_template =
     );
 
 static GstStaticPadTemplate gst_jasper_enc_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("image/x-j2c, "
-        "framerate = " GST_VIDEO_FPS_RANGE ", " "fields = (int) 1")
+        "framerate = " GST_VIDEO_FPS_RANGE ", " "fields = (int) 1; "
+        "image/x-jpc, "
+        "framerate = " GST_VIDEO_FPS_RANGE ", " "fields = (int) 1; "
+        "image/jp2")
     );
 
 static void gst_jasper_enc_base_init (gpointer g_class);
@@ -155,6 +158,7 @@ gst_jasper_enc_reset (GstJasperEnc * enc)
     jas_image_destroy (enc->image);
   enc->image = NULL;
   enc->fmt = -1;
+  enc->mode = GST_JP2ENC_MODE_J2C;
   enc->clrspc = JAS_CLRSPC_UNKNOWN;
   enc->format = GST_VIDEO_FORMAT_UNKNOWN;
 }
@@ -165,6 +169,29 @@ gst_jasper_enc_set_src_caps (GstJasperEnc * enc)
   GstCaps *caps;
   guint32 fourcc;
   gboolean ret;
+  GstCaps *peercaps;
+
+  peercaps = gst_pad_peer_get_caps (enc->srcpad);
+  if (peercaps) {
+    guint i, n;
+
+    n = gst_caps_get_size (peercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (peercaps, i);
+      const gchar *name = gst_structure_get_name (s);
+
+      if (!strcmp (name, "image/x-j2c")) {
+        enc->mode = GST_JP2ENC_MODE_J2C;
+        break;
+      } else if (!strcmp (name, "image/x-jpc")) {
+        enc->mode = GST_JP2ENC_MODE_JPC;
+        break;
+      } else if (!strcmp (name, "image/jp2")) {
+        enc->mode = GST_JP2ENC_MODE_JP2;
+        break;
+      }
+    }
+  }
 
   /* enumerated colourspace */
   if (gst_video_format_is_rgb (enc->format)) {
@@ -173,9 +200,26 @@ gst_jasper_enc_set_src_caps (GstJasperEnc * enc)
     fourcc = GST_MAKE_FOURCC ('s', 'Y', 'U', 'V');
   }
 
-  caps = gst_caps_new_simple ("image/x-j2c", "width", G_TYPE_INT, enc->width,
-      "height", G_TYPE_INT, enc->height, "fourcc", GST_TYPE_FOURCC, fourcc,
-      NULL);
+  switch (enc->mode) {
+    case GST_JP2ENC_MODE_J2C:
+      caps =
+          gst_caps_new_simple ("image/x-j2c", "width", G_TYPE_INT, enc->width,
+          "height", G_TYPE_INT, enc->height, "fourcc", GST_TYPE_FOURCC, fourcc,
+          NULL);
+      break;
+    case GST_JP2ENC_MODE_JPC:
+      caps =
+          gst_caps_new_simple ("image/x-jpc", "width", G_TYPE_INT, enc->width,
+          "height", G_TYPE_INT, enc->height, "fourcc", GST_TYPE_FOURCC, fourcc,
+          NULL);
+      break;
+    case GST_JP2ENC_MODE_JP2:
+      caps = gst_caps_new_simple ("image/jp2", "width", G_TYPE_INT, enc->width,
+          "height", G_TYPE_INT, enc->height, "fourcc", GST_TYPE_FOURCC, fourcc,
+          NULL);
+      break;
+  }
+
 
   if (enc->fps_den > 0)
     gst_caps_set_simple (caps,
@@ -197,7 +241,15 @@ gst_jasper_enc_init_encoder (GstJasperEnc * enc)
   jas_image_cmptparm_t param[GST_JASPER_ENC_MAX_COMPONENT];
   gint i;
 
-  enc->fmt = jas_image_strtofmt ("jpc");
+  switch (enc->mode) {
+    case GST_JP2ENC_MODE_J2C:
+    case GST_JP2ENC_MODE_JPC:
+      enc->fmt = jas_image_strtofmt ("jpc");
+      break;
+    case GST_JP2ENC_MODE_JP2:
+      enc->fmt = jas_image_strtofmt ("jp2");
+      break;
+  }
 
   if (gst_video_format_is_rgb (enc->format))
     enc->clrspc = JAS_CLRSPC_SRGB;
@@ -282,14 +334,22 @@ gst_jasper_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
     enc->inc[i] = gst_video_format_get_pixel_stride (format, i);
   }
 
+  if (!gst_jasper_enc_set_src_caps (enc))
+    goto setcaps_failed;
   if (!gst_jasper_enc_init_encoder (enc))
     goto setup_failed;
 
-  return gst_jasper_enc_set_src_caps (enc);
+  return TRUE;
 
   /* ERRORS */
 setup_failed:
   {
+    GST_ELEMENT_ERROR (enc, LIBRARY, SETTINGS, (NULL), (NULL));
+    return FALSE;
+  }
+setcaps_failed:
+  {
+    GST_WARNING_OBJECT (enc, "Setting src caps failed");
     GST_ELEMENT_ERROR (enc, LIBRARY, SETTINGS, (NULL), (NULL));
     return FALSE;
   }
@@ -307,11 +367,13 @@ gst_jasper_enc_get_data (GstJasperEnc * enc, guint8 * data, GstBuffer ** outbuf)
   GstFlowReturn ret = GST_FLOW_OK;
   jas_stream_t *stream = NULL;
   gint i;
-  guint size;
+  guint size, boxsize;
 
   g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
 
   *outbuf = NULL;
+
+  boxsize = (enc->mode == GST_JP2ENC_MODE_J2C) ? 8 : 0;
 
   if (!(stream = jas_stream_memopen (NULL, 0)))
     goto fail_stream;
@@ -356,7 +418,8 @@ gst_jasper_enc_get_data (GstJasperEnc * enc, guint8 * data, GstBuffer ** outbuf)
 
   size = jas_stream_length (stream);
   ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-      GST_BUFFER_OFFSET_NONE, size + 8, GST_PAD_CAPS (enc->srcpad), outbuf);
+      GST_BUFFER_OFFSET_NONE, size + boxsize, GST_PAD_CAPS (enc->srcpad),
+      outbuf);
 
   if (ret != GST_FLOW_OK)
     goto no_buffer;
@@ -364,12 +427,14 @@ gst_jasper_enc_get_data (GstJasperEnc * enc, guint8 * data, GstBuffer ** outbuf)
   data = GST_BUFFER_DATA (*outbuf);
   if (jas_stream_flush (stream) ||
       jas_stream_rewind (stream) < 0 ||
-      jas_stream_read (stream, data + 8, size) < size)
+      jas_stream_read (stream, data + boxsize, size) < size)
     goto fail_image_out;
 
-  /* write atom prefix */
-  GST_WRITE_UINT32_BE (data, size + 8);
-  GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('j', 'p', '2', 'c'));
+  if (boxsize) {
+    /* write atom prefix */
+    GST_WRITE_UINT32_BE (data, size + 8);
+    GST_WRITE_UINT32_LE (data + 4, GST_MAKE_FOURCC ('j', 'p', '2', 'c'));
+  }
 
 done:
   if (stream)

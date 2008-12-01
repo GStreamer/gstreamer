@@ -42,6 +42,12 @@ G_BEGIN_DECLS
 typedef struct _GstJasperEnc      GstJasperEnc;
 typedef struct _GstJasperEncClass GstJasperEncClass;
 
+enum {
+  GST_JP2ENC_MODE_J2C = 0,
+  GST_JP2ENC_MODE_JPC,
+  GST_JP2ENC_MODE_JP2
+};
+
 #define GST_JASPER_ENC_MAX_COMPONENT  4
 
 struct _GstJasperEnc
@@ -55,6 +61,7 @@ struct _GstJasperEnc
 
   /* jasper image fmt */
   gint fmt;
+  gint mode;
   jas_clrspc_t clrspc;
 
   /* stream/image properties */
