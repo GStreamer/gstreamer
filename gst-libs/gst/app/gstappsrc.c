@@ -991,12 +991,14 @@ flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are flushing", buffer);
     gst_buffer_unref (buffer);
+    g_mutex_unlock (appsrc->mutex);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
   {
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are EOS", buffer);
     gst_buffer_unref (buffer);
+    g_mutex_unlock (appsrc->mutex);
     return GST_FLOW_UNEXPECTED;
   }
 }
