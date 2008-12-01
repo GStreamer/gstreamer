@@ -1,3 +1,12 @@
+2008-12-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	Patch by: 이문형 <iwings at gmail dot com>
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_push_buffer):
+	  Don't forget to release the lock again if we bail out because some
+	  pad is flushing or we've reached EOS, otherwise things will lock up
+	  next time _push_buffer() is called (#562802).
+
 2008-12-01  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/qtmux/atoms.c: (build_jp2h_extension):
