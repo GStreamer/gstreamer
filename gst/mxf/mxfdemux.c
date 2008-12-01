@@ -1305,9 +1305,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1676,6 +1675,12 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
   else if (!mxf_umid_is_zero (&demux->current_package_uid))
     GST_WARNING_OBJECT (demux,
         "Current package not found, choosing the first best");
+
+  if (demux->preface.primary_package)
+    ret = demux->preface.primary_package;
+  if (ret && (ret->type == MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE
+          || ret->type == MXF_METADATA_GENERIC_PACKAGE_MATERIAL))
+    return ret;
 
   if (!demux->material_package) {
     GST_ERROR_OBJECT (demux, "No material package");
