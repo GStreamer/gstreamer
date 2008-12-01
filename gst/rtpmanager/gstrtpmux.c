@@ -365,6 +365,7 @@ static GstFlowReturn
 gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
+  GstStructure * structure;
   GstFlowReturn ret;
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
@@ -373,6 +374,9 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   rtp_mux->seqnum++;
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+  GST_BUFFER_CAPS (buffer) = gst_caps_make_writable(GST_BUFFER_CAPS (buffer));
+  structure = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0U);
+  gst_structure_set (structure, "seqnum-base", G_TYPE_UINT, rtp_mux->seqnum_base, NULL);
   gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
   gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, pad, buffer);
   GST_LOG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
