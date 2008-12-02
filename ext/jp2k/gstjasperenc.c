@@ -218,6 +218,8 @@ gst_jasper_enc_set_src_caps (GstJasperEnc * enc)
           "height", G_TYPE_INT, enc->height, "fourcc", GST_TYPE_FOURCC, fourcc,
           NULL);
       break;
+    default:
+      g_assert_not_reached ();
   }
 
 

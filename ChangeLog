@@ -1,3 +1,8 @@
+2008-12-01  David Schleef  <ds@schleef.org>
+
+	* ext/jp2k/gstjasperenc.c: Some compilers complain about
+	  uninitialized variable; add a g_assert_not_reached()
+
 2008-12-01  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	Patch by: 이문형 <iwings at gmail dot com>
