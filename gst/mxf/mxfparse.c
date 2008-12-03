@@ -32,7 +32,6 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 /* SMPTE 377M 3.3: A value of 0 for every field means unknown timestamp */
 static const MXFTimestamp mxf_timestamp_unknown = { 0, 0, 0, 0, 0, 0, 0 };
 
-/* FIXME: are zero UMID/UL invalid? Should be in SMPTE 298M, 330M or 336M */
 static const MXFUMID umid_zero = { {0,} };
 static const MXFUL key_zero = { {0,} };
 

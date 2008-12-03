@@ -1,5 +1,11 @@
 2008-12-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfparse.c:
+	Remove FIXME, zero-ULs and UMIDs are really invalid and we can
+	use them as "unset" value.
+
+2008-12-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c:
 	(gst_mxf_demux_handle_header_metadata_update_streams),
 	(gst_mxf_demux_base_init):
