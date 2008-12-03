@@ -1,3 +1,13 @@
+2008-12-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_base_init):
+	Use a single "track_%u" src pad template and use the track ID
+	of the playback package for the pad name instead of the track ID
+	of the source package, as the latter could be the same for
+	more than one track if they're in different packages.
+
 2008-12-01  David Schleef  <ds@schleef.org>
 
 	* ext/jp2k/gstjasperenc.c: Some compilers complain about

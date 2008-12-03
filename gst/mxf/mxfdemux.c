@@ -45,20 +45,8 @@ static GstStaticPadTemplate mxf_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/mxf")
     );
 
-static GstStaticPadTemplate audio_src_template =
-GST_STATIC_PAD_TEMPLATE ("audio_%u",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
-
-static GstStaticPadTemplate video_src_template =
-GST_STATIC_PAD_TEMPLATE ("video_%u",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
-
-static GstStaticPadTemplate data_src_template =
-GST_STATIC_PAD_TEMPLATE ("data_%u",
+static GstStaticPadTemplate mxf_src_template =
+GST_STATIC_PAD_TEMPLATE ("track_%u",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -1305,9 +1293,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1816,29 +1803,10 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
       GstPadTemplate *templ;
       gchar *pad_name;
 
-      switch (track_type) {
-        case MXF_METADATA_TRACK_PICTURE_ESSENCE:
-          templ =
-              gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-              "video_%u");
-          pad_name = g_strdup_printf ("video_%u", source_track->track_id);
-          break;
-        case MXF_METADATA_TRACK_SOUND_ESSENCE:
-          templ =
-              gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-              "audio_%u");
-          pad_name = g_strdup_printf ("audio_%u", source_track->track_id);
-          break;
-        case MXF_METADATA_TRACK_DATA_ESSENCE:
-          templ =
-              gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
-              "data_%u");
-          pad_name = g_strdup_printf ("data_%u", source_track->track_id);
-          break;
-        default:
-          g_assert_not_reached ();
-          break;
-      }
+      templ =
+          gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
+          "track_%u");
+      pad_name = g_strdup_printf ("track_%u", track->track_id);
 
       g_assert (templ != NULL);
 
@@ -3223,11 +3191,7 @@ gst_mxf_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mxf_sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&audio_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&video_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&data_src_template));
+      gst_static_pad_template_get (&mxf_src_template));
   gst_element_class_set_details_simple (element_class, "MXF Demuxer",
       "Codec/Demuxer",
       "Demux MXF files", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
