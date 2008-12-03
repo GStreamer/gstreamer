@@ -1,3 +1,10 @@
+2008-12-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_buffer_alloc):
+	Clear all flags on buffers returned from the image pool.
+	Fixes #563143
+
 2008-11-29  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Cygwin Ports maintainer

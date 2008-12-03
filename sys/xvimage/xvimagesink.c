@@ -2469,6 +2469,8 @@ reuse_last_caps:
   }
 
   if (xvimage) {
+    /* Make sure the buffer is cleared of any previously used flags */
+    GST_MINI_OBJECT_CAST (xvimage)->flags = 0;
     gst_buffer_set_caps (GST_BUFFER_CAST (xvimage), intersection);
   }
 

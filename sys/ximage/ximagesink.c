@@ -1793,6 +1793,8 @@ alloc:
   }
   /* Now we should have a ximage, set appropriate caps on it */
   if (ximage) {
+    /* Make sure the buffer is cleared of any previously used flags */
+    GST_MINI_OBJECT_CAST (ximage)->flags = 0;
     gst_buffer_set_caps (GST_BUFFER_CAST (ximage), alloc_caps);
   }
 
