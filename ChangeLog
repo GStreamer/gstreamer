@@ -1,5 +1,10 @@
 2008-12-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/flv/gstflvparse.c: (FLV_GET_STRING):
+	Check if strings are valid UTF8 before using them.
+
+2008-12-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfparse.c:
 	Remove FIXME, zero-ULs and UMIDs are really invalid and we can
 	use them as "unset" value.
