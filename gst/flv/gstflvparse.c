@@ -52,6 +52,10 @@ FLV_GET_STRING (GstByteReader * reader)
   }
 
   memcpy (string, str, string_size);
+  if (!g_utf8_validate (string, string_size, NULL)) {
+    g_free (string);
+    return NULL;
+  }
 
   return string;
 }
