@@ -346,6 +346,15 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
     demux->wave_audio_essence_descriptor = NULL;
   }
 
+  if (demux->aes3_audio_essence_descriptor) {
+    for (i = 0; i < demux->aes3_audio_essence_descriptor->len; i++)
+      mxf_metadata_aes3_audio_essence_descriptor_reset (&g_array_index
+          (demux->aes3_audio_essence_descriptor,
+              MXFMetadataAES3AudioEssenceDescriptor, i));
+    g_array_free (demux->aes3_audio_essence_descriptor, TRUE);
+    demux->aes3_audio_essence_descriptor = NULL;
+  }
+
   if (demux->descriptor) {
     g_ptr_array_free (demux->descriptor, TRUE);
     demux->descriptor = NULL;
@@ -1081,6 +1090,43 @@ gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (GstMXFDemux *
 }
 
 static GstFlowReturn
+gst_mxf_demux_handle_metadata_aes3_audio_essence_descriptor (GstMXFDemux *
+    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
+{
+  MXFMetadataAES3AudioEssenceDescriptor descriptor;
+
+  memset (&descriptor, 0, sizeof (descriptor));
+
+  GST_DEBUG_OBJECT (demux,
+      "Handling metadata AES3 audio essence descriptor of size %u"
+      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
+      GST_BUFFER_SIZE (buffer), demux->offset, type);
+
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_aes3_audio_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_aes3_audio_essence_descriptor_reset)) {
+    GST_ERROR_OBJECT (demux,
+        "Parsing metadata AES3 audio essence descriptor failed");
+    return GST_FLOW_ERROR;
+  }
+
+  if (!demux->aes3_audio_essence_descriptor)
+    demux->aes3_audio_essence_descriptor =
+        g_array_new (FALSE, FALSE,
+        sizeof (MXFMetadataAES3AudioEssenceDescriptor));
+
+  g_array_append_val (demux->aes3_audio_essence_descriptor, descriptor);
+
+  return GST_FLOW_OK;
+}
+
+
+
+static GstFlowReturn
 gst_mxf_demux_handle_metadata_locator (GstMXFDemux * demux,
     const MXFUL * key, guint16 type, GstBuffer * buffer)
 {
@@ -1172,6 +1218,13 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
       g_ptr_array_add (demux->descriptor,
           &g_array_index (demux->wave_audio_essence_descriptor,
               MXFMetadataWaveAudioEssenceDescriptor, i));
+    }
+  }
+  if (demux->aes3_audio_essence_descriptor) {
+    for (i = 0; i < demux->aes3_audio_essence_descriptor->len; i++) {
+      g_ptr_array_add (demux->descriptor,
+          &g_array_index (demux->aes3_audio_essence_descriptor,
+              MXFMetadataAES3AudioEssenceDescriptor, i));
     }
   }
   if (demux->multiple_descriptor) {
@@ -2030,6 +2083,11 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     case MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR:
       ret =
           gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (demux,
+          key, type, buffer);
+      break;
+    case MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR:
+      ret =
+          gst_mxf_demux_handle_metadata_aes3_audio_essence_descriptor (demux,
           key, type, buffer);
       break;
     case MXF_METADATA_NETWORK_LOCATOR:

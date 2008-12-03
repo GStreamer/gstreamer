@@ -30,6 +30,8 @@
 
 /* SMPTE 382M Annex 1 */
 #define MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR 0x0148
+/* SMPTE 382M Annex 2 */
+#define MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR 0x0147
 
 /* SMPTE 382M Annex 1 */
 typedef struct {
@@ -55,9 +57,37 @@ typedef struct {
   guint16 peak_envelope_data_length;
 } MXFMetadataWaveAudioEssenceDescriptor;
 
+/* SMPTE 382M Annex 2 */
+typedef struct {
+  MXFMetadataWaveAudioEssenceDescriptor parent;
+
+  guint8 emphasis;
+  guint16 block_start_offset;
+  guint8 auxiliary_bits_mode;
+
+  guint32 n_channel_status_mode;
+  guint8 *channel_status_mode;
+
+  guint32 n_fixed_channel_status_data;
+  guint8 **fixed_channel_status_data;
+
+  guint32 n_user_data_mode;
+  guint8 *user_data_mode;
+
+  guint32 n_fixed_user_data;
+  guint8 **fixed_user_data;
+
+  guint32 linked_timecode_track_id;
+  guint8 stream_number;
+} MXFMetadataAES3AudioEssenceDescriptor;
+
 gboolean mxf_metadata_wave_audio_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
     const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
 void mxf_metadata_wave_audio_essence_descriptor_reset (MXFMetadataWaveAudioEssenceDescriptor *descriptor);
+
+gboolean mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
+    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
+void mxf_metadata_aes3_audio_essence_descriptor_reset (MXFMetadataAES3AudioEssenceDescriptor *descriptor);
 
 gboolean mxf_is_aes_bwf_essence_track (const MXFMetadataTrack *track);
 

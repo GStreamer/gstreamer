@@ -95,6 +95,7 @@ struct _GstMXFDemux
   GArray *rgba_picture_essence_descriptor;
   GArray *mpeg_video_descriptor;
   GArray *wave_audio_essence_descriptor;
+  GArray *aes3_audio_essence_descriptor;
   GArray *multiple_descriptor;
   
   MXFUMID current_package_uid;

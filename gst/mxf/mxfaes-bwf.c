@@ -184,6 +184,272 @@ void mxf_metadata_wave_audio_essence_descriptor_reset
       MXFMetadataGenericSoundEssenceDescriptor);
 }
 
+/* SMPTE 382M Annex 2 */
+gboolean
+    mxf_metadata_aes3_audio_essence_descriptor_handle_tag
+    (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
+    guint16 tag, const guint8 * tag_data, guint16 tag_size)
+{
+  MXFMetadataAES3AudioEssenceDescriptor *descriptor =
+      (MXFMetadataAES3AudioEssenceDescriptor *) d;
+  gboolean ret = FALSE;
+
+  switch (tag) {
+    case 0x3d0d:
+      if (tag_size != 1)
+        goto error;
+      descriptor->emphasis = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  emphasis = %u", descriptor->emphasis);
+      ret = TRUE;
+      break;
+    case 0x3d0f:
+      if (tag_size != 2)
+        goto error;
+      descriptor->block_start_offset = GST_READ_UINT16_BE (tag_data);
+      GST_DEBUG ("  block start offset = %u", descriptor->block_start_offset);
+      ret = TRUE;
+      break;
+    case 0x3d08:
+      if (tag_size != 1)
+        goto error;
+      descriptor->auxiliary_bits_mode = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  auxiliary bits mode = %u", descriptor->auxiliary_bits_mode);
+      ret = TRUE;
+      break;
+    case 0x3d10:{
+      guint32 len;
+      guint i;
+
+      if (tag_size < 8)
+        goto error;
+      len = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  number of channel status mode = %u", len);
+      descriptor->n_channel_status_mode = len;
+      if (len == 0)
+        return TRUE;
+
+      if (GST_READ_UINT32_BE (tag_data + 4) != 1)
+        goto error;
+
+      tag_data += 8;
+      tag_size -= 8;
+
+      if (tag_size != len)
+        goto error;
+
+      descriptor->channel_status_mode = g_new0 (guint8, len);
+
+      for (i = 0; i < len; i++) {
+        descriptor->channel_status_mode[i] = GST_READ_UINT8 (tag_data);
+        GST_DEBUG ("    channel status mode %u = %u", i,
+            descriptor->channel_status_mode[i]);
+        tag_data++;
+        tag_size--;
+      }
+
+      ret = TRUE;
+      break;
+    }
+    case 0x3d11:{
+      guint32 len;
+      guint i;
+
+      if (tag_size < 8)
+        goto error;
+      len = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  number of fixed channel status data = %u", len);
+      descriptor->n_fixed_channel_status_data = len;
+      if (len == 0)
+        return TRUE;
+
+      if (GST_READ_UINT32_BE (tag_data + 4) != 24)
+        goto error;
+
+      tag_data += 8;
+      tag_size -= 8;
+
+      if (tag_size != len * 24)
+        goto error;
+
+      descriptor->fixed_channel_status_data =
+          g_malloc0 (len * sizeof (guint8 *) + len * 24);
+
+      for (i = 0; i < len; i++) {
+        descriptor->fixed_channel_status_data[i] =
+            ((guint8 *) descriptor->fixed_channel_status_data) +
+            len * sizeof (guint8 *) + i * 24;
+
+        memcpy (descriptor->fixed_channel_status_data[i], tag_data, 24);
+        GST_DEBUG
+            ("    fixed channel status data %u = 0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x",
+            i, descriptor->fixed_channel_status_data[i][0],
+            descriptor->fixed_channel_status_data[i][1],
+            descriptor->fixed_channel_status_data[i][2],
+            descriptor->fixed_channel_status_data[i][3],
+            descriptor->fixed_channel_status_data[i][4],
+            descriptor->fixed_channel_status_data[i][5],
+            descriptor->fixed_channel_status_data[i][6],
+            descriptor->fixed_channel_status_data[i][7],
+            descriptor->fixed_channel_status_data[i][8],
+            descriptor->fixed_channel_status_data[i][9],
+            descriptor->fixed_channel_status_data[i][10],
+            descriptor->fixed_channel_status_data[i][11],
+            descriptor->fixed_channel_status_data[i][12],
+            descriptor->fixed_channel_status_data[i][13],
+            descriptor->fixed_channel_status_data[i][14],
+            descriptor->fixed_channel_status_data[i][15],
+            descriptor->fixed_channel_status_data[i][16],
+            descriptor->fixed_channel_status_data[i][17],
+            descriptor->fixed_channel_status_data[i][18],
+            descriptor->fixed_channel_status_data[i][19],
+            descriptor->fixed_channel_status_data[i][20],
+            descriptor->fixed_channel_status_data[i][21],
+            descriptor->fixed_channel_status_data[i][22],
+            descriptor->fixed_channel_status_data[i][23]
+            );
+        tag_data += 24;
+        tag_size -= 24;
+      }
+
+      ret = TRUE;
+      break;
+    }
+    case 0x3d12:{
+      guint32 len;
+      guint i;
+
+      if (tag_size < 8)
+        goto error;
+      len = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  number of user data mode = %u", len);
+      descriptor->n_user_data_mode = len;
+      if (len == 0)
+        return TRUE;
+
+      if (GST_READ_UINT32_BE (tag_data + 4) != 1)
+        goto error;
+
+      tag_data += 8;
+      tag_size -= 8;
+
+      if (tag_size != len)
+        goto error;
+
+      descriptor->user_data_mode = g_new0 (guint8, len);
+
+      for (i = 0; i < len; i++) {
+        descriptor->user_data_mode[i] = GST_READ_UINT8 (tag_data);
+        GST_DEBUG ("    user data mode %u = %u", i,
+            descriptor->user_data_mode[i]);
+        tag_data++;
+        tag_size--;
+      }
+
+      ret = TRUE;
+      break;
+    }
+    case 0x3d13:{
+      guint32 len;
+      guint i;
+
+      if (tag_size < 8)
+        goto error;
+      len = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  number of fixed user data = %u", len);
+      descriptor->n_fixed_user_data = len;
+      if (len == 0)
+        return TRUE;
+
+      if (GST_READ_UINT32_BE (tag_data + 4) != 24)
+        goto error;
+
+      tag_data += 8;
+      tag_size -= 8;
+
+      if (tag_size != len * 24)
+        goto error;
+
+      descriptor->fixed_user_data =
+          g_malloc0 (len * sizeof (guint8 *) + len * 24);
+
+      for (i = 0; i < len; i++) {
+        descriptor->fixed_user_data[i] =
+            ((guint8 *) descriptor->fixed_user_data) + len * sizeof (guint8 *) +
+            i * 24;
+
+        memcpy (descriptor->fixed_user_data[i], tag_data, 24);
+        GST_DEBUG
+            ("    fixed user data %u = 0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x",
+            i, descriptor->fixed_user_data[i][0],
+            descriptor->fixed_user_data[i][1],
+            descriptor->fixed_user_data[i][2],
+            descriptor->fixed_user_data[i][3],
+            descriptor->fixed_user_data[i][4],
+            descriptor->fixed_user_data[i][5],
+            descriptor->fixed_user_data[i][6],
+            descriptor->fixed_user_data[i][7],
+            descriptor->fixed_user_data[i][8],
+            descriptor->fixed_user_data[i][9],
+            descriptor->fixed_user_data[i][10],
+            descriptor->fixed_user_data[i][11],
+            descriptor->fixed_user_data[i][12],
+            descriptor->fixed_user_data[i][13],
+            descriptor->fixed_user_data[i][14],
+            descriptor->fixed_user_data[i][15],
+            descriptor->fixed_user_data[i][16],
+            descriptor->fixed_user_data[i][17],
+            descriptor->fixed_user_data[i][18],
+            descriptor->fixed_user_data[i][19],
+            descriptor->fixed_user_data[i][20],
+            descriptor->fixed_user_data[i][21],
+            descriptor->fixed_user_data[i][22],
+            descriptor->fixed_user_data[i][23]
+            );
+        tag_data += 24;
+        tag_size -= 24;
+      }
+
+      ret = TRUE;
+      break;
+    }
+      /* TODO: linked timecode track / data_stream_number parsing, see
+       * SMPTE 382M Annex 2 */
+    default:
+      ret =
+          mxf_metadata_wave_audio_essence_descriptor_handle_tag (d, primer,
+          tag, tag_data, tag_size);
+      break;
+  }
+
+  return ret;
+
+error:
+  GST_ERROR ("Invalid AES3 audio essence descriptor tag 0x%04x of size %u", tag,
+      tag_size);
+
+  return TRUE;
+}
+
+void mxf_metadata_aes3_audio_essence_descriptor_reset
+    (MXFMetadataAES3AudioEssenceDescriptor * descriptor)
+{
+  g_return_if_fail (descriptor != NULL);
+
+  mxf_metadata_wave_audio_essence_descriptor_reset (
+      (MXFMetadataWaveAudioEssenceDescriptor *) descriptor);
+
+  g_free (descriptor->channel_status_mode);
+  g_free (descriptor->fixed_channel_status_data);
+  g_free (descriptor->user_data_mode);
+  g_free (descriptor->fixed_user_data);
+
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataAES3AudioEssenceDescriptor,
+      MXFMetadataWaveAudioEssenceDescriptor);
+}
+
+
+
 gboolean
 mxf_is_aes_bwf_essence_track (const MXFMetadataTrack * track)
 {
@@ -233,6 +499,27 @@ mxf_bwf_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+mxf_aes3_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
+    GstCaps * caps, MXFMetadataGenericPackage * package,
+    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
+    gpointer mapping_data, GstBuffer ** outbuf)
+{
+  *outbuf = buffer;
+
+  /* SMPTE 382M Table 1: Check if this is some kind of Wave element */
+  if (key->u[12] != 0x16 || (key->u[14] != 0x03 && key->u[14] != 0x04
+          && key->u[14] != 0x0c)) {
+    GST_ERROR ("Invalid AES3 essence element");
+    return GST_FLOW_ERROR;
+  }
+
+  /* FIXME: check if the size is a multiply of the unit size, ... */
+  return GST_FLOW_OK;
+}
+
+
+
 /* SMPTE RP224 */
 static const MXFUL mxf_sound_essence_compression_uncompressed =
     { {0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x02, 0x02, 0x01,
@@ -264,7 +551,6 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
       MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR)
     wa_descriptor = (MXFMetadataWaveAudioEssenceDescriptor *) descriptor;
 
-  /* TODO: set caps for avg bitrate, audio codec, ...... */
   /* TODO: Handle width=!depth, needs shifting of samples */
 
   /* FIXME: set a channel layout */
@@ -281,7 +567,7 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
       GST_ERROR ("Invalid descriptor");
       return NULL;
     }
-    if (wa_descriptor)
+    if (wa_descriptor && wa_descriptor->block_align != 0)
       block_align = wa_descriptor->block_align;
     else
       block_align = GST_ROUND_UP_8 (descriptor->quantization_bits) / 8;
@@ -310,7 +596,7 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
       return NULL;
     }
 
-    if (wa_descriptor)
+    if (wa_descriptor && wa_descriptor->block_align != 0)
       block_align = wa_descriptor->block_align;
     else
       block_align = GST_ROUND_UP_8 (descriptor->quantization_bits) / 8;
@@ -364,12 +650,69 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
   return ret;
 }
 
+static GstCaps *
+mxf_aes3_create_caps (MXFMetadataGenericPackage * package,
+    MXFMetadataTrack * track,
+    MXFMetadataGenericSoundEssenceDescriptor * descriptor, GstTagList ** tags,
+    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+{
+  GstCaps *ret = NULL;
+  MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
+  gchar *codec_name = NULL;
+  guint block_align;
+
+  if (((MXFMetadataGenericDescriptor *) descriptor)->type ==
+      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR ||
+      ((MXFMetadataGenericDescriptor *) descriptor)->type ==
+      MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR)
+    wa_descriptor = (MXFMetadataWaveAudioEssenceDescriptor *) descriptor;
+
+  /* FIXME: set a channel layout */
+
+  if (descriptor->channel_count == 0 ||
+      descriptor->quantization_bits == 0 ||
+      descriptor->audio_sampling_rate.n == 0 ||
+      descriptor->audio_sampling_rate.d == 0) {
+    GST_ERROR ("Invalid descriptor");
+    return NULL;
+  }
+  if (wa_descriptor && wa_descriptor->block_align != 0)
+    block_align = wa_descriptor->block_align;
+  else
+    block_align = GST_ROUND_UP_8 (descriptor->quantization_bits) / 8;
+
+  ret = gst_caps_new_simple ("audio/x-raw-int",
+      "rate", G_TYPE_INT,
+      (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
+          ((gdouble) descriptor->audio_sampling_rate.d) + 0.5), "channels",
+      G_TYPE_INT, descriptor->channel_count, "signed", G_TYPE_BOOLEAN,
+      (block_align != 1), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "depth",
+      G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
+      G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+
+  codec_name =
+      g_strdup_printf ("Uncompressed %u-bit AES3 audio",
+      (block_align / descriptor->channel_count) * 8);
+
+  if (!*tags)
+    *tags = gst_tag_list_new ();
+
+  gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+      codec_name, GST_TAG_BITRATE, block_align * 8, NULL);
+  g_free (codec_name);
+
+  *handler = mxf_aes3_handle_essence_element;
+
+  return ret;
+}
+
 GstCaps *
 mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
     MXFMetadataTrack * track, GstTagList ** tags,
     MXFEssenceElementHandler * handler, gpointer * mapping_data)
 {
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
+  gboolean bwf = FALSE;
   guint i;
 
   g_return_val_if_fail (package != NULL, NULL);
@@ -380,8 +723,6 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
     return NULL;
   }
 
-  /* TODO: handle AES3 audio */
-
   for (i = 0; i < track->n_descriptor; i++) {
     if ((track->descriptor[i]->parent.type ==
             MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR
@@ -391,6 +732,20 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
             || track->descriptor[i]->essence_container.u[14] == 0x02
             || track->descriptor[i]->essence_container.u[14] == 0x08)) {
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+      bwf = TRUE;
+      break;
+    } else if ((track->descriptor[i]->parent.type ==
+            MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR
+            || track->descriptor[i]->parent.type ==
+            MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR
+            || track->descriptor[i]->parent.type ==
+            MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR)
+        && (track->descriptor[i]->essence_container.u[14] == 0x03
+            || track->descriptor[i]->essence_container.u[14] == 0x04
+            || track->descriptor[i]->essence_container.u[14] == 0x09)) {
+
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+      bwf = FALSE;
       break;
     }
   }
@@ -398,8 +753,11 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
   if (!s) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
-  } else if (s) {
+  } else if (bwf) {
     return mxf_bwf_create_caps (package, track, s, tags, handler, mapping_data);
+  } else {
+    return mxf_aes3_create_caps (package, track, s, tags, handler,
+        mapping_data);
   }
 
   return NULL;
