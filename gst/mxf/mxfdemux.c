@@ -1293,8 +1293,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2172,8 +2173,17 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
   if (outbuf) {
     /* TODO: handle timestamp gaps */
+    GST_DEBUG_OBJECT (demux,
+        "Pushing buffer of size %u for track %u: timestamp %" GST_TIME_FORMAT
+        " duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (outbuf),
+        pad->material_track->track_id,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
     ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
     ret = gst_mxf_demux_combine_flows (demux, pad, ret);
+  } else {
+    GST_DEBUG_OBJECT (demux, "Dropping buffer for track %u",
+        pad->material_track->track_id);
   }
 
   return ret;
