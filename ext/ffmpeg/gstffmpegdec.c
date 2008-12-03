@@ -370,13 +370,16 @@ gst_ffmpegdec_finalize (GObject * object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
-  if (ffmpegdec->opened) {
-
-    /* clean up remaining allocated data */
+  if (ffmpegdec->context != NULL) {
     av_free (ffmpegdec->context);
-    av_free (ffmpegdec->picture);
-
+    ffmpegdec->context = NULL;
   }
+
+  if (ffmpegdec->picture != NULL) {
+    av_free (ffmpegdec->picture);
+    ffmpegdec->picture = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 

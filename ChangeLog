@@ -1,3 +1,11 @@
+2008-12-03  Yotam Shtossel  <sh.yotam@gmail.com>
+
+	reviewed by: Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_finalize):
+	Fix check for memory to free.
+	Fixes #560644
+
 2008-11-27  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
