@@ -455,6 +455,7 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   GstInputSelector *sel;
   GstFlowReturn result;
   GstPad *active_sinkpad;
+  GstPad *prev_active_sinkpad;
   GstSelectorPad *selpad;
 
   sel = GST_INPUT_SELECTOR (gst_pad_get_parent (pad));
@@ -463,12 +464,16 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   GST_DEBUG_OBJECT (pad, "received alloc");
 
   GST_INPUT_SELECTOR_LOCK (sel);
+  prev_active_sinkpad = sel->active_sinkpad;
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
   if (pad != active_sinkpad)
     goto not_active;
 
   GST_INPUT_SELECTOR_UNLOCK (sel);
+
+  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
+    g_object_notify (G_OBJECT (sel), "active-pad");
 
   result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
 
@@ -518,6 +523,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstInputSelector *sel;
   GstFlowReturn res;
   GstPad *active_sinkpad;
+  GstPad *prev_active_sinkpad;
   GstSelectorPad *selpad;
   GstClockTime end_time, duration;
   GstSegment *seg;
@@ -534,6 +540,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (pad, "getting active pad");
 
+  prev_active_sinkpad = sel->active_sinkpad;
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
 
   /* update the segment on the srcpad */
@@ -585,6 +592,9 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
     selpad->segment_pending = FALSE;
   }
   GST_INPUT_SELECTOR_UNLOCK (sel);
+
+  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad)
+    g_object_notify (G_OBJECT (sel), "active-pad");
 
   if (close_event)
     gst_pad_push_event (sel->srcpad, close_event);
@@ -912,6 +922,7 @@ gst_input_selector_set_active_pad (GstInputSelector * self,
     /* schedule a last_stop update if one isn't already scheduled, and a
        segment has been pushed before. */
     memcpy (&self->segment, &old->segment, sizeof (self->segment));
+
     GST_DEBUG_OBJECT (self, "setting stop_time to %" G_GINT64_FORMAT,
         stop_time);
     gst_segment_set_stop (&self->segment, stop_time);

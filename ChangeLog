@@ -1,3 +1,10 @@
+2008-12-04  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/selector/gstinputselector.c:
+	  Ensure we emit notify::active-pad when auto-selecting a pad
+	  due to it having activity and us not having an existing active
+	  pad. Fixes #563147
+
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c:
