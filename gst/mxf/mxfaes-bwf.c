@@ -570,7 +570,9 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
     if (wa_descriptor && wa_descriptor->block_align != 0)
       block_align = wa_descriptor->block_align;
     else
-      block_align = GST_ROUND_UP_8 (descriptor->quantization_bits) / 8;
+      block_align =
+          (GST_ROUND_UP_8 (descriptor->quantization_bits) *
+          descriptor->channel_count) / 8;
 
     ret = gst_caps_new_simple ("audio/x-raw-int",
         "rate", G_TYPE_INT,
@@ -599,7 +601,9 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
     if (wa_descriptor && wa_descriptor->block_align != 0)
       block_align = wa_descriptor->block_align;
     else
-      block_align = GST_ROUND_UP_8 (descriptor->quantization_bits) / 8;
+      block_align =
+          (GST_ROUND_UP_8 (descriptor->quantization_bits) *
+          descriptor->channel_count) / 8;
 
     ret = gst_caps_new_simple ("audio/x-raw-int",
         "rate", G_TYPE_INT,
@@ -679,7 +683,9 @@ mxf_aes3_create_caps (MXFMetadataGenericPackage * package,
   if (wa_descriptor && wa_descriptor->block_align != 0)
     block_align = wa_descriptor->block_align;
   else
-    block_align = GST_ROUND_UP_8 (descriptor->quantization_bits) / 8;
+    block_align =
+        (GST_ROUND_UP_8 (descriptor->quantization_bits) *
+        descriptor->channel_count) / 8;
 
   ret = gst_caps_new_simple ("audio/x-raw-int",
       "rate", G_TYPE_INT,

@@ -1,3 +1,24 @@
+2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxfd10.c: (mxf_is_d10_essence_track),
+	(mxf_d10_picture_handle_essence_element),
+	(mxf_d10_sound_handle_essence_element), (mxf_d10_create_caps):
+	* gst/mxf/mxfd10.h:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams):
+	Add support for SMPTE D10 essence (SMPTE 386M).
+
+	* gst/mxf/mxfparse.c:
+	(mxf_metadata_generic_picture_essence_descriptor_set_caps):
+	Don't set width/height and PAR on the caps as those values are
+	wrong for most files (height is sometimes the height of a field
+	and aspect ratio is some random value).
+
+	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps),
+	(mxf_aes3_create_caps):
+	Fix calculation of block align if it isn't set in the descriptor.
+
 2008-12-03  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfaes-bwf.c:
