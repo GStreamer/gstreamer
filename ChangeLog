@@ -1,5 +1,11 @@
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfparse.c:
+	(mxf_metadata_generic_picture_essence_descriptor_set_caps):
+	Fix setting of the height/width and PAR of video streams.
+
+2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/Makefile.am:
 	* gst/mxf/mxfd10.c: (mxf_is_d10_essence_track),
 	(mxf_d10_picture_handle_essence_element),

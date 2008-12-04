@@ -2610,8 +2610,8 @@ void mxf_metadata_generic_picture_essence_descriptor_reset
 void mxf_metadata_generic_picture_essence_descriptor_set_caps
     (MXFMetadataGenericPictureEssenceDescriptor * descriptor, GstCaps * caps)
 {
-  /*guint par_n, par_d;
-     guint width, height; */
+  guint par_n, par_d;
+  guint width, height;
   MXFMetadataFileDescriptor *f = (MXFMetadataFileDescriptor *) descriptor;
 
   g_return_if_fail (descriptor != NULL);
@@ -2620,12 +2620,17 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, f->sample_rate.n,
       f->sample_rate.d, NULL);
 
-  return;
-
-/* FIXME: This sets wrong values for most (all?) files */
-#if 0
   width = descriptor->stored_width;
   height = descriptor->stored_height;
+
+  /* If the video is stored as separate fields the
+   * height is only the height of one field, i.e.
+   * half the height of the frame.
+   *
+   * See SMPTE 377M E2.2 and E1.2
+   */
+  if (descriptor->frame_layout == 1 || descriptor->frame_layout == 2)
+    height *= 2;
 
   if (width == 0 || height == 0)
     return;
@@ -2636,12 +2641,11 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
   if (descriptor->aspect_ratio.n == 0 || descriptor->aspect_ratio.d == 0)
     return;
 
-  par_n = height * descriptor->aspect_ratio.d;
-  par_d = width * descriptor->aspect_ratio.n;
+  par_n = height * descriptor->aspect_ratio.n;
+  par_d = width * descriptor->aspect_ratio.d;
 
   gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
       par_n, par_d, NULL);
-#endif
 }
 
 gboolean
