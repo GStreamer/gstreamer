@@ -1,6 +1,12 @@
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
+	Apparently AC_CONFIG_MACRO_DIR breaks when using more
+	than one macro directory, reverting last change.
+
+2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
 	Set AC_CONFIG_MACRO_DIR to common/m4 to point autoconf to
 	our M4 macros.
 
