@@ -1,6 +1,18 @@
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_resolve_references):
+	* gst/mxf/mxfdv-dif.c: (mxf_dv_dif_create_caps):
+	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
+	Coding style fixes.
+
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_audio_handle_essence_element),
+	(mxf_mpeg_es_create_caps), (mxf_mpeg_create_caps):
+	Add support for MPEG, AC3, DTS audio.
+
+2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
 	(gst_mxf_demux_handle_generic_container_essence_element):
 	Ignore zero sized essence elements. They're often inserted
 	to fulfill the streaming requirements.
