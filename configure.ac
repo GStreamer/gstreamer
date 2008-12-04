@@ -21,9 +21,6 @@ AS_NANO(GST_CVS="no", GST_CVS="yes")
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/gstmodule.c])
 
-dnl where are our m4 macros ?
-AC_CONFIG_MACRO_DIR([common/m4])
-
 dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
 
