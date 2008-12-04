@@ -1347,8 +1347,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2159,6 +2160,11 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   if (!demux->src || demux->src->len == 0) {
     GST_ERROR_OBJECT (demux, "No streams created yet");
     return GST_FLOW_ERROR;
+  }
+
+  if (GST_BUFFER_SIZE (buffer) == 0) {
+    GST_DEBUG_OBJECT (demux, "Zero sized essence element, ignoring");
+    return GST_FLOW_OK;
   }
 
   track_number = GST_READ_UINT32_BE (&key->u[12]);
