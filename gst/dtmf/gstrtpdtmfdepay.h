@@ -54,7 +54,7 @@ struct _GstRtpDTMFDepay
   guint16		previous_duration;
   GstClockTime		first_gst_ts;
   guint unit_time;
-
+  guint max_duration;
 };
 
 struct _GstRtpDTMFDepayClass
