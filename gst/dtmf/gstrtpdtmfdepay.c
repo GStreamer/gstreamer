@@ -371,8 +371,19 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   /* clip to whole units of unit_time */
   if (rtpdtmfdepay->unit_time)
-    dtmf_payload.duration -= dtmf_payload.duration %
-        ((rtpdtmfdepay->unit_time * depayload->clock_rate) / 1000);
+  {
+    guint unit_time_clock =
+        (rtpdtmfdepay->unit_time * depayload->clock_rate) / 1000;
+    if (dtmf_payload.duration % unit_time_clock)
+    {
+      /* Make sure we don't overflow the duration */
+      if (dtmf_payload.duration < G_MAXUINT16 - unit_time_clock)
+        dtmf_payload.duration += unit_time_clock -
+            (dtmf_payload.duration % unit_time_clock);
+      else
+        dtmf_payload.duration -= dtmf_payload.duration % unit_time_clock;
+    }
+  }
 
   GST_DEBUG_OBJECT (depayload, "Received new RTP DTMF packet : "
       "marker=%d - timestamp=%u - event=%d - duration=%d",
