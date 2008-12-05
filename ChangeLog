@@ -1,3 +1,10 @@
+2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_resolve_references):
+	Generalize some lines of codes that are more or less the same
+	by a macro.
+
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

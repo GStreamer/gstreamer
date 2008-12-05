@@ -1165,76 +1165,38 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
 
   /* Fill in demux->descriptor */
   demux->descriptor = g_ptr_array_new ();
-  if (demux->generic_descriptor) {
-    for (i = 0; i < demux->generic_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->generic_descriptor,
-              MXFMetadataGenericDescriptor, i));
-    }
-  }
-  if (demux->file_descriptor) {
-    for (i = 0; i < demux->file_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->file_descriptor, MXFMetadataFileDescriptor,
-              i));
-    }
-  }
-  if (demux->generic_picture_essence_descriptor) {
-    for (i = 0; i < demux->generic_picture_essence_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->generic_picture_essence_descriptor,
-              MXFMetadataGenericPictureEssenceDescriptor, i));
-    }
-  }
-  if (demux->cdci_picture_essence_descriptor) {
-    for (i = 0; i < demux->cdci_picture_essence_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->cdci_picture_essence_descriptor,
-              MXFMetadataCDCIPictureEssenceDescriptor, i));
-    }
-  }
-  if (demux->rgba_picture_essence_descriptor) {
-    for (i = 0; i < demux->rgba_picture_essence_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->rgba_picture_essence_descriptor,
-              MXFMetadataRGBAPictureEssenceDescriptor, i));
-    }
-  }
-  if (demux->mpeg_video_descriptor) {
-    for (i = 0; i < demux->mpeg_video_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->mpeg_video_descriptor,
-              MXFMetadataMPEGVideoDescriptor, i));
-    }
-  }
-  if (demux->generic_sound_essence_descriptor) {
-    for (i = 0; i < demux->generic_sound_essence_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->generic_sound_essence_descriptor,
-              MXFMetadataGenericSoundEssenceDescriptor, i));
-    }
-  }
-  if (demux->wave_audio_essence_descriptor) {
-    for (i = 0; i < demux->wave_audio_essence_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->wave_audio_essence_descriptor,
-              MXFMetadataWaveAudioEssenceDescriptor, i));
-    }
-  }
-  if (demux->aes3_audio_essence_descriptor) {
-    for (i = 0; i < demux->aes3_audio_essence_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->aes3_audio_essence_descriptor,
-              MXFMetadataAES3AudioEssenceDescriptor, i));
-    }
-  }
-  if (demux->multiple_descriptor) {
-    for (i = 0; i < demux->multiple_descriptor->len; i++) {
-      g_ptr_array_add (demux->descriptor,
-          &g_array_index (demux->multiple_descriptor,
-              MXFMetadataMultipleDescriptor, i));
-    }
-  }
+
+#define FILL_DESCRIPTOR_ARRAY(desc_array, TYPE) \
+  G_STMT_START { \
+    if (desc_array) { \
+      for (i = 0; i < desc_array->len; i++) { \
+        g_ptr_array_add (demux->descriptor, \
+	    &g_array_index (desc_array, TYPE, i)); \
+      } \
+    } \
+  } G_STMT_END
+
+  FILL_DESCRIPTOR_ARRAY (demux->generic_descriptor,
+      MXFMetadataGenericDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->file_descriptor, MXFMetadataFileDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->generic_picture_essence_descriptor,
+      MXFMetadataGenericPictureEssenceDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->cdci_picture_essence_descriptor,
+      MXFMetadataCDCIPictureEssenceDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->rgba_picture_essence_descriptor,
+      MXFMetadataRGBAPictureEssenceDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->mpeg_video_descriptor,
+      MXFMetadataMPEGVideoDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->generic_sound_essence_descriptor,
+      MXFMetadataGenericSoundEssenceDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->wave_audio_essence_descriptor,
+      MXFMetadataWaveAudioEssenceDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->aes3_audio_essence_descriptor,
+      MXFMetadataAES3AudioEssenceDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->multiple_descriptor,
+      MXFMetadataMultipleDescriptor);
+
+#undef FILL_DESCRIPTOR_ARRAY
 
   /* Fill in demux->package */
   demux->package = g_ptr_array_new ();
@@ -1347,9 +1309,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
