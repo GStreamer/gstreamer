@@ -339,6 +339,8 @@ AG_GST_VALGRIND_CHECK
 AC_OUTPUT([
   Makefile
   codegen/Makefile
+  common/Makefile
+  common/m4/Makefile
   gst/Makefile
   gst/gstversion.override
   gst/extend/Makefile

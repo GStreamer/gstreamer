@@ -1,3 +1,10 @@
+2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	Add common to SUBDIRS and generate common/Makefile and
+	common/m4/Makefile.
+
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
