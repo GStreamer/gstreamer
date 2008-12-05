@@ -3,10 +3,10 @@
   <description>transfer data via RTSP</description>
   <filename>../../gst/rtsp/.libs/libgstrtsp.so</filename>
   <basename>libgstrtsp.so</basename>
-  <version>0.10.11</version>
+  <version>0.10.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -40,16 +40,6 @@
           <presence>request</presence>
           <details>application/x-rtp</details>
         </caps>
-      </pads>
-    </element>
-    <element>
-      <name>rtspgoogle</name>
-      <longname>Google RTSP Extension</longname>
-      <class>Network/Extension/Protocol</class>
-      <description>Extends RTSP so that it can handle Google setup</description>
-      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
-      <pads>
-    
       </pads>
     </element>
     <element>

@@ -3,10 +3,10 @@
   <description>Encode raw audio into WAV</description>
   <filename>../../gst/wavenc/.libs/libgstwavenc.so</filename>
   <basename>libgstwavenc.so</basename>
-  <version>0.10.11</version>
+  <version>0.10.11.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32, depth=(int){ 24, 32 }, signed=(boolean)true; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)24, depth=(int)24, signed=(boolean)true; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], width=(int)8, depth=(int)8, signed=(boolean)false</details>
+          <details>audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32, depth=(int)32, signed=(boolean)true; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)24, depth=(int)24, signed=(boolean)true; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)16, depth=(int)16, signed=(boolean)true; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], width=(int)8, depth=(int)8, signed=(boolean)false; audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int){ 32, 64 }; audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ], width=(int)8, depth=(int)8, signed=(boolean)false; audio/x-mulaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ], width=(int)8, depth=(int)8, signed=(boolean)false</details>
         </caps>
         <caps>
           <name>src</name>

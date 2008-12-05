@@ -84,6 +84,8 @@ GstMatroskaPad;
 
 typedef struct _GstMatroskaMux {
   GstElement     element;
+  
+  /* < private > */
 
   /* pads */
   GstPad        *srcpad;

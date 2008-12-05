@@ -30,6 +30,20 @@
  * TODO: seeking with incomplete or without CUE
  */
 
+/**
+ * SECTION:element-matroskademux
+ *
+ * matroskademux demuxes a Matroska file into the different contained streams.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/mkv ! matroskademux ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
+ * ]| This pipeline demuxes a Matroska file and outputs the contained Vorbis audio.
+ * </refsect2>
+ */
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

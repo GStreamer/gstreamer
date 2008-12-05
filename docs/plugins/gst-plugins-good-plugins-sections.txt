@@ -781,6 +781,34 @@ gst_level_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-matroskamux</FILE>
+<TITLE>matroskamux</TITLE>
+GstMatroskaMux
+<SUBSECTION Standard>
+GstMatroskaMuxClass
+GST_TYPE_MATROSKA_MUX
+GST_MATROSKA_MUX
+GST_MATROSKA_MUX_CLASS
+GST_IS_MATROSKA_MUX
+GST_IS_MATROSKA_MUX_CLASS
+gst_matroska_mux_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-matroskademux</FILE>
+<TITLE>matroskademux</TITLE>
+GstMatroskaDemux
+<SUBSECTION Standard>
+GstMatroskaDemuxClass
+GST_TYPE_MATROSKA_DEMUX
+GST_MATROSKA_DEMUX
+GST_MATROSKA_DEMUX_CLASS
+GST_IS_MATROSKA_DEMUX
+GST_IS_MATROSKA_DEMUX_CLASS
+gst_matroska_demux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-monoscope</FILE>
 <TITLE>monoscope</TITLE>
 GstMonoscope

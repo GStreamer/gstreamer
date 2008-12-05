@@ -49,6 +49,8 @@ typedef enum {
 typedef struct _GstMatroskaDemux {
   GstEbmlRead              parent;
 
+  /* < private > */
+
   /* pads */
   GstPad                  *sinkpad;
   GPtrArray               *src;

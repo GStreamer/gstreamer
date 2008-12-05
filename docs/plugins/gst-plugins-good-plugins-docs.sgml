@@ -63,6 +63,8 @@
     <xi:include href="xml/element-jpegdec.xml" />
     <xi:include href="xml/element-jpegenc.xml" />
     <xi:include href="xml/element-level.xml" />
+    <xi:include href="xml/element-matroskamux.xml" />
+    <xi:include href="xml/element-matroskademux.xml" />
     <xi:include href="xml/element-monoscope.xml" />
     <xi:include href="xml/element-multifilesink.xml" />
     <xi:include href="xml/element-multifilesrc.xml" />
