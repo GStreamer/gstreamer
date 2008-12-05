@@ -2838,6 +2838,52 @@ void mxf_metadata_rgba_picture_essence_descriptor_reset
 }
 
 gboolean
+    mxf_metadata_generic_data_essence_descriptor_handle_tag
+    (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
+    guint16 tag, const guint8 * tag_data, guint16 tag_size)
+{
+  MXFMetadataGenericDataEssenceDescriptor *descriptor =
+      (MXFMetadataGenericDataEssenceDescriptor *) d;
+  gboolean ret = FALSE;
+  gchar str[48];
+
+  switch (tag) {
+    case 0x3e01:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&descriptor->data_essence_compression, tag_data, 16);
+      GST_DEBUG ("  data essence compression = %s",
+          mxf_ul_to_string (&descriptor->data_essence_compression, str));
+      ret = TRUE;
+      break;
+    default:
+      ret =
+          mxf_metadata_file_descriptor_handle_tag (d, primer, tag, tag_data,
+          tag_size);
+      break;
+  }
+
+  return ret;
+
+error:
+  GST_ERROR ("Invalid generic data essence descriptor tag 0x%04x of size %u",
+      tag, tag_size);
+
+  return TRUE;
+}
+
+void mxf_metadata_generic_data_essence_descriptor_reset
+    (MXFMetadataGenericDataEssenceDescriptor * descriptor)
+{
+  g_return_if_fail (descriptor != NULL);
+
+  mxf_metadata_file_descriptor_reset ((MXFMetadataFileDescriptor *) descriptor);
+
+  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
+      MXFMetadataGenericDataEssenceDescriptor, MXFMetadataFileDescriptor);
+}
+
+gboolean
 mxf_metadata_multiple_descriptor_handle_tag (MXFMetadataGenericDescriptor * d,
     const MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
     guint16 tag_size)

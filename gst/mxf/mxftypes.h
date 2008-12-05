@@ -195,6 +195,7 @@ typedef struct _MXFMetadataGenericPictureEssenceDescriptor MXFMetadataGenericPic
 typedef struct _MXFMetadataCDCIPictureEssenceDescriptor MXFMetadataCDCIPictureEssenceDescriptor;
 typedef struct _MXFMetadataRGBAPictureEssenceDescriptor MXFMetadataRGBAPictureEssenceDescriptor;
 typedef struct _MXFMetadataGenericSoundEssenceDescriptor MXFMetadataGenericSoundEssenceDescriptor;
+typedef struct _MXFMetadataGenericDataEssenceDescriptor MXFMetadataGenericDataEssenceDescriptor;
 typedef struct _MXFMetadataMultipleDescriptor MXFMetadataMultipleDescriptor;
 typedef struct _MXFMetadataLocator MXFMetadataLocator;
 
@@ -496,6 +497,12 @@ struct _MXFMetadataGenericSoundEssenceDescriptor {
   gint8 dial_norm;
 
   MXFUL sound_essence_compression;
+};
+
+struct _MXFMetadataGenericDataEssenceDescriptor {
+  MXFMetadataFileDescriptor parent;
+
+  MXFUL data_essence_compression;
 };
 
 struct _MXFMetadataMultipleDescriptor {

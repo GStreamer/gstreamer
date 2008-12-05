@@ -294,6 +294,15 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
     demux->multiple_descriptor = NULL;
   }
 
+  if (demux->generic_data_essence_descriptor) {
+    for (i = 0; i < demux->generic_data_essence_descriptor->len; i++)
+      mxf_metadata_generic_data_essence_descriptor_reset (&g_array_index
+          (demux->generic_data_essence_descriptor,
+              MXFMetadataGenericDataEssenceDescriptor, i));
+    g_array_free (demux->generic_data_essence_descriptor, TRUE);
+    demux->generic_data_essence_descriptor = NULL;
+  }
+
   if (demux->generic_picture_essence_descriptor) {
     for (i = 0; i < demux->generic_picture_essence_descriptor->len; i++)
       mxf_metadata_generic_picture_essence_descriptor_reset (&g_array_index
@@ -786,38 +795,6 @@ gst_mxf_demux_handle_metadata_structural_component (GstMXFDemux * demux,
 }
 
 static GstFlowReturn
-gst_mxf_demux_handle_metadata_generic_descriptor (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataGenericDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata generic descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_generic_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset) mxf_metadata_generic_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata generic descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->generic_descriptor)
-    demux->generic_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataGenericDescriptor));
-
-  g_array_append_val (demux->generic_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
 gst_mxf_demux_handle_metadata_file_descriptor (GstMXFDemux * demux,
     const MXFUL * key, guint16 type, GstBuffer * buffer)
 {
@@ -878,6 +855,41 @@ gst_mxf_demux_handle_metadata_multiple_descriptor (GstMXFDemux * demux,
         g_array_new (FALSE, FALSE, sizeof (MXFMetadataMultipleDescriptor));
 
   g_array_append_val (demux->multiple_descriptor, descriptor);
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_mxf_demux_handle_metadata_generic_data_essence_descriptor (GstMXFDemux *
+    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
+{
+  MXFMetadataGenericDataEssenceDescriptor descriptor;
+
+  memset (&descriptor, 0, sizeof (descriptor));
+
+  GST_DEBUG_OBJECT (demux,
+      "Handling metadata generic data essence descriptor of size %u"
+      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
+      GST_BUFFER_SIZE (buffer), demux->offset, type);
+
+  if (!mxf_metadata_descriptor_parse (key,
+          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+          (MXFMetadataDescriptorHandleTag)
+          mxf_metadata_generic_data_essence_descriptor_handle_tag,
+          (MXFMetadataDescriptorReset)
+          mxf_metadata_generic_data_essence_descriptor_reset)) {
+    GST_ERROR_OBJECT (demux,
+        "Parsing metadata generic data essence descriptor failed");
+    return GST_FLOW_ERROR;
+  }
+
+  if (!demux->generic_data_essence_descriptor)
+    demux->generic_data_essence_descriptor =
+        g_array_new (FALSE, FALSE,
+        sizeof (MXFMetadataGenericDataEssenceDescriptor));
+
+  g_array_append_val (demux->generic_data_essence_descriptor, descriptor);
 
   return GST_FLOW_OK;
 }
@@ -1179,6 +1191,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
   FILL_DESCRIPTOR_ARRAY (demux->generic_descriptor,
       MXFMetadataGenericDescriptor);
   FILL_DESCRIPTOR_ARRAY (demux->file_descriptor, MXFMetadataFileDescriptor);
+  FILL_DESCRIPTOR_ARRAY (demux->generic_data_essence_descriptor,
+      MXFMetadataGenericDataEssenceDescriptor);
   FILL_DESCRIPTOR_ARRAY (demux->generic_picture_essence_descriptor,
       MXFMetadataGenericPictureEssenceDescriptor);
   FILL_DESCRIPTOR_ARRAY (demux->cdci_picture_essence_descriptor,
@@ -1309,8 +1323,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2018,15 +2033,15 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
           gst_mxf_demux_handle_metadata_structural_component (demux,
           key, type, buffer);
       break;
-    case MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_generic_descriptor (demux,
-          key, type, buffer);
-      break;
     case MXF_METADATA_FILE_DESCRIPTOR:
       ret =
           gst_mxf_demux_handle_metadata_file_descriptor (demux,
           key, type, buffer);
+      break;
+    case MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR:
+      ret =
+          gst_mxf_demux_handle_metadata_generic_data_essence_descriptor
+          (demux, key, type, buffer);
       break;
     case MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR:
       ret =
