@@ -53,6 +53,8 @@
 #define MAX_UNIT_TIME            1000
 #define DEFAULT_UNIT_TIME        0
 
+#define DEFAULT_MAX_DURATION     0
+
 typedef struct st_dtmf_key {
         char *event_name;
         int event_encoding;
@@ -121,7 +123,8 @@ enum
 enum
 {
   PROP_0,
-  PROP_UNIT_TIME
+  PROP_UNIT_TIME,
+  PROP_MAX_DURATION
 };
 
 enum
@@ -204,6 +207,12 @@ gst_rtp_dtmf_depay_class_init (GstRtpDTMFDepayClass * klass)
         "The smallest unit (ms) the duration must be a multiple of (0 disables it)", MIN_UNIT_TIME,
         MAX_UNIT_TIME, DEFAULT_UNIT_TIME, G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_DURATION,
+    g_param_spec_uint ("max-duration", "Maximum duration",
+        "The maxumimum duration (ms) of the outgoing soundpacket. "
+        "(0 = no limit)", 0, G_MAXUINT, DEFAULT_MAX_DURATION,
+        G_PARAM_READWRITE));
+
   gstbasertpdepayload_class->process =
     GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_process);
   gstbasertpdepayload_class->set_caps =
@@ -230,6 +239,9 @@ gst_rtp_dtmf_depay_set_property (GObject * object, guint prop_id,
     case PROP_UNIT_TIME:
       rtpdtmfdepay->unit_time = g_value_get_uint (value);
       break;
+    case PROP_MAX_DURATION:
+      rtpdtmfdepay->max_duration = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -247,6 +259,9 @@ gst_rtp_dtmf_depay_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_UNIT_TIME:
       g_value_set_uint (value, rtpdtmfdepay->unit_time);
+      break;
+    case PROP_MAX_DURATION:
+      g_value_set_uint (value, rtpdtmfdepay->max_duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -383,6 +398,17 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       else
         dtmf_payload.duration -= dtmf_payload.duration % unit_time_clock;
     }
+  }
+
+  /* clip to max duration */
+  if (rtpdtmfdepay->max_duration)
+  {
+    guint max_duration_clock =
+        (rtpdtmfdepay->max_duration * depayload->clock_rate) / 1000;
+
+    if (max_duration_clock < G_MAXUINT16 &&
+        dtmf_payload.duration > max_duration_clock)
+      dtmf_payload.duration = max_duration_clock;
   }
 
   GST_DEBUG_OBJECT (depayload, "Received new RTP DTMF packet : "
