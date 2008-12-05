@@ -1,3 +1,13 @@
+2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	Add gst-libs to DIST_SUBDIRS to make sure that it's always
+	disted.
+
+	* autogen.sh:
+	Remove -I m4 from autogen.sh, it's not disted and used anymore and
+	thus makes autogen.sh fail if run on a tarball. Fixes bug #563305.
+
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
