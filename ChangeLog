@@ -1,3 +1,9 @@
+2008-12-05  David Schleef  <ds@schleef.org>
+
+	* gst/gst.c:
+	Search for plugins on win32 based on the location of the
+	gstreamer DLL.  Fixes #548786
+
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

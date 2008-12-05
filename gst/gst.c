@@ -719,6 +719,24 @@ scan_and_update_registry (GstRegistry * default_registry,
     /* add the main (installed) library path */
     GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
     changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
+
+#ifdef G_PLATFORM_WIN32
+    {
+      char *base_dir;
+      char *dir;
+
+      base_dir = g_win32_get_package_installation_directory (NULL,
+          "libgstreamer-0.10-0.dll");
+
+      dir = g_build_filename (base_dir, "lib", "gstreamer-0.10", NULL);
+      GST_DEBUG ("scanning DLL dir %s", dir);
+
+      changed |= gst_registry_scan_path (default_registry, dir);
+
+      g_free (dir);
+      g_free (base_dir);
+    }
+#endif
   } else {
     gchar **list;
     gint i;
