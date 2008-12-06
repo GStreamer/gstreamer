@@ -55,5 +55,56 @@ class NewTest(TestCase):
         self.failUnless(self.got_message == True)
         self.gccollect()
 
+class TestCreateMessages(TestCase):
+
+    def setUp(self):
+        TestCase.setUp(self)
+        self.element = gst.Bin()
+
+    def tearDown(self):
+        del self.element
+
+    def testCustomMessage(self):
+        # create two custom messages using the same structure
+        s = gst.Structure("something")
+        assert s != None
+        e1 = gst.message_new_custom(gst.MESSAGE_APPLICATION, self.element, s)
+        assert e1
+        e2 = gst.message_new_custom(gst.MESSAGE_APPLICATION, self.element, s)
+        assert e2
+
+        # make sure the two structures are equal
+        self.assertEquals(e1.structure.to_string(),
+                          e2.structure.to_string())
+
+    def testTagMessage(self):
+        # Create a taglist
+        t = gst.TagList()
+        t['something'] = "else"
+        t['another'] = 42
+
+        # Create two messages using that same taglist
+        m1 = gst.message_new_tag(self.element, t)
+        assert m1
+        m2 = gst.message_new_tag(self.element, t)
+        assert m2
+
+        # make sure the two messages have the same taglist
+        t1 = m1.parse_tag()
+        assert t1
+        keys = t1.keys()
+        keys.sort()
+        self.assertEquals(keys, ['another', 'something'])
+        self.assertEquals(t1['something'], "else")
+        self.assertEquals(t1['another'], 42)
+        t2 = m2.parse_tag()
+        assert t2
+        keys = t2.keys()
+        keys.sort()
+        self.assertEquals(keys, ['another', 'something'])
+        self.assertEquals(t2['something'], "else")
+        self.assertEquals(t2['another'], 42)
+
+
 if __name__ == "__main__":
     unittest.main()

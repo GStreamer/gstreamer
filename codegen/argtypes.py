@@ -613,6 +613,7 @@ class BoxedArg(ArgType):
             '        PyErr_SetString(PyExc_TypeError, "%(name)s should be a %(typename)s or None");\n'
             '        return NULL;\n'
             '    }\n')
+    acopy = ('   %(name)s = g_boxed_copy(%(typecode)s, %(name)s);\n')
     def __init__(self, ptype, typecode):
         self.typename = ptype
         self.typecode = typecode
@@ -628,6 +629,10 @@ class BoxedArg(ArgType):
             info.varlist.add('PyObject', '*py_' + pname)
             info.codebefore.append(self.check % {'name':  pname,
                                                  'typename': self.typename,
+                                                 'typecode': self.typecode})
+        if keeprefcount:
+            # We need to grab a copy of the GBoxed
+            info.codebefore.append(self.acopy % {'name': pname,
                                                  'typecode': self.typecode})
         if ptype[-1] == '*':
             typename = ptype[:-1]

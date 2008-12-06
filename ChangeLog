@@ -1,5 +1,17 @@
 2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* codegen/argtypes.py:
+	Add handling of 'keep-refcount' for GBoxed arguments.
+	* gst/gst.defs:
+	Mark the appropriate 'gst_message_new_*' arguments when the method
+	takes the ownership of the passed gst.Structure/gst.TagList
+	* testsuite/test_message.py:
+	Test for creating messages that take a gst.Structure/gst.TagList as
+	argument and make sure they're properly created.
+	Fixes #556054
+
+2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* testsuite/Makefile.am:
 	Add a way to run individual tests.
 	'make test_bin.py.check' for example.

@@ -3038,7 +3038,7 @@
   (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
-    '("GstTagList*" "tag_list")
+    '("GstTagList*" "tag_list" (keep-refcount))
   )
 )
 
@@ -3131,7 +3131,7 @@
   (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
-    '("GstStructure*" "structure")
+    '("GstStructure*" "structure" (keep-refcount))
   )
 )
 
@@ -3141,7 +3141,7 @@
   (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
-    '("GstStructure*" "structure")
+    '("GstStructure*" "structure" (keep-refcount))
   )
 )
 
@@ -3191,7 +3191,7 @@
   (parameters
     '("GstMessageType" "type")
     '("GstObject*" "src")
-    '("GstStructure*" "structure")
+    '("GstStructure*" "structure" (keep-refcount))
   )
 )
 
