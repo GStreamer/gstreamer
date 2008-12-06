@@ -44,7 +44,7 @@ def succeed(d):
         pp('video caps', d.videocaps)
         pp('video width (pixels)', d.videowidth)
         pp('video height (pixels)', d.videoheight)
-        pp('video length (ms)', d.videolength / gst.MSECOND)
+        pp('video length (hh:mm:ss)', gst.TIME_ARGS(d.videolength))
         pp('framerate (fps)', '%s/%s' % (d.videorate.num, d.videorate.denom))
 
     pp('has audio', d.is_audio)
@@ -54,9 +54,9 @@ def succeed(d):
         pp('sample rate (Hz)', d.audiorate)
         pp('sample width (bits)', d.audiowidth)
         pp('sample depth (bits)', d.audiodepth)
-        pp('audio length (ms)', d.audiolength / gst.MSECOND)
+        pp('audio length (hh:mm:ss)', gst.TIME_ARGS(d.audiolength))
         pp('audio channels', d.audiochannels)
-    
+
     sys.exit(0)
 
 def discover(path):
