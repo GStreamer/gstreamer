@@ -118,10 +118,16 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   indata = GST_BUFFER_DATA (buffer);
   outdata = GST_BUFFER_DATA (*outbuf);
 
+  /* Skip 32 bit header */
+  indata += 4;
+
   for (i = 0; i < nsamples; i++) {
     for (j = 0; j < channels; j++) {
       guint32 in = GST_READ_UINT32_LE (indata);
 
+      /* Remove first 4 and last 4 bits as they only
+       * contain status data. Shift the 24 bit samples
+       * to the correct width afterwards. */
       if (width == 2) {
         in = (in >> 12) & 0xffff;
         GST_WRITE_UINT16_LE (outdata, in);
@@ -132,6 +138,8 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
       indata += 4;
       outdata += width;
     }
+    /* There are always 8 channels but only the first
+     * ones contain valid data, skip the others */
     indata += 4 * (8 - channels);
   }
 
