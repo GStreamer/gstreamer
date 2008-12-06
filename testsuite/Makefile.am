@@ -87,6 +87,11 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
 	fi
 	@rm valgrind.log
 
+%.check: %
+	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
+	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py $*
+	@rm -fr *.pyc
+
 # valgrind all tests
 valgrind: $(tests)
 	@echo "Valgrinding tests ..."

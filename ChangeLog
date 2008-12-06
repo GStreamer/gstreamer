@@ -1,5 +1,11 @@
 2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* testsuite/Makefile.am:
+	Add a way to run individual tests.
+	'make test_bin.py.check' for example.
+
+2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* examples/gst-discover:
 	Beautify output of discoverer's duration.
 
