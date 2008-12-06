@@ -1,5 +1,12 @@
 2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/gstpad.override:
+	Fix memory leak for functions that return a newly created buffer as
+	a function argument.
+	Fixes #554545
+
+2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* codegen/argtypes.py:
 	Add handling of 'keep-refcount' for GBoxed arguments.
 	* gst/gst.defs:

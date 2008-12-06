@@ -942,6 +942,9 @@ _wrap_gst_pad_add_event_probe(PyGObject *self, PyObject *args)
     if (rv)
 	GST_PAD_DO_EVENT_SIGNALS (pad)++;
 
+    GST_PAD_DO_BUFFER_SIGNALS (pad)++;
+    GST_DEBUG ("adding event probe to pad %s:%s, now %d probes",
+	       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
     GST_OBJECT_UNLOCK (pad);
 
     Py_DECREF(myargs);
@@ -1140,6 +1143,9 @@ _wrap_gst_pad_alloc_buffer (PyGObject *self, PyObject * args, PyObject *kwargs)
         PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+	/* Bring down the reference count, since we are meant to be the only
+	 * one holding a reference to the newly created buffer. */
+	gst_buffer_unref (buf);
     }
     return ret;
 }
@@ -1170,6 +1176,9 @@ _wrap_gst_pad_alloc_buffer_and_set_caps (PyGObject *self, PyObject * args, PyObj
         PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+	/* Bring down the reference count, since we are meant to be the only
+	 * one holding a reference to the newly created buffer. */
+	gst_buffer_unref (buf);
     }
     return ret;
 }
@@ -1197,6 +1206,9 @@ _wrap_gst_pad_pull_range (PyGObject *self, PyObject * args, PyObject *kwargs)
         PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+	/* Bring down the reference count, since we are meant to be the only
+	 * one holding a reference to the newly created buffer. */
+	gst_buffer_unref (buf);
     }
     return ret;
 }
@@ -1224,6 +1236,9 @@ _wrap_gst_pad_get_range (PyGObject *self, PyObject * args, PyObject *kwargs)
         PyList_SetItem(ret, 1, Py_None);
     } else {
         PyList_SetItem(ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buf)));
+	/* Bring down the reference count, since we are meant to be the only
+	 * one holding a reference to the newly created buffer. */
+	gst_buffer_unref (buf);
     }
     return ret;
 }
