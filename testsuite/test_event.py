@@ -200,6 +200,10 @@ class TestDelayedEventProbe(TestCase):
             # we also want fakesink to get it
             return True
 
+        # sinks now send Latency events upstream
+        if event.type == gst.EVENT_LATENCY:
+            return True
+
         self.fail("Got an unknown event %r" % event)
 
     def _buffer_probe_cb(self, pad, buffer):

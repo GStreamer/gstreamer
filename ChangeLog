@@ -1,3 +1,9 @@
+2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* testsuite/test_event.py:
+	Sinks now send GST_EVENT_LATENCY events upstream. Adapt test for that
+	new behaviour.
+
 2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* Makefile.am:
