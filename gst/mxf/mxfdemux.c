@@ -1323,9 +1323,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2499,7 +2498,8 @@ next_try:
       goto out;
 
     offset =
-        demux->header_partition_pack_offset + demux->partition.prev_partition;
+        demux->header_partition_pack_offset + demux->partition.this_partition -
+        demux->partition.prev_partition;
     goto next_try;
   }
 
@@ -2507,7 +2507,8 @@ next_try:
     ret = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buffer, &read);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       offset =
-          demux->header_partition_pack_offset + demux->partition.prev_partition;
+          demux->header_partition_pack_offset +
+          demux->partition.this_partition - demux->partition.prev_partition;
       goto next_try;
     }
 
@@ -2523,7 +2524,7 @@ next_try:
         buffer = NULL;
         offset =
             demux->header_partition_pack_offset +
-            demux->partition.prev_partition;
+            demux->partition.this_partition - demux->partition.prev_partition;
         goto next_try;
       }
       offset += read;
@@ -2534,7 +2535,8 @@ next_try:
       gst_buffer_unref (buffer);
       buffer = NULL;
       offset =
-          demux->header_partition_pack_offset + demux->partition.prev_partition;
+          demux->header_partition_pack_offset +
+          demux->partition.this_partition - demux->partition.prev_partition;
       goto next_try;
     }
   }
@@ -2544,7 +2546,8 @@ next_try:
     ret = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buffer, &read);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       offset =
-          demux->header_partition_pack_offset + demux->partition.prev_partition;
+          demux->header_partition_pack_offset +
+          demux->partition.this_partition - demux->partition.prev_partition;
       goto next_try;
     }
 
@@ -2558,7 +2561,7 @@ next_try:
         gst_mxf_demux_reset_metadata (demux);
         offset =
             demux->header_partition_pack_offset +
-            demux->partition.prev_partition;
+            demux->partition.this_partition - demux->partition.prev_partition;
         goto next_try;
       }
     } else if (mxf_is_fill (&key)) {
@@ -2577,7 +2580,8 @@ next_try:
       || gst_mxf_demux_handle_header_metadata_update_streams (demux) !=
       GST_FLOW_OK) {
     offset =
-        demux->header_partition_pack_offset + demux->partition.prev_partition;
+        demux->header_partition_pack_offset + demux->partition.this_partition -
+        demux->partition.prev_partition;
     goto next_try;
   }
 

@@ -1,5 +1,12 @@
 2008-12-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_parse_footer_metadata):
+	The previous partition field of the partition is relative
+	to the current partition and not to the offset of the header
+	partition.
+
+2008-12-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfd10.c: (mxf_d10_sound_handle_essence_element):
 	Document decoding of the AES3 data and also skip the 32 bit
 	header in the beginning of every buffer, otherwise we get
