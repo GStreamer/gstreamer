@@ -62,10 +62,11 @@ gst_sunaudiomixer_ctrl_open (GstSunAudioMixerCtrl * mixer)
 
     return FALSE;
   }
+  mixer->mixer_fd = fd;
+
   /* Try to set the multiple open flag if we can, but ignore errors */
   ioctl (mixer->mixer_fd, AUDIO_MIXER_MULTIPLE_OPEN);
 
-  mixer->mixer_fd = fd;
   return TRUE;
 }
 

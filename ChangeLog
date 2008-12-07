@@ -1,5 +1,13 @@
 2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Brian Cameron <brian.cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_open):
+	Set the mixer fd before calling ioctl() on it. Fixes bug #563414.
+
+2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Alexandre Rostovtsev <tetromino at gmail dot com>
 
 	* configure.ac:
