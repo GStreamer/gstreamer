@@ -1,5 +1,12 @@
 2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfd10.c: (mxf_d10_sound_handle_essence_element),
+	(mxf_d10_create_caps):
+	Use the mapping data for storing the channel count and the
+	width instead of parsing caps for every buffer.
+
+2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfup.c: (mxf_up_handle_essence_element),
 	(mxf_up_rgba_create_caps):
 	Handle the image start and end offsets, otherwise we output

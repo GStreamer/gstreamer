@@ -35,6 +35,11 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
+typedef struct
+{
+  guint width, channels;
+} MXFD10AudioMappingData;
+
 gboolean
 mxf_is_d10_essence_track (const MXFMetadataTrack * track)
 {
@@ -83,18 +88,13 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     gpointer mapping_data, GstBuffer ** outbuf)
 {
   guint i, j, nsamples;
-  gint width, channels;
-  GstStructure *s = gst_caps_get_structure (caps, 0);
   const guint8 *indata;
   guint8 *outdata;
+  MXFD10AudioMappingData *data = mapping_data;
 
-  if (!gst_structure_get_int (s, "width", &width) ||
-      !gst_structure_get_int (s, "channels", &channels)) {
-    GST_ERROR ("Invalid caps");
-    return GST_FLOW_ERROR;
-  }
-
-  width /= 8;
+  g_return_val_if_fail (data != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (data->channels != 0
+      && data->width != 0, GST_FLOW_ERROR);
 
   /* SMPTE 386M 5.3.1 */
   if (key->u[12] != 0x06 || key->u[13] != 0x01 || key->u[14] != 0x10) {
@@ -110,7 +110,7 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
   nsamples = ((GST_BUFFER_SIZE (buffer) - 4) / 4) / 8;
 
-  *outbuf = gst_buffer_new_and_alloc (nsamples * width * channels);
+  *outbuf = gst_buffer_new_and_alloc (nsamples * data->width * data->channels);
   gst_buffer_copy_metadata (*outbuf, buffer,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
       GST_BUFFER_COPY_CAPS);
@@ -122,25 +122,25 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   indata += 4;
 
   for (i = 0; i < nsamples; i++) {
-    for (j = 0; j < channels; j++) {
+    for (j = 0; j < data->channels; j++) {
       guint32 in = GST_READ_UINT32_LE (indata);
 
       /* Remove first 4 and last 4 bits as they only
        * contain status data. Shift the 24 bit samples
        * to the correct width afterwards. */
-      if (width == 2) {
+      if (data->width == 2) {
         in = (in >> 12) & 0xffff;
         GST_WRITE_UINT16_LE (outdata, in);
-      } else if (width == 3) {
+      } else if (data->width == 3) {
         in = (in >> 4) & 0xffffff;
         GST_WRITE_UINT24_LE (outdata, in);
       }
       indata += 4;
-      outdata += width;
+      outdata += data->width;
     }
     /* There are always 8 channels but only the first
      * ones contain valid data, skip the others */
-    indata += 4 * (8 - channels);
+    indata += 4 * (8 - data->channels);
   }
 
   gst_buffer_unref (buffer);
@@ -195,6 +195,8 @@ mxf_d10_create_caps (MXFMetadataGenericPackage * package,
     *tags = gst_tag_list_new ();
 
   if (s) {
+    MXFD10AudioMappingData *data;
+
     if (s->channel_count == 0 ||
         s->quantization_bits == 0 ||
         s->audio_sampling_rate.n == 0 || s->audio_sampling_rate.d == 0) {
@@ -219,6 +221,11 @@ mxf_d10_create_caps (MXFMetadataGenericPackage * package,
         s->quantization_bits, NULL);
 
     *handler = mxf_d10_sound_handle_essence_element;
+
+    data = g_new0 (MXFD10AudioMappingData, 1);
+    data->width = s->quantization_bits / 8;
+    data->channels = s->channel_count;
+    *mapping_data = data;
 
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "SMPTE D-10 Audio", NULL);
