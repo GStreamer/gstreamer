@@ -1,5 +1,22 @@
 2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pad_finalize),
+	(gst_mxf_demux_pad_class_init), (gst_mxf_demux_pad_init),
+	(gst_mxf_demux_remove_pad), (gst_mxf_demux_reset_metadata),
+	(gst_mxf_demux_combine_flows),
+	(gst_mxf_demux_handle_header_metadata_resolve_references),
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_handle_generic_container_essence_element),
+	(gst_mxf_demux_pull_random_index_pack), (gst_mxf_demux_loop),
+	(gst_mxf_demux_src_query):
+	Rename GstMXFPad to GstMXFDemuxPad to prevent name clashes
+	with the GstMXFMuxPad in the muxer (later).
+
+	Pull the random index pack only directly after skipping the run
+	in and don't allocate an array for it if parsing it failed.
+
+2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfd10.c: (mxf_d10_sound_handle_essence_element),
 	(mxf_d10_create_caps):
 	Use the mapping data for storing the channel count and the

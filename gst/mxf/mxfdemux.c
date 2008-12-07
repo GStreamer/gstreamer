@@ -56,10 +56,10 @@ GST_STATIC_PAD_TEMPLATE ("track_%u",
 GST_DEBUG_CATEGORY_STATIC (mxfdemux_debug);
 #define GST_CAT_DEFAULT mxfdemux_debug
 
-#define GST_TYPE_MXF_PAD (gst_mxf_pad_get_type())
-#define GST_MXF_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_MXF_PAD,GstMXFPad))
-#define GST_MXF_PAD_CAST(pad) ((GstMXFPad *) pad)
-#define GST_IS_MXF_PAD(pad) (G_TYPE_CHECK_INSTANCE_TYPE((pad),GST_TYPE_MXF_PAD))
+#define GST_TYPE_MXF_DEMUX_PAD (gst_mxf_demux_pad_get_type())
+#define GST_MXF_DEMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_MXF_DEMUX_PAD,GstMXFDemuxPad))
+#define GST_MXF_DEMUX_PAD_CAST(pad) ((GstMXFDemuxPad *) pad)
+#define GST_IS_MXF_DEMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_TYPE((pad),GST_TYPE_MXF_DEMUX_PAD))
 
 typedef struct
 {
@@ -86,20 +86,20 @@ typedef struct
   MXFMetadataTrack *source_track;
 
   GstCaps *caps;
-} GstMXFPad;
+} GstMXFDemuxPad;
 
 typedef struct
 {
   GstPadClass parent;
 
-} GstMXFPadClass;
+} GstMXFDemuxPadClass;
 
-G_DEFINE_TYPE (GstMXFPad, gst_mxf_pad, GST_TYPE_PAD);
+G_DEFINE_TYPE (GstMXFDemuxPad, gst_mxf_demux_pad, GST_TYPE_PAD);
 
 static void
-gst_mxf_pad_finalize (GObject * object)
+gst_mxf_demux_pad_finalize (GObject * object)
 {
-  GstMXFPad *pad = GST_MXF_PAD (object);
+  GstMXFDemuxPad *pad = GST_MXF_DEMUX_PAD (object);
 
   gst_caps_replace (&pad->caps, NULL);
 
@@ -111,19 +111,19 @@ gst_mxf_pad_finalize (GObject * object)
     pad->tags = NULL;
   }
 
-  G_OBJECT_CLASS (gst_mxf_pad_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_mxf_demux_pad_parent_class)->finalize (object);
 }
 
 static void
-gst_mxf_pad_class_init (GstMXFPadClass * klass)
+gst_mxf_demux_pad_class_init (GstMXFDemuxPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->finalize = gst_mxf_pad_finalize;
+  gobject_class->finalize = gst_mxf_demux_pad_finalize;
 }
 
 static void
-gst_mxf_pad_init (GstMXFPad * pad)
+gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 {
   pad->last_flow = GST_FLOW_OK;
 }
@@ -158,7 +158,7 @@ gst_mxf_demux_flush (GstMXFDemux * demux, gboolean discont)
 }
 
 static void
-gst_mxf_demux_remove_pad (GstMXFPad * pad, GstMXFDemux * demux)
+gst_mxf_demux_remove_pad (GstMXFDemuxPad * pad, GstMXFDemux * demux)
 {
   gst_element_remove_pad (GST_ELEMENT (demux), GST_PAD (pad));
 }
@@ -196,7 +196,7 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
 
   if (demux->src) {
     for (i = 0; i < demux->src->len; i++) {
-      GstMXFPad *pad = g_ptr_array_index (demux->src, i);
+      GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
 
       pad->material_track = NULL;
       pad->material_package = NULL;
@@ -433,7 +433,7 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
 static GstFlowReturn
 gst_mxf_demux_combine_flows (GstMXFDemux * demux,
-    GstMXFPad * pad, GstFlowReturn ret)
+    GstMXFDemuxPad * pad, GstFlowReturn ret)
 {
   guint i;
 
@@ -447,7 +447,7 @@ gst_mxf_demux_combine_flows (GstMXFDemux * demux,
   /* only return NOT_LINKED if all other pads returned NOT_LINKED */
   g_assert (demux->src->len != 0);
   for (i = 0; i < demux->src->len; i++) {
-    GstMXFPad *opad = g_ptr_array_index (demux->src, i);
+    GstMXFDemuxPad *opad = g_ptr_array_index (demux->src, i);
 
     if (opad == NULL)
       continue;
@@ -1748,7 +1748,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
     MXFMetadataStructuralComponent *component = NULL;
     MXFMetadataGenericPackage *source_package = NULL;
     MXFMetadataTrack *source_track = NULL;
-    GstMXFPad *pad = NULL;
+    GstMXFDemuxPad *pad = NULL;
     GstCaps *caps = NULL;
 
     GST_DEBUG_OBJECT (demux, "Handling track %u", i);
@@ -1822,7 +1822,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
     if (demux->src && demux->src->len > 0) {
       /* Find pad from track_id */
       for (j = 0; j < demux->src->len; j++) {
-        GstMXFPad *tmp = g_ptr_array_index (demux->src, j);
+        GstMXFDemuxPad *tmp = g_ptr_array_index (demux->src, j);
 
         if (tmp->track_id == track->track_id) {
           pad = tmp;
@@ -1843,7 +1843,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
       g_assert (templ != NULL);
 
       /* Create pad */
-      pad = (GstMXFPad *) g_object_new (GST_TYPE_MXF_PAD,
+      pad = (GstMXFDemuxPad *) g_object_new (GST_TYPE_MXF_DEMUX_PAD,
           "name", pad_name, "direction", GST_PAD_SRC, "template", templ, NULL);
       pad->need_segment = TRUE;
       g_free (pad_name);
@@ -2120,7 +2120,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 track_number;
   guint i, j;
-  GstMXFPad *pad = NULL;
+  GstMXFDemuxPad *pad = NULL;
   GstBuffer *inbuf;
   GstBuffer *outbuf = NULL;
 
@@ -2151,7 +2151,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   track_number = GST_READ_UINT32_BE (&key->u[12]);
 
   for (i = 0; i < demux->src->len; i++) {
-    GstMXFPad *p = g_ptr_array_index (demux->src, i);
+    GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
 
     if (p->source_track->track_number == track_number ||
         (p->source_track->track_number == 0 &&
@@ -2402,7 +2402,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
   if (!gst_pad_query_peer_duration (demux->sinkpad, &fmt, &filesize) ||
       fmt != GST_FORMAT_BYTES || filesize == -1) {
     GST_DEBUG_OBJECT (demux, "Can't query upstream size");
-    goto out;
+    return;
   }
 
   g_assert (filesize > 4);
@@ -2411,7 +2411,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
           gst_mxf_demux_pull_range (demux, filesize - 4, 4,
               &buffer)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling last 4 bytes");
-    goto out;
+    return;
   }
 
   pack_size = GST_READ_UINT32_BE (GST_BUFFER_DATA (buffer));
@@ -2420,17 +2420,17 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 
   if (pack_size < 20) {
     GST_DEBUG_OBJECT (demux, "Too small pack size (%u bytes)", pack_size);
-    goto out;
+    return;
   } else if (pack_size > filesize - 20) {
     GST_DEBUG_OBJECT (demux, "Too large pack size (%u bytes)", pack_size);
-    goto out;
+    return;
   }
 
   if ((ret =
           gst_mxf_demux_pull_range (demux, filesize - pack_size, 16,
               &buffer)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling random index pack key");
-    goto out;
+    return;
   }
 
   memcpy (&key, GST_BUFFER_DATA (buffer), 16);
@@ -2438,7 +2438,7 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 
   if (!mxf_is_random_index_pack (&key)) {
     GST_DEBUG_OBJECT (demux, "No random index pack");
-    goto out;
+    return;
   }
 
   demux->offset = filesize - pack_size;
@@ -2446,17 +2446,12 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
           gst_mxf_demux_pull_klv_packet (demux, filesize - pack_size, &key,
               &buffer, NULL)) != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (demux, "Failed pulling random index pack");
-    goto out;
+    return;
   }
 
   gst_mxf_demux_handle_random_index_pack (demux, &key, buffer);
   gst_buffer_unref (buffer);
   demux->offset = old_offset;
-
-out:
-  if (!demux->partition_index)
-    demux->partition_index =
-        g_array_new (FALSE, FALSE, sizeof (MXFRandomIndexPackEntry));
 }
 
 static void
@@ -2744,19 +2739,17 @@ gst_mxf_demux_loop (GstPad * pad)
       demux->offset++;
       gst_buffer_unref (buffer);
     }
-  }
 
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto pause;
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto pause;
 
-  if (G_UNLIKELY (demux->run_in == -1)) {
-    GST_ERROR_OBJECT (demux, "No valid header partition pack found");
-    ret = GST_FLOW_ERROR;
-    goto pause;
-  }
+    if (G_UNLIKELY (demux->run_in == -1)) {
+      GST_ERROR_OBJECT (demux, "No valid header partition pack found");
+      ret = GST_FLOW_ERROR;
+      goto pause;
+    }
 
-  /* First of all pull&parse the random index pack at EOF */
-  if (!demux->partition_index) {
+    /* First of all pull&parse the random index pack at EOF */
     gst_mxf_demux_pull_random_index_pack (demux);
   }
 
@@ -3001,7 +2994,7 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
 {
   GstMXFDemux *demux = GST_MXF_DEMUX (gst_pad_get_parent (pad));
   gboolean ret = FALSE;
-  GstMXFPad *mxfpad = GST_MXF_PAD (pad);
+  GstMXFDemuxPad *mxfpad = GST_MXF_DEMUX_PAD (pad);
 
   GST_DEBUG_OBJECT (pad, "handling query %s",
       gst_query_type_get_name (GST_QUERY_TYPE (query)));
