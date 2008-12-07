@@ -362,6 +362,8 @@ gst_gl_window_new (gint width, gint height)
 
   g_debug ("gl window id: %lld\n", (guint64) priv->internal_win_id);
 
+  g_debug ("gl window props: x:%d y:%d w:%d h:%d\n", x, y, width, height);
+
   wm_atoms[0] = XInternAtom (priv->device, "WM_DELETE_WINDOW", True);
   if (wm_atoms[0] == None)
     g_debug ("Cannot create WM_DELETE_WINDOW\n");
@@ -427,6 +429,8 @@ gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
     g_mutex_lock (priv->x_lock);
 
     priv->parent = (Window) id;
+
+    g_debug ("set parent window id: %lld\n", id);
 
     XGetWindowAttributes (priv->disp_send, priv->parent, &attr);
 
@@ -541,13 +545,21 @@ gst_gl_window_draw (GstGLWindow *window)
         XWindowAttributes attr_parent;
         XGetWindowAttributes (priv->disp_send, priv->parent, &attr_parent);
 
-        if (attr.width != attr_parent.width || attr.height != attr_parent.height)
+        if (attr.x != attr_parent.x || attr.y != attr_parent.y ||
+            attr.width != attr_parent.width || attr.height != attr_parent.height)
         {
-          XResizeWindow (priv->disp_send, priv->internal_win_id, attr_parent.width, attr_parent.height);
+          XMoveResizeWindow (priv->disp_send, priv->internal_win_id, attr_parent.x, attr_parent.y,
+            attr_parent.width, attr_parent.height);
           XSync (priv->disp_send, FALSE);
+
+          attr.x = attr_parent.x;
+          attr.y = attr_parent.y;
 
           attr.width = attr_parent.width;
           attr.height = attr_parent.height;
+
+          g_debug ("parent resize:  %d, %d, %d, %d\n", attr_parent.x, attr_parent.y,
+            attr_parent.width, attr_parent.height);
         }
       }
 
@@ -623,8 +635,6 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
             custom_cb (custom_data);
           }
-
-          g_debug("signal\n");
 
           g_cond_signal (priv->cond_send_message);
         }
