@@ -2774,36 +2774,70 @@ gboolean
         goto error;
       descriptor->component_max_ref = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  component max ref = %u", descriptor->component_max_ref);
+      ret = TRUE;
       break;
     case 0x3407:
       if (tag_size != 4)
         goto error;
       descriptor->component_min_ref = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  component min ref = %u", descriptor->component_min_ref);
+      ret = TRUE;
       break;
     case 0x3408:
       if (tag_size != 4)
         goto error;
       descriptor->alpha_max_ref = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  alpha max ref = %u", descriptor->alpha_max_ref);
+      ret = TRUE;
       break;
     case 0x3409:
       if (tag_size != 4)
         goto error;
       descriptor->alpha_min_ref = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  alpha min ref = %u", descriptor->alpha_min_ref);
+      ret = TRUE;
       break;
     case 0x3405:
       if (tag_size != 1)
         goto error;
       descriptor->scanning_direction = GST_READ_UINT8 (tag_data);
       GST_DEBUG ("  scanning direction = %u", descriptor->scanning_direction);
+      ret = TRUE;
       break;
-    case 0x3401:
+    case 0x3401:{
+      guint i, len;
+
+      if (tag_size % 2 != 0)
+        goto error;
+
+      i = 0;
+      while (tag_data[i] != 0 && tag_data[i + 1] != 0 && i + 2 <= tag_size)
+        i += 2;
+      len = i / 2;
+
+      descriptor->n_pixel_layout = len;
+      GST_DEBUG ("  number of pixel layouts = %u", len);
+      if (len == 0)
+        return TRUE;
+
+      descriptor->pixel_layout = g_malloc0 (2 * len);
+
+      for (i = 0; i < len; i++) {
+        descriptor->pixel_layout[2 * i] = tag_data[2 * i];
+        descriptor->pixel_layout[2 * i + 1] = tag_data[2 * i + 1];
+        GST_DEBUG ("    pixel layout %u = %c : %u", i,
+            (gchar) descriptor->pixel_layout[2 * i],
+            descriptor->pixel_layout[2 * i + 1]);
+      }
+
+      ret = TRUE;
+      break;
+    }
     case 0x3403:
     case 0x3404:
       /* TODO: handle this */
       GST_WARNING ("  tag 0x%04x not implemented yet", tag);
+      ret = TRUE;
       break;
     default:
       ret =
@@ -2828,6 +2862,8 @@ void mxf_metadata_rgba_picture_essence_descriptor_reset
 
   mxf_metadata_generic_picture_essence_descriptor_reset (
       (MXFMetadataGenericPictureEssenceDescriptor *) descriptor);
+
+  g_free (descriptor->pixel_layout);
 
   MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
       MXFMetadataRGBAPictureEssenceDescriptor,

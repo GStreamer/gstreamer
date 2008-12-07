@@ -477,7 +477,10 @@ struct _MXFMetadataRGBAPictureEssenceDescriptor {
   guint32 alpha_min_ref;
   guint8 scanning_direction;
 
-  /* TODO: pixel layout, palette & palette layout */
+  guint32 n_pixel_layout;
+  guint8 *pixel_layout;
+
+  /* TODO: palette & palette layout */
 };
 
 struct _MXFMetadataGenericSoundEssenceDescriptor {

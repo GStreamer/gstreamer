@@ -1,3 +1,21 @@
+2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams):
+	* gst/mxf/mxftypes.h:
+	* gst/mxf/mxfup.c: (mxf_is_up_essence_track),
+	(mxf_up_handle_essence_element), (mxf_up_rgba_create_caps),
+	(mxf_up_create_caps):
+	* gst/mxf/mxfup.h:
+	Add initial support for uncompressed video essence (SMPTE S384M).
+	
+	* gst/mxf/mxfparse.c:
+	(mxf_metadata_rgba_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_rgba_picture_essence_descriptor_reset):
+	Fix parsing of the RGBA descriptor and add support for parsing
+	the pixel layout.
+
 2008-12-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_parse_footer_metadata):
