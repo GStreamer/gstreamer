@@ -24,6 +24,8 @@
 /* TODO: 
  *   - Handle CDCI essence
  *   - Correctly transform for the GStreamer strides
+ *   - Handle all the dimensions and other properties in the picture
+ *     essence descriptors correctly according to S377M Annex E
  */
 
 #ifdef HAVE_CONFIG_H
@@ -39,6 +41,12 @@
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
+
+typedef struct
+{
+  guint32 image_start_offset;
+  guint32 image_end_offset;
+} MXFUPMappingData;
 
 gboolean
 mxf_is_up_essence_track (const MXFMetadataTrack * track)
@@ -68,13 +76,33 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
     gpointer mapping_data, GstBuffer ** outbuf)
 {
-  *outbuf = buffer;
+  MXFUPMappingData *data = mapping_data;
 
   /* SMPTE 384M 7.1 */
   if (key->u[12] != 0x15 || (key->u[14] != 0x01 && key->u[14] != 0x02
           && key->u[14] != 0x03 && key->u[14] != 0x04)) {
     GST_ERROR ("Invalid uncompressed picture essence element");
     return GST_FLOW_ERROR;
+  }
+
+  if (!data || (data->image_start_offset == 0 && data->image_end_offset == 0)) {
+    *outbuf = buffer;
+  } else {
+    if (data->image_start_offset + data->image_end_offset
+        > GST_BUFFER_SIZE (buffer)) {
+      gst_buffer_unref (buffer);
+      GST_ERROR ("Invalid buffer size");
+      return GST_FLOW_ERROR;
+    } else {
+      *outbuf =
+          gst_buffer_create_sub (buffer, data->image_start_offset,
+          GST_BUFFER_SIZE (buffer) - data->image_end_offset -
+          data->image_start_offset);
+      gst_buffer_copy_metadata (*outbuf, buffer,
+          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
+          GST_BUFFER_COPY_CAPS);
+      gst_buffer_unref (buffer);
+    }
   }
 
   return GST_FLOW_OK;
@@ -155,6 +183,17 @@ mxf_up_rgba_create_caps (MXFMetadataGenericPackage * package,
     GST_ERROR ("Pixel layouts with %u components not supported yet",
         d->n_pixel_layout);
     return NULL;
+  }
+
+  if (caps) {
+    MXFUPMappingData *data = g_new0 (MXFUPMappingData, 1);
+
+    data->image_start_offset =
+        ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_start_offset;
+    data->image_end_offset =
+        ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_end_offset;
+
+    *mapping_data = data;
   }
 
   return caps;
