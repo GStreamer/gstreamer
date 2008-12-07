@@ -550,14 +550,24 @@ return 0;
   fi
 ])
 
+# Make libv4l2 non-automagic
+AC_ARG_WITH([libv4l2],
+  AC_HELP_STRING([--with-libv4l2],
+    [support video buffer conversion using libv4l2]),
+  [],
+  [with_libv4l2=check])
 if test x$HAVE_GST_V4L2 = xyes; then
-  PKG_CHECK_MODULES(LIBV4L2, libv4l2,
-      [ have_libv4l2=yes
-        AC_DEFINE(HAVE_LIBV4L2, 1,
-	    [Whether libv4l2 is available for video buffer conversion])
-      ], [
-      have_libv4l2=no
-      ])
+  if test x$with_libv4l2 != xno; then
+      PKG_CHECK_MODULES(LIBV4L2, libv4l2,
+          [ have_libv4l2=yes
+            AC_DEFINE(HAVE_LIBV4L2, 1,
+	        [Whether libv4l2 is available for video buffer conversion])
+          ], [
+          have_libv4l2=no
+          ])
+  else
+    have_libv4l2=no
+  fi
 fi
 
 dnl Check for X11
