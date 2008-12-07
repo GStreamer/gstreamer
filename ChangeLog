@@ -1,5 +1,10 @@
 2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_es_create_caps):
+	Set codec name tags for the MPEG audio essence.
+
+2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/Makefile.am:
 	* gst/mxf/mxfdemux.c:
 	(gst_mxf_demux_handle_header_metadata_update_streams):

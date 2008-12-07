@@ -366,32 +366,39 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           NULL);
+      codec_name = "MPEG-1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_ac3)) {
       caps = gst_caps_new_simple ("audio/ac3", NULL);
+      codec_name = "AC3 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_mpeg1_layer1)) {
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           "layer", G_TYPE_INT, 1, NULL);
+      codec_name = "MPEG-1 Layer 1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_mpeg1_layer12)) {
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           NULL);
+      codec_name = "MPEG-1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_mpeg1_layer2)) {
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           "layer", G_TYPE_INT, 2, NULL);
+      codec_name = "MPEG-1 Layer 2 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_mpeg2_layer1)) {
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           "layer", G_TYPE_INT, 1, "mpegaudioversion", G_TYPE_INT, 2, NULL);
+      codec_name = "MPEG-2 Layer 1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_dts)) {
       caps = gst_caps_new_simple ("audio/x-dts", NULL);
+      codec_name = "Dolby DTS Audio";
     }
 
     if (caps) {
