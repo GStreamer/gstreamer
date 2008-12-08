@@ -190,7 +190,7 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
   GST_DEBUG_OBJECT (demux, "Resetting metadata");
 
   demux->update_metadata = TRUE;
-  demux->final_metadata = FALSE;
+  demux->metadata_resolved = FALSE;
 
   demux->current_package = NULL;
 
@@ -556,7 +556,7 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
 
   if (G_UNLIKELY (demux->primer.valid)) {
     GST_ERROR_OBJECT (demux, "Primer pack already exists");
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 
   if (!mxf_primer_pack_parse (key, &demux->primer,
@@ -578,11 +578,6 @@ gst_mxf_demux_handle_metadata_preface (GstMXFDemux * demux,
       "Handling metadata preface of size %u"
       " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  if (demux->final_metadata) {
-    GST_DEBUG_OBJECT (demux, "Metadata is already final, skipping");
-    return GST_FLOW_OK;
-  }
-
   if (!mxf_metadata_preface_parse (key, &preface, &demux->primer,
           GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
     GST_ERROR_OBJECT (demux, "Parsing metadata preface failed");
@@ -597,6 +592,8 @@ gst_mxf_demux_handle_metadata_preface (GstMXFDemux * demux,
         "Timestamp of new preface is newer than old, updating metadata");
     gst_mxf_demux_reset_metadata (demux);
     memcpy (&demux->preface, &preface, sizeof (MXFMetadataPreface));
+  } else {
+    GST_DEBUG_OBJECT (demux, "Preface is older than already parsed preface");
   }
 
   return GST_FLOW_OK;
@@ -1138,8 +1135,6 @@ gst_mxf_demux_handle_metadata_aes3_audio_essence_descriptor (GstMXFDemux *
   return GST_FLOW_OK;
 }
 
-
-
 static GstFlowReturn
 gst_mxf_demux_handle_metadata_locator (GstMXFDemux * demux,
     const MXFUL * key, guint16 type, GstBuffer * buffer)
@@ -1173,8 +1168,6 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
   demux->update_metadata = FALSE;
-  if (demux->partition.closed && demux->partition.complete)
-    demux->final_metadata = TRUE;
 
   /* Fill in demux->descriptor */
   demux->descriptor = g_ptr_array_new ();
@@ -1324,9 +1317,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->content_storage.
+                essence_container_data_uids[j], &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1585,7 +1577,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
     }
   }
 
-  /* Store, for every package, the number of timestamp, metadata, essence and other tracks */
+  /* Store, for every package, the number of timestamp, metadata, essence and other tracks 
+   * and also store for every track the type */
   if (demux->package) {
     for (i = 0; i < demux->package->len; i++) {
       MXFMetadataGenericPackage *package =
@@ -1622,6 +1615,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
               mxf_metadata_track_identifier_parse (&sequence->data_definition);
         }
 
+        track->type = type;
+
         if (type == MXF_METADATA_TRACK_UNKNOWN)
           continue;
         else if ((type & 0xf0) == 0x10)
@@ -1636,9 +1631,13 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
     }
   }
 
+  demux->metadata_resolved = TRUE;
+
   return ret;
 
 error:
+  demux->metadata_resolved = FALSE;
+
   return ret;
 }
 
@@ -1674,8 +1673,6 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
       GST_ERROR_OBJECT (demux, "Invalid requested package");
     } else {
       if (memcmp (&umid, &demux->current_package_uid, 32) != 0) {
-        if (demux->src)
-          gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
         gst_mxf_demux_remove_pads (demux);
         memcpy (&demux->current_package_uid, &umid, 32);
       }
@@ -1730,7 +1727,10 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
 
   current_package = gst_mxf_demux_choose_package (demux);
 
-  if (!current_package->tracks) {
+  if (!current_package) {
+    GST_ERROR_OBJECT (demux, "Unable to find current package");
+    return GST_FLOW_ERROR;
+  } else if (!current_package->tracks) {
     GST_ERROR_OBJECT (demux, "Current package has no (resolved) tracks");
     return GST_FLOW_ERROR;
   } else if (!current_package->n_essence_tracks) {
@@ -2565,7 +2565,7 @@ next_try:
             demux->partition.this_partition - demux->partition.prev_partition;
         goto next_try;
       }
-    } else if (mxf_is_fill (&key)) {
+    } else if (mxf_is_descriptive_metadata (&key) || mxf_is_fill (&key)) {
       offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
@@ -2586,8 +2586,6 @@ next_try:
     goto next_try;
   }
 
-  demux->final_metadata = TRUE;
-
 out:
   if (buffer)
     gst_buffer_unref (buffer);
@@ -2607,24 +2605,6 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   gchar key_str[48];
   GstFlowReturn ret = GST_FLOW_OK;
 
-  /* In pull mode try to get the last metadata */
-  if (demux->pull_footer_metadata && !demux->final_metadata
-      && demux->random_access && demux->partition.valid
-      && demux->partition.type == MXF_PARTITION_PACK_HEADER
-      && (!demux->partition.closed || !demux->partition.complete)
-      && demux->footer_partition_pack_offset != 0) {
-    GST_DEBUG_OBJECT (demux,
-        "Open or incomplete header partition, trying to get final metadata from the last partitions");
-    gst_mxf_demux_parse_footer_metadata (demux);
-    demux->pull_footer_metadata = FALSE;
-  }
-
-  /* TODO: - Pull random index pack from footer partition?
-   *       - Pull all partitions for parsing all index segments and having a complete index
-   *         as first thing. This also will make it possible to use the latest header
-   *         metadata if it's not in the footer partition
-   */
-
   if (demux->update_metadata
       && !mxf_timestamp_is_unknown (&demux->preface.last_modified_date)
       && !mxf_is_metadata (key) && !mxf_is_descriptive_metadata (key)
@@ -2637,7 +2617,7 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
             gst_mxf_demux_handle_header_metadata_update_streams (demux)) !=
         GST_FLOW_OK)
       goto beach;
-  } else if (!demux->update_metadata && demux->requested_package_string) {
+  } else if (demux->metadata_resolved && demux->requested_package_string) {
     if ((ret =
             gst_mxf_demux_handle_header_metadata_update_streams (demux)) !=
         GST_FLOW_OK)
@@ -2675,6 +2655,19 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
         "Skipping unknown packet of size %u at offset %"
         G_GUINT64_FORMAT ", key: %s", GST_BUFFER_SIZE (buffer), demux->offset,
         mxf_ul_to_string (key, key_str));
+  }
+
+  /* In pull mode try to get the last metadata */
+  if (mxf_is_partition_pack (key) && ret == GST_FLOW_OK
+      && demux->pull_footer_metadata
+      && demux->random_access && demux->partition.valid
+      && demux->partition.type == MXF_PARTITION_PACK_HEADER
+      && (!demux->partition.closed || !demux->partition.complete)
+      && demux->footer_partition_pack_offset != 0) {
+    GST_DEBUG_OBJECT (demux,
+        "Open or incomplete header partition, trying to get final metadata from the last partitions");
+    gst_mxf_demux_parse_footer_metadata (demux);
+    demux->pull_footer_metadata = FALSE;
   }
 
 beach:

@@ -72,8 +72,9 @@ struct _GstMXFDemux
 
   /* Structural metadata */
   gboolean update_metadata;
-  gboolean final_metadata;
   gboolean pull_footer_metadata;
+
+  gboolean metadata_resolved;
   MXFMetadataPreface preface;
   GArray *identification;
   MXFMetadataContentStorage content_storage;

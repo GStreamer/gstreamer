@@ -1,5 +1,44 @@
 2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset_metadata),
+	(gst_mxf_demux_handle_primer_pack),
+	(gst_mxf_demux_handle_metadata_preface),
+	(gst_mxf_demux_handle_header_metadata_resolve_references),
+	(gst_mxf_demux_choose_package),
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_parse_footer_metadata),
+	(gst_mxf_demux_handle_klv_packet):
+	* gst/mxf/mxfdemux.h:
+	* gst/mxf/mxftypes.h:
+	Remove the concept of "final" metadata, broken files have updated
+	metadata in following partitions even if the current partition
+	is closed and complete.
+
+	If there's a second primer pack inside a partition ignore the second
+	one instead of throwing an error.
+
+	Store the type of a track (audio, video, timestamp, ...) inside the
+	track struct.
+
+	Post no-more-pads only once for a stream and not a second time
+	when switching the currently playing package.
+
+	When updating all streams make sure that we could select and find
+	a package instead of dereferencing NULL.
+
+	Allow descriptive metadata inside metadata parts of a file when
+	pulling the footer metadata too.
+
+	Only switch the currently playing package if a new one was chosen
+	and the metadata is in a resolved state. If the latter isn't true
+	postpone the switch until the metadata is resolved.
+
+	Pull the footer metadata directly after parsing the header partition
+	pack if it's not closed or not complete instead of waiting until
+	the next KLV packet.
+
+2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfup.c: (mxf_up_handle_essence_element):
 	Don't create a subbuffer, instead just change the buffer metadata
 	of the input buffer.

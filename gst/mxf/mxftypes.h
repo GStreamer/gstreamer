@@ -334,6 +334,8 @@ struct _MXFMetadataTrack {
   guint32 track_id;
   guint32 track_number;
 
+  MXFMetadataTrackType type;
+
   gchar *track_name;
 
   MXFFraction edit_rate;
