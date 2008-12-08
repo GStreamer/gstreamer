@@ -1,3 +1,10 @@
+2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_flush),
+	(gst_rtp_mp4v_pay_event):
+	Don't try to push packets before we could find a valid config
+	startcode. Fixes #563509.
+
 2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Brian Cameron <brian.cameron at sun dot com>

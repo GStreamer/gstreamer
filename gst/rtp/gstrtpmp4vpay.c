@@ -283,6 +283,12 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
    * over multiple packets. */
   avail = gst_adapter_available (rtpmp4vpay->adapter);
 
+  if (rtpmp4vpay->config == NULL) {
+    /* when we don't have a config yet, flush things out */
+    gst_adapter_flush (rtpmp4vpay->adapter, avail);
+    avail = 0;
+  }
+
   ret = GST_FLOW_OK;
 
   while (avail > 0) {
