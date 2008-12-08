@@ -161,6 +161,8 @@ static void volume_set_property (GObject * object, guint prop_id,
 static void volume_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void volume_before_transform (GstBaseTransform * base,
+    GstBuffer * buffer);
 static GstFlowReturn volume_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
 static gboolean volume_setup (GstAudioFilter * filter,
@@ -430,6 +432,7 @@ gst_volume_class_init (GstVolumeClass * klass)
           0.0, VOLUME_MAX_DOUBLE, DEFAULT_PROP_VOLUME,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  trans_class->before_transform = GST_DEBUG_FUNCPTR (volume_before_transform);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
   filter_class->setup = GST_DEBUG_FUNCPTR (volume_setup);
 }
@@ -705,27 +708,18 @@ volume_setup (GstAudioFilter * filter, GstRingBufferSpec * format)
   return res;
 }
 
-/* call the plugged-in process function for this instance
- * needs to be done with this indirection since volume_transform is
- * a class-global method
- */
-static GstFlowReturn
-volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+static void
+volume_before_transform (GstBaseTransform * base, GstBuffer * buffer)
 {
-  GstVolume *this = GST_VOLUME (base);
   GstClockTime timestamp;
+  GstVolume *this = GST_VOLUME (base);
   gfloat volume;
   gboolean mute;
-  guint8 *data;
-  guint size;
-
-  if (G_UNLIKELY (!this->negotiated))
-    goto not_negotiated;
 
   /* FIXME: if controllers are bound, subdivide GST_BUFFER_SIZE into small
    * chunks for smooth fades, what is small? 1/10th sec.
    */
-  timestamp = GST_BUFFER_TIMESTAMP (outbuf);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
   timestamp =
       gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
 
@@ -746,6 +740,21 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
      * we continue processing. */
     volume_update_volume (this, volume, mute);
   }
+}
+
+/* call the plugged-in process function for this instance
+ * needs to be done with this indirection since volume_transform is
+ * a class-global method
+ */
+static GstFlowReturn
+volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+{
+  GstVolume *this = GST_VOLUME (base);
+  guint8 *data;
+  guint size;
+
+  if (G_UNLIKELY (!this->negotiated))
+    goto not_negotiated;
 
   /* don't process data in passthrough-mode */
   if (gst_base_transform_is_passthrough (base) ||

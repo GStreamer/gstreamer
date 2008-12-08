@@ -1,3 +1,10 @@
+2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/volume/gstvolume.c: (gst_volume_class_init),
+	(volume_before_transform), (volume_transform_ip):
+	Use new basetransform vmethod to reconfigure the dynamic properties and
+	any pending volume/mute changes. Fixes #563508.
+
 2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
