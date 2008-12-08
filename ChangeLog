@@ -1,5 +1,11 @@
 2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_src_event):
+	Forward all events upstream unless it's something we really
+	don't handle. This fixes latency configuration of pipelines.
+
+2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/dv/gstdv.c: (plugin_init):
 	* ext/dv/gstdvdec.c: (gst_dvdec_class_init):
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_class_init):

@@ -1166,11 +1166,14 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstEvent * event)
       /* we can't really (yet) do QoS */
     case GST_EVENT_NAVIGATION:
       /* no navigation either... */
-    default:
       res = FALSE;
+    default:
+      res = gst_pad_push_event (dvdemux->sinkpad, event);
+      event = NULL;
       break;
   }
-  gst_event_unref (event);
+  if (event)
+    gst_event_unref (event);
 
   gst_object_unref (dvdemux);
 
