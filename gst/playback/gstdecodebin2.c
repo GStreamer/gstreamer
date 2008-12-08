@@ -24,11 +24,11 @@
  * decoders and demuxers via auto-plugging.
  *
  * At this stage, decodebin2 is considered UNSTABLE. The API provided in the
- * signals is expected to change in the near future. 
+ * signals is expected to change in the near future.
  *
- * To try out decodebin2, you can set the USE_DECODEBIN2 environment 
+ * To try out decodebin2, you can set the USE_DECODEBIN2 environment
  * variable (USE_DECODEBIN2=1 for example). This will cause playbin to use
- * decodebin2 instead of the older decodebin for its internal auto-plugging.
+ * decodebin2 instead of the older #GstDecodeBin for its internal auto-plugging.
  */
 
 #ifdef HAVE_CONFIG_H

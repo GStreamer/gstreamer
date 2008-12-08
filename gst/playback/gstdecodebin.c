@@ -17,6 +17,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-decodebin
+ *
+ * #GstBin that auto-magically constructs a decoding pipeline using available
+ * decoders and demuxers via auto-plugging.
+ *
+ * When using decodebin in your application, connect a signal handler to
+ * #GstDecodeBin::new-decoded-pad and connect your sinks from within the
+ * callback function.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -1,3 +1,10 @@
+2008-12-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gstdecodebin.c:
+	* gst/playback/gstdecodebin2.c:
+	  Add basic docs to decodebin and link to decodebin from decodebin2.
+	  
+
 2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete  <tester at tester ca>
