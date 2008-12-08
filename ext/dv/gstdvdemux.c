@@ -208,9 +208,6 @@ gst_dvdemux_class_init (GstDVDemuxClass * klass)
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dvdemux_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_dvdemux_send_event);
-
-  /* table initialization, only do once */
-  dv_init (0, 0);
 }
 
 static void

@@ -213,9 +213,6 @@ gst_dvdec_class_init (GstDVDecClass * klass)
           1, G_MAXINT, DV_DEFAULT_DECODE_NTH, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_dvdec_change_state;
-
-  /* table initialization, only do once */
-  dv_init (0, 0);
 }
 
 static void
