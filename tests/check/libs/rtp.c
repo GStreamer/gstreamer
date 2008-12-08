@@ -25,6 +25,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtcpbuffer.h>
 #include <string.h>
 
 #define RTP_HEADER_LEN 12
@@ -261,6 +262,103 @@ GST_START_TEST (test_rtp_seqnum_compare)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtcp_buffer)
+{
+  GstBuffer *buf;
+  GstRTCPPacket packet;
+  guint8 *data;
+
+  buf = gst_rtcp_buffer_new (1400);
+  fail_unless (buf != NULL);
+  fail_unless_equals_int (GST_BUFFER_SIZE (buf), 1400);
+  data = GST_BUFFER_DATA (buf);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (buf, &packet) == FALSE);
+  fail_unless (gst_rtcp_buffer_get_packet_count (buf) == 0);
+  fail_unless (gst_rtcp_buffer_validate (buf) == FALSE);
+
+  /* add an SR packet */
+  fail_unless (gst_rtcp_buffer_add_packet (buf, GST_RTCP_TYPE_SR,
+          &packet) == TRUE);
+
+  fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_count (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_SR);
+  fail_unless (gst_rtcp_packet_get_length (&packet) == 6);
+
+  gst_rtcp_packet_sr_set_sender_info (&packet, 0x44556677,
+      G_GUINT64_CONSTANT (1), 0x11111111, 101, 123456);
+  {
+    guint32 ssrc;
+    guint64 ntptime;
+    guint32 rtptime;
+    guint32 packet_count;
+    guint32 octet_count;
+
+    gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntptime, &rtptime,
+        &packet_count, &octet_count);
+
+    fail_unless (ssrc == 0x44556677);
+    fail_unless (ntptime == G_GUINT64_CONSTANT (1));
+    fail_unless (rtptime == 0x11111111);
+    fail_unless (packet_count == 101);
+    fail_unless (octet_count == 123456);
+  }
+
+  /* go to first packet, this should be the packet we just added */
+  fail_unless (gst_rtcp_buffer_get_first_packet (buf, &packet) == TRUE);
+
+  fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_count (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_SR);
+  fail_unless (gst_rtcp_packet_get_length (&packet) == 6);
+
+  fail_unless (gst_rtcp_packet_move_to_next (&packet) == FALSE);
+
+  /* add some SDES */
+  fail_unless (gst_rtcp_buffer_add_packet (buf, GST_RTCP_TYPE_SDES,
+          &packet) == TRUE);
+  fail_unless (gst_rtcp_packet_sdes_add_item (&packet, 0xff658743) == TRUE);
+  fail_unless (gst_rtcp_packet_sdes_add_entry (&packet, GST_RTCP_SDES_CNAME,
+          sizeof ("test@foo.bar"), (guint8 *) "test@foo.bar") == TRUE);
+
+  /* add some BYE */
+  fail_unless (gst_rtcp_buffer_add_packet (buf, GST_RTCP_TYPE_BYE,
+          &packet) == TRUE);
+  fail_unless (gst_rtcp_packet_bye_add_ssrc (&packet, 0x5613212f) == TRUE);
+  fail_unless (gst_rtcp_packet_bye_add_ssrc (&packet, 0x00112233) == TRUE);
+  fail_unless (gst_rtcp_packet_bye_get_ssrc_count (&packet) == 2);
+
+  fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_count (&packet) == 2);
+  fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_BYE);
+  fail_unless (gst_rtcp_packet_get_length (&packet) == 2);
+
+  /* move to SDES */
+  fail_unless (gst_rtcp_buffer_get_first_packet (buf, &packet) == TRUE);
+  fail_unless (gst_rtcp_packet_move_to_next (&packet) == TRUE);
+
+  fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_count (&packet) == 1);
+  fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_SDES);
+  fail_unless (gst_rtcp_packet_get_length (&packet) == 5);
+
+  /* remove the SDES */
+  fail_unless (gst_rtcp_packet_remove (&packet) == TRUE);
+
+  /* we are now at the BYE packet */
+  fail_unless (gst_rtcp_packet_get_padding (&packet) == 0);
+  fail_unless (gst_rtcp_packet_get_count (&packet) == 2);
+  fail_unless (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_BYE);
+  fail_unless (gst_rtcp_packet_get_length (&packet) == 2);
+
+  /* close and validate */
+  gst_rtcp_buffer_end (buf);
+  fail_unless (gst_rtcp_buffer_validate (buf) == TRUE);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -271,6 +369,9 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtp_buffer);
   tcase_add_test (tc_chain, test_rtp_buffer_set_extension_data);
   tcase_add_test (tc_chain, test_rtp_seqnum_compare);
+
+  tcase_add_test (tc_chain, test_rtcp_buffer);
+
   return s;
 }
 

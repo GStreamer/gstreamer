@@ -169,7 +169,7 @@ gboolean        gst_rtcp_packet_move_to_next      (GstRTCPPacket *packet);
 
 gboolean        gst_rtcp_buffer_add_packet        (GstBuffer *buffer, GstRTCPType type,
 		                                   GstRTCPPacket *packet);
-void            gst_rtcp_packet_remove            (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_remove            (GstRTCPPacket *packet);
 
 /* working with packets */
 gboolean        gst_rtcp_packet_get_padding       (GstRTCPPacket *packet);

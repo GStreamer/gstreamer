@@ -486,17 +486,34 @@ no_space:
  * gst_rtcp_packet_remove:
  * @packet: a #GstRTCPPacket
  *
- * Removes the packet pointed to by @packet.
+ * Removes the packet pointed to by @packet and moves pointer to the next one
  *
- * Note: Not implemented.
+ * Returns: TRUE if @packet is pointing to a valid packet after calling this
+ * function.
  */
-void
+gboolean
 gst_rtcp_packet_remove (GstRTCPPacket * packet)
 {
-  g_return_if_fail (packet != NULL);
-  g_return_if_fail (packet->type != GST_RTCP_TYPE_INVALID);
+  gboolean ret = FALSE;
+  guint offset = 0;
 
-  g_warning ("not implemented");
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type != GST_RTCP_TYPE_INVALID, FALSE);
+
+  /* The next packet starts at offset + length + 4 (the header) */
+  offset = packet->offset + (packet->length << 2) + 4;
+
+  /* Overwrite this packet with the rest of the data */
+  memmove (GST_BUFFER_DATA (packet->buffer) + packet->offset,
+      GST_BUFFER_DATA (packet->buffer) + offset,
+      GST_BUFFER_SIZE (packet->buffer) - offset);
+
+  /* try to read next header */
+  ret = read_packet_header (packet);
+  if (!ret)
+    packet->type = GST_RTCP_TYPE_INVALID;
+
+  return ret;
 }
 
 /**
