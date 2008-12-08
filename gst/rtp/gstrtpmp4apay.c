@@ -366,6 +366,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint count, mtu, size;
   guint8 *data;
   gboolean fragmented;
+  GstClockTime timestamp;
 
   ret = GST_FLOW_OK;
 
@@ -373,6 +374,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   fragmented = FALSE;
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpmp4apay);
@@ -431,6 +433,9 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     /* marker only if the packet is complete */
     gst_rtp_buffer_set_marker (outbuf, size == 0);
+
+    /* copy incomming timestamp (if any) to outgoing buffers */
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4apay), outbuf);
 

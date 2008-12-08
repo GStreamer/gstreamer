@@ -1,5 +1,10 @@
 2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtp/gstrtpmp4apay.c: (gst_rtp_mp4a_pay_handle_buffer):
+	Copy incomming timestamp to outgoing packets.
+
+2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_flush),
 	(gst_rtp_mp4v_pay_event):
 	Don't try to push packets before we could find a valid config
