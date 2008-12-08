@@ -2,7 +2,7 @@
 
 [CCode (cprefix = "Gst", lower_case_cprefix = "gst_")]
 namespace Gst {
-	[CCode (cheader_filename = "gst/rtsp-server/rstp-client.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-client.h")]
 	public class RTSPClient : GLib.Object {
 		public void* address;
 		public weak Gst.RTSPConnection connection;
@@ -18,7 +18,7 @@ namespace Gst {
 		[NoAccessorMethod]
 		public Gst.RTSPServer server { get; construct; }
 	}
-	[CCode (cheader_filename = "gst/rtsp-server/rstp-media.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public class RTSPMedia : GLib.Object {
 		public bool prepared;
 		public weak GLib.Array streams;
@@ -43,7 +43,7 @@ namespace Gst {
 		public weak Gst.Element payloader;
 		public weak Gst.Pad srcpad;
 	}
-	[CCode (cheader_filename = "gst/rtsp-server/rstp-server.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-server.h")]
 	public class RTSPServer : Gst.Object {
 		public weak string host;
 		public weak GLib.IOChannel io_channel;
