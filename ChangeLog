@@ -1,5 +1,12 @@
 2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfparse.c:
+	(mxf_metadata_generic_picture_essence_descriptor_set_caps):
+	All frame layout values except 0 are for interlaced video,
+	not only 1 and 2.
+
+2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset_metadata),
 	(gst_mxf_demux_handle_primer_pack),
 	(gst_mxf_demux_handle_metadata_preface),

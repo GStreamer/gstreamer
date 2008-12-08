@@ -2629,7 +2629,7 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
    *
    * See SMPTE 377M E2.2 and E1.2
    */
-  if (descriptor->frame_layout == 1 || descriptor->frame_layout == 2)
+  if (descriptor->frame_layout != 0)
     height *= 2;
 
   if (width == 0 || height == 0)
