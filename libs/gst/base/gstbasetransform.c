@@ -1185,6 +1185,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       /* only discard it when the input was not writable, otherwise, we reuse
        * the input buffer. */
       discard = gst_buffer_is_writable (in_buf);
+      GST_DEBUG_OBJECT (trans, "discard: %d", discard);
     } else {
       GST_DEBUG_OBJECT (trans, "getting output size for copy transform");
       /* copy transform, figure out the output size */
@@ -1948,6 +1949,7 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstBaseTransform *trans;
+  GstBaseTransformClass *klass;
   GstFlowReturn ret;
   GstBuffer *inbuf;
 
@@ -1956,6 +1958,10 @@ gst_base_transform_getrange (GstPad * pad, guint64 offset,
   ret = gst_pad_pull_range (trans->sinkpad, offset, length, &inbuf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pull_error;
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  if (klass->before_transform)
+    klass->before_transform (trans, inbuf);
 
   GST_BASE_TRANSFORM_LOCK (trans);
   ret = gst_base_transform_handle_buffer (trans, inbuf, buffer);
@@ -1979,6 +1985,7 @@ static GstFlowReturn
 gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBaseTransform *trans;
+  GstBaseTransformClass *klass;
   GstFlowReturn ret;
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
   GstBuffer *outbuf = NULL;
@@ -1992,6 +1999,10 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
     else
       last_stop = GST_BUFFER_TIMESTAMP (buffer);
   }
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  if (klass->before_transform)
+    klass->before_transform (trans, buffer);
 
   /* protect transform method and concurrent buffer alloc */
   GST_BASE_TRANSFORM_LOCK (trans);

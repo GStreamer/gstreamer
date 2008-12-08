@@ -182,6 +182,10 @@ struct _GstBaseTransform {
  *                         analysis can return a subbuffer or even just
  *                         increment the reference to the input buffer (if in
  *                         passthrough mode)
+ * @before_transform: Optional. Since 0.10.22
+ *                    This method is called right before the base class will
+ *                    start processing. Dynamic properties or other delayed
+ *                    configuration could be performed in this method.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
@@ -231,8 +235,10 @@ struct _GstBaseTransformClass {
   /* src event */
   gboolean      (*src_event)      (GstBaseTransform *trans, GstEvent *event);
 
+  void          (*before_transform)  (GstBaseTransform *trans, GstBuffer *buffer);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 1];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 2];
 };
 
 GType           gst_base_transform_get_type         (void);

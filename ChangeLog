@@ -1,3 +1,12 @@
+2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_getrange), (gst_base_transform_chain):
+	* libs/gst/base/gstbasetransform.h:
+	Add vmethod that is called before we start the transform and which can
+	be used to configure the transform, such as dynamic properties.
+
 2008-12-05  David Schleef  <ds@schleef.org>
 
 	* gst/gst.c:
