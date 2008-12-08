@@ -593,6 +593,18 @@ restart:
       GST_LOG_OBJECT (tee, "pad already pushed with %s",
           gst_flow_get_name (ret));
     }
+
+    /* before we go combining the return value, check if the pad list is still
+     * the same. It could be possible that the pad we just pushed was removed
+     * and the return value it not valid anymore */
+    if (GST_ELEMENT_CAST (tee)->pads_cookie != cookie) {
+      GST_LOG_OBJECT (tee, "pad list changed");
+      /* the list of pads changed, restart iteration. Pads that we already
+       * pushed on and are still in the new list, will not be pushed on
+       * again. */
+      goto restart;
+    }
+
     /* stop pushing more buffers when we have a fatal error */
     if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
       goto error;
@@ -601,14 +613,6 @@ restart:
     if (ret != GST_FLOW_NOT_LINKED) {
       GST_LOG_OBJECT (tee, "Replacing ret val %d with %d", cret, ret);
       cret = ret;
-    }
-
-    if (GST_ELEMENT_CAST (tee)->pads_cookie != cookie) {
-      GST_LOG_OBJECT (tee, "pad list changed");
-      /* the list of pads changed, restart iteration. Pads that we already
-       * pushed on and are still in the new list, will not be pushed on
-       * again. */
-      goto restart;
     }
     pads = g_list_next (pads);
   }
