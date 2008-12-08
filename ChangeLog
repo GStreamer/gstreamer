@@ -1,3 +1,9 @@
+2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfup.c: (mxf_up_handle_essence_element):
+	Don't create a subbuffer, instead just change the buffer metadata
+	of the input buffer.
+
 2008-12-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pad_finalize),

@@ -94,14 +94,10 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
       GST_ERROR ("Invalid buffer size");
       return GST_FLOW_ERROR;
     } else {
-      *outbuf =
-          gst_buffer_create_sub (buffer, data->image_start_offset,
-          GST_BUFFER_SIZE (buffer) - data->image_end_offset -
-          data->image_start_offset);
-      gst_buffer_copy_metadata (*outbuf, buffer,
-          GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
-          GST_BUFFER_COPY_CAPS);
-      gst_buffer_unref (buffer);
+      GST_BUFFER_DATA (buffer) += data->image_start_offset;
+      GST_BUFFER_SIZE (buffer) -= data->image_start_offset;
+      GST_BUFFER_SIZE (buffer) -= data->image_end_offset;
+      *outbuf = buffer;
     }
   }
 
