@@ -1,3 +1,10 @@
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):
+	Implement detection of the colorspace used by the
+	JPEG2000 codestream. XYZ colorspace isn't supported by
+	our decoders yet unfortunately.
+
 2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfparse.c:

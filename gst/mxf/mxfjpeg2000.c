@@ -87,6 +87,7 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
   guint i;
   GstCaps *caps = NULL;
+  guint32 fourcc;
 
   g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
@@ -106,8 +107,8 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
-        is_file_descriptor
+    } else if (((MXFMetadataGenericDescriptor *) track->
+            descriptor[i])->is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];
@@ -119,13 +120,71 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
     return NULL;
   }
 
+  fourcc = GST_MAKE_FOURCC ('s', 'R', 'G', 'B');
+  if (p
+      && ((MXFMetadataGenericDescriptor *) p)->type ==
+      MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+    fourcc = GST_MAKE_FOURCC ('s', 'Y', 'U', 'V');
+  } else if (p
+      && ((MXFMetadataGenericDescriptor *) p)->type ==
+      MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+    MXFMetadataRGBAPictureEssenceDescriptor *r =
+        (MXFMetadataRGBAPictureEssenceDescriptor *) p;
+    gboolean rgb = TRUE;
+    gboolean xyz = TRUE;
+    gboolean yuv = TRUE;
+    guint i;
+
+    if (r->pixel_layout) {
+      for (i = 0; i < r->n_pixel_layout; i++) {
+        guint8 c = r->pixel_layout[2 * i];
+
+        switch (c) {
+          case 'R':
+          case 'r':
+          case 'G':
+          case 'g':
+          case 'B':
+          case 'b':
+            xyz = yuv = FALSE;
+            break;
+          case 'Y':
+          case 'y':
+            rgb = FALSE;
+            break;
+          case 'U':
+          case 'u':
+          case 'V':
+          case 'v':
+            xyz = rgb = FALSE;
+            break;
+          case 'X':
+          case 'x':
+          case 'Z':
+          case 'z':
+            rgb = yuv = FALSE;
+            break;
+          default:
+            break;
+        }
+      }
+      if (rgb) {
+        fourcc = GST_MAKE_FOURCC ('s', 'R', 'G', 'B');
+      } else if (yuv) {
+        fourcc = GST_MAKE_FOURCC ('s', 'Y', 'U', 'V');
+      } else if (xyz) {
+        GST_ERROR ("JPEG2000 with XYZ colorspace not supported yet");
+        return NULL;
+      }
+    }
+  }
+
   *handler = mxf_jpeg2000_handle_essence_element;
 
   /* TODO: What about other field values? */
-  /* FIXME: For now assume sRGB but get the correct value from the descriptor */
   caps =
       gst_caps_new_simple ("image/x-jpc", "fields", G_TYPE_INT, 1, "fourcc",
-      GST_TYPE_FOURCC, GST_MAKE_FOURCC ('s', 'R', 'G', 'B'), NULL);
+      GST_TYPE_FOURCC, fourcc, NULL);
   if (p) {
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
   } else {
