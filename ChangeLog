@@ -1,3 +1,9 @@
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* tests/check/libs/controller.c: (GST_START_TEST):
+	This test should return TRUE now as syncing an uncontrolled
+	object will succeed now (there's nothing to sync).
+
 2008-12-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:
@@ -9,7 +15,6 @@
 
 	* libs/gst/controller/gsthelper.c:
 	  Fix return code and comment.
-	  
 
 2008-12-09  Stefan Kost  <ensonic@users.sf.net>
 

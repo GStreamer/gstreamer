@@ -1901,7 +1901,8 @@ GST_START_TEST (controller_helper_any_gobject)
 
   /* that element is not controllable */
   res = gst_object_sync_values (G_OBJECT (elem), 0LL);
-  fail_unless (res == FALSE, NULL);
+  /* Syncing should still succeed as there's nothing to sync */
+  fail_unless (res == TRUE, NULL);
 
   gst_object_unref (elem);
 }
