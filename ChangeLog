@@ -1,3 +1,8 @@
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	Also ignore pulsemixer for the states unit test.
+
 2008-12-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtp/gstrtpjpegdepay.c: (gst_rtp_jpeg_depay_process):
