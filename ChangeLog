@@ -1,3 +1,8 @@
+2008-12-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/riff/riff-read.c:
+	  Fix handling of odd chunks in riff metadata.
+
 2008-12-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/volume/gstvolume.c: (gst_volume_class_init),
