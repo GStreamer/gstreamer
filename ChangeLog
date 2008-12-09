@@ -1,3 +1,8 @@
+2008-12-09  Alessandro Decina  <alessandro.decina@collabora.co.uk>
+
+	* gst/__init__.py:
+	Add gst.Fourcc.__eq__ and gst.Fourcc.__ne__.
+
 2008-12-09  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/Makefile.am:

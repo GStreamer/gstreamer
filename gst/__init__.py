@@ -45,8 +45,18 @@ class Fourcc(Value):
     def __init__(self, string):
         Value.__init__(self, 'fourcc')
         self.fourcc = string
+    
     def __repr__(self):
         return '<gst.Fourcc %s>' % self.fourcc
+    
+    def __eq__(self, other):
+        if isinstance(other, Fourcc):
+            return self.fourcc == other.fourcc
+
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class IntRange(Value):
     def __init__(self, low, high):
