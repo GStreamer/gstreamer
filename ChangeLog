@@ -1,5 +1,13 @@
 2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* libs/gst/check/gstcheck.c: (gst_check_init):
+	Revert accidentially commited patch for bug #404631 which
+	tries to print a backtrace if a testcase is terminated by
+	a signal. This code was never activated as the corresponding
+	configure.ac change wasn't committed.
+
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* tests/check/libs/controller.c: (GST_START_TEST):
 	This test should return TRUE now as syncing an uncontrolled
 	object will succeed now (there's nothing to sync).

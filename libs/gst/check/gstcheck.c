@@ -28,10 +28,6 @@
  * inside the 'check' directories of various GStreamer packages.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "gstcheck.h"
 
 GST_DEBUG_CATEGORY (check_debug);
@@ -86,88 +82,6 @@ static void gst_check_log_critical_func
     _gst_check_raised_warning = TRUE;
 }
 
-#if defined(G_OS_UNIX) && defined(HAVE_EXECINFO_H)
-#include <signal.h>
-#include <execinfo.h>
-#include <unistd.h>
-
-static struct sigaction oldaction_segv;
-static struct sigaction oldaction_ill;
-static struct sigaction oldaction_bus;
-static struct sigaction oldaction_abrt;
-static gboolean _gst_check_fault_handler_is_setup;      /* FALSE */
-
-static void
-_gst_check_fault_handler_restore (void)
-{
-  if (!_gst_check_fault_handler_is_setup)
-    return;
-
-  _gst_check_fault_handler_is_setup = FALSE;
-
-  sigaction (SIGSEGV, &oldaction_segv, NULL);
-  sigaction (SIGILL, &oldaction_ill, NULL);
-  sigaction (SIGBUS, &oldaction_bus, NULL);
-  sigaction (SIGABRT, &oldaction_abrt, NULL);
-}
-
-static void
-_gst_check_fault_handler_sighandler (int signum)
-{
-  void *bt_arr[100];
-  int num;
-  char *signame;
-
-  /* We need to restore the fault handler or we'll keep getting it */
-  _gst_check_fault_handler_restore ();
-
-  switch (signum) {
-    case SIGSEGV:
-      signame = "SIGSEGV";
-      break;
-    case SIGILL:
-      signame = "SIGILL";
-      break;
-    case SIGBUS:
-      signame = "SIGBUS";
-      break;
-    case SIGABRT:
-      signame = "SIGABRT";
-      break;
-    default:
-      signame = "Unknown Signal";
-      break;
-  }
-
-  fprintf (stderr, "\nERROR: Caught signal '%s' while running test.\n",
-      signame);
-
-  fprintf (stderr, "Backtrace:\n");
-
-  if ((num = backtrace ((void **) bt_arr, G_N_ELEMENTS (bt_arr))))
-    backtrace_symbols_fd (bt_arr, num, STDERR_FILENO);
-}
-
-static void
-_gst_check_fault_handler_setup (void)
-{
-  struct sigaction action;
-
-  if (_gst_check_fault_handler_is_setup)
-    return;
-
-  _gst_check_fault_handler_is_setup = TRUE;
-
-  memset (&action, 0, sizeof (action));
-  action.sa_handler = _gst_check_fault_handler_sighandler;
-
-  sigaction (SIGSEGV, &action, &oldaction_segv);
-  sigaction (SIGILL, &action, &oldaction_ill);
-  sigaction (SIGBUS, &action, &oldaction_bus);
-  sigaction (SIGABRT, &action, &oldaction_abrt);
-}
-#endif /* G_OS_UNIX && HAVE_EXECINFO_H */
-
 /* initialize GStreamer testing */
 void
 gst_check_init (int *argc, char **argv[])
@@ -192,10 +106,6 @@ gst_check_init (int *argc, char **argv[])
 
   check_cond = g_cond_new ();
   check_mutex = g_mutex_new ();
-
-#if defined(G_OS_UNIX) && defined(HAVE_EXECINFO_H)
-  _gst_check_fault_handler_setup ();
-#endif
 }
 
 /* message checking */
