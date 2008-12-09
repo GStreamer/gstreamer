@@ -92,7 +92,7 @@ gst_control_source_get_value (GstControlSource * self, GstClockTime timestamp,
 {
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
 
-  if (self->get_value) {
+  if (G_LIKELY (self->get_value)) {
     return self->get_value (self, timestamp, value);
   } else {
     GST_ERROR ("Not bound to a specific property yet!");
@@ -122,7 +122,7 @@ gst_control_source_get_value_array (GstControlSource * self,
 {
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (self), FALSE);
 
-  if (self->get_value_array) {
+  if (G_LIKELY (self->get_value_array)) {
     return self->get_value_array (self, timestamp, value_array);
   } else {
     GST_ERROR ("Not bound to a specific property yet!");

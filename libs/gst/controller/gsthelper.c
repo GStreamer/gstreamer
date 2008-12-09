@@ -186,7 +186,10 @@ gst_object_sync_values (GObject * object, GstClockTime timestamp)
   if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_sync_values (ctrl, timestamp);
   }
-  return (FALSE);
+  /* this is no failure, its called by elements regardless if there is a
+   * controller assigned or not
+   */
+  return (TRUE);
 }
 
 /**

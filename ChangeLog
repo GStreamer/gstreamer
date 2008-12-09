@@ -1,5 +1,18 @@
 2008-12-09  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.c:
+	  Aggregate return value for gst_controller_sync_values(). More info in
+	  logging. Always set values on first sync-call.
+
+	* libs/gst/controller/gstcontrolsource.c:
+	  Microoptimizations.
+
+	* libs/gst/controller/gsthelper.c:
+	  Fix return code and comment.
+	  
+
+2008-12-09  Stefan Kost  <ensonic@users.sf.net>
+
 	* tools/gst-launch.1.in:
 	  Fix description of how to specify a type in caps. Fixes #553873.
 	  Also ranges and list contain values and not property-assignments.
