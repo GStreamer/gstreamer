@@ -1,3 +1,9 @@
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/videocrop.c: (check_1x1_buffer):
+	Update the unit test for the new color values for BT.601 red.
+	Fixes bug #563510.
+
 2008-12-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_src_event):

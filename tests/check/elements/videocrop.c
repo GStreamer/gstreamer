@@ -208,6 +208,7 @@ videocrop_test_cropping_deinit_context (GstVideoCropTestContext * ctx)
   gst_buffer_replace (&ctx->last_buf, NULL);
   memset (ctx, 0x00, sizeof (GstVideoCropTestContext));
 }
+
 typedef void (*GstVideoCropTestBufferFunc) (GstBuffer * buffer);
 
 static void
@@ -254,23 +255,23 @@ check_1x1_buffer (GstBuffer * buf)
     /* the exact values we check for come from videotestsrc */
     switch (format) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 76);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 85);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 255);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 81);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 90);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 240);
         break;
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 76);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 255);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 85);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 81);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 240);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 90);
         break;
       case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 76);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 81);
         /* no chroma planes */
         break;
       case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[1], 76);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[2], 85);
-        fail_unless_equals_int (GST_BUFFER_DATA (buf)[3], 255);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[1], 81);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[2], 90);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[3], 240);
         /* no chroma planes */
         break;
       default:
