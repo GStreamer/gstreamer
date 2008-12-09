@@ -1,3 +1,21 @@
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/souphttpsrc.c: (GST_START_TEST),
+	(run_server):
+	The ports in libsoup are unsigned integers and not signed
+	integers.
+
+2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_add_video_pad),
+	(gst_dvdemux_add_audio_pad), (gst_dvdemux_remove_pads),
+	(gst_dvdemux_demux_audio), (gst_dvdemux_demux_video),
+	(gst_dvdemux_chain), (gst_dvdemux_loop),
+	(gst_dvdemux_change_state):
+	Add srcpads only when they're needed. If we add all pads in any
+	case we will get a stalling audio pad if the stream contains
+	no audio, which is the case for many MXF files.
+
 2008-12-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_src_event):
