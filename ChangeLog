@@ -1,3 +1,9 @@
+2008-12-09  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpjpegdepay.c: (gst_rtp_jpeg_depay_process):
+	Add an EOI marker at the end of the jpeg frame when it's missing.
+	Fixes #563056.
+
 2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/elements/videocrop.c: (check_1x1_buffer):

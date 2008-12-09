@@ -549,7 +549,6 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_BUFFER_SIZE (outbuf) = size;
 
     gst_adapter_push (rtpjpegdepay->adapter, outbuf);
-
   }
 
   /* take JPEG data, push in the adapter */
@@ -560,12 +559,32 @@ gst_rtp_jpeg_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   if (gst_rtp_buffer_get_marker (buf)) {
     guint avail;
+    guint8 end[2];
+    guint8 *data;
 
     /* last buffer take all data out of the adapter */
     avail = gst_adapter_available (rtpjpegdepay->adapter);
+    GST_DEBUG_OBJECT (rtpjpegdepay, "marker set, last buffer");
+
+    /* take the last bytes of the jpeg data to see if there is an EOI
+     * marker */
+    gst_adapter_copy (rtpjpegdepay->adapter, end, avail - 2, 2);
+
+    if (end[0] != 0xff && end[1] != 0xd9) {
+      GST_DEBUG_OBJECT (rtpjpegdepay, "no EOI marker, adding one");
+
+      /* no EOI marker, add one */
+      outbuf = gst_buffer_new_and_alloc (2);
+      data = GST_BUFFER_DATA (outbuf);
+      data[0] = 0xff;
+      data[1] = 0xd9;
+
+      gst_adapter_push (rtpjpegdepay->adapter, outbuf);
+      avail += 2;
+    }
     outbuf = gst_adapter_take_buffer (rtpjpegdepay->adapter, avail);
 
-    GST_DEBUG_OBJECT (rtpjpegdepay, "last buffer, returning %u bytes", avail);
+    GST_DEBUG_OBJECT (rtpjpegdepay, "returning %u bytes", avail);
   }
 
   return outbuf;
