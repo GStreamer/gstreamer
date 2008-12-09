@@ -989,6 +989,8 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           intersection = temp2;
 
           if (!gst_caps_is_empty (intersection)) {
+            gst_caps_unref (intersection);
+
             GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
                 "found existing unlinked compatible pad %s:%s",
                 GST_DEBUG_PAD_NAME (current));
@@ -996,6 +998,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
             return current;
           }
+          gst_caps_unref (intersection);
         }
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
 

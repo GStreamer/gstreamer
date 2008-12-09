@@ -1,6 +1,11 @@
 2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstutils.c: (gst_element_get_compatible_pad):
+	Fix a caps memory leak introduced by the last change.
+
+2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstutils.c: (gst_element_get_compatible_pad):
 	Check if the caps of the pads are compatible before returning
 	a pad and claiming it is compatible. This, among other things,
 	fixes a bug with gst-launch where an incompatible pad is chosen
