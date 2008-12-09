@@ -941,8 +941,6 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   GstPad *foundpad = NULL;
   gboolean done;
 
-  /* FIXME check for caps compatibility */
-
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
@@ -972,21 +970,38 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
         peer = gst_pad_get_peer (current);
 
         if (peer == NULL && gst_pad_can_link (pad, current)) {
+          GstCaps *temp, *temp2, *intersection;
 
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-              "found existing unlinked pad %s:%s",
-              GST_DEBUG_PAD_NAME (current));
+          /* Now check if the two pads' caps are compatible */
+          temp = gst_pad_get_caps (pad);
+          if (caps) {
+            intersection = gst_caps_intersect (temp, caps);
+            gst_caps_unref (temp);
+          } else {
+            intersection = temp;
+          }
 
-          gst_iterator_free (pads);
+          temp = gst_pad_get_caps (current);
+          temp2 = gst_caps_intersect (temp, intersection);
+          gst_caps_unref (temp);
+          gst_caps_unref (intersection);
 
-          return current;
-        } else {
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
+          intersection = temp2;
 
-          gst_object_unref (current);
-          if (peer)
-            gst_object_unref (peer);
+          if (!gst_caps_is_empty (intersection)) {
+            GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+                "found existing unlinked compatible pad %s:%s",
+                GST_DEBUG_PAD_NAME (current));
+            gst_iterator_free (pads);
+
+            return current;
+          }
         }
+        GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
+
+        gst_object_unref (current);
+        if (peer)
+          gst_object_unref (peer);
         break;
       }
       case GST_ITERATOR_DONE:
@@ -1145,8 +1160,8 @@ gst_element_factory_can_src_caps (GstElementFactory * factory,
     GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
 
     if (template->direction == GST_PAD_SRC) {
-      if (gst_caps_is_always_compatible (gst_static_caps_get (&template->
-                  static_caps), caps))
+      if (gst_caps_is_always_compatible (gst_static_caps_get
+              (&template->static_caps), caps))
         return TRUE;
     }
     templates = g_list_next (templates);
