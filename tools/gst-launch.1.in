@@ -162,9 +162,9 @@ If you want to chain caps, you can add more caps in the same format afterwards.
 
 .B Properties
 
-NAME\fI[:TYPE]\fR=VALUE
+NAME=\fI[(TYPE)]\fRVALUE
 .br
-in lists and ranges: [TYPE=]VALUE
+in lists and ranges: \fI[(TYPE)]\fRVALUE
 
 Sets the requested property in capabilities. The name is an alphanumeric value
 and the type can have the following case-insensitive values:
@@ -190,9 +190,9 @@ Integer values must be parsable by \fBstrtol()\fP, floats by \fBstrtod()\fP. FOU
 either be integers or strings. Boolean values are (case insensitive) \fIyes\fR, 
 \fIno\fR, \fItrue\fR or \fIfalse\fR and may like strings be escaped with " or '.
 .br
-Ranges are in this format:  [ PROPERTY, PROPERTY ]
+Ranges are in this format:  [ VALUE, VALUE ]
 .br
-Lists use this format:      ( PROPERTY \fI[, PROPERTY ...]\fR )
+Lists use this format:      ( VALUE \fI[, VALUE ...]\fR )
 
 .SH "PIPELINE CONTROL"
 
