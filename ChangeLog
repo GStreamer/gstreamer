@@ -1,5 +1,10 @@
 2008-12-09  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/Makefile.am:
+	Don't forget to dist/install gst-0.10.21.ignore
+
+2008-12-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	Patch by : Vincent Genieux <mutex at runbox dot com>
 	* gst/arg-types.py:
 	Fix memory leak for GstMiniObjects used as parameters in class method
