@@ -160,7 +160,7 @@ class GstMiniObjectParam(Parameter):
 					      "    py_%s = Py_None;\n"
 					      "}"
 					      % (self.name, self.name, self.name, self.name, self.name)),
-					cleanup=("gst_mini_object_ref ((GstMiniObject *) %s);\nPy_DECREF(py_%s);" % (self.name, self.name)))
+					cleanup=("Py_DECREF(py_%s);" % self.name))
 		self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 matcher.register_reverse('GstMiniObject*', GstMiniObjectParam)

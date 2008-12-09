@@ -1,3 +1,11 @@
+2008-12-09  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by : Vincent Genieux <mutex at runbox dot com>
+	* gst/arg-types.py:
+	Fix memory leak for GstMiniObjects used as parameters in class method
+	overrides.
+	Fixes #543961
+
 2008-12-06  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gstpad.override:
