@@ -892,6 +892,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
+      rate_max = 192000;
       channels_max = 8;
 
       if (strf != NULL) {
@@ -957,6 +958,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_IEEE_FLOAT:
+      rate_max = 192000;
       channels_max = 8;
 
       if (strf != NULL) {
@@ -1105,6 +1107,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
     case GST_RIFF_WAVE_FORMAT_VORBIS1PLUS:     /* ogg/vorbis mode 1+ */
     case GST_RIFF_WAVE_FORMAT_VORBIS2PLUS:     /* ogg/vorbis mode 2+ */
     case GST_RIFF_WAVE_FORMAT_VORBIS3PLUS:     /* ogg/vorbis mode 3+ */
+      rate_max = 192000;
       caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Vorbis");

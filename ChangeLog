@@ -1,3 +1,8 @@
+2008-12-09  Julien Moutte  <julien@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps): 
+	Support higher max audio rates for some formats (WAV, Vorbis, LPCM).
+
 2008-12-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-read.c:
