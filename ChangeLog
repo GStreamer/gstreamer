@@ -1,3 +1,13 @@
+2008-12-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
+	  More logging.
+
+	* gst/avi/gstavimux.c:
+	  Handle more metadata fields. Better estimate of metadata size. Don't
+	  merge received tags, if application has specified tags using
+	  GST_TAG_MERGE_REPLACE_ALL. Fixes #563221 for avi.
+
 2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/Makefile.am:

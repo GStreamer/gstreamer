@@ -3145,7 +3145,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         avi->avih->streams, avi->num_streams);
   }
 
-  GST_DEBUG_OBJECT (avi, "skipping junk between header and data ...");
+  GST_DEBUG_OBJECT (avi, "skipping junk between header and data, offset=%"
+      G_GUINT64_FORMAT, avi->offset);
 
   /* Now, find the data (i.e. skip all junk between header and data) */
   do {
@@ -3168,6 +3169,9 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     ltag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 8);
     gst_buffer_unref (buf);
 
+    GST_DEBUG ("tag %" GST_FOURCC_FORMAT ", size %u",
+        GST_FOURCC_ARGS (tag), size);
+
     if (tag == GST_RIFF_TAG_LIST) {
       switch (ltag) {
         case GST_RIFF_LIST_movi:
@@ -3180,6 +3184,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
             goto pull_range_failed;
           }
+          GST_DEBUG ("got size %u", GST_BUFFER_SIZE (buf));
 
           sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
           gst_riff_parse_info (element, sub, &avi->globaltags);

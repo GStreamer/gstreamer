@@ -913,13 +913,16 @@ gst_avi_mux_write_tag (const GstTagList * list, const gchar * tag,
     gchar *tag;
   } rifftags[] = {
     {
+    GST_RIFF_INFO_IARL, GST_TAG_LOCATION}, {
+    GST_RIFF_INFO_IART, GST_TAG_ARTIST}, {
     GST_RIFF_INFO_ICMT, GST_TAG_COMMENT}, {
+    GST_RIFF_INFO_ICOP, GST_TAG_COPYRIGHT}, {
+    GST_RIFF_INFO_ICRD, GST_TAG_DATE}, {
+    GST_RIFF_INFO_IGNR, GST_TAG_GENRE}, {
+    GST_RIFF_INFO_IKEY, GST_TAG_KEYWORDS}, {
     GST_RIFF_INFO_INAM, GST_TAG_TITLE}, {
     GST_RIFF_INFO_ISFT, GST_TAG_ENCODER}, {
-    GST_RIFF_INFO_IGNR, GST_TAG_GENRE}, {
-    GST_RIFF_INFO_ICOP, GST_TAG_COPYRIGHT}, {
-    GST_RIFF_INFO_IART, GST_TAG_ARTIST}, {
-    GST_RIFF_INFO_IARL, GST_TAG_LOCATION}, {
+    GST_RIFF_INFO_ISRC, GST_TAG_ISRC}, {
     0, NULL}
   };
   gint n, len, plen;
@@ -981,9 +984,14 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     tags = avimux->tags_snap;
   }
   avimux->tags_snap = tags;
-  /* FIXME: that should be the strlen of all tags + header sizes */
-  if (avimux->tags_snap)
-    size += 1024;
+  if (avimux->tags_snap) {
+    /* that should be the strlen of all tags + header sizes
+     * not all of tags end up in a avi, still this is a good estimate
+     */
+    gchar *str = gst_structure_to_string (avimux->tags_snap);
+    size += strlen (str) + 8 * gst_structure_n_fields (avimux->tags_snap);
+    g_free (str);
+  }
 
   /* allocate the buffer, starting with some wild/safe upper bound */
   size += avimux->codec_data_size + 100 + sizeof (gst_riff_avih)
@@ -1054,6 +1062,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     } else {
       if (audpad->auds_codec_data)
         codec_size = GST_BUFFER_SIZE (audpad->auds_codec_data);
+      /* +2 is codec_size field, not part of gst_riff_strf_auds */
       strl_size = sizeof (gst_riff_strh_full) + sizeof (gst_riff_strf_auds) + 2
           + GST_ROUND_UP_2 (codec_size) + 4 * 5 + ODML_SUPERINDEX_SIZE;
     }
@@ -1673,18 +1682,23 @@ static gboolean
 gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
 {
   GstAviMux *avimux;
-  GstTagList *list;
   gboolean ret;
 
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
-      gst_event_parse_tag (event, &list);
-      if (avimux->tags) {
-        gst_tag_list_insert (avimux->tags, list, GST_TAG_MERGE_PREPEND);
+      if (gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (avimux)) !=
+          GST_TAG_MERGE_REPLACE_ALL) {
+        GstTagList *list;
+        gst_event_parse_tag (event, &list);
+        if (avimux->tags) {
+          gst_tag_list_insert (avimux->tags, list, GST_TAG_MERGE_PREPEND);
+        } else {
+          avimux->tags = gst_tag_list_copy (list);
+        }
       } else {
-        avimux->tags = gst_tag_list_copy (list);
+        GST_DEBUG ("skipping tag-event");
       }
       break;
     default:
