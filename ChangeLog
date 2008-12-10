@@ -1,3 +1,9 @@
+2008-12-10  Peter Kjellerstedt  <pkj@axis.com>
+
+	* libs/gst/check/gstcheck.h: Allow check tests to use
+	MAIN_START_THREADS()/MAIN_STOP_THREADS() multiple times. Also allows
+	CK_FORK=no to be used with multiple check test that use threads.
+
 2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstutils.c: (gst_element_get_compatible_pad):

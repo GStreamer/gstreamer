@@ -264,9 +264,11 @@ MAIN_SYNCHRONIZE();
 G_STMT_START {				\
   _gst_check_threads_running = TRUE;	\
 					\
-  mutex = g_mutex_new ();		\
-  start_cond = g_cond_new ();		\
-  sync_cond = g_cond_new ();		\
+  if (mutex == NULL) {			\
+    mutex = g_mutex_new ();		\
+    start_cond = g_cond_new ();		\
+    sync_cond = g_cond_new ();		\
+  }					\
 } G_STMT_END;
 
 #define MAIN_START_THREAD_FUNCTIONS(count, function, data)	\
@@ -307,6 +309,8 @@ G_STMT_START {							\
   /* join all threads */					\
   GST_DEBUG ("MAIN: joining");					\
   g_list_foreach (thread_list, (GFunc) g_thread_join, NULL);	\
+  g_list_free (thread_list);					\
+  thread_list = NULL;						\
   GST_DEBUG ("MAIN: joined");					\
 } G_STMT_END;
 
