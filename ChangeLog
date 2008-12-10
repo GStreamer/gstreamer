@@ -1,5 +1,19 @@
 2008-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaysink.c: (gst_play_sink_class_init),
+	(gst_play_sink_dispose), (gst_play_sink_finalize), (try_element),
+	(gen_video_chain), (gen_audio_chain), (gst_play_sink_reconfigure),
+	(gst_play_sink_send_event), (gst_play_sink_change_state):
+	Use G_DEFINE_TYPE.
+	Try to set the selected sink to READY before using it. This will allow
+	for detection of incompatible formats sooner.
+	Don't cause a fatal error when conversion elements are missing but post
+	a missing-element message and a warning instead because things might
+	still link and run fine.
+	Simplyfy the construction of audio and video sink chains.
+
+2008-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_class_init),
 	(gst_ogg_pad_dispose), (gst_ogg_pad_finalize):
 	Use G_DEFINE_TYPE for the OggPad to get some threadsafe type 

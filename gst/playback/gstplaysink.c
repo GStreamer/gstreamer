@@ -170,8 +170,6 @@ static gboolean gst_play_sink_send_event (GstElement * element,
 static GstStateChangeReturn gst_play_sink_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class;
-
 /* static guint gst_play_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 static const GstElementDetails gst_play_sink_details =
@@ -180,31 +178,7 @@ GST_ELEMENT_DETAILS ("Player Sink",
     "Autoplug and play media from an uri",
     "Wim Taymans <wim.taymans@gmail.com>");
 
-GType
-gst_play_sink_get_type (void)
-{
-  static GType gst_play_sink_type = 0;
-
-  if (!gst_play_sink_type) {
-    static const GTypeInfo gst_play_sink_info = {
-      sizeof (GstPlaySinkClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_play_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPlaySink),
-      0,
-      (GInstanceInitFunc) gst_play_sink_init,
-      NULL
-    };
-
-    gst_play_sink_type = g_type_register_static (GST_TYPE_BIN,
-        "GstPlaySink", &gst_play_sink_info, 0);
-  }
-
-  return gst_play_sink_type;
-}
+G_DEFINE_TYPE (GstPlaySink, gst_play_sink, GST_TYPE_BIN);
 
 static void
 gst_play_sink_class_init (GstPlaySinkClass * klass)
@@ -216,8 +190,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_sink_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_sink_finalize);
@@ -270,7 +242,7 @@ gst_play_sink_dispose (GObject * object)
   g_free (playsink->font_desc);
   playsink->font_desc = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_play_sink_parent_class)->dispose (object);
 }
 
 static void
@@ -282,7 +254,7 @@ gst_play_sink_finalize (GObject * object)
 
   g_mutex_free (playsink->lock);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_play_sink_parent_class)->finalize (object);
 }
 
 void
@@ -636,6 +608,26 @@ gst_play_sink_find_property (GstPlaySink * playsink, GstElement * obj,
   return result;
 }
 
+/* try to change the state of an element. This function returns the element when
+ * the state change could be performed. When this function returns NULL an error
+ * occured and the element is unreffed. */
+static GstElement *
+try_element (GstPlaySink * playsink, GstElement * element)
+{
+  GstStateChangeReturn ret;
+
+  if (element) {
+    ret = gst_element_set_state (element, GST_STATE_READY);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+      GST_DEBUG_OBJECT (playsink, "failed state change..");
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_object_unref (element);
+      element = NULL;
+    }
+  }
+  return element;
+}
+
 /* make the element (bin) that contains the elements needed to perform
  * video display. 
  *
@@ -655,6 +647,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   GstPlayVideoChain *chain;
   GstBin *bin;
   GstPad *pad;
+  GstElement *prev, *elem;
 
   chain = g_new0 (GstPlayVideoChain, 1);
   chain->chain.playsink = gst_object_ref (playsink);
@@ -662,15 +655,22 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   GST_DEBUG_OBJECT (playsink, "making video chain %p", chain);
 
   if (playsink->video_sink) {
-    chain->sink = gst_object_ref (playsink->video_sink);
-  } else {
-    chain->sink = gst_element_factory_make ("autovideosink", "videosink");
-    if (chain->sink == NULL) {
-      chain->sink = gst_element_factory_make ("xvimagesink", "videosink");
-    }
-    if (chain->sink == NULL)
-      goto no_sinks;
+    GST_DEBUG_OBJECT (playsink, "trying configured videosink");
+    elem = gst_object_ref (playsink->video_sink);
+    chain->sink = try_element (playsink, elem);
   }
+  if (chain->sink == NULL) {
+    GST_DEBUG_OBJECT (playsink, "trying autovideosink");
+    elem = gst_element_factory_make ("autovideosink", "videosink");
+    chain->sink = try_element (playsink, elem);
+  }
+  if (chain->sink == NULL) {
+    GST_DEBUG_OBJECT (playsink, "trying xvimagesink");
+    elem = gst_element_factory_make ("xvimagesink", "videosink");
+    chain->sink = try_element (playsink, elem);
+  }
+  if (chain->sink == NULL)
+    goto no_sinks;
 
   /* if we can disable async behaviour of the sink, we can avoid adding a
    * queue for the audio chain. We can't use the deep property here because the
@@ -680,8 +680,10 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
         async);
     g_object_set (chain->sink, "async", async, NULL);
     chain->async = async;
-  } else
+  } else {
+    GST_DEBUG_OBJECT (playsink, "no async property on the sink");
     chain->async = TRUE;
+  }
 
   /* create a bin to hold objects, as we create them we add them to this bin so
    * that when something goes wrong we only need to unref the bin */
@@ -691,18 +693,6 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   gst_object_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  if (raw) {
-    chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
-    if (chain->conv == NULL)
-      goto no_colorspace;
-    gst_bin_add (bin, chain->conv);
-
-    chain->scale = gst_element_factory_make ("videoscale", "vscale");
-    if (chain->scale == NULL)
-      goto no_videoscale;
-    gst_bin_add (bin, chain->scale);
-  }
-
   /* decouple decoder from sink, this improves playback quite a lot since the
    * decoder can continue while the sink blocks for synchronisation. We don't
    * need a lot of buffers as this consumes a lot of memory and we don't want
@@ -711,24 +701,49 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
       "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
   gst_bin_add (bin, chain->queue);
+  prev = chain->queue;
 
   if (raw) {
-    gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
-    gst_element_link_pads (chain->conv, "src", chain->scale, "sink");
-    /* be more careful with the pad from the custom sink element, it might not
-     * be named 'sink' */
-    if (!gst_element_link_pads (chain->scale, "src", chain->sink, NULL))
-      goto link_failed;
+    GST_DEBUG_OBJECT (playsink, "creating ffmpegcolorspace");
+    chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
+    if (chain->conv == NULL) {
+      post_missing_element_message (playsink, "ffmpegcolorspace");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "ffmpegcolorspace"), (NULL));
+    } else {
+      gst_bin_add (bin, chain->conv);
+      if (!gst_element_link_pads (prev, "src", chain->conv, "sink"))
+        goto link_failed;
 
-    pad = gst_element_get_static_pad (chain->queue, "sink");
-  } else {
-    if (!gst_element_link_pads (chain->queue, "src", chain->sink, NULL))
-      goto link_failed;
-    pad = gst_element_get_static_pad (chain->queue, "sink");
+      prev = chain->conv;
+    }
+
+    GST_DEBUG_OBJECT (playsink, "creating videoscale");
+    chain->scale = gst_element_factory_make ("videoscale", "vscale");
+    if (chain->scale == NULL) {
+      post_missing_element_message (playsink, "videoscale");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "videoscale"), ("possibly a liboil version mismatch?"));
+    } else {
+      gst_bin_add (bin, chain->scale);
+      if (!gst_element_link_pads (prev, "src", chain->scale, "sink"))
+        goto link_failed;
+
+      prev = chain->scale;
+    }
   }
 
+  /* be more careful with the pad from the custom sink element, it might not
+   * be named 'sink' */
+  if (!gst_element_link_pads (prev, "src", chain->sink, NULL))
+    goto link_failed;
+
+  pad = gst_element_get_static_pad (chain->queue, "sink");
   chain->sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
+
   gst_element_add_pad (chain->chain.bin, chain->sinkpad);
 
   return chain;
@@ -740,24 +755,6 @@ no_sinks:
     GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Both autovideosink and xvimagesink elements are missing.")),
         (NULL));
-    free_chain ((GstPlayChain *) chain);
-    return NULL;
-  }
-no_colorspace:
-  {
-    post_missing_element_message (playsink, "ffmpegcolorspace");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "ffmpegcolorspace"), (NULL));
-    free_chain ((GstPlayChain *) chain);
-    return NULL;
-  }
-no_videoscale:
-  {
-    post_missing_element_message (playsink, "videoscale");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "videoscale"), ("possibly a liboil version mismatch?"));
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -879,8 +876,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 {
   GstPlayAudioChain *chain;
   GstBin *bin;
-  gboolean res, have_volume;
+  gboolean have_volume;
   GstPad *pad;
+  GstElement *head, *prev, *elem;
 
   chain = g_new0 (GstPlayAudioChain, 1);
   chain->chain.playsink = gst_object_ref (playsink);
@@ -888,15 +886,24 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   GST_DEBUG_OBJECT (playsink, "making audio chain %p", chain);
 
   if (playsink->audio_sink) {
-    chain->sink = gst_object_ref (playsink->audio_sink);
-  } else {
-    chain->sink = gst_element_factory_make ("autoaudiosink", "audiosink");
-    if (chain->sink == NULL) {
-      chain->sink = gst_element_factory_make ("alsasink", "audiosink");
-    }
-    if (chain->sink == NULL)
-      goto no_sinks;
+    GST_DEBUG_OBJECT (playsink, "trying configured audiosink");
+    elem = gst_object_ref (playsink->audio_sink);
+    chain->sink = try_element (playsink, elem);
   }
+  if (chain->sink == NULL) {
+    GST_DEBUG_OBJECT (playsink, "trying autoaudiosink");
+    elem = gst_element_factory_make ("autoaudiosink", "audiosink");
+    chain->sink = try_element (playsink, elem);
+  }
+  if (chain->sink == NULL) {
+    GST_DEBUG_OBJECT (playsink, "trying alsasink");
+    elem = gst_element_factory_make ("alsasink", "audiosink");
+    chain->sink = try_element (playsink, elem);
+  }
+  if (chain->sink == NULL)
+    goto no_sinks;
+
+
   chain->chain.bin = gst_bin_new ("abin");
   bin = GST_BIN_CAST (chain->chain.bin);
   gst_object_ref (bin);
@@ -909,6 +916,10 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     GST_DEBUG_OBJECT (playsink, "adding audio queue");
     chain->queue = gst_element_factory_make ("queue", "aqueue");
     gst_bin_add (bin, chain->queue);
+    prev = head = chain->queue;
+  } else {
+    head = chain->sink;
+    prev = NULL;
   }
 
   /* check if the sink has the volume property, if it does we don't need to
@@ -934,60 +945,80 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   if (raw) {
     chain->conv = gst_element_factory_make ("audioconvert", "aconv");
-    if (chain->conv == NULL)
-      goto no_audioconvert;
-    gst_bin_add (bin, chain->conv);
+    if (chain->conv == NULL) {
+      post_missing_element_message (playsink, "audioconvert");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "audioconvert"), ("possibly a liboil version mismatch?"));
+    } else {
+      gst_bin_add (bin, chain->conv);
+      if (prev) {
+        if (!gst_element_link_pads (prev, "src", chain->conv, "sink"))
+          goto link_failed;
+      } else {
+        head = chain->conv;
+      }
+      prev = chain->conv;
+    }
 
     chain->resample = gst_element_factory_make ("audioresample", "aresample");
-    if (chain->resample == NULL)
-      goto no_audioresample;
-    gst_bin_add (bin, chain->resample);
-
-    res = gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
+    if (chain->resample == NULL) {
+      post_missing_element_message (playsink, "audioresample");
+      GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "audioresample"), ("possibly a liboil version mismatch?"));
+    } else {
+      gst_bin_add (bin, chain->resample);
+      if (prev) {
+        if (!gst_element_link_pads (prev, "src", chain->resample, "sink"))
+          goto link_failed;
+      } else {
+        head = chain->resample;
+      }
+      prev = chain->resample;
+    }
 
     if (!have_volume && playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
       chain->volume = gst_element_factory_make ("volume", "volume");
-      if (chain->volume == NULL)
-        goto no_volume;
+      if (chain->volume == NULL) {
+        post_missing_element_message (playsink, "volume");
+        GST_ELEMENT_WARNING (playsink, CORE, MISSING_PLUGIN,
+            (_("Missing element '%s' - check your GStreamer installation."),
+                "volume"), ("possibly a liboil version mismatch?"));
+      } else {
+        have_volume = TRUE;
 
-      have_volume = TRUE;
+        /* volume also has the mute property */
+        chain->mute = gst_object_ref (chain->volume);
 
-      /* volume also has the mute property */
-      chain->mute = gst_object_ref (chain->volume);
+        /* configure with the latest volume and mute */
+        g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume,
+            NULL);
+        g_object_set (G_OBJECT (chain->mute), "mute", playsink->mute, NULL);
+        gst_bin_add (bin, chain->volume);
 
-      /* configure with the latest volume and mute */
-      g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
-      g_object_set (G_OBJECT (chain->mute), "mute", playsink->mute, NULL);
-      gst_bin_add (bin, chain->volume);
-
-      res &=
-          gst_element_link_pads (chain->resample, "src", chain->volume, "sink");
-      res &= gst_element_link_pads (chain->volume, "src", chain->sink, NULL);
-    } else {
-      res &= gst_element_link_pads (chain->resample, "src", chain->sink, NULL);
-    }
-    if (!res)
-      goto link_failed;
-
-    if (queue) {
-      res = gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
-      pad = gst_element_get_static_pad (chain->queue, "sink");
-    } else {
-      pad = gst_element_get_static_pad (chain->conv, "sink");
-    }
-  } else {
-    if (queue) {
-      res = gst_element_link_pads (chain->queue, "src", chain->sink, "sink");
-      pad = gst_element_get_static_pad (chain->queue, "sink");
-    } else {
-      pad = gst_element_get_static_pad (chain->sink, "sink");
+        if (prev) {
+          if (!gst_element_link_pads (prev, "src", chain->volume, "sink"))
+            goto link_failed;
+        } else {
+          head = chain->volume;
+        }
+        prev = chain->volume;
+      }
     }
   }
+
+  if (!gst_element_link_pads (prev, "src", chain->sink, NULL))
+    goto link_failed;
+
   /* post a warning if we have no way to configure the volume */
   if (!have_volume) {
     GST_ELEMENT_WARNING (playsink, STREAM, NOT_IMPLEMENTED,
         (_("No volume control found")), ("No volume control found"));
   }
+
+  /* and ghost the sinkpad of the headmost element */
+  pad = gst_element_get_static_pad (head, "sink");
   chain->sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->sinkpad);
@@ -1000,33 +1031,6 @@ no_sinks:
     post_missing_element_message (playsink, "autoaudiosink");
     GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
-    free_chain ((GstPlayChain *) chain);
-    return NULL;
-  }
-no_audioconvert:
-  {
-    post_missing_element_message (playsink, "audioconvert");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "audioconvert"), ("possibly a liboil version mismatch?"));
-    free_chain ((GstPlayChain *) chain);
-    return NULL;
-  }
-no_audioresample:
-  {
-    post_missing_element_message (playsink, "audioresample");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "audioresample"), ("possibly a liboil version mismatch?"));
-    free_chain ((GstPlayChain *) chain);
-    return NULL;
-  }
-no_volume:
-  {
-    post_missing_element_message (playsink, "volume");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "volume"), ("possibly a liboil version mismatch?"));
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -1175,7 +1179,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   /* figure out which components we need */
   if (flags & GST_PLAY_FLAG_TEXT && playsink->text_pad) {
-    /* we need video too */
+    /* we have a text_pad and we need text rendering, in this case we need a
+     * video_pad to combine the video with the text */
     if (!playsink->video_pad)
       goto subs_but_no_video;
 
@@ -1593,7 +1598,9 @@ gst_play_sink_send_event (GstElement * element, GstEvent * event)
       res = gst_play_sink_send_event_to_sink (GST_PLAY_SINK (element), event);
       break;
     default:
-      res = parent_class->send_event (element, event);
+      res =
+          GST_ELEMENT_CLASS (gst_play_sink_parent_class)->send_event (element,
+          event);
       break;
   }
   return res;
@@ -1614,7 +1621,9 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret =
+      GST_ELEMENT_CLASS (gst_play_sink_parent_class)->change_state (element,
+      transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
