@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#include <glib/gstrfuncs.h>
+#include <glib.h>
 
 #include <gst/gsttypefind.h>
 #include <gst/gstelement.h>
