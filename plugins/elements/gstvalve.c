@@ -77,6 +77,7 @@ static gboolean gst_valve_event (GstPad *pad, GstEvent *event);
 static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
 static GstFlowReturn gst_valve_chain (GstPad *pad, GstBuffer *buffer);
+static GstCaps *gst_valve_getcaps (GstPad *pad);
 
 static void
 _do_init (GType type)
@@ -127,6 +128,8 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
   valve->discont = FALSE;
 
   valve->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  gst_pad_set_getcaps_function (valve->srcpad,
+      GST_DEBUG_FUNCPTR (gst_valve_getcaps));
   gst_element_add_pad (GST_ELEMENT (valve), valve->srcpad);
 
   valve->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
@@ -136,6 +139,8 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
       GST_DEBUG_FUNCPTR (gst_valve_event));
   gst_pad_set_bufferalloc_function (valve->sinkpad,
       GST_DEBUG_FUNCPTR (gst_valve_buffer_alloc));
+  gst_pad_set_getcaps_function (valve->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_valve_getcaps));
   gst_element_add_pad (GST_ELEMENT (valve), valve->sinkpad);
 }
 
@@ -260,3 +265,22 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "fsvalve",
     "Valve",
     gst_valve_plugin_init, VERSION, "LGPL", "Farsight", "http://farsight.sf.net")
+
+static GstCaps *
+gst_valve_getcaps (GstPad *pad)
+{
+  GstValve *valve = GST_VALVE (gst_pad_get_parent (pad));
+  GstCaps *caps;
+
+  if (pad == valve->sinkpad)
+    caps = gst_pad_peer_get_caps (valve->srcpad);
+  else
+    caps = gst_pad_peer_get_caps (valve->sinkpad);
+
+  if (caps == NULL)
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+  gst_object_unref (valve);
+
+  return caps;
+}
