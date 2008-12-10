@@ -1306,8 +1306,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "adding visualisation");
 
     srcpad =
-        gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->chain.
-            bin), "src");
+        gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+            chain.bin), "src");
     add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
     gst_pad_link (playsink->audio_tee_vissrc, playsink->vischain->sinkpad);
     gst_pad_link (srcpad, playsink->videochain->sinkpad);

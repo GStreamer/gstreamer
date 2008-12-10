@@ -1767,9 +1767,14 @@ unknown_type:
   }
 no_selector:
   {
-    GST_ERROR_OBJECT (playbin, "could not create selector for pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
     GST_SOURCE_GROUP_UNLOCK (group);
+
+    gst_element_post_message (GST_ELEMENT_CAST (playbin),
+        gst_missing_element_message_new (GST_ELEMENT_CAST (playbin),
+            "input-selector"));
+    GST_ELEMENT_ERROR (playbin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "input-selector"), (NULL));
     return;
   }
 link_failed:

@@ -1,5 +1,14 @@
 2008-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaybin2.c: (pad_added_cb):
+	Error out with a missing-plugin error when the input-selector was not
+	found.
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_reconfigure):
+	Indentation.
+
+2008-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaysink.c: (gst_play_sink_class_init),
 	(gst_play_sink_dispose), (gst_play_sink_finalize), (try_element),
 	(gen_video_chain), (gen_audio_chain), (gst_play_sink_reconfigure),
