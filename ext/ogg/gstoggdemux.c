@@ -128,31 +128,7 @@ static GstClockTime gst_annodex_granule_to_time (gint64 granulepos,
 static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
     GstOggPad * pad, GstFlowReturn ret);
 
-static GstPadClass *ogg_pad_parent_class = NULL;
-
-static GType
-gst_ogg_pad_get_type (void)
-{
-  static GType ogg_pad_type = 0;
-
-  if (!ogg_pad_type) {
-    static const GTypeInfo ogg_pad_info = {
-      sizeof (GstOggPadClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_ogg_pad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstOggPad),
-      0,
-      (GInstanceInitFunc) gst_ogg_pad_init,
-    };
-
-    ogg_pad_type =
-        g_type_register_static (GST_TYPE_PAD, "GstOggPad", &ogg_pad_info, 0);
-  }
-  return ogg_pad_type;
-}
+G_DEFINE_TYPE (GstOggPad, gst_ogg_pad, GST_TYPE_PAD);
 
 static void
 gst_ogg_pad_class_init (GstOggPadClass * klass)
@@ -160,8 +136,6 @@ gst_ogg_pad_class_init (GstOggPadClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
-
-  ogg_pad_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_ogg_pad_dispose;
   gobject_class->finalize = gst_ogg_pad_finalize;
@@ -224,7 +198,7 @@ gst_ogg_pad_dispose (GObject * object)
 
   ogg_stream_reset (&pad->stream);
 
-  G_OBJECT_CLASS (ogg_pad_parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_ogg_pad_parent_class)->dispose (object);
 }
 
 static void
@@ -234,7 +208,7 @@ gst_ogg_pad_finalize (GObject * object)
 
   ogg_stream_clear (&pad->stream);
 
-  G_OBJECT_CLASS (ogg_pad_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_ogg_pad_parent_class)->finalize (object);
 }
 
 #if 0

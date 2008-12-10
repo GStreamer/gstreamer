@@ -1,3 +1,10 @@
+2008-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_class_init),
+	(gst_ogg_pad_dispose), (gst_ogg_pad_finalize):
+	Use G_DEFINE_TYPE for the OggPad to get some threadsafe type 
+	init from glib.
+
 2008-12-10  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Luis Menina <liberforce at freeside dot fr>
