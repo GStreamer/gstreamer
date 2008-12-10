@@ -136,12 +136,10 @@ mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
 static gboolean
 mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total);
 
-/* static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
-
 GST_BOILERPLATE (GstMPEGAudioParse, gst_mp3parse, GstElement, GST_TYPE_ELEMENT);
 
 #define GST_TYPE_MP3_CHANNEL_MODE (gst_mp3_channel_mode_get_type())
-G_GNUC_UNUSED static GType
+static GType
 gst_mp3_channel_mode_get_type (void)
 {
   static GType mp3_channel_mode_type = 0;
@@ -234,7 +232,7 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
   }
 
   mode_enum =
-      g_enum_get_value (g_type_class_ref (GST_TYPE_MP3_CHANNEL_MODE), mode);
+      g_enum_get_value (g_type_class_peek (GST_TYPE_MP3_CHANNEL_MODE), mode);
 
   GST_DEBUG_OBJECT (mp3parse, "Calculated mp3 frame length of %u bytes",
       length);
@@ -328,6 +326,8 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass * klass)
       "has crc", "Using CRC", NULL);
   gst_tag_register (GST_TAG_MODE, GST_TAG_FLAG_ENCODED, G_TYPE_STRING,
       "channel mode", "MPEG audio channel mode", NULL);
+
+  g_type_class_ref (GST_TYPE_MP3_CHANNEL_MODE);
 }
 
 static void
@@ -766,8 +766,8 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
     }
     mp3parse->last_posted_channel_mode = mode;
 
-    mode_enum = g_enum_get_value (g_type_class_ref (GST_TYPE_MP3_CHANNEL_MODE),
-        mp3parse->last_posted_channel_mode);
+    mode_enum =
+        g_enum_get_value (g_type_class_peek (GST_TYPE_MP3_CHANNEL_MODE), mode);
 
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_MODE,
         mode_enum->value_nick, NULL);
@@ -1968,7 +1968,7 @@ out:
 }
 
 static const GstQueryType *
-mp3parse_get_query_types (GstPad * pad ATTR_UNUSED)
+mp3parse_get_query_types (GstPad * pad G_GNUC_UNUSED)
 {
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,

@@ -131,12 +131,6 @@ struct _GstMPEGAudioParseClass {
 
 GType gst_mp3parse_get_type(void);
 
-#ifdef __GCC__
-#define ATTR_UNUSED __attribute__ ((unused)
-#else
-#define ATTR_UNUSED 
-#endif
-
 G_END_DECLS
 
 #endif /* __MP3PARSE_H__ */

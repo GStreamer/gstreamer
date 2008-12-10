@@ -1,3 +1,16 @@
+2008-12-10  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (channel_mode_class),
+	  (GST_TYPE_MP3_CHANNEL_MODE), (mp3_type_frame_length_from_header),
+	  (gst_mp3parse_emit_frame), (mp3parse_get_query_types):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  Do an initial class_ref on an internal enum type from within the
+	  class_init function so that there aren't any issues when multiple
+	  mp3parse elements are started in separate threads at the same
+	  time. (Why we use an enum type here if the tag is registered as
+	  a string type, I don't know). Also remove custom UNUSED macro
+	  and use GLib's instead.
+
 2008-12-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
