@@ -38,6 +38,10 @@ BuildRequires:  gcc-c++
 @USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
 @USE_AALIB_TRUE@Provides:       gstreamer-aasink = %{version}-%{release}
 @USE_PULSE_TRUE@BuildRequires: pulseaudio-libs-devel
+@USE_DV1394_TRUE@BuildRequires: libavc1394-devel
+@USE_DV1394_TRUE@BuildRequires: libdc1394-devel
+@USE_DV1394_TRUE@BuildRequires: libiec61883-devel  
+@USE_DV1394_TRUE@BuildRequires: libraw1394-devel
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -81,6 +85,8 @@ rm -rf $RPM_BUILD_ROOT
 %files -f gst-plugins-good-%{majorminor}.lang
 %defattr(-, root, root)
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-good.doap
+%{_datadir}/gstreamer-%{majorminor}/presets/GstIirEqualizer10Bands.prs
+%{_datadir}/gstreamer-%{majorminor}/presets/GstIirEqualizer3Bands.prs
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
