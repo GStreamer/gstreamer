@@ -135,7 +135,7 @@ GST_START_TEST (test_granulepos_offset)
   GError *error = NULL;
 
   pipe_str = g_strdup_printf ("videotestsrc timestamp-offset=%" G_GUINT64_FORMAT
-      " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
+      " num-buffers=10 ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
       " ! theoraenc ! fakesink name=fs0", TIMESTAMP_OFFSET);
 
   bin = gst_parse_launch (pipe_str, &error);
@@ -227,7 +227,7 @@ GST_START_TEST (test_continuity)
   GstBuffer *buffer;
   GError *error = NULL;
 
-  pipe_str = g_strdup_printf ("videotestsrc"
+  pipe_str = g_strdup_printf ("videotestsrc num-buffers=10"
       " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
       " ! theoraenc ! fakesink name=fs0");
 
@@ -325,7 +325,7 @@ GST_START_TEST (test_discontinuity)
   GError *error = NULL;
   guint drop_id;
 
-  pipe_str = g_strdup_printf ("videotestsrc"
+  pipe_str = g_strdup_printf ("videotestsrc num-buffers=10"
       " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
       " ! theoraenc ! fakesink name=fs0");
 
