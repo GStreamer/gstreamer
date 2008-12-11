@@ -720,17 +720,18 @@ gst_mxf_demux_handle_metadata_source_package (GstMXFDemux * demux,
 
 static GstFlowReturn
 gst_mxf_demux_handle_metadata_track (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
+    const MXFUL * key, guint16 type, GstBuffer * buffer)
 {
   MXFMetadataTrack track;
 
   GST_DEBUG_OBJECT (demux,
-      "Handling metadata track of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
+      "Handling metadata track with type 0x%04x of size %u"
+      " at offset %" G_GUINT64_FORMAT, type, GST_BUFFER_SIZE (buffer),
+      demux->offset);
 
   if (!mxf_metadata_track_parse (key, &track, &demux->primer,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata track timecode failed");
+          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
+    GST_ERROR_OBJECT (demux, "Parsing metadata track failed");
     return GST_FLOW_ERROR;
   }
 
@@ -1287,8 +1288,6 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
   }
   demux->preface.content_storage = &demux->content_storage;
 
-  /* TODO: dm_schemes */
-
   /* Content storage */
   demux->content_storage.packages =
       g_new0 (MXFMetadataGenericPackage *, demux->content_storage.n_packages);
@@ -1317,8 +1316,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -1500,7 +1500,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           &g_array_index (demux->structural_component,
           MXFMetadataStructuralComponent, i);
 
-      if (component->type != MXF_METADATA_SOURCE_CLIP)
+      if (component->type != MXF_METADATA_SOURCE_CLIP
+          && component->type != MXF_METADATA_DM_SOURCE_CLIP)
         continue;
 
       for (j = 0; j < demux->source_package->len; j++) {
@@ -1508,9 +1509,15 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
             &g_array_index (demux->source_package, MXFMetadataGenericPackage,
             j);
 
-        if (mxf_umid_is_equal (&component->source_clip.source_package_id,
+        if (component->type == MXF_METADATA_SOURCE_CLIP &&
+            mxf_umid_is_equal (&component->source_clip.source_package_id,
                 &package->package_uid)) {
           component->source_clip.source_package = package;
+          break;
+        } else if (component->type == MXF_METADATA_DM_SOURCE_CLIP &&
+            mxf_umid_is_equal (&component->dm_source_clip.source_package_id,
+                &package->package_uid)) {
+          component->dm_source_clip.source_package = package;
           break;
         }
       }
@@ -1986,7 +1993,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
 
   GST_DEBUG_OBJECT (demux,
       "Handling metadata of size %u at offset %"
-      G_GUINT64_FORMAT " of type 0x%04d", GST_BUFFER_SIZE (buffer),
+      G_GUINT64_FORMAT " of type 0x%04x", GST_BUFFER_SIZE (buffer),
       demux->offset, type);
 
   if (G_UNLIKELY (!demux->partition.valid)) {
@@ -2027,13 +2034,17 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
       ret = gst_mxf_demux_handle_metadata_source_package (demux, key, buffer);
       break;
     case MXF_METADATA_TRACK:
-      ret = gst_mxf_demux_handle_metadata_track (demux, key, buffer);
+    case MXF_METADATA_EVENT_TRACK:
+    case MXF_METADATA_STATIC_TRACK:
+      ret = gst_mxf_demux_handle_metadata_track (demux, key, type, buffer);
       break;
     case MXF_METADATA_SEQUENCE:
       ret = gst_mxf_demux_handle_metadata_sequence (demux, key, buffer);
       break;
     case MXF_METADATA_TIMECODE_COMPONENT:
     case MXF_METADATA_SOURCE_CLIP:
+    case MXF_METADATA_DM_SEGMENT:
+    case MXF_METADATA_DM_SOURCE_CLIP:
       ret =
           gst_mxf_demux_handle_metadata_structural_component (demux,
           key, type, buffer);

@@ -1694,7 +1694,7 @@ void mxf_metadata_generic_package_reset
 gboolean
 mxf_metadata_track_parse (const MXFUL * key,
     MXFMetadataTrack * track, const MXFPrimerPack * primer,
-    const guint8 * data, guint size)
+    guint16 type, const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
   const guint8 *tag_data;
@@ -1704,7 +1704,15 @@ mxf_metadata_track_parse (const MXFUL * key,
 
   memset (track, 0, sizeof (MXFMetadataTrack));
 
-  GST_DEBUG ("Parsing track:");
+  if (type == MXF_METADATA_TRACK)
+    track->variant = MXF_METADATA_TRACK_VARIANT_TIMELINE;
+  else if (type == MXF_METADATA_EVENT_TRACK)
+    track->variant = MXF_METADATA_TRACK_VARIANT_EVENT;
+  else
+    track->variant = MXF_METADATA_TRACK_VARIANT_STATIC;
+
+
+  GST_DEBUG ("Parsing track of type 0x%04x:", type);
 
   while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
     if (tag_size == 0 || tag == 0x0000)
@@ -1742,12 +1750,14 @@ mxf_metadata_track_parse (const MXFUL * key,
         GST_DEBUG ("  track name = %s", GST_STR_NULL (track->track_name));
         break;
       case 0x4b01:
+      case 0x4901:
         if (!mxf_fraction_parse (&track->edit_rate, tag_data, tag_size))
           goto error;
         GST_DEBUG ("  edit rate = %d/%d", track->edit_rate.n,
             track->edit_rate.d);
         break;
       case 0x4b02:
+      case 0x4902:
         if (tag_size != 8)
           goto error;
         track->origin = GST_READ_UINT64_BE (tag_data);
@@ -1960,10 +1970,14 @@ mxf_metadata_structural_component_parse (const MXFUL * key,
   GST_DEBUG ("Parsing structural component:");
 
   component->type = type;
-  GST_DEBUG ("  type = %s",
-      (component->type ==
-          MXF_METADATA_TIMECODE_COMPONENT) ? "timecode component" :
-      "source clip");
+  if (type == MXF_METADATA_TIMECODE_COMPONENT)
+    GST_DEBUG ("  type = timecode component");
+  else if (type == MXF_METADATA_SOURCE_CLIP)
+    GST_DEBUG ("  type = source clip");
+  else if (type == MXF_METADATA_DM_SEGMENT)
+    GST_DEBUG ("  type = DM segment");
+  else
+    GST_DEBUG ("  type = DM source clip");
 
   while (mxf_local_tag_parse (data, size, &tag, &tag_size, &tag_data)) {
     if (tag_size == 0 || tag == 0x0000)
@@ -2030,33 +2044,164 @@ mxf_metadata_structural_component_parse (const MXFUL * key,
         break;
         /* Source clip specifics */
       case 0x1201:
-        if (type != MXF_METADATA_SOURCE_CLIP)
+        if (type != MXF_METADATA_SOURCE_CLIP
+            && type != MXF_METADATA_DM_SOURCE_CLIP)
           goto DFLT;
         if (tag_size != 8)
           goto error;
-        component->source_clip.start_position = GST_READ_UINT64_BE (tag_data);
-        GST_DEBUG ("  start position = %" G_GINT64_FORMAT,
-            component->source_clip.start_position);
+
+        if (type == MXF_METADATA_SOURCE_CLIP) {
+          component->source_clip.start_position = GST_READ_UINT64_BE (tag_data);
+          GST_DEBUG ("  start position = %" G_GINT64_FORMAT,
+              component->source_clip.start_position);
+        } else {
+          component->dm_source_clip.start_position =
+              GST_READ_UINT64_BE (tag_data);
+          GST_DEBUG ("  start position = %" G_GINT64_FORMAT,
+              component->dm_source_clip.start_position);
+        }
         break;
       case 0x1101:
-        if (type != MXF_METADATA_SOURCE_CLIP)
+        if (type != MXF_METADATA_SOURCE_CLIP
+            && type != MXF_METADATA_DM_SOURCE_CLIP)
           goto DFLT;
         if (tag_size != 32)
           goto error;
-        memcpy (&component->source_clip.source_package_id, tag_data, 32);
-        GST_DEBUG ("  source package id = %s",
-            mxf_umid_to_string (&component->source_clip.source_package_id,
-                str));
+
+        if (type == MXF_METADATA_SOURCE_CLIP) {
+          memcpy (&component->source_clip.source_package_id, tag_data, 32);
+          GST_DEBUG ("  source package id = %s",
+              mxf_umid_to_string (&component->source_clip.source_package_id,
+                  str));
+        } else {
+          memcpy (&component->dm_source_clip.source_package_id, tag_data, 32);
+          GST_DEBUG ("  source package id = %s",
+              mxf_umid_to_string (&component->dm_source_clip.source_package_id,
+                  str));
+        }
         break;
       case 0x1102:
-        if (type != MXF_METADATA_SOURCE_CLIP)
+        if (type != MXF_METADATA_SOURCE_CLIP
+            && type != MXF_METADATA_DM_SOURCE_CLIP)
           goto DFLT;
         if (tag_size != 4)
           goto error;
-        component->source_clip.source_track_id = GST_READ_UINT32_BE (tag_data);
-        GST_DEBUG ("  source track id = %u",
-            component->source_clip.source_track_id);
+
+        if (type == MXF_METADATA_SOURCE_CLIP) {
+          component->source_clip.source_track_id =
+              GST_READ_UINT32_BE (tag_data);
+          GST_DEBUG ("  source track id = %u",
+              component->source_clip.source_track_id);
+        } else {
+          component->dm_source_clip.source_track_id =
+              GST_READ_UINT32_BE (tag_data);
+          GST_DEBUG ("  source track id = %u",
+              component->dm_source_clip.source_track_id);
+        }
         break;
+        /* DM Segment specifics */
+      case 0x0601:
+        if (type != MXF_METADATA_DM_SEGMENT)
+          goto DFLT;
+        if (tag_size != 8)
+          goto error;
+        component->dm_segment.event_start_position =
+            GST_READ_UINT64_BE (tag_data);
+        GST_DEBUG ("  event start position = %" G_GINT64_FORMAT,
+            component->dm_segment.event_start_position);
+        break;
+      case 0x0602:
+        if (type != MXF_METADATA_DM_SEGMENT)
+          goto DFLT;
+        component->dm_segment.event_comment =
+            mxf_utf16_to_utf8 (tag_data, tag_size);
+        GST_DEBUG ("  event comment = %s",
+            GST_STR_NULL (component->dm_segment.event_comment));
+        break;
+      case 0x6102:
+      {
+        guint32 len;
+        guint i;
+
+        if (type != MXF_METADATA_DM_SEGMENT)
+          goto DFLT;
+
+        if (tag_size < 8)
+          goto error;
+        len = GST_READ_UINT32_BE (tag_data);
+        GST_DEBUG ("  number of track ids = %u", len);
+        if (len == 0)
+          goto next;
+
+        if (GST_READ_UINT32_BE (tag_data + 4) != 4)
+          goto error;
+
+        if (len * 4 + 8 < tag_size)
+          goto error;
+
+        component->dm_segment.n_track_ids = len;
+        component->dm_segment.track_ids = g_new0 (guint32, len);
+
+        tag_data += 8;
+        tag_size -= 8;
+
+        for (i = 0; i < len; i++) {
+          component->dm_segment.track_ids[i] = GST_READ_UINT32_BE (tag_data);
+          GST_DEBUG ("    track id %u = %u", i,
+              component->dm_segment.track_ids[i]);
+          tag_data += 4;
+          tag_size -= 4;
+        }
+        break;
+      }
+      case 0x6101:
+        if (type != MXF_METADATA_DM_SEGMENT)
+          goto DFLT;
+        if (tag_size != 16)
+          goto error;
+
+        memcpy (&component->dm_segment.dm_framework, tag_data, 16);
+        GST_DEBUG ("  DM framework = %s",
+            mxf_ul_to_string (&component->dm_segment.dm_framework, str));
+        break;
+        /* DM Source Clip specifics */
+      case 0x6103:
+      {
+        guint32 len;
+        guint i;
+
+        if (type != MXF_METADATA_DM_SOURCE_CLIP)
+          goto DFLT;
+        if (tag_size < 8)
+          goto error;
+
+        len = GST_READ_UINT32_BE (tag_data);
+        GST_DEBUG ("  number of track ids = %u", len);
+        if (len == 0)
+          goto next;
+
+        if (GST_READ_UINT32_BE (tag_data + 4) != 4)
+          goto error;
+
+        if (tag_size < 8 + 4 * len)
+          goto error;
+
+        tag_data += 8;
+        tag_size -= 8;
+
+        component->dm_source_clip.n_track_ids = len;
+        component->dm_source_clip.track_ids = g_new0 (guint32, len);
+
+        for (i = 0; i < len; i++) {
+          component->dm_source_clip.track_ids[i] =
+              GST_READ_UINT32_BE (tag_data);
+          GST_DEBUG ("    track id %u = %u", i,
+              component->dm_source_clip.track_ids[i]);
+          tag_data += 4;
+          tag_size -= 4;
+        }
+        break;
+      }
       DFLT:
       default:
         if (!gst_metadata_add_custom_tag (primer, tag, tag_data, tag_size,
@@ -2083,6 +2228,13 @@ void mxf_metadata_structural_component_reset
     (MXFMetadataStructuralComponent * component)
 {
   g_return_if_fail (component != NULL);
+
+  if (component->type == MXF_METADATA_DM_SEGMENT) {
+    g_free (component->dm_segment.event_comment);
+    g_free (component->dm_segment.track_ids);
+  } else if (component->type == MXF_METADATA_DM_SOURCE_CLIP) {
+    g_free (component->dm_source_clip.track_ids);
+  }
 
   if (component->other_tags)
     g_hash_table_destroy (component->other_tags);

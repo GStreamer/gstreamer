@@ -106,7 +106,7 @@ void mxf_metadata_essence_container_data_reset (MXFMetadataEssenceContainerData 
 gboolean mxf_metadata_generic_package_parse (const MXFUL *key, MXFMetadataGenericPackage *generic_package, const MXFPrimerPack *primer, const guint8 *data, guint size);
 void mxf_metadata_generic_package_reset (MXFMetadataGenericPackage *generic_package);
 
-gboolean mxf_metadata_track_parse (const MXFUL *key, MXFMetadataTrack *track, const MXFPrimerPack *primer, const guint8 *data, guint size);
+gboolean mxf_metadata_track_parse (const MXFUL *key, MXFMetadataTrack *track, const MXFPrimerPack *primer, guint16 type, const guint8 *data, guint size);
 void mxf_metadata_track_reset (MXFMetadataTrack *track);
 
 MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL *track_identifier);

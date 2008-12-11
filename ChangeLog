@@ -1,3 +1,18 @@
+2008-12-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_handle_metadata_track),
+	(gst_mxf_demux_handle_header_metadata_resolve_references),
+	(gst_mxf_demux_handle_metadata):
+	* gst/mxf/mxfparse.c: (mxf_metadata_track_parse),
+	(mxf_metadata_structural_component_parse),
+	(mxf_metadata_structural_component_reset):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxftypes.h:
+	Implement parsing of Event Tracks, Static Tracks, DM Segments
+	and DM Source Clips as a preparation for descriptive metadata
+	support. Next step is to implement SMPTE S380M, "Descriptive
+	Metadata Scheme-1".
+
 2008-12-09  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_create_caps):

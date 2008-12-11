@@ -327,6 +327,12 @@ typedef enum {
   MXF_METADATA_TRACK_PARSED_TEXT           = 0x41
 } MXFMetadataTrackType;
 
+typedef enum {
+  MXF_METADATA_TRACK_VARIANT_TIMELINE,
+  MXF_METADATA_TRACK_VARIANT_EVENT,
+  MXF_METADATA_TRACK_VARIANT_STATIC
+} MXFMetadataTrackVariant;
+
 struct _MXFMetadataTrack {
   MXFUL instance_uid;
   MXFUL generation_uid;
@@ -335,6 +341,7 @@ struct _MXFMetadataTrack {
   guint32 track_number;
 
   MXFMetadataTrackType type;
+  MXFMetadataTrackVariant variant;
 
   gchar *track_name;
 
@@ -390,6 +397,27 @@ struct _MXFMetadataStructuralComponent {
 
       guint32 source_track_id;
     } source_clip;
+
+    struct {
+      gint64 event_start_position;
+      gchar *event_comment;
+
+      guint32 n_track_ids;
+      guint32 *track_ids;
+      
+      MXFUL dm_framework;
+    } dm_segment;
+
+    struct {
+      gint64 start_position;
+      MXFUMID source_package_id;
+      MXFMetadataGenericPackage *source_package;
+
+      guint32 source_track_id;
+
+      guint32 n_track_ids;
+      guint32 *track_ids;
+    } dm_source_clip;
   };
 
   GHashTable *other_tags;
