@@ -77,6 +77,7 @@ static gboolean loop_seek = FALSE;
 static gboolean flush_seek = TRUE;
 static gboolean scrub = TRUE;
 static gboolean play_scrub = FALSE;
+static gboolean skip_seek = FALSE;
 static gdouble rate = 1.0;
 
 static GstElement *pipeline;
@@ -106,7 +107,7 @@ static gboolean need_streams = TRUE;
 static GtkWidget *video_combo, *audio_combo, *text_combo, *vis_combo;
 static GtkWidget *vis_checkbox, *video_checkbox, *audio_checkbox;
 static GtkWidget *text_checkbox, *mute_checkbox, *volume_spinbutton;
-static GtkWidget *video_window;
+static GtkWidget *skip_checkbox, *video_window;
 
 GList *paths = NULL, *l = NULL;
 
@@ -1285,6 +1286,8 @@ do_seek (GtkWidget * widget)
     flags |= GST_SEEK_FLAG_KEY_UNIT;
   if (loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
+  if (skip_seek)
+    flags |= GST_SEEK_FLAG_SKIP;
 
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
@@ -1514,6 +1517,7 @@ stop_cb (GtkButton * button, gpointer data)
     if (pipeline_type == 16)
       clear_streams (pipeline);
 
+#if 0
     /* if one uses parse_launch, play, stop and play again it fails as all the
      * pads after the demuxer can't be reconnected
      */
@@ -1533,6 +1537,7 @@ stop_cb (GtkButton * button, gpointer data)
       gst_element_set_state (pipeline, GST_STATE_READY);
       connect_bus_signals (pipeline);
     }
+#endif
   }
   return;
 
@@ -1583,6 +1588,15 @@ play_scrub_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 }
 
 static void
+skip_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  skip_seek = gtk_toggle_button_get_active (button);
+  if (state == GST_STATE_PLAYING) {
+    do_seek (hscale);
+  }
+}
+
+static void
 rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 {
   gboolean res = FALSE;
@@ -1600,6 +1614,8 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
     flags |= GST_SEEK_FLAG_ACCURATE;
   if (keyframe_seek)
     flags |= GST_SEEK_FLAG_KEY_UNIT;
+  if (skip_seek)
+    flags |= GST_SEEK_FLAG_SKIP;
 
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
@@ -2002,7 +2018,9 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   /* in the segment-done callback we never flush as this would not make sense
    * for seamless playback. */
   if (loop_seek)
-    flags = GST_SEEK_FLAG_SEGMENT;
+    flags |= GST_SEEK_FLAG_SEGMENT;
+  if (skip_seek)
+    flags |= GST_SEEK_FLAG_SKIP;
 
   s_event = gst_event_new_seek (rate,
       GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
@@ -2328,6 +2346,7 @@ main (int argc, char **argv)
   flush_checkbox = gtk_check_button_new_with_label ("Flush");
   scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
   play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
+  skip_checkbox = gtk_check_button_new_with_label ("Play Skip");
   rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
   gtk_spin_button_set_digits (GTK_SPIN_BUTTON (rate_spinbutton), 3);
   rate_label = gtk_label_new ("Rate");
@@ -2347,6 +2366,8 @@ main (int argc, char **argv)
       NULL);
   gtk_tooltips_set_tip (tips, play_scrub_checkbox, "play video while seeking",
       NULL);
+  gtk_tooltips_set_tip (tips, skip_checkbox,
+      "Skip frames while playing at high frame rates", NULL);
 
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
@@ -2461,8 +2482,9 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), scrub_checkbox, 1, 2, 1, 2);
   gtk_table_attach_defaults (GTK_TABLE (flagtable), play_scrub_checkbox, 2, 3,
       1, 2);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 3, 4, 0, 1);
-  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 3, 4, 1,
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), skip_checkbox, 3, 4, 0, 1);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 4, 5, 0, 1);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 4, 5, 1,
       2);
   if (panel && boxes && boxes2) {
     gtk_box_pack_start (GTK_BOX (vbox), panel, FALSE, FALSE, 2);
@@ -2491,6 +2513,8 @@ main (int argc, char **argv)
       G_CALLBACK (scrub_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (play_scrub_checkbox), "toggled",
       G_CALLBACK (play_scrub_toggle_cb), pipeline);
+  g_signal_connect (G_OBJECT (skip_checkbox), "toggled",
+      G_CALLBACK (skip_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (rate_spinbutton), "value_changed",
       G_CALLBACK (rate_spinbutton_changed_cb), pipeline);
 

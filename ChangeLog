@@ -1,3 +1,10 @@
+2008-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/seek/seek.c: (do_seek), (stop_cb),
+	(skip_toggle_cb), (rate_spinbutton_changed_cb), (msg_segment_done),
+	(main):
+	Hook up the SKIP seek flag.
+
 2008-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c: (pad_added_cb):
