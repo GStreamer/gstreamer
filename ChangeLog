@@ -1,3 +1,13 @@
+2008-12-11  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/subparse/samiparse.c: (sami_context_push_state),
+	(sami_context_pop_state), (start_sami_element), (end_sami_element):
+	Some versions of libxml seem to be very picky as to strict formatting
+	of the input and never 'close' the final </body> tag.
+	In order to fix that bad behaviour, we trigger the flushing of
+	remaining data on both </body> and </sami>.
+	Fixes #557365
+
 2008-12-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Guillaume Emont <guillaume at fluendo dot com>
