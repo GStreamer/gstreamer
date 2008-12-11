@@ -1,5 +1,13 @@
 2008-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaysink.c: (gen_audio_chain),
+	(gst_play_sink_reconfigure):
+	Add some more debug info.
+	Fix linking of just an encoded sink.
+	Handle failure to create a sink chain more gracefully than crashing.
+
+2008-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/check/pipelines/theoraenc.c: (GST_START_TEST):
 	Pushing 10 buffers is enough to run the test.
 
