@@ -1,3 +1,11 @@
+2008-12-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Guillaume Emont <guillaume at fluendo dot com>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	Add typefinders for MS Word files and OS X .DS_Store files to
+	prevent them to be recognized as MPEG files. Fixes bug #564098.
+
 2008-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaysink.c: (gen_audio_chain),

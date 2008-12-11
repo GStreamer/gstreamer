@@ -3139,6 +3139,8 @@ plugin_init (GstPlugin * plugin)
   static gchar *imelody_exts[] = { "imy", "ime", "imelody", NULL };
   static gchar *pdf_exts[] = { "pdf", NULL };
   static gchar *mxf_exts[] = { "mxf", NULL };
+  static gchar *msword_exts[] = { "doc", NULL };
+  static gchar *dsstore_exts[] = { "DS_Store", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -3356,6 +3358,13 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_SECONDARY, nsf_exts, "NESM\x1a", 5, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/pdf",
       GST_RANK_SECONDARY, pdf_exts, "%PDF-", 5, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/msword",
+      GST_RANK_SECONDARY, msword_exts, "\320\317\021\340\241\261\032\341", 8,
+      GST_TYPE_FIND_LIKELY);
+  /* Mac OS X .DS_Store files tend to be taken for video/mpeg */
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/octet-stream",
+      GST_RANK_SECONDARY, dsstore_exts, "\000\000\000\001Bud1", 8,
+      GST_TYPE_FIND_LIKELY);
   return TRUE;
 }
 
