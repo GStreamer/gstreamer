@@ -877,7 +877,6 @@ gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
     }
     default:{
       GST_LOG_OBJECT (src, "let base class handle event");
-      event = gst_event_ref (event);
       ret = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
       break;
     }

@@ -1,3 +1,11 @@
+2008-12-12  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_handle_event):
+	Remove erroneous gst_buffer_ref().
+	* tests/check/libs/rtp.c: (GST_START_TEST):
+	Don't forget to unref the buffer once you're done with it.
+
 2008-12-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/playback/gstplaybin.c:

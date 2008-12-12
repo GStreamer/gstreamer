@@ -355,6 +355,7 @@ GST_START_TEST (test_rtcp_buffer)
   /* close and validate */
   gst_rtcp_buffer_end (buf);
   fail_unless (gst_rtcp_buffer_validate (buf) == TRUE);
+  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;
