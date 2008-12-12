@@ -21,6 +21,12 @@
  * Generic Container
  */
 
+/* TODO:
+ *  - playbin hangs on a lot of MXF/DV-DIF files (bug #563827)
+ *  - decodebin2 creates loops inside the linking graph (bug #563828)
+ *  - Forwarding of timestamps in dvdemux?
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -91,8 +97,8 @@ mxf_dv_dif_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->
-            descriptor[i])->is_file_descriptor
+    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
+        is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];
@@ -109,7 +115,6 @@ mxf_dv_dif_create_caps (MXFMetadataGenericPackage * package,
 
   /* TODO: might be video or audio only, use values of the generic sound/picture
    * descriptor in the caps in that case
-   * Also dvdemux might not forward timestamps
    */
   if (f->essence_container.u[13] == 0x02) {
     GST_DEBUG ("Found DV-DIF stream");

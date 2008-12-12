@@ -24,7 +24,8 @@
 /* TODO:
  * - Handle PES streams
  * - Fix TS/PS demuxers to forward timestamps
- * - Handle sound/data somehow
+ * - h264 support (see SMPTE RP2008)
+ * - AAC support
  */
 
 #ifdef HAVE_CONFIG_H

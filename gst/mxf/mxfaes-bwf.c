@@ -25,6 +25,7 @@
  * - Handle the case were a track only references specific channels
  *   of the essence (ChannelID property)
  * - Add support for more codecs 
+ * - Handle more of the metadata inside the descriptors
  */
 
 #ifdef HAVE_CONFIG_H

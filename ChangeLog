@@ -1,3 +1,14 @@
+2008-12-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c:
+	* gst/mxf/mxfalaw.c: (mxf_alaw_create_caps):
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfdv-dif.c: (mxf_dv_dif_create_caps):
+	* gst/mxf/mxfjpeg2000.c:
+	* gst/mxf/mxfmpeg.c:
+	* gst/mxf/mxfup.c:
+	Major update of the TODO lists. There's still much to do. 
+
 2008-12-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfdemux.c: (gst_mxf_demux_handle_metadata_track),

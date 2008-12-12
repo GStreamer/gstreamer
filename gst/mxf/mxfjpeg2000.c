@@ -23,6 +23,7 @@
 
 /* TODO:
  *  - parse the jpeg2000 sub-descriptor, see SMPTE 422M 7.2
+ *  - Add support for XYZ colorspace
  */
 
 #ifdef HAVE_CONFIG_H
@@ -107,8 +108,8 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->
-            descriptor[i])->is_file_descriptor
+    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
+        is_file_descriptor
         && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
         MXF_METADATA_MULTIPLE_DESCRIPTOR) {
       f = track->descriptor[i];

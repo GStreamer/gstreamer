@@ -23,6 +23,7 @@
 
 /* TODO: 
  *   - Handle CDCI essence
+ *   - Handle more formats with RGBA descriptor (4:4:4 / 4:4:4:4 YUV, RGB656, ...)
  *   - Correctly transform for the GStreamer strides
  *   - Handle all the dimensions and other properties in the picture
  *     essence descriptors correctly according to S377M Annex E

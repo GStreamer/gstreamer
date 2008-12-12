@@ -115,7 +115,8 @@ mxf_alaw_create_caps (MXFMetadataGenericPackage * package,
             ((gdouble) s->audio_sampling_rate.d) + 0.5),
         "channels", G_TYPE_INT, s->channel_count, NULL);
 
-    /* TODO: Handle channel layout somehow? */
+    /* TODO: Handle channel layout somehow?
+     * Or is alaw limited to two channels? */
     if (!*tags)
       *tags = gst_tag_list_new ();
 
