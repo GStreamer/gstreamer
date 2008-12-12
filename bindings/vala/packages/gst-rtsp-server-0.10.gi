@@ -92,7 +92,6 @@
 			<field name="address" type="struct sockaddr_in"/>
 			<field name="media" type="GstRTSPMedia*"/>
 			<field name="pool" type="GstRTSPSessionPool*"/>
-			<field name="session" type="GstRTSPSession*"/>
 			<field name="thread" type="GThread*"/>
 		</object>
 		<object name="GstRTSPMedia" parent="GObject" type-name="GstRTSPMedia" get-type="gst_rtsp_media_get_type">
