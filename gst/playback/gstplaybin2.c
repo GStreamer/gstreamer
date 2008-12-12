@@ -189,7 +189,7 @@
  * <title>Embedding the video window in your application</title>
  * By default, playbin (or rather the video sinks used) will create their own
  * window. Applications will usually want to force output to a window of their
- * own, however. This can be done using the GstXOverlay interface, which most
+ * own, however. This can be done using the #GstXOverlay interface, which most
  * video sinks implement. See the documentation there for more details.
  * </refsect2>
  * <refsect2>

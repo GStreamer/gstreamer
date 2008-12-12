@@ -1,3 +1,9 @@
+2008-12-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gstplaybin.c:
+	* gst/playback/gstplaybin2.c:
+	  XRef to GstXOverlay.
+
 2008-12-12  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_finalize):
