@@ -96,38 +96,13 @@ static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
   GObjectClass *obj_class = G_OBJECT_CLASS (klass);
-
-  g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
-
-  obj_class->finalize = gst_gl_window_finalize;
-}
-
-static void
-gst_gl_window_init (GstGLWindow *window)
-{
-  window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
-
-  if (g_getenv ("GST_GL_WINDOW_DEBUG") != NULL)
-    _gst_gl_window_debug = TRUE;
-
-  g_log_set_handler ("GstGLWindow", G_LOG_LEVEL_DEBUG,
-    gst_gl_window_log_handler, NULL);
-}
-
-/* Must be called in the gl thread */
-GstGLWindow *
-gst_gl_window_new (gint width, gint height)
-{
-  GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
-  GstGLWindowPrivate *priv = window->priv;
-  GstGLWindowClass* klass = GST_GL_WINDOW_GET_CLASS (window);
-
   WNDCLASS wc;
   ATOM atom = 0;
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
-  static gint x = 0;
-  static gint y = 0;
+  g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
+
+  obj_class->finalize = gst_gl_window_finalize;
 
   atom = GetClassInfo (hinstance, "GSTGL", &wc);
 
@@ -151,6 +126,32 @@ gst_gl_window_new (gint width, gint height)
     if (atom == 0)
       g_error ("Failed to register window class %x\r\n", GetLastError());
   }
+}
+
+static void
+gst_gl_window_init (GstGLWindow *window)
+{
+  window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
+
+  if (g_getenv ("GST_GL_WINDOW_DEBUG") != NULL)
+    _gst_gl_window_debug = TRUE;
+
+  g_log_set_handler ("GstGLWindow", G_LOG_LEVEL_DEBUG,
+    gst_gl_window_log_handler, NULL);
+}
+
+/* Must be called in the gl thread */
+GstGLWindow *
+gst_gl_window_new (gint width, gint height)
+{
+  GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
+  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowClass* klass = GST_GL_WINDOW_GET_CLASS (window);
+
+  HINSTANCE hinstance = GetModuleHandle (NULL);
+
+  static gint x = 0;
+  static gint y = 0;
 
   x += 20;
   y += 20;
