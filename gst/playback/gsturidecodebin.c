@@ -432,6 +432,10 @@ gst_uri_decode_bin_finalize (GObject * obj)
   g_mutex_free (dec->lock);
   g_free (dec->uri);
   g_free (dec->encoding);
+  if (dec->factories) {
+    g_value_array_free (dec->factories);
+    dec->factories = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }

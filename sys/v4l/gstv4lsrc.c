@@ -53,6 +53,11 @@ enum
 
 GST_BOILERPLATE (GstV4lSrc, gst_v4lsrc, GstV4lElement, GST_TYPE_V4LELEMENT);
 
+static GstStaticPadTemplate v4l_src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("ANY")
+    );
 
 /* basesrc methods */
 static gboolean gst_v4lsrc_start (GstBaseSrc * src);
@@ -77,8 +82,7 @@ gst_v4lsrc_base_init (gpointer g_class)
   gst_element_class_set_details (gstelement_class, &gst_v4lsrc_details);
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_new_any ()));
+      gst_static_pad_template_get (&v4l_src_template));
 }
 
 static void
