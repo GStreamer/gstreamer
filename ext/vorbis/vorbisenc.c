@@ -56,8 +56,23 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
 #define GST_CAT_DEFAULT vorbisenc_debug
 
-static GstPadTemplate *gst_vorbis_enc_src_template,
-    *gst_vorbis_enc_sink_template;
+static GstStaticPadTemplate vorbis_enc_sink_factory =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "rate = (int) [ 1, 200000 ], "
+        "channels = (int) [ 1, 256 ], " "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32")
+    );
+
+static GstStaticPadTemplate vorbis_enc_src_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-vorbis")
+    );
+
 
 /* elementfactory information */
 static const GstElementDetails vorbisenc_details =
@@ -134,41 +149,18 @@ gst_vorbis_enc_add_interfaces (GType vorbisenc_type)
       &tag_setter_info);
 }
 
-static GstCaps *
-vorbis_caps_factory (void)
-{
-  return gst_caps_new_simple ("audio/x-vorbis", NULL);
-}
-
-static GstCaps *
-raw_caps_factory (void)
-{
-  /* lowest, highest sample rates come from vorbis/lib/modes/setup_X.h:
-   * 1-200000 Hz */
-  return
-      gst_caps_new_simple ("audio/x-raw-float",
-      "rate", GST_TYPE_INT_RANGE, 1, 200000,
-      "channels", GST_TYPE_INT_RANGE, 1, 256,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-}
-
 static void
 gst_vorbis_enc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *vorbis_caps;
+  GstPadTemplate *src_template, *sink_template;
 
-  raw_caps = raw_caps_factory ();
-  vorbis_caps = vorbis_caps_factory ();
 
-  gst_vorbis_enc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, raw_caps);
-  gst_vorbis_enc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, vorbis_caps);
-  gst_element_class_add_pad_template (element_class,
-      gst_vorbis_enc_sink_template);
-  gst_element_class_add_pad_template (element_class,
-      gst_vorbis_enc_src_template);
+  src_template = gst_static_pad_template_get (&vorbis_enc_src_factory);
+  gst_element_class_add_pad_template (element_class, src_template);
+
+  sink_template = gst_static_pad_template_get (&vorbis_enc_sink_factory);
+  gst_element_class_add_pad_template (element_class, sink_template);
   gst_element_class_set_details (element_class, &vorbisenc_details);
 }
 
@@ -636,7 +628,7 @@ static void
 gst_vorbis_enc_init (GstVorbisEnc * vorbisenc, GstVorbisEncClass * klass)
 {
   vorbisenc->sinkpad =
-      gst_pad_new_from_template (gst_vorbis_enc_sink_template, "sink");
+      gst_pad_new_from_static_template (&vorbis_enc_sink_factory, "sink");
   gst_pad_set_event_function (vorbisenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event));
   gst_pad_set_chain_function (vorbisenc->sinkpad,
@@ -650,7 +642,7 @@ gst_vorbis_enc_init (GstVorbisEnc * vorbisenc, GstVorbisEncClass * klass)
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
 
   vorbisenc->srcpad =
-      gst_pad_new_from_template (gst_vorbis_enc_src_template, "src");
+      gst_pad_new_from_static_template (&vorbis_enc_src_factory, "src");
   gst_pad_set_query_function (vorbisenc->srcpad,
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_src_query));
   gst_pad_set_query_type_function (vorbisenc->srcpad,

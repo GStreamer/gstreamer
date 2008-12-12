@@ -1,5 +1,12 @@
 2008-12-12  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_base_init),
+	(gst_vorbis_enc_init):
+	Make vorbisenc's pad template behave like vorbisdec's. Fixes a leak with
+	pad templates.
+
+2008-12-12  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
 	(gst_riff_create_video_template_caps):
 	Add mapping for VP6 in avi/riff.
