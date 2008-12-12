@@ -1,3 +1,9 @@
+2008-12-12  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	Add mapping for VP6 in avi/riff.
+
 2008-12-11  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/subparse/samiparse.c: (sami_context_push_state),
