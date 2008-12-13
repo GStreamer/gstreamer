@@ -1,3 +1,9 @@
+2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	Update ffmpeg revision to 16086 and update to the corresponding
+	swscale revision.
+
 2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* Makefile.am:
