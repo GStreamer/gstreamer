@@ -70,6 +70,98 @@ gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
   }
 }
 
+/* IMPORTANT: Keep this sorted by the ffmpeg channel masks */
+static const struct
+{
+  guint64 ff;
+  GstAudioChannelPosition gst;
+} _ff_to_gst_layout[] = {
+  {
+  CH_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+  CH_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+  CH_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+  CH_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE}, {
+  CH_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
+  CH_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+  CH_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
+  CH_FRONT_RIGHT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+  CH_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+  CH_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
+  CH_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
+  CH_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_NONE}, {
+  CH_STEREO_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+  CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
+};
+
+static GstAudioChannelPosition *
+gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
+{
+  guint nchannels = 0, i, j;
+  GstAudioChannelPosition *pos = NULL;
+  gboolean none_layout = FALSE;
+
+  for (i = 0; i < 64; i++) {
+    if ((channel_layout & (G_GUINT64_CONSTANT (1) << i)) != 0) {
+      nchannels++;
+    }
+  }
+
+  if (channel_layout == 0) {
+    nchannels = channels;
+    none_layout = TRUE;
+  }
+
+  if (nchannels != channels) {
+    GST_ERROR ("Number of channels is different (%u != %u)", channels,
+        nchannels);
+    return NULL;
+  }
+
+  pos = g_new (GstAudioChannelPosition, nchannels);
+
+  for (i = 0, j = 0; i < G_N_ELEMENTS (_ff_to_gst_layout); i++) {
+    if ((channel_layout & _ff_to_gst_layout[i].ff) != 0) {
+      pos[j++] = _ff_to_gst_layout[i].gst;
+
+      if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
+        none_layout = TRUE;
+    }
+  }
+
+  if (j != nchannels) {
+    GST_WARNING ("Unknown channels in channel layout - assuming NONE layout");
+    none_layout = TRUE;
+  }
+
+  if (!gst_audio_check_channel_positions (pos, nchannels)) {
+    GST_ERROR ("Invalid channel layout - assuming NONE layout");
+    none_layout = TRUE;
+  }
+
+  if (none_layout) {
+    if (nchannels == 1) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+    } else if (nchannels == 2) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    } else {
+      for (i = 0; i < nchannels; i++)
+        pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+    }
+  }
+
+  if (nchannels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER)
+    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+
+  return pos;
+}
+
 /* this macro makes a caps width fixed or unfixed width/height
  * properties depending on whether we've got a context.
  *
@@ -197,9 +289,19 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
 
   /* fixed, non-probing context */
   if (context != NULL && context->channels != -1) {
+    GstAudioChannelPosition *pos;
+
     caps = gst_caps_new_simple (mimetype,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
+
+    pos =
+        gst_ff_channel_layout_to_gst (context->channel_layout,
+        context->channels);
+    if (pos != NULL) {
+      gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
+      g_free (pos);
+    }
   } else {
     gint maxchannels = 2;
     const gint *rates = NULL;
@@ -243,6 +345,11 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
         default:
           break;
       }
+
+      /* TODO: handle context->channel_layouts here to set
+       * the list of channel layouts supported by the encoder.
+       * Unfortunately no encoder uses this yet....
+       */
     }
 
     /* regardless of encode/decode, open up channels if applicable */
@@ -1396,7 +1503,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
   }
 
   if (caps != NULL) {
-    GST_DEBUG ("caps for pix_fmt=%d: %"GST_PTR_FORMAT, pix_fmt, caps);
+    GST_DEBUG ("caps for pix_fmt=%d: %" GST_PTR_FORMAT, pix_fmt, caps);
   } else {
     GST_LOG ("No caps found for pix_fmt=%d", pix_fmt);
   }
@@ -1439,7 +1546,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
   }
 
   if (caps != NULL) {
-    GST_LOG ("caps for sample_fmt=%d: %"GST_PTR_FORMAT, sample_fmt, caps);
+    GST_LOG ("caps for sample_fmt=%d: %" GST_PTR_FORMAT, sample_fmt, caps);
   } else {
     GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
   }
@@ -2769,9 +2876,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   }
 
   if (id != CODEC_ID_NONE) {
-    GST_DEBUG ("The id=%d belongs to the caps %"GST_PTR_FORMAT, id, caps);
+    GST_DEBUG ("The id=%d belongs to the caps %" GST_PTR_FORMAT, id, caps);
   } else {
-    GST_WARNING ("Couldn't figure out the id for caps %"GST_PTR_FORMAT, caps);
+    GST_WARNING ("Couldn't figure out the id for caps %" GST_PTR_FORMAT, caps);
   }
 
   return id;

@@ -1,5 +1,14 @@
 2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_channel_layout_to_gst),
+	(gst_ff_aud_caps_new):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	Set the channel layout if it's exposed by the decoder.
+	Fixes bug #548002.
+
+2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ffmpegrev:
 	Update ffmpeg revision to 16086 and update to the corresponding
 	swscale revision.
