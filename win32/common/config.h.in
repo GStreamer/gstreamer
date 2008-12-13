@@ -253,6 +253,9 @@
 #undef inline
 #endif
 
-/* FIXME: this should probably be hard-coded to some win32 system path */
-#define GST_INSTALL_PLUGINS_HELPER "@GST_INSTALL_PLUGINS_HELPER@"
+
+/* PREFIX - specifically added for Windows for easier moving (same as in core) */
+#define PREFIX "C:\\gstreamer"
+
+#define GST_INSTALL_PLUGINS_HELPER PREFIX "\\libexec\\gst-install-plugins-helper.exe"
 

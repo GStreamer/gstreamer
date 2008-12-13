@@ -1,3 +1,13 @@
+2008-12-13  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* win32/common/config.h:
+	  Update to CVS version.
+
+	* win32/common/config.h.in:
+	  Hardcode path to plugin install helper exe, just like we hardcode
+	  the paths in core. Removes another source of VCS conflicts for
+	  people hacking gst-plugins-base on systems with autotools.
+
 2008-12-13  Edward Hervey  <bilboed@gmail.com>
 
 	* m4/Makefile.am:

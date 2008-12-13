@@ -36,7 +36,7 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins CVS/prerelease"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -208,13 +208,13 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.21"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.21.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.21"
+#define PACKAGE_VERSION "0.10.21.1"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -238,7 +238,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.21"
+#define VERSION "0.10.21.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -253,6 +253,9 @@
 #undef inline
 #endif
 
-/* FIXME: this should probably be hard-coded to some win32 system path */
-#define GST_INSTALL_PLUGINS_HELPER "/usr/local/libexec/gst-install-plugins-helper"
+
+/* PREFIX - specifically added for Windows for easier moving (same as in core) */
+#define PREFIX "C:\\gstreamer"
+
+#define GST_INSTALL_PLUGINS_HELPER PREFIX "\\libexec\\gst-install-plugins-helper.exe"
 
