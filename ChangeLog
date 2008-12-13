@@ -1,3 +1,10 @@
+2008-12-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* m4/Makefile.am:
+	inttypes.m4 hasn't been available since gettext-0.15, and since we now
+	require gettext >= 0.17 ... we can remove it from the list of files to
+	dist.
+
 2008-12-10  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (channel_mode_class),
