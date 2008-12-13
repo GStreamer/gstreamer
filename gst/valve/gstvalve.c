@@ -204,6 +204,12 @@ gst_valve_chain (GstPad *pad, GstBuffer *buffer)
   else
     ret = gst_pad_push (valve->srcpad, buffer);
 
+
+  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  if (valve->drop)
+    ret = GST_FLOW_OK;
+  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+
   gst_object_unref (valve);
 
   return ret;
@@ -226,6 +232,11 @@ gst_valve_event (GstPad *pad, GstEvent *event)
   else
     ret = gst_pad_push_event (valve->srcpad, event);
 
+  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  if (valve->drop)
+    ret = TRUE;
+  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
+
   gst_object_unref (valve);
   return ret;
 }
@@ -246,6 +257,11 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     *buf = NULL;
   else
     ret = gst_pad_alloc_buffer (valve->srcpad, offset, size, caps, buf);
+
+  GST_OBJECT_LOCK (GST_OBJECT (valve));
+  if (valve->drop)
+    ret = GST_FLOW_OK;
+  GST_OBJECT_UNLOCK (GST_OBJECT (valve));
 
   gst_object_unref (valve);
 
