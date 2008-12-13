@@ -1,3 +1,12 @@
+2008-12-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/common/.cvsignore:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  Hardcode cpu for win32 build, just like we do in the other modules,
+	  to remove VCS conflicts and inconsistent defines between modules,
+	  and update version defines to CVS.
+
 2008-12-13  Edward Hervey  <bilboed@gmail.com>
 
 	* m4/Makefile.am:

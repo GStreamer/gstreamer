@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
+#define GETTEXT_PACKAGE "gst-plugins-ugly-0.10"
 
 /* macro to use to show function name */
 #define GST_FUNCTION "(function)"
@@ -18,13 +18,13 @@
 #undef GST_LEVEL_DEFAULT
 
 /* GStreamer license */
-#define GST_LICENSE "@GST_LICENSE@"
+#define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "@GST_PACKAGE_NAME@"
+#define GST_PACKAGE_NAME "GStreamer Ugly Plug-ins CVS/prerelease"
 
 /* package origin */
-#define GST_PACKAGE_ORIGIN "@GST_PACKAGE_ORIGIN@"
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* support for features: gstalsa */
 #undef HAVE_ALSA
@@ -187,22 +187,22 @@
 #define LOCALEDIR PREFIX "\\share\\locale"
 
 /* Name of package */
-#define PACKAGE "@PACKAGE@"
+#define PACKAGE "gst-plugins-ugly"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+#define PACKAGE_BUGREPORT "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME "@PACKAGE_NAME@"
+#undef PACKAGE_NAME "GStreamer Ugly Plug-ins"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "@PACKAGE_STRING@"
+#undef PACKAGE_STRING "GStreamer Ugly Plug-ins 0.10.10.1"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+#undef PACKAGE_TARNAME "gst-plugins-ugly"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "@PACKAGE_VERSION@"
+#undef PACKAGE_VERSION "0.10.10.1"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -226,7 +226,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "@VERSION@"
+#define VERSION "0.10.10.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
