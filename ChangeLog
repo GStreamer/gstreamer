@@ -1,3 +1,11 @@
+2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_handle_descriptive_metadata),
+	(gst_mxf_demux_handle_klv_packet):
+	Add a generic handler for descriptive metadata so we can get some
+	debug output and let users file bugs for unsupport descriptive
+	metadata schemes.
+
 2008-12-12  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfaes-bwf.c:

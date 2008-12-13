@@ -1341,8 +1341,9 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
           MXFMetadataEssenceContainerData, i);
 
       for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.
-                essence_container_data_uids[j], &data->instance_uid)) {
+        if (mxf_ul_is_equal (&demux->
+                content_storage.essence_container_data_uids[j],
+                &data->instance_uid)) {
           demux->content_storage.essence_container_data[j] = data;
           break;
         }
@@ -2137,6 +2138,49 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
 }
 
 static GstFlowReturn
+gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
+    const MXFUL * key, GstBuffer * buffer)
+{
+  guint32 type;
+  guint8 scheme;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  scheme = GST_READ_UINT8 (key->u + 12);
+  type = GST_READ_UINT24_BE (key->u + 13);
+
+  GST_DEBUG_OBJECT (demux,
+      "Handling descriptive metadata of size %u at offset %"
+      G_GUINT64_FORMAT " with scheme 0x%02x and type 0x%06x",
+      GST_BUFFER_SIZE (buffer), demux->offset, scheme, type);
+
+  if (G_UNLIKELY (!demux->partition.valid)) {
+    GST_ERROR_OBJECT (demux, "Partition pack doesn't exist");
+    return GST_FLOW_ERROR;
+  }
+
+  if (G_UNLIKELY (!demux->primer.valid)) {
+    GST_ERROR_OBJECT (demux, "Primer pack doesn't exists");
+    return GST_FLOW_ERROR;
+  }
+
+  if (!demux->update_metadata) {
+    GST_DEBUG_OBJECT (demux,
+        "Skipping parsing of metadata because it's older than what we have");
+    return GST_FLOW_OK;
+  }
+
+  switch (type) {
+    default:
+      GST_WARNING_OBJECT (demux,
+          "Unknown or unhandled descriptive metadata of scheme 0x%02x and type 0x%06x",
+          scheme, type);
+      break;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_mxf_demux_handle_generic_container_system_item (GstMXFDemux * demux,
     const MXFUL * key, GstBuffer * buffer)
 {
@@ -2670,6 +2714,8 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
     ret = gst_mxf_demux_handle_primer_pack (demux, key, buffer);
   } else if (mxf_is_metadata (key)) {
     ret = gst_mxf_demux_handle_metadata (demux, key, buffer);
+  } else if (mxf_is_descriptive_metadata (key)) {
+    ret = gst_mxf_demux_handle_descriptive_metadata (demux, key, buffer);
   } else if (mxf_is_generic_container_system_item (key)) {
     ret =
         gst_mxf_demux_handle_generic_container_system_item (demux, key, buffer);
