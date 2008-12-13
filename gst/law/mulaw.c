@@ -4,54 +4,43 @@
 #include "mulaw-encode.h"
 #include "mulaw-decode.h"
 
-static GstCaps *
-mulaw_factory (void)
-{
-  return gst_caps_new_simple ("audio/x-mulaw",
-      "rate", GST_TYPE_INT_RANGE, 8000, 192000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-}
+GstStaticPadTemplate mulaw_dec_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 8000, 192000 ], "
+        "channels = (int) [ 1, 2 ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 16, " "width = (int) 16, " "signed = (boolean) True")
+    );
 
-static GstCaps *
-linear_factory (void)
-{
-  return gst_caps_new_simple ("audio/x-raw-int",
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "rate", GST_TYPE_INT_RANGE, 8000, 192000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-}
+GstStaticPadTemplate mulaw_dec_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-mulaw, "
+        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
+    );
 
-GstPadTemplate *mulawenc_src_template, *mulawenc_sink_template;
-GstPadTemplate *mulawdec_src_template, *mulawdec_sink_template;
+GstStaticPadTemplate mulaw_enc_sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 8000, 192000 ], "
+        "channels = (int) [ 1, 2 ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 16, " "width = (int) 16, " "signed = (boolean) True")
+    );
+
+GstStaticPadTemplate mulaw_enc_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-mulaw, "
+        "rate = [ 8000 , 192000 ], " "channels = [ 1 , 2 ]")
+    );
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstCaps *mulaw_caps, *linear_caps;
-
-  mulaw_caps = mulaw_factory ();
-  linear_caps = linear_factory ();
-
-  gst_caps_ref (mulaw_caps);
-  gst_caps_ref (linear_caps);
-  mulawenc_src_template =
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, mulaw_caps);
-  mulawenc_sink_template =
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, linear_caps);
-
-  gst_caps_ref (mulaw_caps);
-  gst_caps_ref (linear_caps);
-  mulawdec_src_template =
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, linear_caps);
-  mulawdec_sink_template =
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, mulaw_caps);
-
-  gst_caps_unref (mulaw_caps);
-  gst_caps_unref (linear_caps);
-
   if (!gst_element_register (plugin, "mulawenc",
           GST_RANK_NONE, GST_TYPE_MULAWENC) ||
       !gst_element_register (plugin, "mulawdec",

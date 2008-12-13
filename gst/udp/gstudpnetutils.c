@@ -91,7 +91,7 @@ gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
 
   if ((ret = getaddrinfo (hostname, (port == -1) ? NULL : service, &hints,
               &res)) < 0) {
-    return ret;
+    goto beach;
   }
 
   nres = res;
@@ -107,8 +107,9 @@ gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
     errno = EAI_ADDRFAMILY;
     ret = -1;
   }
-  freeaddrinfo (res);
 
+beach:
+  freeaddrinfo (res);
   return ret;
 }
 

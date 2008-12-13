@@ -23,8 +23,8 @@
 
 #include "alaw-decode.h"
 
-extern GstPadTemplate *alawdec_src_template;
-extern GstPadTemplate *alawdec_sink_template;
+extern GstStaticPadTemplate alaw_dec_src_factory;
+extern GstStaticPadTemplate alaw_dec_sink_factory;
 
 GST_DEBUG_CATEGORY_STATIC (alaw_dec_debug);
 #define GST_CAT_DEFAULT alaw_dec_debug
@@ -145,8 +145,10 @@ gst_alaw_dec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class, alawdec_src_template);
-  gst_element_class_add_pad_template (element_class, alawdec_sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&alaw_dec_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&alaw_dec_sink_factory));
 
   gst_element_class_set_details_simple (element_class, "A Law audio decoder",
       "Codec/Decoder/Audio", "Convert 8bit A law to 16bit PCM",
@@ -166,14 +168,16 @@ gst_alaw_dec_class_init (GstALawDecClass * klass)
 static void
 gst_alaw_dec_init (GstALawDec * alawdec, GstALawDecClass * klass)
 {
-  alawdec->sinkpad = gst_pad_new_from_template (alawdec_sink_template, "sink");
+  alawdec->sinkpad =
+      gst_pad_new_from_static_template (&alaw_dec_sink_factory, "sink");
   gst_pad_set_setcaps_function (alawdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_alaw_dec_sink_setcaps));
   gst_pad_set_chain_function (alawdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_alaw_dec_chain));
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->sinkpad);
 
-  alawdec->srcpad = gst_pad_new_from_template (alawdec_src_template, "src");
+  alawdec->srcpad =
+      gst_pad_new_from_static_template (&alaw_dec_src_factory, "src");
   gst_pad_use_fixed_caps (alawdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->srcpad);
 }

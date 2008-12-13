@@ -24,7 +24,8 @@
 #include "mulaw-decode.h"
 #include "mulaw-conversion.h"
 
-extern GstPadTemplate *mulawdec_src_template, *mulawdec_sink_template;
+extern GstStaticPadTemplate mulaw_dec_src_factory;
+extern GstStaticPadTemplate mulaw_dec_sink_factory;
 
 /* Stereo signals and args */
 enum
@@ -117,8 +118,10 @@ gst_mulawdec_base_init (GstMuLawDecClass * klass)
       "Convert 8bit mu law to 16bit PCM",
       "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
-  gst_element_class_add_pad_template (element_class, mulawdec_src_template);
-  gst_element_class_add_pad_template (element_class, mulawdec_sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mulaw_dec_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mulaw_dec_sink_factory));
   gst_element_class_set_details (element_class, &mulawdec_details);
 }
 
@@ -136,12 +139,13 @@ static void
 gst_mulawdec_init (GstMuLawDec * mulawdec)
 {
   mulawdec->sinkpad =
-      gst_pad_new_from_template (mulawdec_sink_template, "sink");
+      gst_pad_new_from_static_template (&mulaw_dec_sink_factory, "sink");
   gst_pad_set_setcaps_function (mulawdec->sinkpad, mulawdec_sink_setcaps);
   gst_pad_set_chain_function (mulawdec->sinkpad, gst_mulawdec_chain);
   gst_element_add_pad (GST_ELEMENT (mulawdec), mulawdec->sinkpad);
 
-  mulawdec->srcpad = gst_pad_new_from_template (mulawdec_src_template, "src");
+  mulawdec->srcpad =
+      gst_pad_new_from_static_template (&mulaw_dec_src_factory, "src");
   gst_pad_use_fixed_caps (mulawdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (mulawdec), mulawdec->srcpad);
 }

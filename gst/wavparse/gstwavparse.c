@@ -168,6 +168,7 @@ gst_wavparse_reset (GstWavParse * wav)
   wav->seek_event = NULL;
   if (wav->adapter) {
     gst_adapter_clear (wav->adapter);
+    g_object_unref (wav->adapter);
     wav->adapter = NULL;
   }
   if (wav->tags)
@@ -2219,12 +2220,17 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
   if (gst_pad_check_pull_range (sinkpad)) {
     GST_DEBUG ("going to pull mode");
     wav->streaming = FALSE;
+    if (wav->adapter) {
+      gst_adapter_clear (wav->adapter);
+      g_object_unref (wav->adapter);
+    }
     wav->adapter = NULL;
     res = gst_pad_activate_pull (sinkpad, TRUE);
   } else {
     GST_DEBUG ("going to push (streaming) mode");
     wav->streaming = TRUE;
-    wav->adapter = gst_adapter_new ();
+    if (wav->adapter == NULL)
+      wav->adapter = gst_adapter_new ();
     res = gst_pad_activate_push (sinkpad, TRUE);
   }
   gst_object_unref (wav);

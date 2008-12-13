@@ -1,5 +1,26 @@
 2008-12-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_base_init),
+	(gst_flac_dec_init):
+	* gst/law/alaw-decode.c: (gst_alaw_dec_base_init),
+	(gst_alaw_dec_init):
+	* gst/law/alaw-encode.c: (gst_alaw_enc_base_init),
+	(gst_alaw_enc_init):
+	* gst/law/alaw.c: (plugin_init):
+	* gst/law/mulaw-decode.c: (gst_mulawdec_base_init),
+	(gst_mulawdec_init):
+	* gst/law/mulaw-encode.c: (gst_mulawenc_base_init),
+	(gst_mulawenc_init):
+	* gst/law/mulaw.c: (plugin_init):
+	Switch to using GstStaticPadTemplate.
+	* gst/udp/gstudpnetutils.c: (gst_udp_get_addr):
+	Don't forget to free the addrinfo structure.
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
+	(gst_wavparse_sink_activate):
+	Don't forget to unref the GstAdapter.
+
+2008-12-13  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* m4/Makefile.am:
 	inttypes.m4 hasn't been available since gettext-0.15, and since we now
 	require gettext >= 0.17 ... we can remove it from the list of files to

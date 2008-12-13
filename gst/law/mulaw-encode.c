@@ -24,7 +24,8 @@
 #include "mulaw-encode.h"
 #include "mulaw-conversion.h"
 
-extern GstPadTemplate *mulawenc_src_template, *mulawenc_sink_template;
+extern GstStaticPadTemplate mulaw_enc_src_factory;
+extern GstStaticPadTemplate mulaw_enc_sink_factory;
 
 /* Stereo signals and args */
 enum
@@ -170,8 +171,10 @@ gst_mulawenc_base_init (GstMuLawEncClass * klass)
       "Convert 16bit PCM to 8bit mu law",
       "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
-  gst_element_class_add_pad_template (element_class, mulawenc_src_template);
-  gst_element_class_add_pad_template (element_class, mulawenc_sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mulaw_enc_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&mulaw_enc_sink_factory));
   gst_element_class_set_details (element_class, &mulawenc_details);
 }
 
@@ -185,13 +188,14 @@ static void
 gst_mulawenc_init (GstMuLawEnc * mulawenc)
 {
   mulawenc->sinkpad =
-      gst_pad_new_from_template (mulawenc_sink_template, "sink");
+      gst_pad_new_from_static_template (&mulaw_enc_sink_factory, "sink");
   gst_pad_set_setcaps_function (mulawenc->sinkpad, mulawenc_setcaps);
   gst_pad_set_getcaps_function (mulawenc->sinkpad, mulawenc_getcaps);
   gst_pad_set_chain_function (mulawenc->sinkpad, gst_mulawenc_chain);
   gst_element_add_pad (GST_ELEMENT (mulawenc), mulawenc->sinkpad);
 
-  mulawenc->srcpad = gst_pad_new_from_template (mulawenc_src_template, "src");
+  mulawenc->srcpad =
+      gst_pad_new_from_static_template (&mulaw_enc_src_factory, "src");
   gst_pad_set_setcaps_function (mulawenc->srcpad, mulawenc_setcaps);
   gst_pad_set_getcaps_function (mulawenc->srcpad, mulawenc_getcaps);
   gst_pad_use_fixed_caps (mulawenc->srcpad);

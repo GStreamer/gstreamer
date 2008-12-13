@@ -26,8 +26,8 @@
 GST_DEBUG_CATEGORY_STATIC (alaw_enc_debug);
 #define GST_CAT_DEFAULT alaw_enc_debug
 
-extern GstPadTemplate *alawenc_src_template;
-extern GstPadTemplate *alawenc_sink_template;
+extern GstStaticPadTemplate alaw_enc_src_factory;
+extern GstStaticPadTemplate alaw_enc_sink_factory;
 
 static GstFlowReturn gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer);
 
@@ -387,8 +387,10 @@ gst_alaw_enc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_add_pad_template (element_class, alawenc_src_template);
-  gst_element_class_add_pad_template (element_class, alawenc_sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&alaw_enc_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&alaw_enc_sink_factory));
 
   gst_element_class_set_details_simple (element_class,
       "A Law audio encoder", "Codec/Encoder/Audio",
@@ -407,7 +409,8 @@ gst_alaw_enc_class_init (GstALawEncClass * klass)
 static void
 gst_alaw_enc_init (GstALawEnc * alawenc, GstALawEncClass * klass)
 {
-  alawenc->sinkpad = gst_pad_new_from_template (alawenc_sink_template, "sink");
+  alawenc->sinkpad =
+      gst_pad_new_from_static_template (&alaw_enc_sink_factory, "sink");
   gst_pad_set_setcaps_function (alawenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_alaw_enc_setcaps));
   gst_pad_set_getcaps_function (alawenc->sinkpad,
@@ -416,7 +419,8 @@ gst_alaw_enc_init (GstALawEnc * alawenc, GstALawEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_alaw_enc_chain));
   gst_element_add_pad (GST_ELEMENT (alawenc), alawenc->sinkpad);
 
-  alawenc->srcpad = gst_pad_new_from_template (alawenc_src_template, "src");
+  alawenc->srcpad =
+      gst_pad_new_from_static_template (&alaw_enc_src_factory, "src");
   gst_pad_set_setcaps_function (alawenc->srcpad,
       GST_DEBUG_FUNCPTR (gst_alaw_enc_setcaps));
   gst_pad_set_getcaps_function (alawenc->srcpad,

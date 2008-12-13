@@ -103,8 +103,6 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
 GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 #define GST_CAT_DEFAULT flacdec_debug
 
-static GstPadTemplate *src_template, *sink_template;
-
 static void gst_flac_dec_finalize (GObject * object);
 static void gst_flac_dec_loop (GstPad * pad);
 
@@ -209,6 +207,12 @@ GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
 /* FIXME 0.11: Use width=32 for all depths and let audioconvert
  * handle the conversions instead of doing it ourself.
  */
+static const GstElementDetails vorbis_dec_details =
+GST_ELEMENT_DETAILS ("Vorbis audio decoder",
+    "Codec/Decoder/Audio",
+    "decode raw vorbis streams to float audio",
+    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
+
 #define GST_FLAC_DEC_SRC_CAPS                             \
     "audio/x-raw-int, "                                   \
     "endianness = (int) BYTE_ORDER, "                     \
@@ -217,22 +221,28 @@ GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
     "depth = (int) [ 4, 32 ], "                           \
     "rate = (int) [ 1, 655350 ], "                        \
     "channels = (int) [ 1, 8 ]"
+
+static GstStaticPadTemplate flac_dec_src_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_FLAC_DEC_SRC_CAPS));
+static GstStaticPadTemplate flac_dec_sink_factory =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-flac")
+    );
+
 static void
 gst_flac_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  GstCaps *raw_caps, *flac_caps;
-
-  raw_caps = gst_caps_from_string (GST_FLAC_DEC_SRC_CAPS);
-  flac_caps = gst_caps_new_simple ("audio/x-flac", NULL);
-
-  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, flac_caps);
-  src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, raw_caps);
-  gst_element_class_add_pad_template (element_class, sink_template);
-  gst_element_class_add_pad_template (element_class, src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&flac_dec_src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&flac_dec_sink_factory));
   gst_element_class_set_details_simple (element_class, "FLAC audio decoder",
       "Codec/Decoder/Audio",
       "Decodes FLAC lossless audio streams", "Wim Taymans <wim@fluendo.com>");
@@ -259,7 +269,8 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
 static void
 gst_flac_dec_init (GstFlacDec * flacdec, GstFlacDecClass * klass)
 {
-  flacdec->sinkpad = gst_pad_new_from_template (sink_template, "sink");
+  flacdec->sinkpad =
+      gst_pad_new_from_static_template (&flac_dec_sink_factory, "sink");
   gst_pad_set_activate_function (flacdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flac_dec_sink_activate));
   gst_pad_set_activatepull_function (flacdec->sinkpad,
@@ -276,7 +287,8 @@ gst_flac_dec_init (GstFlacDec * flacdec, GstFlacDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_flac_dec_chain));
   gst_element_add_pad (GST_ELEMENT (flacdec), flacdec->sinkpad);
 
-  flacdec->srcpad = gst_pad_new_from_template (src_template, "src");
+  flacdec->srcpad =
+      gst_pad_new_from_static_template (&flac_dec_src_factory, "src");
   gst_pad_set_query_type_function (flacdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_flac_dec_get_src_query_types));
   gst_pad_set_query_function (flacdec->srcpad,
