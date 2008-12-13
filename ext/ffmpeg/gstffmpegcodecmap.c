@@ -139,8 +139,9 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
     none_layout = TRUE;
   }
 
-  if (!gst_audio_check_channel_positions (pos, nchannels)) {
-    GST_ERROR ("Invalid channel layout - assuming NONE layout");
+  if (!none_layout && !gst_audio_check_channel_positions (pos, nchannels)) {
+    GST_ERROR ("Invalid channel layout %" G_GUINT64_FORMAT
+        " - assuming NONE layout", channel_layout);
     none_layout = TRUE;
   }
 
@@ -150,6 +151,9 @@ gst_ff_channel_layout_to_gst (guint64 channel_layout, guint channels)
     } else if (nchannels == 2) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    } else if (channel_layout == 0) {
+      g_free (pos);
+      pos = NULL;
     } else {
       for (i = 0; i < nchannels; i++)
         pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;

@@ -1,5 +1,12 @@
 2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_channel_layout_to_gst):
+	If no channel layout is provided don't set a NONE layout in the
+	case of >2 channels but instead let audioconvert add some default
+	layout.
+
+2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* ext/ffmpeg/Makefile.am:
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_channel_layout_to_gst),
 	(gst_ff_aud_caps_new):
