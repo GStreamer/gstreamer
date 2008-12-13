@@ -1,3 +1,8 @@
+2008-12-13  Edward Hervey  <bilboed@gmail.com>
+
+	* m4/Makefile.am:
+	A couple more .m4 that aren't shipped anymore with gettext 0.17.
+
 2008-12-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_base_init),
