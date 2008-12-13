@@ -1,3 +1,8 @@
+2008-12-13  Edward Hervey  <bilboed@gmail.com>
+
+	* m4/Makefile.am:
+	More .m4 that aren't shipped with gettext 0.17 anymore.
+
 2008-12-13  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* m4/Makefile.am:

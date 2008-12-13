@@ -26,7 +26,6 @@ EXTRA_DIST = \
 	intdiv0.m4 \
 	inttypes_h.m4 \
 	inttypes-pri.m4 \
-	isc-posix.m4 \
 	lcmessage.m4 \
 	libfame.m4 \
 	lib-ld.m4 \
@@ -39,5 +38,4 @@ EXTRA_DIST = \
 	progtest.m4 \
 	stdint_h.m4 \
 	uintmax_t.m4 \
-	ulonglong.m4 \
 	vorbis.m4
