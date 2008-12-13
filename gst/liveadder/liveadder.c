@@ -1315,9 +1315,10 @@ gst_live_adder_loop (gpointer data)
   if (newseg_event)
     gst_pad_push_event (adder->srcpad, newseg_event);
 
-  GST_DEBUG ("About to push buffer time:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
-	     GST_TIME_ARGS(GST_BUFFER_TIMESTAMP(buffer)),
-	     GST_TIME_ARGS(GST_BUFFER_DURATION(buffer)));
+  GST_LOG_OBJECT (adder, "About to push buffer time:%" GST_TIME_FORMAT
+      " duration:%"GST_TIME_FORMAT,
+      GST_TIME_ARGS(GST_BUFFER_TIMESTAMP(buffer)),
+      GST_TIME_ARGS(GST_BUFFER_DURATION(buffer)));
 
   result = gst_pad_push (adder->srcpad, buffer);
   if (result != GST_FLOW_OK)
