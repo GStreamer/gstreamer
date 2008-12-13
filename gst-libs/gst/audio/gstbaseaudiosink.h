@@ -95,6 +95,8 @@ typedef enum
   GST_BASE_AUDIO_SINK_SLAVE_NONE
 } GstBaseAudioSinkSlaveMethod;
 
+#define GST_TYPE_BASE_AUDIO_SINK_SLAVE_METHOD (gst_base_audio_sink_slave_method_get_type ())
+
 typedef struct _GstBaseAudioSink GstBaseAudioSink;
 typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;
 typedef struct _GstBaseAudioSinkPrivate GstBaseAudioSinkPrivate;

@@ -89,10 +89,8 @@ enum
   PROP_SLAVE_METHOD
 };
 
-#define GST_TYPE_SLAVE_METHOD (slave_method_get_type ())
-
-static GType
-slave_method_get_type (void)
+GType
+gst_base_audio_sink_slave_method_get_type (void)
 {
   static GType slave_method_type = 0;
   static const GEnumValue slave_method[] = {
@@ -199,7 +197,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_SLAVE_METHOD,
       g_param_spec_enum ("slave-method", "Slave Method",
           "Algorithm to use to match the rate of the masterclock",
-          GST_TYPE_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
+          GST_TYPE_BASE_AUDIO_SINK_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =

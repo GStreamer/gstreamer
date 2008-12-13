@@ -1,3 +1,17 @@
+2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_slave_method_get_type),
+	(gst_base_audio_sink_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_slave_method_get_type),
+	(gst_base_audio_src_class_init):
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	API: Add GST_TYPE_BASE_AUDIO_(SRC|SINK)_SLAVE_METHOD to the
+	public API. This is needed for the C++ bindings to be able
+	to use this base classes. Fixes bug #564200, #564206.
+
 2008-12-12  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/cdda/gstcddabasesrc.c:
