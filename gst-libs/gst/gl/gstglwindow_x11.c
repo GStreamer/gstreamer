@@ -251,16 +251,8 @@ gst_gl_window_new (gint width, gint height)
 
   gint attrib[] = {
     GLX_RGBA,
-    GLX_RED_SIZE, 8, GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8,
+    GLX_RED_SIZE, 1, GLX_GREEN_SIZE, 1, GLX_BLUE_SIZE, 1,
     GLX_DOUBLEBUFFER,
-    GLX_DEPTH_SIZE, 8,
-    GLX_ALPHA_SIZE, 8,
-    GLX_STENCIL_SIZE, 8,
-    GLX_ACCUM_RED_SIZE, 8,
-    GLX_ACCUM_GREEN_SIZE, 8,
-    GLX_ACCUM_BLUE_SIZE, 8,
-    GLX_ACCUM_ALPHA_SIZE, 8,
-    GLX_LEVEL, 0,
     None
   };
 
@@ -321,6 +313,12 @@ gst_gl_window_new (gint width, gint height)
     g_debug ("No GLX extension");
 
   priv->visual_info = glXChooseVisual (priv->device, priv->screen_num, attrib);
+
+  if (!priv->visual_info)
+  {
+    g_warning ("glx visual is null (bad attributes)\n");
+    return NULL;
+  }
 
   if (priv->visual_info->visual != priv->visual)
     g_debug ("selected visual is different from the default\n");
