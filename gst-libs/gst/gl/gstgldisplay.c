@@ -441,6 +441,8 @@ gst_gl_display_thread_create_context (GstGLDisplay *display)
     GST_INFO ("GLEW_VERSION: %s", glewGetString (GLEW_VERSION));
     if (glGetString (GL_SHADING_LANGUAGE_VERSION))
       GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s", glGetString (GL_SHADING_LANGUAGE_VERSION));
+    else
+      GST_INFO ("Your driver does not support GLSL (OpenGL Shading Language)");
 
     GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
     GST_INFO ("GL_RENDERER: %s", glGetString (GL_RENDERER));
@@ -763,6 +765,7 @@ gst_gl_display_thread_init_upload (GstGLDisplay *display)
       case GST_VIDEO_FORMAT_AYUV:
         //turn off the pipeline because
         //MESA only support YUY2 and UYVY
+        GST_WARNING ("Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats");
         display->isAlive = FALSE;
         break;
             default:
