@@ -1,3 +1,8 @@
+2008-12-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/pulse/pulsemixerctrl.c:
+	  Add note about memleak.
+
 2008-12-13  Edward Hervey  <bilboed@gmail.com>
 
 	* m4/Makefile.am:
