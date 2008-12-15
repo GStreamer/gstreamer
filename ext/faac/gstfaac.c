@@ -235,7 +235,7 @@ gst_faac_class_init (GstFaacClass * klass)
   g_object_class_install_property (gobject_class, ARG_OUTPUTFORMAT,
       g_param_spec_enum ("outputformat", "Output format",
           "Format of output frames",
-          GST_TYPE_FAAC_OUTPUTFORMAT, MAIN, G_PARAM_READWRITE));
+          GST_TYPE_FAAC_OUTPUTFORMAT, 0 /* RAW */ , G_PARAM_READWRITE));
 
   /* virtual functions */
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_faac_change_state);
@@ -269,7 +269,7 @@ gst_faac_init (GstFaac * faac)
   faac->bitrate = 1000 * 128;
   faac->profile = MAIN;
   faac->shortctl = SHORTCTL_NORMAL;
-  faac->outputformat = 0;
+  faac->outputformat = 0;       /* RAW */
   faac->tns = FALSE;
   faac->midside = TRUE;
 }

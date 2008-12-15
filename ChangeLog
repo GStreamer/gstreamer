@@ -1,3 +1,8 @@
+2008-12-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/faac/gstfaac.c:
+	  Fix default for outputformat property.
+
 2008-12-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* examples/app/appsrc-ra.c: (feed_data):
