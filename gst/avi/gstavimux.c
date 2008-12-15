@@ -1687,20 +1687,14 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-      if (gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (avimux)) !=
-          GST_TAG_MERGE_REPLACE_ALL) {
-        GstTagList *list;
-        gst_event_parse_tag (event, &list);
-        if (avimux->tags) {
-          gst_tag_list_insert (avimux->tags, list, GST_TAG_MERGE_PREPEND);
-        } else {
-          avimux->tags = gst_tag_list_copy (list);
-        }
-      } else {
-        GST_DEBUG ("skipping tag-event");
-      }
+    case GST_EVENT_TAG:{
+      GstTagList *list;
+
+      gst_event_parse_tag (event, &list);
+      avimux->tags = gst_tag_list_merge (avimux->tags, list,
+          gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (avimux)));
       break;
+    }
     default:
       break;
   }

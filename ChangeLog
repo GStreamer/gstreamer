@@ -1,5 +1,12 @@
 2008-12-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/avi/gstavimux.c:
+	  Instead of filtering wrongly just use the mergemode. Applications is
+	  use KEEP_ALL if they want to supress tag-events. Fixes #563221 for
+	  avi for real (I hope). Everyone chime in, before I fix the others.
+
+2008-12-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/pulse/pulsemixerctrl.c:
 	  Add note about memleak.
 
