@@ -1,5 +1,15 @@
 2008-12-15  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfaes-bwf.c:
+	(mxf_metadata_wave_audio_essence_descriptor_handle_tag),
+	(mxf_metadata_aes3_audio_essence_descriptor_handle_tag):
+	* gst/mxf/mxfmetadata.c:
+	(mxf_metadata_multiple_descriptor_handle_tag):
+	Return FALSE when parsing a metadata tag failed.
+	Remove some useless return value assignments.
+
+2008-12-15  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/Makefile.am:
 	* gst/mxf/mxf.c: (plugin_init):
 	* gst/mxf/mxfaes-bwf.c:

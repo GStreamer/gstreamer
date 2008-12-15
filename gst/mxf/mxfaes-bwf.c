@@ -147,8 +147,8 @@ mxf_metadata_wave_audio_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_wave_audio_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_wave_audio_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -160,7 +160,7 @@ error:
       ("Invalid wave audio essence descriptor local tag 0x%04x of size %u", tag,
       tag_size);
 
-  return TRUE;
+  return FALSE;
 }
 
 static void
@@ -201,8 +201,8 @@ mxf_metadata_aes3_audio_essence_descriptor_finalize (GstMiniObject * object)
   self->fixed_user_data = NULL;
 
   GST_MINI_OBJECT_CLASS
-      (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->
-      finalize (object);
+      (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->finalize
+      (object);
 }
 
 static gboolean
@@ -220,21 +220,18 @@ mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
         goto error;
       self->emphasis = GST_READ_UINT8 (tag_data);
       GST_DEBUG ("  emphasis = %u", self->emphasis);
-      ret = TRUE;
       break;
     case 0x3d0f:
       if (tag_size != 2)
         goto error;
       self->block_start_offset = GST_READ_UINT16_BE (tag_data);
       GST_DEBUG ("  block start offset = %u", self->block_start_offset);
-      ret = TRUE;
       break;
     case 0x3d08:
       if (tag_size != 1)
         goto error;
       self->auxiliary_bits_mode = GST_READ_UINT8 (tag_data);
       GST_DEBUG ("  auxiliary bits mode = %u", self->auxiliary_bits_mode);
-      ret = TRUE;
       break;
     case 0x3d10:{
       guint32 len;
@@ -267,7 +264,6 @@ mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
         tag_size--;
       }
 
-      ret = TRUE;
       break;
     }
     case 0x3d11:{
@@ -331,7 +327,6 @@ mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
         tag_size -= 24;
       }
 
-      ret = TRUE;
       break;
     }
     case 0x3d12:{
@@ -364,7 +359,6 @@ mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
         tag_size--;
       }
 
-      ret = TRUE;
       break;
     }
     case 0x3d13:{
@@ -426,7 +420,6 @@ mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
         tag_size -= 24;
       }
 
-      ret = TRUE;
       break;
     }
       /* TODO: linked timecode track / data_stream_number parsing, see
@@ -434,8 +427,8 @@ mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -447,7 +440,7 @@ error:
       ("Invalid AES3 audio essence descriptor local tag 0x%04x of size %u", tag,
       tag_size);
 
-  return TRUE;
+  return FALSE;
 }
 
 static void
@@ -761,8 +754,9 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
       bwf = TRUE;
       break;
-    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])
+    } else
+        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->descriptor
+            [i])
         && (track->descriptor[i]->essence_container.u[14] == 0x03
             || track->descriptor[i]->essence_container.u[14] == 0x04
             || track->descriptor[i]->essence_container.u[14] == 0x09)) {

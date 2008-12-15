@@ -151,8 +151,8 @@ mxf_metadata_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       break;
     default:
       ret =
-          MXF_METADATA_BASE_CLASS (mxf_metadata_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          MXF_METADATA_BASE_CLASS (mxf_metadata_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -444,8 +444,9 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
     }
     default:
       ret =
-          MXF_METADATA_BASE_CLASS (mxf_metadata_preface_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          MXF_METADATA_BASE_CLASS
+          (mxf_metadata_preface_parent_class)->handle_tag (metadata, primer,
+          tag, tag_data, tag_size);
       break;
   }
 
@@ -503,8 +504,9 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
     return FALSE;
   }
 
-  return MXF_METADATA_BASE_CLASS (mxf_metadata_preface_parent_class)->
-      resolve (m, metadata);
+  return
+      MXF_METADATA_BASE_CLASS (mxf_metadata_preface_parent_class)->resolve (m,
+      metadata);
 }
 
 static void
@@ -798,8 +800,9 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
     return FALSE;
   }
 
-  return MXF_METADATA_BASE_CLASS (mxf_metadata_content_storage_parent_class)->
-      resolve (m, metadata);
+  return
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_content_storage_parent_class)->resolve (m, metadata);
 }
 
 static void
@@ -1076,8 +1079,9 @@ mxf_metadata_generic_package_resolve (MXFMetadataBase * m,
     return FALSE;
   }
 
-  return MXF_METADATA_BASE_CLASS (mxf_metadata_generic_package_parent_class)->
-      resolve (m, metadata);
+  return
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_package_parent_class)->resolve (m, metadata);
 }
 
 static void
@@ -1105,8 +1109,8 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
     MXFMetadataBase ** metadata)
 {
   gboolean ret =
-      MXF_METADATA_BASE_CLASS (mxf_metadata_material_package_parent_class)->
-      resolve (m, metadata);
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_material_package_parent_class)->resolve (m, metadata);
   MXFMetadataGenericPackage *self = MXF_METADATA_GENERIC_PACKAGE (m);
   guint i;
 
@@ -1221,8 +1225,9 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m,
   MXFMetadataGenericDescriptor *d = NULL;
 
   if (mxf_ul_is_zero (&self->descriptors_uid))
-    return MXF_METADATA_BASE_CLASS (mxf_metadata_source_package_parent_class)->
-        resolve (m, metadata);
+    return
+        MXF_METADATA_BASE_CLASS
+        (mxf_metadata_source_package_parent_class)->resolve (m, metadata);
 
   while (*p) {
     current = *p;
@@ -1261,8 +1266,8 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m,
   }
 
   ret =
-      MXF_METADATA_BASE_CLASS (mxf_metadata_source_package_parent_class)->
-      resolve (m, metadata);
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_source_package_parent_class)->resolve (m, metadata);
 
   for (i = 0; i < package->n_tracks; i++) {
     guint n_descriptor = 0, k = 0;
@@ -1721,8 +1726,9 @@ mxf_metadata_sequence_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
     return FALSE;
   }
 
-  return MXF_METADATA_BASE_CLASS (mxf_metadata_sequence_parent_class)->
-      resolve (m, metadata);
+  return
+      MXF_METADATA_BASE_CLASS (mxf_metadata_sequence_parent_class)->resolve (m,
+      metadata);
 
 }
 
@@ -1941,8 +1947,9 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m,
     p++;
   }
 
-  return MXF_METADATA_BASE_CLASS (mxf_metadata_source_clip_parent_class)->
-      resolve (m, metadata);
+  return
+      MXF_METADATA_BASE_CLASS (mxf_metadata_source_clip_parent_class)->resolve
+      (m, metadata);
 }
 
 static void
@@ -2173,8 +2180,9 @@ mxf_metadata_dm_segment_resolve (MXFMetadataBase * m,
     return FALSE;
   }
 
-  return MXF_METADATA_BASE_CLASS (mxf_metadata_dm_segment_parent_class)->
-      resolve (m, metadata);
+  return
+      MXF_METADATA_BASE_CLASS (mxf_metadata_dm_segment_parent_class)->resolve
+      (m, metadata);
 }
 
 static void
@@ -2298,8 +2306,8 @@ mxf_metadata_generic_descriptor_resolve (MXFMetadataBase * m,
   }
 
   return
-      MXF_METADATA_BASE_CLASS (mxf_metadata_generic_descriptor_parent_class)->
-      resolve (m, metadata);
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_descriptor_parent_class)->resolve (m, metadata);
 }
 
 static void
@@ -3064,8 +3072,8 @@ mxf_metadata_multiple_descriptor_finalize (GstMiniObject * object)
   g_free (self->sub_descriptors);
   self->sub_descriptors = NULL;
 
-  GST_MINI_OBJECT_CLASS (mxf_metadata_multiple_descriptor_parent_class)->
-      finalize (object);
+  GST_MINI_OBJECT_CLASS
+      (mxf_metadata_multiple_descriptor_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -3125,7 +3133,7 @@ error:
   GST_ERROR ("Invalid multiple descriptor local tag 0x%04x of size %u", tag,
       tag_size);
 
-  return TRUE;
+  return FALSE;
 }
 
 static gboolean
@@ -3161,8 +3169,8 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
   }
 
   return
-      MXF_METADATA_BASE_CLASS (mxf_metadata_multiple_descriptor_parent_class)->
-      resolve (m, metadata);
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_multiple_descriptor_parent_class)->resolve (m, metadata);
 }
 
 static void
