@@ -127,6 +127,8 @@ static gboolean gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_app_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
+static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
+    GstBuffer * buffer);
 
 static guint gst_app_src_signals[LAST_SIGNAL] = { 0 };
 
@@ -302,7 +304,8 @@ gst_app_src_class_init (GstAppSrcClass * klass)
     * @buffer: a buffer to push
     *
     * Adds a buffer to the queue of buffers that the appsrc element will
-    * push to its source pad. This function will take ownership of @buffer.
+    * push to its source pad. This function does not take ownership of the
+    * buffer so the buffer needs to be unreffed after calling this function.
     *
     * When the block property is TRUE, this function can block until free space
     * becomes available in the queue.
@@ -335,7 +338,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->check_get_range = gst_app_src_check_get_range;
   basesrc_class->get_size = gst_app_src_do_get_size;
 
-  klass->push_buffer = gst_app_src_push_buffer;
+  klass->push_buffer = gst_app_src_push_buffer_action;
   klass->end_of_stream = gst_app_src_end_of_stream;
 }
 
@@ -916,20 +919,9 @@ gst_app_src_get_max_bytes (GstAppSrc * appsrc)
   return result;
 }
 
-/**
- * gst_app_src_push_buffer:
- * @appsrc: a #GstAppSrc
- * @buffer: a #GstBuffer to push
- *
- * Adds a buffer to the queue of buffers that the appsrc element will
- * push to its source pad.  This function takes ownership of the buffer.
- *
- * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
- * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
- * #GST_FLOW_UNEXPECTED when EOS occured.
- */
-GstFlowReturn
-gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
+static GstFlowReturn
+gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
+    gboolean steal_ref)
 {
   gboolean first = TRUE;
 
@@ -979,6 +971,8 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
   }
 
   GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
+  if (!steal_ref)
+    gst_buffer_ref (buffer);
   g_queue_push_tail (appsrc->queue, buffer);
   appsrc->queued_bytes += GST_BUFFER_SIZE (buffer);
   g_cond_broadcast (appsrc->cond);
@@ -990,17 +984,45 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
 flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are flushing", buffer);
-    gst_buffer_unref (buffer);
+    if (steal_ref)
+      gst_buffer_unref (buffer);
     g_mutex_unlock (appsrc->mutex);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
   {
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are EOS", buffer);
-    gst_buffer_unref (buffer);
+    if (steal_ref)
+      gst_buffer_unref (buffer);
     g_mutex_unlock (appsrc->mutex);
     return GST_FLOW_UNEXPECTED;
   }
+}
+
+/**
+ * gst_app_src_push_buffer:
+ * @appsrc: a #GstAppSrc
+ * @buffer: a #GstBuffer to push
+ *
+ * Adds a buffer to the queue of buffers that the appsrc element will
+ * push to its source pad.  This function takes ownership of the buffer.
+ *
+ * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
+ * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
+ * #GST_FLOW_UNEXPECTED when EOS occured.
+ */
+GstFlowReturn
+gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
+{
+  return gst_app_src_push_buffer_full (appsrc, buffer, TRUE);
+}
+
+/* push a buffer without stealing the ref of the buffer. This is used for the
+ * action signal. */
+static GstFlowReturn
+gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
+{
+  return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
 }
 
 /**

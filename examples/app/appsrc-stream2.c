@@ -102,6 +102,7 @@ feed_data (GstElement * appsrc, guint size, App * app)
   GST_DEBUG ("feed buffer %p, offset %" G_GUINT64_FORMAT "-%u", buffer,
       app->offset, len);
   g_signal_emit_by_name (app->appsrc, "push-buffer", buffer, &ret);
+  gst_buffer_unref (buffer);
 
   app->offset += len;
 

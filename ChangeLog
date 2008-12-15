@@ -1,3 +1,17 @@
+2008-12-15  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* examples/app/appsrc-ra.c: (feed_data):
+	* examples/app/appsrc-seekable.c: (feed_data):
+	* examples/app/appsrc-stream.c: (read_data):
+	* examples/app/appsrc-stream2.c: (feed_data):
+	Fix example to unref after emiting the push-buffer action.
+
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
+	(gst_app_src_push_buffer_full), (gst_app_src_push_buffer),
+	(gst_app_src_push_buffer_action):
+	Don't take the ref on the buffer in push-buffer action because it's too
+	awkward for bindings. Fixes #564482.
+
 2008-12-13  Edward Hervey  <bilboed@gmail.com>
 
 	* m4/Makefile.am:
