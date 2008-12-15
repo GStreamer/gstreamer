@@ -61,7 +61,12 @@ mxf_is_up_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 384M 8 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x05 && key->u[15] <= 0x03)
@@ -216,13 +221,15 @@ mxf_up_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR) {
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->descriptor[i])) {
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+    } else if (MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])) {
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->descriptor[i];
     }
@@ -249,4 +256,9 @@ mxf_up_create_caps (MXFMetadataGenericPackage * package,
   }
 
   return caps;
+}
+
+void
+mxf_up_init (void)
+{
 }

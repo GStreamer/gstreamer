@@ -51,7 +51,12 @@ mxf_is_dv_dif_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 383M 8 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x02)
@@ -97,10 +102,11 @@ mxf_dv_dif_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
-        is_file_descriptor
-        && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
-        MXF_METADATA_MULTIPLE_DESCRIPTOR) {
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_FILE_DESCRIPTOR (track->descriptor[i]) &&
+        !MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (track->descriptor[i])) {
       f = track->descriptor[i];
     }
   }
@@ -130,4 +136,10 @@ mxf_dv_dif_create_caps (MXFMetadataGenericPackage * package,
   }
 
   return caps;
+}
+
+void
+mxf_dv_dif_init (void)
+{
+
 }

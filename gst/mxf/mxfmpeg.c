@@ -91,14 +91,18 @@ static const guint8 _profile_and_level_ul[] = {
   0x0a, 0x00, 0x00
 };
 
-gboolean
-mxf_metadata_mpeg_video_descriptor_handle_tag (MXFMetadataGenericDescriptor * d,
-    const MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
-    guint16 tag_size)
+G_DEFINE_TYPE (MXFMetadataMPEGVideoDescriptor,
+    mxf_metadata_mpeg_video_descriptor,
+    MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+
+static gboolean
+mxf_metadata_mpeg_video_descriptor_handle_tag (MXFMetadataBase * metadata,
+    MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
+    guint tag_size)
 {
-  MXFMetadataMPEGVideoDescriptor *descriptor =
-      (MXFMetadataMPEGVideoDescriptor *) d;
-  gboolean ret = FALSE;
+  MXFMetadataMPEGVideoDescriptor *self =
+      MXF_METADATA_MPEG_VIDEO_DESCRIPTOR (metadata);
+  gboolean ret = TRUE;
   MXFUL *tag_ul = NULL;
 
   if (!(tag_ul =
@@ -109,91 +113,86 @@ mxf_metadata_mpeg_video_descriptor_handle_tag (MXFMetadataGenericDescriptor * d,
   if (memcmp (tag_ul, &_single_sequence_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->single_sequence = GST_READ_UINT8 (tag_data);
+    self->single_sequence = GST_READ_UINT8 (tag_data);
     GST_DEBUG ("  single sequence = %s",
-        (descriptor->single_sequence) ? "yes" : "no");
-    ret = TRUE;
+        (self->single_sequence) ? "yes" : "no");
   } else if (memcmp (tag_ul, &_constant_b_frames_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->const_b_frames = GST_READ_UINT8 (tag_data);
+    self->const_b_frames = GST_READ_UINT8 (tag_data);
     GST_DEBUG ("  constant b frames = %s",
-        (descriptor->single_sequence) ? "yes" : "no");
-    ret = TRUE;
+        (self->single_sequence) ? "yes" : "no");
   } else if (memcmp (tag_ul, &_coded_content_type_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->coded_content_type = GST_READ_UINT8 (tag_data);
-    GST_DEBUG ("  coded content type = %u", descriptor->coded_content_type);
-    ret = TRUE;
+    self->coded_content_type = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  coded content type = %u", self->coded_content_type);
   } else if (memcmp (tag_ul, &_low_delay_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->low_delay = GST_READ_UINT8 (tag_data);
-    GST_DEBUG ("  low delay = %s", (descriptor->low_delay) ? "yes" : "no");
-    ret = TRUE;
+    self->low_delay = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  low delay = %s", (self->low_delay) ? "yes" : "no");
   } else if (memcmp (tag_ul, &_closed_gop_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->closed_gop = GST_READ_UINT8 (tag_data);
-    GST_DEBUG ("  closed gop = %s", (descriptor->closed_gop) ? "yes" : "no");
-    ret = TRUE;
+    self->closed_gop = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  closed gop = %s", (self->closed_gop) ? "yes" : "no");
   } else if (memcmp (tag_ul, &_identical_gop_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->identical_gop = GST_READ_UINT8 (tag_data);
-    GST_DEBUG ("  identical gop = %s",
-        (descriptor->identical_gop) ? "yes" : "no");
-    ret = TRUE;
+    self->identical_gop = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  identical gop = %s", (self->identical_gop) ? "yes" : "no");
   } else if (memcmp (tag_ul, &_max_gop_ul, 16) == 0) {
     if (tag_size != 2)
       goto error;
-    descriptor->max_gop = GST_READ_UINT16_BE (tag_data);
-    GST_DEBUG ("  max gop = %u", descriptor->max_gop);
-    ret = TRUE;
+    self->max_gop = GST_READ_UINT16_BE (tag_data);
+    GST_DEBUG ("  max gop = %u", self->max_gop);
   } else if (memcmp (tag_ul, &_b_picture_count_ul, 16) == 0) {
     if (tag_size != 2)
       goto error;
-    descriptor->b_picture_count = GST_READ_UINT16_BE (tag_data);
-    GST_DEBUG ("  b picture count = %u", descriptor->b_picture_count);
-    ret = TRUE;
+    self->b_picture_count = GST_READ_UINT16_BE (tag_data);
+    GST_DEBUG ("  b picture count = %u", self->b_picture_count);
   } else if (memcmp (tag_ul, &_bitrate_ul, 16) == 0) {
     if (tag_size != 4)
       goto error;
-    descriptor->bitrate = GST_READ_UINT32_BE (tag_data);
-    GST_DEBUG ("  bitrate = %u", descriptor->bitrate);
-    ret = TRUE;
+    self->bitrate = GST_READ_UINT32_BE (tag_data);
+    GST_DEBUG ("  bitrate = %u", self->bitrate);
   } else if (memcmp (tag_ul, &_profile_and_level_ul, 16) == 0) {
     if (tag_size != 1)
       goto error;
-    descriptor->profile_and_level = GST_READ_UINT8 (tag_data);
-    GST_DEBUG ("  profile & level = %u", descriptor->profile_and_level);
-    ret = TRUE;
+    self->profile_and_level = GST_READ_UINT8 (tag_data);
+    GST_DEBUG ("  profile & level = %u", self->profile_and_level);
   } else {
     ret =
-        mxf_metadata_cdci_picture_essence_descriptor_handle_tag (d, primer, tag,
-        tag_data, tag_size);
+        MXF_METADATA_BASE_CLASS
+        (mxf_metadata_mpeg_video_descriptor_parent_class)->handle_tag (metadata,
+        primer, tag, tag_data, tag_size);
   }
 
   return ret;
 
 error:
-  GST_ERROR ("Invalid mpeg video descriptor tag 0x%04x of size %u", tag,
+
+  GST_ERROR ("Invalid MPEG video descriptor local tag 0x%04x of size %u", tag,
       tag_size);
 
   return FALSE;
 }
 
-void mxf_metadata_mpeg_video_descriptor_reset
-    (MXFMetadataMPEGVideoDescriptor * descriptor)
+static void
+mxf_metadata_mpeg_video_descriptor_init (MXFMetadataMPEGVideoDescriptor * self)
 {
-  g_return_if_fail (descriptor != NULL);
 
-  mxf_metadata_cdci_picture_essence_descriptor_reset (
-      (MXFMetadataCDCIPictureEssenceDescriptor *) descriptor);
+}
 
-  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor, MXFMetadataMPEGVideoDescriptor,
-      MXFMetadataCDCIPictureEssenceDescriptor);
+static void
+    mxf_metadata_mpeg_video_descriptor_class_init
+    (MXFMetadataMPEGVideoDescriptorClass * klass)
+{
+  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+
+  metadata_base_class->handle_tag =
+      mxf_metadata_mpeg_video_descriptor_handle_tag;
 }
 
 gboolean
@@ -208,7 +207,12 @@ mxf_is_mpeg_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 381M 7 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 &&
@@ -338,8 +342,8 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
       codec_name = "MPEG-1 Video";
     } else if (p->picture_essence_coding.u[13] == 0x20) {
       MXFLocalTag *local_tag =
-          (((MXFMetadataGenericDescriptor *) p)->other_tags) ?
-          g_hash_table_lookup (((MXFMetadataGenericDescriptor *)
+          (((MXFMetadataBase *) p)->other_tags) ?
+          g_hash_table_lookup (((MXFMetadataBase *)
               p)->other_tags, &sony_mpeg4_extradata) : NULL;
 
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 4,
@@ -446,17 +450,16 @@ mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_MPEG_VIDEO_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR) {
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])) {
       f = track->descriptor[i];
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR) {
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])) {
       f = track->descriptor[i];
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
       break;
@@ -502,4 +505,10 @@ mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
 
   return caps;
+}
+
+void
+mxf_mpeg_init (void)
+{
+  mxf_metadata_register (0x0151, MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR);
 }

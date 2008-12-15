@@ -18,7 +18,6 @@
  */
 
 /* TODO:
- *   - GObjectify structural metadata to get rid of the current inheritance mess
  *   - Implement support for DMS-1 and descriptive metadata tracks
  *   - Differentiate UL and UUIDs, the former can define an object system
  *     (i.e. mxf_ul_is_a() and friends could be implemented), see SMPTE S336M.
@@ -56,6 +55,7 @@
 
 #include "mxfdemux.h"
 #include "mxfparse.h"
+#include "mxfmetadata.h"
 #include "mxfaes-bwf.h"
 #include "mxfmpeg.h"
 #include "mxfdv-dif.h"
@@ -91,7 +91,6 @@ typedef struct
   GstPad parent;
 
   guint32 track_id;
-  MXFMetadataTrackType track_type;
   gboolean need_segment;
 
   GstFlowReturn last_flow;
@@ -104,11 +103,11 @@ typedef struct
 
   guint current_material_component;
   MXFMetadataGenericPackage *material_package;
-  MXFMetadataTrack *material_track;
+  MXFMetadataTimelineTrack *material_track;
   MXFMetadataStructuralComponent *component;
 
-  MXFMetadataGenericPackage *source_package;
-  MXFMetadataTrack *source_track;
+  MXFMetadataSourcePackage *source_package;
+  MXFMetadataTimelineTrack *source_track;
 
   GstCaps *caps;
 } GstMXFDemuxPad;
@@ -231,177 +230,19 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
     }
   }
 
-  mxf_metadata_preface_reset (&demux->preface);
+  demux->preface = NULL;
 
-  if (demux->identification) {
-    for (i = 0; i < demux->identification->len; i++)
-      mxf_metadata_identification_reset (&g_array_index (demux->identification,
-              MXFMetadataIdentification, i));
-    g_array_free (demux->identification, TRUE);
-    demux->identification = NULL;
-  }
+  if (demux->metadata) {
+    guint i;
 
-  mxf_metadata_content_storage_reset (&demux->content_storage);
+    for (i = 0; i < demux->metadata->len; i++) {
+      GstMiniObject *o = g_ptr_array_index (demux->metadata, i);
 
-  if (demux->essence_container_data) {
-    for (i = 0; i < demux->essence_container_data->len; i++)
-      mxf_metadata_essence_container_data_reset (&g_array_index
-          (demux->essence_container_data, MXFMetadataEssenceContainerData, i));
-    g_array_free (demux->essence_container_data, TRUE);
-    demux->essence_container_data = NULL;
-  }
-
-  if (demux->material_package) {
-    for (i = 0; i < demux->material_package->len; i++)
-      mxf_metadata_generic_package_reset (&g_array_index
-          (demux->material_package, MXFMetadataGenericPackage, i));
-    g_array_free (demux->material_package, TRUE);
-    demux->material_package = NULL;
-  }
-
-  if (demux->source_package) {
-    for (i = 0; i < demux->source_package->len; i++)
-      mxf_metadata_generic_package_reset (&g_array_index (demux->source_package,
-              MXFMetadataGenericPackage, i));
-    g_array_free (demux->source_package, TRUE);
-    demux->source_package = NULL;
-  }
-
-  if (demux->package) {
-    g_ptr_array_free (demux->package, TRUE);
-    demux->package = NULL;
-  }
-
-  if (demux->track) {
-    for (i = 0; i < demux->track->len; i++)
-      mxf_metadata_track_reset (&g_array_index (demux->track,
-              MXFMetadataTrack, i));
-    g_array_free (demux->track, TRUE);
-    demux->track = NULL;
-  }
-
-  if (demux->sequence) {
-    for (i = 0; i < demux->sequence->len; i++)
-      mxf_metadata_sequence_reset (&g_array_index (demux->sequence,
-              MXFMetadataSequence, i));
-    g_array_free (demux->sequence, TRUE);
-    demux->sequence = NULL;
-  }
-
-  if (demux->structural_component) {
-    for (i = 0; i < demux->structural_component->len; i++)
-      mxf_metadata_structural_component_reset (&g_array_index
-          (demux->structural_component, MXFMetadataStructuralComponent, i));
-    g_array_free (demux->structural_component, TRUE);
-    demux->structural_component = NULL;
-  }
-
-  if (demux->generic_descriptor) {
-    for (i = 0; i < demux->generic_descriptor->len; i++)
-      mxf_metadata_generic_descriptor_reset (&g_array_index
-          (demux->generic_descriptor, MXFMetadataGenericDescriptor, i));
-    g_array_free (demux->generic_descriptor, TRUE);
-    demux->generic_descriptor = NULL;
-  }
-
-  if (demux->file_descriptor) {
-    for (i = 0; i < demux->file_descriptor->len; i++)
-      mxf_metadata_file_descriptor_reset (&g_array_index
-          (demux->file_descriptor, MXFMetadataFileDescriptor, i));
-    g_array_free (demux->file_descriptor, TRUE);
-    demux->file_descriptor = NULL;
-  }
-
-  if (demux->multiple_descriptor) {
-    for (i = 0; i < demux->multiple_descriptor->len; i++)
-      mxf_metadata_multiple_descriptor_reset (&g_array_index
-          (demux->multiple_descriptor, MXFMetadataMultipleDescriptor, i));
-    g_array_free (demux->multiple_descriptor, TRUE);
-    demux->multiple_descriptor = NULL;
-  }
-
-  if (demux->generic_data_essence_descriptor) {
-    for (i = 0; i < demux->generic_data_essence_descriptor->len; i++)
-      mxf_metadata_generic_data_essence_descriptor_reset (&g_array_index
-          (demux->generic_data_essence_descriptor,
-              MXFMetadataGenericDataEssenceDescriptor, i));
-    g_array_free (demux->generic_data_essence_descriptor, TRUE);
-    demux->generic_data_essence_descriptor = NULL;
-  }
-
-  if (demux->generic_picture_essence_descriptor) {
-    for (i = 0; i < demux->generic_picture_essence_descriptor->len; i++)
-      mxf_metadata_generic_picture_essence_descriptor_reset (&g_array_index
-          (demux->generic_picture_essence_descriptor,
-              MXFMetadataGenericPictureEssenceDescriptor, i));
-    g_array_free (demux->generic_picture_essence_descriptor, TRUE);
-    demux->generic_picture_essence_descriptor = NULL;
-  }
-
-  if (demux->cdci_picture_essence_descriptor) {
-    for (i = 0; i < demux->cdci_picture_essence_descriptor->len; i++)
-      mxf_metadata_cdci_picture_essence_descriptor_reset (&g_array_index
-          (demux->cdci_picture_essence_descriptor,
-              MXFMetadataCDCIPictureEssenceDescriptor, i));
-    g_array_free (demux->cdci_picture_essence_descriptor, TRUE);
-    demux->cdci_picture_essence_descriptor = NULL;
-  }
-
-  if (demux->rgba_picture_essence_descriptor) {
-    for (i = 0; i < demux->rgba_picture_essence_descriptor->len; i++)
-      mxf_metadata_rgba_picture_essence_descriptor_reset (&g_array_index
-          (demux->rgba_picture_essence_descriptor,
-              MXFMetadataRGBAPictureEssenceDescriptor, i));
-    g_array_free (demux->rgba_picture_essence_descriptor, TRUE);
-    demux->rgba_picture_essence_descriptor = NULL;
-  }
-
-  if (demux->mpeg_video_descriptor) {
-    for (i = 0; i < demux->mpeg_video_descriptor->len; i++)
-      mxf_metadata_mpeg_video_descriptor_reset (&g_array_index
-          (demux->mpeg_video_descriptor, MXFMetadataMPEGVideoDescriptor, i));
-    g_array_free (demux->mpeg_video_descriptor, TRUE);
-    demux->mpeg_video_descriptor = NULL;
-  }
-
-  if (demux->generic_sound_essence_descriptor) {
-    for (i = 0; i < demux->generic_sound_essence_descriptor->len; i++)
-      mxf_metadata_generic_sound_essence_descriptor_reset (&g_array_index
-          (demux->generic_sound_essence_descriptor,
-              MXFMetadataGenericSoundEssenceDescriptor, i));
-    g_array_free (demux->generic_sound_essence_descriptor, TRUE);
-    demux->generic_sound_essence_descriptor = NULL;
-  }
-
-  if (demux->wave_audio_essence_descriptor) {
-    for (i = 0; i < demux->wave_audio_essence_descriptor->len; i++)
-      mxf_metadata_wave_audio_essence_descriptor_reset (&g_array_index
-          (demux->wave_audio_essence_descriptor,
-              MXFMetadataWaveAudioEssenceDescriptor, i));
-    g_array_free (demux->wave_audio_essence_descriptor, TRUE);
-    demux->wave_audio_essence_descriptor = NULL;
-  }
-
-  if (demux->aes3_audio_essence_descriptor) {
-    for (i = 0; i < demux->aes3_audio_essence_descriptor->len; i++)
-      mxf_metadata_aes3_audio_essence_descriptor_reset (&g_array_index
-          (demux->aes3_audio_essence_descriptor,
-              MXFMetadataAES3AudioEssenceDescriptor, i));
-    g_array_free (demux->aes3_audio_essence_descriptor, TRUE);
-    demux->aes3_audio_essence_descriptor = NULL;
-  }
-
-  if (demux->descriptor) {
-    g_ptr_array_free (demux->descriptor, TRUE);
-    demux->descriptor = NULL;
-  }
-
-  if (demux->locator) {
-    for (i = 0; i < demux->locator->len; i++)
-      mxf_metadata_locator_reset (&g_array_index (demux->locator,
-              MXFMetadataLocator, i));
-    g_array_free (demux->locator, TRUE);
-    demux->locator = NULL;
+      if (o)
+        gst_mini_object_unref (o);
+    }
+    g_ptr_array_free (demux->metadata, TRUE);
+    demux->metadata = NULL;
   }
 }
 
@@ -594,1072 +435,35 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
 }
 
 static GstFlowReturn
-gst_mxf_demux_handle_metadata_preface (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
-{
-  MXFMetadataPreface preface;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata preface of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_preface_parse (key, &preface, &demux->primer,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata preface failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (mxf_timestamp_is_unknown (&demux->preface.last_modified_date)
-      || (!mxf_timestamp_is_unknown (&preface.last_modified_date)
-          && mxf_timestamp_compare (&demux->preface.last_modified_date,
-              &preface.last_modified_date) < 0)) {
-    GST_DEBUG_OBJECT (demux,
-        "Timestamp of new preface is newer than old, updating metadata");
-    gst_mxf_demux_reset_metadata (demux);
-    memcpy (&demux->preface, &preface, sizeof (MXFMetadataPreface));
-  } else {
-    GST_DEBUG_OBJECT (demux, "Preface is older than already parsed preface");
-  }
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_identification (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
-{
-  MXFMetadataIdentification identification;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata identification of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_identification_parse (key, &identification,
-          &demux->primer, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata identification failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->identification)
-    demux->identification =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataIdentification));
-
-  g_array_append_val (demux->identification, identification);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_content_storage (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
-{
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata content storage of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_content_storage_parse (key,
-          &demux->content_storage, &demux->primer, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata content storage failed");
-    return GST_FLOW_ERROR;
-  }
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_essence_container_data (GstMXFDemux *
-    demux, const MXFUL * key, GstBuffer * buffer)
-{
-  MXFMetadataEssenceContainerData essence_container_data;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata essence container data of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_essence_container_data_parse (key,
-          &essence_container_data, &demux->primer, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata essence container data failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->essence_container_data)
-    demux->essence_container_data =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataEssenceContainerData));
-
-  g_array_append_val (demux->essence_container_data, essence_container_data);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_material_package (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
-{
-  MXFMetadataGenericPackage material_package;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata material package of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_generic_package_parse (key, &material_package,
-          &demux->primer, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata material package failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->material_package)
-    demux->material_package =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMaterialPackage));
-
-  g_array_append_val (demux->material_package, material_package);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_source_package (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
-{
-  MXFMetadataGenericPackage source_package;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata source package of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_generic_package_parse (key, &source_package,
-          &demux->primer, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata source package failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->source_package)
-    demux->source_package =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataSourcePackage));
-
-  g_array_append_val (demux->source_package, source_package);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_track (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataTrack track;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata track with type 0x%04x of size %u"
-      " at offset %" G_GUINT64_FORMAT, type, GST_BUFFER_SIZE (buffer),
-      demux->offset);
-
-  if (!mxf_metadata_track_parse (key, &track, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata track failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->track)
-    demux->track = g_array_new (FALSE, FALSE, sizeof (MXFMetadataTrack));
-
-  g_array_append_val (demux->track, track);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_sequence (GstMXFDemux * demux,
-    const MXFUL * key, GstBuffer * buffer)
-{
-  MXFMetadataSequence sequence;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata sequence of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_sequence_parse (key, &sequence,
-          &demux->primer, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata sequence failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->sequence)
-    demux->sequence = g_array_new (FALSE, FALSE, sizeof (MXFMetadataSequence));
-
-  g_array_append_val (demux->sequence, sequence);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_structural_component (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataStructuralComponent component;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata structural component of size %u"
-      " at offset %" G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
-
-  if (!mxf_metadata_structural_component_parse (key, &component,
-          &demux->primer, type, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata structural component failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->structural_component)
-    demux->structural_component =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataStructuralComponent));
-
-  g_array_append_val (demux->structural_component, component);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_file_descriptor (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataFileDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata file descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_file_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset) mxf_metadata_file_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata file descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->file_descriptor)
-    demux->file_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataFileDescriptor));
-
-  g_array_append_val (demux->file_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_multiple_descriptor (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataMultipleDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata multiple descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_multiple_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset) mxf_metadata_multiple_descriptor_reset))
-  {
-    GST_ERROR_OBJECT (demux, "Parsing metadata multiple descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->multiple_descriptor)
-    demux->multiple_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMultipleDescriptor));
-
-  g_array_append_val (demux->multiple_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_generic_data_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataGenericDataEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata generic data essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_generic_data_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_generic_data_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata generic data essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->generic_data_essence_descriptor)
-    demux->generic_data_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataGenericDataEssenceDescriptor));
-
-  g_array_append_val (demux->generic_data_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataGenericPictureEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata generic picture essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_generic_picture_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_generic_picture_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata generic picture essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->generic_picture_essence_descriptor)
-    demux->generic_picture_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataGenericPictureEssenceDescriptor));
-
-  g_array_append_val (demux->generic_picture_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataCDCIPictureEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata CDCI picture essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_cdci_picture_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_cdci_picture_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata CDCI picture essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->cdci_picture_essence_descriptor)
-    demux->cdci_picture_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataCDCIPictureEssenceDescriptor));
-
-  g_array_append_val (demux->cdci_picture_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_rgba_picture_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataRGBAPictureEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata RGBA picture essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_rgba_picture_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_rgba_picture_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata RGBA picture essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->rgba_picture_essence_descriptor)
-    demux->rgba_picture_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataRGBAPictureEssenceDescriptor));
-
-  g_array_append_val (demux->rgba_picture_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_mpeg_video_descriptor (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataMPEGVideoDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata MPEG video descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_mpeg_video_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_mpeg_video_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata MPEG video descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->mpeg_video_descriptor)
-    demux->mpeg_video_descriptor =
-        g_array_new (FALSE, FALSE, sizeof (MXFMetadataMPEGVideoDescriptor));
-
-  g_array_append_val (demux->mpeg_video_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataGenericSoundEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata generic sound essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_generic_sound_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_generic_sound_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata generic sound essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->generic_sound_essence_descriptor)
-    demux->generic_sound_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataGenericSoundEssenceDescriptor));
-
-  g_array_append_val (demux->generic_sound_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataWaveAudioEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata wave sound essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_wave_audio_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_wave_audio_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata wave sound essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->wave_audio_essence_descriptor)
-    demux->wave_audio_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataWaveAudioEssenceDescriptor));
-
-  g_array_append_val (demux->wave_audio_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_aes3_audio_essence_descriptor (GstMXFDemux *
-    demux, const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataAES3AudioEssenceDescriptor descriptor;
-
-  memset (&descriptor, 0, sizeof (descriptor));
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata AES3 audio essence descriptor of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_descriptor_parse (key,
-          (MXFMetadataGenericDescriptor *) & descriptor, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
-          (MXFMetadataDescriptorHandleTag)
-          mxf_metadata_aes3_audio_essence_descriptor_handle_tag,
-          (MXFMetadataDescriptorReset)
-          mxf_metadata_aes3_audio_essence_descriptor_reset)) {
-    GST_ERROR_OBJECT (demux,
-        "Parsing metadata AES3 audio essence descriptor failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->aes3_audio_essence_descriptor)
-    demux->aes3_audio_essence_descriptor =
-        g_array_new (FALSE, FALSE,
-        sizeof (MXFMetadataAES3AudioEssenceDescriptor));
-
-  g_array_append_val (demux->aes3_audio_essence_descriptor, descriptor);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_mxf_demux_handle_metadata_locator (GstMXFDemux * demux,
-    const MXFUL * key, guint16 type, GstBuffer * buffer)
-{
-  MXFMetadataLocator locator;
-
-  GST_DEBUG_OBJECT (demux,
-      "Handling metadata locator of size %u"
-      " at offset %" G_GUINT64_FORMAT " with type 0x%04d",
-      GST_BUFFER_SIZE (buffer), demux->offset, type);
-
-  if (!mxf_metadata_locator_parse (key, &locator, &demux->primer,
-          type, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata locator failed");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!demux->locator)
-    demux->locator = g_array_new (FALSE, FALSE, sizeof (MXFMetadataLocator));
-
-  g_array_append_val (demux->locator, locator);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
 gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
 {
-  guint i, j, k;
+  guint i;
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
   demux->update_metadata = FALSE;
 
-  /* Fill in demux->descriptor */
-  demux->descriptor = g_ptr_array_new ();
-
-#define FILL_DESCRIPTOR_ARRAY(desc_array, TYPE) \
-  G_STMT_START { \
-    if (desc_array) { \
-      for (i = 0; i < desc_array->len; i++) { \
-        g_ptr_array_add (demux->descriptor, \
-	    &g_array_index (desc_array, TYPE, i)); \
-      } \
-    } \
-  } G_STMT_END
-
-  FILL_DESCRIPTOR_ARRAY (demux->generic_descriptor,
-      MXFMetadataGenericDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->file_descriptor, MXFMetadataFileDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->generic_data_essence_descriptor,
-      MXFMetadataGenericDataEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->generic_picture_essence_descriptor,
-      MXFMetadataGenericPictureEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->cdci_picture_essence_descriptor,
-      MXFMetadataCDCIPictureEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->rgba_picture_essence_descriptor,
-      MXFMetadataRGBAPictureEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->mpeg_video_descriptor,
-      MXFMetadataMPEGVideoDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->generic_sound_essence_descriptor,
-      MXFMetadataGenericSoundEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->wave_audio_essence_descriptor,
-      MXFMetadataWaveAudioEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->aes3_audio_essence_descriptor,
-      MXFMetadataAES3AudioEssenceDescriptor);
-  FILL_DESCRIPTOR_ARRAY (demux->multiple_descriptor,
-      MXFMetadataMultipleDescriptor);
-
-#undef FILL_DESCRIPTOR_ARRAY
-
-  /* Fill in demux->package */
-  demux->package = g_ptr_array_new ();
-  if (demux->material_package) {
-    for (i = 0; i < demux->material_package->len; i++) {
-      g_ptr_array_add (demux->package, &g_array_index (demux->material_package,
-              MXFMetadataGenericPackage, i));
-    }
-  }
-  if (demux->source_package) {
-    for (i = 0; i < demux->source_package->len; i++) {
-      g_ptr_array_add (demux->package, &g_array_index (demux->source_package,
-              MXFMetadataGenericPackage, i));
-    }
+  if (!demux->metadata) {
+    GST_ERROR_OBJECT (demux, "No metadata yet");
+    return GST_FLOW_ERROR;
   }
 
-  /* Multiple descriptor */
-  if (demux->multiple_descriptor && demux->descriptor) {
-    for (i = 0; i < demux->multiple_descriptor->len; i++) {
-      MXFMetadataMultipleDescriptor *d =
-          &g_array_index (demux->multiple_descriptor,
-          MXFMetadataMultipleDescriptor, i);
-
-      d->sub_descriptors =
-          g_new0 (MXFMetadataGenericDescriptor *, d->n_sub_descriptors);
-      for (j = 0; j < d->n_sub_descriptors; j++) {
-        for (k = 0; k < demux->descriptor->len; k++) {
-          MXFMetadataGenericDescriptor *e =
-              g_ptr_array_index (demux->descriptor, k);
-
-          if (mxf_ul_is_equal (&d->sub_descriptors_uids[j], &e->instance_uid)) {
-            d->sub_descriptors[j] = e;
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  /* See SMPTE 377M 8.4 */
-
-  /* Preface */
-  if (demux->package) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *package =
-          g_ptr_array_index (demux->package, i);
-
-      if (mxf_ul_is_equal (&demux->preface.primary_package_uid,
-              &package->instance_uid)) {
-        demux->preface.primary_package = package;
-        break;
-      }
-    }
-  }
-
-  demux->preface.identifications =
-      g_new0 (MXFMetadataIdentification *, demux->preface.n_identifications);
-  if (demux->identification) {
-    for (i = 0; i < demux->identification->len; i++) {
-      MXFMetadataIdentification *identification =
-          &g_array_index (demux->identification,
-          MXFMetadataIdentification, i);
-
-      for (j = 0; j < demux->preface.n_identifications; j++) {
-        if (mxf_ul_is_equal (&demux->preface.identifications_uids[j],
-                &identification->instance_uid)) {
-          demux->preface.identifications[j] = identification;
-          break;
-        }
-      }
-    }
-  }
-
-  if (!mxf_ul_is_equal (&demux->preface.content_storage_uid,
-          &demux->content_storage.instance_uid)) {
-    GST_ERROR_OBJECT (demux,
-        "Preface content storage UID not equal to actual content storage instance uid");
-    ret = GST_FLOW_ERROR;
-    goto error;
-  }
-  demux->preface.content_storage = &demux->content_storage;
-
-  /* Content storage */
-  demux->content_storage.packages =
-      g_new0 (MXFMetadataGenericPackage *, demux->content_storage.n_packages);
-  if (demux->package) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *package =
-          g_ptr_array_index (demux->package, i);
-
-      for (j = 0; j < demux->content_storage.n_packages; j++) {
-        if (mxf_ul_is_equal (&demux->content_storage.packages_uids[j],
-                &package->instance_uid)) {
-          demux->content_storage.packages[j] = package;
-          break;
-        }
-      }
-    }
-  }
-
-  demux->content_storage.essence_container_data =
-      g_new0 (MXFMetadataEssenceContainerData *,
-      demux->content_storage.n_essence_container_data);
-  if (demux->essence_container_data) {
-    for (i = 0; i < demux->essence_container_data->len; i++) {
-      MXFMetadataEssenceContainerData *data =
-          &g_array_index (demux->essence_container_data,
-          MXFMetadataEssenceContainerData, i);
-
-      for (j = 0; j < demux->content_storage.n_essence_container_data; j++) {
-        if (mxf_ul_is_equal (&demux->
-                content_storage.essence_container_data_uids[j],
-                &data->instance_uid)) {
-          demux->content_storage.essence_container_data[j] = data;
-          break;
-        }
-      }
-    }
-  }
-
-  /* Essence container data */
-  if (demux->package && demux->essence_container_data) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *package =
-          g_ptr_array_index (demux->package, i);
-
-      for (j = 0; j < demux->essence_container_data->len; j++) {
-        MXFMetadataEssenceContainerData *data =
-            &g_array_index (demux->essence_container_data,
-            MXFMetadataEssenceContainerData, j);
-
-        if (mxf_umid_is_equal (&data->linked_package_uid,
-                &package->package_uid)) {
-          data->linked_package = package;
-          break;
-        }
-      }
-    }
-  }
-
-  /* Generic package */
-  if (demux->package) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *package =
-          g_ptr_array_index (demux->package, i);
-
-      package->tracks = g_new0 (MXFMetadataTrack *, package->n_tracks);
-      if (demux->track) {
-        for (j = 0; j < package->n_tracks; j++) {
-          for (k = 0; k < demux->track->len; k++) {
-            MXFMetadataTrack *track =
-                &g_array_index (demux->track, MXFMetadataTrack, k);
-
-            if (mxf_ul_is_equal (&package->tracks_uids[j],
-                    &track->instance_uid)) {
-              package->tracks[j] = track;
-              break;
-            }
-          }
-        }
-      }
-
-      /* Resolve descriptors */
-      if (package->n_descriptors > 0 && demux->descriptor) {
-        MXFMetadataGenericDescriptor *d = NULL;
-
-        for (j = 0; j < demux->descriptor->len; j++) {
-          MXFMetadataGenericDescriptor *descriptor =
-              g_ptr_array_index (demux->descriptor, j);
-
-          if (mxf_ul_is_equal (&package->descriptors_uid,
-                  &descriptor->instance_uid)) {
-            d = descriptor;
-            break;
-          }
-        }
-
-        if (d && d->type == MXF_METADATA_MULTIPLE_DESCRIPTOR) {
-          MXFMetadataMultipleDescriptor *e =
-              (MXFMetadataMultipleDescriptor *) d;
-
-          package->n_descriptors = e->n_sub_descriptors;
-          package->descriptors =
-              g_new0 (MXFMetadataGenericDescriptor *, e->n_sub_descriptors);
-
-          /* These are already resolved */
-          for (j = 0; j < e->n_sub_descriptors; j++)
-            package->descriptors[j] = e->sub_descriptors[j];
-        } else {
-          package->n_descriptors = 1;
-          package->descriptors = g_new0 (MXFMetadataGenericDescriptor *, 1);
-          package->descriptors[0] = d;
-        }
-      }
-
-      if (package->tracks && package->descriptors) {
-        for (j = 0; j < package->n_tracks; j++) {
-          MXFMetadataTrack *track = package->tracks[j];
-          guint i, n_descriptor = 0;
-
-          if (!track)
-            continue;
-
-          for (k = 0; k < package->n_descriptors; k++) {
-            MXFMetadataGenericDescriptor *d = package->descriptors[k];
-            MXFMetadataFileDescriptor *e;
-
-            if (!d || !d->is_file_descriptor)
-              continue;
-
-            e = (MXFMetadataFileDescriptor *) d;
-
-            if (e->linked_track_id == track->track_id ||
-                e->linked_track_id == 0)
-              n_descriptor++;
-          }
-
-          track->n_descriptor = n_descriptor;
-          track->descriptor =
-              g_new0 (MXFMetadataFileDescriptor *, n_descriptor);
-          i = 0;
-
-          for (k = 0; k < package->n_descriptors; k++) {
-            MXFMetadataGenericDescriptor *d = package->descriptors[k];
-            MXFMetadataFileDescriptor *e;
-
-            if (!d || !d->is_file_descriptor)
-              continue;
-
-            e = (MXFMetadataFileDescriptor *) d;
-
-            if (e->linked_track_id == track->track_id ||
-                (e->linked_track_id == 0 && n_descriptor == 1))
-              track->descriptor[i++] = e;
-          }
-        }
-      }
-    }
-  }
-
-  /* Tracks */
-  if (demux->track && demux->sequence) {
-    for (i = 0; i < demux->track->len; i++) {
-      MXFMetadataTrack *track =
-          &g_array_index (demux->track, MXFMetadataTrack, i);
-
-      for (j = 0; j < demux->sequence->len; j++) {
-        MXFMetadataSequence *sequence =
-            &g_array_index (demux->sequence, MXFMetadataSequence,
-            i);
-
-        if (mxf_ul_is_equal (&track->sequence_uid, &sequence->instance_uid)) {
-          track->sequence = sequence;
-          break;
-        }
-      }
-    }
-  }
-
-  /* Sequences */
-  if (demux->sequence) {
-    for (i = 0; i < demux->sequence->len; i++) {
-      MXFMetadataSequence *sequence =
-          &g_array_index (demux->sequence, MXFMetadataSequence, i);
-
-      sequence->structural_components =
-          g_new0 (MXFMetadataStructuralComponent *,
-          sequence->n_structural_components);
-
-      if (demux->structural_component) {
-        for (j = 0; j < sequence->n_structural_components; j++) {
-          for (k = 0; k < demux->structural_component->len; k++) {
-            MXFMetadataStructuralComponent *component =
-                &g_array_index (demux->structural_component,
-                MXFMetadataStructuralComponent, k);
-
-            if (mxf_ul_is_equal (&sequence->structural_components_uids[j],
-                    &component->instance_uid)) {
-              sequence->structural_components[j] = component;
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /* Source clips */
-  if (demux->structural_component && demux->source_package) {
-    for (i = 0; i < demux->structural_component->len; i++) {
-      MXFMetadataStructuralComponent *component =
-          &g_array_index (demux->structural_component,
-          MXFMetadataStructuralComponent, i);
-
-      if (component->type != MXF_METADATA_SOURCE_CLIP
-          && component->type != MXF_METADATA_DM_SOURCE_CLIP)
-        continue;
-
-      for (j = 0; j < demux->source_package->len; j++) {
-        MXFMetadataGenericPackage *package =
-            &g_array_index (demux->source_package, MXFMetadataGenericPackage,
-            j);
-
-        if (component->type == MXF_METADATA_SOURCE_CLIP &&
-            mxf_umid_is_equal (&component->source_clip.source_package_id,
-                &package->package_uid)) {
-          component->source_clip.source_package = package;
-          break;
-        } else if (component->type == MXF_METADATA_DM_SOURCE_CLIP &&
-            mxf_umid_is_equal (&component->dm_source_clip.source_package_id,
-                &package->package_uid)) {
-          component->dm_source_clip.source_package = package;
-          break;
-        }
-      }
-    }
-  }
-
-  /* Generic descriptors */
-  if (demux->descriptor) {
-    for (i = 0; i < demux->descriptor->len; i++) {
-      MXFMetadataGenericDescriptor *descriptor =
-          g_ptr_array_index (demux->descriptor, i);
-
-      descriptor->locators =
-          g_new0 (MXFMetadataLocator *, descriptor->n_locators);
-
-      if (demux->locator) {
-        for (j = 0; j < descriptor->n_locators; j++) {
-          for (k = 0; k < demux->locator->len; k++) {
-            MXFMetadataLocator *locator =
-                &g_array_index (demux->locator, MXFMetadataLocator,
-                k);
-
-            if (mxf_ul_is_equal (&descriptor->locators_uids[j],
-                    &locator->instance_uid)) {
-              descriptor->locators[j] = locator;
-              break;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /* Mark packages as material, top-level source and source */
-  if (demux->material_package) {
-    for (i = 0; i < demux->material_package->len; i++) {
-      MXFMetadataGenericPackage *package =
-          &g_array_index (demux->material_package, MXFMetadataGenericPackage,
-          i);
-
-      package->type = MXF_METADATA_GENERIC_PACKAGE_MATERIAL;
-
-      for (j = 0; j < package->n_tracks; j++) {
-        MXFMetadataTrack *track = package->tracks[j];
-        MXFMetadataSequence *sequence;
-
-        if (!track || !track->sequence)
-          continue;
-
-        sequence = track->sequence;
-
-        for (k = 0; k < sequence->n_structural_components; k++) {
-          MXFMetadataStructuralComponent *component =
-              sequence->structural_components[k];
-
-          if (!component || component->type != MXF_METADATA_SOURCE_CLIP
-              || !component->source_clip.source_package)
-            continue;
-
-          component->source_clip.source_package->type =
-              MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE;
-        }
-      }
-    }
-  }
-
-  /* Store, for every package, the number of timestamp, metadata, essence and other tracks 
-   * and also store for every track the type */
-  if (demux->package) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *package =
-          g_ptr_array_index (demux->package, i);
-
-      if (!package->tracks || package->n_tracks == 0)
-        continue;
-
-      for (j = 0; j < package->n_tracks; j++) {
-        MXFMetadataTrack *track = package->tracks[j];
-        MXFMetadataSequence *sequence;
-        MXFMetadataTrackType type = MXF_METADATA_TRACK_UNKNOWN;
-
-        if (!track || !track->sequence)
-          continue;
-
-        sequence = track->sequence;
-
-        if (mxf_ul_is_zero (&sequence->data_definition)
-            && sequence->structural_components) {
-          for (k = 0; k < sequence->n_structural_components; k++) {
-            MXFMetadataStructuralComponent *component =
-                sequence->structural_components[k];
-            if (!component || mxf_ul_is_zero (&component->data_definition))
-              continue;
-
-            type =
-                mxf_metadata_track_identifier_parse
-                (&component->data_definition);
-            break;
-          }
-        } else {
-          type =
-              mxf_metadata_track_identifier_parse (&sequence->data_definition);
-        }
-
-        track->type = type;
-
-        if (type == MXF_METADATA_TRACK_UNKNOWN)
-          continue;
-        else if ((type & 0xf0) == 0x10)
-          package->n_timecode_tracks++;
-        else if ((type & 0xf0) == 0x20)
-          package->n_metadata_tracks++;
-        else if ((type & 0xf0) == 0x30)
-          package->n_essence_tracks++;
-        else if ((type & 0xf0) == 0x40)
-          package->n_other_tracks++;
-      }
+  /* Append NULL terminator */
+  g_ptr_array_add (demux->metadata, NULL);
+
+  for (i = 0; i < demux->metadata->len - 1; i++) {
+    MXFMetadataBase *m =
+        MXF_METADATA_BASE (g_ptr_array_index (demux->metadata, i));
+    gboolean resolved;
+
+    resolved =
+        mxf_metadata_resolve (m, (MXFMetadataBase **) demux->metadata->pdata);
+
+    /* Resolving can fail for anything but the preface, as the preface
+     * will resolve everything required */
+    if (!resolved && MXF_IS_METADATA_PREFACE (m)) {
+      ret = GST_FLOW_ERROR;
+      goto error;
     }
   }
 
@@ -1679,9 +483,14 @@ gst_mxf_demux_find_package (GstMXFDemux * demux, const MXFUMID * umid)
   MXFMetadataGenericPackage *ret = NULL;
   guint i;
 
-  if (demux->package) {
-    for (i = 0; i < demux->package->len; i++) {
-      MXFMetadataGenericPackage *p = g_ptr_array_index (demux->package, i);
+  if (demux->preface->content_storage
+      && demux->preface->content_storage->packages) {
+    for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
+      MXFMetadataGenericPackage *p =
+          demux->preface->content_storage->packages[i];
+
+      if (!p)
+        continue;
 
       if (mxf_umid_is_equal (&p->package_uid, umid)) {
         ret = p;
@@ -1697,6 +506,7 @@ static MXFMetadataGenericPackage *
 gst_mxf_demux_choose_package (GstMXFDemux * demux)
 {
   MXFMetadataGenericPackage *ret = NULL;
+  guint i;
 
   if (demux->requested_package_string) {
     MXFUMID umid;
@@ -1715,32 +525,41 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   if (!mxf_umid_is_zero (&demux->current_package_uid))
     ret = gst_mxf_demux_find_package (demux, &demux->current_package_uid);
-  if (ret && (ret->type == MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE
-          || ret->type == MXF_METADATA_GENERIC_PACKAGE_MATERIAL))
+  if (ret && (MXF_IS_METADATA_MATERIAL_PACKAGE (ret)
+          || (MXF_IS_METADATA_SOURCE_PACKAGE (ret)
+              && MXF_METADATA_SOURCE_PACKAGE (ret)->top_level)))
     return ret;
-  else if (ret && ret->type == MXF_METADATA_GENERIC_PACKAGE_SOURCE)
+  else if (ret)
     GST_WARNING_OBJECT (demux,
         "Current package is not a material package or top-level source package, choosing the first best");
   else if (!mxf_umid_is_zero (&demux->current_package_uid))
     GST_WARNING_OBJECT (demux,
         "Current package not found, choosing the first best");
 
-  if (demux->preface.primary_package)
-    ret = demux->preface.primary_package;
-  if (ret && (ret->type == MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE
-          || ret->type == MXF_METADATA_GENERIC_PACKAGE_MATERIAL))
+  if (demux->preface->primary_package)
+    ret = demux->preface->primary_package;
+  if (ret && (MXF_IS_METADATA_MATERIAL_PACKAGE (ret)
+          || (MXF_IS_METADATA_SOURCE_PACKAGE (ret)
+              && MXF_METADATA_SOURCE_PACKAGE (ret)->top_level)))
     return ret;
 
-  if (!demux->material_package) {
+  for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
+    if (demux->preface->content_storage->packages[i] &&
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
+      ret =
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
+      break;
+    }
+  }
+
+  if (!ret) {
     GST_ERROR_OBJECT (demux, "No material package");
     return NULL;
-  } else {
-    MXFMetadataGenericPackage *p =
-        (MXFMetadataGenericPackage *) demux->material_package->data;
-    memcpy (&demux->current_package_uid, &p->package_uid, 32);
-
-    ret = gst_mxf_demux_find_package (demux, &demux->current_package_uid);
   }
+
+  memcpy (&demux->current_package_uid, &ret->package_uid, 32);
 
   if (!ret)
     GST_ERROR_OBJECT (demux, "No suitable package found");
@@ -1774,67 +593,72 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
   demux->current_package = current_package;
 
   for (i = 0; i < current_package->n_tracks; i++) {
-    MXFMetadataTrack *track = current_package->tracks[i];
-    MXFMetadataTrackType track_type = MXF_METADATA_TRACK_UNKNOWN;
+    MXFMetadataTimelineTrack *track = NULL;
     MXFMetadataSequence *sequence;
     MXFMetadataStructuralComponent *component = NULL;
-    MXFMetadataGenericPackage *source_package = NULL;
-    MXFMetadataTrack *source_track = NULL;
+    MXFMetadataSourcePackage *source_package = NULL;
+    MXFMetadataTimelineTrack *source_track = NULL;
     GstMXFDemuxPad *pad = NULL;
     GstCaps *caps = NULL;
 
     GST_DEBUG_OBJECT (demux, "Handling track %u", i);
 
-    if (!track) {
+    if (!current_package->tracks[i]) {
       GST_WARNING_OBJECT (demux, "Unresolved track");
       continue;
-    } else if (!track->sequence) {
+    }
+
+    if (!MXF_IS_METADATA_TIMELINE_TRACK (current_package->tracks[i])) {
+      GST_DEBUG_OBJECT (demux, "No timeline track");
+      continue;
+    }
+
+    track = MXF_METADATA_TIMELINE_TRACK (current_package->tracks[i]);
+
+    if (!track->parent.sequence) {
       GST_WARNING_OBJECT (demux, "Track with no sequence");
       continue;
     }
 
-    sequence = track->sequence;
+    sequence = track->parent.sequence;
 
-    if (current_package->type == MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE) {
-      source_package = current_package;
+    if (MXF_IS_METADATA_SOURCE_PACKAGE (current_package)) {
+      source_package = MXF_METADATA_SOURCE_PACKAGE (current_package);
       source_track = track;
     }
-
-    track_type =
-        mxf_metadata_track_identifier_parse (&sequence->data_definition);
 
     /* TODO: handle multiple components, see SMPTE 377M page 37 */
     if (sequence->structural_components && sequence->structural_components[0]) {
       component = sequence->structural_components[0];
 
-      if (track_type == MXF_METADATA_TRACK_UNKNOWN)
-        track_type =
-            mxf_metadata_track_identifier_parse (&component->data_definition);
+      if (!source_package && MXF_IS_METADATA_SOURCE_CLIP (component)) {
+        MXFMetadataSourceClip *clip = MXF_METADATA_SOURCE_CLIP (component);
 
-      if (!source_package && component->type == MXF_METADATA_SOURCE_CLIP
-          && component->source_clip.source_package
-          && component->source_clip.source_package->type ==
-          MXF_METADATA_GENERIC_PACKAGE_TOP_LEVEL_SOURCE
-          && component->source_clip.source_package->tracks) {
-        source_package = component->source_clip.source_package;
+        if (clip->source_package && clip->source_package->top_level &&
+            MXF_METADATA_GENERIC_PACKAGE (clip->source_package)->tracks) {
+          MXFMetadataGenericPackage *tmp_pkg =
+              MXF_METADATA_GENERIC_PACKAGE (clip->source_package);
 
-        for (k = 0; k < source_package->n_tracks; k++) {
-          MXFMetadataTrack *tmp = source_package->tracks[k];
+          source_package = clip->source_package;
 
-          if (tmp->track_id == component->source_clip.source_track_id) {
-            source_track = tmp;
-            break;
+          for (k = 0; k < tmp_pkg->n_tracks; k++) {
+            MXFMetadataTrack *tmp = tmp_pkg->tracks[k];
+
+            if (tmp->track_id == clip->source_track_id) {
+              source_track = MXF_METADATA_TIMELINE_TRACK (tmp);
+              break;
+            }
           }
         }
       }
     }
 
-    if (track_type && (track_type & 0xf0) != 0x30) {
+    if (track->parent.type && (track->parent.type & 0xf0) != 0x30) {
       GST_DEBUG_OBJECT (demux, "No essence track");
       continue;
     }
 
-    if (!source_package || track_type == MXF_METADATA_TRACK_UNKNOWN
+    if (!source_package || track->parent.type == MXF_METADATA_TRACK_UNKNOWN
         || !source_track || !component) {
       GST_WARNING_OBJECT (demux,
           "No source package or track type for track found");
@@ -1846,7 +670,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
       continue;
     }
 
-    if (!source_track->descriptor) {
+    if (!source_track->parent.descriptor) {
       GST_WARNING_OBJECT (demux, "No descriptor found for track");
       continue;
     }
@@ -1856,7 +680,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
       for (j = 0; j < demux->src->len; j++) {
         GstMXFDemuxPad *tmp = g_ptr_array_index (demux->src, j);
 
-        if (tmp->track_id == track->track_id) {
+        if (tmp->track_id == track->parent.track_id) {
           pad = tmp;
           break;
         }
@@ -1870,7 +694,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
       templ =
           gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (demux),
           "track_%u");
-      pad_name = g_strdup_printf ("track_%u", track->track_id);
+      pad_name = g_strdup_printf ("track_%u", track->parent.track_id);
 
       g_assert (templ != NULL);
 
@@ -1888,8 +712,7 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
     }
 
     /* Update pad */
-    pad->track_id = track->track_id;
-    pad->track_type = track_type;
+    pad->track_id = track->parent.track_id;
 
     pad->material_package = current_package;
     pad->material_track = track;
@@ -1903,64 +726,80 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
     g_free (pad->mapping_data);
     pad->mapping_data = NULL;
 
-    switch (track_type) {
+    switch (track->parent.type) {
       case MXF_METADATA_TRACK_PICTURE_ESSENCE:
-        if (mxf_is_mpeg_essence_track (source_track))
+        if (mxf_is_mpeg_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_mpeg_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_dv_dif_essence_track (source_track))
+              mxf_mpeg_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_dv_dif_essence_track ((MXFMetadataTrack *)
+                source_track))
           caps =
-              mxf_dv_dif_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_jpeg2000_essence_track (source_track))
+              mxf_dv_dif_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_jpeg2000_essence_track ((MXFMetadataTrack *)
+                source_track))
           caps =
-              mxf_jpeg2000_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_d10_essence_track (source_track))
+              mxf_jpeg2000_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_d10_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_d10_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_up_essence_track (source_track))
+              mxf_d10_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_up_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_up_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
+              mxf_up_create_caps (MXF_METADATA_GENERIC_PACKAGE (source_package),
+              (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
         break;
       case MXF_METADATA_TRACK_SOUND_ESSENCE:
-        if (mxf_is_aes_bwf_essence_track (source_track))
+        if (mxf_is_aes_bwf_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_aes_bwf_create_caps (source_package, source_track, &pad->tags,
+              mxf_aes_bwf_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
               &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_dv_dif_essence_track (source_track))
+        else if (mxf_is_dv_dif_essence_track ((MXFMetadataTrack *)
+                source_track))
           caps =
-              mxf_dv_dif_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_alaw_essence_track (source_track))
+              mxf_dv_dif_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_alaw_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_alaw_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_mpeg_essence_track (source_track))
+              mxf_alaw_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_mpeg_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_mpeg_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_d10_essence_track (source_track))
+              mxf_mpeg_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_d10_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_d10_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
+              mxf_d10_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
         break;
       case MXF_METADATA_TRACK_DATA_ESSENCE:
-        if (mxf_is_dv_dif_essence_track (source_track))
+        if (mxf_is_dv_dif_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_dv_dif_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_mpeg_essence_track (source_track))
+              mxf_dv_dif_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_mpeg_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_mpeg_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_d10_essence_track (source_track))
+              mxf_mpeg_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
+        else if (mxf_is_d10_essence_track ((MXFMetadataTrack *) source_track))
           caps =
-              mxf_d10_create_caps (source_package, source_track,
-              &pad->tags, &pad->handle_essence_element, &pad->mapping_data);
+              mxf_d10_create_caps (MXF_METADATA_GENERIC_PACKAGE
+              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
+              &pad->handle_essence_element, &pad->mapping_data);
         break;
       default:
         g_assert_not_reached ();
@@ -2012,6 +851,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     GstBuffer * buffer)
 {
   guint16 type;
+  MXFMetadata *metadata = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
 
   type = GST_READ_UINT16_BE (key->u + 13);
@@ -2031,108 +871,45 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_ERROR;
   }
 
-  if (type != MXF_METADATA_PREFACE && !demux->update_metadata) {
+  metadata =
+      mxf_metadata_new (type, &demux->primer, GST_BUFFER_DATA (buffer),
+      GST_BUFFER_SIZE (buffer));
+
+  if (metadata && !MXF_IS_METADATA_PREFACE (metadata)
+      && !demux->update_metadata) {
     GST_DEBUG_OBJECT (demux,
         "Skipping parsing of metadata because it's older than what we have");
+    gst_mini_object_unref ((GstMiniObject *) metadata);
     return GST_FLOW_OK;
   }
 
-  switch (type) {
-    case MXF_METADATA_PREFACE:
-      ret = gst_mxf_demux_handle_metadata_preface (demux, key, buffer);
-      break;
-    case MXF_METADATA_IDENTIFICATION:
-      ret = gst_mxf_demux_handle_metadata_identification (demux, key, buffer);
-      break;
-    case MXF_METADATA_CONTENT_STORAGE:
-      ret = gst_mxf_demux_handle_metadata_content_storage (demux, key, buffer);
-      break;
-    case MXF_METADATA_ESSENCE_CONTAINER_DATA:
-      ret =
-          gst_mxf_demux_handle_metadata_essence_container_data (demux,
-          key, buffer);
-      break;
-    case MXF_METADATA_MATERIAL_PACKAGE:
-      ret = gst_mxf_demux_handle_metadata_material_package (demux, key, buffer);
-      break;
-    case MXF_METADATA_SOURCE_PACKAGE:
-      ret = gst_mxf_demux_handle_metadata_source_package (demux, key, buffer);
-      break;
-    case MXF_METADATA_TRACK:
-    case MXF_METADATA_EVENT_TRACK:
-    case MXF_METADATA_STATIC_TRACK:
-      ret = gst_mxf_demux_handle_metadata_track (demux, key, type, buffer);
-      break;
-    case MXF_METADATA_SEQUENCE:
-      ret = gst_mxf_demux_handle_metadata_sequence (demux, key, buffer);
-      break;
-    case MXF_METADATA_TIMECODE_COMPONENT:
-    case MXF_METADATA_SOURCE_CLIP:
-    case MXF_METADATA_DM_SEGMENT:
-    case MXF_METADATA_DM_SOURCE_CLIP:
-      ret =
-          gst_mxf_demux_handle_metadata_structural_component (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_FILE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_file_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_generic_data_essence_descriptor
-          (demux, key, type, buffer);
-      break;
-    case MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_generic_picture_essence_descriptor
-          (demux, key, type, buffer);
-      break;
-    case MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_cdci_picture_essence_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_rgba_picture_essence_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_MPEG_VIDEO_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_mpeg_video_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_generic_sound_essence_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_MULTIPLE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_multiple_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_wave_audio_essence_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR:
-      ret =
-          gst_mxf_demux_handle_metadata_aes3_audio_essence_descriptor (demux,
-          key, type, buffer);
-      break;
-    case MXF_METADATA_NETWORK_LOCATOR:
-    case MXF_METADATA_TEXT_LOCATOR:
-      ret = gst_mxf_demux_handle_metadata_locator (demux, key, type, buffer);
-      break;
-    default:
-      GST_WARNING_OBJECT (demux,
-          "Unknown or unhandled metadata type 0x%04x", type);
-      break;
+  if (!metadata) {
+    GST_ERROR_OBJECT (demux, "Parsing metadata failed");
+    return GST_FLOW_ERROR;
   }
+
+  if (MXF_IS_METADATA_PREFACE (metadata)) {
+    MXFMetadataPreface *preface = MXF_METADATA_PREFACE (metadata);
+
+    if (!demux->preface
+        || (!mxf_timestamp_is_unknown (&preface->last_modified_date)
+            && mxf_timestamp_compare (&demux->preface->last_modified_date,
+                &preface->last_modified_date) < 0)) {
+      GST_DEBUG_OBJECT (demux,
+          "Timestamp of new preface is newer than old, updating metadata");
+      gst_mxf_demux_reset_metadata (demux);
+      demux->preface = preface;
+    } else {
+      GST_DEBUG_OBJECT (demux, "Preface is older than already parsed preface");
+      gst_mini_object_unref ((GstMiniObject *) metadata);
+      return GST_FLOW_OK;
+    }
+  }
+
+  if (!demux->metadata)
+    demux->metadata = g_ptr_array_new ();
+
+  g_ptr_array_add (demux->metadata, metadata);
 
   return ret;
 }
@@ -2231,18 +1008,19 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+    MXFMetadataContentStorage *content_storage =
+        demux->preface->content_storage;
 
-    if (p->source_track->track_number == track_number ||
-        (p->source_track->track_number == 0 &&
+    if (p->source_track->parent.track_number == track_number ||
+        (p->source_track->parent.track_number == 0 &&
             demux->src->len == 1 &&
             demux->current_package->n_essence_tracks == 1)) {
-      if (demux->essence_container_data) {
-        for (j = 0; j < demux->essence_container_data->len; j++) {
+      if (content_storage->essence_container_data) {
+        for (j = 0; j < content_storage->n_essence_container_data; j++) {
           MXFMetadataEssenceContainerData *edata =
-              &g_array_index (demux->essence_container_data,
-              MXFMetadataEssenceContainerData, j);
+              content_storage->essence_container_data[j];
 
-          if (p->source_package == edata->linked_package
+          if (edata && p->source_package == edata->linked_package
               && demux->partition.body_sid == edata->body_sid) {
             pad = p;
             break;
@@ -2292,8 +1070,10 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   if (pad->handle_essence_element) {
     /* Takes ownership of inbuf */
     ret =
-        pad->handle_essence_element (key, inbuf, pad->caps, pad->source_package,
-        pad->source_track, pad->component, pad->mapping_data, &outbuf);
+        pad->handle_essence_element (key, inbuf, pad->caps,
+        (MXFMetadataGenericPackage *) pad->source_package,
+        (MXFMetadataTrack *) pad->source_track, pad->component,
+        pad->mapping_data, &outbuf);
     inbuf = NULL;
   } else {
     outbuf = inbuf;
@@ -2316,14 +1096,14 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     GST_DEBUG_OBJECT (demux,
         "Pushing buffer of size %u for track %u: timestamp %" GST_TIME_FORMAT
         " duration %" GST_TIME_FORMAT, GST_BUFFER_SIZE (outbuf),
-        pad->material_track->track_id,
+        pad->material_track->parent.track_id,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
     ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
     ret = gst_mxf_demux_combine_flows (demux, pad, ret);
   } else {
     GST_DEBUG_OBJECT (demux, "Dropping buffer for track %u",
-        pad->material_track->track_id);
+        pad->material_track->parent.track_id);
   }
 
   return ret;
@@ -2685,7 +1465,7 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (demux->update_metadata
-      && !mxf_timestamp_is_unknown (&demux->preface.last_modified_date)
+      && demux->preface
       && !mxf_is_metadata (key) && !mxf_is_descriptive_metadata (key)
       && !mxf_is_fill (key)) {
     if ((ret =
@@ -3112,10 +1892,10 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT)
         goto error;
 
-      if (!mxfpad->material_track || !mxfpad->material_track->sequence)
+      if (!mxfpad->material_track || !mxfpad->material_track->parent.sequence)
         goto error;
 
-      duration = mxfpad->material_track->sequence->duration;
+      duration = mxfpad->material_track->parent.sequence->duration;
       if (format == GST_FORMAT_TIME) {
         if (mxfpad->material_track->edit_rate.n == 0 ||
             mxfpad->material_track->edit_rate.d == 0)

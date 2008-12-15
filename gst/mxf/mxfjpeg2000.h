@@ -33,4 +33,6 @@ gboolean mxf_is_jpeg2000_essence_track (const MXFMetadataTrack *track);
 GstCaps *
 mxf_jpeg2000_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
 
+void mxf_jpeg2000_init (void);
+
 #endif /* __MXF_JPEG2000_H__ */

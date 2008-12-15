@@ -17,18 +17,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* Handling of the basic MXF types */
+
 #ifndef __MXF_PARSE_H__
 #define __MXF_PARSE_H__
 
 #include <string.h>
 
 #include "mxftypes.h"
+#include "mxfmetadata.h"
 
 typedef GstFlowReturn (*MXFEssenceElementHandler) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataGenericPackage *package, MXFMetadataTrack *track, MXFMetadataStructuralComponent *component, gpointer mapping_data, GstBuffer **outbuf);
-
-typedef gboolean (*MXFMetadataDescriptorHandleTag) (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-typedef void (*MXFMetadataDescriptorReset) (MXFMetadataGenericDescriptor *descriptor);
 
 gchar * mxf_ul_to_string (const MXFUL *ul, gchar str[48]);
 gboolean mxf_ul_is_equal (const MXFUL *a, const MXFUL *b);
@@ -87,80 +86,9 @@ gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
     guint16 * tag_size, const guint8 ** tag_data);
 void gst_mxf_local_tag_free (MXFLocalTag *tag);
 
-gboolean gst_metadata_add_custom_tag (const MXFPrimerPack *primer,
+gboolean mxf_local_tag_add_to_hash_table (const MXFPrimerPack *primer,
   guint16 tag, const guint8 *tag_data, guint16 tag_size,
   GHashTable **hash_table);
-
-gboolean mxf_metadata_preface_parse (const MXFUL *key, MXFMetadataPreface *preface, const MXFPrimerPack *primer, const guint8 *data, guint size);
-void mxf_metadata_preface_reset (MXFMetadataPreface *preface);
-
-gboolean mxf_metadata_identification_parse (const MXFUL *key, MXFMetadataIdentification *identification, const MXFPrimerPack *primer, const guint8 *data, guint size);
-void mxf_metadata_identification_reset (MXFMetadataIdentification *identification);
-
-gboolean mxf_metadata_content_storage_parse (const MXFUL *key, MXFMetadataContentStorage *content_storage, const MXFPrimerPack *primer, const guint8 *data, guint size);
-void mxf_metadata_content_storage_reset (MXFMetadataContentStorage *content_storage);
-
-gboolean mxf_metadata_essence_container_data_parse (const MXFUL *key, MXFMetadataEssenceContainerData *essence_container_data, const MXFPrimerPack *primer, const guint8 *data, guint size);
-void mxf_metadata_essence_container_data_reset (MXFMetadataEssenceContainerData *essence_container_data);
-
-gboolean mxf_metadata_generic_package_parse (const MXFUL *key, MXFMetadataGenericPackage *generic_package, const MXFPrimerPack *primer, const guint8 *data, guint size);
-void mxf_metadata_generic_package_reset (MXFMetadataGenericPackage *generic_package);
-
-gboolean mxf_metadata_track_parse (const MXFUL *key, MXFMetadataTrack *track, const MXFPrimerPack *primer, guint16 type, const guint8 *data, guint size);
-void mxf_metadata_track_reset (MXFMetadataTrack *track);
-
-MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL *track_identifier);
-
-gboolean mxf_metadata_sequence_parse (const MXFUL *key, MXFMetadataSequence *sequence, const MXFPrimerPack *primer, const guint8 *data, guint size);
-void mxf_metadata_sequence_reset (MXFMetadataSequence *sequence);
-
-gboolean mxf_metadata_structural_component_parse (const MXFUL *key, MXFMetadataStructuralComponent *component, const MXFPrimerPack *primer, guint16 type, const guint8 *data, guint size);
-void mxf_metadata_structural_component_reset (MXFMetadataStructuralComponent *component);
-
-gboolean
-mxf_metadata_descriptor_parse (const MXFUL * key, MXFMetadataGenericDescriptor * descriptor, const MXFPrimerPack * primer, guint16 type, const guint8 * data, guint size, MXFMetadataDescriptorHandleTag handle_tag, MXFMetadataDescriptorReset reset);
-
-#define MXF_METADATA_DESCRIPTOR_CLEAR(descriptor, type, parent_type) \
-  G_STMT_START { \
-    guint8 *___data = (guint8 *) descriptor + sizeof (parent_type); \
-    memset (___data, 0, sizeof (type) - sizeof (parent_type)); \
-  } G_STMT_END
-
-gboolean mxf_metadata_generic_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_generic_descriptor_reset (MXFMetadataGenericDescriptor *descriptor);
-
-gboolean mxf_metadata_file_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_file_descriptor_reset (MXFMetadataFileDescriptor *descriptor);
-
-gboolean mxf_metadata_generic_sound_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_generic_sound_essence_descriptor_reset (MXFMetadataGenericSoundEssenceDescriptor *descriptor);
-
-gboolean mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_generic_picture_essence_descriptor_reset (MXFMetadataGenericPictureEssenceDescriptor *descriptor);
-void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor *descriptor, GstCaps *caps);
-
-gboolean mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_cdci_picture_essence_descriptor_reset (MXFMetadataCDCIPictureEssenceDescriptor *descriptor);
-
-gboolean mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_rgba_picture_essence_descriptor_reset (MXFMetadataRGBAPictureEssenceDescriptor *descriptor);
-
-gboolean mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_generic_data_essence_descriptor_reset (MXFMetadataGenericDataEssenceDescriptor *descriptor);
-
-gboolean mxf_metadata_multiple_descriptor_handle_tag (MXFMetadataGenericDescriptor *descriptor,
-    const MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint16 tag_size);
-void mxf_metadata_multiple_descriptor_reset (MXFMetadataMultipleDescriptor *descriptor);
-
-gboolean mxf_metadata_locator_parse (const MXFUL *key, MXFMetadataLocator *locator, const MXFPrimerPack *primer, guint16 type, const guint8 *data, guint size);
-void mxf_metadata_locator_reset (MXFMetadataLocator *locator);
 
 #endif /* __MXF_PARSE_H__ */
 

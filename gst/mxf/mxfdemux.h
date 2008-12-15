@@ -23,7 +23,9 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
+#include "mxftypes.h"
 #include "mxfparse.h"
+#include "mxfmetadata.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_MXF_DEMUX \
@@ -75,31 +77,9 @@ struct _GstMXFDemux
   gboolean pull_footer_metadata;
 
   gboolean metadata_resolved;
-  MXFMetadataPreface preface;
-  GArray *identification;
-  MXFMetadataContentStorage content_storage;
-  GArray *essence_container_data;
-  GArray *material_package;
-  GArray *source_package;
-  GPtrArray *package;
-  GArray *track;
-  GArray *sequence;
-  GArray *structural_component;
-  GArray *locator;
+  MXFMetadataPreface *preface;
+  GPtrArray *metadata;
 
-  GPtrArray *descriptor;
-  GArray *generic_descriptor;
-  GArray *file_descriptor;
-  GArray *generic_sound_essence_descriptor;
-  GArray *generic_picture_essence_descriptor;
-  GArray *generic_data_essence_descriptor;
-  GArray *cdci_picture_essence_descriptor;
-  GArray *rgba_picture_essence_descriptor;
-  GArray *mpeg_video_descriptor;
-  GArray *wave_audio_essence_descriptor;
-  GArray *aes3_audio_essence_descriptor;
-  GArray *multiple_descriptor;
-  
   MXFUMID current_package_uid;
   MXFMetadataGenericPackage *current_package;
   gchar *current_package_string;

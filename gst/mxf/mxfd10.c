@@ -52,7 +52,12 @@ mxf_is_d10_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 386M 5.1 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x01 &&
@@ -167,20 +172,15 @@ mxf_d10_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_MPEG_VIDEO_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])) {
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR) {
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])) {
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
       break;
     }
@@ -241,4 +241,9 @@ mxf_d10_create_caps (MXFMetadataGenericPackage * package,
   }
 
   return caps;
+}
+
+void
+mxf_d10_init (void)
+{
 }

@@ -10,7 +10,8 @@ libgstmxf_la_SOURCES = \
 	mxfalaw.c \
 	mxfjpeg2000.c \
 	mxfd10.c \
-	mxfup.c
+	mxfup.c \
+	mxfmetadata.c
 
 libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
@@ -27,5 +28,6 @@ noinst_HEADERS = \
 	mxfjpeg2000.h \
 	mxfd10.h \
 	mxfup.h \
-	mxftypes.h
+	mxftypes.h \
+	mxfmetadata.h
 

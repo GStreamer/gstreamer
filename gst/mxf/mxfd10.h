@@ -33,4 +33,6 @@ gboolean mxf_is_d10_essence_track (const MXFMetadataTrack *track);
 GstCaps *
 mxf_d10_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
 
+void mxf_d10_init (void);
+
 #endif /* __MXF_D10_H__ */

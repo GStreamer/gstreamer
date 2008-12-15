@@ -50,7 +50,12 @@ mxf_is_jpeg2000_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 422M 5.4 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x0c &&
@@ -99,19 +104,16 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR ||
-        ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])) {
       p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
       f = track->descriptor[i];
       break;
-    } else if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->
-        is_file_descriptor
-        && ((MXFMetadataGenericDescriptor *) track->descriptor[i])->type !=
-        MXF_METADATA_MULTIPLE_DESCRIPTOR) {
+    } else if (MXF_IS_METADATA_FILE_DESCRIPTOR (track->descriptor[i]) &&
+        !MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (track->descriptor[i])) {
       f = track->descriptor[i];
     }
   }
@@ -122,13 +124,9 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   }
 
   fourcc = GST_MAKE_FOURCC ('s', 'R', 'G', 'B');
-  if (p
-      && ((MXFMetadataGenericDescriptor *) p)->type ==
-      MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+  if (p && MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (p)) {
     fourcc = GST_MAKE_FOURCC ('s', 'Y', 'U', 'V');
-  } else if (p
-      && ((MXFMetadataGenericDescriptor *) p)->type ==
-      MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR) {
+  } else if (p && MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (p)) {
     MXFMetadataRGBAPictureEssenceDescriptor *r =
         (MXFMetadataRGBAPictureEssenceDescriptor *) p;
     gboolean rgb = TRUE;
@@ -198,4 +196,9 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
       "JPEG 2000", NULL);
 
   return caps;
+}
+
+void
+mxf_jpeg2000_init (void)
+{
 }

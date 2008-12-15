@@ -23,6 +23,14 @@
 #include <gst/gst.h>
 
 #include "mxfdemux.h"
+#include "mxfmetadata.h"
+#include "mxfaes-bwf.h"
+#include "mxfmpeg.h"
+#include "mxfdv-dif.h"
+#include "mxfalaw.h"
+#include "mxfjpeg2000.h"
+#include "mxfd10.h"
+#include "mxfup.h"
 
 GST_DEBUG_CATEGORY (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -30,6 +38,15 @@ GST_DEBUG_CATEGORY (mxf_debug);
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  mxf_metadata_init_types ();
+  mxf_aes_bwf_init ();
+  mxf_mpeg_init ();
+  mxf_dv_dif_init ();
+  mxf_alaw_init ();
+  mxf_jpeg2000_init ();
+  mxf_d10_init ();
+  mxf_up_init ();
+
   if (!gst_element_register (plugin, "mxfdemux", GST_RANK_PRIMARY,
           GST_TYPE_MXF_DEMUX))
     return FALSE;

@@ -45,7 +45,12 @@ mxf_is_alaw_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 388M 6.1 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x0a &&
@@ -93,8 +98,10 @@ mxf_alaw_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if (((MXFMetadataGenericDescriptor *) track->descriptor[i])->type ==
-        MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR) {
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->descriptor[i])) {
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
       break;
     }
@@ -126,4 +133,9 @@ mxf_alaw_create_caps (MXFMetadataGenericPackage * package,
   }
 
   return caps;
+}
+
+void
+mxf_alaw_init (void)
+{
 }

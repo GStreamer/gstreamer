@@ -41,180 +41,199 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
 /* SMPTE 382M Annex 1 */
-gboolean
-    mxf_metadata_wave_audio_essence_descriptor_handle_tag
-    (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
-    guint16 tag, const guint8 * tag_data, guint16 tag_size)
+G_DEFINE_TYPE (MXFMetadataWaveAudioEssenceDescriptor,
+    mxf_metadata_wave_audio_essence_descriptor,
+    MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
+
+static gboolean
+mxf_metadata_wave_audio_essence_descriptor_handle_tag (MXFMetadataBase *
+    metadata, MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
+    guint tag_size)
 {
-  MXFMetadataWaveAudioEssenceDescriptor *descriptor =
-      (MXFMetadataWaveAudioEssenceDescriptor *) d;
-  gboolean ret = FALSE;
+  MXFMetadataWaveAudioEssenceDescriptor *self =
+      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (metadata);
+  gboolean ret = TRUE;
   gchar str[48];
 
   switch (tag) {
     case 0x3d0a:
       if (tag_size != 2)
         goto error;
-      descriptor->block_align = GST_READ_UINT16_BE (tag_data);
-      GST_DEBUG ("  block align = %u", descriptor->block_align);
-      ret = TRUE;
+      self->block_align = GST_READ_UINT16_BE (tag_data);
+      GST_DEBUG ("  block align = %u", self->block_align);
       break;
     case 0x3d0b:
       if (tag_size != 1)
         goto error;
-      descriptor->sequence_offset = GST_READ_UINT8 (tag_data);
-      GST_DEBUG ("  sequence offset = %u", descriptor->sequence_offset);
-      ret = TRUE;
+      self->sequence_offset = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  sequence offset = %u", self->sequence_offset);
       break;
     case 0x3d09:
       if (tag_size != 4)
         goto error;
-      descriptor->avg_bps = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  average bps = %u", descriptor->avg_bps);
-      ret = TRUE;
+      self->avg_bps = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  average bps = %u", self->avg_bps);
       break;
     case 0x3d32:
       if (tag_size != 16)
         goto error;
-      memcpy (&descriptor->channel_assignment, tag_data, 16);
+      memcpy (&self->channel_assignment, tag_data, 16);
       GST_DEBUG ("  channel assignment = %s",
-          mxf_ul_to_string (&descriptor->channel_assignment, str));
-      ret = TRUE;
+          mxf_ul_to_string (&self->channel_assignment, str));
       break;
     case 0x3d29:
       if (tag_size != 4)
         goto error;
-      descriptor->peak_envelope_version = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  peak envelope version = %u",
-          descriptor->peak_envelope_version);
-      ret = TRUE;
+      self->peak_envelope_version = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak envelope version = %u", self->peak_envelope_version);
       break;
     case 0x3d2a:
       if (tag_size != 4)
         goto error;
-      descriptor->peak_envelope_format = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  peak envelope format = %u",
-          descriptor->peak_envelope_format);
-      ret = TRUE;
+      self->peak_envelope_format = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak envelope format = %u", self->peak_envelope_format);
       break;
     case 0x3d2b:
       if (tag_size != 4)
         goto error;
-      descriptor->points_per_peak_value = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  points per peak value = %u",
-          descriptor->points_per_peak_value);
-      ret = TRUE;
+      self->points_per_peak_value = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  points per peak value = %u", self->points_per_peak_value);
       break;
     case 0x3d2c:
       if (tag_size != 4)
         goto error;
-      descriptor->peak_envelope_block_size = GST_READ_UINT32_BE (tag_data);
+      self->peak_envelope_block_size = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  peak envelope block size = %u",
-          descriptor->peak_envelope_block_size);
-      ret = TRUE;
+          self->peak_envelope_block_size);
       break;
     case 0x3d2d:
       if (tag_size != 4)
         goto error;
-      descriptor->peak_channels = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  peak channels = %u", descriptor->peak_channels);
-      ret = TRUE;
+      self->peak_channels = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak channels = %u", self->peak_channels);
       break;
     case 0x3d2e:
       if (tag_size != 4)
         goto error;
-      descriptor->peak_frames = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  peak frames = %u", descriptor->peak_frames);
-      ret = TRUE;
+      self->peak_frames = GST_READ_UINT32_BE (tag_data);
+      GST_DEBUG ("  peak frames = %u", self->peak_frames);
       break;
     case 0x3d2f:
       if (tag_size != 8)
         goto error;
-      descriptor->peak_of_peaks_position = GST_READ_UINT64_BE (tag_data);
+      self->peak_of_peaks_position = GST_READ_UINT64_BE (tag_data);
       GST_DEBUG ("  peak of peaks position = %" G_GINT64_FORMAT,
-          descriptor->peak_of_peaks_position);
-      ret = TRUE;
+          self->peak_of_peaks_position);
       break;
     case 0x3d30:
-      if (!mxf_timestamp_parse (&descriptor->peak_envelope_timestamp,
+      if (!mxf_timestamp_parse (&self->peak_envelope_timestamp,
               tag_data, tag_size))
         goto error;
       GST_DEBUG ("  peak envelope timestamp = %d/%u/%u %u:%u:%u.%u",
-          descriptor->peak_envelope_timestamp.year,
-          descriptor->peak_envelope_timestamp.month,
-          descriptor->peak_envelope_timestamp.day,
-          descriptor->peak_envelope_timestamp.hour,
-          descriptor->peak_envelope_timestamp.minute,
-          descriptor->peak_envelope_timestamp.second,
-          (descriptor->peak_envelope_timestamp.quarter_msecond * 1000) / 256);
-      ret = TRUE;
+          self->peak_envelope_timestamp.year,
+          self->peak_envelope_timestamp.month,
+          self->peak_envelope_timestamp.day,
+          self->peak_envelope_timestamp.hour,
+          self->peak_envelope_timestamp.minute,
+          self->peak_envelope_timestamp.second,
+          (self->peak_envelope_timestamp.quarter_msecond * 1000) / 256);
       break;
     case 0x3d31:
-      descriptor->peak_envelope_data = g_memdup (tag_data, tag_size);
-      descriptor->peak_envelope_data_length = tag_size;
+      self->peak_envelope_data = g_memdup (tag_data, tag_size);
+      self->peak_envelope_data_length = tag_size;
       GST_DEBUG ("  peak evelope data size = %u",
-          descriptor->peak_envelope_data_length);
-      ret = TRUE;
+          self->peak_envelope_data_length);
       break;
     default:
       ret =
-          mxf_metadata_generic_sound_essence_descriptor_handle_tag (d, primer,
-          tag, tag_data, tag_size);
+          MXF_METADATA_BASE_CLASS
+          (mxf_metadata_wave_audio_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
   return ret;
 
 error:
-  GST_ERROR ("Invalid wave audio essence descriptor tag 0x%04x of size %u", tag,
+
+  GST_ERROR
+      ("Invalid wave audio essence descriptor local tag 0x%04x of size %u", tag,
       tag_size);
 
   return TRUE;
 }
 
-void mxf_metadata_wave_audio_essence_descriptor_reset
-    (MXFMetadataWaveAudioEssenceDescriptor * descriptor)
+static void
+    mxf_metadata_wave_audio_essence_descriptor_init
+    (MXFMetadataWaveAudioEssenceDescriptor * self)
 {
-  g_return_if_fail (descriptor != NULL);
 
-  mxf_metadata_generic_sound_essence_descriptor_reset (
-      (MXFMetadataGenericSoundEssenceDescriptor *) descriptor);
+}
 
-  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
-      MXFMetadataWaveAudioEssenceDescriptor,
-      MXFMetadataGenericSoundEssenceDescriptor);
+static void
+    mxf_metadata_wave_audio_essence_descriptor_class_init
+    (MXFMetadataWaveAudioEssenceDescriptorClass * klass)
+{
+  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+
+  metadata_base_class->handle_tag =
+      mxf_metadata_wave_audio_essence_descriptor_handle_tag;
 }
 
 /* SMPTE 382M Annex 2 */
-gboolean
-    mxf_metadata_aes3_audio_essence_descriptor_handle_tag
-    (MXFMetadataGenericDescriptor * d, const MXFPrimerPack * primer,
-    guint16 tag, const guint8 * tag_data, guint16 tag_size)
+G_DEFINE_TYPE (MXFMetadataAES3AudioEssenceDescriptor,
+    mxf_metadata_aes3_audio_essence_descriptor,
+    MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
+
+static void
+mxf_metadata_aes3_audio_essence_descriptor_finalize (GstMiniObject * object)
 {
-  MXFMetadataAES3AudioEssenceDescriptor *descriptor =
-      (MXFMetadataAES3AudioEssenceDescriptor *) d;
-  gboolean ret = FALSE;
+  MXFMetadataAES3AudioEssenceDescriptor *self =
+      MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR (object);
+
+  g_free (self->channel_status_mode);
+  self->channel_status_mode = NULL;
+  g_free (self->fixed_channel_status_data);
+  self->fixed_channel_status_data = NULL;
+  g_free (self->user_data_mode);
+  self->user_data_mode = NULL;
+  g_free (self->fixed_user_data);
+  self->fixed_user_data = NULL;
+
+  GST_MINI_OBJECT_CLASS
+      (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->
+      finalize (object);
+}
+
+static gboolean
+mxf_metadata_aes3_audio_essence_descriptor_handle_tag (MXFMetadataBase *
+    metadata, MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
+    guint tag_size)
+{
+  MXFMetadataAES3AudioEssenceDescriptor *self =
+      MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR (metadata);
+  gboolean ret = TRUE;
 
   switch (tag) {
     case 0x3d0d:
       if (tag_size != 1)
         goto error;
-      descriptor->emphasis = GST_READ_UINT8 (tag_data);
-      GST_DEBUG ("  emphasis = %u", descriptor->emphasis);
+      self->emphasis = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  emphasis = %u", self->emphasis);
       ret = TRUE;
       break;
     case 0x3d0f:
       if (tag_size != 2)
         goto error;
-      descriptor->block_start_offset = GST_READ_UINT16_BE (tag_data);
-      GST_DEBUG ("  block start offset = %u", descriptor->block_start_offset);
+      self->block_start_offset = GST_READ_UINT16_BE (tag_data);
+      GST_DEBUG ("  block start offset = %u", self->block_start_offset);
       ret = TRUE;
       break;
     case 0x3d08:
       if (tag_size != 1)
         goto error;
-      descriptor->auxiliary_bits_mode = GST_READ_UINT8 (tag_data);
-      GST_DEBUG ("  auxiliary bits mode = %u", descriptor->auxiliary_bits_mode);
+      self->auxiliary_bits_mode = GST_READ_UINT8 (tag_data);
+      GST_DEBUG ("  auxiliary bits mode = %u", self->auxiliary_bits_mode);
       ret = TRUE;
       break;
     case 0x3d10:{
@@ -225,7 +244,7 @@ gboolean
         goto error;
       len = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  number of channel status mode = %u", len);
-      descriptor->n_channel_status_mode = len;
+      self->n_channel_status_mode = len;
       if (len == 0)
         return TRUE;
 
@@ -238,12 +257,12 @@ gboolean
       if (tag_size != len)
         goto error;
 
-      descriptor->channel_status_mode = g_new0 (guint8, len);
+      self->channel_status_mode = g_new0 (guint8, len);
 
       for (i = 0; i < len; i++) {
-        descriptor->channel_status_mode[i] = GST_READ_UINT8 (tag_data);
+        self->channel_status_mode[i] = GST_READ_UINT8 (tag_data);
         GST_DEBUG ("    channel status mode %u = %u", i,
-            descriptor->channel_status_mode[i]);
+            self->channel_status_mode[i]);
         tag_data++;
         tag_size--;
       }
@@ -259,7 +278,7 @@ gboolean
         goto error;
       len = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  number of fixed channel status data = %u", len);
-      descriptor->n_fixed_channel_status_data = len;
+      self->n_fixed_channel_status_data = len;
       if (len == 0)
         return TRUE;
 
@@ -272,41 +291,41 @@ gboolean
       if (tag_size != len * 24)
         goto error;
 
-      descriptor->fixed_channel_status_data =
+      self->fixed_channel_status_data =
           g_malloc0 (len * sizeof (guint8 *) + len * 24);
 
       for (i = 0; i < len; i++) {
-        descriptor->fixed_channel_status_data[i] =
-            ((guint8 *) descriptor->fixed_channel_status_data) +
+        self->fixed_channel_status_data[i] =
+            ((guint8 *) self->fixed_channel_status_data) +
             len * sizeof (guint8 *) + i * 24;
 
-        memcpy (descriptor->fixed_channel_status_data[i], tag_data, 24);
+        memcpy (self->fixed_channel_status_data[i], tag_data, 24);
         GST_DEBUG
             ("    fixed channel status data %u = 0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x",
-            i, descriptor->fixed_channel_status_data[i][0],
-            descriptor->fixed_channel_status_data[i][1],
-            descriptor->fixed_channel_status_data[i][2],
-            descriptor->fixed_channel_status_data[i][3],
-            descriptor->fixed_channel_status_data[i][4],
-            descriptor->fixed_channel_status_data[i][5],
-            descriptor->fixed_channel_status_data[i][6],
-            descriptor->fixed_channel_status_data[i][7],
-            descriptor->fixed_channel_status_data[i][8],
-            descriptor->fixed_channel_status_data[i][9],
-            descriptor->fixed_channel_status_data[i][10],
-            descriptor->fixed_channel_status_data[i][11],
-            descriptor->fixed_channel_status_data[i][12],
-            descriptor->fixed_channel_status_data[i][13],
-            descriptor->fixed_channel_status_data[i][14],
-            descriptor->fixed_channel_status_data[i][15],
-            descriptor->fixed_channel_status_data[i][16],
-            descriptor->fixed_channel_status_data[i][17],
-            descriptor->fixed_channel_status_data[i][18],
-            descriptor->fixed_channel_status_data[i][19],
-            descriptor->fixed_channel_status_data[i][20],
-            descriptor->fixed_channel_status_data[i][21],
-            descriptor->fixed_channel_status_data[i][22],
-            descriptor->fixed_channel_status_data[i][23]
+            i, self->fixed_channel_status_data[i][0],
+            self->fixed_channel_status_data[i][1],
+            self->fixed_channel_status_data[i][2],
+            self->fixed_channel_status_data[i][3],
+            self->fixed_channel_status_data[i][4],
+            self->fixed_channel_status_data[i][5],
+            self->fixed_channel_status_data[i][6],
+            self->fixed_channel_status_data[i][7],
+            self->fixed_channel_status_data[i][8],
+            self->fixed_channel_status_data[i][9],
+            self->fixed_channel_status_data[i][10],
+            self->fixed_channel_status_data[i][11],
+            self->fixed_channel_status_data[i][12],
+            self->fixed_channel_status_data[i][13],
+            self->fixed_channel_status_data[i][14],
+            self->fixed_channel_status_data[i][15],
+            self->fixed_channel_status_data[i][16],
+            self->fixed_channel_status_data[i][17],
+            self->fixed_channel_status_data[i][18],
+            self->fixed_channel_status_data[i][19],
+            self->fixed_channel_status_data[i][20],
+            self->fixed_channel_status_data[i][21],
+            self->fixed_channel_status_data[i][22],
+            self->fixed_channel_status_data[i][23]
             );
         tag_data += 24;
         tag_size -= 24;
@@ -323,7 +342,7 @@ gboolean
         goto error;
       len = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  number of user data mode = %u", len);
-      descriptor->n_user_data_mode = len;
+      self->n_user_data_mode = len;
       if (len == 0)
         return TRUE;
 
@@ -336,12 +355,11 @@ gboolean
       if (tag_size != len)
         goto error;
 
-      descriptor->user_data_mode = g_new0 (guint8, len);
+      self->user_data_mode = g_new0 (guint8, len);
 
       for (i = 0; i < len; i++) {
-        descriptor->user_data_mode[i] = GST_READ_UINT8 (tag_data);
-        GST_DEBUG ("    user data mode %u = %u", i,
-            descriptor->user_data_mode[i]);
+        self->user_data_mode[i] = GST_READ_UINT8 (tag_data);
+        GST_DEBUG ("    user data mode %u = %u", i, self->user_data_mode[i]);
         tag_data++;
         tag_size--;
       }
@@ -357,7 +375,7 @@ gboolean
         goto error;
       len = GST_READ_UINT32_BE (tag_data);
       GST_DEBUG ("  number of fixed user data = %u", len);
-      descriptor->n_fixed_user_data = len;
+      self->n_fixed_user_data = len;
       if (len == 0)
         return TRUE;
 
@@ -370,41 +388,39 @@ gboolean
       if (tag_size != len * 24)
         goto error;
 
-      descriptor->fixed_user_data =
-          g_malloc0 (len * sizeof (guint8 *) + len * 24);
+      self->fixed_user_data = g_malloc0 (len * sizeof (guint8 *) + len * 24);
 
       for (i = 0; i < len; i++) {
-        descriptor->fixed_user_data[i] =
-            ((guint8 *) descriptor->fixed_user_data) + len * sizeof (guint8 *) +
+        self->fixed_user_data[i] =
+            ((guint8 *) self->fixed_user_data) + len * sizeof (guint8 *) +
             i * 24;
 
-        memcpy (descriptor->fixed_user_data[i], tag_data, 24);
+        memcpy (self->fixed_user_data[i], tag_data, 24);
         GST_DEBUG
             ("    fixed user data %u = 0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x.0x%02x",
-            i, descriptor->fixed_user_data[i][0],
-            descriptor->fixed_user_data[i][1],
-            descriptor->fixed_user_data[i][2],
-            descriptor->fixed_user_data[i][3],
-            descriptor->fixed_user_data[i][4],
-            descriptor->fixed_user_data[i][5],
-            descriptor->fixed_user_data[i][6],
-            descriptor->fixed_user_data[i][7],
-            descriptor->fixed_user_data[i][8],
-            descriptor->fixed_user_data[i][9],
-            descriptor->fixed_user_data[i][10],
-            descriptor->fixed_user_data[i][11],
-            descriptor->fixed_user_data[i][12],
-            descriptor->fixed_user_data[i][13],
-            descriptor->fixed_user_data[i][14],
-            descriptor->fixed_user_data[i][15],
-            descriptor->fixed_user_data[i][16],
-            descriptor->fixed_user_data[i][17],
-            descriptor->fixed_user_data[i][18],
-            descriptor->fixed_user_data[i][19],
-            descriptor->fixed_user_data[i][20],
-            descriptor->fixed_user_data[i][21],
-            descriptor->fixed_user_data[i][22],
-            descriptor->fixed_user_data[i][23]
+            i, self->fixed_user_data[i][0],
+            self->fixed_user_data[i][1],
+            self->fixed_user_data[i][2],
+            self->fixed_user_data[i][3],
+            self->fixed_user_data[i][4],
+            self->fixed_user_data[i][5],
+            self->fixed_user_data[i][6],
+            self->fixed_user_data[i][7],
+            self->fixed_user_data[i][8],
+            self->fixed_user_data[i][9],
+            self->fixed_user_data[i][10],
+            self->fixed_user_data[i][11],
+            self->fixed_user_data[i][12],
+            self->fixed_user_data[i][13],
+            self->fixed_user_data[i][14],
+            self->fixed_user_data[i][15],
+            self->fixed_user_data[i][16],
+            self->fixed_user_data[i][17],
+            self->fixed_user_data[i][18],
+            self->fixed_user_data[i][19],
+            self->fixed_user_data[i][20],
+            self->fixed_user_data[i][21],
+            self->fixed_user_data[i][22], self->fixed_user_data[i][23]
             );
         tag_data += 24;
         tag_size -= 24;
@@ -417,39 +433,42 @@ gboolean
        * SMPTE 382M Annex 2 */
     default:
       ret =
-          mxf_metadata_wave_audio_essence_descriptor_handle_tag (d, primer,
-          tag, tag_data, tag_size);
+          MXF_METADATA_BASE_CLASS
+          (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
   return ret;
 
 error:
-  GST_ERROR ("Invalid AES3 audio essence descriptor tag 0x%04x of size %u", tag,
+
+  GST_ERROR
+      ("Invalid AES3 audio essence descriptor local tag 0x%04x of size %u", tag,
       tag_size);
 
   return TRUE;
 }
 
-void mxf_metadata_aes3_audio_essence_descriptor_reset
-    (MXFMetadataAES3AudioEssenceDescriptor * descriptor)
+static void
+    mxf_metadata_aes3_audio_essence_descriptor_init
+    (MXFMetadataAES3AudioEssenceDescriptor * self)
 {
-  g_return_if_fail (descriptor != NULL);
 
-  mxf_metadata_wave_audio_essence_descriptor_reset (
-      (MXFMetadataWaveAudioEssenceDescriptor *) descriptor);
-
-  g_free (descriptor->channel_status_mode);
-  g_free (descriptor->fixed_channel_status_data);
-  g_free (descriptor->user_data_mode);
-  g_free (descriptor->fixed_user_data);
-
-  MXF_METADATA_DESCRIPTOR_CLEAR (descriptor,
-      MXFMetadataAES3AudioEssenceDescriptor,
-      MXFMetadataWaveAudioEssenceDescriptor);
 }
 
+static void
+    mxf_metadata_aes3_audio_essence_descriptor_class_init
+    (MXFMetadataAES3AudioEssenceDescriptorClass * klass)
+{
+  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
 
+  miniobject_class->finalize =
+      mxf_metadata_aes3_audio_essence_descriptor_finalize;
+  metadata_base_class->handle_tag =
+      mxf_metadata_aes3_audio_essence_descriptor_handle_tag;
+}
 
 gboolean
 mxf_is_aes_bwf_essence_track (const MXFMetadataTrack * track)
@@ -465,7 +484,12 @@ mxf_is_aes_bwf_essence_track (const MXFMetadataTrack * track)
 
   for (i = 0; i < track->n_descriptor; i++) {
     MXFMetadataFileDescriptor *d = track->descriptor[i];
-    MXFUL *key = &d->essence_container;
+    MXFUL *key;
+
+    if (!d)
+      continue;
+
+    key = &d->essence_container;
     /* SMPTE 382M 9 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 &&
@@ -548,8 +572,7 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
   gchar str[48];
   gchar *codec_name = NULL;
 
-  if (((MXFMetadataGenericDescriptor *) descriptor)->type ==
-      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR)
+  if (MXF_IS_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (descriptor))
     wa_descriptor = (MXFMetadataWaveAudioEssenceDescriptor *) descriptor;
 
   /* TODO: Handle width=!depth, needs shifting of samples */
@@ -666,10 +689,7 @@ mxf_aes3_create_caps (MXFMetadataGenericPackage * package,
   gchar *codec_name = NULL;
   guint block_align;
 
-  if (((MXFMetadataGenericDescriptor *) descriptor)->type ==
-      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR ||
-      ((MXFMetadataGenericDescriptor *) descriptor)->type ==
-      MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR)
+  if (MXF_IS_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (descriptor))
     wa_descriptor = (MXFMetadataWaveAudioEssenceDescriptor *) descriptor;
 
   /* FIXME: set a channel layout */
@@ -731,22 +751,18 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
   }
 
   for (i = 0; i < track->n_descriptor; i++) {
-    if ((track->descriptor[i]->parent.type ==
-            MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR
-            || track->descriptor[i]->parent.type ==
-            MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR)
+    if (!track->descriptor[i])
+      continue;
+
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->descriptor[i])
         && (track->descriptor[i]->essence_container.u[14] == 0x01
             || track->descriptor[i]->essence_container.u[14] == 0x02
             || track->descriptor[i]->essence_container.u[14] == 0x08)) {
       s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
       bwf = TRUE;
       break;
-    } else if ((track->descriptor[i]->parent.type ==
-            MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR
-            || track->descriptor[i]->parent.type ==
-            MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR
-            || track->descriptor[i]->parent.type ==
-            MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR)
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            descriptor[i])
         && (track->descriptor[i]->essence_container.u[14] == 0x03
             || track->descriptor[i]->essence_container.u[14] == 0x04
             || track->descriptor[i]->essence_container.u[14] == 0x09)) {
@@ -768,4 +784,13 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
   }
 
   return NULL;
+}
+
+void
+mxf_aes_bwf_init (void)
+{
+  mxf_metadata_register (0x0148,
+      MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
+  mxf_metadata_register (0x0147,
+      MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR);
 }

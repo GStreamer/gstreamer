@@ -1,3 +1,170 @@
+2008-12-15  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxf.c: (plugin_init):
+	* gst/mxf/mxfaes-bwf.c:
+	(mxf_metadata_wave_audio_essence_descriptor_handle_tag),
+	(mxf_metadata_wave_audio_essence_descriptor_init),
+	(mxf_metadata_wave_audio_essence_descriptor_class_init),
+	(mxf_metadata_aes3_audio_essence_descriptor_finalize),
+	(mxf_metadata_aes3_audio_essence_descriptor_handle_tag),
+	(mxf_metadata_aes3_audio_essence_descriptor_init),
+	(mxf_metadata_aes3_audio_essence_descriptor_class_init),
+	(mxf_is_aes_bwf_essence_track), (mxf_bwf_create_caps),
+	(mxf_aes3_create_caps), (mxf_aes_bwf_create_caps),
+	(mxf_aes_bwf_init):
+	* gst/mxf/mxfaes-bwf.h:
+	* gst/mxf/mxfalaw.c: (mxf_is_alaw_essence_track),
+	(mxf_alaw_create_caps), (mxf_alaw_init):
+	* gst/mxf/mxfalaw.h:
+	* gst/mxf/mxfd10.c: (mxf_is_d10_essence_track),
+	(mxf_d10_create_caps), (mxf_d10_init):
+	* gst/mxf/mxfd10.h:
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset_metadata),
+	(gst_mxf_demux_handle_header_metadata_resolve_references),
+	(gst_mxf_demux_find_package), (gst_mxf_demux_choose_package),
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_handle_metadata),
+	(gst_mxf_demux_handle_generic_container_essence_element),
+	(gst_mxf_demux_handle_klv_packet), (gst_mxf_demux_src_query):
+	* gst/mxf/mxfdemux.h:
+	* gst/mxf/mxfdv-dif.c: (mxf_is_dv_dif_essence_track),
+	(mxf_dv_dif_create_caps), (mxf_dv_dif_init):
+	* gst/mxf/mxfdv-dif.h:
+	* gst/mxf/mxfjpeg2000.c: (mxf_is_jpeg2000_essence_track),
+	(mxf_jpeg2000_create_caps), (mxf_jpeg2000_init):
+	* gst/mxf/mxfjpeg2000.h:
+	* gst/mxf/mxfmetadata.c: (mxf_metadata_base_finalize),
+	(mxf_metadata_base_handle_tag), (mxf_metadata_base_resolve),
+	(mxf_metadata_base_init), (mxf_metadata_base_class_init),
+	(mxf_metadata_parse), (mxf_metadata_resolve),
+	(mxf_metadata_handle_tag), (mxf_metadata_class_init),
+	(mxf_metadata_init), (mxf_metadata_init_types),
+	(mxf_metadata_register), (mxf_metadata_new),
+	(mxf_metadata_preface_finalize), (mxf_metadata_preface_handle_tag),
+	(mxf_metadata_preface_resolve), (mxf_metadata_preface_init),
+	(mxf_metadata_preface_class_init),
+	(mxf_metadata_identification_finalize),
+	(mxf_metadata_identification_handle_tag),
+	(mxf_metadata_identification_init),
+	(mxf_metadata_identification_class_init),
+	(mxf_metadata_content_storage_finalize),
+	(mxf_metadata_content_storage_handle_tag),
+	(mxf_metadata_content_storage_resolve),
+	(mxf_metadata_content_storage_init),
+	(mxf_metadata_content_storage_class_init),
+	(mxf_metadata_essence_container_data_handle_tag),
+	(mxf_metadata_essence_container_data_resolve),
+	(mxf_metadata_essence_container_data_init),
+	(mxf_metadata_essence_container_data_class_init),
+	(mxf_metadata_generic_package_finalize),
+	(mxf_metadata_generic_package_handle_tag),
+	(mxf_metadata_generic_package_resolve),
+	(mxf_metadata_generic_package_init),
+	(mxf_metadata_generic_package_class_init),
+	(mxf_metadata_material_package_resolve),
+	(mxf_metadata_material_package_init),
+	(mxf_metadata_material_package_class_init),
+	(mxf_metadata_source_package_finalize),
+	(mxf_metadata_source_package_handle_tag),
+	(mxf_metadata_source_package_resolve),
+	(mxf_metadata_source_package_init),
+	(mxf_metadata_source_package_class_init),
+	(mxf_metadata_track_finalize), (mxf_metadata_track_handle_tag),
+	(mxf_metadata_track_resolve), (mxf_metadata_track_init),
+	(mxf_metadata_track_class_init),
+	(mxf_metadata_track_identifier_parse),
+	(mxf_metadata_timeline_track_handle_tag),
+	(mxf_metadata_timeline_track_init),
+	(mxf_metadata_timeline_track_class_init),
+	(mxf_metadata_event_track_handle_tag),
+	(mxf_metadata_event_track_init),
+	(mxf_metadata_event_track_class_init),
+	(mxf_metadata_static_track_init),
+	(mxf_metadata_static_track_class_init),
+	(mxf_metadata_sequence_finalize),
+	(mxf_metadata_sequence_handle_tag),
+	(mxf_metadata_sequence_resolve), (mxf_metadata_sequence_init),
+	(mxf_metadata_sequence_class_init),
+	(mxf_metadata_structural_component_handle_tag),
+	(mxf_metadata_structural_component_init),
+	(mxf_metadata_structural_component_class_init),
+	(mxf_metadata_timecode_component_handle_tag),
+	(mxf_metadata_timecode_component_init),
+	(mxf_metadata_timecode_component_class_init),
+	(mxf_metadata_source_clip_handle_tag),
+	(mxf_metadata_source_clip_resolve),
+	(mxf_metadata_source_clip_init),
+	(mxf_metadata_source_clip_class_init),
+	(mxf_metadata_dm_source_clip_finalize),
+	(mxf_metadata_dm_source_clip_handle_tag),
+	(mxf_metadata_dm_source_clip_init),
+	(mxf_metadata_dm_source_clip_class_init),
+	(mxf_metadata_dm_segment_finalize),
+	(mxf_metadata_dm_segment_handle_tag),
+	(mxf_metadata_dm_segment_resolve), (mxf_metadata_dm_segment_init),
+	(mxf_metadata_dm_segment_class_init),
+	(mxf_metadata_generic_descriptor_finalize),
+	(mxf_metadata_generic_descriptor_handle_tag),
+	(mxf_metadata_generic_descriptor_resolve),
+	(mxf_metadata_generic_descriptor_init),
+	(mxf_metadata_generic_descriptor_class_init),
+	(mxf_metadata_file_descriptor_handle_tag),
+	(mxf_metadata_file_descriptor_init),
+	(mxf_metadata_file_descriptor_class_init),
+	(mxf_metadata_generic_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_generic_picture_essence_descriptor_init),
+	(mxf_metadata_generic_picture_essence_descriptor_class_init),
+	(mxf_metadata_generic_picture_essence_descriptor_set_caps),
+	(mxf_metadata_generic_sound_essence_descriptor_handle_tag),
+	(mxf_metadata_generic_sound_essence_descriptor_init),
+	(mxf_metadata_generic_sound_essence_descriptor_class_init),
+	(mxf_metadata_cdci_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_cdci_picture_essence_descriptor_init),
+	(mxf_metadata_cdci_picture_essence_descriptor_class_init),
+	(mxf_metadata_rgba_picture_essence_descriptor_finalize),
+	(mxf_metadata_rgba_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_rgba_picture_essence_descriptor_init),
+	(mxf_metadata_rgba_picture_essence_descriptor_class_init),
+	(mxf_metadata_generic_data_essence_descriptor_handle_tag),
+	(mxf_metadata_generic_data_essence_descriptor_init),
+	(mxf_metadata_generic_data_essence_descriptor_class_init),
+	(mxf_metadata_multiple_descriptor_finalize),
+	(mxf_metadata_multiple_descriptor_handle_tag),
+	(mxf_metadata_multiple_descriptor_resolve),
+	(mxf_metadata_multiple_descriptor_init),
+	(mxf_metadata_multiple_descriptor_class_init),
+	(mxf_metadata_locator_init), (mxf_metadata_locator_class_init),
+	(mxf_metadata_text_locator_finalize),
+	(mxf_metadata_text_locator_handle_tag),
+	(mxf_metadata_text_locator_init),
+	(mxf_metadata_text_locator_class_init),
+	(mxf_metadata_network_locator_finalize),
+	(mxf_metadata_network_locator_handle_tag),
+	(mxf_metadata_network_locator_init),
+	(mxf_metadata_network_locator_class_init):
+	* gst/mxf/mxfmetadata.h:
+	* gst/mxf/mxfmpeg.c:
+	(mxf_metadata_mpeg_video_descriptor_handle_tag),
+	(mxf_metadata_mpeg_video_descriptor_init),
+	(mxf_metadata_mpeg_video_descriptor_class_init),
+	(mxf_is_mpeg_essence_track), (mxf_mpeg_es_create_caps),
+	(mxf_mpeg_create_caps), (mxf_mpeg_init):
+	* gst/mxf/mxfmpeg.h:
+	* gst/mxf/mxfparse.c: (mxf_index_table_segment_parse),
+	(mxf_local_tag_add_to_hash_table):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxftypes.h:
+	* gst/mxf/mxfup.c: (mxf_is_up_essence_track), (mxf_up_create_caps),
+	(mxf_up_init):
+	* gst/mxf/mxfup.h:
+	Convert the structural metadata to GstMiniObjects to make a lot of
+	code easier and to make everything better extensible.
+	Add a "registry" for metadata handlers to improve extensibility even
+	more and to remove metadata type specifics from mxfdemux.
+
+	Clean up a lot of parts and add some more NULL checks.
+
 2008-12-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/faac/gstfaac.c:
