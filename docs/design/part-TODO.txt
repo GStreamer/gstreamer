@@ -30,15 +30,6 @@ API/ABI
   already got pushed and need to be pushed again. Might need GstFlowReturn from
   gst_pad_push_event().
 
-- keep track of seeks with a counter so that we can match seek events received
-  in the demuxer srcpads. This is needed because a normal seek on a pipeline
-  will send the seek event on all sinks, which results in the demuxer receiving
-  the seek twice. If there is no way to see that the seek is the same, it will
-  perform the seek twice.
-  It would also be nice to have this same sequence number in the segment event
-  that resulted from the seek so that everything seek related can be tracked
-  properly.
-
 - Optimize negotiation. We currently do a get_caps() call when we link pads,
   which could potentially generate a huge list of caps and all their
   combinations, we need to avoid generating these huge lists by generating them
@@ -81,6 +72,8 @@ API/ABI
   This could, for example, easily be triggered with a RENEGOTIATE event.
 
 - Remove the XML serialisation stuff.
+
+- Remove the result format value in queries.
 
 
 IMPLEMENTATION

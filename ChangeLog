@@ -1,5 +1,11 @@
 2008-12-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* docs/design/part-TODO.txt:
+	Remove the seqnum entry that we implemented in 0.10 already.
+	Add entry about removing the format return value for queries.
+
+2008-12-15  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
 	(gst_base_sink_init), (gst_base_sink_set_property),
 	(gst_base_sink_get_property):
