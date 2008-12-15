@@ -247,6 +247,7 @@ struct _GstBaseSinkPrivate
 #define DEFAULT_ASYNC			TRUE
 #define DEFAULT_TS_OFFSET		0
 #define DEFAULT_BLOCKSIZE 		4096
+#define DEFAULT_RENDER_DELAY 		0
 
 enum
 {
@@ -259,6 +260,7 @@ enum
   PROP_TS_OFFSET,
   PROP_LAST_BUFFER,
   PROP_BLOCKSIZE,
+  PROP_RENDER_DELAY,
   PROP_LAST
 };
 
@@ -403,7 +405,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       g_param_spec_int64 ("ts-offset", "TS Offset",
           "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
           DEFAULT_TS_OFFSET, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   /**
    * GstBaseSink:last-buffer
    *
@@ -417,7 +418,6 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       gst_param_spec_mini_object ("last-buffer", "Last Buffer",
           "The last buffer received in the sink", GST_TYPE_BUFFER,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
   /**
    * GstBaseSink:blocksize
    *
@@ -429,6 +429,19 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       g_param_spec_uint ("blocksize", "Block size",
           "Size in bytes to pull per buffer (0 = default)", 0, G_MAXUINT,
           DEFAULT_BLOCKSIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseSink:render-delay
+   *
+   * The additional delay between synchronisation and actual rendering of the
+   * media. This property will add additional latency to the device in order to
+   * make other sinks compensate for the delay.
+   *
+   * Since: 0.10.22
+   */
+  g_object_class_install_property (gobject_class, PROP_RENDER_DELAY,
+      g_param_spec_uint64 ("render-delay", "Render Delay",
+          "Additional render delay of the sink in nanoseconds", 0, G_MAXUINT64,
+          DEFAULT_RENDER_DELAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -581,7 +594,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   g_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
   priv->async_enabled = DEFAULT_ASYNC;
   priv->ts_offset = DEFAULT_TS_OFFSET;
-  priv->render_delay = 0;
+  priv->render_delay = DEFAULT_RENDER_DELAY;
   priv->blocksize = DEFAULT_BLOCKSIZE;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
@@ -1145,6 +1158,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_BLOCKSIZE:
       gst_base_sink_set_blocksize (sink, g_value_get_uint (value));
       break;
+    case PROP_RENDER_DELAY:
+      gst_base_sink_set_render_delay (sink, g_value_get_uint64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1183,6 +1199,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BLOCKSIZE:
       g_value_set_uint (value, gst_base_sink_get_blocksize (sink));
+      break;
+    case PROP_RENDER_DELAY:
+      g_value_set_uint64 (value, gst_base_sink_get_render_delay (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
