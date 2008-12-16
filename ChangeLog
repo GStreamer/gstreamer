@@ -1,3 +1,8 @@
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/interleave.c: (interleave_suite):
+	Increase timeout to 3 minutes to prevent timeouts.
+
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:
