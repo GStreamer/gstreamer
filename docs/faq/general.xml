@@ -12,8 +12,7 @@
 No, GStreamer is a development framework for creating applications like 
 media players, video editors, streaming media broadcasters and so on. 
 That said, very good media players can easily be built on top
-of GStreamer and we even include a simple yet functional media player 
-with GStreamer, called gst-player.
+of GStreamer especially when using the high-level object called playbin.
         </para>
       </answer>
     </qandaentry>
@@ -38,7 +37,7 @@ reasons why C is nice in this project:
 in a portable, powerful way. This library provides for introspection and 
 runtime dynamic typing. It is a full OO system, but without the syntactic 
 sugar. If you want sugar, take a look at 
-<ulink url="http://www.5z.com/jirka/gob.html">GOB</ulink>.</para></listitem>
+<ulink url="http://live.gnome.org/Vala">Vala</ulink>.</para></listitem>
 <listitem><para>Use of C integrates nicely with Gtk+ and GNOME. Some people like 
 this a lot, but neither Gtk+ nor GNOME are required by GStreamer.</para></listitem>
 </itemizedlist>
@@ -128,7 +127,7 @@ and in the future we might have the application enforce a stricter policy
         <para>
 No, GStreamer is not a soundserver. GStreamer does however have plugins
 supporting most of the major soundservers available today, including 
-ESD, aRTSd, and to some extent Jack. Support for MAS is also planned.
+pulseaudio, ESD, aRTSd, Jack and others.
         </para>
       </answer>
     </qandaentry>
