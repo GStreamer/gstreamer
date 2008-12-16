@@ -1,6 +1,11 @@
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:
+	  Rename api from _flush to _reset_tags. 
+
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
 	  Use new tagsetter api to flush tags.
 
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>

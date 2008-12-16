@@ -390,7 +390,7 @@ gst_avi_mux_reset (GstAviMux * avimux)
   avimux->write_header = TRUE;
 
   /* tags */
-  gst_tag_setter_flush (GST_TAG_SETTER (avimux));
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (avimux));
 }
 
 static void
