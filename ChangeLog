@@ -1,5 +1,10 @@
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/ffmpeg/gstffmpegmux.c:
+	  Renaming tagsetter_flush to _reset_tags().
+
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* ext/ffmpeg/gstffmpegmux.c:
 	  Fix tag merging. Use tagsetter and not internal copies. Depend on

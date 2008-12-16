@@ -617,7 +617,7 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_tag_setter_flush (GST_TAG_SETTER (ffmpegmux));
+      gst_tag_setter_reset_tags (GST_TAG_SETTER (ffmpegmux));
       if (ffmpegmux->opened) {
         ffmpegmux->opened = FALSE;
         url_fclose (ffmpegmux->context->pb);
