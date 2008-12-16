@@ -1,3 +1,10 @@
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttaglist.c:
+	* tests/check/gst/gsttag.c:
+	  More complete unit tests. Fix handling of empty taglists (they were
+	  not merged before).
+
 2008-12-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttaglist.h:

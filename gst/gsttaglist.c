@@ -640,7 +640,7 @@ gst_tag_list_copy_foreach (GQuark tag, const GValue * value, gpointer user_data)
  * @from: list to merge from
  * @mode: the mode to use
  *
- * Inserts the tags of the second list into the first list using the given mode.
+ * Inserts the tags of the @from list into the first list using the given mode.
  */
 void
 gst_tag_list_insert (GstTagList * into, const GstTagList * from,
@@ -692,23 +692,31 @@ GstTagList *
 gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
     GstTagMergeMode mode)
 {
+  const GstTagList *list1_cp, *list2_cp;
+  GstTagList *ret;
+
   g_return_val_if_fail (list1 == NULL || GST_IS_TAG_LIST (list1), NULL);
   g_return_val_if_fail (list2 == NULL || GST_IS_TAG_LIST (list2), NULL);
   g_return_val_if_fail (GST_TAG_MODE_IS_VALID (mode), NULL);
 
+  /* nothing to merge */
   if (!list1 && !list2) {
     return NULL;
-  } else if (!list1) {
-    return gst_tag_list_copy (list2);
-  } else if (!list2) {
-    return gst_tag_list_copy (list1);
-  } else {
-    GstTagList *ret;
-
-    ret = gst_tag_list_copy (list1);
-    gst_tag_list_insert (ret, list2, mode);
-    return ret;
   }
+
+  /* create empty list, we need to do this to correctly handling merge modes */
+  list1_cp = (list1) ? list1 : gst_tag_list_new ();
+  list2_cp = (list2) ? list2 : gst_tag_list_new ();
+
+  ret = gst_tag_list_copy (list1_cp);
+  gst_tag_list_insert (ret, list2_cp, mode);
+
+  if (!list1)
+    gst_tag_list_free ((GstTagList *) list1_cp);
+  if (!list2)
+    gst_tag_list_free ((GstTagList *) list2_cp);
+
+  return ret;
 }
 
 /**
@@ -817,6 +825,10 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (GST_IS_TAG_LIST (list));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
+
+  if (mode == GST_TAG_MERGE_REPLACE_ALL) {
+    gst_structure_remove_all_fields (list);
+  }
 
   while (tag != NULL) {
     GValue value = { 0, };
