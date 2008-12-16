@@ -108,6 +108,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/playback/gstplay-enum.h \
 	$(top_srcdir)/gst/speexresample/gstspeexresample.h \
 	$(top_srcdir)/gst/tcp/gstmultifdsink.h \
+	$(top_srcdir)/gst/tcp/gsttcpclientsrc.h \
+	$(top_srcdir)/gst/tcp/gsttcpclientsink.h \
+	$(top_srcdir)/gst/tcp/gsttcpserversrc.h \
 	$(top_srcdir)/gst/tcp/gsttcpserversink.h \
 	$(top_srcdir)/gst/tcp/gsttcp-enumtypes.h \
 	$(top_srcdir)/gst/tcp/gsttcp.h \

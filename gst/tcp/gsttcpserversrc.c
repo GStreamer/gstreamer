@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:tcpserversrc
+ * @see_also: #tcpserversink
+ *
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

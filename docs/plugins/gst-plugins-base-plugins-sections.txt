@@ -394,6 +394,49 @@ GST_TYPE_PLAY_FLAGS
 </SECTION>
 
 <SECTION>
+<FILE>element-tcpclientsrc</FILE>
+<TITLE>tcpclientsrc</TITLE>
+GstTCPClientSrc
+<SUBSECTION Standard>
+GstTCPClientSrcClass
+GST_TCP_CLIENT_SRC
+GstTCPClientSrcFlags
+GST_TYPE_TCP_CLIENT_SRC
+gst_tcp_client_src_get_type
+GST_IS_TCP_CLIENT_SRC_CLASS
+GST_IS_TCP_CLIENT_SRC
+</SECTION>
+
+<SECTION>
+<FILE>element-tcpclientsink</FILE>
+<TITLE>tcpclientsink</TITLE>
+GstTCPClientSink
+<SUBSECTION Standard>
+GstTCPClientSinkClass
+GST_TCP_CLIENT_SINK
+GstTCPClientSinkFlags
+GST_TYPE_TCP_CLIENT_SINK
+gst_tcp_client_sink_get_type
+GST_IS_TCP_CLIENT_SINK_CLASS
+GST_IS_TCP_CLIENT_SINK
+</SECTION>
+
+
+<SECTION>
+<FILE>element-tcpserversrc</FILE>
+<TITLE>tcpserversrc</TITLE>
+GstTCPServerSrc
+<SUBSECTION Standard>
+GstTCPServerSrcClass
+GST_TCP_SERVER_SRC
+GstTCPServerSrcFlags
+GST_TYPE_TCP_SERVER_SRC
+gst_tcp_server_src_get_type
+GST_IS_TCP_SERVER_SRC_CLASS
+GST_IS_TCP_SERVER_SRC
+</SECTION>
+
+<SECTION>
 <FILE>element-tcpserversink</FILE>
 <TITLE>tcpserversink</TITLE>
 GstTCPServerSink

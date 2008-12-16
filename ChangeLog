@@ -1,3 +1,14 @@
+2008-12-16  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversrc.c:
+	Add minimal docs to make the remaining tcp elements show up.
+	Fixes #564139.
+
 2008-12-13  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* win32/common/config.h:
