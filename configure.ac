@@ -40,7 +40,7 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.21
+GST_REQ=0.10.21.1
 LIBOIL_MAJORMINOR=0.3
 LIBOIL_REQ=0.3.6
 

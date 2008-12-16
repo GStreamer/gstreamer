@@ -1,5 +1,10 @@
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	  Require core cvs.
+
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/ffmpeg/gstffmpegmux.c:
 	  Renaming tagsetter_flush to _reset_tags().
 
