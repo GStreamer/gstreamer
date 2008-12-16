@@ -3,8 +3,15 @@
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gsttagsetter.c:
 	* gst/gsttagsetter.h:
+	  Rename api added in previous commit and add since tag to docs.
+	  API: gst_tag_setter_reset_tags()
+
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttagsetter.c:
+	* gst/gsttagsetter.h:
 	  Add function to reset tagsetter for element reuse.
-	  API: gst_tag_setter_flush()
 
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 

@@ -149,14 +149,16 @@ gst_tag_setter_get_data (GstTagSetter * setter)
 }
 
 /**
- * gst_tag_setter_flush:
+ * gst_tag_setter_reset_tags:
  * @setter: a #GstTagSetter
  *
  * Reset the internal taglist. Elements should call this from within the
  * state-change handler.
+ *
+ * Since: 0.10.22
  */
 void
-gst_tag_setter_flush (GstTagSetter * setter)
+gst_tag_setter_reset_tags (GstTagSetter * setter)
 {
   GstTagData *data;
 
