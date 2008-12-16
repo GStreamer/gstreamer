@@ -2107,6 +2107,7 @@ gst_tag_merge_mode_get_type
 <TITLE>GstTagSetter</TITLE>
 GstTagSetter
 GstTagSetterIFace
+gst_tag_setter_flush
 gst_tag_setter_merge_tags
 gst_tag_setter_add_tags
 gst_tag_setter_add_tag_values

@@ -86,8 +86,7 @@ typedef struct
 {
   GstTagMergeMode mode;
   GstTagList *list;
-}
-GstTagData;
+} GstTagData;
 
 GType
 gst_tag_setter_get_type (void)
@@ -120,6 +119,7 @@ gst_tag_setter_get_type (void)
 
   return tag_setter_type;
 }
+
 static void
 gst_tag_data_free (gpointer p)
 {
@@ -130,6 +130,7 @@ gst_tag_data_free (gpointer p)
 
   g_free (data);
 }
+
 static GstTagData *
 gst_tag_setter_get_data (GstTagSetter * setter)
 {
@@ -145,6 +146,27 @@ gst_tag_setter_get_data (GstTagSetter * setter)
   }
 
   return data;
+}
+
+/**
+ * gst_tag_setter_flush:
+ * @setter: a #GstTagSetter
+ *
+ * Reset the internal taglist. Elements should call this from within the
+ * state-change handler.
+ */
+void
+gst_tag_setter_flush (GstTagSetter * setter)
+{
+  GstTagData *data;
+
+  g_return_if_fail (GST_IS_TAG_SETTER (setter));
+
+  data = gst_tag_setter_get_data (setter);
+  if (data->list) {
+    gst_tag_list_free (data->list);
+    data->list = NULL;
+  }
 }
 
 /**

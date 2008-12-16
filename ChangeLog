@@ -1,5 +1,13 @@
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttagsetter.c:
+	* gst/gsttagsetter.h:
+	  Add function to reset tagsetter for element reuse.
+	  API: gst_tag_setter_flush()
+
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gsttaglist.c:
 	  Avoid copy of empty taglist.
 

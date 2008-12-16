@@ -58,6 +58,8 @@ struct _GstTagSetterIFace
 
 GType		gst_tag_setter_get_type		    (void);
 
+void		gst_tag_setter_flush                  (GstTagSetter * setter);
+
 void		gst_tag_setter_merge_tags	    (GstTagSetter *	setter,
 						     const GstTagList *	list,
 						     GstTagMergeMode	mode);
