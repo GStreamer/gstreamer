@@ -388,6 +388,9 @@ gst_avi_mux_reset (GstAviMux * avimux)
 
   /* state info */
   avimux->write_header = TRUE;
+
+  /* tags */
+  gst_tag_setter_flush (GST_TAG_SETTER (avimux));
 }
 
 static void
@@ -1225,7 +1228,6 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     /* 12 bytes is needed for data header */
     GST_BUFFER_SIZE (buffer) -= 12;
     gst_tag_list_foreach (tags, gst_avi_mux_write_tag, &data);
-    /* do not free tags here, as it refers to the tag snapshot */
     GST_BUFFER_SIZE (buffer) += 12;
     buffdata = GST_BUFFER_DATA (buffer) + highmark;
 
