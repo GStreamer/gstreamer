@@ -1,5 +1,10 @@
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/elements/mxfdemux.c: (mxfdemux_suite):
+	Increase the timeout to 3 minutes to prevent timeouts.
+
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* tests/check/elements/mxfdemux.c: (_sink_event):
 	* tests/check/elements/mxfdemux.h:
 	Make sure the main loop is already running when handling the EOS
