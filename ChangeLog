@@ -1,5 +1,15 @@
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/mxfdemux.c: (_pad_added), (_sink_chain),
+	(_sink_event), (_create_sink_pad), (_create_src_pad_push),
+	(_src_getrange), (_src_query), (_create_src_pad_pull),
+	(GST_START_TEST), (mxfdemux_suite):
+	* tests/check/elements/mxfdemux.h:
+	Add push and pull mode unit test for mxfdemux.
+
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:

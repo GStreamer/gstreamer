@@ -92,10 +92,11 @@ check_PROGRAMS = \
 	elements/audioresample \
 	elements/qtmux \
 	elements/selector \
+	elements/mxfdemux \
 	elements/y4menc   \
 	$(check_metadata)
 
-noinst_HEADERS = 
+noinst_HEADERS = elements/mxfdemux.h
 
 TESTS = $(check_PROGRAMS)
 
