@@ -55,7 +55,8 @@ mxf_metadata_base_handle_tag (MXFMetadataBase * self, MXFPrimerPack * primer,
 }
 
 static gboolean
-mxf_metadata_base_resolve (MXFMetadataBase * self, MXFMetadataBase ** metadata)
+mxf_metadata_base_resolve_default (MXFMetadataBase * self,
+    MXFMetadataBase ** metadata)
 {
   return TRUE;
 }
@@ -73,11 +74,11 @@ mxf_metadata_base_class_init (MXFMetadataBaseClass * klass)
 
   miniobject_class->finalize = mxf_metadata_base_finalize;
   klass->handle_tag = mxf_metadata_base_handle_tag;
-  klass->resolve = mxf_metadata_base_resolve;
+  klass->resolve = mxf_metadata_base_resolve_default;
 }
 
 gboolean
-mxf_metadata_parse (MXFMetadataBase * self, MXFPrimerPack * primer,
+mxf_metadata_base_parse (MXFMetadataBase * self, MXFPrimerPack * primer,
     const guint8 * data, guint size)
 {
   guint16 tag, tag_size;
@@ -103,7 +104,7 @@ mxf_metadata_parse (MXFMetadataBase * self, MXFPrimerPack * primer,
 }
 
 gboolean
-mxf_metadata_resolve (MXFMetadataBase * self, MXFMetadataBase ** metadata)
+mxf_metadata_base_resolve (MXFMetadataBase * self, MXFMetadataBase ** metadata)
 {
   MXFMetadataBaseClass *klass;
 
@@ -281,7 +282,7 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, const guint8 * data,
   }
 
   ret = (MXFMetadata *) g_type_create_instance (t);
-  if (!mxf_metadata_parse (MXF_METADATA_BASE (ret), primer, data, size)) {
+  if (!mxf_metadata_base_parse (MXF_METADATA_BASE (ret), primer, data, size)) {
     GST_ERROR ("Parsing metadata failed");
     gst_mini_object_unref ((GstMiniObject *) ret);
     return NULL;
@@ -471,11 +472,11 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
 
     if (MXF_IS_METADATA_GENERIC_PACKAGE (current) &&
         mxf_ul_is_equal (&self->primary_package_uid, &current->instance_uid)) {
-      if (mxf_metadata_resolve (current, metadata))
+      if (mxf_metadata_base_resolve (current, metadata))
         self->primary_package = MXF_METADATA_GENERIC_PACKAGE (current);
     } else if (MXF_IS_METADATA_CONTENT_STORAGE (current) &&
         mxf_ul_is_equal (&self->content_storage_uid, &current->instance_uid)) {
-      if (mxf_metadata_resolve (current, metadata))
+      if (mxf_metadata_base_resolve (current, metadata))
         self->content_storage = MXF_METADATA_CONTENT_STORAGE (current);
     }
     p++;
@@ -491,7 +492,7 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
       if (MXF_IS_METADATA_IDENTIFICATION (current) &&
           mxf_ul_is_equal (&self->identifications_uids[i],
               &current->instance_uid)) {
-        if (mxf_metadata_resolve (current, metadata))
+        if (mxf_metadata_base_resolve (current, metadata))
           self->identifications[i] = MXF_METADATA_IDENTIFICATION (current);
         break;
       }
@@ -761,7 +762,7 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
       current = *p;
       if (MXF_IS_METADATA_GENERIC_PACKAGE (current) &&
           mxf_ul_is_equal (&current->instance_uid, &self->packages_uids[i])) {
-        if (mxf_metadata_resolve (current, metadata)) {
+        if (mxf_metadata_base_resolve (current, metadata)) {
           self->packages[i] = MXF_METADATA_GENERIC_PACKAGE (current);
           have_package = TRUE;
         }
@@ -781,7 +782,7 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
       if (MXF_IS_METADATA_ESSENCE_CONTAINER_DATA (current) &&
           mxf_ul_is_equal (&current->instance_uid,
               &self->essence_container_data_uids[i])) {
-        if (mxf_metadata_resolve (current, metadata)) {
+        if (mxf_metadata_base_resolve (current, metadata)) {
           self->essence_container_data[i] =
               MXF_METADATA_ESSENCE_CONTAINER_DATA (current);
           have_ecd = TRUE;
@@ -889,7 +890,7 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
 
       if (mxf_umid_is_equal (&package->parent.package_uid,
               &self->linked_package_uid)) {
-        if (mxf_metadata_resolve (current, metadata)) {
+        if (mxf_metadata_base_resolve (current, metadata)) {
           self->linked_package = package;
         }
         break;
@@ -1052,7 +1053,7 @@ mxf_metadata_generic_package_resolve (MXFMetadataBase * m,
         MXFMetadataTrack *track = MXF_METADATA_TRACK (current);
 
         if (mxf_ul_is_equal (&current->instance_uid, &self->tracks_uids[i])) {
-          if (mxf_metadata_resolve (current, metadata)) {
+          if (mxf_metadata_base_resolve (current, metadata)) {
             self->tracks[i] = track;
             have_track = TRUE;
 
@@ -1240,7 +1241,7 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m,
     p++;
   }
 
-  if (!d || !mxf_metadata_resolve (MXF_METADATA_BASE (d), metadata)) {
+  if (!d || !mxf_metadata_base_resolve (MXF_METADATA_BASE (d), metadata)) {
     GST_ERROR ("Couldn't resolve descriptor");
     return FALSE;
   }
@@ -1403,7 +1404,8 @@ mxf_metadata_track_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
   }
 
   if (!self->sequence
-      || !mxf_metadata_resolve (MXF_METADATA_BASE (self->sequence), metadata)) {
+      || !mxf_metadata_base_resolve (MXF_METADATA_BASE (self->sequence),
+          metadata)) {
     GST_ERROR ("Couldn't resolve sequence");
     return FALSE;
   }
@@ -1710,7 +1712,7 @@ mxf_metadata_sequence_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
       if (MXF_IS_METADATA_STRUCTURAL_COMPONENT (current)
           && mxf_ul_is_equal (&current->instance_uid,
               &self->structural_components_uids[i])) {
-        if (mxf_metadata_resolve (current, metadata)) {
+        if (mxf_metadata_base_resolve (current, metadata)) {
           self->structural_components[i] =
               MXF_METADATA_STRUCTURAL_COMPONENT (current);
           have_sc++;
@@ -2166,7 +2168,7 @@ mxf_metadata_dm_segment_resolve (MXFMetadataBase * m,
 
     /* TODO: if (MXF_IS_DM_FRAMEWORK (current) && */
     if (mxf_ul_is_equal (&current->instance_uid, &self->dm_framework_uid)) {
-      if (mxf_metadata_resolve (current, metadata)) {
+      if (mxf_metadata_base_resolve (current, metadata)) {
         self->dm_framework = current;
       }
       break;
@@ -2290,7 +2292,7 @@ mxf_metadata_generic_descriptor_resolve (MXFMetadataBase * m,
 
       if (MXF_IS_METADATA_LOCATOR (current) &&
           mxf_ul_is_equal (&current->instance_uid, &self->locators_uids[i])) {
-        if (mxf_metadata_resolve (current, metadata)) {
+        if (mxf_metadata_base_resolve (current, metadata)) {
           self->locators[i] = MXF_METADATA_LOCATOR (current);
           have_locator = TRUE;
         }
@@ -3153,7 +3155,7 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
       if (MXF_IS_METADATA_GENERIC_DESCRIPTOR (current) &&
           mxf_ul_is_equal (&current->instance_uid,
               &self->sub_descriptors_uids[i])) {
-        if (mxf_metadata_resolve (current, metadata)) {
+        if (mxf_metadata_base_resolve (current, metadata)) {
           self->sub_descriptors[i] = MXF_METADATA_GENERIC_DESCRIPTOR (current);
           have_subdescriptors++;
         }

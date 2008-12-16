@@ -457,7 +457,8 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
     gboolean resolved;
 
     resolved =
-        mxf_metadata_resolve (m, (MXFMetadataBase **) demux->metadata->pdata);
+        mxf_metadata_base_resolve (m,
+        (MXFMetadataBase **) demux->metadata->pdata);
 
     /* Resolving can fail for anything but the preface, as the preface
      * will resolve everything required */
@@ -545,11 +546,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }

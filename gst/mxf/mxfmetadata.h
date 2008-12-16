@@ -689,8 +689,8 @@ struct _MXFMetadataTextLocator {
   gchar *locator_name;
 };
 
-gboolean mxf_metadata_parse (MXFMetadataBase *self, MXFPrimerPack *primer, const guint8 *data, guint size);
-gboolean mxf_metadata_resolve (MXFMetadataBase *self, MXFMetadataBase **metadata);
+gboolean mxf_metadata_base_parse (MXFMetadataBase *self, MXFPrimerPack *primer, const guint8 *data, guint size);
+gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, MXFMetadataBase **metadata);
 
 MXFMetadata *mxf_metadata_new (guint16 type, MXFPrimerPack *primer, const guint8 *data, guint size);
 void mxf_metadata_register (guint16 type_id, GType type);

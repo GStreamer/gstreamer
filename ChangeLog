@@ -1,3 +1,23 @@
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_resolve_references):
+	* gst/mxf/mxfmetadata.c: (mxf_metadata_base_resolve_default),
+	(mxf_metadata_base_class_init), (mxf_metadata_base_parse),
+	(mxf_metadata_base_resolve), (mxf_metadata_new),
+	(mxf_metadata_preface_resolve),
+	(mxf_metadata_content_storage_resolve),
+	(mxf_metadata_essence_container_data_resolve),
+	(mxf_metadata_generic_package_resolve),
+	(mxf_metadata_source_package_resolve),
+	(mxf_metadata_track_resolve), (mxf_metadata_sequence_resolve),
+	(mxf_metadata_dm_segment_resolve),
+	(mxf_metadata_generic_descriptor_resolve),
+	(mxf_metadata_multiple_descriptor_resolve):
+	* gst/mxf/mxfmetadata.h:
+	Rename MXFMetadataBase methods to reflect that they belong to
+	MXFMetadataBase and not MXFMetadata.
+
 2008-12-15  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfaes-bwf.c:
