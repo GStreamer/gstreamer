@@ -692,8 +692,8 @@ GstTagList *
 gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
     GstTagMergeMode mode)
 {
-  const GstTagList *list1_cp, *list2_cp;
-  GstTagList *ret;
+  GstTagList *list1_cp;
+  const GstTagList *list2_cp;
 
   g_return_val_if_fail (list1 == NULL || GST_IS_TAG_LIST (list1), NULL);
   g_return_val_if_fail (list2 == NULL || GST_IS_TAG_LIST (list2), NULL);
@@ -705,18 +705,15 @@ gst_tag_list_merge (const GstTagList * list1, const GstTagList * list2,
   }
 
   /* create empty list, we need to do this to correctly handling merge modes */
-  list1_cp = (list1) ? list1 : gst_tag_list_new ();
+  list1_cp = (list1) ? gst_tag_list_copy (list1) : gst_tag_list_new ();
   list2_cp = (list2) ? list2 : gst_tag_list_new ();
 
-  ret = gst_tag_list_copy (list1_cp);
-  gst_tag_list_insert (ret, list2_cp, mode);
+  gst_tag_list_insert (list1_cp, list2_cp, mode);
 
-  if (!list1)
-    gst_tag_list_free ((GstTagList *) list1_cp);
   if (!list2)
     gst_tag_list_free ((GstTagList *) list2_cp);
 
-  return ret;
+  return list1_cp;
 }
 
 /**
