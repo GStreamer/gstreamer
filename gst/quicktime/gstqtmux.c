@@ -239,14 +239,11 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
     atom_moov_free (qtmux->moov);
     qtmux->moov = NULL;
   }
-  if (qtmux->tags) {
-    gst_tag_list_free (qtmux->tags);
-    qtmux->tags = NULL;
-  }
   if (qtmux->fast_start_file) {
     fclose (qtmux->fast_start_file);
     qtmux->fast_start_file = NULL;
   }
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (qtmux));
 
   /* reset pad data */
   for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
@@ -514,32 +511,18 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
 static void
 gst_qt_mux_setup_metadata (GstQTMux * qtmux)
 {
-  const GstTagList *user_tags;
-  GstTagList *mixedtags = NULL;
-  GstTagMergeMode merge_mode;
+  const GstTagList *tags;
 
-  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (qtmux));
-  merge_mode = gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (qtmux));
+  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (qtmux));
 
-  GST_DEBUG_OBJECT (qtmux, "merging tags, merge mode = %d", merge_mode);
-  GST_LOG_OBJECT (qtmux, "event tags: %" GST_PTR_FORMAT, qtmux->tags);
-  GST_LOG_OBJECT (qtmux, "set   tags: %" GST_PTR_FORMAT, user_tags);
+  GST_LOG_OBJECT (qtmux, "tags: %" GST_PTR_FORMAT, tags);
 
-  mixedtags = gst_tag_list_merge (user_tags, qtmux->tags, merge_mode);
-
-  GST_LOG_OBJECT (qtmux, "final tags: %" GST_PTR_FORMAT, mixedtags);
-
-  if (mixedtags && !gst_tag_list_is_empty (mixedtags)) {
-    GST_DEBUG_OBJECT (qtmux, "Parsing tags");
-    gst_qt_mux_add_metadata_tags (qtmux, mixedtags);
+  if (tags && !gst_tag_list_is_empty (tags)) {
+    GST_DEBUG_OBJECT (qtmux, "Formatting tags");
+    gst_qt_mux_add_metadata_tags (qtmux, tags);
   } else {
-    GST_DEBUG_OBJECT (qtmux, "No tags found");
+    GST_DEBUG_OBJECT (qtmux, "No tags received");
   }
-
-  if (mixedtags)
-    gst_tag_list_free (mixedtags);
-
-  return;
 }
 
 static GstFlowReturn
@@ -1585,20 +1568,19 @@ gst_qt_mux_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
   GstQTMux *qtmux;
-  GstTagList *list;
 
   qtmux = GST_QT_MUX_CAST (gst_pad_get_parent (pad));
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
+    case GST_EVENT_TAG:{
+      GstTagList *list;
+      GstTagSetter *setter = GST_TAG_SETTER (qtmux);
+      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
+
       GST_DEBUG_OBJECT (qtmux, "received tag event");
       gst_event_parse_tag (event, &list);
-
-      if (qtmux->tags) {
-        gst_tag_list_insert (qtmux->tags, list, GST_TAG_MERGE_PREPEND);
-      } else {
-        qtmux->tags = gst_tag_list_copy (list);
-      }
+      gst_tag_setter_merge_tags (setter, list, mode);
       break;
+    }
     default:
       break;
   }
@@ -1774,6 +1756,7 @@ gst_qt_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+      /* FIXME: shouldn't the downwards state-change be done below? */
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collect_pads_stop (qtmux->collect);
       break;
