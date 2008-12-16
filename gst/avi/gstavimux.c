@@ -383,15 +383,6 @@ gst_avi_mux_reset (GstAviMux * avimux)
   avimux->avi_hdr.max_bps = 10000000;
   avimux->codec_data_size = 0;
 
-  if (avimux->tags) {
-    gst_tag_list_free (avimux->tags);
-    avimux->tags = NULL;
-  }
-  if (avimux->tags_snap) {
-    gst_tag_list_free (avimux->tags_snap);
-    avimux->tags_snap = NULL;
-  }
-
   g_free (avimux->idx);
   avimux->idx = NULL;
 
@@ -958,8 +949,7 @@ gst_avi_mux_write_tag (const GstTagList * list, const gchar * tag,
 static GstBuffer *
 gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 {
-  GstTagList *tags;
-  const GstTagList *iface_tags;
+  const GstTagList *tags;
   GstBuffer *buffer;
   guint8 *buffdata;
   guint size = 0;
@@ -972,24 +962,13 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   GST_DEBUG_OBJECT (avimux, "creating avi header, data_size %u, idx_size %u",
       avimux->data_size, avimux->idx_size);
 
-  /* need to take snapshot of tags now */
-  iface_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
-  if ((iface_tags || avimux->tags) && !avimux->tags_snap) {
-    /* gst_tag_list_merge() will handle NULL for either or both lists fine */
-    tags = gst_tag_list_merge (iface_tags, avimux->tags,
-        gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (avimux)));
-    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
-        PACKAGE_STRING " AVI muxer", NULL);
-  } else {
-    tags = avimux->tags_snap;
-  }
-  avimux->tags_snap = tags;
-  if (avimux->tags_snap) {
+  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
+  if (tags) {
     /* that should be the strlen of all tags + header sizes
      * not all of tags end up in a avi, still this is a good estimate
      */
-    gchar *str = gst_structure_to_string (avimux->tags_snap);
-    size += strlen (str) + 8 * gst_structure_n_fields (avimux->tags_snap);
+    gchar *str = gst_structure_to_string (tags);
+    size += strlen (str) + 8 * gst_structure_n_fields (tags);
     g_free (str);
   }
 
@@ -1689,10 +1668,11 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
       GstTagList *list;
+      GstTagSetter *setter = GST_TAG_SETTER (avimux);
+      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       gst_event_parse_tag (event, &list);
-      avimux->tags = gst_tag_list_merge (avimux->tags, list,
-          gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (avimux)));
+      gst_tag_setter_merge_tags (setter, list, mode);
       break;
     }
     default:

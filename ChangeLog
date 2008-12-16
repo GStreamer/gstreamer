@@ -1,3 +1,9 @@
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
+	* gst/avi/gstavimux.h:
+	  Totally remove the internal taglists and fully use tagsetter.
+
 2008-12-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:
