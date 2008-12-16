@@ -55,8 +55,6 @@ struct _GstFFMpegMux
   AVFormatContext *context;
   gboolean opened;
 
-  GstTagList *tags;
-
   gint videopads, audiopads;
 
   /*< private > */
@@ -213,8 +211,6 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
 
   ffmpegmux->videopads = 0;
   ffmpegmux->audiopads = 0;
-
-  ffmpegmux->tags = NULL;
 }
 
 static void
@@ -343,12 +339,12 @@ gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
-      GstTagList *taglist = NULL;
+      GstTagList *taglist;
+      GstTagSetter *setter = GST_TAG_SETTER (ffmpegmux);
+      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       gst_event_parse_tag (event, &taglist);
-      ffmpegmux->tags = gst_tag_list_merge (ffmpegmux->tags, taglist,
-          GST_TAG_MERGE_PREPEND);
-
+      gst_tag_setter_merge_tags (setter, taglist, mode);
       break;
     }
     default:
@@ -369,7 +365,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
   GSList *collected;
   GstFFMpegMuxPad *best_pad;
   GstClockTime best_time;
-  const GstTagList *iface_tags;
+  const GstTagList *tags;
 
   /* open "file" (gstreamer protocol to next element) */
   if (!ffmpegmux->opened) {
@@ -421,14 +417,10 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     }
 
     /* tags */
-    iface_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (ffmpegmux));
-    if (ffmpegmux->tags || iface_tags) {
-      GstTagList *tags;
+    tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (ffmpegmux));
+    if (tags) {
       gint i;
       gchar *s;
-
-      tags = gst_tag_list_merge (iface_tags, ffmpegmux->tags,
-          GST_TAG_MERGE_APPEND);
 
       /* get the interesting ones */
       if (gst_tag_list_get_string (tags, GST_TAG_TITLE, &s)) {
@@ -458,7 +450,6 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       if (gst_tag_list_get_int (tags, GST_TAG_TRACK_NUMBER, &i)) {
         ffmpegmux->context->track = i;
       }
-      gst_tag_list_free (tags);
     }
 
     /* set the streamheader flag for gstffmpegprotocol if codec supports it */
@@ -626,10 +617,7 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (ffmpegmux->tags) {
-        gst_tag_list_free (ffmpegmux->tags);
-        ffmpegmux->tags = NULL;
-      }
+      gst_tag_setter_flush (GST_TAG_SETTER (ffmpegmux));
       if (ffmpegmux->opened) {
         ffmpegmux->opened = FALSE;
         url_fclose (ffmpegmux->context->pb);

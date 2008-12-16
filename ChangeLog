@@ -1,3 +1,10 @@
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpegmux.c:
+	  Fix tag merging. Use tagsetter and not internal copies. Depend on
+	  CVS core and use new API to flush.
+
 2008-12-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_channel_layout_to_gst):
