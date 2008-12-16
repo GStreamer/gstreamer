@@ -1,3 +1,10 @@
+2008-12-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttaglist.h:
+	* gst/gsttagsetter.c:
+	  Update GstTagSetter and GstTagMergeMode documentation. Mention
+	  that tags can come from events and from application. Fix example.
+
 2008-12-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/design/part-TODO.txt:

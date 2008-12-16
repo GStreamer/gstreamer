@@ -40,11 +40,12 @@ G_BEGIN_DECLS
  * @GST_TAG_MERGE_COUNT: the number of merge modes
  *
  * The different tag merging modes are basically replace, overwrite and append,
- * but they can be seen from two directions.  Given two taglists: (A) the tags
- * already in the element and (B) the ones that are supplied to
- * gst_tag_setter_merge_tags() or gst_tag_setter_add_tags(), how are these tags
- * merged? In the table below this is shown for the cases that a tag exists in
- * the list (A) or does not exists (!A) and combinations thereof.
+ * but they can be seen from two directions. Given two taglists: (A) the tags
+ * already in the element and (B) the ones that are supplied to the element (
+ * e.g. via gst_tag_setter_merge_tags() / gst_tag_setter_add_tags() or a
+ * %GST_EVENT_TAG), how are these tags merged?
+ * In the table below this is shown for the cases that a tag exists in the list
+ * (A) or does not exists (!A) and combinations thereof.
  *
  * <table frame="all" colsep="1" rowsep="1">
  *   <title>merge mode</title>
