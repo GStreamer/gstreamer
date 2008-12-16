@@ -163,6 +163,10 @@ static void gst_metadata_mux_set_property (GObject * object, guint prop_id,
 static void gst_metadata_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn gst_metadata_mux_change_state (GstElement * element,
+    GstStateChange transition);
+
+
 /*
  * GstBaseMetadata virtual functions declaration
  */
@@ -274,6 +278,9 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
   gobject_class->set_property = gst_metadata_mux_set_property;
   gobject_class->get_property = gst_metadata_mux_get_property;
 
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_metadata_mux_change_state);
+
   gstbasemetadata_class->processing =
       GST_DEBUG_FUNCPTR (gst_metadata_mux_create_chunks_from_tags);
   gstbasemetadata_class->set_caps =
@@ -317,6 +324,39 @@ gst_metadata_mux_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstMetadataMux *filter = GST_METADATA_MUX (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_tag_setter_reset_tags (GST_TAG_SETTER (filter));
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
 
 
 static void
@@ -351,7 +391,6 @@ gst_metadata_mux_finalize (GObject * object)
 static void
 gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
 {
-
   GstMetadataMux *filter = GST_METADATA_MUX (base);
   GstTagSetter *setter = GST_TAG_SETTER (filter);
   const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
@@ -506,16 +545,14 @@ gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
     {
-      GstTagList *taglist = NULL;
+      GstTagList *taglist;
       GstTagSetter *setter = GST_TAG_SETTER (filter);
       const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       gst_event_parse_tag (event, &taglist);
       gst_tag_setter_merge_tags (setter, taglist, mode);
-
-
-    }
       break;
+    }
     default:
       break;
   }

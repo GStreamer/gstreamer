@@ -1,3 +1,13 @@
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/celt/gstceltenc.c:
+	* ext/celt/gstceltenc.h:
+	* ext/metadata/gstmetadatamux.c:
+	* gst/qtmux/gstqtmux.c:
+	* gst/qtmux/gstqtmux.h:
+	  Totally remove the internal taglists and fully use tagsetter. Fixes
+	  various tag muxing issues.
+
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/elements/mxfdemux.c: (mxfdemux_suite):

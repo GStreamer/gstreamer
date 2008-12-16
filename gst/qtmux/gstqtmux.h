@@ -97,8 +97,6 @@ struct _GstQTMux
   /* fast start */
   FILE *fast_start_file;
 
-  GstTagList *tags;
-
   /* properties */
   guint32 timescale;
   AtomsTreeFlavor flavor;

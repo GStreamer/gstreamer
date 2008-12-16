@@ -513,29 +513,28 @@ gst_celt_enc_init (GstCeltEnc * enc, GstCeltEncClass * klass)
 static GstBuffer *
 gst_celt_enc_create_metadata_buffer (GstCeltEnc * enc)
 {
-  const GstTagList *user_tags;
-  GstTagList *merged_tags;
+  const GstTagList *tags;
+  GstTagList *empty_tags;
   GstBuffer *comments = NULL;
 
-  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc));
+  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc));
 
-  GST_DEBUG_OBJECT (enc, "upstream tags = %" GST_PTR_FORMAT, enc->tags);
-  GST_DEBUG_OBJECT (enc, "user-set tags = %" GST_PTR_FORMAT, user_tags);
+  GST_DEBUG_OBJECT (enc, "tags = %" GST_PTR_FORMAT, tags);
 
-  /* gst_tag_list_merge() will handle NULL for either or both lists fine */
-  merged_tags = gst_tag_list_merge (user_tags, enc->tags,
-      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
-
-  if (merged_tags == NULL)
-    merged_tags = gst_tag_list_new ();
-
-  GST_DEBUG_OBJECT (enc, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
-  comments = gst_tag_list_to_vorbiscomment_buffer (merged_tags, NULL,
+  if (tags == NULL) {
+    /* FIXME: better fix chain of callers to not write metadata at all,
+     * if there is none */
+    empty_tags = gst_tag_list_new ();
+    tags = empty_tags;
+  }
+  comments = gst_tag_list_to_vorbiscomment_buffer (tags, NULL,
       0, "Encoded with GStreamer Celtenc");
-  gst_tag_list_free (merged_tags);
 
   GST_BUFFER_OFFSET (comments) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (comments) = 0;
+
+  if (empty_tags)
+    gst_tag_list_free (empty_tags);
 
   return comments;
 }
@@ -685,12 +684,11 @@ gst_celt_enc_sinkevent (GstPad * pad, GstEvent * event)
     case GST_EVENT_TAG:
     {
       GstTagList *list;
+      GstTagSetter *setter = GST_TAG_SETTER (enc);
+      const GstTagMergeMode mode = gst_tag_setter_get_tag_merge_mode (setter);
 
       gst_event_parse_tag (event, &list);
-      if (enc->tags) {
-        gst_tag_list_insert (enc->tags, list,
-            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
-      }
+      gst_tag_setter_merge_tags (setter, list, mode);
       res = gst_pad_event_default (pad, event);
       break;
     }
@@ -983,7 +981,6 @@ gst_celt_enc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      enc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       enc->frameno = 0;
@@ -1020,8 +1017,7 @@ gst_celt_enc_change_state (GstElement * element, GstStateChange transition)
       memset (&enc->header, 0, sizeof (enc->header));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_tag_list_free (enc->tags);
-      enc->tags = NULL;
+      gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
     default:
       break;
   }

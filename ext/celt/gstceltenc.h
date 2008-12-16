@@ -73,8 +73,6 @@ struct _GstCeltEnc {
   guint64               samples_in;
   guint64               bytes_out;
 
-  GstTagList            *tags;
-
   guint64               frameno;
   guint64               frameno_out;
 
