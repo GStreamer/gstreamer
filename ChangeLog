@@ -1,5 +1,10 @@
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	  Require core cvs.
+
+2008-12-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/avi/gstavimux.c:
 	  Rename api from _flush to _reset_tags. 
 
