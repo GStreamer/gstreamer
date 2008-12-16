@@ -13,7 +13,7 @@ TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
         GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
-        STATE_IGNORE_ELEMENTS="alsaspdifsink apexsink cdaudio dc1394src dvbsrc dvbbasebin dfbvideosink festival nassink sdlaudiosink sdlvideosink vcdsrc"
+        STATE_IGNORE_ELEMENTS="alsaspdifsink apexsink cdaudio dc1394src dvbsrc dvbbasebin dfbvideosink festival nassink sdlaudiosink sdlvideosink vcdsrc rfbsrc"
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 

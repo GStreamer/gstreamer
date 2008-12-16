@@ -1,3 +1,8 @@
+2008-12-16  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	Blacklist rfbsrc from the state change test.
+
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* tests/check/Makefile.am:
