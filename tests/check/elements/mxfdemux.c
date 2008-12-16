@@ -82,6 +82,10 @@ static gboolean
 _sink_event (GstPad * pad, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    if (loop) {
+      while (!g_main_loop_is_running (loop));
+    }
+
     have_eos = TRUE;
     if (loop)
       g_main_loop_quit (loop);

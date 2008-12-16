@@ -1,5 +1,14 @@
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* tests/check/elements/mxfdemux.c: (_sink_event):
+	* tests/check/elements/mxfdemux.h:
+	Make sure the main loop is already running when handling the EOS
+	event in pull mode. This works around a race condition that can
+	happen if the element goes into PLAYING, handles everything and
+	sends EOS before the main loop is started.
+
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfaes-bwf.c: (mxf_is_aes_bwf_essence_track),
 	(mxf_bwf_handle_essence_element),
 	(mxf_aes3_handle_essence_element), (mxf_bwf_create_caps),
