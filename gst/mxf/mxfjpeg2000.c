@@ -38,18 +38,18 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
-gboolean
-mxf_is_jpeg2000_essence_track (const MXFMetadataTrack * track)
+static gboolean
+mxf_is_jpeg2000_essence_track (const MXFMetadataTimelineTrack * track)
 {
   guint i;
 
   g_return_val_if_fail (track != NULL, FALSE);
 
-  if (track->descriptor == NULL)
+  if (track->parent.descriptor == NULL)
     return FALSE;
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->descriptor[i];
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
     MXFUL *key;
 
     if (!d)
@@ -68,9 +68,10 @@ mxf_is_jpeg2000_essence_track (const MXFMetadataTrack * track)
 
 static GstFlowReturn
 mxf_jpeg2000_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps,
+    MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -84,10 +85,9 @@ mxf_jpeg2000_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 }
 
 
-GstCaps *
-mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+static GstCaps *
+mxf_jpeg2000_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   MXFMetadataFileDescriptor *f = NULL;
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
@@ -95,26 +95,26 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   GstCaps *caps = NULL;
   guint32 fourcc;
 
-  g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
 
-  if (track->descriptor == NULL) {
+  if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   }
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    if (!track->descriptor[i])
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
       continue;
 
     if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
-      f = track->descriptor[i];
+            parent.descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
+      f = track->parent.descriptor[i];
       break;
-    } else if (MXF_IS_METADATA_FILE_DESCRIPTOR (track->descriptor[i]) &&
-        !MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (track->descriptor[i])) {
-      f = track->descriptor[i];
+    } else if (MXF_IS_METADATA_FILE_DESCRIPTOR (track->parent.descriptor[i]) &&
+        !MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (track->parent.descriptor[i])) {
+      f = track->parent.descriptor[i];
     }
   }
 
@@ -198,7 +198,13 @@ mxf_jpeg2000_create_caps (MXFMetadataGenericPackage * package,
   return caps;
 }
 
+static const MXFEssenceElementHandler mxf_jpeg2000_essence_element_handler = {
+  mxf_is_jpeg2000_essence_track,
+  mxf_jpeg2000_create_caps
+};
+
 void
 mxf_jpeg2000_init (void)
 {
+  mxf_essence_element_handler_register (&mxf_jpeg2000_essence_element_handler);
 }

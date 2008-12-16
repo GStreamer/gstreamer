@@ -91,6 +91,35 @@ static const guint8 _profile_and_level_ul[] = {
   0x0a, 0x00, 0x00
 };
 
+/* SMPTE 381M 8.1 */
+#define MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR \
+  (mxf_metadata_mpeg_video_descriptor_get_type())
+#define MXF_METADATA_MPEG_VIDEO_DESCRIPTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR, MXFMetadataMPEGVideoDescriptor))
+#define MXF_IS_METADATA_MPEG_VIDEO_DESCRIPTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR))
+typedef struct _MXFMetadataMPEGVideoDescriptor MXFMetadataMPEGVideoDescriptor;
+typedef MXFMetadataBaseClass MXFMetadataMPEGVideoDescriptorClass;
+GType mxf_metadata_mpeg_video_descriptor_get_type (void);
+
+struct _MXFMetadataMPEGVideoDescriptor
+{
+  MXFMetadataCDCIPictureEssenceDescriptor parent;
+
+  gboolean single_sequence;
+  gboolean const_b_frames;
+  guint8 coded_content_type;
+  gboolean low_delay;
+
+  gboolean closed_gop;
+  gboolean identical_gop;
+  guint16 max_gop;
+
+  guint16 b_picture_count;
+  guint32 bitrate;
+  guint8 profile_and_level;
+};
+
 G_DEFINE_TYPE (MXFMetadataMPEGVideoDescriptor,
     mxf_metadata_mpeg_video_descriptor,
     MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
@@ -195,18 +224,18 @@ static void
       mxf_metadata_mpeg_video_descriptor_handle_tag;
 }
 
-gboolean
-mxf_is_mpeg_essence_track (const MXFMetadataTrack * track)
+static gboolean
+mxf_is_mpeg_essence_track (const MXFMetadataTimelineTrack * track)
 {
   guint i;
 
   g_return_val_if_fail (track != NULL, FALSE);
 
-  if (track->descriptor == NULL)
+  if (track->parent.descriptor == NULL)
     return FALSE;
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->descriptor[i];
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
     MXFUL *key;
 
     if (!d)
@@ -226,9 +255,9 @@ mxf_is_mpeg_essence_track (const MXFMetadataTrack * track)
 
 static GstFlowReturn
 mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps, MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -244,9 +273,9 @@ mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
 static GstFlowReturn
 mxf_mpeg_audio_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps, MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -300,9 +329,8 @@ static const MXFUL sound_essence_compression_dts = { {
 };
 
 static GstCaps *
-mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data,
+mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data,
     MXFMetadataGenericPictureEssenceDescriptor * p,
     MXFMetadataGenericSoundEssenceDescriptor * s)
 {
@@ -430,10 +458,9 @@ mxf_mpeg_es_create_caps (MXFMetadataGenericPackage * package,
   return caps;
 }
 
-GstCaps *
-mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+static GstCaps *
+mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   MXFMetadataFileDescriptor *f = NULL;
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
@@ -441,27 +468,28 @@ mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
   guint i;
   GstCaps *caps = NULL;
 
-  g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
 
-  if (track->descriptor == NULL) {
+  if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   }
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    if (!track->descriptor[i])
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
       continue;
 
     if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])) {
-      f = track->descriptor[i];
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
+            parent.descriptor[i])) {
+      f = track->parent.descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])) {
-      f = track->descriptor[i];
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+            parent.descriptor[i])) {
+      f = track->parent.descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     }
   }
@@ -475,9 +503,7 @@ mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
   if (f->essence_container.u[13] == 0x04) {
     GST_DEBUG ("Found MPEG ES stream");
 
-    caps =
-        mxf_mpeg_es_create_caps (package, track, tags, handler, mapping_data, p,
-        s);
+    caps = mxf_mpeg_es_create_caps (track, tags, handler, mapping_data, p, s);
   } else if (f->essence_container.u[13] == 0x07) {
     GST_ERROR ("MPEG PES streams not supported yet");
     return NULL;
@@ -507,8 +533,14 @@ mxf_mpeg_create_caps (MXFMetadataGenericPackage * package,
   return caps;
 }
 
+static const MXFEssenceElementHandler mxf_mpeg_essence_element_handler = {
+  mxf_is_mpeg_essence_track,
+  mxf_mpeg_create_caps
+};
+
 void
 mxf_mpeg_init (void)
 {
   mxf_metadata_register (0x0151, MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR);
+  mxf_essence_element_handler_register (&mxf_mpeg_essence_element_handler);
 }

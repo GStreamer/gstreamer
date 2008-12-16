@@ -28,11 +28,6 @@
 
 #include "mxfparse.h"
 
-gboolean mxf_is_dv_dif_essence_track (const MXFMetadataTrack *track);
-
-GstCaps *
-mxf_dv_dif_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
-
 void mxf_dv_dif_init (void);
 
 #endif /* __MXF_DV_DIF_H__ */

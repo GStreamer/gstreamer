@@ -27,7 +27,12 @@
 #include "mxftypes.h"
 #include "mxfmetadata.h"
 
-typedef GstFlowReturn (*MXFEssenceElementHandler) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataGenericPackage *package, MXFMetadataTrack *track, MXFMetadataStructuralComponent *component, gpointer mapping_data, GstBuffer **outbuf);
+typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, MXFMetadataStructuralComponent *component, gpointer mapping_data, GstBuffer **outbuf);
+
+typedef struct {
+  gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);
+  GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
+} MXFEssenceElementHandler;
 
 gchar * mxf_ul_to_string (const MXFUL *ul, gchar str[48]);
 gboolean mxf_ul_is_equal (const MXFUL *a, const MXFUL *b);
@@ -89,6 +94,9 @@ void gst_mxf_local_tag_free (MXFLocalTag *tag);
 gboolean mxf_local_tag_add_to_hash_table (const MXFPrimerPack *primer,
   guint16 tag, const guint8 *tag_data, guint16 tag_size,
   GHashTable **hash_table);
+
+void mxf_essence_element_handler_register (const MXFEssenceElementHandler *handler);
+const MXFEssenceElementHandler * mxf_essence_element_handler_find (const MXFMetadataTimelineTrack *track);
 
 #endif /* __MXF_PARSE_H__ */
 

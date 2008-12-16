@@ -28,11 +28,6 @@
 
 #include "mxfparse.h"
 
-gboolean mxf_is_up_essence_track (const MXFMetadataTrack *track);
-
-GstCaps *
-mxf_up_create_caps (MXFMetadataGenericPackage *package, MXFMetadataTrack *track, GstTagList **tags, MXFEssenceElementHandler *handler, gpointer *mapping_data);
-
 void mxf_up_init (void);
 
 #endif /* __MXF_UP_H__ */

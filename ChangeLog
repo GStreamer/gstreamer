@@ -1,3 +1,46 @@
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c: (mxf_is_aes_bwf_essence_track),
+	(mxf_bwf_handle_essence_element),
+	(mxf_aes3_handle_essence_element), (mxf_bwf_create_caps),
+	(mxf_aes3_create_caps), (mxf_aes_bwf_create_caps),
+	(mxf_aes_bwf_init):
+	* gst/mxf/mxfaes-bwf.h:
+	* gst/mxf/mxfalaw.c: (mxf_is_alaw_essence_track),
+	(mxf_alaw_handle_essence_element), (mxf_alaw_create_caps),
+	(mxf_alaw_init):
+	* gst/mxf/mxfalaw.h:
+	* gst/mxf/mxfd10.c: (mxf_is_d10_essence_track),
+	(mxf_d10_picture_handle_essence_element),
+	(mxf_d10_sound_handle_essence_element), (mxf_d10_create_caps),
+	(mxf_d10_init):
+	* gst/mxf/mxfd10.h:
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_reset_metadata),
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_handle_generic_container_essence_element):
+	* gst/mxf/mxfdv-dif.c: (mxf_is_dv_dif_essence_track),
+	(mxf_dv_dif_handle_essence_element), (mxf_dv_dif_create_caps),
+	(mxf_dv_dif_init):
+	* gst/mxf/mxfdv-dif.h:
+	* gst/mxf/mxfjpeg2000.c: (mxf_is_jpeg2000_essence_track),
+	(mxf_jpeg2000_handle_essence_element), (mxf_jpeg2000_create_caps),
+	(mxf_jpeg2000_init):
+	* gst/mxf/mxfjpeg2000.h:
+	* gst/mxf/mxfmpeg.c: (mxf_is_mpeg_essence_track),
+	(mxf_mpeg_video_handle_essence_element),
+	(mxf_mpeg_audio_handle_essence_element), (mxf_mpeg_es_create_caps),
+	(mxf_mpeg_create_caps), (mxf_mpeg_init):
+	* gst/mxf/mxfmpeg.h:
+	* gst/mxf/mxfparse.c: (mxf_essence_element_handler_register),
+	(mxf_essence_element_handler_find):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxfup.c: (mxf_is_up_essence_track),
+	(mxf_up_handle_essence_element), (mxf_up_rgba_create_caps),
+	(mxf_up_create_caps), (mxf_up_init):
+	* gst/mxf/mxfup.h:
+	Implement an essence element handling registry and use this instead
+	of an hardcoded, large if-then-else block.
+
 2008-12-16  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* tests/check/Makefile.am:

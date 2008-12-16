@@ -1015,3 +1015,30 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
 
   return TRUE;
 }
+
+static GSList *_mxf_essence_element_handler_registry = NULL;
+
+void
+mxf_essence_element_handler_register (const MXFEssenceElementHandler * handler)
+{
+  _mxf_essence_element_handler_registry =
+      g_slist_prepend (_mxf_essence_element_handler_registry,
+      (gpointer) handler);
+}
+
+const MXFEssenceElementHandler *
+mxf_essence_element_handler_find (const MXFMetadataTimelineTrack * track)
+{
+  GSList *l;
+  const MXFEssenceElementHandler *ret = NULL;
+
+  for (l = _mxf_essence_element_handler_registry; l; l = l->next) {
+    MXFEssenceElementHandler *current = l->data;
+
+    if (current->handles_track (track)) {
+      ret = current;
+    }
+  }
+
+  return ret;
+}

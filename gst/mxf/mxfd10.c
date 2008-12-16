@@ -40,18 +40,18 @@ typedef struct
   guint width, channels;
 } MXFD10AudioMappingData;
 
-gboolean
-mxf_is_d10_essence_track (const MXFMetadataTrack * track)
+static gboolean
+mxf_is_d10_essence_track (const MXFMetadataTimelineTrack * track)
 {
   guint i;
 
   g_return_val_if_fail (track != NULL, FALSE);
 
-  if (track->descriptor == NULL)
+  if (track->parent.descriptor == NULL)
     return FALSE;
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->descriptor[i];
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
     MXFUL *key;
 
     if (!d)
@@ -71,9 +71,10 @@ mxf_is_d10_essence_track (const MXFMetadataTrack * track)
 
 static GstFlowReturn
 mxf_d10_picture_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps,
+    MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -88,9 +89,10 @@ mxf_d10_picture_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
 static GstFlowReturn
 mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps,
+    MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   guint i, j, nsamples;
   const guint8 *indata;
@@ -153,35 +155,35 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   return GST_FLOW_OK;
 }
 
-GstCaps *
-mxf_d10_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+static GstCaps *
+mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
   guint i;
   GstCaps *caps = NULL;
 
-  g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
 
-  if (track->descriptor == NULL) {
+  if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   }
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    if (!track->descriptor[i])
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
       continue;
 
     if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
+            parent.descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+            parent.descriptor[i])) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     }
   }
@@ -243,7 +245,13 @@ mxf_d10_create_caps (MXFMetadataGenericPackage * package,
   return caps;
 }
 
+static const MXFEssenceElementHandler mxf_d10_essence_element_handler = {
+  mxf_is_d10_essence_track,
+  mxf_d10_create_caps
+};
+
 void
 mxf_d10_init (void)
 {
+  mxf_essence_element_handler_register (&mxf_d10_essence_element_handler);
 }

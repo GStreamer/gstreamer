@@ -41,6 +41,78 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
 /* SMPTE 382M Annex 1 */
+#define MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR \
+  (mxf_metadata_wave_audio_essence_descriptor_get_type())
+#define MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR, MXFMetadataWaveAudioEssenceDescriptor))
+#define MXF_IS_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR))
+typedef struct _MXFMetadataWaveAudioEssenceDescriptor
+    MXFMetadataWaveAudioEssenceDescriptor;
+typedef MXFMetadataBaseClass MXFMetadataWaveAudioEssenceDescriptorClass;
+GType mxf_metadata_wave_audio_essence_descriptor_get_type (void);
+
+struct _MXFMetadataWaveAudioEssenceDescriptor
+{
+  MXFMetadataGenericSoundEssenceDescriptor parent;
+
+  guint16 block_align;
+  guint8 sequence_offset;
+
+  guint32 avg_bps;
+
+  MXFUL channel_assignment;
+
+  guint32 peak_envelope_version;
+  guint32 peak_envelope_format;
+  guint32 points_per_peak_value;
+  guint32 peak_envelope_block_size;
+  guint32 peak_channels;
+  guint32 peak_frames;
+  gint64 peak_of_peaks_position;
+  MXFTimestamp peak_envelope_timestamp;
+
+  guint8 *peak_envelope_data;
+  guint16 peak_envelope_data_length;
+};
+
+/* SMPTE 382M Annex 2 */
+#define MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR \
+  (mxf_metadata_aes3_audio_essence_descriptor_get_type())
+#define MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR, MXFMetadataAES3AudioEssenceDescriptor))
+#define MXF_IS_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR))
+typedef struct _MXFMetadataAES3AudioEssenceDescriptor
+    MXFMetadataAES3AudioEssenceDescriptor;
+typedef MXFMetadataBaseClass MXFMetadataAES3AudioEssenceDescriptorClass;
+GType mxf_metadata_aes3_audio_essence_descriptor_get_type (void);
+
+struct _MXFMetadataAES3AudioEssenceDescriptor
+{
+  MXFMetadataWaveAudioEssenceDescriptor parent;
+
+  guint8 emphasis;
+  guint16 block_start_offset;
+  guint8 auxiliary_bits_mode;
+
+  guint32 n_channel_status_mode;
+  guint8 *channel_status_mode;
+
+  guint32 n_fixed_channel_status_data;
+  guint8 **fixed_channel_status_data;
+
+  guint32 n_user_data_mode;
+  guint8 *user_data_mode;
+
+  guint32 n_fixed_user_data;
+  guint8 **fixed_user_data;
+
+  guint32 linked_timecode_track_id;
+  guint8 stream_number;
+};
+
+/* SMPTE 382M Annex 1 */
 G_DEFINE_TYPE (MXFMetadataWaveAudioEssenceDescriptor,
     mxf_metadata_wave_audio_essence_descriptor,
     MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
@@ -463,20 +535,20 @@ static void
       mxf_metadata_aes3_audio_essence_descriptor_handle_tag;
 }
 
-gboolean
-mxf_is_aes_bwf_essence_track (const MXFMetadataTrack * track)
+static gboolean
+mxf_is_aes_bwf_essence_track (const MXFMetadataTimelineTrack * track)
 {
   guint i;
 
   g_return_val_if_fail (track != NULL, FALSE);
 
-  if (track->descriptor == NULL) {
+  if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor for this track");
     return FALSE;
   }
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->descriptor[i];
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
     MXFUL *key;
 
     if (!d)
@@ -500,9 +572,10 @@ mxf_is_aes_bwf_essence_track (const MXFMetadataTrack * track)
 
 static GstFlowReturn
 mxf_bwf_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps,
+    MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -519,9 +592,9 @@ mxf_bwf_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
 static GstFlowReturn
 mxf_aes3_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps, MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -555,10 +628,9 @@ static const MXFUL mxf_sound_essence_compression_alaw =
 };
 
 static GstCaps *
-mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track,
+mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
     MXFMetadataGenericSoundEssenceDescriptor * descriptor, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   GstCaps *ret = NULL;
   MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
@@ -653,6 +725,8 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
         mxf_ul_to_string (&descriptor->sound_essence_compression, str));
   }
 
+  *handler = mxf_bwf_handle_essence_element;
+
   if (!*tags)
     *tags = gst_tag_list_new ();
 
@@ -666,16 +740,13 @@ mxf_bwf_create_caps (MXFMetadataGenericPackage * package,
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
         wa_descriptor->avg_bps * 8, NULL);
 
-  *handler = mxf_bwf_handle_essence_element;
-
   return ret;
 }
 
 static GstCaps *
-mxf_aes3_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track,
+mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
     MXFMetadataGenericSoundEssenceDescriptor * descriptor, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   GstCaps *ret = NULL;
   MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
@@ -726,42 +797,43 @@ mxf_aes3_create_caps (MXFMetadataGenericPackage * package,
   return ret;
 }
 
-GstCaps *
-mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+static GstCaps *
+mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   MXFMetadataGenericSoundEssenceDescriptor *s = NULL;
   gboolean bwf = FALSE;
   guint i;
 
-  g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
 
-  if (track->descriptor == NULL) {
+  if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   }
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    if (!track->descriptor[i])
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->descriptor[i])
-        && (track->descriptor[i]->essence_container.u[14] == 0x01
-            || track->descriptor[i]->essence_container.u[14] == 0x02
-            || track->descriptor[i]->essence_container.u[14] == 0x08)) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])
+        && (track->parent.descriptor[i]->essence_container.u[14] == 0x01
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x02
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x08)) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       bwf = TRUE;
       break;
     } else
-        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->descriptor
-            [i])
-        && (track->descriptor[i]->essence_container.u[14] == 0x03
-            || track->descriptor[i]->essence_container.u[14] == 0x04
-            || track->descriptor[i]->essence_container.u[14] == 0x09)) {
+        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])
+        && (track->parent.descriptor[i]->essence_container.u[14] == 0x03
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x04
+            || track->parent.descriptor[i]->essence_container.u[14] == 0x09)) {
 
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       bwf = FALSE;
       break;
     }
@@ -771,14 +843,18 @@ mxf_aes_bwf_create_caps (MXFMetadataGenericPackage * package,
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   } else if (bwf) {
-    return mxf_bwf_create_caps (package, track, s, tags, handler, mapping_data);
+    return mxf_bwf_create_caps (track, s, tags, handler, mapping_data);
   } else {
-    return mxf_aes3_create_caps (package, track, s, tags, handler,
-        mapping_data);
+    return mxf_aes3_create_caps (track, s, tags, handler, mapping_data);
   }
 
   return NULL;
 }
+
+static const MXFEssenceElementHandler mxf_aes_bwf_essence_handler = {
+  mxf_is_aes_bwf_essence_track,
+  mxf_aes_bwf_create_caps
+};
 
 void
 mxf_aes_bwf_init (void)
@@ -787,4 +863,6 @@ mxf_aes_bwf_init (void)
       MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
   mxf_metadata_register (0x0147,
       MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR);
+
+  mxf_essence_element_handler_register (&mxf_aes_bwf_essence_handler);
 }

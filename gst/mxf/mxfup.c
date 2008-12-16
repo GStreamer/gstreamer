@@ -49,18 +49,18 @@ typedef struct
   guint32 image_end_offset;
 } MXFUPMappingData;
 
-gboolean
-mxf_is_up_essence_track (const MXFMetadataTrack * track)
+static gboolean
+mxf_is_up_essence_track (const MXFMetadataTimelineTrack * track)
 {
   guint i;
 
   g_return_val_if_fail (track != NULL, FALSE);
 
-  if (track->descriptor == NULL)
+  if (track->parent.descriptor == NULL)
     return FALSE;
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->descriptor[i];
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
     MXFUL *key;
 
     if (!d)
@@ -78,9 +78,10 @@ mxf_is_up_essence_track (const MXFMetadataTrack * track)
 
 static GstFlowReturn
 mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
-    GstCaps * caps, MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataStructuralComponent * component,
-    gpointer mapping_data, GstBuffer ** outbuf)
+    GstCaps * caps,
+    MXFMetadataTimelineTrack * track,
+    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    GstBuffer ** outbuf)
 {
   MXFUPMappingData *data = mapping_data;
 
@@ -111,10 +112,9 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 }
 
 static GstCaps *
-mxf_up_rgba_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, MXFMetadataRGBAPictureEssenceDescriptor * d,
-    GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
+    MXFMetadataRGBAPictureEssenceDescriptor * d, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   GstCaps *caps = NULL;
 
@@ -201,10 +201,9 @@ mxf_up_rgba_create_caps (MXFMetadataGenericPackage * package,
   return caps;
 }
 
-GstCaps *
-mxf_up_create_caps (MXFMetadataGenericPackage * package,
-    MXFMetadataTrack * track, GstTagList ** tags,
-    MXFEssenceElementHandler * handler, gpointer * mapping_data)
+static GstCaps *
+mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   MXFMetadataGenericPictureEssenceDescriptor *p = NULL;
   MXFMetadataCDCIPictureEssenceDescriptor *c = NULL;
@@ -212,26 +211,30 @@ mxf_up_create_caps (MXFMetadataGenericPackage * package,
   guint i;
   GstCaps *caps = NULL;
 
-  g_return_val_if_fail (package != NULL, NULL);
   g_return_val_if_fail (track != NULL, NULL);
 
-  if (track->descriptor == NULL) {
+  if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   }
 
-  for (i = 0; i < track->n_descriptor; i++) {
-    if (!track->descriptor[i])
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
-      r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->descriptor[i];
+    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
+      r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     } else if (MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (track->
-            descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->descriptor[i];
-      c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->descriptor[i];
+            parent.descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
+      c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
     }
   }
 
@@ -243,9 +246,7 @@ mxf_up_create_caps (MXFMetadataGenericPackage * package,
   *handler = mxf_up_handle_essence_element;
 
   if (r) {
-    caps =
-        mxf_up_rgba_create_caps (package, track, r, tags, handler,
-        mapping_data);
+    caps = mxf_up_rgba_create_caps (track, r, tags, handler, mapping_data);
   } else {
     GST_ERROR ("CDCI uncompressed picture essence not supported yet");
     return NULL;
@@ -258,7 +259,13 @@ mxf_up_create_caps (MXFMetadataGenericPackage * package,
   return caps;
 }
 
+static const MXFEssenceElementHandler mxf_up_essence_element_handler = {
+  mxf_is_up_essence_track,
+  mxf_up_create_caps
+};
+
 void
 mxf_up_init (void)
 {
+  mxf_essence_element_handler_register (&mxf_up_essence_element_handler);
 }

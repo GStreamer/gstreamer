@@ -43,8 +43,6 @@
  *     timestamp calculation, etc.
  *   - Handle timecode tracks correctly (where is this documented?)
  *   - Handle Generic container system items
- *   - Use an "essence element/track handling" registry instead of the large if-then-else
- *     block when detecting the codec
  *   - Force synchronization of tracks. Packets that have the timestamp are not required
  *     to be stored at the same position in the essence stream, especially if tracks
  *     with different source packages (body sid) are used.
@@ -69,13 +67,6 @@
 #include "mxfdemux.h"
 #include "mxfparse.h"
 #include "mxfmetadata.h"
-#include "mxfaes-bwf.h"
-#include "mxfmpeg.h"
-#include "mxfdv-dif.h"
-#include "mxfalaw.h"
-#include "mxfjpeg2000.h"
-#include "mxfd10.h"
-#include "mxfup.h"
 
 #include <string.h>
 
@@ -109,8 +100,9 @@ typedef struct
   GstFlowReturn last_flow;
 
   guint64 essence_element_count;
-  MXFEssenceElementHandler handle_essence_element;
   gpointer mapping_data;
+  const MXFEssenceElementHandler *handler;
+  MXFEssenceElementHandleFunc handle_func;
 
   GstTagList *tags;
 
@@ -234,6 +226,9 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
   if (demux->src) {
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
+
+      pad->handler = NULL;
+      pad->handle_func = NULL;
 
       pad->material_track = NULL;
       pad->material_package = NULL;
@@ -559,11 +554,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -736,89 +731,22 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
     pad->source_package = source_package;
     pad->source_track = source_track;
 
-    pad->handle_essence_element = NULL;
+    pad->handler = NULL;
     g_free (pad->mapping_data);
+    pad->handle_func = NULL;
     pad->mapping_data = NULL;
 
-    switch (track->parent.type) {
-      case MXF_METADATA_TRACK_PICTURE_ESSENCE:
-        if (mxf_is_mpeg_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_mpeg_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_dv_dif_essence_track ((MXFMetadataTrack *)
-                source_track))
-          caps =
-              mxf_dv_dif_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_jpeg2000_essence_track ((MXFMetadataTrack *)
-                source_track))
-          caps =
-              mxf_jpeg2000_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_d10_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_d10_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_up_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_up_create_caps (MXF_METADATA_GENERIC_PACKAGE (source_package),
-              (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        break;
-      case MXF_METADATA_TRACK_SOUND_ESSENCE:
-        if (mxf_is_aes_bwf_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_aes_bwf_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_dv_dif_essence_track ((MXFMetadataTrack *)
-                source_track))
-          caps =
-              mxf_dv_dif_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_alaw_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_alaw_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_mpeg_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_mpeg_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_d10_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_d10_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        break;
-      case MXF_METADATA_TRACK_DATA_ESSENCE:
-        if (mxf_is_dv_dif_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_dv_dif_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_mpeg_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_mpeg_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        else if (mxf_is_d10_essence_track ((MXFMetadataTrack *) source_track))
-          caps =
-              mxf_d10_create_caps (MXF_METADATA_GENERIC_PACKAGE
-              (source_package), (MXFMetadataTrack *) source_track, &pad->tags,
-              &pad->handle_essence_element, &pad->mapping_data);
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
+    pad->handler = mxf_essence_element_handler_find (source_track);
+
+    if (!pad->handler) {
+      GST_WARNING_OBJECT (demux, "No essence element handler for track found");
+      gst_object_unref (pad);
+      continue;
     }
+
+    caps =
+        pad->handler->create_caps (source_track, &pad->tags, &pad->handle_func,
+        &pad->mapping_data);
 
     if (!caps) {
       GST_WARNING_OBJECT (demux, "No caps created, ignoring stream");
@@ -1081,13 +1009,11 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
   GST_BUFFER_OFFSET_END (inbuf) = GST_BUFFER_OFFSET_NONE;
   gst_buffer_set_caps (inbuf, pad->caps);
 
-  if (pad->handle_essence_element) {
+  if (pad->handle_func) {
     /* Takes ownership of inbuf */
     ret =
-        pad->handle_essence_element (key, inbuf, pad->caps,
-        (MXFMetadataGenericPackage *) pad->source_package,
-        (MXFMetadataTrack *) pad->source_track, pad->component,
-        pad->mapping_data, &outbuf);
+        pad->handle_func (key, inbuf, pad->caps,
+        pad->source_track, pad->component, pad->mapping_data, &outbuf);
     inbuf = NULL;
   } else {
     outbuf = inbuf;
