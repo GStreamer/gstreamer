@@ -466,6 +466,20 @@ gst_mythtv_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-mxfdemux</FILE>
+<TITLE>mxfdemux</TITLE>
+GstMXFDemux
+<SUBSECTION Standard>
+GstMXFDemuxClass
+GST_IS_MXF_DEMUX
+GST_IS_MXF_DEMUX_CLASS
+GST_MXF_DEMUX
+GST_MXF_DEMUX_CLASS
+GST_TYPE_MXF_DEMUX
+gst_mxf_demux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-nuvdemux</FILE>
 <TITLE>nuvdemux</TITLE>
 GstNuvDemux

@@ -1,5 +1,21 @@
 2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/inspect/plugin-ladspa.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	* docs/plugins/inspect/plugin-mxf.xml:
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfdemux.h:
+	Add initial documentation for the MXF plugin and mxfdemux.
+
+2008-12-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c:
 	(gst_mxf_demux_handle_header_metadata_resolve_references):
 	* gst/mxf/mxfmetadata.c: (mxf_metadata_base_resolve_default),

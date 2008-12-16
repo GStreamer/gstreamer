@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-mxfdemux
+ *
+ * mxfdemux demuxes an MXF file into the different contained streams.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/mxf ! mxfdemux ! audioconvert ! autoaudiosink
+ * ]| This pipeline demuxes an MXF file and outputs one of the contained raw audio streams.
+ * </refsect2>
+ */
+
 /* TODO:
  *   - Implement support for DMS-1 and descriptive metadata tracks
  *   - Differentiate UL and UUIDs, the former can define an object system
@@ -546,11 +559,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }

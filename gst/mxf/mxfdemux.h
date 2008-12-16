@@ -48,6 +48,8 @@ struct _GstMXFDemux
   GstPad *sinkpad;
   GPtrArray *src;
 
+  /* < private > */
+
   GstAdapter *adapter;
 
   GstSegment segment;

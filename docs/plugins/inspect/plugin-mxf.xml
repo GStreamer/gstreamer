@@ -1,0 +1,34 @@
+<plugin>
+  <name>mxf</name>
+  <description>MXF plugin library</description>
+  <filename>../../gst/mxf/.libs/libgstmxf.so</filename>
+  <basename>libgstmxf.so</basename>
+  <version>0.10.9.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mxfdemux</name>
+      <longname>MXF Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demux MXF files</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>track_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/mxf</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

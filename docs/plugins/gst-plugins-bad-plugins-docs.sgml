@@ -47,6 +47,7 @@
     <xi:include href="xml/element-mpeg2enc.xml" />
     <xi:include href="xml/element-mplex.xml" />
     <xi:include href="xml/element-mythtvsrc.xml" />
+    <xi:include href="xml/element-mxfdemux.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
     <xi:include href="xml/element-scaletempo.xml" />
@@ -111,6 +112,7 @@
     <xi:include href="xml/plugin-musepack.xml" />
     <xi:include href="xml/plugin-musicbrainz.xml" />
     <xi:include href="xml/plugin-mve.xml" />
+    <xi:include href="xml/plugin-mxf.xml" />
     <xi:include href="xml/plugin-nas.xml" />
     <xi:include href="xml/plugin-neon.xml" />
     <xi:include href="xml/plugin-nsfdec.xml" />
