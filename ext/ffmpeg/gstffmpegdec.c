@@ -67,6 +67,7 @@ struct _GstFFMpegDec
     {
       gint channels;
       gint samplerate;
+      gint depth;
     } audio;
   } format;
   gboolean waiting_for_key;
@@ -587,6 +588,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     case CODEC_TYPE_AUDIO:
       ffmpegdec->format.audio.samplerate = 0;
       ffmpegdec->format.audio.channels = 0;
+      ffmpegdec->format.audio.depth = 0;
       break;
     default:
       break;
@@ -707,8 +709,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
         GST_DEBUG_OBJECT (ffmpegdec, "enabled direct rendering");
         ffmpegdec->current_dr = TRUE;
       }
-    }
-    else {
+    } else {
       GST_DEBUG_OBJECT (ffmpegdec, "direct rendering not supported");
     }
   }
@@ -1075,16 +1076,22 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
       ffmpegdec->format.video.pix_fmt = ffmpegdec->context->pix_fmt;
       break;
     case CODEC_TYPE_AUDIO:
+    {
+      gint depth = av_smp_format_depth (ffmpegdec->context->sample_fmt);
       if (ffmpegdec->format.audio.samplerate ==
           ffmpegdec->context->sample_rate &&
-          ffmpegdec->format.audio.channels == ffmpegdec->context->channels)
+          ffmpegdec->format.audio.channels == ffmpegdec->context->channels &&
+          ffmpegdec->format.audio.depth == depth)
         return TRUE;
       GST_DEBUG_OBJECT (ffmpegdec,
-          "Renegotiating audio from %dHz@%dchannels to %dHz@%dchannels",
+          "Renegotiating audio from %dHz@%dchannels (%d) to %dHz@%dchannels (%d)",
           ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
-          ffmpegdec->context->sample_rate, ffmpegdec->context->channels);
+          ffmpegdec->format.audio.depth,
+          ffmpegdec->context->sample_rate, ffmpegdec->context->channels, depth);
       ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
       ffmpegdec->format.audio.channels = ffmpegdec->context->channels;
+      ffmpegdec->format.audio.depth = depth;
+    }
       break;
     default:
       break;
@@ -1738,7 +1745,7 @@ clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
     /* bring clipped time to bytes */
     diff =
         gst_util_uint64_scale_int (diff, dec->format.audio.samplerate,
-        GST_SECOND) * (2 * dec->format.audio.channels);
+        GST_SECOND) * (dec->format.audio.depth * dec->format.audio.channels);
 
     GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
         G_GINT64_FORMAT " bytes", GST_TIME_ARGS (ctime), diff);
@@ -1750,7 +1757,7 @@ clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
     /* bring clipped time to bytes */
     diff =
         gst_util_uint64_scale_int (diff, dec->format.audio.samplerate,
-        GST_SECOND) * (2 * dec->format.audio.channels);
+        GST_SECOND) * (dec->format.audio.depth * dec->format.audio.channels);
 
     GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
         G_GINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
@@ -1824,7 +1831,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
      *  1) calculate based on number of samples
      */
     in_duration = gst_util_uint64_scale_int (have_data, GST_SECOND,
-        2 * ffmpegdec->context->channels * ffmpegdec->context->sample_rate);
+        ffmpegdec->format.audio.depth * ffmpegdec->format.audio.channels *
+        ffmpegdec->format.audio.samplerate);
 
     GST_DEBUG_OBJECT (ffmpegdec,
         "Buffer created. Size:%d , timestamp:%" GST_TIME_FORMAT " , duration:%"

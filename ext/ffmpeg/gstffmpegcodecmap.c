@@ -322,6 +322,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
           rates = l_rates;
           break;
         }
+        case CODEC_ID_EAC3:
         case CODEC_ID_AC3:
         {
           const static gint l_rates[] = { 48000, 44100, 32000 };
@@ -361,6 +362,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
      * they support, we whitelist them here. */
     switch (codec_id) {
       case CODEC_ID_AC3:
+      case CODEC_ID_EAC3:
       case CODEC_ID_AAC:
       case CODEC_ID_DTS:
         maxchannels = 6;
@@ -558,6 +560,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_AC3:
       /* FIXME: bitrate */
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-ac3", NULL);
+      break;
+
+    case CODEC_ID_EAC3:
+      /* FIXME: bitrate */
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-eac3", NULL);
       break;
 
     case CODEC_ID_ATRAC3:
@@ -984,6 +991,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_TRUESPEECH:
       caps =
           gst_ff_aud_caps_new (context, codec_id, "audio/x-truespeech", NULL);
+      break;
+
+    case CODEC_ID_QCELP:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/qcelp", NULL);
       break;
 
     case CODEC_ID_WS_VQA:
@@ -1529,6 +1540,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
   GstCaps *caps = NULL;
 
   int bpp = 0;
+  gboolean integer = TRUE;
   gboolean signedness = FALSE;
 
   switch (sample_fmt) {
@@ -1537,16 +1549,36 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
       bpp = 16;
       break;
 
+    case SAMPLE_FMT_S32:
+      signedness = TRUE;
+      bpp = 32;
+      break;
+
+    case SAMPLE_FMT_FLT:
+      integer = FALSE;
+      bpp = 32;
+      break;
+
+    case SAMPLE_FMT_DBL:
+      integer = FALSE;
+      bpp = 64;
+      break;
     default:
       /* .. */
       break;
   }
 
   if (bpp) {
-    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw-int",
-        "signed", G_TYPE_BOOLEAN, signedness,
-        "endianness", G_TYPE_INT, G_BYTE_ORDER,
-        "width", G_TYPE_INT, bpp, "depth", G_TYPE_INT, bpp, NULL);
+    if (integer) {
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw-int",
+          "signed", G_TYPE_BOOLEAN, signedness,
+          "endianness", G_TYPE_INT, G_BYTE_ORDER,
+          "width", G_TYPE_INT, bpp, "depth", G_TYPE_INT, bpp, NULL);
+    } else {
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-raw-float",
+          "endianness", G_TYPE_INT, G_BYTE_ORDER,
+          "width", G_TYPE_INT, bpp, NULL);
+    }
   }
 
   if (caps != NULL) {
@@ -1603,7 +1635,7 @@ gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
 
         ctx.channels = -1;
         caps = gst_caps_new_empty ();
-        for (i = 0; i <= SAMPLE_FMT_S16; i++) {
+        for (i = 0; i <= SAMPLE_FMT_DBL; i++) {
           temp = gst_ffmpeg_smpfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
           if (temp != NULL) {
             gst_caps_append (caps, temp);
@@ -1646,13 +1678,29 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   if (!raw)
     return;
 
-  if (gst_structure_get_int (structure, "width", &width) &&
-      gst_structure_get_int (structure, "depth", &depth) &&
-      gst_structure_get_boolean (structure, "signed", &signedness) &&
-      gst_structure_get_int (structure, "endianness", &endianness)) {
-    if (width == 16 && depth == 16 &&
-        endianness == G_BYTE_ORDER && signedness == TRUE) {
-      context->sample_fmt = SAMPLE_FMT_S16;
+  if (!strcmp (gst_structure_get_name (structure), "audio/x-raw-float")) {
+    /* FLOAT */
+    if (gst_structure_get_int (structure, "width", &width) &&
+	gst_structure_get_int (structure, "endianness", &endianness)) {
+      if (endianness == G_BYTE_ORDER) {
+	if (width == 32)
+	  context->sample_fmt = SAMPLE_FMT_FLT;
+	else if (width == 64)
+	  context->sample_fmt = SAMPLE_FMT_DBL;
+      }
+    }
+  } else {
+    /* INT */
+    if (gst_structure_get_int (structure, "width", &width) &&
+	gst_structure_get_int (structure, "depth", &depth) &&
+	gst_structure_get_boolean (structure, "signed", &signedness) &&
+	gst_structure_get_int (structure, "endianness", &endianness)) { 
+      if ((endianness == G_BYTE_ORDER) && (signedness == TRUE)) {
+	if ((width == 16) && (depth == 16))
+	  context->sample_fmt = SAMPLE_FMT_S16;
+	else if ((width == 32) && (depth == 32))
+	  context->sample_fmt = SAMPLE_FMT_S32;
+      }
     }
   }
 }
@@ -2550,6 +2598,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     id = CODEC_ID_AC3;
     audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-eac3")) {
+    id = CODEC_ID_EAC3;
+    audio = TRUE;
   } else if (!strcmp (mimetype, "audio/atrac3")) {
     id = CODEC_ID_ATRAC3;
     audio = TRUE;
@@ -2820,6 +2871,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     id = CODEC_ID_AMR_NB;
   } else if (!strcmp (mimetype, "audio/AMR-WB")) {
     id = CODEC_ID_AMR_WB;
+    audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/qcelp")) {
+    id = CODEC_ID_QCELP;
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {
     id = CODEC_ID_H264;
@@ -3235,4 +3289,29 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
   }
 
   return 0;
+}
+
+gint
+av_smp_format_depth (enum SampleFormat smp_fmt)
+{
+  gint depth = -1;
+  switch (smp_fmt) {
+    case SAMPLE_FMT_U8:
+      depth = 1;
+      break;
+    case SAMPLE_FMT_S16:
+      depth = 2;
+      break;
+    case SAMPLE_FMT_S32:
+    case SAMPLE_FMT_FLT:
+      depth = 4;
+      break;
+    case SAMPLE_FMT_DBL:
+      depth = 8;
+      break;
+    default:
+      GST_ERROR ("UNHANDLED SAMPLE FORMAT !");
+      break;
+  }
+  return depth;
 }

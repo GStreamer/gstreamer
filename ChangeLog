@@ -1,3 +1,18 @@
+2008-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new),
+	(gst_ffmpeg_codecid_to_caps), (gst_ffmpeg_smpfmt_to_caps),
+	(gst_ffmpeg_codectype_to_caps), (gst_ffmpeg_caps_to_smpfmt),
+	(gst_ffmpeg_caps_to_codecid), (av_smp_format_depth):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	Add mapping for EAC3 and QCELP audio codecs.
+	Add conversion functions for all available audo SampleFormat.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_negotiate),
+	(clip_audio_buffer), (gst_ffmpegdec_audio_frame):
+	Remove assumptions that we can only handle stereo 16bit signed integer
+	audio, and store the depth locally.
+
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

@@ -163,4 +163,7 @@ gst_ffmpeg_time_gst_to_ff (guint64 time, AVRational base)
 void 
 gst_ffmpeg_init_pix_fmt_info();
 
+gint
+av_smp_format_depth(enum SampleFormat smp_fmt);
+
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
