@@ -80,6 +80,9 @@ static xmlNodePtr gst_proxy_pad_save_thyself (GstObject * object,
     xmlNodePtr parent);
 #endif
 
+static void on_src_target_notify (GstPad * target,
+    GParamSpec * unused, GstGhostPad * pad);
+
 
 static void
 gst_proxy_pad_class_init (GstProxyPadClass * klass)
@@ -322,9 +325,9 @@ gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
     GST_LOG_OBJECT (pad, "clearing target");
 
   /* clear old target */
-  if ((oldtarget = GST_PROXY_PAD_TARGET (pad))) {
+  if ((oldtarget = GST_PROXY_PAD_TARGET (pad)))
     gst_object_unref (oldtarget);
-  }
+
   /* set and ref new target if any */
   if (target)
     GST_PROXY_PAD_TARGET (pad) = gst_object_ref (target);
@@ -685,6 +688,23 @@ on_int_notify (GstPad * internal, GParamSpec * unused, GstGhostPad * pad)
 }
 
 static void
+on_src_target_notify (GstPad * target, GParamSpec * unused, GstGhostPad * pad)
+{
+  GstCaps *caps;
+
+  g_object_get (target, "caps", &caps, NULL);
+
+  GST_OBJECT_LOCK (pad);
+  gst_caps_replace (&(GST_PAD_CAPS (pad)), caps);
+  GST_OBJECT_UNLOCK (pad);
+
+  g_object_notify (G_OBJECT (pad), "caps");
+  if (caps)
+    gst_caps_unref (caps);
+
+}
+
+static void
 gst_ghost_pad_init (GstGhostPad * pad)
 {
   GST_GHOST_PAD_PRIVATE (pad) = G_TYPE_INSTANCE_GET_PRIVATE (pad,
@@ -701,11 +721,25 @@ gst_ghost_pad_dispose (GObject * object)
 {
   GstPad *pad;
   GstPad *internal;
-  GstPad *intpeer;
+  GstPad *peer;
 
   pad = GST_PAD (object);
 
   GST_DEBUG_OBJECT (pad, "dispose");
+
+  gst_ghost_pad_set_target (GST_GHOST_PAD (pad), NULL);
+
+  /* Unlink here so that gst_pad_dispose doesn't. That would lead to a call to
+   * gst_ghost_pad_do_unlink when the ghost pad is in an inconsistent state */
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    if (GST_PAD_IS_SRC (pad))
+      gst_pad_unlink (pad, peer);
+    else
+      gst_pad_unlink (peer, pad);
+
+    gst_object_unref (peer);
+  }
 
   GST_PROXY_LOCK (pad);
   internal = GST_PROXY_PAD_INTERNAL (pad);
@@ -716,21 +750,10 @@ gst_ghost_pad_dispose (GObject * object)
   g_signal_handler_disconnect (internal,
       GST_GHOST_PAD_PRIVATE (pad)->notify_id);
 
-  intpeer = gst_pad_get_peer (internal);
-  if (intpeer) {
-    if (GST_PAD_IS_SRC (internal))
-      gst_pad_unlink (internal, intpeer);
-    else
-      gst_pad_unlink (intpeer, internal);
-
-    gst_object_unref (intpeer);
-  }
-
-  GST_PROXY_PAD_INTERNAL (internal) = NULL;
-
   /* disposes of the internal pad, since the ghostpad is the only possible object
    * that has a refcount on the internal pad. */
   gst_object_unparent (GST_OBJECT_CAST (internal));
+  GST_PROXY_PAD_INTERNAL (pad) = NULL;
 
   GST_PROXY_UNLOCK (pad);
 
@@ -1089,6 +1112,11 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 
   /* clear old target */
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
+    if (GST_PAD_IS_SRC (oldtarget)) {
+      g_signal_handlers_disconnect_by_func (oldtarget,
+          on_src_target_notify, gpad);
+    }
+
     /* if we have an internal pad, unlink */
     if (internal) {
       if (GST_PAD_IS_SRC (internal))
@@ -1101,6 +1129,11 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   result = gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), newtarget);
 
   if (result && newtarget) {
+    if (GST_PAD_IS_SRC (newtarget)) {
+      g_signal_connect (newtarget, "notify::caps",
+          G_CALLBACK (on_src_target_notify), gpad);
+    }
+
     /* and link to internal pad */
     GST_DEBUG_OBJECT (gpad, "connecting internal pad to target");
 

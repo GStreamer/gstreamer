@@ -1,3 +1,11 @@
+2008-12-17  Alessandro Decina  <alessandro.decina@collabora.co.uk>
+
+	* gst/gstghostpad.c:
+	* tests/check/gst/gstghostpad.c:
+	In a source ghostpad, when caps are changed in the target pad, the
+	change needs to be reflected in the ghostpad.
+	Fixes #564863.
+
 2008-12-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/gstutils.c: (gst_element_found_tags_for_pad):
