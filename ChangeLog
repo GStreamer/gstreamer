@@ -1,3 +1,12 @@
+2008-12-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/Makefile.am:
+	* gst/adder/gstadder.c:
+	  Cleanup variable names to make the adder-loop easier to understand.
+	  Also try to use liboil to spee it up, but ifdef it out as it does not
+	  make any change for me (Intel pentim M (sse,sse2) please try on other
+	  systems).
+
 2008-12-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:

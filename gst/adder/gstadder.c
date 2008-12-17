@@ -46,6 +46,7 @@
 #include "gstadder.h"
 #include <gst/audio/audio.h>
 #include <string.h>             /* strcmp */
+/*#include <liboil/liboil.h>*/
 
 /* highest positive/lowest negative x-bit value we can use for clamping */
 #define MAX_INT_32  ((gint32) (0x7fffffff))
@@ -151,7 +152,9 @@ gst_adder_get_type (void)
   return adder_type;
 }
 
-/* clipping versions */
+/* clipping versions
+ * FIXME: what about: oil_add_s16 (out, out, in, bytes / sizeof (type))
+ */
 #define MAKE_FUNC(name,type,ttype,min,max)                      \
 static void name (type *out, type *in, gint bytes) {            \
   gint i;                                                       \
@@ -160,12 +163,30 @@ static void name (type *out, type *in, gint bytes) {            \
 }
 
 /* non-clipping versions (for float) */
-#define MAKE_FUNC_NC(name,type,ttype)                           \
+#define MAKE_FUNC_NC(name,type)                                 \
 static void name (type *out, type *in, gint bytes) {            \
   gint i;                                                       \
   for (i = 0; i < bytes / sizeof (type); i++)                   \
-    out[i] = (ttype)out[i] + (ttype)in[i];                      \
+    out[i] += in[i];                                            \
 }
+
+#if 0
+/* right now, the liboil function don't seems to be faster
+ * time gst-launch audiotestsrc num-buffers=50000 ! audio/x-raw-float ! adder name=m ! fakesink audiotestsrc num-buffers=50000 ! audio/x-raw-float ! m.
+ * time gst-launch audiotestsrc num-buffers=50000 ! audio/x-raw-float,width=32 ! adder name=m ! fakesink audiotestsrc num-buffers=50000 ! audio/x-raw-float,width=32 ! m.
+ */
+static void
+add_float32 (gfloat * out, gfloat * in, gint bytes)
+{
+  oil_add_f32 (out, out, in, bytes / sizeof (gfloat));
+}
+
+static void
+add_float64 (gdouble * out, gdouble * in, gint bytes)
+{
+  oil_add_f64 (out, out, in, bytes / sizeof (gdouble));
+}
+#endif
 
 /* *INDENT-OFF* */
 MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
@@ -174,8 +195,8 @@ MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
 MAKE_FUNC (add_uint32, guint32, guint64, MIN_UINT_32, MAX_UINT_32)
 MAKE_FUNC (add_uint16, guint16, guint32, MIN_UINT_16, MAX_UINT_16)
 MAKE_FUNC (add_uint8, guint8, guint16, MIN_UINT_8, MAX_UINT_8)
-MAKE_FUNC_NC (add_float64, gdouble, gdouble)
-MAKE_FUNC_NC (add_float32, gfloat, gfloat)
+MAKE_FUNC_NC (add_float64, gdouble)
+MAKE_FUNC_NC (add_float32, gfloat)
 /* *INDENT-ON* */
 
 /* we can only accept caps that we and downstream can handle. */
@@ -244,12 +265,14 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   media_type = gst_structure_get_name (structure);
   if (strcmp (media_type, "audio/x-raw-int") == 0) {
-    GST_DEBUG_OBJECT (adder, "parse_caps sets adder to format int");
     adder->format = GST_ADDER_FORMAT_INT;
     gst_structure_get_int (structure, "width", &adder->width);
     gst_structure_get_int (structure, "depth", &adder->depth);
     gst_structure_get_int (structure, "endianness", &adder->endianness);
     gst_structure_get_boolean (structure, "signed", &adder->is_signed);
+
+    GST_INFO_OBJECT (adder, "parse_caps sets adder to format int, %d bit",
+        adder->width);
 
     if (adder->endianness != G_BYTE_ORDER)
       goto not_supported;
@@ -271,10 +294,12 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
         goto not_supported;
     }
   } else if (strcmp (media_type, "audio/x-raw-float") == 0) {
-    GST_DEBUG_OBJECT (adder, "parse_caps sets adder to format float");
     adder->format = GST_ADDER_FORMAT_FLOAT;
     gst_structure_get_int (structure, "width", &adder->width);
     gst_structure_get_int (structure, "endianness", &adder->endianness);
+
+    GST_INFO_OBJECT (adder, "parse_caps sets adder to format float, %d bit",
+        adder->width);
 
     if (adder->endianness != G_BYTE_ORDER)
       goto not_supported;
@@ -801,7 +826,7 @@ static GstFlowReturn
 gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 {
   /*
-   * combine channels by adding sample values
+   * combine streams by adding data values
    * basic algorithm :
    * - this function is called when all pads have a buffer
    * - get available bytes on all pads.
@@ -809,13 +834,19 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
    *   - read available bytes, copy or add to target buffer
    *   - if there's an EOS event, remove the input channel
    * - push out the output buffer
+   *
+   * todo:
+   * - would be nice to have a mixing mode, where instead of adding we mix
+   *   - for float we could downscale after collect loop
+   *   - for int we need to downscale each input to avoid clipping or
+   *     mix into a temp (float) buffer and scale afterwards as well
    */
   GstAdder *adder;
-  guint size;
   GSList *collected;
-  GstBuffer *outbuf;
   GstFlowReturn ret;
-  gpointer outbytes;
+  GstBuffer *outbuf = NULL;
+  gpointer outdata = NULL;
+  guint outsize;
   gboolean empty = TRUE;
 
   adder = GST_ADDER (user_data);
@@ -824,79 +855,75 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->func == NULL))
     goto not_negotiated;
 
-  /* get available bytes for reading, this can be 0 which could mean
-   * empty buffers or EOS, which we will catch when we loop over the
-   * pads. */
-  size = gst_collect_pads_available (pads);
+  /* get available bytes for reading, this can be 0 which could mean empty
+   * buffers or EOS, which we will catch when we loop over the pads. */
+  outsize = gst_collect_pads_available (pads);
 
   GST_LOG_OBJECT (adder,
-      "starting to cycle through channels, %d bytes available (bps = %d)", size,
-      adder->bps);
-
-  outbuf = NULL;
-  outbytes = NULL;
+      "starting to cycle through channels, %d bytes available (bps = %d)",
+      outsize, adder->bps);
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
-    GstCollectData *data;
-    guint8 *bytes;
-    guint len;
+    GstCollectData *collect_data;
     GstBuffer *inbuf;
+    guint8 *indata;
+    guint insize;
 
-    data = (GstCollectData *) collected->data;
+    collect_data = (GstCollectData *) collected->data;
 
     /* get a subbuffer of size bytes */
-    inbuf = gst_collect_pads_take_buffer (pads, data, size);
+    inbuf = gst_collect_pads_take_buffer (pads, collect_data, outsize);
     /* NULL means EOS or an empty buffer so we still need to flush in
      * case of an empty buffer. */
     if (inbuf == NULL) {
-      GST_LOG_OBJECT (adder, "channel %p: no bytes available", data);
-      goto next;
+      GST_LOG_OBJECT (adder, "channel %p: no bytes available", collect_data);
+      continue;
     }
 
-    bytes = GST_BUFFER_DATA (inbuf);
-    len = GST_BUFFER_SIZE (inbuf);
+    indata = GST_BUFFER_DATA (inbuf);
+    insize = GST_BUFFER_SIZE (inbuf);
 
     if (outbuf == NULL) {
       GST_LOG_OBJECT (adder, "channel %p: making output buffer of %d bytes",
-          data, size);
+          collect_data, outsize);
 
-      /* first buffer, alloc size bytes. FIXME, we can easily subbuffer
-       * and _make_writable. */
-      outbuf = gst_buffer_new_and_alloc (size);
-      outbytes = GST_BUFFER_DATA (outbuf);
+      /* first buffer, alloc outsize.
+       * FIXME: we can easily subbuffer and _make_writable.
+       * FIXME: only create empty buffer for first non-gap buffer, so that we
+       * only use adder function when really adding
+       */
+      outbuf = gst_buffer_new_and_alloc (outsize);
+      outdata = GST_BUFFER_DATA (outbuf);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (adder->srcpad));
 
       if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
-        /* clear if we are only going to fill a partial buffer */
-        if (G_UNLIKELY (size > len))
-          memset (outbytes, 0, size);
-
         GST_LOG_OBJECT (adder, "channel %p: copying %d bytes from data %p",
-            data, len, bytes);
-
+            collect_data, insize, indata);
+        /* clear if we are only going to fill a partial buffer */
+        if (G_UNLIKELY (outsize > insize))
+          memset (outdata + insize, 0, outsize - insize);
         /* and copy the data into it */
-        memcpy (outbytes, bytes, len);
+        memcpy (outdata, indata, insize);
         empty = FALSE;
       } else {
+        /* clear whole buffer */
         GST_LOG_OBJECT (adder, "channel %p: zeroing %d bytes from data %p",
-            data, len, bytes);
-        memset (outbytes, 0, size);
+            collect_data, insize, indata);
+        memset (outdata, 0, outsize);
       }
     } else {
       if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
         GST_LOG_OBJECT (adder, "channel %p: mixing %d bytes from data %p",
-            data, len, bytes);
-        /* other buffers, need to add them */
-        adder->func ((gpointer) outbytes, (gpointer) bytes, len);
+            collect_data, insize, indata);
+        /* further buffers, need to add them */
+        adder->func ((gpointer) outdata, (gpointer) indata, insize);
         empty = FALSE;
       } else {
         GST_LOG_OBJECT (adder, "channel %p: skipping %d bytes from data %p",
-            data, len, bytes);
+            collect_data, insize, indata);
       }
     }
-  next:
-    if (inbuf)
-      gst_buffer_unref (inbuf);
+    gst_buffer_unref (inbuf);
   }
 
   /* can only happen when no pads to collect or all EOS */
@@ -936,7 +963,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
   /* for the next timestamp, use the sample counter, which will
    * never accumulate rounding errors */
-  adder->offset += size / adder->bps;
+  adder->offset += outsize / adder->bps;
   adder->timestamp = gst_util_uint64_scale_int (adder->offset,
       GST_SECOND, adder->rate);
 
@@ -1015,6 +1042,8 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /*oil_init (); */
+
   if (!gst_element_register (plugin, "adder", GST_RANK_NONE, GST_TYPE_ADDER)) {
     return FALSE;
   }
