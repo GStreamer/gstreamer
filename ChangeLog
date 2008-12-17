@@ -1,3 +1,9 @@
+2008-12-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_chain):
+	In push mode skip the run in again if we get buffers with
+	an offset before the run in. This can happen on seeks for example.
+
 2008-12-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/celt/gstceltenc.c:

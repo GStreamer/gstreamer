@@ -554,11 +554,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -1666,6 +1666,11 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
         }
         gst_adapter_flush (demux->adapter, 1);
       }
+    } else if (demux->offset < demux->run_in) {
+      gst_adapter_flush (demux->adapter,
+          MIN (gst_adapter_available (demux->adapter),
+              demux->run_in - demux->offset));
+      continue;
     }
 
     if (G_UNLIKELY (ret != GST_FLOW_OK))
