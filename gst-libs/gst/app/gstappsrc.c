@@ -20,9 +20,67 @@
 
 /**
  * SECTION:element-appsrc
+ * @see_also: #GstBaseSrc, appsink
  *
  * The appsrc element can be used by applications to insert data into a
  * GStreamer pipeline.
+ *
+ * appsrc can be used by linking to the gstappsrc.h header file to access the
+ * methods or by using the appsrc action signals.
+ *
+ * Before operating appsrc, the caps property must be set to a fixed caps
+ * describing the format of the data that will be pushed with appsrc.
+ *
+ * The main way of handing data to the appsrc element is by calling the
+ * gst_app_src_push_buffer() method or by emiting the push-buffer action signal.
+ * This will put the buffer onto a queue from which appsrc will read from in its
+ * streaming thread. It is important to note that data transport will not happen
+ * from the thread that performed the push-buffer call.
+ *
+ * The "max-bytes" property controls how much data can be queued in appsrc
+ * before appsrc considers the queue full. A filled internal queue will always
+ * signal the "enough-data" signal, which signals the application that it should
+ * stop pushing data into appsrc. The "block" property will cause appsrc to
+ * block the push-buffer method until free data becomes available again.
+ *
+ * When the internal queue is running out of data, the "need-data" signal is
+ * emited, which signals the application that it should start pushing more data
+ * into appsrc.
+ *
+ * In addition to the "need-data" and "enough-data" signals, appsrc can emit the
+ * "seek-data" signal when the "stream-mode" property is set to "seekable" or
+ * "random-access". The signal argument will contain the new desired position in
+ * the stream expressed in the unit set with the "format" property. After
+ * receiving the seek-data signal, the application should push-buffers from the
+ * new position.
+ *
+ * These signals allow the application to operate the appsrc in two different
+ * ways:
+ *
+ * The push model, in which the application repeadedly calls the push-buffer method
+ * with a new buffer. Optionally, the queue size in the appsrc can be controlled
+ * with the enough-data and need-data signals by respectively stopping/starting
+ * the push-buffer calls. This is a typical mode of operation for the
+ * stream-type "stream" and "seekable". Use this model when implementing various
+ * network protocols or hardware devices.
+ *
+ * The pull model where the need-data signal triggers the next push-buffer call.
+ * This mode is typically used in the "random-access" stream-type. Use this
+ * model for file access or other randomly accessable sources. In this mode, a
+ * buffer of exactly the amount of bytes given by the need-data signal should be
+ * pushed into appsrc.
+ *
+ * In all modes, the size property on appsrc should contain the total stream
+ * size in bytes. Setting this property is mandatory in the random-access mode.
+ * For the stream and seekable modes, setting this property is optional but
+ * recommended.
+ *
+ * When the application is finished pushing data into appsrc, it should call 
+ * gst_app_src_end_of_stream() or emit the end-of-stream action signal. After
+ * this call, no more buffers can be pushed into appsrc until a flushing seek
+ * happened or the state of the appsrc has gone through READY.
+ *
+ * Last reviewed on 2008-12-17 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -200,7 +258,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_SIZE,
       g_param_spec_int64 ("size", "Size",
-          "The size of the data stream (-1 if unknown)",
+          "The size of the data stream in bytes (-1 if unknown)",
           -1, G_MAXINT64, DEFAULT_PROP_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**

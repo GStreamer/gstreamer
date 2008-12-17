@@ -113,6 +113,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/timidity/gstwildmidi.h \
 	$(top_srcdir)/ext/twolame/gsttwolame.h \
 	$(top_srcdir)/ext/x264/gstx264enc.h \
+	$(top_srcdir)/gst-libs/gst/app/gstappsrc.h \
+	$(top_srcdir)/gst-libs/gst/app/gstappsink.h \
 	$(top_srcdir)/gst/aacparse/gstaacparse.h \
 	$(top_srcdir)/gst/amrparse/gstamrparse.h \
 	$(top_srcdir)/gst/audioresample/gstaudioresample.h \

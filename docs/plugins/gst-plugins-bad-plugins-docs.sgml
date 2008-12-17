@@ -12,6 +12,8 @@
 
   <chapter>
     <title>gst-plugins-bad Elements</title>
+    <xi:include href="xml/element-appsrc.xml" />
+    <xi:include href="xml/element-appsink.xml" />
     <xi:include href="xml/element-aacparse.xml" />
     <xi:include href="xml/element-amrparse.xml" />
     <xi:include href="xml/element-amrwbdec.xml" />
