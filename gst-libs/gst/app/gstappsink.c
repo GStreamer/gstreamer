@@ -20,12 +20,43 @@
 
 /**
  * SECTION:element-appsink
- * @see_also: #GstBaseSrc
+ * @see_also: #GstBaseSink, appsrc
  *
  * Appsink is a sink plugin that supports many different methods for making
  * the application get a handle on the GStreamer data in a pipeline.
  *
- * Last reviewed on 2008-05-03 (0.10.8)
+ * appsink can be used by linking to the gstappsink.h header file to access the
+ * methods or by using the appsink action signals and properties.
+ *
+ * The normal way of retrieving buffers from appsink is by using the
+ * gst_app_sink_pull_buffer() and gst_app_sink_pull_preroll() methods.
+ * These methods block until a buffer becomes available in the sink or when the
+ * sink is shut down or reaches EOS.
+ *
+ * Appsink will internally use a queue to collect buffers from the streaming
+ * thread. If the application is not pulling buffers fast enough, this queue
+ * will consume a lot of memory over time. The "max-buffers" property can be
+ * used to limit the queue size. The "drop" property controls whether the
+ * streaming thread blocks or if older buffers are dropped when the maximum
+ * queue size is reached. Note that blocking the streaming thread can negatively
+ * affect real-time performance and should be avoided.
+ *
+ * If a blocking behaviour is not desirable, setting the "emit-signals" property
+ * to %TRUE will make appsink emit the "new-buffer" and "new-preroll" signals
+ * when a buffer can be pulled without blocking.
+ *
+ * The "caps" property on appsink can be used to control the formats that
+ * appsink can receive. This property can contain non-fixed caps, the format of
+ * the pulled buffers can be obtained by getting the buffer caps.
+ *
+ * If one of the pull-preroll or pull-buffer methods return %NULL, the appsink
+ * is stopped or in the EOS state. You can check for the EOS state with the
+ * "eos" property or with the gst_app_sink_is_eos() method.
+ *
+ * The eos signal can also be used to be informed when the EOS state is reached
+ * to avoid polling.
+ *
+ * Last reviewed on 2008-12-17 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H
