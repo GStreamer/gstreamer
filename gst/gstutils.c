@@ -3230,6 +3230,9 @@ gst_element_found_tags_for_pad (GstElement * element,
   g_return_if_fail (list != NULL);
 
   gst_pad_push_event (pad, gst_event_new_tag (gst_tag_list_copy (list)));
+  /* FIXME 0.11: Set the pad as source to make it possible to detect for
+   * which pad the tags are actually found.
+   */
   gst_element_post_message (element,
       gst_message_new_tag (GST_OBJECT (element), list));
 }

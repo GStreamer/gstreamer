@@ -1,3 +1,11 @@
+2008-12-17  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/gstutils.c: (gst_element_found_tags_for_pad):
+	Add FIXME for 0.11 to set the pad as message source and not
+	the element. Otherwise it's impossible to detect for which
+	pad the tags were found without adding an event probe
+	or something similar to the pad.
+
 2008-12-16  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/faq/general.xml:
