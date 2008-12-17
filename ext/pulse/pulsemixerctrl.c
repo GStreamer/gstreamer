@@ -270,6 +270,8 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
         pa_strerror (pa_context_errno (c->context)));
     goto unlock_and_fail;
   }
+  pa_operation_unref (o);
+  o = NULL;
 
   /* Get sink info */
 
