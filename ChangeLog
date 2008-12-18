@@ -1,3 +1,20 @@
+2008-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Andrew Feren <acferen at yahoo dot com>
+
+	* gst-libs/gst/netbuffer/gstnetbuffer.c:
+	(gst_netaddress_get_ip4_address), (gst_netaddress_get_ip6_address),
+	(gst_netaddress_get_address_bytes),
+	(gst_netaddress_set_address_bytes):
+	* gst-libs/gst/netbuffer/gstnetbuffer.h:
+	Make gst_netaddress_get_ip4_address fail for v6 addresses.
+	Make gst_netaddress_get_ip6_address either fail or return the v4
+	address as a transitional v6 address.
+	Add two convenience functions:
+	API: gst_netaddress_get_address_bytes()
+	API: gst_netaddress_set_address_bytes()
+	Fixes #564896.
+
 2008-12-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/Makefile.am:

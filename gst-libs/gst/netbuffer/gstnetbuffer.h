@@ -93,20 +93,23 @@ struct _GstNetBufferClass {
 };
 
 /* creating buffers */
-GType           gst_netbuffer_get_type          (void);
+GType           gst_netbuffer_get_type           (void);
 
-GstNetBuffer*   gst_netbuffer_new               (void);
+GstNetBuffer*   gst_netbuffer_new                (void);
 
 /* address operations */
-void            gst_netaddress_set_ip4_address  (GstNetAddress *naddr, guint32 address, guint16 port);
-void            gst_netaddress_set_ip6_address  (GstNetAddress *naddr, guint8 address[16], guint16 port);
+void            gst_netaddress_set_ip4_address   (GstNetAddress *naddr, guint32 address, guint16 port);
+void            gst_netaddress_set_ip6_address   (GstNetAddress *naddr, guint8 address[16], guint16 port);
+gint            gst_netaddress_set_address_bytes (GstNetAddress *naddr, GstNetType type,
+                                                  guint8 address[16], guint16 port);
 
-GstNetType      gst_netaddress_get_net_type     (GstNetAddress *naddr);
-gboolean        gst_netaddress_get_ip4_address  (GstNetAddress *naddr, guint32 *address, guint16 *port);
-gboolean        gst_netaddress_get_ip6_address  (GstNetAddress *naddr, guint8 address[16], guint16 *port);
+GstNetType      gst_netaddress_get_net_type      (GstNetAddress *naddr);
+gboolean        gst_netaddress_get_ip4_address   (GstNetAddress *naddr, guint32 *address, guint16 *port);
+gboolean        gst_netaddress_get_ip6_address   (GstNetAddress *naddr, guint8 address[16], guint16 *port);
+gint            gst_netaddress_get_address_bytes (GstNetAddress *naddr, guint8 address[16], guint16 *port);
 
-gboolean        gst_netaddress_equal            (const GstNetAddress *naddr1,
-                                                 const GstNetAddress *naddr2);
+gboolean        gst_netaddress_equal             (const GstNetAddress *naddr1,
+                                                  const GstNetAddress *naddr2);
 
 G_END_DECLS
 

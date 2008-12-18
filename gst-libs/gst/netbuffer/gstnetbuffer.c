@@ -190,7 +190,8 @@ gst_netaddress_get_net_type (GstNetAddress * naddr)
  * @address: a location to store the address.
  * @port: a location to store the port.
  *
- * Get the IPv4 address stored in @naddr into @address.
+ * Get the IPv4 address stored in @naddr into @address. This function requires
+ * that the address type of @naddr is of type #GST_NET_TYPE_IP4.
  *
  * Returns: TRUE if the address could be retrieved.
  */
@@ -200,7 +201,7 @@ gst_netaddress_get_ip4_address (GstNetAddress * naddr, guint32 * address,
 {
   g_return_val_if_fail (naddr != NULL, FALSE);
 
-  if (naddr->type == GST_NET_TYPE_UNKNOWN)
+  if (naddr->type == GST_NET_TYPE_UNKNOWN || naddr->type == GST_NET_TYPE_IP6)
     return FALSE;
 
   if (address)
@@ -219,23 +220,111 @@ gst_netaddress_get_ip4_address (GstNetAddress * naddr, guint32 * address,
  *
  * Get the IPv6 address stored in @naddr into @address.
  *
+ * If @naddr is of type GST_NET_TYPE_IP4, the transitional IP6 address is
+ * returned.
+ *
  * Returns: TRUE if the address could be retrieved.
  */
 gboolean
 gst_netaddress_get_ip6_address (GstNetAddress * naddr, guint8 address[16],
     guint16 * port)
 {
+  static guint8 ip4_transition[16] =
+      { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF };
   g_return_val_if_fail (naddr != NULL, FALSE);
 
   if (naddr->type == GST_NET_TYPE_UNKNOWN)
     return FALSE;
 
-  if (address)
-    memcpy (address, naddr->address.ip6, 16);
+  if (address) {
+    if (naddr->type == GST_NET_TYPE_IP6) {
+      memcpy (address, naddr->address.ip6, 16);
+    } else {                    /* naddr->type == GST_NET_TYPE_IP4 */
+      memcpy (address, ip4_transition, 12);
+      memcpy (address + 12, (guint8 *) & (naddr->address.ip4), 4);
+    }
+  }
   if (port)
     *port = naddr->port;
 
   return TRUE;
+}
+
+/**
+ * gst_netaddress_get_address_bytes:
+ * @naddr: a network address
+ * @address: a location to store the result.
+ * @port: a location to store the port.
+ *
+ * Get just the address bytes stored in @naddr into @address.
+ *
+ * Returns: number of bytes actually copied
+ *
+ * Since: 0.10.22
+ */
+gint
+gst_netaddress_get_address_bytes (GstNetAddress * naddr, guint8 address[16],
+    guint16 * port)
+{
+  gint ret = 0;
+
+  g_return_val_if_fail (naddr != NULL, FALSE);
+
+  if (naddr->type == GST_NET_TYPE_UNKNOWN)
+    return 0;
+
+  if (address) {
+    if (naddr->type == GST_NET_TYPE_IP6) {
+      memcpy (address, naddr->address.ip6, 16);
+      ret = 16;
+    } else {                    /* naddr->type == GST_NET_TYPE_IP4 */
+      memcpy (address, (guint8 *) & (naddr->address.ip4), 4);
+      ret = 4;
+    }
+  }
+  if (port)
+    *port = naddr->port;
+
+  return ret;
+}
+
+/**
+ * gst_netaddress_set_address_bytes:
+ * @naddr: a network address
+ * @address: a location to store the result.
+ * @port: a location to store the port.
+ *
+ * Set just the address bytes stored in @naddr into @address.
+ *
+ * Returns: number of bytes actually copied
+ *
+ * Since: 0.10.22
+ */
+gint
+gst_netaddress_set_address_bytes (GstNetAddress * naddr, GstNetType type,
+    guint8 address[16], guint16 port)
+{
+  gint len = 0;
+
+  g_return_val_if_fail (naddr != NULL, 0);
+
+  naddr->type = type;
+  switch (naddr->type) {
+    case GST_NET_TYPE_UNKNOWN:
+    case GST_NET_TYPE_IP6:
+      len = 16;
+      memcpy (naddr->address.ip6, address, 16);
+      break;
+    case GST_NET_TYPE_IP4:
+      len = 4;
+      memcpy ((guint8 *) & (naddr->address.ip4), address, 4);
+      break;
+  }
+
+  if (port)
+    naddr->port = port;
+
+  return len;
 }
 
 /**
