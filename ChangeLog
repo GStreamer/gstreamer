@@ -1,3 +1,15 @@
+2008-12-18  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/Makefile.am:
+	* gst/mxf/mxf.c: (plugin_init):
+	* gst/mxf/mxfvc3.c: (mxf_is_vc3_essence_track),
+	(mxf_vc3_handle_essence_element), (mxf_vc3_create_caps),
+	(mxf_vc3_init):
+	* gst/mxf/mxfvc3.h:
+	Add support for VC-3 (aka DNxHD essence, see SMPTE 2019-4).
+	This is untested because of lack of sample files but should
+	work fine.
+
 2008-12-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:

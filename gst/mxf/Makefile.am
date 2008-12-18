@@ -11,6 +11,7 @@ libgstmxf_la_SOURCES = \
 	mxfjpeg2000.c \
 	mxfd10.c \
 	mxfup.c \
+	mxfvc3.c \
 	mxfmetadata.c
 
 libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
@@ -28,6 +29,7 @@ noinst_HEADERS = \
 	mxfjpeg2000.h \
 	mxfd10.h \
 	mxfup.h \
+	mxfvc3.h \
 	mxftypes.h \
 	mxfmetadata.h
 
