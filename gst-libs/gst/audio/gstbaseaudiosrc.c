@@ -45,9 +45,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_base_audio_src_debug);
 #define GST_CAT_DEFAULT gst_base_audio_src_debug
 
-#define GST_TYPE_SLAVE_METHOD (gst_base_audio_src_slave_method_get_type ())
-
-static GType
+GType
 gst_base_audio_src_slave_method_get_type (void)
 {
   static GType slave_method_type = 0;

@@ -1,3 +1,13 @@
+2008-12-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	Make GstAudioSrcSlaveMethod get_type() function non-static
+	as it's public now.
+
+	* win32/common/libgstaudio.def:
+	* win32/common/libgstnetbuffer.def:
+	Add some missing functions to the list of exported symbols.
+
 2008-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Andrew Feren <acferen at yahoo dot com>
