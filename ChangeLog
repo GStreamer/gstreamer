@@ -1,3 +1,10 @@
+2008-12-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/check/gst/gstghostpad.c: (ghost_notify_caps),
+	(GST_START_TEST):
+	Add some more unit-tests for the ghostpad notify signal, one of which
+	currently fails.
+
 2008-12-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* win32/common/libgstreamer.def:
