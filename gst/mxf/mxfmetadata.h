@@ -699,5 +699,6 @@ void mxf_metadata_init_types (void);
 MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL * track_identifier);
 
 void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
+void mxf_metadata_generic_sound_essence_descriptor_set_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
 
 #endif /* __MXF_METADATA_H__ */

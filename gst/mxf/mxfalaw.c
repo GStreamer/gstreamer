@@ -100,10 +100,10 @@ mxf_alaw_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       break;
     }
   }
@@ -118,10 +118,8 @@ mxf_alaw_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   if (s && s->audio_sampling_rate.n != 0 && s->audio_sampling_rate.d != 0 &&
       s->channel_count != 0) {
 
-    caps = gst_caps_new_simple ("audio/x-alaw", "rate", G_TYPE_INT,
-        (gint) (((gdouble) s->audio_sampling_rate.n) /
-            ((gdouble) s->audio_sampling_rate.d) + 0.5),
-        "channels", G_TYPE_INT, s->channel_count, NULL);
+    caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+    mxf_metadata_generic_sound_essence_descriptor_set_caps (s, caps);
 
     /* TODO: Handle channel layout somehow?
      * Or is alaw limited to two channels? */

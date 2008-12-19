@@ -54,6 +54,7 @@
  *   - Multichannel audio needs channel layouts, define them (SMPTE S320M?).
  *   - Correctly handle the different rectangles and aspect-ratio for video
  *   - Add support for non-standard MXF used by Avid (bug #561922).
+ *   - Fix frame layout stuff, i.e. interlaced/progressive
  *
  *   - Implement SMPTE D11 essence and the digital cinema/MXF specs
  *
@@ -554,11 +555,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }

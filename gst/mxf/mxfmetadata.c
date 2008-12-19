@@ -1301,6 +1301,10 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m,
     }
   }
 
+  /* TODO: Check if there is a EssenceContainerData for this source package
+   * and store this in the source package instance. Without
+   * EssenceContainerData this package must be external */
+
   return ret;
 }
 
@@ -2628,8 +2632,12 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
   g_return_if_fail (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (self));
   g_return_if_fail (GST_IS_CAPS (caps));
 
-  gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, f->sample_rate.n,
-      f->sample_rate.d, NULL);
+  if (f->sample_rate.d == 0) {
+    GST_ERROR ("Invalid framerate");
+  } else {
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, f->sample_rate.n,
+        f->sample_rate.d, NULL);
+  }
 
   width = self->stored_width;
   height = self->stored_height;
@@ -2640,17 +2648,22 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
    *
    * See SMPTE 377M E2.2 and E1.2
    */
-  if (self->frame_layout != 0)
+  if (self->frame_layout == 1 || self->frame_layout == 2
+      || self->frame_layout == 4)
     height *= 2;
 
-  if (width == 0 || height == 0)
+  if (width == 0 || height == 0) {
+    GST_ERROR ("Invalid width/height");
     return;
+  }
 
   gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height", G_TYPE_INT,
       height, NULL);
 
-  if (self->aspect_ratio.n == 0 || self->aspect_ratio.d == 0)
+  if (self->aspect_ratio.n == 0 || self->aspect_ratio.d == 0) {
+    GST_ERROR ("Invalid aspect ratio");
     return;
+  }
 
   par_n = height * self->aspect_ratio.n;
   par_d = width * self->aspect_ratio.d;
@@ -2759,6 +2772,29 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_sound_essence_descriptor_handle_tag;
+}
+
+void mxf_metadata_generic_sound_essence_descriptor_set_caps
+    (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps)
+{
+  g_return_if_fail (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (self));
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  if (self->audio_sampling_rate.n == 0 || self->audio_sampling_rate.d == 0) {
+    GST_ERROR ("Invalid audio sampling rate");
+  } else {
+    gst_caps_set_simple (caps,
+        "rate", G_TYPE_INT,
+        (gint) ((((gdouble) self->audio_sampling_rate.n) /
+                ((gdouble) self->audio_sampling_rate.d)) + 0.5), NULL);
+  }
+
+  if (self->channel_count == 0) {
+    GST_ERROR ("Invalid number of channels (0)");
+  } else {
+    gst_caps_set_simple (caps, "channels", G_TYPE_INT, self->channel_count,
+        NULL);
+  }
 }
 
 G_DEFINE_TYPE (MXFMetadataCDCIPictureEssenceDescriptor,

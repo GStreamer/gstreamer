@@ -664,13 +664,12 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
           descriptor->channel_count) / 8;
 
     ret = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT,
-        (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
-            ((gdouble) descriptor->audio_sampling_rate.d) + 0.5), "channels",
-        G_TYPE_INT, descriptor->channel_count, "signed", G_TYPE_BOOLEAN,
+        "signed", G_TYPE_BOOLEAN,
         (block_align != 1), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "depth",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+
+    mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
 
     codec_name =
         g_strdup_printf ("Uncompressed %u-bit little endian integer PCM audio",
@@ -695,13 +694,12 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
           descriptor->channel_count) / 8;
 
     ret = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT,
-        (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
-            ((gdouble) descriptor->audio_sampling_rate.d) + 0.5), "channels",
-        G_TYPE_INT, descriptor->channel_count, "signed", G_TYPE_BOOLEAN,
+        "signed", G_TYPE_BOOLEAN,
         (block_align != 1), "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
         G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+
+    mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
 
     codec_name =
         g_strdup_printf ("Uncompressed %u-bit big endian integer PCM audio",
@@ -715,10 +713,9 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
       GST_ERROR ("Invalid descriptor");
       return NULL;
     }
-    ret = gst_caps_new_simple ("audio/x-alaw", "rate", G_TYPE_INT,
-        (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
-            ((gdouble) descriptor->audio_sampling_rate.d) + 0.5),
-        "channels", G_TYPE_INT, descriptor->channel_count);
+    ret = gst_caps_new_simple ("audio/x-alaw", NULL);
+    mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
+
     codec_name = g_strdup ("A-law encoded audio");
   } else {
     GST_ERROR ("Unsupported sound essence compression: %s",
@@ -773,13 +770,12 @@ mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
         descriptor->channel_count) / 8;
 
   ret = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", G_TYPE_INT,
-      (gint) (((gdouble) descriptor->audio_sampling_rate.n) /
-          ((gdouble) descriptor->audio_sampling_rate.d) + 0.5), "channels",
-      G_TYPE_INT, descriptor->channel_count, "signed", G_TYPE_BOOLEAN,
+      "signed", G_TYPE_BOOLEAN,
       (block_align != 1), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "depth",
       G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
       G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
+
+  mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
 
   codec_name =
       g_strdup_printf ("Uncompressed %u-bit AES3 audio",
@@ -816,24 +812,24 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x01
             || track->parent.descriptor[i]->essence_container.u[14] == 0x02
             || track->parent.descriptor[i]->essence_container.u[14] == 0x08)) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       bwf = TRUE;
       break;
     } else
-        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])
+        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x03
             || track->parent.descriptor[i]->essence_container.u[14] == 0x04
             || track->parent.descriptor[i]->essence_container.u[14] == 0x09)) {
 
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       bwf = FALSE;
       break;
     }

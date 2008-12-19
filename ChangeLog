@@ -1,3 +1,25 @@
+2008-12-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps),
+	(mxf_aes3_create_caps):
+	* gst/mxf/mxfalaw.c: (mxf_alaw_create_caps):
+	* gst/mxf/mxfd10.c: (mxf_d10_create_caps):
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfmetadata.c: (mxf_metadata_source_package_resolve),
+	(mxf_metadata_generic_picture_essence_descriptor_set_caps),
+	(mxf_metadata_generic_sound_essence_descriptor_set_caps):
+	* gst/mxf/mxfmetadata.h:
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_es_create_caps):
+	Add mxf_metadata_generic_sound_essence_descriptor_set_caps() to
+	set rate and channels and use this for all sound essence.
+
+	Give some debug output when setting picture essence caps with
+	invalid descriptor values.
+
+	Fix height calculation from the frame layout a bit more and
+	add a TODO to check if it's really correct now or if it needs
+	more fixing (especially, does the framerate need adjustments?).
+
 2008-12-18  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/Makefile.am:

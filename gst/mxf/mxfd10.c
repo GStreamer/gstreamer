@@ -175,15 +175,15 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
-            parent.descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
-          descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
+          parent.descriptor[i];
       break;
-    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-            parent.descriptor[i])) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       break;
     }
   }
@@ -214,13 +214,12 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     /* FIXME: set channel layout */
 
     caps = gst_caps_new_simple ("audio/x-raw-int",
-        "rate", G_TYPE_INT,
-        (gint) (((gdouble) s->audio_sampling_rate.n) /
-            ((gdouble) s->audio_sampling_rate.d) + 0.5), "channels",
-        G_TYPE_INT, s->channel_count, "signed", G_TYPE_BOOLEAN,
+        "signed", G_TYPE_BOOLEAN,
         (s->quantization_bits != 8), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
         "depth", G_TYPE_INT, s->quantization_bits, "width", G_TYPE_INT,
         s->quantization_bits, NULL);
+
+    mxf_metadata_generic_sound_essence_descriptor_set_caps (s, caps);
 
     *handler = mxf_d10_sound_handle_essence_element;
 
