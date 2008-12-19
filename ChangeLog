@@ -1,5 +1,10 @@
 2008-12-19  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* gst/qtmux/gstqtmux.c: (gst_qt_mux_change_state):
+	Do not tempt or suggest to violate gst_collect_pads API specification.
+
+2008-12-19  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* gst/qtmux/atoms.c:
 	* gst/qtmux/atoms.h:
 	* gst/qtmux/descriptors.c:

@@ -1779,7 +1779,6 @@ gst_qt_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-      /* FIXME: shouldn't the downwards state-change be done below? */
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_collect_pads_stop (qtmux->collect);
       break;
