@@ -911,6 +911,7 @@ EXPORTS
 	gst_tag_setter_get_tag_merge_mode
 	gst_tag_setter_get_type
 	gst_tag_setter_merge_tags
+	gst_tag_setter_reset_tags
 	gst_tag_setter_set_tag_merge_mode
 	gst_task_cleanup_all
 	gst_task_create

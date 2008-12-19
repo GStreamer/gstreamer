@@ -1,3 +1,8 @@
+2008-12-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* win32/common/libgstreamer.def:
+	Add gst_tag_setter_reset_tags to the list of exported symbols.
+
 2008-12-17  Alessandro Decina  <alessandro.decina@collabora.co.uk>
 
 	* gst/gstghostpad.c:
