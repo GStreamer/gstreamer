@@ -1769,7 +1769,7 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   data = gst_buffer_make_metadata_writable (data);
   gst_buffer_set_caps (data, GST_PAD_CAPS (avimux->srcpad));
 
-  GST_DEBUG ("pushing buffers: head, data");
+  GST_LOG_OBJECT (avimux, "pushing buffers: head, data");
 
   if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)
     return res;
@@ -1822,7 +1822,7 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
   }
 
   if (best_pad) {
-    GST_DEBUG_OBJECT (avimux, "selected pad %s with time %" GST_TIME_FORMAT,
+    GST_LOG_OBJECT (avimux, "selected pad %s with time %" GST_TIME_FORMAT,
         GST_PAD_NAME (best_pad->collect->pad), GST_TIME_ARGS (best_time));
 
     return gst_avi_mux_do_buffer (avimux, best_pad);

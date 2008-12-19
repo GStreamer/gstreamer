@@ -247,9 +247,6 @@ gst_pulsemixer_ctrl_open (GstPulseMixerCtrl * c)
 
   /* Subscribe to events */
 
-  /* pa 0.9.10 leaks 36 bytes here
-   * http://www.pulseaudio.org/ticket/434
-   */
   if (!(o =
           pa_context_subscribe (c->context,
               PA_SUBSCRIPTION_MASK_SINK | PA_SUBSCRIPTION_MASK_SOURCE,

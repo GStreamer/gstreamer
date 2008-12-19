@@ -1,3 +1,11 @@
+2008-12-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/pulse/pulsemixerctrl.c:
+	  And remove temporary comment pointing to the bug ticket.
+
+	* gst/avi/gstavimux.c:
+	  Move reoccuring logging to LOG and log instance too.
+
 2008-12-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/pulse/pulsemixerctrl.c:
@@ -183,6 +191,7 @@
 	Make usage of libv4l optional by a configure parameter.
 	Fixes bug #563504.
 
+>>>>>>> 1.3872
 2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:
