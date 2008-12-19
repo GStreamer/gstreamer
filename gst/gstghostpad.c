@@ -704,12 +704,23 @@ on_src_target_notify (GstPad * target, GParamSpec * unused, GstGhostPad * pad)
 
 }
 
+static gboolean
+gst_ghost_pad_do_setcaps (GstPad * pad, GstCaps * caps)
+{
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC)
+    return TRUE;
+
+  return gst_proxy_pad_do_setcaps (pad, caps);
+}
+
 static void
 gst_ghost_pad_init (GstGhostPad * pad)
 {
   GST_GHOST_PAD_PRIVATE (pad) = G_TYPE_INSTANCE_GET_PRIVATE (pad,
       GST_TYPE_GHOST_PAD, GstGhostPadPrivate);
 
+  gst_pad_set_setcaps_function (GST_PAD_CAST (pad),
+      GST_DEBUG_FUNCPTR (gst_ghost_pad_do_setcaps));
   gst_pad_set_activatepull_function (GST_PAD_CAST (pad),
       GST_DEBUG_FUNCPTR (gst_ghost_pad_do_activate_pull));
   gst_pad_set_activatepush_function (GST_PAD_CAST (pad),

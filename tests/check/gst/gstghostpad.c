@@ -721,7 +721,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
   caps1 = gst_caps_from_string ("meh");
   fail_unless (gst_pad_set_caps (ghost, caps1));
   caps2 = GST_PAD_CAPS (src);
-  fail_unless (gst_caps_is_equal (caps1, caps2));
+  fail_unless (caps2 == NULL);
   fail_unless_equals_int (notify_counter, 1);
 
   gst_object_unref (ghost);

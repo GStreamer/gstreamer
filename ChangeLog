@@ -1,3 +1,11 @@
+2008-12-19  Alessandro Decina <alessandro.decina@collabora.co.uk>
+
+	* gst/gstghostpad.c:
+	* tests/check/gst/gstghostpad.c:
+	Don't forward gst_pad_set_caps() on a source ghostpad to its target.
+	That would cause the ghostpad to emit notify::caps two times (fist
+	from gst_pad_set_caps() and after from on_src_target_notify()).
+
 2008-12-19  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/check/gst/gstghostpad.c: (ghost_notify_caps),
