@@ -1,3 +1,19 @@
+2008-12-19  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtmux/atoms.c:
+	* gst/qtmux/atoms.h:
+	* gst/qtmux/descriptors.c:
+	* gst/qtmux/descriptors.h:
+	* gst/qtmux/fourcc.h:
+	* gst/qtmux/ftypcc.h:
+	* gst/qtmux/gstqtmux.c:
+	* gst/qtmux/gstqtmux.h:
+	* gst/qtmux/gstqtmuxmap.c:
+	* gst/qtmux/gstqtmuxmap.h:
+	* gst/qtmux/properties.c:
+	* gst/qtmux/properties.h:
+	Dual license qtmux LGPL/MIT.  Fixes #564232.
+
 2008-12-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_create_caps),
