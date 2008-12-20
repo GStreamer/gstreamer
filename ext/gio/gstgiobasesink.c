@@ -308,6 +308,15 @@ gst_gio_base_sink_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
       return TRUE;
+    case GST_QUERY_URI:
+      if (GST_IS_URI_HANDLER (sink)) {
+        const gchar *uri;
+
+        uri = gst_uri_handler_get_uri (GST_URI_HANDLER (sink));
+        gst_query_set_uri (query, uri);
+        return TRUE;
+      }
+      return FALSE;
     default:
       return gst_pad_query_default (pad, query);
   }

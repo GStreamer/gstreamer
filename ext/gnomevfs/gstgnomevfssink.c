@@ -511,6 +511,10 @@ gst_gnome_vfs_sink_query (GstPad * pad, GstQuery * query)
       gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
       return TRUE;
 
+    case GST_QUERY_URI:
+      gst_query_set_uri (query, sink->uri_name);
+      return TRUE;
+
     default:
       return gst_pad_query_default (pad, query);
   }

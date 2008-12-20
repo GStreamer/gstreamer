@@ -1,3 +1,13 @@
+2008-12-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/gio/gstgiobasesink.c: (gst_gio_base_sink_query):
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_class_init),
+	(gst_gio_base_src_query):
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_query):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_class_init),
+	(gst_gnome_vfs_src_query):
+	Implement URI query. Fixes bug #562949.
+
 2008-12-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c: (no_more_pads_cb):
