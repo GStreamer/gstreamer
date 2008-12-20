@@ -1,3 +1,11 @@
+2008-12-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_setcaps):
+	Pause the write thread before deactivating and releasing the ringbuffer
+	to avoid a deadlock when we do gapless playback with different sample
+	rates in playbin2.  Fixes #564929.
+
 2008-12-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:

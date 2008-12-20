@@ -620,6 +620,7 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (sink, "release old ringbuffer");
 
   /* release old ringbuffer */
+  gst_ring_buffer_pause (sink->ringbuffer);
   gst_ring_buffer_activate (sink->ringbuffer, FALSE);
   gst_ring_buffer_release (sink->ringbuffer);
 
