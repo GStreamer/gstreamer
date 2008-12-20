@@ -1,5 +1,17 @@
 2008-12-20  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaybin2.c: (no_more_pads_cb):
+	Add some debug info.
+
+	* gst/playback/gstplaysink.c: (gen_video_chain), (gen_audio_chain),
+	(gst_play_sink_reconfigure), (gst_play_sink_request_pad),
+	(gst_play_sink_release_pad):
+	Add some more debug info.
+	Reconfigure the audio chain when we switch between raw and encoded audio
+	in gapless playback.
+
+2008-12-20  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_setcaps):
 	Pause the write thread before deactivating and releasing the ringbuffer

@@ -1876,6 +1876,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
      * and link it. We only do this if we have not yet requested the sinkpad
      * before. */
     if (select->selector && select->sinkpad == NULL) {
+      GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", select->type);
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
       res = gst_pad_link (select->srcpad, select->sinkpad);
@@ -1892,8 +1893,10 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   if (group->pending == 0) {
     /* we are the last group to complete, we will configure the output and then
      * signal the other waiters. */
+    GST_LOG_OBJECT (playbin, "last group complete");
     configure = TRUE;
   } else {
+    GST_LOG_OBJECT (playbin, "have more pending groups");
     configure = FALSE;
     /* check if there are more decodebins to wait for */
     while (group->pending) {
@@ -1906,6 +1909,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   GST_SOURCE_GROUP_UNLOCK (group);
 
   if (configure) {
+    GST_LOG_OBJECT (playbin, "reconfigure sink");
     /* we configure the modes if we were the last decodebin to complete. */
     gst_play_sink_reconfigure (playbin->playsink);
 

@@ -44,6 +44,7 @@ typedef struct
   GstElement *bin;
   gboolean added;
   gboolean activated;
+  gboolean raw;
 } GstPlayChain;
 
 typedef struct
@@ -651,6 +652,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
 
   chain = g_new0 (GstPlayVideoChain, 1);
   chain->chain.playsink = gst_object_ref (playsink);
+  chain->chain.raw = raw;
 
   GST_DEBUG_OBJECT (playsink, "making video chain %p", chain);
 
@@ -882,6 +884,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   chain = g_new0 (GstPlayAudioChain, 1);
   chain->chain.playsink = gst_object_ref (playsink);
+  chain->chain.raw = raw;
 
   GST_DEBUG_OBJECT (playsink, "making audio chain %p", chain);
 
@@ -1231,6 +1234,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       playsink->videochain = gen_video_chain (playsink, raw, async);
     }
     if (playsink->videochain) {
+      GST_DEBUG_OBJECT (playsink, "adding video chain");
       add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       /* if we are not part of vis or subtitles, set the ghostpad target */
@@ -1241,7 +1245,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       }
     }
   } else {
+    GST_DEBUG_OBJECT (playsink, "no video needed");
     if (playsink->videochain) {
+      GST_DEBUG_OBJECT (playsink, "removing video chain");
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
     }
@@ -1252,9 +1258,11 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   if (need_text) {
     GST_DEBUG_OBJECT (playsink, "adding text");
     if (!playsink->textchain) {
+      GST_DEBUG_OBJECT (playsink, "creating text chain");
       playsink->textchain = gen_text_chain (playsink);
     }
     if (playsink->textchain) {
+      GST_DEBUG_OBJECT (playsink, "adding text chain");
       add_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad),
           playsink->textchain->textsinkpad);
@@ -1264,8 +1272,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
     }
   } else {
+    GST_DEBUG_OBJECT (playsink, "no text needed");
     /* we have no subtitles/text or we are requested to not show them */
     if (playsink->textchain) {
+      GST_DEBUG_OBJECT (playsink, "removing text chain");
       add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
     }
@@ -1276,34 +1286,56 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   }
 
   if (need_audio) {
+    gboolean create_chain = FALSE;
+    gboolean raw, queue;
+
     GST_DEBUG_OBJECT (playsink, "adding audio");
+
+    /* get a raw sink if we are asked for a raw pad */
+    raw = playsink->audio_pad_raw;
+    if (need_vis && playsink->videochain) {
+      /* If we are dealing with visualisations, we need to add a queue to
+       * decouple the audio from the video part. We only have to do this when
+       * the video part is async=true */
+      queue = ((GstPlayVideoChain *) playsink->videochain)->async;
+      GST_DEBUG_OBJECT (playsink, "need audio queue for vis: %d", queue);
+    } else {
+      /* no vis, we can avoid a queue */
+      GST_DEBUG_OBJECT (playsink, "don't need audio queue");
+      queue = FALSE;
+    }
+
     if (!playsink->audiochain) {
-      gboolean raw, queue;
-
-      /* get a raw sink if we are asked for a raw pad */
-      raw = playsink->audio_pad_raw;
-      if (need_vis) {
-        /* If we are dealing with visualisations, we need to add a queue to
-         * decouple the audio from the video part. We only have to do this when
-         * the video part is async=true */
-        queue = ((GstPlayVideoChain *) playsink->videochain)->async;
-        GST_DEBUG_OBJECT (playsink, "need audio queue for vis: %d", queue);
-      } else {
-        /* no vis, we can avoid a queue */
-        GST_DEBUG_OBJECT (playsink, "don't need audio queue");
-        queue = FALSE;
+      /* create chain if we don't already have one */
+      create_chain = TRUE;
+    } else {
+      /* we have a chain, check if it's also raw */
+      if (playsink->audiochain->chain.raw != raw) {
+        GST_DEBUG_OBJECT (playsink, "removing current audio chain");
+        gst_pad_unlink (playsink->audio_tee_asrc,
+            playsink->audiochain->sinkpad);
+        add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+        activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+        create_chain = TRUE;
       }
+    }
 
+    if (create_chain) {
+      GST_DEBUG_OBJECT (playsink, "creating new audio chain");
       playsink->audiochain = gen_audio_chain (playsink, raw, queue);
     }
+
     if (playsink->audiochain) {
+      GST_DEBUG_OBJECT (playsink, "adding audio chain");
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
       gst_pad_link (playsink->audio_tee_asrc, playsink->audiochain->sinkpad);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), TRUE);
     }
   } else {
+    GST_DEBUG_OBJECT (playsink, "no audio needed");
     /* we have no audio or we are requested to not play audio */
     if (playsink->audiochain) {
+      GST_DEBUG_OBJECT (playsink, "removing audio chain");
       gst_pad_unlink (playsink->audio_tee_asrc, playsink->audiochain->sinkpad);
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
@@ -1319,6 +1351,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "adding visualisation");
 
     if (playsink->vischain) {
+      GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
           gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
               chain.bin), "src");
@@ -1329,7 +1362,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
     }
   } else {
+    GST_DEBUG_OBJECT (playsink, "no vis needed");
     if (playsink->vischain) {
+      GST_DEBUG_OBJECT (playsink, "removing vis chain");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
     }
@@ -1487,12 +1522,15 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   gboolean created = FALSE;
   gboolean raw = FALSE;
 
+  GST_DEBUG_OBJECT (playsink, "request pad type %d", type);
+
   GST_PLAY_SINK_LOCK (playsink);
   switch (type) {
     case GST_PLAY_SINK_TYPE_AUDIO_RAW:
       raw = TRUE;
     case GST_PLAY_SINK_TYPE_AUDIO:
       if (!playsink->audio_tee) {
+        GST_LOG_OBJECT (playsink, "creating tee");
         /* create tee when needed. This element will feed the audio sink chain
          * and the vis chain. */
         playsink->audio_tee = gst_element_factory_make ("tee", "audiotee");
@@ -1507,6 +1545,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
         gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
       }
       if (!playsink->audio_pad) {
+        GST_LOG_OBJECT (playsink, "ghosting tee sinkpad");
         playsink->audio_pad =
             gst_ghost_pad_new ("audio_sink", playsink->audio_tee_sink);
         created = TRUE;
@@ -1518,6 +1557,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       raw = TRUE;
     case GST_PLAY_SINK_TYPE_VIDEO:
       if (!playsink->video_pad) {
+        GST_LOG_OBJECT (playsink, "ghosting videosink");
         playsink->video_pad =
             gst_ghost_pad_new_no_target ("video_sink", GST_PAD_SINK);
         created = TRUE;
@@ -1526,6 +1566,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       res = playsink->video_pad;
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
+      GST_LOG_OBJECT (playsink, "ghosting text");
       if (!playsink->text_pad) {
         playsink->text_pad =
             gst_ghost_pad_new_no_target ("text_sink", GST_PAD_SINK);
@@ -1552,6 +1593,8 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
 {
   GstPad **res = NULL;
 
+  GST_DEBUG_OBJECT (playsink, "release pad %" GST_PTR_FORMAT, pad);
+
   GST_PLAY_SINK_LOCK (playsink);
   if (pad == playsink->video_pad) {
     res = &playsink->video_pad;
@@ -1563,7 +1606,9 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
   GST_PLAY_SINK_UNLOCK (playsink);
 
   if (*res) {
+    GST_DEBUG_OBJECT (playsink, "deactivate pad %" GST_PTR_FORMAT, *res);
     gst_pad_set_active (*res, FALSE);
+    GST_DEBUG_OBJECT (playsink, "remove pad %" GST_PTR_FORMAT, *res);
     gst_element_remove_pad (GST_ELEMENT_CAST (playsink), *res);
     *res = NULL;
   }
