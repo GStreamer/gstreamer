@@ -53,11 +53,11 @@ GST_DEBUG_CATEGORY_STATIC (avdtp_sink_debug);
 #define DEFAULT_AUTOCONNECT TRUE
 
 #define GST_AVDTP_SINK_MUTEX_LOCK(s) G_STMT_START {	\
-		g_mutex_lock (s->sink_lock);		\
+		g_mutex_lock(s->sink_lock);		\
 	} G_STMT_END
 
 #define GST_AVDTP_SINK_MUTEX_UNLOCK(s) G_STMT_START {	\
-		g_mutex_unlock (s->sink_lock);		\
+		g_mutex_unlock(s->sink_lock);		\
 	} G_STMT_END
 
 
@@ -1292,8 +1292,8 @@ gst_avdtp_sink_audioservice_expect (GstAvdtpSink * self,
 gboolean
 gst_avdtp_sink_plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "avdtpsink",
-      GST_RANK_NONE, GST_TYPE_AVDTP_SINK);
+  return gst_element_register (plugin, "avdtpsink", GST_RANK_NONE,
+      GST_TYPE_AVDTP_SINK);
 }
 
 
