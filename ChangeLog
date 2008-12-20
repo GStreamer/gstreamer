@@ -1,3 +1,24 @@
+2008-12-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* gst/gstquery.c: (gst_query_new_uri), (gst_query_set_uri),
+	(gst_query_parse_uri):
+	* gst/gstquery.h:
+	API: Add URI query type. This is useful to query the URI
+	of a sink/source element and can be used by demuxers that
+	need to get data from other files.
+	This query should go upstream by default.
+	Fixes bug #562949.
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_query):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init),
+	(gst_fd_src_query):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_query):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init),
+	(gst_file_src_query):
+	Implement URI query.
+
 2008-12-19  Alessandro Decina <alessandro.decina@collabora.co.uk>
 
 	* gst/gstghostpad.c:

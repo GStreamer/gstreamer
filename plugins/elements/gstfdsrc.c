@@ -130,6 +130,7 @@ static gboolean gst_fd_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_get_size (GstBaseSrc * src, guint64 * size);
 static gboolean gst_fd_src_do_seek (GstBaseSrc * src, GstSegment * segment);
+static gboolean gst_fd_src_query (GstBaseSrc * src, GstQuery * query);
 
 static GstFlowReturn gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
@@ -188,6 +189,7 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fd_src_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_fd_src_get_size);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_fd_src_do_seek);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_fd_src_query);
 
   gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_fd_src_create);
 }
@@ -490,6 +492,28 @@ read_error:
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
+}
+
+static gboolean
+gst_fd_src_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstFdSrc *src = GST_FD_SRC (basesrc);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_URI:
+      gst_query_set_uri (query, src->uri);
+      ret = TRUE;
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
+
+  if (!ret)
+    ret = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
+
+  return ret;
 }
 
 static gboolean

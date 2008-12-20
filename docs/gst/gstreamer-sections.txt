@@ -1802,6 +1802,9 @@ gst_query_parse_buffering_stats
 gst_query_set_buffering_range
 gst_query_parse_buffering_range
 
+gst_query_new_uri
+gst_query_parse_uri
+gst_query_set_uri
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY

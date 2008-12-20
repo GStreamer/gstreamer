@@ -65,6 +65,7 @@
 #include "gstvalue.h"
 #include "gstenumtypes.h"
 #include "gstquark.h"
+#include "gsturi.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
@@ -93,6 +94,7 @@ static GstQueryTypeDefinition standard_definitions[] = {
   {GST_QUERY_FORMATS, "formats", "Supported formats for conversion", 0},
   {GST_QUERY_BUFFERING, "buffering", "Buffering status", 0},
   {GST_QUERY_CUSTOM, "custom", "Custom query", 0},
+  {GST_QUERY_URI, "uri", "URI of the source or sink", 0},
   {0, NULL, NULL, 0}
 };
 
@@ -1307,4 +1309,74 @@ gst_query_parse_buffering_range (GstQuery * query, GstFormat * format,
     *estimated_total =
         g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (ESTIMATED_TOTAL)));
+}
+
+/**
+ * gst_query_new_uri:
+ *
+ * Constructs a new query URI query object. Use gst_query_unref()
+ * when done with it. An URI query is used to query the current URI
+ * that is used by the source or sink.
+ *
+ * Returns: A #GstQuery
+ *
+ * Since: 0.10.22
+ */
+GstQuery *
+gst_query_new_uri (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_empty_new ("GstQueryURI");
+  gst_structure_id_set (structure, GST_QUARK (URI), G_TYPE_STRING, NULL, NULL);
+
+  query = gst_query_new (GST_QUERY_URI, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_uri:
+ * @query: a #GstQuery with query type GST_QUERY_URI
+ * @uri: the URI to set
+ *
+ * Answer a URI query by setting the requested URI.
+ *
+ * Since: 0.10.22
+ */
+void
+gst_query_set_uri (GstQuery * query, const gchar * uri)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+  g_return_if_fail (gst_uri_is_valid (uri));
+
+  structure = gst_query_get_structure (query);
+  gst_structure_id_set (structure, GST_QUARK (URI), G_TYPE_STRING, uri, NULL);
+}
+
+/**
+ * gst_query_parse_uri:
+ * @query: a #GstQuery
+ * @uri: the storage for the current URI (may be NULL)
+ *
+ * Parse an URI query, writing the URI into @uri as a newly
+ * allocated string, if the respective parameters are non-NULL.
+ * Free the string with g_free() after usage.
+ *
+ * Since: 0.10.22
+ */
+void
+gst_query_parse_uri (GstQuery * query, gchar ** uri)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
+
+  structure = gst_query_get_structure (query);
+  if (uri)
+    *uri = g_value_dup_string (gst_structure_id_get_value (structure,
+            GST_QUARK (URI)));
 }

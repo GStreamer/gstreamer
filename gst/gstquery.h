@@ -50,6 +50,7 @@ G_BEGIN_DECLS
  * 0.10.20.
  * @GST_QUERY_CUSTOM: a custom application or element defined query. Since
  * 0.10.22.
+ * @GST_QUERY_URI: query the URI of the source or sink. Since 0.10.22.
  *
  * Standard predefined Query types
  */
@@ -67,7 +68,8 @@ typedef enum {
   GST_QUERY_CONVERT,
   GST_QUERY_FORMATS,
   GST_QUERY_BUFFERING,
-  GST_QUERY_CUSTOM
+  GST_QUERY_CUSTOM,
+  GST_QUERY_URI
 } GstQueryType;
 
 /**
@@ -285,6 +287,10 @@ void            gst_query_set_buffering_range     (GstQuery *query, GstFormat fo
 void            gst_query_parse_buffering_range   (GstQuery *query, GstFormat *format,
                                                    gint64 *start, gint64 *stop,
 						   gint64 *estimated_total);
+/* URI query */
+GstQuery *      gst_query_new_uri                 (void);
+void            gst_query_parse_uri               (GstQuery *query, gchar **uri);
+void            gst_query_set_uri                 (GstQuery *query, const gchar *uri);
 
 G_END_DECLS
 

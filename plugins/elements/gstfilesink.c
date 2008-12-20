@@ -247,6 +247,7 @@ was_open:
     return FALSE;
   }
 }
+
 static void
 gst_file_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -407,6 +408,10 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
 
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
+      return TRUE;
+
+    case GST_QUERY_URI:
+      gst_query_set_uri (query, self->uri);
       return TRUE;
 
     default:
@@ -613,6 +618,7 @@ gst_file_sink_uri_get_type (void)
 {
   return GST_URI_SINK;
 }
+
 static gchar **
 gst_file_sink_uri_get_protocols (void)
 {
@@ -620,6 +626,7 @@ gst_file_sink_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_file_sink_uri_get_uri (GstURIHandler * handler)
 {
