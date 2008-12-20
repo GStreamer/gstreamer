@@ -1105,7 +1105,8 @@ gst_avdtp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
   gsize ret;
   GIOError err;
 
-  err = g_io_channel_write (self->stream, (gchar *) GST_BUFFER_DATA (buffer),
+  err = g_io_channel_write (self->stream,
+      (gchar *) GST_BUFFER_DATA (buffer),
       (gsize) (GST_BUFFER_SIZE (buffer)), &ret);
 
   if (err != G_IO_ERROR_NONE) {
