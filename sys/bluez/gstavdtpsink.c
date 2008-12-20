@@ -780,6 +780,7 @@ gst_avdtp_sink_get_capabilities (GstAvdtpSink * self)
     return FALSE;
   }
 
+  rsp->h.length = 0;
   io_error = gst_avdtp_sink_audioservice_expect (self,
       &rsp->h, BT_GET_CAPABILITIES);
   if (io_error != G_IO_ERROR_NONE) {
@@ -925,6 +926,7 @@ gst_avdtp_sink_stream_start (GstAvdtpSink * self)
     return FALSE;
   }
 
+  rsp->h.length = sizeof (*rsp);
   io_error = gst_avdtp_sink_audioservice_expect (self,
       &rsp->h, BT_START_STREAM);
   if (io_error != G_IO_ERROR_NONE) {
@@ -932,6 +934,7 @@ gst_avdtp_sink_stream_start (GstAvdtpSink * self)
     return FALSE;
   }
 
+  ind->h.length = sizeof (*ind);
   io_error = gst_avdtp_sink_audioservice_expect (self, &ind->h, BT_NEW_STREAM);
   if (io_error != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error while receiving " "stream filedescriptor");
@@ -1056,6 +1059,7 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
     return FALSE;
   }
 
+  req->h.length += req->codec.length - sizeof (req->codec);
   io_error = gst_avdtp_sink_audioservice_send (self, &req->h);
   if (io_error != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error ocurred while sending "
@@ -1063,6 +1067,7 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
     return FALSE;
   }
 
+  rsp->h.length = sizeof (*rsp);
   io_error = gst_avdtp_sink_audioservice_expect (self,
       &rsp->h, BT_SET_CONFIGURATION);
   if (io_error != G_IO_ERROR_NONE) {
@@ -1205,9 +1210,12 @@ gst_avdtp_sink_audioservice_send (GstAvdtpSink * self,
   GIOError error;
   gsize written;
   const char *type, *name;
+  uint16_t length;
 
-  error = g_io_channel_write (self->server, (const gchar *) msg,
-      BT_SUGGESTED_BUFFER_SIZE, &written);
+  length = msg->length ? msg->length : BT_SUGGESTED_BUFFER_SIZE;
+
+  error = g_io_channel_write (self->server, (const gchar *) msg, length,
+      &written);
   if (error != G_IO_ERROR_NONE)
     GST_ERROR_OBJECT (self, "Error sending data to audio service:"
         " %s(%d)", strerror (errno), errno);
@@ -1227,9 +1235,12 @@ gst_avdtp_sink_audioservice_recv (GstAvdtpSink * self,
   GIOError status;
   gsize bytes_read;
   const char *type, *name;
+  uint16_t length;
 
-  status = g_io_channel_read (self->server, (gchar *) inmsg,
-      BT_SUGGESTED_BUFFER_SIZE, &bytes_read);
+  length = inmsg->length ? inmsg->length : BT_SUGGESTED_BUFFER_SIZE;
+
+  status = g_io_channel_read (self->server, (gchar *) inmsg, length,
+      &bytes_read);
   if (status != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error receiving data from " "audio service");
     return status;
