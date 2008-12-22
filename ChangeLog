@@ -1,5 +1,11 @@
 2008-12-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_es_create_caps),
+	(mxf_mpeg_create_caps):
+	Add initial support for h.264 video (SMPTE RP2008).
+
+2008-12-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfmetadata.c: (mxf_metadata_base_resolve):
 	* gst/mxf/mxfmetadata.h:
 	If resolving a metadata object failed the first time return

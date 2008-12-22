@@ -386,6 +386,12 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
         gst_buffer_unref (codec_data);
       }
       codec_name = "MPEG-4 Video";
+    } else if ((p->picture_essence_coding.u[13] >> 4) == 0x03) {
+      /* RP 2008 */
+
+      /* TODO: What about codec_data for AVC1 streams? */
+      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      codec_name = "h.264 Video";
     } else {
       GST_ERROR ("Unsupported MPEG picture essence coding 0x%02x",
           p->picture_essence_coding.u[13]);
@@ -472,17 +478,17 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
       f = track->parent.descriptor[i];
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
-    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
       f = track->parent.descriptor[i];
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
-          parent.descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     }
   }
@@ -518,9 +524,28 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       *tags = gst_tag_list_new ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "MPEG TS", NULL);
+  } else if (f->essence_container.u[13] == 0x0f) {
+    GST_DEBUG ("Found h264 NAL unit stream");
+    /* RP 2008 */
+    /* TODO: What about codec_data? */
+    caps = gst_caps_new_simple ("video/x-h264", NULL);
+
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+        "h.264 Video", NULL);
+  } else if (f->essence_container.u[13] == 0x10) {
+    GST_DEBUG ("Found h264 byte stream stream");
+    /* RP 2008 */
+    caps = gst_caps_new_simple ("video/x-h264", NULL);
+
+    if (!*tags)
+      *tags = gst_tag_list_new ();
+    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+        "h.264 Video", NULL);
   }
 
-  if (p)
+  if (p && caps)
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
 
   return caps;
