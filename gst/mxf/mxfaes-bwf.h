@@ -27,7 +27,6 @@
 #include <gst/gst.h>
 
 #include "mxfparse.h"
-#include "mxfmetadata.h"
 
 void mxf_aes_bwf_init (void);
 

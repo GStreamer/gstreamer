@@ -17,17 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* Implementation of SMPTE 381M - Mapping MPEG streams into the MXF
- * Generic Container
- */
+/* Implementation of SMPTE S380M - Descriptive Metadata Scheme-1 */
 
-#ifndef __MXF_MPEG_H__
-#define __MXF_MPEG_H__
+#ifndef __MXF_DMS1_H__
+#define __MXF_DMS1_H__
 
-#include <gst/gst.h>
 
-#include "mxfparse.h"
 
-void mxf_mpeg_init (void);
-
-#endif /* __MXF_MPEG_H__ */
+#endif /* __MXF_DMS1_H__ */

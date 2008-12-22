@@ -23,7 +23,6 @@
 #include <gst/gst.h>
 
 #include "mxfdemux.h"
-#include "mxfmetadata.h"
 #include "mxfaes-bwf.h"
 #include "mxfmpeg.h"
 #include "mxfdv-dif.h"

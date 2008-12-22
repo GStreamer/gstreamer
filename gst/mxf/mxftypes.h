@@ -22,6 +22,8 @@
 #ifndef __MXF_TYPES_H__
 #define __MXF_TYPES_H__
 
+#include <gst/gst.h>
+
 /* SMPTE 377M 3.2 */
 typedef struct {
   guint8 u[16];
