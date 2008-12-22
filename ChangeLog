@@ -1,5 +1,13 @@
 2008-12-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/mxf/mxfmetadata.c: (mxf_metadata_base_resolve):
+	* gst/mxf/mxfmetadata.h:
+	If resolving a metadata object failed the first time return
+	FALSE for a second mxf_metadata_base_resolve() call instead
+	of TRUE.
+
+2008-12-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxf.c:
 	* gst/mxf/mxfaes-bwf.h:
 	* gst/mxf/mxfd10.c:

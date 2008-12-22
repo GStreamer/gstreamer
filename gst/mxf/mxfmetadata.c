@@ -107,21 +107,28 @@ gboolean
 mxf_metadata_base_resolve (MXFMetadataBase * self, MXFMetadataBase ** metadata)
 {
   MXFMetadataBaseClass *klass;
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (MXF_IS_METADATA_BASE (self), FALSE);
   g_return_val_if_fail (metadata != NULL, FALSE);
 
-  if (self->resolved)
+  if (self->resolved == MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS)
     return TRUE;
+  else if (self->resolved == MXF_METADATA_BASE_RESOLVE_STATE_FAILURE)
+    return FALSE;
 
   self->resolved = TRUE;
 
   klass = MXF_METADATA_BASE_GET_CLASS (self);
 
   if (klass->resolve)
-    return klass->resolve (self, metadata);
+    ret = klass->resolve (self, metadata);
 
-  return TRUE;
+  self->resolved =
+      (ret) ? MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS :
+      MXF_METADATA_BASE_RESOLVE_STATE_FAILURE;
+
+  return ret;
 }
 
 G_DEFINE_TYPE (MXFMetadata, mxf_metadata, MXF_TYPE_METADATA_BASE);

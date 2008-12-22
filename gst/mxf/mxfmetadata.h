@@ -333,13 +333,19 @@ typedef struct _MXFMetadataTextLocator MXFMetadataTextLocator;
 typedef MXFMetadataBaseClass MXFMetadataTextLocatorClass;
 GType mxf_metadata_text_locator_get_type (void);
 
+typedef enum {
+  MXF_METADATA_BASE_RESOLVE_STATE_NONE = 0,
+  MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS,
+  MXF_METADATA_BASE_RESOLVE_STATE_FAILURE
+} MXFMetadataBaseResolveState;
+
 struct _MXFMetadataBase {
   GstMiniObject parent;
 
   MXFUL instance_uid;
   MXFUL generation_uid;
 
-  gboolean resolved;
+  MXFMetadataBaseResolveState resolved;
 
   GHashTable *other_tags;
 };
