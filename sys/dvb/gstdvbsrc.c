@@ -860,7 +860,8 @@ gst_dvbsrc_plugin_init (GstPlugin * plugin)
 }
 
 static GstBuffer *
-read_device (int fd, int adapter_number, int frontend_number, int size)
+read_device (int fd, int adapter_number, int frontend_number, int size,
+    GstDvbSrc * object)
 {
   int count = 0;
   struct pollfd pfd[1];
@@ -911,6 +912,10 @@ read_device (int fd, int adapter_number, int frontend_number, int size)
         GST_WARNING
             ("Unable to read after %u attempts from device: /dev/dvb/adapter%d/dvr%d (%d)",
             attempts, adapter_number, frontend_number, errno);
+        gst_element_post_message (GST_ELEMENT_CAST (object),
+            gst_message_new_element (GST_OBJECT (object),
+                gst_structure_empty_new ("dvb-read-failure")));
+
       }
     } else if (errno == -EINTR) {       // poll interrupted
       ;
@@ -944,7 +949,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
     /* --- Read TS from DVR device --- */
     GST_DEBUG_OBJECT (object, "Reading from DVR device");
     *buf = read_device (object->fd_dvr, object->adapter_number,
-        object->frontend_number, buffer_size);
+        object->frontend_number, buffer_size, object);
     if (*buf != NULL) {
       GstCaps *caps;
 
