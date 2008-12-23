@@ -55,8 +55,6 @@ struct _GstSmokeEnc {
   gint keyframe;
   gint fps_num, fps_denom;
 
-  GstCaps *srccaps;
-
   SmokeCodecInfo *info;
 
   gint threshold;

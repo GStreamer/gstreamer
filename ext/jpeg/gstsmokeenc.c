@@ -69,6 +69,7 @@ static GstStateChangeReturn
 gst_smokeenc_change_state (GstElement * element, GstStateChange transition);
 
 static GstFlowReturn gst_smokeenc_chain (GstPad * pad, GstBuffer * buf);
+static GstCaps *gst_smokeenc_getcaps (GstPad * pad);
 static gboolean gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps);
 
 static gboolean gst_smokeenc_resync (GstSmokeEnc * smokeenc);
@@ -176,11 +177,13 @@ gst_smokeenc_init (GstSmokeEnc * smokeenc)
       gst_pad_new_from_static_template (&gst_smokeenc_sink_pad_template,
       "sink");
   gst_pad_set_chain_function (smokeenc->sinkpad, gst_smokeenc_chain);
+  gst_pad_set_getcaps_function (smokeenc->sinkpad, gst_smokeenc_getcaps);
   gst_pad_set_setcaps_function (smokeenc->sinkpad, gst_smokeenc_setcaps);
   gst_element_add_pad (GST_ELEMENT (smokeenc), smokeenc->sinkpad);
 
   smokeenc->srcpad =
       gst_pad_new_from_static_template (&gst_smokeenc_src_pad_template, "src");
+  gst_pad_set_getcaps_function (smokeenc->srcpad, gst_smokeenc_getcaps);
   gst_pad_use_fixed_caps (smokeenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (smokeenc), smokeenc->srcpad);
 
@@ -201,6 +204,60 @@ gst_smokeenc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static GstCaps *
+gst_smokeenc_getcaps (GstPad * pad)
+{
+  GstSmokeEnc *smokeenc = GST_SMOKEENC (gst_pad_get_parent (pad));
+  GstPad *otherpad;
+  GstCaps *result, *caps;
+  const GstCaps *tcaps;
+  const char *name;
+  int i;
+  GstStructure *structure = NULL;
+
+  /* we want to proxy properties like width, height and framerate from the
+     other end of the element */
+  otherpad = (pad == smokeenc->srcpad) ? smokeenc->sinkpad : smokeenc->srcpad;
+
+  /* get template caps, we always need this to fiter the peer caps */
+  tcaps = gst_pad_get_pad_template_caps (otherpad);
+
+  /* get any constraints on the peer pad */
+  caps = gst_pad_peer_get_caps (otherpad);
+
+  if (caps == NULL)
+    caps = gst_caps_copy (tcaps);
+  else
+    caps = gst_caps_make_writable (caps);
+
+  /* intersect with the template */
+  result = gst_caps_intersect (caps, tcaps);
+  gst_caps_unref (caps);
+
+  if (pad == smokeenc->srcpad) {
+    name = "video/x-smoke";
+  } else {
+    name = "video/x-raw-yuv";
+  }
+
+  /* we can only copy width, height, framerate from one side to the other */
+  for (i = 0; i < gst_caps_get_size (result); i++) {
+    structure = gst_caps_get_structure (result, i);
+
+    gst_structure_set_name (structure, name);
+    gst_structure_remove_field (structure, "format");
+    /* ... but for the sink pad, we only do I420 anyway, so add that */
+    if (pad == smokeenc->sinkpad) {
+      gst_structure_set (structure, "format", GST_TYPE_FOURCC,
+          GST_STR_FOURCC ("I420"), NULL);
+    }
+  }
+
+  gst_object_unref (smokeenc);
+
+  return result;
+}
+
 static gboolean
 gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -208,6 +265,7 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   const GValue *framerate;
   gboolean ret;
+  GstCaps *srccaps;
 
   smokeenc = GST_SMOKEENC (gst_pad_get_parent (pad));
 
@@ -227,16 +285,17 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   if ((smokeenc->width & 0x0f) != 0 || (smokeenc->height & 0x0f) != 0)
     goto width_or_height_notx16;
 
-  if (smokeenc->srccaps)
-    gst_caps_unref (smokeenc->srccaps);
+  if (!gst_smokeenc_resync (smokeenc))
+    goto init_failed;
 
-  smokeenc->srccaps = gst_caps_new_simple ("video/x-smoke",
+  srccaps = gst_caps_new_simple ("video/x-smoke",
       "width", G_TYPE_INT, smokeenc->width,
       "height", G_TYPE_INT, smokeenc->height,
       "framerate", GST_TYPE_FRACTION, smokeenc->fps_num, smokeenc->fps_denom,
       NULL);
 
-  ret = gst_smokeenc_resync (smokeenc);
+  ret = gst_pad_set_caps (smokeenc->srcpad, srccaps);
+  gst_caps_unref (srccaps);
 
   gst_object_unref (smokeenc);
 
@@ -246,6 +305,12 @@ width_or_height_notx16:
   {
     GST_WARNING_OBJECT (smokeenc, "width and height must be multiples of 16"
         ", %dx%d not allowed", smokeenc->width, smokeenc->height);
+    gst_object_unref (smokeenc);
+    return FALSE;
+  }
+init_failed:
+  {
+    GST_WARNING_OBJECT (smokeenc, "could not init decoder");
     gst_object_unref (smokeenc);
     return FALSE;
   }
@@ -328,7 +393,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   GST_BUFFER_DURATION (outbuf) =
       gst_util_uint64_scale_int (GST_SECOND, smokeenc->fps_denom,
       smokeenc->fps_num);
-  gst_buffer_set_caps (outbuf, smokeenc->srccaps);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (smokeenc->srcpad));
 
   flags = 0;
   if ((smokeenc->frame % smokeenc->keyframe) == 0) {
@@ -433,10 +498,6 @@ gst_smokeenc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (enc->srccaps) {
-        gst_caps_unref (enc->srccaps);
-        enc->srccaps = NULL;
-      }
       break;
     default:
       break;

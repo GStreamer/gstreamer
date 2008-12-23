@@ -1,3 +1,13 @@
+2008-12-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_init),
+	(gst_smokeenc_getcaps), (gst_smokeenc_setcaps),
+	(gst_smokeenc_chain), (gst_smokeenc_change_state):
+	* ext/jpeg/gstsmokeenc.h:
+	Implement getcaps function.
+	Set caps on the pad and on all outgoing buffers.
+	Fixes #565441.
+
 2008-12-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/pulse/pulsemixerctrl.c:
