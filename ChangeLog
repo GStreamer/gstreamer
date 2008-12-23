@@ -1,3 +1,15 @@
+2008-12-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Arnout Vandecappelle <arnout at mind dot be>
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),
+	(calculate_skew):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Keep track of the last outgoing timestamp and of the last sender-side
+	time.  Timestamps can only go forward if they do at the sender
+	side, can only go back if they do at the sender side, and remain the
+	same if they remain the same at the sender side. Fixes #565319.
+
 2008-12-22  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfmpeg.c: (mxf_mpeg_es_create_caps),
