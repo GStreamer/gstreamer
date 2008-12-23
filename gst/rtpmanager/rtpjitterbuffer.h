@@ -58,6 +58,7 @@ struct _RTPJitterBuffer {
   GstClockTime   base_rtptime;
   guint32        clock_rate;
   GstClockTime   base_extrtp;
+  GstClockTime   prev_out_time;
   guint64        ext_rtptime;
   guint64        last_rtptime;
   gint64         window[RTP_JITTER_BUFFER_MAX_WINDOW];
