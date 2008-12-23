@@ -21,12 +21,12 @@
  *
  */
 
+#ifndef __GST_A2DP_SINK_H__
+#define __GST_A2DP_SINK_H__
+
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
 #include "gstavdtpsink.h"
-
-#ifndef __GST_A2DP_SINK_H__
-#define __GST_A2DP_SINK_H__
 
 G_BEGIN_DECLS
 
@@ -72,7 +72,8 @@ struct _GstA2dpSinkClass {
 	GstBinClass parent_class;
 };
 
-GType gst_a2dp_sink_get_type(void);
+//GType gst_a2dp_sink_get_type(void);
+
 gboolean gst_a2dp_sink_plugin_init (GstPlugin * plugin);
 
 GstCaps *gst_a2dp_sink_get_device_caps(GstA2dpSink *self);

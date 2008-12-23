@@ -30,6 +30,8 @@
 
 #include "gsta2dpsink.h"
 
+GType gst_avdtp_sink_get_type (void);
+
 GST_DEBUG_CATEGORY_STATIC (gst_a2dp_sink_debug);
 #define GST_CAT_DEFAULT gst_a2dp_sink_debug
 
