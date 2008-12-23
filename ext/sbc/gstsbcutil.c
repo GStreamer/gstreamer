@@ -102,9 +102,9 @@ gst_sbc_get_mode_from_list (const GValue * list, gint channels)
   const GValue *value;
   const gchar *aux;
   gboolean joint, stereo, dual, mono;
+  guint size = gst_value_list_get_size (list);
 
   joint = stereo = dual = mono = FALSE;
-  guint size = gst_value_list_get_size (list);
 
   for (i = 0; i < size; i++) {
     value = gst_value_list_get_value (list, i);
