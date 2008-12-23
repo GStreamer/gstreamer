@@ -1,5 +1,13 @@
 2008-12-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Luotao Fu <l dot fu at pengutronix dot de>
+
+	* sys/fbdev/gstfbdevsink.c: (gst_fbdevsink_getcaps):
+	Fix the Depth calculation.
+	Fixes #564114.
+
+2008-12-23  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Arnout Vandecappelle <arnout at mind dot be>
 
 	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),

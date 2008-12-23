@@ -188,8 +188,10 @@ gst_fbdevsink_getcaps (GstBaseSink * bsink)
   caps = gst_caps_from_string (GST_VIDEO_CAPS_RGB_15);
   gst_caps_set_simple (caps,
       "bpp", G_TYPE_INT, fbdevsink->varinfo.bits_per_pixel,
-      "depth", G_TYPE_INT, fbdevsink->varinfo.bits_per_pixel
-      - fbdevsink->varinfo.transp.length,
+      "depth", G_TYPE_INT, fbdevsink->varinfo.red.length +
+      fbdevsink->varinfo.green.length +
+      fbdevsink->varinfo.blue.length +
+      fbdevsink->varinfo.transp.length,
       "endianness", G_TYPE_INT, endianness,
       "red_mask", G_TYPE_INT, rmask,
       "green_mask", G_TYPE_INT, gmask, "blue_mask", G_TYPE_INT, bmask, NULL);
