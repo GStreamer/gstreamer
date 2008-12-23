@@ -27,6 +27,7 @@
 
 #include <string.h>
 
+#include "gstsbcutil.h"
 #include "gstsbcdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (sbc_dec_debug);

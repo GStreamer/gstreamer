@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "gstsbcenc.h"
 #include "gstsbcutil.h"
+#include "gstsbcenc.h"
 
 #define SBC_ENC_DEFAULT_MODE SBC_MODE_AUTO
 #define SBC_ENC_DEFAULT_BLOCKS 0

@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "gstsbcparse.h"
 #include "gstsbcutil.h"
+#include "gstsbcparse.h"
 
 GST_DEBUG_CATEGORY_STATIC (sbc_parse_debug);
 #define GST_CAT_DEFAULT sbc_parse_debug
