@@ -1,6 +1,12 @@
 2008-12-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
+	With constant read failures, make sure we exit the read_device
+	method.
+
+2008-12-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
 	Post bus message with dvb read failure when unable to read from
 	device.
 

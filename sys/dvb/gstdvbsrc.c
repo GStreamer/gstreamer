@@ -918,7 +918,10 @@ read_device (int fd, int adapter_number, int frontend_number, int size,
 
       }
     } else if (errno == -EINTR) {       // poll interrupted
-      ;
+      if (attempts % 50 == 0) {
+        gst_buffer_unref (buf);
+        return NULL;
+      };
     }
 
   }
