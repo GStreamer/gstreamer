@@ -1681,25 +1681,25 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   if (!strcmp (gst_structure_get_name (structure), "audio/x-raw-float")) {
     /* FLOAT */
     if (gst_structure_get_int (structure, "width", &width) &&
-	gst_structure_get_int (structure, "endianness", &endianness)) {
+        gst_structure_get_int (structure, "endianness", &endianness)) {
       if (endianness == G_BYTE_ORDER) {
-	if (width == 32)
-	  context->sample_fmt = SAMPLE_FMT_FLT;
-	else if (width == 64)
-	  context->sample_fmt = SAMPLE_FMT_DBL;
+        if (width == 32)
+          context->sample_fmt = SAMPLE_FMT_FLT;
+        else if (width == 64)
+          context->sample_fmt = SAMPLE_FMT_DBL;
       }
     }
   } else {
     /* INT */
     if (gst_structure_get_int (structure, "width", &width) &&
-	gst_structure_get_int (structure, "depth", &depth) &&
-	gst_structure_get_boolean (structure, "signed", &signedness) &&
-	gst_structure_get_int (structure, "endianness", &endianness)) { 
+        gst_structure_get_int (structure, "depth", &depth) &&
+        gst_structure_get_boolean (structure, "signed", &signedness) &&
+        gst_structure_get_int (structure, "endianness", &endianness)) {
       if ((endianness == G_BYTE_ORDER) && (signedness == TRUE)) {
-	if ((width == 16) && (depth == 16))
-	  context->sample_fmt = SAMPLE_FMT_S16;
-	else if ((width == 32) && (depth == 32))
-	  context->sample_fmt = SAMPLE_FMT_S32;
+        if ((width == 16) && (depth == 16))
+          context->sample_fmt = SAMPLE_FMT_S16;
+        else if ((width == 32) && (depth == 32))
+          context->sample_fmt = SAMPLE_FMT_S32;
       }
     }
   }
@@ -2814,6 +2814,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           break;
         case 2:
           id = CODEC_ID_RV20;
+          break;
+        case 3:
+          id = CODEC_ID_RV30;
           break;
         case 4:
           id = CODEC_ID_RV40;

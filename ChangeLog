@@ -1,3 +1,11 @@
+2008-12-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	Updating ffmpeg SVN revision to r16304 and update to the corresponding
+	swscale snapshot.
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_codecid):
+	Enable the Real Video 3.0 decoder.
+
 2008-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new),
