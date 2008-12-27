@@ -1,3 +1,9 @@
+2008-12-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstregistrybinary.c: (unpack_element), (unpack_const_string),
+	  (unpack_string)::
+	  Wrap multi-line macros in G_STMT_{START|END}.
+
 2008-12-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* docs/gst/gstreamer-sections.txt:

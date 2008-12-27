@@ -74,17 +74,20 @@
 
 /* macros */
 
-#define unpack_element(_inptr, _outptr, _element)  \
+#define unpack_element(_inptr, _outptr, _element)  G_STMT_START{ \
   _outptr = (_element *) _inptr; \
-  _inptr += sizeof (_element)
+  _inptr += sizeof (_element); \
+}G_STMT_END
 
-#define unpack_const_string(_inptr, _outptr) \
+#define unpack_const_string(_inptr, _outptr) G_STMT_START{\
   _outptr = g_intern_string ((const gchar *)_inptr); \
-  _inptr += strlen(_outptr) + 1
+  _inptr += strlen(_outptr) + 1; \
+}G_STMT_END
 
-#define unpack_string(_inptr, _outptr)  \
+#define unpack_string(_inptr, _outptr)  G_STMT_START{\
   _outptr = g_strdup ((gchar *)_inptr); \
-  _inptr += strlen(_outptr) + 1
+  _inptr += strlen(_outptr) + 1; \
+}G_STMT_END
 
 #define ALIGNMENT            (sizeof (void *))
 #define alignment(_address)  (gsize)_address%ALIGNMENT
