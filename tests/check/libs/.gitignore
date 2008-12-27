@@ -7,5 +7,6 @@ controller
 gstnetclientclock
 gstnettimeprovider
 libsabi
+transform1
 typefindhelper
 *.check.xml

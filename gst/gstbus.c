@@ -95,12 +95,10 @@ static void gst_bus_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_bus_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_bus_set_main_context (GstBus * bus, GMainContext * ctx);
 
 static GstObjectClass *parent_class = NULL;
 static guint gst_bus_signals[LAST_SIGNAL] = { 0 };
-
-/* the context we wakeup when we posted a message on the bus */
-static GMainContext *main_context;
 
 struct _GstBusPrivate
 {
@@ -109,6 +107,8 @@ struct _GstBusPrivate
   GCond *queue_cond;
 
   GSource *watch_id;
+
+  GMainContext *main_context;
 };
 
 GType
@@ -217,8 +217,6 @@ gst_bus_class_init (GstBusClass * klass)
       G_STRUCT_OFFSET (GstBusClass, message), NULL, NULL,
       marshal_VOID__MINIOBJECT, G_TYPE_NONE, 1, GST_TYPE_MESSAGE);
 
-  main_context = g_main_context_default ();
-
   g_type_class_add_private (klass, sizeof (GstBusPrivate));
 }
 
@@ -259,6 +257,11 @@ gst_bus_dispose (GObject * object)
     bus->priv->queue_cond = NULL;
   }
 
+  if (bus->priv->main_context) {
+    g_main_context_unref (bus->priv->main_context);
+    bus->priv->main_context = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -290,6 +293,31 @@ gst_bus_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_bus_wakeup_main_context (GstBus * bus)
+{
+  GST_OBJECT_LOCK (bus);
+  g_main_context_wakeup (bus->priv->main_context);
+  GST_OBJECT_UNLOCK (bus);
+}
+
+static void
+gst_bus_set_main_context (GstBus * bus, GMainContext * ctx)
+{
+  GST_OBJECT_LOCK (bus);
+
+  if (bus->priv->main_context != NULL) {
+    g_main_context_unref (bus->priv->main_context);
+    bus->priv->main_context = NULL;
+  }
+
+  if (ctx != NULL) {
+    bus->priv->main_context = g_main_context_ref (ctx);
+  }
+
+  GST_OBJECT_UNLOCK (bus);
 }
 
 /**
@@ -373,8 +401,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_mutex_unlock (bus->queue_lock);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
-      /* FIXME cannot assume sources are only in the default context */
-      g_main_context_wakeup (main_context);
+      gst_bus_wakeup_main_context (bus);
 
       break;
     case GST_BUS_ASYNC:
@@ -398,8 +425,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_cond_broadcast (bus->priv->queue_cond);
       g_mutex_unlock (bus->queue_lock);
 
-      /* FIXME cannot assume sources are only in the default context */
-      g_main_context_wakeup (main_context);
+      gst_bus_wakeup_main_context (bus);
 
       /* now block till the message is freed */
       g_cond_wait (cond, lock);
@@ -733,6 +759,7 @@ no_replace:
  */
 typedef struct
 {
+  gboolean inited;
   GSource source;
   GstBus *bus;
 } GstBusSource;
@@ -741,6 +768,14 @@ static gboolean
 gst_bus_source_prepare (GSource * source, gint * timeout)
 {
   GstBusSource *bsrc = (GstBusSource *) source;
+
+  /* we do this here now that we know that we're attached to a main context
+   * (we don't support detaching a source from a main context and then
+   * re-attaching it to a different main context) */
+  if (G_UNLIKELY (!bsrc->inited)) {
+    gst_bus_set_main_context (bsrc->bus, g_source_get_context (source));
+    bsrc->inited = TRUE;
+  }
 
   *timeout = -1;
   return gst_bus_have_pending (bsrc->bus);
@@ -813,6 +848,7 @@ gst_bus_source_finalize (GSource * source)
     bus->priv->watch_id = NULL;
   GST_OBJECT_UNLOCK (bus);
 
+  gst_bus_set_main_context (bsource->bus, NULL);
   gst_object_unref (bsource->bus);
   bsource->bus = NULL;
 }
@@ -843,8 +879,7 @@ gst_bus_create_watch (GstBus * bus)
 
   source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
       sizeof (GstBusSource));
-  gst_object_ref (bus);
-  source->bus = bus;
+  source->bus = gst_object_ref (bus);
 
   return (GSource *) source;
 }

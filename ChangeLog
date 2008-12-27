@@ -1,5 +1,20 @@
 2008-12-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/gstbus.c: (gst_bus_dispose), (gst_bus_get_property),
+	  (gst_bus_wakeup_main_context), (gst_bus_set_main_context),
+	  (gst_bus_post), (gst_bus_source_prepare), (gst_bus_source_finalize),
+	  (gst_bus_create_watch):
+	  Make GstBusSource work with non-default main contexts (#562170).
+
+	* tests/check/gst/gstbus.c: (message_func_eos), (message_func_app),
+	  (test_watch), (test_watch_with_custom_context), (gst_bus_suite):
+	  Add test case for GstBusSource with a non-default main context.
+
+	* tests/check/libs/.cvsignore:
+	  Ignore more.
+
+2008-12-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst/gstregistrybinary.c: (unpack_element), (unpack_const_string),
 	  (unpack_string)::
 	  Wrap multi-line macros in G_STMT_{START|END}.
