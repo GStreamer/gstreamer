@@ -4749,6 +4749,20 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 5, NULL);
       break;
+    case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
+    case GST_MAKE_FOURCC ('x', 'v', 'i', 'd'):
+      _codec ("XVID MPEG-4");
+      caps = gst_caps_new_simple ("video/x-xvid", NULL);
+      break;
+
+    case GST_MAKE_FOURCC ('F', 'M', 'P', '4'):
+    case GST_MAKE_FOURCC ('U', 'M', 'P', '4'):
+      caps = gst_caps_new_simple ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 4, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("FFmpeg MPEG-4");
+      break;
+
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
       _codec ("Cinepak");
       caps = gst_caps_new_simple ("video/x-cinepak", NULL);
@@ -4950,6 +4964,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* MPEG layer 3, CBR & VBR (QT4.1 and later) */
       caps = gst_caps_new_simple ("audio/mpeg", "layer", G_TYPE_INT, 3,
           "mpegversion", G_TYPE_INT, 1, NULL);
+      break;
+    case 0x20736d:
+      _codec ("AC-3 audio");
+      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
       break;
     case GST_MAKE_FOURCC ('M', 'A', 'C', '3'):
       _codec ("MACE-3");

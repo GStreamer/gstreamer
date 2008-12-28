@@ -1,3 +1,12 @@
+2008-12-28  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	Patch by: j^ <j at oil21.org>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps),
+	(qtdemux_audio_caps):
+	Add codec mapping for xvid, fmp4 and ac3 tracks.
+	Fixes #565850
+
 2008-12-23  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_init),
