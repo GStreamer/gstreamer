@@ -1,5 +1,22 @@
 2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_getcaps_send_rtp):
+	Use method to get the internal SSRC.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_set_property), (rtp_session_get_property):
+	Add property to congiure the internal SSRC of the session.
+	Fixes #565910.
+
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_set_property), (rtp_session_get_property):
+	Add property to change the internal SSRC of the session.
+
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/rtpsession.c: (rtp_session_set_internal_ssrc):
 	Only change the SSRC of the session and reset the internal source when
 	the SSRC actually changed. See #565910.

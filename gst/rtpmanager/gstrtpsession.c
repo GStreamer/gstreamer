@@ -1653,15 +1653,17 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad)
   GstRtpSessionPrivate *priv;
   GstCaps *result;
   GstStructure *s1, *s2;
+  guint ssrc;
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
   priv = rtpsession->priv;
 
+  ssrc = rtp_session_get_internal_ssrc (priv->session);
+
   /* we can basically accept anything but we prefer to receive packets with our
    * internal SSRC so that we don't have to patch it. Create a structure with
    * the SSRC and another one without. */
-  s1 = gst_structure_new ("application/x-rtp",
-      "ssrc", G_TYPE_UINT, priv->session->source->ssrc, NULL);
+  s1 = gst_structure_new ("application/x-rtp", "ssrc", G_TYPE_UINT, ssrc, NULL);
   s2 = gst_structure_new ("application/x-rtp", NULL);
 
   result = gst_caps_new_full (s1, s2, NULL);
