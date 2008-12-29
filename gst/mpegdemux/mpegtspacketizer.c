@@ -1771,6 +1771,7 @@ mpegts_packetizer_parse_eit (MpegTSPacketizer * packetizer,
           }
         }
         gst_structure_set_value (event, "components", &components);
+        g_value_unset (&components);
         g_array_free (component_descriptors, TRUE);
       }
       gst_mpeg_descriptor_free (mpegdescriptor);
