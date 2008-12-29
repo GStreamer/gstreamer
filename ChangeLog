@@ -1,5 +1,15 @@
 2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Robin Stocker <robin at nibor dot org>
+
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_src_query):
+	Converting from time to bytes operates on the stream_time, not the SCR
+	timeline.
+	The position reporting should happen in stream_time, not the segment
+	timestamp range. See #557161.
+
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
 	(gst_app_src_init), (gst_app_src_set_property),
 	(gst_app_src_get_property), (gst_app_src_query),

@@ -55,7 +55,7 @@
 
 /* We clamp scr delta with 0 so negative bytes won't be possible */
 #define GSTTIME_TO_BYTES(time) \
-  ((time != -1) ? gst_util_uint64_scale (MAX(0,(gint64) (GSTTIME_TO_MPEGTIME(time) - demux->first_scr)), demux->scr_rate_n, demux->scr_rate_d) : -1)
+  ((time != -1) ? gst_util_uint64_scale (MAX(0,(gint64) (GSTTIME_TO_MPEGTIME(time))), demux->scr_rate_n, demux->scr_rate_d) : -1)
 #define BYTES_TO_GSTTIME(bytes) ((bytes != -1) ? MPEGTIME_TO_GSTTIME(gst_util_uint64_scale (bytes, demux->scr_rate_d, demux->scr_rate_n)) : -1)
 
 #define ADAPTER_OFFSET_FLUSH(_bytes_) demux->adapter_offset += (_bytes_)
@@ -895,8 +895,7 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
         goto not_supported;
       }
 
-      position = demux->base_time +
-          MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr);
+      position = MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr);
 
       GST_LOG_OBJECT (demux, "Position at GStreamer Time:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (position));
