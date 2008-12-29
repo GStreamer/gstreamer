@@ -1,5 +1,16 @@
 2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/app/gstappsrc.c: (gst_app_src_class_init),
+	(gst_app_src_init), (gst_app_src_set_property),
+	(gst_app_src_get_property), (gst_app_src_query),
+	(gst_app_src_set_latencies), (gst_app_src_set_latency),
+	(gst_app_src_get_latency), (gst_app_src_push_buffer_full):
+	* gst-libs/gst/app/gstappsrc.h:
+	Add properties and methods to configure and retrieve the min and max
+	latencies.
+
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Sebastian Pölsterl <sebp at k-d-w dot org>
 
 	* gst/mpegdemux/mpegtspacketizer.c: (mpegts_packetizer_parse_eit):
