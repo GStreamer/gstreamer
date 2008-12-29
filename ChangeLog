@@ -1,3 +1,12 @@
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init),
+	(rtp_source_update_caps), (get_clock_rate):
+	* gst/rtpmanager/rtpsource.h:
+	When no payload was specified on the caps but there was a clock-rate,
+	assume the clock-rate corresponds to the first payload type found in the
+	RTP packets. Fixes #565509.
+
 2008-12-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
