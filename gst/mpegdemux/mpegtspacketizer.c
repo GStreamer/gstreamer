@@ -1303,10 +1303,11 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
               get_encoding_and_convert (serviceprovider_name,
               serviceprovider_name_length);
 
-          gst_structure_set (service, "name", G_TYPE_STRING, servicename_tmp,
-              NULL);
-          gst_structure_set (service, "provider-name", G_TYPE_STRING,
-              serviceprovider_name_tmp, NULL);
+          gst_structure_set (service,
+              "name", G_TYPE_STRING, servicename_tmp,
+              "provider-name", G_TYPE_STRING, serviceprovider_name_tmp,
+              "scrambled", G_TYPE_BOOLEAN, scrambled, NULL);
+
           g_free (servicename_tmp);
           g_free (serviceprovider_name_tmp);
         }
