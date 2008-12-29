@@ -63,6 +63,7 @@ enum
 enum
 {
   PROP_0,
+  PROP_INTERNAL_SSRC,
   PROP_INTERNAL_SOURCE,
   PROP_BANDWIDTH,
   PROP_RTCP_FRACTION,
@@ -243,6 +244,11 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sender_timeout),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       RTP_TYPE_SOURCE);
+
+  g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
+      g_param_spec_uint ("internal-ssrc", "Internal SSRC",
+          "The internal SSRC used for the session",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SOURCE,
       g_param_spec_object ("internal-source", "Internal Source",
@@ -451,6 +457,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
   sess = RTP_SESSION (object);
 
   switch (prop_id) {
+    case PROP_INTERNAL_SSRC:
+      rtp_session_set_internal_ssrc (sess, g_value_get_uint (value));
+      break;
     case PROP_BANDWIDTH:
       rtp_session_set_bandwidth (sess, g_value_get_double (value));
       break;
@@ -503,6 +512,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
   sess = RTP_SESSION (object);
 
   switch (prop_id) {
+    case PROP_INTERNAL_SSRC:
+      g_value_set_uint (value, rtp_session_get_internal_ssrc (sess));
+      break;
     case PROP_INTERNAL_SOURCE:
       g_value_take_object (value, rtp_session_get_internal_source (sess));
       break;
