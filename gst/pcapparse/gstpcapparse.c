@@ -48,7 +48,7 @@
 
 #include <string.h>
 
-#ifndef _MSC_VER
+#ifndef G_OS_WIN32
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string.h>

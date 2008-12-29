@@ -1,5 +1,13 @@
 2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* gst/pcapparse/Makefile.am:
+	* gst/pcapparse/gstpcapparse.c:
+	Patch to make gstpcapparse compile with mingw32 gcc. Fixes #565439.
+
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpsession.c:
 	(gst_rtp_session_getcaps_send_rtp):
 	Use method to get the internal SSRC.
