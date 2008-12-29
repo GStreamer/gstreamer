@@ -480,7 +480,10 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
           stop = timestamp;
       }
     }
-    time = start;
+    if (GST_CLOCK_TIME_IS_VALID (demux->base_time) && start > demux->base_time)
+      time = start - demux->base_time;
+    else
+      time = 0;
 
 #ifdef HAVE_NEWSEG_FULL
     GST_INFO_OBJECT (demux, "sending new segment: rate %g applied_rate %g "

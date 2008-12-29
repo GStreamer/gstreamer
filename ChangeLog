@@ -1,5 +1,12 @@
 2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_send_data):
+	* gst/mpegdemux/gstmpegdemux.h:
+	The position member in the newsegment event corresponds to the
+	stream_time of the segment start position.
+
+2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Robin Stocker <robin at nibor dot org>
 
 	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_src_query):

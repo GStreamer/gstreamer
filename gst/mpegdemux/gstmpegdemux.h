@@ -102,9 +102,9 @@ struct _GstFluPSDemux {
   GstPESFilter   filter;
 
   gint64         mux_rate;
-  guint64	     first_scr;
-  guint64	     first_dts;
-  guint64	     base_time;
+  guint64        first_scr;
+  guint64        first_dts;
+  guint64        base_time;
   guint64        current_scr;
   guint64        next_scr;
   guint64        bytes_since_scr;
