@@ -960,7 +960,13 @@ gst_flups_demux_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_duration (query, &format, &duration);
 
+      GST_LOG_OBJECT (demux,
+          "query on peer pad reported bytes %" G_GUINT64_FORMAT, duration);
+
       duration = BYTES_TO_GSTTIME (duration);
+
+      GST_LOG_OBJECT (demux, "converted to time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (duration));
 
       gst_query_set_duration (query, GST_FORMAT_TIME, duration);
       res = TRUE;
@@ -1013,6 +1019,8 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   guint length;
   guint32 scr1, scr2;
   guint64 scr, scr_adjusted, new_rate;
+  guint64 scr_rate_n;
+  guint64 scr_rate_d;
 
   GST_DEBUG ("parsing pack start");
 
@@ -1126,12 +1134,12 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     demux->first_scr_offset = demux->last_scr_offset;
     demux->base_time = MPEGTIME_TO_GSTTIME (demux->first_scr);
     /* at begin consider the new_rate as the scr rate, bytes/clock ticks */
-    demux->scr_rate_n = new_rate;
-    demux->scr_rate_d = CLOCK_FREQ;
+    scr_rate_n = new_rate;
+    scr_rate_d = CLOCK_FREQ;
   } else if (demux->first_scr_offset != demux->last_scr_offset) {
     /* estimate byte rate related to the SCR */
-    demux->scr_rate_n = demux->last_scr_offset - demux->first_scr_offset;
-    demux->scr_rate_d = scr - demux->first_scr;
+    scr_rate_n = demux->last_scr_offset - demux->first_scr_offset;
+    scr_rate_d = scr_adjusted - demux->first_scr;
   }
 
   GST_DEBUG_OBJECT (demux, "%s mode scr: %" G_GUINT64_FORMAT " at %"
@@ -1141,8 +1149,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
       ((demux->sink_segment.rate >= 0.0) ? "forward" : "backward"),
       scr, demux->last_scr_offset,
       demux->first_scr, demux->first_scr_offset,
-      demux->scr_rate_n, demux->scr_rate_d,
-      (float) demux->scr_rate_n / demux->scr_rate_d);
+      scr_rate_n, scr_rate_d, (float) scr_rate_n / scr_rate_d);
 
   /* adjustment of the SCR */
   if (demux->current_scr != G_MAXUINT64) {
@@ -1188,6 +1195,9 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
       GST_DEBUG_OBJECT (demux, "discont found, diff: %" G_GINT64_FORMAT
           ", adjust %" G_GINT64_FORMAT, diff, demux->scr_adjust);
       scr_adjusted = demux->next_scr;
+      /* don't update rate estimation on disconts */
+      scr_rate_n = demux->scr_rate_n;
+      scr_rate_d = demux->scr_rate_d;
     } else {
       demux->next_scr = scr_adjusted;
     }
@@ -1196,6 +1206,8 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   /* update the current_scr and rate members */
   demux->mux_rate = new_rate;
   demux->current_scr = scr_adjusted;
+  demux->scr_rate_n = scr_rate_n;
+  demux->scr_rate_d = scr_rate_d;
 
   /* Reset the bytes_since_scr value to count the data remaining in the
    * adapter */
