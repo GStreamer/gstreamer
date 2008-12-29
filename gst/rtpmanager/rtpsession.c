@@ -1193,14 +1193,16 @@ void
 rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
 {
   RTP_SESSION_LOCK (sess);
-  g_hash_table_steal (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (sess->source->ssrc));
+  if (ssrc != sess->source->ssrc) {
+    g_hash_table_steal (sess->ssrcs[sess->mask_idx],
+        GINT_TO_POINTER (sess->source->ssrc));
 
-  sess->source->ssrc = ssrc;
-  rtp_source_reset (sess->source);
+    sess->source->ssrc = ssrc;
+    rtp_source_reset (sess->source);
 
-  g_hash_table_insert (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (sess->source->ssrc), sess->source);
+    g_hash_table_insert (sess->ssrcs[sess->mask_idx],
+        GINT_TO_POINTER (sess->source->ssrc), sess->source);
+  }
   RTP_SESSION_UNLOCK (sess);
 }
 
