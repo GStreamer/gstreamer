@@ -156,7 +156,7 @@ rtp_source_init (RTPSource * src)
   src->internal = FALSE;
   src->probation = RTP_DEFAULT_PROBATION;
 
-  src->payload = 0;
+  src->payload = -1;
   src->clock_rate = -1;
   src->packets = g_queue_new ();
   src->seqnum_base = -1;
@@ -575,13 +575,22 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
 
   if (gst_structure_get_int (s, "payload", &ival))
     src->payload = ival;
+  else
+    src->payload = -1;
   GST_DEBUG ("got payload %d", src->payload);
 
-  gst_structure_get_int (s, "clock-rate", &src->clock_rate);
+  if (gst_structure_get_int (s, "clock-rate", &ival))
+    src->clock_rate = ival;
+  else
+    src->clock_rate = -1;
+
   GST_DEBUG ("got clock-rate %d", src->clock_rate);
 
   if (gst_structure_get_uint (s, "seqnum-base", &val))
     src->seqnum_base = val;
+  else
+    src->seqnum_base = -1;
+
   GST_DEBUG ("got seqnum-base %" G_GINT32_FORMAT, src->seqnum_base);
 
   gst_caps_replace (&src->caps, caps);
@@ -776,7 +785,12 @@ push_packet (RTPSource * src, GstBuffer * buffer)
 static gint
 get_clock_rate (RTPSource * src, guint8 payload)
 {
-  if (payload != src->payload) {
+  if (src->payload == -1) {
+    /* first payload received, nothing was in the caps, lock on to this payload */
+    src->payload = payload;
+    GST_DEBUG ("first payload %d", payload);
+  } else if (payload != src->payload) {
+    /* we have a different payload than before, reset the clock-rate */
     GST_DEBUG ("new payload %d", payload);
     src->payload = payload;
     src->clock_rate = -1;

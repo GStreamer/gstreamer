@@ -128,7 +128,7 @@ struct _RTPSource {
   gboolean      have_rtcp_from;
   GstNetAddress rtcp_from;
 
-  guint8        payload;
+  gint          payload;
   GstCaps      *caps;
   gint          clock_rate;
   gint32        seqnum_base;
