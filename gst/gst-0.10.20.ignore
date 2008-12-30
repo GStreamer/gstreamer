@@ -9,8 +9,26 @@ ignore
   gst_parse_context_free
   gst_parse_launch_full
   gst_parse_launchv_full
+  gst_preset_get_preset_names
+  gst_preset_get_property_names
+  gst_preset_load_preset
+  gst_preset_save_preset
+  gst_preset_rename_preset
+  gst_preset_delete_preset
+  gst_preset_set_meta
+  gst_preset_get_meta
+  gst_query_new_buffering
+  gst_query_set_buffering_percent
+  gst_query_parse_buffering_percent
+  gst_query_set_buffering_stats
+  gst_query_parse_buffering_stats
+  gst_query_set_buffering_range
+  gst_query_parse_buffering_range
+  gst_type_find_suggest_simple
+  gst_bin_find_unlinked_pad
 %%
 ignore-type
   GstParseFlags
   GstBufferingMode
+  GstPreset
 %%

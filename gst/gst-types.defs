@@ -592,6 +592,7 @@
     '("accurate" "GST_SEEK_FLAG_ACCURATE")
     '("key-unit" "GST_SEEK_FLAG_KEY_UNIT")
     '("segment" "GST_SEEK_FLAG_SEGMENT")
+    '("skip" "GST_SEEK_FLAG_SKIP")
   )
 )
 
@@ -770,6 +771,16 @@
     '("async-start" "GST_MESSAGE_ASYNC_START")
     '("async-done" "GST_MESSAGE_ASYNC_DONE")
     '("any" "GST_MESSAGE_ANY")
+  )
+)
+
+(define-enum StructureChangeType
+  (in-module "Gst")
+  (c-name "GstStructureChangeType")
+  (gtype-id "GST_TYPE_STRUCTURE_CHANGE_TYPE")
+  (values
+    '("link" "GST_STRUCTURE_CHANGE_TYPE_PAD_LINK")
+    '("unlink" "GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK")
   )
 )
 
@@ -954,6 +965,8 @@
     '("convert" "GST_QUERY_CONVERT")
     '("formats" "GST_QUERY_FORMATS")
     '("buffering" "GST_QUERY_BUFFERING")
+    '("custom" "GST_QUERY_CUSTOM")
+    '("uri" "GST_QUERY_URI")
   )
 )
 
@@ -1114,3 +1127,8 @@
    (vtable "GstImplementsInterfaceClass")
 )
 
+(define-interface Preset
+   (in-module "Gst")
+   (c-name "GstPreset")
+   (gtype-id "GST_TYPE_PRESET")
+)

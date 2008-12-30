@@ -219,6 +219,12 @@
   )
 )
 
+(define-method recalculate_latency
+  (of-object "GstBin")
+  (c-name "gst_bin_recalculate_latency")
+  (return-type "gboolean")
+)
+
 (define-virtual add_element
  (of-object "GstBin")
  (return-type "gboolean")
@@ -1988,6 +1994,21 @@
   )
 )
 
+(define-method get_seqnum
+  (of-object "GstEvent")
+  (c-name "gst_event_get_seqnum")
+  (return-type "guint32")
+)
+
+(define-method set_seqnum
+  (of-object "GstEvent")
+  (c-name "gst_event_set_seqnum")
+  (return-type "none")
+  (parameters
+    '("guint32" "seqnum")
+  )
+)
+
 (define-function event_new_flush_start
   (c-name "gst_event_new_flush_start")
   (return-type "GstEvent*")
@@ -2990,6 +3011,15 @@
   (return-type "GQuark")
 )
 
+(define-method set_seqnum
+  (of-object "GstMessage")
+  (c-name "gst_message_set_seqnum")
+  (return-type "none")
+  (parameters
+    '("guint32" "seqnum")
+  )
+)
+
 (define-function message_new_eos
   (c-name "gst_message_new_eos")
   (return-type "GstMessage*")
@@ -3181,6 +3211,29 @@
   (caller-owns-return #t)
   (parameters
     '("GstObject*" "src")
+  )
+)
+
+(define-function message_new_structure_change
+  (c-name "gst_message_new_structure_change")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("GstStructureChangeType" "type")
+    '("GstElement*" "owner")
+    '("gboolean" "busy")
+  )
+)
+
+(define-method parse_structure_change
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_structure_change")
+  (return-type "none")
+  (parameters
+    '("GstStructureChangeType*" "type")
+    '("GstElement**" "owner")
+    '("gboolean*" "busy")
   )
 )
 
@@ -4902,6 +4955,83 @@
   )
 )
 
+;; From gstpreset.h
+
+(define-function gst_preset_get_type
+  (c-name "gst_preset_get_type")
+  (return-type "GType")
+)
+
+(define-method get_preset_names
+  (of-object "GstPreset")
+  (c-name "gst_preset_get_preset_names")
+  (return-type "gchar**")
+)
+
+(define-method get_property_names
+  (of-object "GstPreset")
+  (c-name "gst_preset_get_property_names")
+  (return-type "gchar**")
+)
+
+(define-method load_preset
+  (of-object "GstPreset")
+  (c-name "gst_preset_load_preset")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method save_preset
+  (of-object "GstPreset")
+  (c-name "gst_preset_save_preset")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method rename_preset
+  (of-object "GstPreset")
+  (c-name "gst_preset_rename_preset")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "old_name")
+    '("const-gchar*" "new_name")
+  )
+)
+
+(define-method delete_preset
+  (of-object "GstPreset")
+  (c-name "gst_preset_delete_preset")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+  )
+)
+
+(define-method set_meta
+  (of-object "GstPreset")
+  (c-name "gst_preset_set_meta")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+    '("const-gchar*" "tag")
+    '("const-gchar*" "value")
+  )
+)
+
+(define-method get_meta
+  (of-object "GstPreset")
+  (c-name "gst_preset_get_meta")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "name")
+    '("const-gchar*" "tag")
+    '("gchar**" "value")
+  )
+)
 
 
 ;; From ../gstreamer/gst/gstquery.h
@@ -5208,6 +5338,106 @@
   )
 )
 
+(define-function query_new_buffering
+  (c-name "gst_query_new_buffering")
+  (return-type "GstQuery*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstFormat" "format")
+  )
+)
+
+(define-method set_buffering_percent
+  (of-object "GstQuery")
+  (c-name "gst_query_set_buffering_percent")
+  (return-type "none")
+  (parameters
+    '("gboolean" "busy")
+    '("gint" "percent")
+  )
+)
+
+(define-method parse_buffering_percent
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_buffering_percent")
+  (return-type "none")
+  (parameters
+    '("gboolean*" "busy")
+    '("gint*" "percent")
+  )
+)
+
+(define-method set_buffering_stats
+  (of-object "GstQuery")
+  (c-name "gst_query_set_buffering_stats")
+  (return-type "none")
+  (parameters
+    '("GstBufferingMode" "mode")
+    '("gint" "avg_in")
+    '("gint" "avg_out")
+    '("gint64" "buffering_left")
+  )
+)
+
+(define-method parse_buffering_stats
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_buffering_stats")
+  (return-type "none")
+  (parameters
+    '("GstBufferingMode*" "mode")
+    '("gint*" "avg_in")
+    '("gint*" "avg_out")
+    '("gint64*" "buffering_left")
+  )
+)
+
+(define-method set_buffering_range
+  (of-object "GstQuery")
+  (c-name "gst_query_set_buffering_range")
+  (return-type "none")
+  (parameters
+    '("GstFormat" "format")
+    '("gint64" "start")
+    '("gint64" "stop")
+    '("gint64" "estimated_total")
+  )
+)
+
+(define-method parse_buffering_range
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_buffering_range")
+  (return-type "none")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "start")
+    '("gint64*" "stop")
+    '("gint64*" "estimated_total")
+  )
+)
+
+(define-function query_new_uri
+  (c-name "gst_query_new_uri")
+  (caller-owns-return #t)
+  (return-type "GstQuery*")
+)
+
+(define-method parse_uri
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_uri")
+  (return-type "none")
+  (parameters
+    '("gchar**" "uri")
+  )
+)
+
+(define-method set_uri
+  (of-object "GstQuery")
+  (c-name "gst_query_set_uri")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
 
 
 ;; From ../gstreamer/gst/gstregistry.h
@@ -6497,6 +6727,12 @@
   (return-type "GType")
 )
 
+(define-method reset_tags
+  (of-object "GstTagSetter")
+  (c-name "gst_tag_setter_reset_tags")
+  (return-type "none")
+)
+
 (define-method merge_tags
   (of-object "GstTagSetter")
   (c-name "gst_tag_setter_merge_tags")
@@ -6750,6 +6986,18 @@
     '("guint" "probability")
     '("const-GstCaps*" "caps")
   )
+)
+
+(define-method suggest_simple
+  (of-object "GstTypeFind")
+  (c-name "gst_type_find_suggest_simple")
+  (return-type "none")
+  (parameters
+    '("guint" "probability")
+    '("const-char*" "media_type")
+    '("const-char*" "fieldname")
+  )
+  (varargs #t)
 )
 
 (define-method get_length
@@ -7009,6 +7257,20 @@
     '("guint64" "val")
     '("gint" "num")
     '("gint" "denom")
+  )
+)
+
+(define-function util_seqnum_next
+  (c-name "gst_util_seqnum_next")
+  (return-type "guint32")
+)
+
+(define-function util_seqnum_compare
+  (c-name "gst_util_seqnum_compare")
+  (return-type "gint32")
+  (parameters
+    '("guint32" "s1")
+    '("guint32" "s2")
   )
 )
 
@@ -7360,6 +7622,15 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
+)
+
+(define-method find_unlinked_pad
+  (of-object "GstBin")
+  (c-name "gst_bin_find_unlinked_pad")
+  (return-type "GstPad*")
+  (parameters
+    '("GstPadDirection" "direction")
+  )
 )
 
 (define-method find_unconnected_pad

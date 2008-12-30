@@ -1,3 +1,14 @@
+2008-12-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.20.ignore:
+	* gst/gst-0.10.22.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	Updated core API additions
+
 2008-12-09  Alessandro Decina  <alessandro.decina@collabora.co.uk>
 
 	* gst/__init__.py:

@@ -1,0 +1,18 @@
+%%
+ignore
+	gst_bin_recalculate_latency
+	gst_event_get_seqnum
+	gst_event_set_seqnum
+	gst_message_set_seqnum
+	gst_message_new_structure_change
+	gst_message_parse_structure_change
+	gst_query_new_uri
+	gst_query_parse_uri
+	gst_query_set_uri
+	gst_tag_setter_reset_tags
+	gst_util_seqnum_next
+	gst_util_seqnum_compare
+%%
+ignore-type
+	GstStructureChangeType
+%%
