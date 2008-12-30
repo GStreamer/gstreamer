@@ -1,3 +1,10 @@
+2008-12-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	Updating ffmpeg SVN revision to r16396 and update to the corresponding
+	swscale snapshot. This update features a lot of bugfixes, some of them
+	being security related.
+
 2008-12-24  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ffmpegrev:
