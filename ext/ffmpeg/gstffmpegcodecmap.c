@@ -585,6 +585,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
+  case CODEC_ID_MLP:
+    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-mlp", NULL);
+    break;
+
+  case CODEC_ID_IMC:
+    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-imc", NULL);
+    break;
+
       /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
        * is Quicktime's MJPEG-B. LJPEG is lossless JPEG. I don't know what
        * sp5x is, but it's apparently something JPEG... We don't separate

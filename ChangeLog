@@ -1,3 +1,8 @@
+2008-12-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	Add mapping for IMC and MLP audio codecs.
+
 2008-12-30  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ffmpegrev:
