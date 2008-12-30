@@ -1,3 +1,10 @@
+2008-12-30  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Complete Sebastien's commit from the 13th by exporting the
+	_slave_method_get_type() methods.
+
 2008-12-20  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/gio/gstgiobasesink.c: (gst_gio_base_sink_query):

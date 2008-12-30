@@ -149,6 +149,7 @@ struct _GstBaseAudioSinkClass {
 };
 
 GType gst_base_audio_sink_get_type(void);
+GType gst_base_audio_sink_slave_method_get_type (void);
 
 GstRingBuffer *gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink *sink);
 
