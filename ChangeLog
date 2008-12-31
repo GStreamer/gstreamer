@@ -1,3 +1,13 @@
+2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/audio.defs:
+	* gst/audio.override:
+	* gst/audiomodule.c: (initaudio):
+	Wrap gst-plugins-base's audio helper library.
+	Partially fixes #565762
+
 2008-12-30  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:

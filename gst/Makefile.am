@@ -105,6 +105,28 @@ CLEANFILES += pbutils.c
 EXTRA_DIST += $(PBUTILS_DEFS) $(PBUTILS_OVERRIDES)
 pbutils.c: $(PBUTILS_DEFS) $(PBUTILS_OVERRIDES) $(GEN_FILES)
 
+# GStreamer audio bindings
+AUDIO_OVERRIDES = audio.override
+AUDIO_DEFS = audio.defs
+CLEANFILES += audio.c
+EXTRA_DIST += $(AUDIO_DEFS) $(AUDIO_OVERRIDES)
+defs_DATA += $(AUDIO_DEFS)
+GEN_FILES += $(AUDIO_DEFS)
+
+if HAVE_GST_AUDIO
+
+ audio_lib = audio.la
+ pygstexec_LTLIBRARIES += $(audio_lib)
+ audio_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
+ audio_la_LIBADD = $(common_libadd) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-0.10
+ audio_la_LDFLAGS = $(common_ldflags) \
+	-export-symbols-regex "^(initaudio|_PyGObject_API).*" $(GST_PLUGINS_BASE_LIBS)
+ audio_la_SOURCES = audiomodule.c gst-argtypes.c pygstminiobject.c
+ nodist_audio_la_SOURCES = audio.c
+audio.c: $(AUDIO_DEFS) $(AUDIO_OVERRIDES) $(GEN_FILES)
+
+endif
+
 .defs.c: 
 	($(PYTHON) $(top_srcdir)/codegen/codegen.py \
 		--load-types $(srcdir)/arg-types.py \

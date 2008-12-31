@@ -1,0 +1,823 @@
+;; -*- scheme -*-
+; object definitions ...
+(define-object AudioClock
+  (in-module "Gst")
+  (parent "GstSystemClock")
+  (c-name "GstAudioClock")
+  (gtype-id "GST_TYPE_AUDIO_CLOCK")
+)
+
+(define-object AudioFilter
+  (in-module "Gst")
+  (parent "GstBaseTransform")
+  (c-name "GstAudioFilter")
+  (gtype-id "GST_TYPE_AUDIO_FILTER")
+)
+
+(define-object BaseAudioSink
+  (in-module "Gst")
+  (parent "GstBaseSink")
+  (c-name "GstBaseAudioSink")
+  (gtype-id "GST_TYPE_BASE_AUDIO_SINK")
+)
+
+(define-object AudioSink
+  (in-module "Gst")
+  (parent "GstBaseAudioSink")
+  (c-name "GstAudioSink")
+  (gtype-id "GST_TYPE_AUDIO_SINK")
+)
+
+;; (define-object BaseAudioSrc
+;;   (in-module "Gst")
+;;   (parent "GstPushSrc")
+;;   (c-name "GstBaseAudioSrc")
+;;   (gtype-id "GST_TYPE_BASE_AUDIO_SRC")
+;; )
+
+;; (define-object AudioSrc
+;;   (in-module "Gst")
+;;   (parent "GstBaseAudioSrc")
+;;   (c-name "GstAudioSrc")
+;;   (gtype-id "GST_TYPE_AUDIO_SRC")
+;; )
+
+(define-object RingBuffer
+  (in-module "Gst")
+  (parent "GstObject")
+  (c-name "GstRingBuffer")
+  (gtype-id "GST_TYPE_RING_BUFFER")
+)
+
+;; Enumerations and flags ...
+
+(define-enum BaseAudioSinkSlaveMethod
+  (in-module "Gst")
+  (c-name "GstBaseAudioSinkSlaveMethod")
+  (gtype-id "GST_TYPE_BASE_AUDIO_SINK_SLAVE_METHOD")
+  (values
+    '("resample" "GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE")
+    '("skew" "GST_BASE_AUDIO_SINK_SLAVE_SKEW")
+    '("none" "GST_BASE_AUDIO_SINK_SLAVE_NONE")
+  )
+)
+
+(define-enum BaseAudioSrcSlaveMethod
+  (in-module "Gst")
+  (c-name "GstBaseAudioSrcSlaveMethod")
+  (gtype-id "GST_TYPE_BASE_AUDIO_SRC_SLAVE_METHOD")
+  (values
+    '("resample" "GST_BASE_AUDIO_SRC_SLAVE_RESAMPLE")
+    '("retimestamp" "GST_BASE_AUDIO_SRC_SLAVE_RETIMESTAMP")
+    '("skew" "GST_BASE_AUDIO_SRC_SLAVE_SKEW")
+    '("none" "GST_BASE_AUDIO_SRC_SLAVE_NONE")
+  )
+)
+
+(define-enum RingBufferState
+  (in-module "Gst")
+  (c-name "GstRingBufferState")
+  (gtype-id "GST_TYPE_RING_BUFFER_STATE")
+  (values
+    '("stopped" "GST_RING_BUFFER_STATE_STOPPED")
+    '("paused" "GST_RING_BUFFER_STATE_PAUSED")
+    '("started" "GST_RING_BUFFER_STATE_STARTED")
+  )
+)
+
+(define-enum RingBufferSegState
+  (in-module "Gst")
+  (c-name "GstRingBufferSegState")
+  (gtype-id "GST_TYPE_RING_BUFFER_SEG_STATE")
+  (values
+    '("invalid" "GST_SEGSTATE_INVALID")
+    '("empty" "GST_SEGSTATE_EMPTY")
+    '("filled" "GST_SEGSTATE_FILLED")
+    '("partial" "GST_SEGSTATE_PARTIAL")
+  )
+)
+
+(define-enum BufferFormatType
+  (in-module "Gst")
+  (c-name "GstBufferFormatType")
+  (gtype-id "GST_TYPE_BUFFER_FORMAT_TYPE")
+  (values
+    '("linear" "GST_BUFTYPE_LINEAR")
+    '("float" "GST_BUFTYPE_FLOAT")
+    '("mu-law" "GST_BUFTYPE_MU_LAW")
+    '("a-law" "GST_BUFTYPE_A_LAW")
+    '("ima-adpcm" "GST_BUFTYPE_IMA_ADPCM")
+    '("mpeg" "GST_BUFTYPE_MPEG")
+    '("gsm" "GST_BUFTYPE_GSM")
+    '("iec958" "GST_BUFTYPE_IEC958")
+    '("ac3" "GST_BUFTYPE_AC3")
+    '("eac3" "GST_BUFTYPE_EAC3")
+    '("dts" "GST_BUFTYPE_DTS")
+  )
+)
+
+(define-enum BufferFormat
+  (in-module "Gst")
+  (c-name "GstBufferFormat")
+  (gtype-id "GST_TYPE_BUFFER_FORMAT")
+  (values
+    '("unknown" "GST_UNKNOWN")
+    '("s8" "GST_S8")
+    '("u8" "GST_U8")
+    '("s16-le" "GST_S16_LE")
+    '("s16-be" "GST_S16_BE")
+    '("u16-le" "GST_U16_LE")
+    '("u16-be" "GST_U16_BE")
+    '("s24-le" "GST_S24_LE")
+    '("s24-be" "GST_S24_BE")
+    '("u24-le" "GST_U24_LE")
+    '("u24-be" "GST_U24_BE")
+    '("s32-le" "GST_S32_LE")
+    '("s32-be" "GST_S32_BE")
+    '("u32-le" "GST_U32_LE")
+    '("u32-be" "GST_U32_BE")
+    '("s24-3le" "GST_S24_3LE")
+    '("s24-3be" "GST_S24_3BE")
+    '("u24-3le" "GST_U24_3LE")
+    '("u24-3be" "GST_U24_3BE")
+    '("s20-3le" "GST_S20_3LE")
+    '("s20-3be" "GST_S20_3BE")
+    '("u20-3le" "GST_U20_3LE")
+    '("u20-3be" "GST_U20_3BE")
+    '("s18-3le" "GST_S18_3LE")
+    '("s18-3be" "GST_S18_3BE")
+    '("u18-3le" "GST_U18_3LE")
+    '("u18-3be" "GST_U18_3BE")
+    '("float32-le" "GST_FLOAT32_LE")
+    '("float32-be" "GST_FLOAT32_BE")
+    '("float64-le" "GST_FLOAT64_LE")
+    '("float64-be" "GST_FLOAT64_BE")
+    '("mu-law" "GST_MU_LAW")
+    '("a-law" "GST_A_LAW")
+    '("ima-adpcm" "GST_IMA_ADPCM")
+    '("mpeg" "GST_MPEG")
+    '("gsm" "GST_GSM")
+    '("iec958" "GST_IEC958")
+    '("ac3" "GST_AC3")
+    '("eac3" "GST_EAC3")
+    '("dts" "GST_DTS")
+  )
+)
+
+(define-enum AudioChannelPosition
+  (in-module "Gst")
+  (c-name "GstAudioChannelPosition")
+  (gtype-id "GST_TYPE_AUDIO_CHANNEL_POSITION")
+  (values
+    '("invalid" "GST_AUDIO_CHANNEL_POSITION_INVALID")
+    '("front-mono" "GST_AUDIO_CHANNEL_POSITION_FRONT_MONO")
+    '("front-left" "GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT")
+    '("front-right" "GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT")
+    '("rear-center" "GST_AUDIO_CHANNEL_POSITION_REAR_CENTER")
+    '("rear-left" "GST_AUDIO_CHANNEL_POSITION_REAR_LEFT")
+    '("rear-right" "GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT")
+    '("lfe" "GST_AUDIO_CHANNEL_POSITION_LFE")
+    '("front-center" "GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER")
+    '("front-left-of-center" "GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER")
+    '("front-right-of-center" "GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER")
+    '("side-left" "GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT")
+    '("side-right" "GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT")
+    '("none" "GST_AUDIO_CHANNEL_POSITION_NONE")
+    '("num" "GST_AUDIO_CHANNEL_POSITION_NUM")
+  )
+)
+
+
+;; From audio.h
+
+(define-function frame_byte_size
+  (c-name "gst_audio_frame_byte_size")
+  (return-type "int")
+  (parameters
+    '("GstPad*" "pad")
+  )
+)
+
+(define-function frame_length
+  (c-name "gst_audio_frame_length")
+  (return-type "long")
+  (parameters
+    '("GstPad*" "pad")
+    '("GstBuffer*" "buf")
+  )
+)
+
+(define-function duration_from_pad_buffer
+  (c-name "gst_audio_duration_from_pad_buffer")
+  (return-type "GstClockTime")
+  (parameters
+    '("GstPad*" "pad")
+    '("GstBuffer*" "buf")
+  )
+)
+
+(define-function is_buffer_framed
+  (c-name "gst_audio_is_buffer_framed")
+  (return-type "gboolean")
+  (parameters
+    '("GstPad*" "pad")
+    '("GstBuffer*" "buf")
+  )
+)
+
+(define-function buffer_clip
+  (c-name "gst_audio_buffer_clip")
+  (return-type "GstBuffer*")
+  (parameters
+    '("GstBuffer*" "buffer")
+    '("GstSegment*" "segment")
+    '("gint" "rate")
+    '("gint" "frame_size")
+  )
+)
+
+
+
+;; From gstaudioclock.h
+
+(define-function gst_audio_clock_get_type
+  (c-name "gst_audio_clock_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_audio_clock_new
+  (c-name "gst_audio_clock_new")
+  (is-constructor-of "GstAudioClock")
+  (return-type "GstClock*")
+  (parameters
+    '("gchar*" "name")
+    '("GstAudioClockGetTimeFunc" "func")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-method reset
+  (of-object "GstAudioClock")
+  (c-name "gst_audio_clock_reset")
+  (return-type "none")
+  (parameters
+    '("GstClockTime" "time")
+  )
+)
+
+
+
+;; From gstaudiofilter.h
+
+(define-function gst_audio_filter_get_type
+  (c-name "gst_audio_filter_get_type")
+  (return-type "GType")
+)
+
+(define-method add_pad_templates
+  (of-object "GstAudioFilterClass")
+  (c-name "gst_audio_filter_class_add_pad_templates")
+  (return-type "none")
+  (parameters
+    '("const-GstCaps*" "allowed_caps")
+  )
+)
+
+(define-virtual setup
+  (of-object "GstAudioFilter")
+  (return-type "gboolean")
+  (parameters
+   '("GstRingBufferSpec*" "format")
+   )
+)
+
+;; From gstaudiosink.h
+
+(define-function gst_audio_sink_get_type
+  (c-name "gst_audio_sink_get_type")
+  (return-type "GType")
+)
+
+(define-virtual open
+  (of-object "GstAudioSink")
+  (return-type "gboolean")
+)
+
+(define-virtual prepare
+  (of-object "GstAudioSink")
+  (return-type "gboolean")
+  (parameters
+   '("GstRingBufferSpec*" "spec")
+  )
+)
+
+(define-virtual unprepare
+  (of-object "GstAudioSink")
+  (return-type "gboolean")
+)
+
+(define-virtual close
+  (of-object "GstAudioSink")
+  (return-type "gboolean")
+)
+
+(define-virtual write
+  (of-object "GstAudioSink")
+  (return-type "guint")
+  (parameters
+   '("gpointer" "data")
+   '("guint" "length")
+   )
+)
+
+(define-virtual delay
+  (of-object "GstAudioSink")
+  (return-type "guint")
+)
+
+(define-virtual reset
+  (of-object "GstAudioSink")
+  (return-type "none")
+)
+
+;; From gstaudiosrc.h
+
+(define-function gst_audio_src_get_type
+  (c-name "gst_audio_src_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From gstbaseaudiosink.h
+
+(define-function gst_base_audio_sink_get_type
+  (c-name "gst_base_audio_sink_get_type")
+  (return-type "GType")
+)
+
+(define-method create_ringbuffer
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_create_ringbuffer")
+  (return-type "GstRingBuffer*")
+)
+
+(define-virtual create_ringbuffer
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_create_ringbuffer")
+  (return-type "GstRingBuffer*")
+)
+(define-method set_provide_clock
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_set_provide_clock")
+  (return-type "none")
+  (parameters
+    '("gboolean" "provide")
+  )
+)
+
+(define-method get_provide_clock
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_get_provide_clock")
+  (return-type "gboolean")
+)
+
+(define-method set_slave_method
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_set_slave_method")
+  (return-type "none")
+  (parameters
+    '("GstBaseAudioSinkSlaveMethod" "method")
+  )
+)
+
+(define-method get_slave_method
+  (of-object "GstBaseAudioSink")
+  (c-name "gst_base_audio_sink_get_slave_method")
+  (return-type "GstBaseAudioSinkSlaveMethod")
+)
+
+
+
+;; From gstbaseaudiosrc.h
+
+(define-function gst_base_audio_src_get_type
+  (c-name "gst_base_audio_src_get_type")
+  (return-type "GType")
+)
+
+(define-method create_ringbuffer
+  (of-object "GstBaseAudioSrc")
+  (c-name "gst_base_audio_src_create_ringbuffer")
+  (return-type "GstRingBuffer*")
+)
+
+(define-virtual create_ringbuffer
+  (of-object "GstBaseAudioSrc")
+  (c-name "gst_base_audio_src_create_ringbuffer")
+  (return-type "GstRingBuffer*")
+)
+
+(define-method set_provide_clock
+  (of-object "GstBaseAudioSrc")
+  (c-name "gst_base_audio_src_set_provide_clock")
+  (return-type "none")
+  (parameters
+    '("gboolean" "provide")
+  )
+)
+
+(define-method get_provide_clock
+  (of-object "GstBaseAudioSrc")
+  (c-name "gst_base_audio_src_get_provide_clock")
+  (return-type "gboolean")
+)
+
+(define-method set_slave_method
+  (of-object "GstBaseAudioSrc")
+  (c-name "gst_base_audio_src_set_slave_method")
+  (return-type "none")
+  (parameters
+    '("GstBaseAudioSrcSlaveMethod" "method")
+  )
+)
+
+(define-method get_slave_method
+  (of-object "GstBaseAudioSrc")
+  (c-name "gst_base_audio_src_get_slave_method")
+  (return-type "GstBaseAudioSrcSlaveMethod")
+)
+
+
+
+;; From gstringbuffer.h
+
+(define-function gst_ring_buffer_get_type
+  (c-name "gst_ring_buffer_get_type")
+  (return-type "GType")
+)
+
+(define-method set_callback
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_set_callback")
+  (return-type "none")
+  (parameters
+    '("GstRingBufferCallback" "cb")
+    '("gpointer" "user_data")
+  )
+)
+
+(define-function ring_buffer_parse_caps
+  (c-name "gst_ring_buffer_parse_caps")
+  (return-type "gboolean")
+  (parameters
+    '("GstRingBufferSpec*" "spec")
+    '("GstCaps*" "caps")
+  )
+)
+
+(define-function ring_buffer_debug_spec_caps
+  (c-name "gst_ring_buffer_debug_spec_caps")
+  (return-type "none")
+  (parameters
+    '("GstRingBufferSpec*" "spec")
+  )
+)
+
+(define-function ring_buffer_debug_spec_buff
+  (c-name "gst_ring_buffer_debug_spec_buff")
+  (return-type "none")
+  (parameters
+    '("GstRingBufferSpec*" "spec")
+  )
+)
+
+(define-method convert
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_convert")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat" "src_fmt")
+    '("gint64" "src_val")
+    '("GstFormat" "dest_fmt")
+    '("gint64*" "dest_val")
+  )
+)
+
+(define-method open_device
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_open_device")
+  (return-type "gboolean")
+)
+
+(define-method close_device
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_close_device")
+  (return-type "gboolean")
+)
+
+(define-method device_is_open
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_device_is_open")
+  (return-type "gboolean")
+)
+
+(define-method acquire
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_acquire")
+  (return-type "gboolean")
+  (parameters
+    '("GstRingBufferSpec*" "spec")
+  )
+)
+
+(define-method release
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_release")
+  (return-type "gboolean")
+)
+
+(define-method is_acquired
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_is_acquired")
+  (return-type "gboolean")
+)
+
+(define-method activate
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_activate")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "active")
+  )
+)
+
+(define-method is_active
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_is_active")
+  (return-type "gboolean")
+)
+
+(define-method set_flushing
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_set_flushing")
+  (return-type "none")
+  (parameters
+    '("gboolean" "flushing")
+  )
+)
+
+(define-method start
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_start")
+  (return-type "gboolean")
+)
+
+(define-method pause
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_pause")
+  (return-type "gboolean")
+)
+
+(define-method stop
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_stop")
+  (return-type "gboolean")
+)
+
+(define-method delay
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_delay")
+  (return-type "guint")
+)
+
+(define-method samples_done
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_samples_done")
+  (return-type "guint64")
+)
+
+(define-method set_sample
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_set_sample")
+  (return-type "none")
+  (parameters
+    '("guint64" "sample")
+  )
+)
+
+(define-method clear_all
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_clear_all")
+  (return-type "none")
+)
+
+(define-method commit
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_commit")
+  (return-type "guint")
+  (parameters
+    '("guint64" "sample")
+    '("guchar*" "data")
+    '("guint" "len")
+  )
+)
+
+(define-method commit_full
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_commit_full")
+  (return-type "guint")
+  (parameters
+    '("guint64*" "sample")
+    '("guchar*" "data")
+    '("gint" "in_samples")
+    '("gint" "out_samples")
+    '("gint*" "accum")
+  )
+)
+
+(define-method read
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_read")
+  (return-type "guint")
+  (parameters
+    '("guint64" "sample")
+    '("guchar*" "data")
+    '("guint" "len")
+  )
+)
+
+(define-method prepare_read
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_prepare_read")
+  (return-type "gboolean")
+  (parameters
+    '("gint*" "segment")
+    '("guint8**" "readptr")
+    '("gint*" "len")
+  )
+)
+
+(define-method clear
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_clear")
+  (return-type "none")
+  (parameters
+    '("gint" "segment")
+  )
+)
+
+(define-method advance
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_advance")
+  (return-type "none")
+  (parameters
+    '("guint" "advance")
+  )
+)
+
+(define-method may_start
+  (of-object "GstRingBuffer")
+  (c-name "gst_ring_buffer_may_start")
+  (return-type "none")
+  (parameters
+    '("gboolean" "allowed")
+  )
+)
+
+(define-virtual open_device
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual acquire
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+  (parameters
+   '("GstRingBufferSpec*" "spec")
+   )
+)
+
+(define-virtual release
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual close_device
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual start
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual pause
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual resume
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual stop
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+)
+
+(define-virtual delay
+  (of-object "GstRingBuffer")
+  (return-type "guint")
+)
+
+(define-virtual activate
+  (of-object "GstRingBuffer")
+  (return-type "gboolean")
+  (parameters
+   '("gboolean" "active")
+   )
+)
+
+;; From mixerutils.h
+
+(define-function default_registry_mixer_filter
+  (c-name "gst_audio_default_registry_mixer_filter")
+  (return-type "GList*")
+  (parameters
+    '("GstAudioMixerFilterFunc" "filter_func")
+    '("gboolean" "first")
+    '("gpointer" "user_data")
+  )
+)
+
+
+
+;; From multichannel-enumtypes.h
+
+(define-function gst_audio_channel_position_get_type
+  (c-name "gst_audio_channel_position_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From multichannel.h
+
+(define-function get_channel_positions
+  (c-name "gst_audio_get_channel_positions")
+  (return-type "GstAudioChannelPosition*")
+  (parameters
+    '("GstStructure*" "str")
+  )
+)
+
+(define-function set_channel_positions
+  (c-name "gst_audio_set_channel_positions")
+  (return-type "none")
+  (parameters
+    '("GstStructure*" "str")
+    '("const-GstAudioChannelPosition*" "pos")
+  )
+)
+
+(define-function set_structure_channel_positions_list
+  (c-name "gst_audio_set_structure_channel_positions_list")
+  (return-type "none")
+  (parameters
+    '("GstStructure*" "str")
+    '("const-GstAudioChannelPosition*" "pos")
+    '("gint" "num_positions")
+  )
+)
+
+(define-function set_caps_channel_positions_list
+  (c-name "gst_audio_set_caps_channel_positions_list")
+  (return-type "none")
+  (parameters
+    '("GstCaps*" "caps")
+    '("const-GstAudioChannelPosition*" "pos")
+    '("gint" "num_positions")
+  )
+)
+
+(define-function fixate_channel_positions
+  (c-name "gst_audio_fixate_channel_positions")
+  (return-type "GstAudioChannelPosition*")
+  (parameters
+    '("GstStructure*" "str")
+  )
+)
+
+(define-function check_channel_positions
+  (c-name "gst_audio_check_channel_positions")
+  (return-type "gboolean")
+  (parameters
+    '("const-GstAudioChannelPosition*" "pos")
+    '("guint" "channels")
+  )
+)
+
+
