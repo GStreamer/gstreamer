@@ -1,3 +1,8 @@
+2008-12-31  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ChangeLog:
+	Remove conflict marker from ChangeLog
+
 2008-12-28  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	Patch by: j^ <j at oil21.org>
@@ -210,7 +215,6 @@
 	Make usage of libv4l optional by a configure parameter.
 	Fixes bug #563504.
 
->>>>>>> 1.3872
 2008-12-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* docs/plugins/Makefile.am:
