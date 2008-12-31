@@ -2,6 +2,16 @@
 
 	* configure.ac:
 	* gst/Makefile.am:
+	* gst/tag.defs:
+	* gst/tag.override:
+	* gst/tagmodule.c: (inittag):
+	Wrap gst-plugins-base's tag helper library.
+	Partially fixes #565762
+
+2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
 	* gst/video.defs:
 	* gst/video.override:
 	* gst/videomodule.c: (initvideo):

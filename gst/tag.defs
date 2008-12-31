@@ -1,0 +1,219 @@
+;; -*- scheme -*-
+; object definitions ...
+(define-object TagDemux
+  (in-module "Gst")
+  (parent "GstElement")
+  (c-name "GstTagDemux")
+  (gtype-id "GST_TYPE_TAG_DEMUX")
+)
+
+;; Enumerations and flags ...
+
+(define-enum TagDemuxResult
+  (in-module "Gst")
+  (c-name "GstTagDemuxResult")
+  (gtype-id "GST_TYPE_TAG_DEMUX_RESULT")
+  (values
+    '("broken-tag" "GST_TAG_DEMUX_RESULT_BROKEN_TAG")
+    '("again" "GST_TAG_DEMUX_RESULT_AGAIN")
+    '("ok" "GST_TAG_DEMUX_RESULT_OK")
+  )
+)
+
+(define-enum TagImageType
+  (in-module "Gst")
+  (c-name "GstTagImageType")
+  (gtype-id "GST_TYPE_TAG_IMAGE_TYPE")
+  (values
+    '("none" "GST_TAG_IMAGE_TYPE_NONE")
+    '("undefined" "GST_TAG_IMAGE_TYPE_UNDEFINED")
+    '("front-cover" "GST_TAG_IMAGE_TYPE_FRONT_COVER")
+    '("back-cover" "GST_TAG_IMAGE_TYPE_BACK_COVER")
+    '("leaflet-page" "GST_TAG_IMAGE_TYPE_LEAFLET_PAGE")
+    '("medium" "GST_TAG_IMAGE_TYPE_MEDIUM")
+    '("lead-artist" "GST_TAG_IMAGE_TYPE_LEAD_ARTIST")
+    '("artist" "GST_TAG_IMAGE_TYPE_ARTIST")
+    '("conductor" "GST_TAG_IMAGE_TYPE_CONDUCTOR")
+    '("band-orchestra" "GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA")
+    '("composer" "GST_TAG_IMAGE_TYPE_COMPOSER")
+    '("lyricist" "GST_TAG_IMAGE_TYPE_LYRICIST")
+    '("recording-location" "GST_TAG_IMAGE_TYPE_RECORDING_LOCATION")
+    '("during-recording" "GST_TAG_IMAGE_TYPE_DURING_RECORDING")
+    '("during-performance" "GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE")
+    '("video-capture" "GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE")
+    '("fish" "GST_TAG_IMAGE_TYPE_FISH")
+    '("illustration" "GST_TAG_IMAGE_TYPE_ILLUSTRATION")
+    '("band-artist-logo" "GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO")
+    '("publisher-studio-logo" "GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO")
+  )
+)
+
+
+;; From gsttagdemux.h
+
+(define-function demux_get_type
+  (c-name "gst_tag_demux_get_type")
+  (return-type "GType")
+)
+
+
+
+;; From tag.h
+
+(define-function image_type_get_type
+  (c-name "gst_tag_image_type_get_type")
+  (return-type "GType")
+)
+
+(define-function from_vorbis_tag
+  (c-name "gst_tag_from_vorbis_tag")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "vorbis_tag")
+  )
+)
+
+(define-function to_vorbis_tag
+  (c-name "gst_tag_to_vorbis_tag")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "gst_tag")
+  )
+)
+
+(define-function gst_vorbis_tag_add
+  (c-name "gst_vorbis_tag_add")
+  (return-type "none")
+  (parameters
+    '("GstTagList*" "list")
+    '("const-gchar*" "tag")
+    '("const-gchar*" "value")
+  )
+)
+
+(define-function to_vorbis_comments
+  (c-name "gst_tag_to_vorbis_comments")
+  (return-type "GList*")
+  (parameters
+    '("const-GstTagList*" "list")
+    '("const-gchar*" "tag")
+  )
+)
+
+(define-function list_from_vorbiscomment_buffer
+  (c-name "gst_tag_list_from_vorbiscomment_buffer")
+  (return-type "GstTagList*")
+  (parameters
+    '("const-GstBuffer*" "buffer")
+    '("const-guint8*" "id_data")
+    '("const-guint" "id_data_length")
+    '("gchar**" "vendor_string")
+  )
+)
+
+(define-method to_vorbiscomment_buffer
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_to_vorbiscomment_buffer")
+  (return-type "GstBuffer*")
+  (parameters
+    '("const-guint8*" "id_data")
+    '("const-guint" "id_data_length")
+    '("const-gchar*" "vendor_string")
+  )
+)
+
+(define-function id3_genre_count
+  (c-name "gst_tag_id3_genre_count")
+  (return-type "guint")
+)
+
+(define-function id3_genre_get
+  (c-name "gst_tag_id3_genre_get")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-guint" "id")
+  )
+)
+
+(define-function list_new_from_id3v1
+  (c-name "gst_tag_list_new_from_id3v1")
+  (return-type "GstTagList*")
+  (parameters
+    '("const-guint8*" "data")
+  )
+)
+
+(define-function from_id3_tag
+  (c-name "gst_tag_from_id3_tag")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "id3_tag")
+  )
+)
+
+(define-function from_id3_user_tag
+  (c-name "gst_tag_from_id3_user_tag")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "type")
+    '("const-gchar*" "id3_user_tag")
+  )
+)
+
+(define-function to_id3_tag
+  (c-name "gst_tag_to_id3_tag")
+  (return-type "const-gchar*")
+  (parameters
+    '("const-gchar*" "gst_tag")
+  )
+)
+
+(define-method add_id3_image
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_add_id3_image")
+  (return-type "gboolean")
+  (parameters
+    '("const-guint8*" "image_data")
+    '("guint" "image_data_len")
+    '("guint" "id3_picture_type")
+  )
+)
+
+(define-function parse_extended_comment
+  (c-name "gst_tag_parse_extended_comment")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "ext_comment")
+    '("gchar**" "key")
+    '("gchar**" "lang")
+    '("gchar**" "value")
+    '("gboolean" "fail_if_no_key")
+  )
+)
+
+(define-function freeform_string_to_utf8
+  (c-name "gst_tag_freeform_string_to_utf8")
+  (return-type "gchar*")
+  (parameters
+    '("const-gchar*" "data")
+    '("gint" "size")
+    '("const-gchar**" "env_vars")
+  )
+)
+
+(define-function image_data_to_image_buffer
+  (c-name "gst_tag_image_data_to_image_buffer")
+  (return-type "GstBuffer*")
+  (parameters
+    '("const-guint8*" "image_data")
+    '("guint" "image_data_len")
+    '("GstTagImageType" "image_type")
+  )
+)
+
+(define-function register_musicbrainz_tags
+  (c-name "gst_tag_register_musicbrainz_tags")
+  (return-type "none")
+)
+
+

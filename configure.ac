@@ -186,6 +186,7 @@ then
   then
     AC_DEFINE_UNQUOTED(HAVE_GST_AUDIO, 1, [We can use the gst-audio library])
     AC_DEFINE_UNQUOTED(HAVE_GST_VIDEO, 1, [We can use the gst-video library])
+    AC_DEFINE_UNQUOTED(HAVE_GST_TAG, 1, [We can use the gst-tag library])
   fi
 
 else
@@ -203,6 +204,7 @@ else
   AC_DEFINE_UNQUOTED(HAVE_PLUGINS_INSTALL, 1, [We can use the plugins-install methods])
   AC_DEFINE_UNQUOTED(HAVE_GST_AUDIO, 1, [We can use the gst-audio library])
   AC_DEFINE_UNQUOTED(HAVE_GST_VIDEO, 1, [We can use the gst-video library])
+  AC_DEFINE_UNQUOTED(HAVE_GST_TAG, 1, [We can use the gst-tag library])
 fi
 AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 AC_SUBST(IGNORE_GST_0_10_13)
@@ -220,6 +222,7 @@ AC_SUBST(HAVE_VIDEO_ORIENTATION)
 AC_SUBST(HAVE_PLUGINS_INSTALL)
 AM_CONDITIONAL(HAVE_GST_AUDIO, $HAVE_GST_AUDIO)
 AM_CONDITIONAL(HAVE_GST_VIDEO, $HAVE_GST_VIDEO)
+AM_CONDITIONAL(HAVE_GST_TAG, $HAVE_GST_TAG)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

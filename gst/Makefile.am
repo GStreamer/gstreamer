@@ -149,6 +149,28 @@ video.c: $(VIDEO_DEFS) $(VIDEO_OVERRIDES) $(GEN_FILES)
 
 endif
 
+# GStreamer tag bindings
+TAG_OVERRIDES = tag.override
+TAG_DEFS = tag.defs
+CLEANFILES += tag.c
+EXTRA_DIST += $(TAG_DEFS) $(TAG_OVERRIDES)
+defs_DATA += $(TAG_DEFS)
+GEN_FILES += $(TAG_DEFS)
+
+if HAVE_GST_TAG
+
+ tag_lib = tag.la
+ pygstexec_LTLIBRARIES += $(tag_lib)
+ tag_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
+ tag_la_LIBADD = $(common_libadd) $(GST_PLUGINS_BASE_LIBS) -lgsttag-0.10
+ tag_la_LDFLAGS = $(common_ldflags) \
+	-export-symbols-regex "^(inittag|_PyGObject_API).*" $(GST_PLUGINS_BASE_LIBS)
+ tag_la_SOURCES = tagmodule.c gst-argtypes.c pygstminiobject.c
+ nodist_tag_la_SOURCES = tag.c
+tag.c: $(TAG_DEFS) $(TAG_OVERRIDES) $(GEN_FILES)
+
+endif
+
 
 .defs.c: 
 	($(PYTHON) $(top_srcdir)/codegen/codegen.py \
