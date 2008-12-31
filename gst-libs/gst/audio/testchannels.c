@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 
 #include <multichannel.c>
-#include <multichannel-enumtypes.c>
+#include <audio-enumtypes.c>
 
 gint
 main (gint argc, gchar * argv[])

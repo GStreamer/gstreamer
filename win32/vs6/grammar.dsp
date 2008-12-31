@@ -250,39 +250,39 @@ BuildCmds= \
 # End Source File
 # Begin Source File
 
-SOURCE="..\common\multichannel-enumtypes.c"
+SOURCE="..\common\audio-enumtypes.c"
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
 
 # Begin Custom Build
-InputPath="..\common\multichannel-enumtypes.c"
+InputPath="..\common\audio-enumtypes.c"
 
 BuildCmds= \
-	copy ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio \
-	copy ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
+	copy ..\common\audio-enumtypes.h ..\..\gst-libs\gst\audio \
+	copy ..\common\audio-enumtypes.c ..\..\gst-libs\gst\audio
 	
 
-"..\..\gst-libs\gst\audio\multichannel-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\gst-libs\gst\audio\audio-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
-"..\..\gst-libs\gst\audio\multichannel-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\gst-libs\gst\audio\audio-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
 
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
 # Begin Custom Build
-InputPath="..\common\multichannel-enumtypes.c"
+InputPath="..\common\audio-enumtypes.c"
 
 BuildCmds= \
-	copy ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio \
-	copy ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
+	copy ..\common\audio-enumtypes.h ..\..\gst-libs\gst\audio \
+	copy ..\common\audio-enumtypes.c ..\..\gst-libs\gst\audio
 	
 
-"..\..\gst-libs\gst\audio\multichannel-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\gst-libs\gst\audio\audio-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 
-"..\..\gst-libs\gst\audio\multichannel-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+"..\..\gst-libs\gst\audio\audio-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
 

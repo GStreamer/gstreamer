@@ -21,7 +21,7 @@
 #define __GST_AUDIO_MULTICHANNEL_H__
 
 #include <gst/audio/audio.h>
-#include <gst/audio/multichannel-enumtypes.h>
+#include <gst/audio/audio-enumtypes.h>
 
 G_BEGIN_DECLS
 

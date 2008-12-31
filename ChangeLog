@@ -1,3 +1,28 @@
+2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/audio/multichannel.h:
+	* gst-libs/gst/audio/testchannels.c:
+	* win32/MANIFEST:
+	* win32/common/audio-enumtypes.c:
+	(gst_audio_channel_position_get_type),
+	(gst_ring_buffer_state_get_type),
+	(gst_ring_buffer_seg_state_get_type),
+	(gst_buffer_format_type_get_type), (gst_buffer_format_get_type):
+	* win32/common/audio-enumtypes.h:
+	* win32/common/multichannel-enumtypes.c:
+	* win32/common/multichannel-enumtypes.h:
+	* win32/vs6/grammar.dsp:
+	* win32/vs6/libgstaudio.dsp:
+	* win32/vs7/libgstaudio.vcproj:
+	* win32/vs8/libgstaudio.vcproj:
+	Switch glib-mkenum for gst-libs/gst/audio from multichannel- to
+	audio- in order to wrap all enums declarations of that library.
+	This modification should not matter since that header file is not a
+	public header (it will be included by public headers).
+	Modify win32 crap^Wfiles accordingly.
+
 2008-12-30  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.h:

@@ -22,7 +22,7 @@
 #endif
 
 #include "audio.h"
-#include "multichannel-enumtypes.h"
+#include "audio-enumtypes.h"
 
 #include <gst/gststructure.h>
 

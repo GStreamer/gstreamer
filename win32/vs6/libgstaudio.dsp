@@ -148,7 +148,7 @@ SOURCE="..\..\gst-libs\gst\audio\mixerutils.c"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\gst-libs\gst\audio\multichannel-enumtypes.c"
+SOURCE="..\..\gst-libs\gst\audio\audio-enumtypes.c"
 # End Source File
 # Begin Source File
 
@@ -192,7 +192,7 @@ SOURCE="..\..\gst-libs\gst\audio\gstringbuffer.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\gst-libs\gst\audio\multichannel-enumtypes.h"
+SOURCE="..\..\gst-libs\gst\audio\audio-enumtypes.h"
 # End Source File
 # Begin Source File
 

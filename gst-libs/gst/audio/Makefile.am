@@ -1,10 +1,13 @@
 # variables used for enum/marshal generation
-glib_enum_headers=multichannel.h
+glib_enum_headers= 		\
+	multichannel.h		\
+	gstringbuffer.h
+
 glib_enum_define=GST_AUDIO
 glib_enum_prefix=gst_audio
 
-built_sources = multichannel-enumtypes.c
-built_headers = multichannel-enumtypes.h
+built_sources = audio-enumtypes.c
+built_headers = audio-enumtypes.h
 BUILT_SOURCES = $(built_sources) $(built_headers)
 
 lib_LTLIBRARIES = \
@@ -39,7 +42,7 @@ libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
 	multichannel.h
 
 nodist_libgstaudio_@GST_MAJORMINOR@include_HEADERS = \
-	multichannel-enumtypes.h
+	audio-enumtypes.h
 
 libgstaudio_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudio_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) \

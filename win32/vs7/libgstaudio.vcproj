@@ -49,8 +49,8 @@
 				CommandLine="copy /y &quot;$(TargetPath)&quot; c:\gstreamer\debug\bin"/>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy /y ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio
-copy /y ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
+				CommandLine="copy /y ..\common\audio-enumtypes.h ..\..\gst-libs\gst\audio
+copy /y ..\common\audio-enumtypes.c ..\..\gst-libs\gst\audio
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -104,8 +104,8 @@ copy /y ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
 				CommandLine="copy /y &quot;$(TargetPath)&quot; c:\gstreamer\bin"/>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy /y ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio
-copy /y ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
+				CommandLine="copy /y ..\common\audio-enumtypes.h ..\..\gst-libs\gst\audio
+copy /y ..\common\audio-enumtypes.c ..\..\gst-libs\gst\audio
 "/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
@@ -161,7 +161,7 @@ copy /y ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
 				RelativePath="..\common\libgstaudio.def">
 			</File>
 			<File
-				RelativePath="..\..\gst-libs\gst\audio\multichannel-enumtypes.c">
+				RelativePath="..\..\gst-libs\gst\audio\audio-enumtypes.c">
 			</File>
 			<File
 				RelativePath="..\..\gst-libs\gst\audio\multichannel.c">

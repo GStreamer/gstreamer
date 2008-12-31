@@ -17,8 +17,8 @@ win32/common/libgstrtsp.def
 win32/common/libgstsdp.def
 win32/common/libgsttag.def
 win32/common/libgstvideo.def
-win32/common/multichannel-enumtypes.c
-win32/common/multichannel-enumtypes.h
+win32/common/audio-enumtypes.c
+win32/common/audio-enumtypes.h
 win32/common/pbutils-enumtypes.c
 win32/common/pbutils-enumtypes.h
 win32/vs6/gst_plugins_base.dsw

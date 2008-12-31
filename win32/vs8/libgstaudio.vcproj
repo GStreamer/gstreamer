@@ -23,7 +23,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy /y ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio&#x0D;&#x0A;copy /y ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio&#x0D;&#x0A;"
+				CommandLine="copy /y ..\common\audio-enumtypes.h ..\..\gst-libs\gst\audio&#x0D;&#x0A;copy /y ..\common\audio-enumtypes.c ..\..\gst-libs\gst\audio&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -106,7 +106,7 @@
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy /y ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio&#x0D;&#x0A;copy /y ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio&#x0D;&#x0A;"
+				CommandLine="copy /y ..\common\audio-enumtypes.h ..\..\gst-libs\gst\audio&#x0D;&#x0A;copy /y ..\common\audio-enumtypes.c ..\..\gst-libs\gst\audio&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -224,7 +224,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\gst-libs\gst\audio\multichannel-enumtypes.c"
+				RelativePath="..\..\gst-libs\gst\audio\audio-enumtypes.c"
 				>
 			</File>
 			<File
