@@ -1,5 +1,11 @@
 2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_result_get_type):
+	* gst-libs/gst/tag/gsttagdemux.h:
+	Add GType for GstTagDemuxResult enum.
+
+2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst-libs/gst/video/Makefile.am:
 	* gst-libs/gst/video/video.h:
 	Add glib-mkenum for GstVideoFormat enum GTYPE auto-generation.
