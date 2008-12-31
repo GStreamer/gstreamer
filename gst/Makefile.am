@@ -127,6 +127,29 @@ audio.c: $(AUDIO_DEFS) $(AUDIO_OVERRIDES) $(GEN_FILES)
 
 endif
 
+# GStreamer video bindings
+VIDEO_OVERRIDES = video.override
+VIDEO_DEFS = video.defs
+CLEANFILES += video.c
+EXTRA_DIST += $(VIDEO_DEFS) $(VIDEO_OVERRIDES)
+defs_DATA += $(VIDEO_DEFS)
+GEN_FILES += $(VIDEO_DEFS)
+
+if HAVE_GST_VIDEO
+
+ video_lib = video.la
+ pygstexec_LTLIBRARIES += $(video_lib)
+ video_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
+ video_la_LIBADD = $(common_libadd) $(GST_PLUGINS_BASE_LIBS) -lgstvideo-0.10
+ video_la_LDFLAGS = $(common_ldflags) \
+	-export-symbols-regex "^(initvideo|_PyGObject_API).*" $(GST_PLUGINS_BASE_LIBS)
+ video_la_SOURCES = videomodule.c gst-argtypes.c pygstminiobject.c
+ nodist_video_la_SOURCES = video.c
+video.c: $(VIDEO_DEFS) $(VIDEO_OVERRIDES) $(GEN_FILES)
+
+endif
+
+
 .defs.c: 
 	($(PYTHON) $(top_srcdir)/codegen/codegen.py \
 		--load-types $(srcdir)/arg-types.py \

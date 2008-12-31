@@ -185,6 +185,7 @@ then
   if test $GST_PB_MINOR_VERSION -ge "22"
   then
     AC_DEFINE_UNQUOTED(HAVE_GST_AUDIO, 1, [We can use the gst-audio library])
+    AC_DEFINE_UNQUOTED(HAVE_GST_VIDEO, 1, [We can use the gst-video library])
   fi
 
 else
@@ -201,6 +202,7 @@ else
   IGNORE_GST_PB_0_10_18=""
   AC_DEFINE_UNQUOTED(HAVE_PLUGINS_INSTALL, 1, [We can use the plugins-install methods])
   AC_DEFINE_UNQUOTED(HAVE_GST_AUDIO, 1, [We can use the gst-audio library])
+  AC_DEFINE_UNQUOTED(HAVE_GST_VIDEO, 1, [We can use the gst-video library])
 fi
 AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 AC_SUBST(IGNORE_GST_0_10_13)
@@ -217,6 +219,7 @@ AC_SUBST(IGNORE_GST_PB_0_10_18)
 AC_SUBST(HAVE_VIDEO_ORIENTATION)
 AC_SUBST(HAVE_PLUGINS_INSTALL)
 AM_CONDITIONAL(HAVE_GST_AUDIO, $HAVE_GST_AUDIO)
+AM_CONDITIONAL(HAVE_GST_VIDEO, $HAVE_GST_VIDEO)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

@@ -2,6 +2,16 @@
 
 	* configure.ac:
 	* gst/Makefile.am:
+	* gst/video.defs:
+	* gst/video.override:
+	* gst/videomodule.c: (initvideo):
+	Wrap gst-plugins-base's video helper library.
+	Partially fixes #565762
+
+2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
 	* gst/audio.defs:
 	* gst/audio.override:
 	* gst/audiomodule.c: (initaudio):
