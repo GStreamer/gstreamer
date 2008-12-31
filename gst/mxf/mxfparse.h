@@ -27,7 +27,7 @@
 #include "mxftypes.h"
 #include "mxfmetadata.h"
 
-typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, MXFMetadataStructuralComponent *component, gpointer mapping_data, GstBuffer **outbuf);
+typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, MXFMetadataSourceClip *component, gpointer mapping_data, GstBuffer **outbuf);
 
 typedef struct {
   gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);

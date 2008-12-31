@@ -1748,7 +1748,7 @@ mxf_metadata_sequence_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
 static void
 mxf_metadata_sequence_init (MXFMetadataSequence * self)
 {
-
+  self->duration = -1;
 }
 
 static void
@@ -1810,7 +1810,7 @@ error:
 static void
 mxf_metadata_structural_component_init (MXFMetadataStructuralComponent * self)
 {
-
+  self->duration = -1;
 }
 
 static void
@@ -2617,6 +2617,7 @@ static void
     (MXFMetadataGenericPictureEssenceDescriptor * self)
 {
   self->signal_standard = 1;
+  self->frame_layout = 255;
 }
 
 static void

@@ -1,3 +1,45 @@
+2008-12-31  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c: (mxf_bwf_handle_essence_element),
+	(mxf_aes3_handle_essence_element):
+	* gst/mxf/mxfalaw.c: (mxf_alaw_handle_essence_element):
+	* gst/mxf/mxfd10.c: (mxf_d10_picture_handle_essence_element),
+	(mxf_d10_sound_handle_essence_element):
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_pad_init),
+	(gst_mxf_demux_choose_package),
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_pad_next_component),
+	(gst_mxf_demux_handle_generic_container_essence_element),
+	(gst_mxf_demux_parse_footer_metadata),
+	(gst_mxf_demux_handle_klv_packet), (gst_mxf_demux_src_query):
+	* gst/mxf/mxfdv-dif.c: (mxf_dv_dif_handle_essence_element):
+	* gst/mxf/mxfjpeg2000.c: (mxf_jpeg2000_handle_essence_element):
+	* gst/mxf/mxfmetadata.c: (mxf_metadata_sequence_init),
+	(mxf_metadata_structural_component_init),
+	(mxf_metadata_generic_picture_essence_descriptor_init):
+	* gst/mxf/mxfmpeg.c: (mxf_mpeg_video_handle_essence_element),
+	(mxf_mpeg_audio_handle_essence_element):
+	* gst/mxf/mxfparse.h:
+	* gst/mxf/mxfup.c: (mxf_up_handle_essence_element):
+	* gst/mxf/mxfvc3.c: (mxf_vc3_handle_essence_element):
+	* tests/check/elements/mxfdemux.c: (_sink_chain):
+	Implement support for OP2a/b/c and OP3a/b/c, i.e. tracks with
+	more than a single component. This currently only works for
+	the case where the components are stored in playback order
+	in the file.
+
+	Set some more default/distinguished values for the structural
+	metadata.
+
+	Make some types more strict by choosing the correct subclasses.
+
+	Set DISCONT flag on buffers after a component switch.
+
+	Take the last partition from the random index pack for the footer
+	partition of the header partition doesn't reference the footer
+	partition. This gives us the final structural metadata for
+	some more files in the beginning.
+
 2008-12-29  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/mpegdemux/gstmpegdemux.c: (gst_flups_demux_src_query),

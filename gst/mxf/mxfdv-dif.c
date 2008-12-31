@@ -70,7 +70,7 @@ static GstFlowReturn
 mxf_dv_dif_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    MXFMetadataSourceClip * component, gpointer mapping_data,
     GstBuffer ** outbuf)
 {
   *outbuf = buffer;

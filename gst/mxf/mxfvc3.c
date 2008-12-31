@@ -65,7 +65,7 @@ static GstFlowReturn
 mxf_vc3_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    MXFMetadataSourceClip * component, gpointer mapping_data,
     GstBuffer ** outbuf)
 {
   *outbuf = buffer;
@@ -100,10 +100,10 @@ mxf_vc3_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       f = track->parent.descriptor[i];
       break;
     } else if (MXF_IS_METADATA_FILE_DESCRIPTOR (track->parent.descriptor[i]) &&

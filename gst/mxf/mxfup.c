@@ -80,7 +80,7 @@ static GstFlowReturn
 mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataStructuralComponent * component, gpointer mapping_data,
+    MXFMetadataSourceClip * component, gpointer mapping_data,
     GstBuffer ** outbuf)
 {
   MXFUPMappingData *data = mapping_data;
@@ -222,19 +222,19 @@ mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
-          descriptor[i];
-      r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->parent.
-          descriptor[i];
-      break;
-    } else if (MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (track->
+    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->
             parent.descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
-          descriptor[i];
-      c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->parent.
-          descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
+          parent.descriptor[i];
+      r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->
+          parent.descriptor[i];
+      break;
+    } else if (MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
+          parent.descriptor[i];
+      c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->
+          parent.descriptor[i];
     }
   }
 

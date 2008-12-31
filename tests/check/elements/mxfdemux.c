@@ -69,7 +69,6 @@ _sink_chain (GstPad * pad, GstBuffer * buffer)
 
   fail_unless (GST_BUFFER_TIMESTAMP (buffer) == 0);
   fail_unless (GST_BUFFER_DURATION (buffer) == 200 * GST_MSECOND);
-  fail_unless (GST_BUFFER_OFFSET (buffer) == 0);
 
   gst_buffer_unref (buffer);
   gst_caps_unref (caps);
