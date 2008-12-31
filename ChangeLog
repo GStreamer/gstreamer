@@ -1,5 +1,12 @@
 2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst-libs/gst/video/Makefile.am:
+	* gst-libs/gst/video/video.h:
+	Add glib-mkenum for GstVideoFormat enum GTYPE auto-generation.
+	This will help bindings to use it.
+
+2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst-libs/gst/audio/Makefile.am:
 	* gst-libs/gst/audio/audio.c:
 	* gst-libs/gst/audio/multichannel.h:
