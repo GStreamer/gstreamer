@@ -34,6 +34,8 @@ EXPORTS
 	gst_base_audio_src_set_provide_clock
 	gst_base_audio_src_set_slave_method
 	gst_base_audio_src_slave_method_get_type
+	gst_buffer_format_get_type
+	gst_buffer_format_type_get_type
 	gst_ring_buffer_acquire
 	gst_ring_buffer_activate
 	gst_ring_buffer_advance
@@ -58,8 +60,10 @@ EXPORTS
 	gst_ring_buffer_read
 	gst_ring_buffer_release
 	gst_ring_buffer_samples_done
+	gst_ring_buffer_seg_state_get_type
 	gst_ring_buffer_set_callback
 	gst_ring_buffer_set_flushing
 	gst_ring_buffer_set_sample
 	gst_ring_buffer_start
+	gst_ring_buffer_state_get_type
 	gst_ring_buffer_stop

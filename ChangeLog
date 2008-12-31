@@ -1,3 +1,10 @@
+2008-12-31  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* win32/common/libgstaudio.def:
+	* win32/common/libgsttag.def:
+	* win32/common/libgstvideo.def:
+	Add new exports to win32 files.
+
 2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_result_get_type):

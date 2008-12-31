@@ -1,5 +1,6 @@
 EXPORTS
 	gst_tag_demux_get_type
+	gst_tag_demux_result_get_type
 	gst_tag_freeform_string_to_utf8
 	gst_tag_from_id3_tag
 	gst_tag_from_id3_user_tag
