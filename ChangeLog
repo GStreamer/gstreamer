@@ -1,3 +1,20 @@
+2009-01-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  Add some ideas, how to make the graph smaller.
+
+	* gst/gstutils.c:
+	  Add a comment from a debug session.
+
+	* libs/gst/base/gstbasetransform.c:
+	  Log more context.
+
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	  Indet.
+
+	* plugins/elements/gstcapsfilter.c:
+	  Fix typo in docs.
+
 2008-12-27  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstbus.c: (gst_bus_dispose), (gst_bus_get_property),

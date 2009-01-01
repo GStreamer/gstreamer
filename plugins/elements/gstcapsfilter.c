@@ -22,7 +22,7 @@
 /**
  * SECTION:element-capsfilter
  *
- * The element does not modify data as such, but can enforce limmitations on the
+ * The element does not modify data as such, but can enforce limitations on the
  * data format.
  */
 

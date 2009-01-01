@@ -125,8 +125,9 @@ gst_interpolation_control_source_new (void)
  * Returns: %TRUE if the interpolation mode could be set, %FALSE otherwise
  */
 gboolean
-    gst_interpolation_control_source_set_interpolation_mode
-    (GstInterpolationControlSource * self, GstInterpolateMode mode) {
+gst_interpolation_control_source_set_interpolation_mode
+    (GstInterpolationControlSource * self, GstInterpolateMode mode)
+{
   gboolean ret = TRUE;
   GstControlSource *csource = GST_CONTROL_SOURCE (self);
 

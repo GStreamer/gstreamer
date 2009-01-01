@@ -22,6 +22,11 @@
  * edge [ constraint=false ];
  *   this creates strange graphs ("minlen=0" is better)
  * try puting src/sink ghostpads for each bin into invisible clusters
+ *
+ * for more compact nodes, try
+ * - changing node-shape from box into record
+ * - use labels like : element [ label="{element | <src> src | <sink> sink}"]
+ * - point to record-connectors : element1:src -> element2:sink
  */
 
 #include "gst_private.h"

@@ -1033,7 +1033,8 @@ no_transform_possible:
   {
     GST_WARNING_OBJECT (trans,
         "transform could not transform %" GST_PTR_FORMAT
-        " in anything we support", caps);
+        " in anything we support (othercaps %" GST_PTR_FORMAT ")",
+        caps, othercaps);
     ret = FALSE;
     goto done;
   }

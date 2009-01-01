@@ -2533,6 +2533,7 @@ gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 static gboolean
 intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
 {
+  /* skip the pad, the request came from */
   if (pad != orig) {
     GstCaps *peercaps, *existing;
 
