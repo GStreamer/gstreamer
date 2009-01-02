@@ -401,7 +401,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
       .5);
   if (conf->bitRate > maxbitrate) {
     GST_ELEMENT_WARNING (faac, RESOURCE, SETTINGS, (NULL),
-        ("bitrate %u exceeds maximum allowed bitrate of %u for samplerate %d. "
+        ("bitrate %lu exceeds maximum allowed bitrate of %u for samplerate %d. "
             "Setting bitrate to %u", conf->bitRate, maxbitrate,
             faac->samplerate, maxbitrate));
     conf->bitRate = maxbitrate;

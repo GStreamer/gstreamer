@@ -1,5 +1,13 @@
 2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
 
+	* ext/apexsink/Makefile.am:
+	Link against -lgcrpyto for RSA_new and RSA_free.
+	* ext/faac/gstfaac.c:
+	* ext/x264/gstx264enc.c:
+	Fix compiler warnings.
+
+2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
+
 	* gst/mpegdemux/gstmpegdemux.c:
 	Initialize scr_rate_n and scr_rate_d in order to fix compiler warnings.
 

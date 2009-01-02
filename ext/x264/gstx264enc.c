@@ -617,7 +617,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264enc = x264_encoder_open (&encoder->x264param);
   if (!encoder->x264enc) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
-        ("Can not initialize x264 encoder."), (""));
+        ("Can not initialize x264 encoder."), (NULL));
     return FALSE;
   }
 
