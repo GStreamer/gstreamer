@@ -107,7 +107,7 @@ G_DEFINE_TYPE (RTPSession, rtp_session, G_TYPE_OBJECT);
 
 static RTPSource *obtain_source (RTPSession * sess, guint32 ssrc,
     gboolean * created, RTPArrivalStats * arrival, gboolean rtp);
-static GstFlowReturn rtp_session_send_bye_locked (RTPSession * sess,
+static GstFlowReturn rtp_session_schedule_bye_locked (RTPSession * sess,
     const gchar * reason, GstClockTime current_time);
 static GstClockTime calculate_rtcp_interval (RTPSession * sess,
     gboolean deterministic, gboolean first);
@@ -1109,7 +1109,7 @@ check_collision (RTPSession * sess, RTPSource * source,
       GST_DEBUG ("Collision for SSRC %x", rtp_source_get_ssrc (source));
       on_ssrc_collision (sess, source);
 
-      rtp_session_send_bye_locked (sess, "SSRC Collision", arrival->time);
+      rtp_session_schedule_bye_locked (sess, "SSRC Collision", arrival->time);
 
       sess->change_ssrc = TRUE;
     }
@@ -2031,19 +2031,11 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
   return result;
 }
 
-/**
- * rtp_session_send_bye_locked:
- * @sess: an #RTPSession
- * @reason: a reason or NULL
- *
- * Stop the current @sess and schedule a BYE message for the other members.
- *
+/* Stop the current @sess and schedule a BYE message for the other members.
  * One must have the session lock to call this function
- *
- * Returns: a #GstFlowReturn.
  */
 static GstFlowReturn
-rtp_session_send_bye_locked (RTPSession * sess, const gchar * reason,
+rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
     GstClockTime current_time)
 {
   GstFlowReturn result = GST_FLOW_OK;
@@ -2087,19 +2079,17 @@ done:
 }
 
 /**
- * rtp_session_send_bye:
+ * rtp_session_schedule_bye:
  * @sess: an #RTPSession
  * @reason: a reason or NULL
  * @current_time: the current system time
  *
  * Stop the current @sess and schedule a BYE message for the other members.
  *
- * One must have the session lock to call this function
- *
  * Returns: a #GstFlowReturn.
  */
 GstFlowReturn
-rtp_session_send_bye (RTPSession * sess, const gchar * reason,
+rtp_session_schedule_bye (RTPSession * sess, const gchar * reason,
     GstClockTime current_time)
 {
   GstFlowReturn result = GST_FLOW_OK;
@@ -2107,7 +2097,7 @@ rtp_session_send_bye (RTPSession * sess, const gchar * reason,
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
   RTP_SESSION_LOCK (sess);
-  result = rtp_session_send_bye_locked (sess, reason, current_time);
+  result = rtp_session_schedule_bye_locked (sess, reason, current_time);
   RTP_SESSION_UNLOCK (sess);
 
   return result;
