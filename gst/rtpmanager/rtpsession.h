@@ -292,7 +292,7 @@ GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer 
                                                     GstClockTime current_time, guint64 ntpnstime);
 
 /* stopping the session */
-GstFlowReturn   rtp_session_send_bye               (RTPSession *sess, const gchar *reason,
+GstFlowReturn   rtp_session_schedule_bye           (RTPSession *sess, const gchar *reason,
                                                     GstClockTime current_time);
 
 /* get interval for next RTCP interval */

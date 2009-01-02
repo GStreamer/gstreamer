@@ -1,3 +1,13 @@
+2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_event_send_rtp_sink),
+	(gst_rtp_session_getcaps_send_rtp):
+	* gst/rtpmanager/rtpsession.c: (check_collision),
+	(rtp_session_schedule_bye_locked), (rtp_session_schedule_bye):
+	* gst/rtpmanager/rtpsession.h:
+	Rename a method to better reflect what it really does.
+
 2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* ext/apexsink/Makefile.am:
