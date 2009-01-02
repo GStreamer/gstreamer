@@ -1,3 +1,11 @@
+2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/rtp/.cvsignore:
+	* tests/examples/rtp/Makefile.am:
+	* tests/examples/rtp/client-PCMA.c: (pad_added_cb), (main):
+	* tests/examples/rtp/server-alsasrc-PCMA.c: (main):
+	Add two C examples of using gstrtpbin as a sender and a receiver.
+
 2008-12-31  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ChangeLog:
