@@ -81,7 +81,7 @@ gst_cdio_add_cdtext_album_tags (GstObject * src, CdIo * cdio, GstTagList * tags)
 
   t = cdio_get_cdtext (cdio, 0);
   if (t == NULL) {
-    GST_DEBUG_OBJECT (src, "no CD-TEXT for album %u");
+    GST_DEBUG_OBJECT (src, "no CD-TEXT for album");
     return;
   }
 
