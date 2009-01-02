@@ -1140,6 +1140,9 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
     /* estimate byte rate related to the SCR */
     scr_rate_n = demux->last_scr_offset - demux->first_scr_offset;
     scr_rate_d = scr_adjusted - demux->first_scr;
+  } else {
+    scr_rate_n = demux->scr_rate_n;
+    scr_rate_d = demux->scr_rate_d;
   }
 
   GST_DEBUG_OBJECT (demux, "%s mode scr: %" G_GUINT64_FORMAT " at %"
