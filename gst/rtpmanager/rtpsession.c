@@ -1209,9 +1209,14 @@ rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
     g_hash_table_steal (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (sess->source->ssrc));
 
+    GST_DEBUG ("setting internal SSRC to %08x", ssrc);
+    /* After this call, any receiver of the old SSRC either in RTP or RTCP
+     * packets will timeout on the old SSRC, we could potentially schedule a
+     * BYE RTCP for the old SSRC... */
     sess->source->ssrc = ssrc;
     rtp_source_reset (sess->source);
 
+    /* rehash with the new SSRC */
     g_hash_table_insert (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (sess->source->ssrc), sess->source);
   }

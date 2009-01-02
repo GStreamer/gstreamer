@@ -1,5 +1,15 @@
 2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_setcaps_send_rtp), (create_send_rtp_sink):
+	* gst/rtpmanager/rtpsession.c: (rtp_session_set_internal_ssrc):
+	When an SSRC is found on the caps of the sender RTP, use this as the
+	internal SSRC. Fixes #565910.
+
+2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpsession.c:
 	(gst_rtp_session_event_send_rtp_sink),
 	(gst_rtp_session_getcaps_send_rtp):

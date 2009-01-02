@@ -1675,6 +1675,27 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad)
   return result;
 }
 
+static gboolean
+gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstCaps * caps)
+{
+  GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  guint ssrc;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  priv = rtpsession->priv;
+
+  if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
+    GST_DEBUG_OBJECT (rtpsession, "setting internal SSRC to %08x", ssrc);
+    rtp_session_set_internal_ssrc (priv->session, ssrc);
+  }
+
+  gst_object_unref (rtpsession);
+
+  return TRUE;
+}
+
 /* Recieve an RTP packet to be send to the receivers, send to RTP session
  * manager and forward to send_rtp_src.
  */
@@ -1852,6 +1873,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_chain_send_rtp);
   gst_pad_set_getcaps_function (rtpsession->send_rtp_sink,
       gst_rtp_session_getcaps_send_rtp);
+  gst_pad_set_setcaps_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_setcaps_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
       (GstPadEventFunction) gst_rtp_session_event_send_rtp_sink);
   gst_pad_set_internal_link_function (rtpsession->send_rtp_sink,
