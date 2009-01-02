@@ -2585,6 +2585,24 @@
   )
 )
 
+(define-method ASSOC_FORMAT
+  (of-object "GstIndexEntry")
+  (c-name "GST_INDEX_ASSOC_FORMAT")
+  (return-type "GstFormat")
+  (parameters
+   '("guint" "i")
+  )
+)
+
+(define-method ASSOC_VALUE
+  (of-object "GstIndexEntry")
+  (c-name "GST_INDEX_ASSOC_VALUE")
+  (return-type "gint64")
+  (parameters
+   '("guint" "i")
+  )
+)
+
 (define-function index_factory_get_type
   (c-name "gst_index_factory_get_type")
   (return-type "GType")

@@ -1594,3 +1594,95 @@ _wrap_g_error_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
     self->free_on_dealloc = TRUE;
     return 0;
 }
+%%
+override-attr GstIndexEntry.NASSOCS
+static PyObject *
+_wrap_gst_index_entry__get_NASSOCS(PyObject *self, void *closure)
+{
+    GstIndexEntry *entry;
+
+    g_assert (self);
+    entry = (GstIndexEntry*) pyg_boxed_get(self, GstIndexEntry);
+    g_assert (entry);
+
+    if (entry->type != GST_INDEX_ENTRY_ASSOCIATION) {
+	PyErr_SetString(PyExc_RuntimeError, "IndexEntry is not an AssociationEntry");
+	return NULL;
+    }
+    return PyInt_FromLong(GST_INDEX_NASSOCS(entry));
+}
+%%
+override-attr GstIndexEntry.ASSOC_FLAGS
+static PyObject *
+_wrap_gst_index_entry__get_ASSOC_FLAGS(PyObject *self, void *closure)
+{
+    GstIndexEntry *entry;
+
+    g_assert (self);
+    entry = (GstIndexEntry*) pyg_boxed_get(self, GstIndexEntry);
+    g_assert (entry);
+
+    if (entry->type != GST_INDEX_ENTRY_ASSOCIATION) {
+	PyErr_SetString(PyExc_RuntimeError, "IndexEntry is not an AssociationEntry");
+	return NULL;
+    }
+    return pyg_flags_from_gtype(GST_TYPE_ASSOC_FLAGS,
+				GST_INDEX_ASSOC_FLAGS (entry));
+}
+%%
+override-attr GstIndexEntry.ID_DESCRIPTION
+static PyObject *
+_wrap_gst_index_entry__get_ID_DESCRIPTION(PyObject *self, void *closure)
+{
+    GstIndexEntry *entry;
+
+    g_assert (self);
+    entry = (GstIndexEntry*) pyg_boxed_get(self, GstIndexEntry);
+    g_assert (entry);
+
+    if (entry->type != GST_INDEX_ENTRY_ID) {
+	PyErr_SetString(PyExc_RuntimeError, "IndexEntry is not an ID Entry");
+	return NULL;
+    }
+    if (GST_INDEX_ID_DESCRIPTION (entry))
+	return PyString_FromString(GST_INDEX_ID_DESCRIPTION (entry));
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+%%
+override-attr GstIndexEntry.FORMAT_FORMAT
+static PyObject *
+_wrap_gst_index_entry__get_FORMAT_FORMAT(PyObject *self, void *closure)
+{
+    GstIndexEntry *entry;
+
+    g_assert (self);
+    entry = (GstIndexEntry*) pyg_boxed_get(self, GstIndexEntry);
+    g_assert (entry);
+
+    if (entry->type != GST_INDEX_ENTRY_FORMAT) {
+	PyErr_SetString(PyExc_RuntimeError, "IndexEntry is not a FORMAT Entry");
+	return NULL;
+    }
+    return pyg_enum_from_gtype (GST_TYPE_FORMAT, GST_INDEX_FORMAT_FORMAT (entry));
+}
+%%
+override-attr GstIndexEntry.FORMAT_KEY
+static PyObject *
+_wrap_gst_index_entry__get_FORMAT_KEY(PyObject *self, void *closure)
+{
+    GstIndexEntry *entry;
+
+    g_assert (self);
+    entry = (GstIndexEntry*) pyg_boxed_get(self, GstIndexEntry);
+    g_assert (entry);
+
+    if (entry->type != GST_INDEX_ENTRY_FORMAT) {
+	PyErr_SetString(PyExc_RuntimeError, "IndexEntry is not a FORMAT Entry");
+	return NULL;
+    }
+    if (GST_INDEX_FORMAT_KEY (entry))
+	return PyString_FromString(GST_INDEX_FORMAT_KEY (entry));
+    Py_INCREF(Py_None);
+    return Py_None;
+}

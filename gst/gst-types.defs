@@ -287,7 +287,15 @@
   (in-module "Gst")
   (c-name "GstIndexEntry")
   (gtype-id "GST_TYPE_INDEX_ENTRY")
+  (fields
+   '("GstIndexEntryType" "type")
+   '("gint" "id")
+   '("gint" "NASSOCS")
+   '("GstAssocFlags" "ASSOC_FLAGS")
+   '("const-gchar*" "ID_DESCRIPTION")
+  )
 )
+
 
 (define-pointer StaticPadTemplate
   (in-module "Gst")

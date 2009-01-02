@@ -1,3 +1,10 @@
+2009-01-02  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gst.override:
+	Wrap more GstIndexEntry methods and properties.
+
 2008-12-31  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:
