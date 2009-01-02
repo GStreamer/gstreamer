@@ -1,3 +1,12 @@
+2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
+
+	* configure.ac:
+	* tests/examples/seek/Makefile.am:
+	* tests/icles/Makefile.am:
+	Make the seek and colorkey examples depend on gtk+-x11 as they use
+	GDK_WINDOW_XID.
+	Fixes the build with gtk+-quartz.
+
 2008-12-31  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* win32/common/libgstaudio.def:

@@ -1,4 +1,4 @@
-if HAVE_GTK
+if HAVE_GTK_X11
 GTK_EXAMPLES=seek scrubby
 endif
 

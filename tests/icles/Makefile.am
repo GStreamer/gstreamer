@@ -6,7 +6,7 @@ stress_xoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X_CFLAGS)
 stress_xoverlay_LDADD = $(GST_LIBS) $(X_LIBS) $(LIBM) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la
 
-if HAVE_GTK
+if HAVE_GTK_X11
 X_TESTS += test-colorkey
 
 test_colorkey_SOURCES = test-colorkey.c
