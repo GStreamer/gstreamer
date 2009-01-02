@@ -1,6 +1,11 @@
 2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* ext/apexsink/Makefile.am:
+	Move -lgcrypto from _LDFLAGS to _LIBADD.
+
+2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
+
+	* ext/apexsink/Makefile.am:
 	Link against -lgcrpyto for RSA_new and RSA_free.
 	* ext/faac/gstfaac.c:
 	* ext/x264/gstx264enc.c:
