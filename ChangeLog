@@ -1,5 +1,11 @@
 2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/examples/rtp/server-decodebin-H263p-AMR.sh:
+	Add example RTP transcoding pipeline from any file decodedable with
+	uridecodebin.
+
+2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* tests/examples/rtp/.cvsignore:
 	* tests/examples/rtp/Makefile.am:
 	* tests/examples/rtp/client-PCMA.c: (pad_added_cb), (main):
