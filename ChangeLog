@@ -1,3 +1,21 @@
+2009-01-02  Michael Smith <msmith@songbirdnest.com>
+
+	  Patch by: Justin Karnegas <justin@affinix.com> and
+	            Michael Smith <msmith@songbirdnest.com>
+	* sys/osxaudio/gstosxaudio.c:
+	* sys/osxaudio/gstosxaudioelement.c:
+	* sys/osxaudio/gstosxaudioelement.h:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/osxaudio/gstosxaudiosrc.h:
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  Rewrite osxaudio to work more flexibly and more reliably, using a
+	  different abstraction layer of coreaudio that is the recommended way of
+	  doing low-level audio I/O on OSX.
+	  Fixes byg #564948.
+
 2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/rtp/server-decodebin-H263p-AMR.sh:

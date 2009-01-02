@@ -1,8 +1,8 @@
 /*
  * GStreamer
- * Copyright 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
- * Copyright 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
- * 
+ * Copyright (C) 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -40,11 +40,10 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- * 
- *  The development of this code was made possible due to the involvement of Pioneers of
- *  the Inevitable, the creators of the Songbird Music player
  *
-
+ * The development of this code was made possible due to the involvement of
+ * Pioneers of the Inevitable, the creators of the Songbird Music player
+ *
  */
 
 #ifndef __GST_OSXAUDIOSINK_H__
@@ -56,7 +55,6 @@
 
 G_BEGIN_DECLS
 
-/* #defines don't like whitespacey bits */
 #define GST_TYPE_OSX_AUDIO_SINK \
   (gst_osx_audio_sink_get_type())
 #define GST_OSX_AUDIO_SINK(obj) \
@@ -64,7 +62,7 @@ G_BEGIN_DECLS
 #define GST_OSX_AUDIO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_AUDIO_SINK,GstOsxAudioSinkClass))
 
-typedef struct _GstOsxAudioSink      GstOsxAudioSink;
+typedef struct _GstOsxAudioSink GstOsxAudioSink;
 typedef struct _GstOsxAudioSinkClass GstOsxAudioSinkClass;
 
 struct _GstOsxAudioSink
@@ -72,7 +70,8 @@ struct _GstOsxAudioSink
   GstBaseAudioSink sink;
 
   AudioDeviceID device_id;
-  AudioStreamID stream_id;
+  AudioUnit audiounit;
+  double volume;
 };
 
 struct _GstOsxAudioSinkClass 

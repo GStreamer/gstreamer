@@ -1,7 +1,7 @@
 /*
  * GStreamer
- * Copyright 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
- * 
+ * Copyright (C) 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -50,7 +50,6 @@
 
 G_BEGIN_DECLS
 
-/* #defines don't like whitespacey bits */
 #define GST_TYPE_OSX_AUDIO_SRC \
   (gst_osx_audio_src_get_type())
 #define GST_OSX_AUDIO_SRC(obj) \
@@ -58,7 +57,7 @@ G_BEGIN_DECLS
 #define GST_OSX_AUDIO_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_AUDIO_SRC,GstOsxAudioSrcClass))
 
-typedef struct _GstOsxAudioSrc      GstOsxAudioSrc;
+typedef struct _GstOsxAudioSrc GstOsxAudioSrc;
 typedef struct _GstOsxAudioSrcClass GstOsxAudioSrcClass;
 
 struct _GstOsxAudioSrc
@@ -66,7 +65,9 @@ struct _GstOsxAudioSrc
   GstBaseAudioSrc src;
 
   AudioDeviceID device_id;
-  AudioStreamID stream_id;
+
+  /* actual number of channels reported by input device */
+  int deviceChannels;
 };
 
 struct _GstOsxAudioSrcClass 

@@ -1,5 +1,6 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/*
+ * GStreamer
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2007,2008 Pioneers of the Inevitable <songbird@songbirdnest.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -16,10 +17,10 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- * 
- * The development of this code was made possible due to the involvement of 
+ *
+ * The development of this code was made possible due to the involvement of
  * Pioneers of the Inevitable, the creators of the Songbird Music player
- * 
+ *
  */
 
 /**
@@ -42,11 +43,9 @@
  * Last reviewed on 2006-03-01 (0.10.4)
  */
 
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 
 #include "gstosxaudioelement.h"
 #include "gstosxaudiosink.h"
@@ -55,7 +54,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
   if (!gst_element_register (plugin, "osxaudiosink", GST_RANK_PRIMARY,
           GST_TYPE_OSX_AUDIO_SINK)) {
     return FALSE;

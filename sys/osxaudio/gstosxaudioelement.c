@@ -1,8 +1,8 @@
 /*
  * GStreamer
- * Copyright 2006 Zaheer Abbas Merali  <zaheerabbas at merali dot org>
- * Copyright 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
- * 
+ * Copyright (C) 2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -40,9 +40,10 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
- * 
- * The development of this code was made possible due to the involvement of Pioneers of the * Inevitable, the creators of the Songbird Music player
- * 
+ *
+ * The development of this code was made possible due to the involvement of
+ * Pioneers of the Inevitable, the creators of the Songbird Music player
+ *
  */
 
 #include <gst/gst.h>
@@ -67,12 +68,11 @@ gst_osx_audio_element_get_type ()
       0,
       0,
       NULL,
+      NULL
     };
 
     gst_osxaudioelement_type = g_type_register_static (G_TYPE_INTERFACE,
         "GstOsxAudioElement", &gst_osxaudioelement_info, 0);
-    /*g_type_interface_add_prerequisite (gst_osxaudioelement_type,
-       GST_TYPE_IMPLEMENTS_INTERFACE); */
   }
 
   return gst_osxaudioelement_type;
@@ -84,11 +84,9 @@ gst_osx_audio_element_class_init (GstOsxAudioElementInterface * klass)
   static gboolean initialized = FALSE;
 
   if (!initialized) {
-
     initialized = TRUE;
   }
 
   /* default virtual functions */
   klass->io_proc = NULL;
-
 }

@@ -1,7 +1,7 @@
 /*
  * GStreamer
- * Copyright 2006 Zaheer Abbas Merali  <zaheerabbas at merali dot org>
- * 
+ * Copyright (C) 2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -47,37 +47,48 @@
 #include <gst/gst.h>
 #include <gst/audio/gstringbuffer.h>
 #include <CoreAudio/CoreAudio.h>
-
 #include "gstosxaudioelement.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSX_RING_BUFFER            (gst_osx_ring_buffer_get_type())
-#define GST_OSX_RING_BUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSX_RING_BUFFER,GstOsxRingBuffer))
-#define GST_OSX_RING_BUFFER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_RING_BUFFER,GstOsxRingBufferClass))
-#define GST_OSX_RING_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OSX_RING_BUFFER,GstOsxRingBufferClass))
-#define GST_IS_OSX_RING_BUFFER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSX_RING_BUFFER))
-#define GST_IS_OSX_RING_BUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSX_RING_BUFFER))
+#define GST_TYPE_OSX_RING_BUFFER \
+  (gst_osx_ring_buffer_get_type())
+#define GST_OSX_RING_BUFFER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSX_RING_BUFFER,GstOsxRingBuffer))
+#define GST_OSX_RING_BUFFER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_RING_BUFFER,GstOsxRingBufferClass))
+#define GST_OSX_RING_BUFFER_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_OSX_RING_BUFFER,GstOsxRingBufferClass))
+#define GST_IS_OSX_RING_BUFFER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSX_RING_BUFFER))
+#define GST_IS_OSX_RING_BUFFER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSX_RING_BUFFER))
 
 typedef struct _GstOsxRingBuffer GstOsxRingBuffer;
 typedef struct _GstOsxRingBufferClass GstOsxRingBufferClass;
 
+struct _GstOsxRingBuffer
+{
+  GstRingBuffer object;
 
-struct _GstOsxRingBuffer {
-	GstRingBuffer         object;
-	
-	AudioDeviceID  device_id;
-    AudioStreamID  stream_id;
-	gboolean io_proc_active;
-	guint buffer_len;
-	GstOsxAudioElementInterface* element;
+  gboolean is_src;
+  AudioUnit audiounit;
+  AudioDeviceID device_id;
+  gboolean io_proc_active;
+  gboolean io_proc_needs_deactivation;
+  guint buffer_len;
+  guint segoffset;
+  AudioBufferList * recBufferList;
+  GstOsxAudioElementInterface * element;
 };
 
-struct _GstOsxRingBufferClass {
-	GstRingBufferClass    parent_class;
+struct _GstOsxRingBufferClass
+{
+  GstRingBufferClass parent_class;
 };
 
 GType gst_osx_ring_buffer_get_type (void);
+
 G_END_DECLS
 
-#endif
+#endif /* __GST_OSX_RING_BUFFER_H__ */

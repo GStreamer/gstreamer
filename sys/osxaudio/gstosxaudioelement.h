@@ -1,8 +1,8 @@
 /*
  * GStreamer
- * Copyright 2006 Zaheer Abbas Merali  <zaheerabbas at merali dot org>
- * Copyright 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
- * 
+ * Copyright (C) 2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -41,8 +41,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * The development of this code was made possible due to the involvement of Pioneers of the * Inevitable, the creators of the Songbird Music player
- * 
+ * The development of this code was made possible due to the involvement of
+ * Pioneers of the Inevitable, the creators of the Songbird Music player
+ *
  */
 
 #ifndef __GST_OSX_AUDIO_ELEMENT_H__
@@ -50,22 +51,34 @@
 
 #include <gst/gst.h>
 #include <CoreAudio/CoreAudio.h>
+#include <AudioUnit/AudioUnit.h>
 
-#define GST_OSX_AUDIO_ELEMENT_TYPE                       (gst_osx_audio_element_get_type())
-#define GST_OSX_AUDIO_ELEMENT(obj)                       (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_OSX_AUDIO_ELEMENT_TYPE, GstOsxAudioElementInterface))
-#define GST_IS_OSX_AUDIO_ELEMENT(obj)                    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_OSX_AUDIO_ELEMENT_TYPE))
-#define GST_OSX_AUDIO_ELEMENT_GET_INTERFACE(inst)        (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_OSX_AUDIO_ELEMENT_TYPE, GstOsxAudioElementInterface))
+G_BEGIN_DECLS
+
+#define GST_OSX_AUDIO_ELEMENT_TYPE \
+  (gst_osx_audio_element_get_type())
+#define GST_OSX_AUDIO_ELEMENT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_OSX_AUDIO_ELEMENT_TYPE,GstOsxAudioElementInterface))
+#define GST_IS_OSX_AUDIO_ELEMENT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_OSX_AUDIO_ELEMENT_TYPE))
+#define GST_OSX_AUDIO_ELEMENT_GET_INTERFACE(inst) \
+  (G_TYPE_INSTANCE_GET_INTERFACE((inst),GST_OSX_AUDIO_ELEMENT_TYPE,GstOsxAudioElementInterface))
 
 typedef struct _GstOsxAudioElementInterface GstOsxAudioElementInterface;
 
-struct _GstOsxAudioElementInterface {
-	GTypeInterface parent;
-	
-	OSStatus (*io_proc) (AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, void *inClientData);
-	
+struct _GstOsxAudioElementInterface
+{
+  GTypeInterface parent;
+
+  OSStatus (*io_proc) (void * userdata,
+      AudioUnitRenderActionFlags * ioActionFlags,
+      const AudioTimeStamp * inTimeStamp,
+      UInt32 inBusNumber, UInt32 inNumberFrames,
+      AudioBufferList * bufferList);
 };
 
 GType gst_osx_audio_element_get_type (void);
 
+G_END_DECLS
 
-#endif
+#endif /* __GST_OSX_AUDIO_ELEMENT_H__ */
