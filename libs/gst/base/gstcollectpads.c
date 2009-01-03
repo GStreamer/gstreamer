@@ -768,19 +768,20 @@ gst_collect_pads_available (GstCollectPads * pads)
 
     /* ignore pad with EOS */
     if (G_UNLIKELY (pdata->abidata.ABI.eos)) {
-      GST_DEBUG ("pad %p is EOS", pdata);
+      GST_DEBUG ("pad %s:%s is EOS", GST_DEBUG_PAD_NAME (pdata->pad));
       continue;
     }
 
     /* an empty buffer without EOS is weird when we get here.. */
     if (G_UNLIKELY ((buffer = pdata->buffer) == NULL)) {
-      GST_WARNING ("pad %p has no buffer", pdata);
+      GST_WARNING ("pad %s:%s has no buffer", GST_DEBUG_PAD_NAME (pdata->pad));
       goto not_filled;
     }
 
     /* this is the size left of the buffer */
     size = GST_BUFFER_SIZE (buffer) - pdata->pos;
-    GST_DEBUG ("pad %p has %d bytes left", pdata, size);
+    GST_DEBUG ("pad %s:%s has %d bytes left",
+        GST_DEBUG_PAD_NAME (pdata->pad), size);
 
     /* need to return the min of all available data */
     if (size < result)

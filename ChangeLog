@@ -1,5 +1,10 @@
 2009-01-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_available):
+	Use the name of the pads instead of a pointer, helps in debugging.
+
+2009-01-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gstindex.c: (gst_index_get_type):
 	Add a debugging category for GstIndex, first little step in making
 	indexing top-notch.
