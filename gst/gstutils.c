@@ -2573,7 +2573,8 @@ gst_pad_proxy_getcaps (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  GST_DEBUG ("proxying getcaps for %s:%s", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG (GST_CAT_PADS, "proxying getcaps for %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
 
   element = gst_pad_get_parent_element (pad);
   if (element == NULL)
@@ -2677,7 +2678,8 @@ gst_pad_proxy_setcaps (GstPad * pad, GstCaps * caps)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
 
-  GST_DEBUG ("proxying pad link for %s:%s", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG (GST_CAT_PADS, "proxying pad link for %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
 
   element = gst_pad_get_parent_element (pad);
   if (element == NULL)
@@ -3020,8 +3022,8 @@ gst_pad_add_data_probe_full (GstPad * pad, GCallback handler,
 
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
-  GST_DEBUG ("adding data probe to pad %s:%s, now %d data, %d event probes",
-      GST_DEBUG_PAD_NAME (pad),
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+      "adding data probe, now %d data, %d event probes",
       GST_PAD_DO_BUFFER_SIGNALS (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
@@ -3078,8 +3080,8 @@ gst_pad_add_event_probe_full (GstPad * pad, GCallback handler,
       (GClosureNotify) notify, 0);
 
   GST_PAD_DO_EVENT_SIGNALS (pad)++;
-  GST_DEBUG ("adding event probe to pad %s:%s, now %d probes",
-      GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "adding event probe, now %d probes",
+      GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
   return sigid;
@@ -3135,8 +3137,8 @@ gst_pad_add_buffer_probe_full (GstPad * pad, GCallback handler,
       (GClosureNotify) notify, 0);
 
   GST_PAD_DO_BUFFER_SIGNALS (pad)++;
-  GST_DEBUG ("adding buffer probe to pad %s:%s, now %d probes",
-      GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "adding buffer probe, now %d probes",
+      GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
   return sigid;
@@ -3159,10 +3161,9 @@ gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
   g_signal_handler_disconnect (pad, handler_id);
   GST_PAD_DO_BUFFER_SIGNALS (pad)--;
   GST_PAD_DO_EVENT_SIGNALS (pad)--;
-  GST_DEBUG
-      ("removed data probe from pad %s:%s, now %d event, %d buffer probes",
-      GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad),
-      GST_PAD_DO_BUFFER_SIGNALS (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+      "removed data probe, now %d event, %d buffer probes",
+      GST_PAD_DO_EVENT_SIGNALS (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
 }
@@ -3183,8 +3184,9 @@ gst_pad_remove_event_probe (GstPad * pad, guint handler_id)
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
   GST_PAD_DO_EVENT_SIGNALS (pad)--;
-  GST_DEBUG ("removed event probe from pad %s:%s, now %d event probes",
-      GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+      "removed event probe, now %d event probes",
+      GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 }
 
@@ -3204,8 +3206,9 @@ gst_pad_remove_buffer_probe (GstPad * pad, guint handler_id)
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
   GST_PAD_DO_BUFFER_SIGNALS (pad)--;
-  GST_DEBUG ("removed buffer probe from pad %s:%s, now %d buffer probes",
-      GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+      "removed buffer probe, now %d buffer probes",
+      GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
 }

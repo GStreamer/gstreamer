@@ -1,3 +1,15 @@
+2009-01-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/gstelement.c: (gst_element_message_full),
+	(gst_element_pads_activate):
+	* gst/gstobject.c: (gst_object_dispatch_properties_changed):
+	* gst/gstutils.c: (gst_pad_proxy_getcaps), (gst_pad_proxy_setcaps),
+	(gst_pad_add_data_probe_full), (gst_pad_add_event_probe_full),
+	(gst_pad_add_buffer_probe_full), (gst_pad_remove_data_probe),
+	(gst_pad_remove_event_probe), (gst_pad_remove_buffer_probe):
+	Assign debug statements to relevant categories instead of the 'default'
+	category so they don't get lost in debugging.
+
 2009-01-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstdebugutils.c:

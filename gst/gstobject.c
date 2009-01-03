@@ -519,8 +519,8 @@ gst_object_dispatch_properties_changed (GObject * object,
   parent = gst_object_get_parent (gst_object);
   while (parent) {
     for (i = 0; i < n_pspecs; i++) {
-      GST_LOG_OBJECT (parent, "deep notification from %s (%s)",
-          debug_name, pspecs[i]->name);
+      GST_CAT_LOG_OBJECT (GST_CAT_PROPERTIES, parent,
+          "deep notification from %s (%s)", debug_name, pspecs[i]->name);
 
       g_signal_emit (parent, gst_object_signals[DEEP_NOTIFY],
           g_quark_from_string (pspecs[i]->name), GST_OBJECT_CAST (object),
