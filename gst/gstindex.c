@@ -39,6 +39,7 @@
 /* for constructing an entry name */
 #include "gstelement.h"
 #include "gstpad.h"
+#include "gstinfo.h"
 
 /* Index signals and args */
 enum
@@ -53,6 +54,9 @@ enum
   ARG_RESOLVER
       /* FILL ME */
 };
+
+GST_DEBUG_CATEGORY_STATIC (index_debug);
+#define GST_CAT_DEFAULT index_debug
 
 static void gst_index_class_init (GstIndexClass * klass);
 static void gst_index_init (GstIndex * index);
@@ -142,6 +146,9 @@ gst_index_get_type (void)
 
     index_type =
         g_type_register_static (GST_TYPE_OBJECT, "GstIndex", &index_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (index_debug, "GST_INDEX", GST_DEBUG_BOLD,
+        "Generic indexing support");
   }
   return index_type;
 }

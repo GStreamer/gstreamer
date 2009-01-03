@@ -1,5 +1,11 @@
 2009-01-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
+	* gst/gstindex.c: (gst_index_get_type):
+	Add a debugging category for GstIndex, first little step in making
+	indexing top-notch.
+
+2009-01-03  Edward Hervey  <edward.hervey@collabora.co.uk>
+
 	* gst/gstelement.c: (gst_element_message_full),
 	(gst_element_pads_activate):
 	* gst/gstobject.c: (gst_object_dispatch_properties_changed):
