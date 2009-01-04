@@ -1,3 +1,13 @@
+2009-01-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Sebastian Pölsterl <sebp at k-d-w dot org>
+
+	* sys/dvb/dvbbasebin.c: (dvb_base_bin_init),
+	(dvb_base_bin_finalize), (dvb_base_bin_activate_program),
+	(dvb_base_bin_pmt_info_cb), (dvb_base_bin_pad_added_cb),
+	(dvb_base_bin_program_destroy):
+	Fix some memory leaks. Fixes bug #566356.
+
 2009-01-02  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Olivier Crete <tester at tester dot ca>

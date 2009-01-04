@@ -125,6 +125,8 @@ static void dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin);
 static void dvb_base_bin_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
+static void dvb_base_bin_program_destroy (gpointer data);
+
 static void
 dvb_base_bin_setup_interfaces (GType type)
 {
@@ -352,7 +354,7 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
       dvbbasebin->buffer_queue, dvbbasebin->mpegtsparse, NULL);
 
   dvbbasebin->programs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, g_free);
+      NULL, dvb_base_bin_program_destroy);
   dvbbasebin->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, g_free);
 
@@ -398,6 +400,7 @@ dvb_base_bin_finalize (GObject * object)
 
   g_hash_table_destroy (dvbbasebin->streams);
   g_hash_table_destroy (dvbbasebin->programs);
+  g_list_free (dvbbasebin->pmtlist);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -505,8 +508,8 @@ dvb_base_bin_release_pad (GstElement * element, GstPad * pad)
 
   ghost = GST_GHOST_PAD (pad);
   target = gst_ghost_pad_get_target (ghost);
-  gst_element_release_request_pad (GST_ELEMENT (GST_DVB_BASE_BIN (element)->
-          mpegtsparse), target);
+  gst_element_release_request_pad (GST_ELEMENT (GST_DVB_BASE_BIN
+          (element)->mpegtsparse), target);
   gst_object_unref (target);
 
   gst_element_remove_pad (element, pad);
@@ -924,6 +927,7 @@ dvb_base_bin_pad_added_cb (GstElement * mpegtsparse,
 {
   DvbBaseBinProgram *program;
   gint program_number;
+  gchar *padname;
 
   program_number = get_pad_program_number (pad);
   if (program_number == -1)
@@ -933,13 +937,15 @@ dvb_base_bin_pad_added_cb (GstElement * mpegtsparse,
   if (program == NULL)
     program = dvb_base_bin_add_program (dvbbasebin, program_number);
   program->selected = TRUE;
-  program->ghost = gst_ghost_pad_new (gst_pad_get_name (pad), pad);
+  padname = gst_pad_get_name (pad);
+  program->ghost = gst_ghost_pad_new (padname, pad);
   gst_pad_set_active (program->ghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (dvbbasebin), program->ghost);
   /* if the program has a pmt, activate it now, otherwise it will get activated
    * when there's a PMT */
   if (!program->active && program->pmt_pid != G_MAXUINT16)
     dvb_base_bin_activate_program (dvbbasebin, program);
+  g_free (padname);
 }
 
 static void
@@ -1027,4 +1033,17 @@ gst_dvb_base_bin_plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "dvbbasebin",
       GST_RANK_NONE, GST_TYPE_DVB_BASE_BIN);
+}
+
+static void
+dvb_base_bin_program_destroy (gpointer data)
+{
+  DvbBaseBinProgram *program;
+
+  program = (DvbBaseBinProgram *) data;
+
+  if (program->pmt)
+    gst_structure_free (program->pmt);
+
+  g_free (program);
 }
