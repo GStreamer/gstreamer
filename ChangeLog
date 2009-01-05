@@ -1,3 +1,12 @@
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Sascha Hauer <s dot hauer at pengutronix dot de>
+	          Luotao Fu <l dot fu at pengutronix dot de>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_structure),
+	(gst_v4l2_get_caps_info):
+	Add support for grayscale v4l2 devices. Fixes bug #566616.
+
 2009-01-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_tag_add_str),

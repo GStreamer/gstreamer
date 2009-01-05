@@ -675,6 +675,9 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
       break;
     }
     case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+      structure = gst_structure_new ("video/x-raw-gray",
+          "bpp", G_TYPE_INT, 8, NULL);
+      break;
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       /* FIXME: get correct fourccs here */
@@ -1017,6 +1020,8 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
   } else if (strcmp (mimetype, "video/x-pwc2") == 0) {
     fourcc = V4L2_PIX_FMT_PWC2;
 #endif
+  } else if (strcmp (mimetype, "video/x-raw-gray") == 0) {
+    fourcc = V4L2_PIX_FMT_GREY;
   }
 
   if (fourcc == 0)
