@@ -1,5 +1,11 @@
 2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/gstbus.c: (gst_bus_wakeup_main_context):
+	The lock order should be maincontext > OBJECT_LOCK so we need to release
+	the object lock when waking up the mainloop to avoid deadlocks.
+
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstbin.c: (gst_bin_set_index_func), (gst_bin_set_clock_func),
 	(gst_bin_change_state_func):
 	Use an iterator to set the clock and the index so that we can release

@@ -298,9 +298,17 @@ gst_bus_get_property (GObject * object, guint prop_id,
 static void
 gst_bus_wakeup_main_context (GstBus * bus)
 {
+  GMainContext *ctx;
+
   GST_OBJECT_LOCK (bus);
-  g_main_context_wakeup (bus->priv->main_context);
+  if ((ctx = bus->priv->main_context))
+    g_main_context_ref (ctx);
   GST_OBJECT_UNLOCK (bus);
+
+  g_main_context_wakeup (ctx);
+
+  if (ctx)
+    g_main_context_unref (ctx);
 }
 
 static void
