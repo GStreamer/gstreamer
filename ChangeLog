@@ -1,3 +1,35 @@
+2009-01-05  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-app.xml:
+	* examples/Makefile.am:
+	* examples/app/.cvsignore:
+	* examples/app/Makefile.am:
+	* examples/app/appsink-src.c:
+	* examples/app/appsrc-ra.c:
+	* examples/app/appsrc-seekable.c:
+	* examples/app/appsrc-stream.c:
+	* examples/app/appsrc-stream2.c:
+	* examples/app/appsrc_ex.c:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/app/.cvsignore:
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/app/gstapp-marshal.list:
+	* gst-libs/gst/app/gstappbuffer.c:
+	* gst-libs/gst/app/gstappbuffer.h:
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsink.h:
+	* gst-libs/gst/app/gstappsrc.c:
+	* gst-libs/gst/app/gstappsrc.h:
+	* gst/app/Makefile.am:
+	* gst/app/gstapp.c:
+
+	Remove AppSrc/AppSink that are moving to -base. Partially fixes
+	#564421
+
 2009-01-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegdemux/mpegtspacketizer.c:

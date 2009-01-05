@@ -124,8 +124,6 @@ enum
 #define DEFAULT_PROP_FORMAT        GST_FORMAT_BYTES
 #define DEFAULT_PROP_BLOCK         FALSE
 #define DEFAULT_PROP_IS_LIVE       FALSE
-#define DEFAULT_PROP_MIN_LATENCY   -1
-#define DEFAULT_PROP_MAX_LATENCY   -1
 
 enum
 {
@@ -137,8 +135,7 @@ enum
   PROP_FORMAT,
   PROP_BLOCK,
   PROP_IS_LIVE,
-  PROP_MIN_LATENCY,
-  PROP_MAX_LATENCY,
+
   PROP_LAST
 };
 
@@ -178,9 +175,6 @@ static void gst_app_src_set_property (GObject * object, guint prop_id,
 static void gst_app_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_app_src_set_latencies (GstAppSrc * appsrc,
-    gboolean do_min, guint64 min, gboolean do_max, guint64 max);
-
 static GstFlowReturn gst_app_src_create (GstBaseSrc * bsrc,
     guint64 offset, guint size, GstBuffer ** buf);
 static gboolean gst_app_src_start (GstBaseSrc * bsrc);
@@ -191,8 +185,6 @@ static gboolean gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_app_src_check_get_range (GstBaseSrc * src);
 static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
-static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery * query);
-
 static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
     GstBuffer * buffer);
 
@@ -314,28 +306,6 @@ gst_app_src_class_init (GstAppSrcClass * klass)
       g_param_spec_boolean ("is-live", "Is Live",
           "Whether to act as a live source",
           DEFAULT_PROP_IS_LIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstAppSrc::min-latency
-   *
-   * The minimum latency of the source. A value of -1 will use the default
-   * latency calculations of #GstBaseSrc.
-   */
-  g_object_class_install_property (gobject_class, PROP_MIN_LATENCY,
-      g_param_spec_int64 ("min-latency", "Min Latency",
-          "The minimum latency (-1 = default)",
-          -1, G_MAXINT64, DEFAULT_PROP_MIN_LATENCY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstAppSrc::max-latency
-   *
-   * The maximum latency of the source. A value of -1 means an unlimited amout
-   * of latency.
-   */
-  g_object_class_install_property (gobject_class, PROP_MAX_LATENCY,
-      g_param_spec_int64 ("max-latency", "Max Latency",
-          "The maximum latency (-1 = unlimited)",
-          -1, G_MAXINT64, DEFAULT_PROP_MAX_LATENCY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstAppSrc::need-data:
@@ -425,8 +395,6 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   basesrc_class->is_seekable = gst_app_src_is_seekable;
   basesrc_class->check_get_range = gst_app_src_check_get_range;
   basesrc_class->get_size = gst_app_src_do_get_size;
-  basesrc_class->get_size = gst_app_src_do_get_size;
-  basesrc_class->query = gst_app_src_query;
 
   klass->push_buffer = gst_app_src_push_buffer_action;
   klass->end_of_stream = gst_app_src_end_of_stream;
@@ -444,8 +412,6 @@ gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
   appsrc->max_bytes = DEFAULT_PROP_MAX_BYTES;
   appsrc->format = DEFAULT_PROP_FORMAT;
   appsrc->block = DEFAULT_PROP_BLOCK;
-  appsrc->min_latency = DEFAULT_PROP_MIN_LATENCY;
-  appsrc->max_latency = DEFAULT_PROP_MAX_LATENCY;
 
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
@@ -514,14 +480,6 @@ gst_app_src_set_property (GObject * object, guint prop_id,
       gst_base_src_set_live (GST_BASE_SRC (appsrc),
           g_value_get_boolean (value));
       break;
-    case PROP_MIN_LATENCY:
-      gst_app_src_set_latencies (appsrc, TRUE, g_value_get_int64 (value),
-          FALSE, -1);
-      break;
-    case PROP_MAX_LATENCY:
-      gst_app_src_set_latencies (appsrc, FALSE, -1, TRUE,
-          g_value_get_int64 (value));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -564,22 +522,6 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (appsrc)));
       break;
-    case PROP_MIN_LATENCY:
-    {
-      guint64 min;
-
-      gst_app_src_get_latency (appsrc, &min, NULL);
-      g_value_set_int64 (value, min);
-      break;
-    }
-    case PROP_MAX_LATENCY:
-    {
-      guint64 max;
-
-      gst_app_src_get_latency (appsrc, &max, NULL);
-      g_value_set_int64 (value, max);
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -691,40 +633,6 @@ gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size)
   *size = gst_app_src_get_size (appsrc);
 
   return TRUE;
-}
-
-static gboolean
-gst_app_src_query (GstBaseSrc * src, GstQuery * query)
-{
-  GstAppSrc *appsrc = GST_APP_SRC (src);
-  gboolean res;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_LATENCY:
-    {
-      GstClockTime min, max;
-      gboolean live;
-
-      /* Query the parent class for the defaults */
-      res = gst_base_src_query_latency (src, &live, &min, &max);
-
-      /* overwrite with our values when we need to */
-      g_mutex_lock (appsrc->mutex);
-      if (appsrc->min_latency != -1)
-        min = appsrc->min_latency;
-      if (appsrc->max_latency != -1)
-        max = appsrc->max_latency;
-      g_mutex_unlock (appsrc->mutex);
-
-      gst_query_set_latency (query, live, min, max);
-      break;
-    }
-    default:
-      res = GST_BASE_SRC_CLASS (parent_class)->query (src, query);
-      break;
-  }
-
-  return res;
 }
 
 /* will be called in push mode */
@@ -1067,66 +975,6 @@ gst_app_src_get_max_bytes (GstAppSrc * appsrc)
   g_mutex_unlock (appsrc->mutex);
 
   return result;
-}
-
-static void
-gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
-    gboolean do_max, guint64 max)
-{
-  gboolean changed = FALSE;
-
-  g_mutex_lock (appsrc->mutex);
-  if (do_min && appsrc->min_latency != min) {
-    appsrc->min_latency = min;
-    changed = TRUE;
-  }
-  if (do_max && appsrc->max_latency != max) {
-    appsrc->max_latency = max;
-    changed = TRUE;
-  }
-  g_mutex_unlock (appsrc->mutex);
-
-  if (changed) {
-    GST_DEBUG_OBJECT (appsrc, "posting latency changed");
-    gst_element_post_message (GST_ELEMENT_CAST (appsrc),
-        gst_message_new_latency (GST_OBJECT_CAST (appsrc)));
-  }
-}
-
-/**
- * gst_app_src_set_latency:
- * @appsrc: a #GstAppSrc
- * @min: the min latency
- * @max: the min latency
- *
- * Configure the @min and @max latency in @src. If @min is set to -1, the
- * default latency calculations for pseudo-live sources will be used.
- */
-void
-gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
-{
-  gst_app_src_set_latencies (appsrc, TRUE, min, TRUE, max);
-}
-
-/**
- * gst_app_src_get_latency:
- * @appsrc: a #GstAppSrc
- * @min: the min latency
- * @max: the min latency
- *
- * Retrieve the min and max latencies in @min and @max respectively.
- */
-void
-gst_app_src_get_latency (GstAppSrc * appsrc, guint64 * min, guint64 * max)
-{
-  g_return_if_fail (GST_IS_APP_SRC (appsrc));
-
-  g_mutex_lock (appsrc->mutex);
-  if (min)
-    *min = appsrc->min_latency;
-  if (max)
-    *max = appsrc->max_latency;
-  g_mutex_unlock (appsrc->mutex);
 }
 
 static GstFlowReturn

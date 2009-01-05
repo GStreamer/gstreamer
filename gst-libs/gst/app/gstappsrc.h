@@ -79,9 +79,6 @@ struct _GstAppSrc
   guint64 queued_bytes;
   guint64 offset;
   GstAppStreamType current_type;
-
-  guint64 min_latency;
-  guint64 max_latency;
 };
 
 struct _GstAppSrcClass
@@ -113,9 +110,6 @@ GstAppStreamType gst_app_src_get_stream_type  (GstAppSrc *appsrc);
 
 void             gst_app_src_set_max_bytes    (GstAppSrc *appsrc, guint64 max);
 guint64          gst_app_src_get_max_bytes    (GstAppSrc *appsrc);
-
-void             gst_app_src_set_latency      (GstAppSrc *appsrc, guint64 min, guint64 max);
-void             gst_app_src_get_latency      (GstAppSrc *appsrc, guint64 *min, guint64 *max);
 
 GstFlowReturn    gst_app_src_push_buffer      (GstAppSrc *appsrc, GstBuffer *buffer);
 GstFlowReturn    gst_app_src_end_of_stream    (GstAppSrc *appsrc);

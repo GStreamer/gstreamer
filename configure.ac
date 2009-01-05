@@ -235,7 +235,6 @@ dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(aiffparse)
 AG_GST_CHECK_PLUGIN(amrparse)
-AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(audioresample)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
@@ -1389,7 +1388,6 @@ gst/Makefile
 gst/aacparse/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
-gst/app/Makefile
 gst/audioresample/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
@@ -1431,7 +1429,6 @@ gst/real/Makefile
 gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
-gst-libs/gst/app/Makefile
 gst-libs/gst/dshow/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
@@ -1449,7 +1446,6 @@ sys/wininet/Makefile
 sys/winks/Makefile
 sys/winscreencap/Makefile
 examples/Makefile
-examples/app/Makefile
 examples/directfb/Makefile
 examples/scaletempo/Makefile
 examples/switch/Makefile

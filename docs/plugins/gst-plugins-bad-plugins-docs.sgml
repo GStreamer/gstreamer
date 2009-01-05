@@ -12,8 +12,6 @@
 
   <chapter>
     <title>gst-plugins-bad Elements</title>
-    <xi:include href="xml/element-appsrc.xml" />
-    <xi:include href="xml/element-appsink.xml" />
     <xi:include href="xml/element-aacparse.xml" />
     <xi:include href="xml/element-amrparse.xml" />
     <xi:include href="xml/element-amrwbdec.xml" />
@@ -78,7 +76,6 @@
     <xi:include href="xml/plugin-legacyresample.xml" />
     <xi:include href="xml/plugin-alsaspdif.xml" />
     <xi:include href="xml/plugin-amrwb.xml" />
-    <xi:include href="xml/plugin-app.xml" />
     <xi:include href="xml/plugin-bayer.xml" />
     <xi:include href="xml/plugin-bz2.xml" />
     <xi:include href="xml/plugin-cdaudio.xml" />
