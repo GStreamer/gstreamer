@@ -624,17 +624,40 @@ static void
 gst_bin_set_index_func (GstElement * element, GstIndex * index)
 {
   GstBin *bin;
-  GList *children;
+  gboolean done;
+  GstIterator *it;
 
   bin = GST_BIN (element);
 
-  GST_OBJECT_LOCK (bin);
-  for (children = bin->children; children; children = g_list_next (children)) {
-    GstElement *child = GST_ELEMENT (children->data);
+  it = gst_bin_iterate_elements (bin);
 
-    gst_element_set_index (child, index);
+  done = FALSE;
+  while (!done) {
+    gpointer data;
+
+    switch (gst_iterator_next (it, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *child = GST_ELEMENT_CAST (data);
+
+        GST_DEBUG_OBJECT (bin, "setting index on %s", GST_ELEMENT_NAME (child));
+        gst_element_set_index (child, index);
+
+        gst_object_unref (child);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        GST_DEBUG_OBJECT (bin, "iterator doing resync");
+        gst_iterator_resync (it);
+        break;
+      default:
+      case GST_ITERATOR_DONE:
+        GST_DEBUG_OBJECT (bin, "iterator done");
+        done = TRUE;
+        break;
+    }
   }
-  GST_OBJECT_UNLOCK (bin);
+  gst_iterator_free (it);
 }
 
 /* set the clock on all elements in this bin
@@ -644,21 +667,42 @@ gst_bin_set_index_func (GstElement * element, GstIndex * index)
 static gboolean
 gst_bin_set_clock_func (GstElement * element, GstClock * clock)
 {
-  GList *children;
   GstBin *bin;
+  gboolean done;
+  GstIterator *it;
   gboolean res = TRUE;
 
   bin = GST_BIN (element);
 
-  GST_OBJECT_LOCK (bin);
-  if (element->clock != clock) {
-    for (children = bin->children; children; children = g_list_next (children)) {
-      GstElement *child = GST_ELEMENT (children->data);
+  it = gst_bin_iterate_elements (bin);
 
-      res &= gst_element_set_clock (child, clock);
+  done = FALSE;
+  while (!done) {
+    gpointer data;
+
+    switch (gst_iterator_next (it, &data)) {
+      case GST_ITERATOR_OK:
+      {
+        GstElement *child = GST_ELEMENT_CAST (data);
+
+        res &= gst_element_set_clock (child, clock);
+
+        gst_object_unref (child);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        GST_DEBUG_OBJECT (bin, "iterator doing resync");
+        gst_iterator_resync (it);
+        res = TRUE;
+        break;
+      default:
+      case GST_ITERATOR_DONE:
+        GST_DEBUG_OBJECT (bin, "iterator done");
+        done = TRUE;
+        break;
     }
   }
-  GST_OBJECT_UNLOCK (bin);
+  gst_iterator_free (it);
 
   return res;
 }

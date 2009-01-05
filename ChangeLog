@@ -1,3 +1,10 @@
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/gstbin.c: (gst_bin_set_index_func), (gst_bin_set_clock_func),
+	(gst_bin_change_state_func):
+	Use an iterator to set the clock and the index so that we can release
+	the object lock appropriately. Fixes #566393.
+
 2009-01-03  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_available):
