@@ -1,3 +1,13 @@
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audio_test_src_class_init), (gst_audio_test_src_init),
+	(gst_audio_test_src_check_get_range),
+	(gst_audio_test_src_set_property),
+	(gst_audio_test_src_get_property):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	Add property to control pull/push based scheduling.
+
 2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* configure.ac:

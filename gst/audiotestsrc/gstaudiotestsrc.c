@@ -73,6 +73,7 @@ GST_ELEMENT_DETAILS ("Audio test source",
 #define DEFAULT_VOLUME               0.8
 #define DEFAULT_IS_LIVE              FALSE
 #define DEFAULT_TIMESTAMP_OFFSET     G_GINT64_CONSTANT (0)
+#define DEFAULT_CAN_ACTIVATE_PUSH    TRUE
 #define DEFAULT_CAN_ACTIVATE_PULL    FALSE
 
 enum
@@ -84,6 +85,8 @@ enum
   PROP_VOLUME,
   PROP_IS_LIVE,
   PROP_TIMESTAMP_OFFSET,
+  PROP_CAN_ACTIVATE_PUSH,
+  PROP_CAN_ACTIVATE_PULL,
   PROP_LAST
 };
 
@@ -216,6 +219,14 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
           G_MAXINT64, DEFAULT_TIMESTAMP_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PUSH,
+      g_param_spec_boolean ("can-activate-push", "Can activate push",
+          "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PULL,
+      g_param_spec_boolean ("can-activate-pull", "Can activate pull",
+          "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_test_src_setcaps);
   gstbasesrc_class->is_seekable =
@@ -251,6 +262,7 @@ gst_audio_test_src_init (GstAudioTestSrc * src, GstAudioTestSrcClass * g_class)
   src->samples_per_buffer = DEFAULT_SAMPLES_PER_BUFFER;
   src->generate_samples_per_buffer = src->samples_per_buffer;
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
+  src->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
 
   src->wave = DEFAULT_WAVE;
   gst_base_src_set_blocksize (GST_BASE_SRC (src), -1);
@@ -893,8 +905,12 @@ gst_audio_test_src_is_seekable (GstBaseSrc * basesrc)
 static gboolean
 gst_audio_test_src_check_get_range (GstBaseSrc * basesrc)
 {
+  GstAudioTestSrc *src;
+
+  src = GST_AUDIO_TEST_SRC (basesrc);
+
   /* if we can operate in pull mode */
-  return DEFAULT_CAN_ACTIVATE_PULL;
+  return src->can_activate_pull;
 }
 
 static GstFlowReturn
@@ -1034,6 +1050,12 @@ gst_audio_test_src_set_property (GObject * object, guint prop_id,
     case PROP_TIMESTAMP_OFFSET:
       src->timestamp_offset = g_value_get_int64 (value);
       break;
+    case PROP_CAN_ACTIVATE_PUSH:
+      GST_BASE_SRC (src)->can_activate_push = g_value_get_boolean (value);
+      break;
+    case PROP_CAN_ACTIVATE_PULL:
+      src->can_activate_pull = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1064,6 +1086,12 @@ gst_audio_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int64 (value, src->timestamp_offset);
+      break;
+    case PROP_CAN_ACTIVATE_PUSH:
+      g_value_set_boolean (value, GST_BASE_SRC (src)->can_activate_push);
+      break;
+    case PROP_CAN_ACTIVATE_PULL:
+      g_value_set_boolean (value, src->can_activate_pull);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

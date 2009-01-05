@@ -120,6 +120,7 @@ struct _GstAudioTestSrc {
   gboolean check_seek_stop;
   gboolean eos_reached;
   gint generate_samples_per_buffer;	/* used to generate a partial buffer */
+  gboolean can_activate_pull;
   
   /* waveform specific context data */
   gdouble accumulator;			/* phase angle */
