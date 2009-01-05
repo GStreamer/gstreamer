@@ -1,3 +1,10 @@
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ffmpegrev:
+	Update ffmpeg SVN revision to r16434 and update to the corresponding
+	swscale snapshot. This new ffmpeg version has initial support for
+	metadata (i.e. tags) but we don't use them yet (see bug #566605).
+
 2008-12-30  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
