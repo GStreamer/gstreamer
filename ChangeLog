@@ -1,5 +1,11 @@
 2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstplaybin2.c: (notify_source_cb), (activate_group):
+	Disconnect signal handlers before destroying a previous decodebin so
+	that we don't end up causing deadlocks. Fixes #566586.
+
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/audiotestsrc/gstaudiotestsrc.c:
 	(gst_audio_test_src_class_init), (gst_audio_test_src_init),
 	(gst_audio_test_src_check_get_range),

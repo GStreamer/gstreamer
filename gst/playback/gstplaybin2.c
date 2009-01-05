@@ -303,6 +303,18 @@ struct _GstSourceGroup
   GstElement *suburidecodebin;
   gint pending;
 
+  gulong pad_added_id;
+  gulong pad_removed_id;
+  gulong no_more_pads_id;
+  gulong notify_source_id;
+  gulong drained_id;
+  gulong autoplug_factories_id;
+  gulong autoplug_select_id;
+
+  gulong sub_pad_added_id;
+  gulong sub_pad_removed_id;
+  gulong sub_no_more_pads_id;
+
   /* selectors for different streams */
   GstSourceSelect selector[GST_PLAY_SINK_TYPE_LAST];
 };
@@ -2094,7 +2106,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 }
 
 static void
-notify_source (GstElement * uridecodebin, GParamSpec * pspec,
+notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
     GstSourceGroup * group)
 {
   GstPlayBin *playbin;
@@ -2112,6 +2124,12 @@ notify_source (GstElement * uridecodebin, GParamSpec * pspec,
   g_object_notify (G_OBJECT (playbin), "source");
 }
 
+#define REMOVE_SIGNAL(obj,id)            \
+if (id) {                                \
+  g_signal_handler_disconnect (obj, id); \
+  id = 0;                                \
+}
+
 /* must be called with PLAY_BIN_LOCK */
 static gboolean
 activate_group (GstPlayBin * playbin, GstSourceGroup * group)
@@ -2124,6 +2142,13 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
   if (group->uridecodebin) {
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
     gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
     group->uridecodebin = NULL;
@@ -2145,27 +2170,29 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_object_set (uridecodebin, "buffer-size", playbin->buffer_size, NULL);
 
   /* connect pads and other things */
-  g_signal_connect (uridecodebin, "pad-added", G_CALLBACK (pad_added_cb),
-      group);
-  g_signal_connect (uridecodebin, "pad-removed", G_CALLBACK (pad_removed_cb),
-      group);
-  g_signal_connect (uridecodebin, "no-more-pads", G_CALLBACK (no_more_pads_cb),
-      group);
-  g_signal_connect (uridecodebin, "notify::source", G_CALLBACK (notify_source),
-      group);
+  group->pad_added_id = g_signal_connect (uridecodebin, "pad-added",
+      G_CALLBACK (pad_added_cb), group);
+  group->pad_removed_id = g_signal_connect (uridecodebin, "pad-removed",
+      G_CALLBACK (pad_removed_cb), group);
+  group->no_more_pads_id = g_signal_connect (uridecodebin, "no-more-pads",
+      G_CALLBACK (no_more_pads_cb), group);
+  group->notify_source_id = g_signal_connect (uridecodebin, "notify::source",
+      G_CALLBACK (notify_source_cb), group);
   /* we have 1 pending no-more-pads */
   group->pending = 1;
 
   /* is called when the uridecodebin is out of data and we can switch to the
    * next uri */
-  g_signal_connect (uridecodebin, "drained", G_CALLBACK (drained_cb), group);
+  group->drained_id =
+      g_signal_connect (uridecodebin, "drained", G_CALLBACK (drained_cb),
+      group);
 
   /* will be called when a new media type is found. We return a list of decoders
    * including sinks for decodebin to try */
-  g_signal_connect (uridecodebin, "autoplug-factories",
+  group->autoplug_factories_id =
+      g_signal_connect (uridecodebin, "autoplug-factories",
       G_CALLBACK (autoplug_factories_cb), group);
-
-  g_signal_connect (uridecodebin, "autoplug-select",
+  group->autoplug_select_id = g_signal_connect (uridecodebin, "autoplug-select",
       G_CALLBACK (autoplug_select_cb), group);
 
   /*  */
@@ -2175,6 +2202,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (group->suburi) {
     /* subtitles */
     if (group->suburidecodebin) {
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
       gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
       group->suburidecodebin = NULL;
@@ -2198,12 +2228,13 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
     group->suburidecodebin = suburidecodebin;
 
     /* connect pads and other things */
-    g_signal_connect (suburidecodebin, "pad-added", G_CALLBACK (pad_added_cb),
-        group);
-    g_signal_connect (suburidecodebin, "pad-removed",
-        G_CALLBACK (pad_removed_cb), group);
-    g_signal_connect (suburidecodebin, "no-more-pads",
-        G_CALLBACK (no_more_pads_cb), group);
+    group->sub_pad_added_id = g_signal_connect (suburidecodebin, "pad-added",
+        G_CALLBACK (pad_added_cb), group);
+    group->sub_pad_removed_id = g_signal_connect (suburidecodebin,
+        "pad-removed", G_CALLBACK (pad_removed_cb), group);
+    group->sub_no_more_pads_id = g_signal_connect (suburidecodebin,
+        "no-more-pads", G_CALLBACK (no_more_pads_cb), group);
+
     /* we have 2 pending no-more-pads */
     group->pending = 2;
 
