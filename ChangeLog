@@ -1,5 +1,12 @@
 2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position_last),
+	(gst_base_sink_get_position_paused), (gst_base_sink_get_position):
+	Release the object lock before calling the query convert pad functions
+	to avoid deadlocks.
+
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/gstbus.c: (gst_bus_wakeup_main_context):
 	The lock order should be maincontext > OBJECT_LOCK so we need to release
 	the object lock when waking up the mainloop to avoid deadlocks.

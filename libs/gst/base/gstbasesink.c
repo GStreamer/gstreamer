@@ -3629,7 +3629,7 @@ gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query)
 
 /* get the end position of the last seen object, this is used
  * for EOS and for making sure that we don't report a position we
- * have not reached yet. */
+ * have not reached yet. With LOCK. */
 static gboolean
 gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
     gint64 * cur)
@@ -3651,9 +3651,13 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
   }
 
   if (*cur != -1 && oformat != format) {
-    /* convert to the target format if we need to */
+    GST_OBJECT_UNLOCK (basesink);
+    /* convert to the target format if we need to, release lock first */
     ret =
         gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
+    if (!ret)
+      *cur = -1;
+    GST_OBJECT_LOCK (basesink);
   }
 
   GST_DEBUG_OBJECT (basesink, "POSITION: %" GST_TIME_FORMAT,
@@ -3664,7 +3668,7 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, GstFormat format,
 
 /* get the position when we are PAUSED, this is the stream time of the buffer
  * that prerolled. If no buffer is prerolled (we are still flushing), this
- * value will be -1. */
+ * value will be -1. With LOCK. */
 static gboolean
 gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
     gint64 * cur)
@@ -3710,10 +3714,15 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, GstFormat format,
           GST_TIME_ARGS (*cur));
     }
   }
+
   res = (*cur != -1);
   if (res && oformat != format) {
+    GST_OBJECT_UNLOCK (basesink);
     res =
         gst_pad_query_convert (basesink->sinkpad, oformat, *cur, &format, cur);
+    if (!res)
+      *cur = -1;
+    GST_OBJECT_LOCK (basesink);
   }
 
   return res;
@@ -3774,10 +3783,13 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   base = GST_ELEMENT_CAST (basesink)->base_time;
   accum = basesink->segment.accum;
   rate = basesink->segment.rate * basesink->segment.applied_rate;
-  gst_base_sink_get_position_last (basesink, format, &last);
   latency = basesink->priv->latency;
 
   gst_object_ref (clock);
+
+  /* this function might release the LOCK */
+  gst_base_sink_get_position_last (basesink, format, &last);
+
   /* need to release the object lock before we can get the time, 
    * a clock might take the LOCK of the provider, which could be
    * a basesink subclass. */
