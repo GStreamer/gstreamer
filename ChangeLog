@@ -1,6 +1,11 @@
 2009-01-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegdemux/gstmpegdesc.h:
+	Fix up satellite delivery subsystem defs.
+
+2009-01-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegdemux/gstmpegdesc.h:
 	Fix up terrestrial delivery system descriptor defs.
 	They should be shifted otherwise wrong values are seen.
 
