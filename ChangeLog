@@ -1,3 +1,8 @@
+2009-01-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* configure.ac:
+	Also mention jp2kenc as a jp2k plugin feature.
+
 2009-01-04  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	Patch by: Sebastian Pölsterl <sebp at k-d-w dot org>

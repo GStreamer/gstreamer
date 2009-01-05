@@ -794,7 +794,7 @@ AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
 
 dnl *** jp2k ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JP2K, true)
-AG_GST_CHECK_FEATURE(JP2K, [jp2k], jp2kdec, [
+AG_GST_CHECK_FEATURE(JP2K, [jp2k], jp2kdec jp2kenc, [
   AG_GST_CHECK_LIBHEADER(JP2K, jasper, jas_stream_fopen, , jasper/jasper.h,
     JP2K_LIBS="-ljasper")
   AC_SUBST(JP2K_LIBS)
