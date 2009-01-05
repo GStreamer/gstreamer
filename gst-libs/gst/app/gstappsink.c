@@ -20,10 +20,25 @@
 
 /**
  * SECTION:element-appsink
+ * 
+ * Appsink is a sink plugin that supports many different methods for making
+ * the application get a handle on the GStreamer data in a pipeline. Unlike
+ * most GStreamer elements, Appsink provides external API functions.
+ *
+ * For the documentation of the API, please see the
+ * <link linkend="gst-plugins-base-libs-appsink">libgstapp</link> section in
+ * the GStreamer Plugins Base Libraries documentation.
+ *
+ */
+
+
+/**
+ * SECTION:gstappsink
  * @see_also: #GstBaseSink, appsrc
  *
  * Appsink is a sink plugin that supports many different methods for making
- * the application get a handle on the GStreamer data in a pipeline.
+ * the application get a handle on the GStreamer data in a pipeline. Unlike
+ * most GStreamer elements, Appsink provides external API functions.
  *
  * appsink can be used by linking to the gstappsink.h header file to access the
  * methods or by using the appsink action signals and properties.
@@ -841,7 +856,7 @@ gst_app_sink_get_max_buffers (GstAppSink * appsink)
 /**
  * gst_app_sink_set_drop:
  * @appsink: a #GstAppSink
- * @emit: the new state
+ * @drop: the new state
  *
  * Instruct @appsink to drop old buffers when the maximum amount of queued
  * buffers is reached.

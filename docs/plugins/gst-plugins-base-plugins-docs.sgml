@@ -13,6 +13,8 @@
   <chapter>
     <title>gst-plugins-base Elements</title>
     <xi:include href="xml/element-adder.xml" />
+    <xi:include href="xml/element-appsrc.xml" />
+    <xi:include href="xml/element-appsink.xml" />
     <xi:include href="xml/element-alsamixer.xml" />
     <xi:include href="xml/element-alsasink.xml" />
     <xi:include href="xml/element-alsasrc.xml" />
@@ -64,6 +66,7 @@
     <title>gst-plugins-base Plugins</title>
     <xi:include href="xml/plugin-adder.xml" />
     <xi:include href="xml/plugin-alsa.xml" />
+    <xi:include href="xml/plugin-app.xml" />
     <xi:include href="xml/plugin-audioconvert.xml" />
     <xi:include href="xml/plugin-audiorate.xml" />
     <xi:include href="xml/plugin-audioresample.xml" />

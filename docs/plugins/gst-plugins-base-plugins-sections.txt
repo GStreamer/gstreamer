@@ -17,6 +17,18 @@ GstAdderInputChannel
 </SECTION>
 
 <SECTION>
+<FILE>element-appsrc</FILE>
+<TITLE>appsrc</TITLE>
+GstAppSrc
+</SECTION>
+
+<SECTION>
+<FILE>element-appsink</FILE>
+<TITLE>appsink</TITLE>
+GstAppSink
+</SECTION>
+
+<SECTION>
 <FILE>element-alsamixer</FILE>
 GstAlsaMixerElement
 <TITLE>alsamixer</TITLE>

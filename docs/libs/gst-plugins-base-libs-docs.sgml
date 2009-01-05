@@ -4,6 +4,9 @@
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
 <!ENTITY GstCompiling SYSTEM "compiling.sgml">
+<!-- app-->
+<!ENTITY GstAppSrc SYSTEM "xml/gstappsrc.xml">
+<!ENTITY GstAppSink SYSTEM "xml/gstappsink.xml">
 <!-- audio -->
 <!ENTITY GstAudio SYSTEM "xml/gstaudio.xml">
 <!ENTITY GstAudioClock SYSTEM "xml/gstaudioclock.xml">
@@ -15,6 +18,7 @@
 <!ENTITY GstBaseAudioSrc SYSTEM "xml/gstbaseaudiosrc.xml">
 <!ENTITY GstMultiChannel SYSTEM "xml/gstmultichannel.xml">
 <!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
+<!-- app -->
 <!-- cdda -->
 <!ENTITY GstCddaBaseSrc SYSTEM "xml/gstcddabasesrc.xml">
 <!-- fft -->
@@ -95,6 +99,20 @@
       package.
     </para>
     &GstCompiling;
+
+    <chapter id="gstreamer-app">
+      <title>App Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
+        <filename>-lgstapp-&GST_MAJORMINOR;</filename> to the library flags.
+      </para>
+      <para>
+      To use it the functionality, insert an appsrc or appsink element into a pipeline and call the appropriate functions on the element.
+      </para>
+      &GstAppSrc;
+      &GstAppSink;
+    </chapter>
 
     <chapter id="gstreamer-audio">
       <title>Audio Library</title>

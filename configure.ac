@@ -294,6 +294,7 @@ dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(adder)
+AG_GST_CHECK_PLUGIN(app)
 AG_GST_CHECK_PLUGIN(audioconvert)
 AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
@@ -647,6 +648,7 @@ Makefile
 gst-plugins-base.spec
 gst/Makefile
 gst/adder/Makefile
+gst/app/Makefile
 gst/audioconvert/Makefile
 gst/audiorate/Makefile
 gst/audiotestsrc/Makefile
@@ -678,6 +680,7 @@ ext/vorbis/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/audio/Makefile
+gst-libs/gst/app/Makefile
 gst-libs/gst/cdda/Makefile
 gst-libs/gst/fft/Makefile
 gst-libs/gst/floatcast/Makefile
@@ -724,6 +727,7 @@ pkgconfig/gstreamer-plugins-base-uninstalled.pc
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
+tests/examples/app/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/seek/Makefile
 tests/examples/volume/Makefile

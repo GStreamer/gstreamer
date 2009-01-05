@@ -1369,6 +1369,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstAudioTestSrc::can-activate-pull</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate pull</NICK>
+<BLURB>Can activate in pull mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::can-activate-push</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Can activate push</NICK>
+<BLURB>Can activate in push mode.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVideoScale::method</NAME>
 <TYPE>GstVideoScaleMethod</TYPE>
 <RANGE></RANGE>
@@ -2586,5 +2606,145 @@
 <NICK>Date/Time Format</NICK>
 <BLURB>Format to use for time and date value, as in strftime.</BLURB>
 <DEFAULT>"%H:%M:%S"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The allowed caps for the sink pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::drop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop</NICK>
+<BLURB>Drop old buffers when the buffer queue is filled.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::emit-signals</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Emit signals</NICK>
+<BLURB>Emit new-preroll and new-buffer signals.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::eos</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>EOS</NICK>
+<BLURB>Check if the sink is EOS or not started.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSink::max-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Buffers</NICK>
+<BLURB>The maximum number of buffers to queue internally (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::block</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block</NICK>
+<BLURB>Block push-buffer when max-bytes are queued.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The allowed caps for the src pad.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::format</NAME>
+<TYPE>GstFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>The format of the segment events and seek.</BLURB>
+<DEFAULT>GST_FORMAT_BYTES</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::is-live</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Is Live</NICK>
+<BLURB>Whether to act as a live source.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::max-bytes</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max bytes</NICK>
+<BLURB>The maximum number of bytes to queue internally (0 = unlimited).</BLURB>
+<DEFAULT>200000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::max-latency</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Latency</NICK>
+<BLURB>The maximum latency (-1 = unlimited).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::min-latency</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min Latency</NICK>
+<BLURB>The minimum latency (-1 = default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::size</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size</NICK>
+<BLURB>The size of the data stream in bytes (-1 if unknown).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAppSrc::stream-type</NAME>
+<TYPE>GstAppStreamType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream Type</NICK>
+<BLURB>the type of the stream.</BLURB>
+<DEFAULT>Stream</DEFAULT>
 </ARG>
 

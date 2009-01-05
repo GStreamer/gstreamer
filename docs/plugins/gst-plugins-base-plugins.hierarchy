@@ -12,14 +12,11 @@ GObject
           GstPlayBaseBin
             GstPlayBin
           GstPlayBin2
-        GstDecodeBin
         GstDecodeBin2
         GstURIDecodeBin
-      GstTextOverlay
-        GstTimeOverlay
-        GstClockOverlay
-      GstTextRender
+        GstDecodeBin
       GstBaseSrc
+        GstGnomeVFSSrc
         GstPushSrc
           GstCddaBaseSrc
             GstCdParanoiaSrc
@@ -31,33 +28,37 @@ GObject
           GstTCPClientSrc
           GstTCPServerSrc
           GstVideoTestSrc
-        GstGnomeVFSSrc
         GstGioBaseSrc
           GstGioSrc
           GstGioStreamSrc
         GstAudioTestSrc
+        GstAppSrc
       GstBaseSink
         GstGnomeVFSSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstAlsaSink
         GstGioBaseSink
           GstGioSink
           GstGioStreamSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstAlsaSink
         GstVideoSink
-          GstXvImageSink
           GstXImageSink
+          GstXvImageSink
         GstTCPClientSink
         GstMultiFdSink
           GstTCPServerSink
+        GstAppSink
+      GstTheoraDec
+      GstTheoraEnc
+      GstTheoraParse
       GstVorbisEnc
       GstVorbisDec
       GstVorbisParse
         GstVorbisTag
-      GstAlsaMixerElement
-      GstTheoraDec
-      GstTheoraEnc
-      GstTheoraParse
+      GstTextOverlay
+        GstTimeOverlay
+        GstClockOverlay
+      GstTextRender
       GstOggDemux
       GstOggMux
       GstOgmParse
@@ -66,31 +67,23 @@ GObject
         GstOgmTextParse
       GstOggParse
       GstOggAviParse
-      GstVisual
-        GstVisualjess
-        GstVisualbumpscope
-        GstVisualcorona
-        GstVisualinfinite
-        GstVisualjakdaw
-        GstVisuallv_analyzer
-        GstVisuallv_scope
-        GstVisualoinksie
-      GstGDPDepay
-      GstGDPPay
-      GstStreamSelector
-      GstQueue2
+      GstAlsaMixerElement
       GstBaseTransform
-        GstAudioFilter
-          GstVolume
         GstFFMpegCsp
-        GstSpeexResample
         GstVideoScale
         GstAudioConvert
-      GstAdder
+        GstAudioFilter
+          GstVolume
+        GstSpeexResample
+      GstGDPDepay
+      GstGDPPay
       GstVideoRate
-      GstAudioRate
+      GstQueue2
+      GstStreamSelector
       GstSubParse
       GstSsaParse
+      GstAdder
+      GstAudioRate
     GstBus
     GstTask
     GstClock
@@ -100,10 +93,6 @@ GObject
     GstRegistry
     GstRingBuffer
   GstSignalObject
-  PangoFontMap
-    PangoFcFontMap
-      PangoFT2FontMap
-  PangoContext
   LinkConnection
     GIOPConnection
   LinkServer
@@ -111,12 +100,16 @@ GObject
   GConfClient
   GFileMonitor
     GLocalDirectoryMonitor
+      GFamDirectoryMonitor
       GInotifyDirectoryMonitor
     GLocalFileMonitor
+      GFamFileMonitor
       GInotifyFileMonitor
   GVolumeMonitor
     GNativeVolumeMonitor
-      GHalVolumeMonitor
+      GProxyVolumeMonitor
+        GProxyVolumeMonitorHal
+        GProxyVolumeMonitorGPhoto2
       GUnixVolumeMonitor
     GDaemonVolumeMonitor
   GVfs
@@ -127,33 +120,35 @@ GObject
   GVfsUriMapper
     GVfsUriMapperSmb
     GVfsUriMapperHttp
-  HalDevice
-  HalPool
-  GHalDrive
-  GHalMount
-  GHalVolume
   GAppLookupGConf
+  GProxyDrive
+  GProxyMount
+  GProxyVolume
   GOutputStream
   GInputStream
+  PangoFontMap
+    PangoFcFontMap
+      PangoFT2FontMap
+  PangoContext
   GstTunerNorm
   GstTunerChannel
   GstColorBalanceChannel
-  GstStreamInfo
   GstMixerTrack
+  GstStreamInfo
 GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GstTagSetter
-  GstImplementsInterface
-  GstMixer
-  GstPropertyProbe
   GFile
   GDesktopAppInfoLookup
   GDrive
   GMount
   GVolume
-  GstTuner
-  GstXOverlay
-  GstColorBalance
+  GstTagSetter
+  GstImplementsInterface
+  GstMixer
+  GstPropertyProbe
   GstNavigation
+  GstXOverlay
+  GstTuner
+  GstColorBalance

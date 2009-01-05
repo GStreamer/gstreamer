@@ -15,6 +15,7 @@ SUBDIRS = \
 	rtp \
 	rtsp \
 	sdp \
-	video
+	video \
+	app
 
 noinst_HEADERS = gettext.h gst-i18n-plugin.h

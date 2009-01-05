@@ -20,13 +20,29 @@
 
 /**
  * SECTION:element-appsrc
+ *
+ * The appsrc element can be used by applications to insert data into a
+ * GStreamer pipeline. Unlike most GStreamer elements, Appsrc provides
+ * external API functions.
+ *
+ * For the documentation of the API, please see the
+ * <link linkend="gst-plugins-base-libs-appsrc">libgstapp</link> section in the
+ * GStreamer Plugins Base Libraries documentation.
+ * 
+ */
+
+/**
+ * SECTION:gstappsrc
  * @see_also: #GstBaseSrc, appsink
  *
  * The appsrc element can be used by applications to insert data into a
- * GStreamer pipeline.
+ * GStreamer pipeline. Unlike most GStreamer elements, Appsrc provides
+ * external API functions.
  *
  * appsrc can be used by linking to the gstappsrc.h header file to access the
- * methods or by using the appsrc action signals.
+ * methods or by using the appsrc action signals. For the API
+ * documentation, see the documentation for libgstapp in the
+ * GStreamer Base Plugins Library reference...
  *
  * Before operating appsrc, the caps property must be set to a fixed caps
  * describing the format of the data that will be pushed with appsrc.
