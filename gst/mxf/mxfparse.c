@@ -441,7 +441,9 @@ mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
     const guint8 * data, guint size)
 {
   guint i;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (size >= 84, FALSE);
@@ -632,7 +634,9 @@ mxf_index_table_segment_parse (const MXFUL * key,
     MXFIndexTableSegment * segment, const MXFPrimerPack * primer,
     const guint8 * data, guint size)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
   guint16 tag, tag_size;
   const guint8 *tag_data;
 
@@ -906,7 +910,9 @@ mxf_primer_pack_parse (const MXFUL * key, MXFPrimerPack * pack,
 
   for (i = 0; i < n; i++) {
     guint local_tag;
+#ifndef GST_DISABLE_GST_DEBUG
     gchar str[48];
+#endif
     MXFUL *uid;
 
     local_tag = GST_READ_UINT16_BE (data);
@@ -998,7 +1004,9 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
       GUINT_TO_POINTER (((guint) tag)));
 
   if (key) {
+#ifndef GST_DISABLE_GST_DEBUG
     gchar str[48];
+#endif
 
     GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
         mxf_ul_to_string (key, str), tag_size);

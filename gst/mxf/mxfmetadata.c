@@ -137,7 +137,9 @@ static gboolean
 mxf_metadata_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     guint16 tag, const guint8 * tag_data, guint tag_size)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
   MXFMetadata *self = MXF_METADATA (metadata);
   gboolean ret = TRUE;
 
@@ -327,7 +329,9 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
     guint tag_size)
 {
   MXFMetadataPreface *self = MXF_METADATA_PREFACE (metadata);
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
   gboolean ret = TRUE;
 
   switch (tag) {
@@ -565,7 +569,9 @@ mxf_metadata_identification_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataIdentification *self = MXF_METADATA_IDENTIFICATION (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3c01:
@@ -684,7 +690,9 @@ mxf_metadata_content_storage_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataContentStorage *self = MXF_METADATA_CONTENT_STORAGE (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x1901:{
@@ -841,7 +849,9 @@ mxf_metadata_essence_container_data_handle_tag (MXFMetadataBase * metadata,
   MXFMetadataEssenceContainerData *self =
       MXF_METADATA_ESSENCE_CONTAINER_DATA (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[96];
+#endif
 
   switch (tag) {
     case 0x2701:
@@ -961,7 +971,9 @@ mxf_metadata_generic_package_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataGenericPackage *self = MXF_METADATA_GENERIC_PACKAGE (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[96];
+#endif
 
   switch (tag) {
     case 0x4401:
@@ -1191,7 +1203,9 @@ mxf_metadata_source_package_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataSourcePackage *self = MXF_METADATA_SOURCE_PACKAGE (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x4701:
@@ -1355,7 +1369,9 @@ mxf_metadata_track_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataTrack *self = MXF_METADATA_TRACK (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x4801:
@@ -1647,7 +1663,9 @@ mxf_metadata_sequence_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataSequence *self = MXF_METADATA_SEQUENCE (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x0201:
@@ -1773,7 +1791,9 @@ mxf_metadata_structural_component_handle_tag (MXFMetadataBase * metadata,
   MXFMetadataStructuralComponent *self =
       MXF_METADATA_STRUCTURAL_COMPONENT (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x0201:
@@ -1897,7 +1917,9 @@ mxf_metadata_source_clip_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataSourceClip *self = MXF_METADATA_SOURCE_CLIP (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[96];
+#endif
 
   switch (tag) {
     case 0x1201:
@@ -2096,7 +2118,9 @@ mxf_metadata_dm_segment_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataDMSegment *self = MXF_METADATA_DM_SEGMENT (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x0601:
@@ -2241,7 +2265,9 @@ mxf_metadata_generic_descriptor_handle_tag (MXFMetadataBase * metadata,
   MXFMetadataGenericDescriptor *self =
       MXF_METADATA_GENERIC_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x2f01:{
@@ -2351,7 +2377,9 @@ mxf_metadata_file_descriptor_handle_tag (MXFMetadataBase * metadata,
 {
   MXFMetadataFileDescriptor *self = MXF_METADATA_FILE_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3006:
@@ -2430,7 +2458,9 @@ mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataBase *
   MXFMetadataGenericPictureEssenceDescriptor *self =
       MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3215:
@@ -2692,7 +2722,9 @@ mxf_metadata_generic_sound_essence_descriptor_handle_tag (MXFMetadataBase *
   MXFMetadataGenericSoundEssenceDescriptor *self =
       MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3d03:
@@ -3058,7 +3090,9 @@ mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataBase *
   MXFMetadataGenericDataEssenceDescriptor *self =
       MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3e01:
@@ -3130,7 +3164,9 @@ mxf_metadata_multiple_descriptor_handle_tag (MXFMetadataBase * metadata,
   MXFMetadataMultipleDescriptor *self =
       MXF_METADATA_MULTIPLE_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3f01:{

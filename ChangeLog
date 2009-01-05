@@ -1,3 +1,32 @@
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfaes-bwf.c:
+	(mxf_metadata_wave_audio_essence_descriptor_handle_tag),
+	(mxf_bwf_create_caps):
+	* gst/mxf/mxfdemux.c: (gst_mxf_demux_handle_klv_packet):
+	* gst/mxf/mxfmetadata.c: (mxf_metadata_handle_tag),
+	(mxf_metadata_preface_handle_tag),
+	(mxf_metadata_identification_handle_tag),
+	(mxf_metadata_content_storage_handle_tag),
+	(mxf_metadata_essence_container_data_handle_tag),
+	(mxf_metadata_generic_package_handle_tag),
+	(mxf_metadata_source_package_handle_tag),
+	(mxf_metadata_track_handle_tag),
+	(mxf_metadata_sequence_handle_tag),
+	(mxf_metadata_structural_component_handle_tag),
+	(mxf_metadata_source_clip_handle_tag),
+	(mxf_metadata_dm_segment_handle_tag),
+	(mxf_metadata_generic_descriptor_handle_tag),
+	(mxf_metadata_file_descriptor_handle_tag),
+	(mxf_metadata_generic_picture_essence_descriptor_handle_tag),
+	(mxf_metadata_generic_sound_essence_descriptor_handle_tag),
+	(mxf_metadata_generic_data_essence_descriptor_handle_tag),
+	(mxf_metadata_multiple_descriptor_handle_tag):
+	* gst/mxf/mxfparse.c: (mxf_partition_pack_parse),
+	(mxf_index_table_segment_parse), (mxf_primer_pack_parse),
+	(mxf_local_tag_add_to_hash_table):
+	Fix compilation with debugging disabled.
+
 2009-01-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* configure.ac:

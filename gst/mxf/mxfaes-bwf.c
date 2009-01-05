@@ -125,7 +125,9 @@ mxf_metadata_wave_audio_essence_descriptor_handle_tag (MXFMetadataBase *
   MXFMetadataWaveAudioEssenceDescriptor *self =
       MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
 
   switch (tag) {
     case 0x3d0a:
@@ -634,7 +636,9 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
 {
   GstCaps *ret = NULL;
   MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
+#ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
+#endif
   gchar *codec_name = NULL;
 
   if (MXF_IS_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (descriptor))
@@ -812,24 +816,24 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x01
             || track->parent.descriptor[i]->essence_container.u[14] == 0x02
             || track->parent.descriptor[i]->essence_container.u[14] == 0x08)) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       bwf = TRUE;
       break;
     } else
-        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])
+        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x03
             || track->parent.descriptor[i]->essence_container.u[14] == 0x04
             || track->parent.descriptor[i]->essence_container.u[14] == 0x09)) {
 
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       bwf = FALSE;
       break;
     }
