@@ -1,5 +1,14 @@
 2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Sascha Hauer <s dot hauer at pengutronix dot de>
+	          Luotao Fu <l dot fu at pengutronix dot de>
+
+	* gst/bayer/gstbayer2rgb.c: (get_pix_offset),
+	(gst_bayer2rgb_set_caps):
+	Fix color offset calculation for 24bpp. Fixes bug #566613.
+
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: vanista <vanista at gmail dot com>
 
 	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_create_stream):

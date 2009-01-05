@@ -231,19 +231,21 @@ gst_bayer2rgb_get_property (GObject * object, guint prop_id,
 
 /* Routine to convert colormask value into relative byte offset */
 static int
-get_pix_offset (int offset)
+get_pix_offset (int mask, int bpp)
 {
-  switch (offset) {
+  int bpp32 = (bpp / 8) - 3;
+
+  switch (mask) {
     case 255:
-      return 3;
+      return 2 + bpp32;
     case 65280:
-      return 2;
+      return 1 + bpp32;
     case 16711680:
-      return 1;
+      return 0 + bpp32;
     case -16777216:
       return 0;
     default:
-      GST_ERROR ("Invalid color mask 0x%08x", offset);
+      GST_ERROR ("Invalid color mask 0x%08x", mask);
       return -1;
   }
 }
@@ -254,7 +256,7 @@ gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
 {
   GstBayer2RGB *filter = GST_BAYER2RGB (base);
   GstStructure *structure;
-  int val;
+  int val, bpp;
 
   GST_DEBUG ("in caps %" GST_PTR_FORMAT " out caps %" GST_PTR_FORMAT, incaps,
       outcaps);
@@ -267,14 +269,14 @@ gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
 
   /* To cater for different RGB formats, we need to set params for later */
   structure = gst_caps_get_structure (outcaps, 0);
-  gst_structure_get_int (structure, "bpp", &val);
-  filter->pixsize = val / 8;
+  gst_structure_get_int (structure, "bpp", &bpp);
+  filter->pixsize = bpp / 8;
   gst_structure_get_int (structure, "red_mask", &val);
-  filter->r_off = get_pix_offset (val);
+  filter->r_off = get_pix_offset (val, bpp);
   gst_structure_get_int (structure, "green_mask", &val);
-  filter->g_off = get_pix_offset (val);
+  filter->g_off = get_pix_offset (val, bpp);
   gst_structure_get_int (structure, "blue_mask", &val);
-  filter->b_off = get_pix_offset (val);
+  filter->b_off = get_pix_offset (val, bpp);
 
   return TRUE;
 }
@@ -516,6 +518,7 @@ corner (uint8_t * input, uint8_t * output, int x, int y,
       break;
   }
 }
+
 static void
 do_corners (uint8_t * input, uint8_t * output, GstBayer2RGB * filter)
 {
