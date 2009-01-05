@@ -183,6 +183,10 @@ struct TsMuxStream {
 
   gint   pcr_ref;
   gint64 last_pcr;
+
+  gint audio_sampling;
+  gint audio_channels;
+  gint audio_bitrate;
 };
 
 /* stream management */

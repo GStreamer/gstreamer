@@ -399,6 +399,10 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data, GstPad * pad)
   }
 
   if (ts_data->stream != NULL) {
+    gst_structure_get_int (s, "rate", &ts_data->stream->audio_sampling);
+    gst_structure_get_int (s, "channels", &ts_data->stream->audio_channels);
+    gst_structure_get_int (s, "bitrate", &ts_data->stream->audio_bitrate);
+
     tsmux_stream_set_buffer_release_func (ts_data->stream, release_buffer_cb);
     tsmux_program_add_stream (mux->program, ts_data->stream);
 

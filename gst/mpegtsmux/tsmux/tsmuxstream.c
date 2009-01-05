@@ -157,7 +157,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
           stream->id_extended = 0x80;
           break;
         case TSMUX_ST_PS_AUDIO_AC3:
-          stream->id_extended = 0x81;
+          stream->id_extended = 0x71;
           break;
         case TSMUX_ST_PS_AUDIO_DTS:
           stream->id_extended = 0x82;
@@ -559,7 +559,7 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
       ext_len = 1;              /* Only writing 1 byte into the extended fields */
       *data++ = 0x80 | ext_len;
       /* Write the extended streamID */
-      *data++ = 0x80 | stream->id_extended;
+      *data++ = stream->id_extended;
     }
   }
 }
@@ -631,15 +631,173 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream, guint8 * buf, guint16 * len)
    * PMT ES_info field */
   pos = buf;
 
+  /* tag (registration_descriptor), length, format_identifier */
   switch (stream->stream_type) {
+    case TSMUX_ST_AUDIO_AAC:
+      /* FIXME */
+      break;
+    case TSMUX_ST_VIDEO_MPEG4:
+      /* FIXME */
+      break;
+    case TSMUX_ST_VIDEO_H264:
+      *pos++ = 0x05;
+      *pos++ = 8;
+      *pos++ = 0x48;            /* 'H' */
+      *pos++ = 0x44;            /* 'D' */
+      *pos++ = 0x4D;            /* 'M' */
+      *pos++ = 0x56;            /* 'V' */
+      /* FIXME : Not sure about this additional_identification_info */
+      *pos++ = 0xFF;
+      *pos++ = 0x1B;
+      *pos++ = 0x44;
+      *pos++ = 0x3F;
+      break;
     case TSMUX_ST_VIDEO_DIRAC:
-      /* tag (registration_descriptor), length, format_identifier */
       *pos++ = 0x05;
       *pos++ = 4;
       *pos++ = 0x64;            /* 'd' */
       *pos++ = 0x72;            /* 'r' */
       *pos++ = 0x61;            /* 'a' */
       *pos++ = 0x63;            /* 'c' */
+      break;
+    case TSMUX_ST_PS_AUDIO_AC3:
+    {
+      *pos++ = 0x05;
+      *pos++ = 4;
+      *pos++ = 0x41;            /* 'A' */
+      *pos++ = 0x43;            /* 'C' */
+      *pos++ = 0x2D;            /* '-' */
+      *pos++ = 0x33;            /* '3' */
+
+      /* audio_stream_descriptor () | ATSC A/52-2001 Annex A
+       *
+       * descriptor_tag       8 uimsbf
+       * descriptor_length    8 uimsbf
+       * sample_rate_code     3 bslbf
+       * bsid                 5 bslbf
+       * bit_rate_code        6 bslbf
+       * surround_mode        2 bslbf
+       * bsmod                3 bslbf
+       * num_channels         4 bslbf
+       * full_svc             1 bslbf
+       * langcod              8 bslbf
+       * [...]
+       */
+      *pos++ = 0x81;
+      *pos++ = 0x04;
+
+      /* 3 bits sample_rate_code, 5 bits hardcoded bsid (default ver 8) */
+      switch (stream->audio_sampling) {
+        case 48000:
+          *pos++ = 0x08;
+          break;
+        case 44100:
+          *pos++ = 0x28;
+          break;
+        case 32000:
+          *pos++ = 0x48;
+          break;
+        default:
+          *pos++ = 0xE8;
+          break;                /* 48, 44.1 or 32 Khz */
+      }
+
+      /* 1 bit bit_rate_limit, 5 bits bit_rate_code, 2 bits suround_mode */
+      switch (stream->audio_bitrate) {
+        case 32:
+          *pos++ = 0x00 << 2;
+          break;
+        case 40:
+          *pos++ = 0x01 << 2;
+          break;
+        case 48:
+          *pos++ = 0x02 << 2;
+          break;
+        case 56:
+          *pos++ = 0x03 << 2;
+          break;
+        case 64:
+          *pos++ = 0x04 << 2;
+          break;
+        case 80:
+          *pos++ = 0x05 << 2;
+          break;
+        case 96:
+          *pos++ = 0x06 << 2;
+          break;
+        case 112:
+          *pos++ = 0x07 << 2;
+          break;
+        case 128:
+          *pos++ = 0x08 << 2;
+          break;
+        case 160:
+          *pos++ = 0x09 << 2;
+          break;
+        case 192:
+          *pos++ = 0x0A << 2;
+          break;
+        case 224:
+          *pos++ = 0x0B << 2;
+          break;
+        case 256:
+          *pos++ = 0x0C << 2;
+          break;
+        case 320:
+          *pos++ = 0x0D << 2;
+          break;
+        case 384:
+          *pos++ = 0x0E << 2;
+          break;
+        case 448:
+          *pos++ = 0x0F << 2;
+          break;
+        case 512:
+          *pos++ = 0x10 << 2;
+          break;
+        case 576:
+          *pos++ = 0x11 << 2;
+          break;
+        case 640:
+          *pos++ = 0x12 << 2;
+          break;
+        default:
+          *pos++ = 0x32 << 2;
+          break;                /* 640 Kb/s upper limit */
+      }
+
+      /* 3 bits bsmod, 4 bits num_channels, 1 bit full_svc */
+      switch (stream->audio_channels) {
+        case 1:
+          *pos++ = 0x01 << 1;
+          break;                /* 1/0 */
+        case 2:
+          *pos++ = 0x02 << 1;
+          break;                /* 2/0 */
+        case 3:
+          *pos++ = 0x0A << 1;
+          break;                /* <= 3 */
+        case 4:
+          *pos++ = 0x0B << 1;
+          break;                /* <= 4 */
+        case 5:
+          *pos++ = 0x0C << 1;
+          break;                /* <= 5 */
+        case 6:
+        default:
+          *pos++ = 0x0D << 1;
+          break;                /* <= 6 */
+      }
+
+      *pos++ = 0x00;
+
+      break;
+    }
+    case TSMUX_ST_PS_AUDIO_DTS:
+      /* FIXME */
+      break;
+    case TSMUX_ST_PS_AUDIO_LPCM:
+      /* FIXME */
       break;
     default:
       break;

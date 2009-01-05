@@ -1000,9 +1000,14 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     else
       tsmux_put16 (&pos, 0xE000 | tsmux_stream_get_pid (program->pcr_stream));
 
-    /* FIXME: Write program descriptors if needed, for now write a 
-     * length of 0 */
-    tsmux_put16 (&pos, 0xF000);
+    /* 4 bits reserved, 12 bits program_info_length, descriptor : HDMV */
+    tsmux_put16 (&pos, 0xF00C);
+    tsmux_put16 (&pos, 0x0504);
+    tsmux_put16 (&pos, 0x4844);
+    tsmux_put16 (&pos, 0x4D56);
+    tsmux_put16 (&pos, 0x8804);
+    tsmux_put16 (&pos, 0x0FFF);
+    tsmux_put16 (&pos, 0xFCFC);
 
     /* Write out the entries */
     for (i = 0; i < program->nb_streams; i++) {

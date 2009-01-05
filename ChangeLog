@@ -1,5 +1,16 @@
 2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: vanista <vanista at gmail dot com>
+
+	* gst/mpegtsmux/mpegtsmux.c: (mpegtsmux_create_stream):
+	* gst/mpegtsmux/tsmux/tsmux.c: (tsmux_write_pmt):
+	* gst/mpegtsmux/tsmux/tsmuxstream.c: (tsmux_stream_new),
+	(tsmux_stream_write_pes_header), (tsmux_stream_get_es_descrs):
+	* gst/mpegtsmux/tsmux/tsmuxstream.h:
+	Improve muxing of AC3/h264 streams a bit. Fixes bug #550613.
+
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/mxf/mxfdemux.c:
 	(gst_mxf_demux_handle_header_metadata_update_streams),
 	(gst_mxf_demux_pad_next_component):
