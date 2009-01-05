@@ -1,6 +1,6 @@
 /* 
  * GStreamer
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,53 +26,38 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
 
+#include "audiofxbaseiirfilter.h"
+
 G_BEGIN_DECLS
+
 #define GST_TYPE_AUDIO_CHEB_LIMIT            (gst_audio_cheb_limit_get_type())
 #define GST_AUDIO_CHEB_LIMIT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_CHEB_LIMIT,GstAudioChebLimit))
 #define GST_IS_AUDIO_CHEB_LIMIT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CHEB_LIMIT))
 #define GST_AUDIO_CHEB_LIMIT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_CHEB_LIMIT,GstAudioChebLimitClass))
 #define GST_IS_AUDIO_CHEB_LIMIT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_CHEB_LIMIT))
 #define GST_AUDIO_CHEB_LIMIT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_CHEB_LIMIT,GstAudioChebLimitClass))
+
 typedef struct _GstAudioChebLimit GstAudioChebLimit;
 typedef struct _GstAudioChebLimitClass GstAudioChebLimitClass;
 
-typedef void (*GstAudioChebLimitProcessFunc) (GstAudioChebLimit *, guint8 *, guint);
-
-typedef struct
-{
-  gdouble *x;
-  gint x_pos;
-  gdouble *y;
-  gint y_pos;
-} GstAudioChebLimitChannelCtx;
-
 struct _GstAudioChebLimit
 {
-  GstAudioFilter audiofilter;
+  GstAudioFXBaseIIRFilter parent;
 
   gint mode;
   gint type;
   gint poles;
   gfloat cutoff;
   gfloat ripple;
-
-  /* < private > */
-  GstAudioChebLimitProcessFunc process;
-
-  gboolean have_coeffs;
-  gdouble *a;
-  gint num_a;
-  gdouble *b;
-  gint num_b;
-  GstAudioChebLimitChannelCtx *channels;
 };
 
 struct _GstAudioChebLimitClass
 {
-  GstAudioFilterClass parent;
+  GstAudioFXBaseIIRFilterClass parent;
 };
 
 GType gst_audio_cheb_limit_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_AUDIO_CHEB_LIMIT_H__ */

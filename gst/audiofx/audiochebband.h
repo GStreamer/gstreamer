@@ -1,6 +1,6 @@
 /* 
  * GStreamer
- * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,6 +26,8 @@
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
 
+#include "audiofxbaseiirfilter.h"
+
 G_BEGIN_DECLS
 #define GST_TYPE_AUDIO_CHEB_BAND            (gst_audio_cheb_band_get_type())
 #define GST_AUDIO_CHEB_BAND(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_CHEB_BAND,GstAudioChebBand))
@@ -36,19 +38,9 @@ G_BEGIN_DECLS
 typedef struct _GstAudioChebBand GstAudioChebBand;
 typedef struct _GstAudioChebBandClass GstAudioChebBandClass;
 
-typedef void (*GstAudioChebBandProcessFunc) (GstAudioChebBand *, guint8 *, guint);
-
-typedef struct
-{
-  gdouble *x;
-  gint x_pos;
-  gdouble *y;
-  gint y_pos;
-} GstAudioChebBandChannelCtx;
-
 struct _GstAudioChebBand
 {
-  GstAudioFilter audiofilter;
+  GstAudioFXBaseIIRFilter parent;
 
   gint mode;
   gint type;
@@ -56,21 +48,11 @@ struct _GstAudioChebBand
   gfloat lower_frequency;
   gfloat upper_frequency;
   gfloat ripple;
-
-  /* < private > */
-  GstAudioChebBandProcessFunc process;
-
-  gboolean have_coeffs;
-  gdouble *a;
-  gint num_a;
-  gdouble *b;
-  gint num_b;
-  GstAudioChebBandChannelCtx *channels;
 };
 
 struct _GstAudioChebBandClass
 {
-  GstAudioFilterClass parent;
+  GstAudioFXBaseIIRFilterClass parent;
 };
 
 GType gst_audio_cheb_band_get_type (void);

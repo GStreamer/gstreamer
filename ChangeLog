@@ -1,3 +1,31 @@
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiofxbaseiirfilter.c:
+	(gst_audio_fx_base_iir_filter_base_init),
+	(gst_audio_fx_base_iir_filter_dispose),
+	(gst_audio_fx_base_iir_filter_class_init),
+	(gst_audio_fx_base_iir_filter_init),
+	(gst_audio_fx_base_iir_filter_calculate_gain),
+	(gst_audio_fx_base_iir_filter_set_coefficients),
+	(gst_audio_fx_base_iir_filter_setup), (process),
+	(gst_audio_fx_base_iir_filter_transform_ip),
+	(gst_audio_fx_base_iir_filter_stop):
+	* gst/audiofx/audiofxbaseiirfilter.h:
+	Implement a base class for IIR filters.
+
+	* gst/audiofx/audiochebband.c: (gst_audio_cheb_band_base_init),
+	(gst_audio_cheb_band_class_init), (gst_audio_cheb_band_init),
+	(generate_coefficients), (gst_audio_cheb_band_set_property),
+	(gst_audio_cheb_band_setup):
+	* gst/audiofx/audiochebband.h:
+	* gst/audiofx/audiocheblimit.c: (gst_audio_cheb_limit_base_init),
+	(gst_audio_cheb_limit_class_init), (gst_audio_cheb_limit_init),
+	(generate_coefficients), (gst_audio_cheb_limit_set_property),
+	(gst_audio_cheb_limit_setup):
+	* gst/audiofx/audiocheblimit.h:
+	Use the IIR filter base class for the chebyshev filters.
+
 2009-01-02  Michael Smith <msmith@songbirdnest.com>
 
 	  Patch by: Justin Karnegas <justin@affinix.com> and
