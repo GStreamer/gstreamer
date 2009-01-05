@@ -888,7 +888,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
           default:
             code_rate_lp_str = "reserved";
         }
-        /* guard is 32 if 0, 16 if 1, 8 if 2, 4 if 4 */
+        /* guard is 32 if 0, 16 if 1, 8 if 2, 4 if 3 */
         switch (guard_interval) {
           case 0:
             guard_interval = 32;
@@ -899,7 +899,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
           case 2:
             guard_interval = 8;
             break;
-          case 4:
+          case 3:
             guard_interval = 4;
             break;
           default:             /* make it default to 32 */

@@ -1,5 +1,10 @@
 2009-01-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/mpegdemux/mpegtspacketizer.c:
+	Guard interval is 4 if descriptor part shows binary 11 (3 not 4).
+
+2009-01-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* gst/mpegdemux/gstmpegdesc.h:
 	Fix up satellite delivery subsystem defs.
 
