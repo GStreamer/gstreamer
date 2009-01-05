@@ -1,3 +1,11 @@
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Dejan Sakelšak <sakdean at gmail dot com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ff_aud_caps_new):
+	Narrow down the allowed channels and sample rates for AMR.
+	Fixes #566647.
+
 2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ffmpegrev:

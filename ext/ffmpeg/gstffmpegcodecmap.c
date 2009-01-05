@@ -347,6 +347,22 @@ gst_ff_aud_caps_new (AVCodecContext * context, enum CodecID codec_id,
         case CODEC_ID_ADPCM_G726:
           maxchannels = 1;
           break;
+        case CODEC_ID_AMR_NB:
+        {
+          const static gint l_rates[] = { 8000 };
+          maxchannels = 1;
+          n_rates = G_N_ELEMENTS (l_rates);
+          rates = l_rates;
+          break;
+        }
+        case CODEC_ID_AMR_WB:
+        {
+          const static gint l_rates[] = { 16000 };
+          maxchannels = 1;
+          n_rates = G_N_ELEMENTS (l_rates);
+          rates = l_rates;
+          break;
+        }
         default:
           break;
       }
