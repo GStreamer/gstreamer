@@ -1,5 +1,12 @@
 2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* ext/pulse/pulsesink.c: (gst_pulsesink_destroy_stream):
+	Don't wait for the pulse mainloop when destroying the stream.
+	Fixes a deadlock when the pulsedaemon goes away while pulsesink
+	is PLAYING. Fixes bug #556986.
+
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	Patch by: Sascha Hauer <s dot hauer at pengutronix dot de>
 	          Luotao Fu <l dot fu at pengutronix dot de>
 
