@@ -35,6 +35,11 @@ plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 
+  /* ensure private tag is registered */
+  gst_tag_register (GST_QT_DEMUX_PRIVATE_TAG, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, "QT atom", "unparsed QT tag atom",
+      gst_tag_merge_use_first);
+
   if (!gst_element_register (plugin, "qtdemux",
           GST_RANK_PRIMARY, GST_TYPE_QTDEMUX))
     return FALSE;

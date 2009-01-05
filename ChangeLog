@@ -1,3 +1,14 @@
+2009-01-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_tag_add_str),
+	(qtdemux_tag_add_tmpo), (qtdemux_tag_add_covr),
+	(qtdemux_tag_add_date), (qtdemux_tag_add_gnre),
+	(qtdemux_tag_add_blob), (qtdemux_parse_udta):
+	* gst/qtdemux/qtdemux.h:
+	* gst/qtdemux/quicktime.c: (plugin_init):
+	Streamline tag handling and pass unparsed tags as binary blob
+	in private tag.
+
 2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audiofx/Makefile.am:

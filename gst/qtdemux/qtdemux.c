@@ -3882,7 +3882,8 @@ unknown_stream:
 }
 
 static void
-qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
+qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
+    GNode * node)
 {
   const gchar *env_vars[] = { "GST_QT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
   GNode *data;
@@ -3955,7 +3956,8 @@ qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
 }
 
 static void
-qtdemux_tag_add_tmpo (GstQTDemux * qtdemux, const char *tag1, GNode * node)
+qtdemux_tag_add_tmpo (GstQTDemux * qtdemux, const char *tag1, const char *dummy,
+    GNode * node)
 {
   GNode *data;
   int len;
@@ -3981,7 +3983,8 @@ qtdemux_tag_add_tmpo (GstQTDemux * qtdemux, const char *tag1, GNode * node)
 }
 
 static void
-qtdemux_tag_add_covr (GstQTDemux * qtdemux, const char *tag1, GNode * node)
+qtdemux_tag_add_covr (GstQTDemux * qtdemux, const char *tag1, const char *dummy,
+    GNode * node)
 {
   GNode *data;
   int len;
@@ -4005,7 +4008,8 @@ qtdemux_tag_add_covr (GstQTDemux * qtdemux, const char *tag1, GNode * node)
 }
 
 static void
-qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag, GNode * node)
+qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag, const char *dummy,
+    GNode * node)
 {
   GNode *data;
   char *s;
@@ -4039,7 +4043,8 @@ qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag, GNode * node)
 }
 
 static void
-qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, GNode * node)
+qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, const char *dummy,
+    GNode * node)
 {
   static const gchar *genres[] = {
     "N/A", "Blues", "Classic Rock", "Country", "Dance", "Disco",
@@ -4092,12 +4097,88 @@ qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag, GNode * node)
   }
 }
 
+typedef void (*GstQTDemuxAddTagFunc) (GstQTDemux * demux,
+    const char *tag, const char *tag_bis, GNode * node);
+
+static const struct
+{
+  guint32 fourcc;
+  const gchar *gst_tag;
+  const gchar *gst_tag_bis;
+  const GstQTDemuxAddTagFunc func;
+} add_funcs[] = {
+  {
+  FOURCC__nam, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
+  FOURCC__grp, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC__wrt, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
+  FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
+  FOURCC__cpy, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
+  FOURCC__cmt, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
+  FOURCC__des, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+  FOURCC__day, GST_TAG_DATE, NULL, qtdemux_tag_add_date}, {
+  FOURCC__too, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
+  FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, qtdemux_tag_add_num}, {
+  FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
+        qtdemux_tag_add_num}, {
+  FOURCC_disc, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
+        qtdemux_tag_add_num}, {
+  FOURCC__gen, GST_TAG_GENRE, NULL, qtdemux_tag_add_str}, {
+  FOURCC_gnre, GST_TAG_GENRE, NULL, qtdemux_tag_add_gnre}, {
+  FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
+  FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, qtdemux_tag_add_covr}, {
+  FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
+  FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}
+};
+
+static void
+qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
+{
+  gint len;
+  guint8 *data;
+  GstBuffer *buf;
+  gchar *media_type, *style;
+  GstCaps *caps;
+
+  data = node->data;
+  len = QT_UINT32 (data);
+  buf = gst_buffer_new_and_alloc (len);
+  memcpy (GST_BUFFER_DATA (buf), data, len);
+
+  /* heuristic to determine style of tag */
+  if (QT_FOURCC (data + 4) == FOURCC_____ ||
+      (len > 8 + 12 && QT_FOURCC (data + 12) == FOURCC_data))
+    style = "itunes";
+  else if (demux->major_brand == GST_MAKE_FOURCC ('q', 't', ' ', ' '))
+    style = "quicktime";
+  /* fall back to assuming iso/3gp tag style */
+  else
+    style = "iso";
+
+  media_type = g_strdup_printf ("application/x-gst-qt-%c%c%c%c-tag",
+      g_ascii_tolower (data[4]), g_ascii_tolower (data[5]),
+      g_ascii_tolower (data[6]), g_ascii_tolower (data[7]));
+  caps = gst_caps_new_simple (media_type, "style", G_TYPE_STRING, style, NULL);
+  gst_buffer_set_caps (buf, caps);
+  gst_caps_unref (caps);
+  g_free (media_type);
+
+  GST_DEBUG_OBJECT (demux, "adding private tag; size %d, caps %" GST_PTR_FORMAT,
+      GST_BUFFER_SIZE (buf), caps);
+
+  gst_tag_list_add (demux->tag_list, GST_TAG_MERGE_APPEND,
+      GST_QT_DEMUX_PRIVATE_TAG, buf, NULL);
+  gst_buffer_unref (buf);
+}
+
 static void
 qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
 {
   GNode *meta;
   GNode *ilst;
   GNode *node;
+  gint i;
 
   meta = qtdemux_tree_get_child_by_type (udta, FOURCC_meta);
   if (meta != NULL) {
@@ -4114,107 +4195,18 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
   GST_DEBUG_OBJECT (qtdemux, "new tag list");
   qtdemux->tag_list = gst_tag_list_new ();
 
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__nam);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_TITLE, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__ART);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_ARTIST, node);
-  } else {
-    node = qtdemux_tree_get_child_by_type (ilst, FOURCC__wrt);
+  for (i = 0; i < G_N_ELEMENTS (add_funcs); ++i) {
+    node = qtdemux_tree_get_child_by_type (ilst, add_funcs[i].fourcc);
     if (node) {
-      qtdemux_tag_add_str (qtdemux, GST_TAG_ARTIST, node);
-    } else {
-      node = qtdemux_tree_get_child_by_type (ilst, FOURCC__grp);
-      if (node) {
-        qtdemux_tag_add_str (qtdemux, GST_TAG_ARTIST, node);
-      }
+      add_funcs[i].func (qtdemux, add_funcs[i].gst_tag,
+          add_funcs[i].gst_tag_bis, node);
+      g_node_destroy (node);
     }
   }
 
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__alb);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_ALBUM, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__cpy);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_COPYRIGHT, node);
-  } else {
-    node = qtdemux_tree_get_child_by_type (ilst, FOURCC_cprt);
-    if (node)
-      qtdemux_tag_add_str (qtdemux, GST_TAG_COPYRIGHT, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__cmt);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_COMMENT, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__des);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_DESCRIPTION, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__day);
-  if (node) {
-    qtdemux_tag_add_date (qtdemux, GST_TAG_DATE, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__too);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_COMMENT, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_trkn);
-  if (node) {
-    qtdemux_tag_add_num (qtdemux, GST_TAG_TRACK_NUMBER,
-        GST_TAG_TRACK_COUNT, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_disc);
-  if (node) {
-    qtdemux_tag_add_num (qtdemux, GST_TAG_ALBUM_VOLUME_NUMBER,
-        GST_TAG_ALBUM_VOLUME_COUNT, node);
-  } else {
-    node = qtdemux_tree_get_child_by_type (ilst, FOURCC_disk);
-    if (node) {
-      qtdemux_tag_add_num (qtdemux, GST_TAG_ALBUM_VOLUME_NUMBER,
-          GST_TAG_ALBUM_VOLUME_COUNT, node);
-    }
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_gnre);
-  if (node) {
-    qtdemux_tag_add_gnre (qtdemux, GST_TAG_GENRE, node);
-  } else {
-    node = qtdemux_tree_get_child_by_type (ilst, FOURCC__gen);
-    if (node) {
-      qtdemux_tag_add_str (qtdemux, GST_TAG_GENRE, node);
-    }
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_tmpo);
-  if (node) {
-    qtdemux_tag_add_tmpo (qtdemux, GST_TAG_BEATS_PER_MINUTE, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_covr);
-  if (node) {
-    qtdemux_tag_add_covr (qtdemux, GST_TAG_PREVIEW_IMAGE, node);
-  }
-
-  node = qtdemux_tree_get_child_by_type (ilst, FOURCC_keyw);
-  if (node) {
-    qtdemux_tag_add_str (qtdemux, GST_TAG_KEYWORDS, node);
-  } else {
-    node = qtdemux_tree_get_child_by_type (ilst, FOURCC_kywd);
-    if (node) {
-      qtdemux_tag_add_str (qtdemux, GST_TAG_KEYWORDS, node);
-    }
-  }
+  /* parsed nodes have been removed, pass along remainder as blob */
+  g_node_children_foreach (ilst, G_TRAVERSE_ALL,
+      (GNodeForeachFunc) qtdemux_tag_add_blob, qtdemux);
 
 }
 

@@ -42,6 +42,9 @@ GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 
 #define GST_QTDEMUX_CAST(obj) ((GstQTDemux *)(obj))
 
+/* qtdemux produces these for atoms it cannot parse */
+#define GST_QT_DEMUX_PRIVATE_TAG "private-qt-tag"
+
 #define GST_QTDEMUX_MAX_STREAMS         8
 
 typedef struct _GstQTDemux GstQTDemux;
