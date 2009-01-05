@@ -286,13 +286,13 @@
 
 /* DVB Terrestrial Delivery System Descriptor */
 #define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_frequency(desc)	(GST_READ_UINT32_BE((desc) + 2))
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_bandwidth(desc)	(desc[6] & 0xE0)
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_constellation(desc)	(desc[7] & 0xC0)
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_hierarchy(desc)	(desc[7] & 0x38)
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_hp(desc)	(desc[7] & 0x07)
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_lp(desc)	(desc[8] & 0xE0)
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_guard_interval(desc)	(desc[8] & 0x18)
-#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode(desc)	(desc[8] & 0x06)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_bandwidth(desc)	((desc[6] >> 5) & 0x7)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_constellation(desc)	((desc[7] >> 6) & 0x3)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_hierarchy(desc)	((desc[7] >> 3) & 0x7)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_hp(desc)	(desc[7] & 0x7)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_code_rate_lp(desc)	((desc[8] >> 5) & 0x7)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_guard_interval(desc)	((desc[8] >> 3) & 0x3)
+#define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_transmission_mode(desc)	((desc[8] >> 1) & 0x3)
 #define DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM_other_frequency(desc)	((desc[8] & 0x01) == 0x01)
 
 /* DVB Cable Delivery System Descriptor */
