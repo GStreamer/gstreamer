@@ -560,11 +560,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -698,6 +698,12 @@ gst_mxf_demux_handle_header_metadata_update_streams (GstMXFDemux * demux)
         || !source_track) {
       GST_WARNING_OBJECT (demux,
           "No source package or track type for track found");
+      continue;
+    }
+
+    if (track->edit_rate.n <= 0 || track->edit_rate.d <= 0 ||
+        source_track->edit_rate.n <= 0 || source_track->edit_rate.d <= 0) {
+      GST_WARNING_OBJECT (demux, "Track has an invalid edit rate");
       continue;
     }
 
@@ -968,9 +974,11 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
     return GST_FLOW_UNEXPECTED;
   }
 
+  GST_DEBUG_OBJECT (demux, "Switching to component %u", pad->current_component);
+
   pad->component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component]);
   if (pad->component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -978,8 +986,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->component->source_package
       || !pad->component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->source_package)->
+      tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1011,6 +1019,11 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
     return GST_FLOW_ERROR;
   }
 
+  if (pad->source_track->edit_rate.n <= 0 ||
+      pad->source_track->edit_rate.d <= 0) {
+    GST_ERROR_OBJECT (demux, "Source track has invalid edit rate");
+    return GST_FLOW_ERROR;
+  }
 
   pad->current_component_position = 0;
   pad->current_component_drop = pad->source_track->origin;

@@ -1,3 +1,11 @@
+2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/mxf/mxfdemux.c:
+	(gst_mxf_demux_handle_header_metadata_update_streams),
+	(gst_mxf_demux_pad_next_component):
+	Don't allow negative or zero edit rates to prevent division
+	by zero and we support negative edit rates anyway.
+
 2009-01-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* ext/x264/gstx264enc.c: (gst_x264_enc_class_init),
