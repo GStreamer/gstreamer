@@ -151,14 +151,6 @@ mxf_metadata_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       GST_DEBUG ("  instance uid = %s",
           mxf_ul_to_string (&self->parent.instance_uid, str));
       break;
-    case 0x0102:
-    case 0x3c09:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->parent.generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->parent.generation_uid, str));
-      break;
     default:
       ret =
           MXF_METADATA_BASE_CLASS (mxf_metadata_parent_class)->handle_tag
@@ -335,6 +327,13 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
   gboolean ret = TRUE;
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x3b02:
       if (!mxf_timestamp_parse (&self->last_modified_date, tag_data, tag_size))
         goto error;
@@ -574,6 +573,13 @@ mxf_metadata_identification_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x3c09:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->this_generation_uid, tag_data, 16);
+      GST_DEBUG ("  this generation uid = %s",
+          mxf_ul_to_string (&self->this_generation_uid, str));
+      break;
     case 0x3c01:
       self->company_name = mxf_utf16_to_utf8 (tag_data, tag_size);
       GST_DEBUG ("  company name = %s", GST_STR_NULL (self->company_name));
@@ -695,6 +701,13 @@ mxf_metadata_content_storage_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x1901:{
       guint32 len;
       guint i;
@@ -854,6 +867,13 @@ mxf_metadata_essence_container_data_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x2701:
       if (tag_size != 32)
         goto error;
@@ -976,6 +996,13 @@ mxf_metadata_generic_package_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x4401:
       if (tag_size != 32)
         goto error;
@@ -1374,6 +1401,13 @@ mxf_metadata_track_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x4801:
       if (tag_size != 4)
         goto error;
@@ -1668,6 +1702,13 @@ mxf_metadata_sequence_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x0201:
       if (tag_size != 16)
         goto error;
@@ -1796,6 +1837,13 @@ mxf_metadata_structural_component_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x0201:
       if (tag_size != 16)
         goto error;
@@ -2270,6 +2318,13 @@ mxf_metadata_generic_descriptor_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
     case 0x2f01:{
       guint32 len;
       guint i;
@@ -3276,6 +3331,41 @@ mxf_metadata_multiple_descriptor_class_init (MXFMetadataMultipleDescriptorClass
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataLocator, mxf_metadata_locator,
     MXF_TYPE_METADATA);
 
+static gboolean
+mxf_metadata_locator_handle_tag (MXFMetadataBase * metadata,
+    MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
+    guint tag_size)
+{
+  MXFMetadataLocator *self = MXF_METADATA_LOCATOR (metadata);
+  gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
+
+  switch (tag) {
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->generation_uid, str));
+      break;
+    default:
+      ret =
+          MXF_METADATA_BASE_CLASS
+          (mxf_metadata_locator_parent_class)->handle_tag (metadata,
+          primer, tag, tag_data, tag_size);
+      break;
+  }
+
+  return ret;
+
+error:
+  GST_ERROR ("Invalid locator local tag 0x%04x of size %u", tag, tag_size);
+
+  return FALSE;
+}
+
 static void
 mxf_metadata_locator_init (MXFMetadataLocator * self)
 {
@@ -3284,6 +3374,9 @@ mxf_metadata_locator_init (MXFMetadataLocator * self)
 static void
 mxf_metadata_locator_class_init (MXFMetadataLocatorClass * klass)
 {
+  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+
+  metadata_base_class->handle_tag = mxf_metadata_locator_handle_tag;
 }
 
 G_DEFINE_TYPE (MXFMetadataTextLocator, mxf_metadata_text_locator,

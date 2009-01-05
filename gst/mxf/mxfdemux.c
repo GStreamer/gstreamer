@@ -35,8 +35,6 @@
  *   - Differentiate UL and UUIDs, the former can define an object system
  *     (i.e. mxf_ul_is_a() and friends could be implemented), see SMPTE S336M.
  *     The latter are just 16 byte unique identifiers
- *   - Differentiate between "Generation UID" and "This Generation UID" and move
- *     them from MXFMetadataBase to MXFMetadata*.
  *   - Check everything for correctness vs. SMPTE S336M, some things can probably
  *     be generalized/simplified
  *   - Seeking support: IndexTableSegments and skip-to-position seeks, needs correct
@@ -560,11 +558,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -977,8 +975,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   GST_DEBUG_OBJECT (demux, "Switching to component %u", pad->current_component);
 
   pad->component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component]);
   if (pad->component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -986,8 +984,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->component->source_package
       || !pad->component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->source_package)->
-      tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }

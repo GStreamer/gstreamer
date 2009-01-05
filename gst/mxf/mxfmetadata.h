@@ -343,7 +343,6 @@ struct _MXFMetadataBase {
   GstMiniObject parent;
 
   MXFUL instance_uid;
-  MXFUL generation_uid;
 
   MXFMetadataBaseResolveState resolved;
 
@@ -365,6 +364,8 @@ struct _MXFMetadata {
 
 struct _MXFMetadataPreface {
   MXFMetadata parent;
+
+  MXFUL generation_uid;
 
   MXFTimestamp last_modified_date;
   guint16 version;
@@ -393,6 +394,8 @@ struct _MXFMetadataPreface {
 struct _MXFMetadataIdentification {
   MXFMetadata parent;
 
+  MXFUL this_generation_uid;
+
   gchar *company_name;
 
   gchar *product_name;
@@ -412,6 +415,8 @@ struct _MXFMetadataIdentification {
 struct _MXFMetadataContentStorage {
   MXFMetadata parent;
 
+  MXFUL generation_uid;
+
   guint32 n_packages;
   MXFUL *packages_uids;
   MXFMetadataGenericPackage **packages;
@@ -424,6 +429,8 @@ struct _MXFMetadataContentStorage {
 struct _MXFMetadataEssenceContainerData {
   MXFMetadata parent;
 
+  MXFUL generation_uid;
+
   MXFUMID linked_package_uid;
   MXFMetadataSourcePackage *linked_package;
 
@@ -433,6 +440,8 @@ struct _MXFMetadataEssenceContainerData {
 
 struct _MXFMetadataGenericPackage {
   MXFMetadata parent;
+
+  MXFUL generation_uid;
 
   MXFUMID package_uid;
 
@@ -477,6 +486,8 @@ typedef enum {
 struct _MXFMetadataTrack {
   MXFMetadata parent;
 
+  MXFUL generation_uid;
+
   guint32 track_id;
   guint32 track_number;
 
@@ -508,6 +519,8 @@ struct _MXFMetadataEventTrack {
 struct _MXFMetadataSequence {
   MXFMetadata parent;
 
+  MXFUL generation_uid;
+
   MXFUL data_definition;
 
   gint64 duration;
@@ -519,6 +532,8 @@ struct _MXFMetadataSequence {
 
 struct _MXFMetadataStructuralComponent {
   MXFMetadata parent;
+
+  MXFUL generation_uid;
 
   MXFUL data_definition;
   gint64 duration;
@@ -564,6 +579,8 @@ struct _MXFMetadataDMSegment {
 
 struct _MXFMetadataGenericDescriptor {
   MXFMetadata parent;
+
+  MXFUL generation_uid;
 
   guint32 n_locators;
   MXFUL *locators_uids;
@@ -681,6 +698,8 @@ struct _MXFMetadataMultipleDescriptor {
 
 struct _MXFMetadataLocator {
   MXFMetadata parent;
+
+  MXFUL generation_uid;
 };
 
 struct _MXFMetadataNetworkLocator {
