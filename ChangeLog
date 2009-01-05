@@ -1,5 +1,14 @@
 2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_change_state):
+	Avoid holding the OBJECT_LOCK when calling ringbuffer functions that
+	take the ringbuffer lock because rinbuffer lock > OBJECT_LOCK. We can do
+	this because the async_play method is deprecated and usually not called 
+	anymore.
+
+2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstplaybin2.c: (notify_source_cb), (activate_group):
 	Disconnect signal handlers before destroying a previous decodebin so
 	that we don't end up causing deadlocks. Fixes #566586.

@@ -1710,18 +1710,6 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
 }
 
 static GstStateChangeReturn
-gst_base_audio_sink_do_play (GstBaseAudioSink * sink)
-{
-  GstStateChangeReturn ret;
-
-  GST_OBJECT_LOCK (sink);
-  ret = gst_base_audio_sink_async_play (GST_BASE_SINK_CAST (sink));
-  GST_OBJECT_UNLOCK (sink);
-
-  return ret;
-}
-
-static GstStateChangeReturn
 gst_base_audio_sink_change_state (GstElement * element,
     GstStateChange transition)
 {
@@ -1745,15 +1733,23 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      gst_base_audio_sink_do_play (sink);
+      GST_OBJECT_LOCK (sink);
+      GST_DEBUG_OBJECT (sink, "ringbuffer may start now");
+      sink->priv->sync_latency = TRUE;
+      GST_OBJECT_UNLOCK (sink);
+
+      gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
+      if (GST_BASE_SINK_CAST (sink)->pad_mode == GST_ACTIVATE_PULL) {
+        /* we always start the ringbuffer in pull mode immediatly */
+        gst_ring_buffer_start (sink->ringbuffer);
+      }
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      /* need to take the lock so we don't interfere with an
-       * async play */
-      GST_OBJECT_LOCK (sink);
       /* ringbuffer cannot start anymore */
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       gst_ring_buffer_pause (sink->ringbuffer);
+
+      GST_OBJECT_LOCK (sink);
       sink->priv->sync_latency = FALSE;
       GST_OBJECT_UNLOCK (sink);
       break;
