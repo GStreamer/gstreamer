@@ -1,3 +1,10 @@
+2009-01-05  Alessandro Decina  <alessandro.decina@collabora.co.uk>
+
+	patch by: Vincent GENIEUX <mutex at runbox dot com>
+
+	* gst/gststructure.override:
+	Don't leak key names in _wrap_gst_structure_keys.
+
 2009-01-02  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst/gst-types.defs:

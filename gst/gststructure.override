@@ -155,15 +155,13 @@ _wrap_gst_structure_keys (PyObject *self)
     int i, n;
     PyObject *ret;
 
-
-    ret = PyList_New(0);
-
     s = pyg_boxed_get(self, GstStructure);
     n = gst_structure_n_fields(s);
+    ret = PyList_New(n);
 
     for (i = 0; i < n; ++i) {
         const gchar *name = gst_structure_nth_field_name (s, i);
-        PyList_Append(ret, PyString_FromString(name));
+        PyList_SetItem(ret, i, PyString_FromString(name));
     }
 
     return ret;
