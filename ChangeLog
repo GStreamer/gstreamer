@@ -1,3 +1,10 @@
+2009-01-05  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c: (gst_x264_enc_class_init),
+	(gst_x264_enc_header_buf), (gst_x264_enc_encode_frame):
+	Use hyphen in property name, perform safety buffer size check
+	prior to mem access, and some more parentheses in macro.
+
 2009-01-05  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/mxf/mxfaes-bwf.c:

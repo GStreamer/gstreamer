@@ -334,7 +334,7 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
           "Enable trellis searched quantization", ARG_TRELLIS_DEFAULT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_KEYINT_MAX,
-      g_param_spec_uint ("key_int_max", "Key-frame maximal interval",
+      g_param_spec_uint ("key-int-max", "Key-frame maximal interval",
           "Maximal distance between two key-frames (0 for automatic)",
           0, G_MAXINT, ARG_KEYINT_MAX_DEFAULT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CABAC,
@@ -667,8 +667,9 @@ gst_x264_enc_header_buf (GstX264Enc * encoder)
 
   /* x264 is expected to return an SEI (some identification info),
    * followed by an SPS and PPS */
-  if (i_nal != 3 || nal[1].i_type != 7 || nal[2].i_type != 8) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, NULL,
+  if (i_nal != 3 || nal[1].i_type != 7 || nal[2].i_type != 8 ||
+      nal[1].i_payload < 4 || nal[2].i_payload < 1) {
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, (NULL),
         ("Unexpected x264 header."));
     return NULL;
   }
@@ -941,7 +942,7 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     duration = GST_BUFFER_DURATION (in_buf);
     gst_buffer_unref (in_buf);
   } else {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, NULL,
+    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, (NULL),
         ("Timestamp queue empty."));
     return GST_FLOW_ERROR;
   }
