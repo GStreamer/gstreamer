@@ -383,6 +383,11 @@ gst_avi_mux_reset (GstAviMux * avimux)
   avimux->avi_hdr.max_bps = 10000000;
   avimux->codec_data_size = 0;
 
+  if (avimux->tags_snap) {
+    gst_tag_list_free (avimux->tags_snap);
+    avimux->tags_snap = NULL;
+  }
+
   g_free (avimux->idx);
   avimux->idx = NULL;
 
@@ -965,7 +970,15 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   GST_DEBUG_OBJECT (avimux, "creating avi header, data_size %u, idx_size %u",
       avimux->data_size, avimux->idx_size);
 
-  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
+  if (avimux->tags_snap)
+    tags = avimux->tags_snap;
+  else {
+    /* need to make snapshot of current state of tags to ensure the same set
+     * is used next time around during header rewrite at the end */
+    tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (avimux));
+    if (tags)
+      tags = avimux->tags_snap = gst_tag_list_copy (tags);
+  }
   if (tags) {
     /* that should be the strlen of all tags + header sizes
      * not all of tags end up in a avi, still this is a good estimate

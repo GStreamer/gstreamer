@@ -148,6 +148,9 @@ struct _GstAviMux {
   gboolean write_header;
   gboolean restart;
 
+  /* tags */
+  GstTagList *tags_snap;
+
   /* information about the AVI index ('idx') */
   gst_riff_index_entry *idx;
   gint idx_index, idx_count;
