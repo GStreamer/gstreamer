@@ -96,7 +96,7 @@ check_PROGRAMS = \
 	elements/y4menc   \
 	$(check_metadata)
 
-noinst_HEADERS = elements/mxfdemux.h
+noinst_HEADERS = elements/mxfdemux.h elements/amrparse_data.h elements/aacparse_data.h
 
 TESTS = $(check_PROGRAMS)
 
@@ -106,5 +106,3 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
-elements_speexresample_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
-elements_speexresample_LDADD = $(GST_PLUGINS_BASE_LIBS) $(LDADD) -lgstaudio-$(GST_MAJORMINOR)

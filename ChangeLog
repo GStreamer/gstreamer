@@ -1,3 +1,9 @@
+2009-01-06  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* tests/check/Makefile.am:
+	Dist test headers for amr and aac parsers.
+	Remove leftover lines mentioned speexresample tests.
+
 2009-01-06  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/acmmp3dec/Makefile.am:
