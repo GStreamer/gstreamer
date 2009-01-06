@@ -131,8 +131,6 @@ typedef struct _GstMatroskaMux {
                  cluster_time,
                  cluster_pos;
 
-  /* tags */
-  GstTagList     *tags;
 } GstMatroskaMux;
 
 typedef struct _GstMatroskaMuxClass {

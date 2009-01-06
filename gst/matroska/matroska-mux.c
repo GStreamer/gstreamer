@@ -463,10 +463,7 @@ gst_matroska_mux_reset (GstElement * element)
   mux->cluster_pos = 0;
 
   /* reset tags */
-  if (mux->tags) {
-    gst_tag_list_free (mux->tags);
-    mux->tags = NULL;
-  }
+  gst_tag_setter_reset_tags (GST_TAG_SETTER (mux));
 }
 
 /**
@@ -518,7 +515,9 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
+      GST_DEBUG_OBJECT (mux, "received tag event");
       gst_event_parse_tag (event, &list);
+
       collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
       g_assert (collect_pad);
       context = collect_pad->track;
@@ -528,12 +527,8 @@ gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
        * 639-2 according to matroska specs, but it will have to do for now */
       gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &context->language);
 
-      if (mux->tags) {
-        gst_tag_list_insert (mux->tags, list, GST_TAG_MERGE_PREPEND);
-      } else {
-        mux->tags = gst_tag_list_copy (list);
-      }
-
+      gst_tag_setter_merge_tags (GST_TAG_SETTER (mux), list,
+          gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (mux)));
       break;
     case GST_EVENT_NEWSEGMENT:
       /* We don't support NEWSEGMENT events */
@@ -1801,7 +1796,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   guint64 pos;
   guint64 duration = 0;
   GSList *collected;
-  GstTagList *tags;
+  const GstTagList *tags;
 
   /* finish last cluster */
   if (mux->cluster) {
@@ -1838,10 +1833,9 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   }
 
   /* tags */
-  tags = gst_tag_list_merge (gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux)),
-      mux->tags, GST_TAG_MERGE_APPEND);
+  tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux));
 
-  if (tags != NULL) {
+  if (tags != NULL && !gst_tag_list_is_empty (tags)) {
     guint64 master_tags, master_tag;
 
     GST_DEBUG ("Writing tags");
@@ -1853,7 +1847,6 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     gst_tag_list_foreach (tags, gst_matroska_mux_write_simple_tag, ebml);
     gst_ebml_write_master_finish (ebml, master_tag);
     gst_ebml_write_master_finish (ebml, master_tags);
-    gst_tag_list_free (tags);
   }
 
   /* update seekhead. We know that:

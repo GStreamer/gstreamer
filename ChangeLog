@@ -1,5 +1,12 @@
 2009-01-06  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
+	(gst_matroska_mux_handle_sink_event), (gst_matroska_mux_finish):
+	* gst/matroska/matroska-mux.h:
+	Remove internal taglist and fully use tagsetter interface.
+
+2009-01-06  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
 	* gst/avi/gstavimux.c: (gst_avi_mux_reset),
 	(gst_avi_mux_riff_get_avi_header):
 	* gst/avi/gstavimux.h:
