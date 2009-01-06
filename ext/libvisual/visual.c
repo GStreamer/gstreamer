@@ -875,6 +875,11 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
       "libvisual audio visualisations");
 
+#ifdef LIBVISUAL_PLUGINSBASEDIR
+  gst_plugin_add_dependency_simple (plugin, "HOME/.libvisual/actor",
+      LIBVISUAL_PLUGINSBASEDIR "/actor", NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+#endif
+
   visual_log_set_verboseness (VISUAL_LOG_VERBOSENESS_LOW);
   visual_log_set_info_handler (libvisual_log_handler, (void *) GST_LEVEL_INFO);
   visual_log_set_warning_handler (libvisual_log_handler,

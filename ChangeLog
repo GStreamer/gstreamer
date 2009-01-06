@@ -1,3 +1,10 @@
+2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* configure.ac:
+	* ext/libvisual/visual.c: (plugin_init):
+	  Use new core API to make registry re-scan the plugin
+	  whenever visualisations are added or removed (see #350477).
+
 2009-01-06  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: José Alburquerque <jaalburqu svn gnome org>
