@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/tag
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer Application Library, Uninstalled
+Description: Helper functions and base classes for application integration, uninstalled
+Version: @VERSION@
+Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@
+
+Libs: -L${libdir} ${libdir}/libgstapp-@GST_MAJORMINOR@.la
+Cflags: -I${includedir}
+

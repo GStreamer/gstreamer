@@ -698,6 +698,8 @@ win32/common/config.h
 pkgconfig/Makefile
 pkgconfig/gstreamer-audio.pc
 pkgconfig/gstreamer-audio-uninstalled.pc
+pkgconfig/gstreamer-app.pc
+pkgconfig/gstreamer-app-uninstalled.pc
 pkgconfig/gstreamer-cdda.pc
 pkgconfig/gstreamer-cdda-uninstalled.pc
 pkgconfig/gstreamer-fft.pc
