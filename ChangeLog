@@ -1,3 +1,8 @@
+2009-01-06  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/acmmp3dec/Makefile.am:
+	  Fix typo in the opposite way to give the plugin a sensible name.
+
 2009-01-06  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* sys/acmmp3dec/Makefile.am:
