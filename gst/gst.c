@@ -1056,6 +1056,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_pipeline_flags_get_type ());
   g_type_class_ref (gst_plugin_error_get_type ());
   g_type_class_ref (gst_plugin_flags_get_type ());
+  g_type_class_ref (gst_plugin_dependency_flags_get_type ());
   g_type_class_ref (gst_rank_get_type ());
   g_type_class_ref (gst_query_type_get_type ());
   g_type_class_ref (gst_buffering_mode_get_type ());

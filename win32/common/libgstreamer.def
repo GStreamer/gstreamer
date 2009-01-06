@@ -646,6 +646,9 @@ EXPORTS
 	gst_pipeline_set_delay
 	gst_pipeline_set_new_stream_time
 	gst_pipeline_use_clock
+	gst_plugin_add_dependency
+	gst_plugin_add_dependency_simple
+	gst_plugin_dependency_flags_get_type
 	gst_plugin_error_get_type
 	gst_plugin_error_quark
 	gst_plugin_feature_check_version
@@ -714,6 +717,7 @@ EXPORTS
 	gst_query_new_position
 	gst_query_new_seeking
 	gst_query_new_segment
+	gst_query_new_uri
 	gst_query_parse_buffering_percent
 	gst_query_parse_buffering_range
 	gst_query_parse_buffering_stats
@@ -725,6 +729,7 @@ EXPORTS
 	gst_query_parse_position
 	gst_query_parse_seeking
 	gst_query_parse_segment
+	gst_query_parse_uri
 	gst_query_set_buffering_percent
 	gst_query_set_buffering_range
 	gst_query_set_buffering_stats
@@ -736,6 +741,7 @@ EXPORTS
 	gst_query_set_position
 	gst_query_set_seeking
 	gst_query_set_segment
+	gst_query_set_uri
 	gst_query_type_get_by_nick
 	gst_query_type_get_details
 	gst_query_type_get_name

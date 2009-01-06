@@ -1,5 +1,13 @@
 2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst/gst.c: (init_post):
+	  Ref new enum type in gst_init.
+
+	* win32/common/libgstreamer.def:
+	  Add recently-added API.
+
+2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* docs/gst/gstreamer-sections.txt::
 	* gst/gst_private.h: (GstPluginDep), (_GstPluginPrivate):
 	* gst/gstplugin.c: (gst_plugin_init), (gst_plugin_finalize),
