@@ -70,8 +70,6 @@ struct _GstAppSinkClass
 
 GType gst_app_sink_get_type(void);
 
-GST_DEBUG_CATEGORY_EXTERN (app_sink_debug);
-
 void            gst_app_sink_set_caps         (GstAppSink *appsink, const GstCaps *caps);
 GstCaps *       gst_app_sink_get_caps         (GstAppSink *appsink);
 

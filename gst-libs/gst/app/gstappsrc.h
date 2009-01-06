@@ -88,8 +88,6 @@ struct _GstAppSrcClass
 
 GType gst_app_src_get_type(void);
 
-GST_DEBUG_CATEGORY_EXTERN (app_src_debug);
-
 void             gst_app_src_set_caps         (GstAppSrc *appsrc, const GstCaps *caps);
 GstCaps*         gst_app_src_get_caps         (GstAppSrc *appsrc);
 

@@ -1,5 +1,13 @@
 2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsink.h:
+	* gst-libs/gst/app/gstappsrc.c:
+	* gst-libs/gst/app/gstappsrc.h:
+	  Make debug categories static. Use _element_class_set_details_simple().
+
+2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* gst-libs/gst/app/gstappsink.c: (_GstAppSinkPrivate),
 	  (gst_app_sink_class_init), (gst_app_sink_init),
 	  (gst_app_sink_dispose), (gst_app_sink_finalize),
@@ -12,8 +20,8 @@
 	  (gst_app_sink_get_emit_signals), (gst_app_sink_set_max_buffers),
 	  (gst_app_sink_get_max_buffers), (gst_app_sink_set_drop),
 	  (gst_app_sink_get_drop), (gst_app_sink_pull_preroll),
-	  (gst_app_sink_pull_buffer)::
-	* gst-libs/gst/app/gstappsink.h: (GstAppSinkPrivate), (_GstAppSink)::
+	  (gst_app_sink_pull_buffer):
+	* gst-libs/gst/app/gstappsink.h: (GstAppSinkPrivate), (_GstAppSink):
 	* gst-libs/gst/app/gstappsrc.c: (_GstAppSrcPrivate),
 	  (gst_app_src_class_init), (gst_app_src_init),
 	  (gst_app_src_flush_queued), (gst_app_src_dispose),
@@ -28,8 +36,8 @@
 	  (gst_app_src_set_max_bytes), (gst_app_src_get_max_bytes),
 	  (gst_app_src_set_latencies), (gst_app_src_set_latency),
 	  (gst_app_src_get_latency), (gst_app_src_push_buffer_full),
-	  (gst_app_src_push_buffer_action), (gst_app_src_end_of_stream)::
-	* gst-libs/gst/app/gstappsrc.h: (GstAppSrcPrivate)::
+	  (gst_app_src_push_buffer_action), (gst_app_src_end_of_stream):
+	* gst-libs/gst/app/gstappsrc.h: (GstAppSrcPrivate):
 	  Move private data into a private instance struct. Add padding to
 	  instance and class structures exposed in public headers. Add
 	  Since markers to the gtk-doc blurbs (#566750).

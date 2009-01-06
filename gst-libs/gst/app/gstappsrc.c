@@ -138,13 +138,8 @@ struct _GstAppSrcPrivate
   guint64 max_latency;
 };
 
-GST_DEBUG_CATEGORY (app_src_debug);
+GST_DEBUG_CATEGORY_STATIC (app_src_debug);
 #define GST_CAT_DEFAULT app_src_debug
-
-static const GstElementDetails app_src_details = GST_ELEMENT_DETAILS ("AppSrc",
-    "Generic/Src",
-    "Allow the application to feed buffers to a pipeline",
-    "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
 enum
 {
@@ -262,7 +257,9 @@ gst_app_src_base_init (gpointer g_class)
 
   GST_DEBUG_CATEGORY_INIT (app_src_debug, "appsrc", 0, "appsrc element");
 
-  gst_element_class_set_details (element_class, &app_src_details);
+  gst_element_class_set_details_simple (element_class, "AppSrc",
+      "Generic/Src", "Allow the application to feed buffers to a pipeline",
+      "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_app_src_template));
