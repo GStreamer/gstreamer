@@ -1,3 +1,9 @@
+2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* docs/faq/gst-uninstalled:
+	  Add libgstapp-0.10 from -base to search path and remove the old
+	  lib from -bad from the search path.
+
 2009-01-05  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position_last),
