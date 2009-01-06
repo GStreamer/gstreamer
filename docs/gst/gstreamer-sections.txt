@@ -1641,6 +1641,10 @@ gst_plugin_load
 gst_plugin_load_by_name
 gst_plugin_list_free
 gst_plugin_register_static
+<SUBSECTION>
+GstPluginDependencyFlags
+gst_plugin_add_dependency
+gst_plugin_add_dependency_simple
 <SUBSECTION Standard>
 GstPluginClass
 GST_PLUGIN
@@ -1653,6 +1657,9 @@ GST_IS_PLUGIN
 GST_IS_PLUGIN_CLASS
 GstPluginFlags
 GST_TYPE_PLUGIN_FLAGS
+GST_TYPE_PLUGIN_DEPENDENCY_FLAGS
+GstPluginPrivate
+gst_plugin_dependency_flags_get_type
 <SUBSECTION Private>
 gst_plugin_get_type
 <SUBSECTION Private>

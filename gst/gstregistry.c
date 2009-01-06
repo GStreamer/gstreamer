@@ -863,6 +863,8 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
      * was already seen by the registry, we ignore it */
     plugin = gst_registry_lookup (registry, filename);
     if (plugin) {
+      gboolean env_vars_changed, deps_changed = FALSE;
+
       if (plugin->registered) {
         GST_DEBUG_OBJECT (registry,
             "plugin already registered from path \"%s\"",
@@ -871,8 +873,12 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
         gst_object_unref (plugin);
         continue;
       }
+
+      env_vars_changed = _priv_plugin_deps_env_vars_changed (plugin);
+
       if (plugin->file_mtime == file_status.st_mtime &&
-          plugin->file_size == file_status.st_size) {
+          plugin->file_size == file_status.st_size && !env_vars_changed &&
+          !(deps_changed = _priv_plugin_deps_files_changed (plugin))) {
         GST_LOG_OBJECT (registry, "file %s cached", filename);
         plugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
         GST_LOG_OBJECT (registry, "marking plugin %p as registered as %s",
@@ -888,9 +894,11 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       } else {
         GST_INFO_OBJECT (registry, "cached info for %s is stale", filename);
         GST_DEBUG_OBJECT (registry, "mtime %ld != %ld or size %"
-            G_GINT64_FORMAT " != %"
-            G_GINT64_FORMAT, plugin->file_mtime, file_status.st_mtime,
-            (gint64) plugin->file_size, (gint64) file_status.st_size);
+            G_GINT64_FORMAT " != %" G_GINT64_FORMAT " or external dependency "
+            "env_vars changed: %d or external dependencies changed: %d",
+            plugin->file_mtime, file_status.st_mtime,
+            (gint64) plugin->file_size, (gint64) file_status.st_size,
+            env_vars_changed, deps_changed);
         gst_registry_remove_plugin (gst_registry_get_default (), plugin);
         /* We don't use a GError here because a failure to load some shared 
          * objects as plugins is normal (particularly in the uninstalled case)

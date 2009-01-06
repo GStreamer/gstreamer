@@ -57,7 +57,7 @@
  * This _must_ be updated whenever the registry format changes,
  * we currently use the core version where this change happened.
  */
-#define GST_MAGIC_BINARY_VERSION_STR ("0.10.21.1")
+#define GST_MAGIC_BINARY_VERSION_STR ("0.10.21.2")
 
 /*
  * GST_MAGIC_BINARY_VERSION_LEN:
@@ -108,9 +108,23 @@ typedef struct _GstBinaryPluginElement
   gulong file_size;
   gulong file_mtime;
 
+  guint n_deps;
+
   guint nfeatures;
 } GstBinaryPluginElement;
 
+/* GstBinaryDep:
+ */
+typedef struct _GstBinaryDep
+{
+  guint flags;
+  guint n_env_vars;
+  guint n_paths;
+  guint n_names;
+
+  guint env_hash;
+  guint stat_hash;
+} GstBinaryDep;
 
 /*
  * GstBinaryPluginFeature:

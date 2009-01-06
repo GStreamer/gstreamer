@@ -109,13 +109,15 @@ static void gst_plugin_desc_copy (GstPluginDesc * dest,
     const GstPluginDesc * src);
 static void gst_plugin_desc_free (GstPluginDesc * desc);
 
+static void gst_plugin_ext_dep_free (GstPluginDep * dep);
 
 G_DEFINE_TYPE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
 
 static void
 gst_plugin_init (GstPlugin * plugin)
 {
-  /* do nothing, needed because of G_DEFINE_TYPE */
+  plugin->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (plugin, GST_TYPE_PLUGIN, GstPluginPrivate);
 }
 
 static void
@@ -135,6 +137,10 @@ gst_plugin_finalize (GObject * object)
   g_free (plugin->basename);
   gst_plugin_desc_free (&plugin->desc);
 
+  g_list_foreach (plugin->priv->deps, (GFunc) gst_plugin_ext_dep_free, NULL);
+  g_list_free (plugin->priv->deps);
+  plugin->priv->deps = NULL;
+
   G_OBJECT_CLASS (gst_plugin_parent_class)->finalize (object);
 }
 
@@ -142,6 +148,8 @@ static void
 gst_plugin_class_init (GstPluginClass * klass)
 {
   G_OBJECT_CLASS (klass)->finalize = GST_DEBUG_FUNCPTR (gst_plugin_finalize);
+
+  g_type_class_add_private (klass, sizeof (GstPluginPrivate));
 }
 
 GQuark
@@ -1031,4 +1039,521 @@ gst_plugin_list_free (GList * list)
     gst_object_unref (GST_PLUGIN_CAST (g->data));
   }
   g_list_free (list);
+}
+
+/* ===== plugin dependencies ===== */
+
+/* Scenarios:
+ * ENV + xyz     where ENV can contain multiple values separated by SEPARATOR
+ *               xyz may be "" (if ENV contains path to file rather than dir)
+ * ENV + *xyz   same as above, but xyz acts as suffix filter
+ * ENV + xyz*   same as above, but xyz acts as prefix filter (is this needed?)
+ * ENV + *xyz*  same as above, but xyz acts as strstr filter (is this needed?)
+ * 
+ * same as above, with additional paths hard-coded at compile-time:
+ *   - only check paths + ... if ENV is not set or yields not paths
+ *   - always check paths + ... in addition to ENV
+ *
+ * When user specifies set of environment variables, he/she may also use e.g.
+ * "HOME/.mystuff/plugins", and we'll expand the content of $HOME with the
+ * remainder 
+ */
+
+/* we store in registry:
+ *  sets of:
+ *   { 
+ *     - environment variables (array of strings)
+ *     - last hash of env variable contents (uint) (so we can avoid doing stats
+ *       if one of the env vars has changed; premature optimisation galore)
+ *     - hard-coded paths (array of strings)
+ *     - xyz filename/suffix/prefix strings (array of strings)
+ *     - flags (int)
+ *     - last hash of file/dir stats (int)
+ *   }
+ *   (= struct GstPluginDep)
+ */
+
+static guint
+gst_plugin_ext_dep_get_env_vars_hash (GstPlugin * plugin, GstPluginDep * dep)
+{
+  gchar **e;
+  guint hash;
+
+  /* there's no deeper logic to what we do here; all we want to know (when
+   * checking if the plugin needs to be rescanned) is whether the content of
+   * one of the environment variables in the list is different from when it
+   * was last scanned */
+  hash = 0;
+  for (e = dep->env_vars; e != NULL && *e != NULL; ++e) {
+    const gchar *val;
+    gchar env_var[256];
+
+    /* order matters: "val",NULL needs to yield a different hash than
+     * NULL,"val", so do a shift here whether the var is set or not */
+    hash = hash << 5;
+
+    /* want environment variable at beginning of string */
+    if (!g_ascii_isalnum (**e)) {
+      GST_WARNING_OBJECT (plugin, "string prefix is not a valid environment "
+          "variable string: %s", *e);
+      continue;
+    }
+
+    /* user is allowed to specify e.g. "HOME/.pitivi/plugins" */
+    g_strlcpy (env_var, *e, sizeof (env_var));
+    g_strdelimit (env_var, "/\\", '\0');
+
+    if ((val = g_getenv (env_var)))
+      hash += g_str_hash (val);
+  }
+
+  return hash;
+}
+
+gboolean
+_priv_plugin_deps_env_vars_changed (GstPlugin * plugin)
+{
+  GList *l;
+
+  for (l = plugin->priv->deps; l != NULL; l = l->next) {
+    GstPluginDep *dep = l->data;
+
+    if (dep->env_hash != gst_plugin_ext_dep_get_env_vars_hash (plugin, dep))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static GList *
+gst_plugin_ext_dep_extract_env_vars_paths (GstPlugin * plugin,
+    GstPluginDep * dep)
+{
+  gchar **evars;
+  GList *paths = NULL;
+
+  for (evars = dep->env_vars; evars != NULL && *evars != NULL; ++evars) {
+    const gchar *e;
+    gchar **components;
+
+    /* want environment variable at beginning of string */
+    if (!g_ascii_isalnum (**evars)) {
+      GST_WARNING_OBJECT (plugin, "string prefix is not a valid environment "
+          "variable string: %s", *evars);
+      continue;
+    }
+
+    /* user is allowed to specify e.g. "HOME/.pitivi/plugins", which we want to
+     * split into the env_var name component and the path component */
+    components = g_strsplit_set (*evars, "/\\", 2);
+    g_assert (components != NULL);
+
+    e = g_getenv (components[0]);
+    GST_LOG_OBJECT (plugin, "expanding %s = '%s' (path suffix: %s)",
+        components[0], GST_STR_NULL (e), GST_STR_NULL (components[1]));
+
+    if (components[1] != NULL) {
+      g_strdelimit (components[1], "/\\", G_DIR_SEPARATOR);
+    }
+
+    if (e != NULL && *e != '\0') {
+      gchar **arr;
+      guint i;
+
+      arr = g_strsplit (e, G_SEARCHPATH_SEPARATOR_S, -1);
+
+      for (i = 0; arr != NULL && arr[i] != NULL; ++i) {
+        gchar *full_path;
+
+        if (!g_path_is_absolute (arr[i])) {
+          GST_INFO_OBJECT (plugin, "ignoring environment variable content '%s'"
+              ": either not an absolute path or not a path at all", arr[i]);
+          continue;
+        }
+
+        if (components[1] != NULL) {
+          full_path = g_build_filename (arr[i], components[1], NULL);
+        } else {
+          full_path = g_strdup (arr[i]);
+        }
+
+        if (!g_list_find_custom (paths, full_path, (GCompareFunc) strcmp)) {
+          GST_LOG_OBJECT (plugin, "path: '%s'", full_path);
+          paths = g_list_prepend (paths, full_path);
+          full_path = NULL;
+        } else {
+          GST_LOG_OBJECT (plugin, "path: '%s' (duplicate,ignoring)", full_path);
+          g_free (full_path);
+        }
+      }
+
+      g_strfreev (arr);
+    }
+
+    g_strfreev (components);
+  }
+
+  GST_LOG_OBJECT (plugin, "Extracted %d paths from environment",
+      g_list_length (paths));
+
+  return paths;
+}
+
+static guint
+gst_plugin_ext_dep_get_hash_from_stat_entry (struct stat *s)
+{
+  if (!(s->st_mode & (S_IFDIR | S_IFREG)))
+    return (guint) - 1;
+
+  /* completely random formula */
+  return ((s->st_size << 3) + (s->st_mtime << 5)) ^ s->st_ctime;
+}
+
+static gboolean
+gst_plugin_ext_dep_direntry_matches (GstPlugin * plugin, const gchar * entry,
+    const gchar ** filenames, GstPluginDependencyFlags flags)
+{
+  /* no filenames specified, match all entries for now (could probably
+   * optimise by just taking the dir stat hash or so) */
+  if (filenames == NULL || *filenames == NULL || **filenames == '\0')
+    return TRUE;
+
+  while (*filenames != NULL) {
+    /* suffix match? */
+    if (((flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX)) &&
+        g_str_has_suffix (entry, *filenames)) {
+      return TRUE;
+      /* else it's an exact match that's needed */
+    } else if (strcmp (entry, *filenames) == 0) {
+      return TRUE;
+    }
+    GST_LOG ("%s does not match %s, flags=0x%04x", entry, *filenames, flags);
+    ++filenames;
+  }
+  return FALSE;
+}
+
+static guint
+gst_plugin_ext_dep_scan_dir_and_match_names (GstPlugin * plugin,
+    const gchar * path, const gchar ** filenames,
+    GstPluginDependencyFlags flags, int depth)
+{
+  const gchar *entry;
+  gboolean recurse_dirs;
+  GError *err = NULL;
+  GDir *dir;
+  guint hash = 0;
+
+  recurse_dirs = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+
+  dir = g_dir_open (path, 0, &err);
+  if (dir == NULL) {
+    GST_DEBUG_OBJECT (plugin, "g_dir_open(%s) failed: %s", path, err->message);
+    g_error_free (err);
+    return (guint) - 1;
+  }
+
+  /* FIXME: we're assuming here that we always get the directory entries in
+   * the same order, and not in a random order */
+  while ((entry = g_dir_read_name (dir))) {
+    gboolean have_match;
+    struct stat s;
+    gchar *full_path;
+    guint fhash;
+
+    have_match =
+        gst_plugin_ext_dep_direntry_matches (plugin, entry, filenames, flags);
+
+    /* avoid the stat if possible */
+    if (!have_match && !recurse_dirs)
+      continue;
+
+    full_path = g_build_filename (path, entry, NULL);
+    if (g_stat (full_path, &s) < 0) {
+      fhash = (guint) - 1;
+      GST_LOG_OBJECT (plugin, "stat: %s (error: %s)", full_path,
+          g_strerror (errno));
+    } else if (have_match) {
+      fhash = gst_plugin_ext_dep_get_hash_from_stat_entry (&s);
+      GST_LOG_OBJECT (plugin, "stat: %s (result: %u)", full_path, fhash);
+    } else if ((s.st_mode & (S_IFDIR))) {
+      fhash = gst_plugin_ext_dep_scan_dir_and_match_names (plugin, full_path,
+          filenames, flags, depth + 1);
+    } else {
+      /* it's not a name match, we want to recurse, but it's not a directory */
+      g_free (full_path);
+      continue;
+    }
+
+    hash = (hash + fhash) << 1;
+    g_free (full_path);
+  }
+
+  g_dir_close (dir);
+  return hash;
+}
+
+static guint
+gst_plugin_ext_dep_scan_path_with_filenames (GstPlugin * plugin,
+    const gchar * path, const gchar ** filenames,
+    GstPluginDependencyFlags flags)
+{
+  const gchar *empty_filenames[] = { "", NULL };
+  gboolean recurse_into_dirs, partial_names;
+  guint i, hash = 0;
+
+  /* to avoid special-casing below (FIXME?) */
+  if (filenames == NULL || *filenames == NULL)
+    filenames = empty_filenames;
+
+  recurse_into_dirs = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_RECURSE);
+  partial_names = !!(flags & GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX);
+
+  /* if we can construct the exact paths to check with the data we have, just
+   * stat them one by one; this is more efficient than opening the directory
+   * and going through each entry to see if it matches one of our filenames. */
+  if (!recurse_into_dirs && !partial_names) {
+    for (i = 0; filenames[i] != NULL; ++i) {
+      struct stat s;
+      gchar *full_path;
+      guint fhash;
+
+      full_path = g_build_filename (path, filenames[i], NULL);
+      if (g_stat (full_path, &s) < 0) {
+        fhash = (guint) - 1;
+        GST_LOG_OBJECT (plugin, "stat: %s (error: %s)", full_path,
+            g_strerror (errno));
+      } else {
+        fhash = gst_plugin_ext_dep_get_hash_from_stat_entry (&s);
+        GST_LOG_OBJECT (plugin, "stat: %s (result: %08x)", full_path, fhash);
+      }
+      hash = (hash + fhash) << 1;
+      g_free (full_path);
+    }
+  } else {
+    hash = gst_plugin_ext_dep_scan_dir_and_match_names (plugin, path,
+        filenames, flags, 0);
+  }
+
+  return hash;
+}
+
+static guint
+gst_plugin_ext_dep_get_stat_hash (GstPlugin * plugin, GstPluginDep * dep)
+{
+  gboolean paths_are_default_only;
+  GList *scan_paths;
+  guint scan_hash = 0;
+
+  GST_LOG_OBJECT (plugin, "start");
+
+  paths_are_default_only =
+      dep->flags & GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY;
+
+  scan_paths = gst_plugin_ext_dep_extract_env_vars_paths (plugin, dep);
+
+  if (scan_paths == NULL || !paths_are_default_only) {
+    gchar **paths;
+
+    for (paths = dep->paths; paths != NULL && *paths != NULL; ++paths) {
+      const gchar *path = *paths;
+
+      if (!g_list_find_custom (scan_paths, path, (GCompareFunc) strcmp)) {
+        GST_LOG_OBJECT (plugin, "path: '%s'", path);
+        scan_paths = g_list_prepend (scan_paths, g_strdup (path));
+      } else {
+        GST_LOG_OBJECT (plugin, "path: '%s' (duplicate, ignoring)", path);
+      }
+    }
+  }
+
+  /* not that the order really matters, but it makes debugging easier */
+  scan_paths = g_list_reverse (scan_paths);
+
+  while (scan_paths != NULL) {
+    const gchar *path = scan_paths->data;
+
+    scan_hash += gst_plugin_ext_dep_scan_path_with_filenames (plugin, path,
+        (const gchar **) dep->names, dep->flags);
+    scan_hash = scan_hash << 1;
+
+    g_free (scan_paths->data);
+    scan_paths = g_list_delete_link (scan_paths, scan_paths);
+  }
+
+  GST_LOG_OBJECT (plugin, "done, scan_hash: %08x", scan_hash);
+  return scan_hash;
+}
+
+gboolean
+_priv_plugin_deps_files_changed (GstPlugin * plugin)
+{
+  GList *l;
+
+  for (l = plugin->priv->deps; l != NULL; l = l->next) {
+    GstPluginDep *dep = l->data;
+
+    if (dep->stat_hash != gst_plugin_ext_dep_get_stat_hash (plugin, dep))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static void
+gst_plugin_ext_dep_free (GstPluginDep * dep)
+{
+  g_strfreev (dep->env_vars);
+  g_strfreev (dep->paths);
+  g_strfreev (dep->names);
+  g_free (dep);
+}
+
+static gboolean
+gst_plugin_ext_dep_strv_equal (gchar ** arr1, gchar ** arr2)
+{
+  if (arr1 == arr2)
+    return TRUE;
+  if (arr1 == NULL || arr2 == NULL)
+    return FALSE;
+  for (; *arr1 != NULL && *arr2 != NULL; ++arr1, ++arr2) {
+    if (strcmp (*arr1, *arr2) != 0)
+      return FALSE;
+  }
+  return (*arr1 == *arr2);
+}
+
+static gboolean
+gst_plugin_ext_dep_equals (GstPluginDep * dep, const gchar ** env_vars,
+    const gchar ** paths, const gchar ** names, GstPluginDependencyFlags flags)
+{
+  if (dep->flags != flags)
+    return FALSE;
+
+  return gst_plugin_ext_dep_strv_equal (dep->env_vars, (gchar **) env_vars) &&
+      gst_plugin_ext_dep_strv_equal (dep->paths, (gchar **) paths) &&
+      gst_plugin_ext_dep_strv_equal (dep->names, (gchar **) names);
+}
+
+/**
+ * gst_plugin_add_dependency:
+ * @plugin: a #GstPlugin
+ * @env_vars: NULL-terminated array of environent variables affecting the
+ *     feature set of the plugin (e.g. an environment variable containing
+ *     paths where to look for additional modules/plugins of a library),
+ *     or NULL. Environment variable names may be followed by a path component
+ *      which will be added to the content of the environment variable, e.g.
+ *      "HOME/.mystuff/plugins".
+ * @paths: NULL-terminated array of directories/paths where dependent files
+ *     may be.
+ * @names: NULL-terminated array of file names (or file name suffixes,
+ *     depending on @flags) to be used in combination with the paths from
+ *     @paths and/or the paths extracted from the environment variables in
+ *     @env_vars, or NULL.
+ * @flags: optional flags, or #GST_PLUGIN_DEPENDENCY_FLAG_NONE
+ *
+ * Make GStreamer aware of external dependencies which affect the feature
+ * set of this plugin (ie. the elements or typefinders associated with it).
+ *
+ * GStreamer will re-inspect plugins with external dependencies whenever any
+ * of the external dependencies change. This is useful for plugins which wrap
+ * other plugin systems, e.g. a plugin which wraps a plugin-based visualisation
+ * library and makes visualisations available as GStreamer elements, or a
+ * codec loader which exposes elements and/or caps dependent on what external
+ * codec libraries are currently installed.
+ *
+ * Since: 0.10.22
+ */
+void
+gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
+    const gchar ** paths, const gchar ** names, GstPluginDependencyFlags flags)
+{
+  GstPluginDep *dep;
+  GList *l;
+
+  g_return_if_fail (GST_IS_PLUGIN (plugin));
+  g_return_if_fail (env_vars != NULL || paths != NULL);
+
+  for (l = plugin->priv->deps; l != NULL; l = l->next) {
+    if (gst_plugin_ext_dep_equals (l->data, env_vars, paths, names, flags)) {
+      GST_LOG_OBJECT (plugin, "dependency already registered");
+      return;
+    }
+  }
+
+  dep = g_new0 (GstPluginDep, 1);
+
+  dep->env_vars = g_strdupv ((gchar **) env_vars);
+  dep->paths = g_strdupv ((gchar **) paths);
+  dep->names = g_strdupv ((gchar **) names);
+  dep->flags = flags;
+
+  dep->env_hash = gst_plugin_ext_dep_get_env_vars_hash (plugin, dep);
+  dep->stat_hash = gst_plugin_ext_dep_get_stat_hash (plugin, dep);
+
+  plugin->priv->deps = g_list_append (plugin->priv->deps, dep);
+
+  GST_DEBUG_OBJECT (plugin, "added dependency:");
+  for (; env_vars != NULL && *env_vars != NULL; ++env_vars)
+    GST_DEBUG_OBJECT (plugin, " evar: %s", *env_vars);
+  for (; paths != NULL && *paths != NULL; ++paths)
+    GST_DEBUG_OBJECT (plugin, " path: %s", *paths);
+  for (; names != NULL && *names != NULL; ++names)
+    GST_DEBUG_OBJECT (plugin, " name: %s", *names);
+}
+
+/**
+ * gst_plugin_add_dependency_simple:
+ * @plugin: the #GstPlugin
+ * @env_vars: one or more environent variables (separated by ':', ';' or ','),
+ *      or NULL. Environment variable names may be followed by a path component
+ *      which will be added to the content of the environment variable, e.g.
+ *      "HOME/.mystuff/plugins:MYSTUFF_PLUGINS_PATH"
+ * @paths: one ore more directory paths (separated by ':' or ';' or ','),
+ *      or NULL. Example: "/usr/lib/mystuff/plugins"
+ * @names: one or more file names or file name suffixes (separated by commas),
+ *   or NULL
+ * @flags: optional flags, or #GST_PLUGIN_DEPENDENCY_FLAG_NONE
+ *
+ * Make GStreamer aware of external dependencies which affect the feature
+ * set of this plugin (ie. the elements or typefinders associated with it).
+ *
+ * GStreamer will re-inspect plugins with external dependencies whenever any
+ * of the external dependencies change. This is useful for plugins which wrap
+ * other plugin systems, e.g. a plugin which wraps a plugin-based visualisation
+ * library and makes visualisations available as GStreamer elements, or a
+ * codec loader which exposes elements and/or caps dependent on what external
+ * codec libraries are currently installed.
+ *
+ * Convenience wrapper function for gst_plugin_add_dependency() which
+ * takes simple strings as arguments instead of string arrays, with multiple
+ * arguments separated by predefined delimiters (see above).
+ *
+ * Since: 0.10.22
+ */
+void
+gst_plugin_add_dependency_simple (GstPlugin * plugin,
+    const gchar * env_vars, const gchar * paths, const gchar * names,
+    GstPluginDependencyFlags flags)
+{
+  gchar **a_evars = NULL;
+  gchar **a_paths = NULL;
+  gchar **a_names = NULL;
+
+  if (env_vars)
+    a_evars = g_strsplit_set (env_vars, ":;,", -1);
+  if (paths)
+    a_paths = g_strsplit_set (paths, ":;,", -1);
+  if (names)
+    a_names = g_strsplit_set (names, ",", -1);
+
+  gst_plugin_add_dependency (plugin, (const gchar **) a_evars,
+      (const gchar **) a_paths, (const gchar **) a_names, flags);
+
+  if (a_evars)
+    g_strfreev (a_evars);
+  if (a_paths)
+    g_strfreev (a_paths);
+  if (a_names)
+    g_strfreev (a_names);
 }

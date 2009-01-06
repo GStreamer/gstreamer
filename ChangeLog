@@ -1,5 +1,46 @@
 2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
+	* docs/gst/gstreamer-sections.txt::
+	* gst/gst_private.h: (GstPluginDep), (_GstPluginPrivate):
+	* gst/gstplugin.c: (gst_plugin_init), (gst_plugin_finalize),
+	  (gst_plugin_class_init), (gst_plugin_list_free),
+	  (gst_plugin_ext_dep_get_env_vars_hash),
+	  (_priv_plugin_deps_env_vars_changed),
+	  (gst_plugin_ext_dep_extract_env_vars_paths),
+	  (gst_plugin_ext_dep_get_hash_from_stat_entry),
+	  (gst_plugin_ext_dep_direntry_matches),
+	  (gst_plugin_ext_dep_scan_dir_and_match_names),
+	  (gst_plugin_ext_dep_scan_path_with_filenames),
+	  (gst_plugin_ext_dep_get_stat_hash),
+	  (_priv_plugin_deps_files_changed), (gst_plugin_ext_dep_free),
+	  (gst_plugin_ext_dep_strv_equal), (gst_plugin_ext_dep_equals),
+	  (gst_plugin_add_dependency), (gst_plugin_add_dependency_simple):
+	* gst/gstplugin.h: (GstPluginPrivate), (GstPluginFlags),
+	  (GST_PLUGIN_DEPENDENCY_FLAG_NONE),
+	  (GST_PLUGIN_DEPENDENCY_FLAG_RECURSE),
+	  (GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY),
+	  (GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX),
+	  (GstPluginDependencyFlags), (GstPluginFilter):
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	* gst/gstregistrybinary.c: (gst_registry_binary_save_feature),
+	  (gst_registry_binary_save_plugin_dep),
+	  (gst_registry_binary_save_plugin),
+	  (gst_registry_binary_load_feature),
+	  (gst_registry_binary_load_plugin_dep_strv),
+	  (gst_registry_binary_load_plugin_dep),
+	  (gst_registry_binary_load_plugin):
+	* gst/gstregistrybinary.h: (GST_MAGIC_BINARY_VERSION_STR),
+	  (GstBinaryPluginElement), (_GstBinaryDep), (GstBinaryDep):
+	* gst/gstregistryxml.c: (gst_registry_xml_save_plugin):
+	  Add API for making a GStreamer plugin 'dependent' on external files,
+	  directories or environment variables, so that GStreamer knows when
+	  it needs to re-load GStreamer plugins that wrap other plugin systems.
+	  Fixes bug #350477.
+	  API: add gst_plugin_add_dependency()
+	  API: add gst_plugin_add_dependency_simple()
+
+2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
 	* docs/faq/gst-uninstalled:
 	  Add libgstapp-0.10 from -base to search path and remove the old
 	  lib from -bad from the search path.

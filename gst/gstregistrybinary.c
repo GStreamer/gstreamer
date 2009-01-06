@@ -554,6 +554,38 @@ fail:
   return FALSE;
 }
 
+static gboolean
+gst_registry_binary_save_plugin_dep (GList ** list, GstPluginDep * dep)
+{
+  GstBinaryDep *ed;
+  GstBinaryChunk *chk;
+  gchar **s;
+
+  ed = g_new0 (GstBinaryDep, 1);
+  chk = gst_registry_binary_make_data (ed, sizeof (GstBinaryDep));
+
+  ed->flags = dep->flags;
+  ed->n_env_vars = 0;
+  ed->n_paths = 0;
+  ed->n_names = 0;
+
+  ed->env_hash = dep->env_hash;
+  ed->stat_hash = dep->stat_hash;
+
+  for (s = dep->env_vars; s != NULL && *s != NULL; ++s, ++ed->n_env_vars)
+    gst_registry_binary_save_string (list, *s);
+
+  for (s = dep->paths; s != NULL && *s != NULL; ++s, ++ed->n_paths)
+    gst_registry_binary_save_string (list, *s);
+
+  for (s = dep->names; s != NULL && *s != NULL; ++s, ++ed->n_names)
+    gst_registry_binary_save_string (list, *s);
+
+  *list = g_list_prepend (*list, chk);
+
+  GST_LOG ("Saved external plugin dependency");
+  return TRUE;
+}
 
 /*
  * gst_registry_binary_save_plugin:
@@ -575,7 +607,17 @@ gst_registry_binary_save_plugin (GList ** list, GstRegistry * registry,
 
   pe->file_size = plugin->file_size;
   pe->file_mtime = plugin->file_mtime;
+  pe->n_deps = 0;
   pe->nfeatures = 0;
+
+  /* pack external deps */
+  for (walk = plugin->priv->deps; walk != NULL; walk = walk->next) {
+    if (!gst_registry_binary_save_plugin_dep (list, walk->data)) {
+      GST_ERROR ("Could not save external plugin dependency, aborting.");
+      goto fail;
+    }
+    ++pe->n_deps;
+  }
 
   /* pack plugin features */
   plugin_features =
@@ -954,6 +996,57 @@ fail:
   return FALSE;
 }
 
+static gchar **
+gst_registry_binary_load_plugin_dep_strv (gchar ** in, guint n)
+{
+  gchar **arr;
+
+  if (n == 0)
+    return NULL;
+
+  arr = g_new0 (gchar *, n + 1);
+  while (n > 0) {
+    unpack_string (*in, arr[n - 1]);
+    --n;
+  }
+  return arr;
+}
+
+static gboolean
+gst_registry_binary_load_plugin_dep (GstPlugin * plugin, gchar ** in)
+{
+  GstPluginDep *dep;
+  GstBinaryDep *d;
+  gchar **s;
+
+  align (*in);
+  GST_LOG_OBJECT (plugin, "Unpacking GstBinaryDep from %p", *in);
+  unpack_element (*in, d, GstBinaryDep);
+
+  dep = g_new0 (GstPluginDep, 1);
+
+  dep->env_hash = d->env_hash;
+  dep->stat_hash = d->stat_hash;
+
+  dep->flags = d->flags;
+
+  dep->names = gst_registry_binary_load_plugin_dep_strv (in, d->n_names);
+  dep->paths = gst_registry_binary_load_plugin_dep_strv (in, d->n_paths);
+  dep->env_vars = gst_registry_binary_load_plugin_dep_strv (in, d->n_env_vars);
+
+  plugin->priv->deps = g_list_append (plugin->priv->deps, dep);
+
+  GST_DEBUG_OBJECT (plugin, "Loaded external plugin dependency from registry: "
+      "env_hash: %08x, stat_hash: %08x", dep->env_hash, dep->stat_hash);
+  for (s = dep->env_vars; s != NULL && *s != NULL; ++s)
+    GST_LOG_OBJECT (plugin, " evar: %s", *s);
+  for (s = dep->paths; s != NULL && *s != NULL; ++s)
+    GST_LOG_OBJECT (plugin, " path: %s", *s);
+  for (s = dep->names; s != NULL && *s != NULL; ++s)
+    GST_LOG_OBJECT (plugin, " name: %s", *s);
+
+  return TRUE;
+}
 
 /*
  * gst_registry_binary_load_plugin:
@@ -1004,9 +1097,19 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   gst_registry_add_plugin (registry, plugin);
   GST_DEBUG ("Added plugin '%s' plugin with %d features from binary registry",
       plugin->desc.name, pe->nfeatures);
+
+  /* Load plugin features */
   for (i = 0; i < pe->nfeatures; i++) {
     if (!gst_registry_binary_load_feature (registry, in, plugin->desc.name)) {
       GST_ERROR ("Error while loading binary feature");
+      goto fail;
+    }
+  }
+
+  /* Load external plugin dependencies */
+  for (i = 0; i < pe->n_deps; ++i) {
+    if (!gst_registry_binary_load_plugin_dep (plugin, in)) {
+      GST_ERROR_OBJECT (plugin, "Could not read external plugin dependency");
       goto fail;
     }
   }

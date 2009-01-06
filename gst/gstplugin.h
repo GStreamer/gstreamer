@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstPlugin GstPlugin;
 typedef struct _GstPluginClass GstPluginClass;
+typedef struct _GstPluginPrivate GstPluginPrivate;
 typedef struct _GstPluginDesc GstPluginDesc;
 
 /**
@@ -74,6 +75,27 @@ typedef enum
 {
   GST_PLUGIN_FLAG_CACHED = (1<<0)
 } GstPluginFlags;
+
+/**
+ * GstPluginDependencyFlags:
+ * @GST_PLUGIN_DEPENDENCY_FLAG_NONE : no special flags
+ * @GST_PLUGIN_DEPENDENCY_FLAG_RECURSE : recurse into subdirectories
+ * @GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY : use paths
+ *         argument only if none of the environment variables is set
+ * @GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX : interpret
+ *         filename argument as filter suffix and check all matching files in
+ *         the directory
+ *
+ * Flags used in connection with gst_plugin_add_dependency().
+ *
+ * Since: 0.10.22
+ */
+typedef enum {
+  GST_PLUGIN_DEPENDENCY_FLAG_NONE = 0,
+  GST_PLUGIN_DEPENDENCY_FLAG_RECURSE = (1 << 0),
+  GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY = (1 << 1),
+  GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX = (1 << 2)
+} GstPluginDependencyFlags;
 
 /**
  * GstPluginInitFunc:
@@ -156,7 +178,8 @@ struct _GstPlugin {
   gboolean      registered;     /* TRUE when the registry has seen a filename
                                  * that matches the plugin's basename */
 
-  gpointer _gst_reserved[GST_PADDING];
+  GstPluginPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstPluginClass {
@@ -297,6 +320,18 @@ GstPlugin *		gst_plugin_load_file		(const gchar *filename, GError** error);
 
 GstPlugin *             gst_plugin_load                 (GstPlugin *plugin);
 GstPlugin *             gst_plugin_load_by_name         (const gchar *name);
+
+void                    gst_plugin_add_dependency (GstPlugin    * plugin,
+                                                   const gchar ** env_vars,
+                                                   const gchar ** paths,
+                                                   const gchar ** names,
+                                                   GstPluginDependencyFlags flags);
+
+void                    gst_plugin_add_dependency_simple (GstPlugin   * plugin,
+                                                          const gchar * env_vars,
+                                                          const gchar * paths,
+                                                          const gchar * names,
+                                                          GstPluginDependencyFlags flags);
 
 void gst_plugin_list_free (GList *list);
 

@@ -785,6 +785,10 @@ gst_registry_xml_save_plugin (GstRegistry * registry, GstPlugin * plugin)
   GList *walk;
   char s[100];
 
+  if (plugin->priv->deps != NULL) {
+    GST_WARNING ("XML registry does not support external plugin dependencies");
+  }
+
   if (!gst_registry_save_escaped (registry, " ", "name", plugin->desc.name))
     return FALSE;
   if (!gst_registry_save_escaped (registry, " ", "description",
