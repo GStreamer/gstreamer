@@ -67,14 +67,20 @@ main (int argc, char *argv[])
     gst_app_src_push_buffer (GST_APP_SRC (app->src), buf);
   }
 
+  /* push EOS */
   gst_app_src_end_of_stream (GST_APP_SRC (app->src));
 
+  /* _is_eos() does not block and returns TRUE if there is not currently an EOS
+   * to be retrieved */
   while (!gst_app_sink_is_eos (GST_APP_SINK (app->sink))) {
     GstBuffer *buf;
 
+    /* pull the next item, this can return NULL when there is no more data and
+     * EOS has been received */
     buf = gst_app_sink_pull_buffer (GST_APP_SINK (app->sink));
     printf ("retrieved buffer %p\n", buf);
-    gst_buffer_unref (buf);
+    if (buf)
+      gst_buffer_unref (buf);
   }
   gst_element_set_state (app->pipe, GST_STATE_NULL);
 

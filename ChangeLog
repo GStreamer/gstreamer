@@ -1,3 +1,10 @@
+2009-01-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/app/appsrc_ex.c: (main):
+	Some comments.
+	When pulling a buffer we can get NULL when the element is EOS, don't try
+	to unref this NULL buffer.
+
 2009-01-06  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-libs/gst/video/Makefile.am:
