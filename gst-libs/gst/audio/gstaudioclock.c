@@ -111,7 +111,7 @@ gst_audio_clock_init (GstAudioClock * clock)
  * Returns: a new #GstAudioClock casted to a #GstClock.
  */
 GstClock *
-gst_audio_clock_new (gchar * name, GstAudioClockGetTimeFunc func,
+gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
     gpointer user_data)
 {
   GstAudioClock *aclock =

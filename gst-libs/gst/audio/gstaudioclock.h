@@ -88,7 +88,7 @@ struct _GstAudioClockClass {
 };
 
 GType           gst_audio_clock_get_type        (void);
-GstClock*       gst_audio_clock_new             (gchar *name, GstAudioClockGetTimeFunc func,
+GstClock*       gst_audio_clock_new             (const gchar *name, GstAudioClockGetTimeFunc func,
                                                  gpointer user_data);
 void            gst_audio_clock_reset           (GstAudioClock *clock, GstClockTime time);
 

@@ -1,3 +1,12 @@
+2009-01-06  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: José Alburquerque <jaalburqu svn gnome org>
+
+	* gst-libs/gst/audio/gstaudioclock.c: (gst_audio_clock_new):
+	* gst-libs/gst/audio/gstaudioclock.h:
+	Make gst_audio_clock_new use const gchar* to ease the wrapping of
+	C++ bindings. Fixes #566723.
+
 2009-01-06  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
