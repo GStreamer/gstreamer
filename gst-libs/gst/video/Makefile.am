@@ -15,11 +15,11 @@ CLEANFILES = $(BUILT_SOURCES)
 libgstvideo_@GST_MAJORMINOR@_la_SOURCES = video.c gstvideosink.c gstvideofilter.c
 nodist_libgstvideo_@GST_MAJORMINOR@_la_SOURCES = $(BUILT_SOURCES)
 
-libgstvideoincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
-libgstvideoinclude_HEADERS = video.h gstvideosink.h gstvideofilter.h
-nodist_libgstvideoinclude_HEADERS = $(built_headers)
+libgstvideo_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/video
+libgstvideo_@GST_MAJORMINOR@include_HEADERS = video.h gstvideosink.h gstvideofilter.h
+nodist_libgstvideo_@GST_MAJORMINOR@include_HEADERS = $(built_headers)
 
-libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS)
+libgstvideo_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstvideo_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
 libgstvideo_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 

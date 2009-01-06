@@ -25,7 +25,7 @@
 
 G_BEGIN_DECLS
 
-#include "video-enumtypes.h"
+#include <gst/video/video-enumtypes.h>
 
 /**
  * GstVideoFormat:
