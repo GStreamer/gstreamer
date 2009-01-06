@@ -38,6 +38,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstAppSrc GstAppSrc;
 typedef struct _GstAppSrcClass GstAppSrcClass;
+typedef struct _GstAppSrcPrivate GstAppSrcPrivate;
 
 /**
  * GstAppStreamType:
@@ -62,26 +63,10 @@ struct _GstAppSrc
   GstBaseSrc basesrc;
 
   /*< private >*/
-  GCond *cond;
-  GMutex *mutex;
-  GQueue *queue;
+  GstAppSrcPrivate *priv;
 
-  GstCaps *caps;
-  gint64 size;
-  GstAppStreamType stream_type;
-  guint64 max_bytes;
-  GstFormat format;
-  gboolean block;
-
-  gboolean flushing;
-  gboolean started;
-  gboolean is_eos;
-  guint64 queued_bytes;
-  guint64 offset;
-  GstAppStreamType current_type;
-
-  guint64 min_latency;
-  guint64 max_latency;
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
 };
 
 struct _GstAppSrcClass
@@ -96,6 +81,9 @@ struct _GstAppSrcClass
   /* actions */
   GstFlowReturn (*push_buffer)     (GstAppSrc *src, GstBuffer *buffer);
   GstFlowReturn (*end_of_stream)   (GstAppSrc *src);
+
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
 };
 
 GType gst_app_src_get_type(void);

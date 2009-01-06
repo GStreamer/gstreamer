@@ -29,6 +29,7 @@
  * <link linkend="gst-plugins-base-libs-appsrc">libgstapp</link> section in the
  * GStreamer Plugins Base Libraries documentation.
  * 
+ * Since: 0.10.22
  */
 
 /**
@@ -95,6 +96,8 @@
  * gst_app_src_end_of_stream() or emit the end-of-stream action signal. After
  * this call, no more buffers can be pushed into appsrc until a flushing seek
  * happened or the state of the appsrc has gone through READY.
+ * 
+ * Since: 0.10.22
  *
  * Last reviewed on 2008-12-17 (0.10.10)
  */
@@ -111,6 +114,29 @@
 #include "gstapp-marshal.h"
 #include "gstappsrc.h"
 
+struct _GstAppSrcPrivate
+{
+  GCond *cond;
+  GMutex *mutex;
+  GQueue *queue;
+
+  GstCaps *caps;
+  gint64 size;
+  GstAppStreamType stream_type;
+  guint64 max_bytes;
+  GstFormat format;
+  gboolean block;
+
+  gboolean flushing;
+  gboolean started;
+  gboolean is_eos;
+  guint64 queued_bytes;
+  guint64 offset;
+  GstAppStreamType current_type;
+
+  guint64 min_latency;
+  guint64 max_latency;
+};
 
 GST_DEBUG_CATEGORY (app_src_debug);
 #define GST_CAT_DEFAULT app_src_debug
@@ -446,22 +472,27 @@ gst_app_src_class_init (GstAppSrcClass * klass)
 
   klass->push_buffer = gst_app_src_push_buffer_action;
   klass->end_of_stream = gst_app_src_end_of_stream;
+
+  g_type_class_add_private (klass, sizeof (GstAppSrcPrivate));
 }
 
 static void
 gst_app_src_init (GstAppSrc * appsrc, GstAppSrcClass * klass)
 {
-  appsrc->mutex = g_mutex_new ();
-  appsrc->cond = g_cond_new ();
-  appsrc->queue = g_queue_new ();
+  appsrc->priv = G_TYPE_INSTANCE_GET_PRIVATE (appsrc, GST_TYPE_APP_SRC,
+      GstAppSrcPrivate);
 
-  appsrc->size = DEFAULT_PROP_SIZE;
-  appsrc->stream_type = DEFAULT_PROP_STREAM_TYPE;
-  appsrc->max_bytes = DEFAULT_PROP_MAX_BYTES;
-  appsrc->format = DEFAULT_PROP_FORMAT;
-  appsrc->block = DEFAULT_PROP_BLOCK;
-  appsrc->min_latency = DEFAULT_PROP_MIN_LATENCY;
-  appsrc->max_latency = DEFAULT_PROP_MAX_LATENCY;
+  appsrc->priv->mutex = g_mutex_new ();
+  appsrc->priv->cond = g_cond_new ();
+  appsrc->priv->queue = g_queue_new ();
+
+  appsrc->priv->size = DEFAULT_PROP_SIZE;
+  appsrc->priv->stream_type = DEFAULT_PROP_STREAM_TYPE;
+  appsrc->priv->max_bytes = DEFAULT_PROP_MAX_BYTES;
+  appsrc->priv->format = DEFAULT_PROP_FORMAT;
+  appsrc->priv->block = DEFAULT_PROP_BLOCK;
+  appsrc->priv->min_latency = DEFAULT_PROP_MIN_LATENCY;
+  appsrc->priv->max_latency = DEFAULT_PROP_MAX_LATENCY;
 
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
@@ -471,7 +502,7 @@ gst_app_src_flush_queued (GstAppSrc * src)
 {
   GstBuffer *buf;
 
-  while ((buf = g_queue_pop_head (src->queue)))
+  while ((buf = g_queue_pop_head (src->priv->queue)))
     gst_buffer_unref (buf);
 }
 
@@ -480,9 +511,9 @@ gst_app_src_dispose (GObject * obj)
 {
   GstAppSrc *appsrc = GST_APP_SRC (obj);
 
-  if (appsrc->caps) {
-    gst_caps_unref (appsrc->caps);
-    appsrc->caps = NULL;
+  if (appsrc->priv->caps) {
+    gst_caps_unref (appsrc->priv->caps);
+    appsrc->priv->caps = NULL;
   }
   gst_app_src_flush_queued (appsrc);
 
@@ -494,9 +525,9 @@ gst_app_src_finalize (GObject * obj)
 {
   GstAppSrc *appsrc = GST_APP_SRC (obj);
 
-  g_mutex_free (appsrc->mutex);
-  g_cond_free (appsrc->cond);
-  g_queue_free (appsrc->queue);
+  g_mutex_free (appsrc->priv->mutex);
+  g_cond_free (appsrc->priv->cond);
+  g_queue_free (appsrc->priv->queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -521,10 +552,10 @@ gst_app_src_set_property (GObject * object, guint prop_id,
       gst_app_src_set_max_bytes (appsrc, g_value_get_uint64 (value));
       break;
     case PROP_FORMAT:
-      appsrc->format = g_value_get_enum (value);
+      appsrc->priv->format = g_value_get_enum (value);
       break;
     case PROP_BLOCK:
-      appsrc->block = g_value_get_boolean (value);
+      appsrc->priv->block = g_value_get_boolean (value);
       break;
     case PROP_IS_LIVE:
       gst_base_src_set_live (GST_BASE_SRC (appsrc),
@@ -572,10 +603,10 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint64 (value, gst_app_src_get_max_bytes (appsrc));
       break;
     case PROP_FORMAT:
-      g_value_set_enum (value, appsrc->format);
+      g_value_set_enum (value, appsrc->priv->format);
       break;
     case PROP_BLOCK:
-      g_value_set_boolean (value, appsrc->block);
+      g_value_set_boolean (value, appsrc->priv->block);
       break;
     case PROP_IS_LIVE:
       g_value_set_boolean (value, gst_base_src_is_live (GST_BASE_SRC (appsrc)));
@@ -607,11 +638,11 @@ gst_app_src_unlock (GstBaseSrc * bsrc)
 {
   GstAppSrc *appsrc = GST_APP_SRC (bsrc);
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "unlock start");
-  appsrc->flushing = TRUE;
-  g_cond_broadcast (appsrc->cond);
-  g_mutex_unlock (appsrc->mutex);
+  appsrc->priv->flushing = TRUE;
+  g_cond_broadcast (appsrc->priv->cond);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return TRUE;
 }
@@ -621,11 +652,11 @@ gst_app_src_unlock_stop (GstBaseSrc * bsrc)
 {
   GstAppSrc *appsrc = GST_APP_SRC (bsrc);
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "unlock stop");
-  appsrc->flushing = FALSE;
-  g_cond_broadcast (appsrc->cond);
-  g_mutex_unlock (appsrc->mutex);
+  appsrc->priv->flushing = FALSE;
+  g_cond_broadcast (appsrc->priv->cond);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return TRUE;
 }
@@ -635,16 +666,16 @@ gst_app_src_start (GstBaseSrc * bsrc)
 {
   GstAppSrc *appsrc = GST_APP_SRC (bsrc);
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "starting");
-  appsrc->started = TRUE;
+  appsrc->priv->started = TRUE;
   /* set the offset to -1 so that we always do a first seek. This is only used
    * in random-access mode. */
-  appsrc->offset = -1;
-  appsrc->flushing = FALSE;
-  g_mutex_unlock (appsrc->mutex);
+  appsrc->priv->offset = -1;
+  appsrc->priv->flushing = FALSE;
+  g_mutex_unlock (appsrc->priv->mutex);
 
-  gst_base_src_set_format (bsrc, appsrc->format);
+  gst_base_src_set_format (bsrc, appsrc->priv->format);
 
   return TRUE;
 }
@@ -654,13 +685,13 @@ gst_app_src_stop (GstBaseSrc * bsrc)
 {
   GstAppSrc *appsrc = GST_APP_SRC (bsrc);
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   GST_DEBUG_OBJECT (appsrc, "stopping");
-  appsrc->is_eos = FALSE;
-  appsrc->flushing = TRUE;
-  appsrc->started = FALSE;
+  appsrc->priv->is_eos = FALSE;
+  appsrc->priv->flushing = TRUE;
+  appsrc->priv->started = FALSE;
   gst_app_src_flush_queued (appsrc);
-  g_mutex_unlock (appsrc->mutex);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return TRUE;
 }
@@ -671,7 +702,7 @@ gst_app_src_is_seekable (GstBaseSrc * src)
   GstAppSrc *appsrc = GST_APP_SRC (src);
   gboolean res = FALSE;
 
-  switch (appsrc->stream_type) {
+  switch (appsrc->priv->stream_type) {
     case GST_APP_STREAM_TYPE_STREAM:
       break;
     case GST_APP_STREAM_TYPE_SEEKABLE:
@@ -688,7 +719,7 @@ gst_app_src_check_get_range (GstBaseSrc * src)
   GstAppSrc *appsrc = GST_APP_SRC (src);
   gboolean res = FALSE;
 
-  switch (appsrc->stream_type) {
+  switch (appsrc->priv->stream_type) {
     case GST_APP_STREAM_TYPE_STREAM:
     case GST_APP_STREAM_TYPE_SEEKABLE:
       break;
@@ -725,12 +756,12 @@ gst_app_src_query (GstBaseSrc * src, GstQuery * query)
       res = gst_base_src_query_latency (src, &live, &min, &max);
 
       /* overwrite with our values when we need to */
-      g_mutex_lock (appsrc->mutex);
-      if (appsrc->min_latency != -1)
-        min = appsrc->min_latency;
-      if (appsrc->max_latency != -1)
-        max = appsrc->max_latency;
-      g_mutex_unlock (appsrc->mutex);
+      g_mutex_lock (appsrc->priv->mutex);
+      if (appsrc->priv->min_latency != -1)
+        min = appsrc->priv->min_latency;
+      if (appsrc->priv->max_latency != -1)
+        max = appsrc->priv->max_latency;
+      g_mutex_unlock (appsrc->priv->mutex);
 
       gst_query_set_latency (query, live, min, max);
       break;
@@ -757,7 +788,7 @@ gst_app_src_do_seek (GstBaseSrc * src, GstSegment * segment)
       desired_position, gst_format_get_name (segment->format));
 
   /* no need to try to seek in streaming mode */
-  if (appsrc->stream_type == GST_APP_STREAM_TYPE_STREAM)
+  if (appsrc->priv->stream_type == GST_APP_STREAM_TYPE_STREAM)
     return TRUE;
 
   g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_SEEK_DATA], 0,
@@ -780,22 +811,22 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
   GstAppSrc *appsrc = GST_APP_SRC (bsrc);
   GstFlowReturn ret;
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   /* check flushing first */
-  if (G_UNLIKELY (appsrc->flushing))
+  if (G_UNLIKELY (appsrc->priv->flushing))
     goto flushing;
 
-  if (appsrc->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
+  if (appsrc->priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
     /* if we are dealing with a random-access stream, issue a seek if the offset
      * changed. */
-    if (G_UNLIKELY (appsrc->offset != offset)) {
+    if (G_UNLIKELY (appsrc->priv->offset != offset)) {
       gboolean res;
 
-      g_mutex_unlock (appsrc->mutex);
+      g_mutex_unlock (appsrc->priv->mutex);
 
       GST_DEBUG_OBJECT (appsrc,
           "we are at %" G_GINT64_FORMAT ", seek to %" G_GINT64_FORMAT,
-          appsrc->offset, offset);
+          appsrc->priv->offset, offset);
 
       g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_SEEK_DATA], 0,
           offset, &res);
@@ -804,46 +835,46 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         /* failing to seek is fatal */
         goto seek_error;
 
-      g_mutex_lock (appsrc->mutex);
+      g_mutex_lock (appsrc->priv->mutex);
 
-      appsrc->offset = offset;
+      appsrc->priv->offset = offset;
     }
   }
 
   while (TRUE) {
     /* return data as long as we have some */
-    if (!g_queue_is_empty (appsrc->queue)) {
+    if (!g_queue_is_empty (appsrc->priv->queue)) {
       guint buf_size;
 
-      *buf = g_queue_pop_head (appsrc->queue);
+      *buf = g_queue_pop_head (appsrc->priv->queue);
       buf_size = GST_BUFFER_SIZE (*buf);
 
       GST_DEBUG_OBJECT (appsrc, "we have buffer %p of size %u", *buf, buf_size);
 
-      appsrc->queued_bytes -= buf_size;
+      appsrc->priv->queued_bytes -= buf_size;
 
       /* only update the offset when in random_access mode */
-      if (appsrc->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
-        appsrc->offset += buf_size;
+      if (appsrc->priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS) {
+        appsrc->priv->offset += buf_size;
       }
 
-      gst_buffer_set_caps (*buf, appsrc->caps);
+      gst_buffer_set_caps (*buf, appsrc->priv->caps);
 
       /* signal that we removed an item */
-      g_cond_broadcast (appsrc->cond);
+      g_cond_broadcast (appsrc->priv->cond);
 
       ret = GST_FLOW_OK;
       break;
     } else {
-      g_mutex_unlock (appsrc->mutex);
+      g_mutex_unlock (appsrc->priv->mutex);
 
       /* we have no data, we need some. We fire the signal with the size hint. */
       g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_NEED_DATA], 0, size,
           NULL);
 
-      g_mutex_lock (appsrc->mutex);
+      g_mutex_lock (appsrc->priv->mutex);
       /* we can be flushing now because we released the lock */
-      if (G_UNLIKELY (appsrc->flushing))
+      if (G_UNLIKELY (appsrc->priv->flushing))
         goto flushing;
 
       /* if we have a buffer now, continue the loop and try to return it. In
@@ -851,20 +882,20 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
        * signal) we can still be empty because the pushed buffer got flushed or
        * when the application pushes the requested buffer later, we support both
        * possiblities. */
-      if (!g_queue_is_empty (appsrc->queue))
+      if (!g_queue_is_empty (appsrc->priv->queue))
         continue;
 
       /* no buffer yet, maybe we are EOS, if not, block for more data. */
     }
 
     /* check EOS */
-    if (G_UNLIKELY (appsrc->is_eos))
+    if (G_UNLIKELY (appsrc->priv->is_eos))
       goto eos;
 
     /* nothing to return, wait a while for new data or flushing. */
-    g_cond_wait (appsrc->cond, appsrc->mutex);
+    g_cond_wait (appsrc->priv->cond, appsrc->priv->mutex);
   }
-  g_mutex_unlock (appsrc->mutex);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return ret;
 
@@ -872,13 +903,13 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
 flushing:
   {
     GST_DEBUG_OBJECT (appsrc, "we are flushing");
-    g_mutex_unlock (appsrc->mutex);
+    g_mutex_unlock (appsrc->priv->mutex);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
   {
     GST_DEBUG_OBJECT (appsrc, "we are EOS");
-    g_mutex_unlock (appsrc->mutex);
+    g_mutex_unlock (appsrc->priv->mutex);
     return GST_FLOW_UNEXPECTED;
   }
 seek_error:
@@ -900,6 +931,8 @@ seek_error:
  * a copy of the caps structure. After calling this method, the source will
  * only produce caps that match @caps. @caps must be fixed and the caps on the
  * buffers must match the caps or left NULL.
+ * 
+ * Since: 0.10.22
  */
 void
 gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
@@ -910,11 +943,11 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
-  if ((old = appsrc->caps) != caps) {
+  if ((old = appsrc->priv->caps) != caps) {
     if (caps)
-      appsrc->caps = gst_caps_copy (caps);
+      appsrc->priv->caps = gst_caps_copy (caps);
     else
-      appsrc->caps = NULL;
+      appsrc->priv->caps = NULL;
     if (old)
       gst_caps_unref (old);
   }
@@ -928,6 +961,8 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
  * Get the configured caps on @appsrc.
  *
  * Returns: the #GstCaps produced by the source. gst_caps_unref() after usage.
+ * 
+ * Since: 0.10.22
  */
 GstCaps *
 gst_app_src_get_caps (GstAppSrc * appsrc)
@@ -938,7 +973,7 @@ gst_app_src_get_caps (GstAppSrc * appsrc)
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), NULL);
 
   GST_OBJECT_LOCK (appsrc);
-  if ((caps = appsrc->caps))
+  if ((caps = appsrc->priv->caps))
     gst_caps_ref (caps);
   GST_DEBUG_OBJECT (appsrc, "getting caps of %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (appsrc);
@@ -953,6 +988,8 @@ gst_app_src_get_caps (GstAppSrc * appsrc)
  *
  * Set the size of the stream in bytes. A value of -1 means that the size is
  * not known. 
+ * 
+ * Since: 0.10.22
  */
 void
 gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
@@ -962,7 +999,7 @@ gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting size of %" G_GINT64_FORMAT, size);
-  appsrc->size = size;
+  appsrc->priv->size = size;
   GST_OBJECT_UNLOCK (appsrc);
 }
 
@@ -974,6 +1011,8 @@ gst_app_src_set_size (GstAppSrc * appsrc, gint64 size)
  * not known. 
  *
  * Returns: the size of the stream previously set with gst_app_src_set_size();
+ * 
+ * Since: 0.10.22
  */
 gint64
 gst_app_src_get_size (GstAppSrc * appsrc)
@@ -984,7 +1023,7 @@ gst_app_src_get_size (GstAppSrc * appsrc)
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), -1);
 
   GST_OBJECT_LOCK (appsrc);
-  size = appsrc->size;
+  size = appsrc->priv->size;
   GST_DEBUG_OBJECT (appsrc, "getting size of %" G_GINT64_FORMAT, size);
   GST_OBJECT_UNLOCK (appsrc);
 
@@ -1000,6 +1039,8 @@ gst_app_src_get_size (GstAppSrc * appsrc)
  * be connected to.
  *
  * A stream_type stream 
+ * 
+ * Since: 0.10.22
  */
 void
 gst_app_src_set_stream_type (GstAppSrc * appsrc, GstAppStreamType type)
@@ -1009,7 +1050,7 @@ gst_app_src_set_stream_type (GstAppSrc * appsrc, GstAppStreamType type)
 
   GST_OBJECT_LOCK (appsrc);
   GST_DEBUG_OBJECT (appsrc, "setting stream_type of %d", type);
-  appsrc->stream_type = type;
+  appsrc->priv->stream_type = type;
   GST_OBJECT_UNLOCK (appsrc);
 }
 
@@ -1021,6 +1062,8 @@ gst_app_src_set_stream_type (GstAppSrc * appsrc, GstAppStreamType type)
  * with gst_app_src_set_stream_type().
  *
  * Returns: the stream type.
+ * 
+ * Since: 0.10.22
  */
 GstAppStreamType
 gst_app_src_get_stream_type (GstAppSrc * appsrc)
@@ -1031,7 +1074,7 @@ gst_app_src_get_stream_type (GstAppSrc * appsrc)
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), FALSE);
 
   GST_OBJECT_LOCK (appsrc);
-  stream_type = appsrc->stream_type;
+  stream_type = appsrc->priv->stream_type;
   GST_DEBUG_OBJECT (appsrc, "getting stream_type of %d", stream_type);
   GST_OBJECT_UNLOCK (appsrc);
 
@@ -1046,20 +1089,22 @@ gst_app_src_get_stream_type (GstAppSrc * appsrc)
  * Set the maximum amount of bytes that can be queued in @appsrc.
  * After the maximum amount of bytes are queued, @appsrc will emit the
  * "enough-data" signal.
+ * 
+ * Since: 0.10.22
  */
 void
 gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
 {
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
-  g_mutex_lock (appsrc->mutex);
-  if (max != appsrc->max_bytes) {
+  g_mutex_lock (appsrc->priv->mutex);
+  if (max != appsrc->priv->max_bytes) {
     GST_DEBUG_OBJECT (appsrc, "setting max-bytes to %" G_GUINT64_FORMAT, max);
-    appsrc->max_bytes = max;
+    appsrc->priv->max_bytes = max;
     /* signal the change */
-    g_cond_broadcast (appsrc->cond);
+    g_cond_broadcast (appsrc->priv->cond);
   }
-  g_mutex_unlock (appsrc->mutex);
+  g_mutex_unlock (appsrc->priv->mutex);
 }
 
 /**
@@ -1069,6 +1114,8 @@ gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
  * Get the maximum amount of bytes that can be queued in @appsrc.
  *
  * Returns: The maximum amount of bytes that can be queued.
+ * 
+ * Since: 0.10.22
  */
 guint64
 gst_app_src_get_max_bytes (GstAppSrc * appsrc)
@@ -1077,10 +1124,10 @@ gst_app_src_get_max_bytes (GstAppSrc * appsrc)
 
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), 0);
 
-  g_mutex_lock (appsrc->mutex);
-  result = appsrc->max_bytes;
+  g_mutex_lock (appsrc->priv->mutex);
+  result = appsrc->priv->max_bytes;
   GST_DEBUG_OBJECT (appsrc, "getting max-bytes of %" G_GUINT64_FORMAT, result);
-  g_mutex_unlock (appsrc->mutex);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return result;
 }
@@ -1091,16 +1138,16 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
 {
   gboolean changed = FALSE;
 
-  g_mutex_lock (appsrc->mutex);
-  if (do_min && appsrc->min_latency != min) {
-    appsrc->min_latency = min;
+  g_mutex_lock (appsrc->priv->mutex);
+  if (do_min && appsrc->priv->min_latency != min) {
+    appsrc->priv->min_latency = min;
     changed = TRUE;
   }
-  if (do_max && appsrc->max_latency != max) {
-    appsrc->max_latency = max;
+  if (do_max && appsrc->priv->max_latency != max) {
+    appsrc->priv->max_latency = max;
     changed = TRUE;
   }
-  g_mutex_unlock (appsrc->mutex);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   if (changed) {
     GST_DEBUG_OBJECT (appsrc, "posting latency changed");
@@ -1117,6 +1164,8 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
  *
  * Configure the @min and @max latency in @src. If @min is set to -1, the
  * default latency calculations for pseudo-live sources will be used.
+ * 
+ * Since: 0.10.22
  */
 void
 gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
@@ -1131,18 +1180,20 @@ gst_app_src_set_latency (GstAppSrc * appsrc, guint64 min, guint64 max)
  * @max: the min latency
  *
  * Retrieve the min and max latencies in @min and @max respectively.
+ * 
+ * Since: 0.10.22
  */
 void
 gst_app_src_get_latency (GstAppSrc * appsrc, guint64 * min, guint64 * max)
 {
   g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   if (min)
-    *min = appsrc->min_latency;
+    *min = appsrc->priv->min_latency;
   if (max)
-    *max = appsrc->max_latency;
-  g_mutex_unlock (appsrc->mutex);
+    *max = appsrc->priv->max_latency;
+  g_mutex_unlock (appsrc->priv->mutex);
 }
 
 static GstFlowReturn
@@ -1155,37 +1206,39 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
 
   while (TRUE) {
     /* can't accept buffers when we are flushing or EOS */
-    if (appsrc->flushing)
+    if (appsrc->priv->flushing)
       goto flushing;
 
-    if (appsrc->is_eos)
+    if (appsrc->priv->is_eos)
       goto eos;
 
-    if (appsrc->max_bytes && appsrc->queued_bytes >= appsrc->max_bytes) {
-      GST_DEBUG_OBJECT (appsrc, "queue filled (%" G_GUINT64_FORMAT " >= %"
-          G_GUINT64_FORMAT ")", appsrc->queued_bytes, appsrc->max_bytes);
+    if (appsrc->priv->max_bytes
+        && appsrc->priv->queued_bytes >= appsrc->priv->max_bytes) {
+      GST_DEBUG_OBJECT (appsrc,
+          "queue filled (%" G_GUINT64_FORMAT " >= %" G_GUINT64_FORMAT ")",
+          appsrc->priv->queued_bytes, appsrc->priv->max_bytes);
 
       if (first) {
         /* only signal on the first push */
-        g_mutex_unlock (appsrc->mutex);
+        g_mutex_unlock (appsrc->priv->mutex);
 
         g_signal_emit (appsrc, gst_app_src_signals[SIGNAL_ENOUGH_DATA], 0,
             NULL);
 
-        g_mutex_lock (appsrc->mutex);
+        g_mutex_lock (appsrc->priv->mutex);
         /* continue to check for flushing/eos after releasing the lock */
         first = FALSE;
         continue;
       }
-      if (appsrc->block) {
+      if (appsrc->priv->block) {
         GST_DEBUG_OBJECT (appsrc, "waiting for free space");
         /* we are filled, wait until a buffer gets popped or when we
          * flush. */
-        g_cond_wait (appsrc->cond, appsrc->mutex);
+        g_cond_wait (appsrc->priv->cond, appsrc->priv->mutex);
       } else {
         /* no need to wait for free space, we just pump more data into the
          * queue hoping that the caller reacts to the enough-data signal and
@@ -1199,10 +1252,10 @@ gst_app_src_push_buffer_full (GstAppSrc * appsrc, GstBuffer * buffer,
   GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
   if (!steal_ref)
     gst_buffer_ref (buffer);
-  g_queue_push_tail (appsrc->queue, buffer);
-  appsrc->queued_bytes += GST_BUFFER_SIZE (buffer);
-  g_cond_broadcast (appsrc->cond);
-  g_mutex_unlock (appsrc->mutex);
+  g_queue_push_tail (appsrc->priv->queue, buffer);
+  appsrc->priv->queued_bytes += GST_BUFFER_SIZE (buffer);
+  g_cond_broadcast (appsrc->priv->cond);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return GST_FLOW_OK;
 
@@ -1212,7 +1265,7 @@ flushing:
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are flushing", buffer);
     if (steal_ref)
       gst_buffer_unref (buffer);
-    g_mutex_unlock (appsrc->mutex);
+    g_mutex_unlock (appsrc->priv->mutex);
     return GST_FLOW_WRONG_STATE;
   }
 eos:
@@ -1220,7 +1273,7 @@ eos:
     GST_DEBUG_OBJECT (appsrc, "refuse buffer %p, we are EOS", buffer);
     if (steal_ref)
       gst_buffer_unref (buffer);
-    g_mutex_unlock (appsrc->mutex);
+    g_mutex_unlock (appsrc->priv->mutex);
     return GST_FLOW_UNEXPECTED;
   }
 }
@@ -1236,6 +1289,8 @@ eos:
  * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
  * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
  * #GST_FLOW_UNEXPECTED when EOS occured.
+ * 
+ * Since: 0.10.22
  */
 GstFlowReturn
 gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
@@ -1260,6 +1315,8 @@ gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
  *
  * Returns: #GST_FLOW_OK when the EOS was successfuly queued.
  * #GST_FLOW_WRONG_STATE when @appsrc is not PAUSED or PLAYING.
+ * 
+ * Since: 0.10.22
  */
 GstFlowReturn
 gst_app_src_end_of_stream (GstAppSrc * appsrc)
@@ -1267,16 +1324,16 @@ gst_app_src_end_of_stream (GstAppSrc * appsrc)
   g_return_val_if_fail (appsrc, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_FLOW_ERROR);
 
-  g_mutex_lock (appsrc->mutex);
+  g_mutex_lock (appsrc->priv->mutex);
   /* can't accept buffers when we are flushing. We can accept them when we are 
    * EOS although it will not do anything. */
-  if (appsrc->flushing)
+  if (appsrc->priv->flushing)
     goto flushing;
 
   GST_DEBUG_OBJECT (appsrc, "sending EOS");
-  appsrc->is_eos = TRUE;
-  g_cond_broadcast (appsrc->cond);
-  g_mutex_unlock (appsrc->mutex);
+  appsrc->priv->is_eos = TRUE;
+  g_cond_broadcast (appsrc->priv->cond);
+  g_mutex_unlock (appsrc->priv->mutex);
 
   return GST_FLOW_OK;
 

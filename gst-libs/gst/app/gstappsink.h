@@ -38,24 +38,17 @@ G_BEGIN_DECLS
 
 typedef struct _GstAppSink GstAppSink;
 typedef struct _GstAppSinkClass GstAppSinkClass;
+typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
 
 struct _GstAppSink
 {
   GstBaseSink basesink;
 
   /*< private >*/
-  GstCaps *caps;
-  gboolean emit_signals;
-  guint max_buffers;
-  gboolean drop;
+  GstAppSinkPrivate *priv;
 
-  GCond *cond;
-  GMutex *mutex;
-  GQueue *queue;
-  GstBuffer *preroll;
-  gboolean flushing;
-  gboolean started;
-  gboolean is_eos;
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
 };
 
 struct _GstAppSinkClass
@@ -70,6 +63,9 @@ struct _GstAppSinkClass
   /* actions */
   GstBuffer * (*pull_preroll)  (GstAppSink *sink);
   GstBuffer * (*pull_buffer)   (GstAppSink *sink);
+
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
 };
 
 GType gst_app_sink_get_type(void);
