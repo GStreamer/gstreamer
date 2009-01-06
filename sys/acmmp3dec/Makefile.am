@@ -1,4 +1,4 @@
-plugin_LTLIBRARIES = libgstacmmp3dec.la
+plugin_LTLIBRARIES = libgstacmdecsink.la
 
 libgstacmdecsink_la_SOURCES = acmmp3dec.c
 libgstacmdecsink_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \

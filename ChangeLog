@@ -1,3 +1,8 @@
+2009-01-06  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/acmmp3dec/Makefile.am:
+	Fix typo in the makefile target preventing disting.
+
 2009-01-05  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
