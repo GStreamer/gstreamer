@@ -738,7 +738,6 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
       avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
     } else if (!strcmp (mimetype, "audio/x-mulaw")) {
       avipad->auds.format = GST_RIFF_WAVE_FORMAT_MULAW;
-      avipad->auds.av_bps = 8;
       avipad->auds.size = 8;
       avipad->auds.blockalign = avipad->auds.channels;
       avipad->auds.av_bps = avipad->auds.blockalign * avipad->auds.rate;
@@ -748,7 +747,9 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
   if (!avipad->auds.format)
     goto refuse_caps;
 
-  avipad->parent.hdr.rate = avipad->auds.rate;
+  /* by spec, hdr.rate is av_bps related, is calculated that way in stop_file,
+   * and reduces to sample rate in PCM like cases */
+  avipad->parent.hdr.rate = avipad->auds.av_bps / avipad->auds.blockalign;
   avipad->parent.hdr.samplesize = avipad->auds.blockalign;
   avipad->parent.hdr.scale = 1;
 

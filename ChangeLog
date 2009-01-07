@@ -1,3 +1,8 @@
+2009-01-07  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_audsink_set_caps):
+	Minor fix/cleanup in header field calculation.
+
 2009-01-06  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_reset),
