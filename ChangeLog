@@ -1,3 +1,8 @@
+2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* win32/common/libgstcdda.def:
+	Add new symbol to the list of exported symbols.
+
 2009-01-07  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
