@@ -57,6 +57,7 @@ struct _GstPulseSink
 
   pa_context *context;
   pa_stream *stream;
+  GMutex *stream_mutex;
 
   pa_sample_spec sample_spec;
 

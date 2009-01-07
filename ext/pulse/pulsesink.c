@@ -264,6 +264,8 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   pulsesink->context = NULL;
   pulsesink->stream = NULL;
 
+  pulsesink->stream_mutex = g_mutex_new ();
+
   pulsesink->mainloop = pa_threaded_mainloop_new ();
   g_assert (pulsesink->mainloop);
 
@@ -277,11 +279,13 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 static void
 gst_pulsesink_destroy_stream (GstPulseSink * pulsesink)
 {
+  g_mutex_lock (pulsesink->stream_mutex);
   if (pulsesink->stream) {
     pa_stream_disconnect (pulsesink->stream);
     pa_stream_unref (pulsesink->stream);
     pulsesink->stream = NULL;
   }
+  g_mutex_unlock (pulsesink->stream_mutex);
 
   g_free (pulsesink->stream_name);
   pulsesink->stream_name = NULL;
@@ -290,7 +294,6 @@ gst_pulsesink_destroy_stream (GstPulseSink * pulsesink)
 static void
 gst_pulsesink_destroy_context (GstPulseSink * pulsesink)
 {
-
   gst_pulsesink_destroy_stream (pulsesink);
 
   if (pulsesink->context) {
@@ -312,6 +315,8 @@ gst_pulsesink_finalize (GObject * object)
   g_free (pulsesink->server);
   g_free (pulsesink->device);
   g_free (pulsesink->stream_name);
+
+  g_mutex_free (pulsesink->stream_mutex);
 
   pa_threaded_mainloop_free (pulsesink->mainloop);
 
@@ -482,8 +487,16 @@ gst_pulsesink_stream_state_cb (pa_stream * s, void *userdata)
 
     case PA_STREAM_READY:
     case PA_STREAM_FAILED:
-    case PA_STREAM_TERMINATED:
-      pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+    case PA_STREAM_TERMINATED:{
+      pa_stream *cur_stream;
+
+      g_mutex_lock (pulsesink->stream_mutex);
+      cur_stream = pulsesink->stream;
+      g_mutex_unlock (pulsesink->stream_mutex);
+
+      if (cur_stream == s)
+        pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+    }
       break;
 
     case PA_STREAM_UNCONNECTED:
@@ -496,16 +509,28 @@ static void
 gst_pulsesink_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (userdata);
+  pa_stream *cur_stream;
 
-  pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+  g_mutex_lock (pulsesink->stream_mutex);
+  cur_stream = pulsesink->stream;
+  g_mutex_unlock (pulsesink->stream_mutex);
+
+  if (cur_stream == s)
+    pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
 }
 
 static void
 gst_pulsesink_stream_latency_update_cb (pa_stream * s, void *userdata)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (userdata);
+  pa_stream *cur_stream;
 
-  pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
+  g_mutex_lock (pulsesink->stream_mutex);
+  cur_stream = pulsesink->stream;
+  g_mutex_unlock (pulsesink->stream_mutex);
+
+  if (cur_stream == s)
+    pa_threaded_mainloop_signal (pulsesink->mainloop, 0);
 }
 
 static gboolean
@@ -592,15 +617,18 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
     goto unlock_and_fail;
   }
 
+  g_mutex_lock (pulsesink->stream_mutex);
   if (!(pulsesink->stream = pa_stream_new (pulsesink->context,
               pulsesink->stream_name ? pulsesink->
               stream_name : "Playback Stream", &pulsesink->sample_spec,
               gst_pulse_gst_to_channel_map (&channel_map, spec)))) {
+    g_mutex_unlock (pulsesink->stream_mutex);
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("Failed to create stream: %s",
             pa_strerror (pa_context_errno (pulsesink->context))), (NULL));
     goto unlock_and_fail;
   }
+  g_mutex_unlock (pulsesink->stream_mutex);
 
   pa_stream_set_state_callback (pulsesink->stream,
       gst_pulsesink_stream_state_cb, pulsesink);

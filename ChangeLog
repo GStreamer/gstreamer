@@ -1,5 +1,14 @@
 2009-01-07  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* ext/pulse/pulsesink.c:
+	* ext/pulse/pulsesink.h:
+	Use a mutex to protect the current stream pointer, and ignore
+	callbacks for stream objects that have been destroyed already.
+	Fixes problems with unprepare/prepare cycles caused by the input
+	caps changing, without reintroducing bug #556986.
+
+2009-01-07  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* sys/v4l2/gstv4l2src.c:
 	Remove () from translateable string, so that it makes more sense.
 
