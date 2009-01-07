@@ -467,7 +467,17 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 dnl *** GNOME VFS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
 AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
-  AG_GST_PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0)
+  PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0, [
+      HAVE_GNOME_VFS="yes"
+      AC_SUBST(GNOME_VFS_CFLAGS)
+      AC_SUBST(GNOME_VFS_LIBS)
+      GNOME_VFS_MODULES_DIR="`$PKG_CONFIG --variable=modulesdir gnome-vfs-2.0`"
+      AC_DEFINE_UNQUOTED(GNOME_VFS_MODULES_DIR, "$GNOME_VFS_MODULES_DIR",
+             [The GnomeVFS modules directory.])
+    ],[
+      HAVE_GNOME_VFS="no"
+    ]
+    )
 ])
 
 dnl *** libgio ***

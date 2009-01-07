@@ -1,5 +1,12 @@
 2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* configure.ac:
+	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
+	Add plugin dependency for the gnomevfs modules.
+	Fixes bug #566875.
+
+2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* win32/common/libgstcdda.def:
 	Add new symbol to the list of exported symbols.
 
