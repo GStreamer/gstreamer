@@ -104,8 +104,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_cdda_base_src_debug);
 #define TIME_INTERVAL_FROM_SECTORS(sectors)  ((SAMPLES_PER_SECTOR * sectors * GST_SECOND) / 44100)
 #define SECTORS_FROM_TIME_INTERVAL(dtime)    (dtime * 44100 / (SAMPLES_PER_SECTOR * GST_SECOND))
 
-#define GST_TYPE_CDDA_BASE_SRC_MODE          (gst_cdda_base_src_mode_get_type ())
-
 enum
 {
   ARG_0,
@@ -160,7 +158,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static GstFormat track_format;
 static GstFormat sector_format;
 
-static GType
+GType
 gst_cdda_base_src_mode_get_type (void)
 {
   static GType mode_type;       /* 0 */

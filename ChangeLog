@@ -1,3 +1,10 @@
+2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	* gst-libs/gst/cdda/gstcddabasesrc.h:
+	Make the GType of GstCDDABaseSrcMode public for bindings.
+	Fixes bug #566837.
+
 2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* configure.ac:
