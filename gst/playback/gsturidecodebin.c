@@ -693,6 +693,10 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstURIDecodeBin * decoder)
   GST_DEBUG_OBJECT (element, "pad removed name: <%s:%s>",
       GST_DEBUG_PAD_NAME (pad));
 
+  /* we only care about srcpads */
+  if (!GST_PAD_IS_SRC (pad))
+    return;
+
   if (!(ghost = g_object_get_data (G_OBJECT (pad), "uridecodebin.ghostpad")))
     goto no_ghost;
 
@@ -1141,7 +1145,7 @@ type_found (GstElement * typefind, guint probability,
     goto no_queue2;
 
   g_object_set (G_OBJECT (queue), "use-buffering", TRUE, NULL);
-//  g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL);
+  /* g_object_set (G_OBJECT (queue), "temp-location", "temp", NULL); */
 
   /* Disable max-size-buffers */
   g_object_set (G_OBJECT (queue), "max-size-buffers", 0, NULL);

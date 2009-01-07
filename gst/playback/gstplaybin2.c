@@ -732,7 +732,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * @playbin: a #GstPlayBin2
    *
    * This signal is emitted when the current uri is about to finish. You can
-   * set the next-uri and next-suburi to make sure that playback continues.
+   * set the uri and suburi to make sure that playback continues.
    */
   gst_play_bin_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
@@ -1022,14 +1022,13 @@ gst_play_bin_set_uri (GstPlayBin * playbin, const gchar * uri)
   group = playbin->next_group;
 
   GST_SOURCE_GROUP_LOCK (group);
-  /* if we have no previous uri, or the new uri is different from the
-   * old one, replug */
+  /* store the uri in the next group we will play */
   g_free (group->uri);
   group->uri = g_strdup (uri);
   group->valid = TRUE;
   GST_SOURCE_GROUP_UNLOCK (group);
 
-  GST_DEBUG ("setting new uri to %s", uri);
+  GST_DEBUG ("set new uri to %s", uri);
   GST_PLAY_BIN_UNLOCK (playbin);
 }
 
@@ -1042,17 +1041,12 @@ gst_play_bin_set_suburi (GstPlayBin * playbin, const gchar * suburi)
   group = playbin->next_group;
 
   GST_SOURCE_GROUP_LOCK (group);
-  if ((!suburi && !group->suburi) ||
-      (suburi && group->suburi && !strcmp (group->suburi, suburi)))
-    goto done;
-
   g_free (group->suburi);
   group->suburi = g_strdup (suburi);
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   GST_DEBUG ("setting new .sub uri to %s", suburi);
 
-done:
-  GST_SOURCE_GROUP_UNLOCK (group);
   GST_PLAY_BIN_UNLOCK (playbin);
 }
 
@@ -1894,6 +1888,11 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
       res = gst_pad_link (select->srcpad, select->sinkpad);
       GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d", select->media,
           res);
+      if (res != GST_PAD_LINK_OK) {
+        GST_ELEMENT_ERROR (playbin, CORE, PAD,
+            ("Internal playbin error."),
+            ("Failed to link selector to sink. Error %d", res));
+      }
     }
   }
   GST_DEBUG_OBJECT (playbin, "pending %d > %d", group->pending,
@@ -1944,41 +1943,6 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   }
 }
 
-/* send an EOS event to all of the selectors */
-static void
-perform_eos (GstPlayBin * playbin, GstSourceGroup * group)
-{
-  gboolean res;
-  GstEvent *event;
-  gint i;
-
-  GST_DEBUG_OBJECT (playbin, "doing EOS in group %p", group);
-
-  event = gst_event_new_eos ();
-
-  res = FALSE;
-
-  GST_SOURCE_GROUP_LOCK (group);
-  for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
-    GstSourceSelect *select = &group->selector[i];
-
-    if (select->selector) {
-      GST_DEBUG_OBJECT (playbin, "send EOS in selector %s", select->media);
-      gst_event_ref (event);
-      res |= gst_pad_push_event (select->srcpad, event);
-    }
-  }
-  GST_SOURCE_GROUP_UNLOCK (group);
-
-  gst_event_unref (event);
-
-  if (!res) {
-    /* we cannot post an error because we don't know if the EOS failed because
-     * of a fatal error or simply a pipeline shutdown */
-    GST_ERROR_OBJECT (playbin, "failed to send EOS");
-  }
-}
-
 static void
 drained_cb (GstElement * decodebin, GstSourceGroup * group)
 {
@@ -2000,9 +1964,7 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 
   /* now activate the next group. If the app did not set a next-uri, this will
    * fail and we can do EOS */
-  if (!setup_next_source (playbin)) {
-    perform_eos (playbin, group);
-  }
+  setup_next_source (playbin);
 }
 
 /* Called when we must provide a list of factories to plug to @pad with @caps.
@@ -2124,6 +2086,20 @@ notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
   g_object_notify (G_OBJECT (playbin), "source");
 }
 
+static gboolean
+group_set_locked_state_unlocked (GstPlayBin * playbin, GstSourceGroup * group,
+    gboolean locked)
+{
+  GST_DEBUG_OBJECT (playbin, "locked_state %d on group %p", locked, group);
+
+  if (group->uridecodebin)
+    gst_element_set_locked_state (group->uridecodebin, locked);
+  if (group->suburidecodebin)
+    gst_element_set_locked_state (group->suburidecodebin, locked);
+
+  return TRUE;
+}
+
 #define REMOVE_SIGNAL(obj,id)            \
 if (id) {                                \
   g_signal_handler_disconnect (obj, id); \
@@ -2142,6 +2118,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
   if (group->uridecodebin) {
+    GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
     REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
     REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
     REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
@@ -2150,13 +2127,15 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
     gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (playbin), group->uridecodebin);
-    group->uridecodebin = NULL;
+    uridecodebin = group->uridecodebin;
+  } else {
+    GST_DEBUG_OBJECT (playbin, "making new uridecodebin");
+    uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
+    if (!uridecodebin)
+      goto no_decodebin;
+    gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
+    group->uridecodebin = uridecodebin;
   }
-
-  uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
-  if (!uridecodebin)
-    goto no_decodebin;
 
   /* configure connection speed */
   g_object_set (uridecodebin, "connection-speed", playbin->connection_speed,
@@ -2195,24 +2174,24 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->autoplug_select_id = g_signal_connect (uridecodebin, "autoplug-select",
       G_CALLBACK (autoplug_select_cb), group);
 
-  /*  */
-  gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);
-  group->uridecodebin = uridecodebin;
-
   if (group->suburi) {
     /* subtitles */
     if (group->suburidecodebin) {
+      GST_DEBUG_OBJECT (playbin, "reusing existing suburidecodebin");
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
       gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
-      group->suburidecodebin = NULL;
-    }
+      suburidecodebin = group->suburidecodebin;
+    } else {
+      GST_DEBUG_OBJECT (playbin, "making new suburidecodebin");
+      suburidecodebin = gst_element_factory_make ("uridecodebin", NULL);
+      if (!suburidecodebin)
+        goto no_decodebin;
 
-    suburidecodebin = gst_element_factory_make ("uridecodebin", NULL);
-    if (!suburidecodebin)
-      goto no_decodebin;
+      gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
+      group->suburidecodebin = suburidecodebin;
+    }
 
     /* configure connection speed */
     g_object_set (suburidecodebin, "connection-speed",
@@ -2222,10 +2201,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
         NULL);
     /* configure uri */
     g_object_set (suburidecodebin, "uri", group->suburi, NULL);
-
-    /*  */
-    gst_bin_add (GST_BIN_CAST (playbin), suburidecodebin);
-    group->suburidecodebin = suburidecodebin;
 
     /* connect pads and other things */
     group->sub_pad_added_id = g_signal_connect (suburidecodebin, "pad-added",
@@ -2246,6 +2221,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
           GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
     goto uridecodebin_failure;
 
+  /* alow state changes of the playbin2 affect the group elements now */
+  group_set_locked_state_unlocked (playbin, group, FALSE);
   group->active = TRUE;
   GST_SOURCE_GROUP_UNLOCK (group);
 
@@ -2294,9 +2271,11 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media);
 
     if (select->sinkpad) {
+      GST_LOG_OBJECT (playbin, "unlinking from sink");
       gst_pad_unlink (select->srcpad, select->sinkpad);
 
       /* release back */
+      GST_LOG_OBJECT (playbin, "release sink pad");
       gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
       select->sinkpad = NULL;
     }
@@ -2308,6 +2287,11 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
     select->selector = NULL;
   }
+  /* we still have the decodebins added to the playbin2 but we can't remove them
+   * yet or change their state because this function might be called from the
+   * streaming threads, instead block the state so that state changes on the
+   * playbin2 don't affect us anymore */
+  group_set_locked_state_unlocked (playbin, group, TRUE);
   GST_SOURCE_GROUP_UNLOCK (group);
 
   return TRUE;
@@ -2364,7 +2348,7 @@ activate_failed:
 }
 
 /* The group that is currently playing is copied again to the
- * next_group.
+ * next_group so that it will start playing the next time.
  */
 static gboolean
 save_current_group (GstPlayBin * playbin)
@@ -2388,6 +2372,25 @@ save_current_group (GstPlayBin * playbin)
   return TRUE;
 }
 
+/* clear the locked state from all groups. This function is called before a
+ * state change to NULL is performed on them. */
+static gboolean
+groups_set_locked_state (GstPlayBin * playbin, gboolean locked)
+{
+  GST_DEBUG_OBJECT (playbin, "setting locked state to %d on groups groups");
+
+  GST_PLAY_BIN_LOCK (playbin);
+  GST_SOURCE_GROUP_LOCK (playbin->curr_group);
+  group_set_locked_state_unlocked (playbin, playbin->curr_group, locked);
+  GST_SOURCE_GROUP_UNLOCK (playbin->curr_group);
+  GST_SOURCE_GROUP_LOCK (playbin->next_group);
+  group_set_locked_state_unlocked (playbin, playbin->next_group, locked);
+  GST_SOURCE_GROUP_UNLOCK (playbin->next_group);
+  GST_PLAY_BIN_UNLOCK (playbin);
+
+  return TRUE;
+}
+
 static GstStateChangeReturn
 gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2403,6 +2406,10 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* FIXME unlock our waiting groups */
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      /* unlock so that all groups go to NULL */
+      groups_set_locked_state (playbin, FALSE);
       break;
     default:
       break;
@@ -2420,6 +2427,9 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       save_current_group (playbin);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      groups_set_locked_state (playbin, TRUE);
       break;
     default:
       break;
