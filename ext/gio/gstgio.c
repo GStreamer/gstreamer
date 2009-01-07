@@ -230,6 +230,11 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_gio_debug, "gio", 0, "GIO elements");
 
+  gst_plugin_add_dependency_simple (plugin, NULL, GIO_MODULE_DIR, NULL,
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+  gst_plugin_add_dependency_simple (plugin, "LD_LIBRARY_PATH", GIO_LIBDIR,
+      "gvfsd", GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
   /* FIXME: Rank is MARGINAL for now, should be at least SECONDARY+1 in the future
    * to replace gnomevfssink/src. For testing purposes PRIMARY+1 one makes sense
    * so it gets autoplugged and preferred over filesrc/sink. */

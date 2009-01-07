@@ -484,7 +484,15 @@ dnl *** libgio ***
 USE_GIO=$BUILD_EXPERIMENTAL
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
 AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
-  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, HAVE_GIO="yes", [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.15.2, [
+    HAVE_GIO="yes"
+    GIO_MODULE_DIR="`$PKG_CONFIG --variable=giomoduledir gio-2.0`"
+    AC_DEFINE_UNQUOTED(GIO_MODULE_DIR, "$GIO_MODULE_DIR",
+           [The GIO modules directory.])
+    GIO_LIBDIR="`$PKG_CONFIG --variable=libdir gio-2.0`"
+    AC_DEFINE_UNQUOTED(GIO_LIBDIR, "$GIO_LIBDIR",
+           [The GIO library directory.])
+  ], [
     HAVE_GIO="no"
     AC_MSG_RESULT(no)
   ])

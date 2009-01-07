@@ -1,6 +1,13 @@
 2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
+	* ext/gio/gstgio.c: (plugin_init):
+	Add plugin dependency for the GIO and GVfs modules.
+	Fixes bug #566876.
+
+2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
 	* ext/gnomevfs/gstgnomevfs.c: (plugin_init):
 	Add plugin dependency for the gnomevfs modules.
 	Fixes bug #566875.
