@@ -1,3 +1,8 @@
+2009-01-07  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/v4l2/gstv4l2src.c:
+	Remove () from translateable string, so that it makes more sense.
+
 2009-01-07  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_audsink_set_caps):
