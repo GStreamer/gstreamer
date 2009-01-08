@@ -24,15 +24,33 @@
 
 #define TCP_BACKLOG             5
 #define DEFAULT_PORT            1554
+enum
+{
+  ARG_0,
+  PROP_PORT
+};
 
 G_DEFINE_TYPE (GstRTSPServer, gst_rtsp_server, G_TYPE_OBJECT);
 
+static void gst_rtsp_server_get_property (GObject *object, guint propid,
+    GValue *value, GParamSpec *pspec);
+static void gst_rtsp_server_set_property (GObject *object, guint propid,
+    const GValue *value, GParamSpec *pspec);
+
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
-{
+{ 
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  
+  gobject_class->get_property = gst_rtsp_server_get_property;
+  gobject_class->set_property = gst_rtsp_server_set_property;
+  
+  g_object_class_install_property (gobject_class, PROP_PORT,
+      g_param_spec_int ("port", "Port", "The port the server uses",
+          1, 65535, DEFAULT_PORT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -55,6 +73,36 @@ gst_rtsp_server_new (void)
   result = g_object_new (GST_TYPE_RTSP_SERVER, NULL);
 
   return result;
+}
+
+static void
+gst_rtsp_server_get_property (GObject *object, guint propid,
+    GValue *value, GParamSpec *pspec)
+{
+  GstRTSPServer *server = GST_RTSP_SERVER (object);
+
+  switch (propid) {
+    case PROP_PORT:
+      g_value_set_int (value, server->server_port);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
+static void
+gst_rtsp_server_set_property (GObject *object, guint propid,
+    const GValue *value, GParamSpec *pspec)
+{
+  GstRTSPServer *server = GST_RTSP_SERVER (object);
+
+  switch (propid) {
+    case PROP_PORT:
+      server->server_port = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
 }
 
 static gboolean
