@@ -1,7 +1,9 @@
 public_headers = \
 		rtsp-server.h \
 		rtsp-client.h \
-		rtsp-media.h
+		rtsp-media.h \
+		rtsp-session-pool.h \
+		rtsp-session.h \
 		
 c_sources = \
 	rtsp-server.c \
@@ -10,10 +12,6 @@ c_sources = \
 	rtsp-session-pool.c \
 	rtsp-session.c
 	
-noinst_HEADERS = \
-	rtsp-session-pool.h \
-	rtsp-session.h
-
 lib_LTLIBRARIES = \
 	libgstrtspserver-@GST_MAJORMINOR@.la
 
