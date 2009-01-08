@@ -145,9 +145,9 @@ gst_rtsp_media_prepare (GstRTSPMedia *media, GstBin *bin)
     element = gst_parse_launch ("( "
 	"v4l2src ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
 	"queue ! videorate ! ffmpegcolorspace ! "
-	"x264enc bitrate=300 ! rtph264pay name=pay0 "
+	"x264enc bitrate=300 ! rtph264pay name=pay0 pt=96 "
 	"alsasrc ! audio/x-raw-int,rate=8000 ! queue ! "
-	"amrnbenc ! rtpamrpay name=pay1 "
+	"amrnbenc ! rtpamrpay name=pay1 pt=97 "
 	")", NULL);
   }
   else if (g_str_has_prefix (media->url->abspath, "/h264")) {
@@ -179,8 +179,8 @@ gst_rtsp_media_prepare (GstRTSPMedia *media, GstBin *bin)
     /* proxy HTTP transcode */
     element = gst_parse_launch ("( uridecodebin "
 	"uri=http://movies.apple.com/movies/fox/maxpayne/maxpayne-tlre_h480.mov name=d "
-	"d. ! queue ! x264enc bitrate=1800 ! rtph264pay name=pay0 "
-	"d. ! queue ! faac ! rtpmp4gpay name=pay1 )", NULL);
+	"d. ! queue ! x264enc bitrate=1800 ! rtph264pay name=pay0 pt=96 "
+	"d. ! queue ! faac ! rtpmp4gpay name=pay1 pt=97 )", NULL);
   }
   else
     return FALSE;
