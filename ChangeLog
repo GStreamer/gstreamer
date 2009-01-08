@@ -1,3 +1,9 @@
+2009-01-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gst.c:
+	  Create a registry if there is none also when the option for
+	  gst-disable-registry-update has been selected. Fixes #567002
+
 2009-01-06  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gst.c: (init_post):

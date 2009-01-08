@@ -903,6 +903,7 @@ ensure_current_registry (GError ** error)
   gboolean ret = TRUE;
   gboolean do_fork;
   gboolean do_update;
+  gboolean have_cache;
 
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -918,19 +919,23 @@ ensure_current_registry (GError ** error)
 
   GST_INFO ("reading registry cache: %s", registry_file);
 #ifdef USE_BINARY_REGISTRY
-  gst_registry_binary_read_cache (default_registry, registry_file);
+  have_cache = gst_registry_binary_read_cache (default_registry, registry_file);
 #else
-  gst_registry_xml_read_cache (default_registry, registry_file);
+  have_cache = gst_registry_xml_read_cache (default_registry, registry_file);
 #endif
 
-  do_update = !_gst_disable_registry_update;
-  if (do_update) {
-    const gchar *update_env;
+  if (have_cache) {
+    do_update = !_gst_disable_registry_update;
+    if (do_update) {
+      const gchar *update_env;
 
-    if ((update_env = g_getenv ("GST_REGISTRY_UPDATE"))) {
-      /* do update for any value different from "no" */
-      do_update = (strcmp (update_env, "no") != 0);
+      if ((update_env = g_getenv ("GST_REGISTRY_UPDATE"))) {
+        /* do update for any value different from "no" */
+        do_update = (strcmp (update_env, "no") != 0);
+      }
     }
+  } else {
+    do_update = TRUE;
   }
 
   if (do_update) {
