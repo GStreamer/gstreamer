@@ -1,6 +1,8 @@
 
 noinst_PROGRAMS = gst-rtsp-server
 
+INCLUDES = -I$(top_srcdir) -I$(srcdir)
+
 gst_rtsp_server_SOURCES = \
 	main.c 
 

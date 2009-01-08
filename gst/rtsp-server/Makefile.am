@@ -9,6 +9,10 @@ c_sources = \
 	rtsp-media.c \
 	rtsp-session-pool.c \
 	rtsp-session.c
+	
+noinst_HEADERS = \
+	rtsp-session-pool.h \
+	rtsp-session.h
 
 lib_LTLIBRARIES = \
 	libgstrtspserver.la
