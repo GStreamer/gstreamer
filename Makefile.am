@@ -4,6 +4,7 @@ SUBDIRS = 		\
 	gst \
 	m4   		\
 	common \
+	pkgconfig \
 	examples
 
 DIST_SUBDIRS = $(SUBDIRS)

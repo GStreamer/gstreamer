@@ -218,6 +218,11 @@ m4/Makefile
 gst/Makefile
 gst/rtsp-server/Makefile
 examples/Makefile
+bindings/Makefile
+bindings/python/Makefile
+bindings/python/codegen/Makefile
+pkgconfig/Makefile
+pkgconfig/gst-rtsp-server.pc
 ])
 AC_OUTPUT
 
