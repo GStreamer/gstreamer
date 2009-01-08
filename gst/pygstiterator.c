@@ -147,6 +147,11 @@ pygst_iterator_new (GstIterator * iter)
 {
   PyGstIterator *self;
 
+  if (iter == NULL) {
+      PyErr_SetString (PyExc_TypeError, "Invalid GstIterator (NULL)");
+      return NULL;
+  }
+
   self = PyObject_NEW (PyGstIterator, &PyGstIterator_Type);
   self->iter = iter;
   GST_DEBUG ("self:%p , iterator:%p, type:%lu",

@@ -1,3 +1,10 @@
+2009-01-08  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst/pygstiterator.c: (pygst_iterator_new):
+	* testsuite/test_iterator.py:
+	Raise an Exception when wrapping a NULL GstIterator.
+	Fixes #566903
+
 2009-01-05  Alessandro Decina  <alessandro.decina@collabora.co.uk>
 
 	patch by: Vincent GENIEUX <mutex at runbox dot com>

@@ -107,4 +107,11 @@ class IteratorTest(TestCase):
             break
         else:
             raise AssertionError
-    
+
+    def testInvalidIterator(self):
+        p = gst.Pad("p", gst.PAD_SRC)
+        # The C function will return NULL, we should
+        # therefore have an exception raised
+        self.assertRaises(TypeError, p.iterate_internal_links)
+        del p
+
