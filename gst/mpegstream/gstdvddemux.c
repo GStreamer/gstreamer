@@ -474,6 +474,8 @@ gst_dvd_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
   gint mpeg_version = *((gint *) info);
 
   if (dvd_demux->mpeg_version != mpeg_version) {
+    if (str->caps)
+      gst_caps_unref (str->caps);
     str->caps = gst_caps_new_simple ("video/mpeg",
         "mpegversion", G_TYPE_INT, mpeg_version,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -593,6 +595,8 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
         /* Determine the number of channels. */
         channels = ((sample_info >> 8) & 0x7) + 1;
 
+        if (str->caps)
+          gst_caps_unref (str->caps);
         str->caps = gst_caps_new_simple ("audio/x-lpcm",
             "width", G_TYPE_INT, width,
             "rate", G_TYPE_INT, rate,
@@ -612,11 +616,15 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
         break;
 
       case GST_DVD_DEMUX_AUDIO_AC3:
+        if (str->caps)
+          gst_caps_unref (str->caps);
         str->caps = gst_caps_new_simple ("audio/x-ac3", NULL);
         codec = "AC-3 audio";
         break;
 
       case GST_DVD_DEMUX_AUDIO_DTS:
+        if (str->caps)
+          gst_caps_unref (str->caps);
         str->caps = gst_caps_new_simple ("audio/x-dts", NULL);
         codec = "DTS audio";
         break;
@@ -650,8 +658,8 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
 
         t = g_strdup_printf ("audio-%d-language", stream_nr);
         lang_code =
-            gst_structure_get_string (gst_event_get_structure (dvd_demux->
-                langcodes), t);
+            gst_structure_get_string (gst_event_get_structure
+            (dvd_demux->langcodes), t);
         g_free (t);
       }
 
@@ -720,6 +728,8 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
 
   if (str->type != GST_DVD_DEMUX_SUBP_DVD) {
     /* We need to set new caps for this pad. */
+    if (str->caps)
+      gst_caps_unref (str->caps);
     str->caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
 
     if (!gst_pad_set_caps (str->pad, str->caps)) {
@@ -746,8 +756,8 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
 
         t = g_strdup_printf ("subtitle-%d-language", stream_nr);
         lang_code =
-            gst_structure_get_string (gst_event_get_structure (dvd_demux->
-                langcodes), t);
+            gst_structure_get_string (gst_event_get_structure
+            (dvd_demux->langcodes), t);
         g_free (t);
       }
 
@@ -1164,6 +1174,8 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
 
       gst_element_remove_pad (GST_ELEMENT (dvd_demux),
           dvd_demux->subpicture_stream[i]->pad);
+      if (dvd_demux->subpicture_stream[i]->caps)
+        gst_caps_unref (dvd_demux->subpicture_stream[i]->caps);
       if (dvd_demux->subpicture_stream[i]->tags)
         gst_tag_list_free (dvd_demux->subpicture_stream[i]->tags);
       g_free (dvd_demux->subpicture_stream[i]);

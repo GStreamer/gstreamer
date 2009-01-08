@@ -331,6 +331,7 @@ gst_mpeg_demux_init_stream (GstMPEGDemux * mpeg_demux,
   str->last_flow = GST_FLOW_OK;
   str->buffers_sent = 0;
   str->tags = NULL;
+  str->caps = NULL;
 }
 
 static GstMPEGStream *
@@ -373,6 +374,8 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
     GstTagList *list;
 
     /* We need to set new caps for this pad. */
+    if (str->caps)
+      gst_caps_unref (str->caps);
     str->caps = gst_caps_new_simple ("video/mpeg",
         "mpegversion", G_TYPE_INT, mpeg_version,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
@@ -445,6 +448,8 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
     GstTagList *list;
 
     /* We need to set new caps for this pad. */
+    if (str->caps)
+      gst_caps_unref (str->caps);
     str->caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, 1, NULL);
     if (!gst_pad_set_caps (str->pad, str->caps)) {
@@ -1334,6 +1339,8 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
           gst_event_new_eos ());
       gst_element_remove_pad (GST_ELEMENT (mpeg_demux),
           mpeg_demux->video_stream[i]->pad);
+      if (mpeg_demux->video_stream[i]->caps)
+        gst_caps_unref (mpeg_demux->video_stream[i]->caps);
       g_free (mpeg_demux->video_stream[i]);
       mpeg_demux->video_stream[i] = NULL;
     }
@@ -1345,6 +1352,8 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
           mpeg_demux->audio_stream[i]->pad);
       if (mpeg_demux->audio_stream[i]->tags)
         gst_tag_list_free (mpeg_demux->audio_stream[i]->tags);
+      if (mpeg_demux->audio_stream[i]->caps)
+        gst_caps_unref (mpeg_demux->audio_stream[i]->caps);
       g_free (mpeg_demux->audio_stream[i]);
       mpeg_demux->audio_stream[i] = NULL;
     }
@@ -1354,6 +1363,8 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
           gst_event_new_eos ());
       gst_element_remove_pad (GST_ELEMENT (mpeg_demux),
           mpeg_demux->private_stream[i]->pad);
+      if (mpeg_demux->private_stream[i]->caps)
+        gst_caps_unref (mpeg_demux->private_stream[i]->caps);
       g_free (mpeg_demux->private_stream[i]);
       mpeg_demux->private_stream[i] = NULL;
     }

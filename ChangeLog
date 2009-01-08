@@ -1,3 +1,16 @@
+2009-01-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	Patch by: Yves Lefebvre <ivanohe at abacom dot com>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_get_video_stream),
+	(gst_dvd_demux_get_audio_stream),
+	(gst_dvd_demux_get_subpicture_stream), (gst_dvd_demux_reset):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_init_stream),
+	(gst_mpeg_demux_get_video_stream),
+	(gst_mpeg_demux_get_audio_stream), (gst_mpeg_demux_reset):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_chain):
+	Fix some caps leaks. Fixes bug #564885.
+
 2009-01-02  Alessandro Decina  <alessandro.d@gmail.com>
 
 	* ext/cdio/gstcdio.c:
