@@ -1,3 +1,11 @@
+2009-01-08  Michael Smith <msmith@songbirdnest.com>
+
+	* gst/qtdemux/qtdemux.c:
+	  In push mode, error out if we get EOS before we've created any srcpads.
+	  Handle (in pull mode) some files that have a truncated moov atom where
+	  the final sub-atom is a 'free' atom and the contents of that are not
+	  present in the file.
+
 2009-01-08  Mark Nauwelaerts  <mark.nauwelaerts@collabora.co.uk>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_video_caps):

@@ -985,6 +985,15 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
       gst_event_unref (event);
       res = TRUE;
       break;
+    case GST_EVENT_EOS:
+      /* If we are in push mode, and get an EOS before we've seen any streams,
+       * then error out - we have nowhere to send the EOS */
+      if (!demux->pullbased && demux->n_streams == 0) {
+        GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+            (_("This file contains no playable streams.")),
+            ("no known streams found"));
+      }
+      /* Fall through */
     default:
       res = gst_pad_event_default (demux->sinkpad, event);
       break;
@@ -1128,10 +1137,38 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       if (ret != GST_FLOW_OK)
         goto beach;
       if (length != GST_BUFFER_SIZE (moov)) {
+        /* Some files have a 'moov' atom at the end of the file which contains
+         * a terminal 'free' atom where the body of the atom is missing.
+         * Check for, and permit, this special case.
+         */
+        if (GST_BUFFER_SIZE (moov) >= 8) {
+          guint8 *final_data = GST_BUFFER_DATA (moov) +
+              (GST_BUFFER_SIZE (moov) - 8);
+          guint32 final_length = QT_UINT32 (final_data);
+          guint32 final_fourcc = QT_FOURCC (final_data + 4);
+          if (final_fourcc == FOURCC_free &&
+              GST_BUFFER_SIZE (moov) + final_length - 8 == length) {
+            /* Ok, we've found that special case. Allocate a new buffer with
+             * that free atom actually present. */
+            GstBuffer *newmoov = gst_buffer_new_and_alloc (length);
+            gst_buffer_copy_metadata (newmoov, moov,
+                GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
+                GST_BUFFER_COPY_CAPS);
+            memcpy (GST_BUFFER_DATA (newmoov), GST_BUFFER_DATA (moov),
+                GST_BUFFER_SIZE (moov));
+            memset (GST_BUFFER_DATA (newmoov) + GST_BUFFER_SIZE (moov), 0,
+                final_length - 8);
+            gst_buffer_unref (moov);
+            moov = newmoov;
+          }
+        }
+      }
+
+      if (length != GST_BUFFER_SIZE (moov)) {
         GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
             (_("This file is incomplete and cannot be played.")),
-            ("We got less than expected (received %u, wanted %u)",
-                GST_BUFFER_SIZE (moov), (guint) length));
+            ("We got less than expected (received %u, wanted %u, offset %u)",
+                GST_BUFFER_SIZE (moov), (guint) length, cur_offset));
         ret = GST_FLOW_ERROR;
         goto beach;
       }
