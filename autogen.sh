@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-rtsp
-srcfile=src/rtsp-server.c
+srcfile=gst/rtsp-server/rtsp-server.c
 
 # a quick cvs co to ease the transition
 if test ! -d common;

@@ -1,9 +1,10 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 SUBDIRS = 		\
-	src           	\
+	gst \
 	m4   		\
-	common
+	common \
+	examples
 
 DIST_SUBDIRS = $(SUBDIRS)
 

@@ -17,7 +17,7 @@ dnl check if this is a release version
 AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([src/rtsp-server.c])
+AC_CONFIG_SRCDIR([gst/rtsp-server/rtsp-server.c])
 
 dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
@@ -215,7 +215,9 @@ gst-rtsp.spec
 common/Makefile
 common/m4/Makefile
 m4/Makefile
-src/Makefile
+gst/Makefile
+gst/rtsp-server/Makefile
+examples/Makefile
 ])
 AC_OUTPUT
 
