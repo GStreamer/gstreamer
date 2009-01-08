@@ -93,13 +93,14 @@ teardown_src_pad (GstElement * element)
   /* clean up floating src pad */
   if (!(sinkpad = gst_element_get_static_pad (element, "audio_0")))
     sinkpad = gst_element_get_request_pad (element, "audio_0");
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* references are owned by: 1) us, 2) matroskamux, 3) collect pads */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
   srcpad = gst_pad_get_peer (sinkpad);
 
   gst_pad_unlink (srcpad, sinkpad);
 
-  /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* references are owned by: 1) us, 2) matroskamux, 3) collect pads */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
   gst_object_unref (sinkpad);
   /* one more ref is held by element itself */
 

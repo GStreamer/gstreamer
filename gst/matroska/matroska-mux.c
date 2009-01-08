@@ -61,6 +61,9 @@ enum
   ARG_MATROSKA_VERSION
 };
 
+#define  DEFAULT_MATROSKA_VERSION        1
+#define  DEFAULT_WRITING_APP             "GStreamer Matroska muxer"
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -275,7 +278,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
   g_object_class_install_property (gobject_class, ARG_MATROSKA_VERSION,
       g_param_spec_int ("version", "Matroska version",
           "This parameter determines what matroska features can be used.",
-          1, 2, 1, G_PARAM_READWRITE));
+          1, 2, DEFAULT_MATROSKA_VERSION, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -307,11 +310,18 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
 
+  /* property defaults */
+  mux->matroska_version = DEFAULT_MATROSKA_VERSION;
+  mux->writing_app = g_strdup (DEFAULT_WRITING_APP);
+
   /* initialize internal variables */
   mux->index = NULL;
-  mux->matroska_version = 1;
+  mux->num_streams = 0;
+  mux->num_a_streams = 0;
+  mux->num_t_streams = 0;
+  mux->num_v_streams = 0;
 
-  /* Initialize all variables */
+  /* initialize remaining variables */
   gst_matroska_mux_reset (GST_ELEMENT (mux));
 }
 
@@ -370,30 +380,38 @@ gst_matroska_mux_create_uid (void)
   return uid;
 }
 
+
 /**
- * gst_matroska_pad_free:
+ * gst_matroska_pad_reset:
  * @collect_pad: the #GstMatroskaPad
  *
- * Release resources of a matroska collect pad.
+ * Reset and/or release resources of a matroska collect pad.
  */
 static void
-gst_matroska_pad_free (GstMatroskaPad * collect_pad)
+gst_matroska_pad_reset (GstMatroskaPad * collect_pad, gboolean full)
 {
+  gchar *name = NULL;
+  GstMatroskaTrackType type = 0;
+
   /* free track information */
-  if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
-    GstMatroskaTrackVideoContext *ctx =
-        (GstMatroskaTrackVideoContext *) collect_pad->track;
-
-    if (ctx->dirac_unit) {
-      gst_buffer_unref (ctx->dirac_unit);
-      ctx->dirac_unit = NULL;
-    }
-  }
-
   if (collect_pad->track != NULL) {
+    /* retrieve for optional later use */
+    name = collect_pad->track->name;
+    type = collect_pad->track->type;
+    /* extra for video */
+    if (type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+      GstMatroskaTrackVideoContext *ctx =
+          (GstMatroskaTrackVideoContext *) collect_pad->track;
+
+      if (ctx->dirac_unit) {
+        gst_buffer_unref (ctx->dirac_unit);
+        ctx->dirac_unit = NULL;
+      }
+    }
     g_free (collect_pad->track->codec_id);
     g_free (collect_pad->track->codec_name);
-    g_free (collect_pad->track->name);
+    if (full)
+      g_free (collect_pad->track->name);
     g_free (collect_pad->track->language);
     g_free (collect_pad->track->codec_priv);
     g_free (collect_pad->track);
@@ -405,6 +423,51 @@ gst_matroska_pad_free (GstMatroskaPad * collect_pad)
     gst_buffer_unref (collect_pad->buffer);
     collect_pad->buffer = NULL;
   }
+
+  if (!full && type != 0) {
+    GstMatroskaTrackContext *context;
+
+    /* create a fresh context */
+    switch (type) {
+      case GST_MATROSKA_TRACK_TYPE_VIDEO:
+        context = (GstMatroskaTrackContext *)
+            g_new0 (GstMatroskaTrackVideoContext, 1);
+        break;
+      case GST_MATROSKA_TRACK_TYPE_AUDIO:
+        context = (GstMatroskaTrackContext *)
+            g_new0 (GstMatroskaTrackAudioContext, 1);
+        break;
+      case GST_MATROSKA_TRACK_TYPE_SUBTITLE:
+        context = (GstMatroskaTrackContext *)
+            g_new0 (GstMatroskaTrackSubtitleContext, 1);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+
+    context->type = type;
+    context->name = name;
+    /* TODO: check default values for the context */
+    context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
+    collect_pad->track = context;
+    collect_pad->buffer = NULL;
+    collect_pad->duration = 0;
+    collect_pad->start_ts = GST_CLOCK_TIME_NONE;
+    collect_pad->end_ts = GST_CLOCK_TIME_NONE;
+  }
+}
+
+/**
+ * gst_matroska_pad_free:
+ * @collect_pad: the #GstMatroskaPad
+ *
+ * Release resources of a matroska collect pad.
+ */
+static void
+gst_matroska_pad_free (GstMatroskaPad * collect_pad)
+{
+  gst_matroska_pad_reset (collect_pad, TRUE);
 }
 
 
@@ -427,26 +490,17 @@ gst_matroska_mux_reset (GstElement * element)
   mux->state = GST_MATROSKA_MUX_STATE_START;
 
   /* clean up existing streams */
-  while ((walk = mux->collect->data) != NULL) {
+
+  for (walk = mux->collect->data; walk; walk = g_slist_next (walk)) {
     GstMatroskaPad *collect_pad;
     GstPad *thepad;
 
     collect_pad = (GstMatroskaPad *) walk->data;
     thepad = collect_pad->collect.pad;
 
-    /* remove from collectpads */
-    gst_collect_pads_remove_pad (mux->collect, thepad);
+    /* reset collect pad to pristine state */
+    gst_matroska_pad_reset (collect_pad, FALSE);
   }
-  mux->num_streams = 0;
-  mux->num_a_streams = 0;
-  mux->num_t_streams = 0;
-  mux->num_v_streams = 0;
-
-  /* reset writing_app */
-  if (mux->writing_app) {
-    g_free (mux->writing_app);
-  }
-  mux->writing_app = g_strdup ("GStreamer Matroska muxer");
 
   /* reset indexes */
   mux->num_indexes = 0;
@@ -566,6 +620,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaPad *collect_pad;
   GstStructure *structure;
   const gchar *mimetype;
+  const GValue *value = NULL;
+  const GstBuffer *codec_buf = NULL;
   gint width, height, pixel_width, pixel_height;
   gint fps_d, fps_n;
 
@@ -629,6 +685,11 @@ skip_details:
    *       - add new formats
    */
 
+  /* extract codec_data, may turn out needed */
+  value = gst_structure_get_value (structure, "codec_data");
+  if (value)
+    codec_buf = gst_value_get_buffer (value);
+
   /* find type */
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED);
@@ -643,56 +704,72 @@ skip_details:
       ||!strcmp (mimetype, "video/x-huffyuv")
       || !strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
-      || !strcmp (mimetype, "video/x-h263")) {
+      || !strcmp (mimetype, "video/x-h263")
+      || !strcmp (mimetype, "video/x-msmpeg")) {
     BITMAPINFOHEADER *bih;
-    const GValue *codec_data;
     gint size = sizeof (BITMAPINFOHEADER);
-
-    bih = g_new0 (BITMAPINFOHEADER, 1);
-    GST_WRITE_UINT32_LE (&bih->bi_size, size);
-    GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
-    GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
-    GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
-    GST_WRITE_UINT16_LE (&bih->bi_bit_count, (guint16) 24);
-    GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
-        videocontext->pixel_height * 3);
+    guint32 fourcc = 0;
 
     if (!strcmp (mimetype, "video/x-xvid"))
-      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("XVID"));
+      fourcc = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
     else if (!strcmp (mimetype, "video/x-huffyuv"))
-      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("HFYU"));
+      fourcc = GST_MAKE_FOURCC ('H', 'F', 'Y', 'U');
     else if (!strcmp (mimetype, "video/x-dv"))
-      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DVSD"));
+      fourcc = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');
     else if (!strcmp (mimetype, "video/x-h263"))
-      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("H263"));
+      fourcc = GST_MAKE_FOURCC ('H', '2', '6', '3');
     else if (!strcmp (mimetype, "video/x-divx")) {
       gint divxversion;
 
       gst_structure_get_int (structure, "divxversion", &divxversion);
       switch (divxversion) {
         case 3:
-          GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIV3"));
+          fourcc = GST_MAKE_FOURCC ('D', 'I', 'V', '3');
           break;
         case 4:
-          GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIVX"));
+          fourcc = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
           break;
         case 5:
-          GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DX50"));
+          fourcc = GST_MAKE_FOURCC ('D', 'X', '5', '0');
+          break;
+      }
+    } else if (!strcmp (mimetype, "video/x-msmpeg")) {
+      gint msmpegversion;
+
+      gst_structure_get_int (structure, "msmpegversion", &msmpegversion);
+      switch (msmpegversion) {
+        case 41:
+          fourcc = GST_MAKE_FOURCC ('M', 'P', 'G', '4');
+          break;
+        case 42:
+          fourcc = GST_MAKE_FOURCC ('M', 'P', '4', '2');
+          break;
+        case 43:
+          goto msmpeg43;
           break;
       }
     }
 
-    /* process codec private/initialization data, if any */
-    codec_data = gst_structure_get_value (structure, "codec_data");
-    if (codec_data) {
-      GstBuffer *codec_data_buf;
+    if (!fourcc)
+      return FALSE;
 
-      codec_data_buf = g_value_peek_pointer (codec_data);
-      size += GST_BUFFER_SIZE (codec_data_buf);
+    bih = g_new0 (BITMAPINFOHEADER, 1);
+    GST_WRITE_UINT32_LE (&bih->bi_size, size);
+    GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
+    GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
+    GST_WRITE_UINT32_LE (&bih->bi_compression, fourcc);
+    GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
+    GST_WRITE_UINT16_LE (&bih->bi_bit_count, (guint16) 24);
+    GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
+        videocontext->pixel_height * 3);
+
+    /* process codec private/initialization data, if any */
+    if (codec_buf) {
+      size += GST_BUFFER_SIZE (codec_buf);
       bih = g_realloc (bih, size);
       GST_WRITE_UINT32_LE (&bih->bi_size, size);
       memcpy ((guint8 *) bih + sizeof (BITMAPINFOHEADER),
-          GST_BUFFER_DATA (codec_data_buf), GST_BUFFER_SIZE (codec_data_buf));
+          GST_BUFFER_DATA (codec_buf), GST_BUFFER_SIZE (codec_buf));
     }
 
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
@@ -701,8 +778,6 @@ skip_details:
 
     return TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {
-    const GValue *codec_data;
-
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AVC);
 
     if (context->codec_priv != NULL) {
@@ -711,22 +786,12 @@ skip_details:
       context->codec_priv_size = 0;
     }
 
-
     /* Create avcC header */
-    codec_data = gst_structure_get_value (structure, "codec_data");
-
-    if (codec_data != NULL) {
-      guint8 *priv_data = NULL;
-      guint priv_data_size = 0;
-      GstBuffer *codec_data_buf = g_value_peek_pointer (codec_data);
-
-      priv_data_size = GST_BUFFER_SIZE (codec_data_buf);
-      priv_data = g_malloc0 (priv_data_size);
-
-      memcpy (priv_data, GST_BUFFER_DATA (codec_data_buf), priv_data_size);
-
-      context->codec_priv = priv_data;
-      context->codec_priv_size = priv_data_size;
+    if (codec_buf != NULL) {
+      context->codec_priv_size = GST_BUFFER_SIZE (codec_buf);
+      context->codec_priv = g_malloc0 (context->codec_priv_size);
+      memcpy (context->codec_priv, GST_BUFFER_DATA (codec_buf),
+          context->codec_priv_size);
     }
 
     return TRUE;
@@ -770,8 +835,18 @@ skip_details:
         return FALSE;
     }
 
+    /* global headers may be in codec data */
+    if (codec_buf != NULL) {
+      context->codec_priv_size = GST_BUFFER_SIZE (codec_buf);
+      context->codec_priv = g_malloc0 (context->codec_priv_size);
+      memcpy (context->codec_priv, GST_BUFFER_DATA (codec_buf),
+          context->codec_priv_size);
+    }
+
     return TRUE;
   } else if (!strcmp (mimetype, "video/x-msmpeg")) {
+  msmpeg43:
+    /* can only make it here if preceding case verified it was version 3 */
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MSMPEG4V3);
 
     return TRUE;
@@ -1438,12 +1513,8 @@ gst_matroska_mux_request_new_pad (GstElement * element,
       sizeof (GstMatroskaPad),
       (GstCollectDataDestroyNotify) gst_matroska_pad_free);
 
-  /* TODO: check default values for the context */
-  context->flags = GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT;
   collect_pad->track = context;
-  collect_pad->buffer = NULL;
-  collect_pad->start_ts = GST_CLOCK_TIME_NONE;
-  collect_pad->end_ts = GST_CLOCK_TIME_NONE;
+  gst_matroska_pad_reset (collect_pad, FALSE);
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
