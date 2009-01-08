@@ -1,3 +1,14 @@
+2009-01-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtsp/gstrtspurl.c: (register_rtsp_url_type),
+	(gst_rtsp_url_get_type), (gst_rtsp_url_copy):
+	* gst-libs/gst/rtsp/gstrtspurl.h:
+	* win32/common/libgstrtsp.def:
+	Add GType for GstRTSPUrl and expose a copy function because we can.
+	API: gst_rtsp_url_copy()
+	Fixes #567027.
+
 2009-01-07  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

@@ -44,6 +44,7 @@
 #define __GST_RTSP_URL_H__
 
 #include <glib.h>
+#include <glib-object.h>
 
 #include <gst/rtsp/gstrtspdefs.h>
 #include <gst/rtsp/gstrtsptransport.h>
@@ -56,6 +57,8 @@ G_BEGIN_DECLS
  * The default RTSP port to connect to.
  */
 #define GST_RTSP_DEFAULT_PORT       554
+
+#define GST_TYPE_RTSP_URL  (gst_rtsp_url_get_type())
 
 typedef struct _GstRTSPUrl GstRTSPUrl;
 
@@ -83,7 +86,10 @@ struct _GstRTSPUrl {
   gchar             *query;
 }; 
 
+GType gst_rtsp_url_get_type (void);
+
 GstRTSPResult      gst_rtsp_url_parse           (const gchar *urlstr, GstRTSPUrl **url);
+GstRTSPUrl*        gst_rtsp_url_copy            (GstRTSPUrl *url);
 void               gst_rtsp_url_free            (GstRTSPUrl *url);
 gchar*             gst_rtsp_url_get_request_uri (GstRTSPUrl *url);
 

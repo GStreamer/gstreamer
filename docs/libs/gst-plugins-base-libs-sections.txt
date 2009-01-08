@@ -1242,10 +1242,13 @@ gst_rtsp_message_dump
 GST_RTSP_DEFAULT_PORT
 GstRTSPUrl
 gst_rtsp_url_parse
+gst_rtsp_url_copy
 gst_rtsp_url_free
 gst_rtsp_url_get_request_uri
 gst_rtsp_url_set_port
 gst_rtsp_url_get_port
+<SUBSECTION Standard>
+gst_rtsp_url_get_type
 </SECTION>
 
 <SECTION>

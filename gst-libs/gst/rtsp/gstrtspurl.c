@@ -58,6 +58,24 @@
 
 #include "gstrtspurl.h"
 
+static void
+register_rtsp_url_type (GType * id)
+{
+  *id = g_boxed_type_register_static ("GstRTSPUrl",
+      (GBoxedCopyFunc) gst_rtsp_url_copy, (GBoxedFreeFunc) gst_rtsp_url_free);
+}
+
+GType
+gst_rtsp_url_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_rtsp_url_type, &id);
+  return id;
+}
+
+
 #define RTSP_PROTO      "rtsp://"
 #define RTSP_PROTO_LEN  7
 #define RTSPU_PROTO     "rtspu://"
@@ -174,6 +192,37 @@ invalid:
     gst_rtsp_url_free (res);
     return GST_RTSP_EINVAL;
   }
+}
+
+/**
+ * gst_rtsp_url_copy:
+ * @url: a #GstRTSPUrl
+ *
+ * Make a copy of @url.
+ *
+ * Returns: a copy of @url. Free with gst_rtsp_url_free () after usage.
+ *
+ * Since: 0.10.22
+ */
+GstRTSPUrl *
+gst_rtsp_url_copy (GstRTSPUrl * url)
+{
+  GstRTSPUrl *res;
+
+  g_return_val_if_fail (url != NULL, NULL);
+
+  res = g_new0 (GstRTSPUrl, 1);
+
+  res->transports = url->transports;
+  res->family = url->family;
+  res->user = g_strdup (url->user);
+  res->passwd = g_strdup (url->passwd);
+  res->host = g_strdup (url->host);
+  res->port = url->port;
+  res->abspath = g_strdup (url->abspath);
+  res->query = g_strdup (url->query);
+
+  return res;
 }
 
 /**
