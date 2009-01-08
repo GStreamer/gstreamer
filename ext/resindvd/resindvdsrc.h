@@ -85,6 +85,7 @@ struct _resinDvdSrc
 
   gboolean	running;
   gboolean	discont;
+  gboolean	first_seek;
   gboolean	flushing_seek;
   gboolean	need_segment;
   gboolean	active_highlight;

@@ -1,3 +1,16 @@
+2009-01-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/resindvdsrc.h:
+	* ext/resindvd/rsnaudiomunge.c:
+	Add support for time based seeking.
+	Make setting dvd:// reset to the default device.
+	Make the 'audiomunge' element send any new segment start before
+	the 'gap filler' buffer it generates, and any segment closes
+	after.
+	Fixes: #566957
+
 2009-01-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* ext/ladspa/gstladspa.c: (plugin_init):

@@ -337,6 +337,14 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
     goto fail;
   }
 
+  if (dvdnav_set_PGC_positioning_flag (src->dvdnav, 1) != DVDNAV_STATUS_OK) {
+    GST_ELEMENT_ERROR (src, LIBRARY, FAILED,
+        (_("Failed to set PGC based seeking.")), GST_ERROR_SYSTEM);
+    goto fail;
+  }
+
+
+  src->first_seek = TRUE;
   src->running = TRUE;
   src->branching = FALSE;
   src->discont = TRUE;
@@ -767,10 +775,16 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
     case DVDNAV_VTS_CHANGE:{
       dvdnav_vts_change_event_t *event = (dvdnav_vts_change_event_t *) data;
 
-      if (dvdnav_is_domain_vmgm (src->dvdnav))
+      if (dvdnav_is_domain_vmgm (src->dvdnav)) {
         src->vts_n = 0;
-      else
+      } else {
         src->vts_n = event->new_vtsN;
+        if (src->vts_file) {
+          ifoClose (src->vts_file);
+          src->vts_file = NULL;
+        }
+        src->vts_file = ifoOpen (src->dvdread, src->vts_n);
+      }
 
       src->in_menu = !dvdnav_is_domain_vtsm (src->dvdnav);
 
@@ -1873,23 +1887,90 @@ rsn_dvdsrc_prepare_seek (RsnBaseSrc * bsrc, GstEvent * event,
       event, segment);
 }
 
+/* Find sector from time using time map if available */
+static gint
+rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
+{
+  vts_tmapt_t *vts_tmapt;
+  vts_tmap_t *title_tmap;
+  gint32 title, part, vts_ttn;
+  guint32 entry;
+
+  if (ts == 0)
+    return 0;
+
+  if (src->vts_file == NULL)
+    return -1;
+
+  if (dvdnav_current_title_info (src->dvdnav, &title, &part) !=
+      DVDNAV_STATUS_OK)
+    return -1;
+
+  /* To find the right tmap, we need the title number within this VTS (vts_ttn)
+   * from the VMG tt_srpt table... */
+  if (title < 1 || title >= src->vmg_file->tt_srpt->nr_of_srpts)
+    return -1;
+
+  vts_tmapt = src->vts_file->vts_tmapt;
+  if (vts_tmapt == NULL)
+    return -1;
+
+  vts_ttn = src->vmg_file->tt_srpt->title[title - 1].vts_ttn;
+
+  if (vts_ttn < 1 || vts_ttn > vts_tmapt->nr_of_tmaps)
+    return -1;
+
+  title_tmap = vts_tmapt->tmap + vts_ttn - 1;
+  entry = ts / (title_tmap->tmu * GST_SECOND);
+
+  if (entry < title_tmap->nr_of_entries)
+    return title_tmap->map_ent[entry] & 0x7fffffff;
+
+  return -1;
+}
+
+/* call with DVD lock held */
+static gboolean
+rsn_dvdsrc_seek_to_time (resinDvdSrc * src, GstClockTime ts)
+{
+  gint sector;
+  dvdnav_status_t res;
+
+  GST_DEBUG_OBJECT (src, "Time seek requested to ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (ts));
+
+  sector = rsn_dvdsrc_get_sector_from_time_tmap (src, ts);
+  if (sector < 0)
+    return FALSE;
+
+  src->discont = TRUE;
+  res = dvdnav_sector_search (src->dvdnav, sector, SEEK_SET);
+
+  if (res != DVDNAV_STATUS_OK)
+    return FALSE;
+
+  return TRUE;
+}
+
 static gboolean
 rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
 {
   resinDvdSrc *src = RESINDVDSRC (bsrc);
   gboolean ret = FALSE;
 
-  if (segment->format == rsndvd_format) {
+  if (segment->format == rsndvd_format || src->first_seek) {
     /* The internal format has alread served its purpose of waking
      * everything up and flushing, we just need to step to the next
      * data block (below) so we know our new position */
     ret = TRUE;
+    src->first_seek = FALSE;
   } else {
     /* FIXME: Handle other formats: Time, title, chapter, angle */
     /* HACK to make initial seek work: */
     if (segment->format == GST_FORMAT_TIME) {
-      ret = TRUE;
-      src->discont = TRUE;
+      g_mutex_lock (src->dvd_lock);
+      ret = rsn_dvdsrc_seek_to_time (src, segment->start);
+      g_mutex_unlock (src->dvd_lock);
     } else if (segment->format == title_format) {
       gint titles;
 

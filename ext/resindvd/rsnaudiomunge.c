@@ -311,6 +311,15 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
        * Otherwise, send the buffer before the newsegment, so that it appears
        * in the closing segment.
        */
+      if (!update) {
+        GST_DEBUG_OBJECT (munge, "Sending newsegment: start %" GST_TIME_FORMAT
+            " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+            GST_TIME_ARGS (segment->accum));
+
+        ret = gst_pad_push_event (munge->srcpad, event);
+      }
+
       if (segment->accum >= AUDIO_FILL_THRESHOLD || munge->in_still) {
         g_print ("***********  Sending audio fill: accum = %" GST_TIME_FORMAT
             " still-state=%d\n", GST_TIME_ARGS (segment->accum),
@@ -326,12 +335,15 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
             GST_TIME_ARGS (segment->accum));
       }
 
-      GST_DEBUG_OBJECT (munge, "Sending newsegment: start %" GST_TIME_FORMAT
-          " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-          GST_TIME_ARGS (segment->accum));
+      if (update) {
+        GST_DEBUG_OBJECT (munge, "Sending newsegment: start %" GST_TIME_FORMAT
+            " stop %" GST_TIME_FORMAT " accum now %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+            GST_TIME_ARGS (segment->accum));
 
-      ret = gst_pad_push_event (munge->srcpad, event);
+        ret = gst_pad_push_event (munge->srcpad, event);
+      }
+
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:

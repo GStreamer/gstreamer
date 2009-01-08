@@ -230,7 +230,10 @@ rsn_dvdbin_uri_set_uri (GstURIHandler * handler, const gchar * uri)
    */
   if (g_str_has_prefix (uri, "dvd://")) {
     g_free (dvdbin->device);
-    dvdbin->device = g_strdup (uri + 6);
+    if (strlen (uri) > 6)
+      dvdbin->device = g_strdup (uri + 6);
+    else
+      dvdbin->device = g_strdup (DEFAULT_DEVICE);
   }
 #if 0
   /*
