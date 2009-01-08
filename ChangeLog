@@ -1,3 +1,9 @@
+2009-01-08  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* ext/ladspa/gstladspa.c: (plugin_init):
+	Add plugin dependency for the LADSPA plugin directories.
+	Fixes bug #566878.
+
 2009-01-06  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/check/Makefile.am:

@@ -620,6 +620,11 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_BLACK | GST_DEBUG_BOLD, "LADSPA");
 
+  gst_plugin_add_dependency_simple (plugin,
+      "LADSPA_PATH",
+      "/usr/lib/ladspa:/usr/local/lib/ladspa",
+      NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   ladspa_plugin = plugin;
