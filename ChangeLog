@@ -1,3 +1,11 @@
+2009-01-08  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Based on Patch by: Brian Cameron <brian dot cameron at sun dot com>
+
+	* ext/ladspa/search.c: (LADSPAPluginSearch):
+	Avoid searching (null) paths or crashing on platforms where printing a
+	NULL string segfaults. Fixes #567004.
+
 2009-01-08  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/resindvdbin.c:

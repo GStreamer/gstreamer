@@ -98,13 +98,19 @@ LADSPAPluginSearch (LADSPAPluginSearchCallbackFunction fCallbackFunction)
   const char *pcEnd;
   const char *pcLADSPAPath;
   const char *pcStart;
+  char *search_path;
 
   /* thomasvs: I'm sorry, but I'm going to add glib stuff here.
    * I'm appending logical values for LADSPA_PATH here
    */
 
-  pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
-      getenv ("LADSPA_PATH"));
+  search_path = getenv ("LADSPA_PATH");
+  if (search_path) {
+    pcLADSPAPath = g_strdup_printf ("%s:/usr/lib/ladspa:/usr/local/lib/ladspa",
+        search_path);
+  } else {
+    pcLADSPAPath = g_strdup ("/usr/lib/ladspa:/usr/local/lib/ladspa");
+  }
 
   if (!pcLADSPAPath) {
 /*    fprintf(stderr, */
