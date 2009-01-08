@@ -2,6 +2,7 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 SUBDIRS = 		\
 	gst \
+	bindings	\
 	m4   		\
 	common \
 	pkgconfig \

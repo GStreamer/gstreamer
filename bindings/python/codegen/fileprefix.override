@@ -1,0 +1,12 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
+%%
+headers
+/* include any required headers here */
+%%
+init
+    /* include any code here that needs to be executed before the
+     * extension classes get initialised */
+%%
+
+/* you should add appropriate ignore, ignore-glob and
+ * override sections here */

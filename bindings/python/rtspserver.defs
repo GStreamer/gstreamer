@@ -1,0 +1,16 @@
+(include "rtspserver-types.defs")
+
+(define-function rtsp_server_new
+  (c-name "gst_rtsp_server_new")
+  (is-constructor-of "GstRTSPServer")
+  (return-type "GstRTSPServer*")
+)
+
+(define-method attach
+  (of-object "GstRTSPServer")
+  (c-name "gst_rtsp_server_attach")
+  (return-type "guint")
+  (parameters
+    '("GMainContext*" "context")
+  )
+)

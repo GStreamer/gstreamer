@@ -1,0 +1,52 @@
+/* -*- Mode: C; c-basic-offset: 4 -*- */
+%%
+headers
+/* include any required headers here */
+#define NO_IMPORT_PYGOBJECT
+#include <pygobject.h>
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+/* Boonky define that allows for backwards compatibility with Python 2.4 */
+#if PY_VERSION_HEX < 0x02050000 
+#define Py_ssize_t int
+#endif 
+
+#include "rtsp-server.h"
+
+typedef struct {
+    PyObject_HEAD
+    GMainContext *context;
+} PyGMainContext;
+
+%%
+import gobject.GObject as PyGObject_Type
+import gobject.MainContext as PyGMainContext_Type
+
+%%
+override gst_rtsp_server_attach kwargs
+static PyObject *
+_wrap_gst_rtsp_server_attach (PyGObject *self,
+		PyObject *args, PyObject *keywords)
+{
+	static char *kwlist[] = {"context", NULL};
+	PyGMainContext *py_context = NULL;
+	GMainContext *context = NULL;
+	guint res;
+
+	if (!PyArg_ParseTupleAndKeywords (args, keywords,
+			"|O!:GstRTSPServer.__init__", kwlist,
+			&PyGMainContext_Type, &py_context))
+		return NULL;
+
+	if (py_context)
+		context = py_context->context;
+
+	pyg_begin_allow_threads;
+	res = gst_rtsp_server_attach (GST_RTSP_SERVER (self->obj), context);
+	pyg_end_allow_threads;
+
+	return PyLong_FromLong (res);
+}

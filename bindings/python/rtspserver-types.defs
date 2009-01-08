@@ -1,0 +1,6 @@
+(define-object Server
+  (in-module "Gst.RTSPServer")
+  (parent "GObject")
+  (c-name "GstRTSPServer")
+  (gtype-id "GST_TYPE_RTSP_SERVER")
+)

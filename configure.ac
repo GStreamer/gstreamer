@@ -68,6 +68,11 @@ dnl *** checks for programs ***
 
 dnl find a compiler
 AC_PROG_CC
+AM_PROG_CC_C_O
+
+dnl check for python
+AM_PATH_PYTHON(2.3)
+AM_CHECK_PYTHON_HEADERS([HAVE_PYTHON_HEADERS="yes"], [HAVE_PYTHON_HEADERS="no"])
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
@@ -109,6 +114,7 @@ if test "x$HAVE_PYTHON_HEADERS" = "xyes" -a \
 else
   HAVE_PYTHON_BINDINGS="no"
 fi
+
 AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYTHON_BINDINGS" = "xyes"])
 
 dnl Check for vala
@@ -128,7 +134,6 @@ if test "x$HAVE_VALA" = "xyes"; then
 fi
 AC_SUBST(VAPIDIR)
 	
-
 dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
@@ -267,6 +272,8 @@ gst/Makefile
 gst/rtsp-server/Makefile
 examples/Makefile
 bindings/Makefile
+bindings/python/Makefile
+bindings/python/codegen/Makefile
 bindings/vala/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-rtsp-server.pc
@@ -281,6 +288,7 @@ Configuration
 	Prefix                     : ${prefix}
 	Compiler                   : ${CC}
 	Vala bindings              : ${HAVE_VALA}
+	Python bindings:           : ${HAVE_PYTHON_BINDINGS}
 
 Gst-rtsp-server configured. Type 'make' to build.
 "

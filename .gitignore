@@ -1,4 +1,5 @@
 *.[oa]
+*.pyc
 *.gcda
 *.gcno
 *.la
@@ -28,3 +29,5 @@ libtool
 ltmain.sh
 missing
 stamp-h1
+bindings/python/rtspserver.c
+tags
