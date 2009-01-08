@@ -88,6 +88,8 @@ handle_teardown_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
 
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, client->media);
+  if (!media)
+    goto not_found;
 
   gst_rtsp_session_media_stop (media);
 
@@ -116,6 +118,11 @@ service_unavailable:
   {
     return FALSE;
   }
+not_found:
+  {
+    handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -139,6 +146,8 @@ handle_pause_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
 
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, client->media);
+  if (!media)
+    goto not_found;
 
   gst_rtsp_session_media_pause (media);
   g_object_unref (session);
@@ -159,6 +168,11 @@ session_not_found:
   }
 service_unavailable:
   {
+    return FALSE;
+  }
+not_found:
+  {
+    handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
     return FALSE;
   }
 }
@@ -188,6 +202,8 @@ handle_play_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *r
 
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, client->media);
+  if (!media)
+    goto not_found;
 
   /* wait for paused to get the caps */
   ret = gst_rtsp_session_media_pause (media);
@@ -244,6 +260,11 @@ session_not_found:
 service_unavailable:
   {
     handle_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, request);
+    return FALSE;
+  }
+not_found:
+  {
+    handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
     return FALSE;
   }
 }
@@ -330,6 +351,8 @@ handle_setup_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
 
   /* get a handle to the configuration of the media in the session */
   media = gst_rtsp_session_get_media (session, client->media);
+  if (!media)
+    goto not_found;
 
   /* parse the stream we need to configure */
   if (!(pos = strstr (uri, "stream=")))
