@@ -76,10 +76,40 @@ dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
 
-dnl GTK is optional and used in examples
-HAVE_GTK=NO
-PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
-AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
+AC_SUBST(PYGOBJECT_REQ, 2.11.2)
+
+dnl check for pygobject (optional, used in the bindings)
+PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
+  [
+    HAVE_PYGOBJECT="yes"
+  ],
+  [
+    HAVE_PYGOBJECT="no"
+  ])
+AC_SUBST(PYGOBJECT_CFLAGS)
+
+dnl check for gst-python
+PKG_CHECK_MODULES(PYGST, gst-python-0.10,
+  [
+    HAVE_PYGST="yes"
+  ],
+  [
+    HAVE_PYGST="no"
+  ])
+
+if test "x$HAVE_PYGST" = "xyes"; then
+  PYGST_DEFSDIR=`pkg-config gst-python-0.10 --variable=defsdir`
+fi
+AC_SUBST(PYGST_DEFSDIR, $PYGST_DEFSDIR)
+
+if test "x$HAVE_PYTHON_HEADERS" = "xyes" -a \
+    "x$HAVE_PYGOBJECT" = "xyes" -a \
+    "x$HAVE_PYGST" = "xyes"; then
+  HAVE_PYTHON_BINDINGS="yes"
+else
+  HAVE_PYTHON_BINDINGS="no"
+fi
+AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYTHON_BINDINGS" = "xyes"])
 
 dnl Check for vala
 PKG_CHECK_EXISTS([vala-1.0], [HAVE_VALA="yes"], [HAVE_VALA="no"])
