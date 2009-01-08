@@ -81,6 +81,24 @@ HAVE_GTK=NO
 PKG_CHECK_MODULES(GTK, gtk+-2.0 >= 2.8.0, HAVE_GTK=yes, HAVE_GTK=no)
 AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
+dnl Check for vala
+PKG_CHECK_EXISTS([vala-1.0], [HAVE_VALA="yes"], [HAVE_VALA="no"])
+
+AM_CONDITIONAL(WITH_VALA, [test "x$HAVE_VALA" = "xyes"])
+
+AC_ARG_WITH([vapidir],
+  AS_HELP_STRING([--with-vapidir], [Define where to install the VAPI files]))
+	
+if test "x$HAVE_VALA" = "xyes"; then
+  if test "x$with_vapidir" = "x"; then
+  	VAPIDIR="`pkg-config --variable vapidir vala-1.0`" 
+  else
+    VAPIDIR="$with_vapidir"
+  fi
+fi
+AC_SUBST(VAPIDIR)
+	
+
 dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
@@ -219,11 +237,20 @@ gst/Makefile
 gst/rtsp-server/Makefile
 examples/Makefile
 bindings/Makefile
-bindings/python/Makefile
-bindings/python/codegen/Makefile
+bindings/vala/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-rtsp-server.pc
 ])
 AC_OUTPUT
 
-echo "Gst-rtsp-server configured. Type 'make' to build."
+echo "
+
+Configuration
+	Version                    : ${VERSION}
+	Source code location       : ${srcdir}
+	Prefix                     : ${prefix}
+	Compiler                   : ${CC}
+	Vala bindings              : ${HAVE_VALA}
+
+Gst-rtsp-server configured. Type 'make' to build.
+"
