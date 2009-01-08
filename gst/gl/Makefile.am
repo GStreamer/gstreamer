@@ -71,9 +71,7 @@ libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) \
-	-lGLEW \
-	-lGLU \
-	-lGL
+	$(GL_LIBS)
 if HAVE_GDKPIXBUF
 libgstopengl_la_LIBADD += $(GDKPIXBUF_LIBS)
 endif

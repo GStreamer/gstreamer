@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libgstgl-@GST_MAJORMINOR@.la
 
 libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
-  gstglwindow_x11.c \
+	gstglwindow_win32.c \
 	gstgldisplay.c \
 	gstglbuffer.c \
 	gstglfilter.c \
@@ -19,7 +19,7 @@ libgstgl_@GST_MAJORMINOR@include_HEADERS = \
 libgstgl_@GST_MAJORMINOR@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
-	-lGLU -lGLEW $(GL_LIBS) $(X_LIBS)
+	$(GL_LIBS)
 
 libgstgl_@GST_MAJORMINOR@_la_CFLAGS = \
 	$(GL_CFLAGS) $(X_CFLAGS) \
