@@ -1,3 +1,12 @@
+2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* ext/resindvd/resindvdsrc.c:
+	Additional patch for resin fixes time-based seeking in titles
+	that don't start at sector 0 in the VTS, and fixes interpretation
+	of the cell elapsed time, so that it reports the correct time after
+	the seek completes.
+	Really fixes #566957.
+
 2009-01-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Based on Patch by: Brian Cameron <brian dot cameron at sun dot com>
