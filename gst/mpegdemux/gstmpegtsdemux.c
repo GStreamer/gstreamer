@@ -2445,6 +2445,21 @@ gst_fluts_demux_src_pad_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+      gint64 duration;
+
+      gst_query_parse_duration (query, &format, &duration);
+
+      if (format == GST_FORMAT_BYTES) {
+        res = FALSE;
+      } else {
+        res = gst_pad_query_default (pad, query);
+      }
+
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
   }
