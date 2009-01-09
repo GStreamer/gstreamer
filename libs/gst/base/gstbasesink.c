@@ -1346,6 +1346,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 
       /* make sure we notify the subclass of async playing */
       if (bclass->async_play) {
+        GST_WARNING_OBJECT (basesink, "deprecated async_play");
         ret = bclass->async_play (basesink);
         if (ret == GST_STATE_CHANGE_FAILURE)
           goto async_failed;
@@ -1644,7 +1645,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
  * Returns: #GstClockReturn
  */
 GstClockReturn
-gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
+gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
     GstClockTimeDiff * jitter)
 {
   GstClockID id;
@@ -1654,51 +1655,51 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     goto invalid_time;
 
-  GST_OBJECT_LOCK (basesink);
-  if (G_UNLIKELY (!basesink->sync))
+  GST_OBJECT_LOCK (sink);
+  if (G_UNLIKELY (!sink->sync))
     goto no_sync;
 
-  if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (basesink)) == NULL))
+  if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (sink)) == NULL))
     goto no_clock;
 
   /* add base_time to running_time to get the time against the clock */
-  time += GST_ELEMENT_CAST (basesink)->base_time;
+  time += GST_ELEMENT_CAST (sink)->base_time;
 
   id = gst_clock_new_single_shot_id (clock, time);
-  GST_OBJECT_UNLOCK (basesink);
+  GST_OBJECT_UNLOCK (sink);
 
   /* A blocking wait is performed on the clock. We save the ClockID
    * so we can unlock the entry at any time. While we are blocking, we 
    * release the PREROLL_LOCK so that other threads can interrupt the
    * entry. */
-  basesink->clock_id = id;
+  sink->clock_id = id;
   /* release the preroll lock while waiting */
-  GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
+  GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
 
   ret = gst_clock_id_wait (id, jitter);
 
-  GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+  GST_PAD_PREROLL_LOCK (sink->sinkpad);
   gst_clock_id_unref (id);
-  basesink->clock_id = NULL;
+  sink->clock_id = NULL;
 
   return ret;
 
   /* no syncing needed */
 invalid_time:
   {
-    GST_DEBUG_OBJECT (basesink, "time not valid, no sync needed");
+    GST_DEBUG_OBJECT (sink, "time not valid, no sync needed");
     return GST_CLOCK_BADTIME;
   }
 no_sync:
   {
-    GST_DEBUG_OBJECT (basesink, "sync disabled");
-    GST_OBJECT_UNLOCK (basesink);
+    GST_DEBUG_OBJECT (sink, "sync disabled");
+    GST_OBJECT_UNLOCK (sink);
     return GST_CLOCK_BADTIME;
   }
 no_clock:
   {
-    GST_DEBUG_OBJECT (basesink, "no clock, can't sync");
-    GST_OBJECT_UNLOCK (basesink);
+    GST_DEBUG_OBJECT (sink, "no clock, can't sync");
+    GST_OBJECT_UNLOCK (sink);
     return GST_CLOCK_BADTIME;
   }
 }
