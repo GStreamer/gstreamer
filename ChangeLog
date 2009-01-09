@@ -1,3 +1,8 @@
+2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	pre-release 0.10.21.3
+
 2009-01-09  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_commit_state),
