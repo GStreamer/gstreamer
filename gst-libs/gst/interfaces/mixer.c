@@ -139,6 +139,8 @@ gst_mixer_class_init (GstMixerClass * klass)
  * it is allowed to only provide input elements in this list.
  *
  * Returns: A #GList consisting of zero or more #GstMixerTracks.
+ *          The list is owned by the #GstMixer instance and must not be freed
+ *          or modified.
  */
 
 const GList *

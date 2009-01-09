@@ -1,3 +1,9 @@
+2009-01-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst-libs/gst/interfaces/mixer.c:
+	  Small docs addition to clarify that one really mustn't free
+	  the constant GList returned (#566812).
+	  
 2009-01-08  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
