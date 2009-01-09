@@ -353,7 +353,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    *
    * Returns: a #GstBuffer or NULL when the appsink is stopped or EOS.
    */
-  gst_app_sink_signals[SIGNAL_PULL_PREROLL] =
+  gst_app_sink_signals[SIGNAL_PULL_BUFFER] =
       g_signal_new ("pull-buffer", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
           pull_buffer), NULL, NULL, gst_app_marshal_OBJECT__VOID,

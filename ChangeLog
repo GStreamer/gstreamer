@@ -1,3 +1,11 @@
+2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/app/gstappsink.c:
+	Store the returned signal id in the right slot when
+	registering the pull-buffer signal.
+	Fixes #567168
+	Spotted by: Thomas Vander Stichele  <thomas at apestaart dot org>
+
 2009-01-09  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst-libs/gst/interfaces/mixer.c:
