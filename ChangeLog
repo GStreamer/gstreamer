@@ -1,3 +1,8 @@
+2009-01-09  David Schleef  <ds@schleef.org>
+
+	* gst/qtmux/gstqtmuxmap.c: Add video/x-qt-part and video/x-m4-part
+	to caps so schroenc/schroparse can use it.  Fixes #566958
+
 2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* ext/resindvd/resindvdsrc.c:

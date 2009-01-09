@@ -135,7 +135,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "systemstream = (boolean) false, "
             COMMON_VIDEO_CAPS "; "
             "image/jpeg, "
-            COMMON_VIDEO_CAPS_NO_FRAMERATE "; " "video/x-qt-part"),
+            COMMON_VIDEO_CAPS_NO_FRAMERATE "; "
+            "video/x-qt-part, " COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (PCM_CAPS_FULL "; "
             MP3_CAPS " ; "
             AAC_CAPS " ; "
@@ -153,7 +154,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "GstMP4Mux",
         /* FIXME does not feel right, due to qt caps mess */
         GST_STATIC_CAPS ("video/quicktime"),
-        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS),
+        GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
+            "video/x-mp4-part," COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS)
       }
   ,
