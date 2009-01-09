@@ -1,3 +1,8 @@
+2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* configure.ac:
+	0.10.9.3 pre-release
+
 2009-01-09  David Schleef  <ds@schleef.org>
 
 	* gst/mpegdemux/gstmpegtsdemux.c:
