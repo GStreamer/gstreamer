@@ -1,5 +1,10 @@
 2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* configure.ac:
+	0.10.21.3 pre-release
+
+2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst-libs/gst/app/gstappsink.c:
 	Store the returned signal id in the right slot when
 	registering the pull-buffer signal.
