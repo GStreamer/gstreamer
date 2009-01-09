@@ -1,8 +1,12 @@
 
 lib_LTLIBRARIES = libgstgl-@GST_MAJORMINOR@.la
 
+EXTRA_DIST = \
+	gstglwindow_x11.c \
+	gstglwindow_win32.c
+
 libgstgl_@GST_MAJORMINOR@_la_SOURCES = \
-	gstglwindow_win32.c \
+	gstglwindow_@GL_BACKEND@.c \
 	gstgldisplay.c \
 	gstglbuffer.c \
 	gstglfilter.c \
