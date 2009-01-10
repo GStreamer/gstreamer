@@ -21,25 +21,25 @@
 #ifndef __GST_GL_EFFECTS_SOURCES_H__
 #define __GST_GL_EFFECTS_SOURCES_H__
 
-const gchar *mirror_fragment_source;
-const gchar *squeeze_fragment_source;
-const gchar *stretch_fragment_source;
-const gchar *tunnel_fragment_source;
-const gchar *fisheye_fragment_source;
-const gchar *twirl_fragment_source;
-const gchar *bulge_fragment_source;
-const gchar *square_fragment_source;
-const gchar *luma_threshold_fragment_source;
-const gchar *sobel_fragment_source;
-const gchar *hconv9_fragment_source;
-const gchar *vconv9_fragment_source;
-const gchar *sum_fragment_source;
-const gchar *luma_to_curve_fragment_source;
-const gchar *rgb_to_curve_fragment_source;
-const gchar *sin_fragment_source;
-const gchar *interpolate_fragment_source;
-const gchar *texture_interp_fragment_source;
-const gchar *difference_fragment_source;
-const gchar *multiply_fragment_source;
+extern const gchar *mirror_fragment_source;
+extern const gchar *squeeze_fragment_source;
+extern const gchar *stretch_fragment_source;
+extern const gchar *tunnel_fragment_source;
+extern const gchar *fisheye_fragment_source;
+extern const gchar *twirl_fragment_source;
+extern const gchar *bulge_fragment_source;
+extern const gchar *square_fragment_source;
+extern const gchar *luma_threshold_fragment_source;
+extern const gchar *sobel_fragment_source;
+extern const gchar *hconv9_fragment_source;
+extern const gchar *vconv9_fragment_source;
+extern const gchar *sum_fragment_source;
+extern const gchar *luma_to_curve_fragment_source;
+extern const gchar *rgb_to_curve_fragment_source;
+extern const gchar *sin_fragment_source;
+extern const gchar *interpolate_fragment_source;
+extern const gchar *texture_interp_fragment_source;
+extern const gchar *difference_fragment_source;
+extern const gchar *multiply_fragment_source;
 
 #endif /* __GST_GL_EFFECTS_SOURCES_H__ */
