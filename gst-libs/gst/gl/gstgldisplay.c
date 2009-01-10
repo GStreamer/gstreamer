@@ -1128,6 +1128,13 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay *display)
 
   //-- generate frame buffer object
 
+  if (!GLEW_EXT_framebuffer_object) {
+    //turn off the pipeline because Frame buffer object is a not present
+    GST_WARNING ("Context, EXT_framebuffer_object supported: no");
+    display->isAlive = FALSE;
+    return;
+  }
+
   //setup FBO
   glGenFramebuffersEXT (1, &display->generated_fbo);
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->generated_fbo);
