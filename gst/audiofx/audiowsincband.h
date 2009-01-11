@@ -3,6 +3,7 @@
  * GStreamer
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
+ *               2007-2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -33,10 +34,12 @@
 #include <gst/gst.h>
 #include <gst/audio/gstaudiofilter.h>
 
+#include "audiofxbasefirfilter.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_AUDIO_WSINC_BAND \
-  (audio_wsincband_get_type())
+  (gst_audio_wsincband_get_type())
 #define GST_AUDIO_WSINC_BAND(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_WSINC_BAND,GstAudioWSincBand))
 #define GST_AUDIO_WSINC_BAND_CLASS(klass) \
@@ -49,38 +52,26 @@ G_BEGIN_DECLS
 typedef struct _GstAudioWSincBand GstAudioWSincBand;
 typedef struct _GstAudioWSincBandClass GstAudioWSincBandClass;
 
-typedef void (*GstAudioWSincBandProcessFunc) (GstAudioWSincBand *, guint8 *, guint8 *, guint);
-
 /**
  * GstAudioWSincBand:
  *
  * Opaque data structure.
  */
 struct _GstAudioWSincBand {
-  GstAudioFilter element;
+  GstAudioFXBaseFIRFilter parent;
 
   /* < private > */
-  GstAudioWSincBandProcessFunc process;
-
   gint mode;
   gint window;
   gfloat lower_frequency, upper_frequency;
   gint kernel_length;           /* length of the filter kernel */
-
-  gdouble *residue;             /* buffer for left-over samples from previous buffer */
-  gdouble *kernel;
-  gboolean have_kernel;
-  gint residue_length;
-  guint64 latency;
-  GstClockTime next_ts;
-  guint64 next_off;
 };
 
 struct _GstAudioWSincBandClass {
-  GstAudioFilterClass parent_class;
+  GstAudioFilterClass parent;
 };
 
-GType audio_wsincband_get_type (void);
+GType gst_audio_wsincband_get_type (void);
 
 G_END_DECLS
 

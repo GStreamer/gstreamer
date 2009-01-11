@@ -12,6 +12,7 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audiofxbaseiirfilter.c \
 	audiocheblimit.c \
 	audiochebband.c \
+	audiofxbasefirfilter.c \
 	audiowsincband.c \
 	audiowsinclimit.c
 
@@ -38,6 +39,7 @@ noinst_HEADERS = audiopanorama.h \
 	audiofxbaseiirfilter.h \
 	audiocheblimit.h \
 	audiochebband.h \
+	audiofxbasefirfilter.h \
 	audiowsincband.h \
         audiowsinclimit.h \
 	math_compat.h

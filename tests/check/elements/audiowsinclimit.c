@@ -117,6 +117,7 @@ GST_START_TEST (test_32_lp_0hz)
   /* cutoff = sampling rate / 4, data = 0 */
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
@@ -175,6 +176,7 @@ GST_START_TEST (test_32_lp_22050hz)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
@@ -235,6 +237,7 @@ GST_START_TEST (test_32_hp_0hz)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
@@ -293,6 +296,7 @@ GST_START_TEST (test_32_hp_22050hz)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
@@ -352,6 +356,7 @@ GST_START_TEST (test_32_small_buffer)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gfloat *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
@@ -398,6 +403,7 @@ GST_START_TEST (test_64_lp_0hz)
   /* cutoff = sampling rate / 4, data = 0 */
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
@@ -456,6 +462,7 @@ GST_START_TEST (test_64_lp_22050hz)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
@@ -516,6 +523,7 @@ GST_START_TEST (test_64_hp_0hz)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
@@ -574,6 +582,7 @@ GST_START_TEST (test_64_hp_22050hz)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
     in[i] = 1.0;
@@ -633,6 +642,7 @@ GST_START_TEST (test_64_small_buffer)
 
   g_object_set (G_OBJECT (audiowsinclimit), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gdouble));
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)
     in[i] = 1.0;

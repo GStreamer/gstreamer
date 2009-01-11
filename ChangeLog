@@ -1,3 +1,46 @@
+2009-01-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiofxbasefirfilter.c:
+	(gst_audio_fx_base_fir_filter_dispose),
+	(gst_audio_fx_base_fir_filter_base_init),
+	(gst_audio_fx_base_fir_filter_class_init),
+	(gst_audio_fx_base_fir_filter_init),
+	(gst_audio_fx_base_fir_filter_push_residue),
+	(gst_audio_fx_base_fir_filter_setup),
+	(gst_audio_fx_base_fir_filter_transform),
+	(gst_audio_fx_base_fir_filter_start),
+	(gst_audio_fx_base_fir_filter_stop),
+	(gst_audio_fx_base_fir_filter_query),
+	(gst_audio_fx_base_fir_filter_query_type),
+	(gst_audio_fx_base_fir_filter_event),
+	(gst_audio_fx_base_fir_filter_set_kernel):
+	* gst/audiofx/audiofxbasefirfilter.h:
+	* gst/audiofx/audiofxbaseiirfilter.c:
+	Implement a base class for generic audio FIR filters.
+
+	* gst/audiofx/audiowsincband.c:
+	(gst_gst_audio_wsincband_mode_get_type),
+	(gst_gst_audio_wsincband_window_get_type),
+	(gst_audio_wsincband_base_init), (gst_audio_wsincband_class_init),
+	(gst_audio_wsincband_init), (gst_audio_wsincband_build_kernel),
+	(gst_audio_wsincband_setup), (gst_audio_wsincband_set_property),
+	(gst_audio_wsincband_get_property):
+	* gst/audiofx/audiowsincband.h:
+	* gst/audiofx/audiowsinclimit.c:
+	(gst_audio_wsinclimit_mode_get_type),
+	(gst_audio_wsinclimit_window_get_type),
+	(gst_audio_wsinclimit_base_init),
+	(gst_audio_wsinclimit_class_init), (gst_audio_wsinclimit_init),
+	(gst_audio_wsinclimit_build_kernel), (gst_audio_wsinclimit_setup),
+	(gst_audio_wsinclimit_set_property),
+	(gst_audio_wsinclimit_get_property):
+	* gst/audiofx/audiowsinclimit.h:
+	* tests/check/elements/audiowsincband.c: (GST_START_TEST):
+	* tests/check/elements/audiowsinclimit.c: (GST_START_TEST):
+	Use this new base class for audiowsincband and audiowsinclimit.
+	Also cleanup both elements.
+
 2009-01-08  Michael Smith <msmith@songbirdnest.com>
 
 	* gst/qtdemux/qtdemux.c:

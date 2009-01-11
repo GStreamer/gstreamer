@@ -43,7 +43,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
     " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_iir_filter_debug, "audiobaseiirfilter", 0, "Audio IIR Filter Base Class");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_fx_base_iir_filter_debug, "audiofxbaseiirfilter", 0, "Audio IIR Filter Base Class");
 
 GST_BOILERPLATE_FULL (GstAudioFXBaseIIRFilter,
     gst_audio_fx_base_iir_filter, GstAudioFilter, GST_TYPE_AUDIO_FILTER,
