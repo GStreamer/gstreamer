@@ -144,7 +144,7 @@ type_as_function ## _get_type (void)					\
   /* The typedef for GType may be gulong or gsize, depending on the	\
    * system and whether the compiler is c++ or not. The g_once_init_*	\
    * functions always take a gsize * though ... */			\
-  static volatile gsize gonce_data;					\
+  static volatile gsize gonce_data = 0;					\
   if (__gst_once_init_enter (&gonce_data)) {				\
     GType _type;							\
     _type = gst_type_register_static_full (parent_type_macro,           \
