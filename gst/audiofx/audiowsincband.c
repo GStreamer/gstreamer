@@ -26,13 +26,6 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
- * TODO:  - Implement the convolution in place, probably only makes sense
- *          when using FFT convolution as currently the convolution itself
- *          is probably the bottleneck
- *        - Maybe allow cascading the filter to get a better stopband attenuation.
- *          Can be done by convolving a filter kernel with itself
- *        - Drop the first kernel_length/2 samples and append the same number of
- *          samples on EOS as the first few samples are essentialy zero.
  */
 
 /**
@@ -150,6 +143,7 @@ static void gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_wsincband_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_audio_wsincband_finalize (GObject * object);
 
 static gboolean gst_audio_wsincband_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
@@ -177,6 +171,7 @@ gst_audio_wsincband_class_init (GstAudioWSincBandClass * klass)
 
   gobject_class->set_property = gst_audio_wsincband_set_property;
   gobject_class->get_property = gst_audio_wsincband_get_property;
+  gobject_class->finalize = gst_audio_wsincband_finalize;
 
   /* FIXME: Don't use the complete possible range but restrict the upper boundary
    * so automatically generated UIs can use a slider */
@@ -218,6 +213,8 @@ gst_audio_wsincband_init (GstAudioWSincBand * self,
   self->upper_frequency = 0.0;
   self->mode = MODE_BAND_PASS;
   self->window = WINDOW_HAMMING;
+
+  self->lock = g_mutex_new ();
 }
 
 static void
@@ -353,6 +350,17 @@ gst_audio_wsincband_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 }
 
 static void
+gst_audio_wsincband_finalize (GObject * object)
+{
+  GstAudioWSincBand *self = GST_AUDIO_WSINC_BAND (object);
+
+  g_mutex_free (self->lock);
+  self->lock = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -364,7 +372,7 @@ gst_audio_wsincband_set_property (GObject * object, guint prop_id,
     case PROP_LENGTH:{
       gint val;
 
-      GST_OBJECT_LOCK (self);
+      g_mutex_lock (self->lock);
       val = g_value_get_int (value);
       if (val % 2 == 0)
         val++;
@@ -375,32 +383,32 @@ gst_audio_wsincband_set_property (GObject * object, guint prop_id,
         self->kernel_length = val;
         gst_audio_wsincband_build_kernel (self);
       }
-      GST_OBJECT_UNLOCK (self);
+      g_mutex_unlock (self->lock);
       break;
     }
     case PROP_LOWER_FREQUENCY:
-      GST_OBJECT_LOCK (self);
+      g_mutex_lock (self->lock);
       self->lower_frequency = g_value_get_float (value);
       gst_audio_wsincband_build_kernel (self);
-      GST_OBJECT_UNLOCK (self);
+      g_mutex_unlock (self->lock);
       break;
     case PROP_UPPER_FREQUENCY:
-      GST_OBJECT_LOCK (self);
+      g_mutex_lock (self->lock);
       self->upper_frequency = g_value_get_float (value);
       gst_audio_wsincband_build_kernel (self);
-      GST_OBJECT_UNLOCK (self);
+      g_mutex_unlock (self->lock);
       break;
     case PROP_MODE:
-      GST_OBJECT_LOCK (self);
+      g_mutex_lock (self->lock);
       self->mode = g_value_get_enum (value);
       gst_audio_wsincband_build_kernel (self);
-      GST_OBJECT_UNLOCK (self);
+      g_mutex_unlock (self->lock);
       break;
     case PROP_WINDOW:
-      GST_OBJECT_LOCK (self);
+      g_mutex_lock (self->lock);
       self->window = g_value_get_enum (value);
       gst_audio_wsincband_build_kernel (self);
-      GST_OBJECT_UNLOCK (self);
+      g_mutex_unlock (self->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

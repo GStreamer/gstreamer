@@ -113,6 +113,7 @@ static void gst_audio_cheb_band_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_audio_cheb_band_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_audio_cheb_band_finalize (GObject * object);
 
 static gboolean gst_audio_cheb_band_setup (GstAudioFilter * filter,
     GstRingBufferSpec * format);
@@ -164,6 +165,7 @@ gst_audio_cheb_band_class_init (GstAudioChebBandClass * klass)
 
   gobject_class->set_property = gst_audio_cheb_band_set_property;
   gobject_class->get_property = gst_audio_cheb_band_get_property;
+  gobject_class->finalize = gst_audio_cheb_band_finalize;
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
@@ -210,6 +212,8 @@ gst_audio_cheb_band_init (GstAudioChebBand * filter,
   filter->type = 1;
   filter->poles = 4;
   filter->ripple = 0.25;
+
+  filter->lock = g_mutex_new ();
 }
 
 static void
@@ -568,6 +572,17 @@ generate_coefficients (GstAudioChebBand * filter)
 }
 
 static void
+gst_audio_cheb_band_finalize (GObject * object)
+{
+  GstAudioChebBand *filter = GST_AUDIO_CHEB_BAND (object);
+
+  g_mutex_free (filter->lock);
+  filter->lock = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_audio_cheb_band_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -575,40 +590,40 @@ gst_audio_cheb_band_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_MODE:
-      GST_OBJECT_LOCK (filter);
+      g_mutex_lock (filter->lock);
       filter->mode = g_value_get_enum (value);
       generate_coefficients (filter);
-      GST_OBJECT_UNLOCK (filter);
+      g_mutex_unlock (filter->lock);
       break;
     case PROP_TYPE:
-      GST_OBJECT_LOCK (filter);
+      g_mutex_lock (filter->lock);
       filter->type = g_value_get_int (value);
       generate_coefficients (filter);
-      GST_OBJECT_UNLOCK (filter);
+      g_mutex_unlock (filter->lock);
       break;
     case PROP_LOWER_FREQUENCY:
-      GST_OBJECT_LOCK (filter);
+      g_mutex_lock (filter->lock);
       filter->lower_frequency = g_value_get_float (value);
       generate_coefficients (filter);
-      GST_OBJECT_UNLOCK (filter);
+      g_mutex_unlock (filter->lock);
       break;
     case PROP_UPPER_FREQUENCY:
-      GST_OBJECT_LOCK (filter);
+      g_mutex_lock (filter->lock);
       filter->upper_frequency = g_value_get_float (value);
       generate_coefficients (filter);
-      GST_OBJECT_UNLOCK (filter);
+      g_mutex_unlock (filter->lock);
       break;
     case PROP_RIPPLE:
-      GST_OBJECT_LOCK (filter);
+      g_mutex_lock (filter->lock);
       filter->ripple = g_value_get_float (value);
       generate_coefficients (filter);
-      GST_OBJECT_UNLOCK (filter);
+      g_mutex_unlock (filter->lock);
       break;
     case PROP_POLES:
-      GST_OBJECT_LOCK (filter);
+      g_mutex_lock (filter->lock);
       filter->poles = GST_ROUND_UP_4 (g_value_get_int (value));
       generate_coefficients (filter);
-      GST_OBJECT_UNLOCK (filter);
+      g_mutex_unlock (filter->lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -60,11 +60,13 @@ typedef struct _GstAudioWSincBandClass GstAudioWSincBandClass;
 struct _GstAudioWSincBand {
   GstAudioFXBaseFIRFilter parent;
 
-  /* < private > */
   gint mode;
   gint window;
   gfloat lower_frequency, upper_frequency;
   gint kernel_length;           /* length of the filter kernel */
+
+  /* < private > */
+  GMutex *lock;
 };
 
 struct _GstAudioWSincBandClass {

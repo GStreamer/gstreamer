@@ -48,6 +48,9 @@ struct _GstAudioChebBand
   gfloat lower_frequency;
   gfloat upper_frequency;
   gfloat ripple;
+
+  /* < private > */
+  GMutex *lock;
 };
 
 struct _GstAudioChebBandClass

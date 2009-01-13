@@ -60,11 +60,13 @@ typedef struct _GstAudioWSincLimitClass GstAudioWSincLimitClass;
 struct _GstAudioWSincLimit {
   GstAudioFXBaseFIRFilter parent;
 
-  /* < private > */
   gint mode;
   gint window;
   gfloat cutoff;
   gint kernel_length;
+
+  /* < private > */
+  GMutex *lock;
 };
 
 struct _GstAudioWSincLimitClass {

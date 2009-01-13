@@ -49,6 +49,9 @@ struct _GstAudioChebLimit
   gint poles;
   gfloat cutoff;
   gfloat ripple;
+
+  /* < private > */
+  GMutex *lock;
 };
 
 struct _GstAudioChebLimitClass

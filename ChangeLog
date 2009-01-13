@@ -1,3 +1,25 @@
+2009-01-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/audiofx/audiochebband.c: (gst_audio_cheb_band_class_init),
+	(gst_audio_cheb_band_init), (gst_audio_cheb_band_finalize),
+	(gst_audio_cheb_band_set_property):
+	* gst/audiofx/audiochebband.h:
+	* gst/audiofx/audiocheblimit.c: (gst_audio_cheb_limit_class_init),
+	(gst_audio_cheb_limit_init), (gst_audio_cheb_limit_finalize),
+	(gst_audio_cheb_limit_set_property):
+	* gst/audiofx/audiocheblimit.h:
+	* gst/audiofx/audiowsincband.c: (gst_audio_wsincband_class_init),
+	(gst_audio_wsincband_init), (gst_audio_wsincband_finalize),
+	(gst_audio_wsincband_set_property):
+	* gst/audiofx/audiowsincband.h:
+	* gst/audiofx/audiowsinclimit.c: (gst_audio_wsinclimit_class_init),
+	(gst_audio_wsinclimit_init), (gst_audio_wsinclimit_finalize),
+	(gst_audio_wsinclimit_set_property):
+	* gst/audiofx/audiowsinclimit.h:
+	Use a custom mutex for protecting the instance fields instead of
+	the GstObject lock. Using the latter can lead to deadlocks, especially
+	with the FIR filters when updating the latency.
+
 2009-01-11  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audiofx/Makefile.am:
