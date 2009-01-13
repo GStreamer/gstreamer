@@ -1,3 +1,9 @@
+2009-01-13  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/osxaudio/Makefile.am:
+	  osxaudio plugin now requires AudioUnit framework, so link against that.
+	  Clean up tabs v spaces while I'm there.
+
 2009-01-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/rtp/server-alsasrc-PCMA.c: (print_source_stats),
