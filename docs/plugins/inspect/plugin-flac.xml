@@ -17,16 +17,16 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
       <pads>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16, 32 }, depth=(int)[ 4, 32 ], rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
-        </caps>
-        <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-flac</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int){ 8, 16, 32 }, depth=(int)[ 4, 32 ], rate=(int)[ 1, 655350 ], channels=(int)[ 1, 8 ]</details>
         </caps>
       </pads>
     </element>

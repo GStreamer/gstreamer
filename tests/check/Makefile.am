@@ -72,10 +72,12 @@ check_PROGRAMS = \
 	elements/audioinvert \
 	elements/audiochebband \
 	elements/audiocheblimit \
+	elements/audioiirfilter \
 	elements/audioamplify \
 	elements/audiodynamic \
 	elements/audiowsincband \
 	elements/audiowsinclimit \
+	elements/audiofirfilter \
 	elements/avimux \
 	elements/avisubtitle \
 	elements/deinterleave \

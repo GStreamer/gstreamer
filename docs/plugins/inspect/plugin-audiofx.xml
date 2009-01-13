@@ -35,7 +35,7 @@
       <longname>Band pass &amp; band reject filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Chebyshev band pass and band reject filter</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -56,7 +56,7 @@
       <longname>Low pass &amp; high pass filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Chebyshev low pass and high pass filter</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -90,6 +90,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw-float, width=(int)32, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>audiofirfilter</name>
+      <longname>Audio FIR filter</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Generic audio FIR filter with custom filter kernel</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>audioiirfilter</name>
+      <longname>Audio IIR filter</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Generic audio IIR filter with custom filter kernel</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>
@@ -161,7 +203,7 @@
       <longname>Band pass &amp; band reject filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Band pass and band reject windowed sinc filter</description>
-      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -182,7 +224,7 @@
       <longname>Low pass &amp; high pass filter</longname>
       <class>Filter/Effect/Audio</class>
       <description>Low pass and high pass windowed sinc filter</description>
-      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Steven W. Smith, Dreamlab Technologies Ltd. &lt;mathis.hofer@dreamlab.net&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

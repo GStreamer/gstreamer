@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw-int, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)16, signed=(boolean)true</details>
         </caps>
       </pads>
     </element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw-int, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)16, signed=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>

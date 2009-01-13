@@ -332,3 +332,19 @@ guint  arg1
 guint  arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstAudioFIRFilter::rate-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAudioFIRFilter *gstaudiofirfilter
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAudioIIRFilter::rate-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAudioIIRFilter *gstaudioiirfilter
+gint  arg1
+</SIGNAL>
+

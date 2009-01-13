@@ -19,8 +19,10 @@
     <xi:include href="xml/element-audioamplify.xml" />
     <xi:include href="xml/element-audiochebband.xml" />
     <xi:include href="xml/element-audiocheblimit.xml" />
+    <xi:include href="xml/element-audioiirfilter.xml" />
     <xi:include href="xml/element-audiowsincband.xml" />
     <xi:include href="xml/element-audiowsinclimit.xml" />
+    <xi:include href="xml/element-audiofirfilter.xml" />
     <xi:include href="xml/element-audiodynamic.xml" />
     <xi:include href="xml/element-audioinvert.xml" />
     <xi:include href="xml/element-audiopanorama.xml" />

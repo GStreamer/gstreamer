@@ -56,10 +56,14 @@ GObject
           GstAudioKaraoke
           GstAudioAmplify
           GstAudioDynamic
-          GstAudioChebLimit
-          GstAudioChebBand
-          GstAudioWSincLimit
-          GstAudioWSincBand
+          GstAudioFXBaseIIRFilter
+            GstAudioChebLimit
+            GstAudioChebBand
+            GstAudioIIRFilter
+          GstAudioFXBaseFIRFilter
+            GstAudioWSincLimit
+            GstAudioWSincBand
+            GstAudioFIRFilter
           GstIirEqualizer
             GstIirEqualizerNBands
             GstIirEqualizer3Bands

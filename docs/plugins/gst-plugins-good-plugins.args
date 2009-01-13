@@ -19668,3 +19668,43 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAudioFIRFilter::kernel</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter Kernel</NICK>
+<BLURB>Filter kernel for the FIR filter.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioFIRFilter::latency</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Latecy</NICK>
+<BLURB>Filter latency in samples.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioIIRFilter::a</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>A</NICK>
+<BLURB>Filter coefficients (numerator of transfer function).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioIIRFilter::b</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B</NICK>
+<BLURB>Filter coefficients (denominator of transfer function).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+

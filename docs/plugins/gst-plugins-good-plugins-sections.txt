@@ -103,6 +103,20 @@ gst_audio_cheb_limit_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audioiirfilter</FILE>
+<TITLE>audioiirfilter</TITLE>
+GstAudioIIRFilter
+<SUBSECTION Standard>
+GstAudioIIRFilterClass
+GST_AUDIO_IIR_FILTER
+GST_AUDIO_IIR_FILTER_CLASS
+GST_IS_AUDIO_IIR_FILTER_BAND
+GST_IS_AUDIO_IIR_FILTER_CLASS
+GST_TYPE_AUDIO_IIR_FILTER
+gst_audio_iir_filter_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audiodynamic</FILE>
 <TITLE>audiodynamic</TITLE>
 GstAudioDynamic
@@ -178,7 +192,7 @@ GST_AUDIO_WSINC_BAND_CLASS
 GST_IS_AUDIO_WSINC_BAND
 GST_IS_AUDIO_WSINC_BAND_CLASS
 GST_TYPE_AUDIO_WSINC_BAND
-audio_wsincband_get_type
+gst_audio_wsincband_get_type
 </SECTION>
 
 <SECTION>
@@ -193,7 +207,21 @@ GST_AUDIO_WSINC_LIMIT_CLASS
 GST_IS_AUDIO_WSINC_LIMIT
 GST_IS_AUDIO_WSINC_LIMIT_CLASS
 GST_TYPE_AUDIO_WSINC_LIMIT
-audio_wsinclimit_get_type
+gst_audio_wsinclimit_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-audiofirfilter</FILE>
+<TITLE>audiofirfilter</TITLE>
+GstAudioFIRFilter
+<SUBSECTION Standard>
+GstAudioFIRFilterClass
+GST_AUDIO_FIR_FILTER
+GST_AUDIO_FIR_FILTER_CLASS
+GST_IS_AUDIO_FIR_FILTER_BAND
+GST_IS_AUDIO_FIR_FILTER_CLASS
+GST_TYPE_AUDIO_FIR_FILTER
+gst_audio_fir_filter_get_type
 </SECTION>
 
 <SECTION>

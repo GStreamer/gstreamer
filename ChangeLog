@@ -1,3 +1,59 @@
+2009-01-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiofirfilter.c: (gst_audio_fir_filter_base_init),
+	(gst_audio_fir_filter_class_init),
+	(gst_audio_fir_filter_update_kernel), (gst_audio_fir_filter_init),
+	(gst_audio_fir_filter_setup), (gst_audio_fir_filter_finalize),
+	(gst_audio_fir_filter_set_property),
+	(gst_audio_fir_filter_get_property):
+	* gst/audiofx/audiofirfilter.h:
+	* gst/audiofx/audiofx.c: (plugin_init):
+	* gst/audiofx/audioiirfilter.c: (gst_audio_iir_filter_base_init),
+	(gst_audio_iir_filter_class_init),
+	(gst_audio_iir_filter_update_coefficients),
+	(gst_audio_iir_filter_init), (gst_audio_iir_filter_setup),
+	(gst_audio_iir_filter_finalize),
+	(gst_audio_iir_filter_set_property),
+	(gst_audio_iir_filter_get_property):
+	* gst/audiofx/audioiirfilter.h:
+	Add audioiirfilter and audiofirfilter elements which allow
+	generic IIR/FIR filters to be implemented by providing the
+	filter coefficients. Fixes bug #567577.
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.signals:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	Add documentation for the audioiirfilter and audiofirfilter
+	elements.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/audiofirfilter.c: (on_message),
+	(on_rate_changed), (on_handoff), (GST_START_TEST),
+	(audiofirfilter_suite):
+	* tests/check/elements/audioiirfilter.c: (on_message),
+	(on_rate_changed), (on_handoff), (GST_START_TEST),
+	(audioiirfilter_suite):
+	* tests/examples/Makefile.am:
+	* tests/examples/audiofx/Makefile.am:
+	* tests/examples/audiofx/firfilter-example.c: (on_message),
+	(on_rate_changed), (main):
+	* tests/examples/audiofx/iirfilter-example.c: (on_message),
+	(on_rate_changed), (main):
+	Add unit tests and example applications for the two filter
+	elements.
+
 2009-01-13  Michael Smith <msmith@songbirdnest.com>
 
 	Patch by: Thiago Sousa Santos <thiagoss@embedded.ufcg.edu.br>

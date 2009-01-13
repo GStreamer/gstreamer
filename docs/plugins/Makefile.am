@@ -112,8 +112,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiofx/audiopanorama.h \
 	$(top_srcdir)/gst/audiofx/audiocheblimit.h \
 	$(top_srcdir)/gst/audiofx/audiochebband.h \
+	$(top_srcdir)/gst/audiofx/audioiirfilter.h \
 	$(top_srcdir)/gst/audiofx/audiowsincband.h \
 	$(top_srcdir)/gst/audiofx/audiowsinclimit.h \
+	$(top_srcdir)/gst/audiofx/audiofirfilter.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosrc.h \
 	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
@@ -177,7 +179,9 @@ EXTRA_HFILES = \
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \
 	$(top_srcdir)/tests/examples/level/level-example.c \
-	$(top_srcdir)/tests/examples/spectrum/spectrum-example.c
+	$(top_srcdir)/tests/examples/spectrum/spectrum-example.c \
+	$(top_srcdir)/tests/examples/audiofx/firfilter-example.c \
+	$(top_srcdir)/tests/examples/audiofx/iirfilter-example.c
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

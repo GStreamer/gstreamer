@@ -1105,6 +1105,7 @@ po/Makefile.in
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
+tests/examples/audiofx/Makefile
 tests/examples/equalizer/Makefile
 tests/examples/level/Makefile
 tests/examples/rtp/Makefile

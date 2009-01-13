@@ -12,9 +12,11 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audiofxbaseiirfilter.c \
 	audiocheblimit.c \
 	audiochebband.c \
+	audioiirfilter.c \
 	audiofxbasefirfilter.c \
 	audiowsincband.c \
-	audiowsinclimit.c
+	audiowsinclimit.c \
+	audiofirfilter.c
 
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
@@ -39,8 +41,10 @@ noinst_HEADERS = audiopanorama.h \
 	audiofxbaseiirfilter.h \
 	audiocheblimit.h \
 	audiochebband.h \
+	audioiirfilter.h \
 	audiofxbasefirfilter.h \
 	audiowsincband.h \
         audiowsinclimit.h \
+	audiofirfilter.h \
 	math_compat.h
 
