@@ -2377,7 +2377,8 @@ save_current_group (GstPlayBin * playbin)
 static gboolean
 groups_set_locked_state (GstPlayBin * playbin, gboolean locked)
 {
-  GST_DEBUG_OBJECT (playbin, "setting locked state to %d on groups groups");
+  GST_DEBUG_OBJECT (playbin, "setting locked state to %d on all groups",
+      locked);
 
   GST_PLAY_BIN_LOCK (playbin);
   GST_SOURCE_GROUP_LOCK (playbin->curr_group);

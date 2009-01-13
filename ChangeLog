@@ -1,3 +1,8 @@
+2009-01-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaybin2.c: (groups_set_locked_state):
+	Provide the right arguments to a debug line.
+
 2009-01-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/xvimage/xvimagesink.c:
