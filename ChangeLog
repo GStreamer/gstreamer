@@ -1,3 +1,9 @@
+2009-01-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* tests/examples/rtp/server-alsasrc-PCMA.c: (print_source_stats),
+	(print_stats), (main):
+	Add some example code for printing the RTP manager stats.
+
 2009-01-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audiofx/audiochebband.c: (gst_audio_cheb_band_class_init),
