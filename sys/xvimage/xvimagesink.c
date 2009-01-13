@@ -3145,8 +3145,6 @@ gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
   }
 
   gst_xvimagesink_xcontext_clear (xvimagesink);
-
-  xvimagesink->colorkey = -1;
 }
 
 /* Finalize is called only once, dispose can be called multiple times.
@@ -3220,7 +3218,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->handle_expose = TRUE;
   xvimagesink->autopaint_colorkey = TRUE;
 
-  xvimagesink->colorkey = (1 << 16) | (2 << 8) | 3;;
+  xvimagesink->colorkey = (1 << 16) | (2 << 8) | 3;
   xvimagesink->draw_borders = TRUE;
 }
 

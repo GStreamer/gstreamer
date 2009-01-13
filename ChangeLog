@@ -1,3 +1,8 @@
+2009-01-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c:
+	  Don't reset the colorkey when element is reused. Fixes #567511.
+
 2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
