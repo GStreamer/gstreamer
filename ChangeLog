@@ -1,3 +1,20 @@
+2009-01-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/spectrum/Makefile.am:
+	* gst/spectrum/README:
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_base_init),
+	(gst_spectrum_class_init), (gst_spectrum_init),
+	(gst_spectrum_reset_state), (gst_spectrum_finalize),
+	(gst_spectrum_set_property), (gst_spectrum_start),
+	(gst_spectrum_stop), (gst_spectrum_setup),
+	(gst_spectrum_transform_ip):
+	* gst/spectrum/gstspectrum.h:
+	Post a spectrum message on the bus for every interval, even
+	if the interval is small than the length of the FFT.
+	Fixes bug #567642.
+
+	Major cleanup of the spectrum element.
+
 2009-01-13  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:

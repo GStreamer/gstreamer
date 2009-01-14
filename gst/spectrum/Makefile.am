@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstspectrum.la
 
 libgstspectrum_la_SOURCES = gstspectrum.c
@@ -11,5 +10,3 @@ libgstspectrum_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstspectrum_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstspectrum.h
-
-EXTRA_DIST = README
