@@ -1,5 +1,13 @@
 2009-01-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	Patch by: Lennart Poettering <lennart at poettering dot net>
+
+	* ext/pulse/pulseprobe.c: (gst_pulseprobe_new),
+	(gst_pulseprobe_free):
+	Fix refcount loop, resulting in a thread leak. Fixes bug #567746.
+
+2009-01-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/spectrum/Makefile.am:
 	* gst/spectrum/README:
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_base_init),

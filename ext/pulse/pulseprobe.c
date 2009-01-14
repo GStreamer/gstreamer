@@ -263,7 +263,7 @@ gst_pulseprobe_new (GObject * object, GObjectClass * klass, guint prop_id,
   GstPulseProbe *c = NULL;
 
   c = g_new (GstPulseProbe, 1);
-  c->object = g_object_ref (object);
+  c->object = object;           /* We don't inc the ref counter here to avoid a ref loop */
   c->server = g_strdup (server);
   c->enumerate_sinks = sinks;
   c->enumerate_sources = sources;
@@ -292,8 +292,6 @@ gst_pulseprobe_free (GstPulseProbe * c)
 
   g_list_foreach (c->devices, (GFunc) g_free, NULL);
   g_list_free (c->devices);
-
-  g_object_unref (c->object);
 
   g_free (c);
 }
