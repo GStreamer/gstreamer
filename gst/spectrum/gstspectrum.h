@@ -49,9 +49,9 @@ struct _GstSpectrum
   guint bands;                  /* number of spectrum bands */
   gint threshold;               /* energy level treshold */
 
-  guint num_frames;             /* frame count (1 sample per channel)
+  guint64 num_frames;           /* frame count (1 sample per channel)
                                  * since last emit */
-  guint num_fft;                /* number of FFTs since last emit */
+  guint64 num_fft;              /* number of FFTs since last emit */
   GstClockTime message_ts;      /* starttime for next message */
 
   /* <private> */

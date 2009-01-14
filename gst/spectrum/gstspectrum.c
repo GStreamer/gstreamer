@@ -482,6 +482,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   gfloat *spect_magnitude;
   gfloat *spect_phase;
   GstFFTF32 *fft_ctx;
+  const guint8 *data = GST_BUFFER_DATA (buffer);
+  guint size = GST_BUFFER_SIZE (buffer);
 
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (buffer));
 
@@ -489,9 +491,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     GST_DEBUG_OBJECT (spectrum, "Discontinuity detected -- resetting state");
     gst_spectrum_reset_state (spectrum);
   }
-
-  /* Create a subbuffer to allow us to overwrite the buffer metadata later */
-  buffer = gst_buffer_create_sub (buffer, 0, GST_BUFFER_SIZE (buffer));
 
   /* If we don't have a FFT context yet get one and
    * allocate memory for everything
@@ -521,26 +520,26 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
   spect_phase = spectrum->spect_phase;
   fft_ctx = spectrum->fft_ctx;
 
-  while (GST_BUFFER_SIZE (buffer) >= width * channels) {
+  while (size >= width * channels) {
 
     /* Move the current frame into our ringbuffer and
      * take the average of all channels
      */
     spectrum->input[spectrum->input_pos] = 0.0;
     if (fp && width == 4) {
-      gfloat *in = (gfloat *) GST_BUFFER_DATA (buffer);
+      gfloat *in = (gfloat *) data;
       for (i = 0; i < channels; i++)
         spectrum->input[spectrum->input_pos] += in[i];
     } else if (fp && width == 8) {
-      gdouble *in = (gdouble *) GST_BUFFER_DATA (buffer);
+      gdouble *in = (gdouble *) data;
       for (i = 0; i < channels; i++)
         spectrum->input[spectrum->input_pos] += in[i];
     } else if (!fp && width == 4) {
-      gint32 *in = (gint32 *) GST_BUFFER_DATA (buffer);
+      gint32 *in = (gint32 *) data;
       for (i = 0; i < channels; i++)
         spectrum->input[spectrum->input_pos] += ((gfloat) in[i]) / G_MAXINT32;
     } else if (!fp && width == 2) {
-      gint16 *in = (gint16 *) GST_BUFFER_DATA (buffer);
+      gint16 *in = (gint16 *) data;
       for (i = 0; i < channels; i++)
         spectrum->input[spectrum->input_pos] += ((gfloat) in[i]) / G_MAXINT16;
     } else {
@@ -548,8 +547,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     }
     spectrum->input[spectrum->input_pos] /= channels;
 
-    GST_BUFFER_DATA (buffer) += width * channels;
-    GST_BUFFER_SIZE (buffer) -= width * channels;
+    data += width * channels;
+    size -= width * channels;
     spectrum->input_pos = (spectrum->input_pos + 1) % nfft;
     spectrum->num_frames++;
 
@@ -612,9 +611,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     }
   }
 
-  g_assert (GST_BUFFER_SIZE (buffer) == 0);
-
-  gst_buffer_unref (buffer);
+  g_assert (size == 0);
 
   return GST_FLOW_OK;
 }
