@@ -225,7 +225,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  * gst_buffer_unref() when the buffer is no longer needed.
  *
  * When a chain function detects an error in the data stream, it must post an
- * error on the buffer and return an appropriate #GstFlowReturn value.
+ * error on the bus and return an appropriate #GstFlowReturn value.
  *
  * Returns: #GST_FLOW_OK for success
  */
