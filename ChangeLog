@@ -1,3 +1,9 @@
+2009-01-15  Michael Smith <msmith@songbirdnest.com>
+
+	* sys/osxaudio/Makefile.am:
+	  Link against CoreServices (needed for osx 10.4) and fix up the linker
+	  flags. Fixes #567853.
+
 2009-01-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_segments):
