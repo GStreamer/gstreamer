@@ -261,7 +261,8 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 static void
 gst_spectrum_reset_state (GstSpectrum * spectrum)
 {
-  gst_fft_f32_free (spectrum->fft_ctx);
+  if (spectrum->fft_ctx)
+    gst_fft_f32_free (spectrum->fft_ctx);
   g_free (spectrum->input);
   g_free (spectrum->input_tmp);
   g_free (spectrum->freqdata);

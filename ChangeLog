@@ -1,3 +1,9 @@
+2009-01-15  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_reset_state):
+	Don't call gst_fft_f32_free() with NULL to prevent a
+	crash. Fixes bug #567642.
+
 2009-01-14  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_transform_ip):
