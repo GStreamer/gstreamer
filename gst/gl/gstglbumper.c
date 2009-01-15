@@ -29,7 +29,7 @@
  * |[
  * gst-launch -v videotestsrc ! glupload ! glbumper location=normalmap.bmp ! glimagesink
  * ]| A pipeline to test normal mapping.
- * FBO and GLSL are required.
+ * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * </refsect2>
  */
 

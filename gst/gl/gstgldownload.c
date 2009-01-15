@@ -49,7 +49,7 @@
  * gst-launch -v gltestsrc ! gldownload ! xvimagesink
  * ]| A pipeline to test hardware colorspace conversion.
  * Your driver must support GLSL (OpenGL Shading Language needs OpenGL >= 2.1). 
- * Texture RGB32T is converted to one of the 4 following format YUY2, UYVY, I420, YV12 and AYUV,
+ * Texture RGB32 is converted to one of the 4 following format YUY2, UYVY, I420, YV12 and AYUV,
  * through some fragment shaders and using one framebuffer (FBO extension OpenGL >= 1.4).
  * MESA >= 7.1 supports GLSL but it's made in software.
  * |[

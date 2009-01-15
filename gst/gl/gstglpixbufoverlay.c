@@ -18,6 +18,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-glpixbufoverlay
+ *
+ * Overlay GL video texture with a gdkpixbuf.
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch  videotestsrc ! "video/x-raw-rgb" ! glupload ! glpixbufoverlay location=imagefile ! glimagesink
+ * ]|
+ * FBO (Frame Buffer Object) is required.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

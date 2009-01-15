@@ -18,6 +18,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-gleffects.
+ *
+ * GL Shading Language effects.
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch videotestsrc ! glupload ! gleffects effect=5 ! glimagesink
+ * ]|
+ * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
+ * </refsect2>
+ */
+
 #include <gstgleffects.h>
 
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
