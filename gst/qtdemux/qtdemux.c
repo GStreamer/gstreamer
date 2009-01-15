@@ -3247,6 +3247,7 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       guint64 duration;
       guint64 media_time;
       QtDemuxSegment *segment;
+      guint32 rate_int;
 
       media_time = QT_UINT32 (buffer + 20 + i * 12);
 
@@ -3269,13 +3270,23 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       segment->media_start =
           gst_util_uint64_scale (media_time, GST_SECOND, stream->timescale);
       segment->media_stop = segment->media_start + segment->duration;
-      segment->rate = QT_FP32 (buffer + 24 + i * 12);
+      rate_int = GST_READ_UINT32_BE (buffer + 24 + i * 12);
+
+      if (rate_int <= 1) {
+        /* 0 is not allowed, some programs write 1 instead of the floating point
+         * value */
+        GST_WARNING_OBJECT (qtdemux, "found suspicious rate %" G_GUINT32_FORMAT,
+            rate_int);
+        segment->rate = 1;
+      } else {
+        segment->rate = rate_int / 65536.0;
+      }
 
       GST_DEBUG_OBJECT (qtdemux, "created segment %d time %" GST_TIME_FORMAT
           ", duration %" GST_TIME_FORMAT ", media_time %" GST_TIME_FORMAT
-          ", rate %g", i, GST_TIME_ARGS (segment->time),
+          ", rate %g, (%d)", i, GST_TIME_ARGS (segment->time),
           GST_TIME_ARGS (segment->duration),
-          GST_TIME_ARGS (segment->media_start), segment->rate);
+          GST_TIME_ARGS (segment->media_start), segment->rate, rate_int);
     }
     GST_DEBUG_OBJECT (qtdemux, "found %d non-empty segments", count);
     stream->n_segments = count;
