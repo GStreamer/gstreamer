@@ -170,7 +170,7 @@ gst_tag_demux_result_get_type (void)
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_TAG_DEMUX_RESULT_BROKEN_TAG, "GST_TAG_DEMUX_RESULT_BROKEN_TAG",
-            "broken-tag"},
+          "broken-tag"},
       {GST_TAG_DEMUX_RESULT_AGAIN, "GST_TAG_DEMUX_RESULT_AGAIN", "again"},
       {GST_TAG_DEMUX_RESULT_OK, "GST_TAG_DEMUX_RESULT_OK", "ok"},
       {0, NULL, NULL}
@@ -838,12 +838,14 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      /* FIXME: shouldn't we pass unknown and unhandled events upstream? */
+      res = gst_pad_push_event (tagdemux->priv->sinkpad, event);
+      event = NULL;
       break;
   }
 
   gst_object_unref (tagdemux);
-  gst_event_unref (event);
+  if (event)
+    gst_event_unref (event);
   return res;
 }
 
