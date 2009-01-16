@@ -19,6 +19,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "kiss_fft_f64.h"
 #include <limits.h>
 
+/* The 2*sizeof(size_t) alignment here is borrowed from
+ * GNU libc, so it should be good most everywhere.
+ * It is more conservative than is needed on some 64-bit
+ * platforms, but ia64 does require a 16-byte alignment.
+ * The SIMD extensions for x86 and ppc32 would want a
+ * larger alignment than this, but we don't need to
+ * do better than malloc.
+ *
+ * Borrowed from GLib's gobject/gtype.c
+ */
+#define STRUCT_ALIGNMENT (2 * sizeof (size_t))
+#define ALIGN_STRUCT(offset) \
+      ((offset + (STRUCT_ALIGNMENT - 1)) & -STRUCT_ALIGNMENT)
+
 #define MAXFACTORS 32
 /* e.g. an fft of length 128 has 4 factors 
  as far as kissfft is concerned

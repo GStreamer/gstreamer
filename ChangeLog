@@ -1,5 +1,19 @@
 2009-01-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst-libs/gst/fft/_kiss_fft_guts_f32.h:
+	* gst-libs/gst/fft/_kiss_fft_guts_f64.h:
+	* gst-libs/gst/fft/_kiss_fft_guts_s16.h:
+	* gst-libs/gst/fft/_kiss_fft_guts_s32.h:
+	* gst-libs/gst/fft/kiss_fftr_f32.c: (kiss_fftr_f32_alloc):
+	* gst-libs/gst/fft/kiss_fftr_f64.c: (kiss_fftr_f64_alloc):
+	* gst-libs/gst/fft/kiss_fftr_s16.c: (kiss_fftr_s16_alloc):
+	* gst-libs/gst/fft/kiss_fftr_s32.c: (kiss_fftr_s32_alloc):
+	Use correct struct alignment everywhere to prevent unaligned
+	memory accesses, resulting in SIGBUS on sparc and probably others.
+	Fixes bug #500833.
+
+2009-01-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst-libs/gst/tag/gsttagdemux.c: (gst_tag_demux_srcpad_event):
 	Forward unknown events upstream to allow latency configuration.
 	Fixes bug #567960.
