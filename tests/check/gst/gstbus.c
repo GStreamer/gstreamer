@@ -487,6 +487,84 @@ GST_START_TEST (test_timed_pop_thread)
 
 GST_END_TEST;
 
+static gboolean
+cb_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
+{
+  GMainLoop *loop = data;
+
+  switch (GST_MESSAGE_TYPE (msg)) {
+    case GST_MESSAGE_EOS:
+    {
+      GST_INFO ("End-of-stream");
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_ERROR:
+    {
+      GError *err = NULL;
+
+      gst_message_parse_error (msg, &err, NULL);
+      g_error ("Error: %s", err->message);
+      g_error_free (err);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    default:
+    {
+      GST_LOG ("BUS MESSAGE: type=%s", GST_MESSAGE_TYPE_NAME (msg));
+      break;
+    }
+  }
+
+  return TRUE;
+}
+
+GST_START_TEST (test_custom_main_context)
+{
+  GMainContext *ctx;
+  GMainLoop *loop;
+  GstElement *pipeline;
+  GstElement *src;
+  GstElement *sink;
+  GSource *source;
+  GstBus *bus;
+
+  ctx = g_main_context_new ();
+  loop = g_main_loop_new (ctx, FALSE);
+
+  pipeline = gst_pipeline_new (NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  g_object_set (src, "num-buffers", 2000, NULL);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  fail_unless (gst_bin_add (GST_BIN (pipeline), src));
+  fail_unless (gst_bin_add (GST_BIN (pipeline), sink));
+  fail_unless (gst_element_link (src, sink));
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  source = gst_bus_create_watch (bus);
+  g_source_attach (source, ctx);
+  g_source_set_callback (source, (GSourceFunc) cb_bus_call, loop, NULL);
+  gst_object_unref (bus);
+
+  GST_INFO ("starting pipeline");
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  GST_INFO ("running event loop, ctx=%p", ctx);
+  g_main_loop_run (loop);
+
+  /* clean up */
+  if (ctx)
+    g_main_context_unref (ctx);
+  g_main_loop_unref (loop);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_bus_suite (void)
 {
@@ -504,6 +582,7 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_timed_pop_thread);
   tcase_add_test (tc_chain, test_timed_pop_filtered);
   tcase_add_test (tc_chain, test_timed_pop_filtered_with_timeout);
+  tcase_add_test (tc_chain, test_custom_main_context);
   return s;
 }
 

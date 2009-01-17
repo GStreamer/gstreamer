@@ -1,3 +1,16 @@
+2009-01-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
+
+	* gst/gstbus.c: (gst_bus_set_main_context), (gst_bus_create_watch):
+	  Fix order of members in GstBusSource structure - the first member
+	  must be the parent structure ie. GSource. Should make bus sources
+	  attached to non-default main contexts work in all cases now (ie.
+	  primarily in cases where the callback has a non-NULL user data
+	  argument). Fixes #562170.
+
+	* tests/check/gst/gstbus.c: (test_custom_main_context):
+	  Add unit test for the above, based on code by
+	  Justin Karneges <justin at affinix com>.
+
 2009-01-15  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>

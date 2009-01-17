@@ -325,6 +325,9 @@ gst_bus_set_main_context (GstBus * bus, GMainContext * ctx)
     bus->priv->main_context = g_main_context_ref (ctx);
   }
 
+  GST_DEBUG_OBJECT (bus, "setting main context to %p, GLib default context: %p",
+      ctx, g_main_context_default ());
+
   GST_OBJECT_UNLOCK (bus);
 }
 
@@ -767,9 +770,9 @@ no_replace:
  */
 typedef struct
 {
-  gboolean inited;
   GSource source;
   GstBus *bus;
+  gboolean inited;
 } GstBusSource;
 
 static gboolean
@@ -888,6 +891,7 @@ gst_bus_create_watch (GstBus * bus)
   source = (GstBusSource *) g_source_new (&gst_bus_source_funcs,
       sizeof (GstBusSource));
   source->bus = gst_object_ref (bus);
+  source->inited = FALSE;
 
   return (GSource *) source;
 }
