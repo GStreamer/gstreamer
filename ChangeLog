@@ -1,3 +1,11 @@
+2009-01-19  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Luotao Fu <l dot fu at pengutronix dot de>
+
+	* gst/videocrop/gstvideocrop.c:
+	(gst_video_crop_get_image_details_from_caps):
+	Add 8bit grayscale support to videocrop plugin. Fixes #567952.
+
 2009-01-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst/audiofx/audioreverb.c: (gst_audio_reverb_init):

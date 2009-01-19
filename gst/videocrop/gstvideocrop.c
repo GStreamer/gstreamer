@@ -88,6 +88,12 @@ enum
 };
 
 /* the formats we support */
+#define GST_VIDEO_CAPS_GRAY "video/x-raw-gray, "			\
+    "bpp = (int) 8, "                                                  \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
+
 #define VIDEO_CROP_CAPS                          \
   GST_VIDEO_CAPS_RGBx ";"                        \
   GST_VIDEO_CAPS_xRGB ";"                        \
@@ -107,7 +113,8 @@ enum
   GST_VIDEO_CAPS_YUV ("I420") ";"                \
   GST_VIDEO_CAPS_YUV ("YV12") ";"                \
   GST_VIDEO_CAPS_RGB_16 ";"                      \
-  GST_VIDEO_CAPS_RGB_15
+  GST_VIDEO_CAPS_RGB_15 ";"			 \
+  GST_VIDEO_CAPS_GRAY
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -211,7 +218,8 @@ gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
   details->width = width;
   details->height = height;
 
-  if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
+  if (gst_structure_has_name (structure, "video/x-raw-rgb") ||
+      gst_structure_has_name (structure, "video/x-raw-gray")) {
     gint bpp = 0;
 
     if (!gst_structure_get_int (structure, "bpp", &bpp) || (bpp & 0x07) != 0)
