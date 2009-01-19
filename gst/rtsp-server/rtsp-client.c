@@ -721,7 +721,7 @@ receive_failed:
 
 /* called when we need to accept a new request from a client */
 static gboolean
-client_accept (GstRTSPClient *client, GIOChannel *source)
+client_accept (GstRTSPClient *client, GIOChannel *channel)
 {
   /* a new client connected. */
   int server_sock_fd;
@@ -730,7 +730,7 @@ client_accept (GstRTSPClient *client, GIOChannel *source)
 
   conn = client->connection;
 
-  server_sock_fd = g_io_channel_unix_get_fd (source);
+  server_sock_fd = g_io_channel_unix_get_fd (channel);
 
   address_len = sizeof (client->address);
   memset (&client->address, 0, address_len);
@@ -802,10 +802,9 @@ gst_rtsp_client_get_session_pool (GstRTSPClient *client)
 /**
  * gst_rtsp_client_attach:
  * @client: a #GstRTSPClient
- * @context: a #GMainContext
+ * @channel: a #GIOChannel
  *
- * Attaches @client to @context. When the mainloop for @context is run, the
- * client will be dispatched.
+ * Accept a new connection for @client on the socket in @source. 
  *
  * This function should be called when the client properties and urls are fully
  * configured and the client is ready to start.
@@ -813,11 +812,11 @@ gst_rtsp_client_get_session_pool (GstRTSPClient *client)
  * Returns: %TRUE if the client could be accepted.
  */
 gboolean
-gst_rtsp_client_accept (GstRTSPClient *client, GIOChannel *source)
+gst_rtsp_client_accept (GstRTSPClient *client, GIOChannel *channel)
 {
   gst_rtsp_connection_create (NULL, &client->connection);
 
-  if (!client_accept (client, source))
+  if (!client_accept (client, channel))
     goto accept_failed;
 
   /* client accepted, spawn a thread for the client */

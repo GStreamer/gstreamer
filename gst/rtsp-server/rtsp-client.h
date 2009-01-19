@@ -80,7 +80,7 @@ void                 gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
 GstRTSPSessionPool * gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 
 gboolean             gst_rtsp_client_accept            (GstRTSPClient *client, 
-                                                        GIOChannel *source);
+                                                        GIOChannel *channel);
 
 G_END_DECLS
 
