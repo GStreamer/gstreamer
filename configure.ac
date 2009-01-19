@@ -83,6 +83,7 @@ dnl check for GStreamer
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 PKG_CHECK_MODULES(GST, gstreamer-$GST_MAJORMINOR >= $GST_REQ)
+AC_DEFINE_UNQUOTED(GST_MAJORMINOR, "$GST_MAJORMINOR", [Gst MajorMinor version])
 AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
@@ -358,6 +359,13 @@ dnl add debugging options ...
 
 AG_GST_VALGRIND_CHECK
 
+dnl Stuff needed for the python plugin loader
+
+AM_CHECK_PYTHON_LIBS(,[AC_MSG_ERROR(could not find Python lib)])
+
+AG_GST_SET_PLUGINDIR
+
+
 AC_OUTPUT([
   Makefile
   codegen/Makefile
@@ -370,6 +378,7 @@ AC_OUTPUT([
   pkgconfig/Makefile
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc
+  plugin/Makefile
   testsuite/Makefile
   win32/common/config.h
   gst-python.spec

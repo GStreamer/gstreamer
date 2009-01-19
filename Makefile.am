@@ -1,4 +1,4 @@
-SUBDIRS = common codegen gst examples testsuite pkgconfig
+SUBDIRS = common codegen gst examples plugin testsuite pkgconfig
 
 common_cflags = $(PYTHON_INCLUDES) $(PYGOBJECT_CFLAGS) $(GST_CFLAGS) $(GST_OPTION_CFLAGS) -fno-strict-aliasing
 common_libadd = $(GST_LIBS) $(GST_OPTION_LIBS)

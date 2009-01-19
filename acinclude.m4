@@ -64,3 +64,24 @@ $1],dnl
 $2])
 CPPFLAGS="$save_CPPFLAGS"
 ])
+
+dnl a macro to check for ability to embed python
+dnl  AM_CHECK_PYTHON_LIBS([ACTION-IF-POSSIBLE], [ACTION-IF-NOT-POSSIBLE])
+dnl function also defines PYTHON_LIBS
+AC_DEFUN([AM_CHECK_PYTHON_LIBS],
+[AC_REQUIRE([AM_CHECK_PYTHON_HEADERS])
+AC_MSG_CHECKING(for libraries required to embed python)
+dnl deduce PYTHON_LIBS
+py_exec_prefix=`$PYTHON -c "import sys; print sys.exec_prefix"`
+PYTHON_LIBS="-L${py_prefix}/lib -lpython${PYTHON_VERSION}"
+PYTHON_LIB_LOC="${py_prefix}/lib" 
+AC_SUBST(PYTHON_LIBS)
+AC_SUBST(PYTHON_LIB_LOC)
+dnl check if the headers exist:
+save_LIBS="$LIBS"
+LIBS="$LIBS $PYTHON_LIBS"
+AC_TRY_LINK_FUNC(Py_Initialize, dnl
+         [LIBS="$save_LIBS"; AC_MSG_RESULT(yes); $1], dnl
+         [LIBS="$save_LIBS"; AC_MSG_RESULT(no); $2])
+
+])
