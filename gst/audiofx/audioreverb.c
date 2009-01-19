@@ -145,7 +145,7 @@ gst_audio_reverb_class_init (GstAudioReverbClass * klass)
 static void
 gst_audio_reverb_init (GstAudioReverb * self, GstAudioReverbClass * klass)
 {
-  self->delay = 0;
+  self->delay = 1;
   self->intensity = 0.0;
   self->feedback = 0.0;
 

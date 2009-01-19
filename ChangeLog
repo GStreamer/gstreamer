@@ -1,5 +1,10 @@
 2009-01-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* gst/audiofx/audioreverb.c: (gst_audio_reverb_init):
+	Set the default value in the instance init function.
+
+2009-01-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
