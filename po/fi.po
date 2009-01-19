@@ -1,7 +1,7 @@
 # Finnish translations for gstreamer package.
 # Copyright (C) 2005, 2007-2008 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2005, 2007-2008.
+# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2005, 2007-2009.
 #
 # Words:
 #
@@ -10,10 +10,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-10 17:50+0100\n"
-"PO-Revision-Date: 2008-09-21 11:44+0300\n"
+"Project-Id-Version: gstreamer 0.10.21.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:14+0000\n"
+"PO-Revision-Date: 2009-01-18 15:50+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -108,31 +108,31 @@ msgstr "GStreamerin valitsimet"
 msgid "Show GStreamer Options"
 msgstr "Näytä GStreamerin valitsimet"
 
-#: gst/gst.c:754
+#: gst/gst.c:772
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Virhe kirjoitettaessa rekisterivälimuistia kohteeseen %s: %s"
 
-#: gst/gst.c:790 gst/gst.c:799 gst/gst.c:844
+#: gst/gst.c:808 gst/gst.c:817 gst/gst.c:862
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"
 
-#: gst/gst.c:859
+#: gst/gst.c:877
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Virhe uudelleenskannatessa rekisteriä %s"
 
-#: gst/gst.c:1231
+#: gst/gst.c:1255
 msgid "Unknown option"
 msgstr "Tuntematon valitsin"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2208
+#: gst/gstelement.c:299 gst/gstutils.c:2270
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "VIRHE: elementiltä %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2210 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2272 tools/gst-launch.c:464
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -335,7 +335,7 @@ msgstr "Virheviestiä alueelle %s ei ole."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Standardia virheviestiä alueelle %s ja koodille %d ei ole."
 
-#: gst/gstpipeline.c:527
+#: gst/gstpipeline.c:540
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Valittua kelloa ei voi käyttää liukuhihnassa."
 
@@ -852,19 +852,20 @@ msgstr "nieluelementtiä ei voitu linkittää URIlle \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tyhjää liukuhihnaa ei sallita"
 
-#: libs/gst/base/gstbasesrc.c:1909
+#: libs/gst/base/gstbasesrc.c:1997
 msgid "Internal clock error."
 msgstr "Sisäinen kellovirhe."
 
-#: libs/gst/base/gstbasesrc.c:2233 libs/gst/base/gstbasesrc.c:2244
+#: libs/gst/base/gstbasesrc.c:2329 libs/gst/base/gstbasesrc.c:2340
+#: libs/gst/base/gstbasesink.c:3257
 msgid "Internal data flow error."
 msgstr "Sisäinen tiedon virtausvirhe."
 
-#: libs/gst/base/gstbasesink.c:2688
+#: libs/gst/base/gstbasesink.c:2883
 msgid "Internal data flow problem."
 msgstr "Sisäinen tiedon virtausongelma."
 
-#: libs/gst/base/gstbasesink.c:2837
+#: libs/gst/base/gstbasesink.c:3246
 msgid "Internal data stream error."
 msgstr "Sisäinen tietovirtavirhe."
 
@@ -880,65 +881,65 @@ msgstr ""
 "Rajoita mahdollisia sallittuja kykyjä (NULL tarkoittaa mitä tahansa). Tämän "
 "ominaisuuden asettaminen ottaa kahvan annettuun GstCaps-olioon."
 
-#: plugins/elements/gstfdsink.c:296
+#: plugins/elements/gstfdsink.c:300
 #, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "Virhe kirjoitettaessa tiedostokahvaan \"%d\"."
 
-#: plugins/elements/gstfdsink.c:336
+#: plugins/elements/gstfdsink.c:340
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Tiedostokahva \"%d\" on virheellinen."
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:353
 msgid "No file name specified for writing."
 msgstr "Kirjoitusta varten ei määritetty tiedostonimeä."
 
-#: plugins/elements/gstfilesink.c:357
+#: plugins/elements/gstfilesink.c:359
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Tiedostoa \"%s\" ei voitu avata kirjoittamista varten."
 
-#: plugins/elements/gstfilesink.c:382
+#: plugins/elements/gstfilesink.c:384
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Virhe suljettaessa tiedostoa \"%s\"."
 
-#: plugins/elements/gstfilesink.c:518
+#: plugins/elements/gstfilesink.c:524
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Virhe kelattaessa tiedostoa \"%s\"."
 
-#: plugins/elements/gstfilesink.c:525 plugins/elements/gstfilesink.c:587
+#: plugins/elements/gstfilesink.c:531 plugins/elements/gstfilesink.c:593
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:1010
+#: plugins/elements/gstfilesrc.c:1038
 msgid "No file name specified for reading."
 msgstr "Lukemista varten ei ole määritetty tiedostonimeä."
 
-#: plugins/elements/gstfilesrc.c:1022
+#: plugins/elements/gstfilesrc.c:1050
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tiedostoa \"%s\" ei voitu avata lukemista varten."
 
-#: plugins/elements/gstfilesrc.c:1031
+#: plugins/elements/gstfilesrc.c:1059
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Ei saatu tietoja kohteesta \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:1038
+#: plugins/elements/gstfilesrc.c:1066
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" on hakemisto."
 
-#: plugins/elements/gstfilesrc.c:1045
+#: plugins/elements/gstfilesrc.c:1073
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Tiedosto \"%s\" on pistoke."
 
-#: plugins/elements/gstidentity.c:547
+#: plugins/elements/gstidentity.c:549
 msgid "Failed after iterations as requested."
 msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
 
@@ -966,8 +967,8 @@ msgstr "pakota kyvyt"
 msgid "force caps without doing a typefind"
 msgstr "pakota kyvyt ilman tyyppihakua"
 
-#: plugins/elements/gsttypefindelement.c:521
-#: plugins/elements/gsttypefindelement.c:785
+#: plugins/elements/gsttypefindelement.c:522
+#: plugins/elements/gsttypefindelement.c:786
 msgid "Stream contains no data."
 msgstr "Virta on tyhjä."
 
@@ -1005,11 +1006,11 @@ msgid_plural "%d features"
 msgstr[0] "%d ominaisuus"
 msgstr[1] "%d ominaisuutta"
 
-#: tools/gst-inspect.c:1324
+#: tools/gst-inspect.c:1400
 msgid "Print all elements"
 msgstr "Tulosta kaikki elementit"
 
-#: tools/gst-inspect.c:1326
+#: tools/gst-inspect.c:1402
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -1020,12 +1021,20 @@ msgstr ""
 "                                       Hyödyllinen ulkoisten automaattisten "
 "liitännäisten asennusmekanismien yhteydessä"
 
-#: tools/gst-inspect.c:1406
+#: tools/gst-inspect.c:1407
+msgid "List the plugin contents"
+msgstr "Luettele liitännäisen sisältö"
+
+#: tools/gst-inspect.c:1410
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr "Tulosta tuetut URI-skeemat sekä ne toteuttavat elementit"
+
+#: tools/gst-inspect.c:1500
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Ei voitu ladata liitännäistiedostoa: %s\n"
 
-#: tools/gst-inspect.c:1411
+#: tools/gst-inspect.c:1505
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Ei tällaista elementtiä tai liitännäistä \"%s\"\n"
@@ -1060,22 +1069,21 @@ msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROITUS: elementtiä nimeltä \"%s\" ei löytynyt.\n"
 
-#: tools/gst-launch.c:394
-#, c-format
-msgid "Got Message from element \"%s\" (%s): "
-msgstr "Saatiin Viesti elementiltä \"%s\" (%s): "
+#: tools/gst-launch.c:397
+msgid "Got Message #%"
+msgstr "Saatiin viesti #%"
 
-#: tools/gst-launch.c:420
+#: tools/gst-launch.c:424
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Saatiin EOS (virran loppu) elementiltä \"%s\".\n"
 
-#: tools/gst-launch.c:428
+#: tools/gst-launch.c:432
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
 
-#: tools/gst-launch.c:441
+#: tools/gst-launch.c:445
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1084,150 +1092,157 @@ msgstr ""
 "INFO:\n"
 "%s\n"
 
-#: tools/gst-launch.c:458
+#: tools/gst-launch.c:462
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "VAROITUS: elementiltä %s: %s\n"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:510
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Esipyöritetty, odotetaan puskuroinnin päättymistä...\n"
 
-#: tools/gst-launch.c:521
-#, fuzzy, c-format
-msgid "buffering... %d  \r"
-msgstr "puskuroidaan... %d  \n"
+#: tools/gst-launch.c:525
+msgid "buffering..."
+msgstr "puskuroidaan..."
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:537
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Puskurointi tehty, asetetaan liukuhihna tilaan SOI...\n"
 
-#: tools/gst-launch.c:541
+#: tools/gst-launch.c:545
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Puskuroidaan, asetetaan liukuhihna tilaan TAUOLLA...\n"
 
-#: tools/gst-launch.c:556
+#: tools/gst-launch.c:554
+#, c-format
+msgid "Redistribute latency...\n"
+msgstr "Uudelleenjaa latenssi...\n"
+
+#: tools/gst-launch.c:566
 #, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Keskeytys: Pysäytetään liukuhihna ...\n"
 
-#: tools/gst-launch.c:591
+#: tools/gst-launch.c:601
 msgid "Output tags (also known as metadata)"
 msgstr "Tulostemerkinnät (tunnetaan myös metadatana)"
 
-#: tools/gst-launch.c:593
+#: tools/gst-launch.c:603
 msgid "Output status information and property notifications"
 msgstr "Tulostetilatiedot ja ominaisuushuomiot"
 
-#: tools/gst-launch.c:595
+#: tools/gst-launch.c:605
 msgid "Output messages"
 msgstr "Tulosteviestit"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:607
 msgid "Do not output status information of TYPE"
 msgstr "Älä tulosta tilatietoa TYYPPI"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:607
 msgid "TYPE1,TYPE2,..."
 msgstr "TYYPPI1,TYYPPI2,..."
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:610
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Tallenna liukuhihnan XML-esitys TIEDOSTOon ja poistu"
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:610
 msgid "FILE"
 msgstr "TIEDOSTO"
 
-#: tools/gst-launch.c:603
+#: tools/gst-launch.c:613
 msgid "Do not install a fault handler"
 msgstr "Älä asenna virheenkäsittelintä"
 
-#: tools/gst-launch.c:605
+#: tools/gst-launch.c:615
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"
 
-#: tools/gst-launch.c:673
+#: tools/gst-launch.c:683
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "VIRHE: liukuhihnaa ei voitu rakentaa: %s.\n"
 
-#: tools/gst-launch.c:677
+#: tools/gst-launch.c:687
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "VIRHE: liukuhihnaa ei voitu rakentaa.\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:691
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VAROITUS: virheellinen liukuhihna: %s\n"
 
-#: tools/gst-launch.c:708
+#: tools/gst-launch.c:718
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "VIRHE: \"liukuhihna\"-elementtiä ei löytynyt.\n"
 
-#: tools/gst-launch.c:714 tools/gst-launch.c:784
+#: tools/gst-launch.c:724 tools/gst-launch.c:794
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Asetetaan liukuhihna tilaan TAUOLLA...\n"
 
-#: tools/gst-launch.c:719
+#: tools/gst-launch.c:729
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "VIRHE: Liukuhihna ei halua mennä tauolle.\n"
 
-#: tools/gst-launch.c:724
+#: tools/gst-launch.c:734
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Liukuhihna on käynnissä eikä sitä tarvitse ESIRULLATA...\n"
 
-#: tools/gst-launch.c:728
+#: tools/gst-launch.c:738
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Liukuhihna ESIRULLAUTUU...\n"
 
-#: tools/gst-launch.c:731 tools/gst-launch.c:744
+#: tools/gst-launch.c:741 tools/gst-launch.c:754
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "VIRHE: Liukuhihna ei halua esirullautua.\n"
 
-#: tools/gst-launch.c:737
+#: tools/gst-launch.c:747
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Liukuhihna on ESIRULLATTU...\n"
 
-#: tools/gst-launch.c:749
+#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Asetetaan liukuhihna tilaan SOI...\n"
 
-#: tools/gst-launch.c:755
+#: tools/gst-launch.c:765
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "VIRHE: Liukuhihna ei halua toistaa.\n"
 
-#: tools/gst-launch.c:778
+#: tools/gst-launch.c:788
 msgid "Execution ended after %"
 msgstr "Suoritus päättyi jälkeen %"
 
-#: tools/gst-launch.c:788
+#: tools/gst-launch.c:798
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Asetetaan liukuhihna tilaan VALMIS...\n"
 
-#: tools/gst-launch.c:793
+#: tools/gst-launch.c:803
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
 
-#: tools/gst-launch.c:798
+#: tools/gst-launch.c:808
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "VAPAUTETAAN liukuhihna...\n"
+
+#~ msgid "Got Message from element \"%s\" (%s): "
+#~ msgstr "Saatiin Viesti elementiltä \"%s\" (%s): "
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "tiedoston alkuperäinen sijainti URI:na"

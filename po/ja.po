@@ -1,32 +1,32 @@
-# Translation of 'gstreamer' messages to Azerbaijani.
-# Copyright (C) 2004 Free Software Foundation, Inc.
+# Japanese translation file for gstreamer
 # This file is put in the public domain.
-# Mətin Əmirov <metin@karegen.com>, 2004.
 #
+# Makoto Kato <makoto.kt@gmail.com>, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.8.0\n"
+"Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2009-01-19 21:14+0000\n"
-"PO-Revision-Date: 2004-03-19 18:40+0200\n"
-"Last-Translator: Metin Amiroff <metin@karegen.com>\n"
-"Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
+"PO-Revision-Date: 2008-10-16 19:57+0900\n"
+"Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
+"Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.0.2\n"
+"X-Generator: Lokalize 0.2\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: gst/gst.c:309
 msgid "Print the GStreamer version"
-msgstr "GStreamer buraxılışını göstər"
+msgstr "GStreamer バージョンを表示する"
 
 #: gst/gst.c:311
 msgid "Make all warnings fatal"
-msgstr "Bütün xətaları ölümcül et"
+msgstr ""
 
 #: gst/gst.c:315
 msgid "Print available debug categories and exit"
-msgstr ""
+msgstr "利用可能なデバッグカテゴリを表示して終了する"
 
 #: gst/gst.c:319
 msgid ""
@@ -35,7 +35,7 @@ msgstr ""
 
 #: gst/gst.c:321
 msgid "LEVEL"
-msgstr "SƏVİYYƏ"
+msgstr "LEVEL"
 
 #: gst/gst.c:323
 msgid ""
@@ -45,15 +45,15 @@ msgstr ""
 
 #: gst/gst.c:326
 msgid "LIST"
-msgstr "SİYAHI"
+msgstr "LIST"
 
 #: gst/gst.c:328
 msgid "Disable colored debugging output"
-msgstr ""
+msgstr "デバッグ出力のカラー出力を無効にする"
 
 #: gst/gst.c:331
 msgid "Disable debugging"
-msgstr "Xəta ayırmasını bağla"
+msgstr "デバッグを無効にする"
 
 #: gst/gst.c:335
 msgid "Enable verbose plugin loading diagnostics"
@@ -61,11 +61,11 @@ msgstr ""
 
 #: gst/gst.c:339
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "プラグインを含むコロン (:) で区切られたパス"
 
 #: gst/gst.c:339
 msgid "PATHS"
-msgstr "CIĞIRLAR"
+msgstr "PATHS"
 
 #: gst/gst.c:342
 msgid ""
@@ -75,47 +75,47 @@ msgstr ""
 
 #: gst/gst.c:344
 msgid "PLUGINS"
-msgstr "ƏLAVƏLƏR"
+msgstr "PLUGINS"
 
 #: gst/gst.c:347
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
+"プラグインのロード中に発生したセグメンテーション違反のトラップを無効にする"
 
 #: gst/gst.c:352
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "レジストリのアップデートを無効にする"
 
 #: gst/gst.c:357
 msgid "Disable the use of fork() while scanning the registry"
-msgstr ""
+msgstr "レジストリをスキャンする際に fork() を使わない"
 
 #: gst/gst.c:378
 msgid "GStreamer Options"
-msgstr ""
+msgstr "GStreamer オプション"
 
 #: gst/gst.c:379
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "GStreamer buraxılışını göstər"
+msgstr "GStreamer オプションを表示する"
 
 #: gst/gst.c:772
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "%s へのレジストリキャッシュの書き込み中にエラーが発生しました: %s"
 
 #: gst/gst.c:808 gst/gst.c:817 gst/gst.c:862
 #, c-format
 msgid "Error re-scanning registry %s: %s"
-msgstr ""
+msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
 
 #: gst/gst.c:877
 #, c-format
 msgid "Error re-scanning registry %s"
-msgstr ""
+msgstr "レジストリ %s の再スキャン中にエラーが発生しました"
 
 #: gst/gst.c:1255
 msgid "Unknown option"
-msgstr ""
+msgstr "不明なオプション"
 
 #: gst/gstelement.c:299 gst/gstutils.c:2270
 #, c-format
@@ -128,6 +128,8 @@ msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
+"追加のデバッグ情報:\n"
+"%s\n"
 
 #: gst/gsterror.c:139
 msgid "GStreamer encountered a general core library error."
@@ -140,11 +142,11 @@ msgstr ""
 
 #: gst/gsterror.c:144
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
+msgstr "GStreamer 内部エラー: コードが実装されていません"
 
 #: gst/gsterror.c:146
 msgid "Internal GStreamer error: state change failed."
-msgstr ""
+msgstr "GStreamer 内部エラー: 状態変更に失敗しました"
 
 #: gst/gsterror.c:147
 msgid "Internal GStreamer error: pad problem."
@@ -152,19 +154,19 @@ msgstr ""
 
 #: gst/gsterror.c:149
 msgid "Internal GStreamer error: thread problem."
-msgstr ""
+msgstr "GStreamer 内部エラー: スレッドの問題"
 
 #: gst/gsterror.c:151
 msgid "Internal GStreamer error: negotiation problem."
-msgstr ""
+msgstr "GStreamer 内部エラー: ネゴシエーションの問題"
 
 #: gst/gsterror.c:153
 msgid "Internal GStreamer error: event problem."
-msgstr ""
+msgstr "GStreamer 内部エラー: イベントの問題"
 
 #: gst/gsterror.c:155
 msgid "Internal GStreamer error: seek problem."
-msgstr ""
+msgstr "GStreamer 内部エラー: シークの問題"
 
 #: gst/gsterror.c:157
 msgid "Internal GStreamer error: caps problem."
@@ -172,11 +174,11 @@ msgstr ""
 
 #: gst/gsterror.c:158
 msgid "Internal GStreamer error: tag problem."
-msgstr ""
+msgstr "GStreamer 内部エラー: タグの問題"
 
 #: gst/gsterror.c:160
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "GStreamerはプラグインを見つけることができません"
 
 #: gst/gsterror.c:162
 msgid "Internal GStreamer error: clock problem."
@@ -187,86 +189,89 @@ msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
+"このアプリケーションはGStreamer で無効にしている機能を使用しようとしています"
 
 #: gst/gsterror.c:179
 msgid "GStreamer encountered a general supporting library error."
-msgstr ""
+msgstr "GStreamer上で一般的なサポートライブラリエラーが起きました"
 
 #: gst/gsterror.c:183
 msgid "Could not initialize supporting library."
-msgstr ""
+msgstr "サポートライブラリを初期化できません"
 
 #: gst/gsterror.c:184
 msgid "Could not close supporting library."
-msgstr ""
+msgstr "サポートライブラリをクローズできません"
 
 #: gst/gsterror.c:185
 msgid "Could not configure supporting library."
-msgstr ""
+msgstr "サポートライブラリを構成できません"
 
 #: gst/gsterror.c:199
 msgid "GStreamer encountered a general resource error."
-msgstr ""
+msgstr "GStreamer 上で一般的なリソースエラーが起きました"
 
 #: gst/gsterror.c:203
 msgid "Resource not found."
-msgstr ""
+msgstr "リソースが見つかりません"
 
 #: gst/gsterror.c:204
 msgid "Resource busy or not available."
-msgstr ""
+msgstr "リソースがビジーか利用可能ではありません"
 
 #: gst/gsterror.c:205
 msgid "Could not open resource for reading."
-msgstr ""
+msgstr "読み込み用にリソースを開くことができません"
 
 #: gst/gsterror.c:206
 msgid "Could not open resource for writing."
-msgstr ""
+msgstr "書き込み用にリソースを開くことができません"
 
 #: gst/gsterror.c:208
 msgid "Could not open resource for reading and writing."
-msgstr ""
+msgstr "読み書き用にリソースを開くことができません"
 
 #: gst/gsterror.c:209
 msgid "Could not close resource."
-msgstr ""
+msgstr "リソースをクローズできません"
 
 #: gst/gsterror.c:210
 msgid "Could not read from resource."
-msgstr ""
+msgstr "リソースから読み込むことができません"
 
 #: gst/gsterror.c:211
 msgid "Could not write to resource."
-msgstr ""
+msgstr "リソースを書き込むことができません"
 
 #: gst/gsterror.c:212
 msgid "Could not perform seek on resource."
-msgstr ""
+msgstr "リソース上でリークができません"
 
 #: gst/gsterror.c:213
 msgid "Could not synchronize on resource."
-msgstr ""
+msgstr "リソースを同期できません"
 
 #: gst/gsterror.c:215
 msgid "Could not get/set settings from/on resource."
-msgstr ""
+msgstr "リソース上またはリソースから設定を取得・変更ができません"
 
 #: gst/gsterror.c:216
 msgid "No space left on the resource."
-msgstr ""
+msgstr "リソースに空きがありません"
 
 #: gst/gsterror.c:230
 msgid "GStreamer encountered a general stream error."
-msgstr ""
+msgstr "GStreamer 上で一般的なストリームエラーが起きました"
 
 #: gst/gsterror.c:235
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
+"エレメントはこのストリームのための処理を実装していません。バグを登録してくだ"
+"さい"
 
 #: gst/gsterror.c:237
 msgid "Could not determine type of stream."
-msgstr ""
+msgstr "ストリームの種類を判別できません"
 
 #: gst/gsterror.c:239
 msgid "The stream is of a different type than handled by this element."
@@ -274,37 +279,37 @@ msgstr ""
 
 #: gst/gsterror.c:241
 msgid "There is no codec present that can handle the stream's type."
-msgstr ""
+msgstr "このストリームを処理することができるコーデックがありません"
 
 #: gst/gsterror.c:242
 msgid "Could not decode stream."
-msgstr ""
+msgstr "ストリームをデコードできません"
 
 #: gst/gsterror.c:243
 msgid "Could not encode stream."
-msgstr ""
+msgstr "ストリームをエンコードできません"
 
 #: gst/gsterror.c:244
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "出力ストリームを取り出せません"
 
 #: gst/gsterror.c:245
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "ストリームを多重化できません"
 
 #: gst/gsterror.c:246
 msgid "The stream is in the wrong format."
-msgstr ""
+msgstr "ストリームのフォーマットが正しくありません"
 
 #: gst/gsterror.c:248
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "ストリームは暗号化をサポートしていません"
 
 #: gst/gsterror.c:250
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
-msgstr ""
+msgstr "ストリームは暗号化されていますが適したキーがないため復元できません"
 
 #: gst/gsterror.c:302
 #, c-format
@@ -322,15 +327,15 @@ msgstr ""
 
 #: gst/gsttaglist.c:99
 msgid "title"
-msgstr ""
+msgstr "タイトル"
 
 #: gst/gsttaglist.c:99
 msgid "commonly used title"
-msgstr ""
+msgstr "共通につかわれるタイトル"
 
 #: gst/gsttaglist.c:102
 msgid "title sortname"
-msgstr ""
+msgstr "タイトルのソート名"
 
 #: gst/gsttaglist.c:102
 msgid "commonly used title for sorting purposes"
@@ -338,7 +343,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:105
 msgid "artist"
-msgstr ""
+msgstr "アーティスト"
 
 #: gst/gsttaglist.c:106
 msgid "person(s) responsible for the recording"
@@ -346,7 +351,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:110
 msgid "artist sortname"
-msgstr ""
+msgstr "アーティストのソート名"
 
 #: gst/gsttaglist.c:111
 msgid "person(s) responsible for the recording for sorting purposes"
@@ -354,7 +359,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:114
 msgid "album"
-msgstr ""
+msgstr "アルバム"
 
 #: gst/gsttaglist.c:115
 msgid "album containing this data"
@@ -362,7 +367,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:118
 msgid "album sortname"
-msgstr ""
+msgstr "アルバムのソート名"
 
 #: gst/gsttaglist.c:119
 msgid "album containing this data for sorting purposes"
@@ -370,32 +375,31 @@ msgstr ""
 
 #: gst/gsttaglist.c:121
 msgid "date"
-msgstr "tarix"
+msgstr "日付"
 
 #: gst/gsttaglist.c:121
 msgid "date the data was created (as a GDate structure)"
-msgstr ""
+msgstr "データが作成された日付 (GData 構造体として)"
 
 #: gst/gsttaglist.c:124
 msgid "genre"
-msgstr ""
+msgstr "ジャンル"
 
 #: gst/gsttaglist.c:125
 msgid "genre this data belongs to"
-msgstr ""
+msgstr "このデータが属しているジャンル"
 
 #: gst/gsttaglist.c:128
 msgid "comment"
-msgstr "şərh"
+msgstr "コメント"
 
 #: gst/gsttaglist.c:129
 msgid "free text commenting the data"
 msgstr ""
 
 #: gst/gsttaglist.c:132
-#, fuzzy
 msgid "extended comment"
-msgstr "şərh"
+msgstr ""
 
 #: gst/gsttaglist.c:133
 msgid "free text commenting the data in key=value or key[en]=comment form"
@@ -403,7 +407,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:137
 msgid "track number"
-msgstr ""
+msgstr "トラック番号"
 
 #: gst/gsttaglist.c:138
 msgid "track number inside a collection"
@@ -411,7 +415,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:141
 msgid "track count"
-msgstr ""
+msgstr "トラック数"
 
 #: gst/gsttaglist.c:142
 msgid "count of tracks inside collection this track belongs to"
@@ -419,15 +423,15 @@ msgstr ""
 
 #: gst/gsttaglist.c:146
 msgid "disc number"
-msgstr ""
+msgstr "ディスク番号"
 
 #: gst/gsttaglist.c:147
 msgid "disc number inside a collection"
-msgstr ""
+msgstr "コレクション内のディスク番号"
 
 #: gst/gsttaglist.c:150
 msgid "disc count"
-msgstr ""
+msgstr "ディスク枚数"
 
 #: gst/gsttaglist.c:151
 msgid "count of discs inside collection this disc belongs to"
@@ -435,7 +439,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:155
 msgid "location"
-msgstr ""
+msgstr "場所"
 
 #: gst/gsttaglist.c:157
 msgid ""
@@ -445,7 +449,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:160
 msgid "description"
-msgstr "izahat"
+msgstr "詳細"
 
 #: gst/gsttaglist.c:160
 msgid "short text describing the content of the data"
@@ -453,96 +457,93 @@ msgstr ""
 
 #: gst/gsttaglist.c:163
 msgid "version"
-msgstr "buraxılış"
+msgstr "バージョン"
 
 #: gst/gsttaglist.c:163
 msgid "version of this data"
-msgstr ""
+msgstr "このデータのバージョン"
 
 #: gst/gsttaglist.c:164
 msgid "ISRC"
-msgstr ""
+msgstr "ISRC"
 
 #: gst/gsttaglist.c:166
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
+"International Standard Recording Code - http://www.ifpi.org/isrc/ を参照して"
+"ください"
 
 #: gst/gsttaglist.c:168
 msgid "organization"
-msgstr ""
+msgstr "組織"
 
 #: gst/gsttaglist.c:171
 msgid "copyright"
-msgstr "müəllif hüququ"
+msgstr ""
 
 #: gst/gsttaglist.c:171
 msgid "copyright notice of the data"
-msgstr "mə'lumatın müəllif hüququ qeydi"
+msgstr ""
 
 #: gst/gsttaglist.c:173
-#, fuzzy
 msgid "copyright uri"
-msgstr "müəllif hüququ"
+msgstr ""
 
 #: gst/gsttaglist.c:174
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "mə'lumatın müəllif hüququ qeydi"
+msgstr ""
 
 #: gst/gsttaglist.c:177
 msgid "contact"
-msgstr "əlaqə"
+msgstr "コンタクト"
 
 #: gst/gsttaglist.c:177
 msgid "contact information"
-msgstr "əlaqə mə'lumatı"
+msgstr "コンタクト情報"
 
 #: gst/gsttaglist.c:179
 msgid "license"
-msgstr "lisenziya"
+msgstr "ライセンス"
 
 #: gst/gsttaglist.c:179
 msgid "license of data"
-msgstr "mə'lumatın lisenziyası"
+msgstr "データのライセンス"
 
 #: gst/gsttaglist.c:181
-#, fuzzy
 msgid "license uri"
-msgstr "lisenziya"
+msgstr "ライセンス uri"
 
 #: gst/gsttaglist.c:182
-#, fuzzy
 msgid "URI to the license of the data"
-msgstr "mə'lumatın lisenziyası"
+msgstr "デーtのライセンスへの URI"
 
 #: gst/gsttaglist.c:185
 msgid "performer"
-msgstr "ifaçı"
+msgstr "演奏者"
 
 #: gst/gsttaglist.c:186
 msgid "person(s) performing"
-msgstr "ifa edən şəxs(lər)"
+msgstr ""
 
 #: gst/gsttaglist.c:189
 msgid "composer"
-msgstr ""
+msgstr "作曲者"
 
 #: gst/gsttaglist.c:190
-#, fuzzy
 msgid "person(s) who composed the recording"
-msgstr "ifa edən şəxs(lər)"
+msgstr ""
 
 #: gst/gsttaglist.c:194
 msgid "duration"
-msgstr "sürəklik"
+msgstr "演奏時間"
 
 #: gst/gsttaglist.c:194
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr ""
+msgstr "GStreamer 時間単位 (nanoseconds) での長さ"
 
 #: gst/gsttaglist.c:197
 msgid "codec"
-msgstr ""
+msgstr "コーデック"
 
 #: gst/gsttaglist.c:198
 msgid "codec the data is stored in"
@@ -550,7 +551,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:201
 msgid "video codec"
-msgstr ""
+msgstr "動画コーデック"
 
 #: gst/gsttaglist.c:201
 msgid "codec the video data is stored in"
@@ -558,7 +559,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:204
 msgid "audio codec"
-msgstr ""
+msgstr "音声コーデック"
 
 #: gst/gsttaglist.c:204
 msgid "codec the audio data is stored in"
@@ -566,7 +567,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:206
 msgid "bitrate"
-msgstr ""
+msgstr "ビットレート"
 
 #: gst/gsttaglist.c:206
 msgid "exact or average bitrate in bits/s"
@@ -574,7 +575,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:208
 msgid "nominal bitrate"
-msgstr ""
+msgstr "通常ビットレート"
 
 #: gst/gsttaglist.c:208
 msgid "nominal bitrate in bits/s"
@@ -582,7 +583,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:210
 msgid "minimum bitrate"
-msgstr ""
+msgstr "最小ビットレート"
 
 #: gst/gsttaglist.c:210
 msgid "minimum bitrate in bits/s"
@@ -590,7 +591,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:212
 msgid "maximum bitrate"
-msgstr ""
+msgstr "最大ビットレート"
 
 #: gst/gsttaglist.c:212
 msgid "maximum bitrate in bits/s"
@@ -598,27 +599,27 @@ msgstr ""
 
 #: gst/gsttaglist.c:215
 msgid "encoder"
-msgstr ""
+msgstr "エンコーダー"
 
 #: gst/gsttaglist.c:215
 msgid "encoder used to encode this stream"
-msgstr ""
+msgstr "このストリームをエンコードするのに使ったエンコーダー"
 
 #: gst/gsttaglist.c:218
 msgid "encoder version"
-msgstr ""
+msgstr "エンコーダーバージョン"
 
 #: gst/gsttaglist.c:219
 msgid "version of the encoder used to encode this stream"
-msgstr ""
+msgstr "このストリームをエンコードするのに使ったエンコーダーのバージョン"
 
 #: gst/gsttaglist.c:221
 msgid "serial"
-msgstr "seriya nömrəsi"
+msgstr "シリアル"
 
 #: gst/gsttaglist.c:221
 msgid "serial number of track"
-msgstr "mahnının seriya nömrəsi"
+msgstr "トラックのシリアル番号"
 
 #: gst/gsttaglist.c:223
 msgid "replaygain track gain"
@@ -634,7 +635,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:225
 msgid "peak of the track"
-msgstr ""
+msgstr "トラックのピーク"
 
 #: gst/gsttaglist.c:227
 msgid "replaygain album gain"
@@ -650,7 +651,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:229
 msgid "peak of the album"
-msgstr ""
+msgstr "アルバムのピーク"
 
 #: gst/gsttaglist.c:231
 msgid "replaygain reference level"
@@ -662,7 +663,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:234
 msgid "language code"
-msgstr ""
+msgstr "言語コード"
 
 #: gst/gsttaglist.c:235
 msgid "language code for this stream, conforming to ISO-639-1"
@@ -670,31 +671,31 @@ msgstr ""
 
 #: gst/gsttaglist.c:237
 msgid "image"
-msgstr ""
+msgstr "画像"
 
 #: gst/gsttaglist.c:237
 msgid "image related to this stream"
-msgstr ""
+msgstr "このストリームに関連した画像"
 
 #: gst/gsttaglist.c:239
 msgid "preview image"
-msgstr ""
+msgstr "プレビュー画像"
 
 #: gst/gsttaglist.c:239
 msgid "preview image related to this stream"
-msgstr ""
+msgstr "このストリームに関連したプレビュー画像"
 
 #: gst/gsttaglist.c:241
 msgid "attachment"
-msgstr ""
+msgstr "アタッチメント"
 
 #: gst/gsttaglist.c:241
 msgid "file attached to this stream"
-msgstr ""
+msgstr "このストリームに添付されたファイル"
 
 #: gst/gsttaglist.c:244
 msgid "beats per minute"
-msgstr ""
+msgstr "BPM"
 
 #: gst/gsttaglist.c:244
 msgid "number of beats per minute in audio"
@@ -702,7 +703,7 @@ msgstr ""
 
 #: gst/gsttaglist.c:246
 msgid "keywords"
-msgstr ""
+msgstr "キーワード"
 
 #: gst/gsttaglist.c:246
 msgid "comma separated keywords describing the content"
@@ -767,7 +768,7 @@ msgstr ""
 #: gst/parse/grammar.y:366
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr ""
+msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
 
 #: gst/parse/grammar.y:381
 #, c-format
@@ -777,12 +778,12 @@ msgstr ""
 #: gst/parse/grammar.y:523
 #, c-format
 msgid "could not link %s to %s"
-msgstr ""
+msgstr "%s を %s へリンクできません"
 
 #: gst/parse/grammar.y:571
 #, c-format
 msgid "no element \"%s\""
-msgstr ""
+msgstr "エレメント \"%s\" がありません"
 
 #: gst/parse/grammar.y:623
 #, c-format
@@ -801,7 +802,7 @@ msgstr ""
 #: gst/parse/grammar.y:727
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr ""
+msgstr "URI \"%s\" のソースエレメントがありません"
 
 #: gst/parse/grammar.y:737
 #, c-format
@@ -820,7 +821,7 @@ msgstr ""
 
 #: gst/parse/grammar.y:766
 msgid "empty pipeline not allowed"
-msgstr ""
+msgstr "空のパイプラインは許可されません"
 
 #: libs/gst/base/gstbasesrc.c:1997
 msgid "Internal clock error."
@@ -829,7 +830,7 @@ msgstr ""
 #: libs/gst/base/gstbasesrc.c:2329 libs/gst/base/gstbasesrc.c:2340
 #: libs/gst/base/gstbasesink.c:3257
 msgid "Internal data flow error."
-msgstr ""
+msgstr "内部データフローエラー"
 
 #: libs/gst/base/gstbasesink.c:2883
 msgid "Internal data flow problem."
@@ -837,7 +838,7 @@ msgstr ""
 
 #: libs/gst/base/gstbasesink.c:3246
 msgid "Internal data stream error."
-msgstr ""
+msgstr "内部データストリームエラー"
 
 #: plugins/elements/gstcapsfilter.c:109
 msgid "Filter caps"
@@ -852,60 +853,60 @@ msgstr ""
 #: plugins/elements/gstfdsink.c:300
 #, c-format
 msgid "Error while writing to file descriptor \"%d\"."
-msgstr ""
+msgstr "ファイルディスクリプタ \"%d\" への書き込み中にエラーが発生しました"
 
 #: plugins/elements/gstfdsink.c:340
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
-msgstr ""
+msgstr "ファイルディスクリプタ \"%d\" が正しくありません"
 
 #: plugins/elements/gstfilesink.c:353
 msgid "No file name specified for writing."
-msgstr ""
+msgstr "書き込み用のファイル名が指定されていません"
 
 #: plugins/elements/gstfilesink.c:359
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr ""
+msgstr "書き込み用にファイル \"%s\" を開くことができません"
 
 #: plugins/elements/gstfilesink.c:384
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr ""
+msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
 
 #: plugins/elements/gstfilesink.c:524
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr ""
+msgstr "ファイル \"%s\" のシーク中にエラーが発生しました"
 
 #: plugins/elements/gstfilesink.c:531 plugins/elements/gstfilesink.c:593
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr ""
+msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
 
 #: plugins/elements/gstfilesrc.c:1038
 msgid "No file name specified for reading."
-msgstr ""
+msgstr "読み込み用のファイル名が指定されていません"
 
 #: plugins/elements/gstfilesrc.c:1050
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr ""
+msgstr "読み込み用にファイル \"%s\" を開くことができません"
 
 #: plugins/elements/gstfilesrc.c:1059
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr ""
+msgstr "\"%s\" 上の情報を取得できません"
 
 #: plugins/elements/gstfilesrc.c:1066
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr ""
+msgstr "ファイル \"%s\" はディレクトリです"
 
 #: plugins/elements/gstfilesrc.c:1073
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr ""
+msgstr "ファイル \"%s\" はソケットです"
 
 #: plugins/elements/gstidentity.c:549
 msgid "Failed after iterations as requested."
@@ -917,15 +918,15 @@ msgstr ""
 
 #: plugins/elements/gsttypefindelement.c:204
 msgid "detected capabilities in stream"
-msgstr ""
+msgstr "ストリーム内のケイパビリティを認識しました"
 
 #: plugins/elements/gsttypefindelement.c:207
 msgid "minimum"
-msgstr "minimal"
+msgstr "最小値"
 
 #: plugins/elements/gsttypefindelement.c:212
 msgid "maximum"
-msgstr "maksimal"
+msgstr "最大値"
 
 #: plugins/elements/gsttypefindelement.c:217
 msgid "force caps"
@@ -938,27 +939,27 @@ msgstr ""
 #: plugins/elements/gsttypefindelement.c:522
 #: plugins/elements/gsttypefindelement.c:786
 msgid "Stream contains no data."
-msgstr ""
+msgstr "ストリームでデータが含まれていません"
 
 #: tools/gst-inspect.c:244
 msgid "Implemented Interfaces:\n"
-msgstr ""
+msgstr "実装されているインターフェイス:\n"
 
 #: tools/gst-inspect.c:293
 msgid "readable"
-msgstr ""
+msgstr "読み込み可能"
 
 #: tools/gst-inspect.c:300
 msgid "writable"
-msgstr ""
+msgstr "書き込み可能"
 
 #: tools/gst-inspect.c:307
 msgid "controllable"
-msgstr ""
+msgstr "コントロール可能"
 
 #: tools/gst-inspect.c:1015
 msgid "Total count: "
-msgstr ""
+msgstr "合計数: "
 
 #: tools/gst-inspect.c:1016
 #, c-format
@@ -976,7 +977,7 @@ msgstr[1] ""
 
 #: tools/gst-inspect.c:1400
 msgid "Print all elements"
-msgstr ""
+msgstr "すべてのエレメントを表示する"
 
 #: tools/gst-inspect.c:1402
 msgid ""
@@ -996,7 +997,7 @@ msgstr ""
 #: tools/gst-inspect.c:1500
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr ""
+msgstr "プラグインファイルをロードできませんでした: %s\n"
 
 #: tools/gst-inspect.c:1505
 #, c-format
@@ -1005,32 +1006,33 @@ msgstr ""
 
 #: tools/gst-launch.c:80
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
+msgstr "使い方: gst-xmllaunch <file.xml> [ element.property=value ...]\n"
 
 #: tools/gst-launch.c:89
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr ""
+msgstr "エラー: xml ファイル '%s' の解析に失敗しました\n"
 
 #: tools/gst-launch.c:95
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr ""
+"エラー: ファイル '%s' にトップレベルのパイプラインエレメントがありません\n"
 
 #: tools/gst-launch.c:102
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
-msgstr ""
+msgstr "警告: トップレベルのエレメントは一つのみサポートしています"
 
 #: tools/gst-launch.c:113
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr ""
+msgstr "エラー: コマンドライン引数 %d を解析できません: %s\n"
 
 #: tools/gst-launch.c:124
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr ""
+msgstr "警告: エレメント名 '%s' が見つかりません\n"
 
 #: tools/gst-launch.c:397
 msgid "Got Message #%"
@@ -1052,6 +1054,8 @@ msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"情報:\n"
+"%s\n"
 
 #: tools/gst-launch.c:462
 #, c-format
@@ -1064,18 +1068,21 @@ msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
 #: tools/gst-launch.c:525
+#, fuzzy
 msgid "buffering..."
-msgstr ""
+msgstr "バッファリング中... %d  \n"
 
 #: tools/gst-launch.c:537
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
+"バッファリングが完了しましたので、パイプラインを再生中 (PLAYING) にしま"
+"す...\n"
 
 #: tools/gst-launch.c:545
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "バッファリング中なので、パイプラインを一時停止 (PAUSED) にします...\n"
 
 #: tools/gst-launch.c:554
 #, c-format
@@ -1085,11 +1092,11 @@ msgstr ""
 #: tools/gst-launch.c:566
 #, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "割り込み: パイプラインを停止しています...\n"
 
 #: tools/gst-launch.c:601
 msgid "Output tags (also known as metadata)"
-msgstr ""
+msgstr "タグ (メタデータ) を出力する"
 
 #: tools/gst-launch.c:603
 msgid "Output status information and property notifications"
@@ -1097,15 +1104,15 @@ msgstr ""
 
 #: tools/gst-launch.c:605
 msgid "Output messages"
-msgstr ""
+msgstr "出力メッセージ"
 
 #: tools/gst-launch.c:607
 msgid "Do not output status information of TYPE"
-msgstr ""
+msgstr "TYPE のステータス情報を出力しない"
 
 #: tools/gst-launch.c:607
 msgid "TYPE1,TYPE2,..."
-msgstr ""
+msgstr "TYPE1,TYPE2,..."
 
 #: tools/gst-launch.c:610
 msgid "Save xml representation of pipeline to FILE and exit"
@@ -1113,25 +1120,25 @@ msgstr ""
 
 #: tools/gst-launch.c:610
 msgid "FILE"
-msgstr "FAYL"
+msgstr "FILE"
 
 #: tools/gst-launch.c:613
 msgid "Do not install a fault handler"
-msgstr ""
+msgstr "フォールトハンドラをインストールしない"
 
 #: tools/gst-launch.c:615
 msgid "Print alloc trace (if enabled at compile time)"
-msgstr ""
+msgstr "alloc トレースを表示する (コンパイル時に有効にする必要があります)"
 
 #: tools/gst-launch.c:683
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr ""
+msgstr "エラー: パイプラインを構築することができません: %s\n"
 
 #: tools/gst-launch.c:687
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr ""
+msgstr "エラー: パイプラインを構築することができません\n"
 
 #: tools/gst-launch.c:691
 #, c-format
@@ -1141,12 +1148,12 @@ msgstr ""
 #: tools/gst-launch.c:718
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr ""
+msgstr "エラー: 'pipeline' エレメントが見つかりませんでした\n"
 
 #: tools/gst-launch.c:724 tools/gst-launch.c:794
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "パイプラインを一時停止 (PAUSED) にしています...\n"
 
 #: tools/gst-launch.c:729
 #, c-format
@@ -1176,7 +1183,7 @@ msgstr ""
 #: tools/gst-launch.c:759
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "パイプラインを再生中 (PLAYING) にしています...\n"
 
 #: tools/gst-launch.c:765
 #, c-format
@@ -1200,16 +1207,4 @@ msgstr ""
 #: tools/gst-launch.c:808
 #, c-format
 msgid "FREEING pipeline ...\n"
-msgstr ""
-
-#~ msgid "')"
-#~ msgstr "')"
-
-#~ msgid "SCHEDULER"
-#~ msgstr "VAXTLAŞDIRICI"
-
-#~ msgid "Registry to use"
-#~ msgstr "İşlədiləcək qeyd bazası"
-
-#~ msgid "REGISTRY"
-#~ msgstr "QEYDBAZASI"
+msgstr "パイプラインを解放 (FREEING) しています...\n"

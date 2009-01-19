@@ -1,13 +1,13 @@
 # Indonesian translations for gstreamer package.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2008.
+# Andhika Padmawan <andhika.padmawan@gmail.com>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-10 17:50+0100\n"
-"PO-Revision-Date: 2008-09-17 21:51+0700\n"
+"Project-Id-Version: gstreamer 0.10.21.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:14+0000\n"
+"PO-Revision-Date: 2009-01-13 21:05+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -103,31 +103,31 @@ msgstr "Opsi GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Tampilkan Opsi GStreamer"
 
-#: gst/gst.c:754
+#: gst/gst.c:772
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Galat menulis tembolok registry ke %s: %s"
 
-#: gst/gst.c:790 gst/gst.c:799 gst/gst.c:844
+#: gst/gst.c:808 gst/gst.c:817 gst/gst.c:862
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Galat memindai ulang registry %s: %s"
 
-#: gst/gst.c:859
+#: gst/gst.c:877
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Galat memindai ulang registry %s"
 
-#: gst/gst.c:1231
+#: gst/gst.c:1255
 msgid "Unknown option"
 msgstr "Opsi tak diketahui"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2208
+#: gst/gstelement.c:299 gst/gstutils.c:2270
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "GALAT: dari elemen %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2210 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2272 tools/gst-launch.c:464
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -331,7 +331,7 @@ msgstr "Tak ada pesan galat untuk domain %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Tak ada pesan galat standar untuk domain %s dan kode %d."
 
-#: gst/gstpipeline.c:527
+#: gst/gstpipeline.c:540
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Jam terpilih tak dapat digunakan dalam baris pipa."
 
@@ -846,19 +846,20 @@ msgstr "tak dapat menautkan elemen buang untuk URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "baris pipa kosong tak diizinkan"
 
-#: libs/gst/base/gstbasesrc.c:1909
+#: libs/gst/base/gstbasesrc.c:1997
 msgid "Internal clock error."
 msgstr "Galat jam internal."
 
-#: libs/gst/base/gstbasesrc.c:2233 libs/gst/base/gstbasesrc.c:2244
+#: libs/gst/base/gstbasesrc.c:2329 libs/gst/base/gstbasesrc.c:2340
+#: libs/gst/base/gstbasesink.c:3257
 msgid "Internal data flow error."
 msgstr "Galat aliran data internal."
 
-#: libs/gst/base/gstbasesink.c:2688
+#: libs/gst/base/gstbasesink.c:2883
 msgid "Internal data flow problem."
 msgstr "Masalah aliran data internal."
 
-#: libs/gst/base/gstbasesink.c:2837
+#: libs/gst/base/gstbasesink.c:3246
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
 
@@ -874,65 +875,65 @@ msgstr ""
 "Larang kemampuan yang mungkin diizinkan (KOSONG berarti APAPUN). Pengaturan "
 "properti ini bersumber pada objek GstCaps yang disediakan."
 
-#: plugins/elements/gstfdsink.c:296
+#: plugins/elements/gstfdsink.c:300
 #, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "Galat ketika menulis ke penjelas berkas \"%d\"."
 
-#: plugins/elements/gstfdsink.c:336
+#: plugins/elements/gstfdsink.c:340
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Penjelas berkas \"%d\" tidak sah."
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:353
 msgid "No file name specified for writing."
 msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
 
-#: plugins/elements/gstfilesink.c:357
+#: plugins/elements/gstfilesink.c:359
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Tak dapat membuka berkas \"%s\" untuk ditulis."
 
-#: plugins/elements/gstfilesink.c:382
+#: plugins/elements/gstfilesink.c:384
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Galat menulis berkas \"%s\"."
 
-#: plugins/elements/gstfilesink.c:518
+#: plugins/elements/gstfilesink.c:524
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Galat ketika mencari di berkas \"%s\"."
 
-#: plugins/elements/gstfilesink.c:525 plugins/elements/gstfilesink.c:587
+#: plugins/elements/gstfilesink.c:531 plugins/elements/gstfilesink.c:593
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Galat ketika menulis ke berkas \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:1010
+#: plugins/elements/gstfilesrc.c:1038
 msgid "No file name specified for reading."
 msgstr "Tak ada nama yang ditentukan untuk dibaca."
 
-#: plugins/elements/gstfilesrc.c:1022
+#: plugins/elements/gstfilesrc.c:1050
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
 
-#: plugins/elements/gstfilesrc.c:1031
+#: plugins/elements/gstfilesrc.c:1059
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Tak bisa mendapatkan info di \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:1038
+#: plugins/elements/gstfilesrc.c:1066
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" adalah direktori."
 
-#: plugins/elements/gstfilesrc.c:1045
+#: plugins/elements/gstfilesrc.c:1073
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Berkas \"%s\" adalah soket."
 
-#: plugins/elements/gstidentity.c:547
+#: plugins/elements/gstidentity.c:549
 msgid "Failed after iterations as requested."
 msgstr "Gagal setelah pengulangan seperti yang diminta."
 
@@ -960,8 +961,8 @@ msgstr "paksa huruf"
 msgid "force caps without doing a typefind"
 msgstr "paksa huruf tanpa melakukan pencarian tipe"
 
-#: plugins/elements/gsttypefindelement.c:521
-#: plugins/elements/gsttypefindelement.c:785
+#: plugins/elements/gsttypefindelement.c:522
+#: plugins/elements/gsttypefindelement.c:786
 msgid "Stream contains no data."
 msgstr "Arus tidak berisi data."
 
@@ -997,11 +998,11 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d fitur"
 
-#: tools/gst-inspect.c:1324
+#: tools/gst-inspect.c:1400
 msgid "Print all elements"
 msgstr "Cetak semua elemen"
 
-#: tools/gst-inspect.c:1326
+#: tools/gst-inspect.c:1402
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -1011,12 +1012,21 @@ msgstr ""
 "                                       Berguna dalam koneksi dengan plugin "
 "otomatis eksternal dalam mekanisme instalasi"
 
-#: tools/gst-inspect.c:1406
+#: tools/gst-inspect.c:1407
+msgid "List the plugin contents"
+msgstr "Tampilkan isi plugin"
+
+#: tools/gst-inspect.c:1410
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+"Cetak skema URI yang didukung, dengan elemen yang mengimplementasikannya"
+
+#: tools/gst-inspect.c:1500
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Tak dapat membuat berkas plugin: %s\n"
 
-#: tools/gst-inspect.c:1411
+#: tools/gst-inspect.c:1505
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Tak ada elemen atau plugin '%s'\n"
@@ -1050,22 +1060,21 @@ msgstr "GALAT: tak dapat menguraikan argumen baris perintah %d: %s.\n"
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "GALAT: elemen yang dinamakan '%s' tak ditemukan.\n"
 
-#: tools/gst-launch.c:394
-#, c-format
-msgid "Got Message from element \"%s\" (%s): "
-msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
+#: tools/gst-launch.c:397
+msgid "Got Message #%"
+msgstr "Dapat Pesan #%"
 
-#: tools/gst-launch.c:420
+#: tools/gst-launch.c:424
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Mendapat EOS dari elemen \"%s\".\n"
 
-#: tools/gst-launch.c:428
+#: tools/gst-launch.c:432
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
 
-#: tools/gst-launch.c:441
+#: tools/gst-launch.c:445
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1074,150 +1083,157 @@ msgstr ""
 "INFO:\n"
 "%s\n"
 
-#: tools/gst-launch.c:458
+#: tools/gst-launch.c:462
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "PERINGATAN: dari elemen %s: %s\n"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:510
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
-#: tools/gst-launch.c:521
-#, fuzzy, c-format
-msgid "buffering... %d  \r"
-msgstr "menyangga... %d  \n"
+#: tools/gst-launch.c:525
+msgid "buffering..."
+msgstr "menyangga..."
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:537
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Selesai menyangga, mengatur baris pipa ke MEMUTAR ...\n"
 
-#: tools/gst-launch.c:541
+#: tools/gst-launch.c:545
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Menyangga, mengatur baris pipa ke JEDA ...\n"
 
-#: tools/gst-launch.c:556
+#: tools/gst-launch.c:554
+#, c-format
+msgid "Redistribute latency...\n"
+msgstr "Mendistribusikan ulang latency...\n"
+
+#: tools/gst-launch.c:566
 #, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interupsi: Menghentikan baris pipa ...\n"
 
-#: tools/gst-launch.c:591
+#: tools/gst-launch.c:601
 msgid "Output tags (also known as metadata)"
 msgstr "Tag keluaran (juga dikenal sebagai metadata)"
 
-#: tools/gst-launch.c:593
+#: tools/gst-launch.c:603
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan pemberitahuan properti"
 
-#: tools/gst-launch.c:595
+#: tools/gst-launch.c:605
 msgid "Output messages"
 msgstr "Pesan keluaran"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:607
 msgid "Do not output status information of TYPE"
 msgstr "Jangan keluarkan informasi status dari TIPE"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:607
 msgid "TYPE1,TYPE2,..."
 msgstr "TIPE1, TIPE2,..."
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:610
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Simpan perwakilan xml baris pipa ke BERKAS lalu keluar"
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:610
 msgid "FILE"
 msgstr "BERKAS"
 
-#: tools/gst-launch.c:603
+#: tools/gst-launch.c:613
 msgid "Do not install a fault handler"
 msgstr "Jangan instal penanganan galat"
 
-#: tools/gst-launch.c:605
+#: tools/gst-launch.c:615
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"
 
-#: tools/gst-launch.c:673
+#: tools/gst-launch.c:683
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun: %s.\n"
 
-#: tools/gst-launch.c:677
+#: tools/gst-launch.c:687
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun.\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:691
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "PERINGATAN: baris pipa berisi galat: %s\n"
 
-#: tools/gst-launch.c:708
+#: tools/gst-launch.c:718
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GALAT: elemen 'baris pipa' tak ditemukan.\n"
 
-#: tools/gst-launch.c:714 tools/gst-launch.c:784
+#: tools/gst-launch.c:724 tools/gst-launch.c:794
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Mengatur baris pipa ke JEDA ...\n"
 
-#: tools/gst-launch.c:719
+#: tools/gst-launch.c:729
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "GALAT: Baris pipa tak ingin dijedakan.\n"
 
-#: tools/gst-launch.c:724
+#: tools/gst-launch.c:734
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Baris pipa telah hidup dan tak membutuhkan PRAGULUNG ...\n"
 
-#: tools/gst-launch.c:728
+#: tools/gst-launch.c:738
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Baris pipa PRAGULUNG ...\n"
 
-#: tools/gst-launch.c:731 tools/gst-launch.c:744
+#: tools/gst-launch.c:741 tools/gst-launch.c:754
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GALAT: baris pipa tak ingin dipragulung.\n"
 
-#: tools/gst-launch.c:737
+#: tools/gst-launch.c:747
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Baris pipa telah PRAGULUNG ...\n"
 
-#: tools/gst-launch.c:749
+#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Mengatur baris pipa ke PUTAR ...\n"
 
-#: tools/gst-launch.c:755
+#: tools/gst-launch.c:765
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GALAT: baris pipa tidak ingin diputar.\n"
 
-#: tools/gst-launch.c:778
+#: tools/gst-launch.c:788
 msgid "Execution ended after %"
 msgstr "Eksekusi berakhir setelah %"
 
-#: tools/gst-launch.c:788
+#: tools/gst-launch.c:798
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Mengatur baris pipa ke SIAP ...\n"
 
-#: tools/gst-launch.c:793
+#: tools/gst-launch.c:803
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Mengatur baris pipa ke KOSONG ...\n"
 
-#: tools/gst-launch.c:798
+#: tools/gst-launch.c:808
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "MEMBEBASKAN baris pipa...\n"
+
+#~ msgid "Got Message from element \"%s\" (%s): "
+#~ msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "lokasi asli berkas dalam bentuk URI"

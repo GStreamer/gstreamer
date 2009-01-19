@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.19.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-10 17:50+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:14+0000\n"
 "PO-Revision-Date: 2008-07-21 11:08+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -107,31 +107,31 @@ msgstr "Настройки на GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Показване на опциите на GStreamer"
 
-#: gst/gst.c:754
+#: gst/gst.c:772
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Грешка при запазването на кеша на регистъра в „%s“: %s"
 
-#: gst/gst.c:790 gst/gst.c:799 gst/gst.c:844
+#: gst/gst.c:808 gst/gst.c:817 gst/gst.c:862
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Грешка при повторното прочитане на регистъра „%s“: %s"
 
-#: gst/gst.c:859
+#: gst/gst.c:877
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Грешка при повторното прочитане на регистъра „%s“"
 
-#: gst/gst.c:1231
+#: gst/gst.c:1255
 msgid "Unknown option"
 msgstr "Непозната опция"
 
-#: gst/gstelement.c:299 gst/gstutils.c:2208
+#: gst/gstelement.c:299 gst/gstutils.c:2270
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ГРЕШКА: от елемент %s: %s\n"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2210 tools/gst-launch.c:460
+#: gst/gstelement.c:301 gst/gstutils.c:2272 tools/gst-launch.c:464
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -335,7 +335,7 @@ msgstr "Няма съобщение за грешка за областта %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Няма стандартно съобщение за грешка за областта %s с код %d."
 
-#: gst/gstpipeline.c:527
+#: gst/gstpipeline.c:540
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Избраният часовник не може да се използва в конвейер."
 
@@ -840,19 +840,20 @@ msgstr "не може да се свърже елемент-приемник к�
 msgid "empty pipeline not allowed"
 msgstr "не е позволен празен конвейер"
 
-#: libs/gst/base/gstbasesrc.c:1909
+#: libs/gst/base/gstbasesrc.c:1997
 msgid "Internal clock error."
 msgstr "Вътрешна грешка на часовника."
 
-#: libs/gst/base/gstbasesrc.c:2233 libs/gst/base/gstbasesrc.c:2244
+#: libs/gst/base/gstbasesrc.c:2329 libs/gst/base/gstbasesrc.c:2340
+#: libs/gst/base/gstbasesink.c:3257
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:2688
+#: libs/gst/base/gstbasesink.c:2883
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:2837
+#: libs/gst/base/gstbasesink.c:3246
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
 
@@ -868,65 +869,65 @@ msgstr ""
 "Ограничаване на позволените възможности („NULL“ означава всякакви). "
 "Задаването на това свойство поема указател към подадения обект GstCaps."
 
-#: plugins/elements/gstfdsink.c:296
+#: plugins/elements/gstfdsink.c:300
 #, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "Грешка при запис във файловия дескриптор „%d“."
 
-#: plugins/elements/gstfdsink.c:336
+#: plugins/elements/gstfdsink.c:340
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr "Файловият дескриптор „%d“ е неправилен."
 
-#: plugins/elements/gstfilesink.c:351
+#: plugins/elements/gstfilesink.c:353
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."
 
-#: plugins/elements/gstfilesink.c:357
+#: plugins/elements/gstfilesink.c:359
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Файлът „%s“ не може да се отвори за запис."
 
-#: plugins/elements/gstfilesink.c:382
+#: plugins/elements/gstfilesink.c:384
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Грешка при затварянето на файла „%s“."
 
-#: plugins/elements/gstfilesink.c:518
+#: plugins/elements/gstfilesink.c:524
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Грешка при позициониране във файл „%s“."
 
-#: plugins/elements/gstfilesink.c:525 plugins/elements/gstfilesink.c:587
+#: plugins/elements/gstfilesink.c:531 plugins/elements/gstfilesink.c:593
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при запис във файл „%s“."
 
-#: plugins/elements/gstfilesrc.c:1010
+#: plugins/elements/gstfilesrc.c:1038
 msgid "No file name specified for reading."
 msgstr "Не е указано име на файл за четене."
 
-#: plugins/elements/gstfilesrc.c:1022
+#: plugins/elements/gstfilesrc.c:1050
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да се отвори за четене."
 
-#: plugins/elements/gstfilesrc.c:1031
+#: plugins/elements/gstfilesrc.c:1059
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Не може да се получи информация за „%s“."
 
-#: plugins/elements/gstfilesrc.c:1038
+#: plugins/elements/gstfilesrc.c:1066
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "„%s“ е папка."
 
-#: plugins/elements/gstfilesrc.c:1045
+#: plugins/elements/gstfilesrc.c:1073
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файлът „%s“ е гнездо."
 
-#: plugins/elements/gstidentity.c:547
+#: plugins/elements/gstidentity.c:549
 msgid "Failed after iterations as requested."
 msgstr "Грешка след заявения брой повторения."
 
@@ -954,8 +955,8 @@ msgstr "принудително прилагане на възможности"
 msgid "force caps without doing a typefind"
 msgstr "принудително прилагане на възможности без търсене на видовете"
 
-#: plugins/elements/gsttypefindelement.c:521
-#: plugins/elements/gsttypefindelement.c:785
+#: plugins/elements/gsttypefindelement.c:522
+#: plugins/elements/gsttypefindelement.c:786
 msgid "Stream contains no data."
 msgstr "Потокът не съдържа никакви данни"
 
@@ -993,11 +994,11 @@ msgid_plural "%d features"
 msgstr[0] "%d свойство"
 msgstr[1] "%d свойства"
 
-#: tools/gst-inspect.c:1324
+#: tools/gst-inspect.c:1400
 msgid "Print all elements"
 msgstr "Отпечатване на всички елементи"
 
-#: tools/gst-inspect.c:1326
+#: tools/gst-inspect.c:1402
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -1008,12 +1009,20 @@ msgstr ""
 "                                       Удобно във връзка с външни механизми "
 "за автоматично инсталиране на приставки"
 
-#: tools/gst-inspect.c:1406
+#: tools/gst-inspect.c:1407
+msgid "List the plugin contents"
+msgstr ""
+
+#: tools/gst-inspect.c:1410
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+
+#: tools/gst-inspect.c:1500
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Файлът на приставката не може да бъде зареден: %s\n"
 
-#: tools/gst-inspect.c:1411
+#: tools/gst-inspect.c:1505
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Няма такъв елемент или приставка „%s“\n"
@@ -1049,22 +1058,21 @@ msgstr ""
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
 
-#: tools/gst-launch.c:394
-#, c-format
-msgid "Got Message from element \"%s\" (%s): "
-msgstr "Получено е съобщение от елемента „%s“ (%s): "
+#: tools/gst-launch.c:397
+msgid "Got Message #%"
+msgstr ""
 
-#: tools/gst-launch.c:420
+#: tools/gst-launch.c:424
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Получен е EOS (край на потока) от елемент „%s“.\n"
 
-#: tools/gst-launch.c:428
+#: tools/gst-launch.c:432
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
 
-#: tools/gst-launch.c:441
+#: tools/gst-launch.c:445
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1073,152 +1081,160 @@ msgstr ""
 "ИНФОРМАЦИЯ:\n"
 "%s\n"
 
-#: tools/gst-launch.c:458
+#: tools/gst-launch.c:462
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: от елемент %s: %s\n"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:510
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Буфериран, изчаква се завършването на буферирането…\n"
 
-#: tools/gst-launch.c:521
-#, c-format
-msgid "buffering... %d  \r"
+#: tools/gst-launch.c:525
+#, fuzzy
+msgid "buffering..."
 msgstr "буфериране… %d  \r"
 
-#: tools/gst-launch.c:533
+#: tools/gst-launch.c:537
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Буферирането завърши, конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
 
-#: tools/gst-launch.c:541
+#: tools/gst-launch.c:545
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Буфериране, конвейерът се дава НА ПАУЗА…\n"
 
-#: tools/gst-launch.c:556
+#: tools/gst-launch.c:554
+#, c-format
+msgid "Redistribute latency...\n"
+msgstr ""
+
+#: tools/gst-launch.c:566
 #, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекъсване: Конвейерът се спира…\n"
 
-#: tools/gst-launch.c:591
+#: tools/gst-launch.c:601
 msgid "Output tags (also known as metadata)"
 msgstr "Изходни съобщения за етикетите (метаданните)"
 
-#: tools/gst-launch.c:593
+#: tools/gst-launch.c:603
 msgid "Output status information and property notifications"
 msgstr "Да се дават изходни съобщения за състоянието и промяната на свойства"
 
-#: tools/gst-launch.c:595
+#: tools/gst-launch.c:605
 msgid "Output messages"
 msgstr "Изходни съобщения"
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:607
 msgid "Do not output status information of TYPE"
 msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
 
-#: tools/gst-launch.c:597
+#: tools/gst-launch.c:607
 msgid "TYPE1,TYPE2,..."
 msgstr "ВИД1,ВИД2,…"
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:610
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Запазване на конвейера във вид на XML във ФАЙЛа и изход"
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:610
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:603
+#: tools/gst-launch.c:613
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира модул за обработка на грешки"
 
-#: tools/gst-launch.c:605
+#: tools/gst-launch.c:615
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 "Отпечатване на заделянето на памет (ако е било включено при компилиране на "
 "програмата)"
 
-#: tools/gst-launch.c:673
+#: tools/gst-launch.c:683
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде конструиран: %s.\n"
 
-#: tools/gst-launch.c:677
+#: tools/gst-launch.c:687
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде конструиран.\n"
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:691
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: конвейер с грешки: %s\n"
 
-#: tools/gst-launch.c:708
+#: tools/gst-launch.c:718
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: не е открит елемент за конвейер — „pipeline“.\n"
 
-#: tools/gst-launch.c:714 tools/gst-launch.c:784
+#: tools/gst-launch.c:724 tools/gst-launch.c:794
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Конвейерът се дава НА ПАУЗА…\n"
 
-#: tools/gst-launch.c:719
+#: tools/gst-launch.c:729
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: конвейерът не изпълнява даването на пауза.\n"
 
-#: tools/gst-launch.c:724
+#: tools/gst-launch.c:734
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейерът работи и не се нуждае от БУФЕРИРАНЕ…\n"
 
-#: tools/gst-launch.c:728
+#: tools/gst-launch.c:738
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Конвейерът се БУФЕРИРА…\n"
 
-#: tools/gst-launch.c:731 tools/gst-launch.c:744
+#: tools/gst-launch.c:741 tools/gst-launch.c:754
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ГРЕШКА: конвейерът не иска да превърти напред.\n"
 
-#: tools/gst-launch.c:737
+#: tools/gst-launch.c:747
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Конвейерът е БУФЕРИРАН…\n"
 
-#: tools/gst-launch.c:749
+#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
 
-#: tools/gst-launch.c:755
+#: tools/gst-launch.c:765
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: конвейерът не иска да проработи.\n"
 
-#: tools/gst-launch.c:778
+#: tools/gst-launch.c:788
 msgid "Execution ended after %"
 msgstr "Изпълнението завърши след %"
 
-#: tools/gst-launch.c:788
+#: tools/gst-launch.c:798
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Конвейерът е в ГОТОВНОСТ…\n"
 
-#: tools/gst-launch.c:793
+#: tools/gst-launch.c:803
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
-#: tools/gst-launch.c:798
+#: tools/gst-launch.c:808
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ОСВОБОЖДАВАНЕ на конвейера…\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "първоначално местоположение като адрес"
+
+#~ msgid "Got Message from element \"%s\" (%s): "
+#~ msgstr "Получено е съобщение от елемента „%s“ (%s): "
