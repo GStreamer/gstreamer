@@ -1,4 +1,23 @@
-This is GStreamer Python Bindings 0.10.13, "Feel The Sun Rise"
+This is GStreamer Python Bindings 0.10.14, "You Better Think"
+
+Changes since 0.10.13:
+
+      * Handle keep-refcount for GBoxed arguments
+      * Mark gst.message* that take ownership of the gst.Structure/gst.TagList
+      * Wrap new API in Core and Base
+      * Various other bug fixes and improvements 
+      
+Bugs fixed since 0.10.13:
+
+      * 543961 : Memory leak in gst.Bin.do_handle_message
+      * 553131 : Import modules in correct order
+      * 553134 : Assumes wrong RTLD constants for Linux/MIPS
+      * 554545 : gst.Pad methods that return a new buffer as function argu...
+      * 556054 : codegen: Add 'keep-refcount' handling for GBoxed arguments
+      * 559406 : Add proxy for gst_base_transform_transform_size
+      * 559768 : Fix gst-python on systems that don't support RTLD_GLOBAL ...
+      * 564580 : Memory leak  in gst.Structure.keys()
+      * 566903 : gst.Pad.iterate_internal_links may raise critical warning...
 
 Changes since 0.10.12:
 

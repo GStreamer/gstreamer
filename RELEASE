@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Python bindings 0.10.13 "Feel The Sun Rise"
+Release notes for GStreamer Python bindings 0.10.14 "you better think"
         
 
 
@@ -17,20 +17,22 @@ It is, however, parallel installable with the 0.8.x series.
 
 Features of this release
     
-      * Updated for GStreamer 0.10.21 API
-      * New examples
-      * Fix double import issues on OS/X
-      * Bug fixes
+      * Handle keep-refcount for GBoxed arguments
+      * Mark gst.message* that take ownership of the gst.Structure/gst.TagList
+      * Wrap new API in Core and Base
+      * Various other bug fixes and improvements
 
 Bugs fixed in this release
      
+      * 543961 : Memory leak in gst.Bin.do_handle_message
       * 553131 : Import modules in correct order
       * 553134 : Assumes wrong RTLD constants for Linux/MIPS
-      * 461838 : Fails to build on Mac OS X i686 with multiply defined sym...
-      * 517993 : pipeline-tester should not be hardcoded to ALSA
-      * 540221 : Empty GstMiniObject GValues raise a SystemError
-      * 546689 : Add GST_DEBUG_BIN_TO_DOT_FILE* to python bindings
-      * 549450 : caps.append_structure() gives warnings if structure is no...
+      * 554545 : gst.Pad methods that return a new buffer as function argu...
+      * 556054 : codegen: Add 'keep-refcount' handling for GBoxed arguments
+      * 559406 : Add proxy for gst_base_transform_transform_size
+      * 559768 : Fix gst-python on systems that don't support RTLD_GLOBAL ...
+      * 564580 : Memory leak  in gst.Structure.keys()
+      * 566903 : gst.Pad.iterate_internal_links may raise critical warning...
 
 Download
 
@@ -60,6 +62,11 @@ Applications
   
 Contributors to this release
     
+      * Alessandro Decina
+      * Alexander Wirt
       * Edward Hervey
       * Jan Schmidt
+      * Sebastian Dröge
+      * Thiemo Seufer
+      * Vincent GENIEUX
  
