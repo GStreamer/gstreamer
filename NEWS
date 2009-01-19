@@ -1,4 +1,68 @@
-This is GStreamer Bad Plug-ins 0.10.9, "Matters of Fact"
+This is GStreamer Bad Plug-ins 0.10.9, "Keep Them Dogies Rollin"
+
+Changes since 0.10.9:
+
+      * Require gettext 0.17
+      * ACM mp3 decoder element for win32
+      * New MXF demuxer added
+      * JPEG-2000 encoder - jp2enc added
+      * RTP support
+      * Fixes for RTP support
+      * Add parsers for AAC and AMR
+      * Move libgstapp and elements to -base
+      * Add Quicktime muxer element qtmux
+      * Enhance RFB capture
+      * Improve MPEG-TS and MPEG-PS demuxing
+      * Don't install static libs for plugins
+      * Introduce audioringbuffer element
+      * Improve DVD playback of ResinDVD components
+      * Move old audioresample from -base as legacyaudioresample
+      * Improve speexresampler, and then move it to -base
+      * Improve FLV demuxing and parsing
+      * Various DVB input fixes
+      * Add support for frequency list descriptors for DVB
+      * Improve MPEG-TS muxer
+      * Various other bug-fixes
+
+Bugs fixed since 0.10.9:
+
+      * 127574 : replaygain support
+      * 480543 : [spc] crashes when not given any input data
+      * 546319 : [resindvd] Stuck on first menu (language selection)
+      * 549222 : Totem using resindvd element as DVD navigation module doe...
+      * 550280 : Move qtmux to gst-plugins-bad
+      * 550454 : FLV demuxer screws up in Pitivi
+      * 550613 : [mpegtsmux] Add support for ac3/dts/lpcm
+      * 553823 : CodeStyle improvements and minor fixes to the DCCP plugin.
+      * 555238 : Recent changes in x264 breaks compilation of x264 plugin.
+      * 557161 : Wrong time displayed and no seeking with MPEG PS cut from...
+      * 557763 : [mpegtsmux] DeadlockEOS due to interleaving mechanism
+      * 557814 : [mpegdemux] frequency list descriptor support
+      * 558639 : cross-configuring interrupts due to a failing check for " ...
+      * 560841 : Provide access to packet loss
+      * 561992 : debug format warning during compilation of resindvdsrc.c ...
+      * 562312 : Lip-sync generates wrong `ts-offset' in GstRtpBin
+      * 562319 : [rtpsession] memory corruption
+      * 562802 : [appsrc] lockup in pad_push() if previous flow was wrong-...
+      * 563006 : mxf mpeg422 file stops playing
+      * 563147 : input-selector doesn't notify of active-pad changing when...
+      * 564232 : Dual Licensing qtmux
+      * 565439 : Make pcapparse compile with (mingw32) gcc
+      * 565509 : rtpsource on receiver side can't get clock-rate for h264,...
+      * 565614 : [mpegtsdemux] Fix memory leak
+      * 565910 : allow forcing the ssrc on a rtpsession
+      * 566356 : [dvbbasebin] Couple of memleaks
+      * 566613 : bayer2rgb calculates wrong color offset
+      * 566878 : [ladspa] Add dependencies for ladspa modules
+      * 566957 : Add time based seeking to ResinDVD
+      * 566958 : fix dirac support in qtmux/mp4mux
+      * 566959 : Fix duration query on mpegtsdemux
+      * 508029 : [speexresample] pops/glitches in some cases
+      * 558416 : [PATCH] realvideodec: use pixel aspect ratio of container
+      * 564482 : [appsrc] semantics of push-buffer signal awkward for bind...
+      * 565319 : rtpjitterbuffer: bursty reception can cause time to be re...
+      * 565613 : [mpegtsdemux] Add scrambled field to service structure
+      * 567004 : ladspa plugin crashes on Solaris
 
 Changes since 0.10.8:
 

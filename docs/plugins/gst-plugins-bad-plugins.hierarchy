@@ -12,15 +12,28 @@ GObject
         GstPipeline
         RsnDvdBin
         DvbBaseBin
+        GstRgVolume
         GstRtpBin
         GstRtpClient
         GstSDPDemux
-      GstBaseMetadata
-        GstMetadataDemux
-        GstMetadataMux
-      GstFaad
       GstBz2enc
       GstBz2dec
+      GstBaseSrc
+        GstPushSrc
+          GstNeonhttpSrc
+          GstMythtvSrc
+          GstDc1394
+          GstMMS
+          GstBaseAudioSrc
+            GstJackAudioSrc
+            GstAudioSrc
+              GstOss4Source
+          GstVCDSrc
+          GstDvbSrc
+          GstDCCPClientSrc
+          GstDCCPServerSrc
+          GstRfbSrc
+        GstSFSrc
       GstCDAudio
       GstBaseSink
         GstVideoSink
@@ -28,118 +41,115 @@ GObject
           GstSDLVideoSink
         GstBaseAudioSink
           GstAudioSink
-            GstNasSink
             GstSDLAudioSink
             GstApExSink
+            GstNasSink
             GstOss4Sink
           GstJackAudioSink
-        AlsaSPDIFSink
         GstSFSink
+        AlsaSPDIFSink
         GstFBDEVSink
-        GstAppSink
         GstDCCPServerSink
         GstDCCPClientSink
-      GstBaseSrc
-        GstPushSrc
-          GstMythtvSrc
-          GstMMS
-          GstDc1394
-          GstBaseAudioSrc
-            GstJackAudioSrc
-            GstAudioSrc
-              GstOss4Source
-          GstNeonhttpSrc
-          GstVCDSrc
-          GstDvbSrc
-          GstRfbSrc
-          GstDCCPClientSrc
-          GstDCCPServerSrc
-        GstSFSrc
-        GstAppSrc
+      GstFaad
+      GstCeltEnc
+      GstCeltDec
+      GstSpcDec
+      GstWildmidi
       GstBaseTransform
         GstAudioFilter
           GstOFA
           GstBPMDetect
           GstStereo
         GstBayer2RGB
+        GstRgAnalysis
+        GstRgLimiter
+        GstAudioresample
         GstScaletempo
+        GstDeinterlace
         GstVideoFilter
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
-        GstAudioresample
-        GstDeinterlace
         GstIIR
-      GstDtsDec
-      GstMusepackDec
-      GstGSMEnc
-      GstGSMDec
-      GstWildmidi
       GstSignalProcessor
+        ladspa-noise-white
+        ladspa-delay-5s
         ladspa-amp-mono
         ladspa-amp-stereo
-        ladspa-lpf
-        ladspa-hpf
-        ladspa-delay-5s
         ladspa-sine-faaa
         ladspa-sine-faac
         ladspa-sine-fcaa
         ladspa-sine-fcac
-        ladspa-noise-white
-      GstTwoLame
+        ladspa-lpf
+        ladspa-hpf
+      GstXvidEnc
+      GstXvidDec
       GstPitch
-      GstCeltEnc
-      GstCeltDec
+      GstTwoLame
+      GstMusepackDec
+      GstMpeg2enc
+      GstGSMEnc
+      GstGSMDec
+      GstFaac
+      GstDtsDec
+      GstDiracEnc
       GstTRM
+      GstX264Enc
+      GstBaseMetadata
+        GstMetadataDemux
+        GstMetadataMux
       GstOss4Mixer
+      GstAmrBaseParse
+        GstAmrParse
+      GstFestival
+      GstModPlug
       GstMveDemux
       GstMveMux
-      GstDeinterlace2
+      GstSrtEnc
+      GstMpeg4VParse
+      GstCDXAParse
+      GstVcdParse
+      GstNsfDec
+      MpegTsMux
+      GstRealVideoDec
+      GstRealAudioDec
+      GstRawParse
+        GstVideoParse
+        GstAudioParse
       GstRtpJitterBuffer
       GstRtpPtDemux
       GstRtpSession
       GstRtpSsrcDemux
-      GstMpegPSDemux
-      GstMpegTSDemux
-      MpegTSParse
-      GstH264Parse
-      GstMpeg4VParse
-      MpegVideoParse
-      GstFLVDemux
-      GstFlvMux
-      GstNuvDemux
-      GstRawParse
-        GstVideoParse
-        GstAudioParse
-      GstSpeed
+      GstPcapParse
       GstInputSelector
       GstOutputSelector
+      GstAacBaseParse
+        GstAacParse
+      GstVMncDec
       GstQTMux
       GstMP4Mux
       GstGPPMux
       GstMJ2Mux
-      GstAacBaseParse
-        GstAacParse
-      GstCDXAParse
-      GstVcdParse
-      GstNsfDec
+      MpegVideoParse
+      GstH264Parse
+      GstMXFDemux
+      GstY4mEncode
+      GstSpeed
+      GstInterleave
+      GstDeinterleave
+      GstFreeze
+      GstDVDSpu
+      AIFFParse
       GstTtaParse
       GstTtaDec
-      GstModPlug
-      GstY4mEncode
-      GstFreeze
-      GstVMncDec
-      AIFFParse
-      GstSrtEnc
-      GstFestival
-      MpegTsMux
-      GstDVDSpu
-      GstMXFDemux
-      GstRealVideoDec
-      GstRealAudioDec
-      GstAmrBaseParse
-        GstAmrParse
-      GstPcapParse
+      GstNuvDemux
+      GstFLVDemux
+      GstFlvMux
+      GstMpegPSDemux
+      GstMpegTSDemux
+      MpegTSParse
+      GstDeinterlace2
     GstBus
     GstTask
     GstClock
@@ -152,6 +162,8 @@ GObject
       GstJackAudioSinkRingBuffer
   GstSignalObject
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   RTPSession
   FluTsPatInfo
   FluTsPmtInfo
@@ -159,10 +171,10 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GstTagSetter
   GstImplementsInterface
   GstNavigation
   GstColorBalance
   GstXOverlay
+  GstTagSetter
   GstMixer
   GstPropertyProbe

@@ -1075,7 +1075,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Output format</NICK>
 <BLURB>Format of output frames.</BLURB>
-<DEFAULT>OUTPUTFORMAT_ADTS</DEFAULT>
+<DEFAULT>OUTPUTFORMAT_RAW</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1681,7 +1681,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,7]</RANGE>
+<RANGE>[-1,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -17455,7 +17455,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17495,7 +17495,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path where to search for RealPlayer codecs</NICK>
 <BLURB>Path where to search for RealPlayer codecs.</BLURB>
-<DEFAULT>"/usr/lib64/win32:/usr/lib64/codecs:/usr/local/lib64/win32:/usr/local/lib64/codecs"</DEFAULT>
+<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -18431,7 +18431,7 @@
 <ARG>
 <NAME>DvbBaseBin::diseqc-source</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,7]</RANGE>
+<RANGE>[-1,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc source</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -19311,6 +19311,36 @@
 <NICK>ybsep</NICK>
 <BLURB>ybsep.</BLURB>
 <DEFAULT>12</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::pf-strength</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>pf_strength</NICK>
+<BLURB>pf_strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::picture-coding-mode</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>picture_coding_mode</NICK>
+<BLURB>picture_coding_mode.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDiracEnc::prefilter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,3]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>prefilter</NICK>
+<BLURB>prefilter.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22156,7 +22186,7 @@
 <ARG>
 <NAME>GstTwoLame::psymodel</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,4]</RANGE>
+<RANGE>[-1,4]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Psychoacoustic Model</NICK>
 <BLURB>Psychoacoustic model used to encode the audio.</BLURB>
@@ -22306,7 +22336,7 @@
 <ARG>
 <NAME>GstDCCPClientSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22346,7 +22376,7 @@
 <ARG>
 <NAME>GstDCCPServerSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22406,7 +22436,7 @@
 <ARG>
 <NAME>GstDCCPClientSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The socket file descriptor.</BLURB>
@@ -22466,7 +22496,7 @@
 <ARG>
 <NAME>GstDCCPServerSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket fd</NICK>
 <BLURB>The client socket file descriptor.</BLURB>
@@ -22526,7 +22556,7 @@
 <ARG>
 <NAME>GstMpegTSDemux::program-number</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Program Number</NICK>
 <BLURB>Program number to demux for (-1 to ignore).</BLURB>
@@ -22586,7 +22616,7 @@
 <ARG>
 <NAME>GstPcapParse::dst-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,65535]</RANGE>
+<RANGE>[-1,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Destination port</NICK>
 <BLURB>Destination port to restrict to.</BLURB>
@@ -22606,7 +22636,7 @@
 <ARG>
 <NAME>GstPcapParse::src-port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,65535]</RANGE>
+<RANGE>[-1,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Source port</NICK>
 <BLURB>Source port to restrict to.</BLURB>

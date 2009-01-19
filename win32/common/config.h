@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "NULL"
+#define GETTEXT_PACKAGE "gst-plugins-bad-0.10"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -24,10 +24,10 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins source release"
 
 /* package origin */
-#define GST_PACKAGE_ORIGIN "http://gstreamer.freedesktop.org"
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -199,7 +199,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.9.1"
+#define VERSION "0.10.10"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

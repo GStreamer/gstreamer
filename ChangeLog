@@ -1,3 +1,10 @@
+=== release 0.10.10 ===
+
+2009-01-19  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.10, "keep them dogies rollin"
+
 2009-01-09  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:
