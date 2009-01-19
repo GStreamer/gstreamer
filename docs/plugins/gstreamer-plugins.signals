@@ -15,6 +15,13 @@ GstElement *arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstBin::do-latency</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstBin *gstbin
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstFakeSrc::handoff</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

@@ -3,7 +3,7 @@
   <description>standard GStreamer elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.10.21</version>
+  <version>0.10.22</version>
   <license>LGPL</license>
   <source>gstreamer</source>
   <package>GStreamer source release</package>
@@ -95,7 +95,7 @@
       <longname>File Sink</longname>
       <class>Sink/File</class>
       <description>Write stream to a file</description>
-      <author>Thomas &lt;thomas@apestaart.org&gt;</author>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

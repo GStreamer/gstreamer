@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.21 "Take These Things From Me"
+Release notes for GStreamer 0.10.22 "I heard a disturbing sound"
         
 
 
@@ -37,71 +37,83 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Basetransform rework
-      * Basesink synchronisation extensions
-      * New documentation
-      * Many bug fixes, enhancements and optimisations
+      * GstController improvements
+      * Extensions to the latency setting behaviours
+      * Ability for plugins to register dependencies to trigger re-scanning
+      * Optimisations in some common operations on caps and values and elsewhere
+      * Add sequence numbers to events so dependent events can be associated with the event that caused them
+      * New macros for reading and writing float values
+      * Many improvements in the basesink base class
+      * Support non-default main contexts for GstBus watches
+      * Improvements in pull-mode scheduling of sinks
+      * Fixes for alignment issues on sparc
+      * Ghost pad fixes
+      * New bit-reader assistance API
+      * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 481169 : [tag] add support for geo tags (gps location etc.)
-      * 520694 : adding GST_TAG_KEYWORDS
-      * 538201 : deleting the control point at ts=0 does not lower the con...
-      * 544855 : fakesrc and fakesink should call super::event()
-      * 339795 : [GstBaseTransform] Reverse negotiation issues in passthro...
-      * 348114 : [PPC64?] [gcc-4.1.2?] GST_BUFFER_IN_CAPS flag should have...
-      * 361718 : [basetransform] needs API to force renegotiation
-      * 533856 : gst_buffer_join() documentation is unclear
-      * 536978 : GTKDOC_CFLAGS should include CFLAGS
-      * 537804 : [multiqueue] wrongly reporting that the queue is full.
-      * 537812 : [check] add api to setup a pad by name
-      * 538568 : Add GST_TAG_ATTACHMENT
-      * 539772 : gst_pad_template_new() does more than call g_object_new()
-      * 542175 : gst-inspect --gst-plugins-path fails with multiple direct...
-      * 543444 : gst_base_sink_get_position can return 0 unexpectedly
-      * 543853 : Bison version check failure on OSX 10.4 Tiger
-      * 544174 : [basesrc] allow dynamic value of the seekable value.
-      * 544776 : [win32] binary registry may fail if glib is using a diffe...
-      * 545352 : gsturi is too restrictive
-      * 545603 : gst-inspect: don't print uri handler when compiled withou...
-      * 545605 : gstelementfactory: don't use uri handler code without uri...
-      * 545607 : gst: include gstconfig when using macros defined therein
-      * 545853 : [basetransform] rewrite
-      * 546328 : fractions with G_MAXINT cause failure for fixation
-      * 546822 : gstreamer doesn't tell gettext to output its translations...
-      * 547277 : filesrc detect if a file is seekable using SEEK_SET and n...
-      * 547728 : [basetransform] fail on buffer_alloc
-      * 548394 : basesink should ignore EOS during flushing
-      * 548652 : [Inconsistency] GST_TAG_LOCATION is used for different me...
-      * 549504 : Thread-safe version of gst_pad_get_internal_links()
-      * 551952 : Need 'check' package when compile
-      * 551978 : Memleak in gst_element_sync_state_with_paren
-      * 547835 : tee release_request_pad while buffer_alloc racyness
-      * 538628 : Patch: added a timeout property to fdsrc used in gst_poll...
-      * 546883 : [basetransform] ximagesink fails when resizing video window
-      * 551509 : gst_base_transform_prepare_output_buffer: assertion faile...
+      * 567002 : --gst-disable-registry-update also skips registry creation
+      * 350477 : [Registry] Provide a way for plugins to delegate the 'cha...
+      * 510354 : post GST_MESSAGE_STRUCTURE_CHANGE when linking and unlink...
+      * 526044 : Crash if there is more than one watcher for a GstBus
+      * 539108 : gst_ghost_pad_new() does more than call g_object_new()
+      * 544003 : [parse] Links to wrong pad if no padtemplate name is given
+      * 544293 : rtspsrc / gstpoll regression
+      * 545714 : GST_READ_UINT_* and GST_WRITE_UINT_* are not always safe ...
+      * 548786 : [win32] search for plugins based on location of DLL
+      * 551676 : Small Memleak fix in gst_pad_link_check_compatible_unlocked
+      * 552778 : add free_func in gstbuffer instances
+      * 553554 : [base] Add a generic bit reader
+      * 553874 : query_position broken during seek
+      * 555196 : Move floating point endian conversion macros into core
+      * 555307 : Need to push latency event into the pipeline
+      * 555631 : Banshee crashes; gstreamer GST_CAPS GST_IS_CAPS warnings
+      * 556091 : libtool-2.2 and old gettext don't mix
+      * 556900 : a copy & paste bug in helloworld example
+      * 557154 : Allow totem to run without write-access to home directory
+      * 557300 : libgstnet needs to link against $(WIN32_LIBS)
+      * 557438 : Gstreamer crashes when Banshee supposed to change track
+      * 557649 : GstBaseTransform can cause ivalid memory references
+      * 559250 : segments need identifiers.
+      * 560301 : Add --plugin to gst-inspect
+      * 560360 : Excessive statting when reading binary cache
+      * 560399 : Unnecessary CRC checksum for binary registry cache
+      * 560442 : GNOME Goal: Remove deprecated GLib symbols
+      * 561501 : g_type_class_ref without unref
+      * 562170 : GstBus watch doesn't work with non-default main context
+      * 562949 : [API] Add an URI query type for querying the source/sink URI
+      * 564863 : Caps are not propagated from a ghostpad's target to the g...
+      * 567225 : volatile gonce_data in BOILERPLATE not initialized to 0
+      * 566393 : [deadlock] Setting index on a pipeline
 
 API changed in this release
      
 - API additions:
     
-* Add GST_TAG_ATTACHMENT for generic file attachments to streams.
-* Add gst_base_sink_set_render_delay()
-* Add gst_base_sink_get_render_delay()
-* Add gst_check_setup_src_pad_by_name
-* Add gst_check_setup_sink_pad_by_name
-* Add gst_check_teardown_pad_by_name
-* Add GstBaseTransform::gst_base_transform_suggest()
-* GstBaseTransform::gst_base_transform_reconfigure()
-* GstPad::gst_pad_set_iterate_internal_links_function()
-* GstPad::GstPadIterIntLinkFunction
-* GstPad::gst_pad_iterate_internal_links()
-* GstPad::gst_pad_iterate_internal_links_default()
-- API deprecations:
-    
-* gst_pad_get_internal_links()
-* gst_pad_set_internal_link_function()
-* gst_pad_get_internal_links_default()
+* Add bit reader and byte reader classes.
+* gst_message_new_structure_change()
+* gst_message_parse_structure_change()
+* GST_BUFFER_FREE_FUNC()
+* Add GST_READ_UINT24_(LE|BE) and GST_WRITE_UINT24_(LE|BE).
+* GstBaseSrc::gst_base_src_set_blocksize()
+* GstBaseSrc::gst_base_src_get_blocksize()
+* GstBaseSink::gst_base_sink_set_blocksize()
+* GstBaseSink::gst_base_sink_get_blocksize()
+* GstBaseSink::blocksize
+* GstBaseSink::gst_base_sink_do_preroll()
+* Add gst_byte_reader_get_data and gst_byte_reader_peek_data
+* Move float endianness conversion macros from libgstfloatcast to core
+* gst_util_seqnum_next, gst_util_seqnum_compare
+* gst_event_get_seqnum, gst_event_set_seqnum
+* gst_message_get_seqnum, gst_message_set_seqnum
+* GstSeekFlags::GST_SEEK_FLAG_SKIP
+* gst_bin_recalculate_latency()
+* GstBin::do-latency
+* gst_tag_setter_reset_tags()
+* gst_query_new_uri, gst_query_set_uri, gst_query_parse_uri
+* add gst_plugin_add_dependency()
+* add gst_plugin_add_dependency_simple()
 
 Download
 
@@ -137,25 +149,25 @@ Let us know if you want to be added to this list.
 Contributors to this release
     
       * Alessandro Decina
+      * Andrew Feren
+      * Andy Wingo
       * Antoine Tremblay
+      * Cygwin Ports maintainer
       * David Schleef
+      * Dig Ge
       * Edward Hervey
-      * Frederic Crozat
       * Jan Schmidt
-      * Jason Zhao
-      * Joel Larsson
-      * Luc Pionchon
+      * Jan Schmidt - Sun Microsystems
+      * Jonas Holmberg
       * Michael Smith
-      * Murray Cumming
-      * Ole André Vadla Ravnås
       * Olivier Crete
-      * Rene Stadler
-      * Robert Schwebel
+      * Peter Kjellerstedt
       * Sebastian Dröge
+      * Simon Holm Thøgersen
       * Stefan Kost
       * Thijs Vermeir
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tristan Matthews
       * Wim Taymans
+      * 이문형
  

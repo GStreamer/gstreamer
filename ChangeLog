@@ -1,3 +1,10 @@
+=== release 0.10.22 ===
+
+2009-01-19  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.22, "I heard a disturbing sound"
+
 2009-01-17  Tim-Philipp Müller  <tim.muller at collabora co uk>
 
 	* gst/gstbus.c: (gst_bus_set_main_context), (gst_bus_create_watch):
