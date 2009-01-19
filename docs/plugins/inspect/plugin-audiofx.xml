@@ -199,6 +199,27 @@
       </pads>
     </element>
     <element>
+      <name>audioreverb</name>
+      <longname>Audio reverb</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Adds an echo or reverb effect to an audio stream</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int){ 32, 64 }, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>audiowsincband</name>
       <longname>Band pass &amp; band reject filter</longname>
       <class>Filter/Effect/Audio</class>

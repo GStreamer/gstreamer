@@ -1,5 +1,28 @@
 2009-01-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiofx.c: (plugin_init):
+	* gst/audiofx/audioreverb.c: (gst_audio_reverb_base_init),
+	(gst_audio_reverb_class_init), (gst_audio_reverb_init),
+	(gst_audio_reverb_finalize), (gst_audio_reverb_set_property),
+	(gst_audio_reverb_get_property), (gst_audio_reverb_setup),
+	(gst_audio_reverb_stop), (gst_audio_reverb_transform_ip):
+	* gst/audiofx/audioreverb.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/audioreverb.c: (setup_reverb),
+	(cleanup_reverb), (GST_START_TEST), (audioreverb_suite):
+	Add an echo/reverb filter to the audiofx plugin, with configurable
+	echo delay, intensity and feedback. Fixes bug #567874.
+
+2009-01-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_reset_state),
 	(gst_spectrum_transform_ip):
 	* gst/spectrum/gstspectrum.h:

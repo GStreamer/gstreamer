@@ -14,7 +14,7 @@
       <longname>Spectrum analyzer</longname>
       <class>Filter/Analyzer/Audio</class>
       <description>Run an FFT on the audio signal, output spectrum data</description>
-      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;, Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

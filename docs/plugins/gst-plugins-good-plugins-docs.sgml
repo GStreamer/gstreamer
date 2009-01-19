@@ -23,6 +23,7 @@
     <xi:include href="xml/element-audiowsincband.xml" />
     <xi:include href="xml/element-audiowsinclimit.xml" />
     <xi:include href="xml/element-audiofirfilter.xml" />
+    <xi:include href="xml/element-audioreverb.xml" />
     <xi:include href="xml/element-audiodynamic.xml" />
     <xi:include href="xml/element-audioinvert.xml" />
     <xi:include href="xml/element-audiopanorama.xml" />

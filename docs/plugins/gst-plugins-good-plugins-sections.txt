@@ -117,6 +117,22 @@ gst_audio_iir_filter_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-audioreverb</FILE>
+<TITLE>audioreverb</TITLE>
+GstAudioReverb
+<SUBSECTION Standard>
+GstAudioReverbClass
+GstAudioReverbProcessFunc
+GST_AUDIO_REVERB
+GST_AUDIO_REVERB_CLASS
+GST_AUDIO_REVERB_GET_CLASS
+GST_IS_AUDIO_REVERB
+GST_IS_AUDIO_REVERB_CLASS
+GST_TYPE_AUDIO_REVERB
+gst_audio_reverb_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-audiodynamic</FILE>
 <TITLE>audiodynamic</TITLE>
 GstAudioDynamic

@@ -74,6 +74,7 @@ check_PROGRAMS = \
 	elements/audiocheblimit \
 	elements/audioiirfilter \
 	elements/audioamplify \
+	elements/audioreverb \
 	elements/audiodynamic \
 	elements/audiowsincband \
 	elements/audiowsinclimit \
