@@ -4,10 +4,10 @@
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.20.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-17 14:28+0100\n"
-"PO-Revision-Date: 2008-09-18 10:13中国标准时间\n"
+"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
 "sourceforge.net>\n"
@@ -73,13 +73,13 @@ msgstr "无法在立体声模式打开设备播放。"
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "无法在 %d 声道模式打开设备播放。"
 
-#: ext/alsa/gstalsasink.c:685
+#: ext/alsa/gstalsasink.c:687
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr "无法打开音频设备用于回放。目前有另一个程序正在使用该设备。"
 
-#: ext/alsa/gstalsasink.c:690
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "无法打开音频设备播放。"
 
@@ -132,22 +132,22 @@ msgstr "没有给定文件名"
 msgid "Could not close vfs file \"%s\"."
 msgstr "无法关闭 vfs 文件“%s”。"
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "写入文件“%s”时出错。"
 
-#: ext/ogg/gstoggdemux.c:3126
+#: ext/ogg/gstoggdemux.c:3150
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
 
-#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "播放此数据流需要 %s 插件，但它未安装。"
 
-#: gst/playback/gstdecodebin.c:1715
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
 msgstr "此文件是个文本文件"
 
@@ -156,11 +156,11 @@ msgstr "此文件是个文本文件"
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "无效的字幕 URI “%s”，不使用字幕。"
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
 msgid "No URI specified to play from."
 msgstr "未指定要播放的 URI。"
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "无效的 URI“%s”。"
@@ -173,7 +173,7 @@ msgstr "RTSP 流尚不能播放。"
 msgid "Could not create \"decodebin\" element."
 msgstr "无法创建“decodebin”组件。"
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
 msgid "Source element is invalid."
 msgstr "无效的源组件。"
 
@@ -199,7 +199,7 @@ msgstr "此文件不是媒体文件"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "检测到了字幕流，但无视频流。"
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "autovideosink 和 xvimagesink 组件都缺少。"
 
@@ -207,22 +207,26 @@ msgstr "autovideosink 和 xvimagesink 组件都缺少。"
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
-#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
-#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
-#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
-#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
+#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
+#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
+#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
+#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "autovideosink 和 alsasink 组件都缺少。"
 
-#: gst/playback/gstplaysink.c:989
+#: gst/playback/gstplaysink.c:1028
 msgid "No volume control found"
 msgstr "未找到音量控制"
+
+#: gst/playback/gstplaysink.c:1380
+msgid "Can't play a text file without video."
+msgstr "无法播放不带视频的文本文件。"
 
 #: gst/playback/gstqueue2.c:991
 msgid "No file name specified."
@@ -233,33 +237,33 @@ msgstr "未给定文件名。"
 msgid "Could not open file \"%s\" for reading."
 msgstr "无法打开文件“%s”读取。"
 
-#: gst/playback/gsturidecodebin.c:548
+#: gst/playback/gsturidecodebin.c:589
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "找不到‘%s’类型可用的解码器。"
 
-#: gst/playback/gsturidecodebin.c:779
+#: gst/playback/gsturidecodebin.c:824
 msgid "This stream type cannot be played yet."
 msgstr "此类型的数据流尚不能播放。"
 
-#: gst/playback/gsturidecodebin.c:790
+#: gst/playback/gsturidecodebin.c:835
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "“%s”未实现 URI 处理器。"
 
-#: gst/playback/gsturidecodebin.c:1081
+#: gst/playback/gsturidecodebin.c:1126
 msgid "Could not create \"decodebin2\" element."
 msgstr "无法创建“decodebin”组件。"
 
-#: gst/playback/gsturidecodebin.c:1137
+#: gst/playback/gsturidecodebin.c:1193
 msgid "Could not create \"queue2\" element."
 msgstr "无法创建“queue2”组件。"
 
-#: gst/playback/gsturidecodebin.c:1176
+#: gst/playback/gsturidecodebin.c:1232
 msgid "Could not create \"typefind\" element."
 msgstr "无法创建“typefind”组件。"
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "发送数据至“%s:%d”时出错。"
@@ -274,16 +278,16 @@ msgstr "发送 gdp 头部数据至“%s:%d”时出错。"
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "发送 gdp 负载数据至“%s:%d”时出错。"
 
-#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "拒绝连接至 %s:%d。"
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "无法足够快的录音"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1038
+#: gst-libs/gst/tag/gsttagdemux.c:1057
 msgid "Failed to read tag: not enough data"
 msgstr "无法读取标签: 数据不足"
 
@@ -327,8 +331,8 @@ msgstr "音轨 TRM ID"
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "此 CD 无音轨"
 

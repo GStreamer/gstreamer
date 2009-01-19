@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.20.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-17 14:28+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:59+0000\n"
 "PO-Revision-Date: 2008-09-18 00:17+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -76,7 +76,7 @@ msgstr "Nezdařilo se otevření zařízení k přehrávání v režimu stereo."
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Nezdařilo se otevření zařízení k přehrávání v %dkanálovém režimu."
 
-#: ext/alsa/gstalsasink.c:685
+#: ext/alsa/gstalsasink.c:687
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -84,7 +84,7 @@ msgstr ""
 "Nezdařilo se otevření zvukového zařízení k přehrávání. Zařízení je používáno "
 "jinou aplikací."
 
-#: ext/alsa/gstalsasink.c:690
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "Nezdařilo se otevření zvukového zařízení k přehrávání."
 
@@ -139,16 +139,16 @@ msgstr "Nezadán název souboru"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Nezdařilo se zavření souboru vfs \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Chyba při zápisu do souboru \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3126
+#: ext/ogg/gstoggdemux.c:3150
 msgid "Internal data stream error."
 msgstr "Vnitřní chyba datového proudu."
 
-#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -156,7 +156,7 @@ msgstr ""
 "Zásuvný modul %s je vyžadován k přehrání tohoto proudu, ale není "
 "nainstalován."
 
-#: gst/playback/gstdecodebin.c:1715
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
 msgstr "Zdá se, že se jedná o textový soubor"
 
@@ -165,11 +165,11 @@ msgstr "Zdá se, že se jedná o textový soubor"
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Neplatné URI titulků \"%s\", titulky vypnuty."
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
 msgid "No URI specified to play from."
 msgstr "Nezadáno žádné URI, ze kterého se má přehrávat."
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Neplatné URI \"%s\"."
@@ -182,7 +182,7 @@ msgstr "Proudy RTSP zatím nemohou být přehrávány."
 msgid "Could not create \"decodebin\" element."
 msgstr "Nezdařilo se vytvoření prvku \"decodebin\"."
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
 msgid "Source element is invalid."
 msgstr "Zdrojový prvek je neplatný."
 
@@ -211,7 +211,7 @@ msgstr "Toto není multimediální soubor"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Byl rozpoznán proud titulků, ale nikoliv obrazový proud."
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Schází jak prvek autovideosink, tak xvimagesink."
 
@@ -219,22 +219,26 @@ msgstr "Schází jak prvek autovideosink, tak xvimagesink."
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
-#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
-#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
-#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
-#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
+#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
+#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
+#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
+#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Schází prvek \"%s\" - zkontrolujte prosím instalaci systému GStreamer."
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Schází jak prvek autoaudiosink, tak alsasink."
 
-#: gst/playback/gstplaysink.c:989
+#: gst/playback/gstplaysink.c:1028
 msgid "No volume control found"
 msgstr "Nenalezeno žádné ovládání hlasitosti"
+
+#: gst/playback/gstplaysink.c:1380
+msgid "Can't play a text file without video."
+msgstr ""
 
 #: gst/playback/gstqueue2.c:991
 msgid "No file name specified."
@@ -245,33 +249,33 @@ msgstr "Nezadán název souboru."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
 
-#: gst/playback/gsturidecodebin.c:548
+#: gst/playback/gsturidecodebin.c:589
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "K typu \"%s\" není dostupný dekodér."
 
-#: gst/playback/gsturidecodebin.c:779
+#: gst/playback/gsturidecodebin.c:824
 msgid "This stream type cannot be played yet."
 msgstr "Tento typ proudu zatím nemůže být přehrán."
 
-#: gst/playback/gsturidecodebin.c:790
+#: gst/playback/gsturidecodebin.c:835
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "U \"%s\" není prováděna obsluha URI."
 
-#: gst/playback/gsturidecodebin.c:1081
+#: gst/playback/gsturidecodebin.c:1126
 msgid "Could not create \"decodebin2\" element."
 msgstr "Nezdařilo se vytvoření prvku \"decodebin2\"."
 
-#: gst/playback/gsturidecodebin.c:1137
+#: gst/playback/gsturidecodebin.c:1193
 msgid "Could not create \"queue2\" element."
 msgstr "Nezdařilo se vytvoření prvku \"queue2\"."
 
-#: gst/playback/gsturidecodebin.c:1176
+#: gst/playback/gsturidecodebin.c:1232
 msgid "Could not create \"typefind\" element."
 msgstr "Nezdařilo se vytvoření prvku \"typefind\"."
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Chyba při odesílání dat na \"%s:%d\"."
@@ -286,16 +290,16 @@ msgstr "Chyba při odesílání dat záhlaví gdp na \"%s:%d\"."
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Chyba při odesílání zátěžových dat gdp na \"%s:%d\"."
 
-#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Spojení s %s:%d bylo odmítnuto."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "Zvuk nelze zaznamenat s dostatečnou rychlostí"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1038
+#: gst-libs/gst/tag/gsttagdemux.c:1057
 msgid "Failed to read tag: not enough data"
 msgstr "Nezdařilo se přečtení značky: nedostatek dat"
 
@@ -339,8 +343,8 @@ msgstr "ID stopy TRM"
 msgid "MusicBrainz TRM ID"
 msgstr "ID stopy TRM MusicBrainz"
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá žádné zvukové stopy"
 

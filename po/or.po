@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-17 14:28+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:59+0000\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -77,13 +77,13 @@ msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋ
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: ext/alsa/gstalsasink.c:685
+#: ext/alsa/gstalsasink.c:687
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
 
-#: ext/alsa/gstalsasink.c:690
+#: ext/alsa/gstalsasink.c:692
 #, fuzzy
 msgid "Could not open audio device for playback."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
@@ -143,22 +143,22 @@ msgstr "କୌଣସି ଫାଇଲନାମ ଦିଆଯାଇ ନାହିଁ
 msgid "Could not close vfs file \"%s\"."
 msgstr "ଭି.ଏଫ.ଏସ. ଫାଇଲ \"%s\" ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
 
-#: ext/ogg/gstoggdemux.c:3126
+#: ext/ogg/gstoggdemux.c:3150
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
-#: gst/playback/gstdecodebin.c:1715
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
 msgstr ""
 
@@ -167,11 +167,11 @@ msgstr ""
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
@@ -184,7 +184,7 @@ msgstr ""
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
 msgid "Source element is invalid."
 msgstr ""
 
@@ -209,7 +209,7 @@ msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
@@ -217,21 +217,25 @@ msgstr ""
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
-#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
-#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
-#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
-#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
+#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
+#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
+#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
+#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaysink.c:989
+#: gst/playback/gstplaysink.c:1028
 msgid "No volume control found"
+msgstr ""
+
+#: gst/playback/gstplaysink.c:1380
+msgid "Can't play a text file without video."
 msgstr ""
 
 #: gst/playback/gstqueue2.c:991
@@ -244,34 +248,34 @@ msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: gst/playback/gsturidecodebin.c:548
+#: gst/playback/gsturidecodebin.c:589
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:779
+#: gst/playback/gsturidecodebin.c:824
 msgid "This stream type cannot be played yet."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:790
+#: gst/playback/gsturidecodebin.c:835
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:1081
+#: gst/playback/gsturidecodebin.c:1126
 msgid "Could not create \"decodebin2\" element."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:1137
+#: gst/playback/gsturidecodebin.c:1193
 msgid "Could not create \"queue2\" element."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:1176
+#: gst/playback/gsturidecodebin.c:1232
 #, fuzzy
 msgid "Could not create \"typefind\" element."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
 #, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "\"%s\" ଫାଇଲ ବନ୍ଦ କରିବାରେ ତ୍ରୁଟି."
@@ -286,16 +290,16 @@ msgstr ""
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr ""
 
-#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr ""
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr ""
 
-#: gst-libs/gst/tag/gsttagdemux.c:1038
+#: gst-libs/gst/tag/gsttagdemux.c:1057
 msgid "Failed to read tag: not enough data"
 msgstr ""
 
@@ -339,8 +343,8 @@ msgstr ""
 msgid "MusicBrainz TRM ID"
 msgstr ""
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr ""
 

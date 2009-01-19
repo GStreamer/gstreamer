@@ -1,15 +1,15 @@
 # Swedish messages for gst-plugins-base.
-# Copyright (C) 2004, 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2007, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Christian Rose <menthos@menthos.com>, 2004.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.20.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-17 14:28+0100\n"
-"PO-Revision-Date: 2008-09-17 21:54+0100\n"
+"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"PO-Revision-Date: 2009-01-12 23:20+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -74,7 +74,7 @@ msgstr "Kunde inte öppna enheten för uppspelning i stereoläge."
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Kunde inte öppna enheten för uppspelning i %d-kanalsläge."
 
-#: ext/alsa/gstalsasink.c:685
+#: ext/alsa/gstalsasink.c:687
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -82,7 +82,7 @@ msgstr ""
 "Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat "
 "program."
 
-#: ext/alsa/gstalsasink.c:690
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "Kunde inte öppna ljudenheten för uppspelning."
 
@@ -137,16 +137,16 @@ msgstr "Inget filnamn angivet"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kunde inte stänga vfs-filen \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3126
+#: ext/ogg/gstoggdemux.c:3150
 msgid "Internal data stream error."
 msgstr "Internt dataströmfel."
 
-#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -154,7 +154,7 @@ msgstr ""
 "En %s-insticksmodul krävs för att spela upp den här strömmen men är inte "
 "installerad."
 
-#: gst/playback/gstdecodebin.c:1715
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
 msgstr "Den här ser ut att vara en textfil"
 
@@ -163,11 +163,11 @@ msgstr "Den här ser ut att vara en textfil"
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Ogiltig uri för undertext \"%s\", undertexter inaktiverade."
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
 msgid "No URI specified to play from."
 msgstr "Ingen uri angiven att spela upp från."
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Ogiltig uri \"%s\"."
@@ -180,7 +180,7 @@ msgstr "RTSP-strömmar kan inte spelas upp än."
 msgid "Could not create \"decodebin\" element."
 msgstr "Kunde inte skapa \"decodebin\"-element."
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
 msgid "Source element is invalid."
 msgstr "Källelementet är ogiltigt."
 
@@ -209,7 +209,7 @@ msgstr "Det här är inte en mediafil"
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "En undertextström identifierades men ingen videoström."
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Både autovideosink- och xvimagesink-elementen saknas."
 
@@ -217,22 +217,26 @@ msgstr "Både autovideosink- och xvimagesink-elementen saknas."
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
-#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
-#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
-#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
-#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
+#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
+#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
+#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
+#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Saknar elementet \"%s\" - kontrollera din GStreamer-installation."
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Både autoaudiosink- och alsasink-elementen saknas."
 
-#: gst/playback/gstplaysink.c:989
+#: gst/playback/gstplaysink.c:1028
 msgid "No volume control found"
 msgstr "Ingen volymkontroll hittades"
+
+#: gst/playback/gstplaysink.c:1380
+msgid "Can't play a text file without video."
+msgstr "Kan inte spela upp en textfil utan video."
 
 #: gst/playback/gstqueue2.c:991
 msgid "No file name specified."
@@ -243,33 +247,33 @@ msgstr "Inget filnamn angivet."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
-#: gst/playback/gsturidecodebin.c:548
+#: gst/playback/gsturidecodebin.c:589
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Ingen avkodare tillgänglig för typen \"%s\"."
+msgstr "Ingen avkodare finns tillgänglig för typen \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:779
+#: gst/playback/gsturidecodebin.c:824
 msgid "This stream type cannot be played yet."
 msgstr "Den här strömtypen kan inte spelas upp än."
 
-#: gst/playback/gsturidecodebin.c:790
+#: gst/playback/gsturidecodebin.c:835
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-hanterare implementerad för \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:1081
+#: gst/playback/gsturidecodebin.c:1126
 msgid "Could not create \"decodebin2\" element."
 msgstr "Kunde inte skapa \"decodebin2\"-element."
 
-#: gst/playback/gsturidecodebin.c:1137
+#: gst/playback/gsturidecodebin.c:1193
 msgid "Could not create \"queue2\" element."
 msgstr "Kunde inte skapa \"queue2\"-element."
 
-#: gst/playback/gsturidecodebin.c:1176
+#: gst/playback/gsturidecodebin.c:1232
 msgid "Could not create \"typefind\" element."
 msgstr "Kunde inte skapa \"typefind\"-element."
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fel vid sändning av data till \"%s:%d\"."
@@ -284,16 +288,16 @@ msgstr "Fel vid sändning av gdp-huvuddata till \"%s:%d\"."
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Fel vid sändning av gdp-paketdata till \"%s:%d\"."
 
-#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Anslutningen till %s:%d nekades."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "Kan inte spela in ljud tillräckligt snabbt"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1038
+#: gst-libs/gst/tag/gsttagdemux.c:1057
 msgid "Failed to read tag: not enough data"
 msgstr "Misslyckades med att läsa tagg: inte tillräckligt mycket data"
 
@@ -337,8 +341,8 @@ msgstr "spår TRM-ID"
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-ID"
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "Den här cd-skivan saknar ljudspår"
 
@@ -373,7 +377,7 @@ msgstr "Windows Media Speech"
 
 #: gst-libs/gst/pbutils/descriptions.c:148
 msgid "CYUV Lossless"
-msgstr "Ickeförstörande CYUV"
+msgstr "Förlustfri CYUV"
 
 #: gst-libs/gst/pbutils/descriptions.c:151
 msgid "FFMpeg v1"
@@ -381,7 +385,7 @@ msgstr "FFMpeg v1"
 
 #: gst-libs/gst/pbutils/descriptions.c:163
 msgid "Lossless MSZH"
-msgstr "Ickeförstörande MSZH"
+msgstr "Förlustfri MSZH"
 
 #: gst-libs/gst/pbutils/descriptions.c:169
 msgid "Uncompressed Gray Image"

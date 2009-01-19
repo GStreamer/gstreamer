@@ -1,20 +1,20 @@
-# translation of gst-plugins-base-0.10.19.3.po to Dutch
+# translation of gst-plugins-base-0.10.20.3.po to Dutch
 # This file is put in the public domain.
 #
 # Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.19.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-17 14:28+0100\n"
-"PO-Revision-Date: 2008-06-15 18:46+0200\n"
+"Project-Id-Version: gst-plugins-base-0.10.20.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"PO-Revision-Date: 2008-10-09 21:23+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 #: ext/alsa/gstalsamixertrack.c:144
 msgid "Master"
@@ -74,7 +74,7 @@ msgstr "Kan het apparaat niet openen voor afspelen in stereo."
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Kan het apparaat niet openen voor afspelen in %d-kanalen."
 
-#: ext/alsa/gstalsasink.c:685
+#: ext/alsa/gstalsasink.c:687
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -82,7 +82,7 @@ msgstr ""
 "Kan het audio-apparaat niet openen voor afspelen. Apparaat is in gebruik bij "
 "een andere applicatie."
 
-#: ext/alsa/gstalsasink.c:690
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "Kan het audio-apparaat niet openen voor afspelen."
 
@@ -137,16 +137,16 @@ msgstr "Geen bestandsnaam opgegeven"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Kan het VFS-bestand \"%s\" niet sluiten."
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fout bij het schrijven naar bestand \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3126
+#: ext/ogg/gstoggdemux.c:3150
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
 
-#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -154,7 +154,7 @@ msgstr ""
 "Een %s plugin is vereist voor het afspelen van deze gegevens, echter deze is "
 "niet geïnstalleerd."
 
-#: gst/playback/gstdecodebin.c:1715
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
 msgstr "Dit lijkt een tekstbestand te zijn"
 
@@ -163,11 +163,11 @@ msgstr "Dit lijkt een tekstbestand te zijn"
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Ongeldige ondertitel-URI \"%s\"; ondertitels zijn uitgezet."
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
 msgid "No URI specified to play from."
 msgstr "Geen URI opgegeven om van af te spelen."
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Ongeldige URI \"%s\"."
@@ -180,7 +180,7 @@ msgstr "RTSP-gegevensstromen zijn nog niet af te spelen."
 msgid "Could not create \"decodebin\" element."
 msgstr "Kan \"decodebin\"-element niet aanmaken."
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
 msgid "Source element is invalid."
 msgstr "Bronelement is ongeldig."
 
@@ -209,7 +209,7 @@ msgstr "Dit is geen mediabestand."
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Een ondertitelstroom is gedetecteerd, maar geen videostroom."
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "De elementen 'autovideosink' en 'xvimagesink' ontbreken beide."
 
@@ -217,21 +217,25 @@ msgstr "De elementen 'autovideosink' en 'xvimagesink' ontbreken beide."
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
-#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
-#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
-#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
-#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
+#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
+#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
+#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
+#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Ontbrekend element '%s' - controleer de instalatie van uw GStreamer."
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "De elementen 'autoaudiosink' en 'alsasink' ontbreken beide."
 
-#: gst/playback/gstplaysink.c:989
+#: gst/playback/gstplaysink.c:1028
 msgid "No volume control found"
+msgstr "Geen volume controle gevonden"
+
+#: gst/playback/gstplaysink.c:1380
+msgid "Can't play a text file without video."
 msgstr ""
 
 #: gst/playback/gstqueue2.c:991
@@ -243,33 +247,33 @@ msgstr "Geen bestandsnaam opgegeven."
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet open voor lezen."
 
-#: gst/playback/gsturidecodebin.c:548
+#: gst/playback/gsturidecodebin.c:589
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Geen decoder beschikbaar voor het type '%s'."
 
-#: gst/playback/gsturidecodebin.c:779
+#: gst/playback/gsturidecodebin.c:824
 msgid "This stream type cannot be played yet."
 msgstr "Deze stroom kan nog niet afgespeeld worden."
 
-#: gst/playback/gsturidecodebin.c:790
+#: gst/playback/gsturidecodebin.c:835
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Geen URI-handler geïmplementeerd voor \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:1081
+#: gst/playback/gsturidecodebin.c:1126
 msgid "Could not create \"decodebin2\" element."
 msgstr "Kan het element \"decodebin2\" niet aanmaken."
 
-#: gst/playback/gsturidecodebin.c:1137
+#: gst/playback/gsturidecodebin.c:1193
 msgid "Could not create \"queue2\" element."
 msgstr "Kan het element \"queue2\" niet aanmaken."
 
-#: gst/playback/gsturidecodebin.c:1176
+#: gst/playback/gsturidecodebin.c:1232
 msgid "Could not create \"typefind\" element."
 msgstr "Kan \"typefind\"-element niet aanmaken."
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fout bij het zenden van gegevens naar \"%s:%d\"."
@@ -284,18 +288,18 @@ msgstr "Fout tijdens het zenden van gdp-headergegevens naar \"%s:%d\"."
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Fout tijdens het zenden van gdp-gegevens naar \"%s:%d\"."
 
-#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Verbinding naar %s:%d is geweigerd."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "Kan geluid niet snel genoeg opslaan"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1038
+#: gst-libs/gst/tag/gsttagdemux.c:1057
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "Lezen van tag is mislukt: niet genoeg gegevens"
 
 #: gst-libs/gst/tag/tags.c:59
 msgid "track ID"
@@ -337,8 +341,8 @@ msgstr "track-TRM-ID"
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-ID"
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "Deze CD heeft geen audiotracks"
 
@@ -400,9 +404,8 @@ msgid "TMPlayer subtitle format"
 msgstr "TMPlayer ondertitelformaat"
 
 #: gst-libs/gst/pbutils/descriptions.c:210
-#, fuzzy
 msgid "Kate subtitle format"
-msgstr "Sami ondertitelformaat"
+msgstr "Kate ondertitelformaat"
 
 #: gst-libs/gst/pbutils/descriptions.c:269
 msgid "Uncompressed planar YUV 4:2:0"
