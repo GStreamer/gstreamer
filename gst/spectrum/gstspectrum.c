@@ -278,6 +278,8 @@ gst_spectrum_reset_state (GstSpectrum * spectrum)
 
   spectrum->num_frames = 0;
   spectrum->num_fft = 0;
+
+  spectrum->accumulated_error = 0;
 }
 
 static void
@@ -505,10 +507,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     spectrum->fft_ctx = gst_fft_f32_new (nfft, FALSE);
     spectrum->frames_per_interval =
         gst_util_uint64_scale (spectrum->interval, rate, GST_SECOND);
+    spectrum->error_per_interval = (spectrum->interval * rate) % GST_SECOND;
     if (spectrum->frames_per_interval == 0)
       spectrum->frames_per_interval = 1;
     spectrum->num_frames = 0;
     spectrum->num_fft = 0;
+    spectrum->accumulated_error = 0;
   }
 
   if (spectrum->num_frames == 0)
@@ -559,7 +563,12 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
      * FFT of frames that we already handled.
      */
     if (spectrum->num_frames % nfft == 0 ||
-        spectrum->num_frames == spectrum->frames_per_interval) {
+        ((spectrum->accumulated_error < GST_SECOND
+                && spectrum->num_frames == spectrum->frames_per_interval)
+            || (spectrum->accumulated_error >= GST_SECOND
+                && spectrum->num_frames - 1 ==
+                spectrum->frames_per_interval))) {
+
       for (i = 0; i < nfft; i++)
         input_tmp[i] = input[(spectrum->input_pos + i) % nfft];
 
@@ -586,7 +595,16 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     }
 
     /* Do we have the FFTs for one interval? */
-    if (spectrum->num_frames == spectrum->frames_per_interval) {
+    if ((spectrum->accumulated_error < GST_SECOND
+            && spectrum->num_frames == spectrum->frames_per_interval)
+        || (spectrum->accumulated_error >= GST_SECOND
+            && spectrum->num_frames - 1 == spectrum->frames_per_interval)) {
+
+      if (spectrum->accumulated_error >= GST_SECOND)
+        spectrum->accumulated_error -= GST_SECOND;
+      else
+        spectrum->accumulated_error += spectrum->error_per_interval;
+
       if (spectrum->message) {
         GstMessage *m;
 

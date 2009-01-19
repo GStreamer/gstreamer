@@ -1,3 +1,12 @@
+2009-01-19  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_reset_state),
+	(gst_spectrum_transform_ip):
+	* gst/spectrum/gstspectrum.h:
+	Implement a simple compensation algorithm for rounding errors.
+	This makes sure that a spectrum message is posted on the bus
+	every interval nanoseconds. Fixes bug #567955.
+
 2009-01-15  Michael Smith <msmith@songbirdnest.com>
 
 	* sys/osxaudio/Makefile.am:

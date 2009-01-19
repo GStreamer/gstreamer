@@ -62,6 +62,9 @@ struct _GstSpectrum
   gfloat *spect_magnitude;
   gfloat *spect_phase;
   GstFFTF32 *fft_ctx;
+
+  guint64 error_per_interval;
+  guint64 accumulated_error;
 };
 
 struct _GstSpectrumClass
