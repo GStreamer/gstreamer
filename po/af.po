@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 16:51+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 22:32+0000\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,22 +15,26 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/resindvd/resindvdsrc.c:330
+#: ext/resindvd/resindvdsrc.c:333
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
-#: ext/resindvd/resindvdsrc.c:336
+#: ext/resindvd/resindvdsrc.c:339
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
+
+#: ext/resindvd/resindvdsrc.c:345
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1234
+#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr ""
 
@@ -64,22 +68,22 @@ msgid ""
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
+#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Toestel \"%s\" bestaan nie."
 
-#: sys/dvb/gstdvbsrc.c:701
+#: sys/dvb/gstdvbsrc.c:704
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kon nie beheertoestel \"%s\" toemaak nie."
 
-#: sys/dvb/gstdvbsrc.c:713
+#: sys/dvb/gstdvbsrc.c:716
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kon nie genoeg buffers vanaf toestel \"%s\" kry nie."
 
-#: sys/dvb/gstdvbsrc.c:794
+#: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kon nie lêer \"%s\" oopmaak om te lees nie."

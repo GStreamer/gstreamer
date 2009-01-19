@@ -1,29 +1,30 @@
-# Translation of 'gst-plugins-bad' messages to Kirghiz.
-# Copyright (C) 2002 Free Software Foundation, Inc.
-# Ilyas Bakirov <just_ilyas@yahoo.com>, 2007.
-#
+# Maltese translation for gst-plugins-bad.
+# This file is distributed under the same license as the gst-plugins-bad package.
+# NAME OF AUTHOR <michelbugeja@rabatmalta.com>, 2008.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.5\n"
+"Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2009-01-19 22:32+0000\n"
-"PO-Revision-Date: 2007-11-13 17:16+0600\n"
-"Last-Translator: Ilyas Bakirov <just_ilyas@yahoo.com>\n"
-"Language-Team: Kirghiz <i18n-team-ky-kyrgyz@lists.sourceforge.net>\n"
+"PO-Revision-Date: 2008-10-26 20:27+0100\n"
+"Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
+"Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Kyrgyz\n"
-"X-Poedit-Country: KYRGYZSTAN\n"
+"X-Poedit-Language: Maltese\n"
+"X-Poedit-Country: MALTA\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: ext/resindvd/resindvdsrc.c:333
 msgid "Could not read title information for DVD."
-msgstr ""
+msgstr "Ma stajtx naqra informazzjoni fuq it-titlu tad-DVD."
 
 #: ext/resindvd/resindvdsrc.c:339
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Алдын \"%s\" жабдыкты ачалган жок."
+msgstr "Problema biex niftaħ apparat tad-DVD '%s'."
 
 #: ext/resindvd/resindvdsrc.c:345
 msgid "Failed to set PGC based seeking."
@@ -31,34 +32,36 @@ msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
-msgstr ""
+msgstr "Internal clock error."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
 #: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Internal data flow error."
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
-msgstr ""
+msgstr "L-ebda isem speċifikat biex nikteb."
 
 #: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:351
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "\"%s\"  файлы окууга ачылган жок."
+msgstr "Ma nistax niftaħ fajl \"%s\" biex nikteb."
 
 #: ext/sndfile/gstsfsink.c:440 gst/nuvdemux/gstnuvdemux.c:735
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Internal data stream error."
 
 #: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
-#, fuzzy, c-format
+#, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Алдын \"%s\" жабдыкты ачалган жок."
+msgstr "Ma nistax nikteb fil-fajl \"%s\". "
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Ma nistax naghmel il-konfigurazzjoni ta' TwoLAME encoder.  Iċċekkja "
+"parametri tal-encoding."
 
 #: ext/twolame/gsttwolame.c:502
 #, c-format
@@ -66,337 +69,345 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Il-bitrate rikjesta ta' %d kbit/s għal-property '%s' mhux permessa. Il-"
+"bitrate ġiet mibdula għal %d kbit/s. "
 
 #: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "\"%s\" мындай жабдык жок."
+msgstr "Apparat \"%s\" ma jeżistiex."
 
 #: sys/dvb/gstdvbsrc.c:704
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Алдын \"%s\" жабдыкты ачалган жок."
+msgstr "Ma nistax niftaħ apparat frontend \"%s\"."
 
 #: sys/dvb/gstdvbsrc.c:716
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Алдын \"%s\" жабдыктан ырастоолор алынган жок."
+msgstr "Ma nistax inġib is-settings mill-apparat frontend \"%s\"."
 
 #: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "\"%s\"  файлы окууга ачылган жок."
+msgstr "Ma nistax naqra mill-fajl \"%s\"."
 
 #: sys/oss4/oss4-mixer.c:302
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "\"%s\"  файлы окууга ачылган жок."
+msgstr "Ma nistax niftaħ apparat tal-awdjo għal mixer control handling."
 
 #: sys/oss4/oss4-mixer.c:316
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
+"Ma nistax niftaħ apparat tal-awdjo għal mixer control handling. Din il-"
+"verzjoni ta' Open Sound System mhux issapportjata minn din l-element."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
-msgstr ""
+msgstr "Fast"
 
 #: sys/oss4/oss4-mixer.c:721
 msgid "Low"
-msgstr ""
+msgstr "Low"
 
 #: sys/oss4/oss4-mixer.c:722
 msgid "Medium"
-msgstr ""
+msgstr "Medium"
 
 #: sys/oss4/oss4-mixer.c:723
 msgid "High"
-msgstr ""
+msgstr "High"
 
 #: sys/oss4/oss4-mixer.c:724
 msgid "Very high"
-msgstr ""
+msgstr "Very high"
 
 #: sys/oss4/oss4-mixer.c:725
 msgid "Production"
-msgstr ""
+msgstr "Production"
 
 #: sys/oss4/oss4-mixer.c:726
 msgid "Off"
-msgstr ""
+msgstr "Off"
 
 #: sys/oss4/oss4-mixer.c:727
 msgid "On"
-msgstr ""
+msgstr "On"
 
 #: sys/oss4/oss4-mixer.c:728
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 #: sys/oss4/oss4-mixer.c:729
 msgid "Surround sound"
-msgstr ""
+msgstr "Surround sound"
 
 #: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
 msgid "Input mix"
-msgstr ""
+msgstr "Input mix"
 
 #: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
 msgid "Front"
-msgstr ""
+msgstr "Quddiem"
 
 #: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
-msgstr ""
+msgstr "Wara"
 
 #: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
-msgstr ""
+msgstr "Ġenb"
 
 #: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
-msgstr ""
+msgstr "Center / LFE"
 
 #: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofonu"
 
 #: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
 msgid "Front panel microphone"
-msgstr ""
+msgstr "Mikrofonu tal-panella ta' quddiem"
 
 #: sys/oss4/oss4-mixer.c:737
 msgid "Input"
-msgstr ""
+msgstr "Input"
 
 #: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
-msgstr ""
+msgstr "Line-in"
 
 #: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
-msgstr ""
+msgstr "PCM 1"
 
 #: sys/oss4/oss4-mixer.c:740
 msgid "PCM 2"
-msgstr ""
+msgstr "PCM 2"
 
 #: sys/oss4/oss4-mixer.c:741
 msgid "PCM 3"
-msgstr ""
+msgstr "PCM 3"
 
 #: sys/oss4/oss4-mixer.c:742
 msgid "PCM 4"
-msgstr ""
+msgstr "PCM 4"
 
 #: sys/oss4/oss4-mixer.c:754
 msgid "Green connector"
-msgstr ""
+msgstr "Connector aħdar"
 
 #: sys/oss4/oss4-mixer.c:755
 msgid "Green front panel connector"
-msgstr ""
+msgstr "Front panel connector aħdar"
 
 #: sys/oss4/oss4-mixer.c:756
 msgid "Pink connector"
-msgstr ""
+msgstr "Connector roża"
 
 #: sys/oss4/oss4-mixer.c:757
 msgid "Pink front panel connector"
-msgstr ""
+msgstr "Front panel connector roża"
 
 #: sys/oss4/oss4-mixer.c:758
 msgid "Blue connector"
-msgstr ""
+msgstr "Connector Blu"
 
 #: sys/oss4/oss4-mixer.c:759
 msgid "Blue front panel connector"
-msgstr ""
+msgstr "Front panel connector blu"
 
 #: sys/oss4/oss4-mixer.c:760
 msgid "Orange connector"
-msgstr ""
+msgstr "Connector oranġjo"
 
 #: sys/oss4/oss4-mixer.c:761
 msgid "Orange front panel connector"
-msgstr ""
+msgstr "Front Panel connector oranġjo"
 
 #: sys/oss4/oss4-mixer.c:762
 msgid "Black connector"
-msgstr ""
+msgstr "Connector iswed"
 
 #: sys/oss4/oss4-mixer.c:763
 msgid "Black front panel connector"
-msgstr ""
+msgstr "Front panel connector iswed"
 
 #: sys/oss4/oss4-mixer.c:764
 msgid "Gray connector"
-msgstr ""
+msgstr "Connector Griż"
 
 #: sys/oss4/oss4-mixer.c:765
 msgid "Gray front panel connector"
-msgstr ""
+msgstr "Front panel connector Griż"
 
 #: sys/oss4/oss4-mixer.c:766
 msgid "White connector"
-msgstr ""
+msgstr "Connector abjad"
 
 #: sys/oss4/oss4-mixer.c:767
 msgid "White front panel connector"
-msgstr ""
+msgstr "Front panel connector abjad"
 
 #: sys/oss4/oss4-mixer.c:768
 msgid "Red connector"
-msgstr ""
+msgstr "Connector aħmar"
 
 #: sys/oss4/oss4-mixer.c:769
 msgid "Red front panel connector"
-msgstr ""
+msgstr "Front panel connector aħmar"
 
 #: sys/oss4/oss4-mixer.c:770
 msgid "Yellow connector"
-msgstr ""
+msgstr "Connector isfar"
 
 #: sys/oss4/oss4-mixer.c:771
 msgid "Yellow front panel connector"
-msgstr ""
+msgstr "Front panel connector isfar"
 
 #: sys/oss4/oss4-mixer.c:774
 msgid "Green connector function"
-msgstr ""
+msgstr "Connector function aħdar"
 
 #: sys/oss4/oss4-mixer.c:775
 msgid "Green front panel connector function"
-msgstr ""
+msgstr "Front panel connector function aħdar"
 
 #: sys/oss4/oss4-mixer.c:776
 msgid "Pink connector function"
-msgstr ""
+msgstr "Connector function roża"
 
 #: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
-msgstr ""
+msgstr "Front panel connector function roża"
 
 #: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
-msgstr ""
+msgstr "Connector function blu"
 
 #: sys/oss4/oss4-mixer.c:779
 msgid "Blue front panel connector function"
-msgstr ""
+msgstr "Front panel connector function blu"
 
 #: sys/oss4/oss4-mixer.c:780
 msgid "Orange connector function"
-msgstr ""
+msgstr "Connector function oranġjo"
 
 #: sys/oss4/oss4-mixer.c:781
 msgid "Orange front panel connector function"
-msgstr ""
+msgstr "Front panel connector function oranġjo"
 
 #: sys/oss4/oss4-mixer.c:782
 msgid "Black connector function"
-msgstr ""
+msgstr "Connector function iswed"
 
 #: sys/oss4/oss4-mixer.c:783
 msgid "Black front panel connector function"
-msgstr ""
+msgstr "Front panel connector function iswed"
 
 #: sys/oss4/oss4-mixer.c:784
 msgid "Gray connector function"
-msgstr ""
+msgstr "Connector function griż"
 
 #: sys/oss4/oss4-mixer.c:785
 msgid "Gray front panel connector function"
-msgstr ""
+msgstr "Front panel connector function griż"
 
 #: sys/oss4/oss4-mixer.c:786
 msgid "White connector function"
-msgstr ""
+msgstr "Connector function abjad"
 
 #: sys/oss4/oss4-mixer.c:787
 msgid "White front panel connector function"
-msgstr ""
+msgstr "Front panel connector function abjad"
 
 #: sys/oss4/oss4-mixer.c:788
 msgid "Red connector function"
-msgstr ""
+msgstr "Connector function aħmar"
 
 #: sys/oss4/oss4-mixer.c:789
 msgid "Red front panel connector function"
-msgstr ""
+msgstr "Front panel connector function aħmar"
 
 #: sys/oss4/oss4-mixer.c:790
 msgid "Yellow connector function"
-msgstr ""
+msgstr "Connector function isfar"
 
 #: sys/oss4/oss4-mixer.c:791
 msgid "Yellow front panel connector function"
-msgstr ""
+msgstr "Front panel connector function isfar"
 
 #: sys/oss4/oss4-mixer.c:797
 msgid "Front panel line-in"
-msgstr ""
+msgstr "Front panel line-in"
 
 #: sys/oss4/oss4-mixer.c:798
 msgid "Headphones"
-msgstr ""
+msgstr "Headphones"
 
 #: sys/oss4/oss4-mixer.c:799
 msgid "Front panel headphones"
-msgstr ""
+msgstr "Front panel headphones"
 
 #: sys/oss4/oss4-mixer.c:804
 msgid "PCM"
-msgstr ""
+msgstr "PCM"
 
 #: sys/oss4/oss4-mixer.c:846
 msgid "Virtual mixer input"
-msgstr ""
+msgstr "Virtual mixer input"
 
 #: sys/oss4/oss4-mixer.c:848
 msgid "Virtual mixer output"
-msgstr ""
+msgstr "Virtual mixer output"
 
 #: sys/oss4/oss4-mixer.c:850
 msgid "Virtual mixer channel configuration"
-msgstr ""
+msgstr "Virtual mixer channel configuration"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Ma nistax niftaħ apparat tal-awdjo biex indoqq. Apparat qed jintuża minn "
+"programm ieħor."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Ma nistax niftaħ apparat tal-awdjo biex indoqq. M'għandekx aċċess għall-"
+"apparat."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Алдын \"%s\" жабдыкты ачалган жок."
+msgstr "Ma nistax niftaħ apparat tal-awdjo biex indoqq."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
+"Ma nistax niftaħ apparat tal-awdjo biex indoqq. Dil il-verżjoni ta' Open "
+"Sound System mhux issapportjatha minn dan l-element."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Id-daqq mhux issappartjat minn dan l-apparat tal-awdjo."
 
 #: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
-msgstr ""
+msgstr "Żball fiid-daqq tal-awdjo."
 
 #: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Irrekordjar mhux issapportjat minn dan l-apparat tal-awdjo."
 
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
-msgstr ""
+msgstr "Żball fl-irrekordjar mill-apparat tal-awdjo."

@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 16:51+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 22:32+0000\n"
 "PO-Revision-Date: 2008-10-18 01:46-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -17,21 +17,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: ext/resindvd/resindvdsrc.c:330
+#: ext/resindvd/resindvdsrc.c:333
 msgid "Could not read title information for DVD."
 msgstr "Não foi possível ler as informações de título do DVD."
 
-#: ext/resindvd/resindvdsrc.c:336
+#: ext/resindvd/resindvdsrc.c:339
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Falha ao abrir o dispositivo de DVD \"%s\"."
+
+#: ext/resindvd/resindvdsrc.c:345
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Erro interno do temporizador."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1234
+#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Erro interno de fluxo de dados."
 
@@ -68,23 +72,23 @@ msgstr ""
 "A taxa de bits solicitada de %d kbit/s para a propriedade \"%s\" não é "
 "permitida. A taxa de bits foi alterada para %d kbit/s."
 
-#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
+#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "O dispositivo \"%s\" não existe."
 
-#: sys/dvb/gstdvbsrc.c:701
+#: sys/dvb/gstdvbsrc.c:704
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Não foi possível abrir o dispositivo de interface \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:713
+#: sys/dvb/gstdvbsrc.c:716
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr ""
 "Não foi possível obter as configurações do dispositivo de interface \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:794
+#: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."

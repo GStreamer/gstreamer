@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 16:51+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 22:32+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,22 +16,26 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/resindvd/resindvdsrc.c:330
+#: ext/resindvd/resindvdsrc.c:333
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Не могу да пишем у датотеку „%s“."
 
-#: ext/resindvd/resindvdsrc.c:336
+#: ext/resindvd/resindvdsrc.c:339
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не могу да затворим управљачки уређај „%s“."
+
+#: ext/resindvd/resindvdsrc.c:345
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1234
+#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr ""
 
@@ -65,22 +69,22 @@ msgid ""
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
+#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Не постоји уређај „%s“."
 
-#: sys/dvb/gstdvbsrc.c:701
+#: sys/dvb/gstdvbsrc.c:704
 #, fuzzy, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/dvb/gstdvbsrc.c:713
+#: sys/dvb/gstdvbsrc.c:716
 #, fuzzy, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
 
-#: sys/dvb/gstdvbsrc.c:794
+#: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."

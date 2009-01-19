@@ -2,14 +2,14 @@
 # Czech translations of gst-plugins.
 # Copyright (C) 2004 gst-plugins' COPYRIGHT HOLDER
 # This file is put in the public domain.
-# Peter Tuhársky <tuharsky@misbb.sk>, 2007.
+# Peter Tuhársky <tuharsky@misbb.sk>, 2007, 2008.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.5.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 16:51+0100\n"
-"PO-Revision-Date: 2008-02-19 14:02+0100\n"
+"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 22:32+0000\n"
+"PO-Revision-Date: 2008-11-04 09:39+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
@@ -20,24 +20,25 @@ msgstr ""
 "X-Poedit-Language: Slovak\n"
 "X-Poedit-Country: SLOVAKIA\n"
 
-#: ext/resindvd/resindvdsrc.c:330
-#, fuzzy
+#: ext/resindvd/resindvdsrc.c:333
 msgid "Could not read title information for DVD."
-msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
+msgstr "Nepodarilo sa prečítať titulok DVD."
 
-#: ext/resindvd/resindvdsrc.c:336
-#, fuzzy, c-format
+#: ext/resindvd/resindvdsrc.c:339
+#, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Nepodarilo sa otvoriť ovládacie zariadenie \"%s\"."
+msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
+
+#: ext/resindvd/resindvdsrc.c:345
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
-#, fuzzy
 msgid "Internal clock error."
-msgstr "Vnútorná chyba prúdu údajov."
+msgstr "Vnútorná chyba časovača."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1234
-#, fuzzy
+#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Vnútorná chyba prúdu údajov."
 
@@ -62,6 +63,8 @@ msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Nepodarilo sa nakonfigurovať TwoLAME enkodér. Skontrolujte parametre "
+"kódovania."
 
 #: ext/twolame/gsttwolame.c:502
 #, c-format
@@ -69,337 +72,345 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je povolená. "
+"Rýchlosť bola zmenená na %d kbit/s."
 
-#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
+#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zariadenie \"%s\" neexistuje."
 
-#: sys/dvb/gstdvbsrc.c:701
+#: sys/dvb/gstdvbsrc.c:704
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nepodarilo sa otvoriť ovládacie zariadenie \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:713
+#: sys/dvb/gstdvbsrc.c:716
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:794
+#: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
 
 #: sys/oss4/oss4-mixer.c:302
-#, fuzzy
 msgid "Could not open audio device for mixer control handling."
-msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra."
 
 #: sys/oss4/oss4-mixer.c:316
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
 msgstr ""
+"Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra. Táto "
+"verzia Open Sound System nie je podporovaná týmto prvkom."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
-msgstr ""
+msgstr "Rýchla"
 
 #: sys/oss4/oss4-mixer.c:721
 msgid "Low"
-msgstr ""
+msgstr "Nízka"
 
 #: sys/oss4/oss4-mixer.c:722
 msgid "Medium"
-msgstr ""
+msgstr "Stredná"
 
 #: sys/oss4/oss4-mixer.c:723
 msgid "High"
-msgstr ""
+msgstr "Vysoká"
 
 #: sys/oss4/oss4-mixer.c:724
 msgid "Very high"
-msgstr ""
+msgstr "Veľmi vysoká"
 
 #: sys/oss4/oss4-mixer.c:725
 msgid "Production"
-msgstr ""
+msgstr "Produkčná"
 
 #: sys/oss4/oss4-mixer.c:726
 msgid "Off"
-msgstr ""
+msgstr "Vyp"
 
 #: sys/oss4/oss4-mixer.c:727
 msgid "On"
-msgstr ""
+msgstr "Zap"
 
 #: sys/oss4/oss4-mixer.c:728
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 #: sys/oss4/oss4-mixer.c:729
 msgid "Surround sound"
-msgstr ""
+msgstr "Surround"
 
 #: sys/oss4/oss4-mixer.c:730 sys/oss4/oss4-mixer.c:805
 msgid "Input mix"
-msgstr ""
+msgstr "Vstup mix"
 
 #: sys/oss4/oss4-mixer.c:731 sys/oss4/oss4-mixer.c:800
 msgid "Front"
-msgstr ""
+msgstr "Predné"
 
 #: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
-msgstr ""
+msgstr "Zadné"
 
 #: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
-msgstr ""
+msgstr "Postranné"
 
 #: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
-msgstr ""
+msgstr "Stredné / LFE"
 
 #: sys/oss4/oss4-mixer.c:735 sys/oss4/oss4-mixer.c:794
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofón"
 
 #: sys/oss4/oss4-mixer.c:736 sys/oss4/oss4-mixer.c:795
 msgid "Front panel microphone"
-msgstr ""
+msgstr "Mikrofón predného panelu"
 
 #: sys/oss4/oss4-mixer.c:737
 msgid "Input"
-msgstr ""
+msgstr "Vstup"
 
 #: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
-msgstr ""
+msgstr "Linkový vstup"
 
 #: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
-msgstr ""
+msgstr "PCM 1"
 
 #: sys/oss4/oss4-mixer.c:740
 msgid "PCM 2"
-msgstr ""
+msgstr "PCM 2"
 
 #: sys/oss4/oss4-mixer.c:741
 msgid "PCM 3"
-msgstr ""
+msgstr "PCM 3"
 
 #: sys/oss4/oss4-mixer.c:742
 msgid "PCM 4"
-msgstr ""
+msgstr "PCM 4"
 
 #: sys/oss4/oss4-mixer.c:754
 msgid "Green connector"
-msgstr ""
+msgstr "Zelený konektor"
 
 #: sys/oss4/oss4-mixer.c:755
 msgid "Green front panel connector"
-msgstr ""
+msgstr "Zelený konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:756
 msgid "Pink connector"
-msgstr ""
+msgstr "Ružový konektor"
 
 #: sys/oss4/oss4-mixer.c:757
 msgid "Pink front panel connector"
-msgstr ""
+msgstr "Ružový konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:758
 msgid "Blue connector"
-msgstr ""
+msgstr "Modrý konektor"
 
 #: sys/oss4/oss4-mixer.c:759
 msgid "Blue front panel connector"
-msgstr ""
+msgstr "Modrý konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:760
 msgid "Orange connector"
-msgstr ""
+msgstr "Oranžový konektor"
 
 #: sys/oss4/oss4-mixer.c:761
 msgid "Orange front panel connector"
-msgstr ""
+msgstr "Oranžový konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:762
 msgid "Black connector"
-msgstr ""
+msgstr "Čierny konektor"
 
 #: sys/oss4/oss4-mixer.c:763
 msgid "Black front panel connector"
-msgstr ""
+msgstr "Čierny konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:764
 msgid "Gray connector"
-msgstr ""
+msgstr "Šedý konektor"
 
 #: sys/oss4/oss4-mixer.c:765
 msgid "Gray front panel connector"
-msgstr ""
+msgstr "Šedý konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:766
 msgid "White connector"
-msgstr ""
+msgstr "Biely konektor"
 
 #: sys/oss4/oss4-mixer.c:767
 msgid "White front panel connector"
-msgstr ""
+msgstr "Biely konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:768
 msgid "Red connector"
-msgstr ""
+msgstr "Červený konektor"
 
 #: sys/oss4/oss4-mixer.c:769
 msgid "Red front panel connector"
-msgstr ""
+msgstr "Červený konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:770
 msgid "Yellow connector"
-msgstr ""
+msgstr "Žltý konektor"
 
 #: sys/oss4/oss4-mixer.c:771
 msgid "Yellow front panel connector"
-msgstr ""
+msgstr "Žltý konektor na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:774
 msgid "Green connector function"
-msgstr ""
+msgstr "Funkcia zeleného konektora"
 
 #: sys/oss4/oss4-mixer.c:775
 msgid "Green front panel connector function"
-msgstr ""
+msgstr "Funkcia zeleného konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:776
 msgid "Pink connector function"
-msgstr ""
+msgstr "Funkcia ružového konektora"
 
 #: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
-msgstr ""
+msgstr "Funkcia ružového konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
-msgstr ""
+msgstr "Funkcia modrého konektora"
 
 #: sys/oss4/oss4-mixer.c:779
 msgid "Blue front panel connector function"
-msgstr ""
+msgstr "Funkcia modrého konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:780
 msgid "Orange connector function"
-msgstr ""
+msgstr "Funkcia oranžového konektora"
 
 #: sys/oss4/oss4-mixer.c:781
 msgid "Orange front panel connector function"
-msgstr ""
+msgstr "Funkcia oranžového konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:782
 msgid "Black connector function"
-msgstr ""
+msgstr "Funkcia čierneho konektora"
 
 #: sys/oss4/oss4-mixer.c:783
 msgid "Black front panel connector function"
-msgstr ""
+msgstr "Funkcia čierneho konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:784
 msgid "Gray connector function"
-msgstr ""
+msgstr "Funkcia šedého konektora"
 
 #: sys/oss4/oss4-mixer.c:785
 msgid "Gray front panel connector function"
-msgstr ""
+msgstr "Funkcia šedého konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:786
 msgid "White connector function"
-msgstr ""
+msgstr "Funkcia bieleho konektora"
 
 #: sys/oss4/oss4-mixer.c:787
 msgid "White front panel connector function"
-msgstr ""
+msgstr "Funkcia bieleho konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:788
 msgid "Red connector function"
-msgstr ""
+msgstr "Funkcia červeného konektora"
 
 #: sys/oss4/oss4-mixer.c:789
 msgid "Red front panel connector function"
-msgstr ""
+msgstr "Funkcia červeného konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:790
 msgid "Yellow connector function"
-msgstr ""
+msgstr "Funkcia žltého konektora"
 
 #: sys/oss4/oss4-mixer.c:791
 msgid "Yellow front panel connector function"
-msgstr ""
+msgstr "Funkcia žltého konektora na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:797
 msgid "Front panel line-in"
-msgstr ""
+msgstr "Linkový vstup na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:798
 msgid "Headphones"
-msgstr ""
+msgstr "Slúchadlá"
 
 #: sys/oss4/oss4-mixer.c:799
 msgid "Front panel headphones"
-msgstr ""
+msgstr "Slúchadlá na prednom paneli"
 
 #: sys/oss4/oss4-mixer.c:804
 msgid "PCM"
-msgstr ""
+msgstr "PCM"
 
 #: sys/oss4/oss4-mixer.c:846
 msgid "Virtual mixer input"
-msgstr ""
+msgstr "Vstup virtuálneho mixéra"
 
 #: sys/oss4/oss4-mixer.c:848
 msgid "Virtual mixer output"
-msgstr ""
+msgstr "Výstup virtuálneho mixéra"
 
 #: sys/oss4/oss4-mixer.c:850
 msgid "Virtual mixer channel configuration"
-msgstr ""
+msgstr "Konfigurácia kanálov virtuálneho mixéra"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Zariadenie už "
+"používa iná aplikácia."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Nemáte "
+"oprávnenie na otvorenie tohto zariadenia."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Nepodarilo sa otvoriť ovládacie zariadenie \"%s\"."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
+"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Túto verziu "
+"Open Sound System nepodporuje tento prvok."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Toto zvukové zariadenie nepodporuje prehrávanie."
 
 #: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."
-msgstr ""
+msgstr "Chyba prehrávania zvuku."
 
 #: sys/oss4/oss4-source.c:520
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Toto zvukové zariadenie nepodporuje záznam."
 
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
-msgstr ""
+msgstr "Chyba pri zázname zo zvukového zariadenia."

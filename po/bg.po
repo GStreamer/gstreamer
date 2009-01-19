@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.7.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 16:51+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 22:32+0000\n"
 "PO-Revision-Date: 2008-07-21 11:20+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -16,15 +16,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/resindvd/resindvdsrc.c:330
+#: ext/resindvd/resindvdsrc.c:333
 #, fuzzy
 msgid "Could not read title information for DVD."
 msgstr "Във файла „%s“ не може да се пише."
 
-#: ext/resindvd/resindvdsrc.c:336
+#: ext/resindvd/resindvdsrc.c:339
 #, fuzzy, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Устройството „%s“ не може да бъде отворено."
+
+#: ext/resindvd/resindvdsrc.c:345
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 #, fuzzy
@@ -32,7 +36,7 @@ msgid "Internal clock error."
 msgstr "Вътрешна грешка в потока от данни."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1234
+#: gst/aiffparse/aiffparse.c:1265
 #, fuzzy
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка в потока от данни."
@@ -66,22 +70,22 @@ msgid ""
 "bitrate was changed to %d kbit/s."
 msgstr ""
 
-#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
+#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Устройството „%s“ не съществува."
 
-#: sys/dvb/gstdvbsrc.c:701
+#: sys/dvb/gstdvbsrc.c:704
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Устройството „%s“ не може да бъде отворено."
 
-#: sys/dvb/gstdvbsrc.c:713
+#: sys/dvb/gstdvbsrc.c:716
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могат да бъдат получени настройките от устройството „%s“."
 
-#: sys/dvb/gstdvbsrc.c:794
+#: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да бъде отворен за четене."

@@ -6,31 +6,35 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 16:51+0100\n"
-"PO-Revision-Date: 2008-10-13 11:28+0200\n"
+"Project-Id-Version: gst-plugins-bad-0.10.8.3\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-01-19 22:32+0000\n"
+"PO-Revision-Date: 2008-11-05 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/resindvd/resindvdsrc.c:330
+#: ext/resindvd/resindvdsrc.c:333
 msgid "Could not read title information for DVD."
 msgstr "Kunne ikke læse titelinformation for dvd."
 
-#: ext/resindvd/resindvdsrc.c:336
+#: ext/resindvd/resindvdsrc.c:339
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kunne ikke åbne dvd-enhed »%s«."
+
+#: ext/resindvd/resindvdsrc.c:345
+msgid "Failed to set PGC based seeking."
+msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Intern urfejl."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1234
+#: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
 msgstr "Intern datastrømfejl."
 
@@ -63,25 +67,25 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
-"Den anmodne bitrate %d kbit/s for egenskab »%s« er ikke tilladt. Bitraten "
+"Den anmodede bitrate %d kbit/s for egenskab »%s« er ikke tilladt. Bitraten "
 "blev ændret til %d kbit/s."
 
-#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
+#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheden »%s« eksisterer ikke."
 
-#: sys/dvb/gstdvbsrc.c:701
+#: sys/dvb/gstdvbsrc.c:704
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kunne ikke åbne forende-enheden »%s«."
 
-#: sys/dvb/gstdvbsrc.c:713
+#: sys/dvb/gstdvbsrc.c:716
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunne ikke hente indstillinger fra forende-enheden »%s«."
 
-#: sys/dvb/gstdvbsrc.c:794
+#: sys/dvb/gstdvbsrc.c:797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen »%s« for læsning."
@@ -91,7 +95,6 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Kunne ikke åbne lydenhed til mikserpulthåndtering."
 
 #: sys/oss4/oss4-mixer.c:316
-#, fuzzy
 msgid ""
 "Could not open audio device for mixer control handling. This version of the "
 "Open Sound System is not supported by this element."
@@ -147,9 +150,11 @@ msgstr "Inddata mix"
 msgid "Front"
 msgstr "Front"
 
+# bagende eller eller "Bag" hvis det er den bagerste lydkanal 
+# vi snakker om
 #: sys/oss4/oss4-mixer.c:732 sys/oss4/oss4-mixer.c:801
 msgid "Rear"
-msgstr "Bagende"
+msgstr "Bag"
 
 #: sys/oss4/oss4-mixer.c:733 sys/oss4/oss4-mixer.c:802
 msgid "Side"
@@ -371,7 +376,6 @@ msgstr ""
 "Kunne ikke åbne lydenhed til afspilning. Enheden bruges af et andet program."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -384,7 +388,6 @@ msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åbne lydenhed til afspilning."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
