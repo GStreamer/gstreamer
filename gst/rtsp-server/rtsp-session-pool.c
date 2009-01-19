@@ -21,6 +21,9 @@
 
 #undef DEBUG
 
+static void gst_rtsp_session_pool_finalize (GObject * object);
+
+
 G_DEFINE_TYPE (GstRTSPSessionPool, gst_rtsp_session_pool, G_TYPE_OBJECT);
 
 static void
@@ -29,6 +32,8 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->finalize = gst_rtsp_session_pool_finalize;
 }
 
 static void
@@ -36,7 +41,18 @@ gst_rtsp_session_pool_init (GstRTSPSessionPool * pool)
 {
   pool->lock = g_mutex_new ();
   pool->sessions = g_hash_table_new_full (g_str_hash, g_str_equal,
-		  g_free, NULL);
+		  g_free, g_object_unref);
+}
+
+static void
+gst_rtsp_session_pool_finalize (GObject * object)
+{
+  GstRTSPSessionPool * pool = GST_RTSP_SESSION_POOL (object);
+
+  g_mutex_free (pool->lock);
+  g_hash_table_unref (pool->sessions);
+  
+  G_OBJECT_CLASS (gst_rtsp_session_pool_parent_class)->finalize (object);
 }
 
 /**
@@ -157,9 +173,5 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool *pool, GstRTSPSession *sess)
   g_mutex_lock (pool->lock);
   found = g_hash_table_remove (pool->sessions, sess);
   g_mutex_unlock (pool->lock);
-
-  if (found) {
-    g_object_unref (sess);
-  }
 }
 
