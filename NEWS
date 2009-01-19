@@ -1,4 +1,4 @@
-This is GStreamer Base Plug-ins 0.10.21, "We Could Be Wrong"
+This is GStreamer Base Plug-ins 0.10.22, "Hidey Hidey Hidey Ho"
 
 IMPORTANT NOTES
 
@@ -6,6 +6,72 @@ IMPORTANT NOTES
 still considered unstable and WILL change in future releases. At this stage,
 only developers or early adopters should consider using decodebin2 or playbin2
 API embodied in their signals and properties.
+
+Changes since 0.10.21:
+
+      * Require gettext 0.17
+      * Replace audioresample with speexresample from -bad
+      * Support new formats in RIFF: uncompressed RGB, WMA lossless, VP6
+      * Move libgstapp and elements from -bad
+      * Support color-key setting and probing for Xv properties
+      * Improve typefinding for various formats
+      * Extend audio sinks for pull-mode operation
+      * Support for more subtitle formats
+      * More development on decode2bin and playbin2
+      * RTP and SDP fixes
+      * Many bug fixes and improvements
+
+Bugs fixed since 0.10.21:
+
+      * 562163 : theoraenc likely ignoring segments
+      * 562258 : rtspsrc element takes long time to error out if the addre...
+      * 561789 : [volume] deadlocks with a controller attached
+      * 554533 : [xvimagesink] allow setting colorkey if possible
+      * 567511 : colorkey in xvimagesink gets reset when element is reused
+      * 116051 : libresample doesn't handle > factor of 2 rate conversion
+      * 346218 : [audioresample] doesn't do anti aliasing
+      * 385061 : [audioresample?] investigate high CPU usage
+      * 456788 : [subparse] can't handle UTF-16 charset encoded subtitle.
+      * 525807 : [vorbisenc] vorbisenc has problems with a gnlsource that ...
+      * 546955 : gstoggmux EOS handling issue
+      * 549417 : [audioresample] unit test fails on 64bit linux
+      * 549510 : audioresample doesn't negotiate ideal caps
+      * 552237 : UTF-16 srt confuses gstreamer, misdetected as mp3
+      * 552559 : Implementation of SLAVE_SKEW in baseaudiosrc
+      * 552569 : audioresample producing strange sized buffers
+      * 552801 : audioconvert can overflow with big audio buffers
+      * 554879 : Add ability to specify format for date/time display in Gs...
+      * 555257 : Doesn't display srt subtitles saved with BOM
+      * 555319 : add FFV1 fourcc to riff-media
+      * 555607 : subrip subtitles typefind too strict
+      * 555699 : [PATCH] theoradec: prefer container's pixel aspect ratio ...
+      * 556025 : build failure in tests/icles
+      * 556066 : Last byte of FLAC image buffer chopped off
+      * 557365 : subparse check fails
+      * 558124 : [PLUGIN-MOVE] Move speexresample as audioresample2 to -base
+      * 559111 : ALSA sink hangs on USB audio device unplug while playing
+      * 559478 : does not play windows media streams correctly
+      * 559567 : `gst_base_audio_sink_sync_latency' should call `gst_base_...
+      * 561436 : videorate element add image/jpeg to caps template
+      * 561734 : playbin2 additions
+      * 561780 : Playbin2 should work without volume too
+      * 561924 : oggdemux hangs when given corrupt input via non-seekable ...
+      * 562270 : build without gdk fails
+      * 563143 : ximagesink/xvimagesink : _alloc_buffer returns non-clean ...
+      * 563174 : Implement gst_rtcp_packet_remove
+      * 563508 : [rgvolume] Unit test fails with passthrough assertions
+      * 563718 : Theora check out of date
+      * 563904 : GNOME Goal: Clean up GLib and GTK+ includes
+
+API added since 0.10.21:
+
+      * clockoverlay::time-format
+      * GstRingBuffer:gst_ring_buffer_activate()
+      * GstRingBuffer:gst_ring_buffer_is_active()
+      * GstRingBuffer:gst_ring_buffer_convert()
+      * Add GST_TYPE_BASE_AUDIO_(SRC|SINK)_SLAVE_METHOD to the public API
+      * gst_netaddress_get_address_bytes()
+      * gst_netaddress_set_address_bytes()
 
 Changes since 0.10.20:
 

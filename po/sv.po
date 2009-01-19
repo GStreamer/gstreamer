@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"POT-Creation-Date: 2009-01-09 22:45+0000\n"
 "PO-Revision-Date: 2009-01-12 23:20+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -75,12 +75,8 @@ msgid "Could not open device for playback in %d-channel mode."
 msgstr "Kunde inte öppna enheten för uppspelning i %d-kanalsläge."
 
 #: ext/alsa/gstalsasink.c:687
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat "
-"program."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat program."
 
 #: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
@@ -100,12 +96,8 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "Kunde inte öppna enheten för inspelning i %d-kanalsläge."
 
 #: ext/alsa/gstalsasrc.c:628
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Kunde inte öppna ljudenheten för inspelning. Enheten används av ett annat "
-"program."
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Kunde inte öppna ljudenheten för inspelning. Enheten används av ett annat program."
 
 #: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
@@ -150,9 +142,7 @@ msgstr "Internt dataströmfel."
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-"En %s-insticksmodul krävs för att spela upp den här strömmen men är inte "
-"installerad."
+msgstr "En %s-insticksmodul krävs för att spela upp den här strömmen men är inte installerad."
 
 #: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
@@ -185,21 +175,12 @@ msgid "Source element is invalid."
 msgstr "Källelementet är ogiltigt."
 
 #: gst/playback/gstplaybasebin.c:2301
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Endast en undertextström identifierades. Antingen läser du in en "
-"undertextfil eller någon annan typ av textfil, eller så kändes inte "
-"mediafilen igen."
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "Endast en undertextström identifierades. Antingen läser du in en undertextfil eller någon annan typ av textfil, eller så kändes inte mediafilen igen."
 
 #: gst/playback/gstplaybasebin.c:2306
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Du har inte en installerad avkodare som kan hantera den här filen. Du kanske "
-"behöver installera de nödvändiga insticksmodulerna."
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "Du har inte en installerad avkodare som kan hantera den här filen. Du kanske behöver installera de nödvändiga insticksmodulerna."
 
 #: gst/playback/gstplaybasebin.c:2310
 msgid "This is not a media file"
@@ -297,7 +278,7 @@ msgstr "Anslutningen till %s:%d nekades."
 msgid "Can't record audio fast enough"
 msgstr "Kan inte spela in ljud tillräckligt snabbt"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1057
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "Misslyckades med att läsa tagg: inte tillräckligt mycket data"
 
@@ -629,14 +610,8 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Inget eller ogiltigt inljud. AVI-flödet kommer att skadas."
 
-#~ msgid ""
-#~ "The %s element could not be found. This element is essential for "
-#~ "playback. Please install the right plug-in and verify that it works by "
-#~ "running 'gst-inspect %s'"
-#~ msgstr ""
-#~ "Elementet %s kunde inte hittas. Detta element är nödvändigt för "
-#~ "uppspelning. Installera rätt insticksmodul och verifiera att den fungerar "
-#~ "genom att köra \"gst-inspect %s\""
+#~ msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
+#~ msgstr "Elementet %s kunde inte hittas. Detta element är nödvändigt för uppspelning. Installera rätt insticksmodul och verifiera att den fungerar genom att köra \"gst-inspect %s\""
 
 #~ msgid ""
 #~ "No usable colorspace element could be found.\n"
@@ -748,8 +723,7 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 #~ msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
 
 #~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr ""
-#~ "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
+#~ msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
 
 #~ msgid "Line"
 #~ msgstr "Linje"

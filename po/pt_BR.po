@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"POT-Creation-Date: 2009-01-09 22:45+0000\n"
 "PO-Revision-Date: 2009-01-17 12:21-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -77,12 +77,8 @@ msgid "Could not open device for playback in %d-channel mode."
 msgstr "Não foi possível abrir o dispositivo para reprodução com %d canal(is)."
 
 #: ext/alsa/gstalsasink.c:687
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Não foi possível abrir o dispositivo de áudio para reprodução. O dispositivo "
-"está sendo usado por outro aplicativo."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Não foi possível abrir o dispositivo de áudio para reprodução. O dispositivo está sendo usado por outro aplicativo."
 
 #: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
@@ -102,12 +98,8 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "Não foi possível abrir o dispositivo para gravação com %d canal(is)."
 
 #: ext/alsa/gstalsasrc.c:628
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Não foi possível abrir o dispositivo de áudio para gravação. O dispositivo "
-"está sendo usado por outro aplicativo."
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Não foi possível abrir o dispositivo de áudio para gravação. O dispositivo está sendo usado por outro aplicativo."
 
 #: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
@@ -152,8 +144,7 @@ msgstr "Erro interno no fluxo de dados."
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-"O plug-in %s é necessário para reproduzir este fluxo, mas não está instalado."
+msgstr "O plug-in %s é necessário para reproduzir este fluxo, mas não está instalado."
 
 #: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
@@ -186,21 +177,12 @@ msgid "Source element is invalid."
 msgstr "O elemente de origem é inválido."
 
 #: gst/playback/gstplaybasebin.c:2301
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Apenas um fluxo de legendas foi detectado. Ou você está carregando um "
-"arquivo de legenda ou algum outro tipo de arquivo de texto, ou o arquivo de "
-"mídia não é reconhecido."
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "Apenas um fluxo de legendas foi detectado. Ou você está carregando um arquivo de legenda ou algum outro tipo de arquivo de texto, ou o arquivo de mídia não é reconhecido."
 
 #: gst/playback/gstplaybasebin.c:2306
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Você não tem um decodificador instalado para manipular este arquivo. Você "
-"deveria instalar os plug-ins necessários."
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "Você não tem um decodificador instalado para manipular este arquivo. Você deveria instalar os plug-ins necessários."
 
 #: gst/playback/gstplaybasebin.c:2310
 msgid "This is not a media file"
@@ -225,8 +207,7 @@ msgstr "Os elementos autovideosink e xvimagesink estão faltando."
 #: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-"O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
+msgstr "O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
 
 #: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
 msgid "Both autoaudiosink and alsasink elements are missing."
@@ -299,7 +280,7 @@ msgstr "A conexão para %s:%d foi recusada."
 msgid "Can't record audio fast enough"
 msgstr "Não é possível gravar o áudio rápido suficiente"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1057
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "Falha ao ler etiqueta: dados insuficientes"
 

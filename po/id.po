@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"POT-Creation-Date: 2009-01-09 22:45+0000\n"
 "PO-Revision-Date: 2009-01-13 21:12+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -73,12 +73,8 @@ msgid "Could not open device for playback in %d-channel mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode %d-kanal."
 
 #: ext/alsa/gstalsasink.c:687
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
-"oleh aplikasi lain."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan oleh aplikasi lain."
 
 #: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
@@ -98,12 +94,8 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "Tak dapat membuka divais untuk merekam dalam mode %d-kanal"
 
 #: ext/alsa/gstalsasrc.c:628
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Tak dapat membuka divais audio untuk merekam. Divais sedang digunakan oleh "
-"aplikasi lain."
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Tak dapat membuka divais audio untuk merekam. Divais sedang digunakan oleh aplikasi lain."
 
 #: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
@@ -181,20 +173,12 @@ msgid "Source element is invalid."
 msgstr "Elemen sumber tidak sah."
 
 #: gst/playback/gstplaybasebin.c:2301
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Hanya arus subjudul yang terdeteksi. Mungkin anda memuat berkas subjudul "
-"atau tipe lain dari berkas teks, atau berkas media yang tidak dikenal."
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "Hanya arus subjudul yang terdeteksi. Mungkin anda memuat berkas subjudul atau tipe lain dari berkas teks, atau berkas media yang tidak dikenal."
 
 #: gst/playback/gstplaybasebin.c:2306
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Anda tidak memiliki pengawasandi terinstal untuk menangani berkas ini. Anda "
-"mungkin harus menginstal plugin yang diperlukan."
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "Anda tidak memiliki pengawasandi terinstal untuk menangani berkas ini. Anda mungkin harus menginstal plugin yang diperlukan."
 
 #: gst/playback/gstplaybasebin.c:2310
 msgid "This is not a media file"
@@ -292,7 +276,7 @@ msgstr "Koneksi ke %s:%d ditolak."
 msgid "Can't record audio fast enough"
 msgstr "Tak dapat merekam audio cukup cepat"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1057
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "Gagal membaca tanda: tak cukup data"
 

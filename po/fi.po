@@ -1,19 +1,19 @@
 # Finnish messages for gst-plugins-base.
 #
 # This file is distributed under the same license as the gst-plugins-base package.
-# Copyright (C) 2008 Tommi Vainikainen,
+# Copyright (C) 2008-2009 Tommi Vainikainen,
 # Copyright (C) 2007 Ilkka Tuohela.
 #
-# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2008.
+# Tommi Vainikainen <Tommi.Vainikainen@iki.fi>, 2008-2009.
 # Ilkka Tuohela <hile@iki.fi>, 2007.
 #
 # Suomennos: http://gnome.fi/
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.20.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 21:59+0000\n"
-"PO-Revision-Date: 2008-09-21 11:36+0300\n"
+"POT-Creation-Date: 2009-01-09 22:45+0000\n"
+"PO-Revision-Date: 2009-01-18 15:48+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -81,11 +81,8 @@ msgid "Could not open device for playback in %d-channel mode."
 msgstr "Laitetta ei voitu avata toistoa varten %d-kanavaisessa tilassa."
 
 #: ext/alsa/gstalsasink.c:687
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Laitetta ei voitu avata toistoa varten. Laitetta käyttää toinen sovellus."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Laitetta ei voitu avata toistoa varten. Laitetta käyttää toinen sovellus."
 
 #: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
@@ -105,12 +102,8 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "Laitetta ei voitu avata nauhoitusta varten %d-kanavaisessa tilassa."
 
 #: ext/alsa/gstalsasrc.c:628
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr ""
-"Äänilaitetta ei voitu avata nauhoitusta varten. Laitetta käyttää toinen "
-"sovellus."
+msgid "Could not open audio device for recording. Device is being used by another application."
+msgstr "Äänilaitetta ei voitu avata nauhoitusta varten. Laitetta käyttää toinen sovellus."
 
 #: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
@@ -155,8 +148,7 @@ msgstr "Sisäisen tietovirran virhe."
 #: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-"Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
+msgstr "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
 
 #: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
 msgid "This appears to be a text file"
@@ -189,20 +181,12 @@ msgid "Source element is invalid."
 msgstr "Lähde-elementti on virheellinen."
 
 #: gst/playback/gstplaybasebin.c:2301
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-"Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai "
-"muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
 
 #: gst/playback/gstplaybasebin.c:2306
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-"Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun "
-"täytyy asentaa tarvittavia liitännäisiä."
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun täytyy asentaa tarvittavia liitännäisiä."
 
 #: gst/playback/gstplaybasebin.c:2310
 msgid "This is not a media file"
@@ -239,7 +223,7 @@ msgstr "Äänenvoimakkuuden hallintaa ei löytynyt"
 
 #: gst/playback/gstplaysink.c:1380
 msgid "Can't play a text file without video."
-msgstr ""
+msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
 
 #: gst/playback/gstqueue2.c:991
 msgid "No file name specified."
@@ -300,7 +284,7 @@ msgstr "Yhteys kohteeseen %s:%d estettiin."
 msgid "Can't record audio fast enough"
 msgstr "Ääntä ei voi nauhoittaa tarpeeksi nopeasti"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1057
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "Tagin lukeminen epäonnistui: ei riittävästi dataa"
 

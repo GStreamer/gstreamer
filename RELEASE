@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.21 "We Could Be Wrong"
+Release notes for GStreamer Base Plug-ins 0.10.22 "hidey hidey hidey ho"
         
 
 
@@ -54,50 +54,93 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Continue playbin2 development
-      * Ogg improvements - CELT support, skeleton fixes
-      * DVD subpicture support
-      * Improved audio dithering random number generator
-      * xvimagesink/ximagesink fixes
-      * Vorbis encoding and decoding fixes
-      * Recognise Kate subtitle streams
-      * Many bug-fixes and enhancements
+      * Require gettext 0.17
+      * Replace audioresample with speexresample from -bad
+      * Support new formats in RIFF: uncompressed RGB, WMA lossless, VP6
+      * Move libgstapp and elements from -bad
+      * Support color-key setting and probing for Xv properties
+      * Improve typefinding for various formats
+      * Extend audio sinks for pull-mode operation
+      * Support for more subtitle formats
+      * More development on decode2bin and playbin2
+      * RTP and SDP fixes
+      * Many bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 537380 : [gnomevfssrc] Doesn't handle short reads properly
-      * 538656 : xvimagesink support for autofill/colorkey property
-      * 540334 : Build fails without X in tests/examples/seek
-      * 528299 : Multiple GstMixerTracks with the same label cause problem...
-      * 530068 : Ogg Streams with Skeleton and Granulepos > 0 do not work(...
-      * 537009 : playbin2 silly typo breaks signals
-      * 537045 : decodebin2 sometimes emits 'drained' multiple times
-      * 537599 : [oggdemux] skeleton streams not skipped in ogg
-      * 537889 : [xvimagesink] colorbalance is bad
-      * 538232 : vorbisenc/vorbisdec don't work with a live source
-      * 538663 : gdppay memleak in gst_gdp_pay_reset
-      * 540215 : decodebin does not insert a queue for raw data type
-      * 540351 : [avidemux] Doesn't know about Duck DK4 ADPCM
-      * 540497 : ffmpegcolorspace is returning wrong size
-      * 541358 : cross mingw32 gcc: getaddrinfo is not in ws2_32.dll befor...
-      * 544306 : rtspsrc debug=1 segfaults with some libc
-      * 548898 : GStreamer-CRITICAL errors on seeking beyond stream borders
-      * 548913 : vorbisenc being picky about rounding errors in timestamps
-      * 549062 : Video devices aren't updated on subsequent probing.
-      * 549814 : [typefind] add application/pdf typefinder
-      * 550582 : [oggdemux] KATE streams not recognised
-      * 550638 : [typefind] Recognize some jpeg2k file types
-      * 550656 : recognize TrueSpeech in wavparse
-      * 550729 : gst-plugins-base won't compile with " -pedantic " option
-      * 552960 : tagdemux asserts and aborts on truncated files
-      * 553244 : theoraparse doesn't work at all (throws criticals and ass...
+      * 562163 : theoraenc likely ignoring segments
+      * 562258 : rtspsrc element takes long time to error out if the addre...
+      * 561789 : [volume] deadlocks with a controller attached
+      * 554533 : [xvimagesink] allow setting colorkey if possible
+      * 567511 : colorkey in xvimagesink gets reset when element is reused
+      * 116051 : libresample doesn't handle > factor of 2 rate conversion
+      * 346218 : [audioresample] doesn't do anti aliasing
+      * 385061 : [audioresample?] investigate high CPU usage
+      * 456788 : [subparse] can't handle UTF-16 charset encoded subtitle.
+      * 525807 : [vorbisenc] vorbisenc has problems with a gnlsource that ...
+      * 546955 : gstoggmux EOS handling issue
+      * 549417 : [audioresample] unit test fails on 64bit linux
+      * 549510 : audioresample doesn't negotiate ideal caps
+      * 552237 : UTF-16 srt confuses gstreamer, misdetected as mp3
+      * 552559 : Implementation of SLAVE_SKEW in baseaudiosrc
+      * 552569 : audioresample producing strange sized buffers
+      * 552801 : audioconvert can overflow with big audio buffers
+      * 554879 : Add ability to specify format for date/time display in Gs...
+      * 555257 : Doesn't display srt subtitles saved with BOM
+      * 555319 : add FFV1 fourcc to riff-media
+      * 555607 : subrip subtitles typefind too strict
+      * 555699 : [PATCH] theoradec: prefer container's pixel aspect ratio ...
+      * 556025 : build failure in tests/icles
+      * 556066 : Last byte of FLAC image buffer chopped off
+      * 557365 : subparse check fails
+      * 558124 : [PLUGIN-MOVE] Move speexresample as audioresample2 to -base
+      * 559111 : ALSA sink hangs on USB audio device unplug while playing
+      * 559478 : does not play windows media streams correctly
+      * 559567 : `gst_base_audio_sink_sync_latency' should call `gst_base_...
+      * 561436 : videorate element add image/jpeg to caps template
+      * 561734 : playbin2 additions
+      * 561780 : Playbin2 should work without volume too
+      * 561924 : oggdemux hangs when given corrupt input via non-seekable ...
+      * 562270 : build without gdk fails
+      * 563143 : ximagesink/xvimagesink : _alloc_buffer returns non-clean ...
+      * 563174 : Implement gst_rtcp_packet_remove
+      * 563508 : [rgvolume] Unit test fails with passthrough assertions
+      * 563718 : Theora check out of date
+      * 563904 : GNOME Goal: Clean up GLib and GTK+ includes
+      * 564098 : MS Word files are recognised as audio/mpeg and OSX's .DS_...
+      * 564139 : Documentation of TCP plugins
+      * 564200 : GstBaseAudioSink should register its enums and have corre...
+      * 564206 : GstBaseAudioSrc should register its enum and have corresp...
+      * 564421 : Move appsrc/appsink to -base
+      * 564929 : Audiosink blocks if setcaps called while playing
+      * 566586 : playbin2 test7.c fails after two songs
+      * 566750 : [appsrc/sink] add padding, move private data to private s...
+      * 566761 : [gstapp] No pkg-config file
+      * 566837 : gst_cdda_base_src_mode_get_type() is not public from < gst...
+      * 566875 : [gnomevfs] Add dependency for the GnomeVFS modules
+      * 566876 : [gio] Add dependency for the modules dir
+      * 567027 : Add GType for GstRTSPUrl for bindings
+      * 567168 : appsink is using the wrong signal slot for the pull-buffe...
+      * 567960 : [tagdemux] Doesn't forward unknown events upstream
+      * 500833 : [FFT] Struct alignment issues on sparc
+      * 552199 : Parsing SDP file with multicast address fails
+      * 558553 : [riff] gst_riff_create_video_caps not recognizing certain...
+      * 564896 : gst_netaddress_get_ip[46]_address should check for correc...
+      * 566341 : Some Ogg Theora files don't finished at seek at the end
+      * 566654 : playbin2: does not come back from NULL after switching UR...
+      * 566723 : GstAudioClock's new function may better use const gchar* ...
 
 API changed in this release
      
 - API additions:
     
-* Add "index" property to GstMixerTrack to differantiate between
-       multiple mixer tracks with the same label.
+* clockoverlay::time-format
+* GstRingBuffer:gst_ring_buffer_activate()
+* GstRingBuffer:gst_ring_buffer_is_active()
+* GstRingBuffer:gst_ring_buffer_convert()
+* Add GST_TYPE_BASE_AUDIO_(SRC|SINK)_SLAVE_METHOD to the public API
+* gst_netaddress_get_address_bytes()
+* gst_netaddress_set_address_bytes()
 
 Download
 
@@ -127,26 +170,38 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Dessina
+      * Alessandro Decina
+      * Andrew Feren
       * Andy Wingo
-      * Antoine Tremblay
+      * Christian Schaller
+      * Cygwin Ports maintainer
       * Damien Lespiau
+      * Daniel Drake
       * David Schleef
       * Edward Hervey
-      * Evgeniy Stepanov
-      * Frederic Crozat
+      * Guillaume Emont
+      * Håvard Graff
       * Jan Gerber
       * Jan Schmidt
       * Jonathan Matthew
+      * Jonathan Rosser
+      * José Alburquerque
       * Julien Moutte
+      * Klaas
+      * Luis Menina
       * Mark Nauwelaerts
+      * Matthias Kretz
       * Michael Smith
-      * Mike Ruprecht
-      * Sam Morris
+      * Nick Haddad
+      * Olivier Crete
+      * Pavel Zeldin
+      * Robin Stocker
       * Sebastian Dröge
       * Stefan Kost
+      * Tero Saarni
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
+      * xavierb at gmail dot com
+      * 이문형
  

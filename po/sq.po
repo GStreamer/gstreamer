@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 21:59+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2005-11-23 16:23+0100\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -14,590 +14,127 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/alsa/gstalsamixertrack.c:144
+#: ext/alsa/gstalsamixertrack.c:83
 msgid "Master"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:145
+#: ext/alsa/gstalsamixertrack.c:84
 msgid "Bass"
 msgstr "Bas"
 
-#: ext/alsa/gstalsamixertrack.c:146
+#: ext/alsa/gstalsamixertrack.c:85
 msgid "Treble"
 msgstr "Treble"
 
-#: ext/alsa/gstalsamixertrack.c:147
+#: ext/alsa/gstalsamixertrack.c:86
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:148
+#: ext/alsa/gstalsamixertrack.c:87
 msgid "Synth"
 msgstr "Sintetizuesi"
 
-#: ext/alsa/gstalsamixertrack.c:149
+#: ext/alsa/gstalsamixertrack.c:88
 msgid "Line-in"
 msgstr "Linja-hyrje"
 
-#: ext/alsa/gstalsamixertrack.c:150
+#: ext/alsa/gstalsamixertrack.c:89
 msgid "CD"
 msgstr "CD"
 
-#: ext/alsa/gstalsamixertrack.c:151
+#: ext/alsa/gstalsamixertrack.c:90
 msgid "Microphone"
 msgstr "Mikrofoni"
 
-#: ext/alsa/gstalsamixertrack.c:152
+#: ext/alsa/gstalsamixertrack.c:91
 #, fuzzy
 msgid "PC Speaker"
 msgstr "Zë folës"
 
-#: ext/alsa/gstalsamixertrack.c:153
+#: ext/alsa/gstalsamixertrack.c:92
 msgid "Playback"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:154 ext/alsa/gstalsamixertrack.c:220
-#: ext/alsa/gstalsamixertrack.c:223
+#: ext/alsa/gstalsamixertrack.c:93
 msgid "Capture"
 msgstr ""
 
-#: ext/alsa/gstalsasink.c:479
-#, fuzzy
-msgid "Could not open device for playback in mono mode."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/alsa/gstalsasink.c:481
-#, fuzzy
-msgid "Could not open device for playback in stereo mode."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/alsa/gstalsasink.c:485
-#, fuzzy, c-format
-msgid "Could not open device for playback in %d-channel mode."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/alsa/gstalsasink.c:687
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
+#: ext/cdparanoia/gstcdparanoia.c:279
+msgid "discid"
 msgstr ""
 
-#: ext/alsa/gstalsasink.c:692
-#, fuzzy
-msgid "Could not open audio device for playback."
-msgstr "E pamundur hapja e dispozitivit të zërit \"%s\" për shkrim."
+#: ext/cdparanoia/gstcdparanoia.c:279
+msgid "CDDA discid for metadata retrieval"
+msgstr ""
 
-#: ext/alsa/gstalsasrc.c:417
-#, fuzzy
-msgid "Could not open device for recording in mono mode."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/alsa/gstalsasrc.c:419
-#, fuzzy
-msgid "Could not open device for recording in stereo mode."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/alsa/gstalsasrc.c:423
-#, fuzzy, c-format
-msgid "Could not open device for recording in %d-channel mode"
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/alsa/gstalsasrc.c:628
-#, fuzzy
-msgid ""
-"Could not open audio device for recording. Device is being used by another "
-"application."
-msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
-
-#: ext/alsa/gstalsasrc.c:633
-#, fuzzy
-msgid "Could not open audio device for recording."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-#: ext/cdparanoia/gstcdparanoiasrc.c:257 ext/cdparanoia/gstcdparanoiasrc.c:263
+#: ext/cdparanoia/gstcdparanoia.c:683 ext/cdparanoia/gstcdparanoia.c:699
 msgid "Could not open CD device for reading."
 msgstr "I pamundur hapja e dispozitivit CD për lexim."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:389
-#, fuzzy
-msgid "Could not seek CD."
-msgstr "E pamundur mbyllja e file vfs \"%s\"."
-
-#: ext/cdparanoia/gstcdparanoiasrc.c:397
-#, fuzzy
-msgid "Could not read CD."
-msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
-
-#: ext/gnomevfs/gstgnomevfssink.c:379
+#: ext/gnomevfs/gstgnomevfssink.c:431
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "E pamundur hapja e file vfs \"%s\" për shkrim: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:386
+#: ext/gnomevfs/gstgnomevfssink.c:438
 msgid "No filename given"
 msgstr "Nuk është dhënë asnjë emër file"
 
-#: ext/gnomevfs/gstgnomevfssink.c:412
+#: ext/gnomevfs/gstgnomevfssink.c:466
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "E pamundur mbyllja e file vfs \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:570
-#, fuzzy, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Gabim gjatë mbylljes së file \"%s\"."
-
-#: ext/ogg/gstoggdemux.c:3150
+#: ext/ogg/gstoggdemux.c:2454
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
-#: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-
-#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
-msgid "This appears to be a text file"
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1519
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
+#: gst/playback/gstplaybasebin.c:1331
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
-#, c-format
-msgid "Invalid URI \"%s\"."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1654
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:2006
-msgid "Could not create \"decodebin\" element."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
-msgid "Source element is invalid."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:2301
-msgid ""
-"Only a subtitle stream was detected. Either you are loading a subtitle file "
-"or some other type of text file, or the media file was not recognized."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:2306
-msgid ""
-"You do not have a decoder installed to handle this file. You might need to "
-"install the necessary plugins."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:2310
-#, fuzzy
-msgid "This is not a media file"
-msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
-
-#: gst/playback/gstplaybasebin.c:2315
-msgid "A subtitle stream was detected, but no video stream."
-msgstr ""
-
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
-msgid "Both autovideosink and xvimagesink elements are missing."
-msgstr ""
-
-#: gst/playback/gstplaybin.c:890 gst/playback/gstplaybin.c:900
-#: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
-#: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
-#: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
-#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
-#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
-#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
-#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
-msgid "Both autoaudiosink and alsasink elements are missing."
-msgstr ""
-
-#: gst/playback/gstplaysink.c:1028
-msgid "No volume control found"
-msgstr ""
-
-#: gst/playback/gstplaysink.c:1380
-msgid "Can't play a text file without video."
-msgstr ""
-
-#: gst/playback/gstqueue2.c:991
-#, fuzzy
-msgid "No file name specified."
-msgstr "Nuk është përcaktuar emri i file."
-
-#: gst/playback/gstqueue2.c:997
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "E pamundur hapja e file \"%s\" për lexim."
-
-#: gst/playback/gsturidecodebin.c:589
-#, c-format
-msgid "No decoder available for type '%s'."
-msgstr ""
-
-#: gst/playback/gsturidecodebin.c:824
-msgid "This stream type cannot be played yet."
-msgstr ""
-
-#: gst/playback/gsturidecodebin.c:835
+#: gst/playback/gstplaybasebin.c:1337
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:1126
-msgid "Could not create \"decodebin2\" element."
+#: gst/playback/gstplaybasebin.c:1341
+#, c-format
+msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:1193
-msgid "Could not create \"queue2\" element."
+#: gst/playback/gstplaybasebin.c:1348
+msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:1232
-#, fuzzy
-msgid "Could not create \"typefind\" element."
-msgstr "I pamundur shkrimi tek file \"%s\"."
+#: gst/playback/gstplaybasebin.c:1414
+#, c-format
+msgid ""
+"You do not have a decoder installed to handle \"%s\".  You might need to "
+"install the necessary plugins."
+msgstr ""
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
+#: gst/playback/gstplaybasebin.c:1417
 #, fuzzy, c-format
-msgid "Error while sending data to \"%s:%d\"."
-msgstr "Gabim gjatë mbylljes së file \"%s\"."
+msgid "\"%s\" is not a media file"
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
-#: gst/tcp/gsttcp.c:555
-#, c-format
-msgid "Error while sending gdp header data to \"%s:%d\"."
+#: gst/playback/gstplaybin.c:411
+msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:564
-#, c-format
-msgid "Error while sending gdp payload data to \"%s:%d\"."
+#: gst/playback/gstplaybin.c:541
+msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
-#, c-format
-msgid "Connection to %s:%d refused."
-msgstr ""
-
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
-msgid "Can't record audio fast enough"
-msgstr ""
-
-#: gst-libs/gst/tag/gsttagdemux.c:1057
-msgid "Failed to read tag: not enough data"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:59
-msgid "track ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:59
-msgid "MusicBrainz track ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:61
-msgid "artist ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:61
-msgid "MusicBrainz artist ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:63
-msgid "album ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:63
-msgid "MusicBrainz album ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:66
-msgid "album artist ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:66
-msgid "MusicBrainz album artist ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:68
-msgid "track TRM ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:68
-msgid "MusicBrainz TRM ID"
-msgstr ""
-
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
-msgid "This CD has no audio tracks"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:66
-msgid "ID3 tag"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:67
-msgid "APE tag"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:68
-msgid "ICY internet radio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:91
-msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:100
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:125
-#: gst-libs/gst/pbutils/descriptions.c:126
-msgid "Lossless True Audio (TTA)"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:134
-msgid "Windows Media Speech"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:148
-msgid "CYUV Lossless"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:151
-msgid "FFMpeg v1"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:163
-msgid "Lossless MSZH"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:169
-msgid "Uncompressed Gray Image"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:174
-msgid "Run-length encoding"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:208
-msgid "Sami subtitle format"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:209
-msgid "TMPlayer subtitle format"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:210
-msgid "Kate subtitle format"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:269
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:272
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:275
-#: gst-libs/gst/pbutils/descriptions.c:285
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:278
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:281
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:288
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:291
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:294
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:297
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:300
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:303
-msgid "Uncompressed YUV"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:314
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:366
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:584
-#, c-format
-msgid "Raw %d-bit PCM audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:586
-msgid "Raw PCM audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:592
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:594
-msgid "Raw floating-point audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:681
-msgid "Audio CD source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:684
-msgid "DVD source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:687
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:691
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:699
-#, c-format
-msgid "%s protocol source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:767
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:769
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:771
-#, c-format
-msgid "%s RTP depayloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:778
-#, c-format
-msgid "%s demuxer"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:780
-#, c-format
-msgid "%s decoder"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:815
-#, c-format
-msgid "%s video RTP payloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:817
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:819
-#, c-format
-msgid "%s RTP payloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:826
-#, c-format
-msgid "%s muxer"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:828
-#, c-format
-msgid "%s encoder"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:859
-#, c-format
-msgid "GStreamer element %s"
-msgstr ""
-
-#: gst-libs/gst/pbutils/missing-plugins.c:554
-msgid "Unknown source element"
-msgstr ""
-
-#: gst-libs/gst/pbutils/missing-plugins.c:557
-msgid "Unknown sink element"
-msgstr ""
-
-#: gst-libs/gst/pbutils/missing-plugins.c:560
-msgid "Unknown element"
-msgstr ""
-
-#: gst-libs/gst/pbutils/missing-plugins.c:563
-msgid "Unknown decoder element"
-msgstr ""
-
-#: gst-libs/gst/pbutils/missing-plugins.c:566
-msgid "Unknown encoder element"
-msgstr ""
-
-#: gst-libs/gst/pbutils/missing-plugins.c:571
-msgid "Plugin or element of unknown type"
-msgstr ""
-
-#: sys/v4l/v4l_calls.c:159
-msgid "No device specified."
-msgstr "Nuk është përcaktuar asnjë dispozitiv."
-
-#: sys/v4l/v4l_calls.c:168
-#, c-format
-msgid "Device \"%s\" does not exist."
-msgstr "Dispozitivi \"%s\" nuk ekziston."
+#~ msgid "No device specified."
+#~ msgstr "Nuk është përcaktuar asnjë dispozitiv."
 
-#: sys/v4l/v4l_calls.c:173
-#, fuzzy, c-format
-msgid "Device \"%s\" is already being used."
-msgstr "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
+#~ msgid "Device \"%s\" does not exist."
+#~ msgstr "Dispozitivi \"%s\" nuk ekziston."
 
-#: sys/v4l/v4l_calls.c:178
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
 #~ msgid "Device is not open."
 #~ msgstr "Dispozitivi nuk është hapur."
@@ -614,6 +151,18 @@ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "E pamundur hapja e file \"%s\" në shkrim."
+
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Gabim gjatë mbylljes së file \"%s\"."
+
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "E pamundur hapja e file \"%s\" për lexim."
+
+#~ msgid "No filename specified."
+#~ msgstr "Nuk është përcaktuar emri i file."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "I pamundur shkrimi tek file \"%s\"."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."
@@ -633,6 +182,9 @@ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 #~ msgstr ""
 #~ "Nuk arrin të gjehet asnjë element ngjyra e hapësirës.\n"
 #~ "Ju lutem instaloni një dhe rinisni."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "E pamundur hapja e dispozitivit të zërit \"%s\" për shkrim."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "E pamundur hapja e dispozitivit të kontrollit \"%s\" për shkrim."
@@ -654,6 +206,13 @@ msgstr "E pamundur hapja e dispozitivit \"%s\" për lexim dhe shkrim."
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "E pamundur mbyllja e dispozitivit video \"%s\"."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
+
+#~ msgid "OSS device \"%s\" is already in use by another program."
+#~ msgstr ""
+#~ "Dispozitivi OSS \"%s\" është duke u përdorur nga një tjetër program."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr ""

@@ -1,3 +1,10 @@
+=== release 0.10.22 ===
+
+2009-01-19  Jan Schmidt <jan.schmidt@sun.com>
+
+	* configure.ac:
+	  releasing 0.10.22, "hidey hidey hidey ho"
+
 2009-01-16  Sebastian Dröge  <sebastian.droege@collabora.co.uk>
 
 	* gst-libs/gst/fft/_kiss_fft_guts_f32.h:
