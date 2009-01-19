@@ -56,7 +56,8 @@ struct _GstRTSPServer {
   GObject       parent;
 
   /* server information */
-  int server_port;
+  gint server_port;
+  gint backlog;
   gchar *host;
   struct sockaddr_in server_sin;
 
@@ -74,12 +75,26 @@ struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 };
 
-GType             gst_rtsp_server_get_type             (void);
+GType                gst_rtsp_server_get_type             (void);
 
-GstRTSPServer *   gst_rtsp_server_new                  (void);
+GstRTSPServer *      gst_rtsp_server_new                  (void);
 
-guint             gst_rtsp_server_attach               (GstRTSPServer *server, 
-                                                        GMainContext *context);
+void                 gst_rtsp_server_set_port             (GstRTSPServer *server, gint port);
+gint                 gst_rtsp_server_get_port             (GstRTSPServer *server);
+
+void                 gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
+gint                 gst_rtsp_server_get_backlog          (GstRTSPServer *server);
+
+void                 gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
+GstRTSPSessionPool * gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
+
+gboolean             gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
+                                                           GstRTSPServer *server);
+
+GIOChannel *         gst_rtsp_server_get_io_channel       (GstRTSPServer *server);
+GSource *            gst_rtsp_server_create_watch         (GstRTSPServer *server);
+guint                gst_rtsp_server_attach               (GstRTSPServer *server, 
+                                                           GMainContext *context);
 
 G_END_DECLS
 
