@@ -215,6 +215,7 @@ handle_play_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *r
     case GST_STATE_CHANGE_FAILURE:
       goto service_unavailable;
     case GST_STATE_CHANGE_ASYNC:
+      /* wait for paused state change to complete */
       ret = gst_element_get_state (media->pipeline, NULL, NULL, -1);
       break;
   }
@@ -724,28 +725,32 @@ static gboolean
 client_accept (GstRTSPClient *client, GIOChannel *channel)
 {
   /* a new client connected. */
-  int server_sock_fd;
+  int server_sock_fd, fd;
   unsigned int address_len;
   GstRTSPConnection *conn;
-
-  conn = client->connection;
 
   server_sock_fd = g_io_channel_unix_get_fd (channel);
 
   address_len = sizeof (client->address);
   memset (&client->address, 0, address_len);
 
-  conn->fd.fd = accept (server_sock_fd, (struct sockaddr *) &client->address,
+  fd = accept (server_sock_fd, (struct sockaddr *) &client->address,
       &address_len);
-  if (conn->fd.fd == -1)
+  if (fd == -1)
     goto accept_failed;
 
-  g_print ("added new client %p ip %s with fd %d\n", client,
-	        inet_ntoa (client->address.sin_addr), conn->fd.fd);
+  /* now create the connection object */
+  gst_rtsp_connection_create (NULL, &conn);
+  conn->fd.fd = fd;
 
   /* FIXME some hackery, we need to have a connection method to accept server
    * connections */
   gst_poll_add_fd (conn->fdset, &conn->fd);
+
+  g_print ("added new client %p ip %s with fd %d\n", client,
+	        inet_ntoa (client->address.sin_addr), conn->fd.fd);
+
+  client->connection = conn;
 
   return TRUE;
 
@@ -814,8 +819,6 @@ gst_rtsp_client_get_session_pool (GstRTSPClient *client)
 gboolean
 gst_rtsp_client_accept (GstRTSPClient *client, GIOChannel *channel)
 {
-  gst_rtsp_connection_create (NULL, &client->connection);
-
   if (!client_accept (client, channel))
     goto accept_failed;
 
@@ -828,7 +831,6 @@ gst_rtsp_client_accept (GstRTSPClient *client, GIOChannel *channel)
   /* ERRORS */
 accept_failed:
   {
-    gst_rtsp_connection_close (client->connection);
     return FALSE;
   }
 }

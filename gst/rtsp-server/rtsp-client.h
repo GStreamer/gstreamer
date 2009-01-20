@@ -54,6 +54,17 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPClientClass GstRTSPClientClass;
 
+/**
+ * GstRTSPClient:
+ *
+ * @connection: the connection object handling the client request.
+ * @address: the address of the connection
+ * @media: handle to the media handled by the client.
+ * @pool: handle to the session pool used by the client.
+ * @thread: thread to handle the client connection
+ *
+ * The client structure.
+ */
 struct _GstRTSPClient {
   GObject       parent;
 
