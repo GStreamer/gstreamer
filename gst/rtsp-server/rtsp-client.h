@@ -38,6 +38,7 @@
 #define __GST_RTSP_CLIENT_H__
 
 #include "rtsp-media.h"
+#include "rtsp-media-factory.h"
 #include "rtsp-session-pool.h"
 
 G_BEGIN_DECLS
@@ -70,28 +71,33 @@ struct _GstRTSPClient {
 
   GstRTSPConnection *connection;
   struct sockaddr_in address;
-
-  GstRTSPMedia *media;
+  GThread *thread;
 
   GstRTSPSessionPool *pool;
 
-  GThread *thread;
+  GstRTSPMedia *media;
+  GstRTSPMediaFactory *factory;
+
 };
 
 struct _GstRTSPClientClass {
   GObjectClass  parent_class;
 };
 
-GType                gst_rtsp_client_get_type          (void);
+GType                 gst_rtsp_client_get_type          (void);
 
-GstRTSPClient *      gst_rtsp_client_new               (void);
+GstRTSPClient *       gst_rtsp_client_new               (void);
 
-void                 gst_rtsp_client_set_session_pool  (GstRTSPClient *client, 
-                                                        GstRTSPSessionPool *pool);
-GstRTSPSessionPool * gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
+void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client, 
+                                                         GstRTSPSessionPool *pool);
+GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 
-gboolean             gst_rtsp_client_accept            (GstRTSPClient *client, 
-                                                        GIOChannel *channel);
+void                  gst_rtsp_client_set_media_factory (GstRTSPClient *client, 
+                                                         GstRTSPMediaFactory *factory);
+GstRTSPMediaFactory * gst_rtsp_client_get_media_factory (GstRTSPClient *client);
+
+gboolean              gst_rtsp_client_accept            (GstRTSPClient *client, 
+                                                         GIOChannel *channel);
 
 G_END_DECLS
 

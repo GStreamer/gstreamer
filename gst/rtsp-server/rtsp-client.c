@@ -803,6 +803,49 @@ gst_rtsp_client_get_session_pool (GstRTSPClient *client)
   return result;
 }
 
+/**
+ * gst_rtsp_client_set_media_factory:
+ * @client: a #GstRTSPClient
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Set @factory as the media factory for @client which it will use to map urls
+ * to media streams.
+ */
+void
+gst_rtsp_client_set_media_factory (GstRTSPClient *client, GstRTSPMediaFactory *factory)
+{
+  GstRTSPMediaFactory *old;
+
+  old = client->factory;
+
+  if (old != factory) {
+    if (factory)
+      g_object_ref (factory);
+    client->factory = factory;
+    if (old)
+      g_object_unref (old);
+  }
+}
+
+/**
+ * gst_rtsp_client_get_media_factory:
+ * @client: a #GstRTSPClient
+ *
+ * Get the #GstRTSPMediaFactory object that @client uses to manage its sessions.
+ *
+ * Returns: a #GstRTSPMediaFactory, unref after usage.
+ */
+GstRTSPMediaFactory *
+gst_rtsp_client_get_media_factory (GstRTSPClient *client)
+{
+  GstRTSPMediaFactory *result;
+
+  if ((result = client->factory))
+    g_object_ref (result);
+
+  return result;
+}
+
 
 /**
  * gst_rtsp_client_attach:
