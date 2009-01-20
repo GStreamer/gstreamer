@@ -1259,7 +1259,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
   /* ERRORS */
 read_error:
   {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
         (_("Error reading %d bytes from device '%s'."),
             buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     gst_buffer_unref (*buf);
