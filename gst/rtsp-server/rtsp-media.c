@@ -110,9 +110,6 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
 }
 
 /**
- *
- * STREAMING CONFIGURATION
- *
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
  * @bin: the parent bin to create the elements in.

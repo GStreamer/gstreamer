@@ -38,11 +38,22 @@ typedef struct _GstRTSPMedia GstRTSPMedia;
 typedef struct _GstRTSPMediaStream GstRTSPMediaStream;
 typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 
+/**
+ * GstRTSPMediaStream:
+ *
+ * @idx: the stream index
+ * @element: the toplevel element
+ * @srcpad: the srcpad of the stream
+ * @payloader: the payloader of the formattt
+ * @caps_sig: the signal id for detecting caps
+ * @caps: the caps of the stream
+ *
+ * The definition of a media stream. The streams are identified by @id.
+ */
 struct _GstRTSPMediaStream {
   GstRTSPMedia *media;
 
   guint       idx;
-  gchar      *name;
 
   GstElement *element;
   GstPad     *srcpad;
@@ -51,6 +62,12 @@ struct _GstRTSPMediaStream {
   GstCaps    *caps;
 };
 
+/**
+ * GstRTSPMedia:
+ *
+ * The definition and logic for constructing the pipeline for a media. The media
+ * can contain multiple streams like audio and video.
+ */
 struct _GstRTSPMedia {
   GObject       parent;
 
