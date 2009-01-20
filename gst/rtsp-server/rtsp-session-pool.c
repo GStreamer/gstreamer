@@ -23,6 +23,7 @@
 
 static void gst_rtsp_session_pool_finalize (GObject * object);
 
+static gchar * create_session_id (GstRTSPSessionPool *pool);
 
 G_DEFINE_TYPE (GstRTSPSessionPool, gst_rtsp_session_pool, G_TYPE_OBJECT);
 
@@ -34,6 +35,8 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_session_pool_finalize;
+
+  klass->create_session_id = create_session_id;
 }
 
 static void
@@ -59,6 +62,8 @@ gst_rtsp_session_pool_finalize (GObject * object)
  * gst_rtsp_session_pool_new:
  *
  * Create a new #GstRTSPSessionPool instance.
+ *
+ * Returns: A new #GstRTSPSessionPool. g_object_unref() after usage.
  */
 GstRTSPSessionPool *
 gst_rtsp_session_pool_new (void)
@@ -98,7 +103,7 @@ gst_rtsp_session_pool_find (GstRTSPSessionPool *pool, const gchar *sessionid)
 }
 
 static gchar *
-create_session_id (void)
+create_session_id (GstRTSPSessionPool *pool)
 {
   gchar id[16];
   gint i;
@@ -122,14 +127,23 @@ GstRTSPSession *
 gst_rtsp_session_pool_create (GstRTSPSessionPool *pool)
 {
   GstRTSPSession *result = NULL;
-  gchar *id;
+  GstRTSPSessionPoolClass *klass;
+  gchar *id = NULL;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), NULL);
+
+  klass = GST_RTSP_SESSION_POOL_GET_CLASS (pool);
 
   do {
     /* start by creating a new random session id, we assume that this is random
      * enough to not cause a collision, which we will check later  */
-    id = create_session_id ();
+    if (klass->create_session_id)
+      id = klass->create_session_id (pool);
+    else
+      goto no_function;
+
+    if (id == NULL)
+      goto no_session;
 
     g_mutex_lock (pool->lock);
     /* check if the sessionid existed */
@@ -151,6 +165,18 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool *pool)
   } while (result == NULL);
 
   return result;
+
+  /* ERRORS */
+no_function:
+  {
+    g_warning ("no create_session_id vmethod in GstRTSPSessionPool %p", pool);
+    return NULL;
+  }
+no_session:
+  {
+    g_warning ("can't create session id with GstRTSPSessionPool %p", pool);
+    return NULL;
+  }
 }
 
 /**
