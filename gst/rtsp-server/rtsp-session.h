@@ -46,7 +46,8 @@ typedef struct _GstRTSPSessionMedia GstRTSPSessionMedia;
 /**
  * GstRTSPSessionStream:
  *
- * Configuration of a stream.
+ * Configuration of a stream. A stream is an audio or video stream related to a
+ * media.
  */
 struct _GstRTSPSessionStream
 {
@@ -76,7 +77,9 @@ struct _GstRTSPSessionStream
 /**
  * GstRTSPSessionMedia:
  *
- * State of a client session regarding a specific media.
+ * State of a client session regarding a specific media. The media is identified
+ * with the media factory. The media is typically composed of multiple streams,
+ * such as an audio and video stream.
  */
 struct _GstRTSPSessionMedia
 {
@@ -103,6 +106,8 @@ struct _GstRTSPSessionMedia
  * GstRTSPSession:
  *
  * Session information kept by the server for a specific client.
+ * One client session, identified with a session id, can handle multiple medias
+ * identified with the media factory.
  */
 struct _GstRTSPSession {
   GObject       parent;
