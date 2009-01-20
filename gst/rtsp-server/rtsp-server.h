@@ -34,6 +34,7 @@
 #include <gst/gst.h>
 
 #include "rtsp-session-pool.h"
+#include "rtsp-client.h"
 
 #ifndef __GST_RTSP_SERVER_H__
 #define __GST_RTSP_SERVER_H__
@@ -71,8 +72,18 @@ struct _GstRTSPServer {
   GstRTSPSessionPool *pool;
 };
 
+/**
+ * GstRTSPServerClass:
+ *
+ * @accept_client: Create, configure, accept and return a new GstRTSPClient 
+ *   object that handles the new connection on @channel.
+ *
+ * The RTSP server class structure
+ */
 struct _GstRTSPServerClass {
   GObjectClass  parent_class;
+
+  GstRTSPClient * (*accept_client) (GstRTSPServer *server, GIOChannel *channel);
 };
 
 GType                gst_rtsp_server_get_type             (void);

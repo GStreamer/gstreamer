@@ -41,6 +41,9 @@ static void gst_rtsp_server_get_property (GObject *object, guint propid,
 static void gst_rtsp_server_set_property (GObject *object, guint propid,
     const GValue *value, GParamSpec *pspec);
 
+static GstRTSPClient * gst_rtsp_server_accept_client (GstRTSPServer *server,
+    GIOChannel *channel);
+
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 { 
@@ -83,6 +86,8 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
   g_object_class_install_property (gobject_class, PROP_POOL,
       g_param_spec_object ("pool", "Pool", "The session pool to use for client session",
           GST_TYPE_RTSP_SESSION_POOL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  klass->accept_client = gst_rtsp_server_accept_client;
 }
 
 static void
@@ -357,6 +362,37 @@ bind_failed:
   }
 }
 
+/* default method for creating a new client object in the server to accept and
+ * handle a client connection on this server */
+static GstRTSPClient *
+gst_rtsp_server_accept_client (GstRTSPServer *server, GIOChannel *channel)
+{
+  GstRTSPClient *client;
+
+  /* a new client connected, create a session to handle the client. */
+  client = gst_rtsp_client_new ();
+
+  /* set the session pool that this client should use */
+  gst_rtsp_client_set_session_pool (client, server->pool);
+
+  /* accept connections for that client, this function returns after accepting
+   * the connection and will run the remainder of the communication with the
+   * client asyncronously. */
+  if (!gst_rtsp_client_accept (client, channel))
+    goto accept_failed;
+
+  return client;
+
+  /* ERRORS */
+accept_failed:
+  {
+    g_error ("Could not accept client on server socket %d: %s (%d)",
+            server->server_sock.fd, g_strerror (errno), errno);
+    gst_object_unref (client);
+    return NULL;
+  }
+}
+
 /**
  * gst_rtsp_server_io_func:
  * @channel: a #GIOChannel
@@ -370,20 +406,17 @@ bind_failed:
 gboolean
 gst_rtsp_server_io_func (GIOChannel *channel, GIOCondition condition, GstRTSPServer *server)
 {
-  GstRTSPClient *client;
+  GstRTSPClient *client = NULL;
+  GstRTSPServerClass *klass;
 
   if (condition & G_IO_IN) {
-    /* a new client connected, create a session to handle the client. */
-    client = gst_rtsp_client_new ();
+    klass = GST_RTSP_SERVER_GET_CLASS (server);
 
-    /* set the session pool that this client should use */
-    gst_rtsp_client_set_session_pool (client, server->pool);
-
-    /* accept connections for that client, this function returns after accepting
-     * the connection and will run the remainder of the communication with the
-     * client asyncronously. */
-    if (!gst_rtsp_client_accept (client, channel))
-      goto accept_failed;
+    /* a new client connected, create a client object to handle the client. */
+    if (klass->accept_client)
+      client = klass->accept_client (server, channel);
+    if (client == NULL)
+      goto client_failed;
 
     /* can unref the client now, when the request is finished, it will be
      * unreffed async. */
@@ -395,11 +428,9 @@ gst_rtsp_server_io_func (GIOChannel *channel, GIOCondition condition, GstRTSPSer
   return TRUE;
 
   /* ERRORS */
-accept_failed:
+client_failed:
   {
-    g_error ("Could not accept client on server socket %d: %s (%d)",
-            server->server_sock.fd, g_strerror (errno), errno);
-    gst_object_unref (client);
+    GST_ERROR_OBJECT (server, "failed to create a client");
     return FALSE;
   }
 }
