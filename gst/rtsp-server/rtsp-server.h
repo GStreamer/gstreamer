@@ -34,6 +34,7 @@
 #include <gst/gst.h>
 
 #include "rtsp-session-pool.h"
+#include "rtsp-media-factory.h"
 #include "rtsp-client.h"
 
 #ifndef __GST_RTSP_SERVER_H__
@@ -70,6 +71,9 @@ struct _GstRTSPServer {
 
   /* sessions on this server */
   GstRTSPSessionPool *pool;
+
+  /* media factory for this server */
+  GstRTSPMediaFactory *factory;
 };
 
 /**
@@ -86,25 +90,28 @@ struct _GstRTSPServerClass {
   GstRTSPClient * (*accept_client) (GstRTSPServer *server, GIOChannel *channel);
 };
 
-GType                gst_rtsp_server_get_type             (void);
+GType                 gst_rtsp_server_get_type             (void);
 
-GstRTSPServer *      gst_rtsp_server_new                  (void);
+GstRTSPServer *       gst_rtsp_server_new                  (void);
 
-void                 gst_rtsp_server_set_port             (GstRTSPServer *server, gint port);
-gint                 gst_rtsp_server_get_port             (GstRTSPServer *server);
+void                  gst_rtsp_server_set_port             (GstRTSPServer *server, gint port);
+gint                  gst_rtsp_server_get_port             (GstRTSPServer *server);
 
-void                 gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
-gint                 gst_rtsp_server_get_backlog          (GstRTSPServer *server);
+void                  gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
+gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *server);
 
-void                 gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
-GstRTSPSessionPool * gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
+void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
+GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
 
-gboolean             gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
+void                  gst_rtsp_server_set_media_factory    (GstRTSPServer *server, GstRTSPMediaFactory *factory);
+GstRTSPMediaFactory * gst_rtsp_server_get_media_factory    (GstRTSPServer *server);
+
+gboolean              gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
                                                            GstRTSPServer *server);
 
-GIOChannel *         gst_rtsp_server_get_io_channel       (GstRTSPServer *server);
-GSource *            gst_rtsp_server_create_watch         (GstRTSPServer *server);
-guint                gst_rtsp_server_attach               (GstRTSPServer *server, 
+GIOChannel *          gst_rtsp_server_get_io_channel       (GstRTSPServer *server);
+GSource *             gst_rtsp_server_create_watch         (GstRTSPServer *server);
+guint                 gst_rtsp_server_attach               (GstRTSPServer *server, 
                                                            GMainContext *context);
 
 G_END_DECLS
