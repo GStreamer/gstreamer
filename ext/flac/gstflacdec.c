@@ -1235,7 +1235,7 @@ gst_flac_dec_loop (GstPad * sinkpad)
 #endif
 analyze_state:
 
-  GST_LOG_OBJECT (flacdec, "done processing, checking encoder state");
+  GST_LOG_OBJECT (flacdec, "done processing, checking decoder state");
 #ifdef LEGACY_FLAC
   s = FLAC__seekable_stream_decoder_get_state (flacdec->seekable_decoder);
 #else
@@ -2089,7 +2089,8 @@ gst_flac_dec_sink_activate_push (GstPad * sinkpad, gboolean active)
 {
   GstFlacDec *dec = GST_FLAC_DEC (GST_OBJECT_PARENT (sinkpad));
 
-  gst_flac_dec_setup_stream_decoder (dec);
+  if (active)
+    gst_flac_dec_setup_stream_decoder (dec);
   return TRUE;
 }
 
