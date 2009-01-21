@@ -436,7 +436,6 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
     const FLAC__StreamMetadata * metadata)
 {
   GstTagList *list;
-
   guint num, i;
 
   if (flacdec->tags)
@@ -520,13 +519,9 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
     gint64 * last_sample_num)
 {
   guint headerlen;
-
   guint sr_from_end = 0;        /* can be 0, 8 or 16 */
-
   guint bs_from_end = 0;        /* can be 0, 8 or 16 */
-
   guint32 val = 0;
-
   guint8 bs, sr, ca, ss, pb;
 
   if (size < 10)
@@ -610,11 +605,8 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
   offset = file_size - 1;
   while (offset >= MAX (SCANBLOCK_SIZE / 2, file_size / 2)) {
     GstFlowReturn flow;
-
     GstBuffer *buf = NULL;
-
     guint8 *data;
-
     guint size;
 
     /* divide by 2 = not very sophisticated way to deal with overlapping */
@@ -860,11 +852,8 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
 #endif
 {
   GstFlacDec *flacdec;
-
   GstFormat fmt = GST_FORMAT_BYTES;
-
   gint64 len;
-
   GstPad *peer;
 
   flacdec = GST_FLAC_DEC (client_data);
@@ -905,13 +894,9 @@ gst_flac_dec_eof (const FLAC__StreamDecoder * decoder, void *client_data)
 #endif
 {
   GstFlacDec *flacdec;
-
   GstFormat fmt;
-
   GstPad *peer;
-
   gboolean ret = FALSE;
-
   gint64 len;
 
   flacdec = GST_FLAC_DEC (client_data);
@@ -983,7 +968,6 @@ gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
 #endif
 {
   GstFlacDec *dec = GST_FLAC_DEC (client_data);
-
   guint len;
 
   len = MIN (gst_adapter_available (dec->adapter), *bytes);
@@ -1209,12 +1193,10 @@ static void
 gst_flac_dec_loop (GstPad * sinkpad)
 {
   GstFlacDec *flacdec;
-
 #ifdef LEGACY_FLAC
   FLAC__SeekableStreamDecoderState s;
 #else
   FLAC__StreamDecoderState s;
-
   FLAC__StreamDecoderInitStatus is;
 #endif
 
@@ -1391,7 +1373,6 @@ static gboolean
 gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFlacDec *dec;
-
   gboolean res;
 
   dec = GST_FLAC_DEC (gst_pad_get_parent (pad));
@@ -1474,7 +1455,6 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
   FLAC__StreamDecoderInitStatus s;
 #endif
   GstFlacDec *dec;
-
   gboolean got_audio_frame;
 
   dec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
@@ -1484,14 +1464,15 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_OFFSET_END (buf));
 
   if (dec->init) {
-    GST_DEBUG_OBJECT (dec, "initializing decoder");
 #ifdef  LEGACY_FLAC
+    GST_DEBUG_OBJECT (dec, "legacy initializing decoder");
     s = FLAC__stream_decoder_init (dec->stream_decoder);
     if (s != FLAC__STREAM_DECODER_SEARCH_FOR_METADATA) {
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), LIBRARY, INIT, (NULL), (NULL));
       return GST_FLOW_ERROR;
     }
 #else
+    GST_DEBUG_OBJECT (dec, "new initializing decoder");
     s = FLAC__stream_decoder_init_stream (dec->stream_decoder,
         gst_flac_dec_read_stream, NULL, NULL, NULL, NULL,
         gst_flac_dec_write_stream, gst_flac_dec_metadata_callback_stream,
@@ -1632,7 +1613,6 @@ static gboolean
 gst_flac_dec_sink_query (GstPad * pad, GstQuery * query)
 {
   GstFlacDec *dec;
-
   gboolean res = FALSE;
 
   dec = GST_FLAC_DEC (gst_pad_get_parent (pad));
@@ -1672,11 +1652,8 @@ gst_flac_dec_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   GstFlacDec *flacdec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
-
   gboolean res = TRUE;
-
   guint bytes_per_sample;
-
   guint scale = 1;
 
   if (flacdec->width == 0 || flacdec->channels == 0 ||
@@ -1756,9 +1733,7 @@ static gboolean
 gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
 {
   GstFlacDec *flacdec;
-
   gboolean res = TRUE;
-
   GstPad *peer;
 
   flacdec = GST_FLAC_DEC (gst_pad_get_parent (pad));
@@ -1878,25 +1853,15 @@ static gboolean
 gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
 {
   FLAC__bool seek_ok;
-
   GstSeekFlags seek_flags;
-
   GstSeekType start_type;
-
   GstSeekType stop_type;
-
   GstSegment segment;
-
   GstFormat seek_format;
-
   gboolean only_update = FALSE;
-
   gboolean flush;
-
   gdouble rate;
-
   gint64 start, last_stop;
-
   gint64 stop;
 
   if (flacdec->seekable_decoder == NULL) {
