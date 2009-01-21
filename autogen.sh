@@ -5,13 +5,13 @@ DIE=0
 package=gst-python
 srcfile=gst/gstmodule.c
 
-# a quick cvs co if necessary to alleviate the pain - may remove this
-# when developers get a clue ;)
-if test ! -d common; 
+# Make sure we have common
+if test ! -f common/gst-autogen.sh; 
 then 
-  echo "+ getting common/ from cvs"
-  cvs co common 
+  echo "+ Setting up common submodule"
+  git submodule init
 fi
+git submodule update
 
 # ensure that we have the dirs we put ext libs in to appease automake
 mkdir -p gst-libs/ext/ffmpeg/ffmpeg
