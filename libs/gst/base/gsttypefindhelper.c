@@ -476,3 +476,68 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
 
   return result;
 }
+
+/**
+ * gst_type_find_helper_for_extension:
+ * @obj: object doing the typefinding, or NULL (used for logging)
+ * @extension: an extension
+ *
+ * Tries to find the best #GstCaps associated with @extension.
+ *
+ * All available typefinders will be checked against the extension in order
+ * of rank. The caps of the first typefinder that can handle @extension will be
+ * returned.
+ *
+ * Returns: The #GstCaps corresponding to @extension, or #NULL if no type could
+ * be found. The caller should free the caps returned with gst_caps_unref().
+ * 
+ * Since: 0.10.23
+ */
+GstCaps *
+gst_type_find_helper_for_extension (GstObject * obj, const gchar * extension)
+{
+  GList *l, *type_list;
+  GstCaps *result = NULL;
+
+  g_return_val_if_fail (extension != NULL, NULL);
+
+  GST_LOG_OBJECT (obj, "finding caps for extension %s", extension);
+
+  type_list = gst_type_find_factory_get_list ();
+  type_list = g_list_sort (type_list, type_find_factory_rank_cmp);
+
+  for (l = type_list; l; l = g_list_next (l)) {
+    GstTypeFindFactory *factory;
+    gchar **ext;
+    gint i;
+
+    factory = GST_TYPE_FIND_FACTORY (l->data);
+
+    /* get the extension that this typefind factory can handle */
+    ext = gst_type_find_factory_get_extensions (factory);
+    if (ext == NULL)
+      continue;
+
+    /* we only want to check those factories without a function */
+    if (factory->function != NULL)
+      continue;
+    
+    /* there are extension, see if one of them matches the requested
+     * extension */
+    for (i = 0; ext[i]; i++) {
+      if (strcmp (ext[i], extension) == 0) {
+	/* we found a matching extension, take the caps */
+	if ((result = gst_type_find_factory_get_caps (factory))) {
+          gst_caps_ref (result);
+	  goto done;
+	}
+      }
+    }
+  }
+done:
+  gst_plugin_feature_list_free (type_list);
+
+  GST_LOG_OBJECT (obj, "Returning %" GST_PTR_FORMAT, result);
+
+  return result;
+}

@@ -34,6 +34,9 @@ GstCaps * gst_type_find_helper_for_buffer (GstObject              *obj,
                                            GstBuffer              *buf,
                                            GstTypeFindProbability *prob);
 
+GstCaps * gst_type_find_helper_for_extension (GstObject * obj,
+                                              const gchar * extension);
+
 /**
  * GstTypeFindHelperGetRangeFunction:
  * @obj: a #GstObject that will handle the getrange request
