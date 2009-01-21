@@ -235,7 +235,6 @@ dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(aiffparse)
 AG_GST_CHECK_PLUGIN(amrparse)
-AG_GST_CHECK_PLUGIN(audiobuffer)
 AG_GST_CHECK_PLUGIN(audioresample)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
@@ -1389,7 +1388,6 @@ gst/Makefile
 gst/aacparse/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
-gst/audiobuffer/Makefile
 gst/audioresample/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
