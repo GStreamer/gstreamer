@@ -8,13 +8,13 @@ have_svn=`which svn`
 # FFMPEG specific properties
 . ./ffmpegrev
 
-# a quick cvs co if necessary to alleviate the pain - may remove this
-# when developers get a clue ;)
-if test ! -d common; 
+# make sure we have common
+if test ! -f common/gst-autogen.sh; 
 then 
-  echo "+ getting common/ from cvs"
-  cvs co common 
+  echo "+ Setting up common submodule"
+  git submodule init
 fi
+git submodule update
 
 if test -x $have_svn && [ $have_svn ];
 then
