@@ -238,9 +238,8 @@ gst_type_find_factory_call_function (GstTypeFindFactory * factory,
       GST_TYPE_FIND_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
   if (new_factory) {
-    g_assert (new_factory->function != NULL);
-
-    new_factory->function (find, new_factory->user_data);
+    if (new_factory->function)
+      new_factory->function (find, new_factory->user_data);
     gst_object_unref (new_factory);
   }
 }

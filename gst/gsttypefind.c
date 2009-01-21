@@ -78,7 +78,6 @@ gst_type_find_register (GstPlugin * plugin, const gchar * name, guint rank,
   GstTypeFindFactory *factory;
 
   g_return_val_if_fail (name != NULL, FALSE);
-  g_return_val_if_fail (func != NULL, FALSE);
 
   GST_INFO ("registering typefind function for %s", name);
 
