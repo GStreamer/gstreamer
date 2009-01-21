@@ -652,23 +652,14 @@ link_failed:
 static void
 gst_ghost_pad_do_unlink (GstPad * pad)
 {
-  GstPad *target;
   GstPad *internal;
 
-  target = gst_proxy_pad_get_target (pad);
   internal = GST_PROXY_PAD_INTERNAL (pad);
 
   GST_DEBUG_OBJECT (pad, "unlinking ghostpad");
 
   /* The target of the internal pad is no longer valid */
   gst_proxy_pad_set_target (internal, NULL);
-
-  if (target) {
-    if (GST_PAD_UNLINKFUNC (target))
-      GST_PAD_UNLINKFUNC (target) (target);
-
-    gst_object_unref (target);
-  }
 }
 
 static void
@@ -820,7 +811,6 @@ gst_ghost_pad_construct (GstGhostPad * gpad)
   gst_pad_set_link_function (pad, GST_DEBUG_FUNCPTR (gst_ghost_pad_do_link));
   gst_pad_set_unlink_function (pad,
       GST_DEBUG_FUNCPTR (gst_ghost_pad_do_unlink));
-
 
   /* INTERNAL PAD, it always exists and is child of the ghostpad */
   otherdir = (dir == GST_PAD_SRC) ? GST_PAD_SINK : GST_PAD_SRC;
