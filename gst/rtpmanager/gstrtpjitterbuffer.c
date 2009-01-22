@@ -1442,6 +1442,11 @@ again:
       priv->num_late++;
       discont = TRUE;
 
+      /* update our expected next packet */
+      priv->last_popped_seqnum = next_seqnum;
+      priv->last_out_time = out_time;
+      priv->next_seqnum = (next_seqnum + 1) & 0xffff;
+
       if (priv->do_lost) {
         /* create paket lost event */
         event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
@@ -1449,13 +1454,11 @@ again:
                 "seqnum", G_TYPE_UINT, (guint) next_seqnum,
                 "timestamp", G_TYPE_UINT64, out_time,
                 "duration", G_TYPE_UINT64, duration, NULL));
-        gst_pad_push_event (priv->srcpad, event);
-      }
 
-      /* update our expected next packet */
-      priv->last_popped_seqnum = next_seqnum;
-      priv->last_out_time = out_time;
-      priv->next_seqnum = (next_seqnum + 1) & 0xffff;
+        JBUF_UNLOCK (priv);
+        gst_pad_push_event (priv->srcpad, event);
+        JBUF_LOCK_CHECK (priv, flushing);
+      }
       /* look for next packet */
       goto again;
     }
