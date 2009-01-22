@@ -20,6 +20,7 @@
 #include <glib.h>
 #include <math.h>
 
+#include "_kiss_fft_guts_f32.h"
 #include "kiss_fftr_f32.h"
 #include "gstfft.h"
 #include "gstfftf32.h"
@@ -74,13 +75,18 @@ GstFFTF32 *
 gst_fft_f32_new (gint len, gboolean inverse)
 {
   GstFFTF32 *self;
+  gsize subsize = 0, memneeded;
 
   g_return_val_if_fail (len > 0, NULL);
   g_return_val_if_fail (len % 2 == 0, NULL);
 
-  self = g_new (GstFFTF32, 1);
+  kiss_fftr_f32_alloc (len, (inverse) ? 1 : 0, NULL, &subsize);
+  memneeded = ALIGN_STRUCT (sizeof (GstFFTF32)) + subsize;
 
-  self->cfg = kiss_fftr_f32_alloc (len, (inverse) ? 1 : 0, NULL, NULL);
+  self = (GstFFTF32 *) g_malloc0 (memneeded);
+
+  self->cfg = (((guint8 *) self) + ALIGN_STRUCT (sizeof (GstFFTF32)));
+  self->cfg = kiss_fftr_f32_alloc (len, (inverse) ? 1 : 0, self->cfg, &subsize);
   g_assert (self->cfg);
 
   self->inverse = inverse;
@@ -152,7 +158,6 @@ gst_fft_f32_inverse_fft (GstFFTF32 * self, const GstFFTF32Complex * freqdata,
 void
 gst_fft_f32_free (GstFFTF32 * self)
 {
-  kiss_fftr_f32_free (self->cfg);
   g_free (self);
 }
 
