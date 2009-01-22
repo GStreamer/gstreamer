@@ -71,6 +71,7 @@ struct _GstMXFDemux
   MXFPartitionPack partition;
   MXFPrimerPack primer;
 
+  gboolean parsed_random_index_pack;
   GArray *partition_index;
   GArray *index_table;
 
