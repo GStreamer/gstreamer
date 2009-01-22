@@ -104,8 +104,7 @@ gst_udp_get_addr (const char *hostname, int port, struct sockaddr_storage *addr)
   if (nres) {
     memcpy (addr, nres->ai_addr, nres->ai_addrlen);
   } else {
-    errno = EAI_ADDRFAMILY;
-    ret = -1;
+    ret = EAI_ADDRFAMILY;
   }
 
 beach:
