@@ -56,15 +56,22 @@ struct _GstRTSPMediaFactory {
 
 /**
  * GstRTSPMediaFactoryClass:
+ * @get_element: Construct an return a #GstElement thast is a #GstBin containing
+ *       the pipeline to use for the media. The bin should contain elements
+ *       pay%d for each stream. The default implementation of this functions
+ *       returns the bin created from the launch parameter.
  * @construct: the vmethod that will be called when the factory has to create the
- *       #GstRTSPMediaBin for @location.
+ *       #GstRTSPMediaBin for @location. The default implementation of this
+ *       function calls get_element to retrieve an element and then looks for
+ *       pay%d to create the streams.
  *
  * the #GstRTSPMediaFactory class structure.
  */
 struct _GstRTSPMediaFactoryClass {
   GObjectClass  parent_class;
 
-  GstRTSPMediaBin * (*construct)   (GstRTSPMediaFactory *factory, const gchar *location);
+  GstElement *      (*get_element)   (GstRTSPMediaFactory *factory, const gchar *location);
+  GstRTSPMediaBin * (*construct)     (GstRTSPMediaFactory *factory, const gchar *location);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);

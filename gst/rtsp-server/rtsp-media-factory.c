@@ -35,6 +35,7 @@ static void gst_rtsp_media_factory_set_property (GObject *object, guint propid,
 static void gst_rtsp_media_factory_finalize (GObject * obj);
 
 static GstRTSPMediaBin * default_construct (GstRTSPMediaFactory *factory, const gchar *location);
+static GstElement * default_get_element (GstRTSPMediaFactory *factory, const gchar *location);
 
 G_DEFINE_TYPE (GstRTSPMediaFactory, gst_rtsp_media_factory, G_TYPE_OBJECT);
 
@@ -67,6 +68,7 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           DEFAULT_LAUNCH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->construct = default_construct;
+  klass->get_element = default_get_element;
 }
 
 static void
@@ -218,14 +220,10 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
     gst_caps_ref (stream->caps);
 }
 
-static GstRTSPMediaBin *
-default_construct (GstRTSPMediaFactory *factory, const gchar *location)
+static GstElement *
+default_get_element (GstRTSPMediaFactory *factory, const gchar *location)
 {
-  GstRTSPMediaBin *bin;
-  GstRTSPMediaStream *stream;
-  GstElement *pay, *element;
-  GstPad * pad;
-  gint i;
+  GstElement *element;
   GError *error = NULL;
 
   /* we need a parse syntax */
@@ -242,6 +240,42 @@ default_construct (GstRTSPMediaFactory *factory, const gchar *location)
     g_warning ("recoverable parsing error: %s", error->message);
     g_error_free (error);
   }
+  return element;
+
+  /* ERRORS */
+no_launch:
+  {
+    g_critical ("no launch line specified");
+    return NULL;
+  }
+parse_error:
+  {
+    g_critical ("could not parse launch syntax (%s): %s", factory->launch, 
+         (error ? error->message : "unknown reason"));
+    if (error)
+      g_error_free (error);
+    return NULL;
+  }
+}
+
+static GstRTSPMediaBin *
+default_construct (GstRTSPMediaFactory *factory, const gchar *location)
+{
+  GstRTSPMediaBin *bin;
+  GstRTSPMediaStream *stream;
+  GstElement *pay, *element;
+  GstPad * pad;
+  gint i;
+  GstRTSPMediaFactoryClass *klass;
+
+  klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
+
+  if (klass->get_element)
+    element = klass->get_element (factory, location);
+  else
+    element = NULL;
+  if (element == NULL)
+    goto no_element;
 
   bin = g_object_new (GST_TYPE_RTSP_MEDIA_BIN, NULL);
   bin->element = element;
@@ -287,17 +321,9 @@ default_construct (GstRTSPMediaFactory *factory, const gchar *location)
   return bin;
 
   /* ERRORS */
-no_launch:
+no_element:
   {
-    g_critical ("no launch line specified");
-    return NULL;
-  }
-parse_error:
-  {
-    g_critical ("could not parse launch syntax (%s): %s", factory->launch, 
-         (error ? error->message : "unknown reason"));
-    if (error)
-      g_error_free (error);
+    g_critical ("could not create element");
     return NULL;
   }
 }
