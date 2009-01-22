@@ -455,6 +455,7 @@ handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPM
   GstRTSPMediaFactory *factory;
   GstRTSPMediaBin *mediabin;
   GstElement *pipeline;
+  GstStateChangeReturn ret;
 
   /* the uri contains the stream number we added in the SDP config, which is
    * always /stream=%d so we need to strip that off */
@@ -499,7 +500,9 @@ handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPM
 
   /* now play and wait till we get the pads blocked. At that time the pipeline
    * is prerolled and we have the caps on the streams too. */
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto cant_play;
 
   /* wait for state change to complete */
   gst_element_get_state (pipeline, NULL, NULL, -1);
@@ -643,6 +646,13 @@ no_factory:
 no_media_bin:
   {
     handle_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, request);
+    g_object_unref (factory);
+    return FALSE;
+  }
+cant_play:
+  {
+    handle_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, request);
+    gst_object_unref (pipeline);
     g_object_unref (factory);
     return FALSE;
   }
