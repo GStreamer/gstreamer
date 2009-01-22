@@ -78,7 +78,7 @@ handle_generic_response (GstRTSPClient *client, GstRTSPStatusCode code,
 }
 
 static gboolean
-handle_teardown_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *request)
+handle_teardown_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPResult res;
   GstRTSPSessionMedia *media;
@@ -137,7 +137,7 @@ not_found:
 }
 
 static gboolean
-handle_pause_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *request)
+handle_pause_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPResult res;
   GstRTSPSessionMedia *media;
@@ -189,7 +189,7 @@ not_found:
 }
 
 static gboolean
-handle_play_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *request)
+handle_play_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPResult res;
   GstRTSPSessionMedia *media;
@@ -233,18 +233,22 @@ handle_play_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *r
 
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
-  n_streams = gst_rtsp_media_bin_n_streams (media->mediabin);
+  n_streams = gst_rtsp_media_n_streams (media->media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;
+    gchar *uristr;
 
-    stream = gst_rtsp_media_bin_get_stream (media->mediabin, i);
+    stream = gst_rtsp_media_get_stream (media->media, i);
 
     g_object_get (G_OBJECT (stream->payloader), "seqnum", &seqnum, NULL);
     g_object_get (G_OBJECT (stream->payloader), "timestamp", &timestamp, NULL);
 
     if (i > 0)
       g_string_append (rtpinfo, ", ");
-    g_string_append_printf (rtpinfo, "url=%s/stream=%d;seq=%u;rtptime=%u", uri, i, seqnum, timestamp);
+
+    uristr = gst_rtsp_url_get_request_uri (uri);
+    g_string_append_printf (rtpinfo, "url=%s/stream=%d;seq=%u;rtptime=%u", uristr, i, seqnum, timestamp);
+    g_free (uristr);
   }
 
   /* construct the response now */
@@ -282,7 +286,7 @@ not_found:
 }
 
 static gboolean
-handle_setup_response (GstRTSPClient *client, const gchar *location, GstRTSPMessage *request)
+handle_setup_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPResult res;
   gchar *sessid;
@@ -290,7 +294,6 @@ handle_setup_response (GstRTSPClient *client, const gchar *location, GstRTSPMess
   gchar **transports;
   gboolean have_transport;
   GstRTSPTransport *ct, *st;
-  GstRTSPUrl *uri;
   GstRTSPSession *session;
   gint i;
   GstRTSPLowerTrans supported;
@@ -303,11 +306,8 @@ handle_setup_response (GstRTSPClient *client, const gchar *location, GstRTSPMess
   gboolean need_session;
 
   /* the uri contains the stream number we added in the SDP config, which is
-   * always /stream=%d so we need to strip that off */
-  if ((res = gst_rtsp_url_parse (location, &uri)) != GST_RTSP_OK)
-    goto bad_url;
-
-  /* parse the stream we need to configure, look for the stream in the abspath
+   * always /stream=%d so we need to strip that off 
+   * parse the stream we need to configure, look for the stream in the abspath
    * first and then in the query. */
   if (!(pos = strstr (uri->abspath, "/stream="))) {
     if (!(pos = strstr (uri->query, "/stream=")))
@@ -382,7 +382,7 @@ handle_setup_response (GstRTSPClient *client, const gchar *location, GstRTSPMess
   }
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, uri->abspath, client->factory);
+  media = gst_rtsp_session_get_media (session, uri, client->factory);
   if (!media)
     goto not_found;
 
@@ -410,11 +410,6 @@ handle_setup_response (GstRTSPClient *client, const gchar *location, GstRTSPMess
   return TRUE;
 
   /* ERRORS */
-bad_url:
-  {
-    handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
-    return FALSE;
-  }
 bad_request:
   {
     handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
@@ -444,48 +439,53 @@ service_unavailable:
 
 /* for the describe we must generate an SDP */
 static gboolean
-handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPMessage *request)
+handle_describe_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
   GstSDPMessage *sdp;
-  GstRTSPUrl *uri;
   guint n_streams, i;
   gchar *sdptext;
   GstRTSPMediaFactory *factory;
-  GstRTSPMediaBin *mediabin;
+  GstRTSPMedia *media;
   GstElement *pipeline;
   GstStateChangeReturn ret;
-
-  /* the uri contains the stream number we added in the SDP config, which is
-   * always /stream=%d so we need to strip that off */
-  if ((res = gst_rtsp_url_parse (location, &uri)) != GST_RTSP_OK)
-    goto bad_url;
 
   /* find the factory for the uri first */
   if (!(factory = gst_rtsp_media_mapping_find_factory (client->mapping, uri)))
     goto no_factory;
 
-  /* check what kind of format is accepted */
+  /* check what kind of format is accepted, we don't really do anything with it
+   * and always return SDP for now. */
+  for (i = 0; i++; ) {
+    gchar *accept;
+
+    res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_ACCEPT, &accept, i);
+    if (res == GST_RTSP_ENOTIMPL)
+      break;
+
+    if (g_ascii_strcasecmp (accept, "application/sdp") == 0)
+      break;
+  }
 
   /* create a pipeline to preroll the media */
   pipeline = gst_pipeline_new ("client-describe-pipeline");
 
   /* prepare the media and add it to the pipeline */
-  if (!(mediabin = gst_rtsp_media_factory_construct (factory, uri->abspath)))
-    goto no_media_bin;
+  if (!(media = gst_rtsp_media_factory_construct (factory, uri)))
+    goto no_media;
   
-  gst_bin_add (GST_BIN_CAST (pipeline), mediabin->element);
+  gst_bin_add (GST_BIN_CAST (pipeline), media->element);
 
   /* link fakesink to all stream pads and set the pipeline to PLAYING */
-  n_streams = gst_rtsp_media_bin_n_streams (mediabin);
+  n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;
     GstElement *sink;
     GstPad *sinkpad;
     GstPadLinkReturn lret;
 
-    stream = gst_rtsp_media_bin_get_stream (mediabin, i);
+    stream = gst_rtsp_media_get_stream (media, i);
 
     sink = gst_element_factory_make ("fakesink", NULL);
     gst_bin_add (GST_BIN (pipeline), sink);
@@ -530,7 +530,7 @@ handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPM
     gboolean first;
     GString *fmtp;
 
-    stream = gst_rtsp_media_bin_get_stream (mediabin, i);
+    stream = gst_rtsp_media_get_stream (media, i);
     gst_sdp_media_new (&smedia);
 
     s = gst_caps_get_structure (stream->caps, 0);
@@ -623,6 +623,8 @@ handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPM
   gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, 
 	gst_rtsp_status_as_text (GST_RTSP_STS_OK), request);
 
+  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_TYPE, "application/sdp");
+
   /* add SDP to the response body */
   sdptext = gst_sdp_message_as_text (sdp);
   gst_rtsp_message_take_body (&response, (guint8 *)sdptext, strlen (sdptext));
@@ -633,17 +635,12 @@ handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPM
   return TRUE;
 
   /* ERRORS */
-bad_url:
-  {
-    handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
-    return FALSE;
-  }
 no_factory:
   {
     handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
     return FALSE;
   }
-no_media_bin:
+no_media:
   {
     handle_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, request);
     g_object_unref (factory);
@@ -659,7 +656,7 @@ cant_play:
 }
 
 static void
-handle_options_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *request)
+handle_options_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPMessage response = { 0 };
   GstRTSPMethod options;
@@ -714,7 +711,8 @@ handle_client (GstRTSPClient *client)
   GstRTSPMessage request = { 0 };
   GstRTSPResult res;
   GstRTSPMethod method;
-  const gchar *uri;
+  const gchar *uristr;
+  GstRTSPUrl *uri;
   GstRTSPVersion version;
 
   while (TRUE) {
@@ -727,11 +725,17 @@ handle_client (GstRTSPClient *client)
     gst_rtsp_message_dump (&request);
 #endif
 
-    gst_rtsp_message_parse_request (&request, &method, &uri, &version);
+    gst_rtsp_message_parse_request (&request, &method, &uristr, &version);
 
     if (version != GST_RTSP_VERSION_1_0) {
       /* we can only handle 1.0 requests */
       handle_generic_response (client, GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED, &request);
+      continue;
+    }
+
+    /* we always try to parse the url first */
+    if ((res = gst_rtsp_url_parse (uristr, &uri)) != GST_RTSP_OK) {
+      handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &request);
       continue;
     }
 
@@ -767,6 +771,7 @@ handle_client (GstRTSPClient *client)
         handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &request);
         break;
     }
+    gst_rtsp_url_free (uri);
   }
   g_object_unref (client);
   return NULL;

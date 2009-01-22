@@ -25,19 +25,19 @@
 
 G_BEGIN_DECLS
 
-/* types for the media bin */
-#define GST_TYPE_RTSP_MEDIA_BIN              (gst_rtsp_media_bin_get_type ())
-#define GST_IS_RTSP_MEDIA_BIN(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_MEDIA_BIN))
-#define GST_IS_RTSP_MEDIA_BIN_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RTSP_MEDIA_BIN))
-#define GST_RTSP_MEDIA_BIN_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTSP_MEDIA_BIN, GstRTSPMediaBinClass))
-#define GST_RTSP_MEDIA_BIN(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_RTSP_MEDIA_BIN, GstRTSPMediaBin))
-#define GST_RTSP_MEDIA_BIN_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_RTSP_MEDIA_BIN, GstRTSPMediaBinClass))
-#define GST_RTSP_MEDIA_BIN_CAST(obj)         ((GstRTSPMediaBin*)(obj))
-#define GST_RTSP_MEDIA_BIN_CLASS_CAST(klass) ((GstRTSPMediaBinClass*)(klass))
+/* types for the media */
+#define GST_TYPE_RTSP_MEDIA              (gst_rtsp_media_get_type ())
+#define GST_IS_RTSP_MEDIA(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_MEDIA))
+#define GST_IS_RTSP_MEDIA_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RTSP_MEDIA))
+#define GST_RTSP_MEDIA_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTSP_MEDIA, GstRTSPMediaClass))
+#define GST_RTSP_MEDIA(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_RTSP_MEDIA, GstRTSPMedia))
+#define GST_RTSP_MEDIA_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_RTSP_MEDIA, GstRTSPMediaClass))
+#define GST_RTSP_MEDIA_CAST(obj)         ((GstRTSPMedia*)(obj))
+#define GST_RTSP_MEDIA_CLASS_CAST(klass) ((GstRTSPMediaClass*)(klass))
 
 typedef struct _GstRTSPMediaStream GstRTSPMediaStream;
-typedef struct _GstRTSPMediaBin GstRTSPMediaBin;
-typedef struct _GstRTSPMediaBinClass GstRTSPMediaBinClass;
+typedef struct _GstRTSPMedia GstRTSPMedia;
+typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 
 /**
  * GstRTSPMediaStream:
@@ -45,14 +45,14 @@ typedef struct _GstRTSPMediaBinClass GstRTSPMediaBinClass;
  * @idx: the stream index
  * @element: the toplevel element
  * @srcpad: the srcpad of the stream
- * @payloader: the payloader of the formattt
+ * @payloader: the payloader of the format
  * @caps_sig: the signal id for detecting caps
  * @caps: the caps of the stream
  *
  * The definition of a media stream. The streams are identified by @id.
  */
 struct _GstRTSPMediaStream {
-  GstRTSPMediaBin *mediabin;
+  GstRTSPMedia *media;
 
   guint       idx;
 
@@ -64,28 +64,28 @@ struct _GstRTSPMediaStream {
 };
 
 /**
- * GstRTSPMediaBin:
+ * GstRTSPMedia:
  * @media: the owner #GstRTSPMedia
  *
  * A class that contains the elements to handle the media
  * provided by @media.
  */
-struct _GstRTSPMediaBin {
+struct _GstRTSPMedia {
   GObject       parent;
 
   GstElement   *element;
   GArray       *streams;
 };
 
-struct _GstRTSPMediaBinClass {
+struct _GstRTSPMediaClass {
   GObjectClass  parent_class;
 };
 
-GType                 gst_rtsp_media_bin_get_type         (void);
+GType                 gst_rtsp_media_get_type         (void);
 
-/* dealing with the media bin */
-guint                 gst_rtsp_media_bin_n_streams        (GstRTSPMediaBin *bin);
-GstRTSPMediaStream *  gst_rtsp_media_bin_get_stream       (GstRTSPMediaBin *bin, guint idx);
+/* dealing with the media */
+guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
+GstRTSPMediaStream *  gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 
 G_END_DECLS
 

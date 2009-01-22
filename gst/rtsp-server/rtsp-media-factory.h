@@ -61,17 +61,17 @@ struct _GstRTSPMediaFactory {
  *       pay%d for each stream. The default implementation of this functions
  *       returns the bin created from the launch parameter.
  * @construct: the vmethod that will be called when the factory has to create the
- *       #GstRTSPMediaBin for @location. The default implementation of this
+ *       #GstRTSPMedia for @url. The default implementation of this
  *       function calls get_element to retrieve an element and then looks for
  *       pay%d to create the streams.
- *
+ 
  * the #GstRTSPMediaFactory class structure.
  */
 struct _GstRTSPMediaFactoryClass {
   GObjectClass  parent_class;
 
-  GstElement *      (*get_element)   (GstRTSPMediaFactory *factory, const gchar *location);
-  GstRTSPMediaBin * (*construct)     (GstRTSPMediaFactory *factory, const gchar *location);
+  GstElement *      (*get_element)   (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+  GstRTSPMedia *    (*construct)     (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);
@@ -79,11 +79,18 @@ GType                 gst_rtsp_media_factory_get_type     (void);
 /* configuring the factory */
 GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void);
 
-void                  gst_rtsp_media_factory_set_launch   (GstRTSPMediaFactory *factory, const gchar *launch);
+void                  gst_rtsp_media_factory_set_launch   (GstRTSPMediaFactory *factory,
+                                                           const gchar *launch);
 gchar *               gst_rtsp_media_factory_get_launch   (GstRTSPMediaFactory *factory);
 
+void                  gst_rtsp_media_factory_set_shared   (GstRTSPMediaFactory *factory,
+                                                           gboolean shared);
+gboolean              gst_rtsp_media_factory_is_shared    (GstRTSPMediaFactory *factory);
+
+
 /* creating the media bin from the factory */
-GstRTSPMediaBin *     gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory, const gchar *location);
+GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,
+                                                           const GstRTSPUrl *url);
 
 G_END_DECLS
 

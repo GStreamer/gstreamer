@@ -19,24 +19,24 @@
 
 #include "rtsp-media.h"
 
-static void gst_rtsp_media_bin_finalize (GObject * obj);
+static void gst_rtsp_media_finalize (GObject * obj);
 
-G_DEFINE_TYPE (GstRTSPMediaBin, gst_rtsp_media_bin, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
 
 static void
-gst_rtsp_media_bin_class_init (GstRTSPMediaBinClass * klass)
+gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->finalize = gst_rtsp_media_bin_finalize;
+  gobject_class->finalize = gst_rtsp_media_finalize;
 }
 
 static void
-gst_rtsp_media_bin_init (GstRTSPMediaBin * bin)
+gst_rtsp_media_init (GstRTSPMedia * media)
 {
-  bin->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
+  media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
 }
 
 static void
@@ -45,59 +45,59 @@ gst_rtsp_media_stream_free (GstRTSPMediaStream *stream)
 }
 
 static void
-gst_rtsp_media_bin_finalize (GObject * obj)
+gst_rtsp_media_finalize (GObject * obj)
 {
-  GstRTSPMediaBin *bin;
+  GstRTSPMedia *media;
   guint i;
 
-  bin = GST_RTSP_MEDIA_BIN (obj);
+  media = GST_RTSP_MEDIA (obj);
 
-  for (i = 0; i < bin->streams->len; i++) {
+  for (i = 0; i < media->streams->len; i++) {
     GstRTSPMediaStream *stream;
 
-    stream = g_array_index (bin->streams, GstRTSPMediaStream *, i);
+    stream = g_array_index (media->streams, GstRTSPMediaStream *, i);
 
     gst_rtsp_media_stream_free (stream);
   }
-  g_array_free (bin->streams, TRUE);
+  g_array_free (media->streams, TRUE);
 
-  G_OBJECT_CLASS (gst_rtsp_media_bin_parent_class)->finalize (obj);
+  G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
 
 /**
- * gst_rtsp_media_bin_n_streams:
- * @media: a #GstRTSPMediaBin
+ * gst_rtsp_media_n_streams:
+ * @media: a #GstRTSPMedia
  *
- * Get the number of streams in this mediabin.
+ * Get the number of streams in this media.
  *
  * Returns: The number of streams.
  */
 guint
-gst_rtsp_media_bin_n_streams (GstRTSPMediaBin *bin)
+gst_rtsp_media_n_streams (GstRTSPMedia *media)
 {
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA_BIN (bin), 0);
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), 0);
 
-  return bin->streams->len;
+  return media->streams->len;
 }
 
 /**
- * gst_rtsp_media_bin_get_stream:
- * @bin: a #GstRTSPMediaBin
+ * gst_rtsp_media_get_stream:
+ * @media: a #GstRTSPMedia
  * @idx: the stream index
  *
- * Retrieve the stream with index @idx from @bin.
+ * Retrieve the stream with index @idx from @media.
  *
  * Returns: the #GstRTSPMediaStream at index @idx.
  */
 GstRTSPMediaStream *
-gst_rtsp_media_bin_get_stream (GstRTSPMediaBin *bin, guint idx)
+gst_rtsp_media_get_stream (GstRTSPMedia *media, guint idx)
 {
   GstRTSPMediaStream *res;
   
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA_BIN (bin), NULL);
-  g_return_val_if_fail (idx < bin->streams->len, NULL);
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+  g_return_val_if_fail (idx < media->streams->len, NULL);
 
-  res = g_array_index (bin->streams, GstRTSPMediaStream *, idx);
+  res = g_array_index (media->streams, GstRTSPMediaStream *, idx);
 
   return res;
 }

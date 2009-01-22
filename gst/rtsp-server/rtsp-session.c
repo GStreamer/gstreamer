@@ -98,7 +98,7 @@ gst_rtsp_session_finalize (GObject * obj)
 /**
  * gst_rtsp_session_get_media:
  * @sess: a #GstRTSPSession
- * @location: the url for the media
+ * @url: the url for the media
  * @factory: a #GstRTSPMediaFactory
  *
  * Get or create the session information for @factory.
@@ -106,7 +106,7 @@ gst_rtsp_session_finalize (GObject * obj)
  * Returns: the configuration for @factory in @sess.
  */
 GstRTSPSessionMedia *
-gst_rtsp_session_get_media (GstRTSPSession *sess, const gchar *location, GstRTSPMediaFactory *factory)
+gst_rtsp_session_get_media (GstRTSPSession *sess, const GstRTSPUrl *url, GstRTSPMediaFactory *factory)
 {
   GstRTSPSessionMedia *result;
   GList *walk;
@@ -127,11 +127,11 @@ gst_rtsp_session_get_media (GstRTSPSession *sess, const gchar *location, GstRTSP
     result->pipeline = gst_pipeline_new ("pipeline");
 
     /* construct media and add to the pipeline */
-    result->mediabin = gst_rtsp_media_factory_construct (factory, location);
-    if (result->mediabin == NULL)
+    result->media = gst_rtsp_media_factory_construct (factory, url);
+    if (result->media == NULL)
       goto no_media;
     
-    gst_bin_add (GST_BIN_CAST (result->pipeline), result->mediabin->element);
+    gst_bin_add (GST_BIN_CAST (result->pipeline), result->media->element);
 
     result->rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
 
@@ -182,7 +182,7 @@ gst_rtsp_session_media_get_stream (GstRTSPSessionMedia *media, guint idx)
     result = g_new0 (GstRTSPSessionStream, 1);
     result->idx = idx;
     result->media = media;
-    result->media_stream = gst_rtsp_media_bin_get_stream (media->mediabin, idx);
+    result->media_stream = gst_rtsp_media_get_stream (media->media, idx);
 
     media->streams = g_list_prepend (media->streams, result);
   }
@@ -507,5 +507,4 @@ gst_rtsp_session_media_stop (GstRTSPSessionMedia *media)
 
   return ret;
 }
-
 

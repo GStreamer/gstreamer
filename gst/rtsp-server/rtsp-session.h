@@ -92,7 +92,7 @@ struct _GstRTSPSessionMedia
 
   /* the pipeline for the media */
   GstElement   *pipeline;
-  GstRTSPMediaBin *mediabin;
+  GstRTSPMedia *media;
 
   /* RTP session manager */
   GstElement   *rtpbin;
@@ -127,7 +127,7 @@ GType                  gst_rtsp_session_get_type             (void);
 
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
 
-GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess, const gchar *location,
+GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess, const GstRTSPUrl *url,
                                                               GstRTSPMediaFactory *factory);
 
 GstStateChangeReturn   gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);

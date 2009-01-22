@@ -34,8 +34,8 @@ static void gst_rtsp_media_factory_set_property (GObject *object, guint propid,
     const GValue *value, GParamSpec *pspec);
 static void gst_rtsp_media_factory_finalize (GObject * obj);
 
-static GstRTSPMediaBin * default_construct (GstRTSPMediaFactory *factory, const gchar *location);
-static GstElement * default_get_element (GstRTSPMediaFactory *factory, const gchar *location);
+static GstRTSPMedia * default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+static GstElement * default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 
 G_DEFINE_TYPE (GstRTSPMediaFactory, gst_rtsp_media_factory, G_TYPE_OBJECT);
 
@@ -121,8 +121,7 @@ gst_rtsp_media_factory_set_property (GObject *object, guint propid,
  *
  * Create a new #GstRTSPMediaFactory instance.
  *
- * Returns: a new #GstRTSPMediaFactory object or %NULL when location did not contain a
- * valid or understood URL.
+ * Returns: a new #GstRTSPMediaFactory object.
  */
 GstRTSPMediaFactory *
 gst_rtsp_media_factory_new (void)
@@ -181,9 +180,9 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory *factory)
 /**
  * gst_rtsp_media_factory_construct:
  * @factory: a #GstRTSPMediaFactory
- * @location: the url used
+ * @url: the url used
  *
- * Prepare the media bin object and create its streams. Implementations
+ * Prepare the media object and create its streams. Implementations
  * should create the needed gstreamer elements and add them to the result
  * object. No state changes should be performed on them yet.
  *
@@ -191,22 +190,22 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory *factory)
  * the srcpad member set to a source pad that produces buffer of type 
  * application/x-rtp.
  *
- * Returns: a new #GstRTSPMediaBin if the media could be prepared.
+ * Returns: a new #GstRTSPMedia if the media could be prepared.
  */
-GstRTSPMediaBin *
-gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const gchar *location)
+GstRTSPMedia *
+gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
-  GstRTSPMediaBin *res;
+  GstRTSPMedia *res;
   GstRTSPMediaFactoryClass *klass;
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
   if (klass->construct)
-    res = klass->construct (factory, location);
+    res = klass->construct (factory, url);
   else
     res = NULL;
 
-  g_message ("constructed mediabin %p for location %s", res, location);
+  g_message ("constructed media %p for url %s", res, url->abspath);
 
   return res;
 }
@@ -221,7 +220,7 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
 }
 
 static GstElement *
-default_get_element (GstRTSPMediaFactory *factory, const gchar *location)
+default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
   GstElement *element;
   GError *error = NULL;
@@ -258,10 +257,10 @@ parse_error:
   }
 }
 
-static GstRTSPMediaBin *
-default_construct (GstRTSPMediaFactory *factory, const gchar *location)
+static GstRTSPMedia *
+default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
-  GstRTSPMediaBin *bin;
+  GstRTSPMedia *media;
   GstRTSPMediaStream *stream;
   GstElement *pay, *element;
   GstPad * pad;
@@ -271,14 +270,14 @@ default_construct (GstRTSPMediaFactory *factory, const gchar *location)
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
   if (klass->get_element)
-    element = klass->get_element (factory, location);
+    element = klass->get_element (factory, url);
   else
     element = NULL;
   if (element == NULL)
     goto no_element;
 
-  bin = g_object_new (GST_TYPE_RTSP_MEDIA_BIN, NULL);
-  bin->element = element;
+  media = g_object_new (GST_TYPE_RTSP_MEDIA, NULL);
+  media->element = element;
 
   /* try to find all the payloader elements, they should be named 'pay%d'. for
    * each of the payloaders we will create a stream, collect the source pad and
@@ -297,10 +296,10 @@ default_construct (GstRTSPMediaFactory *factory, const gchar *location)
     
     /* create the stream */
     stream = g_new0 (GstRTSPMediaStream, 1);
-    stream->mediabin = bin;
+    stream->media = media;
     stream->element = element;
     stream->payloader = pay;
-    stream->idx = bin->streams->len;
+    stream->idx = media->streams->len;
 
     pad = gst_element_get_static_pad (pay, "src");
 
@@ -312,13 +311,13 @@ default_construct (GstRTSPMediaFactory *factory, const gchar *location)
     gst_object_unref (pad);
 
     /* add stream now */
-    g_array_append_val (bin->streams, stream);
+    g_array_append_val (media->streams, stream);
     gst_object_unref (pay);
 
     g_free (name);
   }
 
-  return bin;
+  return media;
 
   /* ERRORS */
 no_element:
