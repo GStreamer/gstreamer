@@ -7,23 +7,20 @@ GstGConfVideoSrc GstChildProxy
 GstSwitchSink GstChildProxy
 GstGConfAudioSink GstChildProxy
 GstGConfAudioSrc GstChildProxy
+GstRTSPSrc GstChildProxy GstURIHandler
 GstAutoVideoSink GstChildProxy
 GstAutoAudioSink GstChildProxy
 GstRgVolume GstChildProxy
-GstRTSPSrc GstChildProxy GstURIHandler
-GstPulseSink GstPropertyProbe GstImplementsInterface
 GstShout2send GstTagSetter
+GstPulseSink GstPropertyProbe GstImplementsInterface
 GstUDPSink GstURIHandler
-GstPulseSrc GstPropertyProbe GstImplementsInterface GstMixer
-GstOssSrc GstImplementsInterface GstMixer
-GstSoupHTTPSrc GstURIHandler
 GstDV1394Src GstPropertyProbe GstURIHandler
 GstHDV1394Src GstPropertyProbe GstURIHandler
+GstSoupHTTPSrc GstURIHandler
+GstPulseSrc GstPropertyProbe GstImplementsInterface GstMixer
+GstOssSrc GstImplementsInterface GstMixer
 GstV4l2Src GstPropertyProbe GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation
 GstUDPSrc GstURIHandler
-GstPulseMixer GstPropertyProbe GstImplementsInterface GstMixer
-GstFlacEnc GstTagSetter
-GstFlacTag GstTagSetter
 GstTagLibMux GstTagSetter
 GstId3v2Mux GstTagSetter
 GstApev2Mux GstTagSetter
@@ -33,6 +30,9 @@ GstIirEqualizerNBands GstChildProxy
 GstIirEqualizer3Bands GstChildProxy
 GstIirEqualizer10Bands GstChildProxy
 GstSpeexEnc GstTagSetter
+GstFlacEnc GstTagSetter
+GstFlacTag GstTagSetter
+GstPulseMixer GstPropertyProbe GstImplementsInterface GstMixer
 GstOssMixerElement GstImplementsInterface GstMixer
 GstRTSPGoogle GstRTSPExtension
 GstVideoMixer GstChildProxy

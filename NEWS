@@ -1,4 +1,8 @@
-This is GStreamer Good Plug-ins 0.10.11, "Secondary Consideration"
+This is GStreamer Good Plug-ins 0.10.12, "Taken Under Advisement"
+
+Changes since 0.10.11:
+
+      * Fix for security advisory TKADV2009-0xx
 
 Changes since 0.10.10:
 

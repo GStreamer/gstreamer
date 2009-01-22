@@ -1,8 +1,8 @@
 GObject
   GstObject
     GstPad
-      GstInterleavePad
       GstVideoMixerPad
+      GstInterleavePad
     GstPadTemplate
     GstPluginFeature
       GstElementFactory
@@ -18,55 +18,50 @@ GObject
         GstSwitchSink
           GstGConfAudioSink
         GstGConfAudioSrc
+        GstRTSPSrc
         GstAutoVideoSink
         GstAutoAudioSink
         GstRgVolume
-        GstRTSPSrc
       GstBaseSink
+        GstCACASink
+        GstShout2send
+        GstVideoSink
+          GstGdkPixbufSink
+        GstAASink
         GstBaseAudioSink
           GstAudioSink
             GstEsdSink
             GstPulseSink
             GstOssSink
-        GstShout2send
-        GstCACASink
-        GstVideoSink
-          GstGdkPixbufSink
-        GstAASink
+        GstMultiFileSink
         GstTest
         GstMultiUDPSink
           GstUDPSink
         GstDynUDPSink
-        GstMultiFileSink
-      GstJpegEnc
-      GstJpegDec
-      GstSmokeEnc
-      GstSmokeDec
       GstBaseSrc
         GstPushSrc
+          GstDV1394Src
+          GstHDV1394Src
+          GstSoupHTTPSrc
           GstBaseAudioSrc
             GstAudioSrc
               GstPulseSrc
               GstOssSrc
-          GstSoupHTTPSrc
-          GstDV1394Src
-          GstHDV1394Src
-          GstV4l2Src
           GstXImageSrc
-          GstUDPSrc
+          GstV4l2Src
           GstMultiFileSrc
-      GstPulseMixer
-      GstFlacEnc
-      GstFlacDec
-      GstFlacTag
+          GstUDPSrc
+      GstCmmlEnc
+      GstCmmlDec
       GstTagLibMux
         GstId3v2Mux
         GstApev2Mux
-      GstCairoTextOverlay
+      GstGdkPixbuf
       GstBaseTransform
-        GstCairoTimeOverlay
         GstPixbufScale
-        GstLevel
+        GstCairoTimeOverlay
+        GstAlphaColor
+        GstAlpha
         GstVideoFilter
           GstEdgeTV
           GstAgingTV
@@ -79,12 +74,17 @@ GObject
           GstVideoBalance
           GstVideoFlip
           GstGamma
-          GstNavigationtest
           GstSMPTEAlpha
+          GstNavigationtest
         GstRgAnalysis
         GstRgLimiter
+        GstBreakMyData
+        GstNavSeek
+        GstProgressReport
+        GstTagInject
+        GstVideoBox
+        GstVideoCrop
         GstAudioFilter
-          GstSpectrum
           GstIirEqualizer
             GstIirEqualizerNBands
             GstIirEqualizer3Bands
@@ -97,31 +97,31 @@ GObject
           GstAudioChebBand
           GstAudioWSincLimit
           GstAudioWSincBand
-        GstAlpha
-        GstAlphaColor
+          GstSpectrum
+        GstLevel
         GstAudioPanorama
-        GstBreakMyData
-        GstNavSeek
-        GstProgressReport
-        GstTagInject
-        GstVideoBox
-        GstVideoCrop
-      GstPngDec
-      GstPngEnc
       GstWavpackParse
       GstWavpackDec
       GstWavpackEnc
-      GstGdkPixbuf
-      GstCmmlEnc
-      GstCmmlDec
-      GstSpeexEnc
-      GstSpeexDec
+      GstPngDec
+      GstPngEnc
       GstDVDemux
       GstDVDec
+      GstSpeexEnc
+      GstSpeexDec
+      GstCairoTextOverlay
+      GstFlacEnc
+      GstFlacDec
+      GstFlacTag
+      GstJpegEnc
+      GstJpegDec
+      GstSmokeEnc
+      GstSmokeDec
+      GstPulseMixer
       GstOssMixerElement
-      GstWavEnc
-      GstRTPDepay
+      GstQTDemux
       GstBaseRTPDepayload
+        GstRtpXQTDepay
         GstRtpAC3Depay
         GstRTPDVDepay
         GstRTPiLBCDepay
@@ -147,7 +147,15 @@ GObject
         GstRtpTheoraDepay
         GstRtpVorbisDepay
         GstRtpVRawDepay
-        GstRtpXQTDepay
+      GstRTPDec
+      GstRTSPGoogle
+      GstAuParse
+      GstVideoMixer
+      GstEbmlRead
+        GstMatroskaDemux
+      GstMatroskaMux
+      GstWavParse
+      GstRTPDepay
       GstBaseRTPPayload
         GstRTPDVPay
         GstBaseRTPAudioPayload
@@ -176,35 +184,27 @@ GObject
       GstTagDemux
         GstID3Demux
         GstApeDemux
-      GstICYDemux
-      GstALawEnc
-      GstALawDec
       GstMuLawEnc
       GstMuLawDec
-      GstQTDemux
-      GstWavParse
-      GstCutter
+      GstALawEnc
+      GstALawDec
+      GstMonoscope
+      GstSMPTE
+      GstRndBufferSize
+      GstEFence
+      GstFlxDec
+      GstGoom
       GstMultipartDemux
       GstMultipartMux
-      GstGoom
-      GstEFence
-      GstRndBufferSize
-      GstSMPTE
-      GstRTPDec
-      GstRTSPGoogle
+      GstICYDemux
       GstInterleave
       GstDeinterleave
-      GstVideoMixer
-      GstAuParse
-      GstMonoscope
-      GstFlxDec
-      GstEbmlRead
-        GstMatroskaDemux
-      GstMatroskaMux
-      GstGoom2k1
+      GstWavEnc
       GstAviDemux
       GstAviMux
       GstAviSubtitle
+      GstCutter
+      GstGoom2k1
     GstBus
     GstTask
     GstClock
@@ -214,12 +214,12 @@ GObject
     GstRegistry
     GstRingBuffer
   GstSignalObject
-  GstMixerTrack
-    GstMixerOptions
-  GdkPixbuf
   GstCmmlTagStream
   GstCmmlTagHead
   GstCmmlTagClip
+  GdkPixbuf
+  GstMixerTrack
+    GstMixerOptions
   GstTunerNorm
   GstTunerChannel
   GstColorBalanceChannel
@@ -227,10 +227,10 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
-  GstImplementsInterface
   GstPropertyProbe
-  GstMixer
   GstTagSetter
+  GstImplementsInterface
+  GstMixer
   GstTuner
   GstColorBalance
   GstVideoOrientation
