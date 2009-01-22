@@ -38,6 +38,7 @@
 #endif
 
 #include "gstglbumper.h"
+#include <png.h>
 
 #define GST_CAT_DEFAULT gst_gl_bumper_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -138,26 +139,105 @@ static const gchar *bumper_f_src =
 	"  gl_FragColor = vec4(irradiance * textureColor.rgb, textureColor.w);\n"
   "}\n";
 
+#define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", bumper->location, msg); display->isAlive = FALSE; return; }
+
+//png reading error handler
+static void 
+user_warning_fn(png_structp png_ptr, png_const_charp warning_msg)
+{
+    g_warning("%s\n", warning_msg);
+}
+
 //Called in the gl thread
 static void
 gst_gl_bumper_init_resources (GstGLFilter *filter)
 {
   GstGLBumper *bumper = GST_GL_BUMPER (filter);
-
+  GstGLDisplay *display = filter->display;
   GError *error = NULL;
-  //GdkPixbuf *pixbuf = NULL;
 
-  bumper->pixbuf = gdk_pixbuf_new_from_file (bumper->location, &error);
-  bumper->bumpmap_width = gdk_pixbuf_get_width (bumper->pixbuf);
-  bumper->bumpmap_height = gdk_pixbuf_get_height (bumper->pixbuf);
+  png_structp png_ptr;
+  png_infop info_ptr;
+  unsigned int sig_read = 0;
+  png_uint_32 width = 0;
+  png_uint_32 height = 0;
+  int bit_depth = 0;
+  int color_type = 0;
+  int interlace_type = 0;
+  png_FILE_p fp = NULL;
+  guint y = 0;
+  guchar *raw_data = NULL;
+  guchar **rows = NULL;
+
+  if (!filter->display)
+    return;
+
+  /* BEGIN load png image file */
+
+  if ((fp = fopen(bumper->location, "rb")) == NULL)
+    LOAD_ERROR ("file not found");
+
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  if (png_ptr == NULL)
+  {
+    fclose(fp);
+    LOAD_ERROR ("failed to initialize the png_struct");
+  }
+
+  png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
+
+  info_ptr = png_create_info_struct(png_ptr);
+  if (info_ptr == NULL)
+  {
+    fclose(fp);
+    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+    LOAD_ERROR ("failed to initialize the memory for image information");
+  }
+
+  png_init_io(png_ptr, fp);
+
+  png_set_sig_bytes(png_ptr, sig_read);
+
+  png_read_info(png_ptr, info_ptr);
+
+  png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+     &interlace_type, int_p_NULL, int_p_NULL);
+
+  if (color_type != PNG_COLOR_TYPE_RGB)
+  {
+    fclose(fp);
+    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+    LOAD_ERROR ("color type is not rgb");
+  }
+
+  raw_data = (guchar*) malloc ( sizeof(guchar) * width * height * 3 );
+
+  rows = (guchar**)malloc(sizeof(guchar*) * height);
+
+  for (y = 0;  y < height; ++y)
+    rows[y] = (guchar*) (raw_data + y * width * 3);
+
+  png_read_image(png_ptr, rows);
+
+  free(rows);
+
+  png_read_end(png_ptr, info_ptr);
+  png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+  fclose(fp);
+
+  /* END load png image file */
+
+  bumper->bumpmap_width = width;
+  bumper->bumpmap_height = height;
   
   glGenTextures (1, &bumper->bumpmap);
   glBindTexture(GL_TEXTURE_RECTANGLE_ARB, bumper->bumpmap);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
                 bumper->bumpmap_width, bumper->bumpmap_height, 0,
-                gdk_pixbuf_get_has_alpha (bumper->pixbuf) ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE, gdk_pixbuf_get_pixels (bumper->pixbuf));
+                GL_RGB, GL_UNSIGNED_BYTE, raw_data);
 
+  free (raw_data);
 }
 
 //Called in the gl thread
@@ -211,7 +291,6 @@ gst_gl_bumper_init (GstGLBumper* bumper,
     bumper->bumpmap = 0;
     bumper->bumpmap_width = 0;
     bumper->bumpmap_height = 0;
-    bumper->pixbuf = NULL;
     bumper->location = NULL;
 }
 

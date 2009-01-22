@@ -22,7 +22,6 @@
 #define _GST_GL_BUMPER_H_
 
 #include <gstglfilter.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
 
@@ -43,7 +42,6 @@ struct _GstGLBumper
   GLuint bumpmap;
   gint bumpmap_width;
   gint bumpmap_height;
-  GdkPixbuf *pixbuf;
   gchar *location;
 };
 
