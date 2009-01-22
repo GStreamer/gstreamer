@@ -114,10 +114,10 @@ mxf_metadata_base_resolve (MXFMetadataBase * self, MXFMetadataBase ** metadata)
 
   if (self->resolved == MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS)
     return TRUE;
-  else if (self->resolved == MXF_METADATA_BASE_RESOLVE_STATE_FAILURE)
+  else if (self->resolved != MXF_METADATA_BASE_RESOLVE_STATE_NONE)
     return FALSE;
 
-  self->resolved = TRUE;
+  self->resolved = MXF_METADATA_BASE_RESOLVE_STATE_RUNNING;;
 
   klass = MXF_METADATA_BASE_GET_CLASS (self);
 
@@ -150,6 +150,13 @@ mxf_metadata_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       memcpy (&self->parent.instance_uid, tag_data, 16);
       GST_DEBUG ("  instance uid = %s",
           mxf_ul_to_string (&self->parent.instance_uid, str));
+      break;
+    case 0x0102:
+      if (tag_size != 16)
+        goto error;
+      memcpy (&self->parent.generation_uid, tag_data, 16);
+      GST_DEBUG ("  generation uid = %s",
+          mxf_ul_to_string (&self->parent.generation_uid, str));
       break;
     default:
       ret =
@@ -327,13 +334,6 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
   gboolean ret = TRUE;
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x3b02:
       if (!mxf_timestamp_parse (&self->last_modified_date, tag_data, tag_size))
         goto error;
@@ -701,13 +701,6 @@ mxf_metadata_content_storage_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x1901:{
       guint32 len;
       guint i;
@@ -867,13 +860,6 @@ mxf_metadata_essence_container_data_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x2701:
       if (tag_size != 32)
         goto error;
@@ -996,13 +982,6 @@ mxf_metadata_generic_package_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x4401:
       if (tag_size != 32)
         goto error;
@@ -1401,13 +1380,6 @@ mxf_metadata_track_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x4801:
       if (tag_size != 4)
         goto error;
@@ -1702,13 +1674,6 @@ mxf_metadata_sequence_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x0201:
       if (tag_size != 16)
         goto error;
@@ -1837,13 +1802,6 @@ mxf_metadata_structural_component_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x0201:
       if (tag_size != 16)
         goto error;
@@ -2249,10 +2207,10 @@ mxf_metadata_dm_segment_resolve (MXFMetadataBase * m,
   while (*p) {
     current = *p;
 
-    /* TODO: if (MXF_IS_DM_FRAMEWORK (current) && */
-    if (mxf_ul_is_equal (&current->instance_uid, &self->dm_framework_uid)) {
+    if (MXF_IS_DESCRIPTIVE_METADATA_FRAMEWORK (current)
+        && mxf_ul_is_equal (&current->instance_uid, &self->dm_framework_uid)) {
       if (mxf_metadata_base_resolve (current, metadata)) {
-        self->dm_framework = current;
+        self->dm_framework = MXF_DESCRIPTIVE_METADATA_FRAMEWORK (current);
       }
       break;
     }
@@ -2318,13 +2276,6 @@ mxf_metadata_generic_descriptor_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
     case 0x2f01:{
       guint32 len;
       guint i;
@@ -2681,8 +2632,8 @@ mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -2835,8 +2786,8 @@ mxf_metadata_generic_sound_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -2970,8 +2921,8 @@ mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -3096,8 +3047,8 @@ mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -3160,8 +3111,8 @@ mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_data_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_data_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -3331,41 +3282,6 @@ mxf_metadata_multiple_descriptor_class_init (MXFMetadataMultipleDescriptorClass
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataLocator, mxf_metadata_locator,
     MXF_TYPE_METADATA);
 
-static gboolean
-mxf_metadata_locator_handle_tag (MXFMetadataBase * metadata,
-    MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
-    guint tag_size)
-{
-  MXFMetadataLocator *self = MXF_METADATA_LOCATOR (metadata);
-  gboolean ret = TRUE;
-#ifndef GST_DISABLE_GST_DEBUG
-  gchar str[48];
-#endif
-
-  switch (tag) {
-    case 0x0102:
-      if (tag_size != 16)
-        goto error;
-      memcpy (&self->generation_uid, tag_data, 16);
-      GST_DEBUG ("  generation uid = %s",
-          mxf_ul_to_string (&self->generation_uid, str));
-      break;
-    default:
-      ret =
-          MXF_METADATA_BASE_CLASS
-          (mxf_metadata_locator_parent_class)->handle_tag (metadata,
-          primer, tag, tag_data, tag_size);
-      break;
-  }
-
-  return ret;
-
-error:
-  GST_ERROR ("Invalid locator local tag 0x%04x of size %u", tag, tag_size);
-
-  return FALSE;
-}
-
 static void
 mxf_metadata_locator_init (MXFMetadataLocator * self)
 {
@@ -3374,9 +3290,6 @@ mxf_metadata_locator_init (MXFMetadataLocator * self)
 static void
 mxf_metadata_locator_class_init (MXFMetadataLocatorClass * klass)
 {
-  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
-
-  metadata_base_class->handle_tag = mxf_metadata_locator_handle_tag;
 }
 
 G_DEFINE_TYPE (MXFMetadataTextLocator, mxf_metadata_text_locator,
@@ -3486,4 +3399,126 @@ mxf_metadata_network_locator_class_init (MXFMetadataNetworkLocatorClass * klass)
 
   miniobject_class->finalize = mxf_metadata_network_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_network_locator_handle_tag;
+}
+
+G_DEFINE_ABSTRACT_TYPE (MXFDescriptiveMetadata, mxf_descriptive_metadata,
+    MXF_TYPE_METADATA_BASE);
+
+static void
+mxf_descriptive_metadata_init (MXFDescriptiveMetadata * self)
+{
+}
+
+static void
+mxf_descriptive_metadata_class_init (MXFDescriptiveMetadataClass * klass)
+{
+}
+
+typedef struct
+{
+  guint8 scheme;
+  GSList *sets;
+} _MXFDescriptiveMetadataScheme;
+
+static GSList *_dm_schemes = NULL;
+
+void
+mxf_descriptive_metadata_register (guint8 scheme, GSList * sets)
+{
+  _MXFDescriptiveMetadataScheme *s =
+      g_slice_new (_MXFDescriptiveMetadataScheme);
+
+  s->scheme = scheme;
+  s->sets = sets;
+  _dm_schemes = g_slist_prepend (_dm_schemes, s);
+}
+
+MXFDescriptiveMetadata *
+mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
+    MXFPrimerPack * primer, const guint8 * data, guint size)
+{
+  GSList *l;
+  GType t = G_TYPE_INVALID;
+  _MXFDescriptiveMetadataScheme *s = NULL;
+  MXFDescriptiveMetadata *ret = NULL;
+
+  g_return_val_if_fail (type != 0, NULL);
+  g_return_val_if_fail (primer != NULL, NULL);
+
+  for (l = _dm_schemes; l; l = l->next) {
+    _MXFDescriptiveMetadataScheme *data = l->data;
+
+    if (data->scheme == scheme) {
+      s = data;
+      break;
+    }
+  }
+
+  if (s == NULL) {
+    GST_WARNING ("Descriptive metadata scheme 0x%02x not supported", scheme);
+    return NULL;
+  }
+
+  for (l = s->sets; l; l = l->next) {
+    MXFDescriptiveMetadataSet *set = l->data;
+
+    if (set->id == type) {
+      t = set->type;
+      break;
+    } else if (set->id == 0x000000) {
+      t = set->type;
+    }
+  }
+
+  if (t == G_TYPE_INVALID) {
+    GST_WARNING
+        ("No handler for type 0x%06x of descriptive metadata scheme 0x%02x found",
+        type, scheme);
+    return NULL;
+  }
+
+  ret = (MXFDescriptiveMetadata *) g_type_create_instance (t);
+  if (!mxf_metadata_base_parse (MXF_METADATA_BASE (ret), primer, data, size)) {
+    GST_ERROR ("Parsing metadata failed");
+    gst_mini_object_unref ((GstMiniObject *) ret);
+    return NULL;
+  }
+
+  ret->type = type;
+
+  return ret;
+}
+
+/* TODO: Remove this once we depend on GLib 2.14 */
+#if GLIB_CHECK_VERSION (2, 14, 0)
+#define __gst_once_init_enter(val) (g_once_init_enter (val))
+#define __gst_once_init_leave(val,newval) (g_once_init_leave (val, newval))
+#endif
+
+GType
+mxf_descriptive_metadata_framework_get_type (void)
+{
+  static volatile gsize type = 0;
+  if (__gst_once_init_enter (&type)) {
+    GType _type = 0;
+    static const GTypeInfo info = {
+      sizeof (MXFDescriptiveMetadataFrameworkInterface),
+      NULL,                     /* base_init */
+      NULL,                     /* base_finalize */
+      NULL,                     /* class_init */
+      NULL,                     /* class_finalize */
+      NULL,                     /* class_data */
+      0,                        /* instance_size */
+      0,                        /* n_preallocs */
+      NULL                      /* instance_init */
+    };
+    _type = g_type_register_static (G_TYPE_INTERFACE,
+        "MXFDescriptiveMetadataFrameworkInterface", &info, 0);
+
+    g_type_interface_add_prerequisite (_type, MXF_TYPE_DESCRIPTIVE_METADATA);
+
+    __gst_once_init_leave (&type, (gsize) _type);
+  }
+
+  return (GType) type;
 }

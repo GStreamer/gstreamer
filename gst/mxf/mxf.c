@@ -31,6 +31,7 @@
 #include "mxfd10.h"
 #include "mxfup.h"
 #include "mxfvc3.h"
+#include "mxfdms1.h"
 
 GST_DEBUG_CATEGORY (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -47,6 +48,7 @@ plugin_init (GstPlugin * plugin)
   mxf_d10_init ();
   mxf_up_init ();
   mxf_vc3_init ();
+  mxf_dms1_initialize ();
 
   if (!gst_element_register (plugin, "mxfdemux", GST_RANK_PRIMARY,
           GST_TYPE_MXF_DEMUX))

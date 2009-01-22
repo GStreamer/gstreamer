@@ -333,16 +333,45 @@ typedef struct _MXFMetadataTextLocator MXFMetadataTextLocator;
 typedef MXFMetadataBaseClass MXFMetadataTextLocatorClass;
 GType mxf_metadata_text_locator_get_type (void);
 
+#define MXF_TYPE_DESCRIPTIVE_METADATA \
+  (mxf_descriptive_metadata_get_type())
+#define MXF_DESCRIPTIVE_METADATA(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),MXF_TYPE_DESCRIPTIVE_METADATA,MXFDescriptiveMetadata))
+#define MXF_IS_DESCRIPTIVE_METADATA(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_DESCRIPTIVE_METADATA))
+#define MXF_DESCRIPTIVE_METADATA_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), MXF_TYPE_DESCRIPTIVE_METADATA, MXFDescriptiveMetadataClass))
+#define MXF_DESCRIPTIVE_METADATA_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),MXF_TYPE_DESCRIPTIVE_METADATA,MXFDescriptiveMetadataClass))
+typedef struct _MXFDescriptiveMetadata MXFDescriptiveMetadata;
+typedef struct _MXFDescriptiveMetadataClass MXFDescriptiveMetadataClass;
+GType mxf_descriptive_metadata_get_type (void);
+
+#define MXF_TYPE_DESCRIPTIVE_METADATA_FRAMEWORK \
+  (mxf_descriptive_metadata_framework_get_type ())
+#define MXF_DESCRIPTIVE_METADATA_FRAMEWORK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), MXF_TYPE_DESCRIPTIVE_METADATA_FRAMEWORK, MXFDescriptiveMetadataFramework))
+#define MXF_IS_DESCRIPTIVE_METADATA_FRAMEWORK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), MXF_TYPE_DESCRIPTIVE_METADATA_FRAMEWORK))
+#define MXF_DESCRIPTIVE_METADATA_FRAMEWORK_GET_INTERFACE(inst) \
+  (G_TYPE_INSTANCE_GET_INTERFACE ((inst), MXF_TYPE_DESCRIPTIVE_METADATA_FRAMEWORK, MXFDescriptiveMetadataFrameworkInterface))
+
+typedef struct _MXFDescriptiveMetadataFramework MXFDescriptiveMetadataFramework; /* dummy object */
+typedef struct _MXFDescriptiveMetadataFrameworkInterface MXFDescriptiveMetadataFrameworkInterface;
+GType mxf_descriptive_metadata_framework_get_type (void);
+
 typedef enum {
   MXF_METADATA_BASE_RESOLVE_STATE_NONE = 0,
   MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS,
-  MXF_METADATA_BASE_RESOLVE_STATE_FAILURE
+  MXF_METADATA_BASE_RESOLVE_STATE_FAILURE,
+  MXF_METADATA_BASE_RESOLVE_STATE_RUNNING
 } MXFMetadataBaseResolveState;
 
 struct _MXFMetadataBase {
   GstMiniObject parent;
 
   MXFUL instance_uid;
+  MXFUL generation_uid;
 
   MXFMetadataBaseResolveState resolved;
 
@@ -364,8 +393,6 @@ struct _MXFMetadata {
 
 struct _MXFMetadataPreface {
   MXFMetadata parent;
-
-  MXFUL generation_uid;
 
   MXFTimestamp last_modified_date;
   guint16 version;
@@ -415,8 +442,6 @@ struct _MXFMetadataIdentification {
 struct _MXFMetadataContentStorage {
   MXFMetadata parent;
 
-  MXFUL generation_uid;
-
   guint32 n_packages;
   MXFUL *packages_uids;
   MXFMetadataGenericPackage **packages;
@@ -429,8 +454,6 @@ struct _MXFMetadataContentStorage {
 struct _MXFMetadataEssenceContainerData {
   MXFMetadata parent;
 
-  MXFUL generation_uid;
-
   MXFUMID linked_package_uid;
   MXFMetadataSourcePackage *linked_package;
 
@@ -440,8 +463,6 @@ struct _MXFMetadataEssenceContainerData {
 
 struct _MXFMetadataGenericPackage {
   MXFMetadata parent;
-
-  MXFUL generation_uid;
 
   MXFUMID package_uid;
 
@@ -486,8 +507,6 @@ typedef enum {
 struct _MXFMetadataTrack {
   MXFMetadata parent;
 
-  MXFUL generation_uid;
-
   guint32 track_id;
   guint32 track_number;
 
@@ -519,8 +538,6 @@ struct _MXFMetadataEventTrack {
 struct _MXFMetadataSequence {
   MXFMetadata parent;
 
-  MXFUL generation_uid;
-
   MXFUL data_definition;
 
   gint64 duration;
@@ -532,8 +549,6 @@ struct _MXFMetadataSequence {
 
 struct _MXFMetadataStructuralComponent {
   MXFMetadata parent;
-
-  MXFUL generation_uid;
 
   MXFUL data_definition;
   gint64 duration;
@@ -574,13 +589,11 @@ struct _MXFMetadataDMSegment {
   guint32 *track_ids;
       
   MXFUL dm_framework_uid;
-  MXFMetadataBase *dm_framework;
+  MXFDescriptiveMetadataFramework *dm_framework;
 };
 
 struct _MXFMetadataGenericDescriptor {
   MXFMetadata parent;
-
-  MXFUL generation_uid;
 
   guint32 n_locators;
   MXFUL *locators_uids;
@@ -698,8 +711,6 @@ struct _MXFMetadataMultipleDescriptor {
 
 struct _MXFMetadataLocator {
   MXFMetadata parent;
-
-  MXFUL generation_uid;
 };
 
 struct _MXFMetadataNetworkLocator {
@@ -714,6 +725,25 @@ struct _MXFMetadataTextLocator {
   gchar *locator_name;
 };
 
+typedef struct {
+  guint32 id;
+  GType type;
+} MXFDescriptiveMetadataSet;
+
+struct _MXFDescriptiveMetadata {
+  MXFMetadataBase parent;
+
+  guint32 type;
+};
+
+struct _MXFDescriptiveMetadataClass {
+  MXFMetadataBase parent;
+};
+
+struct _MXFDescriptiveMetadataFrameworkInterface {
+  GTypeInterface parent;
+};
+
 gboolean mxf_metadata_base_parse (MXFMetadataBase *self, MXFPrimerPack *primer, const guint8 *data, guint size);
 gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, MXFMetadataBase **metadata);
 
@@ -725,5 +755,8 @@ MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL * track_id
 
 void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
 void mxf_metadata_generic_sound_essence_descriptor_set_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
+
+void mxf_descriptive_metadata_register (guint8 scheme, GSList *sets);
+MXFDescriptiveMetadata * mxf_descriptive_metadata_new (guint8 scheme, guint32 type, MXFPrimerPack * primer, const guint8 * data, guint size);
 
 #endif /* __MXF_METADATA_H__ */

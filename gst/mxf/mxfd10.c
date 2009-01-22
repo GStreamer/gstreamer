@@ -173,15 +173,15 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
-    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
-          parent.descriptor[i];
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     }
   }

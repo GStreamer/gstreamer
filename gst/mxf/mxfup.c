@@ -222,19 +222,19 @@ mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->
-            parent.descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
-      r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
-      break;
-    } else if (MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
+    if (MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
             descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
-      c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
+      r = (MXFMetadataRGBAPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
+      break;
+    } else if (MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
+      c = (MXFMetadataCDCIPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
     }
   }
 

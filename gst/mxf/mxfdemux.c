@@ -558,11 +558,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -908,6 +908,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
   guint32 type;
   guint8 scheme;
   GstFlowReturn ret = GST_FLOW_OK;
+  MXFDescriptiveMetadata *m = NULL;
 
   scheme = GST_READ_UINT8 (key->u + 12);
   type = GST_READ_UINT24_BE (key->u + 13);
@@ -933,13 +934,22 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
-  switch (type) {
-    default:
-      GST_WARNING_OBJECT (demux,
-          "Unknown or unhandled descriptive metadata of scheme 0x%02x and type 0x%06x",
-          scheme, type);
-      break;
+
+  m = mxf_descriptive_metadata_new (scheme, type, &demux->primer,
+      GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+
+  if (!m) {
+    GST_WARNING_OBJECT (demux,
+        "Unknown or unhandled descriptive metadata of scheme 0x%02x and type 0x%06x",
+        scheme, type);
+    return GST_FLOW_OK;
   }
+
+  if (!demux->metadata)
+    demux->metadata = g_ptr_array_new ();
+
+  g_ptr_array_add (demux->metadata, m);
+
 
   return ret;
 }
@@ -975,8 +985,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   GST_DEBUG_OBJECT (demux, "Switching to component %u", pad->current_component);
 
   pad->component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component]);
   if (pad->component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -984,8 +994,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->component->source_package
       || !pad->component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->source_package)->
+      tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
