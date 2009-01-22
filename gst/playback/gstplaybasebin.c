@@ -483,8 +483,9 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
 
     setup_substreams (play_base_bin);
     GST_DEBUG_OBJECT (play_base_bin, "Emitting signal");
-    res = GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->
-        setup_output_pads (play_base_bin, group);
+    res =
+        GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->setup_output_pads
+        (play_base_bin, group);
     GST_DEBUG_OBJECT (play_base_bin, "done");
 
     GROUP_UNLOCK (play_base_bin);
@@ -869,13 +870,14 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), preroll);
     GST_DEBUG_OBJECT (play_base_bin, "Attaching probe to pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
-    gst_object_unref (sinkpad);
     g_object_set_data (G_OBJECT (preroll), "probe", GINT_TO_POINTER (id));
 
     /* catch eos and flush events so that we can ignore underruns */
     id = gst_pad_add_event_probe (sinkpad, G_CALLBACK (check_queue_event),
         preroll);
     g_object_set_data (G_OBJECT (preroll), "eos_probe", GINT_TO_POINTER (id));
+
+    gst_object_unref (sinkpad);
 
     /* When we connect this queue, it will start running and immediatly
      * fire an underrun. */
@@ -1216,8 +1218,9 @@ probe_triggered (GstPad * pad, GstEvent * event, gpointer user_data)
       setup_substreams (play_base_bin);
       GST_DEBUG ("switching to next group %p - emitting signal", group);
       /* and signal the new group */
-      res = GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->
-          setup_output_pads (play_base_bin, group);
+      res =
+          GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->setup_output_pads
+          (play_base_bin, group);
 
       GROUP_UNLOCK (play_base_bin);
 
