@@ -37,8 +37,8 @@
 #include "config.h"
 #endif
 
-#include "gstglbumper.h"
 #include <png.h>
+#include "gstglbumper.h"
 
 #define GST_CAT_DEFAULT gst_gl_bumper_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -154,16 +154,15 @@ gst_gl_bumper_init_resources (GstGLFilter *filter)
 {
   GstGLBumper *bumper = GST_GL_BUMPER (filter);
   GstGLDisplay *display = filter->display;
-  GError *error = NULL;
 
   png_structp png_ptr;
   png_infop info_ptr;
-  unsigned int sig_read = 0;
+  guint sig_read = 0;
   png_uint_32 width = 0;
   png_uint_32 height = 0;
-  int bit_depth = 0;
-  int color_type = 0;
-  int interlace_type = 0;
+  gint bit_depth = 0;
+  gint color_type = 0;
+  gint interlace_type = 0;
   png_FILE_p fp = NULL;
   guint y = 0;
   guchar *raw_data = NULL;

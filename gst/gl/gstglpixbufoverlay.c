@@ -36,9 +36,9 @@
 #include "config.h"
 #endif
 
+#include <png.h>
 #include <gstglfilter.h>
 #include <gstgleffectssources.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #define GST_TYPE_GL_PIXBUFOVERLAY            (gst_gl_pixbufoverlay_get_type())
 #define GST_GL_PIXBUFOVERLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_PIXBUFOVERLAY,GstGLPixbufOverlay))
@@ -54,8 +54,8 @@ struct _GstGLPixbufOverlay
   gchar *location;
   gboolean pbuf_has_changed;
 
-  GdkPixbuf *pixbuf;
-  gfloat width, height;
+  guchar *pixbuf;
+  gint width, height;
   GLuint pbuftexture;
 
 //  gboolean stretch;
@@ -88,6 +88,8 @@ static void gst_gl_pixbufoverlay_reset_resources (GstGLFilter* filter);
 
 static gboolean gst_gl_pixbufoverlay_filter (GstGLFilter * filter,
 				       GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+
+static gboolean gst_gl_pixbufoverlay_loader (GstGLFilter* filter);
 
 static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
   "Gstreamer OpenGL PixbufOverlay",
@@ -191,8 +193,8 @@ gst_gl_pixbufoverlay_draw_texture (GstGLPixbufOverlay * pixbufoverlay, GLuint te
   if (pixbufoverlay->pbuftexture == 0) return;
 
 //  if (pixbufoverlay->stretch) {
-    width = pixbufoverlay->width;
-    height = pixbufoverlay->height;
+    width = (gfloat) pixbufoverlay->width;
+    height = (gfloat) pixbufoverlay->height;
 //  }
 
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -235,7 +237,7 @@ gst_gl_pixbufoverlay_init (GstGLPixbufOverlay * pixbufoverlay,
 static void
 gst_gl_pixbufoverlay_reset_resources (GstGLFilter* filter)
 {
-//  GstGLPixbufOverlay* pixbufoverlay = GST_GL_PIXBUFOVERLAY(filter);
+  // GstGLPixbufOverlay* pixbufoverlay = GST_GL_PIXBUFOVERLAY(filter);
 }
 
 static void
@@ -301,13 +303,17 @@ static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
 {
   GstGLPixbufOverlay *pixbufoverlay = GST_GL_PIXBUFOVERLAY (data);
   
-  glDeleteTextures (1, &pixbufoverlay->pbuftexture);
-  glGenTextures (1, &pixbufoverlay->pbuftexture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-                (gint)pixbufoverlay->width, (gint)pixbufoverlay->height, 0,
-                gdk_pixbuf_get_has_alpha (pixbufoverlay->pixbuf) ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE, gdk_pixbuf_get_pixels (pixbufoverlay->pixbuf));
+  if (pixbufoverlay->pixbuf) {
+
+    glDeleteTextures (1, &pixbufoverlay->pbuftexture);
+    glGenTextures (1, &pixbufoverlay->pbuftexture);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
+    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+                  (gint)pixbufoverlay->width, (gint)pixbufoverlay->height, 0,
+                  GL_RGB, GL_UNSIGNED_BYTE, pixbufoverlay->pixbuf); //FIXME: RGBA
+  }
+  else
+    display->isAlive = FALSE;
 }
 
 static gboolean
@@ -315,24 +321,112 @@ gst_gl_pixbufoverlay_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
 {
   GstGLPixbufOverlay* pixbufoverlay = GST_GL_PIXBUFOVERLAY(filter);
-  GError *error = NULL;
 
   if (pixbufoverlay->pbuf_has_changed && (pixbufoverlay->location != NULL)) {
-    pixbufoverlay->pixbuf = gdk_pixbuf_new_from_file (pixbufoverlay->location, &error);
-    if (pixbufoverlay->pixbuf != NULL) {
-      pixbufoverlay->width = (gfloat) gdk_pixbuf_get_width (pixbufoverlay->pixbuf);
-      pixbufoverlay->height = (gfloat) gdk_pixbuf_get_height (pixbufoverlay->pixbuf);
+
+      if (pixbufoverlay->pixbuf) {
+        free (pixbufoverlay->pixbuf);
+        pixbufoverlay->pixbuf = NULL;
+      }
+
+      if (!gst_gl_pixbufoverlay_loader (filter))
+        pixbufoverlay->pixbuf = NULL;
+      
+      /* if loader failed then display is turned off */
       gst_gl_display_thread_add (filter->display, init_pixbuf_texture, pixbufoverlay);
-      gdk_pixbuf_unref (pixbufoverlay->pixbuf);
-    } else {
-    if (error != NULL && error->message != NULL)
-      g_warning ("unable to load %s: %s", pixbufoverlay->location, error->message);
-    }
+
     pixbufoverlay->pbuf_has_changed = FALSE;
   }
   
   gst_gl_filter_render_to_target (filter, inbuf->texture, outbuf->texture,
 				  gst_gl_pixbufoverlay_callback, pixbufoverlay);
+
+  return TRUE;
+}
+
+static void 
+user_warning_fn(png_structp png_ptr, png_const_charp warning_msg)
+{
+    g_warning("%s\n", warning_msg);
+}
+
+#define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", pixbufoverlay->location, msg); return FALSE; }
+
+static gboolean
+gst_gl_pixbufoverlay_loader (GstGLFilter* filter)
+{
+  GstGLPixbufOverlay* pixbufoverlay = GST_GL_PIXBUFOVERLAY(filter);
+  GstGLDisplay *display = filter->display;
+
+  png_structp png_ptr;
+  png_infop info_ptr;
+  guint sig_read = 0;
+  png_uint_32 width = 0;
+  png_uint_32 height = 0;
+  gint bit_depth = 0;
+  gint color_type = 0;
+  gint interlace_type = 0;
+  png_FILE_p fp = NULL;
+  guint y = 0;
+  guchar **rows = NULL;
+
+  if (!filter->display)
+    return TRUE;
+
+  if ((fp = fopen(pixbufoverlay->location, "rb")) == NULL)
+    LOAD_ERROR ("file not found");
+
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  if (png_ptr == NULL)
+  {
+    fclose(fp);
+    LOAD_ERROR ("failed to initialize the png_struct");
+  }
+
+  png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
+
+  info_ptr = png_create_info_struct(png_ptr);
+  if (info_ptr == NULL)
+  {
+    fclose(fp);
+    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+    LOAD_ERROR ("failed to initialize the memory for image information");
+  }
+
+  png_init_io(png_ptr, fp);
+
+  png_set_sig_bytes(png_ptr, sig_read);
+
+  png_read_info(png_ptr, info_ptr);
+
+  png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+     &interlace_type, int_p_NULL, int_p_NULL);
+
+  if (color_type != PNG_COLOR_TYPE_RGB) //FIXME: RGBA
+  {
+    fclose(fp);
+    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+    LOAD_ERROR ("color type is not rgb");
+  }
+
+  pixbufoverlay->width = width;
+  pixbufoverlay->height = height;
+
+  pixbufoverlay->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 3 );
+
+  rows = (guchar**)malloc(sizeof(guchar*) * height);
+
+  for (y = 0;  y < height; ++y)
+    rows[y] = (guchar*) (pixbufoverlay->pixbuf + y * width * 3);
+
+  png_read_image(png_ptr, rows);
+
+  free(rows);
+
+  png_read_end(png_ptr, info_ptr);
+  png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+  fclose(fp);
 
   return TRUE;
 }
