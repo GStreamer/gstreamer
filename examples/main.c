@@ -40,29 +40,19 @@ main (int argc, char *argv[])
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
 
-  /* make a media factory for a webcam. The default media factory can use
-   * gst-launch syntax to create pipelines. */
-  factory = gst_rtsp_media_factory_new ();
-#if 0
-  gst_rtsp_media_factory_set_launch (factory, "( "
-    "v4l2src ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
-    "queue ! videorate ! ffmpegcolorspace ! "
-    "x264enc bitrate=300 ! rtph264pay name=pay0 pt=96 "
-    "alsasrc ! audio/x-raw-int,rate=8000 ! queue ! "
-    "amrnbenc ! rtpamrpay name=pay1 pt=97 "
-    ")");
-#endif
-  /* any launch line works as long as it contains elements named pay%d. Each
+  /* make a media factory for a test stream. The default media factory can use
+   * gst-launch syntax to create pipelines. 
+   * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
+  factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, "( "
     "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
     "x264enc bitrate=300 ! rtph264pay name=pay0 pt=96 "
     "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
     "alawenc ! rtppcmapay name=pay1 pt=97 "
     ")");
-
-  /* attach the factory to the /camera url */
-  gst_rtsp_media_mapping_add_factory (mapping, "/camera", factory);
+  /* attach the test factory to the /test url */
+  gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mapping);
