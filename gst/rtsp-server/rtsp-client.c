@@ -25,6 +25,8 @@
 
 #undef DEBUG
 
+static void gst_rtsp_client_finalize (GObject * obj);
+
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
 static void
@@ -33,11 +35,19 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->finalize = gst_rtsp_client_finalize;
 }
 
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
+}
+
+static void
+gst_rtsp_client_finalize (GObject * obj)
+{
+  G_OBJECT_CLASS (gst_rtsp_client_parent_class)->finalize (obj);
 }
 
 /**
@@ -87,7 +97,7 @@ handle_teardown_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
     goto service_unavailable;
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, client->media);
+  media = gst_rtsp_session_get_media (session, uri, client->factory);
   if (!media)
     goto not_found;
 
@@ -116,6 +126,7 @@ session_not_found:
   }
 service_unavailable:
   {
+    handle_generic_response (client, GST_RTSP_STS_OK, request);
     return FALSE;
   }
 not_found:
@@ -145,7 +156,7 @@ handle_pause_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
     goto service_unavailable;
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, client->media);
+  media = gst_rtsp_session_get_media (session, uri, client->factory);
   if (!media)
     goto not_found;
 
@@ -201,7 +212,7 @@ handle_play_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *r
     goto service_unavailable;
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, client->media);
+  media = gst_rtsp_session_get_media (session, uri, client->factory);
   if (!media)
     goto not_found;
 
@@ -222,11 +233,11 @@ handle_play_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *r
 
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
-  n_streams = gst_rtsp_media_n_streams (client->media);
+  n_streams = gst_rtsp_media_bin_n_streams (media->mediabin);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;
 
-    stream = gst_rtsp_media_get_stream (client->media, i);
+    stream = gst_rtsp_media_bin_get_stream (media->mediabin, i);
 
     g_object_get (G_OBJECT (stream->payloader), "seqnum", &seqnum, NULL);
     g_object_get (G_OBJECT (stream->payloader), "timestamp", &timestamp, NULL);
@@ -271,7 +282,7 @@ not_found:
 }
 
 static gboolean
-handle_setup_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *request)
+handle_setup_response (GstRTSPClient *client, const gchar *location, GstRTSPMessage *request)
 {
   GstRTSPResult res;
   gchar *sessid;
@@ -279,6 +290,7 @@ handle_setup_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
   gchar **transports;
   gboolean have_transport;
   GstRTSPTransport *ct, *st;
+  GstRTSPUrl *uri;
   GstRTSPSession *session;
   gint i;
   GstRTSPLowerTrans supported;
@@ -290,9 +302,28 @@ handle_setup_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
   GstRTSPSessionMedia *media;
   gboolean need_session;
 
+  /* the uri contains the stream number we added in the SDP config, which is
+   * always /stream=%d so we need to strip that off */
+  if ((res = gst_rtsp_url_parse (location, &uri)) != GST_RTSP_OK)
+    goto bad_url;
+
+  /* parse the stream we need to configure, look for the stream in the abspath
+   * first and then in the query. */
+  if (!(pos = strstr (uri->abspath, "/stream="))) {
+    if (!(pos = strstr (uri->query, "/stream=")))
+      goto bad_request;
+  }
+
+  /* we can mofify the parse uri in place */
+  *pos = '\0';
+
+  pos += strlen ("/stream=");
+  if (sscanf (pos, "%u", &streamid) != 1)
+    goto bad_request;
+
   /* find the media associated with the uri */
-  if (client->media == NULL) {
-    if ((client->media = gst_rtsp_media_new (uri)) == NULL)
+  if (client->factory == NULL) {
+    if ((client->factory = gst_rtsp_media_mapping_find_factory (client->mapping, uri)) == NULL)
       goto not_found;
   }
 
@@ -351,20 +382,12 @@ handle_setup_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
   }
 
   /* get a handle to the configuration of the media in the session */
-  media = gst_rtsp_session_get_media (session, client->media);
+  media = gst_rtsp_session_get_media (session, uri->abspath, client->factory);
   if (!media)
     goto not_found;
 
-  /* parse the stream we need to configure */
-  if (!(pos = strstr (uri, "stream=")))
-    goto bad_request;
-
-  pos += strlen ("stream=");
-  if (sscanf (pos, "%u", &streamid) != 1)
-    goto bad_request;
-
   /* get a handle to the stream in the media */
-  stream = gst_rtsp_session_get_stream (media, streamid);
+  stream = gst_rtsp_session_media_get_stream (media, streamid);
 
   /* setup the server transport from the client transport */
   st = gst_rtsp_session_stream_set_transport (stream, inet_ntoa (client->address.sin_addr), ct);
@@ -387,14 +410,19 @@ handle_setup_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *
   return TRUE;
 
   /* ERRORS */
-not_found:
+bad_url:
   {
-    handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
     return FALSE;
   }
 bad_request:
   {
     handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
+    return FALSE;
+  }
+not_found:
+  {
+    handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
     return FALSE;
   }
 session_not_found:
@@ -414,46 +442,58 @@ service_unavailable:
   }
 }
 
+/* for the describe we must generate an SDP */
 static gboolean
-handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessage *request)
+handle_describe_response (GstRTSPClient *client, const gchar *location, GstRTSPMessage *request)
 {
   GstRTSPMessage response = { 0 };
+  GstRTSPResult res;
   GstSDPMessage *sdp;
+  GstRTSPUrl *uri;
   guint n_streams, i;
   gchar *sdptext;
-  GstRTSPMedia *media;
-  GstElement *pipeline = NULL;
+  GstRTSPMediaFactory *factory;
+  GstRTSPMediaBin *mediabin;
+  GstElement *pipeline;
+
+  /* the uri contains the stream number we added in the SDP config, which is
+   * always /stream=%d so we need to strip that off */
+  if ((res = gst_rtsp_url_parse (location, &uri)) != GST_RTSP_OK)
+    goto bad_url;
+
+  /* find the factory for the uri first */
+  if (!(factory = gst_rtsp_media_mapping_find_factory (client->mapping, uri)))
+    goto no_factory;
 
   /* check what kind of format is accepted */
 
+  /* create a pipeline to preroll the media */
+  pipeline = gst_pipeline_new ("client-describe-pipeline");
 
-  /* for the describe we must generate an SDP */
-  if (!(media = gst_rtsp_media_new (uri)))
-    goto no_media;
-
-  /* create a pipeline if we have to */
-  if (pipeline == NULL) {
-    pipeline = gst_pipeline_new ("client-pipeline");
-  }
-
-  /* prepare the media into the pipeline */
-  if (!gst_rtsp_media_prepare (media, GST_BIN (pipeline)))
-    goto no_media;
+  /* prepare the media and add it to the pipeline */
+  if (!(mediabin = gst_rtsp_media_factory_construct (factory, uri->abspath)))
+    goto no_media_bin;
+  
+  gst_bin_add (GST_BIN_CAST (pipeline), mediabin->element);
 
   /* link fakesink to all stream pads and set the pipeline to PLAYING */
-  n_streams = gst_rtsp_media_n_streams (media);
+  n_streams = gst_rtsp_media_bin_n_streams (mediabin);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;
     GstElement *sink;
     GstPad *sinkpad;
+    GstPadLinkReturn lret;
 
-    stream = gst_rtsp_media_get_stream (media, i);
+    stream = gst_rtsp_media_bin_get_stream (mediabin, i);
 
     sink = gst_element_factory_make ("fakesink", NULL);
     gst_bin_add (GST_BIN (pipeline), sink);
 
     sinkpad = gst_element_get_static_pad (sink, "sink");
-    gst_pad_link (stream->srcpad, sinkpad);
+    lret = gst_pad_link (stream->srcpad, sinkpad);
+    if (lret != GST_PAD_LINK_OK) {
+      g_warning ("failed to link pad to sink: %d", lret);
+    }
     gst_object_unref (sinkpad);
   }
 
@@ -487,7 +527,7 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
     gboolean first;
     GString *fmtp;
 
-    stream = gst_rtsp_media_get_stream (media, i);
+    stream = gst_rtsp_media_bin_get_stream (mediabin, i);
     gst_sdp_media_new (&smedia);
 
     s = gst_caps_get_structure (stream->caps, 0);
@@ -572,7 +612,7 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
   /* go back to NULL */
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  g_object_unref (media);
+  g_object_unref (factory);
 
   gst_object_unref (pipeline);
   pipeline = NULL;
@@ -590,9 +630,20 @@ handle_describe_response (GstRTSPClient *client, const gchar *uri, GstRTSPMessag
   return TRUE;
 
   /* ERRORS */
-no_media:
+bad_url:
+  {
+    handle_generic_response (client, GST_RTSP_STS_BAD_REQUEST, request);
+    return FALSE;
+  }
+no_factory:
   {
     handle_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    return FALSE;
+  }
+no_media_bin:
+  {
+    handle_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, request);
+    g_object_unref (factory);
     return FALSE;
   }
 }
@@ -713,7 +764,8 @@ handle_client (GstRTSPClient *client)
   /* ERRORS */
 receive_failed:
   {
-    g_print ("receive failed, disconnect client %p\n", client);
+    g_message ("receive failed %d (%s), disconnect client %p", res, 
+	    gst_rtsp_strresult (res), client);
     gst_rtsp_connection_close (client->connection);
     g_object_unref (client);
     return NULL;
@@ -747,7 +799,7 @@ client_accept (GstRTSPClient *client, GIOChannel *channel)
    * connections */
   gst_poll_add_fd (conn->fdset, &conn->fd);
 
-  g_print ("added new client %p ip %s with fd %d\n", client,
+  g_message ("added new client %p ip %s with fd %d", client,
 	        inet_ntoa (client->address.sin_addr), conn->fd.fd);
 
   client->connection = conn;
@@ -769,7 +821,8 @@ accept_failed:
  * @pool: a #GstRTSPSessionPool
  *
  * Set @pool as the sessionpool for @client which it will use to find
- * or allocate sessions.
+ * or allocate sessions. the sessionpool is usually inherited from the server
+ * that created the client but can be overridden later.
  */
 void
 gst_rtsp_client_set_session_pool (GstRTSPClient *client, GstRTSPSessionPool *pool)
@@ -777,11 +830,13 @@ gst_rtsp_client_set_session_pool (GstRTSPClient *client, GstRTSPSessionPool *poo
   GstRTSPSessionPool *old;
 
   old = client->pool;
-  if (pool)
-    g_object_ref (pool);
-  client->pool = pool;
-  if (old)
-    g_object_unref (old);
+  if (old != pool) {
+    if (pool)
+      g_object_ref (pool);
+    client->pool = pool;
+    if (old)
+      g_object_unref (old);
+  }
 }
 
 /**
@@ -804,43 +859,44 @@ gst_rtsp_client_get_session_pool (GstRTSPClient *client)
 }
 
 /**
- * gst_rtsp_client_set_media_factory:
+ * gst_rtsp_client_set_media_mapping:
  * @client: a #GstRTSPClient
- * @factory: a #GstRTSPMediaFactory
+ * @mapping: a #GstRTSPMediaMapping
  *
- * Set @factory as the media factory for @client which it will use to map urls
- * to media streams.
+ * Set @mapping as the media mapping for @client which it will use to map urls
+ * to media streams. These mapping is usually inherited from the server that
+ * created the client but can be overriden later.
  */
 void
-gst_rtsp_client_set_media_factory (GstRTSPClient *client, GstRTSPMediaFactory *factory)
+gst_rtsp_client_set_media_mapping (GstRTSPClient *client, GstRTSPMediaMapping *mapping)
 {
-  GstRTSPMediaFactory *old;
+  GstRTSPMediaMapping *old;
 
-  old = client->factory;
+  old = client->mapping;
 
-  if (old != factory) {
-    if (factory)
-      g_object_ref (factory);
-    client->factory = factory;
+  if (old != mapping) {
+    if (mapping)
+      g_object_ref (mapping);
+    client->mapping = mapping;
     if (old)
       g_object_unref (old);
   }
 }
 
 /**
- * gst_rtsp_client_get_media_factory:
+ * gst_rtsp_client_get_media_mapping:
  * @client: a #GstRTSPClient
  *
- * Get the #GstRTSPMediaFactory object that @client uses to manage its sessions.
+ * Get the #GstRTSPMediaMapping object that @client uses to manage its sessions.
  *
- * Returns: a #GstRTSPMediaFactory, unref after usage.
+ * Returns: a #GstRTSPMediaMapping, unref after usage.
  */
-GstRTSPMediaFactory *
-gst_rtsp_client_get_media_factory (GstRTSPClient *client)
+GstRTSPMediaMapping *
+gst_rtsp_client_get_media_mapping (GstRTSPClient *client)
 {
-  GstRTSPMediaFactory *result;
+  GstRTSPMediaMapping *result;
 
-  if ((result = client->factory))
+  if ((result = client->mapping))
     g_object_ref (result);
 
   return result;

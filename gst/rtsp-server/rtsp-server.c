@@ -31,7 +31,7 @@ enum
   PROP_BACKLOG,
   PROP_PORT,
   PROP_POOL,
-  PROP_FACTORY,
+  PROP_MAPPING,
   PROP_LAST
 };
 
@@ -88,14 +88,14 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
       g_param_spec_object ("pool", "Pool", "The session pool to use for client session",
           GST_TYPE_RTSP_SESSION_POOL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPServer::factory
+   * GstRTSPServer::mapping
    *
-   * The media factory to use for this server. By default the server has no
-   * media factories and thus cannot map urls to media streams.
+   * The media mapping to use for this server. By default the server has no
+   * media mapping and thus cannot map urls to media streams.
    */
-  g_object_class_install_property (gobject_class, PROP_POOL,
-      g_param_spec_object ("factory", "Factory", "The media factory to use for client session",
-          GST_TYPE_RTSP_MEDIA_FACTORY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MAPPING,
+      g_param_spec_object ("mapping", "Mapping", "The media mapping to use for client session",
+          GST_TYPE_RTSP_MEDIA_MAPPING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->accept_client = gst_rtsp_server_accept_client;
 }
@@ -106,6 +106,7 @@ gst_rtsp_server_init (GstRTSPServer * server)
   server->server_port = DEFAULT_PORT;
   server->backlog = DEFAULT_BACKLOG;
   server->pool = gst_rtsp_session_pool_new ();
+  server->mapping = gst_rtsp_media_mapping_new ();
 }
 
 /**
@@ -202,13 +203,19 @@ gst_rtsp_server_get_backlog (GstRTSPServer *server)
 void
 gst_rtsp_server_set_session_pool (GstRTSPServer *server, GstRTSPSessionPool *pool)
 {
+  GstRTSPSessionPool *old;
+
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  if (server->pool)
-    g_object_unref (server->pool);
-  if (pool)
-    g_object_ref (pool);
-  server->pool = pool;
+  old = server->pool;
+
+  if (old != pool) {
+    if (pool)
+      g_object_ref (pool);
+    server->pool = pool;
+    if (old)
+      g_object_unref (old);
+  }
 }
 
 
@@ -235,25 +242,25 @@ gst_rtsp_server_get_session_pool (GstRTSPServer *server)
 }
 
 /**
- * gst_rtsp_server_set_media_factory:
+ * gst_rtsp_server_set_media_mapping:
  * @server: a #GstRTSPServer
- * @factory: a #GstRTSPMediaFactory
+ * @mapping: a #GstRTSPMediaMapping
  *
- * configure @factory to be used as the media factory of @server.
+ * configure @mapping to be used as the media mapping of @server.
  */
 void
-gst_rtsp_server_set_media_factory (GstRTSPServer *server, GstRTSPMediaFactory *factory)
+gst_rtsp_server_set_media_mapping (GstRTSPServer *server, GstRTSPMediaMapping *mapping)
 {
-  GstRTSPMediaFactory *old;
+  GstRTSPMediaMapping *old;
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  old = server->factory;
+  old = server->mapping;
 
-  if (old != factory) {
-    if (factory)
-      g_object_ref (factory);
-    server->factory = factory;
+  if (old != mapping) {
+    if (mapping)
+      g_object_ref (mapping);
+    server->mapping = mapping;
     if (old)
       g_object_unref (old);
   }
@@ -261,22 +268,22 @@ gst_rtsp_server_set_media_factory (GstRTSPServer *server, GstRTSPMediaFactory *f
 
 
 /**
- * gst_rtsp_server_get_media_factory:
+ * gst_rtsp_server_get_media_mapping:
  * @server: a #GstRTSPServer
  *
- * Get the #GstRTSPMediaFactory used as the media factory of @server.
+ * Get the #GstRTSPMediaMapping used as the media mapping of @server.
  *
- * Returns: the #GstRTSPMediaFactory of @server. g_object_unref() after
+ * Returns: the #GstRTSPMediaMapping of @server. g_object_unref() after
  * usage.
  */
-GstRTSPMediaFactory *
-gst_rtsp_server_get_media_factory (GstRTSPServer *server)
+GstRTSPMediaMapping *
+gst_rtsp_server_get_media_mapping (GstRTSPServer *server)
 {
-  GstRTSPMediaFactory *result;
+  GstRTSPMediaMapping *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  if ((result = server->factory))
+  if ((result = server->mapping))
     g_object_ref (result);
 
   return result;
@@ -298,8 +305,8 @@ gst_rtsp_server_get_property (GObject *object, guint propid,
     case PROP_POOL:
       g_value_take_object (value, gst_rtsp_server_get_session_pool (server));
       break;
-    case PROP_FACTORY:
-      g_value_take_object (value, gst_rtsp_server_get_media_factory (server));
+    case PROP_MAPPING:
+      g_value_take_object (value, gst_rtsp_server_get_media_mapping (server));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -322,8 +329,8 @@ gst_rtsp_server_set_property (GObject *object, guint propid,
     case PROP_POOL:
       gst_rtsp_server_set_session_pool (server, g_value_get_object (value));
       break;
-    case PROP_FACTORY:
-      gst_rtsp_server_set_media_factory (server, g_value_get_object (value));
+    case PROP_MAPPING:
+      gst_rtsp_server_set_media_mapping (server, g_value_get_object (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -440,7 +447,7 @@ gst_rtsp_server_accept_client (GstRTSPServer *server, GIOChannel *channel)
   gst_rtsp_client_set_session_pool (client, server->pool);
 
   /* set the session pool that this client should use */
-  gst_rtsp_client_set_media_factory (client, server->factory);
+  gst_rtsp_client_set_media_mapping (client, server->mapping);
 
   /* accept connections for that client, this function returns after accepting
    * the connection and will run the remainder of the communication with the

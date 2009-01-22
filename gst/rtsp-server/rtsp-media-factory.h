@@ -18,7 +18,6 @@
  */
 
 #include <gst/gst.h>
-
 #include <gst/rtsp/gstrtspurl.h>
 
 #include "rtsp-media.h"
@@ -28,7 +27,8 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTSP_MEDIA_FACTORY              (gst_rtsp_media_get_type ())
+/* types for the media factory */
+#define GST_TYPE_RTSP_MEDIA_FACTORY              (gst_rtsp_media_factory_get_type ())
 #define GST_IS_RTSP_MEDIA_FACTORY(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_MEDIA_FACTORY))
 #define GST_IS_RTSP_MEDIA_FACTORY_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_RTSP_MEDIA_FACTORY))
 #define GST_RTSP_MEDIA_FACTORY_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTSP_MEDIA_FACTORY, GstRTSPMediaFactoryClass))
@@ -42,33 +42,41 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 
 /**
  * GstRTSPMediaFactory:
+ * @launch: the launch description
+ * @streams: the array of #GstRTSPMediaStream objects for this media.
  *
- * Creates a #GstRTSPMedia object for a given url.
+ * The definition and logic for constructing the pipeline for a media. The media
+ * can contain multiple streams like audio and video.
  */
 struct _GstRTSPMediaFactory {
   GObject       parent;
+
+  gchar        *launch;
 };
 
+/**
+ * GstRTSPMediaFactoryClass:
+ * @construct: the vmethod that will be called when the factory has to create the
+ *       #GstRTSPMediaBin for @location.
+ *
+ * the #GstRTSPMediaFactory class structure.
+ */
 struct _GstRTSPMediaFactoryClass {
   GObjectClass  parent_class;
 
-  GstRTSPMedia * (*create_media)  (GstRTSPMediaFactory *factory, const gchar *url);
+  GstRTSPMediaBin * (*construct)   (GstRTSPMediaFactory *factory, const gchar *location);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);
 
-/* creating a factory */
+/* configuring the factory */
 GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void);
 
-/* creating a media */
-GstRTSPMedia *        gst_rtsp_media_factory_create       (GstRTSPMediaFactory *factory, const gchar *url);
+void                  gst_rtsp_media_factory_set_launch   (GstRTSPMediaFactory *factory, const gchar *launch);
+gchar *               gst_rtsp_media_factory_get_launch   (GstRTSPMediaFactory *factory);
 
-
-/* managing media GTypes to a path */
-void                  gst_rtsp_media_factory_add          (GstRTSPMediaFactory *factory, const gchar *path,
-                                                           GType type);
-void                  gst_rtsp_media_factory_remove       (GstRTSPMediaFactory *factory, const gchar *path,
-                                                           GType type);
+/* creating the media bin from the factory */
+GstRTSPMediaBin *     gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory, const gchar *location);
 
 G_END_DECLS
 

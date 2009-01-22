@@ -34,7 +34,7 @@
 #include <gst/gst.h>
 
 #include "rtsp-session-pool.h"
-#include "rtsp-media-factory.h"
+#include "rtsp-media-mapping.h"
 #include "rtsp-client.h"
 
 #ifndef __GST_RTSP_SERVER_H__
@@ -72,8 +72,8 @@ struct _GstRTSPServer {
   /* sessions on this server */
   GstRTSPSessionPool *pool;
 
-  /* media factory for this server */
-  GstRTSPMediaFactory *factory;
+  /* media mapper for this server */
+  GstRTSPMediaMapping *mapping;
 };
 
 /**
@@ -103,8 +103,8 @@ gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *serve
 void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
 GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
 
-void                  gst_rtsp_server_set_media_factory    (GstRTSPServer *server, GstRTSPMediaFactory *factory);
-GstRTSPMediaFactory * gst_rtsp_server_get_media_factory    (GstRTSPServer *server);
+void                  gst_rtsp_server_set_media_mapping    (GstRTSPServer *server, GstRTSPMediaMapping *mapping);
+GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
                                                            GstRTSPServer *server);

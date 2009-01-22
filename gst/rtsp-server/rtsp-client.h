@@ -38,7 +38,7 @@
 #define __GST_RTSP_CLIENT_H__
 
 #include "rtsp-media.h"
-#include "rtsp-media-factory.h"
+#include "rtsp-media-mapping.h"
 #include "rtsp-session-pool.h"
 
 G_BEGIN_DECLS
@@ -75,9 +75,8 @@ struct _GstRTSPClient {
 
   GstRTSPSessionPool *pool;
 
-  GstRTSPMedia *media;
-  GstRTSPMediaFactory *factory;
-
+  GstRTSPMediaFactory  *factory;
+  GstRTSPMediaMapping  *mapping;
 };
 
 struct _GstRTSPClientClass {
@@ -92,9 +91,9 @@ void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);
 GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 
-void                  gst_rtsp_client_set_media_factory (GstRTSPClient *client, 
-                                                         GstRTSPMediaFactory *factory);
-GstRTSPMediaFactory * gst_rtsp_client_get_media_factory (GstRTSPClient *client);
+void                  gst_rtsp_client_set_media_mapping (GstRTSPClient *client, 
+                                                         GstRTSPMediaMapping *mapping);
+GstRTSPMediaMapping * gst_rtsp_client_get_media_mapping (GstRTSPClient *client);
 
 gboolean              gst_rtsp_client_accept            (GstRTSPClient *client, 
                                                          GIOChannel *channel);

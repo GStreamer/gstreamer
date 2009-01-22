@@ -22,6 +22,7 @@
 #include <gst/rtsp/gstrtsptransport.h>
 
 #include "rtsp-media.h"
+#include "rtsp-media-factory.h"
 
 #ifndef __GST_RTSP_SESSION_H__
 #define __GST_RTSP_SESSION_H__
@@ -87,10 +88,11 @@ struct _GstRTSPSessionMedia
   GstRTSPSession *session;
 
   /* the media we are handling */
-  GstRTSPMedia *media;
+  GstRTSPMediaFactory *factory;
 
   /* the pipeline for the media */
   GstElement   *pipeline;
+  GstRTSPMediaBin *mediabin;
 
   /* RTP session manager */
   GstElement   *rtpbin;
@@ -125,14 +127,15 @@ GType                  gst_rtsp_session_get_type             (void);
 
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
 
-GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
-                                                              GstRTSPMedia *media);
-GstRTSPSessionStream * gst_rtsp_session_get_stream           (GstRTSPSessionMedia *media,
-                                                              guint idx);
+GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess, const gchar *location,
+                                                              GstRTSPMediaFactory *factory);
 
 GstStateChangeReturn   gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);
 GstStateChangeReturn   gst_rtsp_session_media_pause          (GstRTSPSessionMedia *media);
 GstStateChangeReturn   gst_rtsp_session_media_stop           (GstRTSPSessionMedia *media);
+
+GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedia *media,
+                                                              guint idx);
 
 GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
                                                               const gchar *destination,

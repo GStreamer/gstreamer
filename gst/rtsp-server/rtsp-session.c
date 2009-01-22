@@ -62,8 +62,8 @@ gst_rtsp_session_free_media (GstRTSPSessionMedia *media)
 
   gst_element_set_state (media->pipeline, GST_STATE_NULL);
 
-  if (media->media)
-    g_object_unref (media->media);
+  if (media->factory)
+    g_object_unref (media->factory);
 
   for (walk = media->streams; walk; walk = g_list_next (walk)) {
     GstRTSPSessionStream *stream = (GstRTSPSessionStream *) walk->data; 
@@ -98,14 +98,15 @@ gst_rtsp_session_finalize (GObject * obj)
 /**
  * gst_rtsp_session_get_media:
  * @sess: a #GstRTSPSession
- * @media: a #GstRTSPSessionMedia
+ * @location: the url for the media
+ * @factory: a #GstRTSPMediaFactory
  *
- * Get or create the session information for @media.
+ * Get or create the session information for @factory.
  *
- * Returns: the configuration for @media in @sess.
+ * Returns: the configuration for @factory in @sess.
  */
 GstRTSPSessionMedia *
-gst_rtsp_session_get_media (GstRTSPSession *sess, GstRTSPMedia *media)
+gst_rtsp_session_get_media (GstRTSPSession *sess, const gchar *location, GstRTSPMediaFactory *factory)
 {
   GstRTSPSessionMedia *result;
   GList *walk;
@@ -115,19 +116,22 @@ gst_rtsp_session_get_media (GstRTSPSession *sess, GstRTSPMedia *media)
   for (walk = sess->medias; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionMedia *) walk->data; 
 
-    if (result->media == media)
+    if (result->factory == factory)
       break;
 
     result = NULL;
   }
   if (result == NULL) {
     result = g_new0 (GstRTSPSessionMedia, 1);
-    result->media = media;
+    result->factory = factory;
     result->pipeline = gst_pipeline_new ("pipeline");
 
-    /* prepare media into the pipeline */
-    if (!gst_rtsp_media_prepare (media, GST_BIN (result->pipeline)))
+    /* construct media and add to the pipeline */
+    result->mediabin = gst_rtsp_media_factory_construct (factory, location);
+    if (result->mediabin == NULL)
       goto no_media;
+    
+    gst_bin_add (GST_BIN_CAST (result->pipeline), result->mediabin->element);
 
     result->rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
 
@@ -149,7 +153,7 @@ no_media:
 }
 
 /**
- * gst_rtsp_session_get_stream:
+ * gst_rtsp_session_media_get_stream:
  * @media: a #GstRTSPSessionMedia
  * @idx: the stream index
  *
@@ -159,7 +163,7 @@ no_media:
  * is unreffed.
  */
 GstRTSPSessionStream *
-gst_rtsp_session_get_stream (GstRTSPSessionMedia *media, guint idx)
+gst_rtsp_session_media_get_stream (GstRTSPSessionMedia *media, guint idx)
 {
   GstRTSPSessionStream *result;
   GList *walk;
@@ -178,7 +182,7 @@ gst_rtsp_session_get_stream (GstRTSPSessionMedia *media, guint idx)
     result = g_new0 (GstRTSPSessionStream, 1);
     result->idx = idx;
     result->media = media;
-    result->media_stream = gst_rtsp_media_get_stream (media->media, idx);
+    result->media_stream = gst_rtsp_media_bin_get_stream (media->mediabin, idx);
 
     media->streams = g_list_prepend (media->streams, result);
   }
