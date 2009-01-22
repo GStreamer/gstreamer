@@ -3010,13 +3010,13 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stream->min_duration = 0;
     time = 0;
     index = 0;
-    for (i = 0; i < n_sample_times; i++) {
+    for (i = 0; (i < n_sample_times) && (index < stream->n_samples); i++) {
       guint32 n;
       guint32 duration;
 
       n = QT_UINT32 ((guint8 *) stts->data + 16 + 8 * i);
       duration = QT_UINT32 ((guint8 *) stts->data + 16 + 8 * i + 4);
-      for (j = 0; j < n; j++) {
+      for (j = 0; (j < n) && (index < stream->n_samples); j++) {
         GST_DEBUG_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT,
             index, GST_TIME_ARGS (timestamp));
 
@@ -3044,7 +3044,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         for (i = 0; i < n_sample_syncs; i++) {
           /* note that the first sample is index 1, not 0 */
           index = QT_UINT32 ((guint8 *) stss->data + offset);
-          if (index > 0) {
+          if (index > 0 && index <= stream->n_samples) {
             samples[index - 1].keyframe = TRUE;
             offset += 4;
           }
@@ -3143,7 +3143,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
     for (i = 0, j = 0; (j < stream->n_samples) && (i < n_entries); i++) {
       count = QT_UINT32 (ctts_data + 16 + i * 8);
       soffset = QT_UINT32 (ctts_data + 20 + i * 8);
-      for (k = 0; k < count; k++, j++) {
+      for (k = 0; (k < count) && (j < stream->n_samples); k++, j++) {
         /* we operate with very small soffset values here, it shouldn't overflow */
         samples[j].pts_offset = soffset * GST_SECOND / stream->timescale;
       }
