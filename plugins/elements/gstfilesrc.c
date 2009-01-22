@@ -830,7 +830,8 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
     return GST_FLOW_ERROR;
   }
 
-  GST_LOG_OBJECT (src, "Reading %d bytes", length);
+  GST_LOG_OBJECT (src, "Reading %d bytes at offset 0x%" G_GINT64_MODIFIER "x",
+      length, offset);
   ret = read (src->fd, GST_BUFFER_DATA (buf), length);
   if (G_UNLIKELY (ret < 0))
     goto could_not_read;
