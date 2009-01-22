@@ -206,6 +206,29 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, GstByteReader * reader,
 
       break;
     }
+    case 8:                    // ECMA array
+    {
+      guint32 nb_elems;
+      gboolean end_of_object_marker = FALSE;
+
+      if (!gst_byte_reader_get_uint32_be (reader, &nb_elems))
+        goto error;
+
+      GST_DEBUG_OBJECT (demux, "there are approx. %d elements in the array",
+          nb_elems);
+
+      while (!end_of_object_marker) {
+        gboolean ok =
+            gst_flv_parse_metadata_item (demux, reader, &end_of_object_marker);
+
+        if (G_UNLIKELY (!ok)) {
+          GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
+          goto error;
+        }
+      }
+
+      break;
+    }
     case 9:                    // End marker
     {
       GST_DEBUG_OBJECT (demux, "end marker ?");
