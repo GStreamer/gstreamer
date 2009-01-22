@@ -22,6 +22,13 @@ then
 fi
 . common/gst-autogen.sh
 
+# install pre-commit hook for doing clean commits
+if test ! -x .git/hooks/pre-commit;
+then
+    cp common/hooks/pre-commit.hook .git/hooks/pre-commit
+    chmod +x .git/hooks/pre-commit
+fi
+
 CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
 
 autogen_options $@
