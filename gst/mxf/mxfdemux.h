@@ -81,7 +81,7 @@ struct _GstMXFDemux
 
   gboolean metadata_resolved;
   MXFMetadataPreface *preface;
-  GPtrArray *metadata;
+  GHashTable *metadata;
 
   MXFUMID current_package_uid;
   MXFMetadataGenericPackage *current_package;

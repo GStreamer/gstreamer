@@ -216,16 +216,9 @@ gst_mxf_demux_reset_mxf_state (GstMXFDemux * demux)
 }
 
 static void
-gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
+gst_mxf_demux_reset_track_metadata (GstMXFDemux *demux)
 {
   guint i;
-
-  GST_DEBUG_OBJECT (demux, "Resetting metadata");
-
-  demux->update_metadata = TRUE;
-  demux->metadata_resolved = FALSE;
-
-  demux->current_package = NULL;
 
   if (demux->src) {
     for (i = 0; i < demux->src->len; i++) {
@@ -241,19 +234,24 @@ gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
       pad->source_package = NULL;
     }
   }
+}
+
+static void
+gst_mxf_demux_reset_metadata (GstMXFDemux * demux)
+{
+  GST_DEBUG_OBJECT (demux, "Resetting metadata");
+
+  demux->update_metadata = TRUE;
+  demux->metadata_resolved = FALSE;
+
+  gst_mxf_demux_reset_track_metadata (demux);
+
+  demux->current_package = NULL;
 
   demux->preface = NULL;
 
   if (demux->metadata) {
-    guint i;
-
-    for (i = 0; i < demux->metadata->len; i++) {
-      GstMiniObject *o = g_ptr_array_index (demux->metadata, i);
-
-      if (o)
-        gst_mini_object_unref (o);
-    }
-    g_ptr_array_free (demux->metadata, TRUE);
+    g_hash_table_destroy (demux->metadata);
     demux->metadata = NULL;
   }
 }
@@ -476,8 +474,9 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
 static GstFlowReturn
 gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
 {
-  guint i;
   GstFlowReturn ret = GST_FLOW_OK;
+  GHashTableIter iter;
+  MXFMetadataBase *m = NULL;
 
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
   demux->update_metadata = FALSE;
@@ -487,17 +486,16 @@ gst_mxf_demux_handle_header_metadata_resolve_references (GstMXFDemux * demux)
     return GST_FLOW_ERROR;
   }
 
-  /* Append NULL terminator */
-  g_ptr_array_add (demux->metadata, NULL);
+  g_hash_table_iter_init (&iter, demux->metadata);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
+    m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
+  }
 
-  for (i = 0; i < demux->metadata->len - 1; i++) {
-    MXFMetadataBase *m =
-        MXF_METADATA_BASE (g_ptr_array_index (demux->metadata, i));
+  g_hash_table_iter_init (&iter, demux->metadata);
+  while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
     gboolean resolved;
 
-    resolved =
-        mxf_metadata_base_resolve (m,
-        (MXFMetadataBase **) demux->metadata->pdata);
+    resolved = mxf_metadata_base_resolve (m, demux->metadata);
 
     /* Resolving can fail for anything but the preface, as the preface
      * will resolve everything required */
@@ -865,7 +863,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     GstBuffer * buffer)
 {
   guint16 type;
-  MXFMetadata *metadata = NULL;
+  MXFMetadata *metadata = NULL, *old = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
 
   type = GST_READ_UINT16_BE (key->u + 13);
@@ -886,44 +884,43 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
   }
 
   metadata =
-      mxf_metadata_new (type, &demux->primer, GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer));
-
-  if (metadata && !MXF_IS_METADATA_PREFACE (metadata)
-      && !demux->update_metadata) {
-    GST_DEBUG_OBJECT (demux,
-        "Skipping parsing of metadata because it's older than what we have");
-    gst_mini_object_unref ((GstMiniObject *) metadata);
-    return GST_FLOW_OK;
-  }
+      mxf_metadata_new (type, &demux->primer, demux->offset,
+      GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   if (!metadata) {
     GST_ERROR_OBJECT (demux, "Parsing metadata failed");
     return GST_FLOW_ERROR;
   }
 
-  if (MXF_IS_METADATA_PREFACE (metadata)) {
-    MXFMetadataPreface *preface = MXF_METADATA_PREFACE (metadata);
+  if (!demux->metadata)
+    demux->metadata = mxf_metadata_hash_table_new ();
 
-    if (!demux->preface
-        || (!mxf_timestamp_is_unknown (&preface->last_modified_date)
-            && mxf_timestamp_compare (&demux->preface->last_modified_date,
-                &preface->last_modified_date) < 0)) {
-      GST_DEBUG_OBJECT (demux,
-          "Timestamp of new preface is newer than old, updating metadata");
-      gst_mxf_demux_reset_metadata (demux);
-      demux->preface = preface;
-    } else {
-      GST_DEBUG_OBJECT (demux, "Preface is older than already parsed preface");
-      gst_mini_object_unref ((GstMiniObject *) metadata);
-      return GST_FLOW_OK;
-    }
+  old =
+      g_hash_table_lookup (demux->metadata,
+      &MXF_METADATA_BASE (metadata)->instance_uid);
+  if (old
+      && MXF_METADATA_BASE (old)->offset >=
+      MXF_METADATA_BASE (metadata)->offset) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar str[48];
+#endif
+
+    GST_DEBUG_OBJECT (demux,
+        "Metadata with instance uid %s already exists and is newer",
+        mxf_ul_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str));
+    gst_mini_object_unref (GST_MINI_OBJECT (metadata));
+    return GST_FLOW_OK;
   }
 
-  if (!demux->metadata)
-    demux->metadata = g_ptr_array_new ();
+  if (MXF_IS_METADATA_PREFACE (metadata)) {
+    demux->preface = MXF_METADATA_PREFACE (metadata);
+  }
 
-  g_ptr_array_add (demux->metadata, metadata);
+  demux->update_metadata = TRUE;
+  gst_mxf_demux_reset_track_metadata (demux);
+
+  g_hash_table_replace (demux->metadata,
+      &MXF_METADATA_BASE (metadata)->instance_uid, metadata);
 
   return ret;
 }
@@ -935,7 +932,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
   guint32 type;
   guint8 scheme;
   GstFlowReturn ret = GST_FLOW_OK;
-  MXFDescriptiveMetadata *m = NULL;
+  MXFDescriptiveMetadata *m = NULL, *old = NULL;
 
   scheme = GST_READ_UINT8 (key->u + 12);
   type = GST_READ_UINT24_BE (key->u + 13);
@@ -955,14 +952,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     return GST_FLOW_ERROR;
   }
 
-  if (!demux->update_metadata) {
-    GST_DEBUG_OBJECT (demux,
-        "Skipping parsing of metadata because it's older than what we have");
-    return GST_FLOW_OK;
-  }
-
-
-  m = mxf_descriptive_metadata_new (scheme, type, &demux->primer,
+  m = mxf_descriptive_metadata_new (scheme, type, &demux->primer, demux->offset,
       GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   if (!m) {
@@ -973,10 +963,28 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
   }
 
   if (!demux->metadata)
-    demux->metadata = g_ptr_array_new ();
+    demux->metadata = mxf_metadata_hash_table_new ();
 
-  g_ptr_array_add (demux->metadata, m);
+  old =
+      g_hash_table_lookup (demux->metadata,
+      &MXF_METADATA_BASE (m)->instance_uid);
+  if (old && MXF_METADATA_BASE (old)->offset >= MXF_METADATA_BASE (m)->offset) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar str[48];
+#endif
 
+    GST_DEBUG_OBJECT (demux,
+        "Metadata with instance uid %s already exists and is newer",
+        mxf_ul_to_string (&MXF_METADATA_BASE (m)->instance_uid, str));
+    gst_mini_object_unref (GST_MINI_OBJECT (m));
+    return GST_FLOW_OK;
+  }
+
+  demux->update_metadata = TRUE;
+  gst_mxf_demux_reset_track_metadata (demux);
+
+  g_hash_table_replace (demux->metadata, &MXF_METADATA_BASE (m)->instance_uid,
+      m);
 
   return ret;
 }
@@ -1502,7 +1510,7 @@ gst_mxf_demux_parse_footer_metadata (GstMXFDemux * demux)
 {
   MXFPartitionPack partition;
   MXFPrimerPack primer;
-  guint64 offset, old_offset = demux->offset;
+  guint64 old_offset = demux->offset;
   MXFUL key;
   GstBuffer *buffer = NULL;
   guint read = 0;
@@ -1516,21 +1524,23 @@ gst_mxf_demux_parse_footer_metadata (GstMXFDemux * demux)
   gst_mxf_demux_reset_metadata (demux);
 
   if (demux->footer_partition_pack_offset != 0) {
-    offset =
+    demux->offset =
         demux->header_partition_pack_offset +
         demux->footer_partition_pack_offset;
   } else {
     MXFRandomIndexPackEntry *entry =
         &g_array_index (demux->partition_index, MXFRandomIndexPackEntry,
         demux->partition_index->len - 1);
-    offset = entry->offset;
+    demux->offset = entry->offset;
   }
 
 next_try:
   mxf_partition_pack_reset (&demux->partition);
   mxf_primer_pack_reset (&demux->primer);
 
-  ret = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buffer, &read);
+  ret =
+      gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
+      &read);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto out;
 
@@ -1541,7 +1551,7 @@ next_try:
           GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer)))
     goto out;
 
-  offset += read;
+  demux->offset += read;
   gst_buffer_unref (buffer);
   buffer = NULL;
 
@@ -1550,44 +1560,46 @@ next_try:
         || demux->partition.this_partition == 0)
       goto out;
 
-    offset =
+    demux->offset =
         demux->header_partition_pack_offset + demux->partition.this_partition -
         demux->partition.prev_partition;
     goto next_try;
   }
 
   while (TRUE) {
-    ret = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buffer, &read);
+    ret =
+        gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
+        &read);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      offset =
+      demux->offset =
           demux->header_partition_pack_offset +
           demux->partition.this_partition - demux->partition.prev_partition;
       goto next_try;
     }
 
     if (mxf_is_fill (&key)) {
-      offset += read;
+      demux->offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
     } else if (mxf_is_primer_pack (&key)) {
       if (!mxf_primer_pack_parse (&key, &demux->primer,
               GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-        offset += read;
+        demux->offset += read;
         gst_buffer_unref (buffer);
         buffer = NULL;
-        offset =
+        demux->offset =
             demux->header_partition_pack_offset +
             demux->partition.this_partition - demux->partition.prev_partition;
         goto next_try;
       }
-      offset += read;
+      demux->offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
       break;
     } else {
       gst_buffer_unref (buffer);
       buffer = NULL;
-      offset =
+      demux->offset =
           demux->header_partition_pack_offset +
           demux->partition.this_partition - demux->partition.prev_partition;
       goto next_try;
@@ -1596,9 +1608,11 @@ next_try:
 
   /* parse metadata */
   while (TRUE) {
-    ret = gst_mxf_demux_pull_klv_packet (demux, offset, &key, &buffer, &read);
+    ret =
+        gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
+        &read);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      offset =
+      demux->offset =
           demux->header_partition_pack_offset +
           demux->partition.this_partition - demux->partition.prev_partition;
       goto next_try;
@@ -1606,19 +1620,24 @@ next_try:
 
     if (mxf_is_metadata (&key)) {
       ret = gst_mxf_demux_handle_metadata (demux, &key, buffer);
-      offset += read;
+      demux->offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
 
       if (G_UNLIKELY (ret != GST_FLOW_OK)) {
         gst_mxf_demux_reset_metadata (demux);
-        offset =
+        demux->offset =
             demux->header_partition_pack_offset +
             demux->partition.this_partition - demux->partition.prev_partition;
         goto next_try;
       }
-    } else if (mxf_is_descriptive_metadata (&key) || mxf_is_fill (&key)) {
-      offset += read;
+    } else if (mxf_is_descriptive_metadata (&key)) {
+      ret = gst_mxf_demux_handle_descriptive_metadata (demux, &key, buffer);
+      demux->offset += read;
+      gst_buffer_unref (buffer);
+      buffer = NULL;
+    } else if (mxf_is_fill (&key)) {
+      demux->offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
     } else {
@@ -1632,7 +1651,7 @@ next_try:
       GST_FLOW_OK
       || gst_mxf_demux_handle_header_metadata_update_streams (demux) !=
       GST_FLOW_OK) {
-    offset =
+    demux->offset =
         demux->header_partition_pack_offset + demux->partition.this_partition -
         demux->partition.prev_partition;
     goto next_try;

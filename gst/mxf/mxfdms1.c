@@ -272,68 +272,68 @@ mxf_dms1_framework_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_framework_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_framework_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Framework *self = MXF_DMS1_FRAMEWORK (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->titles_sets = g_new0 (MXFDMS1Titles *, self->n_titles_sets);
-  self->annotation_sets = g_new0 (MXFDMS1Annotation *, self->n_annotation_sets);
-  self->participant_sets =
-      g_new0 (MXFDMS1Participant *, self->n_participant_sets);
-  self->location_sets = g_new0 (MXFDMS1Location *, self->n_location_sets);
-  while (*p != NULL) {
-    current = *p;
+  if (self->titles_sets)
+    memset (self->titles_sets, 0, sizeof (gpointer) * self->n_titles_sets);
+  else
+    self->titles_sets = g_new0 (MXFDMS1Titles *, self->n_titles_sets);
 
-    if (MXF_IS_DMS1_TITLES (current)) {
-      for (i = 0; i < self->n_titles_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->titles_sets_uids[i])) {
-          self->titles_sets[i] = MXF_DMS1_TITLES (current);
-          break;
-        }
-      }
+  if (self->annotation_sets)
+    memset (self->annotation_sets, 0,
+        sizeof (gpointer) * self->n_annotation_sets);
+  else
+    self->annotation_sets =
+        g_new0 (MXFDMS1Annotation *, self->n_annotation_sets);
+
+  if (self->participant_sets)
+    memset (self->participant_sets, 0,
+        sizeof (gpointer) * self->n_participant_sets);
+  else
+    self->participant_sets =
+        g_new0 (MXFDMS1Participant *, self->n_participant_sets);
+
+  if (self->location_sets)
+    memset (self->location_sets, 0, sizeof (gpointer) * self->n_location_sets);
+  else
+    self->location_sets = g_new0 (MXFDMS1Location *, self->n_location_sets);
+
+  for (i = 0; i < self->n_titles_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->titles_sets_uids[i]);
+
+    if (current && MXF_IS_DMS1_TITLES (current)) {
+      self->titles_sets[i] = MXF_DMS1_TITLES (current);
     }
+  }
 
-    if (MXF_IS_DMS1_ANNOTATION (current)) {
-      for (i = 0; i < self->n_annotation_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->annotation_sets_uids[i])) {
-          self->annotation_sets[i] = MXF_DMS1_ANNOTATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_annotation_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->annotation_sets_uids[i]);
+    if (current && MXF_IS_DMS1_ANNOTATION (current)) {
+      self->annotation_sets[i] = MXF_DMS1_ANNOTATION (current);
     }
+  }
 
-    if (MXF_IS_DMS1_PARTICIPANT (current)) {
-      for (i = 0; i < self->n_participant_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->participant_sets_uids[i])) {
-          self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_participant_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->participant_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PARTICIPANT (current)) {
+      self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
     }
+  }
 
-    if (MXF_IS_DMS1_CONTACTS_LIST (current)) {
-      if (mxf_ul_is_equal (&current->instance_uid,
-              &self->contacts_list_set_uid)) {
-        self->contacts_list_set = MXF_DMS1_CONTACTS_LIST (current);
-      }
+  current = g_hash_table_lookup (metadata, &self->contacts_list_set_uid);
+  if (current && MXF_IS_DMS1_CONTACTS_LIST (current)) {
+    self->contacts_list_set = MXF_DMS1_CONTACTS_LIST (current);
+  }
+
+  for (i = 0; i < self->n_location_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->location_sets_uids[i]);
+    if (current && MXF_IS_DMS1_LOCATION (current)) {
+      self->location_sets[i] = MXF_DMS1_LOCATION (current);
     }
-
-    if (MXF_IS_DMS1_LOCATION (current)) {
-      for (i = 0; i < self->n_location_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->location_sets_uids[i])) {
-          self->location_sets[i] = MXF_DMS1_LOCATION (current);
-          break;
-        }
-      }
-    }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_framework_parent_class)->resolve (m,
@@ -578,53 +578,51 @@ mxf_dms1_production_clip_framework_finalize (GstMiniObject * object)
 
 static gboolean
 mxf_dms1_production_clip_framework_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+    GHashTable * metadata)
 {
   MXFDMS1ProductionClipFramework *self = MXF_DMS1_PRODUCTION_CLIP_FRAMEWORK (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->captions_description_sets =
-      g_new0 (MXFDMS1CaptionsDescription *, self->n_captions_description_sets);
-  self->contract_sets = g_new0 (MXFDMS1Contract *, self->n_contract_sets);
-  while (*p) {
-    current = *p;
+  if (self->captions_description_sets)
+    memset (self->captions_description_sets, 0,
+        sizeof (gpointer) * self->n_captions_description_sets);
+  else
+    self->captions_description_sets =
+        g_new0 (MXFDMS1CaptionsDescription *,
+        self->n_captions_description_sets);
 
-    if (MXF_IS_DMS1_PICTURE_FORMAT (current)) {
-      if (mxf_ul_is_equal (&current->instance_uid,
-              &self->picture_format_set_uid)) {
-        self->picture_format = MXF_DMS1_PICTURE_FORMAT (current);
-      }
+  if (self->contract_sets)
+    memset (self->contract_sets, 0,
+        sizeof (gpointer) * self->n_captions_description_sets);
+  else
+    self->contract_sets = g_new0 (MXFDMS1Contract *, self->n_contract_sets);
+
+  current = g_hash_table_lookup (metadata, &self->picture_format_set_uid);
+  if (current && MXF_IS_DMS1_PICTURE_FORMAT (current)) {
+    self->picture_format = MXF_DMS1_PICTURE_FORMAT (current);
+  }
+
+  for (i = 0; i < self->n_captions_description_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata,
+        &self->captions_description_sets_uids[i]);
+    if (current && MXF_IS_DMS1_CAPTIONS_DESCRIPTION (current)) {
+      self->captions_description_sets[i] =
+          MXF_DMS1_CAPTIONS_DESCRIPTION (current);
     }
+  }
 
-    if (MXF_IS_DMS1_CAPTIONS_DESCRIPTION (current)) {
-      for (i = 0; i < self->n_captions_description_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->captions_description_sets_uids[i])) {
-          self->captions_description_sets[i] =
-              MXF_DMS1_CAPTIONS_DESCRIPTION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_contract_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->contract_sets_uids[i]);
+    if (current && MXF_IS_DMS1_CONTRACT (current)) {
+      self->contract_sets[i] = MXF_DMS1_CONTRACT (current);
     }
+  }
 
-    if (MXF_IS_DMS1_CONTRACT (current)) {
-      for (i = 0; i < self->n_contract_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->contract_sets_uids[i])) {
-          self->contract_sets[i] = MXF_DMS1_CONTRACT (current);
-          break;
-        }
-      }
-    }
-
-    if (MXF_IS_DMS1_PROJECT (current)) {
-      if (mxf_ul_is_equal (&current->instance_uid, &self->project_set_uid)) {
-        self->project_set = MXF_DMS1_PROJECT (current);
-      }
-    }
-
-    p++;
+  current = g_hash_table_lookup (metadata, &self->project_set_uid);
+  if (current && MXF_IS_DMS1_PROJECT (current)) {
+    self->project_set = MXF_DMS1_PROJECT (current);
   }
 
   return
@@ -799,78 +797,91 @@ mxf_dms1_production_framework_finalize (GstMiniObject * object)
 
 static gboolean
 mxf_dms1_production_framework_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+    GHashTable * metadata)
 {
   MXFDMS1ProductionFramework *self = MXF_DMS1_PRODUCTION_FRAMEWORK (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->identification_sets =
-      g_new0 (MXFDMS1Identification *, self->n_identification_sets);
-  self->group_relationship_sets =
-      g_new0 (MXFDMS1GroupRelationship *, self->n_group_relationship_sets);
-  self->branding_sets = g_new0 (MXFDMS1Branding *, self->n_branding_sets);
-  self->event_sets = g_new0 (MXFDMS1Event *, self->n_event_sets);
-  self->award_sets = g_new0 (MXFDMS1Award *, self->n_award_sets);
-  self->setting_period_sets =
-      g_new0 (MXFDMS1SettingPeriod *, self->n_setting_period_sets);
-  while (*p) {
-    current = *p;
+  if (self->identification_sets)
+    memset (self->identification_sets, 0,
+        sizeof (gpointer) * self->n_identification_sets);
+  else
+    self->identification_sets =
+        g_new0 (MXFDMS1Identification *, self->n_identification_sets);
 
-    if (MXF_IS_DMS1_IDENTIFICATION (current)) {
-      for (i = 0; i < self->n_identification_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->identification_sets_uids[i])) {
-          self->identification_sets[i] = MXF_DMS1_IDENTIFICATION (current);
-        }
-      }
+  if (self->group_relationship_sets)
+    memset (self->group_relationship_sets, 0,
+        sizeof (gpointer) * self->n_group_relationship_sets);
+  else
+    self->group_relationship_sets =
+        g_new0 (MXFDMS1GroupRelationship *, self->n_group_relationship_sets);
+
+  if (self->branding_sets)
+    memset (self->branding_sets, 0, sizeof (gpointer) * self->n_branding_sets);
+  else
+    self->branding_sets = g_new0 (MXFDMS1Branding *, self->n_branding_sets);
+
+  if (self->event_sets)
+    memset (self->event_sets, 0, sizeof (gpointer) * self->n_event_sets);
+  else
+    self->event_sets = g_new0 (MXFDMS1Event *, self->n_event_sets);
+
+  if (self->award_sets)
+    memset (self->award_sets, 0, sizeof (gpointer) * self->n_award_sets);
+  else
+    self->award_sets = g_new0 (MXFDMS1Award *, self->n_award_sets);
+
+  if (self->setting_period_sets)
+    memset (self->setting_period_sets, 0,
+        sizeof (gpointer) * self->n_setting_period_sets);
+  else
+    self->setting_period_sets =
+        g_new0 (MXFDMS1SettingPeriod *, self->n_setting_period_sets);
+
+  for (i = 0; i < self->n_identification_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->identification_sets_uids[i]);
+    if (current && MXF_IS_DMS1_IDENTIFICATION (current)) {
+      self->identification_sets[i] = MXF_DMS1_IDENTIFICATION (current);
     }
+  }
 
-    if (MXF_IS_DMS1_GROUP_RELATIONSHIP (current)) {
-      for (i = 0; i < self->n_group_relationship_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->group_relationship_sets_uids[i])) {
-          self->group_relationship_sets[i] =
-              MXF_DMS1_GROUP_RELATIONSHIP (current);
-        }
-      }
+  for (i = 0; i < self->n_group_relationship_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->group_relationship_sets_uids[i]);
+    if (current && MXF_IS_DMS1_GROUP_RELATIONSHIP (current)) {
+      self->group_relationship_sets[i] = MXF_DMS1_GROUP_RELATIONSHIP (current);
     }
+  }
 
-    if (MXF_IS_DMS1_BRANDING (current)) {
-      for (i = 0; i < self->n_branding_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->branding_sets_uids[i])) {
-          self->branding_sets[i] = MXF_DMS1_BRANDING (current);
-        }
-      }
+  for (i = 0; i < self->n_branding_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->branding_sets_uids[i]);
+    if (current && MXF_IS_DMS1_BRANDING (current)) {
+      self->branding_sets[i] = MXF_DMS1_BRANDING (current);
     }
+  }
 
-    if (MXF_IS_DMS1_EVENT (current)) {
-      for (i = 0; i < self->n_event_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid, &self->event_sets_uids[i])) {
-          self->event_sets[i] = MXF_DMS1_EVENT (current);
-        }
-      }
+  for (i = 0; i < self->n_event_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->event_sets_uids[i]);
+    if (current && MXF_IS_DMS1_EVENT (current)) {
+      self->event_sets[i] = MXF_DMS1_EVENT (current);
     }
+  }
 
-    if (MXF_IS_DMS1_AWARD (current)) {
-      for (i = 0; i < self->n_award_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid, &self->award_sets_uids[i])) {
-          self->award_sets[i] = MXF_DMS1_AWARD (current);
-        }
-      }
+  for (i = 0; i < self->n_award_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->award_sets_uids[i]);
+    if (current && MXF_IS_DMS1_AWARD (current)) {
+      self->award_sets[i] = MXF_DMS1_AWARD (current);
     }
+  }
 
-    if (MXF_IS_DMS1_SETTING_PERIOD (current)) {
-      for (i = 0; i < self->n_setting_period_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->setting_period_sets_uids[i])) {
-          self->setting_period_sets[i] = MXF_DMS1_SETTING_PERIOD (current);
-        }
-      }
+  for (i = 0; i < self->n_setting_period_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->setting_period_sets_uids[i]);
+    if (current && MXF_IS_DMS1_SETTING_PERIOD (current)) {
+      self->setting_period_sets[i] = MXF_DMS1_SETTING_PERIOD (current);
     }
-
-    p++;
   }
 
   return
@@ -1087,58 +1098,56 @@ mxf_dms1_clip_framework_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_clip_framework_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+mxf_dms1_clip_framework_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1ClipFramework *self = MXF_DMS1_CLIP_FRAMEWORK (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->scripting_sets = g_new0 (MXFDMS1Scripting *, self->n_scripting_sets);
-  self->shot_sets = g_new0 (MXFDMS1Shot *, self->n_shot_sets);
-  self->device_parameters_sets =
-      g_new0 (MXFDMS1DeviceParameters *, self->n_device_parameters_sets);
+  if (self->scripting_sets)
+    memset (self->scripting_sets, 0,
+        sizeof (gpointer) * self->n_scripting_sets);
+  else
+    self->scripting_sets = g_new0 (MXFDMS1Scripting *, self->n_scripting_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->shot_sets)
+    memset (self->shot_sets, 0, sizeof (gpointer) * self->n_shot_sets);
+  else
+    self->shot_sets = g_new0 (MXFDMS1Shot *, self->n_shot_sets);
 
-    if (MXF_IS_DMS1_SCRIPTING (current)) {
-      for (i = 0; i < self->n_scripting_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->scripting_sets_uids[i])) {
-          self->scripting_sets[i] = MXF_DMS1_SCRIPTING (current);
-          break;
-        }
-      }
+  if (self->device_parameters_sets)
+    memset (self->device_parameters_sets, 0,
+        sizeof (gpointer) * self->n_device_parameters_sets);
+  else
+    self->device_parameters_sets =
+        g_new0 (MXFDMS1DeviceParameters *, self->n_device_parameters_sets);
+
+  for (i = 0; i < self->n_scripting_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->scripting_sets_uids[i]);
+
+    if (current && MXF_IS_DMS1_SCRIPTING (current)) {
+      self->scripting_sets[i] = MXF_DMS1_SCRIPTING (current);
     }
+  }
 
-    if (MXF_IS_DMS1_SHOT (current)) {
-      for (i = 0; i < self->n_shot_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid, &self->shot_sets_uids[i])) {
-          self->shot_sets[i] = MXF_DMS1_SHOT (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_shot_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->shot_sets_uids[i]);
+    if (current && MXF_IS_DMS1_SHOT (current)) {
+      self->shot_sets[i] = MXF_DMS1_SHOT (current);
     }
+  }
 
-    if (MXF_IS_DMS1_DEVICE_PARAMETERS (current)) {
-      for (i = 0; i < self->n_device_parameters_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->device_parameters_sets_uids[i])) {
-          self->device_parameters_sets[i] =
-              MXF_DMS1_DEVICE_PARAMETERS (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_device_parameters_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->device_parameters_sets_uids[i]);
+    if (current && MXF_IS_DMS1_DEVICE_PARAMETERS (current)) {
+      self->device_parameters_sets[i] = MXF_DMS1_DEVICE_PARAMETERS (current);
     }
+  }
 
-    if (MXF_IS_DMS1_PROCESSING (current)) {
-      if (mxf_ul_is_equal (&current->instance_uid, &self->processing_set_uid)) {
-        self->processing_set = MXF_DMS1_PROCESSING (current);
-      }
-    }
-
-    p++;
+  current = g_hash_table_lookup (metadata, &self->processing_set_uid);
+  if (current && MXF_IS_DMS1_PROCESSING (current)) {
+    self->processing_set = MXF_DMS1_PROCESSING (current);
   }
 
   return
@@ -1354,41 +1363,38 @@ mxf_dms1_scene_framework_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_scene_framework_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+mxf_dms1_scene_framework_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1SceneFramework *self = MXF_DMS1_SCENE_FRAMEWORK (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->setting_period_sets =
-      g_new0 (MXFDMS1SettingPeriod *, self->n_setting_period_sets);
-  self->shot_scene_sets = g_new0 (MXFDMS1Shot *, self->n_shot_scene_sets);
+  if (self->setting_period_sets)
+    memset (self->setting_period_sets, 0,
+        sizeof (gpointer) * self->n_setting_period_sets);
+  else
+    self->setting_period_sets =
+        g_new0 (MXFDMS1SettingPeriod *, self->n_setting_period_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->shot_scene_sets)
+    memset (self->shot_scene_sets, 0,
+        sizeof (gpointer) * self->n_shot_scene_sets);
+  else
+    self->shot_scene_sets = g_new0 (MXFDMS1Shot *, self->n_shot_scene_sets);
 
-    if (MXF_IS_DMS1_SETTING_PERIOD (current)) {
-      for (i = 0; i < self->n_setting_period_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->setting_period_sets_uids[i])) {
-          self->setting_period_sets[i] = MXF_DMS1_SETTING_PERIOD (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_setting_period_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->setting_period_sets_uids[i]);
+    if (current && MXF_IS_DMS1_SETTING_PERIOD (current)) {
+      self->setting_period_sets[i] = MXF_DMS1_SETTING_PERIOD (current);
     }
+  }
 
-    if (MXF_IS_DMS1_SHOT (current)) {
-      for (i = 0; i < self->n_shot_scene_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->shot_scene_sets_uids[i])) {
-          self->shot_scene_sets[i] = MXF_DMS1_SHOT (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_shot_scene_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->shot_scene_sets_uids[i]);
+    if (current && MXF_IS_DMS1_SHOT (current)) {
+      self->shot_scene_sets[i] = MXF_DMS1_SHOT (current);
     }
-
-    p++;
   }
 
   return
@@ -1924,40 +1930,38 @@ mxf_dms1_event_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_event_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_event_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Event *self = MXF_DMS1_EVENT (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->publication_sets =
-      g_new0 (MXFDMS1Publication *, self->n_publication_sets);
-  self->annotation_sets = g_new0 (MXFDMS1Annotation *, self->n_annotation_sets);
+  if (self->publication_sets)
+    memset (self->publication_sets, 0,
+        sizeof (gpointer) * self->n_publication_sets);
+  else
+    self->publication_sets =
+        g_new0 (MXFDMS1Publication *, self->n_publication_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->annotation_sets)
+    memset (self->annotation_sets, 0,
+        sizeof (gpointer) * self->n_annotation_sets);
+  else
+    self->annotation_sets =
+        g_new0 (MXFDMS1Annotation *, self->n_annotation_sets);
 
-    if (MXF_IS_DMS1_PUBLICATION (current)) {
-      for (i = 0; i < self->n_publication_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->publication_sets_uids[i])) {
-          self->publication_sets[i] = MXF_DMS1_PUBLICATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_publication_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->publication_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PUBLICATION (current)) {
+      self->publication_sets[i] = MXF_DMS1_PUBLICATION (current);
     }
+  }
 
-    if (MXF_IS_DMS1_ANNOTATION (current)) {
-      for (i = 0; i < self->n_annotation_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->annotation_sets_uids[i])) {
-          self->annotation_sets[i] = MXF_DMS1_ANNOTATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_annotation_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->annotation_sets_uids[i]);
+    if (current && MXF_IS_DMS1_ANNOTATION (current)) {
+      self->annotation_sets[i] = MXF_DMS1_ANNOTATION (current);
     }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_event_parent_class)->resolve (m,
@@ -2198,28 +2202,24 @@ mxf_dms1_award_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_award_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_award_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Award *self = MXF_DMS1_AWARD (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->participant_sets =
-      g_new0 (MXFDMS1Participant *, self->n_participant_sets);
-  while (*p) {
-    current = *p;
+  if (self->participant_sets)
+    memset (self->participant_sets, 0,
+        sizeof (gpointer) * self->n_participant_sets);
+  else
+    self->participant_sets =
+        g_new0 (MXFDMS1Participant *, self->n_participant_sets);
 
-    if (MXF_IS_DMS1_PARTICIPANT (current)) {
-      for (i = 0; i < self->n_participant_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->participant_sets_uids[i])) {
-          self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_participant_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->participant_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PARTICIPANT (current)) {
+      self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
     }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_award_parent_class)->resolve (m,
@@ -2450,47 +2450,44 @@ mxf_dms1_annotation_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_annotation_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_annotation_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Annotation *self = MXF_DMS1_ANNOTATION (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->classification_sets =
-      g_new0 (MXFDMS1Classification *, self->n_classification_sets);
-  self->participant_sets =
-      g_new0 (MXFDMS1Participant *, self->n_participant_sets);
+  if (self->classification_sets)
+    memset (self->classification_sets, 0,
+        sizeof (gpointer) * self->n_classification_sets);
+  else
+    self->classification_sets =
+        g_new0 (MXFDMS1Classification *, self->n_classification_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->participant_sets)
+    memset (self->participant_sets, 0,
+        sizeof (gpointer) * self->n_participant_sets);
+  else
+    self->participant_sets =
+        g_new0 (MXFDMS1Participant *, self->n_participant_sets);
 
-    if (MXF_IS_DMS1_CLASSIFICATION (current)) {
-      for (i = 0; i < self->n_classification_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->classification_sets_uids[i])) {
-          self->classification_sets[i] = MXF_DMS1_CLASSIFICATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_classification_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->classification_sets_uids[i]);
+    if (current && MXF_IS_DMS1_CLASSIFICATION (current)) {
+      self->classification_sets[i] = MXF_DMS1_CLASSIFICATION (current);
     }
+  }
 
-    if (MXF_IS_DMS1_CUE_WORDS (current)) {
-      if (mxf_ul_is_equal (&current->instance_uid, &self->cue_words_set_uid)) {
-        self->cue_words_set = MXF_DMS1_CUE_WORDS (current);
-      }
+  current = g_hash_table_lookup (metadata, &self->cue_words_set_uid);
+  if (current && MXF_IS_DMS1_CUE_WORDS (current)) {
+    self->cue_words_set = MXF_DMS1_CUE_WORDS (current);
+  }
+
+  for (i = 0; i < self->n_participant_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->participant_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PARTICIPANT (current)) {
+      self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
     }
-
-    if (MXF_IS_DMS1_PARTICIPANT (current)) {
-      for (i = 0; i < self->n_participant_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->participant_sets_uids[i])) {
-          self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
-          break;
-        }
-      }
-    }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_annotation_parent_class)->resolve (m,
@@ -2858,29 +2855,24 @@ mxf_dms1_classification_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_classification_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+mxf_dms1_classification_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Classification *self = MXF_DMS1_CLASSIFICATION (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->name_value_sets = g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
+  if (self->name_value_sets)
+    memset (self->name_value_sets, 0,
+        sizeof (gpointer) * self->n_name_value_sets);
+  else
+    self->name_value_sets =
+        g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
 
-  while (*p) {
-    current = *p;
-
-    if (MXF_IS_DMS1_NAME_VALUE (current)) {
-      for (i = 0; i < self->n_name_value_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->name_value_sets_uids[i])) {
-          self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_name_value_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->name_value_sets_uids[i]);
+    if (current && MXF_IS_DMS1_NAME_VALUE (current)) {
+      self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
     }
-
-    p++;
   }
 
   return
@@ -2995,34 +2987,28 @@ mxf_dms1_shot_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_shot_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_shot_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Shot *self = MXF_DMS1_SHOT (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->key_point_sets = g_new0 (MXFDMS1KeyPoint *, self->n_key_point_sets);
+  if (self->key_point_sets)
+    memset (self->key_point_sets, 0,
+        sizeof (gpointer) * self->n_key_point_sets);
+  else
+    self->key_point_sets = g_new0 (MXFDMS1KeyPoint *, self->n_key_point_sets);
 
-  while (*p) {
-    current = *p;
+  current = g_hash_table_lookup (metadata, &self->cue_words_set_uid);
+  if (current && MXF_IS_DMS1_CUE_WORDS (current)) {
+    self->cue_words_set = MXF_DMS1_CUE_WORDS (current);
+  }
 
-    if (MXF_IS_DMS1_CUE_WORDS (current)) {
-      if (mxf_ul_is_equal (&current->instance_uid, &self->cue_words_set_uid)) {
-        self->cue_words_set = MXF_DMS1_CUE_WORDS (current);
-      }
+  for (i = 0; i < self->n_key_point_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->key_point_sets_uids[i]);
+    if (current && MXF_IS_DMS1_KEY_POINT (current)) {
+      self->key_point_sets[i] = MXF_DMS1_KEY_POINT (current);
     }
-
-    if (MXF_IS_DMS1_KEY_POINT (current)) {
-      for (i = 0; i < self->n_key_point_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->key_point_sets_uids[i])) {
-          self->key_point_sets[i] = MXF_DMS1_KEY_POINT (current);
-          break;
-        }
-      }
-    }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_shot_parent_class)->resolve (m,
@@ -3297,40 +3283,36 @@ mxf_dms1_participant_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_participant_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_participant_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Participant *self = MXF_DMS1_PARTICIPANT (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->person_sets = g_new0 (MXFDMS1Person *, self->n_person_sets);
-  self->organisation_sets =
-      g_new0 (MXFDMS1Organisation *, self->n_organisation_sets);
+  if (self->person_sets)
+    memset (self->person_sets, 0, sizeof (gpointer) * self->n_person_sets);
+  else
+    self->person_sets = g_new0 (MXFDMS1Person *, self->n_person_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->organisation_sets)
+    memset (self->organisation_sets, 0,
+        sizeof (gpointer) * self->n_organisation_sets);
+  else
+    self->organisation_sets =
+        g_new0 (MXFDMS1Organisation *, self->n_organisation_sets);
 
-    if (MXF_IS_DMS1_PERSON (current)) {
-      for (i = 0; i < self->n_person_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->person_sets_uids[i])) {
-          self->person_sets[i] = MXF_DMS1_PERSON (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_person_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->person_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PERSON (current)) {
+      self->person_sets[i] = MXF_DMS1_PERSON (current);
     }
+  }
 
-    if (MXF_IS_DMS1_ORGANISATION (current)) {
-      for (i = 0; i < self->n_organisation_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->organisation_sets_uids[i])) {
-          self->organisation_sets[i] = MXF_DMS1_ORGANISATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_organisation_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->organisation_sets_uids[i]);
+    if (current && MXF_IS_DMS1_ORGANISATION (current)) {
+      self->organisation_sets[i] = MXF_DMS1_ORGANISATION (current);
     }
-
-    p++;
   }
 
   return
@@ -3491,39 +3473,36 @@ mxf_dms1_contact_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_contact_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_contact_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Contact *self = MXF_DMS1_CONTACT (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->name_value_sets = g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
-  self->address_sets = g_new0 (MXFDMS1Address *, self->n_address_sets);
+  if (self->name_value_sets)
+    memset (self->name_value_sets, 0,
+        sizeof (gpointer) * self->n_name_value_sets);
+  else
+    self->name_value_sets =
+        g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->address_sets)
+    memset (self->address_sets, 0, sizeof (gpointer) * self->n_address_sets);
+  else
+    self->address_sets = g_new0 (MXFDMS1Address *, self->n_address_sets);
 
-    if (MXF_IS_DMS1_NAME_VALUE (current)) {
-      for (i = 0; i < self->n_name_value_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->name_value_sets_uids[i])) {
-          self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_name_value_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->name_value_sets_uids[i]);
+    if (current && MXF_IS_DMS1_NAME_VALUE (current)) {
+      self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
     }
+  }
 
-    if (MXF_IS_DMS1_ADDRESS (current)) {
-      for (i = 0; i < self->n_address_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->address_sets_uids[i])) {
-          self->address_sets[i] = MXF_DMS1_ADDRESS (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_address_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->address_sets_uids[i]);
+    if (current && MXF_IS_DMS1_ADDRESS (current)) {
+      self->address_sets[i] = MXF_DMS1_ADDRESS (current);
     }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_contact_parent_class)->resolve (m,
@@ -3677,29 +3656,24 @@ mxf_dms1_person_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_person_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_person_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Person *self = MXF_DMS1_PERSON (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->organisation_sets =
-      g_new0 (MXFDMS1Organisation *, self->n_organisation_sets);
+  if (self->organisation_sets)
+    memset (self->organisation_sets, 0,
+        sizeof (gpointer) * self->n_organisation_sets);
+  else
+    self->organisation_sets =
+        g_new0 (MXFDMS1Organisation *, self->n_organisation_sets);
 
-  while (*p) {
-    current = *p;
-
-    if (MXF_IS_DMS1_ORGANISATION (current)) {
-      for (i = 0; i < self->n_organisation_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->organisation_sets_uids[i])) {
-          self->organisation_sets[i] = MXF_DMS1_ORGANISATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_organisation_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->organisation_sets_uids[i]);
+    if (current && MXF_IS_DMS1_ORGANISATION (current)) {
+      self->organisation_sets[i] = MXF_DMS1_ORGANISATION (current);
     }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_person_parent_class)->resolve (m,
@@ -4078,39 +4052,39 @@ mxf_dms1_address_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_address_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_address_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Address *self = MXF_DMS1_ADDRESS (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->communications_sets =
-      g_new0 (MXFDMS1Communications *, self->n_communications_sets);
-  self->name_value_sets = g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
-  while (*p != NULL) {
-    current = *p;
+  if (self->communications_sets)
+    memset (self->communications_sets, 0,
+        sizeof (gpointer) * self->n_communications_sets);
+  else
+    self->communications_sets =
+        g_new0 (MXFDMS1Communications *, self->n_communications_sets);
 
-    if (MXF_IS_DMS1_COMMUNICATIONS (current)) {
-      for (i = 0; i < self->n_communications_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->communications_sets_uids[i])) {
-          self->communications_sets[i] = MXF_DMS1_COMMUNICATIONS (self);
-          break;
-        }
-      }
+  if (self->name_value_sets)
+    memset (self->name_value_sets, 0,
+        sizeof (gpointer) * self->n_name_value_sets);
+  else
+    self->name_value_sets =
+        g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
+
+  for (i = 0; i < self->n_communications_sets; i++) {
+    current =
+        g_hash_table_lookup (metadata, &self->communications_sets_uids[i]);
+    if (current && MXF_IS_DMS1_COMMUNICATIONS (current)) {
+      self->communications_sets[i] = MXF_DMS1_COMMUNICATIONS (current);
     }
+  }
 
-    if (MXF_IS_DMS1_NAME_VALUE (current)) {
-      for (i = 0; i < self->n_name_value_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->name_value_sets_uids[i])) {
-          self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (self);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_name_value_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->name_value_sets_uids[i]);
+    if (current && MXF_IS_DMS1_NAME_VALUE (current)) {
+      self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
     }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_address_parent_class)->resolve (m,
@@ -4440,39 +4414,36 @@ mxf_dms1_contract_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_contract_resolve (MXFMetadataBase * m, MXFMetadataBase ** metadata)
+mxf_dms1_contract_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1Contract *self = MXF_DMS1_CONTRACT (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->rights_sets = g_new0 (MXFDMS1Rights *, self->n_rights_sets);
-  self->participant_sets =
-      g_new0 (MXFDMS1Participant *, self->n_participant_sets);
-  while (*p) {
-    current = *p;
+  if (self->rights_sets)
+    memset (self->rights_sets, 0, sizeof (gpointer) * self->n_rights_sets);
+  else
+    self->rights_sets = g_new0 (MXFDMS1Rights *, self->n_rights_sets);
 
-    if (MXF_IS_DMS1_RIGHTS (current)) {
-      for (i = 0; i < self->n_rights_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->rights_sets_uids[i])) {
-          self->rights_sets[i] = MXF_DMS1_RIGHTS (current);
-          break;
-        }
-      }
+  if (self->participant_sets)
+    memset (self->participant_sets, 0,
+        sizeof (gpointer) * self->n_participant_sets);
+  else
+    self->participant_sets =
+        g_new0 (MXFDMS1Participant *, self->n_participant_sets);
+
+  for (i = 0; i < self->n_rights_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->rights_sets_uids[i]);
+    if (current && MXF_IS_DMS1_RIGHTS (current)) {
+      self->rights_sets[i] = MXF_DMS1_RIGHTS (current);
     }
+  }
 
-    if (MXF_IS_DMS1_PARTICIPANT (current)) {
-      for (i = 0; i < self->n_participant_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->participant_sets_uids[i])) {
-          self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_participant_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->participant_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PARTICIPANT (current)) {
+      self->participant_sets[i] = MXF_DMS1_PARTICIPANT (current);
     }
-
-    p++;
   }
 
   return MXF_METADATA_BASE_CLASS (mxf_dms1_contract_parent_class)->resolve (m,
@@ -4879,28 +4850,24 @@ mxf_dms1_device_parameters_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_device_parameters_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+mxf_dms1_device_parameters_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1DeviceParameters *self = MXF_DMS1_DEVICE_PARAMETERS (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->name_value_sets = g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
-  while (*p) {
-    current = *p;
+  if (self->name_value_sets)
+    memset (self->name_value_sets, 0,
+        sizeof (gpointer) * self->n_name_value_sets);
+  else
+    self->name_value_sets =
+        g_new0 (MXFDMS1NameValue *, self->n_name_value_sets);
 
-    if (MXF_IS_DMS1_NAME_VALUE (current)) {
-      for (i = 0; i < self->n_name_value_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->name_value_sets_uids[i])) {
-          self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_name_value_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->name_value_sets_uids[i]);
+    if (current && MXF_IS_DMS1_NAME_VALUE (current)) {
+      self->name_value_sets[i] = MXF_DMS1_NAME_VALUE (current);
     }
-
-    p++;
   }
 
   return
@@ -5373,52 +5340,48 @@ mxf_dms1_contacts_list_finalize (GstMiniObject * object)
 }
 
 static gboolean
-mxf_dms1_contacts_list_resolve (MXFMetadataBase * m,
-    MXFMetadataBase ** metadata)
+mxf_dms1_contacts_list_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFDMS1ContactsList *self = MXF_DMS1_CONTACTS_LIST (m);
-  MXFMetadataBase **p = metadata, *current = NULL;
+  MXFMetadataBase *current = NULL;
   guint i;
 
-  self->person_sets = g_new0 (MXFDMS1Person *, self->n_person_sets);
-  self->organisation_sets =
-      g_new0 (MXFDMS1Organisation *, self->n_organisation_sets);
-  self->location_sets = g_new0 (MXFDMS1Location *, self->n_location_sets);
+  if (self->person_sets)
+    memset (self->person_sets, 0, sizeof (gpointer) * self->n_person_sets);
+  else
+    self->person_sets = g_new0 (MXFDMS1Person *, self->n_person_sets);
 
-  while (*p) {
-    current = *p;
+  if (self->organisation_sets)
+    memset (self->organisation_sets, 0,
+        sizeof (gpointer) * self->n_organisation_sets);
+  else
+    self->organisation_sets =
+        g_new0 (MXFDMS1Organisation *, self->n_organisation_sets);
 
-    if (MXF_IS_DMS1_PERSON (current)) {
-      for (i = 0; i < self->n_person_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->person_sets_uids[i])) {
-          self->person_sets[i] = MXF_DMS1_PERSON (current);
-          break;
-        }
-      }
+  if (self->location_sets)
+    memset (self->location_sets, 0, sizeof (gpointer) * self->n_location_sets);
+  else
+    self->location_sets = g_new0 (MXFDMS1Location *, self->n_location_sets);
+
+  for (i = 0; i < self->n_person_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->person_sets_uids[i]);
+    if (current && MXF_IS_DMS1_PERSON (current)) {
+      self->person_sets[i] = MXF_DMS1_PERSON (current);
     }
+  }
 
-    if (MXF_IS_DMS1_ORGANISATION (current)) {
-      for (i = 0; i < self->n_organisation_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->organisation_sets_uids[i])) {
-          self->organisation_sets[i] = MXF_DMS1_ORGANISATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_organisation_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->organisation_sets_uids[i]);
+    if (current && MXF_IS_DMS1_ORGANISATION (current)) {
+      self->organisation_sets[i] = MXF_DMS1_ORGANISATION (current);
     }
+  }
 
-    if (MXF_IS_DMS1_LOCATION (current)) {
-      for (i = 0; i < self->n_location_sets; i++) {
-        if (mxf_ul_is_equal (&current->instance_uid,
-                &self->location_sets_uids[i])) {
-          self->location_sets[i] = MXF_DMS1_LOCATION (current);
-          break;
-        }
-      }
+  for (i = 0; i < self->n_location_sets; i++) {
+    current = g_hash_table_lookup (metadata, &self->location_sets_uids[i]);
+    if (current && MXF_IS_DMS1_LOCATION (current)) {
+      self->location_sets[i] = MXF_DMS1_LOCATION (current);
     }
-
-    p++;
   }
 
   return

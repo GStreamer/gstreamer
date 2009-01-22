@@ -373,6 +373,8 @@ struct _MXFMetadataBase {
   MXFUL instance_uid;
   MXFUL generation_uid;
 
+  guint64 offset;
+
   MXFMetadataBaseResolveState resolved;
 
   GHashTable *other_tags;
@@ -382,7 +384,7 @@ struct _MXFMetadataBaseClass {
   GstMiniObjectClass parent;
 
   gboolean (*handle_tag) (MXFMetadataBase *self, MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint tag_size);
-  gboolean (*resolve) (MXFMetadataBase *self, MXFMetadataBase **metadata);
+  gboolean (*resolve) (MXFMetadataBase *self, GHashTable *metadata);
 };
 
 struct _MXFMetadata {
@@ -745,9 +747,9 @@ struct _MXFDescriptiveMetadataFrameworkInterface {
 };
 
 gboolean mxf_metadata_base_parse (MXFMetadataBase *self, MXFPrimerPack *primer, const guint8 *data, guint size);
-gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, MXFMetadataBase **metadata);
+gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, GHashTable *metadata);
 
-MXFMetadata *mxf_metadata_new (guint16 type, MXFPrimerPack *primer, const guint8 *data, guint size);
+MXFMetadata *mxf_metadata_new (guint16 type, MXFPrimerPack *primer, guint64 offset, const guint8 *data, guint size);
 void mxf_metadata_register (guint16 type_id, GType type);
 void mxf_metadata_init_types (void);
 
@@ -757,6 +759,8 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGeneri
 void mxf_metadata_generic_sound_essence_descriptor_set_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
 
 void mxf_descriptive_metadata_register (guint8 scheme, GSList *sets);
-MXFDescriptiveMetadata * mxf_descriptive_metadata_new (guint8 scheme, guint32 type, MXFPrimerPack * primer, const guint8 * data, guint size);
+MXFDescriptiveMetadata * mxf_descriptive_metadata_new (guint8 scheme, guint32 type, MXFPrimerPack * primer, guint64 offset, const guint8 * data, guint size);
+
+GHashTable *mxf_metadata_hash_table_new (void);
 
 #endif /* __MXF_METADATA_H__ */

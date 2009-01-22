@@ -37,6 +37,7 @@ typedef struct {
 gchar * mxf_ul_to_string (const MXFUL *ul, gchar str[48]);
 gboolean mxf_ul_is_equal (const MXFUL *a, const MXFUL *b);
 gboolean mxf_ul_is_zero (const MXFUL *ul);
+guint mxf_ul_hash (const MXFUL *ul);
 
 gchar *mxf_umid_to_string (const MXFUMID * umid, gchar str[96]);
 MXFUMID *mxf_umid_from_string (const gchar *str, MXFUMID * umid);

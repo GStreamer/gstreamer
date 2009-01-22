@@ -215,6 +215,20 @@ mxf_ul_is_zero (const MXFUL * key)
   return (memcmp (key, &key_zero, 16) == 0);
 }
 
+guint
+mxf_ul_hash (const MXFUL * key)
+{
+  guint32 ret = 0;
+  guint i;
+
+  for (i = 0; i < 4; i++)
+    ret ^=
+        (key->u[i * 4 + 0] << 24) | (key->u[i * 4 + 1] << 16) | (key->u[i * 4 +
+            2] << 8) | (key->u[i * 4 + 3] << 0);
+
+  return ret;
+}
+
 gchar *
 mxf_ul_to_string (const MXFUL * key, gchar str[48])
 {
@@ -300,26 +314,6 @@ mxf_umid_from_string (const gchar * str, MXFUMID * umid)
     j += 3;
   }
   return umid;
-}
-
-static guint
-gst_mxf_ul_hash (const MXFUL * key)
-{
-  guint32 ret = 0;
-  guint i;
-
-  for (i = 0; i < 4; i++)
-    ret ^=
-        (key->u[i * 4 + 0] << 24) | (key->u[i * 4 + 1] << 16) | (key->u[i * 4 +
-            2] << 8) | (key->u[i * 4 + 3] << 0);
-
-  return ret;
-}
-
-static gboolean
-gst_mxf_ul_equal (const MXFUL * a, const MXFUL * b)
-{
-  return (memcmp (a, b, 16) == 0);
 }
 
 gboolean
@@ -1015,7 +1009,7 @@ mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
 }
 
 void
-gst_mxf_local_tag_free (MXFLocalTag * tag)
+mxf_local_tag_free (MXFLocalTag * tag)
 {
   g_free (tag->data);
   g_slice_free (MXFLocalTag, tag);
@@ -1036,9 +1030,9 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
 
   if (*hash_table == NULL)
     *hash_table =
-        g_hash_table_new_full ((GHashFunc) gst_mxf_ul_hash,
-        (GEqualFunc) gst_mxf_ul_equal, (GDestroyNotify) NULL,
-        (GDestroyNotify) gst_mxf_local_tag_free);
+        g_hash_table_new_full ((GHashFunc) mxf_ul_hash,
+        (GEqualFunc) mxf_ul_is_equal, (GDestroyNotify) NULL,
+        (GDestroyNotify) mxf_local_tag_free);
 
   g_return_val_if_fail (*hash_table != NULL, FALSE);
 
