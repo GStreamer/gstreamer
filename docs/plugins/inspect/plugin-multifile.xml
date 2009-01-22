@@ -3,7 +3,7 @@
   <description>Writes buffers to sequentially named files</description>
   <filename>../../gst/multifile/.libs/libgstmultifile.so</filename>
   <basename>libgstmultifile.so</basename>
-  <version>0.10.12</version>
+  <version>0.10.13</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>

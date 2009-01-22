@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.12 "Taken Under Advisement"
+Release notes for GStreamer Good Plug-ins 0.10.13 "Blatant Discouragement"
         
 
 
@@ -48,13 +48,14 @@ gst-plugins-bad
 contains a set of less supported plug-ins that haven't passed the
     rigorous quality testing we expect
 
-
-
-  
-
 Features of this release
     
-      * Fix for security advisory TKADV2009-0xx
+      * Fix for security advisory TKADV2009-0xx: 
+
+           Fix potential buffer overflows while reading quicktime headers.
+
+      * Fix bad autopoint substitution in the po subdir
+
 There were no bugs fixed in this release
     
 
@@ -87,4 +88,5 @@ Applications
 Contributors to this release
     
       * David Schleef
+      * Jan Schmidt
  

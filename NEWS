@@ -1,4 +1,7 @@
-This is GStreamer Good Plug-ins 0.10.12, "Taken Under Advisement"
+This is GStreamer Good Plug-ins 0.10.13, "Blatant Discouragement"
+
+Changes since 0.10.12:
+      * Fix bad autopoint substitution in the po subdir
 
 Changes since 0.10.11:
 
