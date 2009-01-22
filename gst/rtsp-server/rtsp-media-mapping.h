@@ -44,7 +44,7 @@ typedef struct _GstRTSPMediaMappingClass GstRTSPMediaMappingClass;
  * GstRTSPMediaMapping:
  * @mappings: the mountpoint to media mappings
  *
- * Creates a #GstRTSPMedia object for a given url.
+ * Creates a #GstRTSPMediaFactory object for a given url.
  */
 struct _GstRTSPMediaMapping {
   GObject       parent;
@@ -52,6 +52,14 @@ struct _GstRTSPMediaMapping {
   GHashTable   *mappings;
 };
 
+/**
+ * GstRTSPMediaMappingClass:
+ * @find_media: Create or return a previously cached #GstRTSPMediaFactory object
+ *        for the given url. the default implementation will use the mappings
+ *        added with gst_rtsp_media_mapping_add_factory ().
+ *
+ * The class for the media mapping object.
+ */
 struct _GstRTSPMediaMappingClass {
   GObjectClass  parent_class;
 

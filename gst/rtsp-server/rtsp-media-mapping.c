@@ -69,7 +69,9 @@ find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
 {
   GstRTSPMediaFactory *result;
 
-  /* find the location of the media in the hashtable */
+  /* find the location of the media in the hashtable we only use the absolute
+   * path of the uri to find a mapping. If the mapping depends on other
+   * properties found in the url, this method should be overridden. */
   result = g_hash_table_lookup (mapping->mappings, url->abspath);
   if (result) 
     g_object_ref (result);
@@ -84,7 +86,8 @@ find_media (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url)
  * @mapping: a #GstRTSPMediaMapping
  * @url: a url
  *
- * Find the #GstRTSPMediaFactory for @url from the mappings registered in @mapping.
+ * Find the #GstRTSPMediaFactory for @url. The default implementation of this object 
+ * will use the mappings added with gst_rtsp_media_mapping_add_factory ().
  *
  * Returns: the #GstRTSPMediaFactory for @url. g_object_unref() after usage.
  */

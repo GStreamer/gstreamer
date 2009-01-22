@@ -67,8 +67,10 @@ struct _GstRTSPMediaStream {
  * GstRTSPMedia:
  * @media: the owner #GstRTSPMedia
  *
- * A class that contains the elements to handle the media
- * provided by @media.
+ * A class that contains the GStreamer element along with a list of
+ * #GstRTSPediaStream objects that can produce data.
+ *
+ * This object is usually created from a #GstRTSPMediaFactory.
  */
 struct _GstRTSPMedia {
   GObject       parent;

@@ -44,7 +44,8 @@ typedef struct _GstRTSPSessionPoolClass GstRTSPSessionPoolClass;
  * @lock: locking the session hashtable
  * @session: hashtable of sessions indexed by the session id.
  *
- * An object that keeps track of the active sessions.
+ * An object that keeps track of the active sessions. This object is usually
+ * attached to a #GstRTSPServer object to manage the sessions in that server.
  */
 struct _GstRTSPSessionPool {
   GObject       parent;
@@ -55,9 +56,8 @@ struct _GstRTSPSessionPool {
 
 /**
  * GstRTSPSessionPoolClass:
- *
- * @create_session_id: create a new random session id. Subclasses should not
- * check if the session exists.
+ * @create_session_id: create a new random session id. Subclasses can create
+ * custom session ids and should not check if the session exists.
  */
 struct _GstRTSPSessionPoolClass {
   GObjectClass  parent_class;

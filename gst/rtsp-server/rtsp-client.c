@@ -451,9 +451,6 @@ handle_describe_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage
   GstElement *pipeline;
   GstStateChangeReturn ret;
 
-  /* find the factory for the uri first */
-  if (!(factory = gst_rtsp_media_mapping_find_factory (client->mapping, uri)))
-    goto no_factory;
 
   /* check what kind of format is accepted, we don't really do anything with it
    * and always return SDP for now. */
@@ -468,12 +465,16 @@ handle_describe_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage
       break;
   }
 
-  /* create a pipeline to preroll the media */
-  pipeline = gst_pipeline_new ("client-describe-pipeline");
+  /* find the factory for the uri first */
+  if (!(factory = gst_rtsp_media_mapping_find_factory (client->mapping, uri)))
+    goto no_factory;
 
   /* prepare the media and add it to the pipeline */
   if (!(media = gst_rtsp_media_factory_construct (factory, uri)))
     goto no_media;
+
+  /* create a pipeline to preroll the media */
+  pipeline = gst_pipeline_new ("client-describe-pipeline");
   
   gst_bin_add (GST_BIN_CAST (pipeline), media->element);
 
@@ -662,9 +663,6 @@ handle_options_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
   GstRTSPMethod options;
   GString *str;
 
-  gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, 
-	gst_rtsp_status_as_text (GST_RTSP_STS_OK), request);
-
   options = GST_RTSP_DESCRIBE |
 	    GST_RTSP_OPTIONS |
     //        GST_RTSP_PAUSE |
@@ -695,6 +693,9 @@ handle_options_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
     g_string_append (str, ", SET_PARAMETER");
   if (options & GST_RTSP_TEARDOWN)
     g_string_append (str, ", TEARDOWN");
+
+  gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, 
+	gst_rtsp_status_as_text (GST_RTSP_STS_OK), request);
 
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_PUBLIC, str->str);
 
