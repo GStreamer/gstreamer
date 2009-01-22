@@ -47,6 +47,14 @@ then
 fi
 . common/gst-autogen.sh
 
+# install pre-commit hook for doing clean commits
+if test ! -x .git/hooks/pre-commit;
+then
+    cp common/hooks/pre-commit.hook .git/hooks/pre-commit
+    chmod +x .git/hooks/pre-commit
+fi
+
+
 # Let's check if we can disable the building of the ffmpeg binary
 can_disable=`$FFMPEG_CO_DIR/configure --help | grep 'disable-ffmpeg' | wc -l`
 
