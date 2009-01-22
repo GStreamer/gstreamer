@@ -27,7 +27,7 @@ gboolean have_eos = FALSE;
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define REVERB_CAPS_STRING    \
+#define ECHO_CAPS_STRING    \
     "audio/x-raw-float, "               \
     "channels = (int) 2, "              \
     "rate = (int) 100000, "             \
@@ -52,24 +52,24 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 GstElement *
-setup_reverb ()
+setup_echo ()
 {
-  GstElement *reverb;
+  GstElement *echo;
 
-  GST_DEBUG ("setup_reverb");
-  reverb = gst_check_setup_element ("audioreverb");
-  mysrcpad = gst_check_setup_src_pad (reverb, &srctemplate, NULL);
-  mysinkpad = gst_check_setup_sink_pad (reverb, &sinktemplate, NULL);
+  GST_DEBUG ("setup_echo");
+  echo = gst_check_setup_element ("audioecho");
+  mysrcpad = gst_check_setup_src_pad (echo, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (echo, &sinktemplate, NULL);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  return reverb;
+  return echo;
 }
 
 void
-cleanup_reverb (GstElement * reverb)
+cleanup_echo (GstElement * echo)
 {
-  GST_DEBUG ("cleanup_reverb");
+  GST_DEBUG ("cleanup_echo");
 
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
@@ -77,30 +77,30 @@ cleanup_reverb (GstElement * reverb)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_src_pad (reverb);
-  gst_check_teardown_sink_pad (reverb);
-  gst_check_teardown_element (reverb);
+  gst_check_teardown_src_pad (echo);
+  gst_check_teardown_sink_pad (echo);
+  gst_check_teardown_element (echo);
 }
 
 GST_START_TEST (test_passthrough)
 {
-  GstElement *reverb;
+  GstElement *echo;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble in[] = { 1.0, -1.0, 0.0, 0.5, -0.5, 0.0 };
   gdouble *res;
 
-  reverb = setup_reverb ();
-  g_object_set (G_OBJECT (reverb), "delay", 1, "intensity", 0.0, "feedback",
+  echo = setup_echo ();
+  g_object_set (G_OBJECT (echo), "delay", 1, "intensity", 0.0, "feedback",
       0.0, NULL);
-  fail_unless (gst_element_set_state (reverb,
+  fail_unless (gst_element_set_state (echo,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (in));
   memcpy (GST_BUFFER_DATA (inbuffer), in, sizeof (in));
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, sizeof (in)) == 0);
-  caps = gst_caps_from_string (REVERB_CAPS_STRING);
+  caps = gst_caps_from_string (ECHO_CAPS_STRING);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -119,31 +119,31 @@ GST_START_TEST (test_passthrough)
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), in, sizeof (in)) == 0);
 
   /* cleanup */
-  cleanup_reverb (reverb);
+  cleanup_echo (echo);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_reverb)
+GST_START_TEST (test_echo)
 {
-  GstElement *reverb;
+  GstElement *echo;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble in[] = { 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, };
   gdouble out[] = { 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 0.0, 0.0 };
   gdouble *res;
 
-  reverb = setup_reverb ();
-  g_object_set (G_OBJECT (reverb), "delay", 20000, "intensity", 1.0, "feedback",
+  echo = setup_echo ();
+  g_object_set (G_OBJECT (echo), "delay", 20000, "intensity", 1.0, "feedback",
       0.0, NULL);
-  fail_unless (gst_element_set_state (reverb,
+  fail_unless (gst_element_set_state (echo,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (in));
   memcpy (GST_BUFFER_DATA (inbuffer), in, sizeof (in));
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, sizeof (in)) == 0);
-  caps = gst_caps_from_string (REVERB_CAPS_STRING);
+  caps = gst_caps_from_string (ECHO_CAPS_STRING);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -163,31 +163,31 @@ GST_START_TEST (test_reverb)
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, sizeof (out)) == 0);
 
   /* cleanup */
-  cleanup_reverb (reverb);
+  cleanup_echo (echo);
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_feedback)
 {
-  GstElement *reverb;
+  GstElement *echo;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gdouble in[] = { 1.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, };
   gdouble out[] = { 1.0, -1.0, 0.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, -1.0 };
   gdouble *res;
 
-  reverb = setup_reverb ();
-  g_object_set (G_OBJECT (reverb), "delay", 20000, "intensity", 1.0, "feedback",
+  echo = setup_echo ();
+  g_object_set (G_OBJECT (echo), "delay", 20000, "intensity", 1.0, "feedback",
       1.0, NULL);
-  fail_unless (gst_element_set_state (reverb,
+  fail_unless (gst_element_set_state (echo,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
   inbuffer = gst_buffer_new_and_alloc (sizeof (in));
   memcpy (GST_BUFFER_DATA (inbuffer), in, sizeof (in));
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, sizeof (in)) == 0);
-  caps = gst_caps_from_string (REVERB_CAPS_STRING);
+  caps = gst_caps_from_string (ECHO_CAPS_STRING);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -207,23 +207,23 @@ GST_START_TEST (test_feedback)
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, sizeof (out)) == 0);
 
   /* cleanup */
-  cleanup_reverb (reverb);
+  cleanup_echo (echo);
 }
 
 GST_END_TEST;
 
 static Suite *
-audioreverb_suite (void)
+audioecho_suite (void)
 {
-  Suite *s = suite_create ("audioreverb");
+  Suite *s = suite_create ("audioecho");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_passthrough);
-  tcase_add_test (tc_chain, test_reverb);
+  tcase_add_test (tc_chain, test_echo);
   tcase_add_test (tc_chain, test_feedback);
 
   return s;
 }
 
-GST_CHECK_MAIN (audioreverb);
+GST_CHECK_MAIN (audioecho);

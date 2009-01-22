@@ -117,19 +117,19 @@ gst_audio_iir_filter_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-audioreverb</FILE>
-<TITLE>audioreverb</TITLE>
-GstAudioReverb
+<FILE>element-audioecho</FILE>
+<TITLE>audioecho</TITLE>
+GstAudioEcho
 <SUBSECTION Standard>
-GstAudioReverbClass
-GstAudioReverbProcessFunc
-GST_AUDIO_REVERB
-GST_AUDIO_REVERB_CLASS
-GST_AUDIO_REVERB_GET_CLASS
-GST_IS_AUDIO_REVERB
-GST_IS_AUDIO_REVERB_CLASS
-GST_TYPE_AUDIO_REVERB
-gst_audio_reverb_get_type
+GstAudioEchoClass
+GstAudioEchoProcessFunc
+GST_AUDIO_ECHO
+GST_AUDIO_ECHO_CLASS
+GST_AUDIO_ECHO_GET_CLASS
+GST_IS_AUDIO_ECHO
+GST_IS_AUDIO_ECHO_CLASS
+GST_TYPE_AUDIO_ECHO
+gst_audio_echo_get_type
 </SECTION>
 
 <SECTION>

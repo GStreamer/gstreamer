@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_AUDIO_REVERB_H__
-#define __GST_AUDIO_REVERB_H__
+#ifndef __GST_AUDIO_ECHO_H__
+#define __GST_AUDIO_ECHO_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -28,18 +28,18 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AUDIO_REVERB            (gst_audio_reverb_get_type())
-#define GST_AUDIO_REVERB(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_REVERB,GstAudioReverb))
-#define GST_IS_AUDIO_REVERB(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_REVERB))
-#define GST_AUDIO_REVERB_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_REVERB,GstAudioReverbClass))
-#define GST_IS_AUDIO_REVERB_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_REVERB))
-#define GST_AUDIO_REVERB_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_REVERB,GstAudioReverbClass))
-typedef struct _GstAudioReverb GstAudioReverb;
-typedef struct _GstAudioReverbClass GstAudioReverbClass;
+#define GST_TYPE_AUDIO_ECHO            (gst_audio_echo_get_type())
+#define GST_AUDIO_ECHO(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIO_ECHO,GstAudioEcho))
+#define GST_IS_AUDIO_ECHO(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_ECHO))
+#define GST_AUDIO_ECHO_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_AUDIO_ECHO,GstAudioEchoClass))
+#define GST_IS_AUDIO_ECHO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_AUDIO_ECHO))
+#define GST_AUDIO_ECHO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_AUDIO_ECHO,GstAudioEchoClass))
+typedef struct _GstAudioEcho GstAudioEcho;
+typedef struct _GstAudioEchoClass GstAudioEchoClass;
 
-typedef void (*GstAudioReverbProcessFunc) (GstAudioReverb *, guint8 *, guint);
+typedef void (*GstAudioEchoProcessFunc) (GstAudioEcho *, guint8 *, guint);
 
-struct _GstAudioReverb
+struct _GstAudioEcho
 {
   GstAudioFilter audiofilter;
 
@@ -48,7 +48,7 @@ struct _GstAudioReverb
   gfloat feedback;
 
   /* < private > */
-  GstAudioReverbProcessFunc process;
+  GstAudioEchoProcessFunc process;
   guint delay_frames;
   guint8 *buffer;
   guint buffer_pos;
@@ -56,13 +56,13 @@ struct _GstAudioReverb
   guint buffer_size_frames;
 };
 
-struct _GstAudioReverbClass
+struct _GstAudioEchoClass
 {
   GstAudioFilterClass parent;
 };
 
-GType gst_audio_reverb_get_type (void);
+GType gst_audio_echo_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AUDIO_REVERB_H__ */
+#endif /* __GST_AUDIO_ECHO_H__ */

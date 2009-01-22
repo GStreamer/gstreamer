@@ -106,7 +106,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/alpha/gstalphacolor.h \
 	$(top_srcdir)/gst/apetag/gstapedemux.h \
 	$(top_srcdir)/gst/audiofx/audioamplify.h \
-	$(top_srcdir)/gst/audiofx/audioreverb.h \
+	$(top_srcdir)/gst/audiofx/audioecho.h \
 	$(top_srcdir)/gst/audiofx/audiodynamic.h \
 	$(top_srcdir)/gst/audiofx/audioinvert.h \
 	$(top_srcdir)/gst/audiofx/audiokaraoke.h \

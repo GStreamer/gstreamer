@@ -36,7 +36,7 @@
 #include "audiowsincband.h"
 #include "audiowsinclimit.h"
 #include "audiofirfilter.h"
-#include "audioreverb.h"
+#include "audioecho.h"
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
@@ -71,8 +71,8 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_AUDIO_WSINC_BAND) &&
       gst_element_register (plugin, "audiofirfilter", GST_RANK_NONE,
           GST_TYPE_AUDIO_FIR_FILTER) &&
-      gst_element_register (plugin, "audioreverb", GST_RANK_NONE,
-          GST_TYPE_AUDIO_REVERB));
+      gst_element_register (plugin, "audioecho", GST_RANK_NONE,
+          GST_TYPE_AUDIO_ECHO));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

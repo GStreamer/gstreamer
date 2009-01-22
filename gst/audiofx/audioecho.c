@@ -19,15 +19,15 @@
  */
 
 /**
- * SECTION:element-audioreverb
+ * SECTION:element-audioecho
  *
  * <refsect2>
- * audioreverb adds an echo or revert effect to an audio stream. The echo
- * reverb, intensity and the percentage of feedback can be configured.
+ * audioecho adds an echo or reverb effect to an audio stream. The echo
+ * delay, intensity and the percentage of feedback can be configured.
  * <para>
  * <programlisting>
- * gst-launch filesrc location="melo1.ogg" ! audioconvert ! audioreverb reverb=500000000 intensity=0.6 feedback=0.4 ! audioconvert ! autoaudiosink
- * gst-launch filesrc location="melo1.ogg" ! decodebin ! audioconvert ! audioreverb reverb=50000000 intensity=0.6 feedback=0.4 ! audioconvert ! autoaudiosink
+ * gst-launch filesrc location="melo1.ogg" ! audioconvert ! audioecho delay=500000000 intensity=0.6 feedback=0.4 ! audioconvert ! autoaudiosink
+ * gst-launch filesrc location="melo1.ogg" ! decodebin ! audioconvert ! audioecho delay=50000000 intensity=0.6 feedback=0.4 ! audioconvert ! autoaudiosink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -45,9 +45,9 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
-#include "audioreverb.h"
+#include "audioecho.h"
 
-#define GST_CAT_DEFAULT gst_audio_reverb_debug
+#define GST_CAT_DEFAULT gst_audio_echo_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 enum
@@ -66,37 +66,37 @@ enum
     " channels=(int)[1,MAX]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_reverb_debug, "audioreverb", 0, "audioreverb element");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_echo_debug, "audioecho", 0, "audioecho element");
 
-GST_BOILERPLATE_FULL (GstAudioReverb, gst_audio_reverb, GstAudioFilter,
+GST_BOILERPLATE_FULL (GstAudioEcho, gst_audio_echo, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
-static void gst_audio_reverb_set_property (GObject * object, guint prop_id,
+static void gst_audio_echo_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_audio_reverb_get_property (GObject * object, guint prop_id,
+static void gst_audio_echo_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_audio_reverb_finalize (GObject * object);
+static void gst_audio_echo_finalize (GObject * object);
 
-static gboolean gst_audio_reverb_setup (GstAudioFilter * self,
+static gboolean gst_audio_echo_setup (GstAudioFilter * self,
     GstRingBufferSpec * format);
-static gboolean gst_audio_reverb_stop (GstBaseTransform * base);
-static GstFlowReturn gst_audio_reverb_transform_ip (GstBaseTransform * base,
+static gboolean gst_audio_echo_stop (GstBaseTransform * base);
+static GstFlowReturn gst_audio_echo_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
-static void gst_audio_reverb_transform_float (GstAudioReverb * self,
+static void gst_audio_echo_transform_float (GstAudioEcho * self,
     gfloat * data, guint num_samples);
-static void gst_audio_reverb_transform_double (GstAudioReverb * self,
+static void gst_audio_echo_transform_double (GstAudioEcho * self,
     gdouble * data, guint num_samples);
 
 /* GObject vmethod implementations */
 
 static void
-gst_audio_reverb_base_init (gpointer klass)
+gst_audio_echo_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;
 
-  gst_element_class_set_details_simple (element_class, "Audio reverb",
+  gst_element_class_set_details_simple (element_class, "Audio echo",
       "Filter/Effect/Audio",
       "Adds an echo or reverb effect to an audio stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
@@ -108,19 +108,19 @@ gst_audio_reverb_base_init (gpointer klass)
 }
 
 static void
-gst_audio_reverb_class_init (GstAudioReverbClass * klass)
+gst_audio_echo_class_init (GstAudioEchoClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBaseTransformClass *basetransform_class = (GstBaseTransformClass *) klass;
   GstAudioFilterClass *audioself_class = (GstAudioFilterClass *) klass;
 
-  gobject_class->set_property = gst_audio_reverb_set_property;
-  gobject_class->get_property = gst_audio_reverb_get_property;
-  gobject_class->finalize = gst_audio_reverb_finalize;
+  gobject_class->set_property = gst_audio_echo_set_property;
+  gobject_class->get_property = gst_audio_echo_get_property;
+  gobject_class->finalize = gst_audio_echo_finalize;
 
   g_object_class_install_property (gobject_class, PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",
-          "Delay of the echo in nanoseconds", 1, G_MAXUINT64,
+          "Delay of the echo in nanosecondsecho", 1, G_MAXUINT64,
           1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
           | GST_PARAM_CONTROLLABLE));
 
@@ -136,14 +136,14 @@ gst_audio_reverb_class_init (GstAudioReverbClass * klass)
           0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
           | GST_PARAM_CONTROLLABLE));
 
-  audioself_class->setup = GST_DEBUG_FUNCPTR (gst_audio_reverb_setup);
+  audioself_class->setup = GST_DEBUG_FUNCPTR (gst_audio_echo_setup);
   basetransform_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_audio_reverb_transform_ip);
-  basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_audio_reverb_stop);
+      GST_DEBUG_FUNCPTR (gst_audio_echo_transform_ip);
+  basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_audio_echo_stop);
 }
 
 static void
-gst_audio_reverb_init (GstAudioReverb * self, GstAudioReverbClass * klass)
+gst_audio_echo_init (GstAudioEcho * self, GstAudioEchoClass * klass)
 {
   self->delay = 1;
   self->intensity = 0.0;
@@ -153,9 +153,9 @@ gst_audio_reverb_init (GstAudioReverb * self, GstAudioReverbClass * klass)
 }
 
 static void
-gst_audio_reverb_finalize (GObject * object)
+gst_audio_echo_finalize (GObject * object)
 {
-  GstAudioReverb *self = GST_AUDIO_REVERB (object);
+  GstAudioEcho *self = GST_AUDIO_ECHO (object);
 
   g_free (self->buffer);
   self->buffer = NULL;
@@ -164,10 +164,10 @@ gst_audio_reverb_finalize (GObject * object)
 }
 
 static void
-gst_audio_reverb_set_property (GObject * object, guint prop_id,
+gst_audio_echo_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAudioReverb *self = GST_AUDIO_REVERB (object);
+  GstAudioEcho *self = GST_AUDIO_ECHO (object);
 
   switch (prop_id) {
     case PROP_DELAY:{
@@ -181,9 +181,9 @@ gst_audio_reverb_set_property (GObject * object, guint prop_id,
       channels = GST_AUDIO_FILTER (self)->format.channels;
 
       if (self->buffer && rate > 0) {
-        guint new_reverb =
+        guint new_echo =
             MAX (gst_util_uint64_scale (self->delay, rate, GST_SECOND), 1);
-        guint new_size = new_reverb * width * channels;
+        guint new_size = new_echo * width * channels;
 
         if (new_size > self->buffer_size) {
           guint i;
@@ -198,7 +198,7 @@ gst_audio_reverb_set_property (GObject * object, guint prop_id,
                             self->buffer_pos) % self->buffer_size_frames) *
                     width * channels], channels * width);
           }
-          self->buffer_size_frames = self->delay_frames = new_reverb;
+          self->buffer_size_frames = self->delay_frames = new_echo;
           self->buffer_pos = 0;
         }
       } else if (self->buffer) {
@@ -228,10 +228,10 @@ gst_audio_reverb_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audio_reverb_get_property (GObject * object, guint prop_id,
+gst_audio_echo_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAudioReverb *self = GST_AUDIO_REVERB (object);
+  GstAudioEcho *self = GST_AUDIO_ECHO (object);
 
   switch (prop_id) {
     case PROP_DELAY:
@@ -258,17 +258,17 @@ gst_audio_reverb_get_property (GObject * object, guint prop_id,
 /* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_reverb_setup (GstAudioFilter * base, GstRingBufferSpec * format)
+gst_audio_echo_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  GstAudioReverb *self = GST_AUDIO_REVERB (base);
+  GstAudioEcho *self = GST_AUDIO_ECHO (base);
   gboolean ret = TRUE;
 
   if (format->type == GST_BUFTYPE_FLOAT && format->width == 32)
-    self->process = (GstAudioReverbProcessFunc)
-        gst_audio_reverb_transform_float;
+    self->process = (GstAudioEchoProcessFunc)
+        gst_audio_echo_transform_float;
   else if (format->type == GST_BUFTYPE_FLOAT && format->width == 64)
-    self->process = (GstAudioReverbProcessFunc)
-        gst_audio_reverb_transform_double;
+    self->process = (GstAudioEchoProcessFunc)
+        gst_audio_echo_transform_double;
   else
     ret = FALSE;
 
@@ -282,9 +282,9 @@ gst_audio_reverb_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 }
 
 static gboolean
-gst_audio_reverb_stop (GstBaseTransform * base)
+gst_audio_echo_stop (GstBaseTransform * base)
 {
-  GstAudioReverb *self = GST_AUDIO_REVERB (base);
+  GstAudioEcho *self = GST_AUDIO_ECHO (base);
 
   g_free (self->buffer);
   self->buffer = NULL;
@@ -297,30 +297,30 @@ gst_audio_reverb_stop (GstBaseTransform * base)
 
 #define TRANSFORM_FUNC(name, type) \
 static void \
-gst_audio_reverb_transform_##name (GstAudioReverb * self, \
+gst_audio_echo_transform_##name (GstAudioEcho * self, \
     type * data, guint num_samples) \
 { \
   type *buffer = (type *) self->buffer; \
   guint channels = GST_AUDIO_FILTER (self)->format.channels; \
   guint rate = GST_AUDIO_FILTER (self)->format.rate; \
   guint i, j; \
-  guint reverb_index = self->buffer_size_frames - self->delay_frames; \
-  gdouble reverb_off = ((((gdouble) self->delay) * rate) / GST_SECOND) - self->delay_frames; \
+  guint echo_index = self->buffer_size_frames - self->delay_frames; \
+  gdouble echo_off = ((((gdouble) self->delay) * rate) / GST_SECOND) - self->delay_frames; \
   \
-  if (reverb_off < 0.0) \
-    reverb_off = 0.0; \
+  if (echo_off < 0.0) \
+    echo_off = 0.0; \
   \
   num_samples /= channels; \
   \
   for (i = 0; i < num_samples; i++) { \
-    guint echo0_index = ((reverb_index + self->buffer_pos) % self->buffer_size_frames) * channels; \
-    guint echo1_index = ((reverb_index + self->buffer_pos +1) % self->buffer_size_frames) * channels; \
+    guint echo0_index = ((echo_index + self->buffer_pos) % self->buffer_size_frames) * channels; \
+    guint echo1_index = ((echo_index + self->buffer_pos +1) % self->buffer_size_frames) * channels; \
     guint rbout_index = (self->buffer_pos % self->buffer_size_frames) * channels; \
     for (j = 0; j < channels; j++) { \
       gdouble in = data[i*channels + j]; \
       gdouble echo0 = buffer[echo0_index + j]; \
       gdouble echo1 = buffer[echo1_index + j]; \
-      gdouble echo = echo0 + (echo1-echo0)*reverb_off; \
+      gdouble echo = echo0 + (echo1-echo0)*echo_off; \
       type out = in + self->intensity * echo; \
       \
       data[i*channels + j] = out; \
@@ -336,9 +336,9 @@ TRANSFORM_FUNC (double, gdouble);
 
 /* GstBaseTransform vmethod implementations */
 static GstFlowReturn
-gst_audio_reverb_transform_ip (GstBaseTransform * base, GstBuffer * buf)
+gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
-  GstAudioReverb *self = GST_AUDIO_REVERB (base);
+  GstAudioEcho *self = GST_AUDIO_ECHO (base);
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (self)->format.width / 8);
 

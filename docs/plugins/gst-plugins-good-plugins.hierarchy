@@ -64,7 +64,7 @@ GObject
             GstAudioWSincLimit
             GstAudioWSincBand
             GstAudioFIRFilter
-          GstAudioReverb
+          GstAudioEcho
           GstIirEqualizer
             GstIirEqualizerNBands
             GstIirEqualizer3Bands

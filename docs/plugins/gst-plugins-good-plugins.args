@@ -19768,3 +19768,33 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAudioEcho::delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Delay</NICK>
+<BLURB>Delay of the echo in nanosecondsecho.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioEcho::feedback</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Feedback</NICK>
+<BLURB>Amount of feedback.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioEcho::intensity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intensity</NICK>
+<BLURB>Intensity of the echo.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
