@@ -328,6 +328,11 @@ static const MXFUL sound_essence_compression_dts = { {
     0x03, 0x02, 0x1c, 0x00}
 };
 
+static const MXFUL sound_essence_compression_aac = { {
+        0x06, 0x0E, 0x2B, 0x34, 0x04, 0x01, 0x01, 0x03, 0x04, 0x02, 0x02, 0x02,
+    0x03, 0x03, 0x01, 0x00}
+};
+
 static GstCaps *
 mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data,
@@ -438,6 +443,11 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
             &sound_essence_compression_dts)) {
       caps = gst_caps_new_simple ("audio/x-dts", NULL);
       codec_name = "Dolby DTS Audio";
+    } else if (mxf_ul_is_equal (&s->sound_essence_compression,
+            &sound_essence_compression_aac)) {
+      caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT,
+          2, NULL);
+      codec_name = "MPEG-2 AAC Audio";
     }
 
     if (caps) {
