@@ -41,6 +41,13 @@ G_BEGIN_DECLS
 typedef struct _GstMXFDemux GstMXFDemux;
 typedef struct _GstMXFDemuxClass GstMXFDemuxClass;
 
+typedef struct
+{
+  MXFPartitionPack partition;
+  MXFPrimerPack primer;
+  gboolean parsed_metadata;
+} GstMXFDemuxPartition;
+
 struct _GstMXFDemux
 {
   GstElement element;
@@ -68,11 +75,10 @@ struct _GstMXFDemux
   guint64 footer_partition_pack_offset;
 
   /* MXF file state */
-  MXFPartitionPack partition;
-  MXFPrimerPack primer;
+  GList *partitions;
+  GstMXFDemuxPartition *current_partition;
 
-  gboolean parsed_random_index_pack;
-  GArray *partition_index;
+  GArray *random_index_pack;
   GArray *index_table;
 
   /* Structural metadata */

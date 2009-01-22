@@ -603,8 +603,6 @@ mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
   }
 #endif
 
-  pack->valid = TRUE;
-
   return TRUE;
 
 error:
@@ -965,8 +963,6 @@ mxf_primer_pack_parse (const MXFUL * key, MXFPrimerPack * pack,
     GST_DEBUG ("  Adding mapping = 0x%04x -> %s", local_tag,
         mxf_ul_to_string (uid, str));
   }
-
-  pack->valid = TRUE;
 
   return TRUE;
 

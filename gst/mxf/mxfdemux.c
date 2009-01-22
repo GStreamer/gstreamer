@@ -208,15 +208,29 @@ gst_mxf_demux_remove_pads (GstMXFDemux * demux)
 }
 
 static void
-gst_mxf_demux_reset_mxf_state (GstMXFDemux * demux)
+gst_mxf_demux_partition_free (GstMXFDemuxPartition * partition)
 {
-  GST_DEBUG_OBJECT (demux, "Resetting MXF state");
-  mxf_partition_pack_reset (&demux->partition);
-  mxf_primer_pack_reset (&demux->primer);
+  mxf_partition_pack_reset (&partition->partition);
+  mxf_primer_pack_reset (&partition->primer);
+
+  g_free (partition);
 }
 
 static void
-gst_mxf_demux_reset_track_metadata (GstMXFDemux *demux)
+gst_mxf_demux_reset_mxf_state (GstMXFDemux * demux)
+{
+  GST_DEBUG_OBJECT (demux, "Resetting MXF state");
+
+  g_list_foreach (demux->partitions, (GFunc) gst_mxf_demux_partition_free,
+      NULL);
+  g_list_free (demux->partitions);
+  demux->partitions = NULL;
+
+  demux->current_partition = NULL;
+}
+
+static void
+gst_mxf_demux_reset_track_metadata (GstMXFDemux * demux)
 {
   guint i;
 
@@ -263,7 +277,6 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   demux->flushing = FALSE;
 
-  demux->header_partition_pack_offset = 0;
   demux->footer_partition_pack_offset = 0;
   demux->offset = 0;
 
@@ -287,11 +300,10 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   gst_mxf_demux_remove_pads (demux);
 
-  if (demux->partition_index) {
-    g_array_free (demux->partition_index, TRUE);
-    demux->partition_index = NULL;
+  if (demux->random_index_pack) {
+    g_array_free (demux->random_index_pack, TRUE);
+    demux->random_index_pack = NULL;
   }
-  demux->parsed_random_index_pack = FALSE;
 
   if (demux->index_table) {
     guint i;
@@ -397,49 +409,59 @@ static GstFlowReturn
 gst_mxf_demux_handle_partition_pack (GstMXFDemux * demux, const MXFUL * key,
     GstBuffer * buffer)
 {
-  if (demux->partition.valid) {
-    mxf_partition_pack_reset (&demux->partition);
-    mxf_primer_pack_reset (&demux->primer);
-  }
+  MXFPartitionPack partition;
+  GList *l;
+  GstMXFDemuxPartition *p = NULL;
 
   GST_DEBUG_OBJECT (demux,
       "Handling partition pack of size %u at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  if (!mxf_partition_pack_parse (key, &demux->partition,
+  for (l = demux->partitions; l; l = l->next) {
+    GstMXFDemuxPartition *tmp = l->data;
+
+    if (tmp->partition.this_partition + demux->run_in == demux->offset &&
+        tmp->partition.major_version == 0x0001) {
+      GST_DEBUG_OBJECT (demux, "Partition already parsed");
+      goto out;
+    }
+  }
+
+
+  if (!mxf_partition_pack_parse (key, &partition,
           GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
     GST_ERROR_OBJECT (demux, "Parsing partition pack failed");
     return GST_FLOW_ERROR;
   }
 
-  if (demux->partition.type == MXF_PARTITION_PACK_HEADER)
-    demux->footer_partition_pack_offset = demux->partition.footer_partition;
-
-  if (!demux->parsed_random_index_pack) {
-    MXFRandomIndexPackEntry entry, *last_entry = NULL;
-
-    GST_DEBUG_OBJECT (demux, "Adding partition pack to index");
-
-    if (demux->partition_index && demux->partition_index->len > 0) {
-      last_entry =
-          &g_array_index (demux->partition_index, MXFRandomIndexPackEntry,
-          demux->partition_index->len - 1);
-    } else if (!demux->partition_index) {
-      demux->partition_index =
-          g_array_new (FALSE, FALSE, sizeof (MXFRandomIndexPackEntry));
-    }
-
-    if (last_entry && last_entry->offset >= demux->offset) {
-      GST_DEBUG_OBJECT (demux,
-          "Not adding partition pack to index because it's before the last indexed one");
-      return GST_FLOW_OK;
-    }
-
-    entry.offset = demux->offset;
-    entry.body_sid = demux->partition.body_sid;
-
-    g_array_append_val (demux->partition_index, entry);
+  if (partition.this_partition != demux->offset + demux->run_in) {
+    GST_WARNING_OBJECT (demux, "Partition with incorrect offset");
+    partition.this_partition = demux->offset + demux->run_in;
   }
+
+  if (partition.type == MXF_PARTITION_PACK_HEADER)
+    demux->footer_partition_pack_offset = partition.footer_partition;
+
+  for (l = demux->partitions; l; l = l->next) {
+    GstMXFDemuxPartition *tmp = l->data;
+
+    if (tmp->partition.this_partition + demux->run_in == demux->offset) {
+      p = tmp;
+      break;
+    }
+  }
+
+  if (p) {
+    mxf_partition_pack_reset (&p->partition);
+    memcpy (&p->partition, &partition, sizeof (MXFPartitionPack));
+  } else {
+    p = g_new0 (GstMXFDemuxPartition, 1);
+    memcpy (&p->partition, &partition, sizeof (MXFPartitionPack));
+    demux->partitions = g_list_prepend (demux->partitions, p);
+  }
+
+out:
+  demux->current_partition = p;
 
   return GST_FLOW_OK;
 }
@@ -452,17 +474,17 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
       "Handling primer pack of size %u at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  if (G_UNLIKELY (!demux->partition.valid)) {
+  if (G_UNLIKELY (!demux->current_partition)) {
     GST_ERROR_OBJECT (demux, "Primer pack before partition pack");
     return GST_FLOW_ERROR;
   }
 
-  if (G_UNLIKELY (demux->primer.valid)) {
-    GST_ERROR_OBJECT (demux, "Primer pack already exists");
+  if (G_UNLIKELY (demux->current_partition->primer.mappings)) {
+    GST_DEBUG_OBJECT (demux, "Primer pack already exists");
     return GST_FLOW_OK;
   }
 
-  if (!mxf_primer_pack_parse (key, &demux->primer,
+  if (!mxf_primer_pack_parse (key, &demux->current_partition->primer,
           GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
     GST_ERROR_OBJECT (demux, "Parsing primer pack failed");
     return GST_FLOW_ERROR;
@@ -583,11 +605,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -873,18 +895,23 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
       G_GUINT64_FORMAT " of type 0x%04x", GST_BUFFER_SIZE (buffer),
       demux->offset, type);
 
-  if (G_UNLIKELY (!demux->partition.valid)) {
+  if (G_UNLIKELY (!demux->current_partition)) {
     GST_ERROR_OBJECT (demux, "Partition pack doesn't exist");
     return GST_FLOW_ERROR;
   }
 
-  if (G_UNLIKELY (!demux->primer.valid)) {
+  if (G_UNLIKELY (!demux->current_partition->primer.mappings)) {
     GST_ERROR_OBJECT (demux, "Primer pack doesn't exists");
     return GST_FLOW_ERROR;
   }
 
+  if (demux->current_partition->parsed_metadata) {
+    GST_DEBUG_OBJECT (demux, "Metadata of this partition was already parsed");
+    return GST_FLOW_OK;
+  }
+
   metadata =
-      mxf_metadata_new (type, &demux->primer, demux->offset,
+      mxf_metadata_new (type, &demux->current_partition->primer, demux->offset,
       GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   if (!metadata) {
@@ -892,13 +919,29 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_ERROR;
   }
 
+  demux->update_metadata = TRUE;
+
   if (!demux->metadata)
     demux->metadata = mxf_metadata_hash_table_new ();
 
   old =
       g_hash_table_lookup (demux->metadata,
       &MXF_METADATA_BASE (metadata)->instance_uid);
-  if (old
+
+  if (old && G_TYPE_FROM_INSTANCE (old) != G_TYPE_FROM_INSTANCE (metadata)) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar str[48];
+#endif
+
+    GST_DEBUG_OBJECT (demux,
+        "Metadata with instance uid %s already exists and has different type '%s',"
+        " expected '%s'",
+        mxf_ul_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str),
+        g_type_name (G_TYPE_FROM_INSTANCE (old)),
+        g_type_name (G_TYPE_FROM_INSTANCE (metadata)));
+    gst_mini_object_unref (GST_MINI_OBJECT (metadata));
+    return GST_FLOW_ERROR;
+  } else if (old
       && MXF_METADATA_BASE (old)->offset >=
       MXF_METADATA_BASE (metadata)->offset) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -916,7 +959,6 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     demux->preface = MXF_METADATA_PREFACE (metadata);
   }
 
-  demux->update_metadata = TRUE;
   gst_mxf_demux_reset_track_metadata (demux);
 
   g_hash_table_replace (demux->metadata,
@@ -942,17 +984,23 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
       G_GUINT64_FORMAT " with scheme 0x%02x and type 0x%06x",
       GST_BUFFER_SIZE (buffer), demux->offset, scheme, type);
 
-  if (G_UNLIKELY (!demux->partition.valid)) {
+  if (G_UNLIKELY (!demux->current_partition)) {
     GST_ERROR_OBJECT (demux, "Partition pack doesn't exist");
     return GST_FLOW_ERROR;
   }
 
-  if (G_UNLIKELY (!demux->primer.valid)) {
+  if (G_UNLIKELY (!demux->current_partition->primer.mappings)) {
     GST_ERROR_OBJECT (demux, "Primer pack doesn't exists");
     return GST_FLOW_ERROR;
   }
 
-  m = mxf_descriptive_metadata_new (scheme, type, &demux->primer, demux->offset,
+  if (demux->current_partition->parsed_metadata) {
+    GST_DEBUG_OBJECT (demux, "Metadata of this partition was already parsed");
+    return GST_FLOW_OK;
+  }
+
+  m = mxf_descriptive_metadata_new (scheme, type,
+      &demux->current_partition->primer, demux->offset,
       GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   if (!m) {
@@ -962,13 +1010,30 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
+  demux->update_metadata = TRUE;
+
   if (!demux->metadata)
     demux->metadata = mxf_metadata_hash_table_new ();
 
   old =
       g_hash_table_lookup (demux->metadata,
       &MXF_METADATA_BASE (m)->instance_uid);
-  if (old && MXF_METADATA_BASE (old)->offset >= MXF_METADATA_BASE (m)->offset) {
+
+  if (old && G_TYPE_FROM_INSTANCE (old) != G_TYPE_FROM_INSTANCE (m)) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar str[48];
+#endif
+
+    GST_DEBUG_OBJECT (demux,
+        "Metadata with instance uid %s already exists and has different type '%s',"
+        " expected '%s'",
+        mxf_ul_to_string (&MXF_METADATA_BASE (m)->instance_uid, str),
+        g_type_name (G_TYPE_FROM_INSTANCE (old)),
+        g_type_name (G_TYPE_FROM_INSTANCE (m)));
+    gst_mini_object_unref (GST_MINI_OBJECT (m));
+    return GST_FLOW_ERROR;
+  } else if (old
+      && MXF_METADATA_BASE (old)->offset >= MXF_METADATA_BASE (m)->offset) {
 #ifndef GST_DISABLE_GST_DEBUG
     gchar str[48];
 #endif
@@ -980,7 +1045,6 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     return GST_FLOW_OK;
   }
 
-  demux->update_metadata = TRUE;
   gst_mxf_demux_reset_track_metadata (demux);
 
   g_hash_table_replace (demux->metadata, &MXF_METADATA_BASE (m)->instance_uid,
@@ -1020,8 +1084,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   GST_DEBUG_OBJECT (demux, "Switching to component %u", pad->current_component);
 
   pad->component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component]);
   if (pad->component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1029,8 +1093,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->component->source_package
       || !pad->component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->source_package)->
+      tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1167,7 +1231,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
               content_storage->essence_container_data[j];
 
           if (edata && p->source_package == edata->linked_package
-              && demux->partition.body_sid == edata->body_sid) {
+              && demux->current_partition->partition.body_sid ==
+              edata->body_sid) {
             pad = p;
             break;
           }
@@ -1303,22 +1368,50 @@ static GstFlowReturn
 gst_mxf_demux_handle_random_index_pack (GstMXFDemux * demux, const MXFUL * key,
     GstBuffer * buffer)
 {
+  guint i;
+
   GST_DEBUG_OBJECT (demux,
       "Handling random index pack of size %u at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  if (demux->partition_index || demux->parsed_random_index_pack) {
+  if (demux->random_index_pack) {
     GST_DEBUG_OBJECT (demux, "Already parsed random index pack");
     return GST_FLOW_OK;
   }
 
   if (!mxf_random_index_pack_parse (key, GST_BUFFER_DATA (buffer),
-          GST_BUFFER_SIZE (buffer), &demux->partition_index)) {
+          GST_BUFFER_SIZE (buffer), &demux->random_index_pack)) {
     GST_ERROR_OBJECT (demux, "Parsing random index pack failed");
     return GST_FLOW_ERROR;
   }
 
-  demux->parsed_random_index_pack = TRUE;
+  for (i = 0; i < demux->random_index_pack->len; i++) {
+    GList *l;
+    GstMXFDemuxPartition *p = NULL;
+    MXFRandomIndexPackEntry *e =
+        &g_array_index (demux->random_index_pack, MXFRandomIndexPackEntry, i);
+
+    if (e->offset < demux->run_in) {
+      GST_ERROR_OBJECT (demux, "Invalid random index pack entry");
+      return GST_FLOW_ERROR;
+    }
+
+    for (l = demux->partitions; l; l = l->next) {
+      GstMXFDemuxPartition *tmp = l->data;
+
+      if (tmp->partition.this_partition + demux->run_in == e->offset) {
+        p = tmp;
+        break;
+      }
+    }
+
+    if (!p) {
+      p = g_new0 (GstMXFDemuxPartition, 1);
+      p->partition.this_partition = e->offset - demux->run_in;
+      p->partition.body_sid = e->body_sid;
+      demux->partitions = g_list_prepend (demux->partitions, p);
+    }
+  }
 
   return GST_FLOW_OK;
 }
@@ -1335,13 +1428,14 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
       "Handling index table segment of size %u at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), demux->offset);
 
-  if (!demux->primer.valid) {
+  if (!demux->current_partition->primer.mappings) {
     GST_WARNING_OBJECT (demux, "Invalid primer pack");
     return GST_FLOW_OK;
   }
 
-  if (!mxf_index_table_segment_parse (key, &segment, &demux->primer,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
+  if (!mxf_index_table_segment_parse (key, &segment,
+          &demux->current_partition->primer, GST_BUFFER_DATA (buffer),
+          GST_BUFFER_SIZE (buffer))) {
 
     GST_ERROR_OBJECT (demux, "Parsing index table segment failed");
     return GST_FLOW_ERROR;
@@ -1508,36 +1602,27 @@ gst_mxf_demux_pull_random_index_pack (GstMXFDemux * demux)
 static void
 gst_mxf_demux_parse_footer_metadata (GstMXFDemux * demux)
 {
-  MXFPartitionPack partition;
-  MXFPrimerPack primer;
   guint64 old_offset = demux->offset;
   MXFUL key;
   GstBuffer *buffer = NULL;
   guint read = 0;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstMXFDemuxPartition *old_partition = demux->current_partition;
 
-  memcpy (&partition, &demux->partition, sizeof (MXFPartitionPack));
-  memcpy (&primer, &demux->primer, sizeof (MXFPrimerPack));
-  memset (&demux->partition, 0, sizeof (MXFPartitionPack));
-  memset (&demux->primer, 0, sizeof (MXFPrimerPack));
+  demux->current_partition = NULL;
 
   gst_mxf_demux_reset_metadata (demux);
 
   if (demux->footer_partition_pack_offset != 0) {
-    demux->offset =
-        demux->header_partition_pack_offset +
-        demux->footer_partition_pack_offset;
+    demux->offset = demux->run_in + demux->footer_partition_pack_offset;
   } else {
     MXFRandomIndexPackEntry *entry =
-        &g_array_index (demux->partition_index, MXFRandomIndexPackEntry,
-        demux->partition_index->len - 1);
+        &g_array_index (demux->random_index_pack, MXFRandomIndexPackEntry,
+        demux->random_index_pack->len - 1);
     demux->offset = entry->offset;
   }
 
 next_try:
-  mxf_partition_pack_reset (&demux->partition);
-  mxf_primer_pack_reset (&demux->primer);
-
   ret =
       gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
       &read);
@@ -1547,22 +1632,21 @@ next_try:
   if (!mxf_is_partition_pack (&key))
     goto out;
 
-  if (!mxf_partition_pack_parse (&key, &demux->partition,
-          GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer)))
+  if (gst_mxf_demux_handle_partition_pack (demux, &key, buffer) != GST_FLOW_OK)
     goto out;
 
   demux->offset += read;
   gst_buffer_unref (buffer);
   buffer = NULL;
 
-  if (demux->partition.header_byte_count == 0) {
-    if (demux->partition.prev_partition == 0
-        || demux->partition.this_partition == 0)
+  if (demux->current_partition->partition.header_byte_count == 0) {
+    if (demux->current_partition->partition.prev_partition == 0
+        || demux->current_partition->partition.this_partition == 0)
       goto out;
 
     demux->offset =
-        demux->header_partition_pack_offset + demux->partition.this_partition -
-        demux->partition.prev_partition;
+        demux->run_in + demux->current_partition->partition.this_partition -
+        demux->current_partition->partition.prev_partition;
     goto next_try;
   }
 
@@ -1572,8 +1656,9 @@ next_try:
         &read);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       demux->offset =
-          demux->header_partition_pack_offset +
-          demux->partition.this_partition - demux->partition.prev_partition;
+          demux->run_in +
+          demux->current_partition->partition.this_partition -
+          demux->current_partition->partition.prev_partition;
       goto next_try;
     }
 
@@ -1582,15 +1667,18 @@ next_try:
       gst_buffer_unref (buffer);
       buffer = NULL;
     } else if (mxf_is_primer_pack (&key)) {
-      if (!mxf_primer_pack_parse (&key, &demux->primer,
-              GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer))) {
-        demux->offset += read;
-        gst_buffer_unref (buffer);
-        buffer = NULL;
-        demux->offset =
-            demux->header_partition_pack_offset +
-            demux->partition.this_partition - demux->partition.prev_partition;
-        goto next_try;
+      if (!demux->current_partition->primer.mappings) {
+        if (gst_mxf_demux_handle_primer_pack (demux, &key,
+                buffer) != GST_FLOW_OK) {
+          demux->offset += read;
+          gst_buffer_unref (buffer);
+          buffer = NULL;
+          demux->offset =
+              demux->run_in +
+              demux->current_partition->partition.this_partition -
+              demux->current_partition->partition.prev_partition;
+          goto next_try;
+        }
       }
       demux->offset += read;
       gst_buffer_unref (buffer);
@@ -1600,8 +1688,9 @@ next_try:
       gst_buffer_unref (buffer);
       buffer = NULL;
       demux->offset =
-          demux->header_partition_pack_offset +
-          demux->partition.this_partition - demux->partition.prev_partition;
+          demux->run_in +
+          demux->current_partition->partition.this_partition -
+          demux->current_partition->partition.prev_partition;
       goto next_try;
     }
   }
@@ -1613,8 +1702,9 @@ next_try:
         &read);
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       demux->offset =
-          demux->header_partition_pack_offset +
-          demux->partition.this_partition - demux->partition.prev_partition;
+          demux->run_in +
+          demux->current_partition->partition.this_partition -
+          demux->current_partition->partition.prev_partition;
       goto next_try;
     }
 
@@ -1627,8 +1717,9 @@ next_try:
       if (G_UNLIKELY (ret != GST_FLOW_OK)) {
         gst_mxf_demux_reset_metadata (demux);
         demux->offset =
-            demux->header_partition_pack_offset +
-            demux->partition.this_partition - demux->partition.prev_partition;
+            demux->run_in +
+            demux->current_partition->partition.this_partition -
+            demux->current_partition->partition.prev_partition;
         goto next_try;
       }
     } else if (mxf_is_descriptive_metadata (&key)) {
@@ -1651,9 +1742,10 @@ next_try:
       GST_FLOW_OK
       || gst_mxf_demux_handle_header_metadata_update_streams (demux) !=
       GST_FLOW_OK) {
+    demux->current_partition->parsed_metadata = TRUE;
     demux->offset =
-        demux->header_partition_pack_offset + demux->partition.this_partition -
-        demux->partition.prev_partition;
+        demux->run_in + demux->current_partition->partition.this_partition -
+        demux->current_partition->partition.prev_partition;
     goto next_try;
   }
 
@@ -1661,12 +1753,8 @@ out:
   if (buffer)
     gst_buffer_unref (buffer);
 
-  mxf_partition_pack_reset (&demux->partition);
-  mxf_primer_pack_reset (&demux->primer);
-  memcpy (&demux->partition, &partition, sizeof (MXFPartitionPack));
-  memcpy (&demux->primer, &primer, sizeof (MXFPrimerPack));
-
   demux->offset = old_offset;
+  demux->current_partition = old_partition;
 }
 
 static GstFlowReturn
@@ -1682,6 +1770,7 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
       && demux->preface
       && !mxf_is_metadata (key) && !mxf_is_descriptive_metadata (key)
       && !mxf_is_fill (key)) {
+    demux->current_partition->parsed_metadata = TRUE;
     if ((ret =
             gst_mxf_demux_handle_header_metadata_resolve_references (demux)) !=
         GST_FLOW_OK)
@@ -1735,11 +1824,11 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   /* In pull mode try to get the last metadata */
   if (mxf_is_partition_pack (key) && ret == GST_FLOW_OK
       && demux->pull_footer_metadata
-      && demux->random_access && demux->partition.valid
-      && demux->partition.type == MXF_PARTITION_PACK_HEADER
-      && (!demux->partition.closed || !demux->partition.complete)
-      && (demux->footer_partition_pack_offset != 0 ||
-          demux->parsed_random_index_pack)) {
+      && demux->random_access && demux->current_partition
+      && demux->current_partition->partition.type == MXF_PARTITION_PACK_HEADER
+      && (!demux->current_partition->partition.closed
+          || !demux->current_partition->partition.complete)
+      && (demux->footer_partition_pack_offset != 0 || demux->random_index_pack)) {
     GST_DEBUG_OBJECT (demux,
         "Open or incomplete header partition, trying to get final metadata from the last partitions");
     gst_mxf_demux_parse_footer_metadata (demux);
@@ -1800,7 +1889,6 @@ gst_mxf_demux_loop (GstPad * pad)
             "Found header partition pack at offset %" G_GUINT64_FORMAT,
             demux->offset);
         demux->run_in = demux->offset;
-        demux->header_partition_pack_offset = demux->offset;
         gst_buffer_unref (buffer);
         break;
       }
@@ -1936,7 +2024,6 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
               "Found header partition pack at offset %" G_GUINT64_FORMAT,
               demux->offset);
           demux->run_in = demux->offset;
-          demux->header_partition_pack_offset = demux->offset;
           break;
         }
         gst_adapter_flush (demux->adapter, 1);

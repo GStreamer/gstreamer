@@ -81,8 +81,6 @@ typedef enum {
 
 /* SMPTE 377M 6.1, Table 1 and 2 */
 typedef struct {
-  gboolean valid;
-
   MXFPartitionPackType type;
 
   gboolean closed;
@@ -114,8 +112,6 @@ typedef struct {
 
 /* SMPTE 377M 8.1 */
 typedef struct {
-  gboolean valid;
-
   GHashTable *mappings;
 } MXFPrimerPack;
 
