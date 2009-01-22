@@ -3973,6 +3973,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
         gst_rtspsrc_stream_free_udp (stream);
         continue;
       default:
+        /* cleanup of leftover transport and move to the next stream */
+        gst_rtspsrc_stream_free_udp (stream);
         goto response_error;
     }
 
