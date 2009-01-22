@@ -435,13 +435,64 @@ mxf_product_version_parse (MXFProductVersion * product_version,
   return TRUE;
 }
 
+gboolean
+mxf_ul_array_parse (MXFUL ** array, guint32 * count, const guint8 * data,
+    guint size)
+{
+  guint32 element_count, element_size;
+  guint i;
+
+  g_return_val_if_fail (array != NULL, FALSE);
+  g_return_val_if_fail (count != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  if (size < 8)
+    return FALSE;
+
+  element_count = GST_READ_UINT32_BE (data);
+  data += 4;
+  size -= 4;
+
+  if (element_count == 0) {
+    *array = NULL;
+    *count = 0;
+    return TRUE;
+  }
+
+  element_size = GST_READ_UINT32_BE (data);
+  data += 4;
+  size -= 4;
+
+  if (element_size != 16) {
+    *array = NULL;
+    *count = 0;
+    return FALSE;
+  }
+
+  if (16 * element_count < size) {
+    *array = NULL;
+    *count = 0;
+    return FALSE;
+  }
+
+  *array = g_new (MXFUL, element_count);
+  *count = element_count;
+
+  for (i = 0; i < element_count; i++) {
+    memcpy (&((*array)[i]), data, 16);
+    data += 16;
+  }
+
+  return TRUE;
+}
+
 /* SMPTE 377M 6.1, Table 2 */
 gboolean
 mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
     const guint8 * data, guint size)
 {
-  guint i;
 #ifndef GST_DISABLE_GST_DEBUG
+  guint i;
   gchar str[48];
 #endif
 
@@ -544,28 +595,19 @@ mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
   GST_DEBUG ("  operational pattern = %s",
       mxf_ul_to_string (&pack->operational_pattern, str));
 
-  pack->n_essence_containers = GST_READ_UINT32_BE (data);
-  data += 4;
-  size -= 4;
+  if (!mxf_ul_array_parse (&pack->essence_containers,
+          &pack->n_essence_containers, data, size))
+    goto error;
 
+#ifndef GST_DISABLE_GST_DEBUG
   GST_DEBUG ("  number of essence containers = %u", pack->n_essence_containers);
-
-  if (GST_READ_UINT32_BE (data) != 16)
-    goto error;
-  data += 4;
-  size -= 4;
-
-  if (size < 16 * pack->n_essence_containers)
-    goto error;
-
   if (pack->n_essence_containers) {
-    pack->essence_containers = g_new (MXFUL, pack->n_essence_containers);
     for (i = 0; i < pack->n_essence_containers; i++) {
-      memcpy (&pack->essence_containers[i], data + i * 16, 16);
       GST_DEBUG ("  essence container %u = %s", i,
           mxf_ul_to_string (&pack->essence_containers[i], str));
     }
   }
+#endif
 
   pack->valid = TRUE;
 

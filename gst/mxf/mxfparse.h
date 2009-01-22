@@ -76,6 +76,8 @@ gboolean mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, gui
 gboolean mxf_timestamp_is_unknown (const MXFTimestamp *a);
 gint mxf_timestamp_compare (const MXFTimestamp *a, const MXFTimestamp *b);
 
+gboolean mxf_ul_array_parse (MXFUL **array, guint32 *count, const guint8 *data, guint size);
+
 gboolean mxf_partition_pack_parse (const MXFUL *key, MXFPartitionPack *pack, const guint8 *data, guint size);
 void mxf_partition_pack_reset (MXFPartitionPack *pack);
 

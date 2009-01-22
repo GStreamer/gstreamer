@@ -439,9 +439,9 @@ struct _MXFDMS1Framework {
   MXFUL *titles_sets_uids;
   MXFDMS1Titles **titles_sets;
 
-  guint32 n_annotations_sets;
-  MXFUL *annotations_sets_uids;
-  MXFDMS1Annotation **annotations_sets;
+  guint32 n_annotation_sets;
+  MXFUL *annotation_sets_uids;
+  MXFDMS1Annotation **annotation_sets;
 
   guint32 n_participant_sets;
   MXFUL *participant_sets_uids;

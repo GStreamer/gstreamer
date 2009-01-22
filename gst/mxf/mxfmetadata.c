@@ -364,31 +364,22 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
       GST_DEBUG ("  primary package = %s",
           mxf_ul_to_string (&self->primary_package_uid, str));
       break;
-    case 0x3b06:{
-      guint32 len;
-      guint i;
-
-
-      if (tag_size < 8)
-        goto error;
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of identifications = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-      if (tag_size < 8 + len * 16)
+    case 0x3b06:
+      if (!mxf_ul_array_parse (&self->identifications_uids,
+              &self->n_identifications, tag_data, tag_size))
         goto error;
 
-      self->n_identifications = len;
-      self->identifications_uids = g_new (MXFUL, len);
-      for (i = 0; i < len; i++) {
-        memcpy (&self->identifications_uids[i], tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  identification %u = %s", i,
-            mxf_ul_to_string (&self->identifications_uids[i], str));
+      GST_DEBUG ("  number of identifications = %u", self->n_identifications);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_identifications; i++) {
+          GST_DEBUG ("  identification %u = %s", i,
+              mxf_ul_to_string (&self->identifications_uids[i], str));
+        }
       }
+#endif
       break;
-    }
     case 0x3b03:
       if (tag_size != 16)
         goto error;
@@ -403,56 +394,39 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
       GST_DEBUG ("  operational pattern = %s",
           mxf_ul_to_string (&self->operational_pattern, str));
       break;
-    case 0x3b0a:{
-      guint32 len;
-      guint i;
-
-
-      if (tag_size < 8)
-        goto error;
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of essence containers = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-      if (tag_size < 8 + len * 16)
+    case 0x3b0a:
+      if (!mxf_ul_array_parse (&self->essence_containers,
+              &self->n_essence_containers, tag_data, tag_size))
         goto error;
 
-      self->n_essence_containers = len;
-      self->essence_containers = g_new (MXFUL, len);
-      for (i = 0; i < len; i++) {
-        memcpy (&self->essence_containers[i], tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  essence container %u = %s", i,
-            mxf_ul_to_string (&self->essence_containers[i], str));
+      GST_DEBUG ("  number of essence containers = %u",
+          self->n_essence_containers);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_essence_containers; i++) {
+          GST_DEBUG ("  essence container %u = %s", i,
+              mxf_ul_to_string (&self->essence_containers[i], str));
+        }
       }
+#endif
       break;
-    }
-    case 0x3b0b:{
-      guint32 len;
-      guint i;
-
-
-      if (tag_size < 8)
+    case 0x3b0b:
+      if (!mxf_ul_array_parse (&self->dm_schemes, &self->n_dm_schemes, tag_data,
+              tag_size))
         goto error;
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of DM schemes = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-      if (tag_size < 8 + len * 16)
-        goto error;
+      GST_DEBUG ("  number of DM schemes = %u", self->n_dm_schemes);
 
-      self->n_dm_schemes = len;
-      self->dm_schemes = g_new (MXFUL, len);
-      for (i = 0; i < len; i++) {
-        memcpy (&self->dm_schemes[i], tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  DM schemes %u = %s", i,
-            mxf_ul_to_string (&self->dm_schemes[i], str));
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_dm_schemes; i++) {
+          GST_DEBUG ("  DM schemes %u = %s", i,
+              mxf_ul_to_string (&self->dm_schemes[i], str));
+        }
       }
+#endif
       break;
-    }
     default:
       ret =
           MXF_METADATA_BASE_CLASS
@@ -701,53 +675,38 @@ mxf_metadata_content_storage_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x1901:{
-      guint32 len;
-      guint i;
-
-
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of packages = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
+    case 0x1901:
+      if (!mxf_ul_array_parse (&self->packages_uids, &self->n_packages,
+              tag_data, tag_size))
         goto error;
-      if (tag_size < 8 + len * 16)
-        goto error;
-
-      self->packages_uids = g_new (MXFUL, len);
-      self->n_packages = len;
-      for (i = 0; i < len; i++) {
-        memcpy (&self->packages_uids[i], tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  package %u = %s", i,
-            mxf_ul_to_string (&self->packages_uids[i], str));
+      GST_DEBUG ("  number of packages = %u", self->n_packages);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_packages; i++) {
+          GST_DEBUG ("  package %u = %s", i,
+              mxf_ul_to_string (&self->packages_uids[i], str));
+        }
       }
+#endif
       break;
-    }
-    case 0x1902:{
-      guint32 len;
-      guint i;
-
-
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of essence container data = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-      if (tag_size < 8 + len * 16)
+    case 0x1902:
+      if (!mxf_ul_array_parse (&self->essence_container_data_uids,
+              &self->n_essence_container_data, tag_data, tag_size))
         goto error;
 
-      self->essence_container_data_uids = g_new (MXFUL, len);
-      self->n_essence_container_data = len;
-      for (i = 0; i < len; i++) {
-        memcpy (&self->essence_container_data_uids[i],
-            tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  essence container data %u = %s", i,
-            mxf_ul_to_string (&self->essence_container_data_uids[i], str));
+      GST_DEBUG ("  number of essence container data = %u",
+          self->n_essence_container_data);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_essence_container_data; i++) {
+          GST_DEBUG ("  essence container data %u = %s", i,
+              mxf_ul_to_string (&self->essence_container_data_uids[i], str));
+        }
       }
+#endif
       break;
-    }
     default:
       ret =
           MXF_METADATA_BASE_CLASS
@@ -1018,29 +977,22 @@ mxf_metadata_generic_package_handle_tag (MXFMetadataBase * metadata,
           self->package_modified_date.second,
           (self->package_modified_date.quarter_msecond * 1000) / 256);
       break;
-    case 0x4403:{
-      guint32 len;
-      guint i;
-
-
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of tracks = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-      if (tag_size < 8 + len * 16)
+    case 0x4403:
+      if (!mxf_ul_array_parse (&self->tracks_uids, &self->n_tracks, tag_data,
+              tag_size))
         goto error;
 
-      self->tracks_uids = g_new (MXFUL, len);
-      self->n_tracks = len;
-      for (i = 0; i < len; i++) {
-        memcpy (&self->tracks_uids[i], tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  track %u = %s", i,
-            mxf_ul_to_string (&self->tracks_uids[i], str));
+      GST_DEBUG ("  number of tracks = %u", self->n_tracks);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_tracks; i++) {
+          GST_DEBUG ("  track %u = %s", i,
+              mxf_ul_to_string (&self->tracks_uids[i], str));
+        }
       }
+#endif
       break;
-    }
     default:
       ret =
           MXF_METADATA_BASE_CLASS
@@ -1687,30 +1639,23 @@ mxf_metadata_sequence_handle_tag (MXFMetadataBase * metadata,
       self->duration = GST_READ_UINT64_BE (tag_data);
       GST_DEBUG ("  duration = %" G_GINT64_FORMAT, self->duration);
       break;
-    case 0x1001:{
-      guint32 len;
-      guint i;
-
-
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of structural components = %u", len);
-      if (len == 0)
-        return TRUE;
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-      if (tag_size < 8 + len * 16)
+    case 0x1001:
+      if (!mxf_ul_array_parse (&self->structural_components_uids,
+              &self->n_structural_components, tag_data, tag_size))
         goto error;
 
-      self->structural_components_uids = g_new (MXFUL, len);
-      self->n_structural_components = len;
-      for (i = 0; i < len; i++) {
-        memcpy (&self->structural_components_uids[i],
-            tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  structural component %u = %s", i,
-            mxf_ul_to_string (&self->structural_components_uids[i], str));
+      GST_DEBUG ("  number of structural components = %u",
+          self->n_structural_components);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_structural_components; i++) {
+          GST_DEBUG ("  structural component %u = %s", i,
+              mxf_ul_to_string (&self->structural_components_uids[i], str));
+        }
       }
+#endif
       break;
-    }
     default:
       ret =
           MXF_METADATA_BASE_CLASS
@@ -2276,30 +2221,22 @@ mxf_metadata_generic_descriptor_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x2f01:{
-      guint32 len;
-      guint i;
-
-      if (tag_size < 8)
+    case 0x2f01:
+      if (!mxf_ul_array_parse (&self->locators_uids, &self->n_locators,
+              tag_data, tag_size))
         goto error;
 
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of locators = %u", len);
-      if (len == 0)
-        return TRUE;
-
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
-        goto error;
-
-      self->locators_uids = g_new (MXFUL, len);
-      self->n_locators = len;
-      for (i = 0; i < len; i++) {
-        memcpy (&self->locators_uids[i], tag_data + 8 + i * 16, 16);
-        GST_DEBUG ("  locator %u = %s", i,
-            mxf_ul_to_string (&self->locators_uids[i], str));
+      GST_DEBUG ("  number of locators = %u", self->n_locators);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_locators; i++) {
+          GST_DEBUG ("  locator %u = %s", i,
+              mxf_ul_to_string (&self->locators_uids[i], str));
+        }
       }
+#endif
       break;
-    }
     default:
       ret =
           MXF_METADATA_BASE_CLASS
@@ -3175,37 +3112,23 @@ mxf_metadata_multiple_descriptor_handle_tag (MXFMetadataBase * metadata,
 #endif
 
   switch (tag) {
-    case 0x3f01:{
-      guint32 len;
-      guint i;
-
-      if (tag_size < 8)
-        goto error;
-      len = GST_READ_UINT32_BE (tag_data);
-      GST_DEBUG ("  number of sub descriptors = %u", len);
-      if (len == 0)
-        return TRUE;
-
-      if (GST_READ_UINT32_BE (tag_data + 4) != 16)
+    case 0x3f01:
+      if (!mxf_ul_array_parse (&self->sub_descriptors_uids,
+              &self->n_sub_descriptors, tag_data, tag_size))
         goto error;
 
-      tag_data += 8;
-      tag_size -= 8;
-      if (tag_size < len * 16)
-        goto error;
-
-      self->n_sub_descriptors = len;
-      self->sub_descriptors_uids = g_new (MXFUL, len);
-      for (i = 0; i < len; i++) {
-        memcpy (&self->sub_descriptors_uids[i], tag_data, 16);
-        tag_data += 16;
-        tag_size -= 16;
-        GST_DEBUG ("    sub descriptor %u = %s", i,
-            mxf_ul_to_string (&self->sub_descriptors_uids[i], str));
+      GST_DEBUG ("  number of sub descriptors = %u", self->n_sub_descriptors);
+#ifndef GST_DISABLE_GST_DEBUG
+      {
+        guint i;
+        for (i = 0; i < self->n_sub_descriptors; i++) {
+          GST_DEBUG ("    sub descriptor %u = %s", i,
+              mxf_ul_to_string (&self->sub_descriptors_uids[i], str));
+        }
       }
+#endif
 
       break;
-    }
     default:
       ret =
           MXF_METADATA_BASE_CLASS
