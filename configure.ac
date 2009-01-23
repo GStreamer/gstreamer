@@ -318,6 +318,9 @@ AG_GST_CHECK_PLUGIN(videomixer)
 AG_GST_CHECK_PLUGIN(wavenc)
 AG_GST_CHECK_PLUGIN(wavparse)
 
+dnl *** checks for socket and nsl libraries ***
+AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
+
 dnl disable gst plugins we might not be able to build on this
 dnl platform: udp and rtsp (ugly but minimally invasive)
 dnl FIXME: maybe move to sys
