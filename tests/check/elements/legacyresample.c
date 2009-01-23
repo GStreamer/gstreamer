@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for audioresample
+ * unit test for legacyresample
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  * Copyright (C) <2006> Tim-Philipp Müller <tim at centricular net>
@@ -52,14 +52,14 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstElement *
-setup_audioresample (int channels, int inrate, int outrate)
+setup_legacyresample (int channels, int inrate, int outrate)
 {
-  GstElement *audioresample;
+  GstElement *legacyresample;
   GstCaps *caps;
   GstStructure *structure;
 
-  GST_DEBUG ("setup_audioresample");
-  audioresample = gst_check_setup_element ("legacyresample");
+  GST_DEBUG ("setup_legacyresample");
+  legacyresample = gst_check_setup_element ("legacyresample");
 
   caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
   structure = gst_caps_get_structure (caps, 0);
@@ -67,11 +67,11 @@ setup_audioresample (int channels, int inrate, int outrate)
       "rate", G_TYPE_INT, inrate, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS,
       "could not set to paused");
 
-  mysrcpad = gst_check_setup_src_pad (audioresample, &srctemplate, caps);
+  mysrcpad = gst_check_setup_src_pad (legacyresample, &srctemplate, caps);
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
@@ -81,7 +81,7 @@ setup_audioresample (int channels, int inrate, int outrate)
       "rate", G_TYPE_INT, outrate, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
-  mysinkpad = gst_check_setup_sink_pad (audioresample, &sinktemplate, caps);
+  mysinkpad = gst_check_setup_sink_pad (legacyresample, &sinktemplate, caps);
   /* this installs a getcaps func that will always return the caps we set
    * later */
   gst_pad_set_caps (mysinkpad, caps);
@@ -90,22 +90,22 @@ setup_audioresample (int channels, int inrate, int outrate)
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
 
-  return audioresample;
+  return legacyresample;
 }
 
 static void
-cleanup_audioresample (GstElement * audioresample)
+cleanup_legacyresample (GstElement * legacyresample)
 {
-  GST_DEBUG ("cleanup_audioresample");
+  GST_DEBUG ("cleanup_legacyresample");
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to NULL");
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
-  gst_check_teardown_src_pad (audioresample);
-  gst_check_teardown_sink_pad (audioresample);
-  gst_check_teardown_element (audioresample);
+  gst_check_teardown_src_pad (legacyresample);
+  gst_check_teardown_sink_pad (legacyresample);
+  gst_check_teardown_element (legacyresample);
 }
 
 static void
@@ -145,7 +145,7 @@ static void
 test_perfect_stream_instance (int inrate, int outrate, int samples,
     int numbuffers)
 {
-  GstElement *audioresample;
+  GstElement *legacyresample;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   guint64 offset = 0;
@@ -153,11 +153,11 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   int i, j;
   gint16 *p;
 
-  audioresample = setup_audioresample (2, inrate, outrate);
+  legacyresample = setup_legacyresample (2, inrate, outrate);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
@@ -188,7 +188,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
     fail_unless_equals_int (g_list_length (buffers), j);
   }
 
-  /* FIXME: we should make audioresample handle eos by flushing out the last
+  /* FIXME: we should make legacyresample handle eos by flushing out the last
    * samples, which will give us one more, small, buffer */
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
@@ -197,7 +197,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
 
   /* cleanup */
   gst_caps_unref (caps);
-  cleanup_audioresample (audioresample);
+  cleanup_legacyresample (legacyresample);
 }
 
 
@@ -229,7 +229,7 @@ static void
 test_discont_stream_instance (int inrate, int outrate, int samples,
     int numbuffers)
 {
-  GstElement *audioresample;
+  GstElement *legacyresample;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   GstClockTime ints;
@@ -240,11 +240,11 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
   GST_DEBUG ("inrate:%d outrate:%d samples:%d numbuffers:%d",
       inrate, outrate, samples, numbuffers);
 
-  audioresample = setup_audioresample (2, inrate, outrate);
+  legacyresample = setup_legacyresample (2, inrate, outrate);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
@@ -295,7 +295,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
 
   /* cleanup */
   gst_caps_unref (caps);
-  cleanup_audioresample (audioresample);
+  cleanup_legacyresample (legacyresample);
 }
 
 GST_START_TEST (test_discont_stream)
@@ -321,16 +321,16 @@ GST_END_TEST;
 
 GST_START_TEST (test_reuse)
 {
-  GstElement *audioresample;
+  GstElement *legacyresample;
   GstEvent *newseg;
   GstBuffer *inbuffer;
   GstCaps *caps;
 
-  audioresample = setup_audioresample (1, 9343, 48000);
+  legacyresample = setup_legacyresample (1, 9343, 48000);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
@@ -351,10 +351,10 @@ GST_START_TEST (test_reuse)
   fail_unless_equals_int (g_list_length (buffers), 1);
 
   /* now reset and try again ... */
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to NULL");
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
@@ -371,12 +371,12 @@ GST_START_TEST (test_reuse)
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
 
   /* ... it also ends up being collected on the global buffer list. If we
-   * now have more than 2 buffers, then audioresample probably didn't clean
+   * now have more than 2 buffers, then legacyresample probably didn't clean
    * up its internal buffer properly and tried to push the remaining samples
    * when it got the second NEWSEGMENT event */
   fail_unless_equals_int (g_list_length (buffers), 2);
 
-  cleanup_audioresample (audioresample);
+  cleanup_legacyresample (legacyresample);
   gst_caps_unref (caps);
 }
 
@@ -388,7 +388,7 @@ GST_START_TEST (test_shutdown)
   GstCaps *caps;
   guint i;
 
-  /* create pipeline, force audioresample to actually resample */
+  /* create pipeline, force legacyresample to actually resample */
   pipeline = gst_pipeline_new (NULL);
 
   src = gst_check_setup_element ("audiotestsrc");
@@ -512,11 +512,11 @@ live_switch_push (int rate, GstCaps * caps)
 
 GST_START_TEST (test_live_switch)
 {
-  GstElement *audioresample;
+  GstElement *legacyresample;
   GstEvent *newseg;
   GstCaps *caps;
 
-  audioresample = setup_audioresample (4, 48000, 48000);
+  legacyresample = setup_legacyresample (4, 48000, 48000);
 
   /* Let the sinkpad act like something that can only handle things of
    * rate 48000- and can only allocate buffers for that rate, but if someone
@@ -528,7 +528,7 @@ GST_START_TEST (test_live_switch)
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
-  fail_unless (gst_element_set_state (audioresample,
+  fail_unless (gst_element_set_state (legacyresample,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
@@ -545,14 +545,14 @@ GST_START_TEST (test_live_switch)
   /* Downstream can provide the requested rate but will re-negotiate */
   live_switch_push (50000, caps);
 
-  cleanup_audioresample (audioresample);
+  cleanup_legacyresample (legacyresample);
   gst_caps_unref (caps);
 }
 
 GST_END_TEST static Suite *
-audioresample_suite (void)
+legacyresample_suite (void)
 {
-  Suite *s = suite_create ("audioresample");
+  Suite *s = suite_create ("legacyresample");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -565,4 +565,4 @@ audioresample_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (audioresample);
+GST_CHECK_MAIN (legacyresample);

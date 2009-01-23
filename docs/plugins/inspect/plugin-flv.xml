@@ -1,0 +1,67 @@
+<plugin>
+  <name>flv</name>
+  <description>FLV muxing and demuxing plugin</description>
+  <filename>../../gst/flv/.libs/libgstflv.so</filename>
+  <basename>libgstflv.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>flvdemux</name>
+      <longname>FLV Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demux FLV feeds into digital streams</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+      <pads>
+        <caps>
+          <name>video</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-flv</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>flvmux</name>
+      <longname>FLV muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Muxes video/audio streams into a FLV stream</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-flv</details>
+        </caps>
+        <caps>
+          <name>audio</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>audio/x-adpcm, layout=(string)swf, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/mpeg, mpegversion=(int)1, layer=(int)3, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 22050, 44100 }; audio/mpeg, mpegversion=(int)4; audio/x-nellymoser, channels=(int){ 1, 2 }, rate=(int){ 5512, 8000, 11025, 16000, 22050, 44100 }; audio/x-raw-int, endianness=(int)1234, channels=(int){ 1, 2 }, width=(int)8, depth=(int)8, rate=(int){ 5512, 11025, 22050, 44100 }, signed=(boolean)false; audio/x-raw-int, endianness=(int)1234, channels=(int){ 1, 2 }, width=(int)16, depth=(int)16, rate=(int){ 5512, 11025, 22050, 44100 }, signed=(boolean)true; audio/x-alaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-mulaw, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }; audio/x-speex, channels=(int){ 1, 2 }, rate=(int){ 5512, 11025, 22050, 44100 }</details>
+        </caps>
+        <caps>
+          <name>video</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>video/x-flash-video; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,34 @@
+<plugin>
+  <name>pcapparse</name>
+  <description>Element parsing raw pcap streams</description>
+  <filename>../../gst/pcapparse/.libs/libgstpcapparse.so</filename>
+  <basename>libgstpcapparse.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>pcapparse</name>
+      <longname>PCapParse</longname>
+      <class>Raw/Parser</class>
+      <description>Parses a raw pcap stream</description>
+      <author>Ole André Vadla Ravnås &lt;ole.andre.ravnas@tandberg.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>raw/x-pcap</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

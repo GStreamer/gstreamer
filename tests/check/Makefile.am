@@ -89,7 +89,7 @@ check_PROGRAMS = \
 	$(check_x264enc)   \
 	elements/aacparse \
 	elements/amrparse \
-	elements/audioresample \
+	elements/legacyresample \
 	elements/qtmux \
 	elements/selector \
 	elements/mxfdemux \

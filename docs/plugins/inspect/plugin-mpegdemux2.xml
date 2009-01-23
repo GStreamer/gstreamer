@@ -1,0 +1,107 @@
+<plugin>
+  <name>mpegdemux2</name>
+  <description>MPEG demuxers</description>
+  <filename>../../gst/mpegdemux/.libs/libgstmpegdemux.so</filename>
+  <basename>libgstmpegdemux.so</basename>
+  <version>0.10.10.1</version>
+  <license>unknown</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpegpsdemux</name>
+      <longname>The Fluendo MPEG Program Stream Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplexes MPEG Program Streams</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2 }, systemstream=(boolean)true; video/x-cdxa</details>
+        </caps>
+        <caps>
+          <name>private_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio_%02x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int)1; audio/x-private1-lpcm; audio/x-private1-ac3; audio/x-private1-dts; audio/ac3</details>
+        </caps>
+        <caps>
+          <name>video_%02x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>mpegtsdemux</name>
+      <longname>The Fluendo MPEG Transport stream demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplexes MPEG2 Transport Streams</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpegts</details>
+        </caps>
+        <caps>
+          <name>private_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>audio_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>audio/mpeg, mpegversion=(int){ 1, 4 }; audio/x-lpcm, width=(int){ 16, 20, 24 }, rate=(int){ 48000, 96000 }, channels=(int)[ 1, 8 ], dynamic_range=(int)[ 0, 255 ], emphasis=(boolean){ false, true }, mute=(boolean){ false, true }; audio/x-ac3; audio/x-dts</details>
+        </caps>
+        <caps>
+          <name>video_%04x</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpeg, mpegversion=(int){ 1, 2, 4 }, systemstream=(boolean)false; video/x-h264; video/x-dirac</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>mpegtsparse</name>
+      <longname>MPEG transport stream parser</longname>
+      <class>Codec/Parser</class>
+      <description>Parses MPEG2 transport streams</description>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;
+    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>program_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

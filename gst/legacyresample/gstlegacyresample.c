@@ -44,15 +44,15 @@
 #include <math.h>
 
 /*#define DEBUG_ENABLED */
-#include "gstaudioresample.h"
+#include "gstlegacyresample.h"
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
-GST_DEBUG_CATEGORY_STATIC (audioresample_debug);
-#define GST_CAT_DEFAULT audioresample_debug
+GST_DEBUG_CATEGORY_STATIC (legacyresample_debug);
+#define GST_CAT_DEFAULT legacyresample_debug
 
 /* elementfactory information */
-static const GstElementDetails gst_audioresample_details =
+static const GstElementDetails gst_legacyresample_details =
 GST_ELEMENT_DETAILS ("Audio scaler",
     "Filter/Converter/Audio",
     "Resample audio",
@@ -94,70 +94,71 @@ GST_STATIC_CAPS ( \
       "width = (int) 64" \
 )
 
-static GstStaticPadTemplate gst_audioresample_sink_template =
+static GstStaticPadTemplate gst_legacyresample_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
-static GstStaticPadTemplate gst_audioresample_src_template =
+static GstStaticPadTemplate gst_legacyresample_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
-static void gst_audioresample_set_property (GObject * object,
+static void gst_legacyresample_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_audioresample_get_property (GObject * object,
+static void gst_legacyresample_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 /* vmethods */
-static gboolean audioresample_get_unit_size (GstBaseTransform * base,
+static gboolean legacyresample_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, guint * size);
-static GstCaps *audioresample_transform_caps (GstBaseTransform * base,
+static GstCaps *legacyresample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
-static void audioresample_fixate_caps (GstBaseTransform * base,
+static void legacyresample_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean audioresample_transform_size (GstBaseTransform * trans,
+static gboolean legacyresample_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * incaps, guint insize,
     GstCaps * outcaps, guint * outsize);
-static gboolean audioresample_set_caps (GstBaseTransform * base,
+static gboolean legacyresample_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
-static GstFlowReturn audioresample_pushthrough (GstAudioresample *
-    audioresample);
-static GstFlowReturn audioresample_transform (GstBaseTransform * base,
+static GstFlowReturn legacyresample_pushthrough (GstLegacyresample *
+    legacyresample);
+static GstFlowReturn legacyresample_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static gboolean audioresample_event (GstBaseTransform * base, GstEvent * event);
-static gboolean audioresample_start (GstBaseTransform * base);
-static gboolean audioresample_stop (GstBaseTransform * base);
+static gboolean legacyresample_event (GstBaseTransform * base,
+    GstEvent * event);
+static gboolean legacyresample_start (GstBaseTransform * base);
+static gboolean legacyresample_stop (GstBaseTransform * base);
 
-static gboolean audioresample_query (GstPad * pad, GstQuery * query);
-static const GstQueryType *audioresample_query_type (GstPad * pad);
+static gboolean legacyresample_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *legacyresample_query_type (GstPad * pad);
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (audioresample_debug, "legacyresample", 0, "audio resampling element");
+  GST_DEBUG_CATEGORY_INIT (legacyresample_debug, "legacyresample", 0, "audio resampling element");
 
-GST_BOILERPLATE_FULL (GstAudioresample, gst_audioresample, GstBaseTransform,
+GST_BOILERPLATE_FULL (GstLegacyresample, gst_legacyresample, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
 static void
-gst_audioresample_base_init (gpointer g_class)
+gst_legacyresample_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audioresample_src_template));
+      gst_static_pad_template_get (&gst_legacyresample_src_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_audioresample_sink_template));
+      gst_static_pad_template_get (&gst_legacyresample_sink_template));
 
-  gst_element_class_set_details (gstelement_class, &gst_audioresample_details);
+  gst_element_class_set_details (gstelement_class, &gst_legacyresample_details);
 }
 
 static void
-gst_audioresample_class_init (GstAudioresampleClass * klass)
+gst_legacyresample_class_init (GstLegacyresampleClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = (GObjectClass *) klass;
 
-  gobject_class->set_property = gst_audioresample_set_property;
-  gobject_class->get_property = gst_audioresample_get_property;
+  gobject_class->set_property = gst_legacyresample_set_property;
+  gobject_class->get_property = gst_legacyresample_get_property;
 
   g_object_class_install_property (gobject_class, PROP_FILTERLEN,
       g_param_spec_int ("filter-length", "filter length",
@@ -165,82 +166,82 @@ gst_audioresample_class_init (GstAudioresampleClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   GST_BASE_TRANSFORM_CLASS (klass)->start =
-      GST_DEBUG_FUNCPTR (audioresample_start);
+      GST_DEBUG_FUNCPTR (legacyresample_start);
   GST_BASE_TRANSFORM_CLASS (klass)->stop =
-      GST_DEBUG_FUNCPTR (audioresample_stop);
+      GST_DEBUG_FUNCPTR (legacyresample_stop);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_size =
-      GST_DEBUG_FUNCPTR (audioresample_transform_size);
+      GST_DEBUG_FUNCPTR (legacyresample_transform_size);
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
-      GST_DEBUG_FUNCPTR (audioresample_get_unit_size);
+      GST_DEBUG_FUNCPTR (legacyresample_get_unit_size);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
-      GST_DEBUG_FUNCPTR (audioresample_transform_caps);
+      GST_DEBUG_FUNCPTR (legacyresample_transform_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps =
-      GST_DEBUG_FUNCPTR (audioresample_fixate_caps);
+      GST_DEBUG_FUNCPTR (legacyresample_fixate_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
-      GST_DEBUG_FUNCPTR (audioresample_set_caps);
+      GST_DEBUG_FUNCPTR (legacyresample_set_caps);
   GST_BASE_TRANSFORM_CLASS (klass)->transform =
-      GST_DEBUG_FUNCPTR (audioresample_transform);
+      GST_DEBUG_FUNCPTR (legacyresample_transform);
   GST_BASE_TRANSFORM_CLASS (klass)->event =
-      GST_DEBUG_FUNCPTR (audioresample_event);
+      GST_DEBUG_FUNCPTR (legacyresample_event);
 
   GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
 }
 
 static void
-gst_audioresample_init (GstAudioresample * audioresample,
-    GstAudioresampleClass * klass)
+gst_legacyresample_init (GstLegacyresample * legacyresample,
+    GstLegacyresampleClass * klass)
 {
   GstBaseTransform *trans;
 
-  trans = GST_BASE_TRANSFORM (audioresample);
+  trans = GST_BASE_TRANSFORM (legacyresample);
 
   /* buffer alloc passthrough is too impossible. FIXME, it
    * is trivial in the passthrough case. */
   gst_pad_set_bufferalloc_function (trans->sinkpad, NULL);
 
-  audioresample->filter_length = DEFAULT_FILTERLEN;
+  legacyresample->filter_length = DEFAULT_FILTERLEN;
 
-  audioresample->need_discont = FALSE;
+  legacyresample->need_discont = FALSE;
 
-  gst_pad_set_query_function (trans->srcpad, audioresample_query);
-  gst_pad_set_query_type_function (trans->srcpad, audioresample_query_type);
+  gst_pad_set_query_function (trans->srcpad, legacyresample_query);
+  gst_pad_set_query_type_function (trans->srcpad, legacyresample_query_type);
 }
 
 /* vmethods */
 static gboolean
-audioresample_start (GstBaseTransform * base)
+legacyresample_start (GstBaseTransform * base)
 {
-  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+  GstLegacyresample *legacyresample = GST_LEGACYRESAMPLE (base);
 
-  audioresample->resample = resample_new ();
-  audioresample->ts_offset = -1;
-  audioresample->offset = -1;
-  audioresample->next_ts = -1;
+  legacyresample->resample = resample_new ();
+  legacyresample->ts_offset = -1;
+  legacyresample->offset = -1;
+  legacyresample->next_ts = -1;
 
-  resample_set_filter_length (audioresample->resample,
-      audioresample->filter_length);
+  resample_set_filter_length (legacyresample->resample,
+      legacyresample->filter_length);
 
   return TRUE;
 }
 
 static gboolean
-audioresample_stop (GstBaseTransform * base)
+legacyresample_stop (GstBaseTransform * base)
 {
-  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+  GstLegacyresample *legacyresample = GST_LEGACYRESAMPLE (base);
 
-  if (audioresample->resample) {
-    resample_free (audioresample->resample);
-    audioresample->resample = NULL;
+  if (legacyresample->resample) {
+    resample_free (legacyresample->resample);
+    legacyresample->resample = NULL;
   }
 
-  gst_caps_replace (&audioresample->sinkcaps, NULL);
-  gst_caps_replace (&audioresample->srccaps, NULL);
+  gst_caps_replace (&legacyresample->sinkcaps, NULL);
+  gst_caps_replace (&legacyresample->srccaps, NULL);
 
   return TRUE;
 }
 
 static gboolean
-audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
+legacyresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     guint * size)
 {
   gint width, channels;
@@ -261,7 +262,7 @@ audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 }
 
 static GstCaps *
-audioresample_transform_caps (GstBaseTransform * base,
+legacyresample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps)
 {
   GstCaps *res;
@@ -278,7 +279,7 @@ audioresample_transform_caps (GstBaseTransform * base,
 
 /* Fixate rate to the allowed rate that has the smallest difference */
 static void
-audioresample_fixate_caps (GstBaseTransform * base,
+legacyresample_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *s;
@@ -387,11 +388,11 @@ no_out_rate:
 }
 
 static gboolean
-audioresample_transform_size (GstBaseTransform * base,
+legacyresample_transform_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
     guint * othersize)
 {
-  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+  GstLegacyresample *legacyresample = GST_LEGACYRESAMPLE (base);
   ResampleState *state;
   GstCaps *srccaps, *sinkcaps;
   gboolean use_internal = FALSE;        /* whether we use the internal state */
@@ -409,15 +410,15 @@ audioresample_transform_size (GstBaseTransform * base,
 
   /* if the caps are the ones that _set_caps got called with; we can use
    * our own state; otherwise we'll have to create a state */
-  if (gst_caps_is_equal (sinkcaps, audioresample->sinkcaps) &&
-      gst_caps_is_equal (srccaps, audioresample->srccaps)) {
+  if (gst_caps_is_equal (sinkcaps, legacyresample->sinkcaps) &&
+      gst_caps_is_equal (srccaps, legacyresample->srccaps)) {
     use_internal = TRUE;
-    state = audioresample->resample;
+    state = legacyresample->resample;
   } else {
-    GST_DEBUG_OBJECT (audioresample,
+    GST_DEBUG_OBJECT (legacyresample,
         "caps are not the set caps, creating state");
     state = resample_new ();
-    resample_set_filter_length (state, audioresample->filter_length);
+    resample_set_filter_length (state, legacyresample->filter_length);
     resample_set_state_from_caps (state, sinkcaps, srccaps, NULL, NULL, NULL);
   }
 
@@ -442,64 +443,64 @@ audioresample_transform_size (GstBaseTransform * base,
 }
 
 static gboolean
-audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
+legacyresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   gboolean ret;
   gint inrate, outrate;
   int channels;
-  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+  GstLegacyresample *legacyresample = GST_LEGACYRESAMPLE (base);
 
   GST_DEBUG_OBJECT (base, "incaps %" GST_PTR_FORMAT ", outcaps %"
       GST_PTR_FORMAT, incaps, outcaps);
 
-  ret = resample_set_state_from_caps (audioresample->resample, incaps, outcaps,
+  ret = resample_set_state_from_caps (legacyresample->resample, incaps, outcaps,
       &channels, &inrate, &outrate);
 
   g_return_val_if_fail (ret, FALSE);
 
-  audioresample->channels = channels;
-  GST_DEBUG_OBJECT (audioresample, "set channels to %d", channels);
-  audioresample->i_rate = inrate;
-  GST_DEBUG_OBJECT (audioresample, "set i_rate to %d", inrate);
-  audioresample->o_rate = outrate;
-  GST_DEBUG_OBJECT (audioresample, "set o_rate to %d", outrate);
+  legacyresample->channels = channels;
+  GST_DEBUG_OBJECT (legacyresample, "set channels to %d", channels);
+  legacyresample->i_rate = inrate;
+  GST_DEBUG_OBJECT (legacyresample, "set i_rate to %d", inrate);
+  legacyresample->o_rate = outrate;
+  GST_DEBUG_OBJECT (legacyresample, "set o_rate to %d", outrate);
 
   /* save caps so we can short-circuit in the size_transform if the caps
    * are the same */
-  gst_caps_replace (&audioresample->sinkcaps, incaps);
-  gst_caps_replace (&audioresample->srccaps, outcaps);
+  gst_caps_replace (&legacyresample->sinkcaps, incaps);
+  gst_caps_replace (&legacyresample->srccaps, outcaps);
 
   return TRUE;
 }
 
 static gboolean
-audioresample_event (GstBaseTransform * base, GstEvent * event)
+legacyresample_event (GstBaseTransform * base, GstEvent * event)
 {
-  GstAudioresample *audioresample;
+  GstLegacyresample *legacyresample;
 
-  audioresample = GST_AUDIORESAMPLE (base);
+  legacyresample = GST_LEGACYRESAMPLE (base);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       break;
     case GST_EVENT_FLUSH_STOP:
-      if (audioresample->resample)
-        resample_input_flush (audioresample->resample);
-      audioresample->ts_offset = -1;
-      audioresample->next_ts = -1;
-      audioresample->offset = -1;
+      if (legacyresample->resample)
+        resample_input_flush (legacyresample->resample);
+      legacyresample->ts_offset = -1;
+      legacyresample->next_ts = -1;
+      legacyresample->offset = -1;
       break;
     case GST_EVENT_NEWSEGMENT:
-      resample_input_pushthrough (audioresample->resample);
-      audioresample_pushthrough (audioresample);
-      audioresample->ts_offset = -1;
-      audioresample->next_ts = -1;
-      audioresample->offset = -1;
+      resample_input_pushthrough (legacyresample->resample);
+      legacyresample_pushthrough (legacyresample);
+      legacyresample->ts_offset = -1;
+      legacyresample->next_ts = -1;
+      legacyresample->offset = -1;
       break;
     case GST_EVENT_EOS:
-      resample_input_eos (audioresample->resample);
-      audioresample_pushthrough (audioresample);
+      resample_input_eos (legacyresample->resample);
+      legacyresample_pushthrough (legacyresample);
       break;
     default:
       break;
@@ -508,57 +509,59 @@ audioresample_event (GstBaseTransform * base, GstEvent * event)
 }
 
 static GstFlowReturn
-audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
+legacyresample_do_output (GstLegacyresample * legacyresample,
+    GstBuffer * outbuf)
 {
   int outsize;
   int outsamples;
   ResampleState *r;
 
-  r = audioresample->resample;
+  r = legacyresample->resample;
 
   outsize = resample_get_output_size (r);
-  GST_LOG_OBJECT (audioresample, "audioresample can give me %d bytes", outsize);
+  GST_LOG_OBJECT (legacyresample, "legacyresample can give me %d bytes",
+      outsize);
 
   /* protect against mem corruption */
   if (outsize > GST_BUFFER_SIZE (outbuf)) {
-    GST_WARNING_OBJECT (audioresample,
-        "overriding audioresample's outsize %d with outbuffer's size %d",
+    GST_WARNING_OBJECT (legacyresample,
+        "overriding legacyresample's outsize %d with outbuffer's size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
     outsize = GST_BUFFER_SIZE (outbuf);
   }
   /* catch possibly wrong size differences */
   if (GST_BUFFER_SIZE (outbuf) - outsize > r->sample_size) {
-    GST_WARNING_OBJECT (audioresample,
-        "audioresample's outsize %d too far from outbuffer's size %d",
+    GST_WARNING_OBJECT (legacyresample,
+        "legacyresample's outsize %d too far from outbuffer's size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
   }
 
   outsize = resample_get_output_data (r, GST_BUFFER_DATA (outbuf), outsize);
   outsamples = outsize / r->sample_size;
-  GST_LOG_OBJECT (audioresample, "resample gave me %d bytes or %d samples",
+  GST_LOG_OBJECT (legacyresample, "resample gave me %d bytes or %d samples",
       outsize, outsamples);
 
-  GST_BUFFER_OFFSET (outbuf) = audioresample->offset;
-  GST_BUFFER_TIMESTAMP (outbuf) = audioresample->next_ts;
+  GST_BUFFER_OFFSET (outbuf) = legacyresample->offset;
+  GST_BUFFER_TIMESTAMP (outbuf) = legacyresample->next_ts;
 
-  if (audioresample->ts_offset != -1) {
-    audioresample->offset += outsamples;
-    audioresample->ts_offset += outsamples;
-    audioresample->next_ts =
-        gst_util_uint64_scale_int (audioresample->ts_offset, GST_SECOND,
-        audioresample->o_rate);
-    GST_BUFFER_OFFSET_END (outbuf) = audioresample->offset;
+  if (legacyresample->ts_offset != -1) {
+    legacyresample->offset += outsamples;
+    legacyresample->ts_offset += outsamples;
+    legacyresample->next_ts =
+        gst_util_uint64_scale_int (legacyresample->ts_offset, GST_SECOND,
+        legacyresample->o_rate);
+    GST_BUFFER_OFFSET_END (outbuf) = legacyresample->offset;
 
     /* we calculate DURATION as the difference between "next" timestamp
      * and current timestamp so we ensure a contiguous stream, instead of
      * having rounding errors. */
-    GST_BUFFER_DURATION (outbuf) = audioresample->next_ts -
+    GST_BUFFER_DURATION (outbuf) = legacyresample->next_ts -
         GST_BUFFER_TIMESTAMP (outbuf);
   } else {
     /* no valid offset know, we can still sortof calculate the duration though */
     GST_BUFFER_DURATION (outbuf) =
         gst_util_uint64_scale_int (outsamples, GST_SECOND,
-        audioresample->o_rate);
+        legacyresample->o_rate);
   }
 
   /* check for possible mem corruption */
@@ -566,28 +569,28 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
     /* this is an error that when it happens, would need fixing in the
      * resample library; we told it we wanted only GST_BUFFER_SIZE (outbuf),
      * and it gave us more ! */
-    GST_WARNING_OBJECT (audioresample,
-        "audioresample, you memory corrupting bastard. "
+    GST_WARNING_OBJECT (legacyresample,
+        "legacyresample, you memory corrupting bastard. "
         "you gave me outsize %d while my buffer was size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
     return GST_FLOW_ERROR;
   }
   /* catch possibly wrong size differences */
   if (GST_BUFFER_SIZE (outbuf) - outsize > r->sample_size) {
-    GST_WARNING_OBJECT (audioresample,
-        "audioresample's written outsize %d too far from outbuffer's size %d",
+    GST_WARNING_OBJECT (legacyresample,
+        "legacyresample's written outsize %d too far from outbuffer's size %d",
         outsize, GST_BUFFER_SIZE (outbuf));
   }
   GST_BUFFER_SIZE (outbuf) = outsize;
 
-  if (G_UNLIKELY (audioresample->need_discont)) {
-    GST_DEBUG_OBJECT (audioresample,
+  if (G_UNLIKELY (legacyresample->need_discont)) {
+    GST_DEBUG_OBJECT (legacyresample,
         "marking this buffer with the DISCONT flag");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-    audioresample->need_discont = FALSE;
+    legacyresample->need_discont = FALSE;
   }
 
-  GST_LOG_OBJECT (audioresample, "transformed to buffer of %d bytes, ts %"
+  GST_LOG_OBJECT (legacyresample, "transformed to buffer of %d bytes, ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
       outsize, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
@@ -599,22 +602,22 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
 }
 
 static gboolean
-audioresample_check_discont (GstAudioresample * audioresample,
+legacyresample_check_discont (GstLegacyresample * legacyresample,
     GstClockTime timestamp)
 {
   if (timestamp != GST_CLOCK_TIME_NONE &&
-      audioresample->prev_ts != GST_CLOCK_TIME_NONE &&
-      audioresample->prev_duration != GST_CLOCK_TIME_NONE &&
-      timestamp != audioresample->prev_ts + audioresample->prev_duration) {
+      legacyresample->prev_ts != GST_CLOCK_TIME_NONE &&
+      legacyresample->prev_duration != GST_CLOCK_TIME_NONE &&
+      timestamp != legacyresample->prev_ts + legacyresample->prev_duration) {
     /* Potentially a discontinuous buffer. However, it turns out that many
      * elements generate imperfect streams due to rounding errors, so we permit
      * a small error (up to one sample) without triggering a filter 
      * flush/restart (if triggered incorrectly, this will be audible) */
     GstClockTimeDiff diff = timestamp -
-        (audioresample->prev_ts + audioresample->prev_duration);
+        (legacyresample->prev_ts + legacyresample->prev_duration);
 
-    if (ABS (diff) > GST_SECOND / audioresample->i_rate) {
-      GST_WARNING_OBJECT (audioresample,
+    if (ABS (diff) > GST_SECOND / legacyresample->i_rate) {
+      GST_WARNING_OBJECT (legacyresample,
           "encountered timestamp discontinuity of %" G_GINT64_FORMAT, diff);
       return TRUE;
     }
@@ -624,23 +627,23 @@ audioresample_check_discont (GstAudioresample * audioresample,
 }
 
 static GstFlowReturn
-audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
+legacyresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
-  GstAudioresample *audioresample;
+  GstLegacyresample *legacyresample;
   ResampleState *r;
   guchar *data, *datacopy;
   gulong size;
   GstClockTime timestamp;
 
-  audioresample = GST_AUDIORESAMPLE (base);
-  r = audioresample->resample;
+  legacyresample = GST_LEGACYRESAMPLE (base);
+  r = legacyresample->resample;
 
   data = GST_BUFFER_DATA (inbuf);
   size = GST_BUFFER_SIZE (inbuf);
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
 
-  GST_LOG_OBJECT (audioresample, "transforming buffer of %ld bytes, ts %"
+  GST_LOG_OBJECT (legacyresample, "transforming buffer of %ld bytes, ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
       size, GST_TIME_ARGS (timestamp),
@@ -648,16 +651,16 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
       GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf));
 
   /* check for timestamp discontinuities and flush/reset if needed */
-  if (G_UNLIKELY (audioresample_check_discont (audioresample, timestamp))) {
+  if (G_UNLIKELY (legacyresample_check_discont (legacyresample, timestamp))) {
     /* Flush internal samples */
-    audioresample_pushthrough (audioresample);
+    legacyresample_pushthrough (legacyresample);
     /* Inform downstream element about discontinuity */
-    audioresample->need_discont = TRUE;
+    legacyresample->need_discont = TRUE;
     /* We want to recalculate the offset */
-    audioresample->ts_offset = -1;
+    legacyresample->ts_offset = -1;
   }
 
-  if (audioresample->ts_offset == -1) {
+  if (legacyresample->ts_offset == -1) {
     /* if we don't know the initial offset yet, calculate it based on the 
      * input timestamp. */
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -666,29 +669,29 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
       /* offset used to calculate the timestamps. We use the sample offset for
        * this to make it more accurate. We want the first buffer to have the
        * same timestamp as the incoming timestamp. */
-      audioresample->next_ts = timestamp;
-      audioresample->ts_offset =
+      legacyresample->next_ts = timestamp;
+      legacyresample->ts_offset =
           gst_util_uint64_scale_int (timestamp, r->o_rate, GST_SECOND);
       /* offset used to set as the buffer offset, this offset is always
        * relative to the stream time, note that timestamp is not... */
       stime = (timestamp - base->segment.start) + base->segment.time;
-      audioresample->offset =
+      legacyresample->offset =
           gst_util_uint64_scale_int (stime, r->o_rate, GST_SECOND);
     }
   }
-  audioresample->prev_ts = timestamp;
-  audioresample->prev_duration = GST_BUFFER_DURATION (inbuf);
+  legacyresample->prev_ts = timestamp;
+  legacyresample->prev_duration = GST_BUFFER_DURATION (inbuf);
 
   /* need to memdup, resample takes ownership. */
   datacopy = g_memdup (data, size);
   resample_add_input_data (r, datacopy, size, g_free, datacopy);
 
-  return audioresample_do_output (audioresample, outbuf);
+  return legacyresample_do_output (legacyresample, outbuf);
 }
 
 /* push remaining data in the buffers out */
 static GstFlowReturn
-audioresample_pushthrough (GstAudioresample * audioresample)
+legacyresample_pushthrough (GstLegacyresample * legacyresample)
 {
   int outsize;
   ResampleState *r;
@@ -696,25 +699,25 @@ audioresample_pushthrough (GstAudioresample * audioresample)
   GstFlowReturn res = GST_FLOW_OK;
   GstBaseTransform *trans;
 
-  r = audioresample->resample;
+  r = legacyresample->resample;
 
   outsize = resample_get_output_size (r);
   if (outsize == 0) {
-    GST_DEBUG_OBJECT (audioresample, "no internal buffers needing flush");
+    GST_DEBUG_OBJECT (legacyresample, "no internal buffers needing flush");
     goto done;
   }
 
-  trans = GST_BASE_TRANSFORM (audioresample);
+  trans = GST_BASE_TRANSFORM (legacyresample);
 
   res = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET_NONE, outsize,
       GST_PAD_CAPS (trans->srcpad), &outbuf);
   if (G_UNLIKELY (res != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (audioresample, "failed allocating buffer of %d bytes",
+    GST_WARNING_OBJECT (legacyresample, "failed allocating buffer of %d bytes",
         outsize);
     goto done;
   }
 
-  res = audioresample_do_output (audioresample, outbuf);
+  res = legacyresample_do_output (legacyresample, outbuf);
   if (G_UNLIKELY (res != GST_FLOW_OK))
     goto done;
 
@@ -725,11 +728,11 @@ done:
 }
 
 static gboolean
-audioresample_query (GstPad * pad, GstQuery * query)
+legacyresample_query (GstPad * pad, GstQuery * query)
 {
-  GstAudioresample *audioresample =
-      GST_AUDIORESAMPLE (gst_pad_get_parent (pad));
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (audioresample);
+  GstLegacyresample *legacyresample =
+      GST_LEGACYRESAMPLE (gst_pad_get_parent (pad));
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (legacyresample);
   gboolean res = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -739,8 +742,8 @@ audioresample_query (GstPad * pad, GstQuery * query)
       gboolean live;
       guint64 latency;
       GstPad *peer;
-      gint rate = audioresample->i_rate;
-      gint resampler_latency = audioresample->filter_length / 2;
+      gint rate = legacyresample->i_rate;
+      gint resampler_latency = legacyresample->filter_length / 2;
 
       if (gst_base_transform_is_passthrough (trans))
         resampler_latency = 0;
@@ -780,12 +783,12 @@ audioresample_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
-  gst_object_unref (audioresample);
+  gst_object_unref (legacyresample);
   return res;
 }
 
 static const GstQueryType *
-audioresample_query_type (GstPad * pad)
+legacyresample_query_type (GstPad * pad)
 {
   static const GstQueryType types[] = {
     GST_QUERY_LATENCY,
@@ -796,23 +799,23 @@ audioresample_query_type (GstPad * pad)
 }
 
 static void
-gst_audioresample_set_property (GObject * object, guint prop_id,
+gst_legacyresample_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAudioresample *audioresample;
+  GstLegacyresample *legacyresample;
 
-  audioresample = GST_AUDIORESAMPLE (object);
+  legacyresample = GST_LEGACYRESAMPLE (object);
 
   switch (prop_id) {
     case PROP_FILTERLEN:
-      audioresample->filter_length = g_value_get_int (value);
-      GST_DEBUG_OBJECT (GST_ELEMENT (audioresample), "new filter length %d",
-          audioresample->filter_length);
-      if (audioresample->resample) {
-        resample_set_filter_length (audioresample->resample,
-            audioresample->filter_length);
-        gst_element_post_message (GST_ELEMENT (audioresample),
-            gst_message_new_latency (GST_OBJECT (audioresample)));
+      legacyresample->filter_length = g_value_get_int (value);
+      GST_DEBUG_OBJECT (GST_ELEMENT (legacyresample), "new filter length %d",
+          legacyresample->filter_length);
+      if (legacyresample->resample) {
+        resample_set_filter_length (legacyresample->resample,
+            legacyresample->filter_length);
+        gst_element_post_message (GST_ELEMENT (legacyresample),
+            gst_message_new_latency (GST_OBJECT (legacyresample)));
       }
       break;
     default:
@@ -822,16 +825,16 @@ gst_audioresample_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_audioresample_get_property (GObject * object, guint prop_id,
+gst_legacyresample_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAudioresample *audioresample;
+  GstLegacyresample *legacyresample;
 
-  audioresample = GST_AUDIORESAMPLE (object);
+  legacyresample = GST_LEGACYRESAMPLE (object);
 
   switch (prop_id) {
     case PROP_FILTERLEN:
-      g_value_set_int (value, audioresample->filter_length);
+      g_value_set_int (value, legacyresample->filter_length);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -846,7 +849,7 @@ plugin_init (GstPlugin * plugin)
   resample_init ();
 
   if (!gst_element_register (plugin, "legacyresample", GST_RANK_MARGINAL,
-          GST_TYPE_AUDIORESAMPLE)) {
+          GST_TYPE_LEGACYRESAMPLE)) {
     return FALSE;
   }
 

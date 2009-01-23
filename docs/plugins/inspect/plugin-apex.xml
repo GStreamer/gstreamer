@@ -1,0 +1,28 @@
+<plugin>
+  <name>apex</name>
+  <description>Apple AirPort Express Plugin</description>
+  <filename>../../ext/apexsink/.libs/libgstapexsink.so</filename>
+  <basename>libgstapexsink.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>apexsink</name>
+      <longname>Apple AirPort Express Audio Sink</longname>
+      <class>Sink/Audio/Wireless</class>
+      <description>Output stream to an AirPort Express</description>
+      <author>Jérémie Bernard [GRemi] &lt;gremimail@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, channels=(int)2, rate=(int)44100, signed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

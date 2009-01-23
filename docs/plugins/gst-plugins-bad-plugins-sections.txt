@@ -695,15 +695,15 @@ gst_stereo_get_type
 <SECTION>
 <FILE>element-legacyresample</FILE>
 <TITLE>legacyresample</TITLE>
-GstAudioresample
+GstLegacyresample
 <SUBSECTION Standard>
-GstAudioresampleClass
-GST_AUDIORESAMPLE
-GST_AUDIORESAMPLE_CLASS
-GST_IS_AUDIORESAMPLE
-GST_IS_AUDIORESAMPLE_CLASS
-GST_TYPE_AUDIORESAMPLE
-gst_audioresample_get_type
+GstLegacyresampleClass
+GST_LEGACYRESAMPLE
+GST_LEGACYRESAMPLE_CLASS
+GST_IS_LEGACYRESAMPLE
+GST_IS_LEGACYRESAMPLE_CLASS
+GST_TYPE_LEGACYRESAMPLE
+gst_legacyresample_get_type
 </SECTION>
 
 <SECTION>

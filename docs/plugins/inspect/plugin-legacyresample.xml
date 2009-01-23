@@ -1,12 +1,12 @@
 <plugin>
   <name>legacyresample</name>
   <description>Resamples audio</description>
-  <filename>../../gst/audioresample/.libs/libgstlegacyresample.so</filename>
+  <filename>../../gst/legacyresample/.libs/libgstlegacyresample.so</filename>
   <basename>libgstlegacyresample.so</basename>
-  <version>0.10.10</version>
+  <version>0.10.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

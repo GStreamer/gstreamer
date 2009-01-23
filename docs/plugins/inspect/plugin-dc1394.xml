@@ -1,0 +1,28 @@
+<plugin>
+  <name>dc1394</name>
+  <description>1394 IIDC Video Source</description>
+  <filename>../../ext/dc1394/.libs/libgstdc1394.so</filename>
+  <basename>libgstdc1394.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dc1394src</name>
+      <longname>1394 IIDC Video Source</longname>
+      <class>Source/Video</class>
+      <description>libdc1394 based source, supports 1394 IIDC cameras</description>
+      <author>Antoine Tremblay &lt;hexa00@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)IYU2, bpp=(int)16, width=(int)160, height=(int)120, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)64; video/x-raw-yuv, format=(fourcc)UYVY, bpp=(int)16, width=(int)320, height=(int)240, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)65; video/x-raw-yuv, format=(fourcc)IYU1, bpp=(int)12, width=(int)640, height=(int)480, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)66; video/x-raw-yuv, format=(fourcc)UYVY, bpp=(int)16, width=(int)640, height=(int)480, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)67; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)640, height=(int)480, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)68; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)640, height=(int)480, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)69; video/x-raw-gray, bpp=(int)16, depth=(int)16, width=(int)640, height=(int)480, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)70; video/x-raw-yuv, format=(fourcc)UYVY, bpp=(int)16, width=(int)800, height=(int)600, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)71; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)800, height=(int)600, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)72; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)800, height=(int)600, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)73; video/x-raw-yuv, format=(fourcc)UYVY, bpp=(int)16, width=(int)1024, height=(int)768, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)74; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)1024, height=(int)768, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)75; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)1024, height=(int)768, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)76; video/x-raw-gray, bpp=(int)16, depth=(int)16, width=(int)800, height=(int)600, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)77; video/x-raw-gray, bpp=(int)16, depth=(int)16, width=(int)1024, height=(int)768, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)78; video/x-raw-yuv, format=(fourcc)UYVY, bpp=(int)16, width=(int)1280, height=(int)960, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)79; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)1280, height=(int)960, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)80; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)1280, height=(int)960, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)81; video/x-raw-yuv, format=(fourcc)UYVY, bpp=(int)16, width=(int)1600, height=(int)1200, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)82; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)1600, height=(int)1200, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)83; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)1600, height=(int)1200, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)84; video/x-raw-gray, bpp=(int)16, depth=(int)16, width=(int)1280, height=(int)960, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)85; video/x-raw-gray, bpp=(int)8, depth=(int)8, width=(int)1600, height=(int)1200, framerate=(fraction)[ 0/1, 2147483647/1 ], vmode=(int)86; video/x-raw-gray, vmode=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], bpp=(int)8, depth=(int)8; video/x-raw-yuv, vmode=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], format=(fourcc)IYU1, bpp=(int)12; video/x-raw-yuv, vmode=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], format=(fourcc)UYVY, bpp=(int)16; video/x-raw-yuv, vmode=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], format=(fourcc)IYU2, bpp=(int)16; video/x-raw-rgb, vmode=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255; video/x-raw-gray, vmode=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], bpp=(int)16, depth=(int)16</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

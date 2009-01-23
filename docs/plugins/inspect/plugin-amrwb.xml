@@ -3,7 +3,7 @@
   <description>Adaptive Multi-Rate Wide-Band</description>
   <filename>../../ext/amrwb/.libs/libgstamrwb.so</filename>
   <basename>libgstamrwb.so</basename>
-  <version>0.10.9.1</version>
+  <version>0.10.10.1</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>

@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __AUDIORESAMPLE_H__
-#define __AUDIORESAMPLE_H__
+#ifndef __LEGACYRESAMPLE_H__
+#define __LEGACYRESAMPLE_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -28,26 +28,26 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_AUDIORESAMPLE \
-  (gst_audioresample_get_type())
-#define GST_AUDIORESAMPLE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AUDIORESAMPLE,GstAudioresample))
-#define GST_AUDIORESAMPLE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIORESAMPLE,GstAudioresampleClass))
-#define GST_IS_AUDIORESAMPLE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIORESAMPLE))
-#define GST_IS_AUDIORESAMPLE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIORESAMPLE))
+#define GST_TYPE_LEGACYRESAMPLE \
+  (gst_legacyresample_get_type())
+#define GST_LEGACYRESAMPLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LEGACYRESAMPLE,GstLegacyresample))
+#define GST_LEGACYRESAMPLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LEGACYRESAMPLE,GstLegacyresampleClass))
+#define GST_IS_LEGACYRESAMPLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LEGACYRESAMPLE))
+#define GST_IS_LEGACYRESAMPLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LEGACYRESAMPLE))
 
-typedef struct _GstAudioresample GstAudioresample;
-typedef struct _GstAudioresampleClass GstAudioresampleClass;
+typedef struct _GstLegacyresample GstLegacyresample;
+typedef struct _GstLegacyresampleClass GstLegacyresampleClass;
 
 /**
- * GstAudioresample:
+ * GstLegacyresample:
  *
  * Opaque data structure.
  */
-struct _GstAudioresample {
+struct _GstLegacyresample {
   GstBaseTransform element;
 
   GstCaps *srccaps, *sinkcaps;
@@ -68,12 +68,12 @@ struct _GstAudioresample {
   ResampleState * resample;
 };
 
-struct _GstAudioresampleClass {
+struct _GstLegacyresampleClass {
   GstBaseTransformClass parent_class;
 };
 
-GType gst_audioresample_get_type(void);
+GType gst_legacyresample_get_type(void);
 
 G_END_DECLS
 
-#endif /* __AUDIORESAMPLE_H__ */
+#endif /* __LEGACYRESAMPLE_H__ */
