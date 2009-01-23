@@ -348,6 +348,11 @@ GST_START_TEST (test_crop_to_1x1)
     s = gst_caps_get_structure (caps, 0);
     fail_unless (s != NULL);
 
+    if (g_strcmp0 (gst_structure_get_name (s), "video/x-raw-gray") == 0) {
+      /* videotestsrc does not support this format */
+      continue;
+    }
+
     GST_INFO ("testing format: %" GST_PTR_FORMAT, caps);
 
     gst_structure_set (s, "width", G_TYPE_INT, 160,
@@ -402,6 +407,11 @@ GST_START_TEST (test_cropping)
     caps = gst_caps_copy (GST_CAPS (node->data));
     s = gst_caps_get_structure (caps, 0);
     fail_unless (s != NULL);
+
+    if (g_strcmp0 (gst_structure_get_name (s), "video/x-raw-gray") == 0) {
+      /* videotestsrc does not support this format */
+      continue;
+    }
 
     GST_INFO ("testing format: %" GST_PTR_FORMAT, caps);
 
