@@ -28,3 +28,11 @@ autoregen.sh
 ABOUT-NLS
 _stdint.h
 gst-plugins-bad-*.tar.*
+
+.deps
+.libs
+*.lo
+*.la
+*.o
+Makefile.in
+Makefile
