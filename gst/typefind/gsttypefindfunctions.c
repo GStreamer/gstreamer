@@ -1143,6 +1143,14 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** gsm ***/
+
+/* can only be detected by using the extension, in which case we use the default
+ * GSM properties */
+static GstStaticCaps gsm_caps = GST_STATIC_CAPS ("audio/x-gsm, rate=8000, channels=1");
+
+#define GSM_CAPS (gst_static_caps_get(&gsm_caps))
+
 /*** wavpack ***/
 
 static GstStaticCaps wavpack_caps =
@@ -3096,6 +3104,7 @@ plugin_init (GstPlugin * plugin)
   };
   static gchar *mp3_exts[] = { "mp3", "mp2", "mp1", "mpga", NULL };
   static gchar *ac3_exts[] = { "ac3", NULL };
+  static gchar *gsm_exts[] = { "gsm", NULL };
   static gchar *musepack_exts[] = { "mpc", "mpp", "mp+", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
@@ -3217,6 +3226,8 @@ plugin_init (GstPlugin * plugin)
       mp3_exts, MP3_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
       ac3_exts, AC3_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-gsm", GST_RANK_PRIMARY, NULL,
+      gsm_exts, GSM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg-sys", GST_RANK_PRIMARY,
       mpeg_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpegts", GST_RANK_PRIMARY,
