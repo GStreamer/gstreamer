@@ -583,12 +583,26 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     switch (xvimage->im_format) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-        expected_size =
-            GST_ROUND_UP_2 (xvimage->height) * GST_ROUND_UP_4 (xvimage->width);
-        expected_size +=
-            GST_ROUND_UP_2 (xvimage->height) * GST_ROUND_UP_8 (xvimage->width) /
-            2;
+      {
+        gint pitches[3];
+        gint offsets[3];
+        guint plane;
+
+        offsets[0] = 0;
+        pitches[0] = GST_ROUND_UP_4 (xvimage->width);
+        offsets[1] = offsets[0] + pitches[0] * GST_ROUND_UP_2 (xvimage->height);
+        pitches[1] = GST_ROUND_UP_8 (xvimage->width) / 2;
+        offsets[2] = offsets[1] + pitches[1] * GST_ROUND_UP_2 (xvimage->height) / 2;
+        pitches[2] = GST_ROUND_UP_8 (pitches[0]) / 2;
+
+        expected_size = offsets[2] + pitches[2] * GST_ROUND_UP_2 (xvimage->height) / 2;
+
+        for (plane = 0; plane < xvimage->xvimage->num_planes; plane++) {
+          GST_DEBUG_OBJECT (xvimagesink, "Plane %u has a expected pitch of %d bytes, "
+              "offset of %d", plane, pitches[plane], offsets[plane]);
+        }
         break;
+      }
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
         expected_size = xvimage->height * GST_ROUND_UP_4 (xvimage->width * 2);
