@@ -155,6 +155,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/videocrop/gstvideocrop.h \
+	$(top_srcdir)/gst/videocrop/gstaspectratiocrop.h \
 	$(top_srcdir)/gst/videofilter/gstgamma.h \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \

@@ -1349,6 +1349,21 @@ GST_TYPE_VIDEO_CROP
 </SECTION>
 
 <SECTION>
+<FILE>element-aspectratiocrop</FILE>
+<TITLE>aspectratiocrop</TITLE>
+GstAspectRatioCrop
+<SUBSECTION Standard>
+GstAspectRatioCropClass
+AspectRatioCropPixelFormat
+GstAspectRatioCropImageDetails
+GST_IS_ASPECT_RATIO_CROP
+GST_IS_ASPECT_RATIO_CROP_CLASS
+GST_ASPECT_RATIO_CROP
+GST_ASPECT_RATIO_CROP_CLASS
+GST_TYPE_ASPECT_RATIO_CROP
+</SECTION>
+
+<SECTION>
 <FILE>element-videoflip</FILE>
 <TITLE>videoflip</TITLE>
 GstVideoFlip

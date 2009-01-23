@@ -11,32 +11,79 @@ GObject
     GstElement
       GstBin
         GstPipeline
-        GstHalAudioSink
-        GstHalAudioSrc
         GstGConfVideoSink
         GstGConfVideoSrc
         GstSwitchSink
           GstGConfAudioSink
         GstGConfAudioSrc
-        GstRTSPSrc
+        GstHalAudioSink
+        GstHalAudioSrc
+        GstAspectRatioCrop
+        GstRgVolume
         GstAutoVideoSink
         GstAutoVideoSrc
         GstAutoAudioSink
         GstAutoAudioSrc
-        GstRgVolume
-      GstCairoTextOverlay
+        GstRTSPSrc
+      GstTagLibMux
+        GstId3v2Mux
+        GstApev2Mux
+      GstPngDec
+      GstPngEnc
+      GstBaseSrc
+        GstPushSrc
+          GstSoupHTTPSrc
+          GstBaseAudioSrc
+            GstAudioSrc
+              GstPulseSrc
+              GstOssSrc
+          GstDV1394Src
+          GstHDV1394Src
+          GstV4l2Src
+          GstXImageSrc
+          GstMultiFileSrc
+          GstUDPSrc
+      GstBaseSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstEsdSink
+            GstPulseSink
+            GstOssSink
+        GstAASink
+        GstVideoSink
+          GstGdkPixbufSink
+        GstCACASink
+        GstShout2send
+        GstTest
+        GstMultiFileSink
+        GstMultiUDPSink
+          GstUDPSink
+        GstDynUDPSink
+      GstPulseMixer
+      GstJpegEnc
+      GstJpegDec
+      GstSmokeEnc
+      GstSmokeDec
+      GstWavpackParse
+      GstWavpackDec
+      GstWavpackEnc
+      GstFlacEnc
+      GstFlacDec
+      GstFlacTag
+      GstDVDemux
+      GstDVDec
+      GstSpeexEnc
+      GstSpeexDec
+      GstGdkPixbuf
       GstBaseTransform
-        GstCairoTimeOverlay
         GstPixbufScale
+        GstCairoTimeOverlay
         GstVideoBox
-        GstAlpha
-        GstAlphaColor
         GstVideoFilter
-          GstNavigationtest
-          GstVideoBalance
           GstVideoFlip
+          GstVideoBalance
           GstGamma
-          GstSMPTEAlpha
+          GstNavigationtest
           GstEdgeTV
           GstAgingTV
           GstDiceTV
@@ -45,13 +92,10 @@ GObject
           GstVertigoTV
           GstRevTV
           GstQuarkTV
-        GstBreakMyData
-        GstNavSeek
-        GstProgressReport
-        GstTagInject
-        GstLevel
+          GstSMPTEAlpha
+        GstVideoCrop
+        GstAudioPanorama
         GstAudioFilter
-          GstSpectrum
           GstAudioInvert
           GstAudioKaraoke
           GstAudioAmplify
@@ -69,88 +113,38 @@ GObject
             GstIirEqualizerNBands
             GstIirEqualizer3Bands
             GstIirEqualizer10Bands
-        GstAudioPanorama
+          GstSpectrum
         GstRgAnalysis
         GstRgLimiter
-        GstVideoCrop
-      GstBaseSrc
-        GstPushSrc
-          GstSoupHTTPSrc
-          GstBaseAudioSrc
-            GstAudioSrc
-              GstPulseSrc
-              GstOssSrc
-          GstDV1394Src
-          GstHDV1394Src
-          GstXImageSrc
-          GstV4l2Src
-          GstUDPSrc
-          GstMultiFileSrc
-      GstBaseSink
-        GstCACASink
-        GstBaseAudioSink
-          GstAudioSink
-            GstPulseSink
-            GstEsdSink
-            GstOssSink
-        GstAASink
-        GstVideoSink
-          GstGdkPixbufSink
-        GstShout2send
-        GstTest
-        GstMultiUDPSink
-          GstUDPSink
-        GstDynUDPSink
-        GstMultiFileSink
-      GstPulseMixer
-      GstTagLibMux
-        GstId3v2Mux
-        GstApev2Mux
-      GstJpegEnc
-      GstJpegDec
-      GstSmokeEnc
-      GstSmokeDec
-      GstDVDemux
-      GstDVDec
+        GstBreakMyData
+        GstNavSeek
+        GstProgressReport
+        GstTagInject
+        GstAlphaColor
+        GstAlpha
+        GstLevel
       GstCmmlEnc
       GstCmmlDec
-      GstFlacEnc
-      GstFlacDec
-      GstFlacTag
-      GstPngDec
-      GstPngEnc
-      GstGdkPixbuf
-      GstWavpackParse
-      GstWavpackDec
-      GstWavpackEnc
-      GstSpeexEnc
-      GstSpeexDec
+      GstCairoTextOverlay
       GstOssMixerElement
-      GstRTPDec
-      GstICYDemux
-      GstWavParse
-      GstEbmlRead
-        GstMatroskaDemux
-      GstMatroskaMux
-      GstFlxDec
-      GstVideoMixer
-      GstTagDemux
-        GstApeDemux
-        GstID3Demux
-      GstRndBufferSize
-      GstEFence
-      GstGoom
-      GstGoom2k1
       GstMultipartDemux
       GstMultipartMux
-      GstMuLawEnc
-      GstMuLawDec
+      GstFlxDec
+      GstAuParse
       GstALawEnc
       GstALawDec
-      GstCutter
-      GstQTDemux
+      GstMuLawEnc
+      GstMuLawDec
+      GstVideoMixer
+      GstRndBufferSize
+      GstEFence
+      GstTagDemux
+        GstID3Demux
+        GstApeDemux
+      GstGoom2k1
+      GstWavEnc
+      GstRTPDepay
       GstBaseRTPDepayload
-        GstRtpXQTDepay
         GstRtpAC3Depay
         GstRTPDVDepay
         GstRTPiLBCDepay
@@ -177,16 +171,7 @@ GObject
         GstRtpTheoraDepay
         GstRtpVorbisDepay
         GstRtpVRawDepay
-      GstAviDemux
-      GstAviMux
-      GstAviSubtitle
-      GstSMPTE
-      GstInterleave
-      GstDeinterleave
-      GstMonoscope
-      GstWavEnc
-      GstAuParse
-      GstRTPDepay
+        GstRtpXQTDepay
       GstBaseRTPPayload
         GstRTPDVPay
         GstBaseRTPAudioPayload
@@ -213,6 +198,21 @@ GObject
         GstRtpVorbisPay
         GstRtpVRawPay
       GstAsteriskh263
+      GstEbmlRead
+        GstMatroskaDemux
+      GstMatroskaMux
+      GstCutter
+      GstICYDemux
+      GstAviDemux
+      GstAviMux
+      GstAviSubtitle
+      GstRTPDec
+      GstWavParse
+      GstQTDemux
+      GstSMPTE
+      GstInterleave
+      GstDeinterleave
+      GstGoom
     GstBus
     GstTask
     GstClock
@@ -224,10 +224,10 @@ GObject
   GstSignalObject
   GstMixerTrack
     GstMixerOptions
+  GdkPixbuf
   GstCmmlTagStream
   GstCmmlTagHead
   GstCmmlTagClip
-  GdkPixbuf
   GstTunerNorm
   GstTunerChannel
   GstColorBalanceChannel
@@ -235,10 +235,10 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
+  GstTagSetter
   GstImplementsInterface
   GstPropertyProbe
   GstMixer
-  GstTagSetter
   GstTuner
   GstColorBalance
   GstVideoOrientation

@@ -17,6 +17,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-aspectratiocrop
+ * @see_also: #GstVideoCrop
+ *
+ * This element crops video frames to a specified aspect-ratio.
+ *
+ * If the aspect-ratio is already correct, the element will operate in pass-through mode.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[gst-launch -v videotestsrc ! video/x-raw-rgb,height=640,width=480 ! aspectratiocrop aspect-ratio=16/9 ! ximagesink]|
+ * This pipeline generates a videostream in 4/3 and crops it to 16/9.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

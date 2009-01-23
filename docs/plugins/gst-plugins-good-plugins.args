@@ -19798,3 +19798,13 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAspectRatioCrop::aspect-ratio</NAME>
+<TYPE>GstFraction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>aspect-ratio</NICK>
+<BLURB>Target aspect-ratio of video.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
