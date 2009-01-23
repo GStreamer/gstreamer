@@ -501,6 +501,7 @@ gst_app_src_flush_queued (GstAppSrc * src)
 
   while ((buf = g_queue_pop_head (src->priv->queue)))
     gst_buffer_unref (buf);
+  src->priv->queued_bytes = 0;
 }
 
 static void
