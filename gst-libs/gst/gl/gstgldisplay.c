@@ -2201,31 +2201,6 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
   case GST_VIDEO_FORMAT_I420:
   case GST_VIDEO_FORMAT_YV12:
   {
-    gint offsetU = 0;
-    gint offsetV = 0;
-
-    switch (display->upload_video_format)
-    {
-    case GST_VIDEO_FORMAT_I420:
-      offsetU = 1;
-      offsetV = 2;
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-
-#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
-      //WIN32
-      offsetU = 2;
-      offsetV = 1;
-#else
-      //LINUX
-      offsetU = 1;
-      offsetV = 2;
-#endif
-      break;
-    default:
-      g_assert_not_reached ();
-    }
-
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 
@@ -2234,14 +2209,14 @@ gst_gl_display_thread_do_upload_fill (GstGLDisplay *display)
 		     GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		     (guint8 *) data +
-		     gst_video_format_get_component_offset (display->upload_video_format, offsetU, width, height));
+		     gst_video_format_get_component_offset (display->upload_video_format, 1, width, height));
 
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, display->upload_intex_v);
     glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
 		     GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
 		     GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		     (guint8 *) data +
-		     gst_video_format_get_component_offset (display->upload_video_format, offsetV, width, height));
+		     gst_video_format_get_component_offset (display->upload_video_format, 2, width, height));
   }
   break;
   default:
@@ -2654,30 +2629,6 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display)
   case GST_VIDEO_FORMAT_I420:
   case GST_VIDEO_FORMAT_YV12:
   {
-    gint offsetU = 0;
-    gint offsetV = 0;
-
-    switch (video_format)
-    {
-    case GST_VIDEO_FORMAT_I420:
-      offsetU = 1;
-      offsetV = 2;
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-#if defined(_MSC_VER) || defined(__CYGWIN__) || defined(__MINGW32__)
-      //WIN32
-      offsetU = 2;
-      offsetV = 1;
-#else
-      //LINUX
-      offsetU = 1;
-      offsetV = 2;
-#endif
-      break;
-    default:
-      g_assert_not_reached ();
-    }
-
     glReadPixels (0, 0, width, height, GL_LUMINANCE,
 		  GL_UNSIGNED_BYTE, data);
 
@@ -2685,13 +2636,13 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay *display)
     glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
 		  GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		  (guint8 *) data +
-		  gst_video_format_get_component_offset (video_format, offsetU, width, height));
+		  gst_video_format_get_component_offset (video_format, 1, width, height));
 
     glReadBuffer(GL_COLOR_ATTACHMENT2_EXT);
     glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
 		  GL_LUMINANCE, GL_UNSIGNED_BYTE,
 		  (guint8 *) data +
-		  gst_video_format_get_component_offset (video_format, offsetV, width, height));
+		  gst_video_format_get_component_offset (video_format, 2, width, height));
   }
   break;
   default:
