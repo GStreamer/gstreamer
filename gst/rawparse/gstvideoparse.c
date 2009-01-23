@@ -191,19 +191,19 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
           G_BYTE_ORDER, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_RED_MASK,
       g_param_spec_int ("red-mask", "Red mask",
-          "Red mask of images in raw stream", 0, INT_MAX,
+          "Red mask of images in raw stream", INT_MIN, INT_MAX,
           GST_VIDEO_BYTE1_MASK_24_INT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_GREEN_MASK,
       g_param_spec_int ("green-mask", "Green mask",
-          "Green mask of images in raw stream", 0, INT_MAX,
+          "Green mask of images in raw stream", INT_MIN, INT_MAX,
           GST_VIDEO_BYTE2_MASK_24_INT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BLUE_MASK,
       g_param_spec_int ("blue-mask", "Blue mask",
-          "Blue mask of images in raw stream", 0, INT_MAX,
+          "Blue mask of images in raw stream", INT_MIN, INT_MAX,
           GST_VIDEO_BYTE3_MASK_24_INT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_ALPHA_MASK,
       g_param_spec_int ("alpha-mask", "Alpha mask",
-          "Alpha mask of images in raw stream", 0, INT_MAX, 0,
+          "Alpha mask of images in raw stream", INT_MIN, INT_MAX, 0,
           G_PARAM_READWRITE));
 }
 
