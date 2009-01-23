@@ -74,7 +74,8 @@ typedef enum
 
 typedef enum
 {
-  GST_PLUGIN_FLAG_CACHED = (1<<0)
+  GST_PLUGIN_FLAG_CACHED = (1<<0),
+  GST_PLUGIN_FLAG_BLACKLISTED = (1<<1)
 } GstPluginFlags;
 
 /**

@@ -64,7 +64,7 @@ struct _GstPluginLoader
   GstRegistry *registry;
   GstPoll *fdset;
 
-  gboolean child_started;
+  gboolean child_running;
   GPid child_pid;
   GstPollFD fd_w;
   GstPollFD fd_r;
@@ -83,6 +83,7 @@ struct _GstPluginLoader
   guint8 *rx_buf;
   guint rx_buf_size;
   gboolean rx_done;
+  gboolean rx_got_sync;
 
   /* Head and tail of the pending plugins list. List of
      PendingPluginEntry structs */
@@ -92,7 +93,7 @@ struct _GstPluginLoader
 
 #define PACKET_EXIT 1
 #define PACKET_LOAD_PLUGIN 2
-#define PACKET_STARTING_LOAD 3
+#define PACKET_SYNC 3
 #define PACKET_PLUGIN_DETAILS 4
 
 #define BUF_INIT_SIZE 512
@@ -105,6 +106,12 @@ static gboolean gst_plugin_loader_spawn (GstPluginLoader * loader);
 static void put_packet (GstPluginLoader * loader, guint type, guint32 tag,
     const guint8 * payload, guint32 payload_len);
 static gboolean exchange_packets (GstPluginLoader * l);
+static gboolean plugin_loader_replay_pending (GstPluginLoader * l);
+static gboolean plugin_loader_load_and_sync (GstPluginLoader * l,
+    PendingPluginEntry * entry);
+static void plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
+    PendingPluginEntry * entry);
+static void plugin_loader_cleanup_child (GstPluginLoader * loader);
 
 static GstPluginLoader *
 plugin_loader_new (GstRegistry * registry)
@@ -136,23 +143,20 @@ plugin_loader_free (GstPluginLoader * loader)
 
   fsync (loader->fd_w.fd);
 
-  if (loader->child_started) {
+  if (loader->child_running) {
     put_packet (loader, PACKET_EXIT, 0, NULL, 0);
 
-    /* Swap packets with the child until it exits */
-    while (!loader->rx_done && exchange_packets (loader)) {
-    };
+    /* Swap packets with the child until it exits cleanly */
+    while (!loader->rx_done) {
+      if (exchange_packets (loader) || loader->rx_done)
+        continue;
 
-    close (loader->fd_w.fd);
-    close (loader->fd_r.fd);
+      if (!plugin_loader_replay_pending (loader))
+        break;
+      put_packet (loader, PACKET_EXIT, 0, NULL, 0);
+    }
 
-#ifndef G_OS_WIN32
-    GST_LOG ("waiting for child process to exit");
-    waitpid (loader->child_pid, NULL, 0);
-#else
-    g_warning ("FIXME: Implement child process shutdown for Win32");
-#endif
-    g_spawn_close_pid (loader->child_pid);
+    plugin_loader_cleanup_child (loader);
   } else {
     close (loader->fd_w.fd);
     close (loader->fd_r.fd);
@@ -190,10 +194,8 @@ plugin_loader_load (GstPluginLoader * loader, const gchar * filename,
   gint len;
   PendingPluginEntry *entry;
 
-  if (!loader->child_started) {
-    if (!gst_plugin_loader_spawn (loader))
-      return FALSE;
-  }
+  if (!gst_plugin_loader_spawn (loader))
+    return FALSE;
 
   /* Send a packet to the child requesting that it load the given file */
   GST_LOG_OBJECT (loader->registry,
@@ -216,33 +218,159 @@ plugin_loader_load (GstPluginLoader * loader, const gchar * filename,
   put_packet (loader, PACKET_LOAD_PLUGIN, entry->tag,
       (guint8 *) filename, len + 1);
 
-  if (!exchange_packets (loader))
-    return FALSE;
+  if (!exchange_packets (loader)) {
+    if (!plugin_loader_replay_pending (loader))
+      return FALSE;
+  }
 
   return TRUE;
 }
 
 static gboolean
-gst_plugin_loader_spawn (GstPluginLoader * loader)
+plugin_loader_replay_pending (GstPluginLoader * l)
 {
-  char *helper_bin =
-      "/home/jan/devel/gstreamer/head/gstreamer/libs/gst/helpers/plugin-scanner";
-  char *argv[] = { helper_bin, "-l", NULL };
+  GList *cur, *next;
 
-  if (!g_spawn_async_with_pipes (NULL, argv, NULL,
-          G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
-          NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
-          NULL, NULL))
+restart:
+  if (!gst_plugin_loader_spawn (l))
     return FALSE;
 
-  gst_poll_add_fd (loader->fdset, &loader->fd_w);
+  /* Load each plugin one by one synchronously until we find the
+   * crashing one */
+  while ((cur = l->pending_plugins)) {
+    PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
 
-  gst_poll_add_fd (loader->fdset, &loader->fd_r);
-  gst_poll_fd_ctl_read (loader->fdset, &loader->fd_r, TRUE);
+    if (!plugin_loader_load_and_sync (l, entry)) {
+      GST_INFO ("AHA! %s crashes on loading", entry->filename);
+      /* Create dummy plugin entry to block re-scanning this file */
+      plugin_loader_create_blacklist_plugin (l, entry);
+      l->got_plugin_details = TRUE;
+      /* Now remove this crashy plugin from the head of the list */
+      l->pending_plugins = g_list_delete_link (cur, cur);
+      if (l->pending_plugins == NULL)
+        l->pending_plugins_tail = NULL;
+      if (!gst_plugin_loader_spawn (l))
+        return FALSE;
+      break;
+    }
+  }
 
-  loader->child_started = TRUE;
+  /* We exited after finding the crashing one. If there's any more pending,
+   * dispatch them post-haste, but don't wait */
+  for (cur = l->pending_plugins; cur != NULL; cur = next) {
+    PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
+
+    next = g_list_next (cur);
+
+    put_packet (l, PACKET_LOAD_PLUGIN, entry->tag,
+        (guint8 *) entry->filename, strlen (entry->filename) + 1);
+
+    /* This might invalidate cur, which is why we grabbed 'next' above */
+    if (!exchange_packets (l))
+      goto restart;
+  }
 
   return TRUE;
+}
+
+static gboolean
+plugin_loader_load_and_sync (GstPluginLoader * l, PendingPluginEntry * entry)
+{
+  gint len;
+
+  GST_DEBUG_OBJECT (l->registry, "Synchronously loading plugin file %s",
+      entry->filename);
+
+  len = strlen (entry->filename);
+  put_packet (l, PACKET_LOAD_PLUGIN, entry->tag,
+      (guint8 *) entry->filename, len + 1);
+  put_packet (l, PACKET_SYNC, 0, NULL, 0);
+
+  l->rx_got_sync = FALSE;
+  while (!l->rx_got_sync) {
+    if (!exchange_packets (l))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
+    PendingPluginEntry * entry)
+{
+  GstPlugin *plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+
+  plugin->filename = g_strdup (entry->filename);
+  plugin->file_mtime = entry->file_mtime;
+  plugin->file_size = entry->file_size;
+  plugin->flags |= GST_PLUGIN_FLAG_BLACKLISTED;
+
+  plugin->basename = g_path_get_basename (plugin->filename);
+  plugin->desc.name = g_intern_string (plugin->basename);
+  plugin->desc.description = g_strdup_printf ("Plugin for blacklisted file");
+  plugin->desc.version = g_intern_string ("0.0.0");
+  plugin->desc.license = g_intern_string ("BLACKLIST");
+  plugin->desc.source = plugin->desc.license;
+  plugin->desc.package = plugin->desc.license;
+  plugin->desc.origin = plugin->desc.license;
+
+  GST_DEBUG ("Adding blacklist plugin '%s'", plugin->desc.name);
+  gst_registry_add_plugin (l->registry, plugin);
+}
+
+static gboolean
+gst_plugin_loader_spawn (GstPluginLoader * loader)
+{
+  if (loader->child_running)
+    return TRUE;
+
+  {
+    /* FIXME: Find the plugin-scanner! */
+    char *helper_bin =
+        "/home/jan/devel/gstreamer/head/gstreamer/libs/gst/helpers/plugin-scanner";
+    char *argv[] = { helper_bin, "-l", NULL };
+
+    if (!g_spawn_async_with_pipes (NULL, argv, NULL,
+            G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
+            NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
+            NULL, NULL))
+      return FALSE;
+  }
+
+  gst_poll_add_fd (loader->fdset, &loader->fd_w);
+  gst_poll_add_fd (loader->fdset, &loader->fd_r);
+
+  gst_poll_fd_ctl_read (loader->fdset, &loader->fd_r, TRUE);
+
+  loader->tx_buf_write = loader->tx_buf_read = 0;
+
+  loader->child_running = TRUE;
+
+  return TRUE;
+}
+
+static void
+plugin_loader_cleanup_child (GstPluginLoader * l)
+{
+  if (!l->child_running || l->is_child)
+    return;
+
+  gst_poll_remove_fd (l->fdset, &l->fd_w);
+  gst_poll_remove_fd (l->fdset, &l->fd_r);
+
+  close (l->fd_w.fd);
+  close (l->fd_r.fd);
+
+#ifndef G_OS_WIN32
+  GST_LOG ("waiting for child process to exit");
+  waitpid (l->child_pid, NULL, 0);
+#else
+  g_warning ("FIXME: Implement child process shutdown for Win32");
+#endif
+  g_spawn_close_pid (l->child_pid);
+
+  l->child_running = FALSE;
 }
 
 gboolean
@@ -346,6 +474,11 @@ write_one (GstPluginLoader * l)
       out += res;
     }
   } while (to_write > 0 && res < 0 && (errno == EAGAIN || errno == EINTR));
+  if (res < 0) {
+    /* Failed to write -> child died */
+    plugin_loader_cleanup_child (l);
+    return FALSE;
+  }
 
   if (l->tx_buf_read == l->tx_buf_write) {
     gst_poll_fd_ctl_write (l->fdset, &l->fd_w, FALSE);
@@ -361,7 +494,14 @@ do_plugin_load (GstPluginLoader * l, const gchar * filename, guint tag)
   GList *chunks = NULL;
 
   GST_DEBUG ("Plugin scanner loading file %s. tag %u\n", filename, tag);
-  put_packet (l, PACKET_STARTING_LOAD, tag, NULL, 0);
+
+#if 0                           /* Test code - crash based on an env var */
+  if (strstr (filename, "coreelements") == NULL) {
+    g_printerr ("Crashing on file %s\n", filename);
+    g_printerr ("%d", *(gint *) (NULL));
+  }
+#endif
+
 
   newplugin = gst_plugin_load_file ((gchar *) filename, NULL);
   if (newplugin) {
@@ -437,7 +577,6 @@ handle_rx_packet (GstPluginLoader * l,
       }
       return TRUE;
     case PACKET_LOAD_PLUGIN:{
-
       if (!l->is_child)
         return TRUE;
 
@@ -446,10 +585,6 @@ handle_rx_packet (GstPluginLoader * l,
 
       break;
     }
-    case PACKET_STARTING_LOAD:
-      GST_LOG_OBJECT (l->registry,
-          "child started loading plugin w/ tag %u", tag);
-      break;
     case PACKET_PLUGIN_DETAILS:{
       gchar *tmp = (gchar *) payload;
       PendingPluginEntry *entry = NULL;
@@ -495,25 +630,8 @@ handle_rx_packet (GstPluginLoader * l,
         /* We got a set of plugin details - remember it for later */
         l->got_plugin_details = TRUE;
       } else if (entry != NULL) {
-        /* Create a dummy entry for this file to prevent scanning every time */
-        GstPlugin *plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
-
-        plugin->filename = g_strdup (entry->filename);
-        plugin->file_mtime = entry->file_mtime;
-        plugin->file_size = entry->file_size;
-
-        plugin->basename = g_path_get_basename (plugin->filename);
-        plugin->desc.name = g_intern_string (plugin->basename);
-        plugin->desc.description = g_strdup_printf ("Dummy plugin for file %s",
-            plugin->filename);
-        plugin->desc.version = g_intern_string ("0.0.0");
-        plugin->desc.license = g_intern_string ("DUMMY");
-        plugin->desc.source = plugin->desc.license;
-        plugin->desc.package = plugin->desc.license;
-        plugin->desc.origin = plugin->desc.license;
-
-        GST_DEBUG ("Adding dummy plugin '%s'", plugin->desc.name);
-        gst_registry_add_plugin (l->registry, plugin);
+        /* Create a blacklist entry for this file to prevent scanning every time */
+        plugin_loader_create_blacklist_plugin (l, entry);
         l->got_plugin_details = TRUE;
       }
 
@@ -524,6 +642,14 @@ handle_rx_packet (GstPluginLoader * l,
 
       break;
     }
+    case PACKET_SYNC:
+      if (l->is_child) {
+        /* Respond with our reply - also a sync */
+        put_packet (l, PACKET_SYNC, 0, NULL, 0);
+        GST_LOG ("Got SYNC in child - replying");
+      } else
+        l->rx_got_sync = TRUE;
+      break;
     default:
       return FALSE;             /* Invalid packet -> something is wrong */
   }
@@ -595,13 +721,14 @@ exchange_packets (GstPluginLoader * l)
     if (res < 0)
       return FALSE;
 
-    GST_DEBUG ("Poll res = %d. %d bytes pending for write", res,
+    GST_LOG ("Poll res = %d. %d bytes pending for write", res,
         l->tx_buf_write - l->tx_buf_read);
 
     if (!l->rx_done) {
       if (gst_poll_fd_has_error (l->fdset, &l->fd_r) ||
           gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
         GST_LOG ("read fd %d closed/errored", l->fd_r.fd);
+        plugin_loader_cleanup_child (l);
         return FALSE;
       }
 
@@ -615,6 +742,7 @@ exchange_packets (GstPluginLoader * l)
       if (gst_poll_fd_has_error (l->fdset, &l->fd_w) ||
           gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
         GST_ERROR ("write fd %d closed/errored", l->fd_w.fd);
+        plugin_loader_cleanup_child (l);
         return FALSE;
       }
       if (gst_poll_fd_can_write (l->fdset, &l->fd_w)) {

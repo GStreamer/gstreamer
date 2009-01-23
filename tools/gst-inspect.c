@@ -943,9 +943,34 @@ print_children_info (GstElement * element)
 }
 
 static void
+print_blacklist ()
+{
+  GList *plugins, *cur;
+  gint count = 0;
+
+  g_print ("%s\n", _("Blacklisted files:"));
+
+  plugins = gst_default_registry_get_plugin_list ();
+  for (cur = plugins; cur != NULL; cur = g_list_next (cur)) {
+    GstPlugin *plugin = (GstPlugin *) (cur->data);
+    if (plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) {
+      g_print ("  %s\n", plugin->desc.name);
+      count++;
+    }
+  }
+
+  g_print ("\n");
+  g_print (_("Total count: "));
+  g_print (ngettext ("%d blacklisted file", "%d blacklisted files", count),
+      count);
+  g_print ("\n");
+  gst_plugin_list_free (plugins);
+}
+
+static void
 print_element_list (gboolean print_all)
 {
-  int plugincount = 0, featurecount = 0;
+  int plugincount = 0, featurecount = 0, blacklistcount = 0;
   GList *plugins, *orig_plugins;
 
   orig_plugins = plugins = gst_default_registry_get_plugin_list ();
@@ -956,6 +981,11 @@ print_element_list (gboolean print_all)
     plugin = (GstPlugin *) (plugins->data);
     plugins = g_list_next (plugins);
     plugincount++;
+
+    if (plugin->flags & GST_PLUGIN_FLAG_BLACKLISTED) {
+      blacklistcount++;
+      continue;
+    }
 
     orig_features = features =
         gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
@@ -1022,6 +1052,12 @@ print_element_list (gboolean print_all)
   g_print ("\n");
   g_print (_("Total count: "));
   g_print (ngettext ("%d plugin", "%d plugins", plugincount), plugincount);
+  if (blacklistcount) {
+    g_print (" (");
+    g_print (ngettext ("%d blacklist entry", "%d blacklist entries",
+            blacklistcount), blacklistcount);
+    g_print (" not shown)");
+  }
   g_print (", ");
   g_print (ngettext ("%d feature", "%d features", featurecount), featurecount);
   g_print ("\n");
@@ -1400,6 +1436,7 @@ int
 main (int argc, char *argv[])
 {
   gboolean print_all = FALSE;
+  gboolean do_print_blacklist = FALSE;
   gboolean plugin_name = FALSE;
   gboolean print_aii = FALSE;
   gboolean uri_handlers = FALSE;
@@ -1407,6 +1444,8 @@ main (int argc, char *argv[])
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
         N_("Print all elements"), NULL},
+    {"print-blacklist", 'b', 0, G_OPTION_ARG_NONE, &do_print_blacklist,
+        N_("Print list of blacklisted files"), NULL},
     {"print-plugin-auto-install-info", '\0', 0, G_OPTION_ARG_NONE, &print_aii,
         N_("Print a machine-parsable list of features the specified plugin "
               "provides.\n                                       "
@@ -1463,7 +1502,10 @@ main (int argc, char *argv[])
   if (uri_handlers) {
     print_all_uri_handlers ();
   } else if (argc == 1 || print_all) {
-    print_element_list (print_all);
+    if (do_print_blacklist)
+      print_blacklist ();
+    else
+      print_element_list (print_all);
   } else {
     /* else we try to get a factory */
     GstElementFactory *factory;
