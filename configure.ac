@@ -455,6 +455,10 @@ AC_CHECK_LIB(dl, dladdr,
    LIBS="$LIBS -ldl")
 CFLAGS="$save_cflags"
 
+dnl *** checks for socket and nsl libraries ***
+AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
+AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
+
 dnl check for inet_aton()
 save_libs="$LIBS"
 AC_CHECK_FUNC(inet_aton, ,
