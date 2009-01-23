@@ -3,3 +3,6 @@
 *.c.gcov
 *.c.gcov.out
 *.c.gcov
+*.o
+*.lo
+*.la

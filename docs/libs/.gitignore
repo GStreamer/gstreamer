@@ -1,6 +1,8 @@
+*.bak
 *.stamp
 html
 xml
+doc-registry.xml
 Makefile
 Makefile.in
 gstreamer-libs-decl.txt

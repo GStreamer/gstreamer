@@ -17,6 +17,8 @@ sgml
 tmpl
 *.stamp
 
+doc-registry.xml
+
 gstreamer.html
 gstreamer-presed-scan.c
 gstreamer-scan.c
@@ -34,6 +36,7 @@ html-build.stamp
 *.aux
 *.dvi
 *.ps
+*.bak
 gtkdoc-fixxref
 xml
 

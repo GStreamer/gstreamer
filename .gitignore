@@ -36,3 +36,5 @@ py-compile
 registry.*
 coverage-report.txt
 gst-element-check.m4
+.deps
+.libs

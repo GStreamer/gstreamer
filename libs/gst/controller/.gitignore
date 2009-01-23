@@ -3,3 +3,6 @@
 *.da
 *.def
 *.gcno
+*.o
+*.lo
+*.la

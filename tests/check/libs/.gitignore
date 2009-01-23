@@ -1,6 +1,8 @@
 .dirstamp
 adapter
 basesrc
+bitreader
+bytereader
 gdp
 collectpads
 controller
