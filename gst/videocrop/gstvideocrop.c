@@ -67,6 +67,7 @@
 #include <gst/video/video.h>
 
 #include "gstvideocrop.h"
+#include "gstaspectratiocrop.h"
 
 #include <string.h>
 
@@ -752,8 +753,13 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (videocrop_debug, "videocrop", 0, "videocrop");
 
-  return gst_element_register (plugin, "videocrop", GST_RANK_NONE,
-      GST_TYPE_VIDEO_CROP);
+  if (gst_element_register (plugin, "videocrop", GST_RANK_NONE,
+          GST_TYPE_VIDEO_CROP)
+      && gst_element_register (plugin, "aspectratiocrop", GST_RANK_NONE,
+          GST_TYPE_ASPECT_RATIO_CROP))
+    return TRUE;
+
+  return FALSE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
