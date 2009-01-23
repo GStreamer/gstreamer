@@ -84,8 +84,6 @@
 
 #include "gstmetadatamux.h"
 
-#include "metadataexif.h"
-
 #include "metadataiptc.h"
 
 #include "metadataxmp.h"
@@ -104,6 +102,7 @@ enum
 enum
 {
   ARG_0,
+  ARG_EXIF_BYTE_ORDER,
 };
 
 
@@ -120,6 +119,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_metadata_mux_debug);
 
 #define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) \
     do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
+
+#define DEFAULT_EXIF_BYTE_ORDER GST_META_EXIF_BYTE_ORDER_MOTOROLA
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -292,6 +293,18 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
   gstbasemetadata_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_metadata_mux_sink_event);
 
+  /**
+   * GstMetadataMux:exif-byte-order:
+   *
+   * Set byte-order for exif metadata writing.
+   *
+   * Since: 0.10.11
+   */
+  g_object_class_install_property (gobject_class, ARG_EXIF_BYTE_ORDER,
+      g_param_spec_enum ("exif-byte-order", "Exif byte-order",
+          "Byte-order for exif metadata writing", GST_TYPE_META_EXIF_BYTE_ORDER,
+          DEFAULT_EXIF_BYTE_ORDER, G_PARAM_READWRITE));
+
 }
 
 static void
@@ -299,14 +312,18 @@ gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
 {
   gst_base_metadata_set_option_flag (GST_BASE_METADATA (filter),
       META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP | META_OPT_MUX);
-
+  filter->exif_options.byteorder = DEFAULT_EXIF_BYTE_ORDER;
 }
 
 static void
 gst_metadata_mux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstMetadataMux *filter = GST_METADATA_MUX (object);
   switch (prop_id) {
+    case ARG_EXIF_BYTE_ORDER:
+      filter->exif_options.byteorder = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -317,7 +334,11 @@ static void
 gst_metadata_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstMetadataMux *filter = GST_METADATA_MUX (object);
   switch (prop_id) {
+    case ARG_EXIF_BYTE_ORDER:
+      g_value_set_enum (value, filter->exif_options.byteorder);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -400,7 +421,8 @@ gst_metadata_mux_create_chunks_from_tags (GstBaseMetadata * base)
   if (taglist) {
 
     if (gst_base_metadata_get_option_flag (base) & META_OPT_EXIF) {
-      metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist);
+      metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist,
+          &filter->exif_options);
       gst_base_metadata_update_inject_segment_with_new_data (base, &buf, &size,
           MD_CHUNK_EXIF);
     }

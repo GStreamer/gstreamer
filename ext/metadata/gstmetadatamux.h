@@ -48,6 +48,8 @@
 
 #include "gstbasemetadata.h"
 
+#include "metadataexif.h"
+
 G_BEGIN_DECLS
 
 /* *INDENT-OFF* */
@@ -75,6 +77,7 @@ typedef struct _GstMetadataMuxClass GstMetadataMuxClass;
 struct _GstMetadataMux
 {
   GstBaseMetadata metadata;
+  MetaExifWriteOptions exif_options;
 };
 
 struct _GstMetadataMuxClass

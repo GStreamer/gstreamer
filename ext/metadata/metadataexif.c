@@ -69,6 +69,23 @@
 GST_DEBUG_CATEGORY (gst_metadata_exif_debug);
 #define GST_CAT_DEFAULT gst_metadata_exif_debug
 
+GType
+gst_meta_exif_byte_order_get_type (void)
+{
+  static GType meta_exif_byte_order_type = 0;
+  static const GEnumValue meta_exif_byte_order[] = {
+    {GST_META_EXIF_BYTE_ORDER_MOTOROLA, "Motorola byte-order", "Motorola"},
+    {GST_META_EXIF_BYTE_ORDER_INTEL, "Intel byte-order", "Intel"},
+    {0, NULL, NULL},
+  };
+
+  if (!meta_exif_byte_order_type) {
+    meta_exif_byte_order_type =
+        g_enum_register_static ("MetaExifByteOrder", meta_exif_byte_order);
+  }
+  return meta_exif_byte_order_type;
+}
+
 /*
  * Implementation when libexif isn't available at compilation time
  */
@@ -95,7 +112,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
 void
 metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    const GstTagList * taglist)
+    const GstTagList * taglist, const MetaExifWriteOptions * opts)
 {
   /* do nothing */
 }
@@ -353,6 +370,7 @@ done:
  * @buf: buffer that will have the created EXIF chunk
  * @size: size of the buffer that will be created
  * @taglist: list of tags to be added to EXIF chunk
+ * @opts: write options for exif metadata
  *
  * Get tags from @taglist, create a EXIF chunk based on it and save to @buf.
  * Note: The EXIF chunk is NOT wrapped by any bytes specific to any file format
@@ -362,7 +380,7 @@ done:
 
 void
 metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    const GstTagList * taglist)
+    const GstTagList * taglist, const MetaExifWriteOptions * opts)
 {
   ExifData *ed = NULL;
   GstBuffer *exif_chunk = NULL;
@@ -387,6 +405,17 @@ metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 
   if (!ed) {
     ed = exif_data_new ();
+    GST_DEBUG ("setting byteorder %d", opts->byteorder);
+    switch (opts->byteorder) {
+      case GST_META_EXIF_BYTE_ORDER_MOTOROLA:
+        exif_data_set_byte_order (ed, EXIF_BYTE_ORDER_MOTOROLA);
+        break;
+      case GST_META_EXIF_BYTE_ORDER_INTEL:
+        exif_data_set_byte_order (ed, EXIF_BYTE_ORDER_INTEL);
+        break;
+      default:
+        break;
+    }
     exif_data_set_data_type (ed, EXIF_DATA_TYPE_COMPRESSED);
     exif_data_fix (ed);
   }
