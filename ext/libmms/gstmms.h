@@ -6,8 +6,7 @@
 #define __GST_MMS_H__
 
 #include <gst/gst.h>
-#include <libmms/mms.h>
-#include <libmms/mmsh.h>
+#include <libmms/mmsx.h>
 #include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
@@ -32,10 +31,10 @@ struct _GstMMS
   GstPushSrc parent;
 
   gchar  *uri_name;
+  gchar  *current_connection_uri_name;
   guint  connection_speed;
   
-  mms_t  *connection;
-  mmsh_t *connection_h;
+  mmsx_t *connection;
 };
 
 struct _GstMMSClass 

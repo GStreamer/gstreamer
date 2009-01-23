@@ -65,6 +65,12 @@ static gboolean gst_mms_src_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_mms_start (GstBaseSrc * bsrc);
 static gboolean gst_mms_stop (GstBaseSrc * bsrc);
+static gboolean gst_mms_is_seekable (GstBaseSrc * src);
+static gboolean gst_mms_get_size (GstBaseSrc * src, guint64 * size);
+static gboolean gst_mms_prepare_seek_segment (GstBaseSrc * src,
+    GstEvent * event, GstSegment * segment);
+static gboolean gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment);
+
 static GstFlowReturn gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf);
 
 static void
@@ -127,6 +133,11 @@ gst_mms_class_init (GstMMSClass * klass)
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_mms_create);
 
+  gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_mms_is_seekable);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_mms_get_size);
+  gstbasesrc_class->prepare_seek_segment =
+      GST_DEBUG_FUNCPTR (gst_mms_prepare_seek_segment);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_mms_do_seek);
 }
 
 /* initialize the new element
@@ -143,16 +154,27 @@ gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
       GST_DEBUG_FUNCPTR (gst_mms_get_query_types));
 
   mmssrc->uri_name = NULL;
+  mmssrc->current_connection_uri_name = NULL;
   mmssrc->connection = NULL;
-  mmssrc->connection_h = NULL;
   mmssrc->connection_speed = DEFAULT_CONNECTION_SPEED;
-  GST_BASE_SRC (mmssrc)->blocksize = 2048;
 }
 
 static void
 gst_mms_finalize (GObject * gobject)
 {
   GstMMS *mmssrc = GST_MMS (gobject);
+
+  /* We may still have a connection open, as we preserve unused / pristine
+     open connections in stop to reuse them in start. */
+  if (mmssrc->connection) {
+    mmsx_close (mmssrc->connection);
+    mmssrc->connection = NULL;
+  }
+
+  if (mmssrc->current_connection_uri_name) {
+    g_free (mmssrc->current_connection_uri_name);
+    mmssrc->current_connection_uri_name = NULL;
+  }
 
   if (mmssrc->uri_name) {
     g_free (mmssrc->uri_name);
@@ -196,25 +218,27 @@ gst_mms_src_query (GstPad * pad, GstQuery * query)
         res = FALSE;
         break;
       }
-      if (mmssrc->connection) {
-        value = (gint64) mms_get_current_pos (mmssrc->connection);
-      } else {
-        value = (gint64) mmsh_get_current_pos (mmssrc->connection_h);
-      }
+      value = (gint64) mmsx_get_current_pos (mmssrc->connection);
       gst_query_set_position (query, format, value);
       break;
     case GST_QUERY_DURATION:
-      gst_query_parse_duration (query, &format, &value);
-      if (format != GST_FORMAT_BYTES) {
+      if (!mmsx_get_seekable (mmssrc->connection)) {
         res = FALSE;
         break;
       }
-      if (mmssrc->connection) {
-        value = (gint64) mms_get_length (mmssrc->connection);
-      } else {
-        value = (gint64) mmsh_get_length (mmssrc->connection_h);
+      gst_query_parse_duration (query, &format, &value);
+      switch (format) {
+        case GST_FORMAT_BYTES:
+          value = (gint64) mmsx_get_length (mmssrc->connection);
+          gst_query_set_duration (query, format, value);
+          break;
+        case GST_FORMAT_TIME:
+          value = mmsx_get_time_length (mmssrc->connection) * GST_SECOND;
+          gst_query_set_duration (query, format, value);
+          break;
+        default:
+          res = FALSE;
       }
-      gst_query_set_duration (query, format, value);
       break;
     default:
       res = FALSE;
@@ -225,6 +249,89 @@ gst_mms_src_query (GstPad * pad, GstQuery * query)
   return res;
 
 }
+
+
+static gboolean
+gst_mms_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
+    GstSegment * segment)
+{
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  GstSeekFlags flags;
+  GstFormat seek_format;
+  gdouble rate;
+  GstMMS *mmssrc = GST_MMS (src);
+
+  gst_event_parse_seek (event, &rate, &seek_format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  if (seek_format != GST_FORMAT_BYTES && seek_format != GST_FORMAT_TIME) {
+    GST_LOG_OBJECT (mmssrc, "Only byte or time seeking is supported");
+    return FALSE;
+  }
+
+  if (stop_type != GST_SEEK_TYPE_NONE) {
+    GST_LOG_OBJECT (mmssrc, "Stop seeking not supported");
+    return FALSE;
+  }
+
+  if (cur_type != GST_SEEK_TYPE_NONE && cur_type != GST_SEEK_TYPE_SET) {
+    GST_LOG_OBJECT (mmssrc, "Only absolute seeking is supported");
+    return FALSE;
+  }
+
+  /* We would like to convert from GST_FORMAT_TIME to GST_FORMAT_BYTES here
+     when needed, but we cannot as to do that we need to actually do the seek,
+     so we handle this in do_seek instead. */
+
+  /* FIXME implement relative seeking, we could do any needed relevant
+     seeking calculations here (in seek_format metrics), before the re-init
+     of the segment. */
+
+  gst_segment_init (segment, seek_format);
+  gst_segment_set_seek (segment, rate, seek_format, flags, cur_type, cur,
+      stop_type, stop, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+gst_mms_do_seek (GstBaseSrc * src, GstSegment * segment)
+{
+  mms_off_t start;
+  GstMMS *mmssrc = GST_MMS (src);
+
+  if (segment->format == GST_FORMAT_TIME) {
+    if (!mmsx_time_seek (NULL, mmssrc->connection,
+            (double) segment->start / GST_SECOND)) {
+      GST_LOG_OBJECT (mmssrc, "mmsx_time_seek() failed");
+      return FALSE;
+    }
+    start = mmsx_get_current_pos (mmssrc->connection);
+    GST_LOG_OBJECT (mmssrc, "sought to %f sec, offset after seek: %lld\n",
+        (double) segment->start / GST_SECOND, start);
+  } else if (segment->format == GST_FORMAT_BYTES) {
+    start = mmsx_seek (NULL, mmssrc->connection, segment->start, SEEK_SET);
+    /* mmsx_seek will close and reopen the connection when seeking with the
+       mmsh protocol, if the reopening fails this is indicated with -1 */
+    if (start == -1) {
+      GST_DEBUG_OBJECT (mmssrc, "connection broken during seek");
+      return FALSE;
+    }
+    GST_DEBUG_OBJECT (mmssrc, "sought to: %llu bytes, result: %lld",
+        segment->start, start);
+  } else {
+    GST_DEBUG_OBJECT (mmssrc, "unsupported seek segment format: %d",
+        (int) segment->format);
+    return FALSE;
+  }
+  gst_segment_init (segment, GST_FORMAT_BYTES);
+  gst_segment_set_seek (segment, segment->rate, GST_FORMAT_BYTES,
+      segment->flags, GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_NONE,
+      segment->stop, NULL);
+  return TRUE;
+}
+
 
 /* get function
  * this function generates new data when needed
@@ -238,35 +345,39 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   guint8 *data;
   guint blocksize;
   gint result;
+  mms_off_t offset;
+
+  *buf = NULL;
 
   mmssrc = GST_MMS (psrc);
 
-  GST_OBJECT_LOCK (mmssrc);
-  blocksize = GST_BASE_SRC (mmssrc)->blocksize;
-  GST_OBJECT_UNLOCK (mmssrc);
+  offset = mmsx_get_current_pos (mmssrc->connection);
+
+  /* Check if a seek perhaps has wrecked our connection */
+  if (offset == -1) {
+    GST_DEBUG_OBJECT (mmssrc,
+        "connection broken (probably an error during mmsx_seek_time during a convert query) returning FLOW_ERROR");
+    return GST_FLOW_ERROR;
+  }
+
+  /* Choose blocksize best for optimum performance */
+  if (offset == 0)
+    blocksize = mmsx_get_asf_header_len (mmssrc->connection);
+  else
+    blocksize = mmsx_get_asf_packet_len (mmssrc->connection);
 
   *buf = gst_buffer_new_and_alloc (blocksize);
 
   data = GST_BUFFER_DATA (*buf);
   GST_BUFFER_SIZE (*buf) = 0;
   GST_LOG_OBJECT (mmssrc, "reading %d bytes", blocksize);
-  if (mmssrc->connection) {
-    result = mms_read (NULL, mmssrc->connection, (char *) data, blocksize);
-  } else {
-    result = mmsh_read (NULL, mmssrc->connection_h, (char *) data, blocksize);
-  }
+  result = mmsx_read (NULL, mmssrc->connection, (char *) data, blocksize);
 
   /* EOS? */
   if (result == 0)
     goto eos;
 
-  if (mmssrc->connection) {
-    GST_BUFFER_OFFSET (*buf) =
-        mms_get_current_pos (mmssrc->connection) - result;
-  } else {
-    GST_BUFFER_OFFSET (*buf) =
-        mmsh_get_current_pos (mmssrc->connection_h) - result;
-  }
+  GST_BUFFER_OFFSET (*buf) = offset;
   GST_BUFFER_SIZE (*buf) = result;
 
   GST_LOG_OBJECT (mmssrc, "Returning buffer with offset %" G_GINT64_FORMAT
@@ -286,6 +397,28 @@ eos:
 }
 
 static gboolean
+gst_mms_is_seekable (GstBaseSrc * src)
+{
+  GstMMS *mmssrc = GST_MMS (src);
+
+  return mmsx_get_seekable (mmssrc->connection);
+}
+
+static gboolean
+gst_mms_get_size (GstBaseSrc * src, guint64 * size)
+{
+  GstMMS *mmssrc = GST_MMS (src);
+
+  /* non seekable usually means live streams, and get_length() returns,
+     erm, interesting values for live streams */
+  if (!mmsx_get_seekable (mmssrc->connection))
+    return FALSE;
+
+  *size = mmsx_get_length (mmssrc->connection);
+  return TRUE;
+}
+
+static gboolean
 gst_mms_start (GstBaseSrc * bsrc)
 {
   GstMMS *mms;
@@ -301,40 +434,41 @@ gst_mms_start (GstBaseSrc * bsrc)
   else
     bandwidth_avail = G_MAXINT;
 
+  /* If we already have a connection, and the uri isn't changed, reuse it,
+     as connecting is expensive. */
+  if (mms->connection) {
+    if (!strcmp (mms->uri_name, mms->current_connection_uri_name)) {
+      GST_DEBUG_OBJECT (mms, "Reusing existing connection for %s",
+          mms->uri_name);
+      return TRUE;
+    } else {
+      mmsx_close (mms->connection);
+      g_free (mms->current_connection_uri_name);
+      mms->current_connection_uri_name = NULL;
+    }
+  }
+
   /* FIXME: pass some sane arguments here */
   GST_DEBUG_OBJECT (mms,
       "Trying mms_connect (%s) with bandwidth constraint of %d bps",
       mms->uri_name, bandwidth_avail);
-  mms->connection = mms_connect (NULL, NULL, mms->uri_name, bandwidth_avail);
-  if (mms->connection)
-    goto success;
-
-  GST_DEBUG_OBJECT (mms,
-      "Trying mmsh_connect (%s) with bandwidth constraint of %d bps",
-      mms->uri_name, bandwidth_avail);
-  mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, bandwidth_avail);
-  if (!mms->connection_h)
-    goto no_connect;
-
-  /* fall through */
-
-success:
-  {
+  mms->connection = mmsx_connect (NULL, NULL, mms->uri_name, bandwidth_avail);
+  if (mms->connection) {
+    /* Save the uri name so that it can be checked for connection reusing,
+       see above. */
+    mms->current_connection_uri_name = g_strdup (mms->uri_name);
     GST_DEBUG_OBJECT (mms, "Connect successful");
     return TRUE;
+  } else {
+    GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
+        ("Could not connect to this stream"), (NULL));
+    return FALSE;
   }
 
 no_uri:
   {
     GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
         ("No URI to open specified"), (NULL));
-    return FALSE;
-  }
-
-no_connect:
-  {
-    GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
-        ("Could not connect to this stream"), (NULL));
     return FALSE;
   }
 }
@@ -346,12 +480,17 @@ gst_mms_stop (GstBaseSrc * bsrc)
 
   mms = GST_MMS (bsrc);
   if (mms->connection != NULL) {
-    mms_close (mms->connection);
-    mms->connection = NULL;
-  }
-  if (mms->connection_h != NULL) {
-    mmsh_close (mms->connection_h);
-    mms->connection_h = NULL;
+    /* Check if the connection is still pristine, that is if no more then
+       just the mmslib cached asf header has been read. If it is still pristine
+       preserve it as we often are re-started with the same URL and connecting
+       is expensive */
+    if (mmsx_get_current_pos (mms->connection) >
+        mmsx_get_asf_header_len (mms->connection)) {
+      mmsx_close (mms->connection);
+      mms->connection = NULL;
+      g_free (mms->current_connection_uri_name);
+      mms->current_connection_uri_name = NULL;
+    }
   }
   return TRUE;
 }
