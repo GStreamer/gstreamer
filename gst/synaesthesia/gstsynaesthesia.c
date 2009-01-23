@@ -325,7 +325,10 @@ gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps)
   synaesthesia->spf = gst_util_uint64_scale_int (synaesthesia->rate,
       synaesthesia->fps_d, synaesthesia->fps_n);
 
-  synaesthesia_init (synaesthesia->width, synaesthesia->height);
+  /* FIXME: the size is currently ignored by the engine. see comment above */
+   synaesthesia_close (synaesthesia->si);
+   synaesthesia->si = 
+       synaesthesia_new (synaesthesia->width, synaesthesia->height);
 
 done:
   gst_object_unref (synaesthesia);
