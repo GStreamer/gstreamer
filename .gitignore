@@ -29,3 +29,11 @@ ABOUT-NLS
 _stdint.h
 
 gst-plugins-base-*.tar*
+
+.deps
+.libs
+*.lo
+*.la
+*.o
+Makefile.in
+Makefile

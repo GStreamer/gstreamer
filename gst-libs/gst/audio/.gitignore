@@ -1,4 +1,4 @@
 libgstaudio_la-multichannel-enumtypes.lo
-multichannel-enumtypes.c
-multichannel-enumtypes.h
+audio-enumtypes.c
+audio-enumtypes.h
 testchannels
