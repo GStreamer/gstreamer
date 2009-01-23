@@ -236,6 +236,10 @@ LIBS=$save_libs
 dnl Check for a way to display the function name in debug output
 AG_GST_CHECK_FUNCTION
 
+dnl *** checks for socket and nsl libraries ***
+AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
+AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
+
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
