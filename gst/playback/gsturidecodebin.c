@@ -1160,12 +1160,12 @@ type_found (GstElement * typefind, guint probability,
 
   gst_bin_add (GST_BIN_CAST (decoder), queue);
 
-  if (!gst_element_link (typefind, queue))
+  if (!gst_element_link_pads (typefind, "src", queue, "sink"))
     goto could_not_link;
 
   g_object_set (G_OBJECT (dec_elem), "sink-caps", caps, NULL);
 
-  if (!gst_element_link (queue, dec_elem))
+  if (!gst_element_link_pads (queue, "src", dec_elem, "sink"))
     goto could_not_link;
 
   gst_element_set_state (dec_elem, GST_STATE_PLAYING);
