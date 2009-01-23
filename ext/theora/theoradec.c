@@ -1132,7 +1132,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   stride_y = GST_ROUND_UP_4 (width);
   stride_uv = GST_ROUND_UP_8 (width) / 2;
 
-  out_size = stride_y * height + stride_uv * cheight * 2;
+  out_size = stride_y * GST_ROUND_UP_2 (height) + stride_uv * GST_ROUND_UP_2 (height);
 
   /* now copy over the area contained in offset_x,offset_y,
    * frame_width, frame_height */
@@ -1156,8 +1156,12 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     gint offset;
 
     dest_y = GST_BUFFER_DATA (out);
-    dest_u = dest_y + stride_y * height;
-    dest_v = dest_u + stride_uv * cheight;
+    dest_u = dest_y + stride_y * GST_ROUND_UP_2 (height);
+    dest_v = dest_u + stride_uv * GST_ROUND_UP_2 (height) / 2;
+
+    GST_LOG_OBJECT (dec, "plane 0, offset 0");
+    GST_LOG_OBJECT (dec, "plane 1, offset %d", dest_u - dest_y);
+    GST_LOG_OBJECT (dec, "plane 2, offset %d", dest_v - dest_y);
 
     src_y = yuv.y + dec->offset_x + dec->offset_y * yuv.y_stride;
 
