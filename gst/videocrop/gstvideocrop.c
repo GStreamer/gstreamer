@@ -144,6 +144,8 @@ static gboolean gst_video_crop_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
 static gboolean gst_video_crop_set_caps (GstBaseTransform * trans,
     GstCaps * in_caps, GstCaps * outcaps);
+static gboolean gst_video_crop_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 static void
 gst_video_crop_base_init (gpointer g_class)
@@ -156,6 +158,52 @@ gst_video_crop_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
+}
+
+static gboolean
+gst_video_crop_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstEvent *new_event;
+  GstStructure *new_structure;
+  const GstStructure *structure;
+  const gchar *event_name;
+  double pointer_x;
+  double pointer_y;
+
+  GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
+  new_event = NULL;
+
+  GST_OBJECT_LOCK (vcrop);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION &&
+      (vcrop->crop_left != 0 || vcrop->crop_top != 0)) {
+    structure = gst_event_get_structure (event);
+    event_name = gst_structure_get_string (structure, "event");
+
+    if (event_name &&
+        (g_strcmp0 (event_name, "mouse-move") == 0 ||
+            g_strcmp0 (event_name, "mouse-button-press") == 0 ||
+            g_strcmp0 (event_name, "mouse-button-release") == 0)) {
+
+      if (gst_structure_get_double (structure, "pointer_x", &pointer_x) &&
+          gst_structure_get_double (structure, "pointer_y", &pointer_y)) {
+
+        new_structure = gst_structure_copy (structure);
+        gst_structure_set (new_structure,
+            "pointer_x", G_TYPE_DOUBLE, (double) (pointer_x + vcrop->crop_left),
+            "pointer_y", G_TYPE_DOUBLE, (double) (pointer_y + vcrop->crop_top),
+            NULL);
+
+        new_event = gst_event_new_navigation (new_structure);
+        gst_event_unref (event);
+      } else {
+        GST_WARNING_OBJECT (vcrop, "Failed to read navigation event");
+      }
+    }
+  }
+
+  GST_OBJECT_UNLOCK (vcrop);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans,
+      (new_event ? new_event : event));
 }
 
 static void
@@ -191,6 +239,7 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_crop_get_unit_size);
 
   basetransform_class->passthrough_on_same_caps = FALSE;
+  basetransform_class->src_event = GST_DEBUG_FUNCPTR (gst_video_crop_src_event);
 }
 
 static void
@@ -598,8 +647,8 @@ gst_video_crop_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
       GST_PTR_FORMAT, incaps, outcaps);
 
-  if ((crop->crop_left | crop->crop_right | crop->crop_top | crop->
-          crop_bottom) == 0) {
+  if ((crop->crop_left | crop->crop_right | crop->
+          crop_top | crop->crop_bottom) == 0) {
     GST_LOG_OBJECT (crop, "we are using passthrough");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (crop), TRUE);
   } else {
