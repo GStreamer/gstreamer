@@ -27,9 +27,9 @@ namespace Gst {
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media-factory.h")]
 	public class RTSPMediaFactory : GLib.Object {
-		public virtual Gst.RTSPMedia @construct (Gst.RTSPUrl url);
+		public virtual Gst.RTSPMedia? @construct (Gst.RTSPUrl url);
 		[NoWrapper]
-		public virtual Gst.Element get_element (Gst.RTSPUrl url);
+		public virtual Gst.Element? get_element (Gst.RTSPUrl url);
 		public string get_launch ();
 		public bool is_shared ();
 		[CCode (has_construct_function = false)]
@@ -42,9 +42,9 @@ namespace Gst {
 	public class RTSPMediaMapping : GLib.Object {
 		public weak GLib.HashTable mappings;
 		public void add_factory (string path, Gst.RTSPMediaFactory factory);
-		public Gst.RTSPMediaFactory find_factory (Gst.RTSPUrl url);
+		public Gst.RTSPMediaFactory? find_factory (Gst.RTSPUrl url);
 		[NoWrapper]
-		public virtual Gst.RTSPMediaFactory find_media (Gst.RTSPUrl url);
+		public virtual Gst.RTSPMediaFactory? find_media (Gst.RTSPUrl url);
 		[CCode (has_construct_function = false)]
 		public RTSPMediaMapping ();
 		public void remove_factory (string path);
@@ -69,11 +69,11 @@ namespace Gst {
 		public void* server_sin;
 		public weak Gst.PollFD server_sock;
 		[NoWrapper]
-		public virtual Gst.RTSPClient accept_client (GLib.IOChannel channel);
-		public uint attach (GLib.MainContext context);
-		public GLib.TimeoutSource create_watch ();
+		public virtual Gst.RTSPClient? accept_client (GLib.IOChannel channel);
+		public uint attach (GLib.MainContext? context);
+		public GLib.TimeoutSource? create_watch ();
 		public int get_backlog ();
-		public GLib.IOChannel get_io_channel ();
+		public GLib.IOChannel? get_io_channel ();
 		public Gst.RTSPMediaMapping get_media_mapping ();
 		public int get_port ();
 		public Gst.RTSPSessionPool get_session_pool ();
@@ -121,7 +121,7 @@ namespace Gst {
 		public Gst.RTSPSession create ();
 		[NoWrapper]
 		public virtual string create_session_id ();
-		public Gst.RTSPSession find (string sessionid);
+		public Gst.RTSPSession? find (string sessionid);
 		[CCode (has_construct_function = false)]
 		public RTSPSessionPool ();
 		public void remove (Gst.RTSPSession sess);
