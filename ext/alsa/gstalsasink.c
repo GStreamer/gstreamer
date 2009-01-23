@@ -881,8 +881,9 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
      * to 4 times the period time */
     err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
     if (err < 0) {
-      GST_DEBUG_OBJECT (asink, "wait timeout, %d", err);
-    } else {
+      GST_DEBUG_OBJECT (asink, "wait error, %d", err);
+    }
+    else {
       err = snd_pcm_writei (alsa->handle, ptr, cptr);
     }
 
