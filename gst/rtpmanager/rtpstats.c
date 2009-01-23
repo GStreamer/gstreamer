@@ -145,6 +145,10 @@ rtp_stats_calculate_bye_interval (RTPSessionStats * stats)
   gdouble interval;
   gdouble rtcp_min_time;
 
+  /* no interval when we have less than 50 members */
+  if (stats->active_sources < 50)
+    return 0;
+  
   rtcp_min_time = (stats->min_interval) / 2.0;
 
   /* Dedicate a fraction of the RTCP bandwidth to senders unless
