@@ -6,29 +6,48 @@ namespace Gst {
 	public class RTSPClient : GLib.Object {
 		public void* address;
 		public weak Gst.RTSPConnection connection;
-		public weak Gst.RTSPMedia media;
+		public weak Gst.RTSPMediaFactory factory;
+		public weak Gst.RTSPMediaMapping mapping;
 		public weak Gst.RTSPSessionPool pool;
 		public weak GLib.Thread thread;
-		public bool accept (GLib.IOChannel source);
-		public weak Gst.RTSPSessionPool get_session_pool ();
+		public bool accept (GLib.IOChannel channel);
+		public Gst.RTSPMediaMapping get_media_mapping ();
+		public Gst.RTSPSessionPool get_session_pool ();
 		[CCode (has_construct_function = false)]
-		public RTSPClient (Gst.RTSPServer server);
+		public RTSPClient ();
+		public void set_media_mapping (Gst.RTSPMediaMapping mapping);
 		public void set_session_pool (Gst.RTSPSessionPool pool);
-		[NoAccessorMethod]
-		public Gst.RTSPServer server { get; construct; }
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public class RTSPMedia : GLib.Object {
-		public bool prepared;
+		public weak Gst.Element element;
 		public weak GLib.Array streams;
-		public weak Gst.RTSPMediaStream get_stream (uint idx);
+		public unowned Gst.RTSPMediaStream get_stream (uint idx);
 		public uint n_streams ();
+	}
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media-factory.h")]
+	public class RTSPMediaFactory : GLib.Object {
+		public virtual Gst.RTSPMedia @construct (Gst.RTSPUrl url);
+		[NoWrapper]
+		public virtual Gst.Element get_element (Gst.RTSPUrl url);
+		public string get_launch ();
+		public bool is_shared ();
 		[CCode (has_construct_function = false)]
-		public RTSPMedia (string name);
-		[NoAccessorMethod]
-		public string location { get; construct; }
-		[NoAccessorMethod]
-		public Gst.RTSPUrl url { get; construct; }
+		public RTSPMediaFactory ();
+		public void set_launch (string launch);
+		public void set_shared (bool shared);
+		public string launch { get; set; }
+	}
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media-mapping.h")]
+	public class RTSPMediaMapping : GLib.Object {
+		public weak GLib.HashTable mappings;
+		public void add_factory (string path, Gst.RTSPMediaFactory factory);
+		public Gst.RTSPMediaFactory find_factory (Gst.RTSPUrl url);
+		[NoWrapper]
+		public virtual Gst.RTSPMediaFactory find_media (Gst.RTSPUrl url);
+		[CCode (has_construct_function = false)]
+		public RTSPMediaMapping ();
+		public void remove_factory (string path);
 	}
 	[Compact]
 	[CCode (cheader_filename = "gst/rtsp-server/rstp-media.h")]
@@ -38,58 +57,77 @@ namespace Gst {
 		public weak Gst.Element element;
 		public uint idx;
 		public weak Gst.RTSPMedia media;
-		public weak string name;
 		public weak Gst.Element payloader;
 		public weak Gst.Pad srcpad;
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-server.h")]
-	public class RTSPServer : Gst.Object {
+	public class RTSPServer : GLib.Object {
 		public weak string host;
 		public weak GLib.IOChannel io_channel;
 		public weak GLib.TimeoutSource io_watch;
-		public weak Gst.RTSPSessionPool pool;
 		public int server_port;
 		public void* server_sin;
 		public weak Gst.PollFD server_sock;
+		[NoWrapper]
+		public virtual Gst.RTSPClient accept_client (GLib.IOChannel channel);
 		public uint attach (GLib.MainContext context);
-		public virtual weak Gst.Element prepare_media (Gst.RTSPMedia media, Gst.Bin bin);
+		public GLib.TimeoutSource create_watch ();
+		public int get_backlog ();
+		public GLib.IOChannel get_io_channel ();
+		public Gst.RTSPMediaMapping get_media_mapping ();
+		public int get_port ();
+		public Gst.RTSPSessionPool get_session_pool ();
+		public static bool io_func (GLib.IOChannel channel, GLib.IOCondition condition, Gst.RTSPServer server);
+		[CCode (has_construct_function = false)]
+		public RTSPServer ();
+		public void set_backlog (int backlog);
+		public void set_media_mapping (Gst.RTSPMediaMapping mapping);
+		public void set_port (int port);
+		public void set_session_pool (Gst.RTSPSessionPool pool);
+		public int backlog { get; set; }
 		[NoAccessorMethod]
-		public int port { get; construct; }
+		public Gst.RTSPMediaMapping mapping { owned get; set; }
+		[NoAccessorMethod]
+		public Gst.RTSPSessionPool pool { owned get; set; }
+		public int port { get; set; }
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSession : GLib.Object {
 		public weak GLib.List medias;
 		public weak string sessionid;
-		public weak Gst.RTSPSessionMedia get_media (Gst.RTSPMedia media);
-		public static weak Gst.RTSPSessionStream get_stream (Gst.RTSPSessionMedia media, uint idx);
+		public unowned Gst.RTSPSessionMedia get_media (Gst.RTSPUrl url, Gst.RTSPMediaFactory factory);
 		[CCode (has_construct_function = false)]
 		public RTSPSession (string sessionid);
 	}
 	[Compact]
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSessionMedia {
+		public weak Gst.RTSPMediaFactory factory;
 		public weak Gst.Element fdsink;
 		public weak Gst.RTSPMedia media;
 		public weak Gst.Element pipeline;
 		public weak Gst.Element rtpbin;
 		public weak Gst.RTSPSession session;
 		public weak GLib.List streams;
+		public unowned Gst.RTSPSessionStream get_stream (uint idx);
 		public Gst.StateChangeReturn pause ();
 		public Gst.StateChangeReturn play ();
 		public Gst.StateChangeReturn stop ();
 	}
-	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
 	public class RTSPSessionPool : GLib.Object {
 		public weak GLib.Mutex @lock;
 		public weak GLib.HashTable sessions;
-		public weak Gst.RTSPSession create ();
-		public weak Gst.RTSPSession find (string sessionid);
+		public Gst.RTSPSession create ();
+		[NoWrapper]
+		public virtual string create_session_id ();
+		public Gst.RTSPSession find (string sessionid);
 		[CCode (has_construct_function = false)]
 		public RTSPSessionPool ();
 		public void remove (Gst.RTSPSession sess);
 	}
 	[Compact]
-	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
+	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSessionStream {
 		public weak Gst.RTSPTransport client_trans;
 		public weak string destination;
@@ -101,10 +139,10 @@ namespace Gst {
 		public weak Gst.Pad send_rtp_sink;
 		public weak Gst.Pad send_rtp_src;
 		public weak Gst.RTSPTransport server_trans;
-		[NoArrayLength]
+		[CCode (array_length = false)]
 		public weak Gst.Element[] udpsink;
-		[NoArrayLength]
+		[CCode (array_length = false)]
 		public weak Gst.Element[] udpsrc;
-		public weak Gst.RTSPTransport set_transport (string destination, Gst.RTSPTransport ct);
+		public Gst.RTSPTransport set_transport (string destination, Gst.RTSPTransport ct);
 	}
 }
