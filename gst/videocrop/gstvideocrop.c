@@ -19,7 +19,7 @@
 
 /**
  * SECTION:element-videocrop
- * @see_also: GstVideoBox
+ * @see_also: #GstVideoBox
  *
  * <refsect2>
  * <para>
