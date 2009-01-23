@@ -317,10 +317,22 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     if (csize < 2)
       goto wrong_length;
 
+    GST_DEBUG ("codec_data: object_type=%d, sample_rate=%d, channels=%d",
+        ((cdata[0] & 0xf8) >> 3),
+        (((cdata[0] & 0x07) << 1) | ((cdata[1] & 0x80) >> 7)),
+        ((cdata[1] & 0x78) >> 3));
+
     /* someone forgot that char can be unsigned when writing the API */
     if ((gint8) faacDecInit2 (faad->handle, cdata, csize, &samplerate,
             &channels) < 0)
       goto init_failed;
+
+    if (channels != ((cdata[1] & 0x78) >> 3)) {
+      /* https://bugs.launchpad.net/ubuntu/+source/faad2/+bug/290259 */
+      GST_WARNING_OBJECT (faad,
+          "buggy faad version, wrong nr of channels %d instead of %d", channels,
+          ((cdata[1] & 0x78) >> 3));
+    }
 
     GST_DEBUG_OBJECT (faad, "codec_data init: channels=%u, rate=%u", channels,
         samplerate);
