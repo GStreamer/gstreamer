@@ -157,6 +157,10 @@ dnl *** checks for library functions ***
 
 dnl *** checks for dependency libraries ***
 
+dnl *** checks for socket and nsl libraries ***
+AC_CHECK_FUNC(socket,,[AC_CHECK_LIB(socket,socket)])
+AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
+
 dnl GLib is required
 AG_GST_GLIB_CHECK([2.6])
 
