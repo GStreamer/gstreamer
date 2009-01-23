@@ -45,11 +45,19 @@
 static GstPluginLoader *plugin_loader_new (GstRegistry * registry);
 static gboolean plugin_loader_free (GstPluginLoader * loader);
 static gboolean plugin_loader_load (GstPluginLoader * loader,
-    const gchar * filename);
+    const gchar * filename, off_t file_size, time_t file_mtime);
 
 const GstPluginLoaderFuncs _priv_gst_plugin_loader_funcs = {
   plugin_loader_new, plugin_loader_free, plugin_loader_load
 };
+
+typedef struct _PendingPluginEntry
+{
+  guint32 tag;
+  gchar *filename;
+  off_t file_size;
+  time_t file_mtime;
+} PendingPluginEntry;
 
 struct _GstPluginLoader
 {
@@ -75,6 +83,11 @@ struct _GstPluginLoader
   guint8 *rx_buf;
   guint rx_buf_size;
   gboolean rx_done;
+
+  /* Head and tail of the pending plugins list. List of
+     PendingPluginEntry structs */
+  GList *pending_plugins;
+  GList *pending_plugins_tail;
 };
 
 #define PACKET_EXIT 1
@@ -118,6 +131,7 @@ plugin_loader_new (GstRegistry * registry)
 static gboolean
 plugin_loader_free (GstPluginLoader * loader)
 {
+  GList *cur;
   gboolean got_plugin_details;
 
   fsync (loader->fd_w.fd);
@@ -154,14 +168,28 @@ plugin_loader_free (GstPluginLoader * loader)
 
   got_plugin_details = loader->got_plugin_details;
 
+  /* Free any pending plugin entries */
+  cur = loader->pending_plugins;
+  while (cur) {
+    PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
+    g_free (entry->filename);
+    g_free (entry);
+
+    cur = g_list_delete_link (cur, cur);
+  }
+
   g_free (loader);
 
   return got_plugin_details;
 }
 
 static gboolean
-plugin_loader_load (GstPluginLoader * loader, const gchar * filename)
+plugin_loader_load (GstPluginLoader * loader, const gchar * filename,
+    off_t file_size, time_t file_mtime)
 {
+  gint len;
+  PendingPluginEntry *entry;
+
   if (!loader->child_started) {
     if (!gst_plugin_loader_spawn (loader))
       return FALSE;
@@ -171,10 +199,22 @@ plugin_loader_load (GstPluginLoader * loader, const gchar * filename)
   GST_LOG_OBJECT (loader->registry,
       "Sending file %s to child. tag %u", filename, loader->next_tag);
 
-  put_packet (loader, PACKET_LOAD_PLUGIN, loader->next_tag,
-      (guint8 *) filename, strlen (filename) + 1);
+  entry = g_new (PendingPluginEntry, 1);
+  entry->tag = loader->next_tag++;
+  entry->filename = g_strdup (filename);
+  entry->file_size = file_size;
+  entry->file_mtime = file_mtime;
+  loader->pending_plugins_tail =
+      g_list_append (loader->pending_plugins_tail, entry);
 
-  loader->next_tag++;
+  if (loader->pending_plugins == NULL)
+    loader->pending_plugins = loader->pending_plugins_tail;
+  else
+    loader->pending_plugins_tail = g_list_next (loader->pending_plugins_tail);
+
+  len = strlen (filename);
+  put_packet (loader, PACKET_LOAD_PLUGIN, entry->tag,
+      (guint8 *) filename, len + 1);
 
   if (!exchange_packets (loader))
     return FALSE;
@@ -412,9 +452,35 @@ handle_rx_packet (GstPluginLoader * l,
       break;
     case PACKET_PLUGIN_DETAILS:{
       gchar *tmp = (gchar *) payload;
+      PendingPluginEntry *entry = NULL;
+      GList *cur;
 
       GST_DEBUG_OBJECT (l->registry,
-          "child loaded plugin w/ tag %u. %d bytes info", tag, payload_len);
+          "Received plugin details from child w/ tag %u. %d bytes info",
+          tag, payload_len);
+
+      /* Assume that tagged details come back in the order
+       * we requested, and delete anything before this one */
+      cur = l->pending_plugins;
+      while (cur) {
+        PendingPluginEntry *e = (PendingPluginEntry *) (cur->data);
+
+        if (e->tag > tag)
+          break;
+
+        cur = g_list_delete_link (cur, cur);
+
+        if (e->tag == tag) {
+          entry = e;
+          break;
+        } else {
+          g_free (e->filename);
+          g_free (e);
+        }
+      }
+      l->pending_plugins = cur;
+      if (cur == NULL)
+        l->pending_plugins_tail = NULL;
 
       if (payload_len > 0) {
         GstPlugin *newplugin;
@@ -428,6 +494,32 @@ handle_rx_packet (GstPluginLoader * l,
 
         /* We got a set of plugin details - remember it for later */
         l->got_plugin_details = TRUE;
+      } else if (entry != NULL) {
+        /* Create a dummy entry for this file to prevent scanning every time */
+        GstPlugin *plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
+
+        plugin->filename = g_strdup (entry->filename);
+        plugin->file_mtime = entry->file_mtime;
+        plugin->file_size = entry->file_size;
+
+        plugin->basename = g_path_get_basename (plugin->filename);
+        plugin->desc.name = g_intern_string (plugin->basename);
+        plugin->desc.description = g_strdup_printf ("Dummy plugin for file %s",
+            plugin->filename);
+        plugin->desc.version = g_intern_string ("0.0.0");
+        plugin->desc.license = g_intern_string ("DUMMY");
+        plugin->desc.source = plugin->desc.license;
+        plugin->desc.package = plugin->desc.license;
+        plugin->desc.origin = plugin->desc.license;
+
+        GST_DEBUG ("Adding dummy plugin '%s'", plugin->desc.name);
+        gst_registry_add_plugin (l->registry, plugin);
+        l->got_plugin_details = TRUE;
+      }
+
+      if (entry != NULL) {
+        g_free (entry->filename);
+        g_free (entry);
       }
 
       break;

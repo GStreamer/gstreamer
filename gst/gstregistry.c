@@ -878,7 +878,7 @@ clear_scan_context (GstRegistryScanContext * context)
 
 static gboolean
 gst_registry_scan_plugin_file (GstRegistryScanContext * context,
-    const gchar * filename)
+    const gchar * filename, off_t file_size, time_t file_mtime)
 {
   gboolean changed = FALSE;
   GstPlugin *newplugin = NULL;
@@ -895,7 +895,8 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
 
   if (context->helper_state == REGISTRY_SCAN_HELPER_RUNNING) {
     GST_DEBUG ("Using scan-helper to load plugin %s", filename);
-    if (!_priv_gst_plugin_loader_funcs.load (context->helper, filename)) {
+    if (!_priv_gst_plugin_loader_funcs.load (context->helper,
+            filename, file_size, file_mtime)) {
       g_warning ("External plugin loader failed...");
       context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
     }
@@ -1027,14 +1028,16 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
             (gint64) plugin->file_size, (gint64) file_status.st_size,
             env_vars_changed, deps_changed);
         gst_registry_remove_plugin (context->registry, plugin);
-        changed |= gst_registry_scan_plugin_file (context, filename);
+        changed |= gst_registry_scan_plugin_file (context, filename,
+            file_status.st_size, file_status.st_mtime);
       }
       gst_object_unref (plugin);
 
     } else {
       GST_DEBUG_OBJECT (context->registry, "file %s not yet in registry",
           filename);
-      changed |= gst_registry_scan_plugin_file (context, filename);
+      changed |= gst_registry_scan_plugin_file (context, filename,
+          file_status.st_size, file_status.st_mtime);
     }
 
     g_free (filename);
