@@ -324,16 +324,16 @@ gst_gl_pixbufoverlay_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
   if (pixbufoverlay->pbuf_has_changed && (pixbufoverlay->location != NULL)) {
 
-      if (pixbufoverlay->pixbuf) {
-        free (pixbufoverlay->pixbuf);
-        pixbufoverlay->pixbuf = NULL;
-      }
+    if (!gst_gl_pixbufoverlay_loader (filter))
+      pixbufoverlay->pixbuf = NULL;
+    
+    /* if loader failed then display is turned off */
+    gst_gl_display_thread_add (filter->display, init_pixbuf_texture, pixbufoverlay);
 
-      if (!gst_gl_pixbufoverlay_loader (filter))
-        pixbufoverlay->pixbuf = NULL;
-      
-      /* if loader failed then display is turned off */
-      gst_gl_display_thread_add (filter->display, init_pixbuf_texture, pixbufoverlay);
+    if (pixbufoverlay->pixbuf) {
+      free (pixbufoverlay->pixbuf);
+      pixbufoverlay->pixbuf = NULL;
+    }
 
     pixbufoverlay->pbuf_has_changed = FALSE;
   }
@@ -413,9 +413,9 @@ gst_gl_pixbufoverlay_loader (GstGLFilter* filter)
   pixbufoverlay->width = width;
   pixbufoverlay->height = height;
 
-  pixbufoverlay->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 3 );
+  pixbufoverlay->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 3 ); //FIXME: g_alloc, RGBA
 
-  rows = (guchar**)malloc(sizeof(guchar*) * height);
+  rows = (guchar**)malloc(sizeof(guchar*) * height); //FIXME: g_alloc
 
   for (y = 0;  y < height; ++y)
     rows[y] = (guchar*) (pixbufoverlay->pixbuf + y * width * 3);

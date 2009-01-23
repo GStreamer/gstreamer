@@ -36,9 +36,9 @@
 #include "config.h"
 #endif
 
+#include <png.h>
 #include <gstglfilter.h>
 #include <gstgleffectssources.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #define GST_TYPE_GL_DIFFERENCEMATTE            (gst_gl_differencematte_get_type())
 #define GST_GL_DIFFERENCEMATTE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_DIFFERENCEMATTE,GstGLDifferenceMatte))
@@ -56,7 +56,7 @@ struct _GstGLDifferenceMatte
   gchar *location;
   gboolean bg_has_changed;
 
-  GdkPixbuf *pixbuf;
+  guchar *pixbuf;
   GLuint savedbgtexture;
   GLuint newbgtexture;
   GLuint midtexture[4];
@@ -90,6 +90,8 @@ static void gst_gl_differencematte_reset_resources (GstGLFilter* filter);
 
 static gboolean gst_gl_differencematte_filter (GstGLFilter * filter,
 				       GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+
+static gboolean gst_gl_differencematte_loader (GstGLFilter* filter);
 
 static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
   "Gstreamer OpenGL DifferenceMatte",
@@ -300,8 +302,7 @@ static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
                 filter->width, filter->height, 0,
-                gdk_pixbuf_get_has_alpha (differencematte->pixbuf) ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE, gdk_pixbuf_get_pixels (differencematte->pixbuf));
+                GL_RGB, GL_UNSIGNED_BYTE, differencematte->pixbuf); //FIXME: RGBA
 
   if (differencematte->savedbgtexture == 0) {
     glGenTextures (1, &differencematte->savedbgtexture);
@@ -450,33 +451,29 @@ gst_gl_differencematte_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 				GstGLBuffer* outbuf)
 {
   GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE(filter);
-  GdkPixbuf *pixbuf;
-  GError *error = NULL;
 
   differencematte->intexture = inbuf->texture;
 
   if (differencematte->bg_has_changed && (differencematte->location != NULL)) {
-    pixbuf = gdk_pixbuf_new_from_file (differencematte->location, &error);
-    if (pixbuf) {
-      differencematte->pixbuf = gdk_pixbuf_scale_simple (pixbuf,
-                                                         filter->width,
-                                                         filter->height,
-                                                         GDK_INTERP_BILINEAR);
-      gdk_pixbuf_unref (pixbuf);
-      if (differencematte->pixbuf != NULL) {
-        gst_gl_display_thread_add (filter->display, init_pixbuf_texture, differencematte);
-        /* save current frame, needed to calculate difference between
-         * this frame and next ones */
-        gst_gl_filter_render_to_target (filter, inbuf->texture, 
-                                        differencematte->savedbgtexture,
-                                        gst_gl_differencematte_save_texture,
-                                        differencematte);
-        gdk_pixbuf_unref (differencematte->pixbuf);
-      }
-    } else {
-      if (error != NULL && error->message != NULL)
-        g_warning ("unable to load %s: %s", differencematte->location, error->message);
+
+    if (!gst_gl_differencematte_loader (filter))
+      differencematte->pixbuf = NULL;
+
+    /* if loader failed then display is turned off */
+    gst_gl_display_thread_add (filter->display, init_pixbuf_texture, differencematte);
+
+    /* save current frame, needed to calculate difference between
+     * this frame and next ones */
+    gst_gl_filter_render_to_target (filter, inbuf->texture, 
+                                    differencematte->savedbgtexture,
+                                    gst_gl_differencematte_save_texture,
+                                    differencematte);
+
+    if (differencematte->pixbuf) {
+      free (differencematte->pixbuf);
+      differencematte->pixbuf = NULL;
     }
+
     differencematte->bg_has_changed = FALSE;
   }
 
@@ -504,5 +501,92 @@ gst_gl_differencematte_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
                                     gst_gl_differencematte_identity, differencematte);
   }
     
+  return TRUE;
+}
+
+static void 
+user_warning_fn(png_structp png_ptr, png_const_charp warning_msg)
+{
+    g_warning("%s\n", warning_msg);
+}
+
+#define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", differencematte->location, msg); return FALSE; }
+
+static gboolean
+gst_gl_differencematte_loader (GstGLFilter* filter)
+{
+  GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE(filter);
+  GstGLDisplay *display = filter->display;
+
+  png_structp png_ptr;
+  png_infop info_ptr;
+  guint sig_read = 0;
+  png_uint_32 width = 0;
+  png_uint_32 height = 0;
+  gint bit_depth = 0;
+  gint color_type = 0;
+  gint interlace_type = 0;
+  png_FILE_p fp = NULL;
+  guint y = 0;
+  guchar **rows = NULL;
+
+  if (!filter->display)
+    return TRUE;
+
+  if ((fp = fopen(differencematte->location, "rb")) == NULL)
+    LOAD_ERROR ("file not found");
+
+  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+  if (png_ptr == NULL)
+  {
+    fclose(fp);
+    LOAD_ERROR ("failed to initialize the png_struct");
+  }
+
+  png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
+
+  info_ptr = png_create_info_struct(png_ptr);
+  if (info_ptr == NULL)
+  {
+    fclose(fp);
+    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+    LOAD_ERROR ("failed to initialize the memory for image information");
+  }
+
+  png_init_io(png_ptr, fp);
+
+  png_set_sig_bytes(png_ptr, sig_read);
+
+  png_read_info(png_ptr, info_ptr);
+
+  png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+     &interlace_type, int_p_NULL, int_p_NULL);
+
+  if (color_type != PNG_COLOR_TYPE_RGB) //FIXME: RGBA
+  {
+    fclose(fp);
+    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+    LOAD_ERROR ("color type is not rgb");
+  }
+
+  filter->width = width;
+  filter->height = height;
+
+  differencematte->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 3 ); //FIXME: g_alloc, RGBA
+
+  rows = (guchar**)malloc(sizeof(guchar*) * height); //FIXME: g_alloc
+
+  for (y = 0;  y < height; ++y)
+    rows[y] = (guchar*) (differencematte->pixbuf + y * width * 3);
+
+  png_read_image(png_ptr, rows);
+
+  free(rows);
+
+  png_read_end(png_ptr, info_ptr);
+  png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+  fclose(fp);
+
   return TRUE;
 }

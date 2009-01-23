@@ -119,7 +119,10 @@ on_drag_data_received (GtkWidget * widget,
   GdkPixbufFormat *format;
   SourceData *userdata = g_new0 (SourceData, 1);
   gchar **uris = gtk_selection_data_get_uris (seldata);
-  gchar *filename = g_filename_from_uri (uris[0], NULL, NULL);
+  gchar *filename = NULL;
+
+  g_return_if_fail (uris != NULL);
+  filename = g_filename_from_uri (uris[0], NULL, NULL);
   g_return_if_fail (filename != NULL);
   format = gdk_pixbuf_get_file_info (filename, NULL, NULL);
   g_return_if_fail (format);
