@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for audioresample
+ * unit test for audioresample, based on the audioresample unit test
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  * Copyright (C) <2006> Tim-Philipp Müller <tim at centricular net>
@@ -25,13 +25,21 @@
 
 #include <gst/check/gstcheck.h>
 
+#include <gst/audio/audio.h>
+
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
+#define RESAMPLE_CAPS_FLOAT		\
+    "audio/x-raw-float, "               \
+    "channels = (int) [ 1, MAX ], "     \
+    "rate = (int) [ 1,  MAX ], "        \
+    "endianness = (int) BYTE_ORDER, "   \
+    "width = (int) { 32, 64 }"
 
-#define RESAMPLE_CAPS_TEMPLATE_STRING   \
+#define RESAMPLE_CAPS_INT		\
     "audio/x-raw-int, "                 \
     "channels = (int) [ 1, MAX ], "     \
     "rate = (int) [ 1,  MAX ], "        \
@@ -39,6 +47,10 @@ static GstPad *mysrcpad, *mysinkpad;
     "width = (int) 16, "                \
     "depth = (int) 16, "                \
     "signed = (bool) TRUE"
+
+#define RESAMPLE_CAPS_TEMPLATE_STRING   \
+    RESAMPLE_CAPS_FLOAT " ; " \
+    RESAMPLE_CAPS_INT
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -52,7 +64,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstElement *
-setup_audioresample (int channels, int inrate, int outrate)
+setup_audioresample (int channels, int inrate, int outrate, int width,
+    gboolean fp)
 {
   GstElement *audioresample;
   GstCaps *caps;
@@ -61,10 +74,15 @@ setup_audioresample (int channels, int inrate, int outrate)
   GST_DEBUG ("setup_audioresample");
   audioresample = gst_check_setup_element ("audioresample");
 
-  caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
+  if (fp)
+    caps = gst_caps_from_string (RESAMPLE_CAPS_FLOAT);
+  else
+    caps = gst_caps_from_string (RESAMPLE_CAPS_INT);
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set (structure, "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, inrate, NULL);
+      "rate", G_TYPE_INT, inrate, "width", G_TYPE_INT, width, NULL);
+  if (!fp)
+    gst_structure_set (structure, "depth", G_TYPE_INT, width, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
   fail_unless (gst_element_set_state (audioresample,
@@ -75,10 +93,15 @@ setup_audioresample (int channels, int inrate, int outrate)
   gst_pad_set_caps (mysrcpad, caps);
   gst_caps_unref (caps);
 
-  caps = gst_caps_from_string (RESAMPLE_CAPS_TEMPLATE_STRING);
+  if (fp)
+    caps = gst_caps_from_string (RESAMPLE_CAPS_FLOAT);
+  else
+    caps = gst_caps_from_string (RESAMPLE_CAPS_INT);
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_set (structure, "channels", G_TYPE_INT, channels,
-      "rate", G_TYPE_INT, outrate, NULL);
+      "rate", G_TYPE_INT, outrate, "width", G_TYPE_INT, width, NULL);
+  if (!fp)
+    gst_structure_set (structure, "depth", G_TYPE_INT, width, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
   mysinkpad = gst_check_setup_sink_pad (audioresample, &sinktemplate, caps);
@@ -89,6 +112,8 @@ setup_audioresample (int channels, int inrate, int outrate)
 
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
+
+  gst_caps_unref (caps);
 
   return audioresample;
 }
@@ -153,7 +178,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   int i, j;
   gint16 *p;
 
-  audioresample = setup_audioresample (2, inrate, outrate);
+  audioresample = setup_audioresample (2, inrate, outrate, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -164,7 +189,7 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
   for (j = 1; j <= numbuffers; ++j) {
 
     inbuffer = gst_buffer_new_and_alloc (samples * 4);
-    GST_BUFFER_DURATION (inbuffer) = samples * GST_SECOND / inrate;
+    GST_BUFFER_DURATION (inbuffer) = GST_FRAMES_TO_CLOCK_TIME (samples, inrate);
     GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_DURATION (inbuffer) * (j - 1);
     GST_BUFFER_OFFSET (inbuffer) = offset;
     offset += samples;
@@ -240,7 +265,7 @@ test_discont_stream_instance (int inrate, int outrate, int samples,
   GST_DEBUG ("inrate:%d outrate:%d samples:%d numbuffers:%d",
       inrate, outrate, samples, numbuffers);
 
-  audioresample = setup_audioresample (2, inrate, outrate);
+  audioresample = setup_audioresample (2, inrate, outrate, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -326,7 +351,7 @@ GST_START_TEST (test_reuse)
   GstBuffer *inbuffer;
   GstCaps *caps;
 
-  audioresample = setup_audioresample (1, 9343, 48000);
+  audioresample = setup_audioresample (1, 9343, 48000, 16, FALSE);
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
 
@@ -477,6 +502,7 @@ live_switch_push (int rate, GstCaps * caps)
 
   desired = gst_caps_copy (caps);
   gst_caps_set_simple (desired, "rate", G_TYPE_INT, rate, NULL);
+  gst_pad_set_caps (mysrcpad, desired);
 
   fail_unless (gst_pad_alloc_buffer_and_set_caps (mysrcpad,
           GST_BUFFER_OFFSET_NONE, rate * 4, desired, &inbuffer) == GST_FLOW_OK);
@@ -485,6 +511,8 @@ live_switch_push (int rate, GstCaps * caps)
    * returns a buffer with exactly the same caps as we requested so the actual
    * renegotiation (if needed) will be done in the _chain*/
   fail_unless (inbuffer != NULL);
+  GST_DEBUG ("desired: %" GST_PTR_FORMAT ".... got: %" GST_PTR_FORMAT,
+      desired, GST_BUFFER_CAPS (inbuffer));
   fail_unless (gst_caps_is_equal (desired, GST_BUFFER_CAPS (inbuffer)));
 
   memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
@@ -516,7 +544,7 @@ GST_START_TEST (test_live_switch)
   GstEvent *newseg;
   GstCaps *caps;
 
-  audioresample = setup_audioresample (4, 48000, 48000);
+  audioresample = setup_audioresample (4, 48000, 48000, 16, FALSE);
 
   /* Let the sinkpad act like something that can only handle things of
    * rate 48000- and can only allocate buffers for that rate, but if someone
@@ -524,6 +552,8 @@ GST_START_TEST (test_live_switch)
    * */
   gst_pad_set_bufferalloc_function (mysinkpad, live_switch_alloc_only_48000);
   gst_pad_set_getcaps_function (mysinkpad, live_switch_get_sink_caps);
+
+  gst_pad_use_fixed_caps (mysrcpad);
 
   caps = gst_pad_get_negotiated_caps (mysrcpad);
   fail_unless (gst_caps_is_fixed (caps));
@@ -549,7 +579,104 @@ GST_START_TEST (test_live_switch)
   gst_caps_unref (caps);
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST;
+
+#ifndef GST_DISABLE_PARSE
+
+static GMainLoop *loop;
+static gint messages = 0;
+
+static void
+element_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  gchar *s;
+
+  s = gst_structure_to_string (gst_message_get_structure (message));
+  GST_DEBUG ("Received message: %s", s);
+  g_free (s);
+
+  messages++;
+}
+
+static void
+eos_message_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  GST_DEBUG ("Received eos");
+  g_main_loop_quit (loop);
+}
+
+static void
+test_pipeline (gint width, gboolean fp, gint inrate, gint outrate, gint quality)
+{
+  GstElement *pipeline;
+  GstBus *bus;
+  GError *error = NULL;
+  gchar *pipe_str;
+
+  pipe_str =
+      g_strdup_printf
+      ("audiotestsrc num-buffers=10 ! audioconvert ! audio/x-raw-%s,rate=%d,width=%d,channels=2 ! audioresample quality=%d ! audio/x-raw-%s,rate=%d,width=%d ! identity check-imperfect-timestamp=TRUE ! fakesink",
+      (fp) ? "float" : "int", inrate, width, quality, (fp) ? "float" : "int",
+      outrate, width);
+
+  pipeline = gst_parse_launch (pipe_str, &error);
+  fail_unless (pipeline != NULL, "Error parsing pipeline: %s",
+      error ? error->message : "(invalid error)");
+  g_free (pipe_str);
+
+  bus = gst_element_get_bus (pipeline);
+  fail_if (bus == NULL);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message::element", (GCallback) element_message_cb,
+      NULL);
+  g_signal_connect (bus, "message::eos", (GCallback) eos_message_cb, NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* run until we receive EOS */
+  loop = g_main_loop_new (NULL, FALSE);
+
+  g_main_loop_run (loop);
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  fail_if (messages > 0, "Received imperfect timestamp messages");
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_pipelines)
+{
+  gint quality;
+
+  /* Test qualities 0, 5 and 10 */
+  for (quality = 0; quality < 11; quality += 5) {
+    test_pipeline (8, FALSE, 44100, 48000, quality);
+    test_pipeline (8, FALSE, 48000, 44100, quality);
+
+    test_pipeline (16, FALSE, 44100, 48000, quality);
+    test_pipeline (16, FALSE, 48000, 44100, quality);
+
+    test_pipeline (24, FALSE, 44100, 48000, quality);
+    test_pipeline (24, FALSE, 48000, 44100, quality);
+
+    test_pipeline (32, FALSE, 44100, 48000, quality);
+    test_pipeline (32, FALSE, 48000, 44100, quality);
+
+    test_pipeline (32, TRUE, 44100, 48000, quality);
+    test_pipeline (32, TRUE, 48000, 44100, quality);
+
+    test_pipeline (64, TRUE, 44100, 48000, quality);
+    test_pipeline (64, TRUE, 48000, 44100, quality);
+  }
+}
+
+GST_END_TEST;
+#endif
+
+static Suite *
 audioresample_suite (void)
 {
   Suite *s = suite_create ("audioresample");
@@ -561,6 +688,11 @@ audioresample_suite (void)
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_shutdown);
   tcase_add_test (tc_chain, test_live_switch);
+
+#ifndef GST_DISABLE_PARSE
+  tcase_set_timeout (tc_chain, 360);
+  tcase_add_test (tc_chain, test_pipelines);
+#endif
 
   return s;
 }
