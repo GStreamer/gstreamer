@@ -159,4 +159,5 @@ EXPORTS
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
+	gst_type_find_helper_for_extension
 	gst_type_find_helper_get_range
