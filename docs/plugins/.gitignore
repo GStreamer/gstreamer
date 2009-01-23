@@ -16,6 +16,7 @@ html
 sgml
 xml
 *.stamp
+*.bak
 
 gst-plugins-good-plugins-scan
 gst-plugins-good-plugins-scan.c
