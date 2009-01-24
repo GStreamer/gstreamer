@@ -103,6 +103,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
 	$(top_srcdir)/ext/metadata/gstmetadatamux.h \
+	$(top_srcdir)/ext/modplug/gstmodplug.h \
 	$(top_srcdir)/ext/mpeg2enc/gstmpeg2enc.hh \
 	$(top_srcdir)/ext/mplex/gstmplex.hh \
 	$(top_srcdir)/ext/mythtv/gstmythtvsrc.h \
@@ -123,7 +124,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dccp/gstdccpserversrc.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
-	$(top_srcdir)/gst/modplug/gstmodplug.h \
 	$(top_srcdir)/gst/mxf/mxfdemux.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \

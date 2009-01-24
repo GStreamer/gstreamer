@@ -166,6 +166,12 @@ else
 LIBMMS_DIR=
 endif
 
+if USE_MODPLUG
+MODPLUG_DIR=modplug
+else
+MODPLUG_DIR=
+endif
+
 if USE_MPEG2ENC
 MPEG2ENC_DIR=mpeg2enc
 else
@@ -347,6 +353,7 @@ SUBDIRS=\
 	$(LCS_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \
+	$(MODPLUG_DIR) \
 	$(MPEG2ENC_DIR) \
 	$(METADATA_DIR) \
 	$(MPLEX_DIR) \
@@ -392,6 +399,7 @@ DIST_SUBDIRS = \
 	libmms \
 	dts \
 	divx \
+	modplug \
 	metadata \
 	mpeg2enc \
 	mplex \

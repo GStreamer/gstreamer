@@ -251,7 +251,6 @@ AG_GST_CHECK_PLUGIN(flv)
 AG_GST_CHECK_PLUGIN(freeze)
 AG_GST_CHECK_PLUGIN(h264parse)
 AG_GST_CHECK_PLUGIN(librfb)
-AG_GST_CHECK_PLUGIN(modplug)
 AG_GST_CHECK_PLUGIN(mpegdemux)
 AG_GST_CHECK_PLUGIN(mpegtsmux)
 AG_GST_CHECK_PLUGIN(mpeg4videoparse)
@@ -277,12 +276,6 @@ AG_GST_CHECK_PLUGIN(vmnc)
 AG_GST_CHECK_PLUGIN(y4m)
 
 dnl *** plug-ins to exclude ***
-
-dnl see if we can build C++ plug-ins
-if test "x$HAVE_CXX" != "xyes"; then
-  AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
-  AG_GST_DISABLE_PLUGIN(modplug)
-fi
 
 dnl real plugin only works on i386 and x86_64 for the time being.
 if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
@@ -827,6 +820,19 @@ AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
 ])
 AC_SUBST(LIBMMS_LIBS)
 
+dnl *** modplug ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MODPLUG, true)
+AG_GST_CHECK_FEATURE(MODPLUG, modplug, modplug, [
+  if test "x$HAVE_CXX" != "xyes"; then
+    AC_MSG_WARN([Not compiling modplug plugin as it requires a C++ compiler])
+    HAVE_MODPLUG="no"
+  else
+    PKG_CHECK_MODULES(MODPLUG, libmodplug, HAVE_MODPLUG="yes", HAVE_MODPLUG="no")
+  fi
+  AC_SUBST(MODPLUG_CFLAGS)
+  AC_SUBST(MODPLUG_LIBS)
+])
+
 dnl *** mjpegtools version info ***
 dnl some may prefer older version (given quirks above)
 dnl hm, no version info seems available within mjpegtools headers
@@ -1302,6 +1308,7 @@ AM_CONDITIONAL(USE_JACK, false)
 AM_CONDITIONAL(USE_JP2K, false)
 AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
+AM_CONDITIONAL(USE_MODPLUG, false)
 AM_CONDITIONAL(USE_METADATA, false)
 AM_CONDITIONAL(USE_MPEG2ENC, false)
 AM_CONDITIONAL(USE_MPLEX, false)
@@ -1403,8 +1410,6 @@ gst/flv/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
 gst/librfb/Makefile
-gst/modplug/Makefile
-gst/modplug/libmodplug/Makefile
 gst/mpegdemux/Makefile
 gst/mpegtsmux/Makefile
 gst/mpegtsmux/tsmux/Makefile
@@ -1473,6 +1478,7 @@ ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/nas/Makefile
+ext/modplug/Makefile
 ext/mpeg2enc/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
