@@ -481,9 +481,6 @@ gst_check_element_push_buffer (const gchar * element_name,
   out = g_list_append (out, buffer_out);
 
   gst_check_element_push_buffer_list (element_name, in, out, GST_FLOW_OK);
-
-  g_list_free (in);
-  g_list_free (out);
 }
 
 void
