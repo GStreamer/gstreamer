@@ -304,10 +304,10 @@ in the various plugin packages.
   - examples will only show up using gtk-doc 1.4 or later - it relies on
     merging stuff from .sgml with inline docs.  We might want to change
     this to only get stuff from the source.
-  - you need to commit resulting files to CVS:
+  - you need to commit resulting files to git:
     - changes to *.signals and *.args
     - new files for your plugin created in inspect/
-  - if you get thsi warning:
+  - if you get this warning:
     " Documentation in template xxx for ./tmpl/element-yyy:Short_Description
       being overridden by inline comments"
     per-default the description from the GST_ELEMENT_DETAILS is put to the
