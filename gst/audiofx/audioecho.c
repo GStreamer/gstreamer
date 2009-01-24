@@ -188,7 +188,10 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
       if (self->buffer && rate > 0) {
         guint new_echo =
             MAX (gst_util_uint64_scale (self->delay, rate, GST_SECOND), 1);
-        guint new_size = new_echo * width * channels;
+        guint new_size_frames = MAX (new_echo,
+            gst_util_uint64_scale (self->delay + (GST_SECOND -
+                    self->delay % GST_SECOND), rate, GST_SECOND));
+        guint new_size = new_size_frames * width * channels;
 
         if (new_size > self->buffer_size) {
           guint i;
@@ -203,7 +206,8 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
                             self->buffer_pos) % self->buffer_size_frames) *
                     width * channels], channels * width);
           }
-          self->buffer_size_frames = self->delay_frames = new_echo;
+          self->buffer_size_frames = new_size_frames;
+          self->delay_frames = new_echo;
           self->buffer_pos = 0;
         }
       } else if (self->buffer) {
@@ -353,14 +357,18 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   if (self->buffer == NULL) {
     guint width, rate, channels;
 
+
     width = GST_AUDIO_FILTER (self)->format.width / 8;
     rate = GST_AUDIO_FILTER (self)->format.rate;
     channels = GST_AUDIO_FILTER (self)->format.channels;
 
     self->delay_frames =
         MAX (gst_util_uint64_scale (self->delay, rate, GST_SECOND), 1);
+    self->buffer_size_frames =
+        MAX (self->delay_frames,
+        gst_util_uint64_scale (self->delay + (GST_SECOND -
+                self->delay % GST_SECOND), rate, GST_SECOND));
 
-    self->buffer_size_frames = MAX (self->delay_frames, 1000);
     self->buffer_size = self->buffer_size_frames * width * channels;
     self->buffer = g_malloc0 (self->buffer_size);
     self->buffer_pos = 0;
