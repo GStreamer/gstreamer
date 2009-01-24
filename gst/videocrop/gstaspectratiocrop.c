@@ -99,7 +99,12 @@ static void gst_aspect_ratio_crop_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_aspect_ratio_crop_set_cropping (GstAspectRatioCrop *
     aspect_ratio_crop, gint top, gint right, gint bottom, gint left);
+static GstCaps *gst_aspect_ratio_crop_get_caps (GstPad * pad);
 static gboolean gst_aspect_ratio_crop_set_caps (GstPad * pad, GstCaps * caps);
+static void gst_aspect_ratio_crop_finalize (GObject * object);
+static void gst_aspect_ratio_transform_structure (GstAspectRatioCrop *
+    aspect_ratio_crop, GstStructure * structure, GstStructure ** new_structure,
+    gboolean set_videocrop);
 
 static void
 gst_aspect_ratio_crop_set_cropping (GstAspectRatioCrop * aspect_ratio_crop,
@@ -140,79 +145,14 @@ gst_aspect_ratio_crop_set_caps (GstPad * pad, GstCaps * caps)
   GstPad *peer_pad;
   GstStructure *structure;
   gboolean ret;
-  gdouble incoming_ar;
-  gdouble requested_ar;
-  gint width, height;
-  gint cropvalue;
-  gint par_d, par_n;
 
   aspect_ratio_crop = GST_ASPECT_RATIO_CROP (gst_pad_get_parent (pad));
+
   g_mutex_lock (aspect_ratio_crop->crop_lock);
 
-  /* Check if we need to change the aspect ratio */
-  if (aspect_ratio_crop->ar_num < 1) {
-    GST_DEBUG_OBJECT (aspect_ratio_crop, "No cropping requested");
-    gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, 0, 0, 0, 0);
-    goto setcaps_on_peer;
-  }
-
-  /* get the information from the caps */
   structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &width))
-    goto no_width;
-  if (!gst_structure_get_int (structure, "height", &height))
-    goto no_height;
-
-  if (!gst_structure_get_fraction (structure, "pixel-aspect-ratio",
-          &par_n, &par_d)) {
-    par_d = par_n = 1;
-  }
-
-  incoming_ar = ((gdouble) (width * par_n)) / (height * par_d);
-  GST_LOG_OBJECT (aspect_ratio_crop,
-      "incoming caps width(%d), height(%d), par (%d/%d) : ar = %f", width,
-      height, par_n, par_d, incoming_ar);
-
-  requested_ar =
-      (gdouble) aspect_ratio_crop->ar_num / aspect_ratio_crop->ar_denom;
-
-  /* check if the original aspect-ratio is the aspect-ratio that we want */
-  if (requested_ar == incoming_ar) {
-    GST_DEBUG_OBJECT (aspect_ratio_crop,
-        "Input video already has the correct aspect ratio (%.3f == %.3f)",
-        incoming_ar, requested_ar);
-    gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, 0, 0, 0, 0);
-  } else if (requested_ar > incoming_ar) {
-    /* fix aspect ratio with cropping on top and bottom */
-    cropvalue =
-        ((((double) aspect_ratio_crop->ar_denom /
-                (double) (aspect_ratio_crop->ar_num)) * ((double) par_n /
-                (double) par_d) * width) - height) / 2;
-    if (cropvalue < 0) {
-      cropvalue *= -1;
-    }
-    if (cropvalue >= (height / 2))
-      goto crop_failed;
-    gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, cropvalue, 0,
-        cropvalue, 0);
-  } else {
-    /* fix aspect ratio with cropping on left and right */
-    cropvalue =
-        ((((double) aspect_ratio_crop->ar_num /
-                (double) (aspect_ratio_crop->ar_denom)) * ((double) par_d /
-                (double) par_n) * height) - width) / 2;
-    if (cropvalue < 0) {
-      cropvalue *= -1;
-    }
-    if (cropvalue >= (width / 2))
-      goto crop_failed;
-    gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, 0, cropvalue, 0,
-        cropvalue);
-  }
-
-setcaps_on_peer:
-  GST_DEBUG_OBJECT (aspect_ratio_crop,
-      "setting the caps on the videocrop element");
+  gst_aspect_ratio_transform_structure (aspect_ratio_crop, structure, NULL,
+      TRUE);
   peer_pad =
       gst_element_get_static_pad (GST_ELEMENT (aspect_ratio_crop->videocrop),
       "sink");
@@ -221,21 +161,6 @@ setcaps_on_peer:
   gst_object_unref (aspect_ratio_crop);
   g_mutex_unlock (aspect_ratio_crop->crop_lock);
   return ret;
-
-no_width:
-  GST_INFO_OBJECT (aspect_ratio_crop, "no width found in the caps");
-  goto beach;
-no_height:
-  GST_INFO_OBJECT (aspect_ratio_crop, "no height found in the caps");
-  goto beach;
-crop_failed:
-  GST_WARNING_OBJECT (aspect_ratio_crop,
-      "can't crop to aspect ratio requested");
-  goto beach;
-beach:
-  gst_object_unref (aspect_ratio_crop);
-  g_mutex_unlock (aspect_ratio_crop->crop_lock);
-  return FALSE;
 }
 
 static void
@@ -260,6 +185,7 @@ gst_aspect_ratio_crop_class_init (GstAspectRatioCropClass * klass)
 
   gobject_class->set_property = gst_aspect_ratio_crop_set_property;
   gobject_class->get_property = gst_aspect_ratio_crop_get_property;
+  gobject_class->finalize = gst_aspect_ratio_crop_finalize;
 
   g_object_class_install_property (gobject_class, ARG_ASPECT_RATIO_CROP,
       gst_param_spec_fraction ("aspect-ratio", "aspect-ratio",
@@ -268,10 +194,22 @@ gst_aspect_ratio_crop_class_init (GstAspectRatioCropClass * klass)
 }
 
 static void
+gst_aspect_ratio_crop_finalize (GObject * object)
+{
+  GstAspectRatioCrop *aspect_ratio_crop;
+
+  aspect_ratio_crop = GST_ASPECT_RATIO_CROP (object);
+
+  if (aspect_ratio_crop->crop_lock)
+    g_mutex_free (aspect_ratio_crop->crop_lock);
+}
+
+static void
 gst_aspect_ratio_crop_init (GstAspectRatioCrop * aspect_ratio_crop,
     GstAspectRatioCropClass * klass)
 {
   GstPad *link_pad;
+  GstPad *src_pad;
 
   GST_DEBUG_CATEGORY_INIT (aspect_ratio_crop_debug, "aspectratiocrop", 0,
       "aspectratiocrop");
@@ -289,19 +227,176 @@ gst_aspect_ratio_crop_init (GstAspectRatioCrop * aspect_ratio_crop,
   link_pad =
       gst_element_get_static_pad (GST_ELEMENT (aspect_ratio_crop->videocrop),
       "src");
-  gst_element_add_pad (GST_ELEMENT (aspect_ratio_crop), gst_ghost_pad_new (NULL,
-          link_pad));
+  src_pad = gst_ghost_pad_new ("src", link_pad);
+  gst_pad_set_getcaps_function (src_pad,
+      GST_DEBUG_FUNCPTR (gst_aspect_ratio_crop_get_caps));
+  gst_element_add_pad (GST_ELEMENT (aspect_ratio_crop), src_pad);
   gst_object_unref (link_pad);
   /* create ghost pad sink */
   link_pad =
       gst_element_get_static_pad (GST_ELEMENT (aspect_ratio_crop->videocrop),
       "sink");
-  aspect_ratio_crop->sink = gst_ghost_pad_new (NULL, link_pad);
+  aspect_ratio_crop->sink = gst_ghost_pad_new ("sink", link_pad);
   gst_element_add_pad (GST_ELEMENT (aspect_ratio_crop),
       aspect_ratio_crop->sink);
   gst_object_unref (link_pad);
   gst_pad_set_setcaps_function (aspect_ratio_crop->sink,
       GST_DEBUG_FUNCPTR (gst_aspect_ratio_crop_set_caps));
+}
+
+static void
+gst_aspect_ratio_transform_structure (GstAspectRatioCrop * aspect_ratio_crop,
+    GstStructure * structure, GstStructure ** new_structure,
+    gboolean set_videocrop)
+{
+  gdouble incoming_ar;
+  gdouble requested_ar;
+  gint width, height;
+  gint cropvalue;
+  gint par_d, par_n;
+
+  /* Check if we need to change the aspect ratio */
+  if (aspect_ratio_crop->ar_num < 1) {
+    GST_DEBUG_OBJECT (aspect_ratio_crop, "No cropping requested");
+    goto beach;
+  }
+
+  /* get the information from the caps */
+  if (!gst_structure_get_int (structure, "width", &width) ||
+      !gst_structure_get_int (structure, "height", &height))
+    goto beach;
+
+  if (!gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+          &par_n, &par_d)) {
+    par_d = par_n = 1;
+  }
+
+  incoming_ar = ((gdouble) (width * par_n)) / (height * par_d);
+  GST_LOG_OBJECT (aspect_ratio_crop,
+      "incoming caps width(%d), height(%d), par (%d/%d) : ar = %f", width,
+      height, par_n, par_d, incoming_ar);
+
+  requested_ar =
+      (gdouble) aspect_ratio_crop->ar_num / aspect_ratio_crop->ar_denom;
+
+  /* check if the original aspect-ratio is the aspect-ratio that we want */
+  if (requested_ar == incoming_ar) {
+    GST_DEBUG_OBJECT (aspect_ratio_crop,
+        "Input video already has the correct aspect ratio (%.3f == %.3f)",
+        incoming_ar, requested_ar);
+    goto beach;
+  } else if (requested_ar > incoming_ar) {
+    /* fix aspect ratio with cropping on top and bottom */
+    cropvalue =
+        ((((double) aspect_ratio_crop->ar_denom /
+                (double) (aspect_ratio_crop->ar_num)) * ((double) par_n /
+                (double) par_d) * width) - height) / 2;
+    if (cropvalue < 0) {
+      cropvalue *= -1;
+    }
+    if (cropvalue >= (height / 2))
+      goto crop_failed;
+    if (set_videocrop) {
+      gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, cropvalue, 0,
+          cropvalue, 0);
+    }
+    if (new_structure) {
+      *new_structure = gst_structure_copy (structure);
+      gst_structure_set (*new_structure,
+          "height", G_TYPE_INT, (int) (height - (cropvalue * 2)), NULL);
+    }
+  } else {
+    /* fix aspect ratio with cropping on left and right */
+    cropvalue =
+        ((((double) aspect_ratio_crop->ar_num /
+                (double) (aspect_ratio_crop->ar_denom)) * ((double) par_d /
+                (double) par_n) * height) - width) / 2;
+    if (cropvalue < 0) {
+      cropvalue *= -1;
+    }
+    if (cropvalue >= (width / 2))
+      goto crop_failed;
+    if (set_videocrop) {
+      gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, 0, cropvalue,
+          0, cropvalue);
+    }
+    if (new_structure) {
+      *new_structure = gst_structure_copy (structure);
+      gst_structure_set (*new_structure,
+          "width", G_TYPE_INT, (int) (width - (cropvalue * 2)), NULL);
+    }
+  }
+
+  return;
+
+crop_failed:
+  GST_WARNING_OBJECT (aspect_ratio_crop,
+      "can't crop to aspect ratio requested");
+  goto beach;
+beach:
+  if (set_videocrop) {
+    gst_aspect_ratio_crop_set_cropping (aspect_ratio_crop, 0, 0, 0, 0);
+  }
+
+  if (new_structure) {
+    *new_structure = gst_structure_copy (structure);
+  }
+}
+
+static GstCaps *
+gst_aspect_ratio_crop_transform_caps (GstAspectRatioCrop * aspect_ratio_crop,
+    GstCaps * caps)
+{
+  GstCaps *transform;
+  gint size, i;
+
+  transform = gst_caps_new_empty ();
+
+  size = gst_caps_get_size (caps);
+
+  for (i = 0; i < size; i++) {
+    GstStructure *s;
+    GstStructure *trans_s;
+
+    s = gst_caps_get_structure (caps, i);
+
+    gst_aspect_ratio_transform_structure (aspect_ratio_crop, s, &trans_s,
+        FALSE);
+    gst_caps_append_structure (transform, trans_s);
+  }
+
+  return transform;
+}
+
+static GstCaps *
+gst_aspect_ratio_crop_get_caps (GstPad * pad)
+{
+  GstPad *peer;
+  GstAspectRatioCrop *aspect_ratio_crop;
+  GstCaps *return_caps;
+
+  aspect_ratio_crop = GST_ASPECT_RATIO_CROP (gst_pad_get_parent (pad));
+
+  g_mutex_lock (aspect_ratio_crop->crop_lock);
+
+  peer = gst_pad_get_peer (aspect_ratio_crop->sink);
+  if (peer == NULL) {
+    return_caps = gst_static_pad_template_get_caps (&src_template);
+    gst_caps_ref (return_caps);
+  } else {
+    GstCaps *peer_caps;
+
+    peer_caps = gst_pad_get_caps (peer);
+    return_caps =
+        gst_aspect_ratio_crop_transform_caps (aspect_ratio_crop, peer_caps);
+    gst_caps_unref (peer_caps);
+  }
+
+  g_mutex_unlock (aspect_ratio_crop->crop_lock);
+  gst_object_unref (peer);
+  gst_object_unref (aspect_ratio_crop);
+
+  return return_caps;
 }
 
 static void
@@ -320,7 +415,7 @@ gst_aspect_ratio_crop_set_property (GObject * object, guint prop_id,
         aspect_ratio_crop->ar_num = gst_value_get_fraction_numerator (value);
         aspect_ratio_crop->ar_denom =
             gst_value_get_fraction_denominator (value);
-        recheck = TRUE;
+        recheck = (GST_PAD_CAPS (aspect_ratio_crop->sink) != NULL);
       }
       break;
     default:

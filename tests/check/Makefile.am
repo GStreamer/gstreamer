@@ -68,17 +68,18 @@ check_PROGRAMS = \
 	generic/states \
 	$(check_annodex) \
 	elements/alphacolor \
-	elements/audiopanorama \
-	elements/audioinvert \
+	elements/aspectratiocrop \
+	elements/audioamplify \
 	elements/audiochebband \
 	elements/audiocheblimit \
-	elements/audioiirfilter \
-	elements/audioamplify \
-	elements/audioecho \
 	elements/audiodynamic \
+	elements/audioecho \
+	elements/audiofirfilter \
+	elements/audioiirfilter \
+	elements/audioinvert \
+	elements/audiopanorama \
 	elements/audiowsincband \
 	elements/audiowsinclimit \
-	elements/audiofirfilter \
 	elements/avimux \
 	elements/avisubtitle \
 	elements/deinterleave \
