@@ -47,11 +47,6 @@
 #define SCOPE_BG_GREEN 0
 #define SCOPE_BG_BLUE 0
 
-#define FFT_BUFFER_SIZE_LOG 9
-#define FFT_BUFFER_SIZE (1 << FFT_BUFFER_SIZE_LOG)
-
-#define syn_width 320
-#define syn_height 200
 #define brightMin 200
 #define brightMax 2000
 #define brightDec 10
@@ -65,10 +60,14 @@
 /* Instance data */
 struct syn_instance
 {
+  /* options */
+  unsigned int resx, resy;
   int autobrightness;           /* Whether to use automatic brightness adjust */
   unsigned int brightFactor;
-  unsigned char output[syn_width * syn_height * 2];
-  guint32 display[syn_width * syn_height];
+
+  /* data */
+  unsigned char *output;
+  guint32 *display;
   gint16 pcmt_l[FFT_BUFFER_SIZE];
   gint16 pcmt_r[FFT_BUFFER_SIZE];
   gint16 pcm_l[FFT_BUFFER_SIZE];
@@ -92,14 +91,14 @@ static void synaes_fft (double *x, double *y);
 static void synaescope_coreGo (syn_instance * si);
 
 static inline void
-addPixel (unsigned char *output, int x, int y, int br1, int br2)
+addPixel (syn_instance * si, int x, int y, int br1, int br2)
 {
   unsigned char *p;
 
-  if (x < 0 || x >= syn_width || y < 0 || y >= syn_height)
+  if (G_UNLIKELY (x < 0 || x >= si->resx || y < 0 || y >= si->resy))
     return;
 
-  p = output + x * 2 + y * syn_width * 2;
+  p = si->output + x * 2 + y * si->resx * 2;
   if (p[0] < 255 - br1)
     p[0] += br1;
   else
@@ -161,7 +160,7 @@ synaescope_coreGo (syn_instance * si)
   /* Asger Alstrupt's optimized 32 bit fade */
   /* (alstrup@diku.dk) */
   ptr = (guint32 *) si->output;
-  end = (guint32 *) (si->output + syn_width * syn_height * 2);
+  end = (guint32 *) (si->output + si->resx * si->resy * 2);
   do {
     /*Bytewize version was: *(ptr++) -= *ptr+(*ptr>>1)>>4; */
     if (*ptr) {
@@ -181,22 +180,22 @@ synaescope_coreGo (syn_instance * si)
     ptr++;
   } while (ptr < end);
 
-  heightFactor = FFT_BUFFER_SIZE / 2 / syn_height + 1;
+  heightFactor = FFT_BUFFER_SIZE / 2 / si->resy + 1;
   actualHeight = FFT_BUFFER_SIZE / 2 / heightFactor;
-  heightAdd = (syn_height + actualHeight) >> 1;
+  heightAdd = (si->resy + actualHeight) >> 1;
 
   /* Correct for window size */
   brightFactor2 = (si->brightFactor / 65536.0 / FFT_BUFFER_SIZE) *
-      sqrt (actualHeight * syn_width / (320.0 * 200.0));
+      sqrt (actualHeight * si->resx / (320.0 * 200.0));
 
   brtot = 0;
   for (i = 1; i < FFT_BUFFER_SIZE / 2; i++) {
     /*int h = (int)( corr_r[i]*280 / (corr_l[i]+corr_r[i]+0.0001)+20 ); */
     if (si->corr_l[i] > 0 || si->corr_r[i] > 0) {
       int h =
-          (int) (si->corr_r[i] * syn_width / (si->corr_l[i] + si->corr_r[i]));
+          (int) (si->corr_r[i] * si->resx / (si->corr_l[i] + si->corr_r[i]));
 
-/*      int h = (int)( syn_width - 1 ); */
+/*      int h = (int)( si->resx - 1 ); */
       int br1, br2, br =
           (int) ((si->corr_l[i] + si->corr_r[i]) * i * brightFactor2);
       int px = h, py = heightAdd - i / heightFactor;
@@ -212,19 +211,19 @@ synaescope_coreGo (syn_instance * si)
         br2 = 0;
       else if (br2 > 255)
         br2 = 255;
-      /*unsigned char *p = output+ h*2+(164-((i<<8)>>FFT_BUFFER_SIZE_LOG))*(syn_width*2);  */
+      /*unsigned char *p = output+ h*2+(164-((i<<8)>>FFT_BUFFER_SIZE_LOG))*(si->resx*2);  */
 
-      if (px < 30 || py < 30 || px > syn_width - 30 || py > syn_height - 30) {
-        addPixel (si->output, px, py, br1, br2);
+      if (px < 30 || py < 30 || px > si->resx - 30 || py > si->resy - 30) {
+        addPixel (si, px, py, br1, br2);
         for (j = 1; br1 > 0 || br2 > 0;
             j++, br1 = scaleDown[br1], br2 = scaleDown[br2]) {
-          addPixel (si->output, px + j, py, br1, br2);
-          addPixel (si->output, px, py + j, br1, br2);
-          addPixel (si->output, px - j, py, br1, br2);
-          addPixel (si->output, px, py - j, br1, br2);
+          addPixel (si, px + j, py, br1, br2);
+          addPixel (si, px, py + j, br1, br2);
+          addPixel (si, px - j, py, br1, br2);
+          addPixel (si, px, py - j, br1, br2);
         }
       } else {
-        unsigned char *p = si->output + px * 2 + py * syn_width * 2, *p1 =
+        unsigned char *p = si->output + px * 2 + py * si->resx * 2, *p1 =
             p, *p2 = p, *p3 = p, *p4 = p;
         addPixelFast (p, br1, br2);
         for (; br1 > 0 || br2 > 0; br1 = scaleDown[br1], br2 = scaleDown[br2]) {
@@ -232,9 +231,9 @@ synaescope_coreGo (syn_instance * si)
           addPixelFast (p1, br1, br2);
           p2 -= 2;
           addPixelFast (p2, br1, br2);
-          p3 += syn_width * 2;
+          p3 += si->resx * 2;
           addPixelFast (p3, br1, br2);
-          p4 -= syn_width * 2;
+          p4 -= si->resx * 2;
           addPixelFast (p4, br1, br2);
         }
       }
@@ -274,7 +273,7 @@ synaescope32 (syn_instance * si)
   synaescope_coreGo (si);
 
   outptr = si->output;
-  for (i = 0; i < syn_width * syn_height; i++) {
+  for (i = 0; i < si->resx * si->resy; i++) {
     si->display[i] = colEq[(outptr[0] >> 4) + (outptr[1] & 0xf0)];
     outptr += 2;
   }
@@ -326,7 +325,7 @@ synaes_fft (double *x, double *y)
 }
 
 static void
-synaescope_set_data (syn_instance * si, gint16 data[2][512])
+synaescope_set_data (syn_instance * si, gint16 data[2][FFT_BUFFER_SIZE])
 {
   int i;
   gint16 *newset_l = si->pcmt_l;
@@ -340,7 +339,7 @@ synaescope_set_data (syn_instance * si, gint16 data[2][512])
 
 
 guint32 *
-synaesthesia_update (syn_instance * si, gint16 data[2][512])
+synaesthesia_update (syn_instance * si, gint16 data[2][FFT_BUFFER_SIZE])
 {
   synaescope_set_data (si, data);
   synaescope32 (si);
@@ -390,8 +389,38 @@ synaesthesia_init ()
   inited = 1;
 }
 
+gboolean
+synaesthesia_resize (syn_instance * si, guint resx, guint resy)
+{
+  unsigned char *output = NULL;
+  guint32 *display = NULL;
+
+  /* FIXME: FFT_BUFFER_SIZE is reated to resy, right now we get black borders on
+   * top and below
+   */
+
+  output = g_try_new (unsigned char, 2 * resx * resy);
+  display = g_try_new (guint32, resx * resy);
+  if (!output || !display)
+    goto Error;
+
+  g_free (si->output);
+  g_free (si->display);
+
+  si->resx = resx;
+  si->resy = resy;
+  si->output = output;
+  si->display = display;
+  return TRUE;
+
+Error:
+  g_free (output);
+  g_free (display);
+  return FALSE;
+}
+
 syn_instance *
-synaesthesia_new (guint32 resx, guint32 resy)
+synaesthesia_new (guint resx, guint resy)
 {
   syn_instance *si;
 
@@ -399,10 +428,13 @@ synaesthesia_new (guint32 resx, guint32 resy)
   if (si == NULL)
     return NULL;
 
+  if (!synaesthesia_resize (si, resx, resy)) {
+    g_free (si);
+    return NULL;
+  }
+
   si->autobrightness = 1;       /* Whether to use automatic brightness adjust */
   si->brightFactor = 400;
-
-  /* FIXME: Make the width and height configurable? */
 
   return si;
 }
@@ -411,6 +443,9 @@ void
 synaesthesia_close (syn_instance * si)
 {
   g_return_if_fail (si != NULL);
+
+  g_free (si->output);
+  g_free (si->display);
 
   g_free (si);
 }

@@ -38,7 +38,6 @@
 
 #include "gstsynaesthesia.h"
 
-
 /* elementfactory information */
 static const GstElementDetails gst_synaesthesia_details =
 GST_ELEMENT_DETAILS ("Synaesthesia",
@@ -79,7 +78,7 @@ static GstFlowReturn gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn
 gst_synaesthesia_change_state (GstElement * element, GstStateChange transition);
 
-static GstCaps *gst_synaesthesia_src_getcaps (GstPad * pad);
+static gboolean gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia);
 static gboolean gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps);
 
@@ -157,8 +156,6 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
 
   synaesthesia->srcpad =
       gst_pad_new_from_static_template (&gst_synaesthesia_src_template, "src");
-  gst_pad_set_getcaps_function (synaesthesia->srcpad,
-      GST_DEBUG_FUNCPTR (gst_synaesthesia_src_getcaps));
   gst_pad_set_setcaps_function (synaesthesia->srcpad,
       GST_DEBUG_FUNCPTR (gst_synaesthesia_src_setcaps));
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
@@ -166,8 +163,8 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
   synaesthesia->adapter = gst_adapter_new ();
 
   /* reset the initial video state */
-  synaesthesia->width = SYNAES_WIDTH;
-  synaesthesia->height = SYNAES_HEIGHT;
+  synaesthesia->width = 320;
+  synaesthesia->height = 200;
   synaesthesia->fps_n = 25;     /* desired frame rate */
   synaesthesia->fps_d = 1;
   synaesthesia->frame_duration = -1;
@@ -178,10 +175,6 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
 
   synaesthesia->next_ts = GST_CLOCK_TIME_NONE;
 
-  /* FIXME: the size is currently ignored by the engine. It should
-   * not be, and also there should be a way to change the size later.
-   * We also need API to negotiate the spf (samples_per_frame)
-   * we can supply. */
   synaesthesia->si =
       synaesthesia_new (synaesthesia->width, synaesthesia->height);
 }
@@ -265,33 +258,52 @@ wrong_rate:
   }
 }
 
-static GstCaps *
-gst_synaesthesia_src_getcaps (GstPad * pad)
+static gboolean
+gst_synaesthesia_src_negotiate (GstSynaesthesia * synaesthesia)
 {
-  GstSynaesthesia *synaesthesia;
-  GstCaps *caps;
-  const GstCaps *templcaps;
-  gint i;
+  GstCaps *othercaps, *target, *intersect;
+  GstStructure *structure;
+  const GstCaps *templ;
 
-  synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
-  templcaps = gst_pad_get_pad_template_caps (pad);
-  caps = gst_caps_copy (templcaps);
+  templ = gst_pad_get_pad_template_caps (synaesthesia->srcpad);
 
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstStructure *structure = gst_caps_get_structure (caps, i);
+  GST_DEBUG_OBJECT (synaesthesia, "performing negotiation");
 
-    gst_structure_set (structure,
-        "width", G_TYPE_INT, synaesthesia->width,
-        "height", G_TYPE_INT, synaesthesia->height,
-        "framerate", GST_TYPE_FRACTION, synaesthesia->fps_n,
-        synaesthesia->fps_d, NULL);
+  /* see what the peer can do */
+  othercaps = gst_pad_peer_get_caps (synaesthesia->srcpad);
+  if (othercaps) {
+    intersect = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (othercaps);
+
+    if (gst_caps_is_empty (intersect))
+      goto no_format;
+
+    target = gst_caps_copy_nth (intersect, 0);
+    gst_caps_unref (intersect);
+  } else {
+    target = gst_caps_ref ((GstCaps *) templ);
   }
 
-  gst_object_unref (synaesthesia);
+  structure = gst_caps_get_structure (target, 0);
+  gst_structure_fixate_field_nearest_int (structure, "width",
+      synaesthesia->width);
+  gst_structure_fixate_field_nearest_int (structure, "height",
+      synaesthesia->height);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+      synaesthesia->fps_n, synaesthesia->fps_d);
 
-  GST_DEBUG ("final caps are %" GST_PTR_FORMAT, caps);
+  GST_DEBUG ("final caps are %" GST_PTR_FORMAT, target);
 
-  return caps;
+  gst_pad_set_caps (synaesthesia->srcpad, target);
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    gst_caps_unref (intersect);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -312,23 +324,22 @@ gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps)
     goto missing_caps_details;
   }
 
-  if ((w != SYNAES_WIDTH) || (h != SYNAES_HEIGHT))
-    goto wrong_resolution;
-
   synaesthesia->width = w;
   synaesthesia->height = h;
   synaesthesia->fps_n = num;
   synaesthesia->fps_d = denom;
+
+  synaesthesia_resize (synaesthesia->si, synaesthesia->width,
+      synaesthesia->height);
 
   synaesthesia->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
       synaesthesia->fps_d, synaesthesia->fps_n);
   synaesthesia->spf = gst_util_uint64_scale_int (synaesthesia->rate,
       synaesthesia->fps_d, synaesthesia->fps_n);
 
-  /* FIXME: the size is currently ignored by the engine. see comment above */
-   synaesthesia_close (synaesthesia->si);
-   synaesthesia->si = 
-       synaesthesia_new (synaesthesia->width, synaesthesia->height);
+  GST_DEBUG_OBJECT (synaesthesia, "dimension %dx%d, framerate %d/%d, spf %d",
+      synaesthesia->width, synaesthesia->height,
+      synaesthesia->fps_n, synaesthesia->fps_d, synaesthesia->spf);
 
 done:
   gst_object_unref (synaesthesia);
@@ -338,14 +349,6 @@ done:
 missing_caps_details:
   {
     GST_WARNING_OBJECT (synaesthesia, "missing channels or rate in the caps");
-    res = FALSE;
-    goto done;
-  }
-wrong_resolution:
-  {
-    GST_WARNING_OBJECT (synaesthesia,
-        "unsupported resolution: %d x %d (wanted %d x %d)", w, h, SYNAES_WIDTH,
-        SYNAES_HEIGHT);
     res = FALSE;
     goto done;
   }
@@ -360,7 +363,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("chainfunc called");
+  GST_LOG ("chainfunc called");
 
   /* resync on DISCONT */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
@@ -369,16 +372,8 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   if (GST_PAD_CAPS (synaesthesia->srcpad) == NULL) {
-    GstCaps *target;
-
-    GST_DEBUG ("fixating");
-    if ((target = gst_synaesthesia_src_getcaps (synaesthesia->srcpad))) {
-      gst_pad_set_caps (synaesthesia->srcpad, target);
-      gst_caps_unref (target);
-    } else {
-      GST_DEBUG ("no caps on srcpad");
+    if (!gst_synaesthesia_src_negotiate (synaesthesia))
       return GST_FLOW_NOT_NEGOTIATED;
-    }
   }
 
   /* Match timestamps from the incoming audio */
@@ -388,15 +383,11 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
   gst_adapter_push (synaesthesia->adapter, buffer);
 
   /* this is what we want */
-  bytesperread = SYNAES_SAMPLES * synaesthesia->channels * sizeof (gint16);
-  /* FIXME: what about:
-     bytesperread = MAX (SYNAES_SAMPLES, synaesthesia->spf) * synaesthesia->channels * sizeof (gint16);
-   */
+  bytesperread = MAX (FFT_BUFFER_SIZE, synaesthesia->spf) * synaesthesia->channels * sizeof (gint16);
+
   /* this is what we have */
   avail = gst_adapter_available (synaesthesia->adapter);
-  while (avail >
-      MAX (bytesperread,
-          synaesthesia->spf * synaesthesia->channels * sizeof (gint16))) {
+  while (avail > bytesperread) {
     const guint16 *data =
         (const guint16 *) gst_adapter_peek (synaesthesia->adapter,
         bytesperread);
@@ -405,7 +396,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
     guint i;
 
     /* deinterleave */
-    for (i = 0; i < SYNAES_SAMPLES; i++) {
+    for (i = 0; i < FFT_BUFFER_SIZE; i++) {
       synaesthesia->datain[0][i] = *data++;
       synaesthesia->datain[1][i] = *data++;
     }

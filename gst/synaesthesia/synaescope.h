@@ -23,11 +23,18 @@
 
 #include <glib.h>
 
+/* FIXME: we should set this automatically based on height */
+#define FFT_BUFFER_SIZE_LOG 10
+#define FFT_BUFFER_SIZE (1 << FFT_BUFFER_SIZE_LOG)
+
 typedef struct syn_instance syn_instance;
 
 void synaesthesia_init ();
-syn_instance *synaesthesia_new (guint32 resx, guint32 resy);
-void synaesthesia_close (syn_instance *si);
-guint32 * synaesthesia_update (syn_instance *si, gint16 data [2][512]);
+syn_instance *synaesthesia_new (guint resx, guint resy);
+void synaesthesia_close (syn_instance * si);
+
+gboolean synaesthesia_resize (syn_instance * si, guint resx, guint resy);
+guint32 *synaesthesia_update (syn_instance * si,
+    gint16 data[2][FFT_BUFFER_SIZE]);
 
 #endif

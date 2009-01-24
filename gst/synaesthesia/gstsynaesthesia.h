@@ -29,17 +29,11 @@
 #include "synaescope.h"
 
 G_BEGIN_DECLS
-
-#define SYNAES_SAMPLES 512
-#define SYNAES_WIDTH 320
-#define SYNAES_HEIGHT 200
-
 #define GST_TYPE_SYNAESTHESIA            (gst_synaesthesia_get_type())
 #define GST_SYNAESTHESIA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SYNAESTHESIA,GstSynaesthesia))
 #define GST_SYNAESTHESIA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SYNAESTHESIA,GstSynaesthesiaClass))
 #define GST_IS_SYNAESTHESIA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SYNAESTHESIA))
 #define GST_IS_SYNAESTHESIA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SYNAESTHESIA))
-
 typedef struct _GstSynaesthesia GstSynaesthesia;
 typedef struct _GstSynaesthesiaClass GstSynaesthesiaClass;
 
@@ -59,7 +53,7 @@ struct _GstSynaesthesia
   guint bps;                    /* bytes per sample        */
   guint spf;                    /* samples per video frame */
 
-  gint16 datain[2][SYNAES_SAMPLES];
+  gint16 datain[2][FFT_BUFFER_SIZE];
 
   /* video state */
   gint fps_n, fps_d;
@@ -83,5 +77,4 @@ struct _GstSynaesthesiaClass
 GType gst_synaesthesia_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_SYNAESTHESIA_H__ */
