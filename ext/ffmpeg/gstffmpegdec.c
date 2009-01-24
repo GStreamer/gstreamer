@@ -2540,11 +2540,13 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
     /* MPEG1VIDEO : the mpeg2video decoder is preferred */
+    /* MP1 : Use MP3 for decoding */
     /* MP2 : Use MP3 for decoding */
     if (!strcmp (in_plugin->name, "gif") ||
         !strcmp (in_plugin->name, "vorbis") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
         !strcmp (in_plugin->name, "wavpack") ||
+        !strcmp (in_plugin->name, "mp1") ||
         !strcmp (in_plugin->name, "mp2") ||
         !strcmp (in_plugin->name, "libfaad") ||
         !strcmp (in_plugin->name, "mpeg4aac")) {

@@ -539,6 +539,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     }
       break;
 
+    case CODEC_ID_MP1:
+      /* FIXME: bitrate */
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
+          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 1, NULL);
+      break;
+
     case CODEC_ID_MP2:
       /* FIXME: bitrate */
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
@@ -601,13 +607,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
-  case CODEC_ID_MLP:
-    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-mlp", NULL);
-    break;
+    case CODEC_ID_MLP:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-mlp", NULL);
+      break;
 
-  case CODEC_ID_IMC:
-    caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-imc", NULL);
-    break;
+    case CODEC_ID_IMC:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-imc", NULL);
+      break;
 
       /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
        * is Quicktime's MJPEG-B. LJPEG is lossless JPEG. I don't know what
@@ -1127,6 +1133,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_IMA_WS:
     case CODEC_ID_ADPCM_IMA_SMJPEG:
     case CODEC_ID_ADPCM_IMA_AMV:
+    case CODEC_ID_ADPCM_IMA_ISS:
     case CODEC_ID_ADPCM_MS:
     case CODEC_ID_ADPCM_4XM:
     case CODEC_ID_ADPCM_XA:
@@ -1167,6 +1174,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           break;
         case CODEC_ID_ADPCM_IMA_AMV:
           layout = "amv";
+          break;
+        case CODEC_ID_ADPCM_IMA_ISS:
+          layout = "iss";
           break;
         case CODEC_ID_ADPCM_MS:
           layout = "microsoft";
@@ -2306,7 +2316,8 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
       CODEC_ID_H264,
       CODEC_ID_NONE
     };
-    static enum CodecID mpeg_audio_list[] = { CODEC_ID_MP2,
+    static enum CodecID mpeg_audio_list[] = { CODEC_ID_MP1,
+      CODEC_ID_MP2,
       CODEC_ID_MP3,
       CODEC_ID_NONE
     };
@@ -2583,6 +2594,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           if (gst_structure_get_int (structure, "layer", &layer)) {
             switch (layer) {
               case 1:
+                id = CODEC_ID_MP1;
+                break;
               case 2:
                 id = CODEC_ID_MP2;
                 break;
@@ -2773,6 +2786,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_ADPCM_IMA_DK4;
     } else if (!strcmp (layout, "westwood")) {
       id = CODEC_ID_ADPCM_IMA_WS;
+    } else if (!strcmp (layout, "iss")) {
+      id = CODEC_ID_ADPCM_IMA_ISS;
     } else if (!strcmp (layout, "xa")) {
       id = CODEC_ID_ADPCM_XA;
     } else if (!strcmp (layout, "adx")) {
