@@ -22,8 +22,13 @@
  * SECTION:element-audioecho
  *
  * <refsect2>
- * audioecho adds an echo or reverb effect to an audio stream. The echo
+ * audioecho adds an echo or (simple) reverb effect to an audio stream. The echo
  * delay, intensity and the percentage of feedback can be configured.
+ * <para>
+ * For getting an echo effect you have to set the delay to a larger value,
+ * for example 200ms and more. Everything below will result in a simple
+ * reverb effect, which results in a slightly metallic sounding.
+ * </para>
  * <para>
  * <programlisting>
  * gst-launch filesrc location="melo1.ogg" ! audioconvert ! audioecho delay=500000000 intensity=0.6 feedback=0.4 ! audioconvert ! autoaudiosink
