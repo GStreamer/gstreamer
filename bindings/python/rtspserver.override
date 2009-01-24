@@ -14,7 +14,7 @@ headers
 #define Py_ssize_t int
 #endif 
 
-#include "rtsp-server.h"
+#include <gst/rtsp-server/rtsp-server.h>
 
 typedef struct {
     PyObject_HEAD

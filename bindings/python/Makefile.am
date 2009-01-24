@@ -14,13 +14,13 @@ defs_DATA = $(DEFS)
 defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 OVERRIDES = rtspserver.override
 
-INCLUDES = $(PYTHON_INCLUDES)
+INCLUDES = -I$(top_srcdir) -I$(srcdir) $(PYTHON_INCLUDES)
 
 rtspserver_la_CFLAGS = -I$(top_srcdir)/src \
 		$(PYGOBJECT_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 rtspserver_la_LDFLAGS = -export-symbols-regex "^(initrtspserver|_PyGObject_API).*" \
 	-module -avoid-version $(GST_PLUGIN_LDFLAGS)
-rtspserver_la_LIBADD = $(top_builddir)/src/libgst-rtsp-server.a \
+rtspserver_la_LIBADD = $(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_MAJORMINOR@.la \
 		$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
 		-lgstrtp-@GST_MAJORMINOR@ -lgstrtsp-@GST_MAJORMINOR@ \
         	-lgstsdp-@GST_MAJORMINOR@ $(GST_LIBS) $(LIBM)
