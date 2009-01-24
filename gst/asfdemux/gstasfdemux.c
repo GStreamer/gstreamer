@@ -2237,12 +2237,15 @@ gst_asf_demux_process_metadata (GstASFDemux * demux, guint8 * data,
 
     if (data_type != ASF_DEMUX_DATA_TYPE_DWORD) {
       gst_asf_demux_skip_bytes (data_len, &data, &size);
+      g_free (name_utf8);
       continue;
     }
 
     /* read DWORD */
-    if (size < 4)
+    if (size < 4) {
+      g_free (name_utf8);
       goto not_enough_data;
+    }
 
     ival = gst_asf_demux_get_uint32 (&data, &size);
 
