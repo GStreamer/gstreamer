@@ -4,10 +4,13 @@ apev2mux
 audioamplify
 audiochebband
 audiocheblimit
+audioecho
 audiowsincband
 audiowsinclimit
 audiodynamic
+audiofirfilter
 audioinvert
+audioiirfilter
 audiopanorama
 autodetect
 avimux
