@@ -998,7 +998,14 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
             return current;
           }
+          else {
+            GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "incompatible pads");
+          }
           gst_caps_unref (intersection);
+        }
+        else {
+          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+              "already linked or cannot be linked (peer = %p)", peer);
         }
         GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "unreffing pads");
 
