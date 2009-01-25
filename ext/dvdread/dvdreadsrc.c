@@ -521,15 +521,26 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   /* subtitle */
   for (i = 0; i < src->vts_file->vtsi_mat->nr_of_vts_subp_streams; i++) {
     const subp_attr_t *u;
+    const video_attr_t *v;
+    gint sid;
 
     /* subpicture stream present? */
     if (pgc0 != NULL && (pgc0->subp_control[i] & 0x80000000) == 0)
       continue;
 
     u = &src->vts_file->vtsi_mat->vts_subp_attr[i];
+    v = &src->vts_file->vtsi_mat->vts_video_attr;
+
+    sid = i;
+    if (pgc0 != NULL) {
+      if (v->display_aspect_ratio == 0)         /* 4:3 */
+        sid = (pgc0->subp_control[i] >> 24) & 0x1f;
+      else if (v->display_aspect_ratio == 3)    /* 16:9 */
+        sid = (pgc0->subp_control[i] >> 8) & 0x1f;
+    }
 
     if (u->type) {
-      t = g_strdup_printf ("subtitle-%d-language", i);
+      t = g_strdup_printf ("subtitle-%d-language", sid);
       lang_code[0] = (u->lang_code >> 8) & 0xff;
       lang_code[1] = u->lang_code & 0xff;
       gst_structure_set (s, t, G_TYPE_STRING, lang_code, NULL);
@@ -539,7 +550,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
     }
 
     GST_INFO_OBJECT (src, "[%02d] Subtitle %02d: lang='%s', type=%d",
-        src->title + 1, i, lang_code, u->type);
+        src->title + 1, sid, lang_code, u->type);
   }
 
   src->title_lang_event_pending =
