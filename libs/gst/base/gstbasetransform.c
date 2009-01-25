@@ -586,7 +586,7 @@ no_out_size:
   }
 }
 
-/* get the caps that can be handled by @pad. We perforn:
+/* get the caps that can be handled by @pad. We perform:
  *
  *  - take the caps of peer of otherpad,
  *  - filter against the padtemplate of otherpad, 
