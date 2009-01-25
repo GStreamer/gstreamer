@@ -203,7 +203,9 @@ struct _GstPluginClass {
  *
  * This macro needs to be used to define the entry point and meta data of a
  * plugin. One would use this macro to export a plugin, so that it can be used
- * by other applications
+ * by other applications.
+ *
+ * The macro uses a define named PACKAGE for the #GstPluginDesc,source field.
  */
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
 GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
@@ -236,9 +238,12 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
  * local plugin. One would use this macro to define a local plugin that can only
  * be used by the own application.
  *
+ * The macro uses a define named PACKAGE for the #GstPluginDesc.source field.
+ *
  * Deprecated: Use gst_plugin_register_static() instead. This macro was
  * deprecated because it uses constructors, which is a compiler feature not
  * available on all compilers.
+ *
  */
 /* We don't have deprecation guards here on purpose, it's enough to have
  * deprecation guards around _gst_plugin_register_static(), and will result in
