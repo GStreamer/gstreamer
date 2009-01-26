@@ -23,7 +23,9 @@
 
 #include <glib.h>
 
-/* FIXME: we should set this automatically based on resy */
+/* FIXME: we should set this automatically based on resy
+ * see synaescope.c::synaesthesia_resize()
+ */
 #define FFT_BUFFER_SIZE_LOG 10
 #define FFT_BUFFER_SIZE (1 << FFT_BUFFER_SIZE_LOG)
 

@@ -77,13 +77,19 @@ struct syn_instance
   double corr_l[FFT_BUFFER_SIZE];
   double corr_r[FFT_BUFFER_SIZE];
   int clarity[FFT_BUFFER_SIZE]; /* Surround sound */
+  
+  /* pre calculated values */
+  int heightFactor;
+  int heightAdd;
+  double brightFactor2;  
 };
 
-/* Shared lookup tables */
+/* Shared lookup tables for the FFT */
 static double fftmult[FFT_BUFFER_SIZE / 2 + 1];
 static double cosTable[FFT_BUFFER_SIZE];
 static double negSinTable[FFT_BUFFER_SIZE];
 static int bitReverse[FFT_BUFFER_SIZE];
+/* Shared lookup tables for colors */
 static int scaleDown[256];
 static guint32 colEq[256];
 
@@ -128,11 +134,7 @@ synaescope_coreGo (syn_instance * si)
   int i, j;
   register guint32 *ptr;
   register guint32 *end;
-  int heightFactor;
-  int actualHeight;
-  int heightAdd;
-  double brightFactor2;
-  long int brtot;
+  long int brtot = 0;
 
   memcpy (si->pcm_l, si->pcmt_l, sizeof (si->pcm_l));
   memcpy (si->pcm_r, si->pcmt_r, sizeof (si->pcm_r));
@@ -180,40 +182,23 @@ synaescope_coreGo (syn_instance * si)
     ptr++;
   } while (ptr < end);
 
-  heightFactor = FFT_BUFFER_SIZE / 2 / si->resy + 1;
-  actualHeight = FFT_BUFFER_SIZE / 2 / heightFactor;
-  heightAdd = (si->resy + actualHeight) >> 1;
-
-  /* Correct for window size */
-  brightFactor2 = (si->brightFactor / 65536.0 / FFT_BUFFER_SIZE) *
-      sqrt (actualHeight * si->resx / (320.0 * 200.0));
-
-  brtot = 0;
   for (i = 1; i < FFT_BUFFER_SIZE / 2; i++) {
-    /*int h = (int)( corr_r[i]*280 / (corr_l[i]+corr_r[i]+0.0001)+20 ); */
     if (si->corr_l[i] > 0 || si->corr_r[i] > 0) {
-      int h =
-          (int) (si->corr_r[i] * si->resx / (si->corr_l[i] + si->corr_r[i]));
-
-/*      int h = (int)( si->resx - 1 ); */
-      int br1, br2, br =
-          (int) ((si->corr_l[i] + si->corr_r[i]) * i * brightFactor2);
-      int px = h, py = heightAdd - i / heightFactor;
+      int br1, br2;
+      double fc = si->corr_l[i] + si->corr_r[i];
+      int br = (int) (fc * i * si->brightFactor2);
+      int px = (int) (si->corr_r[i] * si->resx / fc);
+      int py = si->heightAdd - i / si->heightFactor;
 
       brtot += br;
       br1 = br * (si->clarity[i] + 128) >> 8;
       br2 = br * (128 - si->clarity[i]) >> 8;
-      if (br1 < 0)
-        br1 = 0;
-      else if (br1 > 255)
-        br1 = 255;
-      if (br2 < 0)
-        br2 = 0;
-      else if (br2 > 255)
-        br2 = 255;
-      /*unsigned char *p = output+ h*2+(164-((i<<8)>>FFT_BUFFER_SIZE_LOG))*(si->resx*2);  */
+      br1 = CLAMP (br1, 0, 255);
+      br2 = CLAMP (br2, 0, 255);
 
+      /* if we are close to a border */
       if (px < 30 || py < 30 || px > si->resx - 30 || py > si->resy - 30) {
+        /* draw a spark */
         addPixel (si, px, py, br1, br2);
         for (j = 1; br1 > 0 || br2 > 0;
             j++, br1 = scaleDown[br1], br2 = scaleDown[br2]) {
@@ -223,8 +208,9 @@ synaescope_coreGo (syn_instance * si)
           addPixel (si, px, py - j, br1, br2);
         }
       } else {
-        unsigned char *p = si->output + px * 2 + py * si->resx * 2, *p1 =
-            p, *p2 = p, *p3 = p, *p4 = p;
+        unsigned char *p = si->output + px * 2 + py * si->resx * 2;
+        unsigned char *p1 = p, *p2 = p, *p3 = p, *p4 = p;
+        /* draw a spark */
         addPixelFast (p, br1, br2);
         for (; br1 > 0 || br2 > 0; br1 = scaleDown[br1], br2 = scaleDown[br2]) {
           p1 += 2;
@@ -394,6 +380,7 @@ synaesthesia_resize (syn_instance * si, guint resx, guint resy)
 {
   unsigned char *output = NULL;
   guint32 *display = NULL;
+  double actualHeight;
 
   /* FIXME: FFT_BUFFER_SIZE is reated to resy, right now we get black borders on
    * top and below
@@ -411,6 +398,24 @@ synaesthesia_resize (syn_instance * si, guint resx, guint resy)
   si->resy = resy;
   si->output = output;
   si->display = display;
+  
+  /* factors for height scaling
+   * the bigger FFT_BUFFER_SIZE, the more finegrained steps we have
+   * should we report the real hight, so that xvimagesink can scale?
+   */
+   // 512 values , resy=256 -> highFc=2
+  si->heightFactor = FFT_BUFFER_SIZE / 2 / si->resy + 1;
+  actualHeight = FFT_BUFFER_SIZE / 2 / si->heightFactor;
+  si->heightAdd = (si->resy + actualHeight) / 2;
+  
+  /*printf ("resy=%u, heightFactor=%d, heightAdd=%d, actualHeight=%d\n",
+    si->resy, si->heightFactor, si->heightAdd, actualHeight);
+  */
+
+  /* Correct for window size */
+  si->brightFactor2 = (si->brightFactor / 65536.0 / FFT_BUFFER_SIZE) *
+      sqrt (actualHeight * si->resx / (320.0 * 200.0));
+
   return TRUE;
 
 Error:
