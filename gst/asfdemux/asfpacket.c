@@ -317,6 +317,9 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
           GST_TIME_ARGS (payload.duration));
     } else if (payload.rep_data_len != 0) {
       GST_WARNING_OBJECT (demux, "invalid replicated data length, very bad");
+      *p_data += payload_len;
+      *p_size -= payload_len;
+      return FALSE;
     }
 
     GST_LOG_OBJECT (demux, "media object offset : %u", payload.mo_offset);
