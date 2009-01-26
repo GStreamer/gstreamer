@@ -96,6 +96,7 @@ G_STMT_START {                                       \
   unsigned char c = command;                         \
   ssize_t res;                                       \
   res = write (set->control_write_fd.fd, &c, 1);     \
+  set->control_pending = TRUE;                       \
 } G_STMT_END
 
 #define READ_COMMAND(set, command, res)              \
@@ -140,7 +141,6 @@ struct _GstPoll
   GstPollFD control_write_fd;
 #else
   GArray *active_fds_ignored;
-
   GArray *events;
   GArray *active_events;
 
@@ -151,6 +151,7 @@ struct _GstPoll
   gboolean new_controllable;
   gboolean waiting;
   gboolean flushing;
+  gboolean control_pending;
 };
 
 static gint
@@ -465,6 +466,7 @@ gst_poll_new (gboolean controllable)
 
   nset = g_slice_new0 (GstPoll);
   nset->lock = g_mutex_new ();
+  nset->control_pending = FALSE;
 #ifndef G_OS_WIN32
   nset->mode = GST_POLL_MODE_AUTO;
   nset->fds = g_array_new (FALSE, FALSE, sizeof (struct pollfd));
@@ -982,7 +984,7 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
   /* check if the poll/select was aborted due to a command */
   if (set->controllable) {
 #ifndef G_OS_WIN32
-    while (TRUE) {
+    while (TRUE && set->control_pending) {
       guchar cmd;
       gint result;
 
@@ -993,6 +995,7 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
       READ_COMMAND (set, cmd, result);
       if (result <= 0) {
         /* no more commands, quit the loop */
+        set->control_pending = FALSE;
         break;
       }
 
