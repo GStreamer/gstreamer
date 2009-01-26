@@ -490,6 +490,8 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
     return GST_FLOW_ERROR;
   }
 
+  demux->current_partition->primer.offset = demux->offset;
+
   return GST_FLOW_OK;
 }
 
@@ -605,11 +607,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -1084,8 +1086,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   GST_DEBUG_OBJECT (demux, "Switching to component %u", pad->current_component);
 
   pad->component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component]);
   if (pad->component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1093,8 +1095,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->component->source_package
       || !pad->component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->source_package)->
-      tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1696,7 +1698,9 @@ next_try:
   }
 
   /* parse metadata */
-  while (TRUE) {
+  while (demux->offset <
+      demux->run_in + demux->current_partition->primer.offset +
+      demux->current_partition->partition.header_byte_count) {
     ret =
         gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
         &read);
@@ -1732,7 +1736,9 @@ next_try:
       gst_buffer_unref (buffer);
       buffer = NULL;
     } else {
-      break;
+      demux->offset += read;
+      gst_buffer_unref (buffer);
+      buffer = NULL;
     }
   }
 
@@ -1768,8 +1774,9 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
 
   if (demux->update_metadata
       && demux->preface
-      && !mxf_is_metadata (key) && !mxf_is_descriptive_metadata (key)
-      && !mxf_is_fill (key)) {
+      && demux->offset >=
+      demux->run_in + demux->current_partition->primer.offset +
+      demux->current_partition->partition.header_byte_count) {
     demux->current_partition->parsed_metadata = TRUE;
     if ((ret =
             gst_mxf_demux_handle_header_metadata_resolve_references (demux)) !=

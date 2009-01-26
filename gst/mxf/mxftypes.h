@@ -112,6 +112,7 @@ typedef struct {
 
 /* SMPTE 377M 8.1 */
 typedef struct {
+  guint64 offset;
   GHashTable *mappings;
 } MXFPrimerPack;
 
