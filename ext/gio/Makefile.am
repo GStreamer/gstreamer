@@ -12,8 +12,8 @@ libgstgio_la_SOURCES = \
 		gstgiostreamsink.c \
 		gstgiostreamsrc.c
 
-libgstgio_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GIO_CFLAGS)
-libgstgio_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GIO_LIBS)
+libgstgio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstgio_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS)
 libgstgio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GIO_LDFLAGS)
 libgstgio_la_LIBTOOLFLAGS = --tag=disable-static
 
