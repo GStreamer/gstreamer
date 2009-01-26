@@ -522,8 +522,8 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (multipart,
         "pushing buffer with timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-    GST_DEBUG_OBJECT (multipart, "buffer has caps %s",
-        gst_caps_to_string (GST_BUFFER_CAPS (outbuf)));
+    GST_DEBUG_OBJECT (multipart, "buffer has caps %" GST_PTR_FORMAT,
+        GST_BUFFER_CAPS (outbuf));
     res = gst_pad_push (srcpad->pad, outbuf);
     if (res != GST_FLOW_OK)
       break;
