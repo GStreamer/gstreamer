@@ -326,6 +326,8 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   guint32 timestamp;
   gint gap;
   guint16 seqnum;
+  guint8 flags;
+  guint16 outflags;
 
   /* get pointers to the packet data */
   gst_rdt_packet_data_peek_data (packet, &data, &size);
@@ -339,11 +341,12 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   /* copy over some things */
   stream_id = gst_rdt_packet_data_get_stream_id (packet);
   timestamp = gst_rdt_packet_data_get_timestamp (packet);
+  flags = gst_rdt_packet_data_get_flags (packet);
 
   seqnum = gst_rdt_packet_data_get_seq (packet);
 
-  GST_DEBUG_OBJECT (rdtdepay, "stream_id %u, timestamp %u, seqnum %d",
-      stream_id, timestamp, seqnum);
+  GST_DEBUG_OBJECT (rdtdepay, "stream_id %u, timestamp %u, seqnum %d, flags %d",
+      stream_id, timestamp, seqnum, flags);
 
   if (rdtdepay->next_seqnum != -1) {
     gap = gst_rdt_buffer_compare_seqnum (seqnum, rdtdepay->next_seqnum);
@@ -375,11 +378,16 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   if (rdtdepay->next_seqnum == 0xff00)
     rdtdepay->next_seqnum = 0;
 
+  if ((flags & 1) == 0)
+    outflags = 2;
+  else
+    outflags = 0;
+
   GST_WRITE_UINT16_BE (outdata + 0, 0); /* version   */
   GST_WRITE_UINT16_BE (outdata + 2, size + 12); /* length    */
   GST_WRITE_UINT16_BE (outdata + 4, stream_id); /* stream    */
   GST_WRITE_UINT32_BE (outdata + 6, timestamp); /* timestamp */
-  GST_WRITE_UINT16_BE (outdata + 10, 0);        /* flags     */
+  GST_WRITE_UINT16_BE (outdata + 10, outflags);        /* flags     */
   memcpy (outdata + 12, data, size);
 
   GST_DEBUG_OBJECT (rdtdepay, "Pushing packet, outtime %" GST_TIME_FORMAT,
