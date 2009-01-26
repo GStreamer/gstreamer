@@ -179,7 +179,7 @@ static int64_t
 gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
 {
   GstProtocolInfo *info;
-  guint64 newpos;
+  guint64 newpos = 0;
 
   GST_DEBUG ("Seeking to %" G_GINT64_FORMAT ", whence=%d", pos, whence);
 
@@ -193,28 +193,33 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
       /* sinkpad */
       switch (whence) {
         case SEEK_SET:
-          info->offset = (guint64) pos;
+          newpos = (guint64) pos;
           break;
         case SEEK_CUR:
-          info->offset += pos;
+          newpos = info->offset + pos;
           break;
         case SEEK_END:
+        case AVSEEK_SIZE:
           /* ffmpeg wants to know the current end position in bytes ! */
         {
           GstFormat format = GST_FORMAT_BYTES;
           gint64 duration;
 
+          GST_DEBUG ("Seek end");
+
           if (gst_pad_is_linked (info->pad))
             if (gst_pad_query_duration (GST_PAD_PEER (info->pad), &format,
                     &duration))
-              info->offset = ((guint64) duration) + pos;
+              newpos = ((guint64) duration) + pos;
         }
           break;
         default:
+          g_assert (0);
           break;
       }
       /* FIXME : implement case for push-based behaviour */
-      newpos = info->offset;
+      if (whence != AVSEEK_SIZE)
+        info->offset = newpos;
     }
       break;
     case URL_WRONLY:
@@ -244,7 +249,7 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
       break;
   }
 
-  GST_DEBUG ("Now at offset %lld", info->offset);
+  GST_DEBUG ("Now at offset %lld (returning %lld)", info->offset, newpos);
   return newpos;
 }
 
