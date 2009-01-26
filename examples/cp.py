@@ -44,7 +44,8 @@ def filter(input, output):
 
    # create a new bin to hold the elements
    bin = gst.parse_launch('filesrc name=source ! ' +
-                          # This 'statistics' element is depreciated in 0.10
+                          'progressreport ! ' +
+                           # This 'statistics' element is depreciated in 0.10
                           #'statistics silent=false buffer-update-freq=1 ' +
                           #'update_on_eos=true ! ' +
                           'filesink name=sink')
