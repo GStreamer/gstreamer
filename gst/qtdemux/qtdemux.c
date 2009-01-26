@@ -4722,6 +4722,12 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'),
           NULL);
       break;
+    case GST_MAKE_FOURCC ('v', '2', '1', '0'):
+      _codec ("Raw packed YUV 10-bit 4:2:2");
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('v', '2', '1', '0'),
+          NULL);
+      break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
       _codec ("MPEG-1 video");
@@ -4882,6 +4888,14 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('t', 'i', 'f', 'f'):
       _codec ("TIFF still images");
       caps = gst_caps_new_simple ("image/tiff", NULL);
+      break;
+    case GST_MAKE_FOURCC ('i', 'c', 'o', 'd'):
+      _codec ("Apple Intermediate Codec");
+      caps = gst_caps_from_string ("video/x-apple-intermediate-codec");
+      break;
+    case GST_MAKE_FOURCC ('A', 'V', 'd', 'n'):
+      _codec ("AVID DNxHD");
+      caps = gst_caps_from_string ("video/x-dnxhd");
       break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
