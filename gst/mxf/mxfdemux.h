@@ -28,6 +28,7 @@
 #include "mxfmetadata.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_MXF_DEMUX \
   (gst_mxf_demux_get_type())
 #define GST_MXF_DEMUX(obj) \
@@ -41,12 +42,80 @@ G_BEGIN_DECLS
 typedef struct _GstMXFDemux GstMXFDemux;
 typedef struct _GstMXFDemuxClass GstMXFDemuxClass;
 
+#define GST_TYPE_MXF_DEMUX_PAD (gst_mxf_demux_pad_get_type())
+#define GST_MXF_DEMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_CAST((pad),GST_TYPE_MXF_DEMUX_PAD,GstMXFDemuxPad))
+#define GST_MXF_DEMUX_PAD_CAST(pad) ((GstMXFDemuxPad *) pad)
+#define GST_IS_MXF_DEMUX_PAD(pad) (G_TYPE_CHECK_INSTANCE_TYPE((pad),GST_TYPE_MXF_DEMUX_PAD))
+typedef struct _GstMXFDemuxPad GstMXFDemuxPad;
+typedef struct _GstMXFDemuxPadClass GstMXFDemuxPadClass;
+
 typedef struct
 {
   MXFPartitionPack partition;
   MXFPrimerPack primer;
   gboolean parsed_metadata;
 } GstMXFDemuxPartition;
+
+typedef struct
+{
+  guint64 offset;
+  gboolean keyframe;
+} GstMXFDemuxIndex;
+
+typedef struct
+{
+  guint32 body_sid;
+  guint32 track_number;
+
+  guint64 position;
+  guint64 duration;
+
+  GstMXFDemuxIndex *offsets;
+
+  guint64 last_offset;
+  guint64 last_indexed_offset;
+
+  MXFMetadataSourcePackage *source_package;
+  MXFMetadataTimelineTrack *source_track;
+
+  gpointer mapping_data;
+  const MXFEssenceElementHandler *handler;
+  MXFEssenceElementHandleFunc handle_func;
+
+  GstTagList *tags;
+
+  GstCaps *caps;
+} GstMXFDemuxEssenceTrack;
+
+struct _GstMXFDemuxPad
+{
+  GstPad parent;
+
+  guint32 track_id;
+  gboolean need_segment;
+
+  GstClockTime last_stop;
+  GstFlowReturn last_flow;
+  gboolean eos, discont;
+
+  GstTagList *tags;
+
+  MXFMetadataGenericPackage *material_package;
+  MXFMetadataTimelineTrack *material_track;
+
+  guint current_component_index;
+  MXFMetadataSourceClip *current_component;
+
+  gint64 current_component_start;
+  gint64 current_component_position;
+
+  GstMXFDemuxEssenceTrack *current_essence_track;
+};
+
+struct _GstMXFDemuxPadClass
+{
+  GstPadClass parent;
+};
 
 struct _GstMXFDemux
 {
@@ -78,8 +147,10 @@ struct _GstMXFDemux
   GList *partitions;
   GstMXFDemuxPartition *current_partition;
 
+  GArray *essence_tracks;
+  GList *pending_index_table_segments;
+
   GArray *random_index_pack;
-  GArray *index_table;
 
   /* Structural metadata */
   gboolean update_metadata;
