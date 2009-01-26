@@ -423,3 +423,35 @@ gst_rdt_packet_data_get_timestamp (GstRDTPacket * packet)
 
   return result;
 }
+
+guint8
+gst_rdt_packet_data_get_flags (GstRDTPacket * packet)
+{
+  guint8 result;
+  guint header;
+  gboolean length_included_flag;
+  guint8 *bufdata;
+  guint bufsize;
+
+  g_return_val_if_fail (packet != NULL, 0);
+  g_return_val_if_fail (GST_RDT_IS_DATA_TYPE (packet->type), 0);
+
+  bufdata = GST_BUFFER_DATA (packet->buffer);
+  bufsize = GST_BUFFER_SIZE (packet->buffer);
+
+  header = packet->offset;
+
+  length_included_flag = (bufdata[header] & 0x80) == 0x80;
+
+  /* skip seq_no and header bits */
+  header += 3;
+
+  if (length_included_flag) {
+    /* skip length */
+    header += 2;
+  }
+  /* get flags */
+  result = bufdata[header];
+
+  return result;
+}
