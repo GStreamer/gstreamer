@@ -3790,7 +3790,8 @@ failed:
 }
 
 static GstRTSPResult
-gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
+gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports,
+    gint orig_rtpport, gint orig_rtcpport)
 {
   GstRTSPSrc *src;
   gint nr_udp, nr_int;
@@ -3819,8 +3820,13 @@ gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
     goto done;
 
   if (nr_udp > 0) {
-    if (!gst_rtspsrc_alloc_udp_ports (stream, &rtpport, &rtcpport))
-      goto failed;
+    if (!orig_rtpport || !orig_rtcpport) {
+      if (!gst_rtspsrc_alloc_udp_ports (stream, &rtpport, &rtcpport))
+        goto failed;
+    } else {
+      rtpport = orig_rtpport;
+      rtcpport = orig_rtcpport;
+    }
   }
 
   str = g_string_new ("");
@@ -3880,6 +3886,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   GstRTSPStream *stream = NULL;
   GstRTSPLowerTrans protocols;
   GstRTSPStatusCode code;
+  gint rtpport, rtcpport;
 
   /* we initially allow all configured lower transports. based on the URL
    * transports and the replies from the server we narrow them down. */
@@ -3892,9 +3899,11 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   src->free_channel = 0;
   src->interleaved = FALSE;
   src->need_activate = FALSE;
+  rtpport = rtcpport = 0;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
+    gint retry = 0;
 
     stream = (GstRTSPStream *) walk->data;
 
@@ -3935,6 +3944,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
         stream->setup_url);
 
+retry:
     /* create a string with all the transports */
     res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
     if (res < 0)
@@ -3944,7 +3954,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
     /* replace placeholders with real values, this function will optionally
      * allocate UDP ports and other info needed to execute the setup request */
-    res = gst_rtspsrc_prepare_transports (stream, &transports);
+    res = gst_rtspsrc_prepare_transports (stream, &transports,
+        retry > 0 ? rtpport : 0, retry > 0 ? rtcpport : 0);
     if (res < 0)
       goto setup_transport_failed;
 
@@ -3971,8 +3982,17 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       case GST_RTSP_STS_UNSUPPORTED_TRANSPORT:
         gst_rtsp_message_unset (&request);
         gst_rtsp_message_unset (&response);
-        /* cleanup of leftover transport and move to the next stream */
+        /* cleanup of leftover transport */
         gst_rtspsrc_stream_free_udp (stream);
+        /* MS WMServer RTSP MUST use same UDP pair in all SETUP requests;
+         * we might be in this case */
+        if (stream->container && rtpport && rtcpport && !retry) {
+          GST_DEBUG_OBJECT (src, "retrying with original port pair %u-%u",
+              rtpport, rtcpport);
+          retry++;
+          goto retry;
+        }
+        /* give up on this stream and move to the next stream */
         continue;
       default:
         /* cleanup of leftover transport and move to the next stream */
@@ -4029,13 +4049,17 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
           break;
       }
 
-      if (!stream->container || !src->interleaved) {
+      if (!stream->container || (!src->interleaved && !retry)) {
         /* now configure the stream with the selected transport */
         if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
           GST_DEBUG_OBJECT (src,
               "could not configure stream %p transport, skipping stream",
               stream);
           goto next;
+        } else if (stream->udpsrc[0] && stream->udpsrc[1]) {
+          /* retain the first allocated UDP port pair */
+          g_object_get (G_OBJECT (stream->udpsrc[0]), "port", &rtpport, NULL);
+          g_object_get (G_OBJECT (stream->udpsrc[1]), "port", &rtcpport, NULL);
         }
       }
       /* we need to activate at least one streams when we detect activity */
