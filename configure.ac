@@ -836,9 +836,14 @@ AG_GST_CHECK_FEATURE(SHOUT2, [Shoutcast/Icecast client library], shout2, [
 dnl *** soup ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUP, true)
 AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
-  PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.3.2, HAVE_SOUP="yes", [
-    HAVE_SOUP="no"
-    AC_MSG_RESULT(no)
+  PKG_CHECK_MODULES(SOUP, libsoup-gnome-2.4 >= 2.3.2, [
+    HAVE_SOUP="yes"
+    AC_DEFINE(HAVE_LIBSOUP_GNOME, 1, [soup gnome integration])
+  ],[
+    PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.3.2, HAVE_SOUP="yes", [
+      HAVE_SOUP="no"
+      AC_MSG_RESULT(no)
+    ])
   ])
   AC_SUBST(SOUP_CFLAGS)
   AC_SUBST(SOUP_LIBS)

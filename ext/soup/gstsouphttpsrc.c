@@ -25,6 +25,8 @@
  * <para>
  * An HTTP proxy must be specified by its URL.
  * If the "http_proxy" environment variable is set, its value is used.
+ * If built with libsoup's GNOME integration features, the GNOME proxy
+ * configuration will be used, or failing that, proxy autodetection.
  * The element-souphttpsrc::proxy property can be used to override the
  * default.
  * </para>
@@ -94,7 +96,11 @@
 #endif
 #include <gst/gstelement.h>
 #include <gst/gst-i18n-plugin.h>
+#ifdef HAVE_LIBSOUP_GNOME
+#include <libsoup/soup-gnome.h>
+#else
 #include <libsoup/soup.h>
+#endif
 #include "gstsouphttpsrc.h"
 
 #include <gst/tag/tag.h>
@@ -1127,15 +1133,21 @@ gst_soup_http_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
-  if (src->proxy == NULL)
+  if (src->proxy == NULL) {
     src->session =
         soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
-        src->context, SOUP_SESSION_USER_AGENT, src->user_agent, NULL);
-  else
+        src->context, SOUP_SESSION_USER_AGENT, src->user_agent,
+#ifdef HAVE_LIBSOUP_GNOME
+        SOUP_SESSION_ADD_FEATURE, SOUP_TYPE_PROXY_RESOLVER_GNOME,
+#endif
+        NULL);
+  } else {
     src->session =
         soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
         src->context, SOUP_SESSION_PROXY_URI, src->proxy,
         SOUP_SESSION_USER_AGENT, src->user_agent, NULL);
+  }
+
   if (!src->session) {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
         (NULL), ("Failed to create async session"));
