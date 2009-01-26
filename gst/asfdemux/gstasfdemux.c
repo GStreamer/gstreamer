@@ -23,9 +23,6 @@
  * - _loop():
  *   stop if at end of segment if != end of file, ie. demux->segment.stop
  *
- * - _chain(): fix newsegment events for live streams where timestamps don't
- *   start at zero (need sample files/streams for this)
- *
  * - fix packet parsing:
  *   there's something wrong with timestamps for packets with keyframes,
  *   and durations too.
@@ -264,6 +261,7 @@ gst_asf_demux_activate_push (GstPad * sinkpad, gboolean active)
 
   demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
+  demux->push_mode = TRUE;
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->streaming = TRUE;
 
@@ -276,6 +274,7 @@ gst_asf_demux_activate_pull (GstPad * pad, gboolean active)
   GstASFDemux *demux;
 
   demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (pad));
+  demux->push_mode = FALSE;
 
   if (active) {
     demux->state = GST_ASF_DEMUX_STATE_HEADER;
@@ -313,8 +312,17 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       }
 
       GST_OBJECT_LOCK (demux);
+      if (demux->packet_size && newsegment_start > demux->data_offset)
+        demux->packet = (newsegment_start - demux->data_offset) /
+            demux->packet_size;
+      else
+        demux->packet = 0;
+      demux->first_ts = GST_CLOCK_TIME_NONE;
+      demux->need_newsegment = TRUE;
       gst_asf_demux_reset_stream_state_after_discont (demux);
       GST_OBJECT_UNLOCK (demux);
+
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_EOS:{
@@ -330,6 +338,14 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_asf_demux_send_event_unlocked (demux, event);
       break;
     }
+
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
+      GST_OBJECT_LOCK (demux);
+      gst_asf_demux_reset_stream_state_after_discont (demux);
+      GST_OBJECT_UNLOCK (demux);
+      gst_asf_demux_send_event_unlocked (demux, event);
+      break;
 
     default:
       ret = gst_pad_event_default (pad, event);
@@ -449,6 +465,11 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
   accurate = ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
   keyunit_sync = ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
+
+  if (demux->push_mode) {
+    gst_event_ref (event);
+    return gst_pad_push_event (demux->sinkpad, event);
+  }
 
   /* unlock the streaming thread */
   if (flush) {

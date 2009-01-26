@@ -109,6 +109,8 @@ gboolean        gst_rdt_packet_data_peek_data     (GstRDTPacket *packet, guint8 
 guint16         gst_rdt_packet_data_get_stream_id (GstRDTPacket *packet);
 guint32         gst_rdt_packet_data_get_timestamp (GstRDTPacket *packet);
 
+guint8          gst_rdt_packet_data_get_flags     (GstRDTPacket * packet);
+
 /* utils */
 gint            gst_rdt_buffer_compare_seqnum     (guint16 seqnum1, guint16 seqnum2);
 

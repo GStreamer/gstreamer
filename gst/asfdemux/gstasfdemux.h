@@ -171,6 +171,7 @@ struct _GstASFDemux {
   gboolean             need_newsegment;  /* do we need to send a new-segment event? */
   gboolean             segment_running;  /* if we've started the current segment    */
   gboolean             streaming;        /* TRUE if we are operating chain-based    */
+  gboolean             push_mode;        /* are we operating in push_mode? */
 
   /* Descrambler settings */
   guint8               span;
