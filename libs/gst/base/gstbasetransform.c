@@ -491,7 +491,10 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
       }
       GST_LOG_OBJECT (trans, "merged: (%d)", gst_caps_get_size (ret));
       /* we can't do much simplification here because we don't really want to
-       * change the caps order */
+       * change the caps order
+       gst_caps_do_simplify (ret);
+       GST_DEBUG_OBJECT (trans, "simplified: (%d)", gst_caps_get_size (ret));
+       */
     }
   } else {
     GST_DEBUG_OBJECT (trans, "identity from: %" GST_PTR_FORMAT, caps);

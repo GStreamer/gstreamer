@@ -265,6 +265,7 @@ gst_base_src_get_type (void)
   }
   return base_src_type;
 }
+
 static GstCaps *gst_base_src_getcaps (GstPad * pad);
 static gboolean gst_base_src_setcaps (GstPad * pad, GstCaps * caps);
 static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
@@ -2405,6 +2406,8 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
       }
     }
     gst_caps_unref (caps);
+  } else {
+    GST_DEBUG_OBJECT (basesrc, "no common caps");
   }
   return result;
 
