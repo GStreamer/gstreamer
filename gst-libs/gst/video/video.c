@@ -220,6 +220,36 @@ error_overflow:
 }
 
 /**
+ * gst_video_format_parse_caps_interlaced:
+ * @caps: the fixed #GstCaps to parse
+ * @interlaced: whether @caps represents interlaced video or not, may be NULL (output)
+ *
+ * Extracts whether the caps represents interlaced content or not and places it
+ * in @interlaced.
+ *
+ * Since: 0.10.22
+ *
+ * Returns: TRUE if @caps was parsed correctly.
+ */
+gboolean
+gst_video_format_parse_caps_interlaced (GstCaps * caps, gboolean * interlaced)
+{
+  GstStructure *structure;
+
+  if (!gst_caps_is_fixed (caps))
+    return FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (interlaced) {
+    if (!gst_structure_get_boolean (structure, "interlaced", interlaced))
+      *interlaced = FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_video_format_parse_caps:
  * @caps: the #GstCaps to parse
  * @format: the #GstVideoFormat of the video represented by @caps (output)
@@ -314,6 +344,7 @@ gst_video_format_parse_caps (GstCaps * caps, GstVideoFormat * format,
   return ok;
 }
 
+
 /**
  * gst_video_parse_caps_framerate:
  * @caps: pointer to a #GstCaps instance
@@ -380,7 +411,7 @@ gst_video_parse_caps_pixel_aspect_ratio (GstCaps * caps, int *par_n, int *par_d)
 }
 
 /**
- * gst_video_format_new_caps:
+ * gst_video_format_new_caps_interlaced:
  * @format: the #GstVideoFormat describing the raw video format
  * @width: width of video
  * @height: height of video
@@ -388,16 +419,18 @@ gst_video_parse_caps_pixel_aspect_ratio (GstCaps * caps, int *par_n, int *par_d)
  * @framerate_d: denominator of frame rate
  * @par_n: numerator of pixel aspect ratio
  * @par_d: denominator of pixel aspect ratio
+ * @interlaced: #TRUE if the format is interlaced
  *
  * Creates a new #GstCaps object based on the parameters provided.
  *
- * Since: 0.10.16
+ * Since: 0.10.22
  *
  * Returns: a new #GstCaps object, or NULL if there was an error
  */
 GstCaps *
-gst_video_format_new_caps (GstVideoFormat format, int width, int height,
-    int framerate_n, int framerate_d, int par_n, int par_d)
+gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
+    int height, int framerate_n, int framerate_d, int par_n, int par_d,
+    gboolean interlaced)
 {
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
   g_return_val_if_fail (width > 0 && height > 0, NULL);
@@ -408,7 +441,8 @@ gst_video_format_new_caps (GstVideoFormat format, int width, int height,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+        "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
   }
   if (gst_video_format_is_rgb (format)) {
     GstCaps *caps;
@@ -472,7 +506,8 @@ gst_video_format_new_caps (GstVideoFormat format, int width, int height,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+        "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
     if (have_alpha) {
       alpha_mask =
           mask >> (8 * gst_video_format_get_component_offset (format, 3, width,
@@ -482,6 +517,30 @@ gst_video_format_new_caps (GstVideoFormat format, int width, int height,
     return caps;
   }
   return NULL;
+}
+
+/**
+ * gst_video_format_new_caps:
+ * @format: the #GstVideoFormat describing the raw video format
+ * @width: width of video
+ * @height: height of video
+ * @framerate_n: numerator of frame rate
+ * @framerate_d: denominator of frame rate
+ * @par_n: numerator of pixel aspect ratio
+ * @par_d: denominator of pixel aspect ratio
+ *
+ * Creates a new #GstCaps object based on the parameters provided.
+ *
+ * Since: 0.10.16
+ *
+ * Returns: a new #GstCaps object, or NULL if there was an error
+ */
+GstCaps *
+gst_video_format_new_caps (GstVideoFormat format, int width, int height,
+    int framerate_n, int framerate_d, int par_n, int par_d)
+{
+  return gst_video_format_new_caps_interlaced (format, width, height,
+      framerate_n, framerate_d, par_n, par_d, FALSE);
 }
 
 /**

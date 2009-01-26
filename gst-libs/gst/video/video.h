@@ -229,6 +229,29 @@ typedef enum {
         "height = " GST_VIDEO_SIZE_RANGE ", "                           \
         "framerate = " GST_VIDEO_FPS_RANGE
 
+/* buffer flags */
+
+/**
+ * GST_VIDEO_BUFFER_TFF:
+ * If the @GstBuffer is interlaced, then the first field in the video frame is
+ * the top field.  If unset, the bottom field is first.
+ */
+#define GST_VIDEO_BUFFER_TFF GST_BUFFER_FLAG_MEDIA1
+
+/**
+ * GST_VIDEO_BUFFER_RFF:
+ * If the @GstBuffer is interlaced, then the first field (as defined by the
+ * @GST_VIDEO_BUFFER_TFF flag setting) is repeated.
+ */
+#define GST_VIDEO_BUFFER_RFF GST_BUFFER_FLAG_MEDIA2
+
+/**
+ * GST_VIDEO_BUFFER_ONEFIELD:
+ * If the #GstBuffer is interlaced, the only the first field (as defined by the
+ * @GST_VIDEO_BUFFER_TFF flag setting) is to be displayed.
+ */
+#define GST_VIDEO_BUFFER_ONEFIELD GST_BUFFER_FLAG_MEDIA3
+
 /* functions */
 const GValue *gst_video_frame_rate (GstPad *pad);
 gboolean gst_video_get_size   (GstPad *pad,
@@ -242,6 +265,7 @@ gboolean gst_video_calculate_display_ratio (guint *dar_n, guint *dar_d,
 
 gboolean gst_video_format_parse_caps (GstCaps *caps, GstVideoFormat *format,
     int *width, int *height);
+gboolean gst_video_format_parse_caps_interlaced (GstCaps *caps, gboolean *interlaced);
 gboolean gst_video_parse_caps_framerate (GstCaps *caps,
     int *fps_n, int *fps_d);
 gboolean gst_video_parse_caps_pixel_aspect_ratio (GstCaps *caps,
@@ -249,6 +273,9 @@ gboolean gst_video_parse_caps_pixel_aspect_ratio (GstCaps *caps,
 GstCaps * gst_video_format_new_caps (GstVideoFormat format,
     int width, int height, int framerate_n, int framerate_d,
     int par_n, int par_d);
+GstCaps * gst_video_format_new_caps_interlaced (GstVideoFormat format,
+    int width, int height, int framerate_n, int framerate_d,
+						int par_n, int par_d, gboolean interlaced);
 GstVideoFormat gst_video_format_from_fourcc (guint32 fourcc);
 guint32 gst_video_format_to_fourcc (GstVideoFormat format);
 gboolean gst_video_format_is_rgb (GstVideoFormat format);
