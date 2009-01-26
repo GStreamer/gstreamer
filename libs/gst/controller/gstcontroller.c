@@ -646,7 +646,9 @@ gst_controller_suggest_next_sync (GstController * self)
   g_mutex_lock (self->lock);
 
   /* TODO: Implement more logic, depending on interpolation mode
-   * and control points */
+   * and control points
+   * FIXME: we need playback direction
+   */
   ret = self->priv->last_sync + self->priv->control_rate;
 
   g_mutex_unlock (self->lock);
