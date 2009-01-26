@@ -586,11 +586,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -1237,8 +1237,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1246,8 +1246,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->
-          current_component->source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1582,7 +1582,6 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux,
 
   if (!demux->current_partition->primer.mappings) {
     GST_WARNING_OBJECT (demux, "Invalid primer pack");
-    return GST_FLOW_OK;
   }
 
   segment = g_new0 (MXFIndexTableSegment, 1);

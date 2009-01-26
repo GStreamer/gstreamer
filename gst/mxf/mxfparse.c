@@ -868,9 +868,12 @@ mxf_index_table_segment_parse (const MXFUL * key,
         break;
       }
       default:
-        if (!mxf_local_tag_add_to_hash_table (primer, tag, tag_data, tag_size,
-                &segment->other_tags))
+        if (!primer->mappings) {
+          GST_WARNING ("No valid primer pack for this partition");
+        } else if (!mxf_local_tag_add_to_hash_table (primer, tag, tag_data,
+                tag_size, &segment->other_tags)) {
           goto error;
+        }
         break;
     }
 
