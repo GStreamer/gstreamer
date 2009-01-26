@@ -817,12 +817,10 @@ mxf_index_table_segment_parse (const MXFUL * key,
         tag_data += 4;
         tag_size -= 4;
 
-        if (tag_size <
-            len * (11 + 4 * segment->slice_count +
-                8 * segment->pos_table_count))
+        if (tag_size < len * 11)
           goto error;
 
-        segment->index_entries = g_new (MXFIndexEntry, len);
+        segment->index_entries = g_new0 (MXFIndexEntry, len);
 
         for (i = 0; i < len; i++) {
           MXFIndexEntry *entry = &segment->index_entries[i];
@@ -850,6 +848,7 @@ mxf_index_table_segment_parse (const MXFUL * key,
           GST_DEBUG ("    stream offset = %" G_GUINT64_FORMAT,
               entry->stream_offset);
 
+          entry->slice_offset = g_new0 (guint32, segment->slice_count);
           for (j = 0; j < segment->slice_count; j++) {
             entry->slice_offset[j] = GST_READ_UINT32_BE (tag_data);
             tag_data += 4;
@@ -857,6 +856,7 @@ mxf_index_table_segment_parse (const MXFUL * key,
             GST_DEBUG ("    slice %u offset = %u", j, entry->slice_offset[j]);
           }
 
+          entry->pos_table = g_new0 (MXFFraction, segment->pos_table_count);
           for (j = 0; j < segment->pos_table_count; j++) {
             mxf_fraction_parse (&entry->pos_table[j], tag_data, tag_size);
             tag_data += 8;
@@ -889,12 +889,14 @@ void
 mxf_index_table_segment_reset (MXFIndexTableSegment * segment)
 {
   guint i;
+
   g_return_if_fail (segment != NULL);
 
   for (i = 0; i < segment->n_index_entries; i++) {
     g_free (segment->index_entries[i].slice_offset);
     g_free (segment->index_entries[i].pos_table);
   }
+
   g_free (segment->index_entries);
   g_free (segment->delta_entries);
 
