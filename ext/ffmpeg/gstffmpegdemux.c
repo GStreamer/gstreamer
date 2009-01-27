@@ -387,11 +387,28 @@ gst_ffmpegdemux_is_eos (GstFFMpegDemux * demux)
 
   for (n = 0; n < MAX_STREAMS; n++) {
     if ((s = demux->streams[n])) {
+      GST_DEBUG ("stream %d %p eos:%d", n, s, s->eos);
       if (!s->eos)
         return FALSE;
     }
   }
   return TRUE;
+}
+
+/* Returns True if we at least outputted one buffer */
+static gboolean
+gst_ffmpegdemux_has_outputted (GstFFMpegDemux * demux)
+{
+  GstFFStream *s;
+  gint n;
+
+  for (n = 0; n < MAX_STREAMS; n++) {
+    if ((s = demux->streams[n])) {
+      if (GST_CLOCK_TIME_IS_VALID (s->last_ts))
+        return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 static gboolean
@@ -1446,7 +1463,11 @@ read_failed:
     /* pause appropriatly based on if we are flushing or not */
     if (demux->flushing)
       ret = GST_FLOW_WRONG_STATE;
-    else
+    else if (gst_ffmpegdemux_has_outputted (demux)
+        || gst_ffmpegdemux_is_eos (demux)) {
+      GST_DEBUG_OBJECT (demux, "We are EOS");
+      ret = GST_FLOW_UNEXPECTED;
+    } else
       ret = GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (demux);
 
