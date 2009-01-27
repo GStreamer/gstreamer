@@ -456,12 +456,14 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, GHashTable * metadata)
   MXFMetadataBase *current = NULL;
   guint i;
 
-  current = g_hash_table_lookup (metadata, &self->primary_package_uid);
-  if (!current || !MXF_IS_METADATA_GENERIC_PACKAGE (current)) {
-    GST_ERROR ("Primary package not found");
-  } else {
-    if (mxf_metadata_base_resolve (current, metadata)) {
-      self->primary_package = MXF_METADATA_GENERIC_PACKAGE (current);
+  if (!mxf_ul_is_zero (&self->primary_package_uid)) {
+    current = g_hash_table_lookup (metadata, &self->primary_package_uid);
+    if (!current || !MXF_IS_METADATA_GENERIC_PACKAGE (current)) {
+      GST_ERROR ("Primary package not found");
+    } else {
+      if (mxf_metadata_base_resolve (current, metadata)) {
+        self->primary_package = MXF_METADATA_GENERIC_PACKAGE (current);
+      }
     }
   }
   current = NULL;
