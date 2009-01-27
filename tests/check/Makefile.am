@@ -125,6 +125,9 @@ VALGRIND_TESTS_DISABLE = \
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-good.supp
 
+elements_aspectratiocrop_LDADD = $(LDADD)
+elements_aspectratiocrop_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
 elements_audiopanorama_LDADD = \
 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
 	$(LDADD)
