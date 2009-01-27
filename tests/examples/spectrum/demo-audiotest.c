@@ -93,16 +93,21 @@ draw_spectrum (gfloat * data)
 
 /* process delayed message */
 static gboolean
+delayed_idle_spectrum_update (gpointer user_data)
+{
+  draw_spectrum ((gfloat *) user_data);
+  g_free (user_data);
+  return (FALSE);
+}
+
+static gboolean
 delayed_spectrum_update (GstClock * sync_clock, GstClockTime time,
     GstClockID id, gpointer user_data)
 {
-  if (!GST_CLOCK_TIME_IS_VALID (time))
-    goto done;
-
-  draw_spectrum ((gfloat *) user_data);
-
-done:
-  g_free (user_data);
+  if (GST_CLOCK_TIME_IS_VALID (time))
+    g_idle_add (delayed_idle_spectrum_update, user_data);
+  else
+    g_free (user_data);
   return (TRUE);
 }
 
