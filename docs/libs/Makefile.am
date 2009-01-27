@@ -4,6 +4,9 @@
 #DOC_MODULE=gstreamer-libs-@GST_MAJORMINOR@
 DOC_MODULE=gstreamer-libs
 
+# don't want $(DOC_MODULE)-scan.c to be built with -Werror
+ERROR_CFLAGS=
+
 # for upload.mak
 DOC=gstreamer-libs
 FORMATS=html
