@@ -32,3 +32,4 @@ gst-plugins-good-*.tar.*
 *.o
 Makefile.in
 Makefile
+*~
