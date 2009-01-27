@@ -610,11 +610,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -1258,8 +1258,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1267,8 +1267,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1367,7 +1367,6 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     demux->current_partition->essence_container_offset =
         demux->offset - demux->current_partition->partition.this_partition -
         demux->run_in;
-
 
   if (!demux->current_package) {
     GST_ERROR_OBJECT (demux, "No package selected yet");
@@ -2043,6 +2042,26 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
         mxf_ul_to_string (key, key_str));
   } else if (mxf_is_partition_pack (key)) {
     ret = gst_mxf_demux_handle_partition_pack (demux, key, buffer);
+
+    /* If this partition contains the start of an essence container
+     * set the positions of all essence streams to 0
+     */
+    if (ret == GST_FLOW_OK && demux->current_partition
+        && demux->current_partition->partition.body_sid != 0
+        && demux->current_partition->partition.body_offset == 0
+        && demux->essence_tracks) {
+      guint i;
+
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *etrack =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        if (etrack->body_sid != demux->current_partition->partition.body_sid)
+          continue;
+
+        etrack->position = 0;
+      }
+    }
   } else if (mxf_is_primer_pack (key)) {
     ret = gst_mxf_demux_handle_primer_pack (demux, key, buffer);
   } else if (mxf_is_metadata (key)) {
