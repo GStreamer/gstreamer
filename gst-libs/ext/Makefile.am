@@ -44,20 +44,20 @@ dist-local:
 			cp $(TMP_DIST_DIR)/$$d$$id/*.c $(TMP_DIST_DIR)/$$d$$id/*.h $(TMP_DIST_DIR)/$$d$$id/*.asm $(TMP_DIST_DIR)/$$d$$id/*.S $(DIST_DIR)/$$d$$id; \
 			done \
 		fi \
-	done 
-	rm -rf ffmpeg
-	mv $(DIST_DIR) ffmpeg
-	touch ffmpeg/config.mak
+	done
+	mv $(DIST_DIR) $(TMP_DIST_DIR)/ffmpeg
+	touch $(TMP_DIST_DIR)/ffmpeg/config.mak
 	echo "Patching ffmpeg ./configure"
-	sed -e '/Unknown option/ {N;N;s/exit 1//; }' ffmpeg/configure > ffmpeg/configure.tmp
-	mv ffmpeg/configure.tmp ffmpeg/configure
-	chmod +x ffmpeg/configure
-	rm -rf $(TMP_DIST_DIR)
+	sed -e '/Unknown option/ {N;N;s/exit 1//; }' $(TMP_DIST_DIR)/ffmpeg/configure > $(TMP_DIST_DIR)/ffmpeg/configure.tmp
+	mv $(TMP_DIST_DIR)/ffmpeg/configure.tmp $(TMP_DIST_DIR)/ffmpeg/configure
+	chmod +x $(TMP_DIST_DIR)/ffmpeg/configure
 
 distdir: dist-local
-	cp -r ffmpeg ${distdir}
+	cp -r $(TMP_DIST_DIR)/ffmpeg ${distdir}
 	cp -f Makefile.am Makefile.in ${distdir}
+	rm -rf $(TMP_DIST_DIR)
 
 dist: dist-local
-	tar -czf ffmpeg.tar.gz ffmpeg	
-
+	cd $(TMP_DIST_DIR) && tar -czf ffmpeg.tar.gz ffmpeg
+	mv $(TMP_DIST_DIR)/ffmpeg.tar.gz ./
+	rm -rf $(TMP_DIST_DIR)
