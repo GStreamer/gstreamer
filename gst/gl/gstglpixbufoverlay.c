@@ -356,7 +356,6 @@ static gboolean
 gst_gl_pixbufoverlay_loader (GstGLFilter* filter)
 {
   GstGLPixbufOverlay* pixbufoverlay = GST_GL_PIXBUFOVERLAY(filter);
-  GstGLDisplay *display = filter->display;
 
   png_structp png_ptr;
   png_infop info_ptr;

@@ -516,7 +516,6 @@ static gboolean
 gst_gl_differencematte_loader (GstGLFilter* filter)
 {
   GstGLDifferenceMatte* differencematte = GST_GL_DIFFERENCEMATTE(filter);
-  GstGLDisplay *display = filter->display;
 
   png_structp png_ptr;
   png_infop info_ptr;
