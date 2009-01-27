@@ -1390,7 +1390,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
     if (tmp->body_sid == demux->current_partition->partition.body_sid &&
-        tmp->track_number == track_number) {
+        (tmp->track_number == track_number || tmp->track_number == 0)) {
       etrack = tmp;
       break;
     }
