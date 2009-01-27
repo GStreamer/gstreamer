@@ -576,8 +576,7 @@ static GstFlowReturn
 mxf_bwf_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataSourceClip * component, gpointer mapping_data,
-    GstBuffer ** outbuf)
+    gpointer mapping_data, GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -595,8 +594,7 @@ mxf_bwf_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 static GstFlowReturn
 mxf_aes3_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps, MXFMetadataTimelineTrack * track,
-    MXFMetadataSourceClip * component, gpointer mapping_data,
-    GstBuffer ** outbuf)
+    gpointer mapping_data, GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -816,24 +814,24 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x01
             || track->parent.descriptor[i]->essence_container.u[14] == 0x02
             || track->parent.descriptor[i]->essence_container.u[14] == 0x08)) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       bwf = TRUE;
       break;
     } else
-        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])
+        if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
         && (track->parent.descriptor[i]->essence_container.u[14] == 0x03
             || track->parent.descriptor[i]->essence_container.u[14] == 0x04
             || track->parent.descriptor[i]->essence_container.u[14] == 0x09)) {
 
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       bwf = FALSE;
       break;
     }

@@ -54,6 +54,7 @@ typedef struct
   MXFPartitionPack partition;
   MXFPrimerPack primer;
   gboolean parsed_metadata;
+  guint64 essence_container_offset;
 } GstMXFDemuxPartition;
 
 typedef struct
@@ -67,13 +68,10 @@ typedef struct
   guint32 body_sid;
   guint32 track_number;
 
-  guint64 position;
-  guint64 duration;
+  gint64 position;
+  gint64 duration;
 
-  GstMXFDemuxIndex *offsets;
-
-  guint64 last_offset;
-  guint64 last_indexed_offset;
+  GArray *offsets;
 
   MXFMetadataSourcePackage *source_package;
   MXFMetadataTimelineTrack *source_track;

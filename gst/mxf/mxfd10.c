@@ -71,8 +71,7 @@ static GstFlowReturn
 mxf_d10_picture_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataSourceClip * component, gpointer mapping_data,
-    GstBuffer ** outbuf)
+    gpointer mapping_data, GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -89,8 +88,7 @@ static GstFlowReturn
 mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataSourceClip * component, gpointer mapping_data,
-    GstBuffer ** outbuf)
+    gpointer mapping_data, GstBuffer ** outbuf)
 {
   guint i, j, nsamples;
   const guint8 *indata;
@@ -173,15 +171,15 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
-            parent.descriptor[i])) {
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
-          descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
+          parent.descriptor[i];
       break;
-    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-            parent.descriptor[i])) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
-          descriptor[i];
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
+          parent.descriptor[i];
       break;
     }
   }

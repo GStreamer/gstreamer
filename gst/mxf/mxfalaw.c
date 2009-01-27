@@ -65,8 +65,7 @@ static GstFlowReturn
 mxf_alaw_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
     MXFMetadataTimelineTrack * track,
-    MXFMetadataSourceClip * component, gpointer mapping_data,
-    GstBuffer ** outbuf)
+    gpointer mapping_data, GstBuffer ** outbuf)
 {
   *outbuf = buffer;
 
@@ -100,10 +99,10 @@ mxf_alaw_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-            parent.descriptor[i])) {
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
-          parent.descriptor[i];
+    if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
+            descriptor[i])) {
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     }
   }
