@@ -1,7 +1,8 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = $(FFMPEG_SUBDIRS) ext docs common tests
-DIST_SUBDIRS = $(SUBDIRS) gst-libs
+COMMON_SUBDIRS = ext docs common tests
+SUBDIRS = $(FFMPEG_SUBDIRS) $(COMMON_SUBDIRS)
+DIST_SUBDIRS = $(COMMON_SUBDIRS) gst-libs
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak

@@ -29,6 +29,7 @@ distclean: dist-clean
 
 dist-local:
 	svn -r $(FFMPEG_REVISION) co $(FFMPEG_SVN) $(TMP_DIST_DIR)
+	svn update -r $(FFMPEG_EXTERNALS_REVISION) $(TMP_DIST_DIR)/libswscale
 	mkdir $(DIST_DIR)
 	pwd
 	cp $(TMP_DIST_DIR)/*.c $(TMP_DIST_DIR)/*.h $(TMP_DIST_DIR)/Makefile $(TMP_DIST_DIR)/configure $(TMP_DIST_DIR)/version.sh $(DIST_DIR) 
@@ -40,7 +41,7 @@ dist-local:
 		if [ `ls -d $(TMP_DIST_DIR)/$$d*/ | wc -w` != "" ]; \
 		then for id in `cd $(TMP_DIST_DIR)/$$d && ls -d */`; \
 			do mkdir $(DIST_DIR)/$$d$$id; \
-			cp $(TMP_DIST_DIR)/$$d$$id/*.c $(TMP_DIST_DIR)/$$d$$id/*.h $(TMP_DIST_DIR)/$$d$$id/*.asm $(DIST_DIR)/$$d$$id; \
+			cp $(TMP_DIST_DIR)/$$d$$id/*.c $(TMP_DIST_DIR)/$$d$$id/*.h $(TMP_DIST_DIR)/$$d$$id/*.asm $(TMP_DIST_DIR)/$$d$$id/*.S $(DIST_DIR)/$$d$$id; \
 			done \
 		fi \
 	done 

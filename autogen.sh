@@ -25,13 +25,13 @@ then
 	echo "+ getting ffmpeg from svn"
 	svn -r $FFMPEG_REVISION co $FFMPEG_SVN $FFMPEG_CO_DIR
 	echo "+ updating externals"
-        sh -c "$FFMPEG_EXTERNALS_UPDATE"
+	svn update -r $FFMPEG_EXTERNALS_REVISION $FFMPEG_CO_DIR/libswscale
     else
 	# update ffmpeg from its repository
 	echo "+ updating ffmpeg checkout"
 	svn -r $FFMPEG_REVISION up $FFMPEG_CO_DIR
 	echo "+ updating externals"
-	sh -c "$FFMPEG_EXTERNALS_UPDATE"
+	svn update -r $FFMPEG_EXTERNALS_REVISION $FFMPEG_CO_DIR/libswscale
     fi
 else
     echo "Subversion needed for ffmpeg checkout, please install and/or add to \$PATH"

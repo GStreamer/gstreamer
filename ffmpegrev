@@ -5,4 +5,4 @@ FFMPEG_SVN=svn://svn.ffmpeg.org/ffmpeg/trunk
 # out an old ffmpeg does not check out a corresponding libswscale.
 # Keep the swscale checkout manually synchronized, then. Update this
 # when you update FFMPEG_REVISION.
-FFMPEG_EXTERNALS_UPDATE="cd $FFMPEG_CO_DIR/libswscale && svn up -r '{2009-01-24 17:45:00 +0100}'"
+FFMPEG_EXTERNALS_REVISION=28348
