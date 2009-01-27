@@ -445,6 +445,9 @@ not_supported:
  * with  a time set to GST_CLOCK_TIME_NONE. The callback will
  * be called when the time of @id has been reached.
  *
+ * The callback @func can be invoked from any thread, either provided by the
+ * core or from a streaming thread. The application should be prepared for this.
+ *
  * Returns: the result of the non blocking wait.
  *
  * MT safe.
