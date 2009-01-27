@@ -610,11 +610,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -1258,8 +1258,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1267,8 +1267,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->
-          current_component->source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1500,8 +1500,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       continue;
     }
     if (pad->current_component &&
-        etrack->position < pad->current_component_position) {
-      GST_DEBUG_OBJECT (demux, "Before current component's position");
+        etrack->position != pad->current_component_position) {
+      GST_DEBUG_OBJECT (demux, "Not at current component's position");
       continue;
     }
 
@@ -1548,6 +1548,10 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     ret = gst_pad_push (GST_PAD_CAST (pad), outbuf);
     ret = gst_mxf_demux_combine_flows (demux, pad, ret);
+
+    if (pad->last_stop > demux->segment.last_stop)
+      gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
+          pad->last_stop);
 
     if (ret != GST_FLOW_OK)
       break;
@@ -2123,7 +2127,6 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
     goto beach;
 
   ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer);
-
   demux->offset += read;
 
 beach:
