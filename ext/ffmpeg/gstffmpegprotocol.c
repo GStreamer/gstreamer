@@ -32,6 +32,7 @@
 #include <gst/gst.h>
 
 #include "gstffmpeg.h"
+#include "gstffmpegpipe.h"
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
 
@@ -290,4 +291,86 @@ URLProtocol gstreamer_protocol = {
   /*.url_write = */ gst_ffmpegdata_write,
   /*.url_seek = */ gst_ffmpegdata_seek,
   /*.url_close = */ gst_ffmpegdata_close,
+};
+
+
+/* specialized protocol for cross-thread pushing,
+ * based on ffmpeg's pipe protocol */
+
+static int
+gst_ffmpeg_pipe_open (URLContext * h, const char *filename, int flags)
+{
+  GstFFMpegPipe *ffpipe;
+
+  GST_LOG ("Opening %s", filename);
+
+  /* we don't support W together */
+  if (flags != URL_RDONLY) {
+    GST_WARNING ("Only read-only is supported");
+    return -EINVAL;
+  }
+
+  if (sscanf (&filename[10], "%p", &ffpipe) != 1) {
+    GST_WARNING ("could not decode pipe info from %s", filename);
+    return -EIO;
+  }
+
+  /* sanity check */
+  g_return_val_if_fail (GST_IS_ADAPTER (ffpipe->adapter), -EINVAL);
+
+  h->priv_data = (void *) ffpipe;
+  h->is_streamed = TRUE;
+  h->max_packet_size = 0;
+
+  return 0;
+}
+
+static int
+gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
+{
+  GstFFMpegPipe *ffpipe;
+  const guint8 *data;
+  guint available;
+
+  ffpipe = (GstFFMpegPipe *) h->priv_data;
+
+  GST_LOG ("requested size %d", size);
+
+  GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+  while ((available = gst_adapter_available (ffpipe->adapter)) < size
+      && !ffpipe->eos) {
+    ffpipe->needed = size;
+    GST_FFMPEG_PIPE_SIGNAL (ffpipe);
+    GST_FFMPEG_PIPE_WAIT (ffpipe);
+  }
+
+  size = MIN (available, size);
+  if (size) {
+    data = gst_adapter_peek (ffpipe->adapter, size);
+    memcpy (buf, data, size);
+    gst_adapter_flush (ffpipe->adapter, size);
+    ffpipe->needed = 0;
+  }
+  GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+  return size;
+}
+
+static int
+gst_ffmpeg_pipe_close (URLContext * h)
+{
+  GST_LOG ("Closing pipe");
+
+  h->priv_data = NULL;
+
+  return 0;
+}
+
+URLProtocol gstpipe_protocol = {
+  "gstpipe",
+  gst_ffmpeg_pipe_open,
+  gst_ffmpeg_pipe_read,
+  NULL,
+  NULL,
+  gst_ffmpeg_pipe_close,
 };

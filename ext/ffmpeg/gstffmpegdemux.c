@@ -39,6 +39,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegpipe.h"
 
 typedef struct _GstFFMpegDemux GstFFMpegDemux;
 typedef struct _GstFFStream GstFFStream;
@@ -83,6 +84,11 @@ struct _GstFFMpegDemux
 
   /* cached seek in READY */
   GstEvent *seek_event;
+
+  /* push mode data */
+  GstFFMpegPipe ffpipe;
+  GstTask *task;
+  GStaticRecMutex *task_lock;
 };
 
 typedef struct _GstFFMpegDemuxClassParams
@@ -107,8 +113,12 @@ struct _GstFFMpegDemuxClass
 static void gst_ffmpegdemux_class_init (GstFFMpegDemuxClass * klass);
 static void gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass);
 static void gst_ffmpegdemux_init (GstFFMpegDemux * demux);
+static void gst_ffmpegdemux_finalize (GObject * object);
 
-static void gst_ffmpegdemux_loop (GstPad * pad);
+static gboolean gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event);
+static GstFlowReturn gst_ffmpegdemux_chain (GstPad * sinkpad, GstBuffer * buf);
+
+static void gst_ffmpegdemux_loop (GstFFMpegDemux * demux);
 static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad);
 static gboolean
 gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
@@ -220,6 +230,8 @@ gst_ffmpegdemux_class_init (GstFFMpegDemuxClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ffmpegdemux_finalize);
+
   gstelement_class->change_state = gst_ffmpegdemux_change_state;
   gstelement_class->send_event = gst_ffmpegdemux_send_event;
 }
@@ -232,12 +244,25 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   gint n;
 
   demux->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
-  gst_pad_set_activate_function (demux->sinkpad, gst_ffmpegdemux_sink_activate);
+  gst_pad_set_activate_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate));
   gst_pad_set_activatepull_function (demux->sinkpad,
-      gst_ffmpegdemux_sink_activate_pull);
+      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate_pull));
   gst_pad_set_activatepush_function (demux->sinkpad,
-      gst_ffmpegdemux_sink_activate_push);
+      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_activate_push));
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
+
+  /* push based setup */
+  /* the following are not used in pull-based mode, so safe to set anyway */
+  gst_pad_set_event_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_sink_event));
+  gst_pad_set_chain_function (demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegdemux_chain));
+  /* task for driving ffmpeg in loop function */
+  demux->task = gst_task_create ((GstTaskFunction) gst_ffmpegdemux_loop, demux);
+  demux->task_lock = g_new (GStaticRecMutex, 1);
+  g_static_rec_mutex_init (demux->task_lock);
+  gst_task_set_lock (demux->task, demux->task_lock);
 
   demux->opened = FALSE;
   demux->context = NULL;
@@ -250,6 +275,29 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
 
   demux->seek_event = NULL;
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
+
+  /* push based data */
+  demux->ffpipe.tlock = g_mutex_new ();
+  demux->ffpipe.cond = g_cond_new ();
+  demux->ffpipe.adapter = gst_adapter_new ();
+}
+
+static void
+gst_ffmpegdemux_finalize (GObject * object)
+{
+  GstFFMpegDemux *demux;
+
+  demux = (GstFFMpegDemux *) object;
+
+  g_mutex_free (demux->ffpipe.tlock);
+  g_cond_free (demux->ffpipe.cond);
+  gst_object_unref (demux->ffpipe.adapter);
+
+  gst_object_unref (demux->task);
+  g_static_rec_mutex_free (demux->task_lock);
+  g_free (demux->task_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -435,6 +483,11 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
   gboolean flush;
   gboolean update;
   GstSegment seeksegment;
+
+  if (!demux->seekable) {
+    GST_DEBUG_OBJECT (demux, "in push mode; ignoring seek");
+    return FALSE;
+  }
 
   GST_DEBUG_OBJECT (demux, "starting seek");
 
@@ -1050,7 +1103,10 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   gst_ffmpegdemux_close (demux);
 
   /* open via our input protocol hack */
-  location = g_strdup_printf ("gstreamer://%p", demux->sinkpad);
+  if (demux->seekable)
+    location = g_strdup_printf ("gstreamer://%p", demux->sinkpad);
+  else
+    location = g_strdup_printf ("gstpipe://%p", &demux->ffpipe);
   GST_DEBUG_OBJECT (demux, "about to call av_open_input_file %s", location);
 
   res = av_open_input_file (&demux->context, location,
@@ -1178,9 +1234,8 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
 
 /* Task */
 static void
-gst_ffmpegdemux_loop (GstPad * pad)
+gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
 {
-  GstFFMpegDemux *demux;
   GstFlowReturn ret;
   gint res;
   AVPacket pkt;
@@ -1191,8 +1246,6 @@ gst_ffmpegdemux_loop (GstPad * pad)
   GstClockTime timestamp, duration;
   gint outsize;
   gboolean rawvideo;
-
-  demux = (GstFFMpegDemux *) (GST_PAD_PARENT (pad));
 
   /* open file if we didn't so already */
   if (!demux->opened)
@@ -1340,7 +1393,19 @@ pause:
     GST_LOG_OBJECT (demux, "pausing task, reason %d (%s)", ret,
         gst_flow_get_name (ret));
     demux->running = FALSE;
-    gst_pad_pause_task (demux->sinkpad);
+    if (demux->seekable)
+      gst_pad_pause_task (demux->sinkpad);
+    else {
+      GstFFMpegPipe *ffpipe = &demux->ffpipe;
+
+      GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+      /* pause task and make sure loop stops */
+      gst_task_pause (demux->task);
+      g_static_rec_mutex_lock (demux->task_lock);
+      g_static_rec_mutex_unlock (demux->task_lock);
+      demux->ffpipe.srcresult = ret;
+      GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+    }
 
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       if (ret == GST_FLOW_UNEXPECTED) {
@@ -1410,6 +1475,127 @@ no_buffer:
 
 
 static gboolean
+gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
+{
+  GstFFMpegDemux *demux;
+  GstFFMpegPipe *ffpipe;
+  gboolean result = TRUE;
+
+  demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
+  ffpipe = &(demux->ffpipe);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      /* forward event */
+      gst_pad_event_default (sinkpad, event);
+
+      /* now unblock the chain function */
+      GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+      ffpipe->srcresult = GST_FLOW_WRONG_STATE;
+      GST_FFMPEG_PIPE_SIGNAL (ffpipe);
+      GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+      /* loop might run into WRONG_STATE and end itself,
+       * but may also be waiting in a ffmpeg read
+       * trying to break that would make ffmpeg believe eos,
+       * so no harm to have the loop 'pausing' there ... */
+      goto done;
+    case GST_EVENT_FLUSH_STOP:
+      /* forward event */
+      gst_pad_event_default (sinkpad, event);
+
+      GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+      gst_adapter_clear (ffpipe->adapter);
+      ffpipe->srcresult = GST_FLOW_OK;
+      /* loop may have decided to end itself as a result of flush WRONG_STATE */
+      gst_task_start (demux->task);
+      demux->running = TRUE;
+      demux->flushing = FALSE;
+      GST_LOG_OBJECT (demux, "loop started");
+      GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+      goto done;
+    case GST_EVENT_EOS:
+      /* inform the src task that it can stop now */
+      GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+      ffpipe->eos = TRUE;
+      GST_FFMPEG_PIPE_SIGNAL (ffpipe);
+      GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+      /* eat this event for now, task will send eos when finished */
+      gst_event_unref (event);
+      goto done;
+    default:
+      /* for a serialized event, wait until an earlier data is gone,
+       * though this is no guarantee as to when task is done with it */
+      if (GST_EVENT_IS_SERIALIZED (event)) {
+        GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+        while (!ffpipe->needed)
+          GST_FFMPEG_PIPE_WAIT (ffpipe);
+        GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+      }
+      break;
+  }
+
+  result = gst_pad_event_default (sinkpad, event);
+
+done:
+
+  return result;
+}
+
+static GstFlowReturn
+gst_ffmpegdemux_chain (GstPad * sinkpad, GstBuffer * buffer)
+{
+  GstFFMpegDemux *demux;
+  GstFFMpegPipe *ffpipe;
+
+  demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
+  ffpipe = &demux->ffpipe;
+
+  GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+
+  if (G_UNLIKELY (ffpipe->eos))
+    goto eos;
+
+  if (G_UNLIKELY (ffpipe->srcresult != GST_FLOW_OK))
+    goto ignore;
+
+  gst_adapter_push (ffpipe->adapter, buffer);
+  buffer = NULL;
+  while (gst_adapter_available (ffpipe->adapter) >= ffpipe->needed) {
+    GST_FFMPEG_PIPE_SIGNAL (ffpipe);
+    GST_FFMPEG_PIPE_WAIT (ffpipe);
+    /* may have become flushing */
+    if (G_UNLIKELY (ffpipe->srcresult != GST_FLOW_OK))
+      goto ignore;
+  }
+
+  GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+  return GST_FLOW_OK;
+
+/* special cases */
+eos:
+  {
+    GST_DEBUG_OBJECT (demux, "ignoring buffer at end-of-stream");
+    GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+    gst_buffer_unref (buffer);
+    return GST_FLOW_UNEXPECTED;
+  }
+ignore:
+  {
+    GST_DEBUG_OBJECT (demux, "ignoring buffer because src task encountered %s",
+        gst_flow_get_name (ffpipe->srcresult));
+    GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+    if (buffer)
+      gst_buffer_unref (buffer);
+    return GST_FLOW_WRONG_STATE;
+  }
+}
+
+static gboolean
 gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
 {
   GstFFMpegDemux *demux;
@@ -1428,23 +1614,56 @@ gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
   return res;
 }
 
+/* push mode:
+ * - not seekable
+ * - use gstpipe protocol, like ffmpeg's pipe protocol
+ * - (independently managed) task driving ffmpeg
+ */
 static gboolean
 gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
 {
   GstFFMpegDemux *demux;
+  gboolean res;
 
   demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
 
-  GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED,
-      (NULL),
-      ("failed to activate sinkpad in pull mode, push mode not implemented yet"));
+  if (active) {
+    demux->ffpipe.eos = FALSE;
+    demux->ffpipe.srcresult = GST_FLOW_OK;
+    demux->ffpipe.needed = 0;
+    demux->running = TRUE;
+    demux->seekable = FALSE;
+    res = gst_task_start (demux->task);
+  } else {
+    GstFFMpegPipe *ffpipe = &demux->ffpipe;
 
-  demux->seekable = FALSE;
+    /* release chain and loop */
+    GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+    demux->ffpipe.srcresult = GST_FLOW_WRONG_STATE;
+    /* end streaming by making ffmpeg believe eos */
+    demux->ffpipe.eos = TRUE;
+    GST_FFMPEG_PIPE_SIGNAL (ffpipe);
+    GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
+
+    /* make sure streaming ends */
+    gst_task_stop (demux->task);
+    g_static_rec_mutex_lock (demux->task_lock);
+    g_static_rec_mutex_unlock (demux->task_lock);
+    res = gst_task_join (demux->task);
+    demux->running = FALSE;
+    demux->seekable = FALSE;
+  }
+
   gst_object_unref (demux);
 
-  return FALSE;
+  return res;
 }
 
+/* pull mode:
+ * - seekable
+ * - use gstreamer protocol, like ffmpeg's file protocol
+ * - task driving ffmpeg based on sink pad
+ */
 static gboolean
 gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
@@ -1457,7 +1676,7 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
     demux->running = TRUE;
     demux->seekable = TRUE;
     res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ffmpegdemux_loop,
-        sinkpad);
+        demux);
   } else {
     demux->running = FALSE;
     res = gst_pad_stop_task (sinkpad);
@@ -1494,6 +1713,7 @@ gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ffmpegdemux_close (demux);
+      gst_adapter_clear (demux->ffpipe.adapter);
       break;
     default:
       break;

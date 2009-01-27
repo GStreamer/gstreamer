@@ -28,4 +28,5 @@ noinst_HEADERS = \
 	gstffmpeg.h \
 	gstffmpegcodecmap.h \
 	gstffmpegenc.h \
-	gstffmpegcfg.h
+	gstffmpegcfg.h \
+	gstffmpegpipe.h

@@ -61,6 +61,7 @@ int gst_ffmpeg_av_find_stream_info(AVFormatContext *ic);
 G_END_DECLS
 
 extern URLProtocol gstreamer_protocol;
+extern URLProtocol gstpipe_protocol;
 
 /* use GST_FFMPEG URL_STREAMHEADER with URL_WRONLY if the first
  * buffer should be used as streamheader property on the pad's caps. */
