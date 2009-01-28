@@ -631,6 +631,8 @@ AtomInfo *   build_esds_extension        (AtomTRAK * trak, guint8 object_type,
                                           guint8 stream_type, const GstBuffer * codec_data);
 AtomInfo *   build_jp2h_extension        (AtomTRAK * trak, gint width, gint height,
                                           guint32 fourcc);
+AtomInfo *   build_amr_extension         ();
+AtomInfo *   build_h263_extension        ();
 
 
 /*
