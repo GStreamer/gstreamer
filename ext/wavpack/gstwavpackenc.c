@@ -22,32 +22,24 @@
 /**
  * SECTION:element-wavpackenc
  *
- * <refsect2>
  * WavpackEnc encodes raw audio into a framed Wavpack stream.
  * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
  * audio codec that features both lossless and lossy encoding.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc num-buffers=500 ! audioconvert ! wavpackenc ! filesink location=sinewave.wv
- * </programlisting>
- * This pipeline encodes audio from audiotestsrc into a Wavpack file. The audioconvert element is needed
+ * ]| This pipeline encodes audio from audiotestsrc into a Wavpack file. The audioconvert element is needed
  * as the Wavpack encoder only accepts input with 32 bit width (and every depth between 1 and 32 bits).
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch cdda://1 ! audioconvert ! wavpackenc ! filesink location=track1.wv
- * </programlisting>
- * This pipeline encodes audio from an audio CD into a Wavpack file using
+ * ]| This pipeline encodes audio from an audio CD into a Wavpack file using
  * lossless encoding (the file output will be fairly large).
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch cdda://1 ! audioconvert ! wavpackenc bitrate=128000 ! filesink location=track1.wv
- * </programlisting>
- * This pipeline encodes audio from an audio CD into a Wavpack file using
+ * ]| This pipeline encodes audio from an audio CD into a Wavpack file using
  * lossy encoding at a certain bitrate (the file will be fairly small).
- * </para>
  * </refsect2>
  */
 

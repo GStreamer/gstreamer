@@ -17,6 +17,22 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-speexenc
+ * @see_also: speexdec, oggmux
+ *
+ * This element encodes audio as a Speex stream.
+ * <ulink url="http://www.speex.org/">Speex</ulink> is a royalty-free
+ * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
+ * Foundation</ulink>.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch audiotestsrc num-buffers=100 ! speexenc ! oggmux ! filesink location=beep.ogg
+ * ]| Encode an Ogg/Speex file.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

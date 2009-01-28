@@ -25,16 +25,16 @@
  * SECTION:element-cmmlenc
  * @see_also: cmmldec, oggmux
  *
- * <refsect2>
- * <para> Cmmlenc encodes a CMML document into a CMML stream.  <ulink
+ * Cmmlenc encodes a CMML document into a CMML stream.  <ulink
  * url="http://www.annodex.net/TR/draft-pfeiffer-cmml-02.html">CMML</ulink> is
  * an XML markup language for time-continuous data maintained by the <ulink
  * url="http:/www.annodex.org/">Annodex Foundation</ulink>.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=annotations.cmml ! cmmlenc ! oggmux name=mux ! filesink location=annotated.ogg
- * </programlisting>
+ * ]|
  * </refsect2>
  */
 

@@ -17,6 +17,19 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-gconfaudiosink
+ *
+ * This element outputs sound to the audiosink that has been configured in
+ * GConf by the user.
+ * 
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch filesrc location=foo.ogg ! decodebin ! audioconvert ! audioresample ! gconfaudiosink
+ * ]| Play on configured audiosink
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -20,24 +20,17 @@
  * SECTION:element-cacasink
  * @see_also: #GstAASink
  *
- * <refsect2>
- * <para>
  * Displays video as color ascii art.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * CACA_GEOMETRY=160x60 CACA_FONT=5x7 gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! cacasink
- * </programlisting>
- * This pipeline renders a video to ascii art into a separate window using a
+ * ]| This pipeline renders a video to ascii art into a separate window using a
  * small font and specifying the ascii resolution.
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * CACA_DRIVER=ncurses gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! cacasink
- * </programlisting>
- * This pipeline renders a video to ascii art into the current terminal.
- * </para>
+ * ]| This pipeline renders a video to ascii art into the current terminal.
  * </refsect2>
  */
 
@@ -49,6 +42,17 @@
 #include <sys/time.h>
 
 #include "gstcacasink.h"
+
+#define GST_CACA_DEFAULT_SCREEN_WIDTH 80
+#define GST_CACA_DEFAULT_SCREEN_HEIGHT 25
+#define GST_CACA_DEFAULT_BPP 24
+#define GST_CACA_DEFAULT_RED_MASK GST_VIDEO_BYTE1_MASK_32_INT
+#define GST_CACA_DEFAULT_GREEN_MASK GST_VIDEO_BYTE2_MASK_32_INT
+#define GST_CACA_DEFAULT_BLUE_MASK GST_VIDEO_BYTE3_MASK_32_INT
+
+//#define GST_CACA_DEFAULT_RED_MASK R_MASK_32_REVERSE_INT
+//#define GST_CACA_DEFAULT_GREEN_MASK G_MASK_32_REVERSE_INT
+//#define GST_CACA_DEFAULT_BLUE_MASK B_MASK_32_REVERSE_INT
 
 /* elementfactory information */
 static const GstElementDetails gst_cacasink_details =

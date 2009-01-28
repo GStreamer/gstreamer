@@ -20,23 +20,19 @@
 
 /**
  * SECTION:element-speexdec
- * @short_description: a decoder that decodes Speex to raw audio
  * @see_also: speexenc, oggdemux
  *
- * <refsect2>
- * <para>
  * This element decodes a Speex stream to raw integer audio.
  * <ulink url="http://www.speex.org/">Speex</ulink> is a royalty-free
  * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
  * Foundation</ulink>.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=speex.ogg ! oggdemux ! speexdec ! audioconvert ! audioresample ! alsasink
- * </programlisting>
- * Decode an Ogg/Speex file. To create an Ogg/Speex file refer to the documentation of speexenc.
- * </para>
+ * ]| Decode an Ogg/Speex file. To create an Ogg/Speex file refer to the
+ * documentation of speexenc.
  * </refsect2>
  *
  * Last reviewed on 2006-04-05 (0.10.2)

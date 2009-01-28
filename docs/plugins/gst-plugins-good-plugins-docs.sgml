@@ -40,6 +40,7 @@
     <xi:include href="xml/element-avimux.xml" />
     <xi:include href="xml/element-avisubtitle.xml" />
     <xi:include href="xml/element-cacasink.xml" />
+    <xi:include href="xml/element-cairotextoverlay.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
     <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-cmmlenc.xml" />
@@ -48,7 +49,6 @@
     <xi:include href="xml/element-directdrawsink.xml" />
     <xi:include href="xml/element-directsoundsink.xml" />
     <xi:include href="xml/element-dv1394src.xml" />
-    <xi:include href="xml/element-hdv1394src.xml" />
     <xi:include href="xml/element-dvdec.xml" />
     <xi:include href="xml/element-dvdemux.xml" />
     <xi:include href="xml/element-equalizer-10bands.xml" />
@@ -59,11 +59,16 @@
     <xi:include href="xml/element-flacenc.xml" />
     <xi:include href="xml/element-flactag.xml" />
     <xi:include href="xml/element-gamma.xml" />
+    <xi:include href="xml/element-gconfaudiosrc.xml" />
+    <xi:include href="xml/element-gconfaudiosink.xml" />
+    <xi:include href="xml/element-gconfvideosrc.xml" />
+    <xi:include href="xml/element-gconfvideosink.xml" />
     <xi:include href="xml/element-gdkpixbufsink.xml" />
     <xi:include href="xml/element-goom.xml" />
     <xi:include href="xml/element-goom2k1.xml" />
     <xi:include href="xml/element-halaudiosink.xml" />
     <xi:include href="xml/element-halaudiosrc.xml" />
+    <xi:include href="xml/element-hdv1394src.xml" />
     <xi:include href="xml/element-icydemux.xml" />
     <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-id3v2mux.xml" />
@@ -106,6 +111,8 @@
     <xi:include href="xml/element-smptealpha.xml" />
     <xi:include href="xml/element-souphttpsrc.xml" />
     <xi:include href="xml/element-spectrum.xml" />
+    <xi:include href="xml/element-speexenc.xml" />
+    <xi:include href="xml/element-speexdec.xml" />
     <xi:include href="xml/element-taginject.xml" />
     <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-udpsink.xml" />

@@ -24,19 +24,17 @@
 /**
  * SECTION:element-wavpackparse
  *
- * <refsect2>
  * WavpackParse takes raw, unframed Wavpack streams and splits them into
  * single Wavpack chunks with information like bit depth and the position
  * in the stream.
  * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
  * audio codec that features both lossless and lossy encoding.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=test.wv ! wavpackparse ! wavpackdec ! fakesink
- * </programlisting>
- * This pipeline decodes the Wavpack file test.wv into raw audio buffers.
- * </para>
+ * ]| This pipeline decodes the Wavpack file test.wv into raw audio buffers.
  * </refsect2>
  */
 

@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-smokedec
+ *
+ * Decodes images in smoke format.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

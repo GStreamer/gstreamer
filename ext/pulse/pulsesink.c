@@ -21,28 +21,20 @@
 
 /**
  * SECTION:element-pulsesink
- * @short_description: Output audio to a PulseAudio sound server
  * @see_also: pulsesrc, pulsemixer
  *
- * <refsect2>
- * <para>
- * This element outputs audio to a PulseAudio sound server.
- * </para>
- * <title>Example pipelines</title>
- * <para>
- * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
- * </programlisting>
- * Play an Ogg/Vorbis file.
- * </para>
- * <para>
- * <programlisting>
- * gst-launch -v audiotestsrc ! audioconvert ! volume volume=0.4 ! pulsesink
- * </programlisting>
- * Play a 440Hz sine wave.
- * </para>
- * </refsect2>
+ * This element outputs audio to a
+ * <ulink href="http://www.pulseaudio.org">PulseAudio sound server</ulink>.
  *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
+ * ]| Play an Ogg/Vorbis file.
+ * |[
+ * gst-launch -v audiotestsrc ! audioconvert ! volume volume=0.4 ! pulsesink
+ * ]| Play a 440Hz sine wave.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

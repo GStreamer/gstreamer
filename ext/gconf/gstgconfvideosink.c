@@ -16,6 +16,19 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-gconfvideosink
+ *
+ * This element outputs video to the videosink that has been configured in
+ * GConf by the user.
+ * 
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch filesrc location=foo.ogg ! decodebin ! ffmpegcolorspace ! gconfvideosink
+ * ]| Play on configured videosink
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

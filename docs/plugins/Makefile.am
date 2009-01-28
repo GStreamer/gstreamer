@@ -78,6 +78,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/aalib/gstaasink.h \
 	$(top_srcdir)/ext/annodex/gstcmmldec.h \
 	$(top_srcdir)/ext/annodex/gstcmmlenc.h \
+	$(top_srcdir)/ext/cairo/gsttextoverlay.h \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
 	$(top_srcdir)/ext/dv/gstdvdec.h \
 	$(top_srcdir)/ext/dv/gstdvdemux.h \
@@ -85,6 +86,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/flac/gstflacdec.h \
 	$(top_srcdir)/ext/flac/gstflacenc.h \
 	$(top_srcdir)/ext/flac/gstflactag.h \
+	$(top_srcdir)/ext/gconf/gstgconfaudiosrc.h \
+	$(top_srcdir)/ext/gconf/gstgconfaudiosink.h \
+	$(top_srcdir)/ext/gconf/gstgconfvideosrc.h \
+	$(top_srcdir)/ext/gconf/gstgconfvideosink.h \
 	$(top_srcdir)/ext/gdk_pixbuf/gstgdkpixbufsink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosink.h \
 	$(top_srcdir)/ext/hal/gsthalaudiosrc.h \
@@ -103,6 +108,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/pulse/pulsesink.h \
 	$(top_srcdir)/ext/pulse/pulsesrc.h \
 	$(top_srcdir)/ext/pulse/pulsemixer.h \
+	$(top_srcdir)/ext/speex/gstspeexenc.h \
+	$(top_srcdir)/ext/speex/gstspeexdec.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \

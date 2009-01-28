@@ -25,17 +25,16 @@
  * SECTION:element-cmmldec
  * @see_also: cmmlenc, oggdemux
  *
- * <refsect2>
- * <para>
  * Cmmldec extracts a CMML document from a CMML bitstream.<ulink
  * url="http://www.annodex.net/TR/draft-pfeiffer-cmml-02.html">CMML</ulink> is
  * an XML markup language for time-continuous data maintained by the <ulink
  * url="http:/www.annodex.org/">Annodex Foundation</ulink>.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipeline</title>
- * <programlisting>
+ * |[
  * gst-launch -v filesrc location=annotated.ogg ! oggdemux ! cmmldec ! filesink location=annotations.cmml
- * </programlisting>
+ * ]|
  * </refsect2>
  */
 

@@ -15,6 +15,11 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+/**
+ * SECTION:element-pngenc
+ *
+ * Encodes png images.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

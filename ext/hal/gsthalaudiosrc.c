@@ -22,28 +22,22 @@
 /**
  * SECTION:element-halaudiosrc
  *
- * <refsect2>
- * <para>
  * HalAudioSrc allows access to input of sound devices by specifying the
  * corresponding persistent Unique Device Id (UDI) from the Hardware Abstraction
- * Layer (HAL) in the <link linkend="GstHalAudioSrc--udi">udi</link> property.
+ * Layer (HAL) in the #GstHalAudioSrc:udi property.
  * It currently always embeds alsasrc or osssrc as HAL doesn't support other
  * sound systems yet. You can also specify the UDI of a device that has ALSA or
  * OSS subdevices. If both are present ALSA is preferred.
- * </para>
+ *
+ * <refsect2>
  * <title>Examples</title>
- * <para>
- * To list the UDIs of all your ALSA input devices :
- * <programlisting>
+ * |[
  * hal-find-by-property --key alsa.type --string capture
- * </programlisting>
- * Here is a pipeline to test your sound input :
- * <programlisting>
+ * ]| list the UDIs of all your ALSA input devices
+ * |[
  * gst-launch -v halaudiosrc udi=/org/freedesktop/Hal/devices/pci_8086_27d8_alsa_capture_0 ! autoaudiosink
- * </programlisting>
- * You should now hear yourself with a small delay if you have a microphone
+ * ]| You should now hear yourself with a small delay if you have a microphone
  * connected to the specified sound device.
- * </para>
  * </refsect2>
  */
 

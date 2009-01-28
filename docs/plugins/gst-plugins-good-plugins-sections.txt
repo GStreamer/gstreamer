@@ -103,7 +103,6 @@ gst_audio_amplify_get_type
 GstAudioChebBand
 <SUBSECTION Standard>
 GstAudioChebBandClass
-GstAudioChebBandProcessFunc
 GST_AUDIO_CHEB_BAND
 GST_AUDIO_CHEB_BAND_CLASS
 GST_AUDIO_CHEB_BAND_GET_CLASS
@@ -119,7 +118,6 @@ gst_audio_cheb_band_get_type
 GstAudioChebLimit
 <SUBSECTION Standard>
 GstAudioChebLimitClass
-GstAudioChebLimitProcessFunc
 GST_AUDIO_CHEB_LIMIT
 GST_AUDIO_CHEB_LIMIT_CLASS
 GST_AUDIO_CHEB_LIMIT_GET_CLASS
@@ -243,7 +241,6 @@ gst_audio_panorama_get_type
 GstAudioWSincBand
 <SUBSECTION Standard>
 GstAudioWSincBandClass
-GstAudioWSincBandProcessFunc
 GST_AUDIO_WSINC_BAND
 GST_AUDIO_WSINC_BAND_CLASS
 GST_IS_AUDIO_WSINC_BAND
@@ -258,7 +255,6 @@ gst_audio_wsincband_get_type
 GstAudioWSincLimit
 <SUBSECTION Standard>
 GstAudioWSincLimitClass
-GstAudioWSincLimitProcessFunc
 GST_AUDIO_WSINC_LIMIT
 GST_AUDIO_WSINC_LIMIT_CLASS
 GST_IS_AUDIO_WSINC_LIMIT
@@ -397,6 +393,20 @@ gst_cacasink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-cairotextoverlay</FILE>
+<TITLE>cairotextoverlay</TITLE>
+GstCairoTextOverlay
+<SUBSECTION Standard>
+GstCairoTextOverlayClass
+GST_TYPE_CAIRO_TEXT_OVERLAY
+GST_CAIRO_TEXT_OVERLAY
+GST_CAIRO_TEXT_OVERLAY_CLASS
+GST_IS_CAIRO_TEXT_OVERLAY
+GST_IS_CAIRO_TEXT_OVERLAY_CLASS
+gst_text_overlay_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-cairotimeoverlay</FILE>
 <TITLE>cairotimeoverlay</TITLE>
 GstCairoTimeOverlay
@@ -447,7 +457,6 @@ GstCutter
 <SUBSECTION Standard>
 GST_CUTTER
 GST_CUTTER_CLASS
-GST_CUTTER_GET_CLASS
 GST_IS_CUTTER
 GST_IS_CUTTER_CLASS
 GST_TYPE_CUTTER
@@ -698,6 +707,62 @@ gst_gamma_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-gconfaudiosrc</FILE>
+<TITLE>gconfaudiosrc</TITLE>
+GstGConfAudioSrc
+<SUBSECTION Standard>
+GstGConfAudioSrcClass
+GST_GCONF_AUDIO_SRC
+GST_IS_GCONF_AUDIO_SRC
+GST_TYPE_GCONF_AUDIO_SRC
+GST_GCONF_AUDIO_SRC_CLASS
+GST_IS_GCONF_AUDIO_SRC_CLASS
+gst_gconf_audio_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gconfaudiosink</FILE>
+<TITLE>gconfaudiosink</TITLE>
+GstGConfAudioSink
+<SUBSECTION Standard>
+GstGConfAudioSinkClass
+GST_GCONF_AUDIO_SINK
+GST_IS_GCONF_AUDIO_SINK
+GST_TYPE_GCONF_AUDIO_SINK
+GST_GCONF_AUDIO_SINK_CLASS
+GST_IS_GCONF_AUDIO_SINK_CLASS
+gst_gconf_audio_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gconfvideosrc</FILE>
+<TITLE>gconfvideosrc</TITLE>
+GstGConfVideoSrc
+<SUBSECTION Standard>
+GstGConfVideoSrcClass
+GST_GCONF_VIDEO_SRC
+GST_IS_GCONF_VIDEO_SRC
+GST_TYPE_GCONF_VIDEO_SRC
+GST_GCONF_VIDEO_SRC_CLASS
+GST_IS_GCONF_VIDEO_SRC_CLASS
+gst_gconf_video_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-gconfvideosink</FILE>
+<TITLE>gconfvideosink</TITLE>
+GstGConfVideoSink
+<SUBSECTION Standard>
+GstGConfVideoSinkClass
+GST_GCONF_VIDEO_SINK
+GST_IS_GCONF_VIDEO_SINK
+GST_TYPE_GCONF_VIDEO_SINK
+GST_GCONF_VIDEO_SINK_CLASS
+GST_IS_GCONF_VIDEO_SINK_CLASS
+gst_gconf_video_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-gdkpixbufsink</FILE>
 <TITLE>gdkpixbufsink</TITLE>
 GstGdkPixbufSink
@@ -881,7 +946,6 @@ GST_MATROSKA_MUX
 GST_MATROSKA_MUX_CLASS
 GST_IS_MATROSKA_MUX
 GST_IS_MATROSKA_MUX_CLASS
-gst_matroska_mux_get_type
 gst_matroska_mux_plugin_init
 </SECTION>
 
@@ -897,7 +961,6 @@ GST_MATROSKA_DEMUX
 GST_MATROSKA_DEMUX_CLASS
 GST_IS_MATROSKA_DEMUX
 GST_IS_MATROSKA_DEMUX_CLASS
-gst_matroska_demux_get_type
 gst_matroska_demux_plugin_init
 </SECTION>
 
@@ -1271,7 +1334,7 @@ GST_IS_RTP_JPEG_PAY
 GST_TYPE_RTP_JPEG_PAY
 GST_RTP_JPEG_PAY_CLASS
 GST_IS_RTP_JPEG_PAY_CLASS
-gst_rtp_jpeg_pay_get_type
+gst_rtp_jpeg_pay_plugin_init
 </SECTION>
 
 <SECTION>
@@ -1375,14 +1438,40 @@ GST_IS_SMOKEENC_CLASS
 GstSpectrum
 <SUBSECTION Standard>
 GstSpectrumClass
-GstSpectrumFFTFreeFunc
-GstSpectrumProcessFunc
 GST_SPECTRUM
 GST_SPECTRUM_CLASS
 GST_IS_SPECTRUM
 GST_IS_SPECTRUM_CLASS
 GST_TYPE_SPECTRUM
 gst_spectrum_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-speexdec</FILE>
+<TITLE>speexdec</TITLE>
+GstSpeexDec
+<SUBSECTION Standard>
+GstSpeexDecClass
+GST_TYPE_SPEEX_DEC
+GST_SPEEX_DEC
+GST_SPEEX_DEC_CLASS
+GST_IS_SPEEX_DEC
+GST_IS_SPEEX_DEC_CLASS
+gst_speex_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-speexenc</FILE>
+<TITLE>speexenc</TITLE>
+GstSpeexEnc
+<SUBSECTION Standard>
+GstSpeexEncClass
+GST_TYPE_SPEEX_ENC
+GST_SPEEX_ENC
+GST_SPEEX_ENC_CLASS
+GST_IS_SPEEX_ENC
+GST_IS_SPEEX_ENC_CLASS
+gst_speex_enc_get_type
 </SECTION>
 
 <SECTION>
@@ -1446,12 +1535,6 @@ gst_udpsink_get_type
 <TITLE>videobox</TITLE>
 GstVideoBox
 <SUBSECTION Standard>
-GstVideoBoxClass
-GST_IS_VIDEO_BOX
-GST_IS_VIDEO_BOX_CLASS
-GST_VIDEO_BOX
-GST_VIDEO_BOX_CLASS
-GST_TYPE_VIDEO_BOX
 </SECTION>
 
 <SECTION>
@@ -1474,9 +1557,7 @@ GST_TYPE_VIDEO_CROP
 <TITLE>aspectratiocrop</TITLE>
 GstAspectRatioCrop
 <SUBSECTION Standard>
-GstAspectRatioCropClass
-AspectRatioCropPixelFormat
-GstAspectRatioCropImageDetails
+GstAspectRatioCropClass                 
 GST_IS_ASPECT_RATIO_CROP
 GST_IS_ASPECT_RATIO_CROP_CLASS
 GST_ASPECT_RATIO_CROP
@@ -1552,7 +1633,6 @@ GST_V4L2_MIN_BUFFERS
 GST_V4L2_MAX_SIZE
 GstV4l2BufferPool
 GstV4l2Buffer
-GstV4l2Src
 GstV4l2SrcClass
 GST_V4L2SRC
 GST_IS_V4L2SRC
@@ -1594,7 +1674,6 @@ GST_IS_WAVENC
 GST_TYPE_WAVENC
 GST_WAVENC_CLASS
 GST_IS_WAVENC_CLASS
-gst_wavenc_get_type
 </SECTION>
 
 <SECTION>

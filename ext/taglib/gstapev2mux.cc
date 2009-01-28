@@ -23,28 +23,23 @@
  * SECTION:element-apev2mux
  * @see_also: #GstTagSetter
  *
- * <refsect2>
- * <para>
  * This element adds APEv2 tags to the beginning of a stream using the taglib
  * library.
- * </para>
- * <para>
+ *
  * Applications can set the tags to write using the #GstTagSetter interface.
  * Tags sent by upstream elements will be picked up automatically (and merged
  * according to the merge mode set via the tag setter interface).
- * </para>
- * <para>
- * Here is a simple pipeline that transcodes a file from Ogg/Vorbis to mp3
- * format with an APEv2 that contains the same as the the Ogg/Vorbis file:
- * <programlisting>
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
  * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! lame ! apev2mux ! filesink location=foo.mp3
- * </programlisting>
- * Make sure the Ogg/Vorbis file actually has comments to preserve.
- * You can verify the tags were written using:
- * <programlisting>
+ * ]| A pipeline that transcodes a file from Ogg/Vorbis to mp3 format with an
+ * APEv2 that contains the same as the the Ogg/Vorbis file. Make sure the
+ * Ogg/Vorbis file actually has comments to preserve.
+ * |[
  * gst-launch -m filesrc location=foo.mp3 ! apedemux ! fakesink silent=TRUE 2&gt; /dev/null | grep taglist
- * </programlisting>
- * </para>
+ * ]| Verify that tags have been written.
  * </refsect2>
  */
 

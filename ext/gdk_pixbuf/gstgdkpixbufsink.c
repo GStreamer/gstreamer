@@ -19,20 +19,14 @@
 
 /**
  * SECTION:element-gdkpixbufsink
- * @short_description: video sink that converts RGB images to GdkPixbufs.
- * @see_also:
+ * @Since: 0.10.8
  *
- * <refsect2>
- * <para>
  * This sink element takes RGB or RGBA images as input and wraps them into
- * GdkPixbuf objects, for easy saving to file via the
- * <ulink url="http://library.gnome.org/devel/gdk-pixbuf/unstable/index.html">
- * GdkPixbuf library API</ulink> or displaying in Gtk+ applications (e.g. using
- * the <ulink url="http://library.gnome.org/devel/gtk/unstable/GtkImage.html">
- * GtkImage widget</ulink>).
- * </para>
- * <para>
- * There are two ways to use this element and obtain the GdkPixbuf objects
+ * #GdkPixbuf objects, for easy saving to file via the
+ * GdkPixbuf library API or displaying in Gtk+ applications (e.g. using
+ * the #GtkImage widget).
+ *
+ * There are two ways to use this element and obtain the #GdkPixbuf objects
  * created:
  * <itemizedlist>
  * <listitem>
@@ -43,34 +37,30 @@
  * contained in them.
  * </listitem>
  * <listitem>
- * Retrieving the current pixbuf via the <classname>&quot;last-pixbuf&quot;
- * </classname> property when needed.
+ * Retrieving the current pixbuf via the #GstGdkPixbufSink:last-pixbuf property
+ * when needed.
  * </listitem>
  * </itemizedlist>
- * </para>
- * <para>
- * The primary purpose of this element is to abstract away the GstBuffer to
- * GdkPixbuf conversion. Other than that it's very similar to the fakesink
+ *
+ * The primary purpose of this element is to abstract away the #GstBuffer to
+ * #GdkPixbuf conversion. Other than that it's very similar to the fakesink
  * element.
- * </para>
- * <para>
+ *
  * This element is meant for easy no-hassle video snapshotting. It is not
  * suitable for video playback or video display at high framerates. Use
  * ximagesink, xvimagesink or some other suitable video sink in connection
- * with the GstXOverlay interface instead if you want to do video playback.
- * </para>
+ * with the #GstXOverlay interface instead if you want to do video playback.
+ *
+ * <refsect2>
  * <title>Message details</title>
- * <para>
  * As mentioned above, this element will by default post element messages
  * containing structures named <classname>&quot;preroll-pixbuf&quot;
  * </classname> or <classname>&quot;pixbuf&quot;</classname> on the bus (this
- * can be disabled by setting the
- * <link linkend="GstGdkPixbufSink--send-messages">&quot;send-messages&quot;
- * property</link> to #FALSE though). The element message&apos;s structure
- * will have the following fields:
+ * can be disabled by setting the #GstGdkPixbufSink:send-messages property
+ * to #FALSE though). The element message structure has the following fields:
  * <itemizedlist>
  * <listitem>
- *   <classname>&quot;pixbuf&quot;</classname>: the GdkPixbuf object
+ *   <classname>&quot;pixbuf&quot;</classname>: the #GdkPixbuf object
  * </listitem>
  * <listitem>
  *   <classname>&quot;pixel-aspect-ratio&quot;</classname>: the pixel aspect
@@ -78,30 +68,25 @@
  *   PAR is usually 1:1 for images, but is often something non-1:1 in the case
  *   of video input. In this case the image may be distorted and you may need
  *   to rescale it accordingly before saving it to file or displaying it. This
- *   can easily be done using the
- *   <ulink url="http://library.gnome.org/devel/gdk-pixbuf/unstable/index.html">
- *   GdkPixbuf library API</ulink> (the reason this is not done automatically
- *   is that the application will often scale the image anyway according to the
- *   size of the output window, in which case it is much more efficient to only
- *   scale once rather than twice). You can put a videoscale element and a
- *   capsfilter element with
+ *   can easily be done using gdk_pixbuf_scale() (the reason this is not done
+ *   automatically is that the application will often scale the image anyway
+ *   according to the size of the output window, in which case it is much more
+ *   efficient to only scale once rather than twice). You can put a videoscale
+ *   element and a capsfilter element with
  *   <literal>video/x-raw-rgb,pixel-aspect-ratio=(fraction)1/1</literal> caps
  *   in front of this element to make sure the pixbufs always have a 1:1 PAR.
  * </listitem>
  * </itemizedlist>
- * </para>
- * <title>Example pipeline</title>
- * <para>
- * <programlisting>
- * gst-launch -m -v videotestsrc num-buffers=1 ! gdkpixbufsink
- * </programlisting>
- * Process one single test image as pixbuf (note that the output you see will
- * be slightly misleading. The message structure does contain a valid pixbuf
- * object even if the structure string says &apos;(NULL)&apos;).
- * </para>
  * </refsect2>
  *
- * Since: 0.10.8
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch -m -v videotestsrc num-buffers=1 ! gdkpixbufsink
+ * ]| Process one single test image as pixbuf (note that the output you see will
+ * be slightly misleading. The message structure does contain a valid pixbuf
+ * object even if the structure string says &apos;(NULL)&apos;).
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

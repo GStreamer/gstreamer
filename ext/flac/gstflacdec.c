@@ -21,26 +21,20 @@
 
 /**
  * SECTION:element-flacdec
- * @seealso: flacenc
+ * @see_also: #GstFlacEnc
  *
- * <refsect2>
- * <para>
  * flacdec decodes FLAC streams.
  * <ulink url="http://flac.sourceforge.net/">FLAC</ulink>
  * is a Free Lossless Audio Codec.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=media/small/dark.441-16-s.flac ! flacdec ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
- * </para>
- * <title>Another example launch line</title>
- * <para>
- * <programlisting>
+ * ]|
+ * |[
  * gst-launch gnomevfssrc location=http://gstreamer.freedesktop.org/media/small/dark.441-16-s.flac ! flacdec ! audioconvert ! audioresample ! queue min-threshold-buffers=10 ! autoaudiosink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

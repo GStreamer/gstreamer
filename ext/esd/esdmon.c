@@ -20,9 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 /**
- * SECTION:element-esdmod
+ * SECTION:element-esdmon
+ * @see_also: #GstAlsaSrc, #GstAutoAudioSrc
  *
- * This element outputs sound to an already-running Enlightened Sound Daemon
+ * This element records sound from an already-running Enlightened Sound Daemon
  * (ESound Daemon, esd). Note that a sound daemon will never be auto-spawned
  * through this element (regardless of the system configuration), since this
  * is actively prevented by the element. If you must use esd, you need to
@@ -38,6 +39,7 @@
  * ]| Record from audioinput
  * </refsect2>
  */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

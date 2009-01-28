@@ -29,7 +29,7 @@
  * #GstUDPSrc:port property to 0. After setting the udpsrc to PAUSED, the
  * allocated port can be obtained by reading the port property.
  *
- * udpsrc can read from multicast groups by setting the #GstUDPSrc:multicast_group
+ * udpsrc can read from multicast groups by setting the #GstUDPSrc:multicast-group
  * property to the IP address of the multicast group.
  *
  * Alternatively one can provide a custom socket to udpsrc with the #GstUDPSrc:sockfd

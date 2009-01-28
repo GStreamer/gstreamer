@@ -21,27 +21,21 @@
 /**
  * SECTION:element-halaudiosink
  *
- * <refsect2>
- * <para>
  * HalAudioSink allows access to output of sound devices by specifying the
  * corresponding persistent Unique Device Id (UDI) from the Hardware Abstraction
- * Layer (HAL) in the <link linkend="GstHalAudioSrc--udi">udi</link> property.
+ * Layer (HAL) in the #GstHalAudioSink:udi property.
  * It currently always embeds alsasink or osssink as HAL doesn't support other
  * sound systems yet. You can also specify the UDI of a device that has ALSA or
  * OSS subdevices. If both are present ALSA is preferred.
- * </para>
+ *
+ * <refsect2>
  * <title>Examples</title>
- * <para>
- * To list the UDIs of all your ALSA output devices :
- * <programlisting>
+ * |[
  * hal-find-by-property --key alsa.type --string playback
- * </programlisting>
- * Here is a pipeline to test your sound output :
- * <programlisting>
+ * ]| list the UDIs of all your ALSA output devices
+ * |[
  * gst-launch -v audiotestsrc ! halaudiosink udi=/org/freedesktop/Hal/devices/pci_8086_27d8_alsa_playback_0
- * </programlisting>
- * This pipeline produces a test signal on the specified sound device.
- * </para>
+ * ]| test your soundcard by playing a test signal on the specified sound device.
  * </refsect2>
  */
 

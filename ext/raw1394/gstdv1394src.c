@@ -22,18 +22,14 @@
 /**
  * SECTION:element-dv1394src
  *
- * <refsect2>
- * <para>
  * Read DV (digital video) data from firewire port.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch dv1394src ! dvdemux name=d ! queue ! dvdec ! xvimagesink d. ! queue ! alsasink
- * </programlisting>
- * This pipeline captures from the firewire port and displays it (might need
+ * |[
+ * gst-launch dv1394src ! queue ! dvdemux name=d ! queue ! dvdec ! xvimagesink d. ! queue ! alsasink
+ * ]| This pipeline captures from the firewire port and displays it (might need
  * format converters for audio/video).
- * </para>
  * </refsect2>
  */
 

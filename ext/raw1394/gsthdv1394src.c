@@ -16,6 +16,21 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-hdv1394src
+ *
+ * Read MPEG-TS data from firewire port.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch hdv1394src ! queue ! decodebin name=d ! queue ! xvimagesink d. ! queue ! alsasink
+ * ]| captures from the firewire port and plays the streams.
+ * |[
+ * gst-launch hdv1394src ! queue ! filesink location=mydump.ts
+ * ]| capture to a disk file
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -776,6 +791,7 @@ gst_hdv1394src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_hdv1394src_uri_get_protocols (void)
 {
@@ -783,6 +799,7 @@ gst_hdv1394src_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_hdv1394src_uri_get_uri (GstURIHandler * handler)
 {

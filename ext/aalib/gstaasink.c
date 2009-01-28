@@ -20,23 +20,16 @@
  * SECTION:element-aasink
  * @see_also: #GstCACASink
  *
- * <refsect2>
- * <para>
  * Displays video as b/w ascii art.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! aasink
- * </programlisting>
- * This pipeline renders a video to ascii art into a separate window.
- * </para>
- * <para>
- * <programlisting>
+ * ]| This pipeline renders a video to ascii art into a separate window.
+ * |[
  * gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! aasink driver=curses
- * </programlisting>
- * This pipeline renders a video to ascii art into the current terminal.
- * </para>
+ * ]| This pipeline renders a video to ascii art into the current terminal.
  * </refsect2>
  */
 

@@ -137,8 +137,6 @@ typedef struct _GstMatroskaMuxClass {
   GstElementClass parent;
 } GstMatroskaMuxClass;
 
-GType    gst_matroska_mux_get_type    (void);
-
 gboolean gst_matroska_mux_plugin_init (GstPlugin *plugin);
 
 G_END_DECLS

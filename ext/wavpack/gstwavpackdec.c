@@ -24,19 +24,17 @@
 /**
  * SECTION:element-wavpackdec
  *
- * <refsect2>
  * WavpackDec decodes framed (for example by the WavpackParse element)
  * Wavpack streams and decodes them to raw audio.
  * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
  * audio codec that features both lossless and lossy encoding.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=test.wv ! wavpackparse ! wavpackdec ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
- * This pipeline decodes the Wavpack file test.wv into raw audio buffers and
+ * ]| This pipeline decodes the Wavpack file test.wv into raw audio buffers and
  * tries to play it back using an automatically found audio sink.
- * </para>
  * </refsect2>
  */
 

@@ -21,16 +21,14 @@
 
 /**
  * SECTION:element-pulsemixer
- * @short_description: Element to control sound input and output levels for the PulseAudio sound server
  * @see_also: pulsesrc, pulsesink
  *
- * <refsect2>
- * <para>
  * This element lets you adjust sound input and output levels for the
  * PulseAudio sound server. It supports the GstMixer interface, which can be
  * used to obtain a list of available mixer tracks. Set the mixer element to
  * READY state before using the GstMixer interface on it.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
  * <para>
  * pulsemixer can't be used in a sensible way in gst-launch.

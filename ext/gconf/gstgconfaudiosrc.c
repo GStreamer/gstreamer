@@ -17,6 +17,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-gconfaudiosrc
+ * @see_also: #GstAlsaSrc, #GstAutoAudioSrc
+ *
+ * This element records sound from the audiosink that has been configured in
+ * GConf by the user.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch gconfaudiosrc ! audioconvert ! wavenc ! filesink location=record.wav
+ * ]| Record from configured audioinput
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

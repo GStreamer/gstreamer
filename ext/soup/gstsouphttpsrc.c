@@ -14,65 +14,48 @@
 
 /**
  * SECTION:element-souphttpsrc
- * @short_description: Read from an HTTP/HTTPS/WebDAV/Icecast/Shoutcast
- * location.
  *
- * <refsect2>
- * <para>
  * This plugin reads data from a remote location specified by a URI.
  * Supported protocols are 'http', 'https'.
- * </para>
- * <para>
+ * 
  * An HTTP proxy must be specified by its URL.
  * If the "http_proxy" environment variable is set, its value is used.
  * If built with libsoup's GNOME integration features, the GNOME proxy
  * configuration will be used, or failing that, proxy autodetection.
- * The element-souphttpsrc::proxy property can be used to override the
- * default.
- * </para>
- * <para>
- * In case the element-souphttpsrc::iradio-mode property is set and the
- * location is an HTTP resource, souphttpsrc will send special Icecast HTTP
- * headers to the server to request additional Icecast meta-information. If
- * the server is not an Icecast server, it will behave as if the
- * element-souphttpsrc::iradio-mode property were not set. If it is,
- * souphttpsrc will output data with a media type of application/x-icy,
- * in which case you will need to use the #ICYDemux element as follow-up
- * element to extract the Icecast metadata and to determine the underlying
- * media type.
- * </para>
- * <para>
- * Example pipeline:
- * <programlisting>
+ * The #GstSoupHTTPSrc:proxy property can be used to override the default.
+ *
+ * In case the #GstSoupHTTPSrc:iradio-mode property is set and the location is
+ * an HTTP resource, souphttpsrc will send special Icecast HTTP headers to the
+ * server to request additional Icecast meta-information.
+ * If the server is not an Icecast server, it will behave as if the
+ * #GstSoupHTTPSrc:iradio-mode property were not set. If it is, souphttpsrc will
+ * output data with a media type of application/x-icy, in which case you will
+ * need to use the #ICYDemux element as follow-up element to extract the Icecast
+ * metadata and to determine the underlying media type.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
  * gst-launch -v souphttpsrc location=https://some.server.org/index.html
  *     ! filesink location=/home/joe/server.html
- * </programlisting>
- * The above pipeline reads a web page from a server using the HTTPS protocol
+ * ]| The above pipeline reads a web page from a server using the HTTPS protocol
  * and writes it to a local file.
- * </para>
- * <para>
- * Another example pipeline:
- * <programlisting>
+ * |[
  * gst-launch -v souphttpsrc user-agent="FooPlayer 0.99 beta"
  *     automatic-redirect=false proxy=http://proxy.intranet.local:8080
  *     location=http://music.foobar.com/demo.mp3 ! mad ! audioconvert
  *     ! audioresample ! alsasink
- * </programlisting>
- * The above pipeline will read and decode and play an mp3 file from a
+ * ]| The above pipeline will read and decode and play an mp3 file from a
  * web server using the HTTP protocol. If the server sends redirects,
  * the request fails instead of following the redirect. The specified
  * HTTP proxy server is used. The User-Agent HTTP request header
  * is set to a custom string instead of "GStreamer souphttpsrc."
- * </para>
- * <para>
- * Yet another example pipeline:
- * <programlisting>
+ * |[
  * gst-launch -v souphttpsrc location=http://10.11.12.13/mjpeg
  *     do-timestamp=true ! multipartdemux
  *     ! image/jpeg,width=640,height=480 ! matroskamux
  *     ! filesink location=mjpeg.mkv
- * </programlisting>
- * The above pipeline reads a motion JPEG stream from an IP camera
+ * ]| The above pipeline reads a motion JPEG stream from an IP camera
  * using the HTTP protocol, encoded as mime/multipart image/jpeg
  * parts, and writes a Matroska motion JPEG file. The width and
  * height properties are set in the caps to provide the Matroska
@@ -81,9 +64,7 @@
  * These are used by the mime/multipart demultiplexer to emit timestamps
  * on the JPEG-encoded video frame buffers. This allows the Matroska
  * multiplexer to timestamp the frames in the resulting file.
- * </para>
  * </refsect2>
- *
  */
 
 #ifdef HAVE_CONFIG_H

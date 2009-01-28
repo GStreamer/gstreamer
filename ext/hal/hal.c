@@ -40,7 +40,7 @@ GST_DEBUG_CATEGORY_EXTERN (hal_debug);
 #define LIBHAL_FREE_DBUS_ERROR(e) dbus_error_free (e)
 #endif
 
-/**
+/*
  * gst_hal_get_alsa_element:
  * @ctx: a #LibHalContext which should be used for querying HAL.
  * @udi: a #gchar corresponding to the UDI you want to get.
@@ -130,7 +130,7 @@ gst_hal_get_alsa_element (LibHalContext * ctx, const gchar * udi,
   return string;
 }
 
-/**
+/*
  * gst_hal_get_oss_element:
  * @ctx: a #LibHalContext which should be used for querying HAL.
  * @udi: a #gchar corresponding to the UDI you want to get.
@@ -203,7 +203,7 @@ gst_hal_get_oss_element (LibHalContext * ctx, const gchar * udi,
   return string;
 }
 
-/**
+/*
  * gst_hal_get_string:
  * @udi: a #gchar corresponding to the UDI you want to get.
  * @device_type: a #GstHalDeviceType specifying the wanted device type.

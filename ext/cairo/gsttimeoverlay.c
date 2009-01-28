@@ -21,17 +21,14 @@
 /**
  * SECTION:element-cairotimeoverlay
  *
- * <refsect2>
- * <para>
  * cairotimeoverlay renders the buffer timestamp for each frame on top of
  * the frame.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch -v -m videotestsrc ! cairotimeoverlay ! autovideosink
- * </programlisting>
- * </para>
+ * |[
+ * gst-launch videotestsrc ! cairotimeoverlay ! autovideosink
+ * ]|
  * </refsect2>
  */
 

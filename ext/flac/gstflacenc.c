@@ -16,6 +16,21 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-flacenc
+ * @see_also: #GstFlacDec
+ *
+ * flacenc encodes FLAC streams.
+ * <ulink url="http://flac.sourceforge.net/">FLAC</ulink>
+ * is a Free Lossless Audio Codec.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch audiotestsrc num-buffers=100 ! flacenc ! filesink location=beep.flac
+ * ]|
+ * </refsect2>
+ */
 
 /* TODO: - We currently don't handle discontinuities in the stream in a useful
  *         way and instead rely on the developer plugging in audiorate if

@@ -17,6 +17,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-gconfvideosrc
+ * @see_also: #GstAlsaSrc, #GstAutoVideoSrc
+ *
+ * This element records video from the videosink that has been configured in
+ * GConf by the user.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch gconfvideosrc ! theoraenc ! oggmux ! filesink location=record.ogg
+ * ]| Record from configured videoinput
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
