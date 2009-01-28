@@ -19,23 +19,17 @@
 
 /**
  * SECTION:element-multipartmux
- * @short_description: Muxer that takes one or several digital streams
- * and muxes them to a single multipart stream.
  *
- * <refsect2>
- * <para>
  * MultipartMux uses the #GstCaps of the sink pad as the Content-type field for
  * incoming buffers when muxing them to a multipart stream. Most of the time 
  * multipart streams are sequential JPEG frames.
- * </para>
+ *
+ * <refsect2>
  * <title>Sample pipelines</title>
- * <para>
- * Here is a simple pipeline to mux 5 JPEG frames per second into a multipart
- * stream stored to a file :
- * <programlisting>
+ * |[
  * gst-launch videotestsrc ! video/x-raw-yuv, framerate=(fraction)5/1 ! jpegenc ! multipartmux ! filesink location=/tmp/test.multipart
- * </programlisting>
- * </para>
+ * ]| a simple pipeline to mux 5 JPEG frames per second into a multipart stream
+ * stored to a file.
  * </refsect2>
  */
 

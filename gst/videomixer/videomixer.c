@@ -19,33 +19,26 @@
 
 /**
  * SECTION:element-videomixer
- * @short_description: Takes several AYUV video streams as input and mixes them
- * together.
  *
- * <refsect2>
- * <para>
  * Videomixer can only accept AYUV video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
  * output parameters. Indeed output video frames will have the geometry of the
  * biggest incoming video stream and the framerate of the fastest incoming one.
- * </para>
- * <para>
+ *
  * Individual parameters for each input stream can be configured on the
  * #GstVideoMixerPad.
- * </para>
+ *
+ * <refsect2>
  * <title>Sample pipelines</title>
- * <para>
- * Here is a pipeline to demonstrate videomixer used together with videobox :
- * <programlisting>
+ * |[
  * gst-launch videotestsrc pattern=1 ! video/x-raw-yuv, framerate=\(fraction\)10/1, width=100, height=100 ! videobox border-alpha=0 alpha=0.5 top=-70 bottom=-70 right=-220 ! videomixer name=mix ! ffmpegcolorspace ! xvimagesink videotestsrc ! video/x-raw-yuv, framerate=\(fraction\)5/1, width=320, height=240 ! alpha alpha=0.7 ! mix.
- * </programlisting>
+ * ]| A pipeline to demonstrate videomixer used together with videobox.
  * This should show a 320x240 pixels video test source with some transparency
  * showing the background checker pattern. Another video test source with just
  * the snow pattern of 100x100 pixels is overlayed on top of the first one on
  * the left vertically centered with a small transparency showing the first
  * video test source behind and the checker pattern under it. Note that the
  * framerate of the output video is 10 frames per second.
- * </para>
  * </refsect2>
  */
 

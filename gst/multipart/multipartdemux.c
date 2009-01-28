@@ -22,34 +22,27 @@
 
 /**
  * SECTION:element-multipartdemux
- * @short_description: Demuxer that takes a multipart digital stream as input
- * and demuxes one or many digital streams from it.
  * @see_also: #GstMultipartMux
  *
- * <refsect2>
- * <para>
  * MultipartDemux uses the Content-type field of incoming buffers to demux and 
  * push data to dynamic source pads. Most of the time multipart streams are 
  * sequential JPEG frames generated from a live source such as a network source
  * or a camera.
- * </para>
+ *
+ * The output buffers of the multipartdemux typically have no timestamps and are
+ * usually played as fast as possible (at the rate that the source provides the
+ * data).
+ *
+ * the content in multipart files is separated with a boundary string that can
+ * be configured specifically with the #GstMultipartDemux:boundary property
+ * otherwise it will be autodetected.
+ *
+ * <refsect2>
  * <title>Sample pipelines</title>
- * <para>
- * Here is a simple pipeline to demux a multipart file muxed with
- * #GstMultipartMux containing JPEG frames:
- * <programlisting>
+ * |[
  * gst-launch filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! ffmpegcolorspace ! ximagesink
- * </programlisting>
- * </para>
- * <para>
- * The output buffers of the multipartdemux typically have no timestamps and are usually 
- * played as fast as possible (at the rate that the source provides the data).
- * </para>
- * <para>
- * the content in multipart files is separated with a boundary string that can be 
- * configured specifically with the "boundary" property otherwise it will be 
- * autodetected. 
- * </para>
+ * ]| a simple pipeline to demux a multipart file muxed with #GstMultipartMux
+ * containing JPEG frames.
  * </refsect2>
  */
 

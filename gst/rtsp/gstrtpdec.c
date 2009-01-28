@@ -44,11 +44,7 @@
 /**
  * SECTION:element-rtpdec
  *
- * <refsect2>
- * <para>
  * A simple RTP session manager used internally by rtspsrc.
- * </para>
- * </refsect2>
  *
  * Last reviewed on 2006-06-20 (0.10.4)
  */
@@ -252,8 +248,8 @@ gst_rtp_dec_marshal_BOXED__UINT_UINT (GClosure * closure,
     data2 = closure->data;
   }
   callback =
-      (GMarshalFunc_BOXED__UINT_UINT) (marshal_data ? marshal_data : cc->
-      callback);
+      (GMarshalFunc_BOXED__UINT_UINT) (marshal_data ? marshal_data :
+      cc->callback);
 
   v_return = callback (data1,
       g_marshal_value_peek_uint (param_values + 1),
@@ -285,8 +281,8 @@ gst_rtp_dec_marshal_VOID__UINT_UINT (GClosure * closure,
     data2 = closure->data;
   }
   callback =
-      (GMarshalFunc_VOID__UINT_UINT) (marshal_data ? marshal_data : cc->
-      callback);
+      (GMarshalFunc_VOID__UINT_UINT) (marshal_data ? marshal_data :
+      cc->callback);
 
   callback (data1,
       g_marshal_value_peek_uint (param_values + 1),

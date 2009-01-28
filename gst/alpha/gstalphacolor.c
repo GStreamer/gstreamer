@@ -20,12 +20,8 @@
 /**
  * SECTION:element-alphacolor
  *
- * <refsect2>
- * <para>
  * The alphacolor element does memory-efficient (in-place) colourspace
  * conversion from RGBA to AYUV, preserving the alpha channel.
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

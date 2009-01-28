@@ -19,31 +19,23 @@
 
 /**
  * SECTION:element-smpte
- * @short_description: Takes to video frames and applies an SMPTE transition 
- * effect on them.
  *
- * <refsect2>
- * <para>
  * smpte can accept I420 video streams with the same width, height and
  * framerate. The two incomming buffers are blended together using an effect
  * specific alpha mask. 
- * </para>
- * <para>
- * The depth property defines the presision in bits of the mask. A higher
- * presision will create a mask with smoother gradients in order to avoid
+ *
+ * The #GstSmpte:depth property defines the presision in bits of the mask. A
+ * higher presision will create a mask with smoother gradients in order to avoid
  * banding.
- * </para>
+ *
+ * <refsect2>
  * <title>Sample pipelines</title>
- * <para>
- * Here is a pipeline to demonstrate the smpte transition :
- * <programlisting>
- * gst-launch -v videotestsrc pattern=1 ! smpte name=s border=20000 type=234
- * duration=2000000000 ! ffmpegcolorspace ! ximagesink videotestsrc ! s.
- * </programlisting>
- * This shows a pinwheel transition a from a snow videotestsrc to an smpte
+ * |[
+ * gst-launch -v videotestsrc pattern=1 ! smpte name=s border=20000 type=234 duration=2000000000 ! ffmpegcolorspace ! ximagesink videotestsrc ! s.
+ * ]| A pipeline to demonstrate the smpte transition.
+ * It shows a pinwheel transition a from a snow videotestsrc to an smpte
  * pattern videotestsrc. The transition will take 2 seconds to complete. The
  * edges of the transition are smoothed with a 20000 big border.
- * </para>
  * </refsect2>
  */
 
@@ -491,8 +483,8 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
       GstCaps *caps;
 
       caps =
-          gst_caps_copy (gst_static_caps_get (&gst_smpte_src_template.
-              static_caps));
+          gst_caps_copy (gst_static_caps_get
+          (&gst_smpte_src_template.static_caps));
       gst_caps_set_simple (caps, "width", G_TYPE_INT, smpte->width, "height",
           G_TYPE_INT, smpte->height, "framerate", GST_TYPE_FRACTION,
           smpte->fps_num, smpte->fps_denom, NULL);

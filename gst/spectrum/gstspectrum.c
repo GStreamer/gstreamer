@@ -20,17 +20,13 @@
  */
 /**
  * SECTION:element-spectrum
- * @short_description: audio spectrum analyzer
  *
- * <refsect2>
- * <para>
  * The Spectrum element analyzes the frequency spectrum of an audio signal.
  * If the #GstSpectrum:message property is #TRUE, it sends analysis results as
  * application messages named
  * <classname>&quot;spectrum&quot;</classname> after each interval of time given
  * by the #GstSpectrum:interval property.
- * </para>
- * <para>
+ *
  * The message's structure contains some combination of these fields:
  * <itemizedlist>
  * <listitem>
@@ -87,19 +83,15 @@
  *   </para>
  * </listitem>
  * </itemizedlist>
- * </para>
- * <para>
- * This element cannot be used with the gst-launch command in a sensible way.
- * This sample code demonstrates how to use it in an application.
- * </para>
+ *
+ * <refsect2>
  * <title>Example application</title>
- * <para>
- * <include xmlns="http://www.w3.org/2003/XInclude" href="element-spectrum-example.xml" />
- * </para>
- * <para>
- * Last reviewed on 2009-01-14 (0.10.12)
- * </para>
+ * |[
+ * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/spectrum/spectrum-example.c" />
+ * ]|
  * </refsect2>
+ *
+ * Last reviewed on 2009-01-14 (0.10.12)
  */
 
 #ifdef HAVE_CONFIG_H

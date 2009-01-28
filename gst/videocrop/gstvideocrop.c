@@ -21,35 +21,29 @@
  * SECTION:element-videocrop
  * @see_also: #GstVideoBox
  *
- * <refsect2>
- * <para>
  * This element crops video frames, meaning it can remove parts of the
  * picture on the left, right, top or bottom of the picture and output
  * a smaller picture than the input picture, with the unwanted parts at the
  * border removed.
- * </para>
- * <para>
+ *
  * The videocrop element is similar to the videobox element, but its main
  * goal is to support a multitude of formats as efficiently as possible.
  * Unlike videbox, it cannot add borders to the picture and unlike videbox
  * it will always output images in exactly the same format as the input image.
- * </para>
- * <para>
+ *
  * If there is nothing to crop, the element will operate in pass-through mode.
- * </para>
- * <para>
+ *
  * Note that no special efforts are made to handle chroma-subsampled formats
  * in the case of odd-valued cropping and compensate for sub-unit chroma plane
- * shifts for such formats in the case where the "left" or "top" property is
- * set to an odd number. This doesn't matter for most use cases, but it might
- * matter for yours.
- * </para>
+ * shifts for such formats in the case where the #GstVideoCrop:left or
+ * #GstVideoCrop:top property is set to an odd number. This doesn't matter for 
+ * most use cases, but it might matter for yours.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v videotestsrc ! videocrop top=42 left=1 right=4 bottom=0 ! ximagesink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

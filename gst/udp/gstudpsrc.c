@@ -22,72 +22,46 @@
  * SECTION:element-udpsrc
  * @see_also: udpsink, multifdsink
  *
- * <refsect2>
- * <para>
  * udpsrc is a network source that reads UDP packets from the network.
  * It can be combined with RTP depayloaders to implement RTP streaming.
- * </para>
- * <title>Examples</title>
- * <para>
- * Here is a simple pipeline to read from the default port and dump the udp packets.
- * <programlisting>
- * gst-launch -v udpsrc ! fakesink dump=1
- * </programlisting>
- * To actually generate udp packets on the default port one can use the
- * udpsink element. When running the following pipeline in another terminal, the
- * above mentioned pipeline should dump data packets to the console.
- * <programlisting>
- * gst-launch -v audiotestsrc ! udpsink
- * </programlisting>
- * </para>
- * <para>
+ *
  * The udpsrc element supports automatic port allocation by setting the
- * "port" property to 0. the following pipeline reads UDP from a free port.
- * <programlisting>
- * gst-launch -v udpsrc port=0 ! fakesink
- * </programlisting>
- * After setting the udpsrc to PAUSED, the allocated port can be obtained by
- * reading the port property.
- * </para>
- * <para>
- * udpsrc can read from multicast groups by setting the multicast_group property
- * to the IP address of the multicast group.
- * </para>
- * <para>
- * Alternatively one can provide a custom socket to udpsrc with the "sockfd" property,
- * udpsrc will then not allocate a socket itself but use the provided one.
- * </para>
- * <para>
- * The "caps" property is mainly used to give a type to the UDP packet so that they
- * can be autoplugged in GStreamer pipelines. This is very usefull for RTP 
- * implementations where the contents of the UDP packets is transfered out-of-bounds
- * using SDP or other means. 
- * </para>
- * <para>
- * The "buffer" property is used to change the default kernel buffer sizes used for
- * receiving packets. The buffer size may be increased for high-volume connections,
- * or may be decreased to limit the possible backlog of incoming data.
- * The system places an absolute limit on these values, on Linux, for example, the
- * default buffer size is typically 50K and can be increased to maximally 100K.
- * </para>
- * <para>
- * The "skip-first-bytes" property is used to strip off an arbitrary number of
- * bytes from the start of the raw udp packet and can be used to strip off
- * proprietary header, for example. 
- * </para>
- * <para>
- * The udpsrc is always a live source. It does however not provide a GstClock, this
- * is left for upstream elements such as an RTP session manager or demuxer (such
- * as an MPEG demuxer). As with all live sources, the captured buffers will have
- * their timestamp set to the current running time of the pipeline.
- * </para>
- * <para>
- * udpsrc implements a GstURIHandler interface that handles udp://host:port type
- * URIs.
- * </para>
- * <para>
- * If the <link linkend="GstUDPSrc--timeout">timeout property</link> is set to a
- * value bigger than 0, udpsrc will generate an element message named
+ * #GstUDPSrc:port property to 0. After setting the udpsrc to PAUSED, the
+ * allocated port can be obtained by reading the port property.
+ *
+ * udpsrc can read from multicast groups by setting the #GstUDPSrc:multicast_group
+ * property to the IP address of the multicast group.
+ *
+ * Alternatively one can provide a custom socket to udpsrc with the #GstUDPSrc:sockfd
+ * property, udpsrc will then not allocate a socket itself but use the provided
+ * one.
+ *
+ * The #GstUDPSrc:caps property is mainly used to give a type to the UDP packet
+ * so that they can be autoplugged in GStreamer pipelines. This is very usefull
+ * for RTP implementations where the contents of the UDP packets is transfered
+ * out-of-bounds using SDP or other means.
+ *
+ * The #GstUDPSrc:buffer property is used to change the default kernel buffer
+ * sizes used for receiving packets. The buffer size may be increased for
+ * high-volume connections, or may be decreased to limit the possible backlog of
+ * incoming data. The system places an absolute limit on these values, on Linux,
+ * for example, the default buffer size is typically 50K and can be increased to
+ * maximally 100K.
+ *
+ * The #GstUDPSrc:skip-first-bytes property is used to strip off an arbitrary
+ * number of bytes from the start of the raw udp packet and can be used to strip
+ * off proprietary header, for example. 
+ *
+ * The udpsrc is always a live source. It does however not provide a #GstClock,
+ * this is left for upstream elements such as an RTP session manager or demuxer
+ * (such as an MPEG demuxer). As with all live sources, the captured buffers
+ * will have their timestamp set to the current running time of the pipeline.
+ *
+ * udpsrc implements a #GstURIHandler interface that handles udp://host:port
+ * type URIs.
+ *
+ * If the #GstUDPSrc:timeout property is set to a value bigger than 0, udpsrc
+ * will generate an element message named
  * <classname>&quot;GstUDPSrcTimeout&quot;</classname>
  * if no data was recieved in the given timeout.
  * The message's structure contains one field:
@@ -105,15 +79,28 @@
  * </para>
  * <para>
  * A custom file descriptor can be configured with the 
- * <link linkend="GstUDPSrc--sockfd">sockfd property</link>. The socket will be
- * closed when setting the element to READY by default. This behaviour can be
- * overriden with the <link linkend="GstUDPSrc--closefd">closefd property</link>,
- * in which case the application is responsible for closing the file descriptor.
- * </para>
- * <para>
- * Last reviewed on 2007-09-20 (0.10.7)
- * </para>
+ * #GstUDPSrc:sockfd property. The socket will be closed when setting the
+ * element to READY by default. This behaviour can be
+ * overriden with the #GstUDPSrc:closefd property, in which case the application
+ * is responsible for closing the file descriptor.
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v udpsrc ! fakesink dump=1
+ * ]| A pipeline to read from the default port and dump the udp packets.
+ * To actually generate udp packets on the default port one can use the
+ * udpsink element. When running the following pipeline in another terminal, the
+ * above mentioned pipeline should dump data packets to the console.
+ * |[
+ * gst-launch -v audiotestsrc ! udpsink
+ * ]|
+ * |[
+ * gst-launch -v udpsrc port=0 ! fakesink
+ * ]| read udp packets from a free port.
  * </refsect2>
+ *
+ * Last reviewed on 2007-09-20 (0.10.7)
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

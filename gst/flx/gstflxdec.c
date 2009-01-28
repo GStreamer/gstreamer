@@ -19,10 +19,7 @@
 /**
  * SECTION:element-flxdec
  *
- * <refsect2>
- * <para>
  * This element decodes fli/flc/flx-video into raw video
- * </refsect2>
  */
 /*
  * http://www.coolutils.com/Formats/FLI

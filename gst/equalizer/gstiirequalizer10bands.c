@@ -19,20 +19,15 @@
 
 /**
  * SECTION:element-equalizer-10bands
- * @short_description: 10-band equalizer
  *
- * <refsect2>
- * <para>
  * The 10 band equalizer element allows to change the gain of 10 equally distributed
  * frequency bands between 30 Hz and 15 kHz.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-10bands band2=3.0 ! alsasink
- * </programlisting>
- * This raises the volume of the 3rd band which is at 119 Hz by 3 db.
- * </para>
+ * ]| This raises the volume of the 3rd band which is at 119 Hz by 3 db.
  * </refsect2>
  */
 

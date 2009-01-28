@@ -22,17 +22,14 @@
  * SECTION:element-goom
  * @see_also: synaesthesia
  *
- * <refsect2>
- * <para>
  * Goom is an audio visualisation element. It creates warping structures
  * based on the incoming audio signal.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v audiotestsrc ! goom ! ffmpegcolorspace ! xvimagesink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

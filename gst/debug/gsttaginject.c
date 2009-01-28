@@ -23,12 +23,16 @@
  *
  * Element that injects new metadata tags, but passes incomming data through
  * unmodified.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
  * |[
  * gst-launch audiotestsrc num-buffers=100 ! taginject tags="title=testsrc,artist=gstreamer" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set title and artist
  * |[
  * gst-launch audiotestsrc num-buffers=100 ! taginject tags="keywords=\"testone,audio\",title=\"audio testtone\"" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set keywords and title demonstrating quoting of special chars
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

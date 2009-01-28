@@ -30,28 +30,23 @@
 
 /**
  * SECTION:element-audiowsincband
- * @short_description: Windowed Sinc band pass and band reject filter
  *
- * <refsect2>
- * <para>
  * Attenuates all frequencies outside (bandpass) or inside (bandreject) of a frequency
  * band. The length parameter controls the rolloff, the window parameter
  * controls rolloff and stopband attenuation. The Hamming window provides a faster rolloff but a bit
  * worse stopband attenuation, the other way around for the Blackman window.
- * </para>
- * <para>
+ *
  * This element has the advantage over the Chebyshev bandpass and bandreject filter that it has
  * a much better rolloff when using a larger kernel size and almost linear phase. The only
  * disadvantage is the much slower execution time with larger kernels.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiosincband mode=band-pass lower-frequency=3000 upper-frequency=10000 length=501 window=blackman ! audioconvert ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsincband mode=band-reject lower-frequency=59 upper-frequency=61 length=10001 window=hamming ! audioconvert ! alsasink
  * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiowsincband mode=band-pass lower-frequency=1000 upper-frequency=2000 length=31 ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

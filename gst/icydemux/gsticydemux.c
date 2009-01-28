@@ -21,27 +21,21 @@
 
 /**
  * SECTION:element-icydemux
- * @short_description: reads tag information from an Icy (Icecast/Shoutcast) 
- * stream, outputting them as tag messages, and forwarding the enclosed data.
  *
- * <refsect2>
- * <para>
  * icydemux accepts data streams with ICY metadata at known intervals, as
  * transmitted from an upstream element (usually read as response headers from
  * an HTTP stream). The mime type of the data between the tag blocks is
  * detected using typefind functions, and the appropriate output mime type set
  * on outgoing buffers. 
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch souphttpsrc location=http://some.server/ iradio-mode=true ! icydemux ! fakesink -t
- * </programlisting>
- * This pipeline should read any available ICY tag information and output it.
+ * ]| This pipeline should read any available ICY tag information and output it.
  * The contents of the stream should be detected, and the appropriate mime
  * type set on buffers produced from icydemux. (Using gnomevfssrc, neonhttpsrc
  * or giosrc instead of souphttpsrc should also work.)
- * </para>
  * </refsect2>
  */
 #ifdef HAVE_CONFIG_H

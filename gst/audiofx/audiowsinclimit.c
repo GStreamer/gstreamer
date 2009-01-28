@@ -30,28 +30,23 @@
 
 /**
  * SECTION:element-audiowsinclimit
- * @short_description: Windowed Sinc low pass and high pass filter
  *
- * <refsect2>
- * <para>
  * Attenuates all frequencies above the cutoff frequency (low-pass) or all frequencies below the
  * cutoff frequency (high-pass). The length parameter controls the rolloff, the window parameter
  * controls rolloff and stopband attenuation. The Hamming window provides a faster rolloff but a bit
  * worse stopband attenuation, the other way around for the Blackman window.
- * </para>
- * <para>
+ *
  * This element has the advantage over the Chebyshev lowpass and highpass filter that it has
  * a much better rolloff when using a larger kernel size and almost linear phase. The only
  * disadvantage is the much slower execution time with larger kernels.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=501 ! audioconvert ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsinclimit mode=high-pass frequency=15000 length=501 ! audioconvert ! alsasink
  * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=10001 window=blackman ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

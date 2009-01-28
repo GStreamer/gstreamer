@@ -21,7 +21,6 @@
 
 /**
  * SECTION:rtpjpegpay
- * @short_description: RTP payloader for JPEG pictures
  *
  * Payload encode JPEG pictures into RTP packets according to RFC 2435.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc2435.txt
@@ -31,7 +30,6 @@
  * the actual JPEG entropy scan.
  *
  * The payloader assumes that correct width and height is found in the caps.
- *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -74,7 +72,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
 #define GST_CAT_DEFAULT (rtpjpegpay_debug)
 
-/**
+/*
  * QUANT_PREFIX_LEN:
  *
  * Prefix length in the header before the quantization tables:
@@ -82,13 +80,13 @@ GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
  */
 #define QUANT_PREFIX_LEN     3
 
-/**
+/*
  * DEFAULT_JPEG_QUALITY:
  *
  */
 #define DEFAULT_JPEG_QUALITY 255
 
-/**
+/*
  * DEFAULT_JPEG_TYPE:
  *
  */
@@ -96,7 +94,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpjpegpay_debug);
 
 typedef enum _RtpJpegMarker RtpJpegMarker;
 
-/**
+/*
  * RtpJpegMarker:
  * @JPEG_MARKER: Prefix for JPEG marker
  * @JPEG_MARKER_SOI: Start of Image marker
@@ -140,7 +138,7 @@ enum
 typedef struct _RtpJpegHeader RtpJpegHeader;
 typedef struct _RtpQuantHeader RtpQuantHeader;
 
-/**
+/*
  * RtpJpegHeader:
  * @type_spec: type specific
  * @offset: fragment offset
@@ -172,7 +170,7 @@ struct _RtpJpegHeader
   guint8 height;
 };
 
-/**
+/*
  * RtpQuantHeader
  * @mbz: must be zero
  * @precision: specify size of quantization tables

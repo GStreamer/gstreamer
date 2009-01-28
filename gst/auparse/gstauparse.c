@@ -20,13 +20,8 @@
 
 /**
  * SECTION:element-auparse
- * @short_description: .au file parser
  *
- * <refsect2>
- * <para>
- * Parses .au files.
- * </para>
- * </refsect2>
+ * Parses .au files mostly originating from sun os based computers.
  */
 
 #ifdef HAVE_CONFIG_H

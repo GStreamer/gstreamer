@@ -34,42 +34,35 @@
 
 /**
  * SECTION:element-audiochebband
- * @short_description: Chebyshev band pass and band reject filter
  *
- * <refsect2>
- * <para>
  * Attenuates all frequencies outside (bandpass) or inside (bandreject) of a frequency
  * band. The number of poles and the ripple parameter control the rolloff.
- * </para>
- * <para>
+ *
  * This element has the advantage over the windowed sinc bandpass and bandreject filter that it is
  * much faster and produces almost as good results. It's only disadvantages are the highly
  * non-linear phase and the slower rolloff compared to a windowed sinc filter with a large kernel.
- * </para>
- * <para>
+ *
  * For type 1 the ripple parameter specifies how much ripple in dB is allowed in the passband, i.e.
  * some frequencies in the passband will be amplified by that value. A higher ripple value will allow
  * a faster rolloff.
- * </para>
- * <para>
+ *
  * For type 2 the ripple parameter specifies the stopband attenuation. In the stopband the gain will
  * be at most this value. A lower ripple value will allow a faster rolloff.
- * </para>
- * <para>
+ *
  * As a special case, a Chebyshev type 1 filter with no ripple is a Butterworth filter.
- * </para>
- * <para><note>
+ *
+ * <note>
  * Be warned that a too large number of poles can produce noise. The most poles are possible with
  * a cutoff frequency at a quarter of the sampling rate.
- * </note></para>
+ * </note>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiochebband mode=band-pass lower-frequency=1000 upper-frequenc=6000 poles=4 ! audioconvert ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiochebband mode=band-reject lower-frequency=1000 upper-frequency=4000 ripple=0.2 ! audioconvert ! alsasink
  * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiochebband mode=band-pass lower-frequency=1000 upper-frequency=4000 type=2 ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

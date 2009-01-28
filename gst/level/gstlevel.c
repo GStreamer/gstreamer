@@ -21,10 +21,7 @@
 
 /**
  * SECTION:element-level
- * @short_description: audio level analyzer
  *
- * <refsect2>
- * <para>
  * Level analyses incoming audio buffers and, if the #GstLevel:message property
  * is #TRUE, generates an element message named
  * <classname>&quot;level&quot;</classname>:
@@ -95,11 +92,12 @@
  *   </para>
  * </listitem>
  * </itemizedlist>
- * </para>
+ *
+ * <refsect2>
  * <title>Example application</title>
- * <para>
- * <include xmlns="http://www.w3.org/2003/XInclude" href="element-level-example.xml" />
- * </para>
+ * |[
+ * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/level/level-example.c" />
+ * ]|
  * </refsect2>
  */
 

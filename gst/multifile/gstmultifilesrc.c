@@ -20,29 +20,23 @@
  */
 /**
  * SECTION:element-multifilesrc
- * @short_description: Read buffers from sequentially-named files
  * @see_also: #GstFileSrc
  *
- * <refsect2>
- * <para>
  * Reads buffers from sequentially named files. If used together with an image
- * decoder, one needs to use the GstMultiFileSrc::caps property or a capsfilter
+ * decoder, one needs to use the #GstMultiFileSrc:caps property or a capsfilter
  * to force to caps containing a framerate. Otherwise image decoders send EOS
  * after the first picture.
- * </para>
+ *
+ * File names are created by replacing "%%d" with the index using printf().
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch multifilesrc location="img.%04d.png" index=0 caps="image/png,framerate=\(fraction\)12/1" ! \
  *     pngdec ! ffmpegcolorspace ! theoraenc ! oggmux ! \
  *     filesink location="images.ogg"
- * </programlisting>
- * This pipeline creates a video file "images.ogg" by joining multiple PNG
+ * ]| This pipeline creates a video file "images.ogg" by joining multiple PNG
  * files named img.0000.png, img.0001.png, etc.
- * </para>
- * <para>
- * File names are created by replacing "%%d" with the index using printf().
- * </para>
  * </refsect2>
 */
 
@@ -232,6 +226,7 @@ gst_multi_file_src_set_location (GstMultiFileSrc * src, const gchar * location)
 
   return TRUE;
 }
+
 static void
 gst_multi_file_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)

@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>spectrum</name>

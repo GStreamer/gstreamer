@@ -21,31 +21,27 @@
 
 /**
  * SECTION:element-audiofirfilter
- * @short_description: Generic audio FIR filter
  *
- * <refsect2>
- * <para>
  * audiofirfilter implements a generic audio <ulink url="http://en.wikipedia.org/wiki/Finite_impulse_response">FIR filter</ulink>. Before usage the
  * "kernel" property has to be set to the filter kernel that should be
  * used and the "latency" property has to be set to the latency (in samples)
  * that is introduced by the filter kernel. Setting a latency of n samples
  * will lead to the first n samples being dropped from the output and
  * n samples added to the end.
- * </para>
- * <para>
+ *
  * The filter kernel describes the impulse response of the filter. To
  * calculate the frequency response of the filter you have to calculate
  * the Fourier Transform of the impulse response.
- * </para>
- * <para>
+ *
  * To change the filter kernel whenever the sampling rate changes the
  * "rate-changed" signal can be used. This should be done for most
  * FIR filters as they're depending on the sampling rate.
- * </para>
+ *
+ * <refsect2>
  * <title>Example application</title>
- * <para>
- * <include xmlns="http://www.w3.org/2003/XInclude" href="element-firfilter-example.xml" />
- * </para>
+ * |[
+ * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/audiofx/firfilter-example.c" />
+ * ]|
  * </refsect2>
  */
 

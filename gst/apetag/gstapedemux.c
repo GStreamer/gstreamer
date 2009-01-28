@@ -20,33 +20,26 @@
 
 /**
  * SECTION:element-apedemux
- * @short_description: reads tag information from APE tag data blocks and
- * outputs them as GStreamer tag messages and events.
  *
- * <refsect2>
- * <para>
  * apedemux accepts data streams with APE tags at the start or at the end
  * (or both). The mime type of the data between the tag blocks is detected
  * using typefind functions, and the appropriate output mime type set on
- * outgoing buffers. 
- * </para>
- * <para>
+ * outgoing buffers.
+ *
  * The element is only able to read APE tags at the end of a stream from
  * a seekable stream, ie. when get_range mode is supported by the upstream
  * elements. If get_range operation is available, apedemux makes it available
  * downstream. This means that elements which require get_range mode, such as
  * wavparse or musepackdec, can operate on files containing APE tag
  * information.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -t filesrc location=file.mpc ! apedemux ! fakesink
- * </programlisting>
- * This pipeline should read any available APE tag information and output it.
+ * ]| This pipeline should read any available APE tag information and output it.
  * The contents of the file inside the APE tag regions should be detected, and
  * the appropriate mime type set on buffers produced from apedemux.
- * </para>
  * </refsect2>
  */
 #ifdef HAVE_CONFIG_H

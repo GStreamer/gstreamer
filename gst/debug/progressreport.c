@@ -22,32 +22,26 @@
 
 /**
  * SECTION:element-progressreport
- * @short_description: Reports progress
- * @see_also:
  *
- * <refsect2>
- * <para>
  * The progressreport element can be put into a pipeline to report progress,
  * which is done by doing upstream duration and position queries in regular
  * (real-time) intervals. Both the interval and the prefered query format
- * can be specified via the "update-freq" and the "format" property.
- * </para>
- * <para>
+ * can be specified via the #GstProgressReport:update-freq and the
+ * #GstProgressReport:format property.
+ *
  * Element messages containing a "progress" structure are posted on the bus
  * whenever progress has been queried (since gst-plugins-good 0.10.6 only).
- * </para>
- * <para>
+ *
  * Since the element was originally designed for debugging purposes, it will
  * by default also print information about the current progress to the
- * terminal. This can be prevented by setting the "silent" property to TRUE.
- * </para>
- * <para>
+ * terminal. This can be prevented by setting the #GstProgressReport:silent
+ * property to %TRUE.
+ *
  * This element is most useful in transcoding pipelines or other situations
  * where just querying the pipeline might not lead to the wanted result. For
  * progress in TIME format, the element is best placed in a 'raw stream'
  * section of the pipeline (or after any demuxers/decoders/parsers).
- * </para>
- * <para>
+ *
  * Three more things should be pointed out: firstly, the element will only
  * query progress when data flow happens. If data flow is stalled for some
  * reason, no progress messages will be posted. Secondly, there are other
@@ -58,20 +52,15 @@
  * take action when they receive an EOS message (since the progress reported
  * is in reference to an internal point of a pipeline and not the pipeline as
  * a whole).
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -m filesrc location=foo.ogg ! decodebin ! progressreport update-freq=1 ! audioconvert ! audioresample ! autoaudiosink
- * </programlisting>
- * This shows a progress query where a duration is available.
- * </para>
- * <para>
- * <programlisting>
+ * ]| This shows a progress query where a duration is available.
+ * |[
  * gst-launch -m audiotestsrc ! progressreport update-freq=1 ! audioconvert ! autoaudiosink
- * </programlisting>
- * This shows a progress query where no duration is available.
- * </para>
+ * ]| This shows a progress query where no duration is available.
  * </refsect2>
  */
 

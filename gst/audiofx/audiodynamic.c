@@ -20,21 +20,19 @@
 
 /**
  * SECTION:element-audiodynamic
- * @short_description: Compressor and Expander
  *
- * <refsect2>
  * This element can act as a compressor or expander. A compressor changes the
  * amplitude of all samples above a specific threshold with a specific ratio,
  * a expander does the same for all samples below a specific threshold. If
  * soft-knee mode is selected the ratio is applied smoothly.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc wave=saw ! audiodynamic characteristics=soft-knee mode=compressor threshold=0.5 rate=0.5 ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiodynamic characteristics=hard-knee mode=expander threshold=0.2 rate=4.0 ! alsasink
  * gst-launch audiotestsrc wave=saw ! audioconvert ! audiodynamic ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

@@ -30,42 +30,35 @@
 
 /**
  * SECTION:element-audiocheblimit
- * @short_description: Chebyshev low pass and high pass filter
  *
- * <refsect2>
- * <para>
  * Attenuates all frequencies above the cutoff frequency (low-pass) or all frequencies below the
  * cutoff frequency (high-pass). The number of poles and the ripple parameter control the rolloff.
- * </para>
- * <para>
+ *
  * This element has the advantage over the windowed sinc lowpass and highpass filter that it is
  * much faster and produces almost as good results. It's only disadvantages are the highly
  * non-linear phase and the slower rolloff compared to a windowed sinc filter with a large kernel.
- * </para>
- * <para>
+ *
  * For type 1 the ripple parameter specifies how much ripple in dB is allowed in the passband, i.e.
  * some frequencies in the passband will be amplified by that value. A higher ripple value will allow
  * a faster rolloff.
- * </para>
- * <para>
+ *
  * For type 2 the ripple parameter specifies the stopband attenuation. In the stopband the gain will
  * be at most this value. A lower ripple value will allow a faster rolloff.
- * </para>
- * <para>
+ *
  * As a special case, a Chebyshev type 1 filter with no ripple is a Butterworth filter.
  * </para>
- * <para><note>
+ * <note><para>
  * Be warned that a too large number of poles can produce noise. The most poles are possible with
  * a cutoff frequency at a quarter of the sampling rate.
- * </note></para>
- * <title>Example launch line</title>
+ * </para></note>
  * <para>
- * <programlisting>
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
  * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiocheblimit mode=low-pass cutoff=1000 poles=4 ! audioconvert ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiocheblimit mode=high-pass cutoff=400 ripple=0.2 ! audioconvert ! alsasink
  * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiocheblimit mode=low-pass cutoff=800 type=2 ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

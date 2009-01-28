@@ -19,26 +19,21 @@
 
 /**
  * SECTION:element-smptealpha
- * @short_description: Takes a video frames and applies an SMPTE transition 
- * effect on it in the alpha channel.
+ *
+ * smptealpha can accept an I420 or AYUV video stream. An alpha channel is added
+ * using an effect specific SMPTE mask in the I420 input case. In the AYUV case,
+ * the alpha channel is modified using the effect specific SMPTE mask.
+ *
+ * The #GstSmpteAlpha:position property is a controllabe double between 0.0 and
+ * 1.0 that specifies the position in the transition. 0.0 is the start of the
+ * transition with the alpha channel to complete opaque where 1.0 has the alpha
+ * channel set to completely transparent.
+ *
+ * The #GstSmpteAlpha:depth property defines the precision in bits of the mask.
+ * A higher presision will create a mask with smoother gradients in order to
+ * avoid banding.
  *
  * <refsect2>
- * <para>
- * smptealpha can accept an I420 or AYUV video stream. An alpha channel is added
- * using an effect specific SMPTE mask in the I420 input case. In the AYUV case, the
- * alpha channel is modified using the effect specific SMPTE mask.
- * </para>
- * <para>
- * The "position" property is a controllabe double between 0.0 and 1.0 that
- * specifies the position in the transition. 0.0 is the start of the transition
- * with the alpha channel to complete opaque where 1.0 has the alpha channel set
- * to completely transparent.
- * </para>
- * <para>
- * The depth property defines the precision in bits of the mask. A higher
- * presision will create a mask with smoother gradients in order to avoid
- * banding.
- * </para>
  * <title>Sample pipelines</title>
  * <para>
  * Here is a pipeline to demonstrate the smpte transition :
@@ -432,6 +427,7 @@ gst_smpte_alpha_do_ayuv (GstSMPTEAlpha * smpte, guint8 * in, guint8 * out,
     }
   }
 }
+
 static void
 gst_smpte_alpha_do_i420 (GstSMPTEAlpha * smpte, guint8 * in, guint8 * out,
     GstMask * mask, gint width, gint height, gint border, gint pos)

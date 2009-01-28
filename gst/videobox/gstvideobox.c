@@ -16,7 +16,25 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:element-videobox
+ * @see_also: #GstVideoCrop
+ *
+ * This plugin crops or enlarges the image. It takes 4 values as input, a
+ * top, bottom, left and right offset. Positive values will crop that much
+ * pixels from the respective border of the image, negative values will add
+ * that much pixels. When pixels are added, you can specify their color. 
+ * Some predefined colors are usable with an enum property.
+ * 
+ * The plugin is alpha channel aware and will try to negotiate with a format
+ * that supports alpha channels first. When alpha channel is active two
+ * other properties, alpha and border_alpha can be used to set the alpha
+ * values of the inner picture and the border respectively. an alpha value of
+ * 0.0 means total transparency, 1.0 is opaque.
+ * 
+ * The videobox plugin has many uses such as doing a mosaic of pictures, 
+ * letterboxing video, cutting out pieces of video, picture in picture, etc..
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -1147,6 +1165,7 @@ invalid_format:
   }
 }
 
+/* FIXME: 0.11 merge with videocrop plugin */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

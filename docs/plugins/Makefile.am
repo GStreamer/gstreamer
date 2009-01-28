@@ -103,6 +103,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/pulse/pulsesink.h \
 	$(top_srcdir)/ext/pulse/pulsesrc.h \
 	$(top_srcdir)/ext/pulse/pulsemixer.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
 	$(top_srcdir)/gst/alpha/gstalphacolor.h \
 	$(top_srcdir)/gst/apetag/gstapedemux.h \
 	$(top_srcdir)/gst/audiofx/audioamplify.h \
@@ -124,6 +127,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/avi/gstavidemux.h \
 	$(top_srcdir)/gst/avi/gstavimux.h \
 	$(top_srcdir)/gst/avi/gstavisubtitle.h \
+	$(top_srcdir)/gst/cutter/gstcutter.h \
 	$(top_srcdir)/gst/debug/gsttaginject.h \
 	$(top_srcdir)/gst/debug/progressreport.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer.h \
@@ -131,6 +135,11 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
 	$(top_srcdir)/gst/goom/gstgoom.h \
+	$(top_srcdir)/gst/goom2k1/gstgoom.h \
+	$(top_srcdir)/gst/law/alaw-decode.h \
+	$(top_srcdir)/gst/law/alaw-encode.h \
+	$(top_srcdir)/gst/law/mulaw-decode.h \
+	$(top_srcdir)/gst/law/mulaw-encode.h \
 	$(top_srcdir)/gst/icydemux/gsticydemux.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \
 	$(top_srcdir)/gst/interleave/deinterleave.h \
@@ -147,13 +156,16 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
+	$(top_srcdir)/gst/rtp/gstrtpjpegpay.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/smpte/gstsmpte.h \
 	$(top_srcdir)/gst/smpte/gstsmptealpha.h \
 	$(top_srcdir)/gst/spectrum/gstspectrum.h \
+	$(top_srcdir)/gst/udp/gstdynudpsink.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
+	$(top_srcdir)/gst/udp/gstudpsink.h \
 	$(top_srcdir)/gst/videocrop/gstvideocrop.h \
 	$(top_srcdir)/gst/videocrop/gstaspectratiocrop.h \
 	$(top_srcdir)/gst/videofilter/gstgamma.h \
@@ -161,10 +173,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.h \
 	$(top_srcdir)/gst/videomixer/videomixerpad.h \
-	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
-	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
-	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
-	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
+	$(top_srcdir)/gst/wavenc/gstwavenc.h \
 	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/directsound/gstdirectsoundsink.h \
@@ -175,6 +184,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/osxaudio/gstosxaudiosink.h \
 	$(top_srcdir)/sys/osxvideo/osxvideosink.h \
 	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
+	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
 
 

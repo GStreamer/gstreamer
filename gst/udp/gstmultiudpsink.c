@@ -21,13 +21,9 @@
  * SECTION:element-multiupdsink
  * @see_also: udpsink, multifdsink
  *
- * <refsect2>
- * <para>
  * multiudpsink is a network sink that sends UDP packets to multiple
  * clients.
  * It can be combined with rtp payload encoders to implement RTP streaming.
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

@@ -23,13 +23,9 @@
  */
 /**
  * SECTION:element-multifilesink
- * @short_description: Writes buffers to sequentially-named files
  * @see_also: #GstFileSrc
  *
- * <para>
  * Write incoming data to a series of sequentially-named files.
- * </para>
- *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -154,6 +150,7 @@ gst_multi_file_sink_set_location (GstMultiFileSink * sink,
 
   return TRUE;
 }
+
 static void
 gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)

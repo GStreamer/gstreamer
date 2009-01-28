@@ -21,7 +21,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gst-plugins-good-0.10"
+#define GETTEXT_PACKAGE "NULL"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -39,7 +39,7 @@
 #define GST_PACKAGE_NAME "GStreamer Good Plug-ins CVS/prerelease"
 
 /* package origin */
-#define GST_PACKAGE_ORIGIN "Unknown package origin"
+#define GST_PACKAGE_ORIGIN "http://gstreamer.freedesktop.org"
 
 /* support for features: aasink */
 #define HAVE_AALIB 

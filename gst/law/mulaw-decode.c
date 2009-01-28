@@ -16,6 +16,11 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-mulawdec
+ *
+ * This element decodes mulaw audio. Mulaw coding is also known as G.711.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

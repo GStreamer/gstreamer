@@ -18,6 +18,37 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-cutter
+ *
+ * Analyses the audio signal for periods of silence. The start and end of
+ * silence is signalled by bus messages named
+ * <classname>&quot;cutter&quot;</classname>.
+ * The message's structure contains two fields:
+ * <itemizedlist>
+ * <listitem>
+ *   <para>
+ *   #GstClockTime
+ *   <classname>&quot;timestamp&quot;</classname>:
+ *   the timestamp of the buffer that triggered the message.
+ *   </para>
+ * </listitem>
+ * <listitem>
+ *   <para>
+ *   gboolean
+ *   <classname>&quot;above&quot;</classname>:
+ *   %TRUE for begin of silence and %FALSE for end of silence.
+ *   </para>
+ * </listitem>
+ * </itemizedlist>
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -m filesrc location=foo.ogg ! decodebin ! audioconvert ! cutter ! autoaudiosink
+ * ]| Show cut messages.
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -82,7 +113,7 @@ static void gst_cutter_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_cutter_chain (GstPad * pad, GstBuffer * buffer);
 
-void gst_cutter_get_caps (GstPad * pad, GstCutter * filter);
+static gboolean gst_cutter_get_caps (GstPad * pad, GstCutter * filter);
 
 static void
 gst_cutter_base_init (gpointer g_class)
@@ -224,8 +255,10 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   g_return_val_if_fail (filter != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_CUTTER (filter), GST_FLOW_ERROR);
 
-  if (!filter->have_caps)
-    gst_cutter_get_caps (pad, filter);
+  if (!filter->have_caps) {
+    if (!(gst_cutter_get_caps (pad, filter)))
+      return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   in_data = (gint16 *) GST_BUFFER_DATA (buf);
   GST_LOG_OBJECT (filter, "length of prerec buffer: %" GST_TIME_FORMAT,
@@ -257,12 +290,12 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
    */
   GST_LOG_OBJECT (filter, "buffer stats: NMS %f, RMS %f, audio length %f", NMS,
       RMS,
-      gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
-              sinkpad, buf)));
+      gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer
+          (filter->sinkpad, buf)));
   if (RMS < filter->threshold_level)
     filter->silent_run_length +=
-        gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
-            sinkpad, buf));
+        gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer
+        (filter->sinkpad, buf));
   else {
     filter->silent_run_length = 0 * GST_SECOND;
     filter->silent = FALSE;
@@ -306,15 +339,15 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   if (filter->silent) {
     filter->pre_buffer = g_list_append (filter->pre_buffer, buf);
     filter->pre_run_length +=
-        gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
-            sinkpad, buf));
+        gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer
+        (filter->sinkpad, buf));
     while (filter->pre_run_length > filter->pre_length) {
       prebuf = (g_list_first (filter->pre_buffer))->data;
       g_assert (GST_IS_BUFFER (prebuf));
       filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
       filter->pre_run_length -=
-          gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
-              sinkpad, prebuf));
+          gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer
+          (filter->sinkpad, prebuf));
       /* only pass buffers if we don't leak */
       if (!filter->leaky)
         gst_pad_push (filter->srcpad, prebuf);
@@ -326,6 +359,28 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
 
   return GST_FLOW_OK;
 }
+
+
+static gboolean
+gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+
+  caps = gst_pad_get_caps (pad);
+  if (!caps) {
+    GST_INFO ("no caps on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    return FALSE;
+  }
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "width", &filter->width);
+  filter->max_sample = 1 << (filter->width - 1);        /* signed */
+  filter->have_caps = TRUE;
+
+  gst_caps_unref (caps);
+  return TRUE;
+}
+
 
 static void
 gst_cutter_set_property (GObject * object, guint prop_id,
@@ -414,21 +469,3 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "cutter",
     "Audio Cutter to split audio into non-silent bits",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
-
-
-void
-gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
-{
-  GstCaps *caps;
-  GstStructure *structure;
-
-  caps = gst_pad_get_caps (pad);
-  /* FIXME : Please change this to a better warning method ! */
-  g_assert (caps != NULL);
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &filter->width);
-  filter->max_sample = 1 << (filter->width - 1);        /* signed */
-  filter->have_caps = TRUE;
-
-  gst_caps_unref (caps);
-}

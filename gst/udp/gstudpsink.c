@@ -16,7 +16,20 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:element-udpsink
+ * @see_also: udpsrc, multifdsink
+ *
+ * udpsink is a network sink that sends UDP packets to the network.
+ * It can be combined with RTP payloaders to implement RTP streaming.
+ *
+ * <refsect2>
+ * <title>Examples</title>
+ * |[
+ * gst-launch -v audiotestsrc ! udpsink
+ * ]|
+ * </refsect2>
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

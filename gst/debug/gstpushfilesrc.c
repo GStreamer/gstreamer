@@ -19,26 +19,21 @@
 
 /**
  * SECTION:element-pushfilesrc
- * @short_description: Works like a filesrc, but only push-based (for debugging)
  * @see_also: filesrc
  *
- * <refsect2>
- * <para>
  * This element is only useful for debugging purposes. It implements an URI
  * protocol handler for the 'pushfile' protocol and behaves like a file source
  * element that cannot be activated in pull-mode. This makes it very easy to
  * debug demuxers or decoders that can operate both pull and push-based in
  * connection with the playbin element (which creates a source based on the
  * URI passed).
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -m playbin uri=pushfile:///home/you/some/file.ogg
- * </programlisting>
- * This plays back the given file using playbin, with the demuxer operating
+ * ]| This plays back the given file using playbin, with the demuxer operating
  * push-based.
- * </para>
  * </refsect2>
  */
 
@@ -156,6 +151,7 @@ gst_push_file_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
+
 static gchar **
 gst_push_file_src_uri_get_protocols (void)
 {
@@ -163,6 +159,7 @@ gst_push_file_src_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_push_file_src_uri_get_uri (GstURIHandler * handler)
 {

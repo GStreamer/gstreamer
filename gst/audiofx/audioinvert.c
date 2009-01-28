@@ -21,20 +21,18 @@
 
 /**
  * SECTION:element-audioinvert
- * @short_description: Swaps upper and lower half of audio samples
  *
- * <refsect2>
  * Swaps upper and lower half of audio samples. Mixing an inverted sample on top of
  * the original with a slight delay can produce effects that sound like resonance.
  * Creating a stereo sample from a mono source, with one channel inverted produces wide-stereo sounds.
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch audiotestsrc wave=saw ! audioinvert invert=0.4 ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audioinvert invert=0.4 ! alsasink
  * gst-launch audiotestsrc wave=saw ! audioconvert ! audioinvert invert=0.4 ! audioconvert ! alsasink
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  */
 

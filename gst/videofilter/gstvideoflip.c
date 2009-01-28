@@ -25,17 +25,13 @@
 /**
  * SECTION:element-videoflip
  *
- * <refsect2>
- * <para>
  * Flips and rotates video.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch videotestsrc ! videoflip method=clockwise ! ffmpegcolorspace ! ximagesink
- * </programlisting>
- * This pipeline flips the test image 90 degrees clockwise.
- * </para>
+ * ]| This pipeline flips the test image 90 degrees clockwise.
  * </refsect2>
  *
  * Last reviewed on 2006-03-03 (0.10.3)

@@ -28,42 +28,32 @@
 /**
  * SECTION:element-avimux
  *
- * <refsect2>
- * <para>
  * Muxes raw or compressed audio and/or video streams into an AVI file.
- * </para>
- * <title>Example launch line</title>
- * <para>
- * (write everything in one line, without the backslash characters)
- * <programlisting>
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
+ * <para>(write everything in one line, without the backslash characters)</para>
+ * |[
  * gst-launch-0.10 videotestsrc num-buffers=250 \
  * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert \
  * ! 'audio/x-raw-int,rate=44100,channels=2' ! queue ! mux. \
  * avimux name=mux ! filesink location=test.avi
- * </programlisting>
- * This will create an .AVI file containing an uncompressed video stream
+ * ]| This will create an .AVI file containing an uncompressed video stream
  * with a test picture and an uncompressed audio stream containing a 
  * test sound.
- * </para>
- * <title>Another example launch line</title>
- * <para>
- * (write everything in one line, without the backslash characters)
- * <programlisting>
+ * |[
  * gst-launch-0.10 videotestsrc num-buffers=250 \
  * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! xvidenc ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert ! 'audio/x-raw-int,rate=44100,channels=2' \
  * ! lame ! queue ! mux. \
  * avimux name=mux ! filesink location=test.avi
- * </programlisting>
- * This will create an .AVI file containing the same test video and sound
+ * ]| This will create an .AVI file containing the same test video and sound
  * as above, only that both streams will be compressed this time. This will
  * only work if you have the necessary encoder elements installed of course.
- * </para>
  * </refsect2>
- *
  */
 
 #ifdef HAVE_CONFIG_H

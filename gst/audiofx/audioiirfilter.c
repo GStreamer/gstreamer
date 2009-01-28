@@ -21,27 +21,23 @@
 
 /**
  * SECTION:element-audioiirfilter
- * @short_description: Generic audio IIR filter
  *
- * <refsect2>
- * <para>
  * audioiirfilter implements a generic audio <ulink url="http://en.wikipedia.org/wiki/Infinite_impulse_response">IIR filter</ulink>. Before usage the
  * "a" and "b" properties have to be set to the filter coefficients that
  * should be used.
- * </para>
- * <para>
+ *
  * The filter coefficients describe the numerator and denominator of the
  * transfer function.
- * </para>
- * <para>
+ *
  * To change the filter coefficients whenever the sampling rate changes the
  * "rate-changed" signal can be used. This should be done for most
  * IIR filters as they're depending on the sampling rate.
- * </para>
+ *
+ * <refsect2>
  * <title>Example application</title>
- * <para>
- * <include xmlns="http://www.w3.org/2003/XInclude" href="element-iirfilter-example.xml" />
- * </para>
+ * |[
+ * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/audiofx/iirfilter-example.c" />
+ * ]|
  * </refsect2>
  */
 
