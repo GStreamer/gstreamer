@@ -287,7 +287,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
 
     /* check PES scrambling control */
     if ((flags & 0x30) != 0)
-      GST_DEBUG ("PES scrambling control: %x", (flags >> 4) & 0x3);
+      goto encrypted;
 
     /* 2: PTS_DTS_flags
      * 1: ESCR_flag
@@ -466,7 +466,7 @@ need_more_data:
         ret = GST_FLOW_NEED_MORE_DATA;
       }
     } else {
-      GST_DEBG ("unbounded need more data %d",
+      GST_DEBUG ("unbounded need more data %d",
           gst_adapter_available (filter->adapter));
       ret = GST_FLOW_NEED_MORE_DATA;
     }
@@ -476,6 +476,17 @@ need_more_data:
 skip:
   {
     GST_DEBUG ("skipping 0x%02x", filter->id);
+    gst_adapter_flush (filter->adapter, avail);
+    ADAPTER_OFFSET_FLUSH (avail);
+
+    filter->length -= avail - 6;
+    if (filter->length > 0 || filter->unbounded_packet)
+      filter->state = STATE_DATA_SKIP;
+    return GST_FLOW_OK;
+  }
+encrypted:
+  {
+    GST_DEBUG ("skipping encrypted 0x%02x", filter->id);
     gst_adapter_flush (filter->adapter, avail);
     ADAPTER_OFFSET_FLUSH (avail);
 
