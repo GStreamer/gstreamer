@@ -56,6 +56,10 @@
   "width = (int) [ 16, 4096 ], " \
   "height = (int) [ 16, 4096 ] "
 
+#define H263_CAPS \
+  "video/x-h263, " \
+  COMMON_VIDEO_CAPS
+
 #define H264_CAPS \
   "video/x-h264, " \
   COMMON_VIDEO_CAPS
@@ -112,6 +116,13 @@
   "mpegversion = (int) 4, " \
   COMMON_AUDIO_CAPS (8, MAX)
 
+#define AMR_CAPS \
+  "audio/AMR, " \
+  "rate = (int) 8000, " \
+  "channels = [ 1, 2 ]; " \
+  "audio/AMR-WB, " \
+  "rate = (int) 16000, " \
+  "channels = [ 1, 2 ] "
 
 GstQTMuxFormatProp gst_qt_mux_format_list[] = {
   /* original QuickTime format; see Apple site (e.g. qtff.pdf) */
@@ -126,10 +137,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             "video/x-raw-yuv, "
             "format = (fourcc) UYVY, "
             COMMON_VIDEO_CAPS "; "
-            "video/x-h263, "
-            "h263version = (string) h263, "
-            COMMON_VIDEO_CAPS "; "
             MPEG4V_CAPS "; "
+            H263_CAPS "; "
             H264_CAPS "; "
             "video/x-dv, "
             "systemstream = (boolean) false, "
@@ -140,9 +149,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (PCM_CAPS_FULL "; "
             MP3_CAPS " ; "
             AAC_CAPS " ; "
-            "audio/x-alaw, "
-            COMMON_AUDIO_CAPS (2, MAX) "; "
-            "audio/x-mulaw, " COMMON_AUDIO_CAPS (2, MAX))
+            "audio/x-alaw, " COMMON_AUDIO_CAPS (2, MAX) "; " AMR_CAPS)
       }
   ,
   /* ISO 14496-14: mp42 as ISO base media extension
@@ -167,9 +174,8 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "3GPP",
         "GstGPPMux",
         GST_STATIC_CAPS ("application/x-3gp"),
-        GST_STATIC_CAPS (H264_CAPS),
-        GST_STATIC_CAPS ("audio/AMR, "
-            COMMON_AUDIO_CAPS (8, MAX) "; " MP3_CAPS "; " AAC_CAPS)
+        GST_STATIC_CAPS (H263_CAPS "; " H264_CAPS),
+        GST_STATIC_CAPS (AMR_CAPS "; " MP3_CAPS "; " AAC_CAPS)
       }
   ,
   /* ISO 15444-3: Motion-JPEG-2000 (also ISO base media extension) */

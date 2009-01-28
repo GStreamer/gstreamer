@@ -2972,3 +2972,55 @@ build_codec_data_extension (guint32 fourcc, const GstBuffer * codec_data)
 
   return result;
 }
+
+AtomInfo *
+build_amr_extension ()
+{
+  guint8 ext[9];
+  GstBuffer *buf;
+  AtomInfo *res;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = ext;
+  GST_BUFFER_SIZE (buf) = sizeof (ext);
+
+  /* vendor */
+  GST_WRITE_UINT32_LE (ext, 0);
+  /* decoder version */
+  GST_WRITE_UINT8 (ext + 4, 0);
+  /* mode set (all modes) */
+  GST_WRITE_UINT16_BE (ext + 5, 0x81FF);
+  /* mode change period (no restriction) */
+  GST_WRITE_UINT8 (ext + 7, 0);
+  /* frames per sample */
+  GST_WRITE_UINT8 (ext + 8, 1);
+
+  res = build_codec_data_extension (GST_MAKE_FOURCC ('d', 'a', 'm', 'r'), buf);
+  gst_buffer_unref (buf);
+  return res;
+}
+
+AtomInfo *
+build_h263_extension ()
+{
+  guint8 ext[7];
+  GstBuffer *buf;
+  AtomInfo *res;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = ext;
+  GST_BUFFER_SIZE (buf) = sizeof (ext);
+
+  /* vendor */
+  GST_WRITE_UINT32_LE (ext, 0);
+  /* decoder version */
+  GST_WRITE_UINT8 (ext + 4, 0);
+  /* level / profile */
+  /* FIXME ? maybe ? obtain somewhere; baseline for now */
+  GST_WRITE_UINT8 (ext + 5, 10);
+  GST_WRITE_UINT8 (ext + 6, 0);
+
+  res = build_codec_data_extension (GST_MAKE_FOURCC ('d', '2', '6', '3'), buf);
+  gst_buffer_unref (buf);
+  return res;
+}
