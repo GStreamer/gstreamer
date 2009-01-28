@@ -44,6 +44,7 @@ struct _GstAudioEcho
   GstAudioFilter audiofilter;
 
   guint64 delay;
+  guint64 max_delay;
   gfloat intensity;
   gfloat feedback;
 

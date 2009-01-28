@@ -27,7 +27,11 @@
  *
  * For getting an echo effect you have to set the delay to a larger value,
  * for example 200ms and more. Everything below will result in a simple
- * reverb effect, which results in a slightly metallic sounding.
+ * reverb effect, which results in a slightly metallic sound.
+ *
+ * Use the max-delay property to set the maximum amount of delay that
+ * will be used. This can only be set before going to the PAUSED or PLAYING
+ * state and will be set to the current delay by default.
  *
  * <refsect2>
  * <title>Example launch line</title>
@@ -57,6 +61,7 @@ enum
 {
   PROP_0,
   PROP_DELAY,
+  PROP_MAX_DELAY,
   PROP_INTENSITY,
   PROP_FEEDBACK
 };
@@ -123,9 +128,16 @@ gst_audio_echo_class_init (GstAudioEchoClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",
-          "Delay of the echo in nanosecondsecho", 1, G_MAXUINT64,
+          "Delay of the echo in nanoseconds", 1, G_MAXUINT64,
           1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
           | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_DELAY,
+      g_param_spec_uint64 ("max-delay", "Maximum Delay",
+          "Maximum delay of the echo in nanoseconds"
+          " (can't be changed in PLAYING or PAUSED state)",
+          1, G_MAXUINT64, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_INTENSITY,
       g_param_spec_float ("intensity", "Intensity",
@@ -149,6 +161,7 @@ static void
 gst_audio_echo_init (GstAudioEcho * self, GstAudioEchoClass * klass)
 {
   self->delay = 1;
+  self->max_delay = 1;
   self->intensity = 0.0;
   self->feedback = 0.0;
 
@@ -174,45 +187,38 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DELAY:{
-      guint rate, width, channels;
+      guint max_delay, delay;
 
       GST_BASE_TRANSFORM_LOCK (self);
-      self->delay = g_value_get_uint64 (value);
+      delay = g_value_get_uint64 (value);
+      max_delay = self->max_delay;
 
-      rate = GST_AUDIO_FILTER (self)->format.rate;
-      width = GST_AUDIO_FILTER (self)->format.width / 8;
-      channels = GST_AUDIO_FILTER (self)->format.channels;
-
-      if (self->buffer && rate > 0) {
-        guint new_echo =
-            MAX (gst_util_uint64_scale (self->delay, rate, GST_SECOND), 1);
-        guint new_size_frames = MAX (new_echo,
-            gst_util_uint64_scale (self->delay + (GST_SECOND -
-                    self->delay % GST_SECOND), rate, GST_SECOND));
-        guint new_size = new_size_frames * width * channels;
-
-        if (new_size > self->buffer_size) {
-          guint i;
-          guint8 *old_buffer = self->buffer;
-
-          self->buffer_size = new_size;
-          self->buffer = g_malloc0 (new_size);
-
-          for (i = 0; i < self->buffer_size_frames; i++) {
-            memcpy (&self->buffer[i * width * channels],
-                &old_buffer[((i +
-                            self->buffer_pos) % self->buffer_size_frames) *
-                    width * channels], channels * width);
-          }
-          self->buffer_size_frames = new_size_frames;
-          self->delay_frames = new_echo;
-          self->buffer_pos = 0;
-        }
-      } else if (self->buffer) {
-        g_free (self->buffer);
-        self->buffer = NULL;
+      if (delay > max_delay && GST_STATE (self) > GST_STATE_READY) {
+        GST_WARNING_OBJECT (self, "New delay (%" GST_TIME_FORMAT ") "
+            "is larger than maximum delay (%" GST_TIME_FORMAT ")",
+            GST_TIME_ARGS (delay), GST_TIME_ARGS (max_delay));
+        self->delay = max_delay;
+      } else {
+        self->delay = delay;
+        self->max_delay = MAX (delay, max_delay);
       }
+      GST_BASE_TRANSFORM_UNLOCK (self);
+    }
+      break;
+    case PROP_MAX_DELAY:{
+      guint max_delay, delay;
 
+      GST_BASE_TRANSFORM_LOCK (self);
+      max_delay = g_value_get_uint64 (value);
+      delay = self->delay;
+
+      if (GST_STATE (self) > GST_STATE_READY) {
+        GST_ERROR_OBJECT (self, "Can't change maximum delay in"
+            " PLAYING or PAUSED state");
+      } else {
+        self->delay = delay;
+        self->max_delay = max_delay;
+      }
       GST_BASE_TRANSFORM_UNLOCK (self);
     }
       break;
@@ -244,6 +250,11 @@ gst_audio_echo_get_property (GObject * object, guint prop_id,
     case PROP_DELAY:
       GST_BASE_TRANSFORM_LOCK (self);
       g_value_set_uint64 (value, self->delay);
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
+    case PROP_MAX_DELAY:
+      GST_BASE_TRANSFORM_LOCK (self);
+      g_value_set_uint64 (value, self->max_delay);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_INTENSITY:
@@ -363,13 +374,16 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
     self->delay_frames =
         MAX (gst_util_uint64_scale (self->delay, rate, GST_SECOND), 1);
     self->buffer_size_frames =
-        MAX (self->delay_frames,
-        gst_util_uint64_scale (self->delay + (GST_SECOND -
-                self->delay % GST_SECOND), rate, GST_SECOND));
+        MAX (gst_util_uint64_scale (self->max_delay, rate, GST_SECOND), 1);
 
     self->buffer_size = self->buffer_size_frames * width * channels;
-    self->buffer = g_malloc0 (self->buffer_size);
+    self->buffer = g_try_malloc0 (self->buffer_size);
     self->buffer_pos = 0;
+
+    if (self->buffer == NULL) {
+      GST_ERROR_OBJECT (self, "Failed to allocate %u bytes", self->buffer_size);
+      return GST_FLOW_ERROR;
+    }
   }
 
   self->process (self, GST_BUFFER_DATA (buf), num_samples);
