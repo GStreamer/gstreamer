@@ -31,7 +31,6 @@
  */
 
 /* TODO:
- *   - Implement support for DMS-1 and descriptive metadata tracks
  *   - Differentiate UL and UUIDs, the former can define an object system
  *     (i.e. mxf_ul_is_a() and friends could be implemented), see SMPTE S336M.
  *     The latter are just 16 byte unique identifiers
@@ -41,9 +40,6 @@
  *     timestamp calculation, etc.
  *   - Handle timecode tracks correctly (where is this documented?)
  *   - Handle Generic container system items
- *   - Force synchronization of tracks. Packets that have the timestamp are not required
- *     to be stored at the same position in the essence stream, especially if tracks
- *     with different source packages (body sid) are used.
  *   - Implement correct support for clip-wrapped essence elements.
  *   - Add a "tracks" property to select the tracks that should be used from the
  *     selected package.
