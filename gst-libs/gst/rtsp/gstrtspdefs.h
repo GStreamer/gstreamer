@@ -338,6 +338,8 @@ const gchar*       gst_rtsp_version_as_text    (GstRTSPVersion version);
 const gchar*       gst_rtsp_header_as_text     (GstRTSPHeaderField field);
 const gchar*       gst_rtsp_status_as_text     (GstRTSPStatusCode code);
 
+gchar*             gst_rtsp_options_as_text    (GstRTSPMethod options);
+
 GstRTSPHeaderField gst_rtsp_find_header_field  (const gchar *header);
 GstRTSPMethod      gst_rtsp_find_method        (const gchar *method);
 
