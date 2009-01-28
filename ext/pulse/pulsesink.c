@@ -97,6 +97,8 @@ static GstStateChangeReturn gst_pulsesink_change_state (GstElement *
 
 static void gst_pulsesink_init_interfaces (GType type);
 
+static gboolean gst_pulsesink_is_dead (GstPulseSink * pulsesink);
+
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define ENDIANNESS   "LITTLE_ENDIAN, BIG_ENDIAN"
 #else
