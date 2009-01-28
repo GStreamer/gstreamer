@@ -37,4 +37,24 @@ pa_channel_map *gst_pulse_gst_to_channel_map (pa_channel_map * map,
 GstRingBufferSpec *gst_pulse_channel_map_to_gst (const pa_channel_map * map,
     GstRingBufferSpec * spec);
 
+void gst_pulse_cvolume_from_linear(pa_cvolume *v, unsigned channels, gdouble volume);
+
+#if !HAVE_PULSE_0_9_11
+static inline int PA_CONTEXT_IS_GOOD(pa_context_state_t x) {
+    return
+        x == PA_CONTEXT_CONNECTING ||
+        x == PA_CONTEXT_AUTHORIZING ||
+        x == PA_CONTEXT_SETTING_NAME ||
+        x == PA_CONTEXT_READY;
+}
+
+/** Return non-zero if the passed state is one of the connected states */
+static inline int PA_STREAM_IS_GOOD(pa_stream_state_t x) {
+    return
+        x == PA_STREAM_CREATING ||
+        x == PA_STREAM_READY;
+}
+
+#endif
+
 #endif

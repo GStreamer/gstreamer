@@ -200,3 +200,10 @@ gst_pulse_channel_map_to_gst (const pa_channel_map * map,
 
   return spec;
 }
+
+void
+gst_pulse_cvolume_from_linear (pa_cvolume * v, unsigned channels,
+    gdouble volume)
+{
+  pa_cvolume_set (v, channels, pa_sw_volume_from_linear (volume));
+}

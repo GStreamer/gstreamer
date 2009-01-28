@@ -68,8 +68,6 @@ static void gst_pulsesrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_pulsesrc_finalize (GObject * object);
 
-static void gst_pulsesrc_dispose (GObject * object);
-
 static gboolean gst_pulsesrc_open (GstAudioSrc * asrc);
 
 static gboolean gst_pulsesrc_close (GstAudioSrc * asrc);
@@ -82,6 +80,8 @@ static gboolean gst_pulsesrc_unprepare (GstAudioSrc * asrc);
 static guint gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data,
     guint length);
 static guint gst_pulsesrc_delay (GstAudioSrc * asrc);
+
+static void gst_pulsesrc_reset (GstAudioSrc * src);
 
 static gboolean gst_pulsesrc_negotiate (GstBaseSrc * basesrc);
 
@@ -161,30 +161,30 @@ gst_pulsesrc_base_init (gpointer g_class)
           "width = (int) 16, "
           "depth = (int) 16, "
           "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 16 ];"
+          "channels = (int) [ 1, 32 ];"
+          "audio/x-raw-float, "
+          "endianness = (int) { " ENDIANNESS " }, "
+          "width = (int) 32, "
+          "rate = (int) [ 1, MAX ], "
+          "channels = (int) [ 1, 32 ];"
           "audio/x-raw-int, "
           "endianness = (int) { " ENDIANNESS " }, "
           "signed = (boolean) TRUE, "
           "width = (int) 32, "
           "depth = (int) 32, "
           "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 16 ];"
-          "audio/x-raw-float, "
-          "endianness = (int) { " ENDIANNESS " }, "
-          "width = (int) 32, "
-          "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 16 ];"
+          "channels = (int) [ 1, 32 ];"
           "audio/x-raw-int, "
           "signed = (boolean) FALSE, "
           "width = (int) 8, "
           "depth = (int) 8, "
           "rate = (int) [ 1, MAX ], "
-          "channels = (int) [ 1, 16 ];"
+          "channels = (int) [ 1, 32 ];"
           "audio/x-alaw, "
           "rate = (int) [ 1, MAX], "
-          "channels = (int) [ 1, 16 ];"
+          "channels = (int) [ 1, 32 ];"
           "audio/x-mulaw, "
-          "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 16 ]")
+          "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ]")
       );
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
@@ -205,13 +205,12 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_pulsesrc_change_state);
-
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pulsesrc_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesrc_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_pulsesrc_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pulsesrc_get_property);
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_pulsesrc_change_state);
 
   gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_pulsesrc_negotiate);
 
@@ -221,6 +220,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   gstaudiosrc_class->unprepare = GST_DEBUG_FUNCPTR (gst_pulsesrc_unprepare);
   gstaudiosrc_class->read = GST_DEBUG_FUNCPTR (gst_pulsesrc_read);
   gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_pulsesrc_delay);
+  gstaudiosrc_class->reset = GST_DEBUG_FUNCPTR (gst_pulsesrc_reset);
 
   /* Overwrite GObject fields */
   g_object_class_install_property (gobject_class,
@@ -245,13 +245,25 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc, GstPulseSrcClass * klass)
 {
   int e;
 
-  pulsesrc->server = pulsesrc->device = NULL;
+  pulsesrc->server = pulsesrc->device = pulsesrc->device_description = NULL;
 
   pulsesrc->context = NULL;
   pulsesrc->stream = NULL;
 
   pulsesrc->read_buffer = NULL;
   pulsesrc->read_buffer_length = 0;
+
+#if HAVE_PULSE_0_9_13
+  pa_sample_spec_init (&pulsesrc->sample_spec);
+#else
+  pulsesrc->sample_spec.format = PA_SAMPLE_INVALID;
+  pulsesrc->sample_spec.rate = 0;
+  pulsesrc->sample_spec.channels = 0;
+#endif
+
+  pulsesrc->operation_success = FALSE;
+  pulsesrc->did_reset = FALSE;
+  pulsesrc->in_read = FALSE;
 
   pulsesrc->mainloop = pa_threaded_mainloop_new ();
   g_assert (pulsesrc->mainloop);
@@ -272,6 +284,9 @@ gst_pulsesrc_destroy_stream (GstPulseSrc * pulsesrc)
     pa_stream_unref (pulsesrc->stream);
     pulsesrc->stream = NULL;
   }
+
+  g_free (pulsesrc->device_description);
+  pulsesrc->device_description = NULL;
 }
 
 static void
@@ -301,8 +316,10 @@ gst_pulsesrc_finalize (GObject * object)
 
   pa_threaded_mainloop_free (pulsesrc->mainloop);
 
-  if (pulsesrc->mixer)
+  if (pulsesrc->mixer) {
     gst_pulsemixer_ctrl_free (pulsesrc->mixer);
+    pulsesrc->mixer = NULL;
+  }
 
   if (pulsesrc->probe) {
     gst_pulseprobe_free (pulsesrc->probe);
@@ -312,11 +329,25 @@ gst_pulsesrc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
-gst_pulsesrc_dispose (GObject * object)
+static gboolean
+gst_pulsesrc_is_dead (GstPulseSrc * pulsesrc)
 {
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  if (!pulsesrc->context
+      || !PA_CONTEXT_IS_GOOD (pa_context_get_state (pulsesrc->context))
+      || !pulsesrc->stream
+      || !PA_STREAM_IS_GOOD (pa_stream_get_state (pulsesrc->stream))) {
+    const gchar *err_str = pulsesrc->context ?
+        pa_strerror (pa_context_errno (pulsesrc->context)) : NULL;
+
+    GST_ELEMENT_ERROR ((pulsesrc), RESOURCE, FAILED, ("Disconnected: %s",
+            err_str), (NULL));
+    return TRUE;
+  }
+
+  return FALSE;
 }
+
 
 static void
 gst_pulsesrc_set_property (GObject * object,
@@ -347,6 +378,65 @@ gst_pulsesrc_set_property (GObject * object,
 }
 
 static void
+gst_pulsesrc_source_info_cb (pa_context * c, const pa_source_info * i, int eol,
+    void *userdata)
+{
+  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+
+  if (!i)
+    return;
+
+  if (!pulsesrc->stream)
+    return;
+
+  g_assert (i->index == pa_stream_get_device_index (pulsesrc->stream));
+
+  g_free (pulsesrc->device_description);
+  pulsesrc->device_description = g_strdup (i->description);
+}
+
+static gchar *
+gst_pulsesrc_device_description (GstPulseSrc * pulsesrc)
+{
+  pa_operation *o = NULL;
+  gchar *t;
+
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  if (!pulsesrc->stream)
+    goto unlock;
+
+  if (!(o = pa_context_get_source_info_by_index (pulsesrc->context,
+              pa_stream_get_device_index (pulsesrc->stream),
+              gst_pulsesrc_source_info_cb, pulsesrc))) {
+
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("pa_stream_get_source_info() failed: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock;
+  }
+
+  while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+
+    if (gst_pulsesrc_is_dead (pulsesrc))
+      goto unlock;
+
+    pa_threaded_mainloop_wait (pulsesrc->mainloop);
+  }
+
+unlock:
+
+  if (o)
+    pa_operation_unref (o);
+
+  t = g_strdup (pulsesrc->device_description);
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+
+  return t;
+}
+
+static void
 gst_pulsesrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
@@ -362,14 +452,12 @@ gst_pulsesrc_get_property (GObject * object,
       g_value_set_string (value, pulsesrc->device);
       break;
 
-    case PROP_DEVICE_NAME:
-
-      if (pulsesrc->mixer)
-        g_value_set_string (value, pulsesrc->mixer->description);
-      else
-        g_value_set_string (value, NULL);
-
+    case PROP_DEVICE_NAME:{
+      char *t = gst_pulsesrc_device_description (pulsesrc);
+      g_value_set_string (value, t);
+      g_free (t);
       break;
+    }
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -424,14 +512,24 @@ gst_pulsesrc_stream_request_cb (pa_stream * s, size_t length, void *userdata)
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 
+static void
+gst_pulsesrc_stream_latency_update_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+
+  pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
+}
+
 static gboolean
 gst_pulsesrc_open (GstAudioSrc * asrc)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
-
   gchar *name = gst_pulse_client_name ();
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  g_assert (!pulsesrc->context);
+  g_assert (!pulsesrc->stream);
 
   if (!(pulsesrc->context =
           pa_context_new (pa_threaded_mainloop_get_api (pulsesrc->mainloop),
@@ -450,13 +548,22 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
     goto unlock_and_fail;
   }
 
-  /* Wait until the context is ready */
-  pa_threaded_mainloop_wait (pulsesrc->mainloop);
+  for (;;) {
+    pa_context_state_t state;
 
-  if (pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Failed to connect: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
+    state = pa_context_get_state (pulsesrc->context);
+
+    if (!PA_CONTEXT_IS_GOOD (state)) {
+      GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Failed to connect: %s",
+              pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+      goto unlock_and_fail;
+    }
+
+    if (state == PA_CONTEXT_READY)
+      break;
+
+    /* Wait until the context is ready */
+    pa_threaded_mainloop_wait (pulsesrc->mainloop);
   }
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
@@ -465,6 +572,8 @@ gst_pulsesrc_open (GstAudioSrc * asrc)
   return TRUE;
 
 unlock_and_fail:
+
+  gst_pulsesrc_destroy_context (pulsesrc);
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
@@ -500,23 +609,15 @@ gst_pulsesrc_unprepare (GstAudioSrc * asrc)
   return TRUE;
 }
 
-#define CHECK_DEAD_GOTO(pulsesrc, label) \
-if (!(pulsesrc)->context || pa_context_get_state((pulsesrc)->context) != PA_CONTEXT_READY || \
-    !(pulsesrc)->stream || pa_stream_get_state((pulsesrc)->stream) != PA_STREAM_READY) { \
-    GST_ELEMENT_ERROR((pulsesrc), RESOURCE, FAILED, ("Disconnected: %s", (pulsesrc)->context ? pa_strerror(pa_context_errno((pulsesrc)->context)) : NULL), (NULL)); \
-    goto label; \
-}
-
 static guint
 gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
-
   size_t sum = 0;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  CHECK_DEAD_GOTO (pulsesrc, unlock_and_fail);
+  pulsesrc->in_read = TRUE;
 
   while (length > 0) {
     size_t l;
@@ -524,6 +625,9 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
     if (!pulsesrc->read_buffer) {
 
       for (;;) {
+        if (gst_pulsesrc_is_dead (pulsesrc))
+          goto unlock_and_fail;
+
         if (pa_stream_peek (pulsesrc->stream, &pulsesrc->read_buffer,
                 &pulsesrc->read_buffer_length) < 0) {
           GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
@@ -535,9 +639,10 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
         if (pulsesrc->read_buffer)
           break;
 
-        pa_threaded_mainloop_wait (pulsesrc->mainloop);
+        if (pulsesrc->did_reset)
+          goto unlock_and_fail;
 
-        CHECK_DEAD_GOTO (pulsesrc, unlock_and_fail);
+        pa_threaded_mainloop_wait (pulsesrc->mainloop);
       }
     }
 
@@ -570,16 +675,19 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
     }
   }
 
-  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+  pulsesrc->did_reset = FALSE;
+  pulsesrc->in_read = FALSE;
 
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
   return sum;
 
-  /* ERRORS */
 unlock_and_fail:
-  {
-    pa_threaded_mainloop_unlock (pulsesrc->mainloop);
-    return -1;
-  }
+
+  pulsesrc->did_reset = FALSE;
+  pulsesrc->in_read = FALSE;
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+  return (guint) - 1;
 }
 
 static guint
@@ -593,9 +701,12 @@ gst_pulsesrc_delay (GstAudioSrc * asrc)
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  CHECK_DEAD_GOTO (pulsesrc, unlock_and_fail);
+  for (;;) {
+    if (gst_pulsesrc_is_dead (pulsesrc))
+      goto unlock_and_fail;
 
-  if (pa_stream_get_latency (pulsesrc->stream, &t, &negative) < 0) {
+    if (pa_stream_get_latency (pulsesrc->stream, &t, &negative) >= 0)
+      break;
 
     if (pa_context_errno (pulsesrc->context) != PA_ERR_NODATA) {
       GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
@@ -604,9 +715,10 @@ gst_pulsesrc_delay (GstAudioSrc * asrc)
       goto unlock_and_fail;
     }
 
-    GST_WARNING_OBJECT (pulsesrc, "Not data while querying latency");
-    t = 0;
-  } else if (negative)
+    pa_threaded_mainloop_wait (pulsesrc->mainloop);
+  }
+
+  if (negative)
     t = 0;
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
@@ -645,12 +757,8 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
-  if (!pulsesrc->context
-      || pa_context_get_state (pulsesrc->context) != PA_CONTEXT_READY) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context state: %s",
-            pulsesrc->
-            context ? pa_strerror (pa_context_errno (pulsesrc->context)) :
-            NULL), (NULL));
+  if (!pulsesrc->context) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Bad context"), (NULL));
     goto unlock_and_fail;
   }
 
@@ -688,10 +796,16 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps * caps)
       pulsesrc);
   pa_stream_set_read_callback (pulsesrc->stream, gst_pulsesrc_stream_request_cb,
       pulsesrc);
+  pa_stream_set_latency_update_callback (pulsesrc->stream,
+      gst_pulsesrc_stream_latency_update_cb, pulsesrc);
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
   return TRUE;
 
 unlock_and_fail:
+  gst_pulsesrc_destroy_stream (pulsesrc);
+
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 
 fail:
@@ -776,27 +890,42 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   pa_buffer_attr buf_attr;
   GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
 
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
   memset (&buf_attr, 0, sizeof (buf_attr));
   buf_attr.maxlength = spec->segtotal * spec->segsize * 2;
   buf_attr.fragsize = spec->segsize;
 
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &buf_attr,
-          PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
-          PA_STREAM_NOT_MONOTONOUS) < 0) {
+          PA_STREAM_INTERPOLATE_TIMING |
+          PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_NOT_MONOTONOUS |
+#if HAVE_PULSE_0_9_11
+          PA_STREAM_ADJUST_LATENCY |
+#endif
+          PA_STREAM_START_CORKED) < 0) {
     GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
         ("Failed to connect stream: %s",
             pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
     goto unlock_and_fail;
   }
 
-  /* Wait until the stream is ready */
-  pa_threaded_mainloop_wait (pulsesrc->mainloop);
+  for (;;) {
+    pa_stream_state_t state;
 
-  if (pa_stream_get_state (pulsesrc->stream) != PA_STREAM_READY) {
-    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-        ("Failed to connect stream: %s",
-            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
-    goto unlock_and_fail;
+    state = pa_stream_get_state (pulsesrc->stream);
+
+    if (!PA_STREAM_IS_GOOD (state)) {
+      GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+          ("Failed to connect stream: %s",
+              pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+      goto unlock_and_fail;
+    }
+
+    if (state == PA_STREAM_READY)
+      break;
+
+    /* Wait until the stream is ready */
+    pa_threaded_mainloop_wait (pulsesrc->mainloop);
   }
 
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
@@ -804,8 +933,105 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   return TRUE;
 
 unlock_and_fail:
+
+  gst_pulsesrc_destroy_stream (pulsesrc);
+
   pa_threaded_mainloop_unlock (pulsesrc->mainloop);
   return FALSE;
+}
+
+static void
+gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
+{
+  GstPulseSrc *pulsesrc = GST_PULSESRC (userdata);
+
+  pulsesrc->operation_success = !!success;
+  pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
+}
+
+static void
+gst_pulsesrc_reset (GstAudioSrc * asrc)
+{
+  GstPulseSrc *pulsesrc = GST_PULSESRC (asrc);
+  pa_operation *o = NULL;
+
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  if (gst_pulsesrc_is_dead (pulsesrc))
+    goto unlock_and_fail;
+
+  if (!(o =
+          pa_stream_flush (pulsesrc->stream, gst_pulsesrc_success_cb,
+              pulsesrc))) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("pa_stream_flush() failed: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
+
+  /* Inform anyone waiting in _write() call that it shall wakeup */
+  if (pulsesrc->in_read) {
+    pulsesrc->did_reset = TRUE;
+    pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
+  }
+
+  pulsesrc->operation_success = FALSE;
+  while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+
+    if (gst_pulsesrc_is_dead (pulsesrc))
+      goto unlock_and_fail;
+
+    pa_threaded_mainloop_wait (pulsesrc->mainloop);
+  }
+
+  if (!pulsesrc->operation_success) {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED, ("Flush failed: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock_and_fail;
+  }
+
+unlock_and_fail:
+
+  if (o) {
+    pa_operation_cancel (o);
+    pa_operation_unref (o);
+  }
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+}
+
+static void
+gst_pulsesrc_pause (GstPulseSrc * pulsesrc, gboolean b)
+{
+  pa_operation *o = NULL;
+
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  if (gst_pulsesrc_is_dead (pulsesrc))
+    goto unlock;
+
+  if (!(o = pa_stream_cork (pulsesrc->stream, b, NULL, NULL))) {
+
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("pa_stream_cork() failed: %s",
+            pa_strerror (pa_context_errno (pulsesrc->context))), (NULL));
+    goto unlock;
+  }
+
+  while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+
+    if (gst_pulsesrc_is_dead (pulsesrc))
+      goto unlock;
+
+    pa_threaded_mainloop_wait (pulsesrc->mainloop);
+  }
+
+unlock:
+
+  if (o)
+    pa_operation_unref (o);
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
 }
 
 static GstStateChangeReturn
@@ -814,6 +1040,13 @@ gst_pulsesrc_change_state (GstElement * element, GstStateChange transition)
   GstPulseSrc *this = GST_PULSESRC (element);
 
   switch (transition) {
+
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      gst_pulsesrc_pause (this,
+          GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED);
+      break;
+
     case GST_STATE_CHANGE_NULL_TO_READY:
 
       if (!this->mixer)

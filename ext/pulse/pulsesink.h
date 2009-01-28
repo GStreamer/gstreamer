@@ -29,7 +29,6 @@
 #include <pulse/thread-mainloop.h>
 
 #include "pulseprobe.h"
-#include "pulsemixerctrl.h"
 
 G_BEGIN_DECLS
 
@@ -57,18 +56,18 @@ struct _GstPulseSink
 
   pa_context *context;
   pa_stream *stream;
-  GMutex *stream_mutex;
 
   pa_sample_spec sample_spec;
 
-  GstPulseMixerCtrl *mixer;
   GstPulseProbe *probe;
 
-#if 0
   gdouble volume;
-#endif
+  gboolean volume_set;
 
-  int operation_success;
+  gchar *device_description;
+
+  gboolean operation_success;
+  gboolean did_reset, in_write;
 };
 
 struct _GstPulseSinkClass

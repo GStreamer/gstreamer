@@ -92,7 +92,7 @@ gst_pulseprobe_invalidate (GstPulseProbe * c)
   g_list_foreach (c->devices, (GFunc) g_free, NULL);
   g_list_free (c->devices);
   c->devices = NULL;
-  c->devices_valid = 0;
+  c->devices_valid = FALSE;
 }
 
 static gboolean
@@ -126,13 +126,22 @@ gst_pulseprobe_open (GstPulseProbe * c)
     goto unlock_and_fail;
   }
 
-  /* Wait until the context is ready */
-  pa_threaded_mainloop_wait (c->mainloop);
+  for (;;) {
+    pa_context_state_t state;
 
-  if (pa_context_get_state (c->context) != PA_CONTEXT_READY) {
-    GST_WARNING_OBJECT (c->object, "Failed to connect context: %s",
-        pa_strerror (pa_context_errno (c->context)));
-    goto unlock_and_fail;
+    state = pa_context_get_state (c->context);
+
+    if (!PA_CONTEXT_IS_GOOD (state)) {
+      GST_WARNING_OBJECT (c->object, "Failed to connect context: %s",
+          pa_strerror (pa_context_errno (c->context)));
+      goto unlock_and_fail;
+    }
+
+    if (state == PA_CONTEXT_READY)
+      break;
+
+    /* Wait until the context is ready */
+    pa_threaded_mainloop_wait (c->mainloop);
   }
 
   pa_threaded_mainloop_unlock (c->mainloop);
@@ -152,12 +161,23 @@ unlock_and_fail:
   return FALSE;
 }
 
-#define CHECK_DEAD_GOTO(c, label) do { \
-if (!(c)->context || pa_context_get_state((c)->context) != PA_CONTEXT_READY) { \
-    GST_WARNING_OBJECT((c)->object, "Not connected: %s", (c)->context ? pa_strerror(pa_context_errno((c)->context)) : "NULL"); \
-    goto label; \
-} \
-} while(0);
+static gboolean
+gst_pulseprobe_is_dead (GstPulseProbe * pulseprobe)
+{
+
+  if (!pulseprobe->context ||
+      !PA_CONTEXT_IS_GOOD (pa_context_get_state (pulseprobe->context))) {
+    const gchar *err_str =
+        pulseprobe->context ?
+        pa_strerror (pa_context_errno (pulseprobe->context)) : NULL;
+
+    GST_ELEMENT_ERROR ((pulseprobe), RESOURCE, FAILED,
+        ("Disconnected: %s", err_str), (NULL));
+    return TRUE;
+  }
+
+  return FALSE;
+}
 
 static gboolean
 gst_pulseprobe_enumerate (GstPulseProbe * c)
@@ -178,9 +198,13 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     }
 
     c->operation_success = 0;
-    while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
+
+    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+
+      if (gst_pulseprobe_is_dead (c))
+        goto unlock_and_fail;
+
       pa_threaded_mainloop_wait (c->mainloop);
-      CHECK_DEAD_GOTO (c, unlock_and_fail);
     }
 
     if (!c->operation_success) {
@@ -205,9 +229,12 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     }
 
     c->operation_success = 0;
-    while (pa_operation_get_state (o) != PA_OPERATION_DONE) {
+    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+
+      if (gst_pulseprobe_is_dead (c))
+        goto unlock_and_fail;
+
       pa_threaded_mainloop_wait (c->mainloop);
-      CHECK_DEAD_GOTO (c, unlock_and_fail);
     }
 
     if (!c->operation_success) {
@@ -220,7 +247,7 @@ gst_pulseprobe_enumerate (GstPulseProbe * c)
     o = NULL;
   }
 
-  c->devices_valid = 1;
+  c->devices_valid = TRUE;
 
   pa_threaded_mainloop_unlock (c->mainloop);
 
@@ -246,6 +273,7 @@ gst_pulseprobe_close (GstPulseProbe * c)
 
   if (c->context) {
     pa_context_disconnect (c->context);
+    pa_context_set_state_callback (c->context, NULL, NULL);
     pa_context_unref (c->context);
     c->context = NULL;
   }
@@ -257,8 +285,8 @@ gst_pulseprobe_close (GstPulseProbe * c)
 }
 
 GstPulseProbe *
-gst_pulseprobe_new (GObject * object, GObjectClass * klass, guint prop_id,
-    const gchar * server, gboolean sinks, gboolean sources)
+gst_pulseprobe_new (GObject * object, GObjectClass * klass,
+    guint prop_id, const gchar * server, gboolean sinks, gboolean sources)
 {
   GstPulseProbe *c = NULL;
 
@@ -335,7 +363,9 @@ gst_pulseprobe_get_values (GstPulseProbe * c, guint prop_id,
     const GParamSpec * pspec)
 {
   GValueArray *array;
-  GValue value = { 0 };
+  GValue value = {
+    0
+  };
   GList *item;
 
   if (prop_id != c->prop_id) {

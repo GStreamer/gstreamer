@@ -37,7 +37,7 @@ struct _GstPulseProbe
   GObject *object;
   gchar *server;
   GList *devices;
-  int devices_valid;
+  gboolean devices_valid;
 
   pa_threaded_mainloop *mainloop;
   pa_context *context;

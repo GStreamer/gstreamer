@@ -769,6 +769,18 @@ dnl *** pulseaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PULSE, true)
 AG_GST_CHECK_FEATURE(PULSE, [pulseaudio plug-in], pulseaudio, [
   AG_GST_PKG_CHECK_MODULES(PULSE, libpulse >= 0.9.8)
+  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_11, libpulse >= 0.9.11)
+  if test x$HAVE_PULSE_0_9_11 = xyes; then
+    AC_DEFINE(HAVE_PULSE_0_9_11, 1, [defined if pulseaudio >= 0.9.11 is available])
+  fi
+  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_12, libpulse >= 0.9.12)
+  if test x$HAVE_PULSE_0_9_12 = xyes; then
+    AC_DEFINE(HAVE_PULSE_0_9_12, 1, [defined if pulseaudio >= 0.9.12 is available])
+  fi
+  AG_GST_PKG_CHECK_MODULES(PULSE_0_9_13, libpulse >= 0.9.13)
+  if test x$HAVE_PULSE_0_9_13 = xyes; then
+    AC_DEFINE(HAVE_PULSE_0_9_13, 1, [defined if pulseaudio >= 0.9.13 is available])
+  fi
 ])
 
 dnl *** dv1394 ***

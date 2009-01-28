@@ -63,8 +63,13 @@ struct _GstPulseSrc
   const void *read_buffer;
   size_t read_buffer_length;
 
+  gchar *device_description;
+
   GstPulseMixerCtrl *mixer;
   GstPulseProbe *probe;
+
+  gboolean operation_success;
+  gboolean did_reset, in_read;
 };
 
 struct _GstPulseSrcClass
