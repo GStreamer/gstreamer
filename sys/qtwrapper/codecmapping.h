@@ -48,7 +48,7 @@
 #ifdef G_OS_WIN32
 #include <ImageCodec.h>
 #else
-#include <Quicktime/ImageCodec.h>
+#include <QuickTime/ImageCodec.h>
 #endif
 
 

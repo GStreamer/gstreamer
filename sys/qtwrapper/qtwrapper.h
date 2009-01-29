@@ -50,7 +50,7 @@
 #include <Movies.h>
 #include <QTML.h>
 #else
-#include <Quicktime/Movies.h>
+#include <QuickTime/Movies.h>
 #endif
 
 /* Set following to 1 if you want to have extra debug in form of

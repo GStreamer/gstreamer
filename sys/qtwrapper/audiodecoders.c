@@ -57,7 +57,7 @@
 #ifdef G_OS_WIN32
 #include <QuickTimeComponents.h>
 #else
-#include <Quicktime/QuickTimeComponents.h>
+#include <QuickTime/QuickTimeComponents.h>
 #endif
 
 #define QTWRAPPER_ADEC_PARAMS_QDATA g_quark_from_static_string("qtwrapper-adec-params")
