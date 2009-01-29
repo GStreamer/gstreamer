@@ -27,8 +27,8 @@
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
- * gst-launch videotestsrc ! video/x-raw-yuv, framerate=(fraction)5/1 ! jpegenc ! multipartmux ! filesink location=/tmp/test.multipart
- * ]| a simple pipeline to mux 5 JPEG frames per second into a multipart stream
+ * gst-launch videotestsrc ! video/x-raw-yuv, framerate='(fraction)'5/1 ! jpegenc ! multipartmux ! filesink location=/tmp/test.multipart
+ * ]| a pipeline to mux 5 JPEG frames per second into a multipart stream
  * stored to a file.
  * </refsect2>
  */
