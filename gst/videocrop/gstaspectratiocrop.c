@@ -392,10 +392,10 @@ gst_aspect_ratio_crop_get_caps (GstPad * pad)
     return_caps =
         gst_aspect_ratio_crop_transform_caps (aspect_ratio_crop, peer_caps);
     gst_caps_unref (peer_caps);
+    gst_object_unref (peer);
   }
 
   g_mutex_unlock (aspect_ratio_crop->crop_lock);
-  gst_object_unref (peer);
   gst_object_unref (aspect_ratio_crop);
 
   return return_caps;
