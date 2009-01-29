@@ -21,6 +21,14 @@
  * SECTION:element-jpegdec
  *
  * Decodes jpeg images.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v v4l2src ! jpegddec ! ffmpegcolorspace ! xvimagesink
+ * ]| The above pipeline reads a motion JPEG stream from a v4l2 camera
+ * and renders it to the screen.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
