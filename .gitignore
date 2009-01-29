@@ -1,3 +1,11 @@
+*~
+*.o
+*.lo
+*.la
+Makefile
+Makefile.in
+.deps
+.libs
 stamp-h1
 stamp-h.in
 mkinstalldirs
