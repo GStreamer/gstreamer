@@ -123,7 +123,7 @@ gst_plugin_finalize (GObject * object)
   GstRegistry *registry = gst_registry_get_default ();
   GList *g;
 
-  GST_DEBUG ("finalizing plugin %p", plugin);
+  GST_DEBUG ("finalizing plugin %" GST_PTR_FORMAT, plugin);
   for (g = registry->plugins; g; g = g->next) {
     if (g->data == (gpointer) plugin) {
       g_warning ("removing plugin that is still in registry");
