@@ -28,8 +28,14 @@ main (int argc, char *argv[])
   GstRTSPServer *server;
   GstRTSPMediaMapping *mapping;
   GstRTSPMediaFactory *factory;
+  gchar *str;
 
   gst_init (&argc, &argv);
+
+  if (argc < 2) {
+    g_message ("usage: %s <filename.ogg>", argv[0]);
+    return -1;
+  }
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -40,17 +46,21 @@ main (int argc, char *argv[])
    * that be used to map uri mount points to media factories */
   mapping = gst_rtsp_server_get_media_mapping (server);
 
+  str = g_strdup_printf (
+    "( "
+      "filesrc location=%s ! oggdemux name=d "
+        "d. ! queue ! theoraparse ! rtptheorapay name=pay0 "
+        "d. ! queue ! vorbisparse ! rtpvorbispay name=pay1 "
+    ")", argv[1]);
+
   /* make a media factory for a test stream. The default media factory can use
    * gst-launch syntax to create pipelines. 
    * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
-  gst_rtsp_media_factory_set_launch (factory, "( "
-    "videotestsrc ! video/x-raw-yuv,width=352,height=288,framerate=15/1 ! "
-    "x264enc bitrate=300 ! rtph264pay name=pay0 pt=96 "
-    "audiotestsrc ! audio/x-raw-int,rate=8000 ! "
-    "alawenc ! rtppcmapay name=pay1 pt=97 "
-    ")");
+  gst_rtsp_media_factory_set_launch (factory, str);
+  g_free (str);
+
   /* attach the test factory to the /test url */
   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
 

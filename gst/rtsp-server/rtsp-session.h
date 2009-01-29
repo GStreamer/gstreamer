@@ -22,7 +22,6 @@
 #include <gst/rtsp/gstrtsptransport.h>
 
 #include "rtsp-media.h"
-#include "rtsp-media-factory.h"
 
 #ifndef __GST_RTSP_SESSION_H__
 #define __GST_RTSP_SESSION_H__
@@ -60,45 +59,22 @@ struct _GstRTSPSessionStream
   GstRTSPMediaStream *media_stream;
 
   /* client and server transports */
-  gchar *destination;
   GstRTSPTransport *client_trans;
   GstRTSPTransport *server_trans;
-
-  /* pads on the rtpbin */
-  GstPad       *recv_rtcp_sink;
-  GstPad       *send_rtp_sink;
-  GstPad       *send_rtp_src;
-  GstPad       *send_rtcp_src;
-
-  /* sinks used for sending and receiving RTP and RTCP, they share sockets */
-  GstElement   *udpsrc[2];
-  GstElement   *udpsink[2];
 };
 
 /**
  * GstRTSPSessionMedia:
  *
- * State of a client session regarding a specific media. The media is identified
- * with the media factory. The media is typically composed of multiple streams,
- * such as an audio and video stream.
+ * State of a client session regarding a specific media.
  */
 struct _GstRTSPSessionMedia
 {
-  /* the owner session */
-  GstRTSPSession *session;
-
-  /* the media we are handling */
-  GstRTSPMediaFactory *factory;
+  /* the url of the media */
+  GstRTSPUrl   *url;
 
   /* the pipeline for the media */
-  GstElement   *pipeline;
   GstRTSPMedia *media;
-
-  /* RTP session manager */
-  GstElement   *rtpbin;
-
-  /* for TCP transport */
-  GstElement   *fdsink;
 
   /* configuration for the different streams */
   GList        *streams;
@@ -109,7 +85,7 @@ struct _GstRTSPSessionMedia
  *
  * Session information kept by the server for a specific client.
  * One client session, identified with a session id, can handle multiple medias
- * identified with the media factory.
+ * identified with the media object.
  */
 struct _GstRTSPSession {
   GObject       parent;
@@ -127,8 +103,11 @@ GType                  gst_rtsp_session_get_type             (void);
 
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
 
-GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess, const GstRTSPUrl *url,
-                                                              GstRTSPMediaFactory *factory);
+GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,
+                                                              const GstRTSPUrl *uri,
+							      GstRTSPMedia *media);
+GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
+                                                              const GstRTSPUrl *uri);
 
 GstStateChangeReturn   gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);
 GstStateChangeReturn   gst_rtsp_session_media_pause          (GstRTSPSessionMedia *media);
@@ -138,7 +117,6 @@ GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedi
                                                               guint idx);
 
 GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
-                                                              const gchar *destination,
                                                               GstRTSPTransport *ct);
 
 G_END_DECLS

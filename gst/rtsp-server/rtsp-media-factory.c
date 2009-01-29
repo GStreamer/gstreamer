@@ -210,15 +210,6 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl
   return res;
 }
 
-static void
-caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
-{
-  if (stream->caps)
-    gst_caps_unref (stream->caps);
-  if ((stream->caps = GST_PAD_CAPS (pad)))
-    gst_caps_ref (stream->caps);
-}
-
 static GstElement *
 default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
@@ -276,12 +267,13 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   if (element == NULL)
     goto no_element;
 
-  media = g_object_new (GST_TYPE_RTSP_MEDIA, NULL);
+  /* create a new empty media */
+  media = gst_rtsp_media_new ();
   media->element = element;
 
   /* try to find all the payloader elements, they should be named 'pay%d'. for
-   * each of the payloaders we will create a stream, collect the source pad and
-   * add a notify::caps on the pad. */
+   * each of the payloaders we will create a stream and collect the source pad.
+   */
   for (i = 0; ; i++) {
     gchar *name;
 
@@ -297,7 +289,6 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
     /* create the stream */
     stream = g_new0 (GstRTSPMediaStream, 1);
     stream->media = media;
-    stream->element = element;
     stream->payloader = pay;
     stream->idx = media->streams->len;
 
@@ -305,16 +296,12 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 
     /* ghost the pad of the payloader to the element */
     stream->srcpad = gst_ghost_pad_new (name, pad);
-    gst_element_add_pad (stream->element, stream->srcpad);
-
-    stream->caps_sig = g_signal_connect (pad, "notify::caps", (GCallback) caps_notify, stream);
-    gst_object_unref (pad);
+    gst_element_add_pad (media->element, stream->srcpad);
+    gst_object_unref (pay);
+    g_free (name);
 
     /* add stream now */
     g_array_append_val (media->streams, stream);
-    gst_object_unref (pay);
-
-    g_free (name);
   }
 
   return media;

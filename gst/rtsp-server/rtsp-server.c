@@ -30,8 +30,8 @@ enum
   PROP_0,
   PROP_BACKLOG,
   PROP_PORT,
-  PROP_POOL,
-  PROP_MAPPING,
+  PROP_SESSION_POOL,
+  PROP_MEDIA_MAPPING,
   PROP_LAST
 };
 
@@ -78,23 +78,25 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
       g_param_spec_int ("port", "Port", "The port the server uses to listen on",
           1, 65535, DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPServer::pool
+   * GstRTSPServer::session-pool
    *
    * The session pool of the server. By default each server has a separate
    * session pool but sessions can be shared between servers by setting the same
    * session pool on multiple servers.
    */
-  g_object_class_install_property (gobject_class, PROP_POOL,
-      g_param_spec_object ("pool", "Pool", "The session pool to use for client session",
+  g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
+      g_param_spec_object ("session-pool", "Session Pool",
+	  "The session pool to use for client session",
           GST_TYPE_RTSP_SESSION_POOL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPServer::mapping
+   * GstRTSPServer::media-mapping
    *
    * The media mapping to use for this server. By default the server has no
    * media mapping and thus cannot map urls to media streams.
    */
-  g_object_class_install_property (gobject_class, PROP_MAPPING,
-      g_param_spec_object ("mapping", "Mapping", "The media mapping to use for client session",
+  g_object_class_install_property (gobject_class, PROP_MEDIA_MAPPING,
+      g_param_spec_object ("media-mapping", "Media Mapping",
+	  "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->accept_client = gst_rtsp_server_accept_client;
@@ -105,8 +107,8 @@ gst_rtsp_server_init (GstRTSPServer * server)
 {
   server->server_port = DEFAULT_PORT;
   server->backlog = DEFAULT_BACKLOG;
-  server->pool = gst_rtsp_session_pool_new ();
-  server->mapping = gst_rtsp_media_mapping_new ();
+  server->session_pool = gst_rtsp_session_pool_new ();
+  server->media_mapping = gst_rtsp_media_mapping_new ();
 }
 
 /**
@@ -207,12 +209,12 @@ gst_rtsp_server_set_session_pool (GstRTSPServer *server, GstRTSPSessionPool *poo
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  old = server->pool;
+  old = server->session_pool;
 
   if (old != pool) {
     if (pool)
       g_object_ref (pool);
-    server->pool = pool;
+    server->session_pool = pool;
     if (old)
       g_object_unref (old);
   }
@@ -235,7 +237,7 @@ gst_rtsp_server_get_session_pool (GstRTSPServer *server)
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  if ((result = server->pool))
+  if ((result = server->session_pool))
     g_object_ref (result);
 
   return result;
@@ -255,12 +257,12 @@ gst_rtsp_server_set_media_mapping (GstRTSPServer *server, GstRTSPMediaMapping *m
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  old = server->mapping;
+  old = server->media_mapping;
 
   if (old != mapping) {
     if (mapping)
       g_object_ref (mapping);
-    server->mapping = mapping;
+    server->media_mapping = mapping;
     if (old)
       g_object_unref (old);
   }
@@ -283,7 +285,7 @@ gst_rtsp_server_get_media_mapping (GstRTSPServer *server)
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
-  if ((result = server->mapping))
+  if ((result = server->media_mapping))
     g_object_ref (result);
 
   return result;
@@ -302,10 +304,10 @@ gst_rtsp_server_get_property (GObject *object, guint propid,
     case PROP_BACKLOG:
       g_value_set_int (value, gst_rtsp_server_get_backlog (server));
       break;
-    case PROP_POOL:
+    case PROP_SESSION_POOL:
       g_value_take_object (value, gst_rtsp_server_get_session_pool (server));
       break;
-    case PROP_MAPPING:
+    case PROP_MEDIA_MAPPING:
       g_value_take_object (value, gst_rtsp_server_get_media_mapping (server));
       break;
     default:
@@ -326,10 +328,10 @@ gst_rtsp_server_set_property (GObject *object, guint propid,
     case PROP_BACKLOG:
       gst_rtsp_server_set_backlog (server, g_value_get_int (value));
       break;
-    case PROP_POOL:
+    case PROP_SESSION_POOL:
       gst_rtsp_server_set_session_pool (server, g_value_get_object (value));
       break;
-    case PROP_MAPPING:
+    case PROP_MEDIA_MAPPING:
       gst_rtsp_server_set_media_mapping (server, g_value_get_object (value));
       break;
     default:
@@ -444,10 +446,10 @@ gst_rtsp_server_accept_client (GstRTSPServer *server, GIOChannel *channel)
   client = gst_rtsp_client_new ();
 
   /* set the session pool that this client should use */
-  gst_rtsp_client_set_session_pool (client, server->pool);
+  gst_rtsp_client_set_session_pool (client, server->session_pool);
 
   /* set the session pool that this client should use */
-  gst_rtsp_client_set_media_mapping (client, server->mapping);
+  gst_rtsp_client_set_media_mapping (client, server->media_mapping);
 
   /* accept connections for that client, this function returns after accepting
    * the connection and will run the remainder of the communication with the

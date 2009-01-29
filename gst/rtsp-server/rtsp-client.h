@@ -73,10 +73,8 @@ struct _GstRTSPClient {
   struct sockaddr_in address;
   GThread *thread;
 
-  GstRTSPSessionPool *pool;
-
-  GstRTSPMediaFactory  *factory;
-  GstRTSPMediaMapping  *mapping;
+  GstRTSPSessionPool   *session_pool;
+  GstRTSPMediaMapping  *media_mapping;
 };
 
 struct _GstRTSPClientClass {

@@ -4,6 +4,7 @@ public_headers = \
 		rtsp-media.h \
 		rtsp-media-factory.h \
 		rtsp-media-mapping.h \
+		rtsp-sdp.h \
 		rtsp-session-pool.h \
 		rtsp-session.h
 		
@@ -13,6 +14,7 @@ c_sources = \
 	rtsp-media.c \
 	rtsp-media-factory.c \
         rtsp-media-mapping.c \
+        rtsp-sdp.c \
 	rtsp-session-pool.c \
 	rtsp-session.c
 	

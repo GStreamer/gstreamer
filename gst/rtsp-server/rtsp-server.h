@@ -58,22 +58,21 @@ struct _GstRTSPServer {
   GObject       parent;
 
   /* server information */
-  gint server_port;
-  gint backlog;
-  gchar *host;
-  struct sockaddr_in server_sin;
+  gint    server_port;
+  gint    backlog;
+  gchar  *host;
+  struct  sockaddr_in server_sin;
 
-  /* socket */
-  GstPollFD server_sock;
-
-  GIOChannel *io_channel;
-  GSource *io_watch;
+  /* socket and channels */
+  GstPollFD    server_sock;
+  GIOChannel  *io_channel;
+  GSource     *io_watch;
 
   /* sessions on this server */
-  GstRTSPSessionPool *pool;
+  GstRTSPSessionPool  *session_pool;
 
   /* media mapper for this server */
-  GstRTSPMediaMapping *mapping;
+  GstRTSPMediaMapping *media_mapping;
 };
 
 /**

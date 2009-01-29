@@ -42,10 +42,18 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 /**
  * GstRTSPMediaStream:
  *
+ * @media: the owner #GstRTSPMedia
  * @idx: the stream index
- * @element: the toplevel element
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
+ * @prepared: if the stream is prepared for streaming
+ * @server_port: the server udp ports
+ * @recv_rtp_sink: sinkpad for RTP buffers
+ * @recv_rtcp_sink: sinkpad for RTCP buffers
+ * @recv_rtp_src: srcpad for RTP buffers
+ * @recv_rtcp_src: srcpad for RTCP buffers
+ * @udpsrc: the udp source elements for RTP/RTCP
+ * @udpsink: the udp sink elements for RTP/RTCP
  * @caps_sig: the signal id for detecting caps
  * @caps: the caps of the stream
  *
@@ -54,18 +62,38 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 struct _GstRTSPMediaStream {
   GstRTSPMedia *media;
 
-  guint       idx;
+  guint         idx;
 
-  GstElement *element;
-  GstPad     *srcpad;
-  GstElement *payloader;
-  gulong      caps_sig;
-  GstCaps    *caps;
+  GstPad       *srcpad;
+  GstElement   *payloader;
+  gboolean      prepared;
+
+  GstRTSPRange  server_port;
+
+  /* pads on the rtpbin */
+  GstPad       *recv_rtcp_sink;
+  GstPad       *send_rtp_sink;
+  GstPad       *send_rtp_src;
+  GstPad       *send_rtcp_src;
+
+  /* sinks used for sending and receiving RTP and RTCP, they share
+   * sockets */
+  GstElement   *udpsrc[2];
+  GstElement   *udpsink[2];
+
+  /* the caps of the stream */
+  gulong        caps_sig;
+  GstCaps      *caps;
 };
 
 /**
  * GstRTSPMedia:
- * @media: the owner #GstRTSPMedia
+ * @element: the data providing element
+ * @stream: the different streams provided by @element
+ * @prepared: if the media is prepared for streaming
+ * @pipeline: the toplevel pipeline
+ * @rtpbin: the rtpbin
+ * @multifdsink: multifdsink element for TCP transport
  *
  * A class that contains the GStreamer element along with a list of
  * #GstRTSPediaStream objects that can produce data.
@@ -77,6 +105,16 @@ struct _GstRTSPMedia {
 
   GstElement   *element;
   GArray       *streams;
+  gboolean      prepared;
+
+  /* the pipeline for the media */
+  GstElement   *pipeline;
+
+  /* RTP session manager */
+  GstElement   *rtpbin;
+
+  /* for TCP transport */
+  GstElement   *multifdsink;
 };
 
 struct _GstRTSPMediaClass {
@@ -85,9 +123,23 @@ struct _GstRTSPMediaClass {
 
 GType                 gst_rtsp_media_get_type         (void);
 
+/* creating the media */
+GstRTSPMedia *        gst_rtsp_media_new              (void);
+
 /* dealing with the media */
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPMediaStream *  gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
+
+/* prepare the media for playback */
+gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
+
+/* add destinations to a stream */
+gboolean              gst_rtsp_media_stream_add       (GstRTSPMediaStream *stream, GstRTSPTransport *ct);
+gboolean              gst_rtsp_media_stream_remove    (GstRTSPMediaStream *stream, GstRTSPTransport *ct);
+
+GstStateChangeReturn  gst_rtsp_media_play             (GstRTSPMedia *media);
+GstStateChangeReturn  gst_rtsp_media_pause            (GstRTSPMedia *media);
+GstStateChangeReturn  gst_rtsp_media_stop             (GstRTSPMedia *media);
 
 G_END_DECLS
 
