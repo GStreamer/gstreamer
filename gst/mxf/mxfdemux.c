@@ -1534,6 +1534,18 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
 
+    /* Update accumulated error and compensate */
+    {
+      guint64 abs_error = (GST_SECOND * pad->material_track->edit_rate.d) %
+          pad->material_track->edit_rate.n;
+      pad->last_stop_accumulated_error +=
+          ((gdouble) abs_error) / ((gdouble) pad->material_track->edit_rate.n);
+    }
+    if (pad->last_stop_accumulated_error >= 1.0) {
+      GST_BUFFER_DURATION (outbuf) += 1;
+      pad->last_stop_accumulated_error -= 1.0;
+    }
+
     if (pad->need_segment) {
       gst_pad_push_event (GST_PAD_CAST (pad),
           gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1,

@@ -93,6 +93,7 @@ struct _GstMXFDemuxPad
   gboolean need_segment;
 
   GstClockTime last_stop;
+  gdouble last_stop_accumulated_error;
   GstFlowReturn last_flow;
   gboolean eos, discont;
 
