@@ -573,13 +573,13 @@ gst_registry_binary_save_plugin_dep (GList ** list, GstPluginDep * dep)
   ed->stat_hash = dep->stat_hash;
 
   for (s = dep->env_vars; s != NULL && *s != NULL; ++s, ++ed->n_env_vars)
-    gst_registry_binary_save_string (list, *s);
+    gst_registry_binary_save_string (list, g_strdup (*s));
 
   for (s = dep->paths; s != NULL && *s != NULL; ++s, ++ed->n_paths)
-    gst_registry_binary_save_string (list, *s);
+    gst_registry_binary_save_string (list, g_strdup (*s));
 
   for (s = dep->names; s != NULL && *s != NULL; ++s, ++ed->n_names)
-    gst_registry_binary_save_string (list, *s);
+    gst_registry_binary_save_string (list, g_strdup (*s));
 
   *list = g_list_prepend (*list, chk);
 
