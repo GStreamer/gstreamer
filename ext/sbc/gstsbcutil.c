@@ -98,7 +98,7 @@ gst_sbc_get_allocation_from_list (const GValue * value)
 const gchar *
 gst_sbc_get_mode_from_list (const GValue * list, gint channels)
 {
-  int i;
+  unsigned int i;
   const GValue *value;
   const gchar *aux;
   gboolean joint, stereo, dual, mono;

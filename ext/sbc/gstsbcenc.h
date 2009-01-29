@@ -57,7 +57,7 @@ struct _GstSbcEnc {
 	gint subbands;
 	gint bitpool;
 
-	gint codesize;
+	guint codesize;
 	gint frame_length;
 	gint frame_duration;
 
