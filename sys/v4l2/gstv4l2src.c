@@ -24,23 +24,19 @@
 /**
  * SECTION:element-v4l2src
  *
+ * v4l2src can be used to capture video from v4l2 devices, like webcams and tv
+ * cards.
+ *
  * <refsect2>
- * v4l2src can be used to capture video from v4l2 devices, like webcams and tv cards.
  * <title>Example launch lines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch v4l2src ! xvimagesink
- * </programlisting>
- * This pipeline shows the video captured from /dev/video0 tv card and for
+ * ]| This pipeline shows the video captured from /dev/video0 tv card and for
  * webcams.
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 v4l2src ! jpegdec ! xvimagesink
- * </programlisting>
- * This pipeline shows the video captured from a webcam that delivers jpeg
+ * ]| This pipeline shows the video captured from a webcam that delivers jpeg
  * images.
- * </para>
  * </refsect2>
  */
 

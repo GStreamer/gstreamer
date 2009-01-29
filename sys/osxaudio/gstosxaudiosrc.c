@@ -43,15 +43,15 @@
  */
 
 /**
- * SECTION:element-plugin
+ * SECTION:element-osxaudiosrc
+ *
+ * This element captures raw audio samples using the CoreAudio api.
  *
  * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch -v -m osxaudiosrc ! fakesink
- * </programlisting>
- * </para>
+ * |[
+ * gst-launch osxaudiosrc ! wavenc ! filesink location=audio.wav
+ * ]|
  * </refsect2>
  */
 

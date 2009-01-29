@@ -23,26 +23,6 @@
  *
  */
 
-/**
- * SECTION:element-osxaudiosink
- * @short_description: play audio to an CoreAudio device
- *
- * <refsect2>
- * <para>
- * This element renders raw audio samples using the CoreAudio api.
- * </para>
- * <title>Example pipelines</title>
- * <para>
- * Play an Ogg/Vorbis file.
- * </para>
- * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! osxaudiosink
- * </programlisting>
- * </refsect2>
- *
- * Last reviewed on 2006-03-01 (0.10.4)
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

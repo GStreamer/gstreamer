@@ -27,32 +27,23 @@
 
 /**
  * SECTION:element-directsoundsink
- * @short_description: output sound using Directsound API
  *
- * <refsect2>
- * <para>
  * This element lets you output sound using the DirectSound API.
- * </para>
- * <para>
+ *
  * Note that you should almost always use generic audio conversion elements
  * like audioconvert and audioresample in front of an audiosink to make sure
  * your pipeline works under all circumstances (those conversion elements will
  * act in passthrough-mode if no conversion is necessary).
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 -v audiotestsrc ! audioconvert ! volume volume=0.1 ! directsoundsink
- * </programlisting>
- * will output a sine wave (continuous beep sound) to your sound card (with
+ * ]| will output a sine wave (continuous beep sound) to your sound card (with
  * a very low volume as precaution).
- * </para>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch-0.10 -v filesrc location=music.ogg ! decodebin ! audioconvert ! audioresample ! directsoundsink
- * </programlisting>
- * will play an Ogg/Vorbis audio file and output it.
- * </para>
+ * ]| will play an Ogg/Vorbis audio file and output it.
  * </refsect2>
  */
 

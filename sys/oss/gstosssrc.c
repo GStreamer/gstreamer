@@ -22,21 +22,16 @@
 
 /**
  * SECTION:element-osssrc
- * @short_description: record sound from your sound card using OSS
+ *
+ * This element lets you record sound using the Open Sound System (OSS).
  *
  * <refsect2>
- * <para>
- * This element lets you record sound using the Open Sound System (OSS).
- * </para>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v osssrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=mymusic.ogg
- * </programlisting>
- * will record sound from your sound card using OSS and encode it to an
+ * ]| will record sound from your sound card using OSS and encode it to an
  * Ogg/Vorbis file (this will only work if your mixer settings are right
  * and the right inputs enabled etc.)
- * </para>
  * </refsect2>
  */
 
@@ -147,6 +142,7 @@ gst_oss_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&osssrc_src_factory));
 }
+
 static void
 gst_oss_src_class_init (GstOssSrcClass * klass)
 {

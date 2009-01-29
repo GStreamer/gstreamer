@@ -26,23 +26,19 @@
 /**
  * SECTION:element-osxvideosink
  *
- * <refsect2>
- * <para>
  * The OSXVideoSink renders video frames to a MacOSX window. The video output
  * can be directed to a window embedded in an existing NSApp. This can be done
- * by setting the "embed" property to #TRUE. When the NSView to be embedded is
- * created an element #GstMessage with a name of 'have-ns-view' will be created
- * and posted on the bus. The pointer to the NSView to embed will be in the
- * 'nsview' field of that message. If no embedding is requested, the plugin will
- * create a standalone window.
- * </para>
+ * by setting the #GstOSXVideoSink:embed property to %TRUE. When the NSView to
+ * be embedded is created an element #GstMessage with a name of 'have-ns-view'
+ * will be created and posted on the bus. The pointer to the NSView to embed
+ * will be in the 'nsview' field of that message. If no embedding is requested,
+ * the plugin will create a standalone window.
+ *
+ * <refsect2>
  * <title>Examples</title>
- * <para>
- * Simple timeline to test the sink :
- * <programlisting>
- * gst-launch-0.10 -v videotestsrc ! osxvideosink
- * </programlisting>
- * </para>
+ * |[
+ * gst-launch-0.10 videotestsrc ! osxvideosink
+ * ]| test the sink
  * </refsect2>
  */
 

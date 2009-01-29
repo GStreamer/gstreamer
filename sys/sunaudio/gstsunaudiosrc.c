@@ -24,18 +24,14 @@
 /**
  * SECTION:element-sunaudiosrc
  *
- * <refsect2>
- * <para>
  * sunaudiosrc is an audio source designed to work with the Sun Audio
  * interface available in Solaris.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * 
- * gst-launch sunaudiosrc ! filesink location=outfile 
- * </programlisting>
- * </para>
+ * |[
+ * gst-launch sunaudiosrc ! wavenc ! filesink location=audio.wav
+ * ]|
  * </refsect2>
  */
 

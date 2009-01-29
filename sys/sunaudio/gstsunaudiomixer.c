@@ -22,12 +22,8 @@
 /**
  * SECTION:element-sunaudiomixer
  *
- * <refsect2>
- * <para>
  * sunaudiomixer is an mixer that controls the sound input and output
  * levels with the Sun Audio interface available in Solaris.
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

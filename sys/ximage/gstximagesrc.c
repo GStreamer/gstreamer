@@ -20,23 +20,18 @@
 
 /**
  * SECTION:element-ximagesrc
- * @short_description: a source that captures your X Display
  *
- * <refsect2>
- * <para>
  * This element captures your X Display and creates raw RGB video.  It uses
  * the XDamage extension if available to only capture areas of the screen that
  * have changed since the last frame.  It uses the XFixes extension if
  * available to also capture your mouse pointer.  By default it will fixate to
  * 25 frames per second.
- * </para>
+ *
+ * <refsect2>
  * <title>Example pipelines</title>
- * <para>
- * <programlisting>
- * gst-launch -v ximagesrc ! video/x-raw-rgb,framerate=5/1 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
- * </programlisting>
- * Encodes your X display to an Ogg theora video at 5 frames per second.
- * </para>
+ * |[
+ * gst-launch ximagesrc ! video/x-raw-rgb,framerate=5/1 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
+ * ]| Encodes your X display to an Ogg theora video at 5 frames per second.
  * </refsect2>
  */
 
@@ -941,12 +936,14 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
   gint x, y, width, height;
 
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
-    return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->
-            srcpad));
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC
+            (s)->srcpad));
 
   if (!gst_ximage_src_recalc (s))
-    return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->
-            srcpad));
+    return
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC
+            (s)->srcpad));
 
   xcontext = s->xcontext;
 

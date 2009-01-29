@@ -19,15 +19,13 @@
 
 /**
  * SECTION:element-ossmixer
- * @short_description: element to control sound input and output levels with OSS
+ *
+ * This element lets you adjust sound input and output levels with the
+ * Open Sound System (OSS). It supports the #GstMixer interface, which can be
+ * used to obtain a list of available mixer tracks. Set the mixer element to
+ * READY state before using the #GstMixer interface on it.
  *
  * <refsect2>
- * <para>
- * This element lets you adjust sound input and output levels with the
- * Open Sound System (OSS). It supports the GstMixer interface, which can be
- * used to obtain a list of available mixer tracks. Set the mixer element to
- * READY state before using the GstMixer interface on it.
- * </para>
  * <title>Example pipelines</title>
  * <para>
  * ossmixer can't be used in a sensible way in gst-launch.

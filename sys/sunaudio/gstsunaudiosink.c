@@ -24,17 +24,14 @@
 /**
  * SECTION:element-sunaudiosink
  *
- * <refsect2>
- * <para>
  * sunaudiosink is an audio sink designed to work with the Sun Audio
  * interface available in Solaris.
- * </para>
+ *
+ * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch -v sinesrc ! sunaudiosink
- * </programlisting>
- * </para>
+ * |[
+ * gst-launch audiotestsrc volume=0.5 ! sunaudiosink
+ * ]|
  * </refsect2>
  */
 

@@ -25,21 +25,17 @@
 /**
  * SECTION:element-directdrawsink
  *
- * <refsect2>
- * <para>
  * DirectdrawSink renders video RGB frames to any win32 window. This element
- * can receive a window ID from the application through the XOverlay interface
+ * can receive a window ID from the application through the #XOverlay interface
  * and will then render video frames in this window.
  * If no Window ID was provided by the application, the element will create its
  * own internal window and render into it.
- * </para>
- * <title>Examples</title>
- * <para>
- * Here is a simple pipeline to test the sink :
- * <programlisting>
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
  * gst-launch-0.10 -v videotestsrc ! directdrawsink
- * </programlisting>
- * </para>
+ * ]| a simple pipeline to test the sink
  * </refsect2>
  */
 

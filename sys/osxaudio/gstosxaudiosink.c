@@ -47,16 +47,18 @@
  */
 
 /**
- * SECTION:element-plugin
+ * SECTION:element-osxaudiosink
+ *
+ * This element renders raw audio samples using the CoreAudio api.
  *
  * <refsect2>
- * <title>Example launch line</title>
- * <para>
- * <programlisting>
- * gst-launch -v -m audiotestsrc ! audioconvert ! osxaudiosink
- * </programlisting>
- * </para>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! osxaudiosink
+ * ]| Play an Ogg/Vorbis file.
  * </refsect2>
+ *
+ * Last reviewed on 2006-03-01 (0.10.4)
  */
 
 #ifdef HAVE_CONFIG_H
