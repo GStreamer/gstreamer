@@ -309,8 +309,7 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
         *pos = '\0';
       }
       g_strchomp (header);
-      gst_rtsp_message_add_header (msg, GST_RTSP_HDR_SESSION, header);
-      g_free (header);
+      gst_rtsp_message_take_header (msg, GST_RTSP_HDR_SESSION, header);
     }
 
     /* FIXME copy more headers? */
@@ -491,18 +490,21 @@ gst_rtsp_message_free (GstRTSPMessage * msg)
 }
 
 /**
- * gst_rtsp_message_add_header:
+ * gst_rtsp_message_take_header:
  * @msg: a #GstRTSPMessage
  * @field: a #GstRTSPHeaderField
  * @value: the value of the header
  *
- * Add a header with key @field and @value to @msg.
+ * Add a header with key @field and @value to @msg. This function takes
+ * ownership of @value.
  *
  * Returns: a #GstRTSPResult.
+ *
+ * Since: 0.10.23
  */
 GstRTSPResult
-gst_rtsp_message_add_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
-    const gchar * value)
+gst_rtsp_message_take_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
+    gchar * value)
 {
   RTSPKeyValue key_value;
 
@@ -510,11 +512,29 @@ gst_rtsp_message_add_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
   g_return_val_if_fail (value != NULL, GST_RTSP_EINVAL);
 
   key_value.field = field;
-  key_value.value = g_strdup (value);
+  key_value.value = value;
 
   g_array_append_val (msg->hdr_fields, key_value);
 
   return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_add_header:
+ * @msg: a #GstRTSPMessage
+ * @field: a #GstRTSPHeaderField
+ * @value: the value of the header
+ *
+ * Add a header with key @field and @value to @msg. This function takes a copy
+ * of @value.
+ *
+ * Returns: a #GstRTSPResult.
+ */
+GstRTSPResult
+gst_rtsp_message_add_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
+    const gchar * value)
+{
+  return gst_rtsp_message_take_header (msg, field, g_strdup (value));
 }
 
 /**

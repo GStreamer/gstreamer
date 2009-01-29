@@ -398,12 +398,11 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
           gst_rtsp_base64_encode (user_pass, strlen (user_pass));
       gchar *auth_string = g_strdup_printf ("Basic %s", user_pass64);
 
-      gst_rtsp_message_add_header (message, GST_RTSP_HDR_AUTHORIZATION,
+      gst_rtsp_message_take_header (message, GST_RTSP_HDR_AUTHORIZATION,
           auth_string);
 
       g_free (user_pass);
       g_free (user_pass64);
-      g_free (auth_string);
       break;
     }
     case GST_RTSP_AUTH_DIGEST:{
@@ -445,9 +444,8 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
         g_free (auth_string);
         auth_string = auth_string2;
       }
-      gst_rtsp_message_add_header (message, GST_RTSP_HDR_AUTHORIZATION,
+      gst_rtsp_message_take_header (message, GST_RTSP_HDR_AUTHORIZATION,
           auth_string);
-      g_free (auth_string);
       break;
     }
     default:

@@ -1227,6 +1227,7 @@ gst_rtsp_message_new_data
 gst_rtsp_message_init_data
 gst_rtsp_message_parse_data
 gst_rtsp_message_add_header
+gst_rtsp_message_take_header
 gst_rtsp_message_remove_header
 gst_rtsp_message_get_header
 gst_rtsp_message_append_headers
