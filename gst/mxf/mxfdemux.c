@@ -372,9 +372,12 @@ gst_mxf_demux_push_src_event (GstMXFDemux * demux, GstEvent * event)
     return ret;
 
   for (i = 0; i < demux->src->len; i++) {
-    GstPad *pad = GST_PAD (g_ptr_array_index (demux->src, i));
+    GstMXFDemuxPad *pad = GST_MXF_DEMUX_PAD (g_ptr_array_index (demux->src, i));
 
-    ret |= gst_pad_push_event (pad, gst_event_ref (event));
+    if (pad->eos && GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+      continue;
+
+    ret |= gst_pad_push_event (GST_PAD_CAST (pad), gst_event_ref (event));
   }
 
   gst_event_unref (event);
@@ -1425,9 +1428,6 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         etrack->position).keyframe;
   }
 
-  if (etrack->duration <= etrack->position)
-    etrack->duration = etrack->position + 1;
-
   /* Create subbuffer to be able to change metadata */
   inbuf = gst_buffer_create_sub (buffer, 0, GST_BUFFER_SIZE (buffer));
 
@@ -1560,39 +1560,51 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
 
     if (pad->current_component) {
       pad->current_component_position++;
-      if (pad->current_component->parent.duration != -1 &&
+
+      if (pad->current_component->parent.duration >= 0 &&
           pad->current_component_position - pad->current_component_start
           >= pad->current_component->parent.duration) {
         GST_DEBUG_OBJECT (demux, "Switching to next component");
 
-        if ((ret =
-                gst_mxf_demux_pad_next_component (demux, pad)) != GST_FLOW_OK) {
-          if (ret == GST_FLOW_UNEXPECTED) {
-            gboolean eos = TRUE;
-
-            GST_DEBUG_OBJECT (demux, "EOS for track");
-            pad->eos = TRUE;
-
-            for (i = 0; i < demux->src->len; i++) {
-              GstMXFDemuxPad *opad = g_ptr_array_index (demux->src, i);
-
-              eos &= opad->eos;
-            }
-
-            if (eos) {
-              GST_DEBUG_OBJECT (demux, "All tracks are EOS");
-              ret = GST_FLOW_UNEXPECTED;
-              break;
-            } else {
-              ret = GST_FLOW_OK;
-            }
-          } else {
-            GST_ERROR_OBJECT (demux, "Switching component failed");
-            break;
-          }
+        ret = gst_mxf_demux_pad_next_component (demux, pad);
+        if (ret != GST_FLOW_OK && ret != GST_FLOW_UNEXPECTED) {
+          GST_ERROR_OBJECT (demux, "Switching component failed");
         }
+      } else if (etrack->duration > 0
+          && pad->current_component_position >= etrack->duration) {
+        GST_ERROR_OBJECT (demux,
+            "Current component position after end of essence track");
+        ret = GST_FLOW_UNEXPECTED;
+      }
+    } else if (etrack->duration > 0 && etrack->position + 1 == etrack->duration) {
+      GST_DEBUG_OBJECT (demux, "At the end of the essence track");
+      ret = GST_FLOW_UNEXPECTED;
+    }
+
+    if (ret == GST_FLOW_UNEXPECTED) {
+      gboolean eos = TRUE;
+
+      GST_DEBUG_OBJECT (demux, "EOS for track");
+      pad->eos = TRUE;
+      gst_pad_push_event (GST_PAD_CAST (pad), gst_event_new_eos ());
+
+      for (i = 0; i < demux->src->len; i++) {
+        GstMXFDemuxPad *opad = g_ptr_array_index (demux->src, i);
+
+        eos &= opad->eos;
+      }
+
+      if (eos) {
+        GST_DEBUG_OBJECT (demux, "All tracks are EOS");
+        ret = GST_FLOW_UNEXPECTED;
+        break;
+      } else {
+        ret = GST_FLOW_OK;
       }
     }
+
+    if (ret != GST_FLOW_OK)
+      goto out;
   }
 
 out:
@@ -2147,6 +2159,12 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
       etrack->body_sid);
 
 from_index:
+
+  if (etrack->duration > 0 && *position >= etrack->duration) {
+    GST_WARNING_OBJECT (demux, "Position after end of essence track");
+    return -1;
+  }
+
   /* First try to find an offset in our index */
   if (etrack->offsets && etrack->offsets->len > *position) {
     GstMXFDemuxIndex *idx =
@@ -2212,6 +2230,17 @@ from_index:
     ret =
         gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
         &read);
+
+    if (ret == GST_FLOW_UNEXPECTED) {
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *t =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        if (t->position != -1)
+          t->duration = t->position;
+      }
+    }
+
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       break;
 
@@ -2251,6 +2280,49 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   ret =
       gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
       &read);
+
+  if (ret == GST_FLOW_UNEXPECTED && demux->src) {
+    guint i;
+
+    for (i = 0; i < demux->src->len; i++) {
+      GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+      if (!p->eos) {
+        guint64 offset;
+        gint64 position;
+
+        if (p->current_component)
+          position = p->current_component_position;
+        else
+          position = p->current_essence_track->position;
+
+        offset =
+            gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
+            &position, FALSE);
+        if (offset == -1) {
+          GST_ERROR_OBJECT (demux,
+              "Failed to find offset for late essence track");
+          p->eos = TRUE;
+          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+          goto beach;
+        }
+
+        demux->offset = offset + demux->run_in;
+        gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+
+        for (i = 0; i < demux->essence_tracks->len; i++) {
+          GstMXFDemuxEssenceTrack *etrack =
+              &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
+              i);
+          etrack->position = -1;
+        }
+
+        ret = GST_FLOW_OK;
+        goto beach;
+      }
+    }
+  }
+
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto beach;
 
@@ -2267,7 +2339,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
 
-      if (p->last_stop < earliest_last_stop) {
+      if (!p->eos && p->last_stop < earliest_last_stop) {
         earliest = p;
         earliest_last_stop = p->last_stop;
       }
@@ -2279,13 +2351,25 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
 
     GST_WARNING_OBJECT (demux,
         "Found synchronization issue -- trying to solve");
-    position = earliest->current_component_position;
 
+    if (earliest->current_component)
+      position = earliest->current_component_position;
+    else
+      position = earliest->current_essence_track->position;
+
+    /* FIXME: This can probably be improved by using the
+     * offset of position-1 if it's in the same partition
+     * or the start of the position otherwise.
+     * This way we won't skip elements from the same essence
+     * container as etrack->position
+     */
     offset =
         gst_mxf_demux_find_essence_element (demux,
         earliest->current_essence_track, &position, FALSE);
     if (offset == -1) {
       GST_ERROR_OBJECT (demux, "Failed to find offset for late essence track");
+      earliest->eos = TRUE;
+      gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
       goto beach;
     }
 
