@@ -75,6 +75,9 @@ struct _GstRTSPClient {
 
   GstRTSPSessionPool   *session_pool;
   GstRTSPMediaMapping  *media_mapping;
+
+  GstRTSPUrl     *uri;
+  GstRTSPMedia   *media;
 };
 
 struct _GstRTSPClientClass {
