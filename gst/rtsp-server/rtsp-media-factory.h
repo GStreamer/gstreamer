@@ -42,8 +42,11 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 
 /**
  * GstRTSPMediaFactory:
+ * @lock: mutex protecting the datastructure.
  * @launch: the launch description
- * @streams: the array of #GstRTSPMediaStream objects for this media.
+ * @shared: if media from this factory can be shared between clients
+ * @media_lock: mutex protecting the medias.
+ * @media: hashtable of shared media
  *
  * The definition and logic for constructing the pipeline for a media. The media
  * can contain multiple streams like audio and video.
@@ -51,39 +54,52 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 struct _GstRTSPMediaFactory {
   GObject       parent;
 
+  GMutex       *lock;
   gchar        *launch;
+  gboolean      shared;
+
+  GMutex       *medias_lock;
+  GHashTable   *medias;
 };
 
 /**
  * GstRTSPMediaFactoryClass:
+ * @gen_key: convert @url to a key for caching media
+ * @get_element: Construct an return a #GstElement thast is a #GstBin containing
+ *       the elements to use for the media. The bin should contain payloaders
+ *       pay%d for each stream. The default implementation of this functions
+ *       returns the bin created from the launch parameter.
  * @construct: the vmethod that will be called when the factory has to create the
  *       #GstRTSPMedia for @url. The default implementation of this
  *       function calls get_element to retrieve an element and then looks for
  *       pay%d to create the streams.
+ * @configure: configure the media created with @construct. The default
+ *       implementation will configure the 'shared' property of the media.
  * @handle_message: Handle a bus message for @media created from @factory.
- * @get_element: Construct an return a #GstElement thast is a #GstBin containing
- *       the pipeline to use for the media. The bin should contain elements
- *       pay%d for each stream. The default implementation of this functions
- *       returns the bin created from the launch parameter.
  *
  * the #GstRTSPMediaFactory class structure.
  */
 struct _GstRTSPMediaFactoryClass {
   GObjectClass  parent_class;
 
+  gchar *           (*gen_key)        (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+
+  GstElement *      (*get_element)    (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   GstRTSPMedia *    (*construct)      (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+  void              (*configure)      (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+
   void              (*handle_message) (GstRTSPMediaFactory *factory, GstRTSPMedia *media, 
                                        GstMessage *message);
 
-  GstElement *      (*get_element)    (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);
 
-/* configuring the factory */
+/* creating the factory */
 GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void);
 
+/* configuring the factory */
 void                  gst_rtsp_media_factory_set_launch   (GstRTSPMediaFactory *factory,
                                                            const gchar *launch);
 gchar *               gst_rtsp_media_factory_get_launch   (GstRTSPMediaFactory *factory);
@@ -92,8 +108,7 @@ void                  gst_rtsp_media_factory_set_shared   (GstRTSPMediaFactory *
                                                            gboolean shared);
 gboolean              gst_rtsp_media_factory_is_shared    (GstRTSPMediaFactory *factory);
 
-
-/* creating the media bin from the factory */
+/* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,
                                                            const GstRTSPUrl *url);
 

@@ -19,6 +19,19 @@
 
 #include "rtsp-media.h"
 
+#define DEFAULT_SHARED         FALSE
+
+enum
+{
+  PROP_0,
+  PROP_SHARED,
+  PROP_LAST
+};
+
+static void gst_rtsp_media_get_property (GObject *object, guint propid,
+    GValue *value, GParamSpec *pspec);
+static void gst_rtsp_media_set_property (GObject *object, guint propid,
+    const GValue *value, GParamSpec *pspec);
 static void gst_rtsp_media_finalize (GObject * obj);
 
 G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
@@ -30,7 +43,13 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->get_property = gst_rtsp_media_get_property;
+  gobject_class->set_property = gst_rtsp_media_set_property;
   gobject_class->finalize = gst_rtsp_media_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_SHARED,
+      g_param_spec_boolean ("shared", "Shared", "If this media pipeline can be shared",
+          DEFAULT_SHARED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -64,6 +83,36 @@ gst_rtsp_media_finalize (GObject * obj)
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
 
+static void
+gst_rtsp_media_get_property (GObject *object, guint propid,
+    GValue *value, GParamSpec *pspec)
+{
+  GstRTSPMedia *media = GST_RTSP_MEDIA (object);
+
+  switch (propid) {
+    case PROP_SHARED:
+      g_value_set_boolean (value, gst_rtsp_media_is_shared (media));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
+static void
+gst_rtsp_media_set_property (GObject *object, guint propid,
+    const GValue *value, GParamSpec *pspec)
+{
+  GstRTSPMedia *media = GST_RTSP_MEDIA (object);
+
+  switch (propid) {
+    case PROP_SHARED:
+      gst_rtsp_media_set_shared (media, g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
 /**
  * gst_rtsp_media_new:
  *
@@ -83,6 +132,38 @@ gst_rtsp_media_new (void)
   return result;
 }
 
+/**
+ * gst_rtsp_media_set_shared:
+ * @media: a #GstRTSPMedia
+ * @shared: the new value
+ *
+ * Set or unset if the pipeline for @media can be shared will multiple clients.
+ * When @shared is %TRUE, client requests for this media will share the media
+ * pipeline.
+ */
+void
+gst_rtsp_media_set_shared (GstRTSPMedia *media, gboolean shared)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  media->shared = shared;
+}
+
+/**
+ * gst_rtsp_media_is_shared:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media can be shared between multiple clients.
+ *
+ * Returns: %TRUE if the media can be shared between clients.
+ */
+gboolean
+gst_rtsp_media_is_shared (GstRTSPMedia *media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  return media->shared;
+}
 
 /**
  * gst_rtsp_media_n_streams:
@@ -360,7 +441,6 @@ setup_stream (GstRTSPMediaStream *stream, GstRTSPMedia *media)
   return TRUE;
 }
 
-
 /**
  * gst_rtsp_media_prepare:
  * @obj: a #GstRTSPMedia
@@ -379,6 +459,8 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   if (media->prepared)
     goto was_prepared;
 
+  g_message ("preparing media %p", media);
+
   media->pipeline = gst_pipeline_new ("media-pipeline");
 
   gst_bin_add (GST_BIN_CAST (media->pipeline), media->element);
@@ -388,8 +470,7 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   /* add stuf to the bin */
   gst_bin_add (GST_BIN (media->pipeline), media->rtpbin);
 
-  ret = gst_element_set_state (media->pipeline, GST_STATE_READY);
-
+  /* link streams we already have */
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;
@@ -416,7 +497,7 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
       goto state_failed;
   }
 
-  /* no wait for all pads to be prerolled */
+  /* now wait for all pads to be prerolled */
   ret = gst_element_get_state (media->pipeline, NULL, NULL, -1);
 
   /* and back to PAUSED for live pipelines */

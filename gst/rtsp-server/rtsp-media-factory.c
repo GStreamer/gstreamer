@@ -20,11 +20,13 @@
 #include "rtsp-media-factory.h"
 
 #define DEFAULT_LAUNCH         NULL
+#define DEFAULT_SHARED         FALSE
 
 enum
 {
   PROP_0,
   PROP_LAUNCH,
+  PROP_SHARED,
   PROP_LAST
 };
 
@@ -34,8 +36,10 @@ static void gst_rtsp_media_factory_set_property (GObject *object, guint propid,
     const GValue *value, GParamSpec *pspec);
 static void gst_rtsp_media_factory_finalize (GObject * obj);
 
-static GstRTSPMedia * default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+static gchar * default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 static GstElement * default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+static GstRTSPMedia * default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+static void default_configure (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 
 G_DEFINE_TYPE (GstRTSPMediaFactory, gst_rtsp_media_factory, G_TYPE_OBJECT);
 
@@ -67,13 +71,26 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
       g_param_spec_string ("launch", "Launch", "A launch description of the pipeline",
           DEFAULT_LAUNCH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  klass->construct = default_construct;
+  g_object_class_install_property (gobject_class, PROP_SHARED,
+      g_param_spec_boolean ("shared", "Shared", "If media from this factory is shared",
+          DEFAULT_SHARED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  klass->gen_key = default_gen_key;
   klass->get_element = default_get_element;
+  klass->construct = default_construct;
+  klass->configure = default_configure;
 }
 
 static void
 gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
 {
+  factory->launch = g_strdup (DEFAULT_LAUNCH);
+  factory->shared = DEFAULT_SHARED;
+
+  factory->lock = g_mutex_new ();
+  factory->medias_lock = g_mutex_new ();
+  factory->medias = g_hash_table_new_full (g_str_hash, g_str_equal,
+		  g_free, g_object_unref);
 }
 
 static void
@@ -81,7 +98,10 @@ gst_rtsp_media_factory_finalize (GObject * obj)
 {
   GstRTSPMediaFactory *factory = GST_RTSP_MEDIA_FACTORY (obj);
 
+  g_hash_table_unref (factory->medias);
+  g_mutex_free (factory->medias_lock);
   g_free (factory->launch);
+  g_mutex_free (factory->lock);
 
   G_OBJECT_CLASS (gst_rtsp_media_factory_parent_class)->finalize (obj);
 }
@@ -95,6 +115,9 @@ gst_rtsp_media_factory_get_property (GObject *object, guint propid,
   switch (propid) {
     case PROP_LAUNCH:
       g_value_take_string (value, gst_rtsp_media_factory_get_launch (factory));
+      break;
+    case PROP_SHARED:
+      g_value_set_boolean (value, gst_rtsp_media_factory_is_shared (factory));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -110,6 +133,9 @@ gst_rtsp_media_factory_set_property (GObject *object, guint propid,
   switch (propid) {
     case PROP_LAUNCH:
       gst_rtsp_media_factory_set_launch (factory, g_value_get_string (value));
+      break;
+    case PROP_SHARED:
+      gst_rtsp_media_factory_set_shared (factory, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -155,7 +181,10 @@ gst_rtsp_media_factory_set_launch (GstRTSPMediaFactory *factory, const gchar *la
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
   g_return_if_fail (launch != NULL);
 
+  g_mutex_lock (factory->lock);
+  g_free (factory->launch);
   factory->launch = g_strdup (launch);
+  g_mutex_unlock (factory->lock);
 }
 
 /**
@@ -172,7 +201,51 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory *factory)
 {
   gchar *result;
 
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+
+  g_mutex_lock (factory->lock);
   result = g_strdup (factory->launch);
+  g_mutex_unlock (factory->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_shared:
+ * @factory: a #GstRTSPMediaFactory
+ * @shared: the new value
+ *
+ * Configure if media created from this factory can be shared between clients.
+ */
+void
+gst_rtsp_media_factory_set_shared (GstRTSPMediaFactory *factory,
+    gboolean shared)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  g_mutex_lock (factory->lock);
+  factory->shared = shared;
+  g_mutex_unlock (factory->lock);
+}
+
+/**
+ * gst_rtsp_media_factory_is_shared:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get if media created from this factory can be shared between clients.
+ *
+ * Returns: %TRUE if the media will be shared between clients.
+ */
+gboolean
+gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory *factory)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), FALSE);
+
+  g_mutex_lock (factory->lock);
+  result = factory->shared;
+  g_mutex_unlock (factory->lock);
 
   return result;
 }
@@ -195,19 +268,68 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory *factory)
 GstRTSPMedia *
 gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
-  GstRTSPMedia *res;
+  gchar *key;
+  GstRTSPMedia *media;
   GstRTSPMediaFactoryClass *klass;
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
-  if (klass->construct)
-    res = klass->construct (factory, url);
+  /* convert the url to a key for the hashtable. NULL return or a NULL function
+   * will not cache anything for this factory. */
+  if (klass->gen_key)
+    key = klass->gen_key (factory, url);
   else
-    res = NULL;
+    key = NULL;
 
-  g_message ("constructed media %p for url %s", res, url->abspath);
+  g_mutex_lock (factory->medias_lock);
+  if (key) {
+    /* we have a key, see if we find a cached media */
+    media = g_hash_table_lookup (factory->medias, key);
+    if (media)
+      g_object_ref (media);
+  }
+  else
+    media = NULL;
 
-  return res;
+  if (media == NULL) {
+    /* nothing cached found, try to create one */
+    if (klass->construct)
+      media = klass->construct (factory, url);
+    else
+      media = NULL;
+
+    if (media) {
+      /* configure the media */
+      if (klass->configure)
+        klass->configure (factory, media);
+
+      /* check if we can cache this media */
+      if (gst_rtsp_media_is_shared (media)) {
+        /* insert in the hashtable, takes ownership of the key */
+        g_object_ref (media);
+        g_hash_table_insert (factory->medias, key, media);
+        key = NULL;
+      }
+    }
+  }
+  g_mutex_unlock (factory->medias_lock);
+
+  if (key)
+    g_free (key);
+
+  g_message ("constructed media %p for url %s", media, url->abspath);
+
+  return media;
+}
+
+static gchar *
+default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
+{
+  gchar *result;
+
+  result = gst_rtsp_url_get_request_uri (url);
+
+  return result;
 }
 
 static GstElement *
@@ -216,6 +338,7 @@ default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   GstElement *element;
   GError *error = NULL;
 
+  g_mutex_lock (factory->lock);
   /* we need a parse syntax */
   if (factory->launch == NULL)
     goto no_launch;
@@ -224,6 +347,8 @@ default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   element = gst_parse_launch (factory->launch, &error);
   if (element == NULL)
     goto parse_error;
+
+  g_mutex_unlock (factory->lock);
 
   if (error != NULL) {
     /* a recoverable error was encountered */
@@ -235,11 +360,13 @@ default_get_element (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
   /* ERRORS */
 no_launch:
   {
+    g_mutex_unlock (factory->lock);
     g_critical ("no launch line specified");
     return NULL;
   }
 parse_error:
   {
+    g_mutex_unlock (factory->lock);
     g_critical ("could not parse launch syntax (%s): %s", factory->launch, 
          (error ? error->message : "unknown reason"));
     if (error)
@@ -247,6 +374,7 @@ parse_error:
     return NULL;
   }
 }
+
 
 static GstRTSPMedia *
 default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
@@ -312,4 +440,17 @@ no_element:
     g_critical ("could not create element");
     return NULL;
   }
+}
+
+static void
+default_configure (GstRTSPMediaFactory *factory, GstRTSPMedia *media)
+{
+  gboolean shared;
+
+  /* configure the sharedness */
+  g_mutex_lock (factory->lock);
+  shared = factory->shared;
+  g_mutex_unlock (factory->lock);
+
+  gst_rtsp_media_set_shared (media, shared);
 }
