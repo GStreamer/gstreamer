@@ -106,9 +106,9 @@ struct _GstMXFDemuxPad
   MXFMetadataSourceClip *current_component;
 
   gint64 current_component_start;
-  gint64 current_component_position;
 
   GstMXFDemuxEssenceTrack *current_essence_track;
+  gint64 current_essence_track_position;
 };
 
 struct _GstMXFDemuxPadClass

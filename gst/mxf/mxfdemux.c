@@ -1001,7 +1001,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
       } else {
         pad->current_component_start += component->start_position;
       }
-      pad->current_component_position = pad->current_component_start;
+      pad->current_essence_track_position = pad->current_component_start;
     }
 
     /* NULL iff playing a source package */
@@ -1332,7 +1332,7 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
   } else {
     pad->current_component_start += pad->current_component->start_position;
   }
-  pad->current_component_position = pad->current_component_start;
+  pad->current_essence_track_position = pad->current_component_start;
 
 
   if (!gst_caps_is_equal (GST_PAD_CAPS (pad), pad->current_essence_track->caps)) {
@@ -1501,8 +1501,8 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GST_DEBUG_OBJECT (demux, "Pad is already EOS");
       continue;
     }
-    if (pad->current_component &&
-        etrack->position != pad->current_component_position) {
+
+    if (etrack->position != pad->current_essence_track_position) {
       GST_DEBUG_OBJECT (demux, "Not at current component's position");
       continue;
     }
@@ -1584,11 +1584,11 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     if (ret != GST_FLOW_OK)
       break;
 
-    if (pad->current_component) {
-      pad->current_component_position++;
+    pad->current_essence_track_position++;
 
-      if (pad->current_component->parent.duration >= 0 &&
-          pad->current_component_position - pad->current_component_start
+    if (pad->current_component) {
+      if (pad->current_component->parent.duration > 0 &&
+          pad->current_essence_track_position - pad->current_component_start
           >= pad->current_component->parent.duration) {
         GST_DEBUG_OBJECT (demux, "Switching to next component");
 
@@ -1597,18 +1597,18 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
           GST_ERROR_OBJECT (demux, "Switching component failed");
         }
       } else if (etrack->duration > 0
-          && pad->current_component_position >= etrack->duration) {
+          && pad->current_essence_track_position >= etrack->duration) {
         GST_ERROR_OBJECT (demux,
             "Current component position after end of essence track");
         ret = GST_FLOW_UNEXPECTED;
       }
-    } else if (etrack->duration > 0 && etrack->position + 1 == etrack->duration) {
+    } else if (etrack->duration > 0
+        && pad->current_essence_track_position == etrack->duration) {
       GST_DEBUG_OBJECT (demux, "At the end of the essence track");
       ret = GST_FLOW_UNEXPECTED;
     }
 
     if (ret == GST_FLOW_UNEXPECTED) {
-
       GST_DEBUG_OBJECT (demux, "EOS for track");
       pad->eos = TRUE;
       gst_pad_push_event (GST_PAD_CAST (pad), gst_event_new_eos ());
@@ -2316,10 +2316,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
         guint64 offset;
         gint64 position;
 
-        if (p->current_component)
-          position = p->current_component_position;
-        else
-          position = p->current_essence_track->position;
+        position = p->current_essence_track_position;
 
         offset =
             gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
@@ -2340,6 +2337,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
               i);
           etrack->position = -1;
         }
+        p->current_essence_track->position = position;
 
         ret = GST_FLOW_OK;
         goto beach;
@@ -2376,10 +2374,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
     GST_WARNING_OBJECT (demux,
         "Found synchronization issue -- trying to solve");
 
-    if (earliest->current_component)
-      position = earliest->current_component_position;
-    else
-      position = earliest->current_essence_track->position;
+    position = earliest->current_essence_track_position;
 
     /* FIXME: This can probably be improved by using the
      * offset of position-1 if it's in the same partition
@@ -2406,6 +2401,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
 
       etrack->position = -1;
     }
+    earliest->current_essence_track->position = position;
   }
 
 beach:
