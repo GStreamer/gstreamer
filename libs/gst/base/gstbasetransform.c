@@ -1544,7 +1544,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         priv->proxy_alloc = FALSE;
       } else {
         /* we transformed into something */
-        if (gst_caps_is_equal (caps, othercaps)) {
+        if (gst_caps_is_equal (sink_suggest, othercaps)) {
           GST_DEBUG_OBJECT (trans,
               "best caps same as input, marking for proxy");
           priv->proxy_alloc = TRUE;
