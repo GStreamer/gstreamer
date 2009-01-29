@@ -400,9 +400,9 @@ gst_rtsp_find_method (const gchar * method)
  * gst_rtsp_options_as_text:
  * @options: one or more #GstRTSPMethod
  *
- * Convert @moptions to a string.
+ * Convert @options to a string.
  *
- * Returns: a new string of @opions. g_free () after usage.
+ * Returns: a new string of @options. g_free() after usage.
  *
  * Since: 0.10.23
  */
