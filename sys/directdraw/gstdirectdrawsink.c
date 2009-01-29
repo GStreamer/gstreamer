@@ -34,7 +34,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-0.10 -v videotestsrc ! directdrawsink
+ * gst-launch -v videotestsrc ! directdrawsink
  * ]| a simple pipeline to test the sink
  * </refsect2>
  */
