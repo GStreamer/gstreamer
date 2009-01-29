@@ -1161,6 +1161,7 @@ gst_rtsp_method_as_text
 gst_rtsp_version_as_text
 gst_rtsp_header_as_text
 gst_rtsp_status_as_text
+gst_rtsp_options_as_text
 gst_rtsp_find_header_field
 gst_rtsp_find_method
 </SECTION>
