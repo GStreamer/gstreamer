@@ -225,8 +225,7 @@ gst_rtp_sbc_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
   available = gst_adapter_available (sbcpay->adapter);
   if (available + RTP_SBC_HEADER_TOTAL >=
       GST_BASE_RTP_PAYLOAD_MTU (sbcpay) ||
-      (sbcpay->min_frames != -1 && available >
-          (sbcpay->min_frames * sbcpay->frame_length)))
+      (available > (sbcpay->min_frames * sbcpay->frame_length)))
     return gst_rtp_sbc_pay_flush_buffers (sbcpay);
 
   return GST_FLOW_OK;
