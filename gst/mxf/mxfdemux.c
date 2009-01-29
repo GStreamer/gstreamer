@@ -2313,11 +2313,10 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
             gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
             &position, FALSE);
         if (offset == -1) {
-          GST_ERROR_OBJECT (demux,
-              "Failed to find offset for late essence track");
+          GST_ERROR_OBJECT (demux, "Failed to find offset for essence track");
           p->eos = TRUE;
           gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
-          goto beach;
+          continue;
         }
 
         demux->offset = offset + demux->run_in;
