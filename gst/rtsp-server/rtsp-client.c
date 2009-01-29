@@ -518,6 +518,7 @@ handle_describe_response (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage
 
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_TYPE, "application/sdp");
 
+  /* content base for some clients that might screw up creating the setup uri */
   str = g_strdup_printf ("rtsp://%s:%u%s/", uri->host, uri->port, uri->abspath);
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_CONTENT_BASE, str);
   g_free (str);
