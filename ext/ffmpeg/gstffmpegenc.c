@@ -1029,8 +1029,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       sinkcaps = gst_caps_from_string
           ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
     } else {
-      sinkcaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL,
-          in_plugin->id, TRUE);
+      sinkcaps = gst_ffmpeg_codectype_to_audio_caps (NULL,
+          in_plugin->id, TRUE, in_plugin);
     }
     if (!sinkcaps) {
       GST_WARNING ("Couldn't get sink caps for encoder %s", in_plugin->name);

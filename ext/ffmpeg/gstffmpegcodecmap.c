@@ -1624,6 +1624,75 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
   return caps;
 }
 
+GstCaps *
+gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
+    enum CodecID codec_id, gboolean encode, AVCodec * codec)
+{
+  GstCaps *caps = NULL;
+
+  GST_DEBUG ("context:%p, codec_id:%d, encode:%d, codec:%p",
+      context, codec_id, encode, codec);
+  if (codec)
+    GST_DEBUG ("sample_fmts:%p, samplerates:%p",
+        codec->sample_fmts, codec->supported_samplerates);
+
+  if (context) {
+    /* Specific codec context */
+    caps = gst_ffmpeg_smpfmt_to_caps (context->sample_fmt, context, codec_id);
+  } else if (codec && codec->sample_fmts) {
+    GstCaps *temp;
+    int i;
+
+    caps = gst_caps_new_empty ();
+    for (i = 0; codec->sample_fmts[i] != -1; i++) {
+      temp =
+          gst_ffmpeg_smpfmt_to_caps (codec->sample_fmts[0], context, codec_id);
+      if (temp != NULL)
+        gst_caps_append (caps, temp);
+    }
+  } else {
+    GstCaps *temp;
+    enum SampleFormat i;
+    AVCodecContext ctx = { 0, };
+
+    ctx.channels = -1;
+    caps = gst_caps_new_empty ();
+    for (i = 0; i <= SAMPLE_FMT_DBL; i++) {
+      temp = gst_ffmpeg_smpfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
+      if (temp != NULL) {
+        gst_caps_append (caps, temp);
+      }
+    }
+  }
+  return caps;
+}
+
+GstCaps *
+gst_ffmpeg_codectype_to_video_caps (AVCodecContext * context,
+    enum CodecID codec_id, gboolean encode, AVCodec * codec)
+{
+  GstCaps *caps;
+
+  if (context) {
+    caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt, context, codec_id);
+  } else {
+    GstCaps *temp;
+    enum PixelFormat i;
+    AVCodecContext ctx = { 0, };
+
+    caps = gst_caps_new_empty ();
+    for (i = 0; i < PIX_FMT_NB; i++) {
+      ctx.width = -1;
+      ctx.pix_fmt = i;
+      temp = gst_ffmpeg_pixfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
+      if (temp != NULL) {
+        gst_caps_append (caps, temp);
+      }
+    }
+  }
+  return caps;
+}
+
 /* Convert a FFMPEG codec Type and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps
@@ -1639,47 +1708,14 @@ gst_ffmpeg_codectype_to_caps (enum CodecType codec_type,
 
   switch (codec_type) {
     case CODEC_TYPE_VIDEO:
-      if (context) {
-        caps = gst_ffmpeg_pixfmt_to_caps (context->pix_fmt, context, codec_id);
-      } else {
-        GstCaps *temp;
-        enum PixelFormat i;
-        AVCodecContext ctx = { 0, };
-
-        caps = gst_caps_new_empty ();
-        for (i = 0; i < PIX_FMT_NB; i++) {
-          ctx.width = -1;
-          ctx.pix_fmt = i;
-          temp = gst_ffmpeg_pixfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
-          if (temp != NULL) {
-            gst_caps_append (caps, temp);
-          }
-        }
-      }
+      caps =
+          gst_ffmpeg_codectype_to_video_caps (context, codec_id, encode, NULL);
       break;
-
     case CODEC_TYPE_AUDIO:
-      if (context) {
-        caps =
-            gst_ffmpeg_smpfmt_to_caps (context->sample_fmt, context, codec_id);
-      } else {
-        GstCaps *temp;
-        enum SampleFormat i;
-        AVCodecContext ctx = { 0, };
-
-        ctx.channels = -1;
-        caps = gst_caps_new_empty ();
-        for (i = 0; i <= SAMPLE_FMT_DBL; i++) {
-          temp = gst_ffmpeg_smpfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
-          if (temp != NULL) {
-            gst_caps_append (caps, temp);
-          }
-        }
-      }
+      caps =
+          gst_ffmpeg_codectype_to_audio_caps (context, codec_id, encode, NULL);
       break;
-
     default:
-      /* .. */
       caps = NULL;
       break;
   }
