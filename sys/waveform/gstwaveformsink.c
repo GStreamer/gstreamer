@@ -32,11 +32,11 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-0.10 -v audiotestsrc ! audioconvert ! volume volume=0.1 ! waveformsink
+ * gst-launch -v audiotestsrc ! audioconvert ! volume volume=0.1 ! waveformsink
  * ]| will output a sine wave (continuous beep sound) to your sound card (with
  * a very low volume as precaution).
  * |[
- * gst-launch-0.10 -v filesrc location=music.ogg ! decodebin ! audioconvert ! audioresample ! waveformsink
+ * gst-launch -v filesrc location=music.ogg ! decodebin ! audioconvert ! audioresample ! waveformsink
  * ]| will play an Ogg/Vorbis audio file and output it.
  * </refsect2>
  */

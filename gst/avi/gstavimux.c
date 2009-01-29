@@ -34,7 +34,7 @@
  * <title>Example launch lines</title>
  * <para>(write everything in one line, without the backslash characters)</para>
  * |[
- * gst-launch-0.10 videotestsrc num-buffers=250 \
+ * gst-launch videotestsrc num-buffers=250 \
  * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert \
@@ -44,7 +44,7 @@
  * with a test picture and an uncompressed audio stream containing a 
  * test sound.
  * |[
- * gst-launch-0.10 videotestsrc num-buffers=250 \
+ * gst-launch videotestsrc num-buffers=250 \
  * ! 'video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)25/1' \
  * ! xvidenc ! queue ! mux. \
  * audiotestsrc num-buffers=440 ! audioconvert ! 'audio/x-raw-int,rate=44100,channels=2' \

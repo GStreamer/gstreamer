@@ -37,7 +37,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch-0.10 videotestsrc ! osxvideosink
+ * gst-launch videotestsrc ! osxvideosink
  * ]| test the sink
  * </refsect2>
  */

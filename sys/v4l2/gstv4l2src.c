@@ -34,7 +34,7 @@
  * ]| This pipeline shows the video captured from /dev/video0 tv card and for
  * webcams.
  * |[
- * gst-launch-0.10 v4l2src ! jpegdec ! xvimagesink
+ * gst-launch v4l2src ! jpegdec ! xvimagesink
  * ]| This pipeline shows the video captured from a webcam that delivers jpeg
  * images.
  * </refsect2>
