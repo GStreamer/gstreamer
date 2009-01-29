@@ -51,22 +51,17 @@ typedef struct _GstRTSPSessionMedia GstRTSPSessionMedia;
  */
 struct _GstRTSPSessionStream
 {
-  guint idx;
-
-  /* the owner media */
-  GstRTSPSessionMedia *media;
-
+  /* the stream of the media */
   GstRTSPMediaStream *media_stream;
 
   /* client and server transports */
   GstRTSPTransport *client_trans;
-  GstRTSPTransport *server_trans;
 };
 
 /**
  * GstRTSPSessionMedia:
  *
- * State of a client session regarding a specific media.
+ * State of a client session regarding a specific media identified by uri.
  */
 struct _GstRTSPSessionMedia
 {

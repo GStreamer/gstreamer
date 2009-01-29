@@ -42,7 +42,7 @@ gst_rtsp_session_init (GstRTSPSession * session)
 }
 
 static void
-gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
+gst_rtsp_session_free_stream (GstRTSPSessionStream *stream, GstRTSPSessionMedia *media)
 {
   if (stream->client_trans)
     gst_rtsp_transport_free (stream->client_trans);
@@ -51,34 +51,35 @@ gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
 }
 
 static void
-gst_rtsp_session_free_media (GstRTSPSessionMedia *media)
+gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session)
 {
-  GList *walk;
-
-  for (walk = media->streams; walk; walk = g_list_next (walk)) {
-    GstRTSPSessionStream *stream = (GstRTSPSessionStream *) walk->data; 
-
-    gst_rtsp_session_free_stream (stream);
-  }
+  g_list_foreach (media->streams, (GFunc) gst_rtsp_session_free_stream,
+		  media);
   g_list_free (media->streams);
+
+  if (media->url)
+    gst_rtsp_url_free (media->url);
+
+  if (media->media)
+    g_object_unref (media->media);
+
+  g_free (media);
 }
 
 static void
 gst_rtsp_session_finalize (GObject * obj)
 {
   GstRTSPSession *session;
-  GList *walk;
 
   session = GST_RTSP_SESSION (obj);
 
-  g_free (session->sessionid);
-
-  for (walk = session->medias; walk; walk = g_list_next (walk)) {
-    GstRTSPSessionMedia *media = (GstRTSPSessionMedia *) walk->data; 
-
-    gst_rtsp_session_free_media (media);
-  }
+  /* free all media */
+  g_list_foreach (session->medias, (GFunc) gst_rtsp_session_free_media,
+		  session);
   g_list_free (session->medias);
+
+  /* free session id */
+  g_free (session->sessionid);
 
   G_OBJECT_CLASS (gst_rtsp_session_parent_class)->finalize (obj);
 }
@@ -156,27 +157,38 @@ GstRTSPSessionStream *
 gst_rtsp_session_media_get_stream (GstRTSPSessionMedia *media, guint idx)
 {
   GstRTSPSessionStream *result;
+  GstRTSPMediaStream *media_stream;
   GList *walk;
 
-  result = NULL;
+  g_return_val_if_fail (media != NULL, NULL);
+  g_return_val_if_fail (media->media != NULL, NULL);
 
+  media_stream = gst_rtsp_media_get_stream (media->media, idx);
+  if (media_stream == NULL)
+    goto no_media;
+
+  result = NULL;
   for (walk = media->streams; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionStream *) walk->data; 
 
-    if (result->idx == idx)
+    if (result->media_stream == media_stream)
       break;
 
     result = NULL;
   }
   if (result == NULL) {
     result = g_new0 (GstRTSPSessionStream, 1);
-    result->idx = idx;
-    result->media = media;
-    result->media_stream = gst_rtsp_media_get_stream (media->media, idx);
+    result->media_stream = media_stream;
 
     media->streams = g_list_prepend (media->streams, result);
   }
   return result;
+
+  /* ERRORS */
+no_media:
+  {
+    return NULL;
+  }
 }
 
 /**
@@ -210,9 +222,6 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
     GstRTSPTransport *ct)
 {
   GstRTSPTransport *st;
-  GstRTSPSessionMedia *media;
-
-  media = stream->media;
 
   /* prepare the server transport */
   gst_rtsp_transport_new (&st);
@@ -229,7 +238,6 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
 
   st->server_port.min = stream->media_stream->server_port.min;
   st->server_port.max = stream->media_stream->server_port.max;
-  stream->server_trans = st;
 
   return st;
 }
