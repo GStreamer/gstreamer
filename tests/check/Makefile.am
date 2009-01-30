@@ -156,7 +156,7 @@ elements_sunaudio_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
 	$(LDADD)
 
-elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
+elements_videocrop_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_videocrop_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 # FIXME: configure should check for gdk-pixbuf not gtk
