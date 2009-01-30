@@ -127,7 +127,7 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     GST_DEBUG_OBJECT (demux, "first ts: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (payload->ts));
     demux->first_ts = payload->ts;
-    if (demux->push_mode) {
+    if (demux->streaming) {
       gst_segment_set_seek (&demux->segment, demux->segment.rate,
           GST_FORMAT_TIME, demux->segment.flags, GST_SEEK_TYPE_SET,
           demux->first_ts, GST_SEEK_TYPE_NONE, 0, NULL);
@@ -145,7 +145,7 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
   }
 
   /* make timestamps start from 0 */
-  if (!demux->push_mode)
+  if (!demux->streaming)
     payload->ts -= demux->first_ts;
 
   /* remove any incomplete payloads that will never be completed */

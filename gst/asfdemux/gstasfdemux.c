@@ -261,7 +261,6 @@ gst_asf_demux_activate_push (GstPad * sinkpad, gboolean active)
 
   demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
-  demux->push_mode = TRUE;
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->streaming = TRUE;
 
@@ -274,7 +273,6 @@ gst_asf_demux_activate_pull (GstPad * pad, gboolean active)
   GstASFDemux *demux;
 
   demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (pad));
-  demux->push_mode = FALSE;
 
   if (active) {
     demux->state = GST_ASF_DEMUX_STATE_HEADER;
@@ -466,7 +464,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   accurate = ((flags & GST_SEEK_FLAG_ACCURATE) == GST_SEEK_FLAG_ACCURATE);
   keyunit_sync = ((flags & GST_SEEK_FLAG_KEY_UNIT) == GST_SEEK_FLAG_KEY_UNIT);
 
-  if (demux->push_mode) {
+  if (demux->streaming) {
     gst_event_ref (event);
     return gst_pad_push_event (demux->sinkpad, event);
   }
