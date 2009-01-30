@@ -101,6 +101,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC__cpy, "Copyright", QT_FLAG_CONTAINER,},
   {FOURCC__cmt, "Comment", QT_FLAG_CONTAINER,},
   {FOURCC__des, "Description", QT_FLAG_CONTAINER,},
+  {FOURCC__req, "Requirement", QT_FLAG_CONTAINER,},
+  {FOURCC__enc, "Encoder", QT_FLAG_CONTAINER,},
   {FOURCC_gnre, "Genre", QT_FLAG_CONTAINER,},
   {FOURCC_trkn, "Track Number", QT_FLAG_CONTAINER,},
   {FOURCC_disc, "Disc Number", QT_FLAG_CONTAINER,},

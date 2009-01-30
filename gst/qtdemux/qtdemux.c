@@ -4173,7 +4173,8 @@ static const struct
   FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
   FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, qtdemux_tag_add_covr}, {
   FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
-  FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}
+  FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
+  FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}
 };
 
 static void
