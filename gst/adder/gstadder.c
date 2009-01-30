@@ -901,7 +901,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
             collect_data, insize, indata);
         /* clear if we are only going to fill a partial buffer */
         if (G_UNLIKELY (outsize > insize))
-          memset (outdata + insize, 0, outsize - insize);
+          memset ((guint8 *) outdata + insize, 0, outsize - insize);
         /* and copy the data into it */
         memcpy (outdata, indata, insize);
         empty = FALSE;
