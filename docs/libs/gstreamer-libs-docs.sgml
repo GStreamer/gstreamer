@@ -11,6 +11,7 @@
     <title>GStreamer &GST_MAJORMINOR; Library Reference Manual</title>
     <releaseinfo>
       for GStreamer Library &GST_MAJORMINOR; (&GST_VERSION;)
+      The latest version of this documentation can be found on-line at
       <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-libs/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-libs/html/</ulink>.
     </releaseinfo>
   </bookinfo>
