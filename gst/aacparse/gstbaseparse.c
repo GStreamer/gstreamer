@@ -272,7 +272,7 @@ static void gst_base_parse_loop (GstPad * pad);
 static gboolean gst_base_parse_check_frame (GstBaseParse * parse,
     GstBuffer * buffer, guint * framesize, gint * skipsize);
 
-static gboolean gst_base_parse_parse_frame (GstBaseParse * parse,
+static GstFlowReturn gst_base_parse_parse_frame (GstBaseParse * parse,
     GstBuffer * buffer);
 
 static gboolean gst_base_parse_sink_eventfunc (GstBaseParse * parse,
@@ -443,13 +443,13 @@ gst_base_parse_check_frame (GstBaseParse * parse,
  *
  * Default callback for parse_frame.
  */
-static gboolean
+static GstFlowReturn
 gst_base_parse_parse_frame (GstBaseParse * parse, GstBuffer * buffer)
 {
   /* FIXME: Could we even _try_ to do something clever here? */
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 
