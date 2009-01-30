@@ -1205,9 +1205,13 @@ get_current_stream_number (GstPlayBin * playbin, GPtrArray * channels)
       g_object_get (selector, "active-pad", &current, NULL);
 
       if (pad == current) {
+        gst_object_unref (current);
         ret = i;
         break;
       }
+
+      if (current)
+        gst_object_unref (current);
     }
   }
 
