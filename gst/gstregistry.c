@@ -97,9 +97,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_FORK
-#include <sys/wait.h>
-#endif /* HAVE_FORK */
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -125,11 +122,7 @@ static GStaticMutex _gst_registry_mutex = G_STATIC_MUTEX_INIT;
 static GstRegistry *_gst_registry_default = NULL;
 
 /* defaults */
-#if defined(HAVE_FORK) && !defined(GST_HAVE_UNSAFE_FORK)
 #define DEFAULT_FORK TRUE
-#else
-#define DEFAULT_FORK FALSE
-#endif /* HAVE_FORK */
 
 /* control the behaviour of registry rebuild */
 static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
@@ -1436,14 +1429,15 @@ ensure_current_registry (GError ** error)
 /**
  * gst_registry_fork_is_enabled:
  *
- * By default GStreamer will perform a fork() when scanning and rebuilding the
- * registry file.
+ * By default GStreamer will perform scanning and rebuilding of the
+ * registry file using a helper child process.
  *
  * Applications might want to disable this behaviour with the
- * gst_registry_fork_set_enabled() function.
+ * gst_registry_fork_set_enabled() function, in which case new plugins
+ * are scanned (and loaded) into the application process.
  *
- * Returns: %TRUE if GStreamer will use fork() when rebuilding the registry. On
- * platforms without fork(), this function will always return %FALSE.
+ * Returns: %TRUE if GStreamer will use the child helper process when
+ * rebuilding the registry.
  *
  * Since: 0.10.10
  */
@@ -1455,22 +1449,18 @@ gst_registry_fork_is_enabled (void)
 
 /**
  * gst_registry_fork_set_enabled:
- * @enabled: whether rebuilding the registry may fork
+ * @enabled: whether rebuilding the registry can use a temporary child helper process.
  *
- * Applications might want to disable/enable the usage of fork() when rebuilding
- * the registry. See gst_registry_fork_is_enabled() for more information.
- *
- * On platforms without fork(), this function will have no effect on the return
- * value of gst_registry_fork_is_enabled().
+ * Applications might want to disable/enable spawning of a child helper process
+ * when rebuilding the registry. See gst_registry_fork_is_enabled() for more
+ * information.
  *
  * Since: 0.10.10
  */
 void
 gst_registry_fork_set_enabled (gboolean enabled)
 {
-#ifdef HAVE_FORK
   _gst_enable_registry_fork = enabled;
-#endif /* HAVE_FORK */
 }
 
 /**

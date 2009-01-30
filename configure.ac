@@ -203,7 +203,6 @@ case $host_os in
         ;;
      darwin*)
 	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [".dylib"], [Extra platform specific plugin suffix])
-        AC_DEFINE_UNQUOTED(GST_HAVE_UNSAFE_FORK, 1, [Defined when registry scanning through fork is unsafe])
         AC_DEFINE_UNQUOTED(HAVE_OSX, 1, [Defined if compiling for OSX])
 	;;
      cygwin*)
@@ -380,9 +379,6 @@ fi
 dnl *** checks for library functions ***
 
 AC_CHECK_FUNCS([sigaction])
-
-dnl we use fork in the registry code
-AC_CHECK_FUNCS([fork])
 
 dnl check for fseeko()
 AC_FUNC_FSEEKO
