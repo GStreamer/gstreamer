@@ -2267,9 +2267,11 @@ from_index:
         GstMXFDemuxEssenceTrack *t =
             &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
-        if (t->position != -1)
+        if (t->position > 0)
           t->duration = t->position;
       }
+      /* For the searched track this is really our position */
+      etrack->duration = etrack->position;
     }
 
     if (G_UNLIKELY (ret != GST_FLOW_OK))
@@ -2328,7 +2330,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
       GstMXFDemuxEssenceTrack *t =
           &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
-      if (t->position != -1)
+      if (t->position > 0)
         t->duration = t->position;
     }
 
