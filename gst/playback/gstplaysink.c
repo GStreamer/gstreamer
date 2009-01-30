@@ -219,6 +219,16 @@ gst_play_sink_init (GstPlaySink * playsink)
 }
 
 static void
+free_chain (GstPlayChain * chain)
+{
+  if (chain) {
+    if (chain->bin)
+      gst_object_unref (chain->bin);
+    g_free (chain);
+  }
+}
+
+static void
 gst_play_sink_dispose (GObject * object)
 {
   GstPlaySink *playsink;
@@ -240,6 +250,16 @@ gst_play_sink_dispose (GObject * object)
     gst_object_unref (playsink->visualisation);
     playsink->visualisation = NULL;
   }
+
+  free_chain ((GstPlayChain *) playsink->videochain);
+  playsink->videochain = NULL;
+  free_chain ((GstPlayChain *) playsink->audiochain);
+  playsink->audiochain = NULL;
+  free_chain ((GstPlayChain *) playsink->vischain);
+  playsink->vischain = NULL;
+  free_chain ((GstPlayChain *) playsink->textchain);
+  playsink->textchain = NULL;
+
   g_free (playsink->font_desc);
   playsink->font_desc = NULL;
 
@@ -530,15 +550,6 @@ post_missing_element_message (GstPlaySink * playsink, const gchar * name)
   gst_element_post_message (GST_ELEMENT_CAST (playsink), msg);
 }
 
-static void
-free_chain (GstPlayChain * chain)
-{
-  if (chain->bin)
-    gst_object_unref (chain->bin);
-  gst_object_unref (chain->playsink);
-  g_free (chain);
-}
-
 static gboolean
 add_chain (GstPlayChain * chain, gboolean add)
 {
@@ -651,7 +662,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   GstElement *prev, *elem;
 
   chain = g_new0 (GstPlayVideoChain, 1);
-  chain->chain.playsink = gst_object_ref (playsink);
+  chain->chain.playsink = playsink;
   chain->chain.raw = raw;
 
   GST_DEBUG_OBJECT (playsink, "making video chain %p", chain);
@@ -788,7 +799,7 @@ gen_text_chain (GstPlaySink * playsink)
   GstPad *pad;
 
   chain = g_new0 (GstPlayTextChain, 1);
-  chain->chain.playsink = gst_object_ref (playsink);
+  chain->chain.playsink = playsink;
 
   GST_DEBUG_OBJECT (playsink, "making text chain %p", chain);
 
@@ -883,7 +894,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   GstElement *head, *prev, *elem;
 
   chain = g_new0 (GstPlayAudioChain, 1);
-  chain->chain.playsink = gst_object_ref (playsink);
+  chain->chain.playsink = playsink;
   chain->chain.raw = raw;
 
   GST_DEBUG_OBJECT (playsink, "making audio chain %p", chain);
@@ -1075,7 +1086,7 @@ gen_vis_chain (GstPlaySink * playsink)
   GstPad *pad;
 
   chain = g_new0 (GstPlayVisChain, 1);
-  chain->chain.playsink = gst_object_ref (playsink);
+  chain->chain.playsink = playsink;
 
   GST_DEBUG_OBJECT (playsink, "making vis chain %p", chain);
 
