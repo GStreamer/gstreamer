@@ -943,12 +943,15 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
-        if (!has_all_raw_caps (pad, is_raw))
+        if (!has_all_raw_caps (pad, is_raw)) {
+          gst_object_unref (pad);
           break;
+        }
 
         /* caps on source pad are all raw, we can add the pad */
         if (*is_raw)
           new_decoded_pad_cb (decoder->source, pad, FALSE, decoder);
+        gst_object_unref (pad);
         break;
     }
   }
@@ -1569,6 +1572,7 @@ decoder_query_duration_fold (GstPad * item, GValue * ret, QueryFold * fold)
   gst_object_unref (item);
   return TRUE;
 }
+
 static void
 decoder_query_duration_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
@@ -1600,6 +1604,7 @@ decoder_query_position_fold (GstPad * item, GValue * ret, QueryFold * fold)
   gst_object_unref (item);
   return TRUE;
 }
+
 static void
 decoder_query_position_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
@@ -1642,6 +1647,7 @@ decoder_query_latency_fold (GstPad * item, GValue * ret, QueryFold * fold)
   gst_object_unref (item);
   return TRUE;
 }
+
 static void
 decoder_query_latency_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
@@ -1673,6 +1679,7 @@ decoder_query_seeking_fold (GstPad * item, GValue * ret, QueryFold * fold)
 
   return TRUE;
 }
+
 static void
 decoder_query_seeking_done (GstURIDecodeBin * dec, QueryFold * fold)
 {
