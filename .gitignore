@@ -34,5 +34,7 @@ gst-plugins-bad-*.tar.*
 *.lo
 *.la
 *.o
+*~
+/m4
 Makefile.in
 Makefile

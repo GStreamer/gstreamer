@@ -1,11 +1,17 @@
 .dirstamp
+aacparse
+amrparse
 deinterleave
 gdpdepay
 gdppay
 interleave
+legacyresample
 mpeg2enc
+mplex
+mxfdemux
 neonhttpsrc
 ofa
+qtmux
 souphttpsrc
 rganalysis
 rglimiter
@@ -17,4 +23,5 @@ videocrop
 wavpackdec
 wavpackenc
 wavpackparse
+x264enc
 y4menc
