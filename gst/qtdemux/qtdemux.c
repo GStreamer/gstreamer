@@ -4201,8 +4201,9 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
     style = "iso";
 
   media_type = g_strdup_printf ("application/x-gst-qt-%c%c%c%c-tag",
-      g_ascii_tolower (data[4]), g_ascii_tolower (data[5]),
-      g_ascii_tolower (data[6]), g_ascii_tolower (data[7]));
+      (data[4] == 0xa9) ? '_' : g_ascii_tolower (data[4]),
+      g_ascii_tolower (data[5]), g_ascii_tolower (data[6]),
+      g_ascii_tolower (data[7]));
   caps = gst_caps_new_simple (media_type, "style", G_TYPE_STRING, style, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
