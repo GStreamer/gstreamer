@@ -13,3 +13,6 @@ gen-*.c
 interfaces.c
 play.c
 gstversion.override
+audio.c
+tag.c
+video.c
