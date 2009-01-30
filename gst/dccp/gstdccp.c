@@ -137,7 +137,7 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   memset (&mh, 0, sizeof (mh));
   mh.msg_name = NULL;
   mh.msg_namelen = 0;
-  iov.iov_base = GST_BUFFER_DATA (*buf);
+  iov.iov_base = (char *) GST_BUFFER_DATA (*buf);
   iov.iov_len = readsize;
   mh.msg_iov = &iov;
   mh.msg_iovlen = 1;
@@ -513,7 +513,7 @@ gst_dccp_get_max_packet_size (GstElement * element, int sock)
 void
 gst_dccp_socket_close (GstElement * element, int *socket)
 {
-  if (socket >= 0) {
+  if (*socket >= 0) {
     GST_DEBUG_OBJECT (element, "closing socket");
     close (*socket);
     *socket = -1;
