@@ -64,11 +64,13 @@ struct _GstRTSPMediaFactory {
 
 /**
  * GstRTSPMediaFactoryClass:
- * @gen_key: convert @url to a key for caching media
- * @get_element: Construct an return a #GstElement thast is a #GstBin containing
- *       the elements to use for the media. The bin should contain payloaders
- *       pay%d for each stream. The default implementation of this functions
- *       returns the bin created from the launch parameter.
+ * @gen_key: convert @url to a key for caching shared #GstRTSPMedia objects.
+ *       The default implementation of this function will use the complete URL
+ *       including the query parameters to return a key.
+ * @get_element: Construct and return a #GstElement that is a #GstBin containing
+ *       the elements to use for streaming the media. The bin should contain
+ *       payloaders pay%d for each stream. The default implementation of this
+ *       function returns the bin created from the launch parameter.
  * @construct: the vmethod that will be called when the factory has to create the
  *       #GstRTSPMedia for @url. The default implementation of this
  *       function calls get_element to retrieve an element and then looks for
@@ -77,7 +79,7 @@ struct _GstRTSPMediaFactory {
  *       implementation will configure the 'shared' property of the media.
  * @handle_message: Handle a bus message for @media created from @factory.
  *
- * the #GstRTSPMediaFactory class structure.
+ * The #GstRTSPMediaFactory class structure.
  */
 struct _GstRTSPMediaFactoryClass {
   GObjectClass  parent_class;
@@ -90,8 +92,6 @@ struct _GstRTSPMediaFactoryClass {
 
   void              (*handle_message) (GstRTSPMediaFactory *factory, GstRTSPMedia *media, 
                                        GstMessage *message);
-
-
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);

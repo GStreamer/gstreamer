@@ -418,7 +418,6 @@ default_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
     stream = g_new0 (GstRTSPMediaStream, 1);
     stream->media = media;
     stream->payloader = pay;
-    stream->idx = media->streams->len;
 
     pad = gst_element_get_static_pad (pay, "src");
 

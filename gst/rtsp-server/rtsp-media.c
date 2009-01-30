@@ -386,7 +386,7 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
 
 /* prepare the pipeline objects to handle @stream in @media */
 static gboolean
-setup_stream (GstRTSPMediaStream *stream, GstRTSPMedia *media)
+setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
 {
   gchar *name;
   GstPad *pad;
@@ -399,16 +399,16 @@ setup_stream (GstRTSPMediaStream *stream, GstRTSPMedia *media)
   gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsrc[1]);
 
   /* hook up the stream to the RTP session elements. */
-  name = g_strdup_printf ("send_rtp_sink_%d", stream->idx);
+  name = g_strdup_printf ("send_rtp_sink_%d", idx);
   stream->send_rtp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("send_rtp_src_%d", stream->idx);
+  name = g_strdup_printf ("send_rtp_src_%d", idx);
   stream->send_rtp_src = gst_element_get_static_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("send_rtcp_src_%d", stream->idx);
+  name = g_strdup_printf ("send_rtcp_src_%d", idx);
   stream->send_rtcp_src = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
-  name = g_strdup_printf ("recv_rtcp_sink_%d", stream->idx);
+  name = g_strdup_printf ("recv_rtcp_sink_%d", idx);
   stream->recv_rtcp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
 
@@ -478,7 +478,7 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
     stream = gst_rtsp_media_get_stream (media, i);
 
-    setup_stream (stream, media);
+    setup_stream (stream, i, media);
   }
 
   /* first go to PAUSED */

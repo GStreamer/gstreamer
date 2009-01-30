@@ -43,7 +43,6 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
  * GstRTSPMediaStream:
  *
  * @media: the owner #GstRTSPMedia
- * @idx: the stream index
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
  * @prepared: if the stream is prepared for streaming
@@ -61,8 +60,6 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
  */
 struct _GstRTSPMediaStream {
   GstRTSPMedia *media;
-
-  guint         idx;
 
   GstPad       *srcpad;
   GstElement   *payloader;

@@ -107,6 +107,7 @@ can build simple server applications with it.
  request URL to a specific stream and its configuration. We explain in the next
  topic how to configure this object.
 
+
 * Making url mappings
 
  Next we need to define what media is attached to a particular URL. What we want
@@ -160,6 +161,102 @@ can build simple server applications with it.
  a test signal will be streamed to the client. The full example code can be
  found in the examples/test-readme.c file.
 
+
+* more on GstRTSPMediaFactory
+
+ The GstRTSPMediaFactory is responsible for creating and caching GstRTSPMedia
+ objects. 
+
+ A freshly created GstRTSPMedia object from the factory initialy only contains a
+ GstElement containing the elements to produce the RTP streams for the media and
+ a GArray of GstRTSPMediaStream objects describing the payloader and its source
+ pad. The media is unprepared in this state.
+
+ Usually the url will determine what kind of pipeline should be created. You can
+ for example use query parameters to configure certain parts of the pipeline or
+ select encoders and payloaders based on some url pattern.
+
+ When dealing with a live stream from, for example, a webcam, it can be
+ interesting to share the pipeline with multiple clients. This must be done when
+ only one instance of the video capture element can be used at a time. In this
+ case, the shared property of GstRTSPMedia must be used to instruct the default
+ GstRTSPMediaFactory implementation to cache the media.
+
+ When all objects created from a factory can be shared, you can set the shared
+ property directly on the factory.
+
+* more on GstRTSPMedia
+
+ After creating the GstRTSPMedia object from the factory, it can be prepared
+ with gst_rtsp_media_prepare(). This method will put those objects in a
+ GstPipeline and will construct and link the streaming elements and the
+ gstrtpbin session manager object.
+
+ The _prepare() method will then preroll the pipeline in order to figure out the
+ caps on the payloaders. After the GstRTSPMedia prerolled it will be in the
+ prepared state and can be used for creating SDP files or for streaming to
+ clients.
+
+ The prepare method will also create 2 UDP ports for each stream that can be
+ used for sending and receiving RTP/RTCP from clients. These port numbers will
+ have to be negotiated with the client in the SETUP requests.
+
+ When preparing a GstRTSPMedia, a multifdsink is also constructed for streaming
+ the stream over TCP^when requested.
+
+
+* the GstRTSPClient object
+
+ When a server detects a new client connection on its port, it will call its
+ accept_client vmethod. The default implementation of this function will create
+ a new GstRTCPClient object, will configure the session pool and media mapper
+ objects in it and will then call the accept function of the client.
+
+ The default GstRTSPClient will accept the connection and will start a new
+ GThread to handle the connection. In RTSP it is usual to keep the connection
+ open between multiple RTSP requests. The client thread will simply block for a
+ new GstRTSPMessage, will dispatch it and will send a response.
+ 
+ We will briefly describe how it deals with some common requests.
+
+ - DESCRIBE:
+
+    locates the GstRTSPMedia for the url, prepares it and asks the sdp helper
+    function to construct an SDP from the caps of the prepared media pipeline.
+    It will also cache the url+media object so that it can be reused later.
+ 
+ - SETUP
+
+    A new GstRTSPSession object will be created from the GstRTSPSessionPool
+    object configured in the GstRTSPClient. This session will contain the
+    configuration of the client regarding the media it is streaming and the
+    ports/transport it negotiated with the server.
+
+    The sessionid is set in the response header. The client will add the
+    sessionid to any further SETUP/PLAY/PAUSE/TEARDOWN request so that we can
+    always find the session again.
+
+    The session configuration for a sessionid will have a link to the prepared
+    GstRTSPMedia object of the stream. The port and transport of the client is
+    stored in the session configuration.
+
+ - PLAY
+
+    The session configuration is retrieved with the sessionid and the client
+    ports are configured in the UDP sinks, then the streaming to the client 
+    is started. 
+
+ - PAUSE
+
+    The session configuration is retrieved with the sessionid and the client
+    ports are removed from the UDP sinks, the streaming to the client 
+    pauses. 
+
+ - TEARDOWN
+
+    The session configuration is released along with its link to the
+    GstRTSPMedia object. When no more clients are refering to the GstRTSPMedia
+    object, it can be released as well.
 
 
 

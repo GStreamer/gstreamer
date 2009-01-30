@@ -42,7 +42,7 @@ static void gst_rtsp_server_get_property (GObject *object, guint propid,
 static void gst_rtsp_server_set_property (GObject *object, guint propid,
     const GValue *value, GParamSpec *pspec);
 
-static GstRTSPClient * gst_rtsp_server_accept_client (GstRTSPServer *server,
+static GstRTSPClient * default_accept_client (GstRTSPServer *server,
     GIOChannel *channel);
 
 static void
@@ -99,7 +99,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 	  "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  klass->accept_client = gst_rtsp_server_accept_client;
+  klass->accept_client = default_accept_client;
 }
 
 static void
@@ -438,7 +438,7 @@ bind_failed:
 /* default method for creating a new client object in the server to accept and
  * handle a client connection on this server */
 static GstRTSPClient *
-gst_rtsp_server_accept_client (GstRTSPServer *server, GIOChannel *channel)
+default_accept_client (GstRTSPServer *server, GIOChannel *channel)
 {
   GstRTSPClient *client;
 

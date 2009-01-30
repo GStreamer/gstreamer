@@ -106,12 +106,12 @@ void                  gst_rtsp_server_set_media_mapping    (GstRTSPServer *serve
 GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_io_func              (GIOChannel *channel, GIOCondition condition,
-                                                           GstRTSPServer *server);
+                                                            GstRTSPServer *server);
 
 GIOChannel *          gst_rtsp_server_get_io_channel       (GstRTSPServer *server);
 GSource *             gst_rtsp_server_create_watch         (GstRTSPServer *server);
 guint                 gst_rtsp_server_attach               (GstRTSPServer *server, 
-                                                           GMainContext *context);
+                                                            GMainContext *context);
 
 G_END_DECLS
 
