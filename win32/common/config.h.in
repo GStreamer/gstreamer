@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.ac by autoheader.  */
+/* config.h.in.  Originally generated from configure.ac by autoheader.  */
 /* This copy of config.h.in is specifically for win32 Visual Studio builds */
 
 /* Define to 1 if translation of program messages to the user's native
@@ -17,11 +17,18 @@
 /* Location of registry */
 #define GST_CACHE_DIR PREFIX "\\var\\cache"
 
+
 /* Define if pipeline parsing code is disabled */
 /* #undef GST_DISABLE_PARSE */
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 /* #undef GST_GCOV_ENABLED */
+
+/* Extra platform specific plugin suffix */
+/* #undef GST_EXTRA_MODULE_SUFFIX */
+
+/* macro to use to show function name */
+/* #undef GST_FUNCTION */
 
 /* Default errorlevel to use */
 #define GST_LEVEL_DEFAULT @GST_LEVEL_DEFAULT@
@@ -44,6 +51,12 @@
 /* Define if the host CPU is an ARM */
 #undef HAVE_CPU_ARM
 
+/* Define if the host CPU is a CRIS */
+#undef HAVE_CPU_CRIS
+
+/* Define if the host CPU is a CRISv32 */
+#undef HAVE_CPU_CRISV32
+
 /* Define if the host CPU is a HPPA */
 #undef HAVE_CPU_HPPA
 
@@ -61,6 +74,9 @@
 
 /* Define if the host CPU is a PowerPC */
 #undef HAVE_CPU_PPC
+
+/* Define if the host CPU is a 64 bit PowerPC */
+#undef HAVE_CPU_PPC64
 
 /* Define if the host CPU is a S390 */
 #undef HAVE_CPU_S390
@@ -83,9 +99,6 @@
 
 /* Define to 1 if you have the `fgetpos' function. */
 #define HAVE_FGETPOS 1
-
-/* Define to 1 if you have the `fork' function. */
-#undef HAVE_FORK
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
@@ -114,6 +127,15 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `nsl' library (-lnsl). */
+#undef HAVE_LIBNSL
+
+/* Define to 1 if you have the `resolv' library (-lresolv). */
+#undef HAVE_LIBRESOLV
+
+/* Define to 1 if you have the `socket' library (-lsocket). */
+#undef HAVE_LIBSOCKET
+
 /* Define if libxml2 is available */
 #define HAVE_LIBXML2 1
 
@@ -122,6 +144,18 @@
 
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
+
+/* Have a monotonic clock */
+#undef HAVE_MONOTONIC_CLOCK
+
+/* Define to 1 if you have the `poll' function. */
+#undef HAVE_POLL
+
+/* Have posix timers */
+#undef HAVE_POSIX_TIMERS
+
+/* Define to 1 if you have the `ppoll' function. */
+#undef HAVE_PPOLL
 
 /* defined if the compiler implements __PRETTY_FUNCTION__ */
 #undef HAVE_PRETTY_FUNCTION
@@ -132,6 +166,9 @@
 /* Define to 1 if you have the <process.h> header file. */
 #define HAVE_PROCESS_H 1
 
+/* Define to 1 if you have the `pselect' function. */
+#undef HAVE_PSELECT
+
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
 
@@ -140,6 +177,9 @@
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio_ext.h> header file. */
+#undef HAVE_STDIO_EXT_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #define HAVE_STDLIB_H 1
@@ -156,8 +196,14 @@
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
+/* Define to 1 if you have the <sys/times.h> header file. */
+#undef HAVE_SYS_TIMES_H
+
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
+
+/* Define to 1 if you have the <sys/utsname.h> header file. */
+#undef HAVE_SYS_UTSNAME_H
 
 /* Define to 1 if you have the <ucontext.h> header file. */
 #undef HAVE_UCONTEXT_H
@@ -171,8 +217,14 @@
 /* Define if valgrind should be used */
 #undef HAVE_VALGRIND
 
+/* Define to 1 if you have the <valgrind/valgrind.h> header file. */
+#undef HAVE_VALGRIND_VALGRIND_H
+
 /* Defined if compiling for Windows */
 #define HAVE_WIN32 1
+
+/* Define to 1 if you have the <winsock2.h> header file. */
+#define HAVE_WINSOCK2_H 1
 
 /* Define host CPU */
 #define HOST_CPU "i686"
@@ -214,6 +266,9 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Define if we should use binary registry instead xml registry */
+#define USE_BINARY_REGISTRY
 
 /* Define if we should poison deallocated memory */
 #undef USE_POISONING
