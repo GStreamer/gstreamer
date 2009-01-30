@@ -175,9 +175,9 @@ gst_video_crop_src_event (GstBaseTransform * trans, GstEvent * event)
     event_name = gst_structure_get_string (structure, "event");
 
     if (event_name &&
-        (g_strcmp0 (event_name, "mouse-move") == 0 ||
-            g_strcmp0 (event_name, "mouse-button-press") == 0 ||
-            g_strcmp0 (event_name, "mouse-button-release") == 0)) {
+        (strcmp (event_name, "mouse-move") == 0 ||
+            strcmp (event_name, "mouse-button-press") == 0 ||
+            strcmp (event_name, "mouse-button-release") == 0)) {
 
       if (gst_structure_get_double (structure, "pointer_x", &pointer_x) &&
           gst_structure_get_double (structure, "pointer_y", &pointer_y)) {
