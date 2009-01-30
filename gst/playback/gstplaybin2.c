@@ -951,6 +951,7 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
 static void
 free_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
+  g_free (group->uri);
   g_ptr_array_free (group->video_channels, TRUE);
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
