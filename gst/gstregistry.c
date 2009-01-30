@@ -1401,6 +1401,9 @@ ensure_current_registry (GError ** error)
     GST_INFO ("reading registry cache: %s", registry_file);
     have_cache = gst_registry_binary_read_cache (default_registry,
         registry_file);
+    /* Only ever read the registry cache once, then disable it for
+     * subsequent updates during the program lifetime */
+    _gst_disable_registry_cache = TRUE;
   }
 
   if (have_cache) {
