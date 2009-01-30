@@ -86,6 +86,7 @@ send_response (GstRTSPClient *client, GstRTSPMessage *response)
 #endif
 
   gst_rtsp_connection_send (client->connection, response, NULL);
+  gst_rtsp_message_unset (response);
 }
 
 static void
@@ -496,6 +497,7 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
 
   /* serialize the server transport */
   trans_str = gst_rtsp_transport_as_text (st);
+  gst_rtsp_transport_free (st);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -752,8 +754,12 @@ handle_client (GstRTSPClient *client)
   /* ERRORS */
 receive_failed:
   {
+    gchar *str;
+    str = gst_rtsp_strresult (res);
     g_message ("receive failed %d (%s), disconnect client %p", res, 
-	    gst_rtsp_strresult (res), client);
+	    str, client);
+    g_free (str);
+    gst_rtsp_message_unset (&request);
     gst_rtsp_connection_close (client->connection);
     g_object_unref (client);
     return NULL;

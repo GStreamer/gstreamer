@@ -85,7 +85,8 @@ gst_rtsp_media_finalize (GObject * obj)
   }
   g_array_free (media->streams, TRUE);
 
-  gst_object_unref (media->pipeline);
+  if (media->pipeline)
+    gst_object_unref (media->pipeline);
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }

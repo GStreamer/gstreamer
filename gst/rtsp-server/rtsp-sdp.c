@@ -139,6 +139,7 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
       g_string_free (fmtp, TRUE);
     }
     gst_sdp_message_add_media (sdp, smedia);
+    gst_sdp_media_free (smedia);
   }
 
   return sdp;
