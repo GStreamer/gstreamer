@@ -1,0 +1,175 @@
+README 
+------
+
+(Last updated on Fri 30 jan 2009, version 0.10.1.1)
+
+This HOWTO describes the basic usage of the GStreamer RTSP libraries and how you
+can build simple server applications with it.
+
+* General
+
+ The server relies heavily on the RTSP infrastructure of GStreamer. This includes
+ all of the media acquisition, decoding, encoding, payloading and UDP/TCP
+ streaming. We use the gstrtpbin element for all the session management. Most of
+ the RTSP message parsing and construction in the server is done using the RTSP
+ library that comes with gst-plugins-base. 
+
+ The result is that the server is rather small (a few 1000 lines of code) and easy
+ to understand and extend. In its current state of development, things change
+ fast, API and ABI are unstable. We encourage people to use it for their various
+ use cases and participate by suggesting changes/features.
+
+ Most of the server is built as a library containing a bunch of GObject objects
+ that provide reasonable default functionality but has a fair amount of hooks
+ to override the default behaviour.
+
+ The server currently integrates with the glib mainloop nicely. It is also a
+ heavy user of multiple threads. It's currently not meant to be used in
+ high-load scenarios and you should probably not put it on a public IP address.
+
+* Initialisation
+
+ You need to initialize GStreamer before using any of the RTSP server functions.
+
+   #include <gst/gst.h>
+
+   int
+   main (int argc, char *argv[])
+   {
+     gst_init (&argc, &argv);
+
+     ...
+   }
+ 
+ The server itself currently does not have any specific initialisation function
+ but that might change in the future.
+
+
+* Creating the server
+
+ The first thing you want to do is create a new GstRTSPServer object. This object
+ will handle all the new client connections to your server once it is added to a
+ GMainLoop. You can create a new server object like this:
+
+   #include <gst/rtsp-server/rtsp-server.h>
+
+   GstRTSPServer *server;
+
+   server = gst_rtsp_server_new ();
+
+ The server will by default listen on port 8554 for new connections. This can be
+ changed by calling gst_rtsp_server_set_port() or with the 'port' GObject
+ property. This makes it possible to run multiple server instances listening on
+ multiple ports on one machine.
+
+ We can make the server start listening on its default port by attaching it to a
+ mainloop. The following example shows how this is done and will start a server
+ on the default 8554 port. For any request we make, we will get a NOT_FOUND
+ error code because we need to configure more things before the server becomes
+ useful.
+
+   #include <gst/gst.h>
+   #include <gst/rtsp-server/rtsp-server.h>
+
+   int
+   main (int argc, char *argv[])
+   {
+     GstRTSPServer *server;
+     GMainLoop *loop;
+
+     gst_init (&argc, &argv);
+
+     server = gst_rtsp_server_new ();
+
+     /* make a mainloop for the default context */
+     loop = g_main_loop_new (NULL, FALSE);
+
+     /* attach the server to the default maincontext */
+     gst_rtsp_server_attach (server, NULL);
+
+     /* start serving */
+     g_main_loop_run (loop);
+   }
+
+ The server manages two other objects: GstRTSPSessionPool and
+ GstRTSPMediaMapping. 
+
+ The GstRTSPSessionPool is an object that keeps track of all the active sessions
+ in the server. A session will usually be kept for each client that performed a
+ SETUP request for a certain media stream. It contains the configuration that
+ the client negotiated with the server to receive the particular stream, ie. the
+ transport used and port pairs for UDP along with the state of the streaming.
+ The default implementation of the session pool is usually sufficient but
+ alternative implementation can be used by the server.
+
+ The GstRTSPMediaMapping object is more interesting and needs more configuration
+ before the server object is useful. This object manages to mapping from a
+ request URL to a specific stream and its configuration. We explain in the next
+ topic how to configure this object.
+
+* Making url mappings
+
+ Next we need to define what media is attached to a particular URL. What we want
+ to achieve is that when the user asks our server for a specific URL, say /test,
+ that we create (or reuse) a GStreamer pipeline that produces one or more RTP
+ streams. 
+ 
+ The object that can create such pipeline is called a GstRTSPMediaFactory object. 
+ The default implementation of GstRTSPMediaFactory allows you to easily create
+ GStreamer pipelines using the gst-launch syntax. It possible to create a
+ GstRTSPMediaFactory subclass that uses different methods for constructing
+ pipelines.
+
+ The default GstRTSPMediaFactory can be configured with a gst-launch line that
+ produces a toplevel bin (use '(' and ')' around the pipeline description to
+ force a toplevel GstBin instead of the default GstPipeline toplevel element).
+ The pipeline description should contain elements named payN, one for each
+ stream (ex. pay0, pay1, ...). Also, for increased compatibility each stream
+ should have a different payload type which can be configured on the payloader.
+
+ The following code snippet illustrates how to create a media factory that
+ creates an RTP feed of an H264 encoded test video signal.
+
+   GstRTSPMediaFactory *factory;
+
+   factory = gst_rtsp_media_factory_new ();
+
+   gst_rtsp_media_factory_set_launch (factory, 
+                "( videotestsrc ! x264enc ! rtph264pay pt=96 name=pay0 )");
+
+ Now that we have the media factory, we can attach it to a specific url. To do
+ this we get the default GstRTSPMediaMapping from our server and add the url to
+ factory mapping to it like this:
+
+   GstRTSPMediaMapping *mapping;
+
+   ...create server..create factory..
+
+   /* get the default mapping from the server */
+   mapping = gst_rtsp_server_get_media_mapping (server);
+
+   /* attach the video test signal to the "/test" URL */
+   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
+   g_object_unref (mapping);
+
+ When starting the server now and directing an RTP client to the URL (like with 
+ vlc, mplayer or gstreamer):
+
+   rtsp://localhost:8554/test 
+
+ a test signal will be streamed to the client. The full example code can be
+ found in the examples/test-readme.c file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
