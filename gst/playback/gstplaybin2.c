@@ -1767,6 +1767,8 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       g_signal_emit (G_OBJECT (playbin), gst_play_bin_signals[signal], 0, NULL);
   }
 
+done:
+  gst_caps_unref (caps);
   return;
 
   /* ERRORS */
@@ -1774,7 +1776,7 @@ unknown_type:
   {
     GST_ERROR_OBJECT (playbin, "unknown type %s for pad %s:%s",
         name, GST_DEBUG_PAD_NAME (pad));
-    return;
+    goto done;
   }
 no_selector:
   {
@@ -1786,7 +1788,7 @@ no_selector:
     GST_ELEMENT_ERROR (playbin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "input-selector"), (NULL));
-    return;
+    goto done;
   }
 link_failed:
   {
@@ -1794,7 +1796,7 @@ link_failed:
         "failed to link pad %s:%s to selector, reason %d",
         GST_DEBUG_PAD_NAME (pad), res);
     GST_SOURCE_GROUP_UNLOCK (group);
-    return;
+    goto done;
   }
 }
 
