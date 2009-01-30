@@ -1115,7 +1115,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
     if (GST_PAD_IS_SRC (oldtarget)) {
       g_signal_handlers_disconnect_by_func (oldtarget,
-          on_src_target_notify, gpad);
+          (gpointer) on_src_target_notify, gpad);
     }
 
     /* if we have an internal pad, unlink */
