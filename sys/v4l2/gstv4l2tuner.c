@@ -246,7 +246,7 @@ gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object)
   gst_v4l2_get_norm (v4l2object, &norm);
 
   for (item = v4l2object->norms; item != NULL; item = item->next) {
-    if (norm == GST_V4L2_TUNER_NORM (item->data)->index)
+    if (norm & GST_V4L2_TUNER_NORM (item->data)->index)
       return (GstTunerNorm *) item->data;
   }
 
