@@ -395,6 +395,7 @@ setup_stream (GstRTSPMediaStream *stream, GstRTSPMedia *media)
 
   gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsink[0]);
   gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsink[1]);
+  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsrc[0]);
   gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsrc[1]);
 
   /* hook up the stream to the RTP session elements. */
@@ -502,6 +503,16 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   /* and back to PAUSED for live pipelines */
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
+
+  n_streams = gst_rtsp_media_n_streams (media);
+  for (i = 0; i < n_streams; i++) {
+    GstRTSPMediaStream *stream;
+
+    stream = gst_rtsp_media_get_stream (media, i);
+
+    gst_element_set_locked_state (stream->udpsrc[0], FALSE);
+    gst_element_set_locked_state (stream->udpsrc[1], FALSE);
+  }
 
   g_message ("object %p is prerolled", media);
   media->prepared = TRUE;

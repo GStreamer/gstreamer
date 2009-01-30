@@ -23,7 +23,7 @@
 #include "rtsp-client.h"
 
 #define DEFAULT_BACKLOG         5
-#define DEFAULT_PORT            1554
+#define DEFAULT_PORT            8554
 
 enum
 {
