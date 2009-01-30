@@ -35,5 +35,7 @@ gst-plugins-base-*.tar*
 *.lo
 *.la
 *.o
+*~
+/m4
 Makefile.in
 Makefile
