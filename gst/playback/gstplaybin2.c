@@ -1002,6 +1002,9 @@ gst_play_bin_finalize (GObject * object)
   free_group (playbin, &playbin->groups[0]);
   free_group (playbin, &playbin->groups[1]);
 
+  if (playbin->source)
+    gst_object_unref (playbin->source);
+
   g_value_array_free (playbin->elements);
   g_free (playbin->encoding);
   g_mutex_free (playbin->lock);
