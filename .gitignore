@@ -30,5 +30,7 @@ gst-plugins-ugly-*.tar.*
 *.lo
 *.la
 *.o
+*~
+/m4
 Makefile.in
 Makefile
