@@ -23,10 +23,10 @@ fi
 . common/gst-autogen.sh
 
 # install pre-commit hook for doing clean commits
-if test ! -x .git/hooks/pre-commit;
+if test ! \( -x .git/hooks/pre-commit -a -L .git/hooks/pre-commit \);
 then
-    cp common/hooks/pre-commit.hook .git/hooks/pre-commit
-    chmod +x .git/hooks/pre-commit
+    rm -f .git/hooks/pre-commit
+    ln -s ../../common/hooks/pre-commit.hook .git/hooks/pre-commit
 fi
 
 
