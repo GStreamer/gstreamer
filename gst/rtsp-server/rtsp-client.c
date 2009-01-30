@@ -435,19 +435,16 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   }
   g_strfreev (transports);
 
-  g_free (ct->destination);
-  ct->destination = g_strdup (inet_ntoa (client->address.sin_addr));
-
   /* we have not found anything usable, error out */
-  if (!have_transport) {
+  if (!have_transport) 
     goto unsupported_transports;
-  }
 
   /* we have a valid transport, check if we can handle it */
   if (ct->trans != GST_RTSP_TRANS_RTP)
     goto unsupported_transports;
   if (ct->profile != GST_RTSP_PROFILE_AVP)
     goto unsupported_transports;
+
   supported = GST_RTSP_LOWER_TRANS_UDP |
 	GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
   if (!(ct->lower_transport & supported))
@@ -455,6 +452,10 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
 
   if (client->session_pool == NULL)
     goto no_pool;
+
+  /* we have a valid transport now, set the destination of the client. */
+  g_free (ct->destination);
+  ct->destination = g_strdup (inet_ntoa (client->address.sin_addr));
 
   /* a setup request creates a session for a client, check if the client already
    * sent a session id to us */
@@ -478,6 +479,7 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
 
     /* get a handle to the configuration of the media in the session */
     if ((m = find_media (client, uri, request))) {
+      /* manage the media in our session now */
       media = gst_rtsp_session_manage_media (session, uri, m);
     }
   }

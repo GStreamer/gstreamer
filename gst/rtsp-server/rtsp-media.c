@@ -56,11 +56,16 @@ static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
   media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
+  media->complete = FALSE;
 }
 
 static void
 gst_rtsp_media_stream_free (GstRTSPMediaStream *stream)
 {
+  if (stream->caps)
+    gst_caps_unref (stream->caps);
+
+  g_free (stream);
 }
 
 static void
@@ -79,6 +84,8 @@ gst_rtsp_media_finalize (GObject * obj)
     gst_rtsp_media_stream_free (stream);
   }
   g_array_free (media->streams, TRUE);
+
+  gst_object_unref (media->pipeline);
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
@@ -188,7 +195,8 @@ gst_rtsp_media_n_streams (GstRTSPMedia *media)
  *
  * Retrieve the stream with index @idx from @media.
  *
- * Returns: the #GstRTSPMediaStream at index @idx.
+ * Returns: the #GstRTSPMediaStream at index @idx or %NULL when a stream with
+ * that index did not exist.
  */
 GstRTSPMediaStream *
 gst_rtsp_media_get_stream (GstRTSPMedia *media, guint idx)
@@ -196,9 +204,11 @@ gst_rtsp_media_get_stream (GstRTSPMedia *media, guint idx)
   GstRTSPMediaStream *res;
   
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
-  g_return_val_if_fail (idx < media->streams->len, NULL);
 
-  res = g_array_index (media->streams, GstRTSPMediaStream *, idx);
+  if (idx < media->streams->len)
+    res = g_array_index (media->streams, GstRTSPMediaStream *, idx);
+  else
+    res = NULL;
 
   return res;
 }
@@ -315,18 +325,12 @@ again:
 
   /* we keep these elements, we configure all in configure_transport when the
    * server told us to really use the UDP ports. */
-  stream->udpsrc[0] = gst_object_ref (udpsrc0);
-  stream->udpsrc[1] = gst_object_ref (udpsrc1);
-  stream->udpsink[0] = gst_object_ref (udpsink0);
-  stream->udpsink[1] = gst_object_ref (udpsink1);
+  stream->udpsrc[0] = udpsrc0;
+  stream->udpsrc[1] = udpsrc1;
+  stream->udpsink[0] = udpsink0;
+  stream->udpsink[1] = udpsink1;
   stream->server_port.min = rtpport;
   stream->server_port.max = rtcpport;
-
-  /* they are ours now */
-  gst_object_sink (udpsrc0);
-  gst_object_sink (udpsrc1);
-  gst_object_sink (udpsink0);
-  gst_object_sink (udpsink1);
 
   return TRUE;
 
@@ -504,6 +508,7 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   /* and back to PAUSED for live pipelines */
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
 
+  /* unlock the udp src elements */
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;

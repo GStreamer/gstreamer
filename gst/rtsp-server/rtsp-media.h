@@ -59,13 +59,9 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
  * The definition of a media stream. The streams are identified by @id.
  */
 struct _GstRTSPMediaStream {
-  GstRTSPMedia *media;
-
   GstPad       *srcpad;
   GstElement   *payloader;
   gboolean      prepared;
-
-  GstRTSPRange  server_port;
 
   /* pads on the rtpbin */
   GstPad       *recv_rtcp_sink;
@@ -77,6 +73,9 @@ struct _GstRTSPMediaStream {
    * sockets */
   GstElement   *udpsrc[2];
   GstElement   *udpsink[2];
+
+  /* server ports for sending/receiving */
+  GstRTSPRange  server_port;
 
   /* the caps of the stream */
   gulong        caps_sig;
@@ -102,6 +101,7 @@ struct _GstRTSPMedia {
   GObject       parent;
 
   gboolean      shared;
+  gboolean      complete;
 
   GstElement   *element;
   GArray       *streams;
