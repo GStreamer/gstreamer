@@ -156,10 +156,10 @@ gst_matroska_demux_change_state (GstElement * element,
 /* caps functions */
 static GstCaps *gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext
     * videocontext,
-    const gchar * codec_id, gpointer data, guint size, gchar ** codec_name);
+    const gchar * codec_id, guint8 * data, guint size, gchar ** codec_name);
 static GstCaps *gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext
     * audiocontext,
-    const gchar * codec_id, gpointer data, guint size, gchar ** codec_name);
+    const gchar * codec_id, guint8 * data, guint size, gchar ** codec_name);
 static GstCaps
     * gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     subtitlecontext, const gchar * codec_id, gpointer data, guint size);
@@ -581,8 +581,8 @@ gst_matroska_demux_read_track_encoding (GstMatroskaDemux * demux,
             break;
           }
         }
-        break;
         DEBUG_ELEMENT_STOP (demux, ebml, "ContentCompression", ret);
+        break;
       }
 
       case GST_MATROSKA_ID_CONTENTENCRYPTION:
@@ -1713,7 +1713,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       templ = gst_element_class_get_pad_template (klass, "video_%02d");
       caps = gst_matroska_demux_video_caps (videocontext,
           context->codec_id,
-          context->codec_priv, context->codec_priv_size, &codec);
+          (guint8 *) context->codec_priv, context->codec_priv_size, &codec);
       if (codec) {
         list = gst_tag_list_new ();
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -4931,7 +4931,7 @@ gst_matroska_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
 static GstCaps *
 gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
-    videocontext, const gchar * codec_id, gpointer data, guint size,
+    videocontext, const gchar * codec_id, guint8 * data, guint size,
     gchar ** codec_name)
 {
   GstMatroskaTrackContext *context = (GstMatroskaTrackContext *) videocontext;
@@ -5282,7 +5282,7 @@ aac_profile_idx (const gchar * codec_id)
 
 static GstCaps *
 gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
-    audiocontext, const gchar * codec_id, gpointer data, guint size,
+    audiocontext, const gchar * codec_id, guint8 * data, guint size,
     gchar ** codec_name)
 {
   GstMatroskaTrackContext *context = (GstMatroskaTrackContext *) audiocontext;

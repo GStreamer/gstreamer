@@ -1130,7 +1130,7 @@ flac_streamheader_to_codecdata (const GValue * streamheader,
     context->codec_priv =
         g_realloc (context->codec_priv,
         context->codec_priv_size + GST_BUFFER_SIZE (buffer));
-    memcpy (context->codec_priv + context->codec_priv_size,
+    memcpy ((guint8 *) context->codec_priv + context->codec_priv_size,
         GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
     context->codec_priv_size =
         context->codec_priv_size + GST_BUFFER_SIZE (buffer);
