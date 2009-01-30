@@ -2454,6 +2454,5 @@ gst_base_transform_reconfigure (GstBaseTransform * trans)
   GST_OBJECT_LOCK (trans);
   GST_DEBUG_OBJECT (trans, "marking reconfigure");
   trans->priv->reconfigure = TRUE;
-  gst_caps_replace (&trans->priv->sink_alloc, NULL);
   GST_OBJECT_UNLOCK (trans);
 }
