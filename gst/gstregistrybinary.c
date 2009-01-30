@@ -404,7 +404,7 @@ gst_registry_binary_save_pad_template (GList ** list,
   GstBinaryPadTemplate *pt;
   GstBinaryChunk *chk;
 
-  pt = g_malloc (sizeof (GstBinaryPadTemplate));
+  pt = g_malloc0 (sizeof (GstBinaryPadTemplate));
   chk = gst_registry_binary_make_data (pt, sizeof (GstBinaryPadTemplate));
 
   pt->presence = template->presence;
@@ -445,7 +445,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     GstBinaryElementFactory *ef;
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
-    ef = g_malloc (sizeof (GstBinaryElementFactory));
+    ef = g_malloc0 (sizeof (GstBinaryElementFactory));
     chk = gst_registry_binary_make_data (ef, sizeof (GstBinaryElementFactory));
     ef->npadtemplates = ef->ninterfaces = ef->nuriprotocols = 0;
     pf = (GstBinaryPluginFeature *) ef;
@@ -505,7 +505,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
      * faster when loading them later on */
     GstCaps *copy = gst_caps_copy (factory->caps);
 
-    tff = g_malloc (sizeof (GstBinaryTypeFindFactory));
+    tff = g_malloc0 (sizeof (GstBinaryTypeFindFactory));
     chk =
         gst_registry_binary_make_data (tff, sizeof (GstBinaryTypeFindFactory));
     tff->nextensions = 0;
@@ -526,7 +526,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
   } else if (GST_IS_INDEX_FACTORY (feature)) {
     GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
-    pf = g_malloc (sizeof (GstBinaryPluginFeature));
+    pf = g_malloc0 (sizeof (GstBinaryPluginFeature));
     chk = gst_registry_binary_make_data (pf, sizeof (GstBinaryPluginFeature));
     pf->rank = feature->rank;
 
@@ -602,7 +602,7 @@ gst_registry_binary_save_plugin (GList ** list, GstRegistry * registry,
   GList *plugin_features = NULL;
   GList *walk;
 
-  pe = g_malloc (sizeof (GstBinaryPluginElement));
+  pe = g_malloc0 (sizeof (GstBinaryPluginElement));
   chk = gst_registry_binary_make_data (pe, sizeof (GstBinaryPluginElement));
 
   pe->file_size = plugin->file_size;
