@@ -260,6 +260,26 @@ gst_play_sink_dispose (GObject * object)
   free_chain ((GstPlayChain *) playsink->textchain);
   playsink->textchain = NULL;
 
+
+  if (playsink->audio_tee_sink) {
+    gst_object_unref (playsink->audio_tee_sink);
+    playsink->audio_tee_sink = NULL;
+  }
+
+  if (playsink->audio_tee_vissrc) {
+    gst_element_release_request_pad (playsink->audio_tee,
+        playsink->audio_tee_vissrc);
+    gst_object_unref (playsink->audio_tee_vissrc);
+    playsink->audio_tee_vissrc = NULL;
+  }
+
+  if (playsink->audio_tee_asrc) {
+    gst_element_release_request_pad (playsink->audio_tee,
+        playsink->audio_tee_asrc);
+    gst_object_unref (playsink->audio_tee_asrc);
+    playsink->audio_tee_asrc = NULL;
+  }
+
   g_free (playsink->font_desc);
   playsink->font_desc = NULL;
 
@@ -941,15 +961,15 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink), "volume")) {
     GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
     have_volume = TRUE;
-    /* take ref to sink to control the volume */
-    chain->volume = gst_object_ref (chain->sink);
+    /* use the sink to control the volume */
+    chain->volume = chain->sink;
     g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
     /* if the sink also has a mute property we can use this as well. We'll only
      * use the mute property if there is a volume property. We can simulate the
      * mute with the volume otherwise. */
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (chain->sink), "mute")) {
       GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
-      chain->mute = gst_object_ref (chain->sink);
+      chain->mute = chain->sink;
     }
   } else {
     /* no volume, we need to add a volume element when we can */
@@ -1006,7 +1026,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
         have_volume = TRUE;
 
         /* volume also has the mute property */
-        chain->mute = gst_object_ref (chain->volume);
+        chain->mute = chain->volume;
 
         /* configure with the latest volume and mute */
         g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume,
