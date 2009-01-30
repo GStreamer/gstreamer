@@ -272,7 +272,8 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
     demux->close_seg_event = NULL;
   }
 
-  gst_adapter_clear (demux->adapter);
+  if (demux->adapter)
+    gst_adapter_clear (demux->adapter);
 
   gst_mxf_demux_remove_pads (demux);
 
@@ -2975,7 +2976,7 @@ gst_mxf_demux_finalize (GObject * object)
   g_free (demux->requested_package_string);
   demux->requested_package_string = NULL;
 
-  gst_mxf_demux_remove_pads (demux);
+  gst_mxf_demux_reset (demux);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
