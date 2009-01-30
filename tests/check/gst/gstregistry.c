@@ -99,11 +99,11 @@ GST_START_TEST (test_registry_update)
     ASSERT_OBJECT_REFCOUNT (plugin, "plugin", 2);
   }
 
+  GST_LOG (" ----- calling gst_update_registry -----");
+
   fail_unless (gst_update_registry () != FALSE, "registry update failed");
 
-  GST_LOG (" -----------------------------------");
-  GST_LOG ("          registry updated          ");
-  GST_LOG (" -----------------------------------");
+  GST_LOG (" ----- registry updated -----");
 
   /* static plugins should have the same refcount as before (ie. 2), whereas
    * file-based plugins *may* have been replaced by a newly-created object
@@ -178,19 +178,16 @@ GST_START_TEST (test_registry_update)
 
   new_identity = gst_registry_lookup_feature (registry, "identity");
   fail_unless (new_identity != NULL, "Can't find plugin feature 'identity'");
-#if 0
-  fail_unless (old_identity != new_identity, "Old and new 'identity' feature "
-      "should be different but are the same object");
+  fail_unless (old_identity == new_identity, "Old and new 'identity' feature "
+      "objects should be the same, but are different objects");
 
-  ASSERT_OBJECT_REFCOUNT (old_identity, "old identity feature after update", 1);
-#endif
+  /* One ref each for: the registry, old_identity, new_identity */
+  ASSERT_OBJECT_REFCOUNT (old_identity, "old identity feature after update", 3);
 
   new_pipeline = gst_registry_lookup_feature (registry, "pipeline");
   fail_unless (new_pipeline != NULL, "Can't find plugin feature 'pipeline'");
-#if 0
   fail_unless (old_pipeline == new_pipeline, "Old and new 'pipeline' feature "
       "objects should be the same, but are different objects");
-#endif
 
   gst_plugin_list_free (plugins_before);
   plugins_before = NULL;
