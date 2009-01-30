@@ -632,11 +632,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -1280,8 +1280,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1289,8 +1289,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -2890,6 +2890,109 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static const GstQueryType *
+gst_mxf_demux_get_query_types (GstElement * element)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    0
+  };
+
+  return types;
+}
+
+static gboolean
+gst_mxf_demux_query (GstElement * element, GstQuery * query)
+{
+  GstMXFDemux *demux = GST_MXF_DEMUX (element);
+  gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (demux, "handling query %s",
+      gst_query_type_get_name (GST_QUERY_TYPE (query)));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      gint64 pos;
+
+      gst_query_parse_position (query, &format, NULL);
+      if (format != GST_FORMAT_TIME)
+        goto error;
+
+      pos = demux->segment.last_stop;
+
+      GST_DEBUG_OBJECT (demux,
+          "Returning position %" G_GINT64_FORMAT " in format %s", pos,
+          gst_format_get_name (format));
+
+      gst_query_set_position (query, format, pos);
+      ret = TRUE;
+
+      break;
+    }
+    case GST_QUERY_DURATION:{
+      gint64 duration = -1;
+      GstFormat format;
+      guint i;
+
+      gst_query_parse_duration (query, &format, NULL);
+      if (format != GST_FORMAT_TIME)
+        goto error;
+
+      if (!demux->src)
+        goto done;
+
+      for (i = 0; i < demux->src->len; i++) {
+        GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
+        gint64 pdur = -1;
+
+        if (!pad->material_track || !pad->material_track->parent.sequence)
+          continue;
+
+        pdur = pad->material_track->parent.sequence->duration;
+        if (pad->material_track->edit_rate.n == 0 ||
+            pad->material_track->edit_rate.d == 0)
+          continue;
+
+        pdur =
+            gst_util_uint64_scale (pdur,
+            GST_SECOND * pad->material_track->edit_rate.d,
+            pad->material_track->edit_rate.n);
+        duration = MAX (duration, pdur);
+      }
+
+      if (duration == -1) {
+        GST_DEBUG_OBJECT (demux, "No duration known (yet)");
+        goto done;
+      }
+
+      GST_DEBUG_OBJECT (demux,
+          "Returning duration %" G_GINT64_FORMAT " in format %s", duration,
+          gst_format_get_name (format));
+
+      gst_query_set_duration (query, format, duration);
+      ret = TRUE;
+      break;
+    }
+    default:
+      /* else forward upstream */
+      ret = gst_pad_peer_query (demux->sinkpad, query);
+      break;
+  }
+
+done:
+  return ret;
+
+  /* ERRORS */
+error:
+  {
+    GST_DEBUG_OBJECT (demux, "query failed");
+    goto done;
+  }
+}
+
 static GstStateChangeReturn
 gst_mxf_demux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -3014,6 +3117,9 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mxf_demux_change_state);
+  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_mxf_demux_query);
+  gstelement_class->get_query_types =
+      GST_DEBUG_FUNCPTR (gst_mxf_demux_get_query_types);
 }
 
 static void
