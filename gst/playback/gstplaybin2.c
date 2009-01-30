@@ -1838,6 +1838,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   /* release the pad to the selector, this will make the selector choose a new
    * pad. */
   gst_element_release_request_pad (selector, peer);
+  gst_object_unref (peer);
 
   gst_object_unref (selector);
   GST_SOURCE_GROUP_UNLOCK (group);
