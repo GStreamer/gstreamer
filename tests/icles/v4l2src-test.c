@@ -57,8 +57,7 @@ run_options (char opt)
 
       freq = gst_tuner_get_frequency (tuner, channel);
 
-      printf ("\ntype the new frequency (current = %lu) (-1 to cancel): ",
-          freq);
+      printf ("\ntype the new frequency (current = %u) (-1 to cancel): ", freq);
       scanf ("%u", &freq);
       if (freq != -1)
         gst_tuner_set_frequency (tuner, channel, freq);
