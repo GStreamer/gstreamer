@@ -327,7 +327,7 @@ default_gen_key (GstRTSPMediaFactory *factory, const GstRTSPUrl *url)
 {
   gchar *result;
 
-  result = gst_rtsp_url_get_request_uri (url);
+  result = gst_rtsp_url_get_request_uri ((GstRTSPUrl *)url);
 
   return result;
 }

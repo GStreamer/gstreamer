@@ -117,7 +117,7 @@ compare_uri (const GstRTSPUrl *uri1, const GstRTSPUrl *uri2)
  * but is cached for when the same client (without breaking the connection) is
  * doing a setup for the exact same url. */
 static GstRTSPMedia *
-find_media (GstRTSPClient *client, const GstRTSPUrl *uri, GstRTSPMessage *request)
+find_media (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 {
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
