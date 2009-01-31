@@ -1038,6 +1038,8 @@ gst_input_selector_event (GstPad * pad, GstEvent * event)
 
     gst_object_unref (otherpad);
   }
+  else
+    gst_event_unref (event);
   return res;
 }
 
@@ -1191,6 +1193,8 @@ gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
   if (active_sinkpad == NULL || sel->select_all) {
     /* first pad we get activity on becomes the activated pad by default, if we
      * select all, we also remember the last used pad. */
+    if (sel->active_sinkpad)
+      gst_object_unref (sel->active_sinkpad);
     active_sinkpad = sel->active_sinkpad = gst_object_ref (pad);
     GST_DEBUG_OBJECT (sel, "Activating pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   }
@@ -1250,6 +1254,7 @@ gst_input_selector_release_pad (GstElement * element, GstPad * pad)
   /* if the pad was the active pad, makes us select a new one */
   if (sel->active_sinkpad == pad) {
     GST_DEBUG_OBJECT (sel, "Deactivating pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    gst_object_unref (sel->active_sinkpad);
     sel->active_sinkpad = NULL;
   }
   sel->n_pads--;
