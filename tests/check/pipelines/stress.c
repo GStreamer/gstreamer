@@ -121,7 +121,7 @@ stress_suite (void)
   Suite *s = suite_create ("stress");
   TCase *tc_chain = tcase_create ("linear");
 
-  /* time out after 20s, not the default 3 */
+  /* Completely disable timeout for this test */
   tcase_set_timeout (tc_chain, 0);
 
   suite_add_tcase (s, tc_chain);
