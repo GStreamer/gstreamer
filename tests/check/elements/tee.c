@@ -592,6 +592,9 @@ tee_suite (void)
   Suite *s = suite_create ("tee");
   TCase *tc_chain = tcase_create ("general");
 
+  /* Set the timeout to a much larger time - 3 minutes */
+  tcase_set_timeout (tc_chain, 180);
+
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_num_buffers);
   tcase_add_test (tc_chain, test_stress);
