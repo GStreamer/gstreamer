@@ -32,8 +32,9 @@
  * their base_init function to easily configure the set of caps/formats that
  * the element is able to handle.
  *
- * Derived classes should override the GstAudioFilter::setup() and
- * GstBaseTransform::transform_ip() and/or GstBaseTransform::transform()
+ * Derived classes should override the #GstAudioFilterClass.setup() and
+ * #GstBaseTransformClass.transform_ip() and/or
+ * #GstBaseTransformClass.transform()
  * virtual functions in their class_init function.
  *
  * Since: 0.10.12
