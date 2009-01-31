@@ -1835,8 +1835,10 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   /* get selector, this can be NULL when the element is removing the pads
    * because it's being disposed. */
   selector = GST_ELEMENT_CAST (gst_pad_get_parent (peer));
-  if (!selector)
+  if (!selector) {
+    gst_object_unref (peer);
     goto no_selector;
+  }
 
   /* release the pad to the selector, this will make the selector choose a new
    * pad. */
