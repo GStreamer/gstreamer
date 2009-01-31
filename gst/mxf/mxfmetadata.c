@@ -875,11 +875,22 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
   MXFMetadataEssenceContainerData *self =
       MXF_METADATA_ESSENCE_CONTAINER_DATA (m);
   MXFMetadataBase *current = NULL;
+#if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
 
   g_hash_table_iter_init (&iter, metadata);
+#else
+  GList *l, *values;
 
+  values = g_hash_table_get_values (metadata);
+#endif
+
+#if GLIB_CHECK_VERSION (2, 16, 0)
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & current)) {
+#else
+  for (l = values; l; l = l->next) {
+    current = l->data;
+#endif
     if (MXF_IS_METADATA_SOURCE_PACKAGE (current)) {
       MXFMetadataSourcePackage *package = MXF_METADATA_SOURCE_PACKAGE (current);
 
@@ -892,6 +903,10 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
       }
     }
   }
+
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+  g_list_free (values);
+#endif
 
   if (!self->linked_package) {
     GST_ERROR ("Couldn't resolve a package");
@@ -1919,11 +1934,22 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFMetadataSourceClip *self = MXF_METADATA_SOURCE_CLIP (m);
   MXFMetadataBase *current = NULL;
+#if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
 
   g_hash_table_iter_init (&iter, metadata);
+#else
+  GList *l, *values;
 
+  values = g_hash_table_get_values (metadata);
+#endif
+
+#if GLIB_CHECK_VERSION (2, 16, 0)
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & current)) {
+#else
+  for (l = values; l; l = l->next) {
+    current = l->data;
+#endif
     if (MXF_IS_METADATA_SOURCE_PACKAGE (current)) {
       MXFMetadataGenericPackage *p = MXF_METADATA_GENERIC_PACKAGE (current);
 
@@ -1933,6 +1959,10 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
       }
     }
   }
+
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+  g_list_free (values);
+#endif
 
   return
       MXF_METADATA_BASE_CLASS (mxf_metadata_source_clip_parent_class)->resolve
@@ -2564,8 +2594,8 @@ mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->handle_tag
-          (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -2718,8 +2748,8 @@ mxf_metadata_generic_sound_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->handle_tag
-          (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -2853,8 +2883,8 @@ mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->handle_tag
-          (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -2979,8 +3009,8 @@ mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->handle_tag
-          (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -3043,8 +3073,8 @@ mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_data_essence_descriptor_parent_class)->handle_tag
-          (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_data_essence_descriptor_parent_class)->
+          handle_tag (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 

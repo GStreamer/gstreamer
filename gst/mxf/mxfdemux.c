@@ -524,7 +524,11 @@ static GstFlowReturn
 gst_mxf_demux_resolve_references (GstMXFDemux * demux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+#if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
+#else
+  GList *l, *values;
+#endif
   MXFMetadataBase *m = NULL;
 
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
@@ -534,15 +538,29 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
     GST_ERROR_OBJECT (demux, "No metadata yet");
     return GST_FLOW_ERROR;
   }
-
+#if GLIB_CHECK_VERSION (2, 16, 0)
   g_hash_table_iter_init (&iter, demux->metadata);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
     m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
   }
+#else
+  values = g_hash_table_get_values (demux->metadata);
+  for (l = values; l; l = l->next) {
+    m = l->data;
+    m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
+  }
+#endif
 
+#if GLIB_CHECK_VERSION (2, 16, 0)
   g_hash_table_iter_init (&iter, demux->metadata);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
     gboolean resolved;
+#else
+  for (l = values; l; l = l->next) {
+    gboolean resolved;
+
+    m = l->data;
+#endif
 
     resolved = mxf_metadata_base_resolve (m, demux->metadata);
 
@@ -556,9 +574,17 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
 
   demux->metadata_resolved = TRUE;
 
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+  g_list_free (values);
+#endif
+
   return ret;
 
 error:
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+  g_list_free (values);
+#endif
+
   demux->metadata_resolved = FALSE;
 
   return ret;
@@ -632,11 +658,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -1280,8 +1306,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1289,8 +1315,8 @@ gst_mxf_demux_pad_next_component (GstMXFDemux * demux, GstMXFDemuxPad * pad)
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
