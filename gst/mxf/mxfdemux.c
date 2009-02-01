@@ -2243,86 +2243,113 @@ from_index:
   }
 
   GST_DEBUG_OBJECT (demux, "Not found in index");
-  demux->offset = demux->run_in;
-  if (etrack->offsets && etrack->offsets->len) {
-    for (i = etrack->offsets->len - 1; i >= 0; i--) {
-      GstMXFDemuxIndex *idx =
-          &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
+  if (!demux->random_access) {
+    guint64 new_offset = -1;
+    gint64 new_position = -1;
 
-      if (idx->offset != 0 && i <= *position) {
-        demux->offset = idx->offset + demux->run_in;
-        break;
-      }
-    }
-  }
-  gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+    if (etrack->offsets && etrack->offsets->len) {
+      for (i = etrack->offsets->len - 1; i >= 0; i--) {
+        GstMXFDemuxIndex *idx =
+            &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
 
-  for (i = 0; i < demux->essence_tracks->len; i++) {
-    GstMXFDemuxEssenceTrack *t =
-        &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
-
-    t->position = (demux->offset == demux->run_in) ? 0 : -1;
-  }
-
-  /* Else peek at all essence elements and complete our
-   * index until we find the requested element
-   */
-  while (ret == GST_FLOW_OK) {
-    GstBuffer *buffer = NULL;
-    MXFUL key;
-    guint read = 0;
-
-    ret =
-        gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
-        &read);
-
-    if (ret == GST_FLOW_UNEXPECTED) {
-      for (i = 0; i < demux->essence_tracks->len; i++) {
-        GstMXFDemuxEssenceTrack *t =
-            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
-
-        if (t->position > 0)
-          t->duration = t->position;
-      }
-      /* For the searched track this is really our position */
-      etrack->duration = etrack->position;
-
-      for (i = 0; i < demux->src->len; i++) {
-        GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
-
-        if (!p->eos
-            && p->current_essence_track_position >=
-            p->current_essence_track->duration) {
-          p->eos = TRUE;
-          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+        if (idx->offset != 0 && i <= *position && (!keyframe || idx->keyframe)) {
+          new_offset = idx->offset;
+          new_position = i;
+          break;
         }
       }
     }
 
-    if (G_UNLIKELY (ret != GST_FLOW_OK))
-      break;
-
-    ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, TRUE);
-
-    gst_buffer_unref (buffer);
-
-    /* If we found the position read it from the index again */
-    if (ret == GST_FLOW_OK && etrack->position == *position + 1 &&
-        etrack->offsets && etrack->offsets->len > *position &&
-        g_array_index (etrack->offsets, GstMXFDemuxIndex,
-            *position).offset != 0) {
-      GST_DEBUG_OBJECT (demux, "Found at offset %" G_GUINT64_FORMAT,
-          demux->offset);
-      demux->offset = old_offset;
-      demux->current_partition = old_partition;
-      goto from_index;
+    if (new_offset != -1) {
+      *position = new_position;
+      return new_offset;
     }
-    demux->offset += read;
-  }
+  } else if (demux->random_access) {
+    demux->offset = demux->run_in;
+    if (etrack->offsets && etrack->offsets->len) {
+      for (i = etrack->offsets->len - 1; i >= 0; i--) {
+        GstMXFDemuxIndex *idx =
+            &g_array_index (etrack->offsets, GstMXFDemuxIndex, i);
 
-  GST_DEBUG_OBJECT (demux, "Not found in this file");
-  demux->offset = old_offset;
-  demux->current_partition = old_partition;
+        if (idx->offset != 0 && i <= *position) {
+          demux->offset = idx->offset + demux->run_in;
+          break;
+        }
+      }
+    }
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+
+    for (i = 0; i < demux->essence_tracks->len; i++) {
+      GstMXFDemuxEssenceTrack *t =
+          &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+      t->position = (demux->offset == demux->run_in) ? 0 : -1;
+    }
+
+    /* Else peek at all essence elements and complete our
+     * index until we find the requested element
+     */
+    while (ret == GST_FLOW_OK) {
+      GstBuffer *buffer = NULL;
+      MXFUL key;
+      guint read = 0;
+
+      ret =
+          gst_mxf_demux_pull_klv_packet (demux, demux->offset, &key, &buffer,
+          &read);
+
+      if (ret == GST_FLOW_UNEXPECTED) {
+        for (i = 0; i < demux->essence_tracks->len; i++) {
+          GstMXFDemuxEssenceTrack *t =
+              &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
+              i);
+
+          if (t->position > 0)
+            t->duration = t->position;
+        }
+        /* For the searched track this is really our position */
+        etrack->duration = etrack->position;
+
+        for (i = 0; i < demux->src->len; i++) {
+          GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+          if (!p->eos
+              && p->current_essence_track_position >=
+              p->current_essence_track->duration) {
+            p->eos = TRUE;
+            gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+          }
+        }
+      }
+
+      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+        demux->offset = old_offset;
+        demux->current_partition = old_partition;
+        break;
+      }
+
+      ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, TRUE);
+
+      gst_buffer_unref (buffer);
+
+      /* If we found the position read it from the index again */
+      if (ret == GST_FLOW_OK && etrack->position == *position + 1 &&
+          etrack->offsets && etrack->offsets->len > *position &&
+          g_array_index (etrack->offsets, GstMXFDemuxIndex,
+              *position).offset != 0) {
+        GST_DEBUG_OBJECT (demux, "Found at offset %" G_GUINT64_FORMAT,
+            demux->offset);
+        demux->offset = old_offset;
+        demux->current_partition = old_partition;
+        goto from_index;
+      }
+      demux->offset += read;
+    }
+    demux->offset = old_offset;
+    demux->current_partition = old_partition;
+
+    GST_DEBUG_OBJECT (demux, "Not found in this file");
+  }
 
   return -1;
 }
@@ -2796,6 +2823,132 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
 }
 
 static gboolean
+gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
+{
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+  gdouble rate;
+  gboolean update, flush, keyframe;
+  GstSegment seeksegment;
+  guint i;
+
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &start_type, &start, &stop_type, &stop);
+
+  if (rate <= 0.0)
+    goto wrong_rate;
+
+  if (format != GST_FORMAT_TIME)
+    goto wrong_format;
+
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+
+  /* Work on a copy until we are sure the seek succeeded. */
+  memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
+
+  GST_DEBUG_OBJECT (demux, "segment before configure %" GST_SEGMENT_FORMAT,
+      &demux->segment);
+
+  /* Apply the seek to our segment */
+  gst_segment_set_seek (&seeksegment, rate, format, flags,
+      start_type, start, stop_type, stop, &update);
+
+  GST_DEBUG_OBJECT (demux, "segment configured %" GST_SEGMENT_FORMAT,
+      &seeksegment);
+
+  if (flush || seeksegment.last_stop != demux->segment.last_stop) {
+    gboolean ret;
+    guint64 new_offset = -1;
+
+    if (!demux->metadata_resolved) {
+      if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK)
+        goto unresolved_metadata;
+    }
+
+    /* Do the actual seeking */
+    for (i = 0; i < demux->src->len; i++) {
+      GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+      gint64 position;
+      guint64 off;
+
+      /* Reset EOS flag on all pads */
+      p->eos = FALSE;
+      p->last_flow = GST_FLOW_OK;
+      gst_mxf_demux_pad_set_position (demux, p, start);
+
+      position = p->current_essence_track_position;
+      off = gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
+          &position, keyframe);
+      new_offset = MIN (off, new_offset);
+      p->discont = TRUE;
+    }
+
+    if (new_offset == -1)
+      goto no_new_offset;
+
+    new_offset += demux->run_in;
+
+    GST_DEBUG_OBJECT (demux, "generating an upstream seek at position %"
+        G_GUINT64_FORMAT, new_offset);
+    ret = gst_pad_push_event (demux->sinkpad,
+        gst_event_new_seek (seeksegment.rate, GST_FORMAT_BYTES,
+            seeksegment.flags | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
+            new_offset, GST_SEEK_TYPE_NONE, 0));
+
+    if (G_UNLIKELY (!ret)) {
+      goto seek_failed;
+    }
+  }
+
+  /* Tell all the stream a new segment is needed */
+  for (i = 0; i < demux->src->len; i++) {
+    GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+    p->need_segment = TRUE;
+  }
+
+  for (i = 0; i < demux->essence_tracks->len; i++) {
+    GstMXFDemuxEssenceTrack *t =
+        &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+    t->position = -1;
+  }
+
+  /* Ok seek succeeded, take the newly configured segment */
+  memcpy (&demux->segment, &seeksegment, sizeof (GstSegment));
+
+  return TRUE;
+
+/* ERRORS */
+wrong_format:
+  {
+    GST_WARNING_OBJECT (demux, "seeking only supported in TIME format");
+    return gst_pad_push_event (demux->sinkpad, gst_event_ref (event));
+  }
+wrong_rate:
+  {
+    GST_WARNING_OBJECT (demux, "only rates > 0.0 are allowed");
+    return FALSE;
+  }
+unresolved_metadata:
+  {
+    GST_WARNING_OBJECT (demux, "metadata can't be resolved");
+    return gst_pad_push_event (demux->sinkpad, gst_event_ref (event));
+  }
+seek_failed:
+  {
+    GST_WARNING_OBJECT (demux, "upstream seek failed");
+    return gst_pad_push_event (demux->sinkpad, gst_event_ref (event));
+  }
+no_new_offset:
+  {
+    GST_WARNING_OBJECT (demux, "can't find new offset");
+    return gst_pad_push_event (demux->sinkpad, gst_event_ref (event));
+  }
+}
+
+static gboolean
 gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 {
   GstFormat format;
@@ -2974,7 +3127,7 @@ gst_mxf_demux_src_event (GstPad * pad, GstEvent * event)
       if (demux->random_access)
         ret = gst_mxf_demux_seek_pull (demux, event);
       else
-        ret = FALSE;
+        ret = gst_mxf_demux_seek_push (demux, event);
       gst_event_unref (event);
       break;
     default:
