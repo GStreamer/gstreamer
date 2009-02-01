@@ -124,22 +124,6 @@ static gboolean gst_mxf_demux_src_query (GstPad * pad, GstQuery * query);
 GST_BOILERPLATE (GstMXFDemux, gst_mxf_demux, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_mxf_demux_flush (GstMXFDemux * demux, gboolean discont)
-{
-  GST_DEBUG_OBJECT (demux, "flushing queued data in the MXF demuxer");
-
-  gst_adapter_clear (demux->adapter);
-
-  demux->flushing = FALSE;
-
-  /* Only in push mode */
-  if (!demux->random_access) {
-    /* We reset the offset and will get one from first push */
-    demux->offset = -1;
-  }
-}
-
-static void
 gst_mxf_demux_remove_pad (GstMXFDemuxPad * pad, GstMXFDemux * demux)
 {
   gst_element_remove_pad (GST_ELEMENT (demux), GST_PAD (pad));
@@ -655,11 +639,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -1304,8 +1288,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1313,8 +1297,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->
-          current_component->source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -2650,11 +2634,13 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
           break;
         }
         gst_adapter_flush (demux->adapter, 1);
+        demux->offset++;
       }
     } else if (demux->offset < demux->run_in) {
-      gst_adapter_flush (demux->adapter,
-          MIN (gst_adapter_available (demux->adapter),
-              demux->run_in - demux->offset));
+      guint64 flush = MIN (gst_adapter_available (demux->adapter),
+          demux->run_in - demux->offset);
+      gst_adapter_flush (demux->adapter, flush);
+      demux->offset += flush;
       continue;
     }
 
@@ -2726,10 +2712,15 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
       break;
 
     gst_adapter_flush (demux->adapter, offset);
-    buffer = gst_adapter_take_buffer (demux->adapter, length);
 
-    ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, FALSE);
-    gst_buffer_unref (buffer);
+    if (length > 0) {
+      buffer = gst_adapter_take_buffer (demux->adapter, length);
+
+      ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, FALSE);
+      gst_buffer_unref (buffer);
+    }
+
+    demux->offset += offset + length;
   }
 
   gst_object_unref (demux);
@@ -2768,8 +2759,8 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
-        sequence->structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
+        structural_components[i]);
 
     sum +=
         gst_util_uint64_scale (clip->parent.duration,
@@ -3148,7 +3139,11 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_mxf_demux_push_src_event (demux, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      gst_mxf_demux_flush (demux, TRUE);
+      GST_DEBUG_OBJECT (demux, "flushing queued data in the MXF demuxer");
+
+      gst_adapter_clear (demux->adapter);
+      demux->flushing = FALSE;
+      demux->offset = 0;
       ret = gst_mxf_demux_push_src_event (demux, event);
       break;
     case GST_EVENT_EOS:
@@ -3156,11 +3151,21 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
         GST_WARNING_OBJECT (pad, "failed pushing EOS on streams");
       ret = TRUE;
       break;
-    case GST_EVENT_NEWSEGMENT:
-      /* TODO: handle this */
+    case GST_EVENT_NEWSEGMENT:{
+      guint i;
+
+      if (demux->essence_tracks) {
+        for (i = 0; i < demux->essence_tracks->len; i++) {
+          GstMXFDemuxEssenceTrack *t =
+              &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
+              i);
+          t->position = -1;
+        }
+      }
       gst_event_unref (event);
-      ret = FALSE;
+      ret = TRUE;
       break;
+    }
     default:
       ret = gst_mxf_demux_push_src_event (demux, event);
       break;
