@@ -2883,7 +2883,10 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       }
       p->discont = TRUE;
     }
-    demux->offset = new_offset;
+    if (new_offset == -1)
+      goto no_new_offset;
+
+    demux->offset = new_offset + demux->run_in;
   }
 
   if (G_UNLIKELY (demux->close_seg_event)) {
@@ -2946,10 +2949,16 @@ wrong_rate:
   }
 unresolved_metadata:
   {
+    GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_WARNING_OBJECT (demux, "metadata can't be resolved");
     return FALSE;
   }
-
+no_new_offset:
+  {
+    GST_PAD_STREAM_UNLOCK (demux->sinkpad);
+    GST_WARNING_OBJECT (demux, "can't find new offset");
+    return FALSE;
+  }
 }
 
 static gboolean
