@@ -129,7 +129,6 @@ struct _GstMXFDemux
 
   GstSegment segment;
 
-  GstEvent *new_seg_event;
   GstEvent *close_seg_event;
 
   guint64 offset;
