@@ -639,11 +639,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -1288,8 +1288,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1297,8 +1297,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -2786,13 +2786,17 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
-        structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
+        sequence->structural_components[i]);
+
+    if (clip->parent.duration <= 0)
+      break;
 
     sum +=
         gst_util_uint64_scale (clip->parent.duration,
         p->material_track->edit_rate.d * GST_SECOND,
         p->material_track->edit_rate.n);
+
     if (sum > start)
       break;
   }
@@ -2804,10 +2808,11 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
     return;
   }
 
-  sum -=
-      gst_util_uint64_scale (clip->parent.duration,
-      p->material_track->edit_rate.d * GST_SECOND,
-      p->material_track->edit_rate.n);
+  if (clip->parent.duration > 0)
+    sum -=
+        gst_util_uint64_scale (clip->parent.duration,
+        p->material_track->edit_rate.d * GST_SECOND,
+        p->material_track->edit_rate.n);
 
   p->last_stop = start;
   p->last_stop_accumulated_error = 0.0;
