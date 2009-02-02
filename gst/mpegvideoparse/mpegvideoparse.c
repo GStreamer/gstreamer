@@ -807,6 +807,8 @@ mpv_parse_sink_event (GstPad * pad, GstEvent * event)
             format, start, stop, pos);
       }
 
+      gst_mpegvideoparse_flush (mpegvideoparse);
+
       /* now configure the values */
       gst_segment_set_newsegment_full (&mpegvideoparse->segment, update,
           rate, applied_rate, format, start, stop, pos);
