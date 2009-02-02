@@ -1119,7 +1119,7 @@ gst_soup_http_src_start (GstBaseSrc * bsrc)
         soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
         src->context, SOUP_SESSION_USER_AGENT, src->user_agent,
 #ifdef HAVE_LIBSOUP_GNOME
-        SOUP_SESSION_ADD_FEATURE, SOUP_TYPE_PROXY_RESOLVER_GNOME,
+        SOUP_SESSION_ADD_FEATURE_BY_TYPE, SOUP_TYPE_PROXY_RESOLVER_GNOME,
 #endif
         NULL);
   } else {
