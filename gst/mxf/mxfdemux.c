@@ -2904,8 +2904,9 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
     gboolean ret;
     guint64 new_offset = -1;
 
-    if (!demux->metadata_resolved) {
-      if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK)
+    if (!demux->metadata_resolved || demux->update_metadata) {
+      if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK ||
+          gst_mxf_demux_update_tracks (demux) != GST_FLOW_OK)
         goto unresolved_metadata;
     }
 
@@ -3047,8 +3048,9 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   if (flush || seeksegment.last_stop != demux->segment.last_stop) {
     guint64 new_offset = -1;
 
-    if (!demux->metadata_resolved) {
-      if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK)
+    if (!demux->metadata_resolved || demux->update_metadata) {
+      if (gst_mxf_demux_resolve_references (demux) != GST_FLOW_OK ||
+          gst_mxf_demux_update_tracks (demux) != GST_FLOW_OK)
         goto unresolved_metadata;
     }
 
