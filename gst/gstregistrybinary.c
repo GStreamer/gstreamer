@@ -1164,7 +1164,9 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     g_file_get_contents (location, &contents, &size, &err);
     if (err != NULL) {
       GST_INFO ("Unable to read file %s : %s", location, err->message);
+#ifndef GST_DISABLE_GST_DEBUG
       g_timer_destroy (timer);
+#endif
       g_error_free (err);
       return FALSE;
     }
