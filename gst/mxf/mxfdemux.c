@@ -639,11 +639,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -835,7 +835,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
   GST_DEBUG_OBJECT (demux, "Updating tracks");
 
-  if ((ret = gst_mxf_demux_update_essence_tracks (demux))) {
+  if ((ret = gst_mxf_demux_update_essence_tracks (demux)) != GST_FLOW_OK) {
     return ret;
   }
 
@@ -897,7 +897,10 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (!track->parent.sequence) {
       GST_WARNING_OBJECT (demux, "Track with no sequence");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     sequence = track->parent.sequence;
@@ -938,14 +941,20 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (track->parent.type && (track->parent.type & 0xf0) != 0x30) {
       GST_DEBUG_OBJECT (demux, "No essence track");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     if (!source_package || track->parent.type == MXF_METADATA_TRACK_UNKNOWN
         || !source_track) {
       GST_WARNING_OBJECT (demux,
           "No source package or track type for track found");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     for (k = 0; k < demux->essence_tracks->len; k++) {
@@ -961,29 +970,44 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     if (!etrack) {
       GST_WARNING_OBJECT (demux, "No essence track for this track found");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     if (track->edit_rate.n <= 0 || track->edit_rate.d <= 0 ||
         source_track->edit_rate.n <= 0 || source_track->edit_rate.d <= 0) {
       GST_WARNING_OBJECT (demux, "Track has an invalid edit rate");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     if (MXF_IS_METADATA_MATERIAL_PACKAGE (current_package) && !component) {
       GST_WARNING_OBJECT (demux,
           "Playing material package but found no component for track");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     if (!source_package->descriptors) {
       GST_WARNING_OBJECT (demux, "Source package has no descriptors");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     if (!source_track->parent.descriptor) {
       GST_WARNING_OBJECT (demux, "No descriptor found for track");
-      continue;
+      if (!pad)
+        continue;
+      else
+        return GST_FLOW_ERROR;
     }
 
     if (!pad && first_run) {
@@ -1071,7 +1095,19 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     }
   }
 
-  gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+  if (first_run)
+    gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
+
+  if (demux->src) {
+    for (i = 0; i < demux->src->len; i++) {
+      GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
+
+      if (!pad->material_track || !pad->material_package) {
+        GST_ERROR_OBJECT (demux, "Unable to update existing pad");
+        return GST_FLOW_ERROR;
+      }
+    }
+  }
 
   return GST_FLOW_OK;
 }
@@ -1288,8 +1324,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1297,8 +1333,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->
-          current_component->source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -2386,7 +2422,6 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
         t->duration = t->position;
     }
 
-
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
 
@@ -2786,8 +2821,8 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
-        sequence->structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
+        structural_components[i]);
 
     if (clip->parent.duration <= 0)
       break;
