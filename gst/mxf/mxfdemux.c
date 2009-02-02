@@ -1063,11 +1063,12 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     pad->current_essence_track = etrack;
 
-    if (pad->tags)
-      gst_tag_list_free (pad->tags);
-    pad->tags = NULL;
-    if (etrack->tags)
-      pad->tags = gst_tag_list_copy (etrack->tags);
+    if (etrack->tags) {
+      if (pad->tags)
+        gst_tag_list_insert (pad->tags, etrack->tags, GST_TAG_MERGE_REPLACE);
+      else
+        pad->tags = gst_tag_list_copy (etrack->tags);
+    }
 
     if (GST_PAD_CAPS (pad)
         && !gst_caps_is_equal (GST_PAD_CAPS (pad), etrack->caps)) {
@@ -1313,6 +1314,7 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
   guint k;
   MXFMetadataSourcePackage *source_package = NULL;
   MXFMetadataTimelineTrack *source_track = NULL;
+  gboolean update = (pad->current_component_index != i);
 
   pad->current_component_index = i;
 
@@ -1408,6 +1410,17 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!gst_caps_is_equal (GST_PAD_CAPS (pad), pad->current_essence_track->caps)) {
     gst_pad_set_caps (GST_PAD_CAST (pad), pad->current_essence_track->caps);
+  }
+
+  if (update) {
+    if (pad->tags) {
+      if (pad->current_essence_track->tags)
+        gst_tag_list_insert (pad->tags, pad->current_essence_track->tags,
+            GST_TAG_MERGE_REPLACE);
+    } else {
+      if (pad->current_essence_track->tags)
+        pad->tags = gst_tag_list_copy (pad->current_essence_track->tags);
+    }
   }
 
   return GST_FLOW_OK;
