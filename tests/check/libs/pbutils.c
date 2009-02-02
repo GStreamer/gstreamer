@@ -549,6 +549,7 @@ GST_START_TEST (test_pb_utils_install_plugins)
   GstInstallPluginsContext *ctx;
   GstInstallPluginsReturn ret;
   gchar *details[] = { "detail1", "detail2", NULL };
+  gchar *details_multi[] = { "detail1", "detail1", "detail2", NULL };
 
   ctx = gst_install_plugins_context_new ();
 
@@ -581,6 +582,15 @@ GST_START_TEST (test_pb_utils_install_plugins)
   /* and again with context */
   gst_install_plugins_context_set_xid (ctx, 42);
   test_pb_utils_install_plugins_do_callout (details, ctx, SCRIPT_WITH_XID,
+      GST_INSTALL_PLUGINS_SUCCESS);
+
+  /* and make sure that duplicate detail strings get dropped */
+  test_pb_utils_install_plugins_do_callout (details_multi, NULL, SCRIPT_NO_XID,
+      GST_INSTALL_PLUGINS_NOT_FOUND);
+
+  /* and the same again with context */
+  gst_install_plugins_context_set_xid (ctx, 42);
+  test_pb_utils_install_plugins_do_callout (details_multi, ctx, SCRIPT_WITH_XID,
       GST_INSTALL_PLUGINS_SUCCESS);
 
   /* and free the context now that we don't need it any longer */

@@ -366,6 +366,8 @@
 #include <sys/wait.h>
 #endif
 
+#include <string.h>
+
 /* best effort to make things compile and possibly even work on win32 */
 #ifndef WEXITSTATUS
 # define WEXITSTATUS(status) ((((guint)(status)) & 0xff00) >> 8)
@@ -490,6 +492,18 @@ gst_install_plugins_get_helper (void)
 }
 
 static gboolean
+ptr_array_contains_string (GPtrArray * arr, const gchar * s)
+{
+  gint i;
+
+  for (i = 0; i < arr->len; ++i) {
+    if (strcmp ((const char *) g_ptr_array_index (arr, i), s) == 0)
+      return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
 gst_install_plugins_spawn_child (gchar ** details,
     GstInstallPluginsContext * ctx, GPid * child_pid, gint * exit_status)
 {
@@ -509,9 +523,10 @@ gst_install_plugins_spawn_child (gchar ** details,
     g_ptr_array_add (arr, xid_str);
   }
 
-  /* finally, add the detail strings */
+  /* finally, add the detail strings, but without duplicates */
   while (details != NULL && details[0] != NULL) {
-    g_ptr_array_add (arr, details[0]);
+    if (!ptr_array_contains_string (arr, details[0]))
+      g_ptr_array_add (arr, details[0]);
     ++details;
   }
 
