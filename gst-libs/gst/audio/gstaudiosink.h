@@ -83,6 +83,8 @@ struct _GstAudioSinkClass {
   /* close the device */
   gboolean (*close)     (GstAudioSink *sink);
   /* write samples to the device */
+  /* FIXME 0.11: change return value to gint, as most implementation use that
+   * already anyway */
   guint    (*write)     (GstAudioSink *sink, gpointer data, guint length);
   /* get number of samples queued in the device */
   guint    (*delay)     (GstAudioSink *sink);
