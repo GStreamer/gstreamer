@@ -1317,6 +1317,7 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (pad->current_component_index >= sequence->n_structural_components) {
     GST_DEBUG_OBJECT (demux, "After last structural component");
+    pad->current_component_index = sequence->n_structural_components - 1;
     return GST_FLOW_UNEXPECTED;
   }
 
