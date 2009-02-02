@@ -603,26 +603,25 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
   guint i;
 
   if (demux->requested_package_string) {
-    MXFUMID umid;
+    MXFUMID umid = { {0,}
+    };
 
     if (!mxf_umid_from_string (demux->requested_package_string, &umid)) {
       GST_ERROR_OBJECT (demux, "Invalid requested package");
-    } else {
-      if (memcmp (&umid, &demux->current_package_uid, 32) != 0) {
-        gst_mxf_demux_remove_pads (demux);
-        memcpy (&demux->current_package_uid, &umid, 32);
-      }
     }
     g_free (demux->requested_package_string);
     demux->requested_package_string = NULL;
+
+    ret = gst_mxf_demux_find_package (demux, &umid);
   }
 
-  if (!mxf_umid_is_zero (&demux->current_package_uid))
+  if (!ret && !mxf_umid_is_zero (&demux->current_package_uid))
     ret = gst_mxf_demux_find_package (demux, &demux->current_package_uid);
+
   if (ret && (MXF_IS_METADATA_MATERIAL_PACKAGE (ret)
           || (MXF_IS_METADATA_SOURCE_PACKAGE (ret)
               && MXF_METADATA_SOURCE_PACKAGE (ret)->top_level)))
-    return ret;
+    goto done;
   else if (ret)
     GST_WARNING_OBJECT (demux,
         "Current package is not a material package or top-level source package, choosing the first best");
@@ -630,12 +629,12 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
     GST_WARNING_OBJECT (demux,
         "Current package not found, choosing the first best");
 
-  if (demux->preface->primary_package)
-    ret = demux->preface->primary_package;
+  ret = demux->preface->primary_package;
   if (ret && (MXF_IS_METADATA_MATERIAL_PACKAGE (ret)
           || (MXF_IS_METADATA_SOURCE_PACKAGE (ret)
               && MXF_METADATA_SOURCE_PACKAGE (ret)->top_level)))
-    return ret;
+    goto done;
+  ret = NULL;
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
@@ -653,10 +652,18 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
     return NULL;
   }
 
-  memcpy (&demux->current_package_uid, &ret->package_uid, 32);
+done:
+  if (memcmp (&ret->package_uid, &demux->current_package_uid, 32) != 0) {
+    gchar current_package_string[96];
 
-  if (!ret)
-    GST_ERROR_OBJECT (demux, "No suitable package found");
+    gst_mxf_demux_remove_pads (demux);
+    memcpy (&demux->current_package_uid, &ret->package_uid, 32);
+
+    mxf_umid_to_string (&ret->package_uid, current_package_string);
+    demux->current_package = ret;
+    demux->current_package_string = g_strdup (current_package_string);
+    g_object_notify (G_OBJECT (demux), "package");
+  }
 
   return ret;
 }
@@ -853,7 +860,6 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   }
 
   first_run = (demux->src == NULL);
-  demux->current_package = current_package;
 
   for (i = 0; i < current_package->n_tracks; i++) {
     MXFMetadataTimelineTrack *track = NULL;
