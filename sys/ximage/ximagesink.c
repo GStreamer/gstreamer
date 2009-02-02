@@ -231,8 +231,8 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
   }
 
   if (!recycled)
-    GST_MINI_OBJECT_CLASS (ximage_buffer_parent_class)->
-        finalize (GST_MINI_OBJECT (ximage));
+    GST_MINI_OBJECT_CLASS (ximage_buffer_parent_class)->finalize
+        (GST_MINI_OBJECT (ximage));
 
 beach:
   return;
@@ -1364,8 +1364,8 @@ gst_ximagesink_getcaps (GstBaseSink * bsink)
 
   /* get a template copy and add the pixel aspect ratio */
   caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK (ximagesink)->
-          sinkpad));
+      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK
+          (ximagesink)->sinkpad));
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     GstStructure *structure = gst_caps_get_structure (caps, i);
 
@@ -1742,24 +1742,19 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
        * function returns true. */
       if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink),
               desired_caps)) {
-        gint bpp;
-
-        bpp = size / height / width;
         /* we will not alloc a buffer of the new suggested caps. Make sure
          * we also unref this new caps after we set it on the buffer. */
         alloc_caps = desired_caps;
         alloc_unref = TRUE;
         width = result.w;
         height = result.h;
-        size = bpp * width * height;
-        GST_DEBUG ("peer pad accepts our desired caps %" GST_PTR_FORMAT
-            " buffer size is now %d bytes", desired_caps, size);
+        GST_DEBUG ("peer pad accepts our desired caps %" GST_PTR_FORMAT,
+            desired_caps);
       } else {
         GST_DEBUG ("peer pad does not accept our desired caps %" GST_PTR_FORMAT,
             desired_caps);
-        /* we alloc a buffer with the original incomming caps */
-        width = GST_VIDEO_SINK_WIDTH (ximagesink);
-        height = GST_VIDEO_SINK_HEIGHT (ximagesink);
+        /* we alloc a buffer with the original incomming caps already in the
+         * width and height variables */
       }
     }
   }
