@@ -1107,6 +1107,9 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
         return GST_FLOW_ERROR;
       }
     }
+  } else {
+    GST_ERROR_OBJECT (demux, "Couldn't create any streams");
+    return GST_FLOW_ERROR;
   }
 
   return GST_FLOW_OK;
