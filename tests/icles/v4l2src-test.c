@@ -46,6 +46,8 @@ print_options ()
 void
 run_options (char opt)
 {
+  int res;
+
   switch (opt) {
     case 'f':
     {
@@ -58,8 +60,8 @@ run_options (char opt)
       freq = gst_tuner_get_frequency (tuner, channel);
 
       printf ("\ntype the new frequency (current = %u) (-1 to cancel): ", freq);
-      scanf ("%u", &freq);
-      if (freq != -1)
+      res = scanf ("%u", &freq);
+      if (res != 1 || freq != -1)
         gst_tuner_set_frequency (tuner, channel, freq);
     }
       break;
@@ -86,8 +88,8 @@ run_options (char opt)
         }
       }
       printf ("\ntype the number of norm you want (-1 to cancel): ");
-      scanf ("%d", &next_norm);
-      if (next_norm < 0) {
+      res = scanf ("%d", &next_norm);
+      if (res != 1 || next_norm < 0) {
         break;
       }
       if (index <= next_norm) {
@@ -125,8 +127,8 @@ run_options (char opt)
         }
       }
       printf ("\ntype the number of input you want (-1 to cancel): ");
-      scanf ("%d", &next_channel);
-      if (next_channel < 0) {
+      res = scanf ("%d", &next_channel);
+      if (res != 1 || next_channel < 0) {
         break;
       }
       if (index <= next_channel) {
@@ -174,8 +176,8 @@ run_options (char opt)
               gst_color_balance_get_value (balance, channel));
         }
         printf ("\ntype the number of color control you want (-1 to cancel): ");
-        scanf ("%d", &new_value);
-        if (new_value == -1)
+        res = scanf ("%d", &new_value);
+        if (res != 1 || new_value == -1)
           break;
         for (item = controls, index = 0; item != NULL && index <= new_value;
             item = item->next, ++index) {
@@ -184,8 +186,8 @@ run_options (char opt)
         printf ("   %u - %s (%d - %d) = %d, type the new value: ", index - 1,
             channel->label, channel->min_value, channel->max_value,
             gst_color_balance_get_value (balance, channel));
-        scanf ("%d", &new_value);
-        if (new_value == -1)
+        res = scanf ("%d", &new_value);
+        if (res != 1 || new_value == -1)
           break;
         gst_color_balance_set_value (balance, channel, new_value);
       }
@@ -203,8 +205,8 @@ run_options (char opt)
 
         printf ("Horizontal flip is %s\n", flip ? "on" : "off");
         printf ("\ntype 1 to toggle (-1 to cancel): ");
-        scanf ("%d", &new_value);
-        if (new_value == 1) {
+        res = scanf ("%d", &new_value);
+        if (res != 1 || new_value == 1) {
           flip = !flip;
           if (gst_video_orientation_set_hflip (vidorient, flip)) {
             gst_video_orientation_get_hflip (vidorient, &flip);
@@ -223,8 +225,8 @@ run_options (char opt)
 
         printf ("\nVertical flip is %s\n", flip ? "on" : "off");
         printf ("\ntype 1 to toggle (-1 to cancel): ");
-        scanf ("%d", &new_value);
-        if (new_value == 1) {
+        res = scanf ("%d", &new_value);
+        if (res != 1 || new_value == 1) {
           flip = !flip;
           if (gst_video_orientation_set_vflip (vidorient, flip)) {
             gst_video_orientation_get_vflip (vidorient, &flip);
@@ -241,8 +243,8 @@ run_options (char opt)
       if (gst_video_orientation_get_hcenter (vidorient, &center)) {
         printf ("Horizontal center is %d\n", center);
         printf ("\ntype the new horizontal center value (-1 to cancel): ");
-        scanf ("%d", &center);
-        if (center != -1) {
+        res = scanf ("%d", &center);
+        if (res != 1 || center != -1) {
           if (gst_video_orientation_set_hcenter (vidorient, center)) {
             gst_video_orientation_get_hcenter (vidorient, &center);
             printf ("Now horizontal center is %d\n", center);
@@ -258,8 +260,8 @@ run_options (char opt)
       if (gst_video_orientation_get_vcenter (vidorient, &center)) {
         printf ("Vertical center is %d\n", center);
         printf ("\ntype the new vertical center value (-1 to cancel): ");
-        scanf ("%d", &center);
-        if (center != -1) {
+        res = scanf ("%d", &center);
+        if (res != 1 || center != -1) {
           if (gst_video_orientation_set_vcenter (vidorient, center)) {
             gst_video_orientation_get_vcenter (vidorient, &center);
             printf ("Now vertical center is %d\n", center);
