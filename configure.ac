@@ -294,6 +294,26 @@ AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 dnl used in examples
 AG_GST_DEFAULT_ELEMENTS
 
+dnl behaviour of speex based audio resampler
+AC_MSG_CHECKING(which audio resample format to use for integer)
+AC_ARG_WITH([audioresample_format],
+        AS_HELP_STRING([--with-audioresample-format],[Which implementation should be used for integer audio resampling, int/float/auto, (default is auto)]),
+        [ac_cv_audioresample_format=$withval], [ac_cv_audioresample_format=auto])dnl
+AC_MSG_RESULT($ac_cv_audioresample_format)
+case $ac_cv_audioresample_format in
+  int)
+    AC_DEFINE(AUDIORESAMPLE_FORMAT_INT,1,[The int implementation should be used for integer audio resampling])
+    AC_SUBST(AUDIORESAMPLE_FORMAT_INT)
+  ;;
+  float)
+    AC_DEFINE(AUDIORESAMPLE_FORMAT_FLOAT,1,[The float implementation should be used for integer audio resampling])
+    AC_SUBST(AUDIORESAMPLE_FORMAT_FLOAT)
+  ;;
+  auto)
+    AC_DEFINE(AUDIORESAMPLE_FORMAT_AUTO,1,[The implementation that should be used for integer audio resampling witll be benchmarked at runtime])
+    AC_SUBST(AUDIORESAMPLE_FORMAT_AUTO)
+esac
+
 dnl *** plug-ins to include ***
 
 dnl these are all the gst plug-ins, compilable without additional libs

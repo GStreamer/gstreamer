@@ -101,7 +101,13 @@ GST_STATIC_CAPS ( \
 )
 
 /* If TRUE integer arithmetic resampling is faster and will be used if appropiate */
+#if defined AUDIORESAMPLE_FORMAT_INT
+static gboolean gst_audio_resample_use_int = TRUE;
+#elif defined AUDIORESAMPLE_FORMAT_FLOAT
 static gboolean gst_audio_resample_use_int = FALSE;
+#else
+static gboolean gst_audio_resample_use_int = FALSE;
+#endif
 
 static GstStaticPadTemplate gst_audio_resample_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -1261,6 +1267,7 @@ gst_audio_resample_get_property (GObject * object, guint prop_id,
   }
 }
 
+#if defined AUDIORESAMPLE_FORMAT_AUTO
 #define BENCHMARK_SIZE 512
 
 static gboolean
@@ -1360,23 +1367,25 @@ _benchmark_integer_resampling (void)
   oil_profile_get_ave_std (&a, &av, NULL);
   oil_profile_get_ave_std (&b, &bv, NULL);
 
+  /* Remember benchmark result in global variable */
   gst_audio_resample_use_int = (av > bv);
   resample_float_resampler_destroy (sta);
-  resample_float_resampler_destroy (stb);
+  resample_int_resampler_destroy (stb);
 
   if (av > bv)
-    GST_DEBUG ("Using integer resampler if appropiate: %lf < %lf", bv, av);
+    GST_INFO ("Using integer resampler if appropiate: %lf < %lf", bv, av);
   else
-    GST_DEBUG ("Using float resampler for everything: %lf <= %lf", av, bv);
+    GST_INFO ("Using float resampler for everything: %lf <= %lf", av, bv);
 
   return TRUE;
 
 error:
   resample_float_resampler_destroy (sta);
-  resample_float_resampler_destroy (stb);
+  resample_int_resampler_destroy (stb);
 
   return FALSE;
 }
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -1386,8 +1395,10 @@ plugin_init (GstPlugin * plugin)
 
   oil_init ();
 
+#if defined AUDIORESAMPLE_FORMAT_AUTO
   if (!_benchmark_integer_resampling ())
     return FALSE;
+#endif
 
   if (!gst_element_register (plugin, "audioresample", GST_RANK_PRIMARY,
           GST_TYPE_AUDIO_RESAMPLE)) {
