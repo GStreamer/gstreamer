@@ -190,6 +190,17 @@
 
 #define MPEG_MUX_RATE_MULT      50
 
+/* sync:4 == 00xx ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
+#define READ_TS(data, target, lost_sync_label)          \
+    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
+    target  = ((guint64) (*data++ & 0x0E)) << 29;	\
+    target |= ((guint64) (*data++       )) << 22;	\
+    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
+    target |= ((guint64) (*data++ & 0xFE)) << 14;	\
+    target |= ((guint64) (*data++       )) << 7;	\
+    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
+    target |= ((guint64) (*data++ & 0xFE)) >> 1;
+
 /* some extra GstFlowReturn values used internally */
 #define GST_FLOW_NEED_MORE_DATA		-100
 #define GST_FLOW_LOST_SYNC		-101

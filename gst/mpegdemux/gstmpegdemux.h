@@ -50,14 +50,12 @@
 #include "gstpesfilter.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_FLUPS_DEMUX		(gst_flups_demux_get_type())
 #define GST_FLUPS_DEMUX(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLUPS_DEMUX,GstFluPSDemux))
 #define GST_FLUPS_DEMUX_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLUPS_DEMUX,GstFluPSDemuxClass))
 #define GST_FLUPS_DEMUX_GET_CLASS(klass) (G_TYPE_INSTANCE_GET_CLASS((klass),GST_TYPE_FLUPS_DEMUX,GstFluPSDemuxClass))
 #define GST_IS_FLUPS_DEMUX(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLUPS_DEMUX))
 #define GST_IS_FLUPS_DEMUX_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLUPS_DEMUX))
-
 typedef struct _GstFluPSStream GstFluPSStream;
 typedef struct _GstFluPSDemux GstFluPSDemux;
 typedef struct _GstFluPSDemuxClass GstFluPSDemuxClass;
@@ -65,76 +63,87 @@ typedef struct _GstFluPSDemuxClass GstFluPSDemuxClass;
 #define GST_FLUPS_DEMUX_MAX_STREAMS	256
 #define GST_FLUPS_DEMUX_MAX_PSM		256
 
-typedef enum {
+typedef enum
+{
   GST_FLUPS_DEMUX_SYNC_AUTO = 0,
   GST_FLUPS_DEMUX_SYNC_SCR = 1,
   GST_FLUPS_DEMUX_SYNC_DTS = 2
 } GstFluPSDemuxSync;
 
-typedef enum {
+typedef enum
+{
   STATE_FLUPS_DEMUX_NEED_SYNC,
   STATE_FLUPS_DEMUX_SYNCED,
   STATE_FLUPS_DEMUX_NEED_MORE_DATA,
 } GstFluPSDemuxState;
 
 /* Information associated with a single FluPS stream. */
-struct _GstFluPSStream {
-  GstPad         * pad;
+struct _GstFluPSStream
+{
+  GstPad *pad;
 
-  gint           id;
-  gint           type;
-  gint           size_bound;
+  gint id;
+  gint type;
+  gint size_bound;
 
-  gboolean       discont;
-  gboolean       notlinked;
-  gboolean       need_segment;
+  gboolean discont;
+  gboolean notlinked;
+  gboolean need_segment;
 };
 
-struct _GstFluPSDemux {
-  GstElement     parent;
+struct _GstFluPSDemux
+{
+  GstElement parent;
 
-  GstPad         * sinkpad;
+  GstPad *sinkpad;
+  gboolean random_access;       /* If we operate in pull mode */
 
-  GstAdapter     * adapter;
-  GstAdapter     * rev_adapter;
-  guint64        adapter_offset;
-  guint32        last_sync_code;
-  GstPESFilter   filter;
+  GstAdapter *adapter;
+  GstAdapter *rev_adapter;
+  guint64 adapter_offset;
+  guint32 last_sync_code;
+  GstPESFilter filter;
 
-  gint64         mux_rate;
-  guint64        first_scr;
-  guint64        first_dts;
-  guint64        base_time;
-  guint64        current_scr;
-  guint64        next_scr;
-  guint64        bytes_since_scr;
-  gint64         scr_adjust;
-  guint64        scr_rate_n;
-  guint64        scr_rate_d;
-  guint64        first_scr_offset;
-  guint64        last_scr_offset;
+  gint64 mux_rate;
+  guint64 first_scr;
+  guint64 last_scr;
+  guint64 first_dts;
+  guint64 base_time;
+  guint64 current_scr;
+  guint64 next_scr;
+  guint64 bytes_since_scr;
+  gint64 scr_adjust;
+  guint64 scr_rate_n;
+  guint64 scr_rate_d;
+  guint64 first_scr_offset;
+  guint64 last_scr_offset;
 
-  gint16         psm[GST_FLUPS_DEMUX_MAX_PSM];
+  guint64 first_pts;
+  guint64 last_pts;
 
-  GstSegment     sink_segment;
-  GstSegment     src_segment;
+  gint16 psm[GST_FLUPS_DEMUX_MAX_PSM];
+
+  GstSegment sink_segment;
+  GstSegment src_segment;
+  gboolean is_segment_open;
 
   /* stream output */
-  GstFluPSStream * current_stream;
-  guint64        next_pts;
-  guint64        next_dts;
-  GstFluPSStream ** streams;
-  gboolean       need_no_more_pads;
+  GstFluPSStream *current_stream;
+  guint64 next_pts;
+  guint64 next_dts;
+  GstFluPSStream **streams;
+  gboolean need_no_more_pads;
 
   /* Indicates an MPEG-2 stream */
   gboolean is_mpeg2_pack;
 
   /* Language codes event is stored when a dvd-lang-codes
    * custom event arrives from upstream */
-  GstEvent * lang_codes;
+  GstEvent *lang_codes;
 };
 
-struct _GstFluPSDemuxClass {
+struct _GstFluPSDemuxClass
+{
   GstElementClass parent_class;
 
   GstPadTemplate *sink_template;
@@ -143,10 +152,9 @@ struct _GstFluPSDemuxClass {
   GstPadTemplate *private_template;
 };
 
-GType		gst_flups_demux_get_type	(void);
+GType gst_flups_demux_get_type (void);
 
-gboolean	gst_flups_demux_plugin_init	(GstPlugin *plugin);
+gboolean gst_flups_demux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_FLUPS_DEMUX_H__ */

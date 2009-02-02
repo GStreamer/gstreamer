@@ -97,17 +97,6 @@ gst_pes_filter_set_callbacks (GstPESFilter * filter,
   filter->user_data = user_data;
 }
 
-/* sync:4 == 00xx ! pts:3 ! 1 ! pts:15 ! 1 | pts:15 ! 1 */
-#define READ_TS(data, target, lost_sync_label)          \
-    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target  = ((guint64) (*data++ & 0x0E)) << 29;	\
-    target |= ((guint64) (*data++       )) << 22;	\
-    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target |= ((guint64) (*data++ & 0xFE)) << 14;	\
-    target |= ((guint64) (*data++       )) << 7;	\
-    if ((*data & 0x01) != 0x01) goto lost_sync_label;   \
-    target |= ((guint64) (*data++ & 0xFE)) >> 1;
-
 static gboolean
 gst_pes_filter_is_sync (guint32 sync)
 {
