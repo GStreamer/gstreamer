@@ -514,16 +514,27 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @bin: The decodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factories: A #GValueArray of possible #GstElementFactory to use, sorted by
-   * rank (higher ranks come first).
+   * @factory: A #GstElementFactory to use
    *
    * This signal is emitted once decodebin2 has found all the possible
-   * #GstElementFactory that can be used to handle the given @caps.
+   * #GstElementFactory that can be used to handle the given @caps. For each of
+   * those factories, this signal is emited.
    *
-   * Returns: A #gint indicating what factory index from the @factories array
-   * that you wish decodebin2 to use for trying to decode the given @caps.
-   * Return -1 to stop selection of a factory and expose the pad as a raw type. 
-   * The default handler always returns the first possible factory (index 0).
+   * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
+   * value indicating what decodebin2 should do next.
+   *
+   * A value of #GST_AUTOPLUG_SELECT_TRY will try to autoplug an element from
+   * @factory.
+   *
+   * A value of #GST_AUTOPLUG_SELECT_EXPOSE will expose @pad without plugging
+   * any element to it.
+   *
+   * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
+   * next factory.
+   *
+   * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
+   * operation. the default handler will always return
+   * #GST_AUTOPLUG_SELECT_TRY.
    */
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),

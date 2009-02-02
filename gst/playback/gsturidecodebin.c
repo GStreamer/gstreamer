@@ -309,6 +309,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::unknown-type:
+   * @bin: The uridecodebin
    * @pad: the new pad containing caps that cannot be resolved to a 'final'
    * stream type.
    * @caps: the #GstCaps of the pad that cannot be resolved.
@@ -324,6 +325,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-continue:
+   * @bin: The uridecodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
@@ -344,11 +346,18 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 
   /**
    * GstURIDecodeBin::autoplug-factories:
+   * @bin: The decodebin
    * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This function is emited when an array of possible factories for @caps on
-   * @pad is needed. Decodebin2 will by default return 
+   * @pad is needed. Uridecodebin will by default return an array with all
+   * compatible factories, sorted by rank.
+   *
+   * If this function returns NULL, @pad will be exposed as a final caps.
+   *
+   * If this function returns an empty array, the pad will be considered as
+   * having an unhandled type media type.
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -365,16 +374,27 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    * GstURIDecodeBin::autoplug-select:
    * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factories: A #GValueArray of possible #GstElementFactory to use, sorted by
-   * rank (higher ranks come first).
+   * @factory: A #GstElementFactory to use
    *
    * This signal is emitted once uridecodebin has found all the possible
-   * #GstElementFactory that can be used to handle the given @caps.
+   * #GstElementFactory that can be used to handle the given @caps. For each of
+   * those factories, this signal is emited.
    *
-   * Returns: A #gint indicating what factory index from the @factories array
-   * that you wish uridecodebin to use for trying to decode the given @caps.
-   * -1 to stop selection of a factory. The default handler always
-   * returns the first possible factory.
+   * The signal handler should return a #GST_TYPE_AUTOPLUG_SELECT_RESULT enum
+   * value indicating what decodebin2 should do next.
+   *
+   * A value of #GST_AUTOPLUG_SELECT_TRY will try to autoplug an element from
+   * @factory.
+   *
+   * A value of #GST_AUTOPLUG_SELECT_EXPOSE will expose @pad without plugging
+   * any element to it.
+   *
+   * A value of #GST_AUTOPLUG_SELECT_SKIP will skip @factory and move to the
+   * next factory.
+   *
+   * Returns: a #GST_TYPE_AUTOPLUG_SELECT_RESULT that indicates the required
+   * operation. The default handler will always return
+   * #GST_AUTOPLUG_SELECT_TRY.
    */
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
