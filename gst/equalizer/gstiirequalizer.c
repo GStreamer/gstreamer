@@ -141,8 +141,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
         GstIirEqualizer *equ =
             GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
 
-        equ->need_new_coefficients = equ->need_new_coefficients ||
-            (band->gain != gain);
+        equ->need_new_coefficients = TRUE;
         band->gain = gain;
 
         gst_object_unref (equ);
@@ -159,8 +158,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
         GstIirEqualizer *equ =
             GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
 
-        equ->need_new_coefficients = equ->need_new_coefficients ||
-            (band->freq != freq);
+        equ->need_new_coefficients = TRUE;
         band->freq = freq;
         gst_object_unref (equ);
         GST_DEBUG_OBJECT (band, "changed freq = %lf ", band->freq);
@@ -176,8 +174,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
         GstIirEqualizer *equ =
             GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
 
-        equ->need_new_coefficients = equ->need_new_coefficients ||
-            (band->width != width);
+        equ->need_new_coefficients = TRUE;
         band->width = width;
         gst_object_unref (equ);
         GST_DEBUG_OBJECT (band, "changed width = %lf ", band->width);
@@ -390,11 +387,8 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
    */
   {
     gdouble gain, omega, bw;
-
     gdouble edge_gain, gamma;
-
     gdouble alpha, beta;
-
 
     gain = arg_to_scale (band->gain);
 
@@ -441,7 +435,7 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 
   out:
     GST_INFO
-        ("gain = %7.5g, , bandwidth= %7.5g, frequency = %7.5g, a0 = %7.5g, a1 = %7.5g, a2=%7.5g b1 = %7.5g, b2 = %7.5g",
+        ("gain = %5.1f, width= %7.2f, freq = %7.2f, a0 = %7.5g, a1 = %7.5g, a2=%7.5g b1 = %7.5g, b2 = %7.5g",
         band->gain, band->width, band->freq, band->a0, band->a1, band->a2,
         band->b1, band->b2);
   }
@@ -473,14 +467,25 @@ update_coefficients (GstIirEqualizer * equ)
   equ->need_new_coefficients = FALSE;
 }
 
+static void
+alloc_history (GstIirEqualizer * equ)
+{
+  /* free + alloc = no memcpy */
+  g_free (equ->history);
+  equ->history =
+      g_malloc0 (equ->history_size * GST_AUDIO_FILTER (equ)->format.channels *
+      equ->freq_band_count);
+}
+
 void
 gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 {
   guint old_count, i;
-
   gdouble freq0, freq1, step;
-
   gchar name[20];
+
+  if (equ->freq_band_count == new_count)
+    return;
 
   old_count = equ->freq_band_count;
   equ->freq_band_count = new_count;
@@ -494,6 +499,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
       /* otherwise they get names like 'iirequalizerband5' */
       sprintf (name, "band%u", i);
       gst_object_set_name (GST_OBJECT (equ->bands[i]), name);
+      GST_DEBUG ("adding band[%d]=%p", i, equ->bands[i]);
 
       gst_object_set_parent (GST_OBJECT (equ->bands[i]), GST_OBJECT (equ));
       gst_child_proxy_child_added (GST_OBJECT (equ),
@@ -510,11 +516,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
     }
   }
 
-  /* free + alloc = no memcpy */
-  g_free (equ->history);
-  equ->history =
-      g_malloc0 (equ->history_size * GST_AUDIO_FILTER (equ)->format.channels *
-      new_count);
+  alloc_history (equ);
 
   /* set center frequencies and name band objects
    * FIXME: arg! we can't change the name of parented objects :(
@@ -716,7 +718,7 @@ gst_iir_equalizer_setup (GstAudioFilter * audio, GstRingBufferSpec * fmt)
       return FALSE;
   }
 
-  gst_iir_equalizer_compute_frequencies (equ, equ->freq_band_count);
+  alloc_history (equ);
   return TRUE;
 }
 
