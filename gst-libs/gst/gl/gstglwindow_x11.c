@@ -621,12 +621,21 @@ gst_gl_window_run_loop (GstGLWindow *window)
           g_debug ("Cannot create WM_QUIT_LOOP\n");
 
         /* Message sent with gst_gl_window_send_message */
-        if (wm_gl != None && event.xclient.message_type == wm_gl)
-        {
-          if (priv->running)
-          {
+        if (wm_gl != None && event.xclient.message_type == wm_gl) {
+          if (priv->running) {
+#if SIZEOF_VOID_P == 8
+            GstGLWindowCB custom_cb =
+                (GstGLWindowCB) (((event.xclient.
+                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[1] & 0xffffffff));
+            gpointer custom_data =
+                (gpointer) (((event.xclient.
+                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[3] & 0xffffffff));
+#else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
+#endif
 
             if (!custom_cb || !custom_data)
               g_debug ("custom cb not initialized\n");
@@ -654,10 +663,21 @@ gst_gl_window_run_loop (GstGLWindow *window)
         }
 
         /* message sent with gst_gl_window_quit_loop */
-        else if (wm_quit_loop != None && event.xclient.message_type == wm_quit_loop)
-        {
+        else if (wm_quit_loop != None
+            && event.xclient.message_type == wm_quit_loop) {
+#if SIZEOF_VOID_P == 8
+          GstGLWindowCB destroy_cb =
+              (GstGLWindowCB) (((event.xclient.
+                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                  data.l[1] & 0xffffffff));
+          gpointer destroy_data =
+              (gpointer) (((event.xclient.
+                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                  data.l[3] & 0xffffffff));
+#else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
+#endif
 
           g_debug ("Quit loop message %" G_GUINT64_FORMAT "\n", (guint64) priv->internal_win_id);
 
@@ -666,11 +686,20 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
           /* make sure last pendings send message calls are executed */
           XFlush (priv->device);
-          while (XCheckTypedEvent (priv->device, ClientMessage, &pending_event))
-          {
-            GstGLWindowCB custom_cb = (GstGLWindowCB) pending_event.xclient.data.l[0];
-            gpointer custom_data = (gpointer) pending_event.xclient.data.l[1];
-
+          while (XCheckTypedEvent (priv->device, ClientMessage, &pending_event)) {
+#if SIZEOF_VOID_P == 8
+            GstGLWindowCB custom_cb =
+                (GstGLWindowCB) (((event.xclient.
+                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[1] & 0xffffffff));
+            gpointer custom_data =
+                (gpointer) (((event.xclient.
+                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
+                    data.l[3] & 0xffffffff));
+#else
+            GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
+            gpointer custom_data = (gpointer) event.xclient.data.l[1];
+#endif
             g_debug ("execute last pending custom x events\n");
 
             if (!custom_cb || !custom_data)
@@ -771,8 +800,15 @@ gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer d
       event.xclient.window = priv->internal_win_id;
       event.xclient.message_type = XInternAtom (priv->disp_send, "WM_QUIT_LOOP", True);;
       event.xclient.format = 32;
+#if SIZEOF_VOID_P == 8
+      event.xclient.data.l[0] = (((long) callback) >> 32) & 0xffffffff;
+      event.xclient.data.l[1] = (((long) callback)) & 0xffffffff;
+      event.xclient.data.l[2] = (((long) data) >> 32) & 0xffffffff;
+      event.xclient.data.l[3] = (((long) data)) & 0xffffffff;
+#else
       event.xclient.data.l[0] = (long) callback;
       event.xclient.data.l[1] = (long) data;
+#endif
 
       XSendEvent (priv->disp_send, priv->internal_win_id, FALSE, NoEventMask, &event);
       XSync (priv->disp_send, FALSE);
@@ -802,8 +838,15 @@ gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointe
       event.xclient.window = priv->internal_win_id;
       event.xclient.message_type = XInternAtom (priv->disp_send, "WM_GL_WINDOW", True);
       event.xclient.format = 32;
+#if SIZEOF_VOID_P == 8
+      event.xclient.data.l[0] = (((long) callback) >> 32) & 0xffffffff;
+      event.xclient.data.l[1] = (((long) callback)) & 0xffffffff;
+      event.xclient.data.l[2] = (((long) data) >> 32) & 0xffffffff;
+      event.xclient.data.l[3] = (((long) data)) & 0xffffffff;
+#else
       event.xclient.data.l[0] = (long) callback;
       event.xclient.data.l[1] = (long) data;
+#endif
 
       XSendEvent (priv->disp_send, priv->internal_win_id, FALSE, NoEventMask, &event);
       XSync (priv->disp_send, FALSE);
