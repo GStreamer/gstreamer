@@ -538,100 +538,125 @@ state_failed:
   }
 }
 
-gboolean
-gst_rtsp_media_stream_add (GstRTSPMediaStream *stream, GstRTSPTransport *ct)
-{
-  g_return_val_if_fail (stream != NULL, FALSE);
-  g_return_val_if_fail (ct != NULL, FALSE);
-  g_return_val_if_fail (stream->prepared, FALSE);
-
-  g_message ("adding %s:%d", ct->destination, ct->client_port.min);
-
-  g_signal_emit_by_name (stream->udpsink[0], "add", ct->destination, ct->client_port.min, NULL);
-  g_signal_emit_by_name (stream->udpsink[1], "add", ct->destination, ct->client_port.max, NULL);
-
-  return TRUE;
-}
-
-gboolean
-gst_rtsp_media_stream_remove (GstRTSPMediaStream *stream, GstRTSPTransport *ct)
-{
-  g_return_val_if_fail (stream != NULL, FALSE);
-  g_return_val_if_fail (ct != NULL, FALSE);
-  g_return_val_if_fail (stream->prepared, FALSE);
-
-  g_message ("removing %s:%d", ct->destination, ct->client_port.min);
-
-  g_signal_emit_by_name (stream->udpsink[0], "remove", ct->destination, ct->client_port.min, NULL);
-  g_signal_emit_by_name (stream->udpsink[1], "remove", ct->destination, ct->client_port.max, NULL);
-
-  return TRUE;
-}
-
 /**
  * gst_rtsp_media_play:
  * @media: a #GstRTSPMedia
+ * @transports: a GArray of #GstRTSPMediaTrans pointers
  *
- * Tell the @media to start playing and streaming to the client.
+ * Start playing @media for to the transports in @transports.
  *
- * Returns: a #GstStateChangeReturn
+ * Returns: %TRUE on success.
  */
-GstStateChangeReturn
-gst_rtsp_media_play (GstRTSPMedia *media)
+gboolean
+gst_rtsp_media_play (GstRTSPMedia *media, GArray *transports)
 {
+  gint i;
   GstStateChangeReturn ret;
 
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_STATE_CHANGE_FAILURE);
-  g_return_val_if_fail (media->prepared, GST_STATE_CHANGE_FAILURE);
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (transports != NULL, FALSE);
+  g_return_val_if_fail (media->prepared, FALSE);
+
+  for (i = 0; i < transports->len; i++) {
+    GstRTSPMediaTrans *tr;
+    GstRTSPMediaStream *stream;
+    GstRTSPTransport *trans;
+
+    /* we need a non-NULL entry in the array */
+    tr = g_array_index (transports, GstRTSPMediaTrans *, i);
+    if (tr == NULL)
+      continue;
+
+    /* we need a transport */
+    if (!(trans = tr->transport))
+      continue;
+
+    /* get the stream and add the destinations */
+    stream = gst_rtsp_media_get_stream (media, tr->idx);
+
+    g_message ("adding %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
+
+    g_signal_emit_by_name (stream->udpsink[0], "add", trans->destination, trans->client_port.min, NULL);
+    g_signal_emit_by_name (stream->udpsink[1], "add", trans->destination, trans->client_port.max, NULL);
+  }
 
   g_message ("playing");
   ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
 
-  return ret;
+  return TRUE;
 }
 
 /**
  * gst_rtsp_media_pause:
  * @media: a #GstRTSPMedia
+ * @transports: a array of #GstRTSPTransport pointers
  *
- * Tell the @media to pause.
+ * Pause playing @media for to the transports in @transports.
  *
- * Returns: a #GstStateChangeReturn
+ * Returns: %TRUE on success.
  */
-GstStateChangeReturn
-gst_rtsp_media_pause (GstRTSPMedia *media)
+gboolean
+gst_rtsp_media_pause (GstRTSPMedia *media, GArray *transports)
 {
+  gint i;
   GstStateChangeReturn ret;
 
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_STATE_CHANGE_FAILURE);
-  g_return_val_if_fail (media->prepared, GST_STATE_CHANGE_FAILURE);
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (transports != NULL, FALSE);
+  g_return_val_if_fail (media->prepared, FALSE);
 
-  g_message ("paused");
+  for (i = 0; i < transports->len; i++) {
+    GstRTSPMediaTrans *tr;
+    GstRTSPMediaStream *stream;
+    GstRTSPTransport *trans;
+
+    /* we need a non-NULL entry in the array */
+    tr = g_array_index (transports, GstRTSPMediaTrans *, i);
+    if (tr == NULL)
+      continue;
+
+    /* we need a transport */
+    if (!(trans = tr->transport))
+      continue;
+
+    /* get the stream and add the destinations */
+    stream = gst_rtsp_media_get_stream (media, tr->idx);
+
+    g_message ("removing %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
+
+    g_signal_emit_by_name (stream->udpsink[0], "remove", trans->destination, trans->client_port.min, NULL);
+    g_signal_emit_by_name (stream->udpsink[1], "remove", trans->destination, trans->client_port.max, NULL);
+  }
+
+  g_message ("pause");
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
 
-  return ret;
+  return TRUE;
 }
 
 /**
- * gst_rtsp_media_stop:
+ * gst_rtsp_media_stream_stop:
  * @media: a #GstRTSPMedia
+ * @transports: a GArray of #GstRTSPMediaTrans pointers
  *
- * Tell the @media to stop playing. After this call the media
- * cannot be played or paused anymore
+ * Stop playing @media for to the transports in @transports.
  *
- * Returns: a #GstStateChangeReturn
+ * Returns: %TRUE on success.
  */
-GstStateChangeReturn
-gst_rtsp_media_stop (GstRTSPMedia *media)
+gboolean
+gst_rtsp_media_stop (GstRTSPMedia *media, GArray *transports)
 {
   GstStateChangeReturn ret;
 
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_STATE_CHANGE_FAILURE);
-  g_return_val_if_fail (media->prepared, GST_STATE_CHANGE_FAILURE);
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (transports != NULL, FALSE);
+  g_return_val_if_fail (media->prepared, FALSE);
+
+  gst_rtsp_media_pause (media, transports);
 
   g_message ("stop");
   ret = gst_element_set_state (media->pipeline, GST_STATE_NULL);
 
-  return ret;
+  return TRUE;
 }
 

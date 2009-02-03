@@ -38,6 +38,20 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPMediaStream GstRTSPMediaStream;
 typedef struct _GstRTSPMedia GstRTSPMedia;
 typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
+typedef struct _GstRTSPMediaTrans GstRTSPMediaTrans;
+
+/**
+ * GstRTSPMediaTrans:
+ * @idx: a stream index
+ * @transport: a transport description
+ *
+ * A Transport description for stream @idx
+ */
+struct _GstRTSPMediaTrans {
+  guint idx;
+
+  GstRTSPTransport *transport;
+};
 
 /**
  * GstRTSPMediaStream:
@@ -136,13 +150,9 @@ gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPMediaStream *  gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 
-/* add destinations to a stream */
-gboolean              gst_rtsp_media_stream_add       (GstRTSPMediaStream *stream, GstRTSPTransport *ct);
-gboolean              gst_rtsp_media_stream_remove    (GstRTSPMediaStream *stream, GstRTSPTransport *ct);
-
-GstStateChangeReturn  gst_rtsp_media_play             (GstRTSPMedia *media);
-GstStateChangeReturn  gst_rtsp_media_pause            (GstRTSPMedia *media);
-GstStateChangeReturn  gst_rtsp_media_stop             (GstRTSPMedia *media);
+gboolean              gst_rtsp_media_play             (GstRTSPMedia *media, GArray *trans);
+gboolean              gst_rtsp_media_pause            (GstRTSPMedia *media, GArray *trans);
+gboolean              gst_rtsp_media_stop             (GstRTSPMedia *media, GArray *trans);
 
 G_END_DECLS
 

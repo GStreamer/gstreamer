@@ -287,14 +287,22 @@ handle_pause_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   if (!media)
     goto not_found;
 
+  /* the session state must be playing or recording */
+  if (media->state != GST_RTSP_STATE_PLAYING &&
+      media->state != GST_RTSP_STATE_RECORDING)
+    goto invalid_state;
+
   gst_rtsp_session_media_pause (media);
-  g_object_unref (session);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
   send_response (client, &response);
+
+  /* the state is now READY */
+  media->state = GST_RTSP_STATE_READY;
+  g_object_unref (session);
 
   return FALSE;
 
@@ -306,6 +314,11 @@ no_session:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    return FALSE;
+  }
+invalid_state:
+  {
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, request);
     return FALSE;
   }
 }
@@ -328,6 +341,11 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
   media = gst_rtsp_session_get_media (session, uri);
   if (!media)
     goto not_found;
+
+  /* the session state must be playing or ready */
+  if (media->state != GST_RTSP_STATE_PLAYING &&
+      media->state != GST_RTSP_STATE_READY)
+    goto invalid_state;
 
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
@@ -362,6 +380,8 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
 
   /* start playing after sending the request */
   gst_rtsp_session_media_play (media);
+
+  media->state = GST_RTSP_STATE_PLAYING;
   g_object_unref (session);
 
   return FALSE;
@@ -375,6 +395,11 @@ no_session:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    return FALSE;
+  }
+invalid_state:
+  {
+    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, request);
     return FALSE;
   }
 }
@@ -508,9 +533,22 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
 
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_TRANSPORT, trans_str);
   g_free (trans_str);
-  g_object_unref (session);
 
   send_response (client, &response);
+
+  /* update the state */
+  switch (media->state) {
+    case GST_RTSP_STATE_PLAYING:
+    case GST_RTSP_STATE_RECORDING:
+    case GST_RTSP_STATE_READY:
+      /* no state change */
+      break;
+    default:
+      media->state = GST_RTSP_STATE_READY;
+      break;
+  }
+
+  g_object_unref (session);
 
   return TRUE;
 

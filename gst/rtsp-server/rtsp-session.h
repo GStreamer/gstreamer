@@ -45,17 +45,18 @@ typedef struct _GstRTSPSessionMedia GstRTSPSessionMedia;
 
 /**
  * GstRTSPSessionStream:
+ * @trans: the media transport
+ * @media_stream: the controlled media stream
  *
  * Configuration of a stream. A stream is an audio or video stream related to a
  * media.
  */
 struct _GstRTSPSessionStream
 {
+  GstRTSPMediaTrans trans;
+
   /* the stream of the media */
   GstRTSPMediaStream *media_stream;
-
-  /* client and server transports */
-  GstRTSPTransport *client_trans;
 };
 
 /**
@@ -71,8 +72,11 @@ struct _GstRTSPSessionMedia
   /* the pipeline for the media */
   GstRTSPMedia *media;
 
+  /* the server state */
+  GstRTSPState  state;
+
   /* configuration for the different streams */
-  GList        *streams;
+  GArray       *streams;
 };
 
 /**
@@ -96,21 +100,27 @@ struct _GstRTSPSessionClass {
 
 GType                  gst_rtsp_session_get_type             (void);
 
+/* create a new session */
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
 
+/* handle media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,
                                                               const GstRTSPUrl *uri,
 							      GstRTSPMedia *media);
+/* get media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const GstRTSPUrl *uri);
 
-GstStateChangeReturn   gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);
-GstStateChangeReturn   gst_rtsp_session_media_pause          (GstRTSPSessionMedia *media);
-GstStateChangeReturn   gst_rtsp_session_media_stop           (GstRTSPSessionMedia *media);
+/* control media */
+gboolean               gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);
+gboolean               gst_rtsp_session_media_pause          (GstRTSPSessionMedia *media);
+gboolean               gst_rtsp_session_media_stop           (GstRTSPSessionMedia *media);
 
+/* get stream config */
 GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedia *media,
                                                               guint idx);
 
+/* configure transport */
 GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
                                                               GstRTSPTransport *ct);
 

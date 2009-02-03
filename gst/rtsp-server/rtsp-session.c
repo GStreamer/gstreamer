@@ -42,10 +42,10 @@ gst_rtsp_session_init (GstRTSPSession * session)
 }
 
 static void
-gst_rtsp_session_free_stream (GstRTSPSessionStream *stream, GstRTSPSessionMedia *media)
+gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
 {
-  if (stream->client_trans)
-    gst_rtsp_transport_free (stream->client_trans);
+  if (stream->trans.transport)
+    gst_rtsp_transport_free (stream->trans.transport);
 
   g_free (stream);
 }
@@ -53,9 +53,19 @@ gst_rtsp_session_free_stream (GstRTSPSessionStream *stream, GstRTSPSessionMedia 
 static void
 gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session)
 {
-  g_list_foreach (media->streams, (GFunc) gst_rtsp_session_free_stream,
-		  media);
-  g_list_free (media->streams);
+  guint size, i;
+
+  size = media->streams->len;
+
+  for (i = 0; i < size; i++) {
+    GstRTSPSessionStream *stream;
+
+    stream = g_array_index (media->streams, GstRTSPSessionStream *, i);
+
+    if (stream)
+      gst_rtsp_session_free_stream (stream);
+  }
+  g_array_free (media->streams, TRUE);
 
   if (media->url)
     gst_rtsp_url_free (media->url);
@@ -100,10 +110,22 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
     GstRTSPMedia *media)
 {
   GstRTSPSessionMedia *result;
+  guint n_streams;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
+  g_return_val_if_fail (uri != NULL, NULL);
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+  g_return_val_if_fail (media->prepared, NULL);
 
   result = g_new0 (GstRTSPSessionMedia, 1);
   result->media = media;
   result->url = gst_rtsp_url_copy ((GstRTSPUrl *)uri);
+  result->state = GST_RTSP_STATE_INIT;
+
+  /* prealloc the streams now, filled with NULL */
+  n_streams = gst_rtsp_media_n_streams (media);
+  result->streams = g_array_sized_new (FALSE, TRUE, sizeof (GstRTSPSessionStream *), n_streams);
+  g_array_set_size (result->streams, n_streams);
 
   sess->medias = g_list_prepend (sess->medias, result);
 
@@ -158,29 +180,25 @@ gst_rtsp_session_media_get_stream (GstRTSPSessionMedia *media, guint idx)
 {
   GstRTSPSessionStream *result;
   GstRTSPMediaStream *media_stream;
-  GList *walk;
 
   g_return_val_if_fail (media != NULL, NULL);
   g_return_val_if_fail (media->media != NULL, NULL);
 
-  media_stream = gst_rtsp_media_get_stream (media->media, idx);
-  if (media_stream == NULL)
-    goto no_media;
+  if (idx >= media->streams->len)
+    return NULL;
 
-  result = NULL;
-  for (walk = media->streams; walk; walk = g_list_next (walk)) {
-    result = (GstRTSPSessionStream *) walk->data; 
-
-    if (result->media_stream == media_stream)
-      break;
-
-    result = NULL;
-  }
+  result = g_array_index (media->streams, GstRTSPSessionStream *, idx);
   if (result == NULL) {
+    media_stream = gst_rtsp_media_get_stream (media->media, idx);
+    if (media_stream == NULL)
+      goto no_media;
+
     result = g_new0 (GstRTSPSessionStream, 1);
+    result->trans.idx = idx;
+    result->trans.transport = NULL;
     result->media_stream = media_stream;
 
-    media->streams = g_list_prepend (media->streams, result);
+    g_array_insert_val (media->streams, idx, result);
   }
   return result;
 
@@ -232,9 +250,9 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
   st->client_port = ct->client_port;
 
   /* keep track of the transports */
-  if (stream->client_trans)
-    gst_rtsp_transport_free (stream->client_trans);
-  stream->client_trans = ct;
+  if (stream->trans.transport)
+    gst_rtsp_transport_free (stream->trans.transport);
+  stream->trans.transport = ct;
 
   st->server_port.min = stream->media_stream->server_port.min;
   st->server_port.max = stream->media_stream->server_port.max;
@@ -242,28 +260,20 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
   return st;
 }
 
-
 /**
  * gst_rtsp_session_media_play:
  * @media: a #GstRTSPSessionMedia
  *
  * Tell the media object @media to start playing and streaming to the client.
  *
- * Returns: a #GstStateChangeReturn
+ * Returns: %TRUE on success.
  */
-GstStateChangeReturn
+gboolean
 gst_rtsp_session_media_play (GstRTSPSessionMedia *media)
 {
-  GstStateChangeReturn ret;
-  GstRTSPSessionStream *stream;
-  GList *walk;
+  gboolean ret;
 
-  for (walk = media->streams; walk; walk = g_list_next (walk)) {
-    stream = (GstRTSPSessionStream *) walk->data; 
-
-    gst_rtsp_media_stream_add (stream->media_stream, stream->client_trans);
-  }
-  ret = gst_rtsp_media_play (media->media);
+  ret = gst_rtsp_media_play (media->media, media->streams);
 
   return ret;
 }
@@ -274,14 +284,14 @@ gst_rtsp_session_media_play (GstRTSPSessionMedia *media)
  *
  * Tell the media object @media to pause.
  *
- * Returns: a #GstStateChangeReturn
+ * Returns: %TRUE on success.
  */
-GstStateChangeReturn
+gboolean
 gst_rtsp_session_media_pause (GstRTSPSessionMedia *media)
 {
-  GstStateChangeReturn ret;
+  gboolean ret;
 
-  ret = gst_rtsp_media_pause (media->media);
+  ret = gst_rtsp_media_pause (media->media, media->streams);
 
   return ret;
 }
@@ -293,14 +303,14 @@ gst_rtsp_session_media_pause (GstRTSPSessionMedia *media)
  * Tell the media object @media to stop playing. After this call the media
  * cannot be played or paused anymore
  *
- * Returns: a #GstStateChangeReturn
+ * Returns: %TRUE on success.
  */
-GstStateChangeReturn
+gboolean
 gst_rtsp_session_media_stop (GstRTSPSessionMedia *media)
 {
-  GstStateChangeReturn ret;
+  gboolean ret;
 
-  ret = gst_rtsp_media_stop (media->media);
+  ret = gst_rtsp_media_stop (media->media, media->streams);
 
   return ret;
 }
