@@ -91,17 +91,22 @@
 /* FIXME: Shouldn't we check or return the return value
  * of write()?
  */
-#define SEND_COMMAND(set, command)                   \
+#define SEND_COMMAND(set, command, result)           \
 G_STMT_START {                                       \
   unsigned char c = command;                         \
-  ssize_t res;                                       \
-  res = write (set->control_write_fd.fd, &c, 1);     \
-  set->control_pending = TRUE;                       \
+  result = write (set->control_write_fd.fd, &c, 1);  \
+  if (result > 0)                                    \
+    set->control_pending++;                          \
 } G_STMT_END
 
-#define READ_COMMAND(set, command, res)              \
-G_STMT_START {                                       \
-  res = read (set->control_read_fd.fd, &command, 1); \
+#define READ_COMMAND(set, command, res)                \
+G_STMT_START {                                         \
+  if (set->control_pending > 0) {                      \
+    res = read (set->control_read_fd.fd, &command, 1); \
+    if (res == 1)                                      \
+      set->control_pending--;                          \
+  } else                                               \
+    res = 0;                                           \
 } G_STMT_END
 
 #define GST_POLL_CMD_WAKEUP  'W'        /* restart the poll/select call */
@@ -149,9 +154,10 @@ struct _GstPoll
 
   gboolean controllable;
   gboolean new_controllable;
-  gboolean waiting;
+  guint waiting;
+  guint control_pending;
   gboolean flushing;
-  gboolean control_pending;
+  gboolean timer;
 };
 
 static gint
@@ -466,7 +472,6 @@ gst_poll_new (gboolean controllable)
 
   nset = g_slice_new0 (GstPoll);
   nset->lock = g_mutex_new ();
-  nset->control_pending = FALSE;
 #ifndef G_OS_WIN32
   nset->mode = GST_POLL_MODE_AUTO;
   nset->fds = g_array_new (FALSE, FALSE, sizeof (struct pollfd));
@@ -495,6 +500,34 @@ not_controllable:
     gst_poll_free (nset);
     return NULL;
   }
+}
+
+/**
+ * gst_poll_new_timer:
+ *
+ * Create a new poll object that can be used for scheduling cancelable timeouts.
+ * A timeout is performed with gst_poll_wait(). Multiple timeouts can be
+ * performed from different threads. 
+ *
+ * Returns: a new #GstPoll, or %NULL in case of an error. Free with
+ * gst_poll_free().
+ *
+ * Since: 0.10.23
+ */
+GstPoll *
+gst_poll_new_timer (void)
+{
+  GstPoll *poll;
+
+  /* make a new controllable poll set */
+  if (!(poll = gst_poll_new (TRUE)))
+    goto done;
+
+  /* we are a timer */
+  poll->timer = TRUE;
+
+done:
+  return poll;
 }
 
 /**
@@ -984,7 +1017,7 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
   /* check if the poll/select was aborted due to a command */
   if (set->controllable) {
 #ifndef G_OS_WIN32
-    while (TRUE && set->control_pending) {
+    while (TRUE) {
       guchar cmd;
       gint result;
 
@@ -995,7 +1028,6 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
       READ_COMMAND (set, cmd, result);
       if (result <= 0) {
         /* no more commands, quit the loop */
-        set->control_pending = FALSE;
         break;
       }
 
@@ -1042,15 +1074,16 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
 
   g_mutex_lock (set->lock);
 
-  /* we cannot wait from multiple threads */
-  if (G_UNLIKELY (set->waiting))
+  /* we cannot wait from multiple threads unless we are a timer */
+  if (G_UNLIKELY (set->waiting > 0 && !set->timer))
     goto already_waiting;
 
   /* flushing, exit immediatly */
   if (G_UNLIKELY (set->flushing))
     goto flushing;
 
-  set->waiting = TRUE;
+  /* add one more waiter */
+  set->waiting++;
 
   do {
     GstPollMode mode;
@@ -1213,8 +1246,8 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
 
     g_mutex_lock (set->lock);
 
-    /* FIXME, can we only do this check when (res > 0)? */
-    gst_poll_check_ctrl_commands (set, res, &restarting);
+    if (!set->timer)
+      gst_poll_check_ctrl_commands (set, res, &restarting);
 
     /* update the controllable state if needed */
     set->controllable = set->new_controllable;
@@ -1227,7 +1260,7 @@ gst_poll_wait (GstPoll * set, GstClockTime timeout)
     }
   } while (G_UNLIKELY (restarting));
 
-  set->waiting = FALSE;
+  set->waiting--;
 
   g_mutex_unlock (set->lock);
 
@@ -1249,6 +1282,7 @@ flushing:
 #ifdef G_OS_WIN32
 winsock_error:
   {
+    set->waiting--;
     g_mutex_unlock (set->lock);
     return -1;
   }
@@ -1297,7 +1331,7 @@ gst_poll_set_controllable (GstPoll * set, gboolean controllable)
 
   /* delay the change of the controllable state if we are waiting */
   set->new_controllable = controllable;
-  if (!set->waiting)
+  if (set->waiting == 0)
     set->controllable = controllable;
 
   g_mutex_unlock (set->lock);
@@ -1332,11 +1366,13 @@ gst_poll_restart (GstPoll * set)
 
   g_mutex_lock (set->lock);
 
-  if (set->controllable && set->waiting) {
+  if (set->controllable && set->waiting > 0) {
 #ifndef G_OS_WIN32
+    gint result;
+
     /* if we are waiting, we can send the command, else we do not have to
      * bother, future calls will automatically pick up the new fdset */
-    SEND_COMMAND (set, GST_POLL_CMD_WAKEUP);
+    SEND_COMMAND (set, GST_POLL_CMD_WAKEUP, result);
 #else
     SetEvent (set->wakeup_event);
 #endif
@@ -1367,16 +1403,95 @@ gst_poll_set_flushing (GstPoll * set, gboolean flushing)
   /* update the new state first */
   set->flushing = flushing;
 
-  if (flushing && set->controllable && set->waiting) {
+  if (flushing && set->controllable && set->waiting > 0) {
     /* we are flushing, controllable and waiting, wake up the waiter. When we
      * stop the flushing operation we don't clear the wakeup fd here, this will
      * happen in the _wait() thread. */
 #ifndef G_OS_WIN32
-    SEND_COMMAND (set, GST_POLL_CMD_WAKEUP);
+    gint result;
+
+    SEND_COMMAND (set, GST_POLL_CMD_WAKEUP, result);
 #else
     SetEvent (set->wakeup_event);
 #endif
   }
 
   g_mutex_unlock (set->lock);
+}
+
+/**
+ * gst_poll_write_control:
+ * @set: a #GstPoll.
+ *
+ * Write a byte to the control socket of the controllable @set.
+ * This function is mostly usefull for timer #GstPoll objects created with
+ * gst_poll_new_timer(). 
+ *
+ * It will make any current and future gst_poll_wait() function return with
+ * 1, meaning the control socket is set. After an equal amount of calls to
+ * gst_poll_read_control() have been performed, calls to gst_poll_wait() will
+ * block again until their timeout expired.
+ *
+ * Returns: %TRUE on success. %FALSE when @set is not controllable or when the
+ * byte could not be written.
+ *
+ * Since: 0.10.23
+ */
+gboolean
+gst_poll_write_control (GstPoll * set)
+{
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (set != NULL, FALSE);
+
+  g_mutex_lock (set->lock);
+  if (set->controllable) {
+#ifndef G_OS_WIN32
+    gint result;
+
+    SEND_COMMAND (set, GST_POLL_CMD_WAKEUP, result);
+    res = (result > 0);
+#else
+    SetEvent (set->wakeup_event);
+#endif
+  }
+  g_mutex_unlock (set->lock);
+
+  return res;
+}
+
+/**
+ * gst_poll_read_control:
+ * @set: a #GstPoll.
+ *
+ * Read a byte from the control socket of the controllable @set.
+ * This function is mostly usefull for timer #GstPoll objects created with
+ * gst_poll_new_timer(). 
+ *
+ * Returns: %TRUE on success. %FALSE when @set is not controllable or when there
+ * was no byte to read.
+ *
+ * Since: 0.10.23
+ */
+gboolean
+gst_poll_read_control (GstPoll * set)
+{
+  gboolean res = FALSE;
+
+  g_return_val_if_fail (set != NULL, FALSE);
+
+  g_mutex_lock (set->lock);
+  if (set->controllable) {
+#ifndef G_OS_WIN32
+    guchar cmd;
+    gint result;
+    READ_COMMAND (set, cmd, result);
+    res = (result > 0);
+#else
+    ResetEvent (set->wakeup_event);
+#endif
+  }
+  g_mutex_unlock (set->lock);
+
+  return res;
 }

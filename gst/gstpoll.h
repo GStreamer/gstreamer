@@ -64,6 +64,7 @@ typedef struct {
 #define GST_POLL_FD_INIT  { -1, -1 }
 
 GstPoll*        gst_poll_new              (gboolean controllable);
+GstPoll*        gst_poll_new_timer        (void);
 void            gst_poll_free             (GstPoll *set);
 
 void            gst_poll_fd_init          (GstPollFD *fd);
@@ -85,6 +86,9 @@ gint            gst_poll_wait             (GstPoll *set, GstClockTime timeout);
 gboolean        gst_poll_set_controllable (GstPoll *set, gboolean controllable);
 void            gst_poll_restart          (GstPoll *set);
 void            gst_poll_set_flushing     (GstPoll *set, gboolean flushing);
+
+gboolean        gst_poll_write_control    (GstPoll *set);
+gboolean        gst_poll_read_control     (GstPoll *set);
 
 G_END_DECLS
 
