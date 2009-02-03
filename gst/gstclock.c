@@ -166,7 +166,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   entry->type = type;
   entry->time = time;
   entry->interval = interval;
-  entry->status = GST_CLOCK_BUSY;
+  entry->status = GST_CLOCK_OK;
   entry->func = NULL;
   entry->user_data = NULL;
 

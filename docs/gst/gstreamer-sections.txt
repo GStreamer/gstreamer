@@ -1967,14 +1967,15 @@ GST_TYPE_STRUCTURE
 gst_structure_get_type
 </SECTION>
 
-
 <SECTION>
 <FILE>gstsystemclock</FILE>
 <TITLE>GstSystemClock</TITLE>
+GstClockType
 GstSystemClock
 gst_system_clock_obtain
 <SUBSECTION Standard>
 GstSystemClockClass
+GstSystemClockPrivate
 GST_SYSTEM_CLOCK
 GST_IS_SYSTEM_CLOCK
 gst_system_clock_get_type
@@ -1982,8 +1983,10 @@ GST_SYSTEM_CLOCK_CLASS
 GST_IS_SYSTEM_CLOCK_CLASS
 GST_SYSTEM_CLOCK_GET_CLASS
 GST_TYPE_SYSTEM_CLOCK
+GST_SYSTEM_CLOCK_CAST
+GST_TYPE_CLOCK_TYPE
+gst_clock_type_get_type
 </SECTION>
-
 
 <SECTION>
 <FILE>gsttaglist</FILE>
