@@ -132,12 +132,9 @@ gst_mxf_demux_remove_pad (GstMXFDemuxPad * pad, GstMXFDemux * demux)
 static void
 gst_mxf_demux_remove_pads (GstMXFDemux * demux)
 {
-  if (demux->src) {
-    g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
-    g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
-    g_ptr_array_free (demux->src, TRUE);
-    demux->src = NULL;
-  }
+  g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
+  g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
+  g_ptr_array_set_size (demux->src, 0);
 }
 
 static void
@@ -189,14 +186,12 @@ gst_mxf_demux_reset_linked_metadata (GstMXFDemux * demux)
 {
   guint i;
 
-  if (demux->src) {
-    for (i = 0; i < demux->src->len; i++) {
-      GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
+  for (i = 0; i < demux->src->len; i++) {
+    GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
 
-      pad->material_track = NULL;
-      pad->material_package = NULL;
-      pad->current_component = NULL;
-    }
+    pad->material_track = NULL;
+    pad->material_package = NULL;
+    pad->current_component = NULL;
   }
 
   if (demux->essence_tracks) {
@@ -350,7 +345,7 @@ gst_mxf_demux_push_src_event (GstMXFDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "Pushing '%s' event downstream",
       GST_EVENT_TYPE_NAME (event));
 
-  if (!demux->src)
+  if (demux->src->len == 0)
     return ret;
 
   for (i = 0; i < demux->src->len; i++) {
@@ -373,9 +368,6 @@ gst_mxf_demux_get_earliest_pad (GstMXFDemux * demux)
   guint i;
   GstClockTime earliest = GST_CLOCK_TIME_NONE;
   GstMXFDemuxPad *pad = NULL;
-
-  if (!demux->src)
-    return NULL;
 
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
@@ -859,7 +851,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     return GST_FLOW_ERROR;
   }
 
-  first_run = (demux->src == NULL);
+  first_run = (demux->src->len == 0);
 
   for (i = 0; i < current_package->n_tracks; i++) {
     MXFMetadataTimelineTrack *track = NULL;
@@ -884,7 +876,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     track = MXF_METADATA_TIMELINE_TRACK (current_package->tracks[i]);
 
-    if (demux->src && demux->src->len > 0) {
+    if (demux->src->len > 0) {
       /* Find pad from track_id */
       for (j = 0; j < demux->src->len; j++) {
         GstMXFDemuxPad *tmp = g_ptr_array_index (demux->src, j);
@@ -1095,8 +1087,6 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
       gst_element_add_pad (GST_ELEMENT_CAST (demux), gst_object_ref (pad));
 
-      if (!demux->src)
-        demux->src = g_ptr_array_new ();
       g_ptr_array_add (demux->src, pad);
       pad->discont = TRUE;
     }
@@ -1105,7 +1095,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   if (first_run)
     gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
 
-  if (demux->src) {
+  if (demux->src->len > 0) {
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
 
@@ -1463,7 +1453,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return GST_FLOW_ERROR;
   }
 
-  if (!demux->src || demux->src->len == 0) {
+  if (demux->src->len == 0) {
     GST_ERROR_OBJECT (demux, "No streams created yet");
     return GST_FLOW_ERROR;
   }
@@ -2421,7 +2411,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   GstFlowReturn ret = GST_FLOW_OK;
   guint read = 0;
 
-  if (demux->src) {
+  if (demux->src->len > 0) {
     if (!gst_mxf_demux_get_earliest_pad (demux)) {
       ret = GST_FLOW_UNEXPECTED;
       GST_DEBUG_OBJECT (demux, "All tracks are EOS");
@@ -2670,7 +2660,7 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   GST_LOG_OBJECT (demux, "received buffer of %u bytes at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (inbuf), GST_BUFFER_OFFSET (inbuf));
 
-  if (demux->src) {
+  if (demux->src->len > 0) {
     if (!gst_mxf_demux_get_earliest_pad (demux)) {
       ret = GST_FLOW_UNEXPECTED;
       GST_DEBUG_OBJECT (demux, "All tracks are EOS");
@@ -3454,7 +3444,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       if (format != GST_FORMAT_TIME)
         goto error;
 
-      if (!demux->src)
+      if (demux->src->len == 0)
         goto done;
 
       for (i = 0; i < demux->src->len; i++) {
@@ -3588,6 +3578,9 @@ gst_mxf_demux_finalize (GObject * object)
   demux->current_package_string = NULL;
   g_free (demux->requested_package_string);
   demux->requested_package_string = NULL;
+
+  g_ptr_array_free (demux->src, TRUE);
+  demux->src = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
