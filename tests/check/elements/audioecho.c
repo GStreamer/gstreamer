@@ -91,8 +91,8 @@ GST_START_TEST (test_passthrough)
   gdouble *res;
 
   echo = setup_echo ();
-  g_object_set (G_OBJECT (echo), "delay", 1, "intensity", 0.0, "feedback",
-      0.0, NULL);
+  g_object_set (G_OBJECT (echo), "delay", (GstClockTime) 1, "intensity", 0.0,
+      "feedback", 0.0, NULL);
   fail_unless (gst_element_set_state (echo,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -134,8 +134,8 @@ GST_START_TEST (test_echo)
   gdouble *res;
 
   echo = setup_echo ();
-  g_object_set (G_OBJECT (echo), "delay", 20000, "intensity", 1.0, "feedback",
-      0.0, NULL);
+  g_object_set (G_OBJECT (echo), "delay", (GstClockTime) 20000, "intensity",
+      1.0, "feedback", 0.0, NULL);
   fail_unless (gst_element_set_state (echo,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -178,8 +178,8 @@ GST_START_TEST (test_feedback)
   gdouble *res;
 
   echo = setup_echo ();
-  g_object_set (G_OBJECT (echo), "delay", 20000, "intensity", 1.0, "feedback",
-      1.0, NULL);
+  g_object_set (G_OBJECT (echo), "delay", (GstClockTime) 20000, "intensity",
+      1.0, "feedback", 1.0, NULL);
   fail_unless (gst_element_set_state (echo,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
