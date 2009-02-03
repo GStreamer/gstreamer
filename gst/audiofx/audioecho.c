@@ -187,7 +187,7 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DELAY:{
-      guint max_delay, delay;
+      guint64 max_delay, delay;
 
       GST_BASE_TRANSFORM_LOCK (self);
       delay = g_value_get_uint64 (value);
@@ -206,7 +206,7 @@ gst_audio_echo_set_property (GObject * object, guint prop_id,
     }
       break;
     case PROP_MAX_DELAY:{
-      guint max_delay, delay;
+      guint64 max_delay, delay;
 
       GST_BASE_TRANSFORM_LOCK (self);
       max_delay = g_value_get_uint64 (value);
@@ -365,7 +365,6 @@ gst_audio_echo_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 
   if (self->buffer == NULL) {
     guint width, rate, channels;
-
 
     width = GST_AUDIO_FILTER (self)->format.width / 8;
     rate = GST_AUDIO_FILTER (self)->format.rate;
