@@ -132,8 +132,8 @@ gst_gl_shader_get_property (GObject * object,
 }
 
 static void
-gst_gl_shader_log_handler (const gchar *domain, GLogLevelFlags flags,
-                           const gchar *message, gpointer user_data)
+gst_gl_shader_log_handler (const gchar * domain, GLogLevelFlags flags,
+    const gchar * message, gpointer user_data)
 {
   if (_gst_gl_shader_debug) {
     g_log_default_handler (domain, flags, message, user_data);
@@ -249,7 +249,7 @@ gst_gl_shader_init (GstGLShader * self)
     _gst_gl_shader_debug = TRUE;
 
   g_log_set_handler ("GstGLShader", G_LOG_LEVEL_DEBUG,
-                     gst_gl_shader_log_handler, NULL);
+      gst_gl_shader_log_handler, NULL);
 }
 
 GstGLShader *
@@ -511,7 +511,7 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
 }
 
 GLint
-gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar *name)
+gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
 {
   GstGLShaderPrivate *priv;
 
