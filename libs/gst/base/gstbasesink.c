@@ -883,17 +883,21 @@ gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstBuffer *old;
 
-  if (buffer)
-    gst_buffer_ref (buffer);
-
-  GST_DEBUG_OBJECT (sink, "setting last buffer to %p", buffer);
-
   GST_OBJECT_LOCK (sink);
   old = sink->priv->last_buffer;
-  sink->priv->last_buffer = buffer;
+  if (G_LIKELY (old != buffer)) {
+    GST_DEBUG_OBJECT (sink, "setting last buffer to %p", buffer);
+    if (G_LIKELY (buffer))
+      gst_buffer_ref (buffer);
+    sink->priv->last_buffer = buffer;
+  } else {
+    old = NULL;
+  }
   GST_OBJECT_UNLOCK (sink);
 
-  if (old)
+  /* avoid unreffing with the lock because cleanup code might want to take the
+   * lock too */
+  if (G_LIKELY (old))
     gst_buffer_unref (old);
 }
 
@@ -2446,10 +2450,10 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, GstMiniObject * obj)
 {
   GstFlowReturn ret;
 
-  GST_DEBUG_OBJECT (basesink, "do preroll %p", obj);
+  GST_DEBUG_OBJECT (basesink, "prerolling object %p", obj);
 
   /* if it's a buffer, we need to call the preroll method */
-  if (G_LIKELY (GST_IS_BUFFER (obj))) {
+  if (G_LIKELY (GST_IS_BUFFER (obj)) && !basesink->priv->commited) {
     GstBaseSinkClass *bclass;
     GstBuffer *buf;
     GstClockTime timestamp;

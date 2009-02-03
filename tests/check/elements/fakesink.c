@@ -218,6 +218,15 @@ GST_START_TEST (test_clipping)
 
 GST_END_TEST;
 
+static gint num_preroll = 0;
+
+static void
+preroll_count (GstElement * sink)
+{
+  num_preroll++;
+  GST_DEBUG ("got preroll handoff %d", num_preroll);
+}
+
 GST_START_TEST (test_preroll_sync)
 {
   GstElement *pipeline, *sink;
@@ -231,6 +240,10 @@ GST_START_TEST (test_preroll_sync)
   sink = gst_element_factory_make ("fakesink", "sink");
   fail_if (sink == NULL);
   g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+  g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "preroll-handoff", G_CALLBACK (preroll_count), NULL);
+
+  fail_unless (num_preroll == 0);
 
   gst_bin_add (GST_BIN (pipeline), sink);
 
@@ -248,7 +261,7 @@ GST_START_TEST (test_preroll_sync)
 
     GST_DEBUG ("sending segment");
     segment = gst_event_new_new_segment (FALSE,
-        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 102 * GST_SECOND, 0 * GST_SECOND);
 
     eret = gst_pad_send_event (sinkpad, segment);
     fail_if (eret == FALSE);
@@ -277,6 +290,8 @@ GST_START_TEST (test_preroll_sync)
     fail_unless (current == GST_STATE_PAUSED);
     fail_unless (pending == GST_STATE_VOID_PENDING);
 
+    fail_unless (num_preroll == 1);
+
     /* playing should render the buffer */
     ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
     fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
@@ -284,6 +299,40 @@ GST_START_TEST (test_preroll_sync)
     /* and we should get a success return value */
     fret = chain_async_return (data);
     fail_if (fret != GST_FLOW_OK);
+
+    /* now we are playing no new preroll was done */
+    fail_unless (num_preroll == 1);
+
+    buffer = gst_buffer_new ();
+    /* far in the future to make sure we block */
+    GST_BUFFER_TIMESTAMP (buffer) = 100 * GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = 100 * GST_SECOND;
+    data = chain_async (sinkpad, buffer);
+    fail_if (data == NULL);
+
+    g_usleep (1000000);
+
+    /* pause again. Since the buffer has a humongous timestamp we likely
+     * interrupt the clock_wait and we should preroll on this buffer again */
+    ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+    ret =
+        gst_element_get_state (pipeline, &current, &pending,
+        GST_CLOCK_TIME_NONE);
+    fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+    fail_unless (current == GST_STATE_PAUSED);
+    fail_unless (pending == GST_STATE_VOID_PENDING);
+
+    fail_unless (num_preroll == 2);
+
+    /* shutdown */
+    ret = gst_element_set_state (pipeline, GST_STATE_READY);
+    fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
+
+    /* should be wrong state now */
+    fret = chain_async_return (data);
+    fail_if (fret != GST_FLOW_WRONG_STATE);
   }
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
