@@ -567,14 +567,17 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
     }
   }
 
-  /* flac without headers */
+  /* flac without headers (subset format) */
   /* 64K should be enough */
   while (c.offset < (64 * 1024)) {
     if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 4)))
       break;
 
+    /* look for frame header,
+     * http://flac.sourceforge.net/format.html#frame_header
+     */
     if (data[0] == 0xff && (data[1] >> 2) == 0x3e) {
-      /* bit 15 must be 0 */
+      /* bit 15 in the header must be 0 */
       if (((data[1] >> 1) & 0x01) == 0x01)
         goto advance;
 
@@ -585,19 +588,32 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
       /* samplerate must be != 0x0f */
       if ((data[2] & 0x0f) == 0x0f)
         goto advance;
+      /* also 0 is invalid, as it means get the info from the header and we
+       * don't have headers if we are here */
+      if ((data[2] & 0x0f) == 0x00)
+        goto advance;
 
       /* channel assignment must be < 11 */
       if ((data[3] >> 4) >= 11)
         goto advance;
 
-      /* sample size must be != 0x07 */
+      /* sample size must be != 0x07 and != 0x05 */
       if (((data[3] >> 1) & 0x07) == 0x07)
+        goto advance;
+      if (((data[3] >> 1) & 0x07) == 0x05)
+        goto advance;
+      /* also 0 is invalid, as it means get the info from the header and we
+       * don't have headers if we are here */
+      if (((data[3] >> 1) & 0x07) == 0x00)
         goto advance;
 
       /* next bit must be 0 */
       if ((data[3] & 0x01) == 0x01)
         goto advance;
 
+      /* FIXME: shouldn't we include the crc check ? */
+
+      GST_DEBUG ("Found flac without headers at %d", (gint) c.offset);
       gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, FLAC_CAPS);
       return;
     }
@@ -1149,7 +1165,8 @@ ac3_type_find (GstTypeFind * tf, gpointer unused)
 
 /* can only be detected by using the extension, in which case we use the default
  * GSM properties */
-static GstStaticCaps gsm_caps = GST_STATIC_CAPS ("audio/x-gsm, rate=8000, channels=1");
+static GstStaticCaps gsm_caps =
+GST_STATIC_CAPS ("audio/x-gsm, rate=8000, channels=1");
 
 #define GSM_CAPS (gst_static_caps_get(&gsm_caps))
 
