@@ -32,7 +32,8 @@
 #define W 160
 #define H 120
 
-struct GstGLClutterActor_ {
+struct GstGLClutterActor_
+{
   Window win;
   Window root;
   ClutterActor *texture;
@@ -42,24 +43,25 @@ struct GstGLClutterActor_ {
 typedef struct GstGLClutterActor_ GstGLClutterActor;
 
 static gboolean
-create_actor (GstGLClutterActor *actor) {
+create_actor (GstGLClutterActor * actor)
+{
   static gint xpos = 0;
   static gint ypos = 0;
   Display *disp;
   actor->texture = g_object_new (CLUTTER_GLX_TYPE_TEXTURE_PIXMAP,
-                                 "window", actor->win,
-                                 "automatic-updates", TRUE, NULL);
-  clutter_container_add_actor (CLUTTER_CONTAINER (actor->stage), actor->texture);
+      "window", actor->win, "automatic-updates", TRUE, NULL);
+  clutter_container_add_actor (CLUTTER_CONTAINER (actor->stage),
+      actor->texture);
   clutter_actor_set_position (actor->texture, xpos, ypos);
 
   disp = clutter_x11_get_default_display ();
   XMoveResizeWindow (disp, actor->win, xpos, ypos, W, H);
 
-  if (xpos > (COLS-1)*W) {
+  if (xpos > (COLS - 1) * W) {
     xpos = 0;
-    ypos += H+1;
+    ypos += H + 1;
   } else
-    xpos += W+1;
+    xpos += W + 1;
   clutter_actor_show (actor->texture);
 
   return FALSE;
@@ -79,14 +81,14 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
     return GST_BUS_PASS;
 
   if (!mutex)
-      mutex = g_mutex_new ();
+    mutex = g_mutex_new ();
 
   g_mutex_lock (mutex);
 
   if (count < N_ACTORS) {
     g_message ("adding actor %d", count);
     gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-                                  actor[count]->win);
+        actor[count]->win);
     clutter_threads_add_idle ((GSourceFunc) create_actor, actor[count]);
     count++;
   }
@@ -99,7 +101,7 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
 
 #if 0
 void
-apply_fx (GstElement *element, const gchar *fx)
+apply_fx (GstElement * element, const gchar * fx)
 {
   GEnumClass *p_class;
 
@@ -120,12 +122,13 @@ apply_fx (GstElement *element, const gchar *fx)
 int
 main (int argc, char *argv[])
 {
-  GstPipeline      *pipeline;
-  GstBus	   *bus;
+  GstPipeline *pipeline;
+  GstBus *bus;
 
   GstElement *srcbin;
   GstElement *tee;
-  GstElement *queue[N_ACTORS], *upload[N_ACTORS], *effect[N_ACTORS], *sink[N_ACTORS];
+  GstElement *queue[N_ACTORS], *upload[N_ACTORS], *effect[N_ACTORS],
+      *sink[N_ACTORS];
 
   ClutterActor *stage;
   GstGLClutterActor *actor[N_ACTORS];
@@ -139,18 +142,17 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   disp = clutter_x11_get_default_display ();
-  if(!clutter_x11_has_composite_extension ()) {
+  if (!clutter_x11_has_composite_extension ()) {
     g_error ("XComposite extension missing");
   }
 
   stage = clutter_stage_get_default ();
   clutter_actor_set_size (CLUTTER_ACTOR (stage),
-                          W*COLS + (COLS-1),
-                          H*ROWS + (ROWS-1));
+      W * COLS + (COLS - 1), H * ROWS + (ROWS - 1));
 
   stage_win = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
 
-  for (i=0; i<N_ACTORS; i++) {
+  for (i = 0; i < N_ACTORS; i++) {
     actor[i] = g_new0 (GstGLClutterActor, 1);
     actor[i]->stage = stage;
     actor[i]->win = XCreateSimpleWindow (disp, stage_win, 0, 0, W, H, 0, 0, 0);
@@ -166,38 +168,41 @@ main (int argc, char *argv[])
                           "identity", W, H);
 */
   desc = g_strdup_printf ("videotestsrc ! "
-                          "video/x-raw-rgb, width=%d, height=%d !"
-                          "identity", W, H);
+      "video/x-raw-rgb, width=%d, height=%d !" "identity", W, H);
   pipeline = GST_PIPELINE (gst_pipeline_new (NULL));
 
   srcbin = gst_parse_bin_from_description (desc, TRUE, NULL);
-  if (!srcbin) g_error ("Source bin creation failed");
+  if (!srcbin)
+    g_error ("Source bin creation failed");
 
   tee = gst_element_factory_make ("tee", NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), srcbin, tee, NULL);
 
-  for (i=0; i<N_ACTORS; i++) {
+  for (i = 0; i < N_ACTORS; i++) {
     queue[i] = gst_element_factory_make ("queue", NULL);
     upload[i] = gst_element_factory_make ("glupload", NULL);
     effect[i] = gst_element_factory_make ("gleffects", NULL);
     sink[i] = gst_element_factory_make ("glimagesink", NULL);
     gst_bin_add_many (GST_BIN (pipeline),
-                      queue[i], upload[i], effect[i], sink[i], NULL);
+        queue[i], upload[i], effect[i], sink[i], NULL);
   }
 
   gst_element_link_many (srcbin, tee, NULL);
 
-  for (i=0; i<N_ACTORS; i++) {
-    ok |= gst_element_link_many (tee, queue[i], upload[i], effect[i], sink[i], NULL);
+  for (i = 0; i < N_ACTORS; i++) {
+    ok |=
+        gst_element_link_many (tee, queue[i], upload[i], effect[i], sink[i],
+        NULL);
   }
 
   if (!ok)
     g_error ("Failed to link one or more elements");
 
-  for (i=0; i<N_ACTORS; i++) {
-    g_message ("setting effect %d on %s", i+1, gst_element_get_name (effect[i]));
-    g_object_set (G_OBJECT (effect[i]), "effect", i+1, NULL);
+  for (i = 0; i < N_ACTORS; i++) {
+    g_message ("setting effect %d on %s", i + 1,
+        gst_element_get_name (effect[i]));
+    g_object_set (G_OBJECT (effect[i]), "effect", i + 1, NULL);
   }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -208,7 +213,7 @@ main (int argc, char *argv[])
 
   clutter_actor_show_all (stage);
 
-  clutter_main();
+  clutter_main ();
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_object_unref (pipeline);
