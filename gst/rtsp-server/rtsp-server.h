@@ -58,7 +58,7 @@ struct _GstRTSPServer {
   GObject       parent;
 
   /* server information */
-  gint    server_port;
+  gint    port;
   gint    backlog;
   gchar  *host;
   struct  sockaddr_in server_sin;

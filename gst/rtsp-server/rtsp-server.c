@@ -105,7 +105,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 static void
 gst_rtsp_server_init (GstRTSPServer * server)
 {
-  server->server_port = DEFAULT_PORT;
+  server->port = DEFAULT_PORT;
   server->backlog = DEFAULT_BACKLOG;
   server->session_pool = gst_rtsp_session_pool_new ();
   server->media_mapping = gst_rtsp_media_mapping_new ();
@@ -142,7 +142,7 @@ gst_rtsp_server_set_port (GstRTSPServer *server, gint port)
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
   g_return_if_fail (port >= 1 && port <= 65535);
 
-  server->server_port = port;
+  server->port = port;
 }
 
 /**
@@ -158,7 +158,7 @@ gst_rtsp_server_get_port (GstRTSPServer *server)
 {
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), -1);
 
-  return server->server_port;
+  return server->port;
 }
 
 /**
@@ -367,7 +367,7 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   /* name the socket */
   memset (&server->server_sin, 0, sizeof (server->server_sin));
   server->server_sin.sin_family = AF_INET;        /* network socket */
-  server->server_sin.sin_port = htons (server->server_port);        /* on port */
+  server->server_sin.sin_port = htons (server->port);        /* on port */
   server->server_sin.sin_addr.s_addr = htonl (INADDR_ANY);        /* for hosts */
 
   /* bind it */
@@ -388,6 +388,8 @@ gst_rtsp_server_sink_init_send (GstRTSPServer * server)
   GST_DEBUG_OBJECT (server,
       "listened on server socket %d, returning from connection setup",
       server->server_sock.fd);
+
+  g_message ("listening on port %d", server->port);
 
   return TRUE;
 
