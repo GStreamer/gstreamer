@@ -107,10 +107,11 @@ GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessi
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,
                                                               const GstRTSPUrl *uri,
 							      GstRTSPMedia *media);
+gboolean               gst_rtsp_session_release_media        (GstRTSPSession *sess,
+                                                              GstRTSPSessionMedia *media);
 /* get media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const GstRTSPUrl *uri);
-
 /* control media */
 gboolean               gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);
 gboolean               gst_rtsp_session_media_pause          (GstRTSPSessionMedia *media);

@@ -44,7 +44,7 @@ gst_rtsp_session_pool_init (GstRTSPSessionPool * pool)
 {
   pool->lock = g_mutex_new ();
   pool->sessions = g_hash_table_new_full (g_str_hash, g_str_equal,
-		  g_free, g_object_unref);
+		  NULL, g_object_unref);
 }
 
 static void
@@ -197,7 +197,7 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool *pool, GstRTSPSession *sess)
   g_return_if_fail (GST_IS_RTSP_SESSION (sess));
 
   g_mutex_lock (pool->lock);
-  found = g_hash_table_remove (pool->sessions, sess);
+  found = g_hash_table_remove (pool->sessions, sess->sessionid);
   g_mutex_unlock (pool->lock);
 }
 

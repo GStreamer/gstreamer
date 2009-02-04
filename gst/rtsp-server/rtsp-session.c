@@ -44,6 +44,8 @@ gst_rtsp_session_init (GstRTSPSession * session)
 static void
 gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
 {
+  g_message ("free session stream %p", stream);
+
   if (stream->trans.transport)
     gst_rtsp_transport_free (stream->trans.transport);
 
@@ -56,6 +58,8 @@ gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session
   guint size, i;
 
   size = media->streams->len;
+
+  g_message ("free session media %p", media);
 
   for (i = 0; i < size; i++) {
     GstRTSPSessionStream *stream;
@@ -83,6 +87,8 @@ gst_rtsp_session_finalize (GObject * obj)
 
   session = GST_RTSP_SESSION (obj);
 
+  g_message ("finalize session %p", session);
+
   /* free all media */
   g_list_foreach (session->medias, (GFunc) gst_rtsp_session_free_media,
 		  session);
@@ -98,10 +104,12 @@ gst_rtsp_session_finalize (GObject * obj)
  * gst_rtsp_session_manage_media:
  * @sess: a #GstRTSPSession
  * @url: the url for the media
- * @obj: a #GstRTSPMediaObject
+ * @media: a #GstRTSPMediaObject
  *
  * Manage the media object @obj in @sess. @url will be used to retrieve this
- * media object from the session with gst_rtsp_session_get_media().
+ * media from the session with gst_rtsp_session_get_media().
+ *
+ * Ownership is taken from @media.
  *
  * Returns: a new @GstRTSPSessionMedia object.
  */
@@ -129,9 +137,44 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
 
   sess->medias = g_list_prepend (sess->medias, result);
 
-  g_message ("manage new media %p in session %p", media, sess);
+  g_message ("manage new media %p in session %p", media, result);
 
   return result;
+}
+
+/**
+ * gst_rtsp_session_release_media:
+ * @sess: a #GstRTSPSession
+ * @media: a #GstRTSPMediaObject
+ *
+ * Release the managed @media in @sess, freeing the memory allocated by it.
+ *
+ * Returns: %TRUE if there are more media session left in @sess.
+ */
+gboolean
+gst_rtsp_session_release_media (GstRTSPSession *sess,
+    GstRTSPSessionMedia *media)
+{
+  GList *walk, *next;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), FALSE);
+  g_return_val_if_fail (media != NULL, FALSE);
+
+  for (walk = sess->medias; walk;) {
+    GstRTSPSessionMedia *find;
+
+    find = (GstRTSPSessionMedia *) walk->data; 
+    next = g_list_next (walk);
+
+    if (find == media) {
+      sess->medias = g_list_delete_link (sess->medias, walk);
+
+      gst_rtsp_session_free_media (find, sess);
+      break;
+    }
+    walk = next;
+  }
+  return (sess->medias != NULL);
 }
 
 /**
@@ -141,7 +184,7 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
  *
  * Get the session media of the @url.
  *
- * Returns: the configuration for @url in @sess.
+ * Returns: the configuration for @url in @sess. 
  */
 GstRTSPSessionMedia *
 gst_rtsp_session_get_media (GstRTSPSession *sess, const GstRTSPUrl *url)

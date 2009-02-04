@@ -49,6 +49,8 @@ gst_rtsp_client_finalize (GObject * obj)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (obj);
 
+  g_message ("finalize client %p", client);
+
   gst_rtsp_connection_free (client->connection);
   if (client->session_pool)
     g_object_unref (client->session_pool);
@@ -81,6 +83,8 @@ gst_rtsp_client_new (void)
 static void
 send_response (GstRTSPClient *client, GstRTSPMessage *response)
 {
+  gst_rtsp_message_add_header (response, GST_RTSP_HDR_SERVER, "GStreamer RTSP server");
+
 #ifdef DEBUG
   gst_rtsp_message_dump (response);
 #endif
@@ -149,13 +153,16 @@ find_media (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
 
     /* now keep track of the uri and the media */
     client->uri = gst_rtsp_url_copy (uri);
-    client->media = g_object_ref (media);
+    client->media = media;
   }
   else {
     /* we have seen this uri before, used cached media */
-    media = g_object_ref (client->media);
+    media = client->media;
     g_message ("reusing cached media %p", media); 
   }
+
+  if (media)
+    g_object_ref (media);
 
   return media;
 
@@ -243,12 +250,17 @@ handle_teardown_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
 
   gst_rtsp_session_media_stop (media);
 
-  gst_rtsp_session_pool_remove (client->session_pool, session);
-  g_object_unref (session);
+  /* unmanage the media in the session, returns false if all media session
+   * are torn down. */
+  if (!gst_rtsp_session_release_media (session, media)) {
+    /* remove the session */
+    gst_rtsp_session_pool_remove (client->session_pool, session);
 
-  /* remove the session id from the request, which will also remove it from the
-   * response */
-  gst_rtsp_message_remove_header (request, GST_RTSP_HDR_SESSION, -1);
+    /* remove the session id from the request, which will also remove it from the
+     * response */
+    gst_rtsp_message_remove_header (request, GST_RTSP_HDR_SESSION, -1);
+  }
+  g_object_unref (session);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -314,11 +326,13 @@ no_session:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    g_object_unref (session);
     return FALSE;
   }
 invalid_state:
   {
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, request);
+    g_object_unref (session);
     return FALSE;
   }
 }
@@ -333,6 +347,7 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
   GString *rtpinfo;
   guint n_streams, i;
   guint timestamp, seqnum;
+  gchar *str;
 
   if (!(session = ensure_session (client, request)))
     goto no_session;
@@ -373,8 +388,12 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
   /* add the RTP-Info header */
-  gst_rtsp_message_add_header (&response, GST_RTSP_HDR_RTP_INFO, rtpinfo->str);
-  g_string_free (rtpinfo, TRUE);
+  str = g_string_free (rtpinfo, FALSE);
+  gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RTP_INFO, str);
+
+  /* add the range */
+  str = gst_rtsp_range_to_string (&media->media->range);
+  gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RANGE, str);
 
   send_response (client, &response);
 
@@ -395,11 +414,13 @@ no_session:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    g_object_unref (session);
     return FALSE;
   }
 invalid_state:
   {
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, request);
+    g_object_unref (session);
     return FALSE;
   }
 }
@@ -490,6 +511,11 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
     /* we had a session in the request, find it again */
     if (!(session = gst_rtsp_session_pool_find (client->session_pool, sessid)))
       goto session_not_found;
+
+    /* get a handle to the configuration of the media in the session, this can
+     * return NULL if this is a new url to manage in this session. */
+    media = gst_rtsp_session_get_media (session, uri);
+
     need_session = FALSE;
   }
   else {
@@ -497,10 +523,15 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
      * something. */
     if (!(session = gst_rtsp_session_pool_create (client->session_pool)))
       goto service_unavailable;
+
+    /* we need a new media configuration in this session */
+    media = NULL;
+
     need_session = TRUE;
   }
 
-  if (need_session) {
+  /* we have no media, find one and manage it */
+  if (media == NULL) {
     GstRTSPMedia *m;
 
     /* get a handle to the configuration of the media in the session */
@@ -509,8 +540,9 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
       media = gst_rtsp_session_manage_media (session, uri, m);
     }
   }
-  /* get a handle to the configuration of the media in the session */
-  if (!(media = gst_rtsp_session_get_media (session, uri)))
+
+  /* if we stil have no media, error */
+  if (media == NULL)
     goto not_found;
 
   /* get a handle to the stream in the media */
@@ -528,6 +560,7 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   code = GST_RTSP_STS_OK;
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
+  /* add the new session header for new session ids */
   if (need_session)
     gst_rtsp_message_add_header (&response, GST_RTSP_HDR_SESSION, session->sessionid);
 
@@ -566,6 +599,7 @@ not_found:
 no_stream:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    g_object_unref (media);
     return FALSE;
   }
 session_not_found:
@@ -627,6 +661,8 @@ handle_describe_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
   /* create an SDP for the media object */
   if (!(sdp = gst_rtsp_sdp_from_media (media)))
     goto no_sdp;
+
+  g_object_unref (media);
 
   gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, 
 	gst_rtsp_status_as_text (GST_RTSP_STS_OK), request);
