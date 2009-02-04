@@ -216,23 +216,27 @@ gst_check_teardown_pad_by_name (GstElement * element, gchar * name)
   ASSERT_OBJECT_REFCOUNT (pad_element, "pad", 2);
   pad_peer = gst_pad_get_peer (pad_element);
 
-  if (gst_pad_get_direction (pad_element) == GST_PAD_SINK)
-    gst_pad_unlink (pad_peer, pad_element);
-  else
-    gst_pad_unlink (pad_element, pad_peer);
+  if (pad_peer) {
+    if (gst_pad_get_direction (pad_element) == GST_PAD_SINK)
+      gst_pad_unlink (pad_peer, pad_element);
+    else
+      gst_pad_unlink (pad_element, pad_peer);
 
-  /* caps could have been set, make sure they get unset */
-  gst_pad_set_caps (pad_peer, NULL);
+    /* caps could have been set, make sure they get unset */
+    gst_pad_set_caps (pad_peer, NULL);
+  }
 
   /* pad refs held by both creator and this function (through _get) */
   ASSERT_OBJECT_REFCOUNT (pad_element, "element pad_element", 2);
   gst_object_unref (pad_element);
   /* one more ref is held by element itself */
 
-  /* pad refs held by both creator and this function (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (pad_peer, "check pad_peer", 2);
-  gst_object_unref (pad_peer);
-  gst_object_unref (pad_peer);
+  if (pad_peer) {
+    /* pad refs held by both creator and this function (through _get_peer) */
+    ASSERT_OBJECT_REFCOUNT (pad_peer, "check pad_peer", 2);
+    gst_object_unref (pad_peer);
+    gst_object_unref (pad_peer);
+  }
 }
 
 void
