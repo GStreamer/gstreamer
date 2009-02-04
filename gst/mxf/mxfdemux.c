@@ -631,11 +631,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -1327,8 +1327,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1336,8 +1336,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -2833,8 +2833,8 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
-        structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
+        sequence->structural_components[i]);
 
     if (clip->parent.duration <= 0)
       break;
@@ -3362,11 +3362,69 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
       demux->offset = 0;
       ret = gst_mxf_demux_push_src_event (demux, event);
       break;
-    case GST_EVENT_EOS:
-      if (!gst_mxf_demux_push_src_event (demux, event))
+    case GST_EVENT_EOS:{
+      GstMXFDemuxPad *p = NULL;
+      guint i;
+
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *t =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        if (t->position > 0)
+          t->duration = t->position;
+      }
+
+      for (i = 0; i < demux->src->len; i++) {
+        GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+        if (!p->eos
+            && p->current_essence_track_position >=
+            p->current_essence_track->duration) {
+          p->eos = TRUE;
+          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+        }
+      }
+
+      while ((p = gst_mxf_demux_get_earliest_pad (demux))) {
+        guint64 offset;
+        gint64 position;
+
+        position = p->current_essence_track_position;
+
+        offset =
+            gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
+            &position, FALSE);
+        if (offset == -1) {
+          GST_ERROR_OBJECT (demux, "Failed to find offset for essence track");
+          p->eos = TRUE;
+          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+          continue;
+        }
+
+        if (gst_pad_push_event (demux->sinkpad,
+                gst_event_new_seek (demux->segment.rate, GST_FORMAT_BYTES,
+                    demux->segment.flags | GST_SEEK_FLAG_ACCURATE,
+                    GST_SEEK_TYPE_SET, offset + demux->run_in,
+                    GST_SEEK_TYPE_NONE, 0))) {
+
+          for (i = 0; i < demux->essence_tracks->len; i++) {
+            GstMXFDemuxEssenceTrack *etrack =
+                &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
+                i);
+            etrack->position = -1;
+          }
+          ret = TRUE;
+          goto out;
+        } else {
+          GST_WARNING_OBJECT (demux,
+              "Seek to remaining part of the file failed");
+        }
+      }
+
+      if (!(ret = gst_mxf_demux_push_src_event (demux, event)))
         GST_WARNING_OBJECT (pad, "failed pushing EOS on streams");
-      ret = TRUE;
       break;
+    }
     case GST_EVENT_NEWSEGMENT:{
       guint i;
 
@@ -3387,6 +3445,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+out:
   gst_object_unref (demux);
 
   return ret;
