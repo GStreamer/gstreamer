@@ -300,7 +300,9 @@ done:
 
 sys_error:
   {
+    GST_ERROR ("system error %d (%s)", errno, g_strerror (errno));
     if (conn->fd.fd >= 0) {
+      GST_DEBUG ("remove fd %d", conn->fd.fd);
       gst_poll_remove_fd (conn->fdset, &conn->fd);
       conn->fd.fd = -1;
     }
@@ -310,15 +312,19 @@ sys_error:
   }
 not_resolved:
   {
+    GST_ERROR ("could not resolve %s", url->host);
     return GST_RTSP_ENET;
   }
 not_ip:
   {
+    GST_ERROR ("not an IP address");
     return GST_RTSP_ENOTIP;
   }
 timeout:
   {
+    GST_ERROR ("timeout");
     if (conn->fd.fd >= 0) {
+      GST_DEBUG ("remove fd %d", conn->fd.fd);
       gst_poll_remove_fd (conn->fdset, &conn->fd);
       conn->fd.fd = -1;
     }
@@ -504,6 +510,7 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL || size == 0, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->fd.fd >= 0, GST_RTSP_EINVAL);
 
   gst_poll_set_controllable (conn->fdset, TRUE);
   gst_poll_fd_ctl_write (conn->fdset, &conn->fd, TRUE);
@@ -906,6 +913,7 @@ gst_rtsp_connection_read_internal (GstRTSPConnection * conn, guint8 * data,
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->fd.fd >= 0, GST_RTSP_EINVAL);
 
   if (size == 0)
     return GST_RTSP_OK;
@@ -1290,6 +1298,7 @@ gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (events != 0, GST_RTSP_EINVAL);
   g_return_val_if_fail (revents != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (conn->fd.fd >= 0, GST_RTSP_EINVAL);
 
   gst_poll_set_controllable (conn->fdset, TRUE);
 
@@ -1615,7 +1624,8 @@ wrong_family:
  *
  * Retrieve the IP address of the other end of @conn.
  *
- * Returns: The IP address as a string.
+ * Returns: The IP address as a string. this value remains valid until the
+ * connection is closed.
  *
  * Since: 0.10.20
  */
