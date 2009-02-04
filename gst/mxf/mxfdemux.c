@@ -2235,7 +2235,7 @@ gst_mxf_demux_set_partition_for_offset (GstMXFDemux * demux, guint64 offset)
   for (l = demux->partitions; l; l = l->next) {
     GstMXFDemuxPartition *p = l->data;
 
-    if (p->partition.this_partition <= offset)
+    if (p->partition.this_partition + demux->run_in <= offset)
       demux->current_partition = p;
   }
 }
@@ -2676,6 +2676,9 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   if (G_UNLIKELY (demux->offset == 0 && GST_BUFFER_OFFSET (inbuf) != 0)) {
     GST_DEBUG_OBJECT (demux, "offset was zero, synchronizing with buffer's");
     demux->offset = GST_BUFFER_OFFSET (inbuf);
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+  } else if (demux->current_partition == NULL) {
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
   }
 
   gst_adapter_push (demux->adapter, inbuf);
@@ -3094,6 +3097,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       goto no_new_offset;
 
     demux->offset = new_offset + demux->run_in;
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
   }
 
   if (G_UNLIKELY (demux->close_seg_event)) {
@@ -3436,6 +3440,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
           t->position = -1;
         }
       }
+      demux->current_partition = NULL;
       gst_event_unref (event);
       ret = TRUE;
       break;
