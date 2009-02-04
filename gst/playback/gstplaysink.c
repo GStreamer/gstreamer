@@ -736,7 +736,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   gst_bin_add (bin, chain->queue);
   prev = chain->queue;
 
-  if (raw) {
+  if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
     GST_DEBUG_OBJECT (playsink, "creating ffmpegcolorspace");
     chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
     if (chain->conv == NULL) {
@@ -977,7 +977,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     have_volume = FALSE;
   }
 
-  if (raw) {
+  if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_AUDIO)) {
     GST_DEBUG_OBJECT (playsink, "creating audioconvert");
     chain->conv = gst_element_factory_make ("audioconvert", "aconv");
     if (chain->conv == NULL) {
