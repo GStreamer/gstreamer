@@ -81,15 +81,24 @@ struct _GstRTSPSessionMedia
 
 /**
  * GstRTSPSession:
+ * @sessionid: the session id of the session
+ * @timeout: the timeout of the session
+ * @create_time: the time when the session was created
+ * @last_access: the time the session was last accessed
+ * @media: a list of #GstRTSPSessionMedia managed in this session
  *
  * Session information kept by the server for a specific client.
  * One client session, identified with a session id, can handle multiple medias
- * identified with the media object.
+ * identified with the url of a media.
  */
 struct _GstRTSPSession {
   GObject       parent;
 
   gchar        *sessionid;
+
+  guint         timeout;
+  GTimeVal      create_time;
+  GTimeVal      last_access;
 
   GList        *medias;
 };
@@ -102,6 +111,14 @@ GType                  gst_rtsp_session_get_type             (void);
 
 /* create a new session */
 GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessionid);
+
+const gchar *          gst_rtsp_session_get_sessionid        (GstRTSPSession *session);
+
+void                   gst_rtsp_session_set_timeout          (GstRTSPSession *session, guint timeout);
+guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *session);
+
+/* touch the session, update last_access */
+void                   gst_rtsp_session_touch                (GstRTSPSession *session);
 
 /* handle media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,

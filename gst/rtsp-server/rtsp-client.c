@@ -561,8 +561,16 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
   /* add the new session header for new session ids */
-  if (need_session)
-    gst_rtsp_message_add_header (&response, GST_RTSP_HDR_SESSION, session->sessionid);
+  if (need_session) {
+    gchar *str;
+
+    if (session->timeout != 60)
+      str = g_strdup_printf ("%s; timeout=%d", session->sessionid, session->timeout);
+    else
+      str = g_strdup (session->sessionid);
+
+    gst_rtsp_message_take_header (&response, GST_RTSP_HDR_SESSION, str);
+  }
 
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_TRANSPORT, trans_str);
   g_free (trans_str);
