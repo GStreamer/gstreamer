@@ -652,10 +652,10 @@ done:
     memcpy (&demux->current_package_uid, &ret->package_uid, 32);
 
     mxf_umid_to_string (&ret->package_uid, current_package_string);
-    demux->current_package = ret;
     demux->current_package_string = g_strdup (current_package_string);
     g_object_notify (G_OBJECT (demux), "package");
   }
+  demux->current_package = ret;
 
   return ret;
 }
