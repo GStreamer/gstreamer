@@ -1008,6 +1008,9 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
   if (G_VALUE_TYPE (src) == GST_TYPE_LIST) {
     GstTagInfo *info = gst_tag_lookup (g_quark_from_string (tag));
 
+    if (!info)
+      return FALSE;
+
     /* must be there or lists aren't allowed */
     g_assert (info->merge_func);
     info->merge_func (dest, src);
