@@ -126,7 +126,6 @@ struct _GstFluPSDemux
 
   GstSegment sink_segment;
   GstSegment src_segment;
-  gboolean is_segment_open;
 
   /* stream output */
   GstFluPSStream *current_stream;

@@ -82,7 +82,8 @@ GST_DEBUG_CATEGORY_STATIC (gstflupsdemux_debug);
 #endif
 
 #if !GST_CHECK_VERSION(0,10,9)
-#define GST_BUFFER_IS_DISCONT(buffer)	(GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+#define GST_BUFFER_IS_DISCONT(buffer) \
+    (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
 #endif
 
 #if GST_CHECK_VERSION(0,10,6)
@@ -543,10 +544,6 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     gst_pad_push_event (stream->pad, newsegment);
 
     stream->need_segment = FALSE;
-    if (!demux->is_segment_open) {
-      GST_DEBUG_OBJECT (demux, "segment opened");
-      demux->is_segment_open = TRUE;
-    }
   }
 
   /* OK, sent new segment now prepare the buffer for sending */
@@ -556,7 +553,11 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 
   /* update position in the segment */
   gst_segment_set_last_stop (&demux->src_segment, GST_FORMAT_TIME,
-      MPEGTIME_TO_GSTTIME (demux->current_scr));
+      MPEGTIME_TO_GSTTIME (demux->current_scr - demux->first_scr));
+  GST_LOG_OBJECT (demux, "last stop position is now %" GST_TIME_FORMAT
+      " current scr is %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (demux->src_segment.last_stop),
+      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->current_scr)));
 
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
@@ -738,10 +739,9 @@ gst_flups_demux_flush (GstFluPSDemux * demux)
 static void
 gst_flups_demux_close_segment (GstFluPSDemux * demux)
 {
-  if (G_UNLIKELY (!demux->is_segment_open)) {
-    GST_DEBUG_OBJECT (demux, "no running segment to close");
-    return;
-  }
+  gint id;
+  GstEvent *event = NULL;
+
 #if POST_10_10
   GST_INFO_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
       &demux->src_segment);
@@ -750,10 +750,11 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
   /* Close the current segment for a linear playback */
   if (demux->src_segment.rate >= 0) {
     /* for forward playback, we played from start to last_stop */
-    gst_flups_demux_send_event (demux, gst_event_new_new_segment (TRUE,
-            demux->src_segment.rate, demux->src_segment.format,
-            demux->src_segment.start, demux->src_segment.last_stop,
-            demux->src_segment.time));
+    event = gst_event_new_new_segment (TRUE,
+        demux->src_segment.rate, demux->src_segment.format,
+        demux->src_segment.start + demux->base_time,
+        demux->src_segment.last_stop + demux->base_time,
+        demux->src_segment.time);
   } else {
     gint64 stop;
 
@@ -761,12 +762,32 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
       stop = demux->src_segment.duration;
 
     /* for reverse playback, we played from stop to last_stop. */
-    gst_flups_demux_send_event (demux, gst_event_new_new_segment (TRUE,
-            demux->src_segment.rate, demux->src_segment.format,
-            demux->src_segment.last_stop, stop, demux->src_segment.last_stop));
+    event = gst_event_new_new_segment (TRUE,
+        demux->src_segment.rate, demux->src_segment.format,
+        demux->src_segment.last_stop + demux->base_time,
+        stop + demux->base_time, demux->src_segment.last_stop);
   }
 
-  demux->is_segment_open = FALSE;
+  if (event) {
+    for (id = 0; id < GST_FLUPS_DEMUX_MAX_STREAMS; id++) {
+      GstFluPSStream *stream = demux->streams[id];
+
+      if (stream && !stream->notlinked && !stream->need_segment) {
+        (void) gst_event_ref (event);
+
+        if (!gst_pad_push_event (stream->pad, event)) {
+          GST_DEBUG_OBJECT (stream, "event %s was not handled correctly",
+              GST_EVENT_TYPE_NAME (event));
+        } else {
+          /* If at least one push returns TRUE, then we return TRUE. */
+          GST_DEBUG_OBJECT (stream, "event %s was handled correctly",
+              GST_EVENT_TYPE_NAME (event));
+        }
+      }
+    }
+
+    gst_event_unref (event);
+  }
 }
 
 static gboolean
@@ -1394,7 +1415,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
       "SCR: %" G_GINT64_FORMAT " (%" G_GINT64_FORMAT "), mux_rate %"
       G_GINT64_FORMAT ", GStreamer Time:%" GST_TIME_FORMAT,
       scr, scr_adjusted, new_rate,
-      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME ((guint64) scr - demux->first_scr)));
+      GST_TIME_ARGS (MPEGTIME_TO_GSTTIME ((guint64) scr)));
 
   /* keep the first src in order to calculate delta time */
   if (demux->first_scr == G_MAXUINT64) {
@@ -2302,14 +2323,14 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
       demux->last_pts, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_pts)),
       offset);
 
-  if (G_LIKELY (demux->first_scr != G_MAXUINT64 &&
-          demux->last_scr != G_MAXUINT64)) {
+  if (G_LIKELY (demux->first_pts != G_MAXUINT64 &&
+          demux->last_pts != G_MAXUINT64)) {
     /* update the src segment */
     demux->src_segment.start =
-        MPEGTIME_TO_GSTTIME (demux->first_scr) - demux->base_time;
+        MPEGTIME_TO_GSTTIME (demux->first_pts) - demux->base_time;
     demux->src_segment.stop = -1;
     gst_segment_set_duration (&demux->src_segment, GST_FORMAT_TIME,
-        MPEGTIME_TO_GSTTIME (demux->last_scr - demux->first_scr));
+        MPEGTIME_TO_GSTTIME (demux->last_pts - demux->first_pts));
     gst_segment_set_last_stop (&demux->src_segment, GST_FORMAT_TIME,
         demux->src_segment.start);
   }
@@ -2385,6 +2406,12 @@ gst_flups_demux_loop (GstPad * pad)
         ((demux->sink_segment.last_stop >= demux->sink_segment.stop) ||
             (demux->src_segment.stop != -1 &&
                 demux->src_segment.last_stop >= demux->src_segment.stop))) {
+      GST_DEBUG_OBJECT (demux, "forward mode using segment reached end of "
+          "segment pos %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
+          " pos in bytes %" G_GUINT64_FORMAT " stop in bytes %"
+          G_GUINT64_FORMAT, GST_TIME_ARGS (demux->src_segment.last_stop),
+          GST_TIME_ARGS (demux->src_segment.stop),
+          demux->sink_segment.last_stop, demux->sink_segment.stop);
       ret = GST_FLOW_UNEXPECTED;
       goto pause;
     }
@@ -2405,6 +2432,12 @@ gst_flups_demux_loop (GstPad * pad)
     /* check EOS condition */
     if (demux->sink_segment.last_stop <= demux->sink_segment.start ||
         demux->src_segment.last_stop <= demux->src_segment.start) {
+      GST_DEBUG_OBJECT (demux, "reverse mode using segment reached end of "
+          "segment pos %" GST_TIME_FORMAT " stop %" GST_TIME_FORMAT
+          " pos in bytes %" G_GUINT64_FORMAT " stop in bytes %"
+          G_GUINT64_FORMAT, GST_TIME_ARGS (demux->src_segment.last_stop),
+          GST_TIME_ARGS (demux->src_segment.start),
+          demux->sink_segment.last_stop, demux->sink_segment.start);
       ret = GST_FLOW_UNEXPECTED;
       goto pause;
     }
@@ -2678,7 +2711,6 @@ gst_flups_demux_change_state (GstElement * element, GstStateChange transition)
       demux->scr_rate_d = G_MAXUINT64;
       demux->first_pts = G_MAXUINT64;
       demux->last_pts = G_MAXUINT64;
-      demux->is_segment_open = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       demux->current_scr = G_MAXUINT64;
@@ -2693,7 +2725,6 @@ gst_flups_demux_change_state (GstElement * element, GstStateChange transition)
       demux->need_no_more_pads = TRUE;
       demux->first_pts = G_MAXUINT64;
       demux->last_pts = G_MAXUINT64;
-      demux->is_segment_open = FALSE;
       gst_flups_demux_reset_psm (demux);
       gst_segment_init (&demux->sink_segment, GST_FORMAT_UNDEFINED);
       gst_segment_init (&demux->src_segment, GST_FORMAT_TIME);
