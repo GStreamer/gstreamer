@@ -2743,6 +2743,21 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
         break;
       }
 
+      case GST_MATROSKA_ID_TITLE:{
+        gchar *text;
+        GstTagList *taglist;
+
+        if ((ret = gst_ebml_read_utf8 (ebml, &id, &text)) != GST_FLOW_OK)
+          break;
+
+        GST_DEBUG_OBJECT (demux, "Title: %s", GST_STR_NULL (text));
+        taglist = gst_tag_list_new ();
+        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, text,
+            NULL);
+        gst_element_found_tags (GST_ELEMENT (ebml), taglist);
+        break;
+      }
+
       default:
         GST_WARNING_OBJECT (demux,
             "Unknown SegmentInfo subelement 0x%x - ignoring", id);
@@ -2754,7 +2769,6 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_PREVFILENAME:
       case GST_MATROSKA_ID_NEXTUID:
       case GST_MATROSKA_ID_NEXTFILENAME:
-      case GST_MATROSKA_ID_TITLE:
       case GST_MATROSKA_ID_SEGMENTFAMILY:
       case GST_MATROSKA_ID_CHAPTERTRANSLATE:
         ret = gst_ebml_read_skip (ebml);
