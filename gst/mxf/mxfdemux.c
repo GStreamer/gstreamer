@@ -648,6 +648,7 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 done:
   if (memcmp (&ret->package_uid, &demux->current_package_uid, 32) != 0) {
     gchar current_package_string[96];
+    GstTagList *tags = gst_tag_list_new ();
 
     gst_mxf_demux_remove_pads (demux);
     memcpy (&demux->current_package_uid, &ret->package_uid, 32);
@@ -655,6 +656,10 @@ done:
     mxf_umid_to_string (&ret->package_uid, current_package_string);
     demux->current_package_string = g_strdup (current_package_string);
     g_object_notify (G_OBJECT (demux), "package");
+
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MXF_UMID,
+        demux->current_package_string, NULL);
+    gst_element_found_tags (GST_ELEMENT_CAST (demux), tags);
   }
   demux->current_package = ret;
 

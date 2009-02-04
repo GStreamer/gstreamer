@@ -36,9 +36,17 @@
 GST_DEBUG_CATEGORY (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
+static void
+mxf_init (void)
+{
+  gst_tag_register (GST_TAG_MXF_UMID, GST_TAG_FLAG_META,
+      G_TYPE_STRING, "UMID", "Unique Material Identifier", NULL);
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  mxf_init ();
   mxf_metadata_init_types ();
   mxf_aes_bwf_init ();
   mxf_mpeg_init ();
