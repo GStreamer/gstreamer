@@ -1261,6 +1261,7 @@ GstRTSPTimeRange
 GstRTSPTime
 GstRTSPTimeType
 gst_rtsp_range_parse
+gst_rtsp_range_to_string
 gst_rtsp_range_free
 </SECTION>
 

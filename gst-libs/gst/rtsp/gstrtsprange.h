@@ -113,6 +113,7 @@ struct _GstRTSPTimeRange {
 };
 
 GstRTSPResult   gst_rtsp_range_parse        (const gchar *rangestr, GstRTSPTimeRange **range);
+gchar *         gst_rtsp_range_to_string    (const GstRTSPTimeRange *range);
 void            gst_rtsp_range_free         (GstRTSPTimeRange *range);
 
 G_END_DECLS

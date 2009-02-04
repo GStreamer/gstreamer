@@ -180,6 +180,88 @@ invalid:
   }
 }
 
+static gboolean
+npt_time_string (const GstRTSPTime * time, GString * string)
+{
+  gboolean res = TRUE;;
+
+  switch (time->type) {
+    case GST_RTSP_TIME_SECONDS:
+      g_string_append_printf (string, "%f", time->seconds);
+      break;
+    case GST_RTSP_TIME_NOW:
+      g_string_append (string, "now");
+      break;
+    case GST_RTSP_TIME_END:
+      break;
+    default:
+      res = FALSE;
+      break;
+  }
+  return res;
+}
+
+static gboolean
+npt_range_string (const GstRTSPTimeRange * range, GString * string)
+{
+  gboolean res;
+
+  if (!(res = npt_time_string (&range->min, string)))
+    goto done;
+
+  g_string_append (string, "-");
+
+  if (!(res = npt_time_string (&range->max, string)))
+    goto done;
+
+done:
+  return res;
+}
+
+/**
+ * gst_rtsp_range_to_string:
+ * @range: a #GstRTSPTimeRange
+ *
+ * Convert @range into a string representation.
+ *
+ * Returns: The string representation of @range. g_free() after usage.
+ *
+ * Since: 0.10.23
+ */
+gchar *
+gst_rtsp_range_to_string (const GstRTSPTimeRange * range)
+{
+  gchar *result = NULL;
+  GString *string;
+
+  g_return_val_if_fail (range != NULL, NULL);
+
+  string = g_string_new ("");
+
+  switch (range->unit) {
+    case GST_RTSP_RANGE_NPT:
+      g_string_append (string, "npt=");
+      if (!npt_range_string (range, string)) {
+        g_string_free (string, TRUE);
+        string = NULL;
+      }
+      break;
+    case GST_RTSP_RANGE_SMPTE:
+    case GST_RTSP_RANGE_SMPTE_30_DROP:
+    case GST_RTSP_RANGE_SMPTE_25:
+    case GST_RTSP_RANGE_CLOCK:
+    default:
+      g_warning ("time range unit not yet implemented");
+      g_string_free (string, TRUE);
+      string = NULL;
+      break;
+  }
+  if (string)
+    result = g_string_free (string, FALSE);
+
+  return result;
+}
+
 /**
  * gst_rtsp_range_free:
  * @range: a #GstRTSPTimeRange
