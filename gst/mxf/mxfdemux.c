@@ -113,7 +113,8 @@ gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 enum
 {
   PROP_0,
-  PROP_PACKAGE
+  PROP_PACKAGE,
+  PROP_MAX_DRIFT
 };
 
 static gboolean gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event);
@@ -1590,7 +1591,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GstMXFDemuxPad *earliest = gst_mxf_demux_get_earliest_pad (demux);
 
       if (earliest && earliest != pad && earliest->last_stop < pad->last_stop &&
-          pad->last_stop - earliest->last_stop > 500 * GST_MSECOND) {
+          pad->last_stop - earliest->last_stop > demux->max_drift) {
         GST_DEBUG_OBJECT (demux, "Pad is too far ahead of time");
         continue;
       }
@@ -2488,7 +2489,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
     GstMXFDemuxPad *earliest = NULL;
     /* We allow time drifts of at most 500ms */
     while ((earliest = gst_mxf_demux_get_earliest_pad (demux)) &&
-        demux->segment.last_stop - earliest->last_stop > 500 * GST_MSECOND) {
+        demux->segment.last_stop - earliest->last_stop > demux->max_drift) {
       guint i;
       guint64 offset;
       gint64 position;
@@ -3533,6 +3534,9 @@ gst_mxf_demux_set_property (GObject * object, guint prop_id,
       g_free (demux->requested_package_string);
       demux->requested_package_string = g_value_dup_string (value);
       break;
+    case PROP_MAX_DRIFT:
+      demux->max_drift = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3548,6 +3552,9 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PACKAGE:
       g_value_set_string (value, demux->current_package_string);
+      break;
+    case PROP_MAX_DRIFT:
+      g_value_set_uint64 (value, demux->max_drift);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3614,6 +3621,12 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
           "Material or Source package to use for playback", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_DRIFT,
+      g_param_spec_uint64 ("max-drift", "Maximum drift",
+          "Maximum number of nanoseconds by which tracks can differ",
+          100 * GST_MSECOND, G_MAXUINT64, 500 * GST_MSECOND,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mxf_demux_change_state);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_mxf_demux_query);
@@ -3639,6 +3652,8 @@ gst_mxf_demux_init (GstMXFDemux * demux, GstMXFDemuxClass * g_class)
       GST_DEBUG_FUNCPTR (gst_mxf_demux_sink_activate_push));
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
+
+  demux->max_drift = 500 * GST_MSECOND;
 
   demux->adapter = gst_adapter_new ();
   demux->src = g_ptr_array_new ();

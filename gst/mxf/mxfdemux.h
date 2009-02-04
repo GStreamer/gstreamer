@@ -161,7 +161,10 @@ struct _GstMXFDemux
   MXFUMID current_package_uid;
   MXFMetadataGenericPackage *current_package;
   gchar *current_package_string;
+
+  /* Properties */
   gchar *requested_package_string;
+  GstClockTime max_drift;
 };
 
 struct _GstMXFDemuxClass
