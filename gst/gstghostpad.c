@@ -1105,6 +1105,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 
   GST_PROXY_LOCK (gpad);
   internal = GST_PROXY_PAD_INTERNAL (gpad);
+  g_assert (internal);
 
   if (newtarget)
     GST_DEBUG_OBJECT (gpad, "set target %s:%s", GST_DEBUG_PAD_NAME (newtarget));
@@ -1118,13 +1119,11 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
           (gpointer) on_src_target_notify, gpad);
     }
 
-    /* if we have an internal pad, unlink */
-    if (internal) {
-      if (GST_PAD_IS_SRC (internal))
-        gst_pad_unlink (internal, oldtarget);
-      else
-        gst_pad_unlink (oldtarget, internal);
-    }
+    /* unlink internal pad */
+    if (GST_PAD_IS_SRC (internal))
+      gst_pad_unlink (internal, oldtarget);
+    else
+      gst_pad_unlink (oldtarget, internal);
   }
 
   result = gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), newtarget);
