@@ -154,4 +154,6 @@ typedef struct {
   GHashTable *other_tags;
 } MXFIndexTableSegment;
 
+#define GST_TAG_MXF_UMID "mxf-umid"
+
 #endif /* __MXF_TYPES_H__ */

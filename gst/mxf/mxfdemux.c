@@ -36,8 +36,7 @@
  *     The latter are just 16 byte unique identifiers
  *   - Check everything for correctness vs. SMPTE S336M, some things can probably
  *     be generalized/simplified
- *   - Seeking support: IndexTableSegments and skip-to-position seeks, needs correct
- *     timestamp calculation, etc.
+ *   - Seeking support: Use IndexTableSegments
  *   - Handle timecode tracks correctly (where is this documented?)
  *   - Handle Generic container system items
  *   - Implement correct support for clip-wrapped essence elements.
@@ -49,6 +48,9 @@
  *   - Correctly handle the different rectangles and aspect-ratio for video
  *   - Add support for non-standard MXF used by Avid (bug #561922).
  *   - Fix frame layout stuff, i.e. interlaced/progressive
+ *   - Extend essence element handlers to set DELTA_UNIT flag.
+ *   - In pull mode first find the first buffer for every pad before pushing
+ *     to prevent jumpy playback in the beginning due to resynchronization.
  *
  *   - Implement SMPTE D11 essence and the digital cinema/MXF specs
  *
@@ -113,7 +115,8 @@ gst_mxf_demux_pad_init (GstMXFDemuxPad * pad)
 enum
 {
   PROP_0,
-  PROP_PACKAGE
+  PROP_PACKAGE,
+  PROP_MAX_DRIFT
 };
 
 static gboolean gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event);
@@ -132,12 +135,9 @@ gst_mxf_demux_remove_pad (GstMXFDemuxPad * pad, GstMXFDemux * demux)
 static void
 gst_mxf_demux_remove_pads (GstMXFDemux * demux)
 {
-  if (demux->src) {
-    g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
-    g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
-    g_ptr_array_free (demux->src, TRUE);
-    demux->src = NULL;
-  }
+  g_ptr_array_foreach (demux->src, (GFunc) gst_mxf_demux_remove_pad, demux);
+  g_ptr_array_foreach (demux->src, (GFunc) gst_object_unref, NULL);
+  g_ptr_array_set_size (demux->src, 0);
 }
 
 static void
@@ -189,14 +189,12 @@ gst_mxf_demux_reset_linked_metadata (GstMXFDemux * demux)
 {
   guint i;
 
-  if (demux->src) {
-    for (i = 0; i < demux->src->len; i++) {
-      GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
+  for (i = 0; i < demux->src->len; i++) {
+    GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
 
-      pad->material_track = NULL;
-      pad->material_package = NULL;
-      pad->current_component = NULL;
-    }
+    pad->material_track = NULL;
+    pad->material_package = NULL;
+    pad->current_component = NULL;
   }
 
   if (demux->essence_tracks) {
@@ -350,7 +348,7 @@ gst_mxf_demux_push_src_event (GstMXFDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "Pushing '%s' event downstream",
       GST_EVENT_TYPE_NAME (event));
 
-  if (!demux->src)
+  if (demux->src->len == 0)
     return ret;
 
   for (i = 0; i < demux->src->len; i++) {
@@ -373,9 +371,6 @@ gst_mxf_demux_get_earliest_pad (GstMXFDemux * demux)
   guint i;
   GstClockTime earliest = GST_CLOCK_TIME_NONE;
   GstMXFDemuxPad *pad = NULL;
-
-  if (!demux->src)
-    return NULL;
 
   for (i = 0; i < demux->src->len; i++) {
     GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
@@ -638,11 +633,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
-            packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
+            content_storage->packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
-          packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
+          content_storage->packages[i]);
       break;
     }
   }
@@ -655,15 +650,20 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 done:
   if (memcmp (&ret->package_uid, &demux->current_package_uid, 32) != 0) {
     gchar current_package_string[96];
+    GstTagList *tags = gst_tag_list_new ();
 
     gst_mxf_demux_remove_pads (demux);
     memcpy (&demux->current_package_uid, &ret->package_uid, 32);
 
     mxf_umid_to_string (&ret->package_uid, current_package_string);
-    demux->current_package = ret;
     demux->current_package_string = g_strdup (current_package_string);
     g_object_notify (G_OBJECT (demux), "package");
+
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MXF_UMID,
+        demux->current_package_string, NULL);
+    gst_element_found_tags (GST_ELEMENT_CAST (demux), tags);
   }
+  demux->current_package = ret;
 
   return ret;
 }
@@ -859,7 +859,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     return GST_FLOW_ERROR;
   }
 
-  first_run = (demux->src == NULL);
+  first_run = (demux->src->len == 0);
 
   for (i = 0; i < current_package->n_tracks; i++) {
     MXFMetadataTimelineTrack *track = NULL;
@@ -884,7 +884,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
     track = MXF_METADATA_TIMELINE_TRACK (current_package->tracks[i]);
 
-    if (demux->src && demux->src->len > 0) {
+    if (demux->src->len > 0) {
       /* Find pad from track_id */
       for (j = 0; j < demux->src->len; j++) {
         GstMXFDemuxPad *tmp = g_ptr_array_index (demux->src, j);
@@ -1095,8 +1095,6 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
 
       gst_element_add_pad (GST_ELEMENT_CAST (demux), gst_object_ref (pad));
 
-      if (!demux->src)
-        demux->src = g_ptr_array_new ();
       g_ptr_array_add (demux->src, pad);
       pad->discont = TRUE;
     }
@@ -1105,7 +1103,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
   if (first_run)
     gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
 
-  if (demux->src) {
+  if (demux->src->len > 0) {
     for (i = 0; i < demux->src->len; i++) {
       GstMXFDemuxPad *pad = g_ptr_array_index (demux->src, i);
 
@@ -1336,8 +1334,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
-          current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->
+      structural_components[pad->current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1345,8 +1343,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
-          source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->
+          current_component->source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -1463,7 +1461,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     return GST_FLOW_ERROR;
   }
 
-  if (!demux->src || demux->src->len == 0) {
+  if (demux->src->len == 0) {
     GST_ERROR_OBJECT (demux, "No streams created yet");
     return GST_FLOW_ERROR;
   }
@@ -1600,7 +1598,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
       GstMXFDemuxPad *earliest = gst_mxf_demux_get_earliest_pad (demux);
 
       if (earliest && earliest != pad && earliest->last_stop < pad->last_stop &&
-          pad->last_stop - earliest->last_stop > 500 * GST_MSECOND) {
+          pad->last_stop - earliest->last_stop > demux->max_drift) {
         GST_DEBUG_OBJECT (demux, "Pad is too far ahead of time");
         continue;
       }
@@ -2244,7 +2242,7 @@ gst_mxf_demux_set_partition_for_offset (GstMXFDemux * demux, guint64 offset)
   for (l = demux->partitions; l; l = l->next) {
     GstMXFDemuxPartition *p = l->data;
 
-    if (p->partition.this_partition <= offset)
+    if (p->partition.this_partition + demux->run_in <= offset)
       demux->current_partition = p;
   }
 }
@@ -2421,7 +2419,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   GstFlowReturn ret = GST_FLOW_OK;
   guint read = 0;
 
-  if (demux->src) {
+  if (demux->src->len > 0) {
     if (!gst_mxf_demux_get_earliest_pad (demux)) {
       ret = GST_FLOW_UNEXPECTED;
       GST_DEBUG_OBJECT (demux, "All tracks are EOS");
@@ -2495,50 +2493,48 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   demux->offset += read;
 
   if (ret == GST_FLOW_OK && demux->src && demux->essence_tracks) {
-    guint i;
     GstMXFDemuxPad *earliest = NULL;
-    guint64 offset;
-    gint64 position;
-
-    earliest = gst_mxf_demux_get_earliest_pad (demux);
-    if (!earliest)
-      goto beach;
-
     /* We allow time drifts of at most 500ms */
-    if (demux->segment.last_stop - earliest->last_stop <= 500 * GST_MSECOND)
-      goto beach;
+    while ((earliest = gst_mxf_demux_get_earliest_pad (demux)) &&
+        demux->segment.last_stop - earliest->last_stop > demux->max_drift) {
+      guint i;
+      guint64 offset;
+      gint64 position;
 
-    GST_WARNING_OBJECT (demux,
-        "Found synchronization issue -- trying to solve");
+      GST_WARNING_OBJECT (demux,
+          "Found synchronization issue -- trying to solve");
 
-    position = earliest->current_essence_track_position;
+      position = earliest->current_essence_track_position;
 
-    /* FIXME: This can probably be improved by using the
-     * offset of position-1 if it's in the same partition
-     * or the start of the position otherwise.
-     * This way we won't skip elements from the same essence
-     * container as etrack->position
-     */
-    offset =
-        gst_mxf_demux_find_essence_element (demux,
-        earliest->current_essence_track, &position, FALSE);
-    if (offset == -1) {
-      GST_ERROR_OBJECT (demux, "Failed to find offset for late essence track");
-      earliest->eos = TRUE;
-      gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
-      goto beach;
+      /* FIXME: This can probably be improved by using the
+       * offset of position-1 if it's in the same partition
+       * or the start of the position otherwise.
+       * This way we won't skip elements from the same essence
+       * container as etrack->position
+       */
+      offset =
+          gst_mxf_demux_find_essence_element (demux,
+          earliest->current_essence_track, &position, FALSE);
+      if (offset == -1) {
+        GST_ERROR_OBJECT (demux,
+            "Failed to find offset for late essence track");
+        earliest->eos = TRUE;
+        gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
+        continue;
+      }
+
+      demux->offset = offset + demux->run_in;
+      gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *etrack =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        etrack->position = -1;
+      }
+      earliest->current_essence_track->position = position;
+      break;
     }
-
-    demux->offset = offset + demux->run_in;
-    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
-
-    for (i = 0; i < demux->essence_tracks->len; i++) {
-      GstMXFDemuxEssenceTrack *etrack =
-          &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
-
-      etrack->position = -1;
-    }
-    earliest->current_essence_track->position = position;
   }
 
 beach:
@@ -2670,7 +2666,7 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   GST_LOG_OBJECT (demux, "received buffer of %u bytes at offset %"
       G_GUINT64_FORMAT, GST_BUFFER_SIZE (inbuf), GST_BUFFER_OFFSET (inbuf));
 
-  if (demux->src) {
+  if (demux->src->len > 0) {
     if (!gst_mxf_demux_get_earliest_pad (demux)) {
       ret = GST_FLOW_UNEXPECTED;
       GST_DEBUG_OBJECT (demux, "All tracks are EOS");
@@ -2687,6 +2683,9 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
   if (G_UNLIKELY (demux->offset == 0 && GST_BUFFER_OFFSET (inbuf) != 0)) {
     GST_DEBUG_OBJECT (demux, "offset was zero, synchronizing with buffer's");
     demux->offset = GST_BUFFER_OFFSET (inbuf);
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+  } else if (demux->current_partition == NULL) {
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
   }
 
   gst_adapter_push (demux->adapter, inbuf);
@@ -2844,8 +2843,8 @@ gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
-        structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
+        sequence->structural_components[i]);
 
     if (clip->parent.duration <= 0)
       break;
@@ -3105,6 +3104,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       goto no_new_offset;
 
     demux->offset = new_offset + demux->run_in;
+    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
   }
 
   if (G_UNLIKELY (demux->close_seg_event)) {
@@ -3373,11 +3373,69 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
       demux->offset = 0;
       ret = gst_mxf_demux_push_src_event (demux, event);
       break;
-    case GST_EVENT_EOS:
-      if (!gst_mxf_demux_push_src_event (demux, event))
+    case GST_EVENT_EOS:{
+      GstMXFDemuxPad *p = NULL;
+      guint i;
+
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *t =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        if (t->position > 0)
+          t->duration = t->position;
+      }
+
+      for (i = 0; i < demux->src->len; i++) {
+        GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+        if (!p->eos
+            && p->current_essence_track_position >=
+            p->current_essence_track->duration) {
+          p->eos = TRUE;
+          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+        }
+      }
+
+      while ((p = gst_mxf_demux_get_earliest_pad (demux))) {
+        guint64 offset;
+        gint64 position;
+
+        position = p->current_essence_track_position;
+
+        offset =
+            gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
+            &position, FALSE);
+        if (offset == -1) {
+          GST_ERROR_OBJECT (demux, "Failed to find offset for essence track");
+          p->eos = TRUE;
+          gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+          continue;
+        }
+
+        if (gst_pad_push_event (demux->sinkpad,
+                gst_event_new_seek (demux->segment.rate, GST_FORMAT_BYTES,
+                    demux->segment.flags | GST_SEEK_FLAG_ACCURATE,
+                    GST_SEEK_TYPE_SET, offset + demux->run_in,
+                    GST_SEEK_TYPE_NONE, 0))) {
+
+          for (i = 0; i < demux->essence_tracks->len; i++) {
+            GstMXFDemuxEssenceTrack *etrack =
+                &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
+                i);
+            etrack->position = -1;
+          }
+          ret = TRUE;
+          goto out;
+        } else {
+          GST_WARNING_OBJECT (demux,
+              "Seek to remaining part of the file failed");
+        }
+      }
+
+      if (!(ret = gst_mxf_demux_push_src_event (demux, event)))
         GST_WARNING_OBJECT (pad, "failed pushing EOS on streams");
-      ret = TRUE;
       break;
+    }
     case GST_EVENT_NEWSEGMENT:{
       guint i;
 
@@ -3389,6 +3447,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
           t->position = -1;
         }
       }
+      demux->current_partition = NULL;
       gst_event_unref (event);
       ret = TRUE;
       break;
@@ -3398,6 +3457,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+out:
   gst_object_unref (demux);
 
   return ret;
@@ -3454,7 +3514,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
       if (format != GST_FORMAT_TIME)
         goto error;
 
-      if (!demux->src)
+      if (demux->src->len == 0)
         goto done;
 
       for (i = 0; i < demux->src->len; i++) {
@@ -3545,6 +3605,9 @@ gst_mxf_demux_set_property (GObject * object, guint prop_id,
       g_free (demux->requested_package_string);
       demux->requested_package_string = g_value_dup_string (value);
       break;
+    case PROP_MAX_DRIFT:
+      demux->max_drift = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3560,6 +3623,9 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PACKAGE:
       g_value_set_string (value, demux->current_package_string);
+      break;
+    case PROP_MAX_DRIFT:
+      g_value_set_uint64 (value, demux->max_drift);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3588,6 +3654,9 @@ gst_mxf_demux_finalize (GObject * object)
   demux->current_package_string = NULL;
   g_free (demux->requested_package_string);
   demux->requested_package_string = NULL;
+
+  g_ptr_array_free (demux->src, TRUE);
+  demux->src = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -3623,6 +3692,12 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
           "Material or Source package to use for playback", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MAX_DRIFT,
+      g_param_spec_uint64 ("max-drift", "Maximum drift",
+          "Maximum number of nanoseconds by which tracks can differ",
+          100 * GST_MSECOND, G_MAXUINT64, 500 * GST_MSECOND,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mxf_demux_change_state);
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_mxf_demux_query);
@@ -3648,6 +3723,8 @@ gst_mxf_demux_init (GstMXFDemux * demux, GstMXFDemuxClass * g_class)
       GST_DEBUG_FUNCPTR (gst_mxf_demux_sink_activate_push));
 
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
+
+  demux->max_drift = 500 * GST_MSECOND;
 
   demux->adapter = gst_adapter_new ();
   demux->src = g_ptr_array_new ();
