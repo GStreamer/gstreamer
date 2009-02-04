@@ -398,6 +398,35 @@ gst_rtsp_session_touch (GstRTSPSession *session)
 }
 
 /**
+ * gst_rtsp_session_is_expired:
+ * @session: a #GstRTSPSession
+ *
+ * Check if @session timeout out. 
+ *
+ * Returns: %TRUE if @session timed out
+ */
+gboolean
+gst_rtsp_session_is_expired (GstRTSPSession *session)
+{
+  gboolean res;
+  GstClockTime last_access, now_ns;
+  GTimeVal now;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), FALSE);
+
+  last_access = GST_TIMEVAL_TO_TIME (session->last_access);
+  /* add timeout */
+  last_access += session->timeout * GST_SECOND;
+
+  g_get_current_time (&now);
+  now_ns = GST_TIMEVAL_TO_TIME (now);
+
+  res = now_ns > last_access;
+
+  return res;
+}
+
+/**
  * gst_rtsp_session_stream_init_udp:
  * @stream: a #GstRTSPSessionStream
  * @ct: a client #GstRTSPTransport

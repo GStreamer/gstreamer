@@ -117,8 +117,9 @@ const gchar *          gst_rtsp_session_get_sessionid        (GstRTSPSession *se
 void                   gst_rtsp_session_set_timeout          (GstRTSPSession *session, guint timeout);
 guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *session);
 
-/* touch the session, update last_access */
+/* session timeout stuff */
 void                   gst_rtsp_session_touch                (GstRTSPSession *session);
+gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session);
 
 /* handle media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,

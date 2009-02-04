@@ -352,3 +352,31 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool *pool, GstRTSPSession *sess)
   return found;
 }
 
+static gboolean
+cleanup_func (gchar *sessionid, GstRTSPSession *sess, GstRTSPSessionPool *pool)
+{
+  return gst_rtsp_session_is_expired (sess);
+}
+
+/**
+ * gst_rtsp_session_pool_cleanup:
+ * @pool: a #GstRTSPSessionPool
+ *
+ * Inspect all the sessions in @pool and remove the sessions that are inactive
+ * for more than their timeout.
+ *
+ * Returns: the amount of sessions that got removed.
+ */
+guint
+gst_rtsp_session_pool_cleanup (GstRTSPSessionPool *pool)
+{
+  guint result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), 0);
+
+  g_mutex_lock (pool->lock);
+  result = g_hash_table_foreach_remove (pool->sessions, (GHRFunc) cleanup_func, pool);
+  g_mutex_unlock (pool->lock);
+
+  return result;
+}

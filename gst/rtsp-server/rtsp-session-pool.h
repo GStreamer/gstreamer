@@ -85,6 +85,9 @@ GstRTSPSession *      gst_rtsp_session_pool_find              (GstRTSPSessionPoo
 gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPool *pool,
                                                                GstRTSPSession *sess);
 
+/* perform session maintenance */
+guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SESSION_POOL_H__ */
