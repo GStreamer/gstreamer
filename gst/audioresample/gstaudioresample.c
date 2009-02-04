@@ -181,10 +181,16 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
   /* FIXME 0.11: Remove this property, it's just for compatibility
    * with old audioresample
    */
+  /**
+   * GstAudioResample:filter-length:
+   *
+   * Length of the resample filter
+   *
+   * Deprectated: Use #GstAudioResample:quality property instead
+   */
   g_object_class_install_property (gobject_class, PROP_FILTER_LENGTH,
       g_param_spec_int ("filter-length", "Filter length",
-          "DEPRECATED, DON'T USE THIS! " "Length of the resample filter", 0,
-          G_MAXINT, 64, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          "Length of the resample filter", 0, G_MAXINT, 64, G_PARAM_READWRITE));
 
   GST_BASE_TRANSFORM_CLASS (klass)->start =
       GST_DEBUG_FUNCPTR (gst_audio_resample_start);
