@@ -997,13 +997,11 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
             gst_iterator_free (pads);
 
             return current;
-          }
-          else {
+          } else {
             GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "incompatible pads");
           }
           gst_caps_unref (intersection);
-        }
-        else {
+        } else {
           GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
               "already linked or cannot be linked (peer = %p)", peer);
         }
@@ -1767,6 +1765,7 @@ gst_element_link (GstElement * src, GstElement * dest)
 gboolean
 gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
 {
+  gboolean res = TRUE;
   va_list args;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element_1), FALSE);
@@ -1775,8 +1774,10 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
   va_start (args, element_2);
 
   while (element_2) {
-    if (!gst_element_link (element_1, element_2))
-      return FALSE;
+    if (!gst_element_link (element_1, element_2)) {
+      res = FALSE;
+      break;
+    }
 
     element_1 = element_2;
     element_2 = va_arg (args, GstElement *);
@@ -1784,7 +1785,7 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
 
   va_end (args);
 
-  return TRUE;
+  return res;
 }
 
 /**
