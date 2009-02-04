@@ -866,7 +866,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
   /* unpack plugin feature strings */
   unpack_string (*in, type_name);
 
-  if (!type_name || !*(type_name)) {
+  if (!type_name) {
     GST_ERROR ("No feature type name");
     return FALSE;
   }
@@ -876,10 +876,12 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
   if (!(type = g_type_from_name (type_name))) {
     GST_ERROR ("Unknown type from typename '%s' for plugin '%s'", type_name,
         plugin_name);
+    g_free (type_name);
     return FALSE;
   }
   if ((feature = g_object_new (type, NULL)) == NULL) {
     GST_ERROR ("Can't create feature from type");
+    g_free (type_name);
     return FALSE;
   }
 
