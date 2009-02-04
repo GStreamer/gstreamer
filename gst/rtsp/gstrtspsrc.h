@@ -204,6 +204,7 @@ struct _GstRTSPSrc {
   gulong           session_ptmap_id;
 
   GstRTSPConnection  *connection;
+  gboolean            connected;
 
   /* a list of RTSP extensions as GstElement */
   GstRTSPExtensionList  *extensions;

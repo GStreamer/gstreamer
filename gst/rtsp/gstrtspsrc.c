@@ -2911,6 +2911,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
               gst_rtsp_connection_connect (src->connection, src->ptcp_timeout);
           if (res < 0)
             goto connect_error;
+          src->connected = TRUE;
           continue;
         default:
           goto receive_error;
@@ -3025,6 +3026,7 @@ connect_error:
   {
     gchar *str = gst_rtsp_strresult (res);
 
+    src->connected = FALSE;
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Could not connect to server. (%s)", str));
     g_free (str);
@@ -3471,6 +3473,8 @@ receive_error:
                   gst_rtsp_connection_connect (src->connection,
                       src->ptcp_timeout)) == 0)
             goto again;
+
+          src->connected = FALSE;
         }
         /* only try once after reconnect, then fallthrough and error out */
       default:
@@ -3978,8 +3982,10 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
       gst_rtsp_message_get_header (&response, GST_RTSP_HDR_TRANSPORT,
           &resptrans, 0);
-      if (!resptrans)
+      if (!resptrans) {
+        gst_rtspsrc_stream_free_udp (stream);
         goto no_transport;
+      }
 
       /* parse transport, go to next stream on parse error */
       if (gst_rtsp_transport_parse (resptrans, &transport) != GST_RTSP_OK) {
@@ -4191,6 +4197,8 @@ restart:
           gst_rtsp_connection_connect (src->connection, src->ptcp_timeout)) < 0)
     goto could_not_connect;
 
+  src->connected = TRUE;
+
   /* create OPTIONS */
   GST_DEBUG_OBJECT (src, "create options...");
   res =
@@ -4238,6 +4246,7 @@ restart:
     gst_rtsp_connection_close (src->connection);
     gst_rtsp_connection_free (src->connection);
     src->connection = NULL;
+    src->connected = FALSE;
 
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
@@ -4375,6 +4384,7 @@ cleanup_error:
       GST_DEBUG_OBJECT (src, "free connection");
       gst_rtsp_connection_free (src->connection);
       src->connection = NULL;
+      src->connected = FALSE;
     }
     GST_RTSP_STATE_UNLOCK (src);
     gst_rtsp_message_unset (&request);
@@ -4436,7 +4446,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "stop connection flush");
   gst_rtsp_connection_flush (src->connection, FALSE);
 
-  if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)) {
+  if (src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN) && src->connected) {
     /* do TEARDOWN */
     res =
         gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN,
@@ -4457,12 +4467,11 @@ gst_rtspsrc_close (GstRTSPSrc * src)
 
   /* close connection */
   GST_DEBUG_OBJECT (src, "closing connection...");
-  if ((res = gst_rtsp_connection_close (src->connection)) < 0)
-    goto close_failed;
-
+  gst_rtsp_connection_close (src->connection);
   /* free connection */
   gst_rtsp_connection_free (src->connection);
   src->connection = NULL;
+  src->connected = FALSE;
 
 done:
   /* cleanup */
@@ -4487,12 +4496,6 @@ send_error:
     gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
-    return FALSE;
-  }
-close_failed:
-  {
-    GST_RTSP_STATE_UNLOCK (src);
-    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL), ("Close failed."));
     return FALSE;
   }
 }
