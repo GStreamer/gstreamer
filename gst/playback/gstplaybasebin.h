@@ -87,6 +87,7 @@ struct _GstPlayBaseBin {
   GstElement    *subtitle;              /* additional filesrc ! subparse bin */
   gboolean       subtitle_done;
   gboolean       need_rebuild;
+  gboolean       raw_decoding_mode;     /* Use smaller queues when source outputs raw data */
 
   GSList        *subtitle_elements;     /* subtitle elements that have 'subtitle-encoding' property */
   gchar         *subencoding;           /* encoding to propagate to the above subtitle elements     */

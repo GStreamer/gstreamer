@@ -826,10 +826,22 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
    * after the source that measures the datarate and scales this
    * queue of encoded data instead.
    */
-  g_object_set (G_OBJECT (preroll),
-      "max-size-buffers", 0, "max-size-bytes",
-      ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 2) * 1024 * 1024,
-      "max-size-time", play_base_bin->queue_size, NULL);
+  if (play_base_bin->raw_decoding_mode) {
+    if (type == GST_STREAM_TYPE_VIDEO) {
+      g_object_set (G_OBJECT (preroll),
+          "max-size-buffers", 2, "max-size-bytes", 0,
+          "max-size-time", (guint64) 0, NULL);
+    } else {
+      g_object_set (G_OBJECT (preroll),
+          "max-size-buffers", 0, "max-size-bytes",
+          2 * 1024 * 1024, "max-size-time", play_base_bin->queue_size, NULL);
+    }
+  } else {
+    g_object_set (G_OBJECT (preroll),
+        "max-size-buffers", 0, "max-size-bytes",
+        ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 2) * 1024 * 1024,
+        "max-size-time", play_base_bin->queue_size, NULL);
+  }
 
   /* the overrun signal is always attached and serves two purposes:
    *
@@ -1697,6 +1709,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstPlayBaseBin * bin)
       GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
 
   /* if this is a pad with all raw caps, we can expose it */
+  bin->raw_decoding_mode = TRUE;
   if (has_all_raw_caps (pad, &is_raw) && is_raw) {
     /* it's all raw, create output pads. */
     new_decoded_pad_full (element, pad, FALSE, bin, FALSE);
@@ -2066,6 +2079,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
+  play_base_bin->raw_decoding_mode = FALSE;
 
   GST_DEBUG_OBJECT (play_base_bin, "setup source");
 
