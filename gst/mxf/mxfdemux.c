@@ -36,8 +36,7 @@
  *     The latter are just 16 byte unique identifiers
  *   - Check everything for correctness vs. SMPTE S336M, some things can probably
  *     be generalized/simplified
- *   - Seeking support: IndexTableSegments and skip-to-position seeks, needs correct
- *     timestamp calculation, etc.
+ *   - Seeking support: Use IndexTableSegments
  *   - Handle timecode tracks correctly (where is this documented?)
  *   - Handle Generic container system items
  *   - Implement correct support for clip-wrapped essence elements.
@@ -49,6 +48,9 @@
  *   - Correctly handle the different rectangles and aspect-ratio for video
  *   - Add support for non-standard MXF used by Avid (bug #561922).
  *   - Fix frame layout stuff, i.e. interlaced/progressive
+ *   - Extend essence element handlers to set DELTA_UNIT flag.
+ *   - In pull mode first find the first buffer for every pad before pushing
+ *     to prevent jumpy playback in the beginning due to resynchronization.
  *
  *   - Implement SMPTE D11 essence and the digital cinema/MXF specs
  *
