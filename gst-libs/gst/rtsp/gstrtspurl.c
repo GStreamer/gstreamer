@@ -205,7 +205,7 @@ invalid:
  * Since: 0.10.22
  */
 GstRTSPUrl *
-gst_rtsp_url_copy (GstRTSPUrl * url)
+gst_rtsp_url_copy (const GstRTSPUrl * url)
 {
   GstRTSPUrl *res;
 
@@ -274,7 +274,7 @@ gst_rtsp_url_set_port (GstRTSPUrl * url, guint16 port)
  * Returns: #GST_RTSP_OK.
  */
 GstRTSPResult
-gst_rtsp_url_get_port (GstRTSPUrl * url, guint16 * port)
+gst_rtsp_url_get_port (const GstRTSPUrl * url, guint16 * port)
 {
   g_return_val_if_fail (url != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (port != NULL, GST_RTSP_EINVAL);
@@ -297,7 +297,7 @@ gst_rtsp_url_get_port (GstRTSPUrl * url, guint16 * port)
  * Returns: a string with the request URI. g_free() after usage.
  */
 gchar *
-gst_rtsp_url_get_request_uri (GstRTSPUrl * url)
+gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
 {
   gchar *uri;
 

@@ -89,12 +89,12 @@ struct _GstRTSPUrl {
 GType gst_rtsp_url_get_type (void);
 
 GstRTSPResult      gst_rtsp_url_parse           (const gchar *urlstr, GstRTSPUrl **url);
-GstRTSPUrl*        gst_rtsp_url_copy            (GstRTSPUrl *url);
+GstRTSPUrl*        gst_rtsp_url_copy            (const GstRTSPUrl *url);
 void               gst_rtsp_url_free            (GstRTSPUrl *url);
-gchar*             gst_rtsp_url_get_request_uri (GstRTSPUrl *url);
+gchar*             gst_rtsp_url_get_request_uri (const GstRTSPUrl *url);
 
 GstRTSPResult      gst_rtsp_url_set_port        (GstRTSPUrl *url, guint16 port);
-GstRTSPResult      gst_rtsp_url_get_port        (GstRTSPUrl *url, guint16 *port);
+GstRTSPResult      gst_rtsp_url_get_port        (const GstRTSPUrl *url, guint16 *port);
 
 G_END_DECLS
 
