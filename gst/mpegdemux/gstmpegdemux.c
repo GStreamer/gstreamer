@@ -2161,6 +2161,8 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
   guint64 ts = 0;
   guint scan_sz = (mode == SCAN_SCR ? SCAN_SCR_SZ : SCAN_PTS_SZ);
   guint cursor, to_read = BLOCK_SZ;
+  guint8 *data;
+  guint end_scan;
 
   do {
     if (offset + scan_sz > demux->sink_segment.stop)
@@ -2171,8 +2173,8 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
 
     /* read some data */
     ret = gst_pad_pull_range (demux->sinkpad, offset, to_read, &buffer);
-    const guint8 *data = GST_BUFFER_DATA (buffer);
-    const guint end_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
+    data = GST_BUFFER_DATA (buffer);
+    end_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
     /* scan the block */
     for (cursor = 0; !found && cursor <= end_scan; cursor++) {
       found = gst_flups_demux_scan_ts (demux, data++, mode, &ts);
@@ -2203,6 +2205,8 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
   guint64 ts = 0;
   guint scan_sz = (mode == SCAN_SCR ? SCAN_SCR_SZ : SCAN_PTS_SZ);
   guint cursor, to_read = BLOCK_SZ;
+  guint start_scan;
+  guint8 *data;
 
   do {
     if (offset < scan_sz - 1)
@@ -2216,8 +2220,8 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
     }
     /* read some data */
     ret = gst_pad_pull_range (demux->sinkpad, offset, to_read, &buffer);
-    const guint start_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
-    const guint8 *data = GST_BUFFER_DATA (buffer) + start_scan;
+    start_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
+    data = GST_BUFFER_DATA (buffer) + start_scan;
     /* scan the block */
     for (cursor = (start_scan + 1); !found && cursor > 0; cursor--) {
       found = gst_flups_demux_scan_ts (demux, data--, mode, &ts);
