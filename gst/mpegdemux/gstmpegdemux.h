@@ -117,6 +117,7 @@ struct _GstFluPSDemux
   guint64 scr_rate_d;
   guint64 first_scr_offset;
   guint64 last_scr_offset;
+  guint64 cur_scr_offset;
 
   guint64 first_pts;
   guint64 last_pts;
