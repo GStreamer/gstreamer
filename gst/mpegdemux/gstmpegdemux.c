@@ -941,20 +941,21 @@ gst_flups_demux_do_seek (GstFluPSDemux * demux, GstSegment * seeksegment)
 {
   gboolean found;
   guint64 fscr, offset;
-  guint64 scr =
-      MIN (demux->last_scr, GSTTIME_TO_MPEGTIME (seeksegment->last_stop));
+  guint64 scr = GSTTIME_TO_MPEGTIME (seeksegment->last_stop + demux->base_time);
   guint64 scr_rate_n = demux->last_scr_offset - demux->first_scr_offset;
   guint64 scr_rate_d = demux->last_scr - demux->first_scr;
 
+  scr = MIN (demux->last_scr, scr);
+  scr = MAX (demux->first_scr, scr);
+  fscr = scr;
+
 #if POST_10_10
-  GST_INFO_OBJECT (demux, "sink segment configured %" GST_SEGMENT_FORMAT,
-      &demux->sink_segment);
+  GST_INFO_OBJECT (demux, "sink segment configured %" GST_SEGMENT_FORMAT
+      ", trying to go at SCR: %" G_GUINT64_FORMAT, &demux->sink_segment, scr);
 #endif
 
   offset = MIN (gst_util_uint64_scale (scr, scr_rate_n, scr_rate_d),
       demux->sink_segment.stop);
-
-  gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &demux->first_scr);
 
   found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr);
   if (!found) {
@@ -966,13 +967,13 @@ gst_flups_demux_do_seek (GstFluPSDemux * demux, GstSegment * seeksegment)
     found = gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &fscr);
   }
 
-  while (found && fscr > scr) {
+  while (found && fscr > scr && offset > 0) {
     offset--;
     found = gst_flups_demux_scan_backward_ts (demux, &offset, SCAN_SCR, &fscr);
   }
 
   GST_INFO_OBJECT (demux, "doing seek at offset %" G_GUINT64_FORMAT
-      " SRC: %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
+      " SCR: %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
       offset, fscr, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (fscr)));
   gst_segment_set_last_stop (&demux->sink_segment, GST_FORMAT_BYTES, offset);
 }
