@@ -33,6 +33,7 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
 {
   GstSDPMessage *sdp;
   guint i, n_streams;
+  gchar *rangestr;
 
   n_streams = gst_rtsp_media_n_streams (media);
 
@@ -46,6 +47,9 @@ gst_rtsp_sdp_from_media (GstRTSPMedia *media)
   gst_sdp_message_add_time (sdp, "0", "0", NULL);
   gst_sdp_message_add_attribute (sdp, "tool", "GStreamer");
   gst_sdp_message_add_attribute (sdp, "type", "broadcast");
+  rangestr = gst_rtsp_range_to_string (&media->range);
+  gst_sdp_message_add_attribute (sdp, "range", rangestr);
+  g_free (rangestr);
 
   for (i = 0; i < n_streams; i++) {
     GstRTSPMediaStream *stream;

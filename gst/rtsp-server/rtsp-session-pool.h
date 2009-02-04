@@ -40,7 +40,7 @@ typedef struct _GstRTSPSessionPoolClass GstRTSPSessionPoolClass;
 
 /**
  * GstRTSPSessionPool:
- *
+ * @max_sessions: the maximum number of sessions.
  * @lock: locking the session hashtable
  * @session: hashtable of sessions indexed by the session id.
  *
@@ -50,6 +50,8 @@ typedef struct _GstRTSPSessionPoolClass GstRTSPSessionPoolClass;
 struct _GstRTSPSessionPool {
   GObject       parent;
 
+  guint         max_sessions;
+
   GMutex       *lock;
   GHashTable   *sessions;
 };
@@ -57,7 +59,7 @@ struct _GstRTSPSessionPool {
 /**
  * GstRTSPSessionPoolClass:
  * @create_session_id: create a new random session id. Subclasses can create
- * custom session ids and should not check if the session exists.
+ *    custom session ids and should not check if the session exists.
  */
 struct _GstRTSPSessionPoolClass {
   GObjectClass  parent_class;
@@ -67,13 +69,24 @@ struct _GstRTSPSessionPoolClass {
 
 GType                 gst_rtsp_session_pool_get_type          (void);
 
+/* creating a session pool */
 GstRTSPSessionPool *  gst_rtsp_session_pool_new               (void);
 
+/* counting sessionss */
+void                  gst_rtsp_session_pool_set_max_sessions  (GstRTSPSessionPool *pool, guint max);
+guint                 gst_rtsp_session_pool_get_max_sessions  (GstRTSPSessionPool *pool);
+
+guint                 gst_rtsp_session_pool_get_n_sessions    (GstRTSPSessionPool *pool);
+
+/* managing sessions */
+GstRTSPSession *      gst_rtsp_session_pool_create            (GstRTSPSessionPool *pool);
 GstRTSPSession *      gst_rtsp_session_pool_find              (GstRTSPSessionPool *pool,
                                                                const gchar *sessionid);
-GstRTSPSession *      gst_rtsp_session_pool_create            (GstRTSPSessionPool *pool);
-void                  gst_rtsp_session_pool_remove            (GstRTSPSessionPool *pool,
+gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPool *pool,
                                                                GstRTSPSession *sess);
+
+/* perform session maintenance */
+guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
 
 G_END_DECLS
 

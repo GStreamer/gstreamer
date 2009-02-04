@@ -76,6 +76,8 @@ gst_rtsp_media_finalize (GObject * obj)
 
   media = GST_RTSP_MEDIA (obj);
 
+  g_message ("finalize media %p", media);
+
   for (i = 0; i < media->streams->len; i++) {
     GstRTSPMediaStream *stream;
 
@@ -447,6 +449,31 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
   return TRUE;
 }
 
+static void
+collect_media_stats (GstRTSPMedia *media)
+{
+  GstFormat format;
+  gint64 duration;
+
+  media->range.unit = GST_RTSP_RANGE_NPT;
+  media->range.min.type = GST_RTSP_TIME_SECONDS;
+  media->range.min.seconds = 0.0;
+
+  /* get the duration */
+  format = GST_FORMAT_TIME;
+  if (!gst_element_query_duration (media->pipeline, &format, &duration)) 
+    duration = -1;
+
+  if (duration == -1) {
+    media->range.max.type = GST_RTSP_TIME_END;
+    media->range.max.seconds = -1;
+  }
+  else {
+    media->range.max.type = GST_RTSP_TIME_SECONDS;
+    media->range.max.seconds = ((gdouble)duration) / GST_SECOND;
+  }
+}
+
 /**
  * gst_rtsp_media_prepare:
  * @obj: a #GstRTSPMedia
@@ -508,6 +535,9 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   /* and back to PAUSED for live pipelines */
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
+
+  /* collect stats about the media */
+  collect_media_stats (media);
 
   /* unlock the udp src elements */
   n_streams = gst_rtsp_media_n_streams (media);

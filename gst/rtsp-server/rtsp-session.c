@@ -22,6 +22,20 @@
 
 #undef DEBUG
 
+#define DEFAULT_TIMEOUT	60
+
+enum
+{
+  PROP_0,
+  PROP_SESSIONID,
+  PROP_TIMEOUT,
+  PROP_LAST
+};
+
+static void gst_rtsp_session_get_property (GObject *object, guint propid,
+    GValue *value, GParamSpec *pspec);
+static void gst_rtsp_session_set_property (GObject *object, guint propid,
+    const GValue *value, GParamSpec *pspec);
 static void gst_rtsp_session_finalize (GObject * obj);
 
 G_DEFINE_TYPE (GstRTSPSession, gst_rtsp_session, G_TYPE_OBJECT);
@@ -33,17 +47,33 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
 
+  gobject_class->get_property = gst_rtsp_session_get_property;
+  gobject_class->set_property = gst_rtsp_session_set_property;
   gobject_class->finalize = gst_rtsp_session_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_SESSIONID,
+      g_param_spec_string ("sessionid", "Sessionid", "the session id",
+          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY |
+	  G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
+      g_param_spec_uint ("timeout", "timeout", "the timeout of the session (0 = never)",
+          0, G_MAXUINT, DEFAULT_TIMEOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_rtsp_session_init (GstRTSPSession * session)
 {
+  session->timeout = DEFAULT_TIMEOUT;
+  g_get_current_time (&session->create_time);
+  gst_rtsp_session_touch (session);
 }
 
 static void
 gst_rtsp_session_free_stream (GstRTSPSessionStream *stream)
 {
+  g_message ("free session stream %p", stream);
+
   if (stream->trans.transport)
     gst_rtsp_transport_free (stream->trans.transport);
 
@@ -56,6 +86,8 @@ gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session
   guint size, i;
 
   size = media->streams->len;
+
+  g_message ("free session media %p", media);
 
   for (i = 0; i < size; i++) {
     GstRTSPSessionStream *stream;
@@ -83,6 +115,8 @@ gst_rtsp_session_finalize (GObject * obj)
 
   session = GST_RTSP_SESSION (obj);
 
+  g_message ("finalize session %p", session);
+
   /* free all media */
   g_list_foreach (session->medias, (GFunc) gst_rtsp_session_free_media,
 		  session);
@@ -94,14 +128,53 @@ gst_rtsp_session_finalize (GObject * obj)
   G_OBJECT_CLASS (gst_rtsp_session_parent_class)->finalize (obj);
 }
 
+static void
+gst_rtsp_session_get_property (GObject *object, guint propid,
+    GValue *value, GParamSpec *pspec)
+{
+  GstRTSPSession *session = GST_RTSP_SESSION (object);
+
+  switch (propid) {
+    case PROP_SESSIONID:
+      g_value_set_string (value, session->sessionid);
+      break;
+    case PROP_TIMEOUT:
+      g_value_set_uint (value, gst_rtsp_session_get_timeout (session));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
+static void
+gst_rtsp_session_set_property (GObject *object, guint propid,
+    const GValue *value, GParamSpec *pspec)
+{
+  GstRTSPSession *session = GST_RTSP_SESSION (object);
+
+  switch (propid) {
+    case PROP_SESSIONID:
+      g_free (session->sessionid);
+      session->sessionid = g_value_dup_string (value);
+      break;
+    case PROP_TIMEOUT:
+      gst_rtsp_session_set_timeout (session, g_value_get_uint (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
+  }
+}
+
 /**
  * gst_rtsp_session_manage_media:
  * @sess: a #GstRTSPSession
  * @url: the url for the media
- * @obj: a #GstRTSPMediaObject
+ * @media: a #GstRTSPMediaObject
  *
  * Manage the media object @obj in @sess. @url will be used to retrieve this
- * media object from the session with gst_rtsp_session_get_media().
+ * media from the session with gst_rtsp_session_get_media().
+ *
+ * Ownership is taken from @media.
  *
  * Returns: a new @GstRTSPSessionMedia object.
  */
@@ -129,9 +202,44 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
 
   sess->medias = g_list_prepend (sess->medias, result);
 
-  g_message ("manage new media %p in session %p", media, sess);
+  g_message ("manage new media %p in session %p", media, result);
 
   return result;
+}
+
+/**
+ * gst_rtsp_session_release_media:
+ * @sess: a #GstRTSPSession
+ * @media: a #GstRTSPMediaObject
+ *
+ * Release the managed @media in @sess, freeing the memory allocated by it.
+ *
+ * Returns: %TRUE if there are more media session left in @sess.
+ */
+gboolean
+gst_rtsp_session_release_media (GstRTSPSession *sess,
+    GstRTSPSessionMedia *media)
+{
+  GList *walk, *next;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), FALSE);
+  g_return_val_if_fail (media != NULL, FALSE);
+
+  for (walk = sess->medias; walk;) {
+    GstRTSPSessionMedia *find;
+
+    find = (GstRTSPSessionMedia *) walk->data; 
+    next = g_list_next (walk);
+
+    if (find == media) {
+      sess->medias = g_list_delete_link (sess->medias, walk);
+
+      gst_rtsp_session_free_media (find, sess);
+      break;
+    }
+    walk = next;
+  }
+  return (sess->medias != NULL);
 }
 
 /**
@@ -141,7 +249,7 @@ gst_rtsp_session_manage_media (GstRTSPSession *sess, const GstRTSPUrl *uri,
  *
  * Get the session media of the @url.
  *
- * Returns: the configuration for @url in @sess.
+ * Returns: the configuration for @url in @sess. 
  */
 GstRTSPSessionMedia *
 gst_rtsp_session_get_media (GstRTSPSession *sess, const GstRTSPUrl *url)
@@ -219,10 +327,103 @@ gst_rtsp_session_new (const gchar *sessionid)
 {
   GstRTSPSession *result;
 
-  result = g_object_new (GST_TYPE_RTSP_SESSION, NULL);
-  result->sessionid = g_strdup (sessionid);
+  g_return_val_if_fail (sessionid != NULL, NULL);
+
+  result = g_object_new (GST_TYPE_RTSP_SESSION, "sessionid", sessionid, NULL);
 
   return result;
+}
+
+/**
+ * gst_rtsp_session_get_sessionid:
+ * @session: a #GstRTSPSession
+ *
+ * Get the sessionid of @session.
+ *
+ * Returns: the sessionid of @session. The value remains valid as long as
+ * @session is alive.
+ */
+const gchar *
+gst_rtsp_session_get_sessionid (GstRTSPSession *session)
+{
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), NULL);
+
+  return session->sessionid;
+}
+
+/**
+ * gst_rtsp_session_set_timeout:
+ * @session: a #GstRTSPSession
+ * @timeout: the new timeout
+ *
+ * Configure @session for a timeout of @timeout seconds. The session will be
+ * cleaned up when there is no activity for @timeout seconds.
+ */
+void
+gst_rtsp_session_set_timeout (GstRTSPSession *session, guint timeout)
+{
+  g_return_if_fail (GST_IS_RTSP_SESSION (session));
+
+  session->timeout = timeout;
+}
+
+/**
+ * gst_rtsp_session_get_timeout:
+ * @session: a #GstRTSPSession
+ *
+ * Get the timeout value of @session.
+ *
+ * Returns: the timeout of @session in seconds.
+ */
+guint
+gst_rtsp_session_get_timeout (GstRTSPSession *session)
+{
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), 0);
+
+  return session->timeout;
+}
+
+/**
+ * gst_rtsp_session_touch:
+ * @session: a #GstRTSPSession
+ *
+ * Update the last_access time of the session to the current time.
+ */
+void
+gst_rtsp_session_touch (GstRTSPSession *session)
+{
+  g_return_if_fail (GST_IS_RTSP_SESSION (session));
+
+  g_get_current_time (&session->last_access);
+}
+
+/**
+ * gst_rtsp_session_is_expired:
+ * @session: a #GstRTSPSession
+ *
+ * Check if @session timeout out. 
+ *
+ * Returns: %TRUE if @session timed out
+ */
+gboolean
+gst_rtsp_session_is_expired (GstRTSPSession *session)
+{
+  gboolean res;
+  GstClockTime last_access, now_ns;
+  GTimeVal now;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), FALSE);
+
+  last_access = GST_TIMEVAL_TO_TIME (session->last_access);
+  /* add timeout */
+  last_access += session->timeout * GST_SECOND;
+
+  g_get_current_time (&now);
+  now_ns = GST_TIMEVAL_TO_TIME (now);
+
+  res = now_ns > last_access;
+
+  return res;
 }
 
 /**
@@ -240,6 +441,9 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
     GstRTSPTransport *ct)
 {
   GstRTSPTransport *st;
+
+  g_return_val_if_fail (stream != NULL, NULL);
+  g_return_val_if_fail (ct != NULL, NULL);
 
   /* prepare the server transport */
   gst_rtsp_transport_new (&st);
@@ -273,6 +477,8 @@ gst_rtsp_session_media_play (GstRTSPSessionMedia *media)
 {
   gboolean ret;
 
+  g_return_val_if_fail (media != NULL, FALSE);
+
   ret = gst_rtsp_media_play (media->media, media->streams);
 
   return ret;
@@ -290,6 +496,8 @@ gboolean
 gst_rtsp_session_media_pause (GstRTSPSessionMedia *media)
 {
   gboolean ret;
+
+  g_return_val_if_fail (media != NULL, FALSE);
 
   ret = gst_rtsp_media_pause (media->media, media->streams);
 
@@ -309,6 +517,8 @@ gboolean
 gst_rtsp_session_media_stop (GstRTSPSessionMedia *media)
 {
   gboolean ret;
+
+  g_return_val_if_fail (media != NULL, FALSE);
 
   ret = gst_rtsp_media_stop (media->media, media->streams);
 

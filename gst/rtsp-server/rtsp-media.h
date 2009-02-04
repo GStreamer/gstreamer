@@ -18,6 +18,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/rtsp/gstrtsprange.h>
 #include <gst/rtsp/gstrtspurl.h>
 
 #ifndef __GST_RTSP_MEDIA_H__
@@ -129,6 +130,9 @@ struct _GstRTSPMedia {
 
   /* for TCP transport */
   GstElement   *multifdsink;
+
+  /* the range of media */
+  GstRTSPTimeRange range;
 };
 
 struct _GstRTSPMediaClass {
