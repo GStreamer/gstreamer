@@ -49,9 +49,11 @@
 #include <gst/audio/audio.h>
 #include <gst/base/gstbasetransform.h>
 
+#if defined AUDIORESAMPLE_FORMAT_AUTO
 #define OIL_ENABLE_UNSTABLE_API
 #include <liboil/liboilprofile.h>
 #include <liboil/liboil.h>
+#endif
 
 GST_DEBUG_CATEGORY (audio_resample_debug);
 #define GST_CAT_DEFAULT audio_resample_debug
@@ -1392,10 +1394,9 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (audio_resample_debug, "audioresample", 0,
       "audio resampling element");
-
+#if defined AUDIORESAMPLE_FORMAT_AUTO
   oil_init ();
 
-#if defined AUDIORESAMPLE_FORMAT_AUTO
   if (!_benchmark_integer_resampling ())
     return FALSE;
 #endif

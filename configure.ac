@@ -313,6 +313,7 @@ case $ac_cv_audioresample_format in
     AC_DEFINE(AUDIORESAMPLE_FORMAT_AUTO,1,[The implementation that should be used for integer audio resampling witll be benchmarked at runtime])
     AC_SUBST(AUDIORESAMPLE_FORMAT_AUTO)
 esac
+AM_CONDITIONAL(AUDIORESAMPLE_NEEDS_LIBOIL, test "$ac_cv_audioresample_format" = "auto")
 
 dnl *** plug-ins to include ***
 
