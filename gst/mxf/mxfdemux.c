@@ -2485,50 +2485,48 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
   demux->offset += read;
 
   if (ret == GST_FLOW_OK && demux->src && demux->essence_tracks) {
-    guint i;
     GstMXFDemuxPad *earliest = NULL;
-    guint64 offset;
-    gint64 position;
-
-    earliest = gst_mxf_demux_get_earliest_pad (demux);
-    if (!earliest)
-      goto beach;
-
     /* We allow time drifts of at most 500ms */
-    if (demux->segment.last_stop - earliest->last_stop <= 500 * GST_MSECOND)
-      goto beach;
+    while ((earliest = gst_mxf_demux_get_earliest_pad (demux)) &&
+        demux->segment.last_stop - earliest->last_stop > 500 * GST_MSECOND) {
+      guint i;
+      guint64 offset;
+      gint64 position;
 
-    GST_WARNING_OBJECT (demux,
-        "Found synchronization issue -- trying to solve");
+      GST_WARNING_OBJECT (demux,
+          "Found synchronization issue -- trying to solve");
 
-    position = earliest->current_essence_track_position;
+      position = earliest->current_essence_track_position;
 
-    /* FIXME: This can probably be improved by using the
-     * offset of position-1 if it's in the same partition
-     * or the start of the position otherwise.
-     * This way we won't skip elements from the same essence
-     * container as etrack->position
-     */
-    offset =
-        gst_mxf_demux_find_essence_element (demux,
-        earliest->current_essence_track, &position, FALSE);
-    if (offset == -1) {
-      GST_ERROR_OBJECT (demux, "Failed to find offset for late essence track");
-      earliest->eos = TRUE;
-      gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
-      goto beach;
+      /* FIXME: This can probably be improved by using the
+       * offset of position-1 if it's in the same partition
+       * or the start of the position otherwise.
+       * This way we won't skip elements from the same essence
+       * container as etrack->position
+       */
+      offset =
+          gst_mxf_demux_find_essence_element (demux,
+          earliest->current_essence_track, &position, FALSE);
+      if (offset == -1) {
+        GST_ERROR_OBJECT (demux,
+            "Failed to find offset for late essence track");
+        earliest->eos = TRUE;
+        gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
+        continue;
+      }
+
+      demux->offset = offset + demux->run_in;
+      gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
+
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *etrack =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        etrack->position = -1;
+      }
+      earliest->current_essence_track->position = position;
+      break;
     }
-
-    demux->offset = offset + demux->run_in;
-    gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
-
-    for (i = 0; i < demux->essence_tracks->len; i++) {
-      GstMXFDemuxEssenceTrack *etrack =
-          &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
-
-      etrack->position = -1;
-    }
-    earliest->current_essence_track->position = position;
   }
 
 beach:
