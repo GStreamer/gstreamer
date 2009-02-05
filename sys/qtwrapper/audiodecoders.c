@@ -303,7 +303,7 @@ write_len (guint8 * buf, int val)
 }
 
 static void
-aac_parse_codec_data (GstBuffer * codec_data, guint * channels)
+aac_parse_codec_data (GstBuffer * codec_data, gint * channels)
 {
   guint8 *data = GST_BUFFER_DATA (codec_data);
   int codec_channels;
@@ -389,6 +389,19 @@ make_aac_magic_cookie (GstBuffer * codec_data, gsize * len)
   return cookie;
 }
 
+static void
+close_decoder (QTWrapperAudioDecoder *qtwrapper)
+{
+  if (qtwrapper->adec) {
+    CloseComponent (qtwrapper->adec);
+    qtwrapper->adec = NULL;
+  }
+
+  if (qtwrapper->bufferlist) {
+    DestroyAudioBufferList (qtwrapper->bufferlist);
+    qtwrapper->bufferlist = NULL;
+  }
+}
 
 static gboolean
 open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
@@ -409,6 +422,9 @@ open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
   const GValue *value;
   GstBuffer *codec_data = NULL;
   gboolean have_esds = FALSE;
+
+  /* Clean up any existing decoder */
+  close_decoder (qtwrapper);
 
   tmp = gst_caps_to_string (caps);
   GST_LOG_OBJECT (qtwrapper, "caps: %s", tmp);
@@ -486,6 +502,7 @@ open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
   if (status) {
     GST_WARNING_OBJECT (qtwrapper,
         "Error instantiating SCAudio component: %ld", status);
+    qtwrapper->adec = NULL;
     goto beach;
   }
 
@@ -561,6 +578,8 @@ open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
             status);
         goto beach;
       }
+
+      g_free (magiccookie);
     }
   }
 
@@ -957,10 +976,25 @@ qtwrapper_audio_decoder_base_init (QTWrapperAudioDecoderClass * klass)
   klass->componentSubType = desc.componentSubType;
 }
 
+static void qtwrapper_audio_decoder_dispose (GObject * object)
+{
+  QTWrapperAudioDecoder *qtwrapper = (QTWrapperAudioDecoder *)object;
+  QTWrapperAudioDecoderClass *oclass = (QTWrapperAudioDecoderClass *) (G_OBJECT_GET_CLASS (qtwrapper));
+  GObjectClass *parent_class = g_type_class_peek_parent (oclass);
+
+  close_decoder (qtwrapper);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
 static void
 qtwrapper_audio_decoder_class_init (QTWrapperAudioDecoderClass * klass)
 {
-  /* FIXME : don't we need some vmethod implementations here ?? */
+  GObjectClass *object_class;
+
+  object_class = (GObjectClass *) klass;
+
+  object_class->dispose = qtwrapper_audio_decoder_dispose;
 }
 
 gboolean
