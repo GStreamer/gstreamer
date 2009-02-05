@@ -89,6 +89,7 @@ check_PROGRAMS = \
 	$(check_x264enc)   \
 	elements/aacparse \
 	elements/amrparse \
+	elements/camerabin \
 	elements/legacyresample \
 	elements/qtmux \
 	elements/selector \
@@ -102,6 +103,12 @@ TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)  $(GST_OPTION_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
+
+elements_camerabin_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CHECK_CFLAGS)
+elements_camerabin_LDADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_CHECK_LIBS) \
+         -lgstinterfaces-@GST_MAJORMINOR@ \
+        $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_MAJORMINOR@.la
+elements_camerabin_SOURCES = elements/camerabin.c
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
