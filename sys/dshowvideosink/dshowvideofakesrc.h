@@ -22,7 +22,7 @@
 #include <streams.h>
 #include <gst/gst.h>
 
-class VideoFakeSrcPin : public CBaseOutputPin
+class VideoFakeSrcPin : public CDynamicOutputPin
 {
 protected:
   /* members */
@@ -41,11 +41,14 @@ public:
   virtual HRESULT CheckMediaType(const CMediaType *pmt);
   HRESULT GetMediaType(int iPosition, CMediaType *pMediaType);
   virtual HRESULT DecideBufferSize (IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *ppropInputRequest);
+  virtual HRESULT BreakConnect();
+  virtual HRESULT CompleteConnect(IPin *pReceivePin);
+  virtual HRESULT Inactive();
   STDMETHOD (SetMediaType) (AM_MEDIA_TYPE *pmt);
   STDMETHOD (Flush) ();
   STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
-
-
+  STDMETHODIMP Disconnect();
+  STDMETHODIMP Block(DWORD dwBlockFlags, HANDLE hEvent);
 };
 
 class VideoFakeSrc : public CBaseFilter
@@ -54,6 +57,8 @@ private:
   /* members */
   CCritSec m_critsec;
   VideoFakeSrcPin *m_pOutputPin;
+
+  CAMEvent m_evFilterStoppingEvent;
 
 public:
   /* methods */
@@ -65,6 +70,11 @@ public:
   /* Overrides */
   int       GetPinCount();
   CBasePin *GetPin(int n);
+
+  STDMETHODIMP Run(REFERENCE_TIME tStart);
+  STDMETHODIMP Stop(void);
+  STDMETHODIMP Pause(void);
+  STDMETHODIMP JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName);
 };
 
 #endif /* __DSHOWVIDEOFAKESRC_H__ */

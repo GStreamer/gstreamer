@@ -19,13 +19,16 @@
 
 #include "dshowvideofakesrc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (dshowvideosink_debug);
+#define GST_CAT_DEFAULT dshowvideosink_debug
+
 // {A0A5CF33-BD0C-4158-9A56-3011DEE3AF6B}
 const GUID CLSID_VideoFakeSrc = 
 { 0xa0a5cf33, 0xbd0c, 0x4158, { 0x9a, 0x56, 0x30, 0x11, 0xde, 0xe3, 0xaf, 0x6b } };
 
 /* output pin*/
 VideoFakeSrcPin::VideoFakeSrcPin (CBaseFilter *pFilter, CCritSec *sec, HRESULT *hres):
-  CBaseOutputPin("VideoFakeSrcPin", pFilter, sec, hres, L"output")
+  CDynamicOutputPin("VideoFakeSrcPin", pFilter, sec, hres, L"output")
 {
 }
 
@@ -101,7 +104,8 @@ HRESULT VideoFakeSrcPin::DecideBufferSize (IMemAllocator *pAlloc, ALLOCATOR_PROP
         properties.cbPrefix, properties.cBuffers);
 
   /* Then actually allocate the buffers */
-  pAlloc->Commit();
+  hres = pAlloc->Commit();
+  GST_DEBUG ("Allocator commit returned %x", hres);
 
   return S_OK;
 }
@@ -199,56 +203,125 @@ STDMETHODIMP VideoFakeSrcPin::CopyToDestinationBuffer (byte *srcbuf, byte *dstbu
   return S_OK;
 }
 
+STDMETHODIMP VideoFakeSrcPin::Disconnect ()
+{
+  GST_DEBUG_OBJECT (this, "Disconnecting pin");
+  HRESULT hr = CDynamicOutputPin::Disconnect();
+  GST_DEBUG_OBJECT (this, "Pin disconnected");
+  return hr;
+}
+
+HRESULT VideoFakeSrcPin::Inactive ()
+{
+  GST_DEBUG_OBJECT (this, "Pin going inactive");
+  HRESULT hr = CDynamicOutputPin::Inactive();
+  GST_DEBUG_OBJECT (this, "Pin inactivated");
+  return hr;
+}
+
+HRESULT VideoFakeSrcPin::BreakConnect ()
+{
+  GST_DEBUG_OBJECT (this, "Breaking connection");
+  HRESULT hr = CDynamicOutputPin::BreakConnect();
+  GST_DEBUG_OBJECT (this, "Connection broken");
+  return hr;
+}
+
+HRESULT VideoFakeSrcPin::CompleteConnect (IPin *pReceivePin)
+{
+  GST_DEBUG_OBJECT (this, "Completing connection");
+  HRESULT hr = CDynamicOutputPin::CompleteConnect(pReceivePin);
+  GST_DEBUG_OBJECT (this, "Completed connection: %x", hr);
+  return hr;
+}
+
+STDMETHODIMP VideoFakeSrcPin::Block(DWORD dwBlockFlags, HANDLE hEvent)
+{
+  GST_DEBUG_OBJECT (this, "Calling Block()");
+  HRESULT hr = CDynamicOutputPin::Block (dwBlockFlags, hEvent);
+  GST_DEBUG_OBJECT (this, "Called Block()");
+  return hr;
+}
+
+/* When moving the video to a different monitor, directshow stops and restarts the playback pipeline.
+ * Unfortunately, it doesn't properly block pins or do anything special, so we racily just fail
+ * at this point.
+ * So, we try multiple times in a loop, hoping that it'll have finished (we get no notifications at all!)
+ * at some point.
+ */
+#define MAX_ATTEMPTS 10
 
 GstFlowReturn VideoFakeSrcPin::PushBuffer(GstBuffer *buffer)
 {
   IMediaSample *pSample = NULL;
-
   byte *data = GST_BUFFER_DATA (buffer);
-  
-  /* TODO: Use more of the arguments here? */
-  HRESULT hres = GetDeliveryBuffer(&pSample, NULL, NULL, 0);
-  if (SUCCEEDED (hres))
+  int attempts = 0;
+  HRESULT hres;
+  BYTE *sample_buffer;
+  AM_MEDIA_TYPE *mediatype;
+
+  StartUsingOutputPin();
+
+  while (attempts < MAX_ATTEMPTS)
   {
-    BYTE *sample_buffer;
-    AM_MEDIA_TYPE *mediatype;
-
-    pSample->GetPointer(&sample_buffer);
-    pSample->GetMediaType(&mediatype);
-    if (mediatype)
-      SetMediaType (mediatype);
-
-    if(sample_buffer)
-    {
-      /* Copy to the destination stride. 
-       * This is not just a simple memcpy because of the different strides. 
-       * TODO: optimise for the same-stride case and avoid the copy entirely. 
-       */
-      CopyToDestinationBuffer (data, sample_buffer);
-    }
-
-    pSample->SetDiscontinuity(FALSE); /* Decoded frame; unimportant */
-    pSample->SetSyncPoint(TRUE); /* Decoded frame; always a valid syncpoint */
-    pSample->SetPreroll(FALSE); /* For non-displayed frames. 
-                                   Not used in GStreamer */
-
-    /* Disable synchronising on this sample. We instead let GStreamer handle 
-     * this at a higher level, inside BaseSink. */
-    pSample->SetTime(NULL, NULL);
-
-    hres = Deliver(pSample);
-    pSample->Release();
-
+    hres = GetDeliveryBuffer(&pSample, NULL, NULL, 0);
     if (SUCCEEDED (hres))
-      return GST_FLOW_OK;
-    else if (hres == VFW_E_NOT_CONNECTED)
+      break;
+    attempts++;
+    Sleep(100);
+  }
+
+  if (FAILED (hres)) 
+  {
+    StopUsingOutputPin();
+    GST_WARNING ("Could not get sample for delivery to sink: %x", hres);
+    return GST_FLOW_ERROR;
+  }
+
+  pSample->GetPointer(&sample_buffer);
+  pSample->GetMediaType(&mediatype);
+  if (mediatype)
+    SetMediaType (mediatype);
+
+  if(sample_buffer)
+  {
+    /* Copy to the destination stride. 
+     * This is not just a simple memcpy because of the different strides. 
+     * TODO: optimise for the same-stride case and avoid the copy entirely. 
+     */
+    CopyToDestinationBuffer (data, sample_buffer);
+  }
+
+  pSample->SetDiscontinuity(FALSE); /* Decoded frame; unimportant */
+  pSample->SetSyncPoint(TRUE); /* Decoded frame; always a valid syncpoint */
+  pSample->SetPreroll(FALSE); /* For non-displayed frames. 
+                                 Not used in GStreamer */
+
+  /* Disable synchronising on this sample. We instead let GStreamer handle 
+   * this at a higher level, inside BaseSink. */
+  pSample->SetTime(NULL, NULL);
+
+  while (attempts < MAX_ATTEMPTS)
+  {
+    hres = Deliver(pSample);
+    if (SUCCEEDED (hres))
+      break;
+    attempts++;
+    Sleep(100);
+  }
+
+  pSample->Release();
+
+  StopUsingOutputPin();
+
+  if (SUCCEEDED (hres))
+    return GST_FLOW_OK;
+  else {
+    GST_WARNING_OBJECT (this, "Failed to deliver sample: %x", hres);
+    if (hres == VFW_E_NOT_CONNECTED)
       return GST_FLOW_NOT_LINKED;
     else
       return GST_FLOW_ERROR;
-  }
-  else {
-    GST_WARNING ("Could not get sample for delivery to sink: %x", hres);
-    return GST_FLOW_ERROR;
   }
 }
 
@@ -259,7 +332,8 @@ STDMETHODIMP VideoFakeSrcPin::Flush ()
   return S_OK;
 }
 
-VideoFakeSrc::VideoFakeSrc() : CBaseFilter("VideoFakeSrc", NULL, &m_critsec, CLSID_VideoFakeSrc)
+VideoFakeSrc::VideoFakeSrc() : CBaseFilter("VideoFakeSrc", NULL, &m_critsec, CLSID_VideoFakeSrc),
+	m_evFilterStoppingEvent(TRUE)
 {
   HRESULT hr = S_OK;
   m_pOutputPin = new VideoFakeSrcPin ((CSource *)this, &m_critsec, &hr);
@@ -279,3 +353,62 @@ VideoFakeSrcPin *VideoFakeSrc::GetOutputPin()
 {
   return m_pOutputPin;
 }
+
+STDMETHODIMP VideoFakeSrc::Stop(void)
+{
+  GST_DEBUG_OBJECT (this, "Stop()");
+  m_evFilterStoppingEvent.Set();
+
+  return CBaseFilter::Stop();
+}
+
+STDMETHODIMP VideoFakeSrc::Pause(void)
+{
+  GST_DEBUG_OBJECT (this, "Pause()");
+
+  m_evFilterStoppingEvent.Reset();
+
+  return CBaseFilter::Pause();
+}
+
+STDMETHODIMP VideoFakeSrc::Run(REFERENCE_TIME tStart)
+{
+  GST_DEBUG_OBJECT (this, "Run()");
+
+  return CBaseFilter::Run(tStart);
+}
+
+STDMETHODIMP VideoFakeSrc::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName)
+{
+  HRESULT hr;
+
+  // The filter is joining the filter graph.
+  if(NULL != pGraph)
+  {
+    IGraphConfig* pGraphConfig = NULL;
+    hr = pGraph->QueryInterface(IID_IGraphConfig, (void**)&pGraphConfig);
+    if(FAILED(hr))
+      return hr;
+
+    hr = CBaseFilter::JoinFilterGraph(pGraph, pName);
+    if(FAILED(hr))
+    {
+      pGraphConfig->Release();
+      return hr;
+    }
+
+    m_pOutputPin->SetConfigInfo(pGraphConfig, m_evFilterStoppingEvent);
+    pGraphConfig->Release();
+  }
+  else
+  {
+    hr = CBaseFilter::JoinFilterGraph(pGraph, pName);
+    if(FAILED(hr))
+      return hr;
+
+    m_pOutputPin->SetConfigInfo(NULL, NULL);
+  }
+
+  return S_OK;
+}
+

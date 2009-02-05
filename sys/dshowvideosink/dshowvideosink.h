@@ -65,6 +65,8 @@ struct _GstDshowVideoSink
    /* The filter graph (DirectShow equivalent to pipeline */
   IFilterGraph *filter_graph;
 
+  IMediaEventEx *filter_media_event;
+
   /* Renderer wrapper (EVR, VMR9, or VMR) and support code */
   RendererSupport *renderersupport;
 
