@@ -10,6 +10,8 @@ libgstopengl_la_SOURCES = \
 	gstglimagesink.h \
 	gstglupload.c \
 	gstglupload.h \
+	gstglbumper.c \
+	gstglbumber.h \
 	gstgldownload.c \
 	gstgldownload.h \
 	gstglfilterblur.c \
@@ -24,6 +26,8 @@ libgstopengl_la_SOURCES = \
 	gstglfilterapp.h \
 	gstglcolorscale.c \
 	gstglcolorscale.h \
+	gstgldifferencematte.c \
+	gstglpixbufoverlay.c \
 	gltestsrc.c \
 	gltestsrc.h \
 	gstgltestsrc.c \
@@ -49,13 +53,6 @@ libgstopengl_la_SOURCES = \
 	effects/gstgleffectglow.c \
 	effects/gstgleffectxray.c
 
-if HAVE_GDKPIXBUF
-libgstopengl_la_SOURCES += gstglpixbufoverlay.c \
-                           gstgldifferencematte.c \
-                           gstglbumper.c \
-                           gstglbumber.h
-endif
-
 # check order of CFLAGS and LIBS, shouldn't the order be the other way around
 # (like in AM_CFLAGS)?
 libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
@@ -63,9 +60,6 @@ libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	-I$(top_srcdir)/gst-libs \
 	-I$(top_srcdir)/gst-libs/gst/gl \
 	-I$(top_srcdir)/gst/gl/effects
-if HAVE_GDKPIXBUF
-libgstopengl_la_CFLAGS += $(GDKPIXBUF_CFLAGS)
-endif
 
 libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_MAJORMINOR).la \
@@ -73,9 +67,6 @@ libgstopengl_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR) \
 	$(GL_LIBS) \
 	$(LIBPNG_LIBS)
-if HAVE_GDKPIXBUF
-libgstopengl_la_LIBADD += $(GDKPIXBUF_LIBS)
-endif
 
 libgstopengl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

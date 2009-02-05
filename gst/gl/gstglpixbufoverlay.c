@@ -21,7 +21,7 @@
 /**
  * SECTION:element-glpixbufoverlay
  *
- * Overlay GL video texture with a gdkpixbuf.
+ * Overlay GL video texture with a PNG image
  *
  * <refsect2>
  * <title>Examples</title>
@@ -94,7 +94,7 @@ static gboolean gst_gl_pixbufoverlay_loader (GstGLFilter* filter);
 static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
   "Gstreamer OpenGL PixbufOverlay",
   "Filter/Effect",
-  "Overlay GL video texture with a gdkpixbuf",
+  "Overlay GL video texture with a PNG image",
   "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
 enum
