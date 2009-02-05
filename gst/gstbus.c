@@ -91,10 +91,6 @@ static void gst_bus_class_init (GstBusClass * klass);
 static void gst_bus_init (GstBus * bus);
 static void gst_bus_dispose (GObject * object);
 
-static void gst_bus_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_bus_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 static void gst_bus_set_main_context (GstBus * bus, GMainContext * ctx);
 
 static GstObjectClass *parent_class = NULL;
@@ -178,8 +174,6 @@ gst_bus_class_init (GstBusClass * klass)
     g_thread_init (NULL);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_bus_dispose);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_bus_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_bus_get_property);
 
   /**
    * GstBus::sync-message:
@@ -263,36 +257,6 @@ gst_bus_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_bus_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstBus *bus;
-
-  bus = GST_BUS (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_bus_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstBus *bus;
-
-  bus = GST_BUS (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static void
