@@ -331,6 +331,17 @@ AG_GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
   ])
 ])
 
+dnl *** assrender ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ASSRENDER, true)
+AG_GST_CHECK_FEATURE(ASSRENDER, [ASS/SSA renderer], assrender, [
+  PKG_CHECK_MODULES(ASSRENDER, libass >= 0.9.4, HAVE_ASSRENDER="yes", [
+    HAVE_ASSRENDER="no"
+    AC_MSG_RESULT(no)
+  ])
+])
+AC_SUBST(ASSRENDER_CFLAGS)
+AC_SUBST(ASSRENDER_LIBS)
+
 dnl *** amrwb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
 AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwb, [
@@ -1288,6 +1299,7 @@ dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_QUICKTIME, false)
 AM_CONDITIONAL(USE_VCD, false)
 AM_CONDITIONAL(USE_ALSA, false)
+AM_CONDITIONAL(USE_ASSRENDER, false)
 AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
@@ -1458,6 +1470,7 @@ examples/scaletempo/Makefile
 examples/switch/Makefile
 ext/amrwb/Makefile
 ext/alsaspdif/Makefile
+ext/assrender/Makefile
 ext/apexsink/Makefile
 ext/bz2/Makefile
 ext/cdaudio/Makefile

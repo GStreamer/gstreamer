@@ -4,6 +4,12 @@ else
 ALSASPDIF_DIR =
 endif
 
+if USE_ASSRENDER
+ASSRENDER_DIR = assrender
+else
+ASSRENDER_DIR =
+endif
+
 if USE_AMRWB
 AMRWB_DIR = amrwb
 else
@@ -326,6 +332,7 @@ endif
 
 SUBDIRS=\
 	$(ALSASPDIF_DIR) \
+	$(ASSRENDER_DIR) \
 	$(AMRWB_DIR) \
 	$(APEXSINK_DIR) \
 	$(ARTS_DIR) \
