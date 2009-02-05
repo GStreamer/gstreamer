@@ -1798,6 +1798,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* Don't use the typefind functions of formats for which we already have
      * better typefind functions */
     if (!strcmp (in_plugin->name, "mov,mp4,m4a,3gp,3g2,mj2") ||
+        !strcmp (in_plugin->name, "ass") ||
         !strcmp (in_plugin->name, "avi") ||
         !strcmp (in_plugin->name, "asf") ||
         !strcmp (in_plugin->name, "mpegvideo") ||
