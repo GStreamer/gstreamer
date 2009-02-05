@@ -1530,6 +1530,13 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
         GST_DEBUG_OBJECT (dec, "process_single failed");
         break;
       }
+
+      if (FLAC__stream_decoder_get_state (dec->stream_decoder) ==
+          FLAC__STREAM_DECODER_ABORTED) {
+        GST_WARNING_OBJECT (dec, "Read callback caused internal abort");
+        dec->last_flow = GST_FLOW_ERROR;
+        break;
+      }
     }
   } else if (dec->framed && got_audio_frame) {
     /* framed - there should always be enough data to decode something */
