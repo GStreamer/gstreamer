@@ -390,7 +390,7 @@ make_aac_magic_cookie (GstBuffer * codec_data, gsize * len)
 }
 
 static void
-close_decoder (QTWrapperAudioDecoder *qtwrapper)
+close_decoder (QTWrapperAudioDecoder * qtwrapper)
 {
   if (qtwrapper->adec) {
     CloseComponent (qtwrapper->adec);
@@ -976,10 +976,12 @@ qtwrapper_audio_decoder_base_init (QTWrapperAudioDecoderClass * klass)
   klass->componentSubType = desc.componentSubType;
 }
 
-static void qtwrapper_audio_decoder_dispose (GObject * object)
+static void
+qtwrapper_audio_decoder_dispose (GObject * object)
 {
-  QTWrapperAudioDecoder *qtwrapper = (QTWrapperAudioDecoder *)object;
-  QTWrapperAudioDecoderClass *oclass = (QTWrapperAudioDecoderClass *) (G_OBJECT_GET_CLASS (qtwrapper));
+  QTWrapperAudioDecoder *qtwrapper = (QTWrapperAudioDecoder *) object;
+  QTWrapperAudioDecoderClass *oclass =
+      (QTWrapperAudioDecoderClass *) (G_OBJECT_GET_CLASS (qtwrapper));
   GObjectClass *parent_class = g_type_class_peek_parent (oclass);
 
   close_decoder (qtwrapper);
