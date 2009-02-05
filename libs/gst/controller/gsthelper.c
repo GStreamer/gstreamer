@@ -131,12 +131,10 @@ gst_object_get_controller (GObject * object)
 gboolean
 gst_object_set_controller (GObject * object, GstController * controller)
 {
-  GstController *ctrl;
-
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (controller, FALSE);
 
-  if (!(ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
+  if (!g_object_get_qdata (object, priv_gst_controller_key)) {
     g_object_set_qdata (object, priv_gst_controller_key, controller);
     return (TRUE);
   }
