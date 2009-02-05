@@ -277,8 +277,8 @@ beach:
   xvimage->xvimagesink = NULL;
   gst_object_unref (xvimagesink);
 
-  GST_MINI_OBJECT_CLASS (xvimage_buffer_parent_class)->
-      finalize (GST_MINI_OBJECT (xvimage));
+  GST_MINI_OBJECT_CLASS (xvimage_buffer_parent_class)->finalize (GST_MINI_OBJECT
+      (xvimage));
 
   return;
 
@@ -592,14 +592,17 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
         pitches[0] = GST_ROUND_UP_4 (xvimage->width);
         offsets[1] = offsets[0] + pitches[0] * GST_ROUND_UP_2 (xvimage->height);
         pitches[1] = GST_ROUND_UP_8 (xvimage->width) / 2;
-        offsets[2] = offsets[1] + pitches[1] * GST_ROUND_UP_2 (xvimage->height) / 2;
+        offsets[2] =
+            offsets[1] + pitches[1] * GST_ROUND_UP_2 (xvimage->height) / 2;
         pitches[2] = GST_ROUND_UP_8 (pitches[0]) / 2;
 
-        expected_size = offsets[2] + pitches[2] * GST_ROUND_UP_2 (xvimage->height) / 2;
+        expected_size =
+            offsets[2] + pitches[2] * GST_ROUND_UP_2 (xvimage->height) / 2;
 
         for (plane = 0; plane < xvimage->xvimage->num_planes; plane++) {
-          GST_DEBUG_OBJECT (xvimagesink, "Plane %u has a expected pitch of %d bytes, "
-              "offset of %d", plane, pitches[plane], offsets[plane]);
+          GST_DEBUG_OBJECT (xvimagesink,
+              "Plane %u has a expected pitch of %d bytes, " "offset of %d",
+              plane, pitches[plane], offsets[plane]);
         }
         break;
       }
@@ -2206,10 +2209,6 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      g_mutex_lock (xvimagesink->flow_lock);
-      if (xvimagesink->xwindow)
-        gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
-      g_mutex_unlock (xvimagesink->flow_lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
