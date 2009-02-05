@@ -444,6 +444,8 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
 
   /* now start rendering subtitles, if all conditions are met */
   if (render->renderer_init_ok && render->track_init_ok && render->enable) {
+    int counter;
+
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     GST_DEBUG_OBJECT (render, "rendering frame for timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));
@@ -467,7 +469,7 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
       return ret;
     }
 
-    int counter = 0;
+    counter = 0;
     while (ass_image) {
       /* blend subtitles onto the video frame */
       guint8 alpha = 255 - ((ass_image->color) & 0xff);
@@ -581,20 +583,22 @@ gst_assrender_event_video (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_TAG:
     {
-      /* tag events may contain attachments which might be fonts */
-      GST_DEBUG_OBJECT (render, "got TAG event");
       GstTagList *taglist = gst_tag_list_new ();
       guint tag_size;
       guint index;
 
+      /* tag events may contain attachments which might be fonts */
+      GST_DEBUG_OBJECT (render, "got TAG event");
+
       gst_event_parse_tag (event, &taglist);
       tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
       if (tag_size > 0 && render->embeddedfonts) {
-        GST_DEBUG_OBJECT (render, "TAG event has attachments");
         const GValue *value;
         GstBuffer *buf;
         GstCaps *caps;
         GstStructure *structure;
+
+        GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
         for (index = 0; index < tag_size; index++) {
           value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT,
@@ -677,19 +681,21 @@ gst_assrender_event_text (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_TAG:
     {
-      GST_DEBUG_OBJECT (render, "got TAG event");
       GstTagList *taglist = gst_tag_list_new ();
       guint tag_size;
       guint index;
 
+      GST_DEBUG_OBJECT (render, "got TAG event");
+
       gst_event_parse_tag (event, &taglist);
       tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
       if (tag_size > 0 && render->embeddedfonts) {
-        GST_DEBUG_OBJECT (render, "TAG event has attachments");
         const GValue *value;
         GstBuffer *buf;
         GstCaps *caps;
         GstStructure *structure;
+
+        GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
         for (index = 0; index < tag_size; index++) {
           value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT,
