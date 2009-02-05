@@ -63,27 +63,13 @@ typedef struct _GstOSXVideoSinkClass GstOSXVideoSinkClass;
 struct _GstOSXWindow {
   gint width, height;
   gboolean internal;
-  GstOSXVideoSinkWindow* win;
   GstGLView* gstview;
-  NSAutoreleasePool *pool;
 };
 
 struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
   GstOSXWindow *osxwindow;
-  
-  GstTask *event_task;
-  GStaticRecMutex event_task_lock;
-
-  /* Unused */
-  gint pixel_width, pixel_height;
- 
-  GstClockTime time;
-  
-  gboolean embed;
-  gboolean fullscreen; 
-  gboolean sw_scaling_failed;
 };
 
 struct _GstOSXVideoSinkClass {
@@ -91,16 +77,6 @@ struct _GstOSXVideoSinkClass {
 };
 
 GType gst_osx_video_sink_get_type(void);
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
-@interface NSApplication(AppleMenu)
-- (void)setAppleMenu:(NSMenu *)menu;
-@end
-#endif
-
-@interface GstAppDelegate : NSObject
-- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
-@end
 
 G_END_DECLS
 
