@@ -163,8 +163,8 @@ marshal_VOID__MINIOBJECT (GClosure * closure, GValue * return_value,
     data2 = closure->data;
   }
   callback =
-      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data : cc->
-      callback);
+      (marshalfunc_VOID__MINIOBJECT) (marshal_data ? marshal_data :
+      cc->callback);
 
   callback (data1, gst_value_get_mini_object (param_values + 1), data2);
 }
@@ -173,11 +173,9 @@ static void
 gst_identity_class_init (GstIdentityClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetrans_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbasetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);

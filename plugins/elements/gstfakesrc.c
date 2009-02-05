@@ -243,8 +243,8 @@ marshal_VOID__MINIOBJECT_OBJECT (GClosure * closure, GValue * return_value,
     data2 = closure->data;
   }
   callback =
-      (marshalfunc_VOID__MINIOBJECT_OBJECT) (marshal_data ? marshal_data : cc->
-      callback);
+      (marshalfunc_VOID__MINIOBJECT_OBJECT) (marshal_data ? marshal_data :
+      cc->callback);
 
   callback (data1, gst_value_get_mini_object (param_values + 1),
       g_value_get_object (param_values + 2), data2);
@@ -268,11 +268,9 @@ static void
 gst_fake_src_class_init (GstFakeSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbase_src_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbase_src_class = GST_BASE_SRC_CLASS (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_fake_src_finalize);

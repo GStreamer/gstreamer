@@ -572,10 +572,8 @@ static void
 gst_clock_class_init (GstClockClass * klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gstobject_class = GST_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
