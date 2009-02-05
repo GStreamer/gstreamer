@@ -342,8 +342,8 @@ GST_START_TEST (test_base_time)
     fail_unless (observed <= stream, "timestamps outrun stream time: %"
         GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
         GST_TIME_ARGS (observed), GST_TIME_ARGS (stream));
-    fail_unless (observed >= 0, "early timestamp: %" GST_TIME_FORMAT " < %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (observed),
+    fail_unless (observed != GST_CLOCK_TIME_NONE, "early timestamp: %"
+        GST_TIME_FORMAT " < %" GST_TIME_FORMAT, GST_TIME_ARGS (observed),
         GST_TIME_ARGS (lower - base));
     fail_unless (observed <= upper - base,
         "late timestamp: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
