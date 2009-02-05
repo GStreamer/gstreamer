@@ -519,7 +519,7 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar *name)
 
   g_return_val_if_fail (priv->program_handle != 0, 0);
 
-  return glGetUniformLocationARB (priv->program_handle, name);
+  return glGetAttribLocationARB (priv->program_handle, name);
 }
 
 GQuark

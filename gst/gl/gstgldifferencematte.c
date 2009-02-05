@@ -302,7 +302,7 @@ static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
                 filter->width, filter->height, 0,
-                GL_RGB, GL_UNSIGNED_BYTE, differencematte->pixbuf); //FIXME: RGBA
+                GL_RGBA, GL_UNSIGNED_BYTE, differencematte->pixbuf);
 
   if (differencematte->savedbgtexture == 0) {
     glGenTextures (1, &differencematte->savedbgtexture);
@@ -562,7 +562,7 @@ gst_gl_differencematte_loader (GstGLFilter* filter)
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
      &interlace_type, int_p_NULL, int_p_NULL);
 
-  if (color_type != PNG_COLOR_TYPE_RGB) //FIXME: RGBA
+  if (color_type != PNG_COLOR_TYPE_RGB_ALPHA)
   {
     fclose(fp);
     png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
@@ -572,12 +572,12 @@ gst_gl_differencematte_loader (GstGLFilter* filter)
   filter->width = width;
   filter->height = height;
 
-  differencematte->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 3 ); //FIXME: g_alloc, RGBA
+  differencematte->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 4 );
 
-  rows = (guchar**)malloc(sizeof(guchar*) * height); //FIXME: g_alloc
+  rows = (guchar**)malloc(sizeof(guchar*) * height);
 
   for (y = 0;  y < height; ++y)
-    rows[y] = (guchar*) (differencematte->pixbuf + y * width * 3);
+    rows[y] = (guchar*) (differencematte->pixbuf + y * width * 4);
 
   png_read_image(png_ptr, rows);
 

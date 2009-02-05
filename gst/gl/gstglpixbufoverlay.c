@@ -310,7 +310,7 @@ static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, pixbufoverlay->pbuftexture);
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
                   (gint)pixbufoverlay->width, (gint)pixbufoverlay->height, 0,
-                  GL_RGB, GL_UNSIGNED_BYTE, pixbufoverlay->pixbuf); //FIXME: RGBA
+                  GL_RGBA, GL_UNSIGNED_BYTE, pixbufoverlay->pixbuf);
   }
   else
     display->isAlive = FALSE;
@@ -402,7 +402,7 @@ gst_gl_pixbufoverlay_loader (GstGLFilter* filter)
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
      &interlace_type, int_p_NULL, int_p_NULL);
 
-  if (color_type != PNG_COLOR_TYPE_RGB) //FIXME: RGBA
+  if (color_type != PNG_COLOR_TYPE_RGB_ALPHA)
   {
     fclose(fp);
     png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
@@ -412,12 +412,12 @@ gst_gl_pixbufoverlay_loader (GstGLFilter* filter)
   pixbufoverlay->width = width;
   pixbufoverlay->height = height;
 
-  pixbufoverlay->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 3 ); //FIXME: g_alloc, RGBA
+  pixbufoverlay->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 4 );
 
-  rows = (guchar**)malloc(sizeof(guchar*) * height); //FIXME: g_alloc
+  rows = (guchar**)malloc(sizeof(guchar*) * height);
 
   for (y = 0;  y < height; ++y)
-    rows[y] = (guchar*) (pixbufoverlay->pixbuf + y * width * 3);
+    rows[y] = (guchar*) (pixbufoverlay->pixbuf + y * width * 4);
 
   png_read_image(png_ptr, rows);
 

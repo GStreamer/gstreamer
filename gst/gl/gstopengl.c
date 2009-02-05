@@ -53,7 +53,7 @@
 #include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 #include "gstgleffects.h"
-#ifdef HAVE_GDKPIXBUF  //FIXME: HAVE_LIBPNG
+#ifdef HAVE_LIBPNG
 #include "gstglbumper.h"
 #endif
 
@@ -65,7 +65,7 @@ GType gst_gl_filtersobel_get_type (void);
 GType gst_gl_filter_edge_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
 GType gst_gl_filter_glass_get_type (void);
-#ifdef HAVE_GDKPIXBUF //FIXME: HAVE_LIBPNG
+#ifdef HAVE_LIBPNG
 GType gst_gl_pixbufoverlay_get_type (void);
 GType gst_gl_differencematte_get_type (void);
 GType gst_gl_bumper_get_type (void);
@@ -94,7 +94,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
     return FALSE;
   }
-#ifdef HAVE_GDKPIXBUF //FIXME: HAVE_LIBPNG
+#ifdef HAVE_LIBPNG
   if (!gst_element_register (plugin, "glpixbufoverlay",
           GST_RANK_NONE, gst_gl_pixbufoverlay_get_type())) {
     return FALSE;
