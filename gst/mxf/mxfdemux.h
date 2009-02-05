@@ -150,7 +150,8 @@ struct _GstMXFDemux
 
   GArray *random_index_pack;
 
-  /* Structural metadata */
+  /* Metadata */
+  GMutex *metadata_lock;
   gboolean update_metadata;
   gboolean pull_footer_metadata;
 
