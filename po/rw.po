@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 21:14+0000\n"
+"POT-Creation-Date: 2009-02-05 20:02+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -24,22 +24,18 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:309
 #, fuzzy
 msgid "Print the GStreamer version"
 msgstr "i Verisiyo"
 
-#: gst/gst.c:311
 #, fuzzy
 msgid "Make all warnings fatal"
 msgstr "Byose Iburira"
 
-#: gst/gst.c:315
 #, fuzzy
 msgid "Print available debug categories and exit"
 msgstr "Bihari Kosora amakosa Ibyiciro Na Gusohoka"
 
-#: gst/gst.c:319
 #, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
@@ -67,12 +63,10 @@ msgstr ""
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Insert.Caption.OfficeObject.Impress.Settings.Level.text
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Insert.Caption.OfficeObject.OLEMisc.Settings.Level.text
-#: gst/gst.c:321
 #, fuzzy
 msgid "LEVEL"
 msgstr "urwego"
 
-#: gst/gst.c:323
 #, fuzzy
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -87,523 +81,417 @@ msgstr ""
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....DefaultFontCJK.List.text
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....DefaultFontCTL.List.text
-#: gst/gst.c:326
 #, fuzzy
 msgid "LIST"
 msgstr "Urutonde"
 
-#: gst/gst.c:328
 #, fuzzy
 msgid "Disable colored debugging output"
 msgstr "Ibisohoka"
 
-#: gst/gst.c:331
 msgid "Disable debugging"
 msgstr ""
 
-#: gst/gst.c:335
 #, fuzzy
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Itangira..."
 
-#: gst/gst.c:339
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
 # offmgr/source\offapp\dialog\treeopt.src:RID_OFADLG_OPTIONS_TREE_PAGES.SID_GENERAL_OPTIONS.8.text
-#: gst/gst.c:339
 #, fuzzy
 msgid "PATHS"
 msgstr "Inzira"
 
-#: gst/gst.c:342
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr "Urutonde Bya Kuri in Guteranya+ Kuri i Urutonde in IMPINDURAGACIRO"
 
-#: gst/gst.c:344
 msgid "PLUGINS"
 msgstr ""
 
-#: gst/gst.c:347
 #, fuzzy
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Bya Itangira..."
 
-#: gst/gst.c:352
 msgid "Disable updating the registry"
 msgstr ""
 
-#: gst/gst.c:357
 msgid "Disable the use of fork() while scanning the registry"
 msgstr ""
 
-#: gst/gst.c:378
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:379
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "i Verisiyo"
 
-#: gst/gst.c:772
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr ""
 
-#: gst/gst.c:808 gst/gst.c:817 gst/gst.c:862
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr ""
 
-#: gst/gst.c:877
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr ""
 
-#: gst/gst.c:1255
 msgid "Unknown option"
 msgstr ""
 
-#: gst/gstelement.c:299 gst/gstutils.c:2270
 #, fuzzy, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "Bivuye Ikigize:"
 
-#: gst/gstelement.c:301 gst/gstutils.c:2272 tools/gst-launch.c:464
 #, fuzzy, c-format
 msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr "Kosora amakosa Ibisobanuro"
 
-#: gst/gsterror.c:139
 #, fuzzy
 msgid "GStreamer encountered a general core library error."
 msgstr "a Rusange Isomero Ikosa"
 
-#: gst/gsterror.c:141 gst/gsterror.c:181 gst/gsterror.c:201 gst/gsterror.c:232
 #, fuzzy
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr "Kuri Kugenera... Ikosa ITEGEKONGENGA Kuri iyi Ikosa IDOSIYE a"
 
-#: gst/gsterror.c:144
 #, fuzzy
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Ikosa ITEGEKONGENGA OYA Idosiye a"
 
-#: gst/gsterror.c:146
 #, fuzzy
 msgid "Internal GStreamer error: state change failed."
 msgstr "Ikosa Leta Guhindura>> Byanze Idosiye a"
 
-#: gst/gsterror.c:147
 #, fuzzy
 msgid "Internal GStreamer error: pad problem."
 msgstr "Ikosa Idosiye a"
 
-#: gst/gsterror.c:149
 #, fuzzy
 msgid "Internal GStreamer error: thread problem."
 msgstr "Ikosa Urudodo Idosiye a"
 
-#: gst/gsterror.c:151
 #, fuzzy
 msgid "Internal GStreamer error: negotiation problem."
 msgstr "Ikosa Idosiye a"
 
-#: gst/gsterror.c:153
 #, fuzzy
 msgid "Internal GStreamer error: event problem."
 msgstr "Ikosa Icyabaye Idosiye a"
 
-#: gst/gsterror.c:155
 #, fuzzy
 msgid "Internal GStreamer error: seek problem."
 msgstr "Ikosa Idosiye a"
 
-#: gst/gsterror.c:157
 #, fuzzy
 msgid "Internal GStreamer error: caps problem."
 msgstr "Ikosa Inyuguti nkuru Idosiye a"
 
-#: gst/gsterror.c:158
 #, fuzzy
 msgid "Internal GStreamer error: tag problem."
 msgstr "Ikosa Itagi: Idosiye a"
 
-#: gst/gsterror.c:160
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr ""
 
-#: gst/gsterror.c:162
 #, fuzzy
 msgid "Internal GStreamer error: clock problem."
 msgstr "Ikosa Idosiye a"
 
-#: gst/gsterror.c:164
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
 
-#: gst/gsterror.c:179
 #, fuzzy
 msgid "GStreamer encountered a general supporting library error."
 msgstr "a Rusange Isomero Ikosa"
 
-#: gst/gsterror.c:183
 #, fuzzy
 msgid "Could not initialize supporting library."
 msgstr "OYA gutangiza Isomero"
 
-#: gst/gsterror.c:184
 #, fuzzy
 msgid "Could not close supporting library."
 msgstr "OYA Gufunga Isomero"
 
-#: gst/gsterror.c:185
 #, fuzzy
 msgid "Could not configure supporting library."
 msgstr "OYA Gufunga Isomero"
 
-#: gst/gsterror.c:199
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
 msgstr "a Rusange Isomero Ikosa"
 
-#: gst/gsterror.c:203
 #, fuzzy
 msgid "Resource not found."
 msgstr "OYA Byabonetse"
 
-#: gst/gsterror.c:204
 #, fuzzy
 msgid "Resource busy or not available."
 msgstr "Irahuze Cyangwa OYA Bihari"
 
-#: gst/gsterror.c:205
 #, fuzzy
 msgid "Could not open resource for reading."
 msgstr "OYA Gufungura kugirango"
 
-#: gst/gsterror.c:206
 #, fuzzy
 msgid "Could not open resource for writing."
 msgstr "OYA Gufungura kugirango"
 
-#: gst/gsterror.c:208
 #, fuzzy
 msgid "Could not open resource for reading and writing."
 msgstr "OYA Gufungura kugirango Na"
 
-#: gst/gsterror.c:209
 #, fuzzy
 msgid "Could not close resource."
 msgstr "OYA Gufunga"
 
-#: gst/gsterror.c:210
 #, fuzzy
 msgid "Could not read from resource."
 msgstr "OYA Gusoma Bivuye"
 
-#: gst/gsterror.c:211
 #, fuzzy
 msgid "Could not write to resource."
 msgstr "OYA Kwandika Kuri"
 
-#: gst/gsterror.c:212
 #, fuzzy
 msgid "Could not perform seek on resource."
 msgstr "OYA ku"
 
-#: gst/gsterror.c:213
 #, fuzzy
 msgid "Could not synchronize on resource."
 msgstr "OYA Kuringaniza ku"
 
-#: gst/gsterror.c:215
 #, fuzzy
 msgid "Could not get/set settings from/on resource."
 msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
 
-#: gst/gsterror.c:216
 msgid "No space left on the resource."
 msgstr ""
 
-#: gst/gsterror.c:230
 #, fuzzy
 msgid "GStreamer encountered a general stream error."
 msgstr "a Rusange Isomero Ikosa"
 
-#: gst/gsterror.c:235
 #, fuzzy
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr "Bya iyi IDOSIYE a"
 
-#: gst/gsterror.c:237
 #, fuzzy
 msgid "Could not determine type of stream."
 msgstr "OYA Ubwoko Bya"
 
-#: gst/gsterror.c:239
 #, fuzzy
 msgid "The stream is of a different type than handled by this element."
 msgstr "ni Bya a Ubwoko ku iyi Ikigize:"
 
-#: gst/gsterror.c:241
 #, fuzzy
 msgid "There is no codec present that can handle the stream's type."
 msgstr "ni Oya i Ubwoko"
 
-#: gst/gsterror.c:242
 #, fuzzy
 msgid "Could not decode stream."
 msgstr "OYA"
 
-#: gst/gsterror.c:243
 #, fuzzy
 msgid "Could not encode stream."
 msgstr "OYA"
 
-#: gst/gsterror.c:244
 #, fuzzy
 msgid "Could not demultiplex stream."
 msgstr "OYA"
 
-#: gst/gsterror.c:245
 #, fuzzy
 msgid "Could not multiplex stream."
 msgstr "OYA"
 
-#: gst/gsterror.c:246
 #, fuzzy
 msgid "The stream is in the wrong format."
 msgstr "ni Bya i Imiterere"
 
-#: gst/gsterror.c:248
 msgid "The stream is encrypted and decryption is not supported."
 msgstr ""
 
-#: gst/gsterror.c:250
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
 
-#: gst/gsterror.c:302
 #, fuzzy, c-format
 msgid "No error message for domain %s."
 msgstr "Ikosa Ubutumwa kugirango Urwego"
 
-#: gst/gsterror.c:310
 #, fuzzy, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Bisanzwe Ikosa Ubutumwa kugirango Urwego Na ITEGEKONGENGA"
 
-#: gst/gstpipeline.c:540
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 
-#: gst/gsttaglist.c:99
 msgid "title"
 msgstr "umutwe"
 
-#: gst/gsttaglist.c:99
 #, fuzzy
 msgid "commonly used title"
 msgstr "Umutwe"
 
-#: gst/gsttaglist.c:102
 msgid "title sortname"
 msgstr ""
 
-#: gst/gsttaglist.c:102
 #, fuzzy
 msgid "commonly used title for sorting purposes"
 msgstr "Umutwe"
 
-#: gst/gsttaglist.c:105
 #, fuzzy
 msgid "artist"
 msgstr "Umuhanzi"
 
-#: gst/gsttaglist.c:106
 #, fuzzy
 msgid "person(s) responsible for the recording"
 msgstr "S Nshingwabikorwa kugirango i"
 
-#: gst/gsttaglist.c:110
 msgid "artist sortname"
 msgstr ""
 
-#: gst/gsttaglist.c:111
 #, fuzzy
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "S Nshingwabikorwa kugirango i"
 
-#: gst/gsttaglist.c:114
 msgid "album"
 msgstr ""
 
-#: gst/gsttaglist.c:115
 #, fuzzy
 msgid "album containing this data"
 msgstr "iyi Ibyatanzwe"
 
-#: gst/gsttaglist.c:118
 msgid "album sortname"
 msgstr ""
 
-#: gst/gsttaglist.c:119
 #, fuzzy
 msgid "album containing this data for sorting purposes"
 msgstr "iyi Ibyatanzwe"
 
-#: gst/gsttaglist.c:121
 msgid "date"
 msgstr "Itariki"
 
-#: gst/gsttaglist.c:121
 #, fuzzy
 msgid "date the data was created (as a GDate structure)"
 msgstr "Itariki i Ibyatanzwe Byaremwe in Kalindari Iminsi"
 
-#: gst/gsttaglist.c:124
 msgid "genre"
 msgstr ""
 
-#: gst/gsttaglist.c:125
 #, fuzzy
 msgid "genre this data belongs to"
 msgstr "iyi Ibyatanzwe Kuri"
 
 # padmin/source\padialog.src:RID_TXT_TESTPAGE_COMMENT.text
-#: gst/gsttaglist.c:128
 #, fuzzy
 msgid "comment"
 msgstr "Icyo wongeraho"
 
-#: gst/gsttaglist.c:129
 #, fuzzy
 msgid "free text commenting the data"
 msgstr "Kigenga Umwandiko i Ibyatanzwe"
 
 # padmin/source\padialog.src:RID_TXT_TESTPAGE_COMMENT.text
-#: gst/gsttaglist.c:132
 #, fuzzy
 msgid "extended comment"
 msgstr "Icyo wongeraho"
 
-#: gst/gsttaglist.c:133
 #, fuzzy
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr "Kigenga Umwandiko i Ibyatanzwe"
 
-#: gst/gsttaglist.c:137
 #, fuzzy
 msgid "track number"
 msgstr "Umubare"
 
-#: gst/gsttaglist.c:138
 #, fuzzy
 msgid "track number inside a collection"
 msgstr "Umubare Mo Imbere a"
 
-#: gst/gsttaglist.c:141
 #, fuzzy
 msgid "track count"
 msgstr "IBARA"
 
-#: gst/gsttaglist.c:142
 #, fuzzy
 msgid "count of tracks inside collection this track belongs to"
 msgstr "IBARA Bya Mo Imbere iyi Kuri"
 
-#: gst/gsttaglist.c:146
 #, fuzzy
 msgid "disc number"
 msgstr "DISIKI Umubare"
 
-#: gst/gsttaglist.c:147
 #, fuzzy
 msgid "disc number inside a collection"
 msgstr "DISIKI Umubare Mo Imbere a"
 
-#: gst/gsttaglist.c:150
 #, fuzzy
 msgid "disc count"
 msgstr "DISIKI IBARA"
 
-#: gst/gsttaglist.c:151
 #, fuzzy
 msgid "count of discs inside collection this disc belongs to"
 msgstr "IBARA Bya Mo Imbere iyi DISIKI Kuri"
 
-#: gst/gsttaglist.c:155
 msgid "location"
 msgstr "Inturo"
 
-#: gst/gsttaglist.c:157
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
 
-#: gst/gsttaglist.c:160
 msgid "description"
 msgstr "Isobanuramiterere"
 
-#: gst/gsttaglist.c:160
 #, fuzzy
 msgid "short text describing the content of the data"
 msgstr "Umwandiko i Ibikubiyemo Bya i Ibyatanzwe"
 
 # goodies/source\filter.vcl\eps\dlgeps.src:DLG_EXPORT_EPS.GRP_VERSION.text
-#: gst/gsttaglist.c:163
 #, fuzzy
 msgid "version"
 msgstr "Verisiyo"
 
-#: gst/gsttaglist.c:163
 #, fuzzy
 msgid "version of this data"
 msgstr "Verisiyo Bya iyi Ibyatanzwe"
 
-#: gst/gsttaglist.c:164
 msgid "ISRC"
 msgstr ""
 
-#: gst/gsttaglist.c:166
 #, fuzzy
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr "HTTP www org"
 
-#: gst/gsttaglist.c:168
 #, fuzzy
 msgid "organization"
 msgstr "Ihuzagahunda"
 
-#: gst/gsttaglist.c:171
 #, fuzzy
 msgid "copyright"
 msgstr "Uburenganzira bw'umuhimbyi"
 
-#: gst/gsttaglist.c:171
 #, fuzzy
 msgid "copyright notice of the data"
 msgstr "Uburenganzira bw'umuhimbyi Bya i Ibyatanzwe"
 
-#: gst/gsttaglist.c:173
 #, fuzzy
 msgid "copyright uri"
 msgstr "Uburenganzira bw'umuhimbyi"
 
-#: gst/gsttaglist.c:174
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "Uburenganzira bw'umuhimbyi Bya i Ibyatanzwe"
@@ -645,460 +533,362 @@ msgstr "Uburenganzira bw'umuhimbyi Bya i Ibyatanzwe"
 #
 # ***** END LICENSE BLOCK *****
 # Box Headings
-#: gst/gsttaglist.c:177
 #, fuzzy
 msgid "contact"
 msgstr "Umuntu"
 
-#: gst/gsttaglist.c:177
 #, fuzzy
 msgid "contact information"
 msgstr "Umuntu Ibisobanuro"
 
-#: gst/gsttaglist.c:179
 msgid "license"
 msgstr ""
 
-#: gst/gsttaglist.c:179
 #, fuzzy
 msgid "license of data"
 msgstr "Bya Ibyatanzwe"
 
-#: gst/gsttaglist.c:181
 #, fuzzy
 msgid "license uri"
 msgstr "Bya Ibyatanzwe"
 
-#: gst/gsttaglist.c:182
 #, fuzzy
 msgid "URI to the license of the data"
 msgstr "Bya Ibyatanzwe"
 
-#: gst/gsttaglist.c:185
 msgid "performer"
 msgstr ""
 
-#: gst/gsttaglist.c:186
 #, fuzzy
 msgid "person(s) performing"
 msgstr "S"
 
-#: gst/gsttaglist.c:189
 msgid "composer"
 msgstr ""
 
-#: gst/gsttaglist.c:190
 #, fuzzy
 msgid "person(s) who composed the recording"
 msgstr "S Nshingwabikorwa kugirango i"
 
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....AgendaType.Duration.text
-#: gst/gsttaglist.c:194
 #, fuzzy
 msgid "duration"
 msgstr "Igihe- ngombwa"
 
-#: gst/gsttaglist.c:194
 #, fuzzy
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "Uburebure in Igihe"
 
-#: gst/gsttaglist.c:197
 msgid "codec"
 msgstr ""
 
-#: gst/gsttaglist.c:198
 #, fuzzy
 msgid "codec the data is stored in"
 msgstr "i Ibyatanzwe ni in"
 
-#: gst/gsttaglist.c:201
 #, fuzzy
 msgid "video codec"
 msgstr "Videwo..."
 
-#: gst/gsttaglist.c:201
 #, fuzzy
 msgid "codec the video data is stored in"
 msgstr "i Videwo... Ibyatanzwe ni in"
 
-#: gst/gsttaglist.c:204
 msgid "audio codec"
 msgstr ""
 
-#: gst/gsttaglist.c:204
 #, fuzzy
 msgid "codec the audio data is stored in"
 msgstr "i Ibyatanzwe ni in"
 
-#: gst/gsttaglist.c:206
 msgid "bitrate"
 msgstr ""
 
-#: gst/gsttaglist.c:206
 #, fuzzy
 msgid "exact or average bitrate in bits/s"
 msgstr "NYACYO Cyangwa Impuzandengo in S"
 
-#: gst/gsttaglist.c:208
 #, fuzzy
 msgid "nominal bitrate"
 msgstr "SHINGIRO"
 
-#: gst/gsttaglist.c:208
 #, fuzzy
 msgid "nominal bitrate in bits/s"
 msgstr "SHINGIRO in S"
 
-#: gst/gsttaglist.c:210
 #, fuzzy
 msgid "minimum bitrate"
 msgstr "Gito"
 
-#: gst/gsttaglist.c:210
 #, fuzzy
 msgid "minimum bitrate in bits/s"
 msgstr "Gito in S"
 
-#: gst/gsttaglist.c:212
 #, fuzzy
 msgid "maximum bitrate"
 msgstr "Kinini"
 
-#: gst/gsttaglist.c:212
 #, fuzzy
 msgid "maximum bitrate in bits/s"
 msgstr "Kinini in S"
 
-#: gst/gsttaglist.c:215
 msgid "encoder"
 msgstr ""
 
-#: gst/gsttaglist.c:215
 #, fuzzy
 msgid "encoder used to encode this stream"
 msgstr "Kuri iyi"
 
-#: gst/gsttaglist.c:218
 #, fuzzy
 msgid "encoder version"
 msgstr "Verisiyo"
 
-#: gst/gsttaglist.c:219
 #, fuzzy
 msgid "version of the encoder used to encode this stream"
 msgstr "Verisiyo Bya i Kuri iyi"
 
-#: gst/gsttaglist.c:221
 msgid "serial"
 msgstr ""
 
-#: gst/gsttaglist.c:221
 #, fuzzy
 msgid "serial number of track"
 msgstr "Umubare Bya"
 
-#: gst/gsttaglist.c:223
 msgid "replaygain track gain"
 msgstr ""
 
-#: gst/gsttaglist.c:223
 #, fuzzy
 msgid "track gain in db"
 msgstr "in DB"
 
-#: gst/gsttaglist.c:225
 msgid "replaygain track peak"
 msgstr ""
 
-#: gst/gsttaglist.c:225
 #, fuzzy
 msgid "peak of the track"
 msgstr "Bya i"
 
-#: gst/gsttaglist.c:227
 msgid "replaygain album gain"
 msgstr ""
 
-#: gst/gsttaglist.c:227
 #, fuzzy
 msgid "album gain in db"
 msgstr "in DB"
 
-#: gst/gsttaglist.c:229
 msgid "replaygain album peak"
 msgstr ""
 
-#: gst/gsttaglist.c:229
 #, fuzzy
 msgid "peak of the album"
 msgstr "Bya i"
 
-#: gst/gsttaglist.c:231
 msgid "replaygain reference level"
 msgstr ""
 
-#: gst/gsttaglist.c:232
 msgid "reference level of track and album gain values"
 msgstr ""
 
-#: gst/gsttaglist.c:234
 msgid "language code"
 msgstr ""
 
-#: gst/gsttaglist.c:235
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr ""
 
-#: gst/gsttaglist.c:237
 msgid "image"
 msgstr ""
 
-#: gst/gsttaglist.c:237
 #, fuzzy
 msgid "image related to this stream"
 msgstr "Kuri iyi"
 
-#: gst/gsttaglist.c:239
 msgid "preview image"
 msgstr ""
 
-#: gst/gsttaglist.c:239
 msgid "preview image related to this stream"
 msgstr ""
 
-#: gst/gsttaglist.c:241
 msgid "attachment"
 msgstr ""
 
-#: gst/gsttaglist.c:241
 #, fuzzy
 msgid "file attached to this stream"
 msgstr "Kuri iyi"
 
-#: gst/gsttaglist.c:244
 msgid "beats per minute"
 msgstr ""
 
-#: gst/gsttaglist.c:244
 msgid "number of beats per minute in audio"
 msgstr ""
 
-#: gst/gsttaglist.c:246
 msgid "keywords"
 msgstr ""
 
-#: gst/gsttaglist.c:246
 #, fuzzy
 msgid "comma separated keywords describing the content"
 msgstr "Umwandiko i Ibikubiyemo Bya i Ibyatanzwe"
 
-#: gst/gsttaglist.c:249
 #, fuzzy
 msgid "geo location name"
 msgstr "Inturo"
 
-#: gst/gsttaglist.c:251
 msgid ""
 "human readable descriptive location or where the media has been recorded or "
 "produced"
 msgstr ""
 
-#: gst/gsttaglist.c:254
 msgid "geo location latitude"
 msgstr ""
 
-#: gst/gsttaglist.c:256
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
 
-#: gst/gsttaglist.c:259
 msgid "geo location longitude"
 msgstr ""
 
-#: gst/gsttaglist.c:261
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
 
-#: gst/gsttaglist.c:264
 msgid "geo location elevation"
 msgstr ""
 
-#: gst/gsttaglist.c:266
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
 
-#: gst/gsttaglist.c:307
 msgid ", "
 msgstr ", "
 
-#: gst/parse/grammar.y:230
 #, fuzzy, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "ubusa OYA"
 
-#: gst/parse/grammar.y:240
 #, fuzzy, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "Oya Gusimbuka: %s%s"
 
-#: gst/parse/grammar.y:366
 #, fuzzy, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "Oya indangakintu in Ikigize:"
 
-#: gst/parse/grammar.y:381
 #, fuzzy, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "OYA Gushyiraho indangakintu in Ikigize: Kuri"
 
-#: gst/parse/grammar.y:523
 #, fuzzy, c-format
 msgid "could not link %s to %s"
 msgstr "OYA Ihuza Kuri"
 
-#: gst/parse/grammar.y:571
 #, fuzzy, c-format
 msgid "no element \"%s\""
 msgstr "Oya Ikigize:"
 
-#: gst/parse/grammar.y:623
 #, fuzzy, c-format
 msgid "could not parse caps \"%s\""
 msgstr "OYA Inyuguti nkuru"
 
-#: gst/parse/grammar.y:645 gst/parse/grammar.y:693 gst/parse/grammar.y:709
-#: gst/parse/grammar.y:772
 #, fuzzy
 msgid "link without source element"
 msgstr "Ihuza Inkomoko Ikigize:"
 
-#: gst/parse/grammar.y:651 gst/parse/grammar.y:690 gst/parse/grammar.y:781
 #, fuzzy
 msgid "link without sink element"
 msgstr "Ihuza Ikigize:"
 
-#: gst/parse/grammar.y:727
 #, fuzzy, c-format
 msgid "no source element for URI \"%s\""
 msgstr "Oya Inkomoko Ikigize: kugirango"
 
-#: gst/parse/grammar.y:737
 #, fuzzy, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "Oya Ikigize: Kuri Ihuza Kuri"
 
-#: gst/parse/grammar.y:745
 #, fuzzy, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "Oya Ikigize: kugirango"
 
-#: gst/parse/grammar.y:752
 #, fuzzy, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "OYA Ihuza Ikigize: kugirango"
 
-#: gst/parse/grammar.y:766
 #, fuzzy
 msgid "empty pipeline not allowed"
 msgstr "ubusa OYA"
 
-#: libs/gst/base/gstbasesrc.c:1997
 msgid "Internal clock error."
 msgstr ""
 
-#: libs/gst/base/gstbasesrc.c:2329 libs/gst/base/gstbasesrc.c:2340
-#: libs/gst/base/gstbasesink.c:3257
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:2883
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:3246
 msgid "Internal data stream error."
 msgstr ""
 
-#: plugins/elements/gstcapsfilter.c:109
 msgid "Filter caps"
 msgstr ""
 
-#: plugins/elements/gstcapsfilter.c:110
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
 
-#: plugins/elements/gstfdsink.c:300
 #, fuzzy, c-format
 msgid "Error while writing to file descriptor \"%d\"."
 msgstr "Kuri IDOSIYE"
 
-#: plugins/elements/gstfdsink.c:340
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
 msgstr ""
 
-#: plugins/elements/gstfilesink.c:353
 #, fuzzy
 msgid "No file name specified for writing."
 msgstr "IDOSIYE Izina: kugirango"
 
-#: plugins/elements/gstfilesink.c:359
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "OYA Gufungura IDOSIYE kugirango"
 
-#: plugins/elements/gstfilesink.c:384
 #, fuzzy, c-format
 msgid "Error closing file \"%s\"."
 msgstr "IDOSIYE"
 
-#: plugins/elements/gstfilesink.c:524
 #, fuzzy, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Kuri IDOSIYE"
 
-#: plugins/elements/gstfilesink.c:531 plugins/elements/gstfilesink.c:593
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Kuri IDOSIYE"
 
-#: plugins/elements/gstfilesrc.c:1038
 #, fuzzy
 msgid "No file name specified for reading."
 msgstr "IDOSIYE Izina: kugirango"
 
-#: plugins/elements/gstfilesrc.c:1050
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "OYA Gufungura IDOSIYE kugirango"
 
-#: plugins/elements/gstfilesrc.c:1059
 #, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "OYA Kubona Gushyiraho Amagenamiterere Bivuye ku"
 
-#: plugins/elements/gstfilesrc.c:1066
 #, fuzzy, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\"ni a bushyinguro"
 
-#: plugins/elements/gstfilesrc.c:1073
 #, fuzzy, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Idosiye ni a"
 
-#: plugins/elements/gstidentity.c:549
 #, fuzzy
 msgid "Failed after iterations as requested."
 msgstr "Nyuma Amasubiramo Nka"
@@ -1109,310 +899,247 @@ msgstr "Nyuma Amasubiramo Nka"
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Revision.TextDisplay.Delete.Attribute..4.text
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Revision.TextDisplay.ChangedAttribute.Attribute..5.text
-#: plugins/elements/gsttypefindelement.c:203
 #, fuzzy
 msgid "caps"
 msgstr "Inyuguti nkuru"
 
-#: plugins/elements/gsttypefindelement.c:204
 #, fuzzy
 msgid "detected capabilities in stream"
 msgstr "in"
 
 # officecfg/registry\schema\org\openoffice\Office\Calc.xcs:....Layout.Other.StatusbarFunction..5.text
-#: plugins/elements/gsttypefindelement.c:207
 #, fuzzy
 msgid "minimum"
 msgstr "Gito"
 
 # officecfg/registry\schema\org\openoffice\Office\Calc.xcs:....Layout.Other.StatusbarFunction..4.text
-#: plugins/elements/gsttypefindelement.c:212
 #, fuzzy
 msgid "maximum"
 msgstr "Kinini"
 
-#: plugins/elements/gsttypefindelement.c:217
 msgid "force caps"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:218
 msgid "force caps without doing a typefind"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:522
-#: plugins/elements/gsttypefindelement.c:786
 #, fuzzy
 msgid "Stream contains no data."
 msgstr "iyi Ibyatanzwe"
 
-#: tools/gst-inspect.c:244
 msgid "Implemented Interfaces:\n"
 msgstr ""
 
-#: tools/gst-inspect.c:293
 msgid "readable"
 msgstr ""
 
-#: tools/gst-inspect.c:300
 #, fuzzy
 msgid "writable"
 msgstr "umutwe"
 
-#: tools/gst-inspect.c:307
 msgid "controllable"
 msgstr ""
 
-#: tools/gst-inspect.c:1015
 #, fuzzy
 msgid "Total count: "
 msgstr "IBARA"
 
-#: tools/gst-inspect.c:1016
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:1018
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:1400
 #, fuzzy
 msgid "Print all elements"
 msgstr "Byose Ibintu"
 
-#: tools/gst-inspect.c:1402
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
 
-#: tools/gst-inspect.c:1407
 msgid "List the plugin contents"
 msgstr ""
 
-#: tools/gst-inspect.c:1410
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 
-#: tools/gst-inspect.c:1500
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "OYA Gufungura IDOSIYE kugirango"
 
-#: tools/gst-inspect.c:1505
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Oya Inkomoko Ikigize: kugirango"
 
-#: tools/gst-launch.c:80
 #, fuzzy
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "IDOSIYE xml Ikigize: indangakintu Agaciro"
 
-#: tools/gst-launch.c:89
 #, fuzzy, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "Bya xml IDOSIYE Byanze"
 
-#: tools/gst-launch.c:95
 #, fuzzy, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "Oya Ikigize: in IDOSIYE"
 
-#: tools/gst-launch.c:102
 #, fuzzy, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "Ikigize: ni ku iyi Igihe"
 
-#: tools/gst-launch.c:113
 #, fuzzy, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "OYA Komandi: Umurongo"
 
-#: tools/gst-launch.c:124
 #, fuzzy, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "Ikigize: OYA Byabonetse"
 
-#: tools/gst-launch.c:397
 msgid "Got Message #%"
 msgstr ""
 
-#: tools/gst-launch.c:424
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Bivuye Ikigize:"
 
-#: tools/gst-launch.c:432
 #, fuzzy, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "Byabonetse ku Ikigize:"
 
-#: tools/gst-launch.c:445
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
 
-#: tools/gst-launch.c:462
 #, fuzzy, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "Bivuye Ikigize:"
 
-#: tools/gst-launch.c:510
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
-#: tools/gst-launch.c:525
 msgid "buffering..."
 msgstr ""
 
-#: tools/gst-launch.c:537
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:545
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:554
 #, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
-#: tools/gst-launch.c:566
 #, c-format
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:601
 #, fuzzy
 msgid "Output tags (also known as metadata)"
 msgstr "Nka"
 
-#: tools/gst-launch.c:603
 #, fuzzy
 msgid "Output status information and property notifications"
 msgstr "Imimerere Ibisobanuro Na indangakintu Ibimenyetso"
 
-#: tools/gst-launch.c:605
 msgid "Output messages"
 msgstr ""
 
-#: tools/gst-launch.c:607
 #, fuzzy
 msgid "Do not output status information of TYPE"
 msgstr "OYA Ibisohoka Imimerere Ibisobanuro Bya"
 
-#: tools/gst-launch.c:607
 msgid "TYPE1,TYPE2,..."
 msgstr ""
 
-#: tools/gst-launch.c:610
 #, fuzzy
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Kubika xml Bya Kuri Na Gusohoka"
 
-#: tools/gst-launch.c:610
 msgid "FILE"
 msgstr "IDOSIYE"
 
-#: tools/gst-launch.c:613
 #, fuzzy
 msgid "Do not install a fault handler"
 msgstr "OYA Kwinjiza porogaramu a"
 
-#: tools/gst-launch.c:615
 #, fuzzy
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "NIBA Bikora ku Gukusanya Igihe"
 
-#: tools/gst-launch.c:683
 #, fuzzy, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "OYA"
 
-#: tools/gst-launch.c:687
 #, fuzzy, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "OYA"
 
-#: tools/gst-launch.c:691
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr ""
 
-#: tools/gst-launch.c:718
 #, fuzzy, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "i Ikigize: Byabonetse"
 
-#: tools/gst-launch.c:724 tools/gst-launch.c:794
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:729
 #, fuzzy, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "Kuri Gukina"
 
-#: tools/gst-launch.c:734
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:738
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:741 tools/gst-launch.c:754
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "Kuri Gukina"
 
-#: tools/gst-launch.c:747
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:765
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "Kuri Gukina"
 
-#: tools/gst-launch.c:788
 msgid "Execution ended after %"
 msgstr ""
 
-#: tools/gst-launch.c:798
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:803
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:808
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr ""
