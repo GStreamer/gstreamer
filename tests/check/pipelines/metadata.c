@@ -145,7 +145,7 @@ test_tags (const gchar * tag_str)
     name_sent = gst_structure_nth_field_name (sent_tags, i);
     value_sent = gst_structure_get_value (sent_tags, name_sent);
     found = FALSE;
-    for (j = 0; i < n_recv; j++) {
+    for (j = 0; j < n_recv; j++) {
       name_recv = gst_structure_nth_field_name (received_tags, j);
       if (!strcmp (name_sent, name_recv)) {
         value_recv = gst_structure_get_value (received_tags, name_recv);
