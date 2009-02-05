@@ -165,7 +165,7 @@ main (gint argc, gchar * argv[])
   GOptionEntry options[] = {
     { "source-bin", 's', 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array,
       "Use a custom source bin description (gst-launch style)", NULL },
-    { "method", 'm', 0, G_OPTION_ARG_INT, &method, "1 for gstdifferencematte, 2 for gstpixbufoverlay", "M" },
+    { "method", 'm', 0, G_OPTION_ARG_INT, &method, "1 for gstdifferencematte, 2 for gloverlay", "M" },
     { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "Wait N seconds before to send the image to gstreamer (useful with differencematte)", "N" },
     { NULL }
   };
@@ -207,7 +207,7 @@ main (gint argc, gchar * argv[])
 
   uload = gst_element_factory_make ("glupload", "glu");
   if (method == 2) {
-    filter = gst_element_factory_make ("glpixbufoverlay", "flt");
+    filter = gst_element_factory_make ("gloverlay", "flt");
   } else {
     filter = gst_element_factory_make ("gldifferencematte", "flt");
   }

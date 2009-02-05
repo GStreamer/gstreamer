@@ -63,7 +63,7 @@ GType gst_gl_filtersobel_get_type (void);
 GType gst_gl_filter_edge_get_type (void);
 GType gst_gl_filter_laplacian_get_type (void);
 GType gst_gl_filter_glass_get_type (void);
-GType gst_gl_pixbufoverlay_get_type (void);
+GType gst_gl_overlay_get_type (void);
 GType gst_gl_differencematte_get_type (void);
 GType gst_gl_bumper_get_type (void);
 
@@ -91,7 +91,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
   if (!gst_element_register (plugin, "gloverlay",
-          GST_RANK_NONE, gst_gl_pixbufoverlay_get_type())) {
+          GST_RANK_NONE, gst_gl_overlay_get_type())) {
     return FALSE;
   }
   if (!gst_element_register (plugin, "gldifferencematte",

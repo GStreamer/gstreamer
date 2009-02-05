@@ -29,7 +29,7 @@ endif (WIN32)
 
 if (PNG_FOUND AND ZLIB_FOUND)
   set(OTHER_ELEMENTS
-    gstglpixbufoverlay.c
+    gstgloverlay.c
     gstgldifferencematte.c
     gstglbumper.c)
 endif (PNG_FOUND AND ZLIB_FOUND)
