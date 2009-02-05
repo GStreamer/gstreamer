@@ -1,0 +1,6 @@
+# glib-genmarshal --header --prefix=gst_camerabin camerabin_marshal.marshal > camerabin_marshal.h
+# glib-genmarshal --body --prefix=gst_camerabin camerabin_marshal.marshal > camerabin_marshal.c
+
+VOID:INT,INT,INT,INT
+VOID:INT,INT
+
