@@ -23,6 +23,8 @@
 
 #include "gstassrender.h"
 
+#include <gst/video/video.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_assrender_debug);
 #define GST_CAT_DEFAULT gst_assrender_debug
 
@@ -42,14 +44,14 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, bpp=24")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 static GstStaticPadTemplate video_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, bpp=24")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
     );
 
 static GstStaticPadTemplate text_sink_factory =
