@@ -788,7 +788,7 @@ gst_registry_binary_check_magic (gchar ** in, gsize size)
   GST_DEBUG ("Reading/casting for GstBinaryRegistryMagic at address %p", *in);
   unpack_element (*in, m, GstBinaryRegistryMagic);
 
-  if (m == NULL || m->magic == NULL || m->version == NULL) {
+  if (m == NULL || &m->magic == NULL || &m->version == NULL) {
     GST_WARNING ("Binary registry magic structure is broken");
     return -1;
   }
