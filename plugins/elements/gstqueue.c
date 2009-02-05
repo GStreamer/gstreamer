@@ -204,8 +204,6 @@ static void gst_queue_locked_flush (GstQueue * queue);
 
 static gboolean gst_queue_src_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_queue_sink_activate_push (GstPad * pad, gboolean active);
-static GstStateChangeReturn gst_queue_change_state (GstElement * element,
-    GstStateChange transition);
 
 static gboolean gst_queue_is_empty (GstQueue * queue);
 static gboolean gst_queue_is_filled (GstQueue * queue);
@@ -250,7 +248,6 @@ static void
 gst_queue_class_init (GstQueueClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
@@ -356,8 +353,6 @@ gst_queue_class_init (GstQueueClass * klass)
 
   /* set several parent class virtual functions */
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_queue_finalize);
-
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_queue_change_state);
 }
 
 static void
@@ -1318,41 +1313,6 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
   gst_object_unref (queue);
 
   return result;
-}
-
-static GstStateChangeReturn
-gst_queue_change_state (GstElement * element, GstStateChange transition)
-{
-  GstQueue *queue;
-  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-  queue = GST_QUEUE (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
 }
 
 static void
