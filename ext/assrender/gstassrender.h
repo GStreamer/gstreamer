@@ -40,7 +40,7 @@ struct _Gstassrender
 
   GstPad *video_sinkpad, *text_sinkpad, *srcpad;
 
-  GstSegment *video_segment;
+  GstSegment video_segment;
 
   gint width, height;
 

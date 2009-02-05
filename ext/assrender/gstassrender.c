@@ -84,12 +84,6 @@ static gboolean gst_assrender_event_text (GstPad * pad, GstEvent * event);
 static void
 gst_assrender_base_init (gpointer gclass)
 {
-  static GstElementDetails element_details = {
-    "ASS Render",
-    "Filter/Effect/Video",
-    "Renders ASS/SSA subtitles with libass",
-    "Benjamin Schmitz <vortex@wolpzone.de>"
-  };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_add_pad_template (element_class,
@@ -99,7 +93,10 @@ gst_assrender_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&text_sink_factory));
 
-  gst_element_class_set_details (element_class, &element_details);
+  gst_element_class_set_details_simple (element_class, "ASS/SSA Render",
+      "Filter/Effect/Video",
+      "Renders ASS/SSA subtitles with libass",
+      "Benjamin Schmitz <vortex@wolpzone.de>");
 }
 
 /* initialize the plugin's class */
@@ -119,32 +116,24 @@ gst_assrender_class_init (GstassrenderClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_ENABLE,
       g_param_spec_boolean ("enable", "Toggle rendering",
-          "Enable rendering of subtitles", TRUE, G_PARAM_READWRITE));
+          "Enable rendering of subtitles", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_EMBEDDEDFONTS,
       g_param_spec_boolean ("embeddedfonts", "Use embedded fonts",
-          "Extract and use fonts embedded in the stream",
-          TRUE, G_PARAM_READWRITE));
+          "Extract and use fonts embedded in the stream", TRUE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (render);
-  GstPadTemplate *template;
-
   GST_DEBUG_OBJECT (render, "init");
 
-  template = gst_element_class_get_pad_template (klass, "src");
-  render->srcpad = gst_pad_new_from_template (template, "src");
-  gst_object_unref (template);
-
-  template = gst_element_class_get_pad_template (klass, "video_sink");
-  render->video_sinkpad = gst_pad_new_from_template (template, "video_sink");
-  gst_object_unref (template);
-
-  template = gst_element_class_get_pad_template (klass, "text_sink");
-  render->text_sinkpad = gst_pad_new_from_template (template, "text_sink");
-  gst_object_unref (template);
+  render->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  render->video_sinkpad =
+      gst_pad_new_from_static_template (&video_sink_factory, "video_sink");
+  render->text_sinkpad =
+      gst_pad_new_from_static_template (&text_sink_factory, "text_sink");
 
   gst_pad_set_setcaps_function (render->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_assrender_setcaps_video));
@@ -176,13 +165,7 @@ gst_assrender_init (Gstassrender * render, GstassrenderClass * gclass)
   render->enable = TRUE;
   render->embeddedfonts = TRUE;
 
-  render->video_segment = gst_segment_new ();
-  if (render->video_segment) {
-    gst_segment_init (render->video_segment, GST_FORMAT_TIME);
-  } else {
-    GST_WARNING_OBJECT (render, "video_segment creation failed");
-    g_assert_not_reached ();
-  }
+  gst_segment_init (&render->video_segment, GST_FORMAT_TIME);
 
   render->ass_library = ass_library_init ();
   ass_set_fonts_dir (render->ass_library, "./");
@@ -288,7 +271,6 @@ gst_assrender_getcaps (GstPad * pad)
     caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
   }
 
-
   gst_object_unref (render);
 
   return caps;
@@ -300,11 +282,7 @@ gst_assrender_setcaps_video (GstPad * pad, GstCaps * caps)
   Gstassrender *render;
   GstStructure *structure;
   gboolean ret = FALSE;
-  double aspect_ratio = 1.0;
-
-  if (!gst_caps_is_fixed (caps)) {
-    return FALSE;
-  }
+  gint par_n = 1, par_d = 1;
 
   render = GST_ASSRENDER (gst_pad_get_parent (pad));
 
@@ -313,13 +291,15 @@ gst_assrender_setcaps_video (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_double (structure, "pixel-aspect-ratio", &aspect_ratio);
+  gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n, &par_d);
 
   if (gst_structure_get_int (structure, "width", &render->width) &&
       gst_structure_get_int (structure, "height", &render->height)) {
     ret = gst_pad_set_caps (render->srcpad, caps);
     ass_set_frame_size (render->ass_renderer, render->width, render->height);
-    ass_set_aspect_ratio (render->ass_renderer, aspect_ratio);
+    /* FIXME: Does this expect aspect ratio or pixel aspect ratio? */
+    ass_set_aspect_ratio (render->ass_renderer,
+        ((gdouble) par_n) / ((gdouble) par_d));
     ass_set_font_scale (render->ass_renderer, 1.0);
     ass_set_hinting (render->ass_renderer, ASS_HINTING_NATIVE);
     ass_set_fonts (render->ass_renderer, "Arial", "sans-serif");
@@ -330,6 +310,9 @@ gst_assrender_setcaps_video (GstPad * pad, GstCaps * caps)
     render->renderer_init_ok = TRUE;
 
     GST_DEBUG_OBJECT (render, "ass renderer setup complete");
+  } else {
+    GST_ERROR_OBJECT (render, "Invalid caps %" GST_PTR_FORMAT, caps);
+    ret = FALSE;
   }
 
   gst_object_unref (render);
@@ -355,36 +338,35 @@ gst_assrender_setcaps_text (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (render, "text pad linked with caps:  %" GST_PTR_FORMAT,
       caps);
 
-  if (gst_structure_has_name (structure, "application/x-ass") ||
-      gst_structure_has_name (structure, "application/x-ssa")) {
+  value = gst_structure_get_value (structure, "codec_data");
 
-    value = gst_structure_get_value (structure, "codec_data");
+  if (value != NULL) {
+    priv = (GstBuffer *) gst_value_get_mini_object (value);
+    g_return_val_if_fail (priv != NULL, FALSE);
 
-    if (value != NULL) {
-      priv = (GstBuffer *) gst_value_get_mini_object (value);
-      g_return_val_if_fail (priv != NULL, FALSE);
+    gst_buffer_ref (priv);
 
-      gst_buffer_ref (priv);
+    codec_private = (gchar *) GST_BUFFER_DATA (priv);
+    codec_private_size = GST_BUFFER_SIZE (priv);
 
-      codec_private = (gchar *) GST_BUFFER_DATA (priv);
-      codec_private_size = GST_BUFFER_SIZE (priv);
-
-      if (render->ass_track) {
-        ass_free_track (render->ass_track);
-      }
-
-      render->ass_track = ass_new_track (render->ass_library);
-      ass_process_codec_private (render->ass_track,
-          codec_private, codec_private_size);
-
-      GST_DEBUG_OBJECT (render, "ass track created");
-
-      render->track_init_ok = TRUE;
-
-      gst_buffer_unref (priv);
-
-      ret = TRUE;
+    if (render->ass_track) {
+      ass_free_track (render->ass_track);
     }
+
+    render->ass_track = ass_new_track (render->ass_library);
+    ass_process_codec_private (render->ass_track,
+        codec_private, codec_private_size);
+
+    GST_DEBUG_OBJECT (render, "ass track created");
+
+    render->track_init_ok = TRUE;
+
+    gst_buffer_unref (priv);
+
+    ret = TRUE;
+  } else if (!render->ass_track) {
+    render->ass_track = ass_new_track (render->ass_library);
+    ret = TRUE;
   }
 
   gst_object_unref (render);
@@ -422,11 +404,11 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
 
   /* segment_clip() will adjust start unconditionally to segment_start if
    * no stop time is provided, so handle this ourselves */
-  if (stop == GST_CLOCK_TIME_NONE && start < render->video_segment->start)
+  if (stop == GST_CLOCK_TIME_NONE && start < render->video_segment.start)
     goto out_of_segment;
 
   in_seg =
-      gst_segment_clip (render->video_segment, GST_FORMAT_TIME, start, stop,
+      gst_segment_clip (&render->video_segment, GST_FORMAT_TIME, start, stop,
       &clip_start, &clip_stop);
 
   if (!in_seg)
@@ -441,7 +423,7 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
       GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
   }
 
-  gst_segment_set_last_stop (render->video_segment, GST_FORMAT_TIME,
+  gst_segment_set_last_stop (&render->video_segment, GST_FORMAT_TIME,
       clip_start);
 
   /* now start rendering subtitles, if all conditions are met */
@@ -452,14 +434,14 @@ gst_assrender_chain_video (GstPad * pad, GstBuffer * buffer)
     GST_DEBUG_OBJECT (render, "rendering frame for timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));
     /* libass needs timestamps in ms */
-    timestamp = timestamp / 1000 / 1000;
+    timestamp = timestamp / GST_MSECOND;
 
     /* only for testing right now. could possibly be used for optimizations? */
     step = ass_step_sub (render->ass_track, timestamp, 1);
     GST_DEBUG_OBJECT (render, "Current timestamp: %" GST_TIME_FORMAT
         " // Next event: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-        GST_TIME_ARGS (step * 1000 * 1000));
+        GST_TIME_ARGS (step * GST_MSECOND));
 
     /* not sure what the last parameter to this call is for (detect_change) */
     ass_image = ass_render_frame (render->ass_renderer, render->ass_track,
@@ -530,9 +512,9 @@ gst_assrender_chain_text (GstPad * pad, GstBuffer * buffer)
   data = (gchar *) GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
   pts_start = GST_BUFFER_TIMESTAMP (buffer);
-  pts_start = pts_start / 1000 / 1000;
+  pts_start = pts_start / GST_MSECOND;
   pts_end = GST_BUFFER_DURATION (buffer);
-  pts_end = pts_end / 1000 / 1000;
+  pts_end = pts_end / GST_MSECOND;
 
   ass_process_chunk (render->ass_track, data, size, pts_start, pts_end);
 
@@ -571,10 +553,10 @@ gst_assrender_event_video (GstPad * pad, GstEvent * event)
 
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (render, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
-            render->video_segment);
+            &render->video_segment);
 
-        gst_segment_set_newsegment (render->video_segment, update, rate, format,
-            start, stop, time);
+        gst_segment_set_newsegment (&render->video_segment, update, rate,
+            format, start, stop, time);
       } else {
         GST_ELEMENT_WARNING (render, STREAM, MUX, (NULL),
             ("received non-TIME newsegment event on video input"));
@@ -747,4 +729,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "assrender",
     "ASS/SSA subtitle renderer",
-    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
