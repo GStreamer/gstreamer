@@ -412,8 +412,8 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     goto done;
   }
 
-  spec->segsize = 4096;
-  spec->segtotal = 16;
+  spec->segsize = (spec->latency_time * spec->rate / G_USEC_PER_SEC) * spec->bytes_per_sample;
+  spec->segtotal = spec->buffer_time / spec->latency_time;
 
   /* create AudioBufferList needed for recording */
   if (osxbuf->is_src) {
@@ -432,6 +432,8 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
   memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
+
+  osxbuf->segoffset = 0;
 
   status = AudioUnitInitialize (osxbuf->audiounit);
   if (status) {
@@ -568,8 +570,9 @@ gst_osx_ring_buffer_start (GstRingBuffer * buf)
     }
 
     osxbuf->io_proc_active = TRUE;
-  } else
-    osxbuf->io_proc_needs_deactivation = FALSE;
+  }
+
+  osxbuf->io_proc_needs_deactivation = FALSE;
 
   status = AudioOutputUnitStart (osxbuf->audiounit);
   if (status) {
