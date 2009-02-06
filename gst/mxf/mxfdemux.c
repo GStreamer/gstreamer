@@ -2827,7 +2827,7 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
 }
 
 static void
-gst_mxf_demux_pad_set_position (GstMXFDemux * demux, GstMXFDemuxPad * p,
+gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
     GstClockTime start)
 {
   guint i;
@@ -2958,7 +2958,7 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
       p->last_flow = GST_FLOW_OK;
-      gst_mxf_demux_pad_set_position (demux, p, start);
+      gst_mxf_demux_pad_set_last_stop (demux, p, start);
 
       position = p->current_essence_track_position;
       off = gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
@@ -3106,7 +3106,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       /* Reset EOS flag on all pads */
       p->eos = FALSE;
       p->last_flow = GST_FLOW_OK;
-      gst_mxf_demux_pad_set_position (demux, p, start);
+      gst_mxf_demux_pad_set_last_stop (demux, p, start);
 
       position = p->current_essence_track_position;
       off =
@@ -3118,6 +3118,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
         p->eos = TRUE;
       } else {
         new_offset = MIN (off, new_offset);
+        if (position != p->current_essence_track_position) {
+          p->last_flow -=
+              gst_util_uint64_scale (p->current_essence_track_position -
+              position, GST_SECOND * p->material_track->edit_rate.d,
+              p->material_track->edit_rate.d);
+        }
         p->current_essence_track_position = position;
       }
       p->discont = TRUE;
