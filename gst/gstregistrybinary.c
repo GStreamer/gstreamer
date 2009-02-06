@@ -786,12 +786,13 @@ gst_registry_binary_check_magic (gchar ** in, gsize size)
 
   align (*in);
   GST_DEBUG ("Reading/casting for GstBinaryRegistryMagic at address %p", *in);
-  unpack_element (*in, m, GstBinaryRegistryMagic);
 
-  if (m == NULL || &m->magic == NULL || &m->version == NULL) {
-    GST_WARNING ("Binary registry magic structure is broken");
+  if (size < sizeof (GstBinaryRegistryMagic)) {
+    GST_WARNING ("Not enough data for binary registry magic structure");
     return -1;
   }
+  unpack_element (*in, m, GstBinaryRegistryMagic);
+
   if (strncmp (m->magic, GST_MAGIC_BINARY_REGISTRY_STR,
           GST_MAGIC_BINARY_REGISTRY_LEN) != 0) {
     GST_WARNING
