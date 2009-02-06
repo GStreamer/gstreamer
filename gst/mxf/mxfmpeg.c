@@ -307,6 +307,45 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
   return FALSE;
 }
 
+static gboolean
+mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
+{
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  guint32 tmp;
+
+  while (gst_byte_reader_get_remaining (&reader) > 3) {
+    if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
+      guint8 type;
+
+      /* Found sync code */
+      gst_byte_reader_skip (&reader, 3);
+
+      if (!gst_byte_reader_get_uint8 (&reader, &type))
+        break;
+
+      if (type == 0xb6) {
+        guint8 pic_type;
+
+        if (!gst_byte_reader_get_uint8 (&reader, &pic_type))
+          break;
+
+        pic_type = (pic_type >> 6) & 0x03;
+        if (pic_type == 0) {
+          return TRUE;
+        } else {
+          return FALSE;
+        }
+      }
+    } else {
+      gst_byte_reader_skip (&reader, 1);
+    }
+  }
+
+  g_assert_not_reached ();
+
+  return FALSE;
+}
+
 static GstFlowReturn
 mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps, MXFMetadataTimelineTrack * track,
@@ -326,6 +365,12 @@ mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   switch (type) {
     case MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2:
       if (mxf_mpeg_is_mpeg2_keyframe (buffer))
+        GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      else
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      break;
+    case MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG4:
+      if (mxf_mpeg_is_mpeg4_keyframe (buffer))
         GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
       else
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
