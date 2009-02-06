@@ -30,4 +30,6 @@
 
 void mxf_mpeg_init (void);
 
+gboolean mxf_mpeg_is_mpeg2_keyframe (GstBuffer *buffer);
+
 #endif /* __MXF_MPEG_H__ */

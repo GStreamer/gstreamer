@@ -30,6 +30,8 @@
 
 #include "mxfd10.h"
 
+#include "mxfmpeg.h"
+
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
@@ -80,6 +82,11 @@ mxf_d10_picture_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GST_ERROR ("Invalid D10 picture essence element");
     return GST_FLOW_ERROR;
   }
+
+  if (mxf_mpeg_is_mpeg2_keyframe (buffer))
+    GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  else
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   return GST_FLOW_OK;
 }

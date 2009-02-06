@@ -37,6 +37,8 @@
 
 #include "mxfmpeg.h"
 
+#include <gst/base/gstbytereader.h>
+
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
@@ -224,6 +226,14 @@ static void
       mxf_metadata_mpeg_video_descriptor_handle_tag;
 }
 
+typedef enum
+{
+  MXF_MPEG_ESSENCE_TYPE_OTHER = 0,
+  MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2,
+  MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG4,
+  MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC
+} MXFMPEGEssenceType;
+
 static gboolean
 mxf_is_mpeg_essence_track (const MXFMetadataTimelineTrack * track)
 {
@@ -253,11 +263,57 @@ mxf_is_mpeg_essence_track (const MXFMetadataTimelineTrack * track)
   return FALSE;
 }
 
+/* See ISO/IEC 13818-2 for MPEG ES format */
+gboolean
+mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
+{
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  guint32 tmp;
+
+  while (gst_byte_reader_get_remaining (&reader) > 3) {
+    if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
+      guint8 type;
+
+      /* Found sync code */
+      gst_byte_reader_skip (&reader, 3);
+
+      if (!gst_byte_reader_get_uint8 (&reader, &type))
+        break;
+
+      /* GOP packets are meant as random access markers */
+      if (type == 0xb8) {
+        return TRUE;
+      } else if (type == 0x00) {
+        guint8 pic_type;
+
+        if (!gst_byte_reader_skip (&reader, 5))
+          break;
+
+        if (!gst_byte_reader_get_uint8 (&reader, &pic_type))
+          break;
+
+        pic_type = (pic_type >> 3) & 0x07;
+        if (pic_type == 0x01) {
+          return TRUE;
+        } else {
+          return FALSE;
+        }
+      }
+    } else {
+      gst_byte_reader_skip (&reader, 1);
+    }
+  }
+
+  return FALSE;
+}
+
 static GstFlowReturn
 mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps, MXFMetadataTimelineTrack * track,
     gpointer mapping_data, GstBuffer ** outbuf)
 {
+  MXFMPEGEssenceType type = *((MXFMPEGEssenceType *) mapping_data);
+
   *outbuf = buffer;
 
   /* SMPTE 381M 6.1 */
@@ -265,6 +321,18 @@ mxf_mpeg_video_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
           && key->u[14] != 0x07)) {
     GST_ERROR ("Invalid MPEG video essence element");
     return GST_FLOW_ERROR;
+  }
+
+  switch (type) {
+    case MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2:
+      if (mxf_mpeg_is_mpeg2_keyframe (buffer))
+        GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      else
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+      break;
+
+    default:
+      break;
   }
 
   return GST_FLOW_OK;
@@ -339,6 +407,10 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 {
   GstCaps *caps = NULL;
   const gchar *codec_name = NULL;
+  MXFMPEGEssenceType t, *mdata;
+
+  *mapping_data = g_malloc (sizeof (MXFMPEGEssenceType));
+  mdata = (MXFMPEGEssenceType *) * mapping_data;
 
   /* SMPTE RP224 */
   if (p) {
@@ -348,6 +420,8 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
           gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       codec_name = "MPEG-2 Video";
+      t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
+      memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
     } else if (p->picture_essence_coding.u[0] != 0x06
         || p->picture_essence_coding.u[1] != 0x0e
         || p->picture_essence_coding.u[2] != 0x2b
@@ -367,10 +441,14 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       codec_name = "MPEG-2 Video";
+      t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
+      memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
     } else if (p->picture_essence_coding.u[13] == 0x10) {
       caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       codec_name = "MPEG-1 Video";
+      t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
+      memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
     } else if (p->picture_essence_coding.u[13] == 0x20) {
       MXFLocalTag *local_tag =
           (((MXFMetadataBase *) p)->other_tags) ?
@@ -389,12 +467,16 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
         gst_buffer_unref (codec_data);
       }
       codec_name = "MPEG-4 Video";
+      t = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG4;
+      memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
     } else if ((p->picture_essence_coding.u[13] >> 4) == 0x03) {
       /* RP 2008 */
 
       /* TODO: What about codec_data for AVC1 streams? */
       caps = gst_caps_new_simple ("video/x-h264", NULL);
       codec_name = "h.264 Video";
+      t = MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC;
+      memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
     } else {
       GST_ERROR ("Unsupported MPEG picture essence coding 0x%02x",
           p->picture_essence_coding.u[13]);
