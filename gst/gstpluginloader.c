@@ -40,6 +40,9 @@
 #include <gst/gstpluginloader.h>
 #include <gst/gstregistrychunks.h>
 
+/* IMPORTANT: Bump the version number if the plugin loader protocol changes */
+static const guint32 loader_protocol_version = 1;
+
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
 static GstPluginLoader *plugin_loader_new (GstRegistry * registry);
@@ -85,6 +88,8 @@ struct _GstPluginLoader
   gboolean rx_done;
   gboolean rx_got_sync;
 
+  guint32 got_version;
+
   /* Head and tail of the pending plugins list. List of
      PendingPluginEntry structs */
   GList *pending_plugins;
@@ -95,12 +100,12 @@ struct _GstPluginLoader
 #define PACKET_LOAD_PLUGIN 2
 #define PACKET_SYNC 3
 #define PACKET_PLUGIN_DETAILS 4
+#define PACKET_VERSION 5
 
 #define BUF_INIT_SIZE 512
 #define BUF_GROW_EXTRA 512
 #define HEADER_SIZE 8
 #define ALIGNMENT   (sizeof (void *))
-
 
 static gboolean gst_plugin_loader_spawn (GstPluginLoader * loader);
 static void put_packet (GstPluginLoader * loader, guint type, guint32 tag,
@@ -112,6 +117,7 @@ static gboolean plugin_loader_load_and_sync (GstPluginLoader * l,
 static void plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
     PendingPluginEntry * entry);
 static void plugin_loader_cleanup_child (GstPluginLoader * loader);
+static gboolean plugin_loader_sync_with_child (GstPluginLoader * l);
 
 static GstPluginLoader *
 plugin_loader_new (GstRegistry * registry)
@@ -274,6 +280,19 @@ restart:
 }
 
 static gboolean
+plugin_loader_sync_with_child (GstPluginLoader * l)
+{
+  put_packet (l, PACKET_SYNC, 0, NULL, 0);
+
+  l->rx_got_sync = FALSE;
+  while (!l->rx_got_sync) {
+    if (!exchange_packets (l))
+      return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
 plugin_loader_load_and_sync (GstPluginLoader * l, PendingPluginEntry * entry)
 {
   gint len;
@@ -284,15 +303,8 @@ plugin_loader_load_and_sync (GstPluginLoader * l, PendingPluginEntry * entry)
   len = strlen (entry->filename);
   put_packet (l, PACKET_LOAD_PLUGIN, entry->tag,
       (guint8 *) entry->filename, len + 1);
-  put_packet (l, PACKET_SYNC, 0, NULL, 0);
 
-  l->rx_got_sync = FALSE;
-  while (!l->rx_got_sync) {
-    if (!exchange_packets (l))
-      return FALSE;
-  }
-
-  return TRUE;
+  return plugin_loader_sync_with_child (l);
 }
 
 static void
@@ -320,23 +332,16 @@ plugin_loader_create_blacklist_plugin (GstPluginLoader * l,
 }
 
 static gboolean
-gst_plugin_loader_spawn (GstPluginLoader * loader)
+gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 {
-  if (loader->child_running)
-    return TRUE;
+  char *argv[] = { location, "-l", NULL };
 
-  {
-    /* FIXME: Find the plugin-scanner! */
-    char *helper_bin =
-        "/home/jan/devel/gstreamer/head/gstreamer/libs/gst/helpers/plugin-scanner";
-    char *argv[] = { helper_bin, "-l", NULL };
-
-    if (!g_spawn_async_with_pipes (NULL, argv, NULL,
-            G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
-            NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
-            NULL, NULL))
-      return FALSE;
-  }
+  GST_LOG ("Trying to spawn plugin-scanner helper at %s", location);
+  if (!g_spawn_async_with_pipes (NULL, argv, NULL,
+          G_SPAWN_DO_NOT_REAP_CHILD /* | G_SPAWN_STDERR_TO_DEV_NULL */ ,
+          NULL, NULL, &loader->child_pid, &loader->fd_w.fd, &loader->fd_r.fd,
+          NULL, NULL))
+    return FALSE;
 
   gst_poll_add_fd (loader->fdset, &loader->fd_w);
   gst_poll_add_fd (loader->fdset, &loader->fd_r);
@@ -345,9 +350,51 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
 
   loader->tx_buf_write = loader->tx_buf_read = 0;
 
+  loader->got_version = (guint32) (-1);
+  put_packet (loader, PACKET_VERSION, 0, NULL, 0);
+  if (!plugin_loader_sync_with_child (loader))
+    return FALSE;
+
+  GST_LOG ("Got VERSION %u from child. Ours is %u", loader->got_version,
+      loader_protocol_version);
+  if (loader->got_version != loader_protocol_version)
+    return FALSE;
+
   loader->child_running = TRUE;
 
   return TRUE;
+}
+
+static gboolean
+gst_plugin_loader_spawn (GstPluginLoader * loader)
+{
+  char *helper_bin;
+  gboolean res;
+
+  if (loader->child_running)
+    return TRUE;
+
+  /* Find the plugin-scanner, first try installed then by env-var */
+  helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+  res = gst_plugin_loader_try_helper (loader, helper_bin);
+  g_free (helper_bin);
+
+  if (!res) {
+    /* Try the GST_PLUGIN_SCANNER env var */
+    const gchar *env = g_getenv ("GST_PLUGIN_SCANNER");
+    if (env != NULL) {
+      GST_LOG ("Installed plugin scanner failed. "
+          "Trying GST_PLUGIN_SCANNER env var: %s", env);
+      helper_bin = g_strdup (env);
+      res = gst_plugin_loader_try_helper (loader, helper_bin);
+      g_free (helper_bin);
+    } else {
+      GST_LOG ("Installed plugin scanner failed and "
+          "GST_PLUGIN_SCANNER env var not set. No plugin-scanner available");
+    }
+  }
+
+  return loader->child_running;
 }
 
 static void
@@ -645,10 +692,25 @@ handle_rx_packet (GstPluginLoader * l,
     case PACKET_SYNC:
       if (l->is_child) {
         /* Respond with our reply - also a sync */
-        put_packet (l, PACKET_SYNC, 0, NULL, 0);
+        put_packet (l, PACKET_SYNC, tag, NULL, 0);
         GST_LOG ("Got SYNC in child - replying");
       } else
         l->rx_got_sync = TRUE;
+      break;
+    case PACKET_VERSION:
+      if (l->is_child) {
+        /* Respond with our reply - a version packet, with the version */
+        guint32 val;
+        GST_WRITE_UINT32_BE (&val, loader_protocol_version);
+        put_packet (l, PACKET_VERSION, tag, (guint8 *) & val, sizeof (guint32));
+        GST_LOG ("Got VERSION in child - replying %u", loader_protocol_version);
+      } else {
+        if (payload_len == sizeof (loader_protocol_version)) {
+          l->got_version = GST_READ_UINT32_BE (payload);
+        } else {
+          res = FALSE;
+        }
+      }
       break;
     default:
       return FALSE;             /* Invalid packet -> something is wrong */

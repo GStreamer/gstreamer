@@ -1,6 +1,5 @@
-# helpers_PROGRAMS = plugin-scanner
-# FIXME: Subst helpersdir in configure.ac
-noinst_PROGRAMS = plugin-scanner
+helpers_PROGRAMS = plugin-scanner
+helpersdir=$(libexecdir)
 
 plugin_scanner_SOURCES = plugin-scanner.c
 plugin_scanner_CFLAGS = $(GST_OBJ_CFLAGS)

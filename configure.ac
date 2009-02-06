@@ -654,6 +654,11 @@ dnl LDFLAGS for plugins; includes GST_ALL_LDFLAGS
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
+dnl plugin scanner locations
+AS_AC_EXPAND(GST_PLUGIN_SCANNER_INSTALLED,${libexecdir}/plugin-scanner)
+AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_INSTALLED,
+    "$GST_PLUGIN_SCANNER_INSTALLED", [location of the installed plugin-scanner])
+
 SHAVE_INIT([common],[enable])
 
 dnl things for our internal libcheck
