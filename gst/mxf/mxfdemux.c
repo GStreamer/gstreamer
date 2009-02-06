@@ -2842,6 +2842,7 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
     if (p->current_essence_track_position >= p->current_essence_track->duration
         && p->current_essence_track->duration > 0) {
       p->eos = TRUE;
+      p->current_essence_track_position = p->current_essence_track->duration;
       p->last_stop =
           gst_util_uint64_scale (p->current_essence_track->duration,
           p->material_track->edit_rate.d * GST_SECOND,
@@ -2876,6 +2877,8 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
     p->eos = TRUE;
     p->last_stop = sum;
     p->last_stop_accumulated_error = 0.0;
+    p->current_essence_track_position =
+        p->material_track->parent.sequence->duration;
     return;
   }
 
@@ -2896,6 +2899,16 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
   p->current_essence_track_position =
       gst_util_uint64_scale (start, p->material_track->edit_rate.n,
       p->material_track->edit_rate.d * GST_SECOND);
+
+  if (p->current_essence_track_position >= p->current_essence_track->duration
+      && p->current_essence_track->duration > 0) {
+    p->eos = TRUE;
+    p->current_essence_track_position = p->current_component->parent.duration;
+    p->last_stop =
+        sum + gst_util_uint64_scale (p->current_component->parent.duration,
+        p->material_track->edit_rate.d * GST_SECOND,
+        p->material_track->edit_rate.n);
+  }
 }
 
 static gboolean
