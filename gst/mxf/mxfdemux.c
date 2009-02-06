@@ -2268,8 +2268,8 @@ gst_mxf_demux_find_essence_element (GstMXFDemux * demux,
   guint i;
 
   GST_DEBUG_OBJECT (demux, "Trying to find essence element %" G_GINT64_FORMAT
-      " of track %u with body_sid %u", *position, etrack->track_number,
-      etrack->body_sid);
+      " of track %u with body_sid %u (keyframe %d)", *position,
+      etrack->track_number, etrack->body_sid, keyframe);
 
 from_index:
 
@@ -2293,12 +2293,15 @@ from_index:
         idx =
             &g_array_index (etrack->offsets, GstMXFDemuxIndex,
             current_position);
-        if (idx->offset == 0)
+        if (idx->offset == 0) {
           break;
-        else if (!idx->keyframe)
+        } else if (!idx->keyframe) {
+          current_position--;
           continue;
-
-        current_offset = idx->offset;
+        } else {
+          current_offset = idx->offset;
+          break;
+        }
       }
     }
 
