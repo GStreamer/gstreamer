@@ -769,14 +769,29 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       etrack->handler = mxf_essence_element_handler_find (track);
       if (!etrack->handler) {
+        gchar essence_container[96];
+        gchar *name;
+
         GST_WARNING_OBJECT (demux,
             "No essence element handler for track found");
-        goto next;
-      }
 
-      caps =
-          etrack->handler->create_caps (track, &etrack->tags,
-          &etrack->handle_func, &etrack->mapping_data);
+        mxf_ul_to_string (&track->parent.descriptor[0]->essence_container,
+            essence_container);
+
+        if (track->parent.type == MXF_METADATA_TRACK_PICTURE_ESSENCE) {
+          name = g_strdup_printf ("video/x-mxf-%s", essence_container);
+        } else if (track->parent.type == MXF_METADATA_TRACK_SOUND_ESSENCE) {
+          name = g_strdup_printf ("audio/x-mxf-%s", essence_container);
+        } else {
+          name = g_strdup_printf ("application/x-mxf-%s", essence_container);
+        }
+        caps = gst_caps_new_simple (name, NULL);
+        g_free (name);
+      } else {
+        caps =
+            etrack->handler->create_caps (track, &etrack->tags,
+            &etrack->handle_func, &etrack->mapping_data);
+      }
 
       GST_DEBUG_OBJECT (demux, "Created caps %" GST_PTR_FORMAT, caps);
 
