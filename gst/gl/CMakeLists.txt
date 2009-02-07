@@ -1,20 +1,25 @@
-add_definitions(-DHAVE_CONFIG_H -DHAVE_GDKPIXBUF)
+add_definitions(-DHAVE_CONFIG_H)
+
+if (PNG_FOUND)
+add_definitions(-DHAVE_LIBPNG)
+endif (PNG_FOUND)
 
 include_directories(AFTER
-  ../../win32/common
   ${GSTREAMER_INCLUDE_DIR}
   ${GLIB2_INCLUDE_DIR}
   ${LIBXML2_INCLUDE_DIR}
   ${LIBICONV_INCLUDE_DIR}
-  ${LIBATK_INCLUDE_DIR}
-  ${CAIRO_INCLUDE_DIR}
-  ${GTK2_INCLUDE_DIR}
+  ${PNG_INCLUDE_DIR}
   ../../gst-libs/gst/gl
   ${GLEW_INCLUDE_DIR}
-  ../../gst-libs/gst/freeglut
   ../../gst-libs
+  ../..
   .
   effects)
+
+if (WIN32)
+  include_directories(AFTER ../../win32/common)
+endif (WIN32)
 
 add_library (gstopengl SHARED
   gstopengl.c
@@ -53,4 +58,4 @@ add_library (gstopengl SHARED
 
 target_link_libraries(gstopengl
   general gstgl
-  general ${GTK2_LIBRARIES})
+  general ${PNG_LIBRARY})
