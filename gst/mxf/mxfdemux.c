@@ -2133,7 +2133,8 @@ next_try:
       gst_buffer_unref (buffer);
       buffer = NULL;
     } else if (mxf_is_generic_container_system_item (&key) ||
-        mxf_is_generic_container_essence_element (&key)) {
+        mxf_is_generic_container_essence_element (&key) ||
+        mxf_is_avid_essence_container_essence_element (&key)) {
       demux->offset += read;
       gst_buffer_unref (buffer);
       buffer = NULL;
@@ -2183,7 +2184,8 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
           demux->run_in + demux->current_partition->primer.offset +
           demux->current_partition->partition.header_byte_count ||
           mxf_is_generic_container_system_item (key) ||
-          mxf_is_generic_container_essence_element (key))) {
+          mxf_is_generic_container_essence_element (key) ||
+          mxf_is_avid_essence_container_essence_element (key))) {
     demux->current_partition->parsed_metadata = TRUE;
     if ((ret = gst_mxf_demux_resolve_references (demux)) != GST_FLOW_OK ||
         (ret = gst_mxf_demux_update_tracks (demux)) != GST_FLOW_OK) {
@@ -2234,7 +2236,8 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
   } else if (mxf_is_generic_container_system_item (key)) {
     ret =
         gst_mxf_demux_handle_generic_container_system_item (demux, key, buffer);
-  } else if (mxf_is_generic_container_essence_element (key)) {
+  } else if (mxf_is_generic_container_essence_element (key) ||
+      mxf_is_avid_essence_container_essence_element (key)) {
     ret =
         gst_mxf_demux_handle_generic_container_essence_element (demux, key,
         buffer, peek);

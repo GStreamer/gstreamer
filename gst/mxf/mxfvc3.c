@@ -33,6 +33,11 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
+static const guint8 picture_essence_coding_vc3_avid[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x0e, 0x04, 0x02, 0x01, 0x02,
+  0x04, 0x01, 0x00
+};
+
 static gboolean
 mxf_is_vc3_essence_track (const MXFMetadataTimelineTrack * track)
 {
@@ -54,8 +59,19 @@ mxf_is_vc3_essence_track (const MXFMetadataTimelineTrack * track)
     /* SMPTE S2019-4 7 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 && key->u[13] == 0x11 &&
-        (key->u[14] == 0x01 || key->u[14] == 0x02))
+        (key->u[14] == 0x01 || key->u[14] == 0x02)) {
       return TRUE;
+    } else if (mxf_is_avid_essence_container_label (key)) {
+      MXFMetadataGenericPictureEssenceDescriptor *p;
+
+      if (!MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d))
+        return FALSE;
+      p = MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d);
+
+      key = &p->picture_essence_coding;
+      if (memcmp (key, picture_essence_coding_vc3_avid, 16) == 0)
+        return TRUE;
+    }
   }
 
   return FALSE;
