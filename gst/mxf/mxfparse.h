@@ -63,6 +63,7 @@ gboolean mxf_is_generic_container_system_item (const MXFUL *key);
 gboolean mxf_is_generic_container_essence_element (const MXFUL *key);
 
 gboolean mxf_is_generic_container_essence_container_label (const MXFUL *key);
+gboolean mxf_is_avid_essence_container_label (const MXFUL *key);
 
 gboolean mxf_is_fill (const MXFUL *key);
 

@@ -39,6 +39,10 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
+static const guint8 picture_essence_coding_dv[13] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x02, 0x02, 0x02
+};
+
 static gboolean
 mxf_is_dv_dif_essence_track (const MXFMetadataTimelineTrack * track)
 {
@@ -59,8 +63,19 @@ mxf_is_dv_dif_essence_track (const MXFMetadataTimelineTrack * track)
     key = &d->essence_container;
     /* SMPTE 383M 8 */
     if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 && key->u[13] == 0x02)
+        key->u[12] == 0x02 && key->u[13] == 0x02) {
       return TRUE;
+    } else if (mxf_is_avid_essence_container_label (key)) {
+      MXFMetadataGenericPictureEssenceDescriptor *p;
+
+      if (!MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d))
+        return FALSE;
+      p = MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d);
+
+      key = &p->picture_essence_coding;
+      if (memcmp (key, &picture_essence_coding_dv, 13) == 0)
+        return TRUE;
+    }
   }
 
   return FALSE;
@@ -88,28 +103,11 @@ static GstCaps *
 mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
-  MXFMetadataFileDescriptor *f = NULL;
-  guint i;
   GstCaps *caps = NULL;
 
   g_return_val_if_fail (track != NULL, NULL);
 
   if (track->parent.descriptor == NULL) {
-    GST_ERROR ("No descriptor found for this track");
-    return NULL;
-  }
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    if (!track->parent.descriptor[i])
-      continue;
-
-    if (MXF_IS_METADATA_FILE_DESCRIPTOR (track->parent.descriptor[i]) &&
-        !MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (track->parent.descriptor[i])) {
-      f = track->parent.descriptor[i];
-    }
-  }
-
-  if (!f) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
   }
@@ -120,18 +118,15 @@ mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   /* TODO: might be video or audio only, use values of the generic sound/picture
    * descriptor in the caps in that case
    */
-  if (f->essence_container.u[13] == 0x02) {
-    GST_DEBUG ("Found DV-DIF stream");
-    caps =
-        gst_caps_new_simple ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
-        NULL);
+  GST_DEBUG ("Found DV-DIF stream");
+  caps =
+      gst_caps_new_simple ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
+      NULL);
 
-    if (!*tags)
-      *tags = gst_tag_list_new ();
+  if (!*tags)
+    *tags = gst_tag_list_new ();
 
-    gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_CODEC, "DV-DIF",
-        NULL);
-  }
+  gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_CODEC, "DV-DIF", NULL);
 
   return caps;
 }
