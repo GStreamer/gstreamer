@@ -725,6 +725,14 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
           if (tmp->track_number == track->parent.track_number &&
               tmp->body_sid == edata->body_sid) {
+            if (tmp->track_id != track->parent.track_id ||
+                !mxf_umid_is_equal (&tmp->source_package_uid,
+                    &package->parent.package_uid)) {
+              GST_ERROR_OBJECT (demux, "There already exists a different track "
+                  "with this track number and body sid but a different source "
+                  "or source track id -- ignoring");
+              continue;
+            }
             etrack = tmp;
             break;
           }
@@ -737,6 +745,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         memset (&tmp, 0, sizeof (tmp));
         tmp.body_sid = edata->body_sid;
         tmp.track_number = track->parent.track_number;
+        tmp.track_id = track->parent.track_id;
+        memcpy (&tmp.source_package_uid, &package->parent.package_uid, 32);
 
         if (!demux->essence_tracks)
           demux->essence_tracks =
@@ -753,6 +763,11 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       if (!track->parent.sequence) {
         GST_WARNING_OBJECT (demux, "Source track has no sequence");
+        goto next;
+      }
+
+      if (track->parent.n_descriptor == 0) {
+        GST_WARNING_OBJECT (demux, "Source track has no descriptors");
         goto next;
       }
 
@@ -773,7 +788,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         gchar *name;
 
         GST_WARNING_OBJECT (demux,
-            "No essence element handler for track found");
+            "No essence element handler for track %u found", i);
 
         mxf_ul_to_string (&track->parent.descriptor[0]->essence_container,
             essence_container);
@@ -840,7 +855,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
     if (!etrack->source_package || !etrack->source_track || !etrack->caps) {
-      GST_ERROR_OBJECT (demux, "Failed to update essence track");
+      GST_ERROR_OBJECT (demux, "Failed to update essence track %u", i);
       return GST_FLOW_ERROR;
     }
   }

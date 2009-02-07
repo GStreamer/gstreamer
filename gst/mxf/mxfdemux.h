@@ -68,6 +68,9 @@ typedef struct
   guint32 body_sid;
   guint32 track_number;
 
+  guint32 track_id;
+  MXFUMID source_package_uid;
+
   gint64 position;
   gint64 duration;
 
