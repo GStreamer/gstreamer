@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.10.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-21 14:02+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-02-07 16:02+0000\n"
 "PO-Revision-Date: 2008-10-21 09:30+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -17,22 +17,22 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
+#: ext/esd/esdsink.c:258 ext/esd/esdsink.c:363
 msgid "Could not establish connection to sound server"
 msgstr "Impossible d'établir une connexion vers le serveur de son"
 
-#: ext/esd/esdsink.c:269
+#: ext/esd/esdsink.c:265
 msgid "Failed to query sound server capabilities"
 msgstr ""
 "Échec lors de l'interrogation du serveur de son au sujet de ses capacités"
 
-#: ext/flac/gstflacdec.c:1266 ext/libpng/gstpngdec.c:329
-#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
-#: gst/avi/gstavidemux.c:4152 gst/avi/gstavidemux.c:4160
+#: ext/flac/gstflacdec.c:1261 ext/libpng/gstpngdec.c:328
+#: ext/libpng/gstpngdec.c:516 ext/wavpack/gstwavpackparse.c:1165
+#: gst/avi/gstavidemux.c:4162 gst/avi/gstavidemux.c:4170
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
 
-#: ext/jpeg/gstjpegdec.c:1041
+#: ext/jpeg/gstjpegdec.c:1049
 msgid "Failed to decode JPEG image"
 msgstr "Échec de décodage de l'image JPEG"
 
@@ -40,38 +40,38 @@ msgstr "Échec de décodage de l'image JPEG"
 msgid "Could not connect to server"
 msgstr "Impossible de se connecter au serveur"
 
-#: gst/avi/gstavimux.c:1616
+#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Entrée audio absente ou non valide, le flux AVI sera corrompu."
 
-#: gst/qtdemux/qtdemux.c:1094 gst/qtdemux/qtdemux.c:2106
-msgid "This file is invalid and cannot be played."
-msgstr "Ce fichier n'est pas valide et ne peut donc pas être lu."
-
-#: gst/qtdemux/qtdemux.c:1124
-msgid "This file is incomplete and cannot be played."
-msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
-
-#: gst/qtdemux/qtdemux.c:1965
+#: gst/qtdemux/qtdemux.c:988 gst/qtdemux/qtdemux.c:2008
 msgid "This file contains no playable streams."
 msgstr "Ce fichier ne contient aucun flux exploitable."
 
-#: gst/qtdemux/qtdemux.c:2822
+#: gst/qtdemux/qtdemux.c:1106 gst/qtdemux/qtdemux.c:2149
+msgid "This file is invalid and cannot be played."
+msgstr "Ce fichier n'est pas valide et ne peut donc pas être lu."
+
+#: gst/qtdemux/qtdemux.c:1164
+msgid "This file is incomplete and cannot be played."
+msgstr "Ce fichier n'est pas complet et ne peut donc pas être lu."
+
+#: gst/qtdemux/qtdemux.c:2865
 msgid "The video in this file might not play correctly."
 msgstr ""
 "Il est possible que la vidéo de ce fichier ne puisse pas être lue "
 "correctement."
 
-#: gst/qtdemux/qtdemux.c:2897
+#: gst/qtdemux/qtdemux.c:2940
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Ce fichier contient trop de flux. Seuls les %d premiers seront lus."
 
-#: gst/qtdemux/qtdemux.c:3159 gst/qtdemux/qtdemux.c:3839
+#: gst/qtdemux/qtdemux.c:3223 gst/qtdemux/qtdemux.c:3918
 msgid "This file is corrupt and cannot be played."
 msgstr "Ce fichier est corrompu et ne peut pas être lu."
 
-#: gst/wavparse/gstwavparse.c:1893
+#: gst/wavparse/gstwavparse.c:1887
 msgid "Internal data flow error."
 msgstr "Erreur interne de flux de données."
 
@@ -175,7 +175,7 @@ msgstr "Radio"
 msgid "Monitor"
 msgstr "Moniteur"
 
-#: sys/oss/gstosssink.c:414
+#: sys/oss/gstosssink.c:406
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -183,27 +183,29 @@ msgstr ""
 "Impossible d'ouvrir le périphérique audio pour la lecture. Le périphérique "
 "est utilisé par une autre application."
 
-#: sys/oss/gstosssink.c:421
+#: sys/oss/gstosssink.c:413
+#, fuzzy
 msgid ""
-"Could not open audio device for playback.You don't have permission to open "
+"Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
 "Impossible d'ouvrir le périphérique audio pour la lecture. Vous n'avez pas "
 "les droits nécessaires pour ouvrir le périphérique."
 
-#: sys/oss/gstosssink.c:429
+#: sys/oss/gstosssink.c:421
 msgid "Could not open audio device for playback."
 msgstr "Impossible d'ouvrir le périphérique audio pour la lecture."
 
-#: sys/oss/gstosssrc.c:381
+#: sys/oss/gstosssrc.c:377
+#, fuzzy
 msgid ""
-"Could not open audio device for recording.You don't have permission to open "
+"Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 "Impossible d'ouvrir le périphérique audio pour l'enregistrement. Vous n'avez "
 "pas les droits nécessaires pour ouvrir le périphérique."
 
-#: sys/oss/gstosssrc.c:389
+#: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
 msgstr "Impossible d'ouvrir le périphérique audio pour l'enregistrement."
 
@@ -211,15 +213,20 @@ msgstr "Impossible d'ouvrir le périphérique audio pour l'enregistrement."
 msgid "Gain"
 msgstr "Gain"
 
-#: sys/v4l2/gstv4l2src.c:1258 sys/v4l2/gstv4l2src.c:1307
-#, c-format
-msgid "Error read()ing %d bytes on device '%s'."
+#: sys/v4l2/gstv4l2src.c:1259
+#, fuzzy, c-format
+msgid "Error reading %d bytes from device '%s'."
 msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 
-#: sys/v4l2/gstv4l2src.c:1289
+#: sys/v4l2/gstv4l2src.c:1290
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Taille de trame imprévue de %u à la place de %u."
+
+#: sys/v4l2/gstv4l2src.c:1308
+#, fuzzy, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Erreur de lecture de %d octets sur le périphérique « %s »."
 
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format
@@ -246,79 +253,74 @@ msgstr ""
 msgid "Failed to query norm on device '%s'."
 msgstr "Impossible d'obtenir la norme du périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:254
-#, c-format
-msgid "Failed getting controls attributes on device '%s.'"
-msgstr "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
-
-#: sys/v4l2/v4l2_calls.c:332
+#: sys/v4l2/v4l2_calls.c:254 sys/v4l2/v4l2_calls.c:332
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:450
+#: sys/v4l2/v4l2_calls.c:462
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Impossible d'identifier le périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:457
+#: sys/v4l2/v4l2_calls.c:469
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Ceci n'est pas un périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:464
+#: sys/v4l2/v4l2_calls.c:476
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Impossible d'ouvrir le périphérique « %s » en lecture et écriture."
 
-#: sys/v4l2/v4l2_calls.c:471
+#: sys/v4l2/v4l2_calls.c:483
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Le périphérique « %s » n'est pas un périphérique d'enregistrement."
 
-#: sys/v4l2/v4l2_calls.c:566
+#: sys/v4l2/v4l2_calls.c:578
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "La définition de la norme du périphérique « %s » a échoué."
 
-#: sys/v4l2/v4l2_calls.c:604
+#: sys/v4l2/v4l2_calls.c:616
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr ""
 "Impossible d'obtenir la fréquence actuelle de syntonisation du périphérique "
 "« %s »."
 
-#: sys/v4l2/v4l2_calls.c:646
+#: sys/v4l2/v4l2_calls.c:658
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
 "Impossible de définir la fréquence de syntonisation du périphérique « %s » à %"
 "lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:680
+#: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Impossible d'obtenir la force du signal du périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:716
+#: sys/v4l2/v4l2_calls.c:728
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Impossible d'obtenir la valeur du contrôle %d du périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:751
+#: sys/v4l2/v4l2_calls.c:763
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Impossible de définir la valeur %d du contrôle %d du périphérique « %s »."
 
-#: sys/v4l2/v4l2_calls.c:780
+#: sys/v4l2/v4l2_calls.c:792
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Impossible d'obtenir l'entrée actuelle du périphérique « %s ». C'est peut-"
 "être un périphérique radio"
 
-#: sys/v4l2/v4l2_calls.c:802
+#: sys/v4l2/v4l2_calls.c:814
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Impossible de définir l'entrée %d du périphérique %s."
@@ -329,19 +331,19 @@ msgid "Could not enqueue buffers in device '%s'."
 msgstr ""
 "Impossible de mettre les tampons en file d'attente sur le périphérique « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:553
+#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 "Impossible d'énumérer les formats vidéo que le périphérique « %s » sait gérer"
 
-#: sys/v4l2/v4l2src_calls.c:1121 sys/v4l2/v4l2src_calls.c:1138
-#: sys/v4l2/v4l2src_calls.c:1147
+#: sys/v4l2/v4l2src_calls.c:1139 sys/v4l2/v4l2src_calls.c:1156
+#: sys/v4l2/v4l2src_calls.c:1165
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "L'obtention de trames vidéo du périphérique « %s » a échoué."
 
-#: sys/v4l2/v4l2src_calls.c:1123
+#: sys/v4l2/v4l2src_calls.c:1141
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -352,99 +354,103 @@ msgstr ""
 "aucun tampon n'a été alloué, ou les paramètres userptr ou length ne sont pas "
 "valides. périphérique %s"
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 "L'obtention de trames vidéo à partir du périphérique « %s » a échoué. Mémoire "
 "insuffisante."
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 "mémoire insuffisante pour mettre en file d'attente un tampon de pointeur "
 "utilisateur. périphérique %s."
 
-#: sys/v4l2/v4l2src_calls.c:1140
+#: sys/v4l2/v4l2src_calls.c:1158
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Échec après %d tentatives. périphérique %s. erreur système : %s"
 
-#: sys/v4l2/v4l2src_calls.c:1149
+#: sys/v4l2/v4l2src_calls.c:1167
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr "Aucun tampon libre dans la réserve à l'index %d."
 
-#: sys/v4l2/v4l2src_calls.c:1231
+#: sys/v4l2/v4l2src_calls.c:1249
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Impossible d'obtenir les paramètres du périphérique « %s »"
 
-#: sys/v4l2/v4l2src_calls.c:1261
+#: sys/v4l2/v4l2src_calls.c:1279
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 "Le périphérique d'entrée vidéo n'a pas accepté le nouveau paramètre de "
 "fréquence d'image."
 
-#: sys/v4l2/v4l2src_calls.c:1278
+#: sys/v4l2/v4l2src_calls.c:1296
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Le périphérique « %s » ne gère par l'enregistrement vidéo"
 
-#: sys/v4l2/v4l2src_calls.c:1286 sys/v4l2/v4l2src_calls.c:1295
+#: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Le périphérique « %s » ne peut pas enregistrer à %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1304
+#: sys/v4l2/v4l2src_calls.c:1322
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Le périphérique « %s » ne peut pas enregistrer dans le format indiqué"
 
-#: sys/v4l2/v4l2src_calls.c:1382
+#: sys/v4l2/v4l2src_calls.c:1400
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Impossible d'accéder aux tampons du périphérique « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1409
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Impossible d'accéder à suffisamment de tampons du périphérique « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1400
+#: sys/v4l2/v4l2src_calls.c:1418
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Impossible de mapper les tampons du périphérique « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1408
+#: sys/v4l2/v4l2src_calls.c:1426
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 "Le pilote du périphérique « %s » ne prend en charge aucune méthode "
 "d'enregistrement connue."
 
-#: sys/v4l2/v4l2src_calls.c:1453
+#: sys/v4l2/v4l2src_calls.c:1471
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr ""
 "Erreur lors du démarrage d'enregistrement de flux sur le périphérique « %s »."
 
-#: sys/v4l2/v4l2src_calls.c:1497
+#: sys/v4l2/v4l2src_calls.c:1515
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr ""
 "Erreur lors de l'arrêt d'enregistrement de flux sur le périphérique « %s »."
 
-#: sys/ximage/gstximagesrc.c:727
+#: sys/ximage/gstximagesrc.c:722
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 "La modification de résolution en cours d'exécution n'est pas encore prise en "
 "charge."
 
-#: sys/ximage/gstximagesrc.c:741
+#: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "Impossible de fonctionner sans horloge"
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr ""
+#~ "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
 
 #~ msgid "Could not read from CD."
 #~ msgstr "Impossible de lire le CD."

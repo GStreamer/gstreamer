@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.10.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-21 14:02+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-02-07 16:02+0000\n"
 "PO-Revision-Date: 2008-10-18 16:25+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -17,21 +17,21 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
+#: ext/esd/esdsink.c:258 ext/esd/esdsink.c:363
 msgid "Could not establish connection to sound server"
 msgstr "No se pudo establecer la conexión con el servidor de sonido"
 
-#: ext/esd/esdsink.c:269
+#: ext/esd/esdsink.c:265
 msgid "Failed to query sound server capabilities"
 msgstr "Falló al preguntar al servidor de sonido sus capacidades"
 
-#: ext/flac/gstflacdec.c:1266 ext/libpng/gstpngdec.c:329
-#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
-#: gst/avi/gstavidemux.c:4152 gst/avi/gstavidemux.c:4160
+#: ext/flac/gstflacdec.c:1261 ext/libpng/gstpngdec.c:328
+#: ext/libpng/gstpngdec.c:516 ext/wavpack/gstwavpackparse.c:1165
+#: gst/avi/gstavidemux.c:4162 gst/avi/gstavidemux.c:4170
 msgid "Internal data stream error."
 msgstr "Error interno de flujo de datos."
 
-#: ext/jpeg/gstjpegdec.c:1041
+#: ext/jpeg/gstjpegdec.c:1049
 msgid "Failed to decode JPEG image"
 msgstr "Falló al decodificar la imagen JPEG"
 
@@ -39,38 +39,38 @@ msgstr "Falló al decodificar la imagen JPEG"
 msgid "Could not connect to server"
 msgstr "No se pudo conectar con el servidor"
 
-#: gst/avi/gstavimux.c:1616
+#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "El audio no existe o no es válido, el flujo AVI estará corrupto."
 
-#: gst/qtdemux/qtdemux.c:1094 gst/qtdemux/qtdemux.c:2106
-msgid "This file is invalid and cannot be played."
-msgstr "Este archivo no es válido y no se puede reproducir."
-
-#: gst/qtdemux/qtdemux.c:1124
-msgid "This file is incomplete and cannot be played."
-msgstr "Este archivo está incompleto y no se puede reproducir."
-
-#: gst/qtdemux/qtdemux.c:1965
+#: gst/qtdemux/qtdemux.c:988 gst/qtdemux/qtdemux.c:2008
 msgid "This file contains no playable streams."
 msgstr "Este archivo no contiene flujos reproducibles."
 
-#: gst/qtdemux/qtdemux.c:2822
+#: gst/qtdemux/qtdemux.c:1106 gst/qtdemux/qtdemux.c:2149
+msgid "This file is invalid and cannot be played."
+msgstr "Este archivo no es válido y no se puede reproducir."
+
+#: gst/qtdemux/qtdemux.c:1164
+msgid "This file is incomplete and cannot be played."
+msgstr "Este archivo está incompleto y no se puede reproducir."
+
+#: gst/qtdemux/qtdemux.c:2865
 msgid "The video in this file might not play correctly."
 msgstr ""
 "Puede que el vídeo en este archivo no se pueda reproducir correctamente."
 
-#: gst/qtdemux/qtdemux.c:2897
+#: gst/qtdemux/qtdemux.c:2940
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 "Este archivo contiene demasiados flujos. Sólo se reproducirá el primer %d"
 
-#: gst/qtdemux/qtdemux.c:3159 gst/qtdemux/qtdemux.c:3839
+#: gst/qtdemux/qtdemux.c:3223 gst/qtdemux/qtdemux.c:3918
 msgid "This file is corrupt and cannot be played."
 msgstr "Este archivo está corrupto y no se puede reproducir."
 
-#: gst/wavparse/gstwavparse.c:1893
+#: gst/wavparse/gstwavparse.c:1887
 msgid "Internal data flow error."
 msgstr "Error en el flujo de datos interno."
 
@@ -174,7 +174,7 @@ msgstr "Radio"
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/oss/gstosssink.c:414
+#: sys/oss/gstosssink.c:406
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
@@ -182,27 +182,29 @@ msgstr ""
 "No se pudo abrir el dispositivo para reproducir. Otra aplicación está usando "
 "el dispositivo."
 
-#: sys/oss/gstosssink.c:421
+#: sys/oss/gstosssink.c:413
+#, fuzzy
 msgid ""
-"Could not open audio device for playback.You don't have permission to open "
+"Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
 "No se pudo abrir el dispositivo para reproducir. No tiene permisos para "
 "abrir el dispositivo."
 
-#: sys/oss/gstosssink.c:429
+#: sys/oss/gstosssink.c:421
 msgid "Could not open audio device for playback."
 msgstr "No se pudo abrir el dispositivo para reproducir."
 
-#: sys/oss/gstosssrc.c:381
+#: sys/oss/gstosssrc.c:377
+#, fuzzy
 msgid ""
-"Could not open audio device for recording.You don't have permission to open "
+"Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 "No se pudo abrir el dispositivo para grabar. No tiene permisos para abrir el "
 "dispositivo."
 
-#: sys/oss/gstosssrc.c:389
+#: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
 msgstr "No se pudo abrir el dispositivo para grabar."
 
@@ -210,15 +212,20 @@ msgstr "No se pudo abrir el dispositivo para grabar."
 msgid "Gain"
 msgstr "Ganancia"
 
-#: sys/v4l2/gstv4l2src.c:1258 sys/v4l2/gstv4l2src.c:1307
-#, c-format
-msgid "Error read()ing %d bytes on device '%s'."
+#: sys/v4l2/gstv4l2src.c:1259
+#, fuzzy, c-format
+msgid "Error reading %d bytes from device '%s'."
 msgstr "Error al leer %d bytes del dispositivo «%s»"
 
-#: sys/v4l2/gstv4l2src.c:1289
+#: sys/v4l2/gstv4l2src.c:1290
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Se obtuvo un tamaño de cuadro inesperado %u en lugar de %u."
+
+#: sys/v4l2/gstv4l2src.c:1308
+#, fuzzy, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Error al leer %d bytes del dispositivo «%s»"
 
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format
@@ -245,79 +252,74 @@ msgstr ""
 msgid "Failed to query norm on device '%s'."
 msgstr "Falló al consultar la norma para el dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:254
-#, c-format
-msgid "Failed getting controls attributes on device '%s.'"
-msgstr "Falló al obtener los atributos de control en el dispositivo «%s»."
-
-#: sys/v4l2/v4l2_calls.c:332
+#: sys/v4l2/v4l2_calls.c:254 sys/v4l2/v4l2_calls.c:332
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Falló al obtener los atributos de control en el dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:450
+#: sys/v4l2/v4l2_calls.c:462
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "No se puede identificar el dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:457
+#: sys/v4l2/v4l2_calls.c:469
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Esto no es un dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:464
+#: sys/v4l2/v4l2_calls.c:476
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "No se pudo abrir el dispositivo «%s» para lectura y escritura."
 
-#: sys/v4l2/v4l2_calls.c:471
+#: sys/v4l2/v4l2_calls.c:483
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "El dispositivo «%s» no es un dispositivo de captura."
 
-#: sys/v4l2/v4l2_calls.c:566
+#: sys/v4l2/v4l2_calls.c:578
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Falló al establecer la norma para el dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:604
+#: sys/v4l2/v4l2_calls.c:616
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr ""
 "Falló al obtener la frecuencia actual del sintonizador para el dispositivo «%"
 "s»."
 
-#: sys/v4l2/v4l2_calls.c:646
+#: sys/v4l2/v4l2_calls.c:658
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
 "Falló al establecer la frecuencia actual del sintonizador para el "
 "dispositivo «%s» a %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:680
+#: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Falló al obtener la potencia de la señal para el dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:716
+#: sys/v4l2/v4l2_calls.c:728
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Falló al obtener el valor para el control %d del dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:751
+#: sys/v4l2/v4l2_calls.c:763
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Falló al establecer el valor %ds para el control %d del dispositivo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:780
+#: sys/v4l2/v4l2_calls.c:792
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Falló al obtener la entrada actual en el dispositivo «%s». Quizá sea un "
 "dispositivo de radio."
 
-#: sys/v4l2/v4l2_calls.c:802
+#: sys/v4l2/v4l2_calls.c:814
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Falló al establecer la entrada %d en el dispositivo %s."
@@ -327,20 +329,20 @@ msgstr "Falló al establecer la entrada %d en el dispositivo %s."
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "No se pueden encolar los búferes en el dispositivo «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:553
+#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 "Falló al enumerar los posibles formatos de vídeo con los que el dispositivo «%"
 "s» puede trabajar"
 
-#: sys/v4l2/v4l2src_calls.c:1121 sys/v4l2/v4l2src_calls.c:1138
-#: sys/v4l2/v4l2src_calls.c:1147
+#: sys/v4l2/v4l2src_calls.c:1139 sys/v4l2/v4l2src_calls.c:1156
+#: sys/v4l2/v4l2src_calls.c:1165
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Falló al intentar obtener cuadros de vídeo del dispositivo «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:1123
+#: sys/v4l2/v4l2src_calls.c:1141
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -351,95 +353,98 @@ msgstr ""
 "no se han registrado búferes todavía o la longitud o el userptr son "
 "inválidos. Dispositivo %s"
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 "Falló al intentar obtener cuadros de vídeo del dispositivo «%s». No hay "
 "memoria suficiente."
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 "Memoria insuficiente para encolar un búfer puntero de usuario. Dispositivo %"
 "s."
 
-#: sys/v4l2/v4l2src_calls.c:1140
+#: sys/v4l2/v4l2src_calls.c:1158
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Falló después de %d intentos. Dispositivo %s. Error del sistema: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1149
+#: sys/v4l2/v4l2src_calls.c:1167
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr "No se encontraron búferes libres en el índice %d del «pool»."
 
-#: sys/v4l2/v4l2src_calls.c:1231
+#: sys/v4l2/v4l2src_calls.c:1249
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "No se pudieron obtener los parámetros para el dispositivo «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1261
+#: sys/v4l2/v4l2src_calls.c:1279
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 "El dispositivo de entrada de vídeo no aceptó el ajuste de la nueva tasa de "
 "fotogramas."
 
-#: sys/v4l2/v4l2src_calls.c:1278
+#: sys/v4l2/v4l2src_calls.c:1296
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "El dispositivo «%s» no soporta captura de vídeo"
 
-#: sys/v4l2/v4l2src_calls.c:1286 sys/v4l2/v4l2src_calls.c:1295
+#: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "El dispositivo «%s» no puede capturar a %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1304
+#: sys/v4l2/v4l2src_calls.c:1322
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "El dispositivo «%s» no puede capturar en el formato especificado"
 
-#: sys/v4l2/v4l2src_calls.c:1382
+#: sys/v4l2/v4l2src_calls.c:1400
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "No se pudieron obtener búferes del dispositivo «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1409
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "No se pudieron obtener búferes suficientes del dispositivo «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:1400
+#: sys/v4l2/v4l2src_calls.c:1418
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "No se pudieron mapear los búferes del dispositivo «%s»"
 
-#: sys/v4l2/v4l2src_calls.c:1408
+#: sys/v4l2/v4l2src_calls.c:1426
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 "El controlador del dispositivo «%s» no soporta ningún método de captura "
 "conocido."
 
-#: sys/v4l2/v4l2src_calls.c:1453
+#: sys/v4l2/v4l2src_calls.c:1471
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Error al iniciar el flujo de captura del dispositivo «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:1497
+#: sys/v4l2/v4l2src_calls.c:1515
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Error al parar el flujo de captura del dispositivo «%s»."
 
-#: sys/ximage/gstximagesrc.c:727
+#: sys/ximage/gstximagesrc.c:722
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "El cambio de resolución durante la reproducción aún no está soportado."
 
-#: sys/ximage/gstximagesrc.c:741
+#: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "No se puede operar sin reloj"
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "Falló al obtener los atributos de control en el dispositivo «%s»."
 
 #~ msgid "Could not read from CD."
 #~ msgstr "No se pudo leer del CD."

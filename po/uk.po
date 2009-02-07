@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.6\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-21 14:02+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-02-07 16:02+0000\n"
 "PO-Revision-Date: 2007-07-05 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -15,21 +15,21 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
+#: ext/esd/esdsink.c:258 ext/esd/esdsink.c:363
 msgid "Could not establish connection to sound server"
 msgstr "Не вдається встановити з'єднання із звуковим сервером."
 
-#: ext/esd/esdsink.c:269
+#: ext/esd/esdsink.c:265
 msgid "Failed to query sound server capabilities"
 msgstr "Помилка при запиті можливостей звукового сервера"
 
-#: ext/flac/gstflacdec.c:1266 ext/libpng/gstpngdec.c:329
-#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
-#: gst/avi/gstavidemux.c:4152 gst/avi/gstavidemux.c:4160
+#: ext/flac/gstflacdec.c:1261 ext/libpng/gstpngdec.c:328
+#: ext/libpng/gstpngdec.c:516 ext/wavpack/gstwavpackparse.c:1165
+#: gst/avi/gstavidemux.c:4162 gst/avi/gstavidemux.c:4170
 msgid "Internal data stream error."
 msgstr "Внутрішня помилка потоку даних."
 
-#: ext/jpeg/gstjpegdec.c:1041
+#: ext/jpeg/gstjpegdec.c:1049
 msgid "Failed to decode JPEG image"
 msgstr "Помилка при декодуванні зображення JPEG"
 
@@ -37,37 +37,37 @@ msgstr "Помилка при декодуванні зображення JPEG"
 msgid "Could not connect to server"
 msgstr "Не вдається з'єднатись з сервером"
 
-#: gst/avi/gstavimux.c:1616
+#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
 
-#: gst/qtdemux/qtdemux.c:1094 gst/qtdemux/qtdemux.c:2106
+#: gst/qtdemux/qtdemux.c:988 gst/qtdemux/qtdemux.c:2008
+msgid "This file contains no playable streams."
+msgstr "Файл містить потоки, які неможливо відтворити."
+
+#: gst/qtdemux/qtdemux.c:1106 gst/qtdemux/qtdemux.c:2149
 #, fuzzy
 msgid "This file is invalid and cannot be played."
 msgstr "Файл неповний або не може відтворюватись."
 
-#: gst/qtdemux/qtdemux.c:1124
+#: gst/qtdemux/qtdemux.c:1164
 msgid "This file is incomplete and cannot be played."
 msgstr "Файл неповний або не може відтворюватись."
 
-#: gst/qtdemux/qtdemux.c:1965
-msgid "This file contains no playable streams."
-msgstr "Файл містить потоки, які неможливо відтворити."
-
-#: gst/qtdemux/qtdemux.c:2822
+#: gst/qtdemux/qtdemux.c:2865
 msgid "The video in this file might not play correctly."
 msgstr "Потік відео у цьому файлі неможливо коректно відтворити."
 
-#: gst/qtdemux/qtdemux.c:2897
+#: gst/qtdemux/qtdemux.c:2940
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Файл містить надто багато потоків. Відтворюються перші %d"
 
-#: gst/qtdemux/qtdemux.c:3159 gst/qtdemux/qtdemux.c:3839
+#: gst/qtdemux/qtdemux.c:3223 gst/qtdemux/qtdemux.c:3918
 msgid "This file is corrupt and cannot be played."
 msgstr "Файл пошкоджений та не може бути відтворений."
 
-#: gst/wavparse/gstwavparse.c:1893
+#: gst/wavparse/gstwavparse.c:1887
 msgid "Internal data flow error."
 msgstr "Внутрішня помилка потоку даних."
 
@@ -171,30 +171,30 @@ msgstr "Радіо"
 msgid "Monitor"
 msgstr "Монітор"
 
-#: sys/oss/gstosssink.c:414
+#: sys/oss/gstosssink.c:406
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
 
-#: sys/oss/gstosssink.c:421
+#: sys/oss/gstosssink.c:413
 msgid ""
-"Could not open audio device for playback.You don't have permission to open "
+"Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
 
-#: sys/oss/gstosssink.c:429
+#: sys/oss/gstosssink.c:421
 #, fuzzy
 msgid "Could not open audio device for playback."
 msgstr "Не вдається відкрити пристрій компакт-дисків читання."
 
-#: sys/oss/gstosssrc.c:381
+#: sys/oss/gstosssrc.c:377
 msgid ""
-"Could not open audio device for recording.You don't have permission to open "
+"Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 
-#: sys/oss/gstosssrc.c:389
+#: sys/oss/gstosssrc.c:385
 #, fuzzy
 msgid "Could not open audio device for recording."
 msgstr "Не вдається відкрити пристрій компакт-дисків читання."
@@ -203,15 +203,20 @@ msgstr "Не вдається відкрити пристрій компакт-�
 msgid "Gain"
 msgstr "Підсилення"
 
-#: sys/v4l2/gstv4l2src.c:1258 sys/v4l2/gstv4l2src.c:1307
-#, c-format
-msgid "Error read()ing %d bytes on device '%s'."
+#: sys/v4l2/gstv4l2src.c:1259
+#, fuzzy, c-format
+msgid "Error reading %d bytes from device '%s'."
 msgstr "Помилка при читанні %d байтів на пристрої '%s'."
 
-#: sys/v4l2/gstv4l2src.c:1289
+#: sys/v4l2/gstv4l2src.c:1290
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr ""
+
+#: sys/v4l2/gstv4l2src.c:1308
+#, fuzzy, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Помилка при читанні %d байтів на пристрої '%s'."
 
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format
@@ -237,76 +242,71 @@ msgstr "Помилка при встановленні приймача %d пр�
 msgid "Failed to query norm on device '%s'."
 msgstr "Помилка при запиті норми пристрою '%s'."
 
-#: sys/v4l2/v4l2_calls.c:254
-#, c-format
-msgid "Failed getting controls attributes on device '%s.'"
-msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
-
-#: sys/v4l2/v4l2_calls.c:332
+#: sys/v4l2/v4l2_calls.c:254 sys/v4l2/v4l2_calls.c:332
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:450
+#: sys/v4l2/v4l2_calls.c:462
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Не вдається ідентифікувати пристрій \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:457
+#: sys/v4l2/v4l2_calls.c:469
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Це не пристрій '%s'."
 
-#: sys/v4l2/v4l2_calls.c:464
+#: sys/v4l2/v4l2_calls.c:476
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання та запису."
 
-#: sys/v4l2/v4l2_calls.c:471
+#: sys/v4l2/v4l2_calls.c:483
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Пристрій \"%s\" не є пристроєм захоплення."
 
-#: sys/v4l2/v4l2_calls.c:566
+#: sys/v4l2/v4l2_calls.c:578
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Не вдається встановити норму пристрою \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:604
+#: sys/v4l2/v4l2_calls.c:616
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Не вдається отримати поточну частоту приймача пристрою \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:646
+#: sys/v4l2/v4l2_calls.c:658
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
 "Не вдається встановити поточну частоту приймача пристрою \"%s\" у %lu Гц."
 
-#: sys/v4l2/v4l2_calls.c:680
+#: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Помилка при отриманні сили сигналу пристрою \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:716
+#: sys/v4l2/v4l2_calls.c:728
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Не вдається отримати значення від органу керування %d пристрою \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:751
+#: sys/v4l2/v4l2_calls.c:763
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
 "Не вдається встановити значення %d для органу керування %d пристрою \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:780
+#: sys/v4l2/v4l2_calls.c:792
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
 "Не вдається отримати поточний ввід пристрою \"%s\". Можливо цей пристрій - "
 "радіо."
 
-#: sys/v4l2/v4l2_calls.c:802
+#: sys/v4l2/v4l2_calls.c:814
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Не вдається встановити ввід %d пристрою \"%s\"."
@@ -316,20 +316,20 @@ msgstr "Не вдається встановити ввід %d пристрою 
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Не вдається опитати буфери від пристрою \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:553
+#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 "Не вдається отримати список усіх можливих відеоформатів, які підтримує "
 "пристрій \"%s\""
 
-#: sys/v4l2/v4l2src_calls.c:1121 sys/v4l2/v4l2src_calls.c:1138
-#: sys/v4l2/v4l2src_calls.c:1147
+#: sys/v4l2/v4l2src_calls.c:1139 sys/v4l2/v4l2src_calls.c:1156
+#: sys/v4l2/v4l2src_calls.c:1165
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Не вдається отримати відеокадри з пристрою \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1123
+#: sys/v4l2/v4l2src_calls.c:1141
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -340,88 +340,88 @@ msgstr ""
 "буфери ще не були виділені, або неправильні параметри userptr чи довжина. "
 "Пристрій %s"
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 "Не вдається отримати відеокадри з пристрою \"%s\". Недостатньо пам'яті."
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 "Недостатньо пам'яті для вставляння у чергу вказівника на буфер користувача. "
 "Пристрій %s."
 
-#: sys/v4l2/v4l2src_calls.c:1140
+#: sys/v4l2/v4l2src_calls.c:1158
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Помилка після %d спроб. Пристрій %s. Системна помилка: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1149
+#: sys/v4l2/v4l2src_calls.c:1167
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1231
+#: sys/v4l2/v4l2src_calls.c:1249
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Не вдається отримати параметри пристрою \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1261
+#: sys/v4l2/v4l2src_calls.c:1279
 msgid "Video input device did not accept new frame rate setting."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:1278
+#: sys/v4l2/v4l2src_calls.c:1296
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Пристрій \"%s\" не підтримує захоплення відео"
 
-#: sys/v4l2/v4l2src_calls.c:1286 sys/v4l2/v4l2src_calls.c:1295
+#: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Пристрій \"%s\" не здатний захоплювати відео у форматі %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1304
+#: sys/v4l2/v4l2src_calls.c:1322
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Пристрій \"%s\" не здатний захоплювати відео у вказаному форматі"
 
-#: sys/v4l2/v4l2src_calls.c:1382
+#: sys/v4l2/v4l2src_calls.c:1400
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Не вдається отримати буфери від пристрою \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1409
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Не вдається отримати достатньо буферів від пристрою \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1400
+#: sys/v4l2/v4l2src_calls.c:1418
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Не вдається відобразити буфери на пристрій \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1408
+#: sys/v4l2/v4l2src_calls.c:1426
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
 msgstr "Драйвер пристрою \"%s\" не підтримує жоден відомий метод захоплення."
 
-#: sys/v4l2/v4l2src_calls.c:1453
+#: sys/v4l2/v4l2src_calls.c:1471
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Не вдається розпочати захоплення кадрів з пристрою \"%s\"."
 
-#: sys/v4l2/v4l2src_calls.c:1497
+#: sys/v4l2/v4l2src_calls.c:1515
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Помилка при зупиненні захоплення кадрів з пристрою \"%s\"."
 
-#: sys/ximage/gstximagesrc.c:727
+#: sys/ximage/gstximagesrc.c:722
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Зміна роздільної здатності при відтворенні ще не підтримується."
 
-#: sys/ximage/gstximagesrc.c:741
+#: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
 
@@ -433,6 +433,9 @@ msgstr "Робота без годинника неможлива"
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Файл зашифрований та не може бути відтворений."
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
 
 #~ msgid "Could not exchange data with device '%s'."
 #~ msgstr "Помилка при обміні даними з пристроєм \"%s\"."

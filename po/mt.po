@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-16 17:05+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-02-07 16:02+0000\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -15,21 +15,21 @@ msgstr ""
 "X-Poedit-Language: Maltese\n"
 "X-Poedit-Country: MALTA\n"
 
-#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
+#: ext/esd/esdsink.c:258 ext/esd/esdsink.c:363
 msgid "Could not establish connection to sound server"
 msgstr "Kuntatt mas-sound server ma ġiex stabbilit"
 
-#: ext/esd/esdsink.c:269
+#: ext/esd/esdsink.c:265
 msgid "Failed to query sound server capabilities"
 msgstr "Mhux possibli t-tfittxija għall-kapaċita tas-sound server"
 
-#: ext/flac/gstflacdec.c:1266 ext/libpng/gstpngdec.c:329
-#: ext/libpng/gstpngdec.c:517 ext/wavpack/gstwavpackparse.c:1167
-#: gst/avi/gstavidemux.c:4152 gst/avi/gstavidemux.c:4160
+#: ext/flac/gstflacdec.c:1261 ext/libpng/gstpngdec.c:328
+#: ext/libpng/gstpngdec.c:516 ext/wavpack/gstwavpackparse.c:1165
+#: gst/avi/gstavidemux.c:4162 gst/avi/gstavidemux.c:4170
 msgid "Internal data stream error."
 msgstr "Problema interna fid-data stream"
 
-#: ext/jpeg/gstjpegdec.c:1041
+#: ext/jpeg/gstjpegdec.c:1049
 msgid "Failed to decode JPEG image"
 msgstr "Problem fid-decoding tal-istampa JPEG"
 
@@ -37,36 +37,36 @@ msgstr "Problem fid-decoding tal-istampa JPEG"
 msgid "Could not connect to server"
 msgstr "Mhux possibli naqbad mas-server"
 
-#: gst/avi/gstavimux.c:1615
+#: gst/avi/gstavimux.c:1610
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Input audio ma nstabx jew mhux validu. AVI stream jista jkun korrott."
 
-#: gst/qtdemux/qtdemux.c:1094 gst/qtdemux/qtdemux.c:2106
-msgid "This file is invalid and cannot be played."
-msgstr "Il-fajl mhux validu u ma jistax jindaqq"
-
-#: gst/qtdemux/qtdemux.c:1124
-msgid "This file is incomplete and cannot be played."
-msgstr "Il-fajl mhux komplut u ma jistax jindaqq,"
-
-#: gst/qtdemux/qtdemux.c:1965
+#: gst/qtdemux/qtdemux.c:988 gst/qtdemux/qtdemux.c:2008
 msgid "This file contains no playable streams."
 msgstr "Il-fajl ma fiħ l-ebda stream li tista tindaqq."
 
-#: gst/qtdemux/qtdemux.c:2822
+#: gst/qtdemux/qtdemux.c:1106 gst/qtdemux/qtdemux.c:2149
+msgid "This file is invalid and cannot be played."
+msgstr "Il-fajl mhux validu u ma jistax jindaqq"
+
+#: gst/qtdemux/qtdemux.c:1164
+msgid "This file is incomplete and cannot be played."
+msgstr "Il-fajl mhux komplut u ma jistax jindaqq,"
+
+#: gst/qtdemux/qtdemux.c:2865
 msgid "The video in this file might not play correctly."
 msgstr "Jista jkun illi l-vidjo ġo dan il-fajl ma jidhirx sewwa."
 
-#: gst/qtdemux/qtdemux.c:2897
+#: gst/qtdemux/qtdemux.c:2940
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
 msgstr "Il-fajl fiħ aktar streams milli suppost. Ser indoqq l-ewwel %d"
 
-#: gst/qtdemux/qtdemux.c:3159 gst/qtdemux/qtdemux.c:3839
+#: gst/qtdemux/qtdemux.c:3223 gst/qtdemux/qtdemux.c:3918
 msgid "This file is corrupt and cannot be played."
 msgstr "Il-fajl huwa korrott u ma jistax jinfetaħ."
 
-#: gst/wavparse/gstwavparse.c:1893
+#: gst/wavparse/gstwavparse.c:1887
 msgid "Internal data flow error."
 msgstr "Problema interna ta' data flow"
 
@@ -170,23 +170,32 @@ msgstr "Radju"
 msgid "Monitor"
 msgstr "Monitor"
 
-#: sys/oss/gstosssink.c:414
-msgid "Could not open audio device for playback. Device is being used by another application."
+#: sys/oss/gstosssink.c:406
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
 msgstr "Audio device ma jistax jintuża. Qed jintuża minn programm ieħor."
 
-#: sys/oss/gstosssink.c:421
-msgid "Could not open audio device for playback.You don't have permission to open the device."
+#: sys/oss/gstosssink.c:413
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
 msgstr "Audio device ma jistax jintuża. M'għandex aċċess għalih."
 
-#: sys/oss/gstosssink.c:429
+#: sys/oss/gstosssink.c:421
 msgid "Could not open audio device for playback."
 msgstr "Audio device ma jistax jintuża."
 
-#: sys/oss/gstosssrc.c:381
-msgid "Could not open audio device for recording.You don't have permission to open the device."
-msgstr "Audio device ma jistax jintuża biex tirrekordja. M'għandex aċċess għalih."
+#: sys/oss/gstosssrc.c:377
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Audio device ma jistax jintuża biex tirrekordja. M'għandex aċċess għalih."
 
-#: sys/oss/gstosssrc.c:389
+#: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
 msgstr "Audio device ma jistax jintuża biex tirrekordja."
 
@@ -194,20 +203,29 @@ msgstr "Audio device ma jistax jintuża biex tirrekordja."
 msgid "Gain"
 msgstr "Gain"
 
-#: sys/v4l2/gstv4l2src.c:1258 sys/v4l2/gstv4l2src.c:1307
-#, c-format
-msgid "Error read()ing %d bytes on device '%s'."
+#: sys/v4l2/gstv4l2src.c:1259
+#, fuzzy, c-format
+msgid "Error reading %d bytes from device '%s'."
 msgstr "Problema fil-qar()i %d bytes fid-device '%s'."
 
-#: sys/v4l2/gstv4l2src.c:1289
+#: sys/v4l2/gstv4l2src.c:1290
 #, c-format
 msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."
 
+#: sys/v4l2/gstv4l2src.c:1308
+#, fuzzy, c-format
+msgid "Error reading %d bytes on device '%s'."
+msgstr "Problema fil-qar()i %d bytes fid-device '%s'."
+
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
-msgstr "Problema biex nġib il-kapaċitajiet tal-apparat '%s': Mhux v4l2 driver. Iċċekkja jekk hux v4l1 driver. "
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Problema biex nġib il-kapaċitajiet tal-apparat '%s': Mhux v4l2 driver. "
+"Iċċekkja jekk hux v4l1 driver. "
 
 #: sys/v4l2/v4l2_calls.c:132
 #, c-format
@@ -224,72 +242,71 @@ msgstr "Problema biex inġib settings tat-tuner %d fuq l-appart '%s'"
 msgid "Failed to query norm on device '%s'."
 msgstr "Ma stajx nfittex norm fuq apparat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:254
-#, c-format
-msgid "Failed getting controls attributes on device '%s.'"
-msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."
-
-#: sys/v4l2/v4l2_calls.c:332
+#: sys/v4l2/v4l2_calls.c:254 sys/v4l2/v4l2_calls.c:332
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."
 
-#: sys/v4l2/v4l2_calls.c:450
+#: sys/v4l2/v4l2_calls.c:462
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Device '%s' mhux identifikat."
 
-#: sys/v4l2/v4l2_calls.c:457
+#: sys/v4l2/v4l2_calls.c:469
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dan mhux device %s."
 
-#: sys/v4l2/v4l2_calls.c:464
+#: sys/v4l2/v4l2_calls.c:476
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Device '%s' ma nistax niftaħu biex naqra jew nikteb."
 
-#: sys/v4l2/v4l2_calls.c:471
+#: sys/v4l2/v4l2_calls.c:483
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Device '%s' mhux capture device."
 
-#: sys/v4l2/v4l2_calls.c:566
+#: sys/v4l2/v4l2_calls.c:578
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Ma stajtx nissetja norm fuq apparat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:604
+#: sys/v4l2/v4l2_calls.c:616
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Problema biex inġib il-frekwenza li jitrażmetti fuqha apparat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:646
+#: sys/v4l2/v4l2_calls.c:658
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Problema biex nissettja l-frekwenza li jitrażmetti fuqha apparat '%s' għal %lu Hz."
+msgstr ""
+"Problema biex nissettja l-frekwenza li jitrażmetti fuqha apparat '%s' għal %"
+"lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:680
+#: sys/v4l2/v4l2_calls.c:692
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Problema biex inġib signal strength fuq l-apparat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:716
+#: sys/v4l2/v4l2_calls.c:728
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Problema biex inġib valur ta' control %d fuq l-apparat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:751
+#: sys/v4l2/v4l2_calls.c:763
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Problema biex nissetja valur %d lil control %d fuq l-apparat '%s'."
 
-#: sys/v4l2/v4l2_calls.c:780
+#: sys/v4l2/v4l2_calls.c:792
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr "Problema biex inġib current input fuq apparat '%s'. Jista jkun li huwa apparat tar-radju."
+msgstr ""
+"Problema biex inġib current input fuq apparat '%s'. Jista jkun li huwa "
+"apparat tar-radju."
 
-#: sys/v4l2/v4l2_calls.c:802
+#: sys/v4l2/v4l2_calls.c:814
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Problema biex nissettja input %d fuq apparat %s."
@@ -299,100 +316,113 @@ msgstr "Problema biex nissettja input %d fuq apparat %s."
 msgid "Could not enqueue buffers in device '%s'."
 msgstr "Could not enqueue buffers in device '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:553
+#: sys/v4l2/v4l2src_calls.c:561
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr "Failed to enumerate possible video formats device '%s' can work with"
 
-#: sys/v4l2/v4l2src_calls.c:1121 sys/v4l2/v4l2src_calls.c:1138
-#: sys/v4l2/v4l2src_calls.c:1147
+#: sys/v4l2/v4l2src_calls.c:1139 sys/v4l2/v4l2src_calls.c:1156
+#: sys/v4l2/v4l2src_calls.c:1165
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr "Problema biex inġib video frames mill-apparat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1123
+#: sys/v4l2/v4l2src_calls.c:1141
 #, c-format
-msgid "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
-msgstr "The buffer type is not supported, or the index is out of bounds, or no buffers have been allocated yet, or the userptr or length are invalid. device %s"
+msgid ""
+"The buffer type is not supported, or the index is out of bounds, or no "
+"buffers have been allocated yet, or the userptr or length are invalid. "
+"device %s"
+msgstr ""
+"The buffer type is not supported, or the index is out of bounds, or no "
+"buffers have been allocated yet, or the userptr or length are invalid. "
+"device %s"
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
-msgstr "Problema biex inġib video frames mill-apparat '%s'. Il-memorja allokata mhijiex biżżejjed."
+msgstr ""
+"Problema biex inġib video frames mill-apparat '%s'. Il-memorja allokata "
+"mhijiex biżżejjed."
 
-#: sys/v4l2/v4l2src_calls.c:1132
+#: sys/v4l2/v4l2src_calls.c:1150
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr "insufficient memory to enqueue a user pointer buffer. device %s."
 
-#: sys/v4l2/v4l2src_calls.c:1140
+#: sys/v4l2/v4l2src_calls.c:1158
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr "Problema wara li pruvajt %d drabi. apparat %s. żball fis-sistema: %s"
 
-#: sys/v4l2/v4l2src_calls.c:1149
+#: sys/v4l2/v4l2src_calls.c:1167
 #, c-format
 msgid "No free buffers found in the pool at index %d."
 msgstr "Ma nstab l-ebda buffer free fl-indiċi %d tal-pool."
 
-#: sys/v4l2/v4l2src_calls.c:1231
+#: sys/v4l2/v4l2src_calls.c:1249
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Mhux possibli nġib parametri tal-apparat '%s'"
 
-#: sys/v4l2/v4l2src_calls.c:1261
+#: sys/v4l2/v4l2src_calls.c:1279
 msgid "Video input device did not accept new frame rate setting."
-msgstr "Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
 
-#: sys/v4l2/v4l2src_calls.c:1278
+#: sys/v4l2/v4l2src_calls.c:1296
 #, c-format
 msgid "Device '%s' does not support video capture"
 msgstr "Appart '%s' ma jagħmilx video capture"
 
-#: sys/v4l2/v4l2src_calls.c:1286 sys/v4l2/v4l2src_calls.c:1295
+#: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Appart '%s' ma jistax jagħmel capture bi %dx%d"
 
-#: sys/v4l2/v4l2src_calls.c:1304
+#: sys/v4l2/v4l2src_calls.c:1322
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Appart '%s' ma jistax jagħmel capture f'dan il-format"
 
-#: sys/v4l2/v4l2src_calls.c:1382
+#: sys/v4l2/v4l2src_calls.c:1400
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr "Ma nistax nirċievi buffers mill-apparat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1391
+#: sys/v4l2/v4l2src_calls.c:1409
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr "Ma nistax nirċievi biżżejjed buffers mill-apparat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1400
+#: sys/v4l2/v4l2src_calls.c:1418
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Ma nistax nqabbel buffers mill-apparat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1408
+#: sys/v4l2/v4l2src_calls.c:1426
 #, c-format
 msgid "The driver of device '%s' does not support any known capture method."
-msgstr "Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
+msgstr ""
+"Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
 
-#: sys/v4l2/v4l2src_calls.c:1453
+#: sys/v4l2/v4l2src_calls.c:1471
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr "Problem biex nibda streaming capture mill-apparat '%s'."
 
-#: sys/v4l2/v4l2src_calls.c:1497
+#: sys/v4l2/v4l2src_calls.c:1515
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr "Problem biex inwaqqaf streaming capture mill-apparat '%s'."
 
-#: sys/ximage/gstximagesrc.c:727
+#: sys/ximage/gstximagesrc.c:722
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 
-#: sys/ximage/gstximagesrc.c:741
+#: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
+
+#~ msgid "Failed getting controls attributes on device '%s.'"
+#~ msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."
