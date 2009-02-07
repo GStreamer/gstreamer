@@ -61,6 +61,8 @@ static const QtNodeType qt_node_types[] = {
       qtdemux_dump_stsd},
   {FOURCC_stts, "time-to-sample", 0,
       qtdemux_dump_stts},
+  {FOURCC_stps, "partial sync sample", 0,
+      qtdemux_dump_stps},
   {FOURCC_stss, "sync sample", 0,
       qtdemux_dump_stss},
   {FOURCC_stsc, "sample-to-chunk", 0,

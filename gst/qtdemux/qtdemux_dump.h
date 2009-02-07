@@ -35,6 +35,7 @@ void qtdemux_dump_dref (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_stsd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_stts (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_stss (GstQTDemux * qtdemux, guint8 * buffer, int depth);
+void qtdemux_dump_stps (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_stsc (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_stsz (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_stco (GstQTDemux * qtdemux, guint8 * buffer, int depth);

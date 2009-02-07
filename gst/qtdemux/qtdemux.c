@@ -2956,6 +2956,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GNode *co64;
   GNode *stts;
   GNode *stss;
+  GNode *stps;
   GNode *ctts;
   const guint8 *stsc_data, *stsz_data, *stco_data;
   int sample_size;
@@ -2992,6 +2993,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* sample sync, can be NULL */
   stss = qtdemux_tree_get_child_by_type (stbl, FOURCC_stss);
+  stps = qtdemux_tree_get_child_by_type (stbl, FOURCC_stps);
 
   sample_size = QT_UINT32 (stsz_data + 12);
   if (sample_size == 0 || stream->sampled) {
@@ -3093,6 +3095,25 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           }
         }
       }
+      if (stps) {
+        /* mark keyframes */
+        guint32 n_sample_syncs;
+
+        n_sample_syncs = QT_UINT32 ((guint8 *) stps->data + 12);
+        if (n_sample_syncs == 0) {
+          //stream->all_keyframe = TRUE;
+        } else {
+          offset = 16;
+          for (i = 0; i < n_sample_syncs; i++) {
+            /* note that the first sample is index 1, not 0 */
+            index = QT_UINT32 ((guint8 *) stps->data + offset);
+            if (index > 0 && index <= stream->n_samples) {
+              samples[index - 1].keyframe = TRUE;
+            offset += 4;
+          }
+        }
+      }
+    }
     } else {
       /* no stss, all samples are keyframes */
       stream->all_keyframe = TRUE;
