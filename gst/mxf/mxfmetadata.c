@@ -1278,7 +1278,8 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
     for (j = 0; j < self->n_descriptors; j++) {
       MXFMetadataFileDescriptor *d;
 
-      if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptors[j]))
+      if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptors[j]) ||
+          MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (self->descriptors[j]))
         continue;
       d = MXF_METADATA_FILE_DESCRIPTOR (self->descriptors[j]);
 
@@ -1295,7 +1296,8 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
     for (j = 0; j < self->n_descriptors; j++) {
       MXFMetadataFileDescriptor *d;
 
-      if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptors[j]))
+      if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptors[j]) ||
+          MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (self->descriptors[j]))
         continue;
       d = MXF_METADATA_FILE_DESCRIPTOR (self->descriptors[j]);
 
