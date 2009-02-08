@@ -48,7 +48,6 @@
  *   - Correctly handle the different rectangles and aspect-ratio for video
  *   - Add support for non-standard MXF used by Avid (bug #561922).
  *   - Fix frame layout stuff, i.e. interlaced/progressive
- *   - Extend essence element handlers to set DELTA_UNIT flag.
  *   - In pull mode first find the first buffer for every pad before pushing
  *     to prevent jumpy playback in the beginning due to resynchronization.
  *
@@ -717,6 +716,11 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       if ((track->parent.type & 0xf0) != 0x30)
         continue;
 
+      if (track->edit_rate.n <= 0 || track->edit_rate.d <= 0) {
+        GST_WARNING_OBJECT (demux, "Invalid edit rate");
+        continue;
+      }
+
       if (demux->essence_tracks) {
         for (k = 0; k < demux->essence_tracks->len; k++) {
           GstMXFDemuxEssenceTrack *tmp =
@@ -784,7 +788,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
 
       etrack->handler = mxf_essence_element_handler_find (track);
       if (!etrack->handler) {
-        gchar essence_container[96];
+        gchar essence_container[48];
         gchar *name;
 
         GST_WARNING_OBJECT (demux,
