@@ -1087,13 +1087,24 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     if (first_run && MXF_IS_METADATA_MATERIAL_PACKAGE (current_package)) {
       pad->current_component_index = 0;
       pad->current_component_start = source_track->origin;
+
+      if (component->parent.duration >= -1)
+        pad->current_component_duration = component->parent.duration;
+      else
+        pad->current_component_duration = -1;
+
       if (track->edit_rate.n != source_track->edit_rate.n ||
           track->edit_rate.n != source_track->edit_rate.n) {
-
         pad->current_component_start +=
             gst_util_uint64_scale (component->start_position,
             source_track->edit_rate.n * track->edit_rate.d,
             source_track->edit_rate.d * track->edit_rate.n);
+
+        if (pad->current_component_duration != -1)
+          pad->current_component_duration =
+              gst_util_uint64_scale (pad->current_component_duration,
+              source_track->edit_rate.n * track->edit_rate.d,
+              source_track->edit_rate.d * track->edit_rate.n);
       } else {
         pad->current_component_start += component->start_position;
       }
@@ -1435,13 +1446,23 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
   }
 
   pad->current_component_start = source_track->origin;
+  if (pad->current_component->parent.duration >= -1)
+    pad->current_component_duration = pad->current_component->parent.duration;
+  else
+    pad->current_component_duration = -1;
+
   if (pad->material_track->edit_rate.n != source_track->edit_rate.n ||
       pad->material_track->edit_rate.n != source_track->edit_rate.n) {
-
     pad->current_component_start +=
         gst_util_uint64_scale (pad->current_component->start_position,
         source_track->edit_rate.n * pad->material_track->edit_rate.d,
         source_track->edit_rate.d * pad->material_track->edit_rate.n);
+
+    if (pad->current_component_duration != -1)
+      pad->current_component_duration =
+          gst_util_uint64_scale (pad->current_component_duration,
+          source_track->edit_rate.n * pad->material_track->edit_rate.d,
+          source_track->edit_rate.d * pad->material_track->edit_rate.n);
   } else {
     pad->current_component_start += pad->current_component->start_position;
   }
@@ -1648,22 +1669,21 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     outbuf = gst_buffer_create_sub (inbuf, 0, GST_BUFFER_SIZE (inbuf));
 
     GST_BUFFER_TIMESTAMP (outbuf) = pad->last_stop;
-    /* FIXME: What about tracks with source track edit rate != material
-     *        track edit rate? Use one of them and set the relative rate
-     *        to the other one as "rate" for the segment?
-     */
     GST_BUFFER_DURATION (outbuf) =
-        gst_util_uint64_scale (GST_SECOND, pad->material_track->edit_rate.d,
-        pad->material_track->edit_rate.n);
+        gst_util_uint64_scale (GST_SECOND,
+        pad->current_essence_track->source_track->edit_rate.d,
+        pad->current_essence_track->source_track->edit_rate.n);
     GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
     GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
 
     /* Update accumulated error and compensate */
     {
-      guint64 abs_error = (GST_SECOND * pad->material_track->edit_rate.d) %
-          pad->material_track->edit_rate.n;
+      guint64 abs_error =
+          (GST_SECOND * pad->current_essence_track->source_track->edit_rate.d) %
+          pad->current_essence_track->source_track->edit_rate.n;
       pad->last_stop_accumulated_error +=
-          ((gdouble) abs_error) / ((gdouble) pad->material_track->edit_rate.n);
+          ((gdouble) abs_error) /
+          ((gdouble) pad->current_essence_track->source_track->edit_rate.n);
     }
     if (pad->last_stop_accumulated_error >= 1.0) {
       GST_BUFFER_DURATION (outbuf) += 1;
@@ -1715,9 +1735,9 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     pad->current_essence_track_position++;
 
     if (pad->current_component) {
-      if (pad->current_component->parent.duration > 0 &&
+      if (pad->current_component_duration > 0 &&
           pad->current_essence_track_position - pad->current_component_start
-          >= pad->current_component->parent.duration) {
+          >= pad->current_component_duration) {
         GST_DEBUG_OBJECT (demux, "Switching to next component");
 
         ret =
@@ -2928,22 +2948,25 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
         p->material_track->edit_rate.d * GST_SECOND,
         p->material_track->edit_rate.n);
 
-  p->last_stop = start;
-  p->last_stop_accumulated_error = 0.0;
   start -= sum;
+  p->last_stop = sum + gst_util_uint64_scale (start,
+      GST_SECOND * p->material_track->edit_rate.d,
+      p->material_track->edit_rate.n);;
+  p->last_stop_accumulated_error = 0.0;
 
   if (gst_mxf_demux_pad_set_component (demux, p, i) != GST_FLOW_OK) {
     p->eos = TRUE;
   }
 
-  p->current_essence_track_position =
-      gst_util_uint64_scale (start, p->material_track->edit_rate.n,
-      p->material_track->edit_rate.d * GST_SECOND);
+  p->current_essence_track_position +=
+      gst_util_uint64_scale (start,
+      p->current_essence_track->source_track->edit_rate.n,
+      p->current_essence_track->source_track->edit_rate.d * GST_SECOND);
 
   if (p->current_essence_track_position >= p->current_essence_track->duration
       && p->current_essence_track->duration > 0) {
     p->eos = TRUE;
-    p->current_essence_track_position = p->current_component->parent.duration;
+    p->current_essence_track_position = p->current_essence_track->duration;
     p->last_stop =
         sum + gst_util_uint64_scale (p->current_component->parent.duration,
         p->material_track->edit_rate.d * GST_SECOND,
@@ -3174,8 +3197,9 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
         if (position != p->current_essence_track_position) {
           p->last_flow -=
               gst_util_uint64_scale (p->current_essence_track_position -
-              position, GST_SECOND * p->material_track->edit_rate.d,
-              p->material_track->edit_rate.d);
+              position,
+              GST_SECOND * p->current_essence_track->source_track->edit_rate.d,
+              p->current_essence_track->source_track->edit_rate.d);
         }
         p->current_essence_track_position = position;
       }
