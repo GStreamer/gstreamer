@@ -3359,7 +3359,10 @@ gst_mxf_demux_src_query (GstPad * pad, GstQuery * query)
       }
 
       duration = mxfpad->material_track->parent.sequence->duration;
-      if (format == GST_FORMAT_TIME) {
+      if (duration <= -1)
+        duration = -1;
+
+      if (duration != -1 && format == GST_FORMAT_TIME) {
         if (mxfpad->material_track->edit_rate.n == 0 ||
             mxfpad->material_track->edit_rate.d == 0) {
           g_mutex_unlock (demux->metadata_lock);
@@ -3619,7 +3622,7 @@ gst_mxf_demux_query (GstElement * element, GstQuery * query)
 
         pdur = pad->material_track->parent.sequence->duration;
         if (pad->material_track->edit_rate.n == 0 ||
-            pad->material_track->edit_rate.d == 0)
+            pad->material_track->edit_rate.d == 0 || pdur <= -1)
           continue;
 
         pdur =
