@@ -1349,6 +1349,7 @@ static GstFlowReturn
 gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
     guint i)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   MXFMetadataSequence *sequence;
   guint k;
   MXFMetadataSourcePackage *source_package = NULL;
@@ -1362,7 +1363,7 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
   if (pad->current_component_index >= sequence->n_structural_components) {
     GST_DEBUG_OBJECT (demux, "After last structural component");
     pad->current_component_index = sequence->n_structural_components - 1;
-    return GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_UNEXPECTED;
   }
 
   GST_DEBUG_OBJECT (demux, "Switching to component %u",
@@ -1462,7 +1463,11 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
     }
   }
 
-  return GST_FLOW_OK;
+  if (ret == GST_FLOW_UNEXPECTED) {
+    pad->current_essence_track_position += pad->current_component_duration;
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -2912,8 +2917,8 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
     p->eos = TRUE;
     p->last_stop = sum;
     p->last_stop_accumulated_error = 0.0;
-    p->current_essence_track_position =
-        p->material_track->parent.sequence->duration;
+
+    gst_mxf_demux_pad_set_component (demux, p, i);
     return;
   }
 
