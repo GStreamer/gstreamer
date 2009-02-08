@@ -1114,6 +1114,7 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
       (mxf_metadata_material_package_parent_class)->resolve (m, metadata);
   MXFMetadataGenericPackage *self = MXF_METADATA_GENERIC_PACKAGE (m);
   guint i;
+  guint ntracks = 0;
 
   if (!ret)
     return ret;
@@ -1133,6 +1134,8 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
 
     for (j = 0; j < sequence->n_structural_components; j++) {
       MXFMetadataSourceClip *sc;
+      MXFMetadataTimelineTrack *st = NULL;
+      guint k;
 
       if (!sequence->structural_components[j]
           || !MXF_IS_METADATA_SOURCE_CLIP (sequence->structural_components[j]))
@@ -1140,9 +1143,48 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
 
       sc = MXF_METADATA_SOURCE_CLIP (sequence->structural_components[j]);
 
-      if (sc->source_package)
-        sc->source_package->top_level = TRUE;
+      if (!sc->source_package) {
+        GST_ERROR ("Material package track %u without resolved source package",
+            i);
+        track = NULL;
+        break;
+      }
+
+      sc->source_package->top_level = TRUE;
+      for (k = 0; k < sc->source_package->parent.n_tracks; k++) {
+        MXFMetadataTimelineTrack *tmp;
+
+        if (!sc->source_package->parent.tracks[k] ||
+            !MXF_IS_METADATA_TIMELINE_TRACK (sc->source_package->
+                parent.tracks[k]))
+          continue;
+
+        tmp =
+            MXF_METADATA_TIMELINE_TRACK (sc->source_package->parent.tracks[k]);
+        if (tmp->parent.track_id == sc->source_track_id) {
+          st = tmp;
+          break;
+        }
+      }
+
+      if (!st) {
+        GST_ERROR ("Material package track %u without resolved source track",
+            i);
+        track = NULL;
+      }
     }
+
+    if (track)
+      ntracks++;
+    else
+      self->tracks[i] = NULL;
+  }
+
+  if (ntracks == 0) {
+    GST_ERROR ("No tracks could be resolved");
+    return FALSE;
+  } else if (ntracks != self->n_tracks) {
+    GST_WARNING ("Not all tracks could be resolved");
   }
 
   return TRUE;
