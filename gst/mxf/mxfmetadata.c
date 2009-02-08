@@ -1150,6 +1150,13 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
         break;
       }
 
+      if (!mxf_metadata_base_resolve (MXF_METADATA_BASE (sc->source_package),
+              metadata)) {
+        GST_ERROR ("Couldn't resolve source package for track %u", i);
+        track = NULL;
+        break;
+      }
+
       sc->source_package->top_level = TRUE;
       for (k = 0; k < sc->source_package->parent.n_tracks; k++) {
         MXFMetadataTimelineTrack *tmp;
