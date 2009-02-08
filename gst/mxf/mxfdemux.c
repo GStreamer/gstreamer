@@ -2894,7 +2894,7 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
   GstClockTime sum = 0;
   MXFMetadataSourceClip *clip = NULL;
 
-  if (!MXF_IS_METADATA_MATERIAL_PACKAGE (demux->current_package)) {
+  if (!p->current_component) {
     p->current_essence_track_position =
         gst_util_uint64_scale (start, p->material_track->edit_rate.n,
         p->material_track->edit_rate.d * GST_SECOND);
@@ -2949,19 +2949,23 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
         p->material_track->edit_rate.n);
 
   start -= sum;
-  p->last_stop = sum + gst_util_uint64_scale (start,
-      GST_SECOND * p->material_track->edit_rate.d,
-      p->material_track->edit_rate.n);;
-  p->last_stop_accumulated_error = 0.0;
 
   if (gst_mxf_demux_pad_set_component (demux, p, i) != GST_FLOW_OK) {
     p->eos = TRUE;
   }
 
-  p->current_essence_track_position +=
-      gst_util_uint64_scale (start,
-      p->current_essence_track->source_track->edit_rate.n,
-      p->current_essence_track->source_track->edit_rate.d * GST_SECOND);
+  {
+    gint64 essence_offset = gst_util_uint64_scale (start,
+        p->current_essence_track->source_track->edit_rate.n,
+        p->current_essence_track->source_track->edit_rate.d * GST_SECOND);
+
+    p->current_essence_track_position += essence_offset;
+
+    p->last_stop = sum + gst_util_uint64_scale (essence_offset,
+        GST_SECOND * p->material_track->edit_rate.d,
+        p->material_track->edit_rate.n);
+    p->last_stop_accumulated_error = 0.0;
+  }
 
   if (p->current_essence_track_position >= p->current_essence_track->duration
       && p->current_essence_track->duration > 0) {
