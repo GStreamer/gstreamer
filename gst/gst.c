@@ -1457,7 +1457,7 @@ gst_version_string ()
   if (nano == 0)
     return g_strdup_printf ("GStreamer %d.%d.%d", major, minor, micro);
   else if (nano == 1)
-    return g_strdup_printf ("GStreamer %d.%d.%d (CVS)", major, minor, micro);
+    return g_strdup_printf ("GStreamer %d.%d.%d (GIT)", major, minor, micro);
   else
     return g_strdup_printf ("GStreamer %d.%d.%d (prerelease)", major, minor,
         micro);
