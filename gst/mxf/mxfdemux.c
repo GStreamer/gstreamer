@@ -151,6 +151,8 @@ gst_mxf_demux_partition_free (GstMXFDemuxPartition * partition)
 static void
 gst_mxf_demux_reset_mxf_state (GstMXFDemux * demux)
 {
+  guint i;
+
   GST_DEBUG_OBJECT (demux, "Resetting MXF state");
 
   g_list_foreach (demux->partitions, (GFunc) gst_mxf_demux_partition_free,
@@ -160,27 +162,22 @@ gst_mxf_demux_reset_mxf_state (GstMXFDemux * demux)
 
   demux->current_partition = NULL;
 
-  if (demux->essence_tracks) {
-    guint i;
+  for (i = 0; i < demux->essence_tracks->len; i++) {
+    GstMXFDemuxEssenceTrack *t =
+        &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
 
-    for (i = 0; i < demux->essence_tracks->len; i++) {
-      GstMXFDemuxEssenceTrack *t =
-          &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+    if (t->offsets)
+      g_array_free (t->offsets, TRUE);
 
-      if (t->offsets)
-        g_array_free (t->offsets, TRUE);
+    g_free (t->mapping_data);
 
-      g_free (t->mapping_data);
+    if (t->tags)
+      gst_tag_list_free (t->tags);
 
-      if (t->tags)
-        gst_tag_list_free (t->tags);
-
-      if (t->caps)
-        gst_caps_unref (t->caps);
-    }
-    g_array_free (demux->essence_tracks, TRUE);
-    demux->essence_tracks = NULL;
+    if (t->caps)
+      gst_caps_unref (t->caps);
   }
+  g_array_set_size (demux->essence_tracks, 0);
 }
 
 static void
@@ -254,8 +251,7 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
     demux->close_seg_event = NULL;
   }
 
-  if (demux->adapter)
-    gst_adapter_clear (demux->adapter);
+  gst_adapter_clear (demux->adapter);
 
   gst_mxf_demux_remove_pads (demux);
 
@@ -3790,6 +3786,8 @@ gst_mxf_demux_finalize (GObject * object)
 
   g_ptr_array_free (demux->src, TRUE);
   demux->src = NULL;
+  g_array_free (demux->essence_tracks, TRUE);
+  demux->essence_tracks = NULL;
 
   g_hash_table_destroy (demux->metadata);
 
@@ -3867,8 +3865,12 @@ gst_mxf_demux_init (GstMXFDemux * demux, GstMXFDemuxClass * g_class)
   demux->max_drift = 500 * GST_MSECOND;
 
   demux->adapter = gst_adapter_new ();
-  demux->src = g_ptr_array_new ();
   demux->metadata_lock = g_mutex_new ();
+
+  demux->src = g_ptr_array_new ();
+  demux->essence_tracks =
+      g_array_new (FALSE, FALSE, sizeof (GstMXFDemuxEssenceTrack));
+
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   gst_mxf_demux_reset (demux);
