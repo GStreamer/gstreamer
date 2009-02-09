@@ -60,7 +60,7 @@ endif
 GSTSUPP = $(top_srcdir)/common/gst.supp
 PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
 GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
-TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
+TESTS_ENVIRONMENT = PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH)
 
 # gdb any given test_x.py by running make test_x.py.gdb
 %.gdb: %
@@ -79,6 +79,25 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
 	--suppressions=$(GSTPYTHONSUPP)				\
 	--tool=memcheck --leak-check=full --trace-children=yes  \
 	--leak-resolution=high --num-callers=50		\
+	$(PYTHON)						\
+	$* 2>&1 | tee valgrind.log
+	@if grep "tely lost" valgrind.log; then                 \
+	    rm valgrind.log;                                    \
+	    exit 1;                                             \
+	fi
+	@rm valgrind.log
+
+# valgrind any given test_x.py by running make test_x.py.valgrind
+%.gen-suppressions: %
+	$(TESTS_ENVIRONMENT)                                    \
+	G_DEBUG=gc-friendly G_SLICE=always-malloc					\
+	$(VALGRIND_PATH) -q					\
+	--suppressions=$(GSTSUPP)				\
+	--suppressions=$(PYTHONSUPP)				\
+	--suppressions=$(GSTPYTHONSUPP)				\
+	--tool=memcheck --leak-check=full --trace-children=yes  \
+	--leak-resolution=high --num-callers=50			\
+	--gen-suppressions=all					\
 	$(PYTHON)						\
 	$* 2>&1 | tee valgrind.log
 	@if grep "tely lost" valgrind.log; then                 \
