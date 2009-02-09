@@ -39,9 +39,12 @@
 
 #include <gst/gstpluginloader.h>
 #include <gst/gstregistrychunks.h>
+#include <gst/gstregistrybinary.h>
 
-/* IMPORTANT: Bump the version number if the plugin loader protocol changes */
-static const guint32 loader_protocol_version = 1;
+/* IMPORTANT: Bump the version number if the plugin loader packet protocol
+ * changes. Changes in the binary registry format are handled by bumps
+ * in the GST_MAGIC_BINARY_VERSION_STR as before */
+static const guint32 loader_protocol_version = 2;
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
@@ -87,8 +90,6 @@ struct _GstPluginLoader
   guint rx_buf_size;
   gboolean rx_done;
   gboolean rx_got_sync;
-
-  guint32 got_version;
 
   /* Head and tail of the pending plugins list. List of
      PendingPluginEntry structs */
@@ -350,14 +351,8 @@ gst_plugin_loader_try_helper (GstPluginLoader * loader, gchar * location)
 
   loader->tx_buf_write = loader->tx_buf_read = 0;
 
-  loader->got_version = (guint32) (-1);
   put_packet (loader, PACKET_VERSION, 0, NULL, 0);
   if (!plugin_loader_sync_with_child (loader))
-    return FALSE;
-
-  GST_LOG ("Got VERSION %u from child. Ours is %u", loader->got_version,
-      loader_protocol_version);
-  if (loader->got_version != loader_protocol_version)
     return FALSE;
 
   loader->child_running = TRUE;
@@ -608,6 +603,32 @@ fail:
 }
 
 static gboolean
+check_protocol_version (GstPluginLoader * l, guint8 * payload,
+    guint payload_len)
+{
+  guint32 got_version;
+  guint8 *binary_reg_ver;
+
+  if (payload_len < sizeof (guint32) + GST_MAGIC_BINARY_VERSION_LEN)
+    return FALSE;
+
+  got_version = GST_READ_UINT32_BE (payload);
+  GST_LOG ("Got VERSION %u from child. Ours is %u", got_version,
+      loader_protocol_version);
+  if (got_version != loader_protocol_version)
+    return FALSE;
+
+  binary_reg_ver = payload + sizeof (guint32);
+  if (strcmp ((gchar *) binary_reg_ver, GST_MAGIC_BINARY_VERSION_STR)) {
+    GST_LOG ("Binary chunk format of child is different. Ours: %s, child %s\n",
+        GST_MAGIC_BINARY_VERSION_STR, binary_reg_ver);
+    return FALSE;
+  }
+
+  return TRUE;
+};
+
+static gboolean
 handle_rx_packet (GstPluginLoader * l,
     guint pack_type, guint32 tag, guint8 * payload, guint payload_len)
 {
@@ -700,16 +721,17 @@ handle_rx_packet (GstPluginLoader * l,
     case PACKET_VERSION:
       if (l->is_child) {
         /* Respond with our reply - a version packet, with the version */
-        guint32 val;
-        GST_WRITE_UINT32_BE (&val, loader_protocol_version);
-        put_packet (l, PACKET_VERSION, tag, (guint8 *) & val, sizeof (guint32));
+        const gint version_len =
+            sizeof (guint32) + GST_MAGIC_BINARY_VERSION_LEN;
+        guint8 version_info[sizeof (guint32) + GST_MAGIC_BINARY_VERSION_LEN];
+        memset (version_info, 0, version_len);
+        GST_WRITE_UINT32_BE (version_info, loader_protocol_version);
+        memcpy (version_info + sizeof (guint32), GST_MAGIC_BINARY_VERSION_STR,
+            strlen (GST_MAGIC_BINARY_VERSION_STR));
+        put_packet (l, PACKET_VERSION, tag, version_info, version_len);
         GST_LOG ("Got VERSION in child - replying %u", loader_protocol_version);
       } else {
-        if (payload_len == sizeof (loader_protocol_version)) {
-          l->got_version = GST_READ_UINT32_BE (payload);
-        } else {
-          res = FALSE;
-        }
+        res = check_protocol_version (l, payload, payload_len);
       }
       break;
     default:
