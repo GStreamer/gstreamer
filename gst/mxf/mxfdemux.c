@@ -2287,6 +2287,20 @@ gst_mxf_demux_handle_klv_packet (GstMXFDemux * demux, const MXFUL * key,
         "Open or incomplete header partition, trying to get final metadata from the last partitions");
     gst_mxf_demux_parse_footer_metadata (demux);
     demux->pull_footer_metadata = FALSE;
+
+    if (demux->current_partition->partition.body_sid != 0 &&
+        demux->current_partition->partition.body_offset == 0) {
+      guint i;
+      for (i = 0; i < demux->essence_tracks->len; i++) {
+        GstMXFDemuxEssenceTrack *etrack =
+            &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
+
+        if (etrack->body_sid != demux->current_partition->partition.body_sid)
+          continue;
+
+        etrack->position = 0;
+      }
+    }
   }
 
 beach:
