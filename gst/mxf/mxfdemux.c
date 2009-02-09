@@ -1748,7 +1748,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         }
       } else if (etrack->duration > 0
           && pad->current_essence_track_position >= etrack->duration) {
-        GST_ERROR_OBJECT (demux,
+        GST_DEBUG_OBJECT (demux,
             "Current component position after end of essence track");
         ret = GST_FLOW_UNEXPECTED;
       }
@@ -2590,7 +2590,7 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
           gst_mxf_demux_find_essence_element (demux,
           earliest->current_essence_track, &position, FALSE);
       if (offset == -1) {
-        GST_ERROR_OBJECT (demux,
+        GST_WARNING_OBJECT (demux,
             "Failed to find offset for late essence track");
         earliest->eos = TRUE;
         gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
