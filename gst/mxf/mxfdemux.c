@@ -46,7 +46,7 @@
  *     and send them downstream as event.
  *   - Multichannel audio needs channel layouts, define them (SMPTE S320M?).
  *   - Correctly handle the different rectangles and aspect-ratio for video
- *   - Add support for non-standard MXF used by Avid (bug #561922).
+ *   - Add more support for non-standard MXF used by Avid (bug #561922).
  *   - Fix frame layout stuff, i.e. interlaced/progressive
  *   - In pull mode first find the first buffer for every pad before pushing
  *     to prevent jumpy playback in the beginning due to resynchronization.

@@ -27,6 +27,7 @@
  *   - Correctly transform for the GStreamer strides
  *   - Handle all the dimensions and other properties in the picture
  *     essence descriptors correctly according to S377M Annex E
+ *   - Handle interlaced correctly, i.e. weave until we support one-field-per-buffer
  */
 
 #ifdef HAVE_CONFIG_H
