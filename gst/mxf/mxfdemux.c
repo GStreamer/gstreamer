@@ -2675,8 +2675,22 @@ gst_mxf_demux_loop (GstPad * pad)
   if ((demux->segment.flags & GST_SEEK_FLAG_SEGMENT) &&
       (demux->segment.stop != -1) &&
       (demux->segment.last_stop >= demux->segment.stop)) {
-    ret = GST_FLOW_UNEXPECTED;
-    goto pause;
+    guint i;
+    gboolean eos = TRUE;
+
+    for (i = 0; i < demux->src->len; i++) {
+      GstMXFDemuxPad *p = g_ptr_array_index (demux->src, i);
+
+      if (!p->eos && p->last_stop < demux->segment.stop) {
+        eos = FALSE;
+        break;
+      }
+    }
+
+    if (eos) {
+      ret = GST_FLOW_UNEXPECTED;
+      goto pause;
+    }
   }
 
   gst_object_unref (demux);
