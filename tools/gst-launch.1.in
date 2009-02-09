@@ -28,7 +28,10 @@ easy way to construct pipelines from pipeline descriptions.
 Print help synopsis and available FLAGS
 .TP 8
 .B  \-v, \-\-verbose
-Output status information
+Output status information and property notifications
+.TP 8
+.B  \-v, \-\-quiet
+Do not print any progress information
 .TP 8
 .B  \-m, \-\-messages
 Output messages posted on the pipeline's bus
