@@ -2901,7 +2901,6 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
 
     if (p->current_essence_track_position >= p->current_essence_track->duration
         && p->current_essence_track->duration > 0) {
-      p->eos = TRUE;
       p->current_essence_track_position = p->current_essence_track->duration;
       p->last_stop =
           gst_util_uint64_scale (p->current_essence_track->duration,
@@ -2934,7 +2933,6 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
   }
 
   if (i == p->material_track->parent.sequence->n_structural_components) {
-    p->eos = TRUE;
     p->last_stop = sum;
     p->last_stop_accumulated_error = 0.0;
 
@@ -2950,9 +2948,7 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
 
   start -= sum;
 
-  if (gst_mxf_demux_pad_set_component (demux, p, i) != GST_FLOW_OK) {
-    p->eos = TRUE;
-  }
+  gst_mxf_demux_pad_set_component (demux, p, i);
 
   {
     gint64 essence_offset = gst_util_uint64_scale (start,
@@ -2969,7 +2965,6 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
 
   if (p->current_essence_track_position >= p->current_essence_track->duration
       && p->current_essence_track->duration > 0) {
-    p->eos = TRUE;
     p->current_essence_track_position = p->current_essence_track->duration;
     p->last_stop =
         sum + gst_util_uint64_scale (p->current_component->parent.duration,
@@ -3120,6 +3115,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   gboolean update, flush, keyframe;
   GstSegment seeksegment;
   guint i;
+  gboolean ret = TRUE;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
@@ -3195,7 +3191,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       if (off == -1) {
         GST_DEBUG_OBJECT (demux, "Unable to find offset for pad %s",
             GST_PAD_NAME (p));
-        p->eos = TRUE;
+        p->current_essence_track_position = p->current_essence_track->duration;
       } else {
         new_offset = MIN (off, new_offset);
         if (position != p->current_essence_track_position) {
@@ -3209,10 +3205,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
       }
       p->discont = TRUE;
     }
-    if (new_offset == -1)
-      goto no_new_offset;
-
-    demux->offset = new_offset + demux->run_in;
+    if (new_offset == -1) {
+      GST_WARNING_OBJECT (demux, "No new offset found");
+      ret = FALSE;
+    } else {
+      demux->offset = new_offset + demux->run_in;
+    }
     gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
   }
 
@@ -3276,14 +3274,10 @@ wrong_rate:
   }
 unresolved_metadata:
   {
+    gst_pad_start_task (demux->sinkpad,
+        (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad);
     GST_PAD_STREAM_UNLOCK (demux->sinkpad);
     GST_WARNING_OBJECT (demux, "metadata can't be resolved");
-    return FALSE;
-  }
-no_new_offset:
-  {
-    GST_PAD_STREAM_UNLOCK (demux->sinkpad);
-    GST_WARNING_OBJECT (demux, "can't find new offset");
     return FALSE;
   }
 }
