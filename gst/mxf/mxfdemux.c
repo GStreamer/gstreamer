@@ -740,6 +740,12 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         tmp.track_id = track->parent.track_id;
         memcpy (&tmp.source_package_uid, &package->parent.package_uid, 32);
 
+        if (demux->current_partition->partition.body_sid == edata->body_sid &&
+            demux->current_partition->partition.body_offset == 0)
+          tmp.position = 0;
+        else
+          tmp.position = -1;
+
         g_array_append_val (demux->essence_tracks, tmp);
         etrack =
             &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack,
