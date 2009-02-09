@@ -2443,20 +2443,20 @@ from_index:
         }
       }
 
-      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (G_UNLIKELY (ret != GST_FLOW_OK) && etrack->position <= *position) {
         demux->offset = old_offset;
         demux->current_partition = old_partition;
         break;
+      } else if (G_UNLIKELY (ret == GST_FLOW_OK)) {
+        ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, TRUE);
+        gst_buffer_unref (buffer);
       }
 
-      ret = gst_mxf_demux_handle_klv_packet (demux, &key, buffer, TRUE);
-
-      gst_buffer_unref (buffer);
-
       /* If we found the position read it from the index again */
-      if (ret == GST_FLOW_OK && etrack->position == *position + 1 &&
-          etrack->offsets && etrack->offsets->len > *position &&
-          g_array_index (etrack->offsets, GstMXFDemuxIndex,
+      if (((ret == GST_FLOW_OK && etrack->position == *position + 2) ||
+              (ret == GST_FLOW_UNEXPECTED && etrack->position == *position + 1))
+          && etrack->offsets && etrack->offsets->len > *position
+          && g_array_index (etrack->offsets, GstMXFDemuxIndex,
               *position).offset != 0) {
         GST_DEBUG_OBJECT (demux, "Found at offset %" G_GUINT64_FORMAT,
             demux->offset);
