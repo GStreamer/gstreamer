@@ -29,7 +29,6 @@
 #include "siren7.h"
 
 G_BEGIN_DECLS
-
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_SIREN_ENC \
   (gst_siren_enc_get_type())
@@ -43,7 +42,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIREN_ENC))
 #define GST_IS_SIREN_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIREN_ENC))
-
 typedef struct _GstSirenEnc GstSirenEnc;
 typedef struct _GstSirenEncClass GstSirenEncClass;
 typedef struct _GstSirenEncPrivate GstSirenEncPrivate;
@@ -53,7 +51,7 @@ struct _GstSirenEnc
   GstElement parent;
 
   /* protected by the stream lock */
-  SirenEncoder     encoder;
+  SirenEncoder encoder;
   /* protected by the object lock */
   GstAdapter *adapter;
 
@@ -70,9 +68,7 @@ struct _GstSirenEncClass
 
 GType gst_siren_enc_get_type (void);
 
-gboolean
-gst_siren_enc_plugin_init (GstPlugin *plugin);
+gboolean gst_siren_enc_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_SIREN_ENC_H__ */

@@ -27,7 +27,6 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
-
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_SIREN \
   (gst_siren_get_type())
@@ -41,7 +40,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIREN))
 #define GST_IS_SIREN_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIREN))
-
 typedef struct _GstSiren GstSiren;
 typedef struct _GstSirenClass GstSirenClass;
 typedef struct _GstSirenPrivate GstSirenPrivate;
@@ -65,5 +63,4 @@ struct _GstSirenClass
 GType gst_siren_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_SIREN_H__ */

@@ -33,18 +33,16 @@ GST_DEBUG_CATEGORY (sirenenc_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_siren_enc_details =
-GST_ELEMENT_DETAILS (
-  "Siren Encoder element",
-  "Codec/Encoder/Audio ",
-  "Encode 16bit PCM streams into the Siren7 codec",
-  "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
+GST_ELEMENT_DETAILS ("Siren Encoder element",
+    "Codec/Encoder/Audio ",
+    "Encode 16bit PCM streams into the Siren7 codec",
+    "Youness Alaoui <kakaroto@kakaroto.homelinux.net>");
 
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-siren, "
-        "dct-length = (int) 320"));
+    GST_STATIC_CAPS ("audio/x-siren, " "dct-length = (int) 320"));
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -54,8 +52,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
         "depth = (int) 16, "
         "endianness = (int) 1234, "
         "signed = (boolean) true, "
-        "rate = (int) 16000, "
-        "channels = (int) 1"));
+        "rate = (int) 16000, " "channels = (int) 1"));
 
 /* signals and args */
 enum
@@ -71,19 +68,17 @@ enum
 
 
 
-static void gst_siren_enc_dispose (GObject *object);
+static void gst_siren_enc_dispose (GObject * object);
 
-static GstFlowReturn
-gst_siren_enc_chain (GstPad *pad, GstBuffer *buf);
+static GstFlowReturn gst_siren_enc_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn
-gst_siren_change_state (GstElement *element, GstStateChange transition);
+gst_siren_change_state (GstElement * element, GstStateChange transition);
 
 
 static void
 _do_init (GType type)
 {
-  GST_DEBUG_CATEGORY_INIT
-    (sirenenc_debug, "sirenenc", 0, "sirenenc");
+  GST_DEBUG_CATEGORY_INIT (sirenenc_debug, "sirenenc", 0, "sirenenc");
 }
 
 GST_BOILERPLATE_FULL (GstSirenEnc, gst_siren_enc, GstElement,
@@ -103,7 +98,7 @@ gst_siren_enc_base_init (gpointer klass)
 }
 
 static void
-gst_siren_enc_class_init (GstSirenEncClass *klass)
+gst_siren_enc_class_init (GstSirenEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -121,7 +116,7 @@ gst_siren_enc_class_init (GstSirenEncClass *klass)
 }
 
 static void
-gst_siren_enc_init (GstSirenEnc *enc, GstSirenEncClass *klass)
+gst_siren_enc_init (GstSirenEnc * enc, GstSirenEncClass * klass)
 {
 
   GST_DEBUG_OBJECT (enc, "Initializing");
@@ -143,7 +138,7 @@ gst_siren_enc_init (GstSirenEnc *enc, GstSirenEncClass *klass)
 }
 
 static void
-gst_siren_enc_dispose (GObject *object)
+gst_siren_enc_dispose (GObject * object)
 {
   GstSirenEnc *enc = GST_SIREN_ENC (object);
 
@@ -159,8 +154,7 @@ gst_siren_enc_dispose (GObject *object)
     enc->adapter = NULL;
   }
 
-  if (enc->srccaps)
-  {
+  if (enc->srccaps) {
     gst_caps_unref (enc->srccaps);
     enc->srccaps = NULL;
   }
@@ -169,7 +163,7 @@ gst_siren_enc_dispose (GObject *object)
 }
 
 static GstFlowReturn
-gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
+gst_siren_enc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstSirenEnc *enc = GST_SIREN_ENC (gst_pad_get_parent_element (pad));
   GstFlowReturn ret = GST_FLOW_OK;
@@ -210,8 +204,7 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
     GST_LOG_OBJECT (enc, "Encoding frame");
 
     encode_ret = Siren7_EncodeFrame (enc->encoder,
-        data + in_offset,
-        GST_BUFFER_DATA (encoded) + out_offset);
+        data + in_offset, GST_BUFFER_DATA (encoded) + out_offset);
     if (encode_ret != 0) {
       GST_ERROR_OBJECT (enc, "Siren7_EncodeFrame returned %d", encode_ret);
       ret = GST_FLOW_ERROR;
@@ -227,7 +220,7 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
 
   ret = gst_pad_push (enc->srcpad, encoded);
 
- out:
+out:
   if (data)
     g_free (data);
 
@@ -236,7 +229,7 @@ gst_siren_enc_chain (GstPad *pad, GstBuffer *buf)
 }
 
 static GstStateChangeReturn
-gst_siren_change_state (GstElement *element, GstStateChange transition)
+gst_siren_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstSirenEnc *enc = GST_SIREN_ENC (element);
@@ -246,8 +239,7 @@ gst_siren_change_state (GstElement *element, GstStateChange transition)
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
 
-  switch (transition)
-  {
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (element);
       gst_adapter_clear (enc->adapter);
@@ -261,7 +253,7 @@ gst_siren_change_state (GstElement *element, GstStateChange transition)
 }
 
 gboolean
-gst_siren_enc_plugin_init (GstPlugin *plugin)
+gst_siren_enc_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "sirenenc",
       GST_RANK_MARGINAL, GST_TYPE_SIREN_ENC);
