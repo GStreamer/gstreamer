@@ -28,8 +28,8 @@
  * @short_description: Muxer that takes one or several RTP streams
  * and muxes them to a single rtp stream.
  *
- * <refsect2>
- * </refsect2>
+ * The rtp muxer takes multiple RTP streams having the same clock-rate and
+ * muxes into a single stream with a single SSRC.
  */
 
 #ifdef HAVE_CONFIG_H
