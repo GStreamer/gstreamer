@@ -40,8 +40,6 @@
  *   - Handle timecode tracks correctly (where is this documented?)
  *   - Handle Generic container system items
  *   - Implement correct support for clip-wrapped essence elements.
- *   - Add a "tracks" property to select the tracks that should be used from the
- *     selected package.
  *   - Post structural metadata and descriptive metadata trees as a message on the bus
  *     and send them downstream as event.
  *   - Multichannel audio needs channel layouts, define them (SMPTE S320M?).
