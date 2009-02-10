@@ -46,6 +46,7 @@
     <xi:include href="xml/element-jackaudiosrc.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
     <xi:include href="xml/element-legacyresample.xml" />
+    <xi:include href="xml/element-liveadder.xml" />
     <xi:include href="xml/element-metadatademux.xml" />
     <xi:include href="xml/element-metadatamux.xml" />
     <xi:include href="xml/element-modplug.xml" />
@@ -105,6 +106,7 @@
     <xi:include href="xml/plugin-h264parse.xml" />
     <xi:include href="xml/plugin-jack.xml" />
     <xi:include href="xml/plugin-ladspa.xml" />
+    <xi:include href="xml/plugin-liveadder.xml" />
     <xi:include href="xml/plugin-metadata.xml" />
     <xi:include href="xml/plugin-mms.xml" />
     <xi:include href="xml/plugin-modplug.xml" />

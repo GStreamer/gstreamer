@@ -858,3 +858,22 @@ GST_Y4M_ENCODE_GET_CLASS
 GST_TYPE_Y4M_ENCODE
 gst_y4m_encode_get_type
 </SECTION>
+
+
+<SECTION>
+<FILE>element-liveadder</FILE>
+<TITLE>liveadder</TITLE>
+GstLiveAdder
+<SUBSECTION Standard>
+GstLiveAdderClass
+GST_IS_LIVE_ADDER
+GST_IS_LIVE_ADDER_CLASS
+GST_IS_MXF_DEMUX_PAD
+GST_LIVE_ADDER
+GST_LIVE_ADDER_CLASS
+GST_LIVE_ADDER_GET_CLASS
+GST_TYPE_LIVE_ADDER
+GstLiveAdderFormat
+GstLiveAdderFunction
+gst_live_adder_get_type
+</SECTION>

@@ -55,6 +55,7 @@ typedef void (*GstLiveAdderFunction) (gpointer out, gpointer in, guint size);
  */
 struct _GstLiveAdder
 {
+  /*< private >*/
   GstElement element;
 
   GstPad *srcpad;
