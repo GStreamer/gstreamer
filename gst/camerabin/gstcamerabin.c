@@ -2759,4 +2759,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "camerabin",
     "High level api for DC (Digital Camera) application",
-    plugin_init, VERSION, "LGPL", "Nokia", "http://www.nokia.com/")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
