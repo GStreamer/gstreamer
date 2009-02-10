@@ -877,3 +877,18 @@ GstLiveAdderFormat
 GstLiveAdderFunction
 gst_live_adder_get_type
 </SECTION>
+
+<SECTION>
+<FILE>element-valve</FILE>
+<TITLE>valve</TITLE>
+GstValve
+<SUBSECTION Standard>
+GstValveClass
+GstValvePrivate
+gst_valve_get_type
+GST_IS_VALVE
+GST_IS_VALVE_CLASS
+GST_TYPE_VALVE
+GST_VALVE
+GST_VALVE_CLASS
+</SECTION>

@@ -143,6 +143,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h \
+	$(top_srcdir)/gst/valve/gstvalve.h \
 	$(top_srcdir)/gst/y4m/gsty4mencode.h \
 	$(top_srcdir)/gst/liveadder/liveadder.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h
