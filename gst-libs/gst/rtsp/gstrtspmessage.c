@@ -81,9 +81,9 @@ key_value_foreach (GArray * array, GFunc func, gpointer user_data)
  * gst_rtsp_message_new:
  * @msg: a location for the new #GstRTSPMessage
  *
- * Create a new initialized #GstRTSPMessage.
+ * Create a new initialized #GstRTSPMessage. Free with gst_rtsp_message_free().
  *
- * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ * Returns: a #GstRTSPResult.
  */
 GstRTSPResult
 gst_rtsp_message_new (GstRTSPMessage ** msg)
@@ -144,9 +144,9 @@ gst_rtsp_message_get_type (GstRTSPMessage * msg)
  * @uri: the uri of the request
  *
  * Create a new #GstRTSPMessage with @method and @uri and store the result
- * request message in @msg. 
+ * request message in @msg. Free with gst_rtsp_message_free().
  *
- * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ * Returns: a #GstRTSPResult.
  */
 GstRTSPResult
 gst_rtsp_message_new_request (GstRTSPMessage ** msg, GstRTSPMethod method,
@@ -233,14 +233,14 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
  * @request: the request that triggered the response or #NULL
  *
  * Create a new response #GstRTSPMessage with @code and @reason and store the
- * result message in @msg. 
+ * result message in @msg. Free with gst_rtsp_message_free().
  *
  * When @reason is #NULL, the default reason for @code will be used.
  *
  * When @request is not #NULL, the relevant headers will be copied to the new
  * response message.
  *
- * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ * Returns: a #GstRTSPResult.
  */
 GstRTSPResult
 gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
@@ -358,9 +358,9 @@ gst_rtsp_message_parse_response (GstRTSPMessage * msg,
  * @channel: the channel
  *
  * Create a new data #GstRTSPMessage with @channel and store the
- * result message in @msg. 
+ * result message in @msg. Free with gst_rtsp_message_free().
  *
- * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ * Returns: a #GstRTSPResult.
  */
 GstRTSPResult
 gst_rtsp_message_new_data (GstRTSPMessage ** msg, guint8 channel)
