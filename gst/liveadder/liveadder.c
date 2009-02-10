@@ -25,6 +25,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
  *
  */
+/**
+ * SECTION:element-liveadder
+ * @see_also: adder
+ *
+ * The live adder allows to mix several streams into one by adding the data.
+ * Mixed data is clamped to the min/max values of the data format.
+ *
+ * Unlike the adder, the liveadder mixes the streams according the their
+ * timestamps and waits for some milli-seconds before trying doing the mixing.
+ *
+ * Last reviewed on 2008-02-10 (0.10.11)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
