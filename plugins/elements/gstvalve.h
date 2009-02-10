@@ -28,7 +28,6 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_VALVE \
   (gst_valve_get_type())
@@ -42,7 +41,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VALVE))
 #define GST_IS_VALVE_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VALVE))
-
 typedef struct _GstValve GstValve;
 typedef struct _GstValveClass GstValveClass;
 typedef struct _GstValvePrivate GstValvePrivate;
@@ -52,13 +50,13 @@ struct _GstValve
   GstElement parent;
 
   /* Protected by the object lock */
-  gboolean      drop;
+  gboolean drop;
 
-  /* Protected by the stream lock*/
-  gboolean      discont;
+  /* Protected by the stream lock */
+  gboolean discont;
 
-  GstPad        *srcpad;
-  GstPad        *sinkpad;
+  GstPad *srcpad;
+  GstPad *sinkpad;
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
@@ -75,5 +73,4 @@ struct _GstValveClass
 GType gst_valve_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_VALVE_H__ */
