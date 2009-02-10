@@ -54,7 +54,7 @@ dist-local:
 
 distdir: dist-local
 	cp -r $(TMP_DIST_DIR)/ffmpeg ${distdir}
-	cp -f Makefile.am Makefile.in ${distdir}
+	cp -f $(top_srcdir)/gst-libs/ext/Makefile.am $(top_srcdir)/gst-libs/ext/Makefile.in ${distdir}
 	rm -rf $(TMP_DIST_DIR)
 
 dist: dist-local
