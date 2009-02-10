@@ -314,6 +314,9 @@ static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
 static void paint_setup_v308 (paintinfo * p, unsigned char *dest);
 static void paint_setup_NV12 (paintinfo * p, unsigned char *dest);
 static void paint_setup_NV21 (paintinfo * p, unsigned char *dest);
+static void paint_setup_v410 (paintinfo * p, unsigned char *dest);
+static void paint_setup_v216 (paintinfo * p, unsigned char *dest);
+static void paint_setup_v210 (paintinfo * p, unsigned char *dest);
 
 #if 0
 static void paint_setup_IMC1 (paintinfo * p, unsigned char *dest);
@@ -348,6 +351,9 @@ static void paint_hline_Y444 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
 static void paint_hline_v308 (paintinfo * p, int x, int y, int w);
 static void paint_hline_AYUV (paintinfo * p, int x, int y, int w);
+static void paint_hline_v410 (paintinfo * p, int x, int y, int w);
+static void paint_hline_v216 (paintinfo * p, int x, int y, int w);
+static void paint_hline_v210 (paintinfo * p, int x, int y, int w);
 
 #if 0
 static void paint_hline_IMC1 (paintinfo * p, int x, int y, int w);
@@ -369,6 +375,9 @@ struct fourcc_list_struct fourcc_list[] = {
   {VTS_YUV, "YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
   {VTS_YUV, "v308", "v308", 24, paint_setup_v308, paint_hline_v308},
   {VTS_YUV, "AYUV", "AYUV", 32, paint_setup_AYUV, paint_hline_AYUV},
+  {VTS_YUV, "v410", "v410", 32, paint_setup_v410, paint_hline_v410},
+  {VTS_YUV, "v210", "v210", 21, paint_setup_v210, paint_hline_v210},
+  {VTS_YUV, "v216", "v216", 32, paint_setup_v216, paint_hline_v216},
 
   /* interlaced */
   /*{ VTS_YUV,  "IUYV", "IUY2", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
@@ -1338,7 +1347,6 @@ gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
 }
 
 
-
 static void
 paint_setup_I420 (paintinfo * p, unsigned char *dest)
 {
@@ -1438,6 +1446,38 @@ paint_setup_AYUV (paintinfo * p, unsigned char *dest)
 }
 
 static void
+paint_setup_v410 (paintinfo * p, unsigned char *dest)
+{
+  p->yp = dest + 0;
+  p->up = dest + 0;
+  p->vp = dest + 0;
+  p->ystride = p->width * 4;
+  p->endptr = dest + p->ystride * p->height;
+}
+
+static void
+paint_setup_v216 (paintinfo * p, unsigned char *dest)
+{
+  p->ap = dest;
+  p->yp = dest + 2;
+  p->up = dest + 0;
+  p->vp = dest + 4;
+  p->ystride = p->width * 4;
+  p->endptr = dest + p->ystride * p->height;
+}
+
+static void
+paint_setup_v210 (paintinfo * p, unsigned char *dest)
+{
+  p->ap = dest;
+  p->yp = dest + 0;
+  p->up = dest + 0;
+  p->vp = dest + 0;
+  p->ystride = ((p->width + 47) / 48) * 128;    /* no, really. */
+  p->endptr = dest + p->ystride * p->height;
+}
+
+static void
 paint_setup_YUY2 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
@@ -1489,6 +1529,75 @@ paint_hline_AYUV (paintinfo * p, int x, int y, int w)
   oil_splat_u8 (p->up + offset, 4, &p->yuv_color->U, w);
   oil_splat_u8 (p->vp + offset, 4, &p->yuv_color->V, w);
   oil_splat_u8 (p->ap + offset, 4, &alpha, w);
+}
+
+#define TO_16(x) (((x)<<8) | (x))
+#define TO_10(x) (((x)<<2) | ((x)>>6))
+
+static void
+paint_hline_v216 (paintinfo * p, int x, int y, int w)
+{
+  int x1 = x / 2;
+  int x2 = (x + w) / 2;
+  uint16_t Y, U, V;
+  int i;
+  int offset;
+
+  offset = y * p->ystride;
+  Y = TO_16 (p->yuv_color->Y);
+  U = TO_16 (p->yuv_color->U);
+  V = TO_16 (p->yuv_color->V);
+  for (i = x; i < x + w; i++) {
+    GST_WRITE_UINT16_LE (p->yp + offset + i * 4, Y);
+  }
+  for (i = x1; i < x2; i++) {
+    GST_WRITE_UINT16_LE (p->up + offset + i * 8, U);
+    GST_WRITE_UINT16_LE (p->vp + offset + i * 8, V);
+  }
+}
+
+static void
+paint_hline_v410 (paintinfo * p, int x, int y, int w)
+{
+  uint32_t a;
+  uint8_t *data;
+  int i;
+
+  a = (TO_10 (p->yuv_color->U) << 22) |
+      (TO_10 (p->yuv_color->Y) << 12) | (TO_10 (p->yuv_color->V) << 2);
+
+  data = p->yp + y * p->ystride + x * 4;
+  for (i = 0; i < w; i++) {
+    GST_WRITE_UINT32_LE (data, a);
+  }
+}
+
+static void
+paint_hline_v210 (paintinfo * p, int x, int y, int w)
+{
+  uint32_t a0, a1, a2, a3;
+  uint8_t *data;
+  int i;
+
+  /* FIXME this is kinda gross.  it only handles x values in
+     multiples of 6 */
+
+  a0 = TO_10 (p->yuv_color->U) | (TO_10 (p->yuv_color->Y) << 10)
+      | (TO_10 (p->yuv_color->V) << 20);
+  a1 = TO_10 (p->yuv_color->Y) | (TO_10 (p->yuv_color->U) << 10)
+      | (TO_10 (p->yuv_color->Y) << 20);
+  a2 = TO_10 (p->yuv_color->V) | (TO_10 (p->yuv_color->Y) << 10)
+      | (TO_10 (p->yuv_color->U) << 20);
+  a3 = TO_10 (p->yuv_color->Y) | (TO_10 (p->yuv_color->V) << 10)
+      | (TO_10 (p->yuv_color->Y) << 20);
+
+  data = p->yp + y * p->ystride;
+  for (i = x / 6; i < (x + w) / 6; i++) {
+    GST_WRITE_UINT32_LE (data + i * 16 + 0, a0);
+    GST_WRITE_UINT32_LE (data + i * 16 + 4, a1);
+    GST_WRITE_UINT32_LE (data + i * 16 + 8, a2);
+    GST_WRITE_UINT32_LE (data + i * 16 + 12, a3);
+  }
 }
 
 static void
