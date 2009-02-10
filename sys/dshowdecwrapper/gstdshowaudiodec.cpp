@@ -1124,7 +1124,7 @@ dshow_adec_register (GstPlugin * plugin)
       type = g_type_register_static (GST_TYPE_ELEMENT,
           audio_dec_codecs[i].element_name, &info, (GTypeFlags)0);
       if (!gst_element_register (plugin, audio_dec_codecs[i].element_name,
-              GST_RANK_PRIMARY, type)) {
+              GST_RANK_SECONDARY, type)) {
         return FALSE;
       }
       GST_CAT_DEBUG (dshowaudiodec_debug, "Registered %s",
