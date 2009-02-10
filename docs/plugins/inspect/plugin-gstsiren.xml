@@ -1,0 +1,55 @@
+<plugin>
+  <name>gstsiren</name>
+  <description>Siren encoder/decoder/payloader/depayloader plugins</description>
+  <filename>../../gst/siren/.libs/libgstsiren.so</filename>
+  <basename>libgstsiren.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>sirendec</name>
+      <longname>Siren Decoder element</longname>
+      <class>Codec/Decoder/Audio </class>
+      <description>Decode streams encoded with the Siren7 codec into 16bit PCM</description>
+      <author>Youness Alaoui &lt;kakaroto@kakaroto.homelinux.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-siren, dct-length=(int)320</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)16000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>sirenenc</name>
+      <longname>Siren Encoder element</longname>
+      <class>Codec/Encoder/Audio </class>
+      <description>Encode 16bit PCM streams into the Siren7 codec</description>
+      <author>Youness Alaoui &lt;kakaroto@kakaroto.homelinux.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-siren, dct-length=(int)320</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

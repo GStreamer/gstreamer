@@ -269,6 +269,7 @@ AG_GST_CHECK_PLUGIN(rtpmanager)
 AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(selector)
+AG_GST_CHECK_PLUGIN(siren)
 AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
@@ -1442,6 +1443,7 @@ gst/rtpmanager/Makefile
 gst/scaletempo/Makefile
 gst/sdp/Makefile
 gst/selector/Makefile
+gst/siren/Makefile
 gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
