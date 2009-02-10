@@ -26,8 +26,6 @@
 
 #include "gstsirendec.h"
 #include "gstsirenenc.h"
-#include "gstrtpsirenpay.h"
-#include "gstrtpsirendepay.h"
 
 
 static gboolean
@@ -39,12 +37,6 @@ plugin_init (GstPlugin * plugin)
   if (!gst_siren_enc_plugin_init (plugin))
     return FALSE;
 
-  if (!gst_rtp_siren_pay_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rtp_siren_depay_plugin_init (plugin))
-    return FALSE;
-
   return TRUE;
 }
 
@@ -52,4 +44,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "gstsiren",
     "Siren encoder/decoder/payloader/depayloader plugins",
-    plugin_init, "0.1" , "LGPL", "Siren", "");
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

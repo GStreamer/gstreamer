@@ -3,8 +3,6 @@ plugin_LTLIBRARIES = libgstsiren.la
 libgstsiren_la_SOURCES = gstsiren.c \
 	gstsirendec.c gstsirendec.h \
 	gstsirenenc.c gstsirenenc.h \
-	gstrtpsirenpay.c gstrtpsirenpay.h \
-	gstrtpsirendepay.c gstrtpsirendepay.h \
 	common.c dct4.c decoder.c encoder.c huffman.c \
 	huffman.h rmlt.h common.h dct4.h decoder.h \
 	encoder.h huffman_consts.h rmlt.c siren7.h
