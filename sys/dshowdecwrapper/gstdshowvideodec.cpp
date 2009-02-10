@@ -529,7 +529,7 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
   CComPtr<IPin> input_pin;
   IBaseFilter *srcfilter = NULL;
   IBaseFilter *sinkfilter = NULL;
-  const GValue *fps;
+  const GValue *fps, *par;
 
   /* read data */
   if (!gst_structure_get_int (s, "width", &vdec->width) ||
@@ -548,6 +548,15 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
      * more anyway. */
     vdec->fps_n = 25;
     vdec->fps_d = 1;
+  }
+
+  par = gst_structure_get_value (s, "pixel-aspect-ratio");
+  if (par) {
+    vdec->par_n = gst_value_get_fraction_numerator (par);
+    vdec->par_d = gst_value_get_fraction_denominator (par);
+  }
+  else {
+    vdec->par_n = vdec->par_d = 1;
   }
 
   if ((v = gst_structure_get_value (s, "codec_data")))
@@ -697,9 +706,12 @@ gst_dshowvideodec_sink_setcaps (GstPad * pad, GstCaps * caps)
       "height", G_TYPE_INT, vdec->height, NULL);
 
   if (vdec->fps_n && vdec->fps_d) {
-      gst_caps_set_simple (caps_out, 
+      gst_caps_set_simple (caps_out,
           "framerate", GST_TYPE_FRACTION, vdec->fps_n, vdec->fps_d, NULL);
   }
+
+  gst_caps_set_simple (caps_out, 
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, vdec->par_n, vdec->par_d, NULL);
 
   if (!gst_pad_set_caps (vdec->srcpad, caps_out)) {
     gst_caps_unref (caps_out);
