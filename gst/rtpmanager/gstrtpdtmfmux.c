@@ -26,8 +26,8 @@
 /**
  * SECTION:element-rtpdtmfmux
  * @short_description: mixes RTP DTMF streams into other RTP streams
- * <refsect2>
- * <para>
+ * @see_also: rtpdtmfsrc, dtmfsrc
+ *
  * The RTPDTMFMuxer mixes/muxes RTP DTMF stream(s) into other RTP
  * streams. It does exactly what it's parent (RTPMuxer) does, except
  * that it allows upstream peer elements to request exclusive access
@@ -40,11 +40,10 @@
  * structure of name "stream-lock" with only one boolean field:
  * "lock". If this field is set to TRUE, the request is for the
  * acquisition of the lock, otherwise it is for release of the lock.
- * </para>
- * <para>For example, the following code in an upstream peer element
+ *
+ * For example, the following code in an upstream peer element
  * requests the acquisition of the stream lock:
- * </para>
- * <para>
+ *
  * <programlisting>
  * GstEvent *event;
  * GstStructure *structure;
@@ -58,8 +57,7 @@
  * event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
  * gst_pad_push_event (dtmfsrc->srcpad, event);
  * </programlisting>
- * </para>
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
