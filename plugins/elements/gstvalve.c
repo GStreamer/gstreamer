@@ -21,6 +21,18 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+/**
+ * SECTION:element-valve
+ *
+ * The valve is a simple element that drops buffers when the #GstValve::drop
+ * property is set to %TRUE and lets then through otherwise.
+ *
+ * Any downstream error received while the #GstValve::drop property is %FALSE
+ * is ignored. So downstream element can be set to  %GST_STATE_NULL and removed,
+ * without using pad blocking.
+ *
+ * Last reviewed on 2008-02-10 (0.10.11)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
