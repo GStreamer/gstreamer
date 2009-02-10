@@ -1,0 +1,55 @@
+<plugin>
+  <name>rtpmux</name>
+  <description>RTP Muxer plugins</description>
+  <filename>../../gst/rtpmux/.libs/libgstrtpmux.so</filename>
+  <basename>libgstrtpmux.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rtpdtmfmux</name>
+      <longname>RTP muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>mixes RTP DTMF streams into other RTP streams</description>
+      <author>Zeeshan Ali &lt;first.last@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpmux</name>
+      <longname>RTP muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>multiplex N rtp streams into one</description>
+      <author>Zeeshan Ali &lt;first.last@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

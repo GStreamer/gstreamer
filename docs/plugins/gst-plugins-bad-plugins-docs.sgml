@@ -59,6 +59,8 @@
     <xi:include href="xml/element-output-selector.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
+    <xi:include href="xml/element-rtpdtmfmux.xml" />
+    <xi:include href="xml/element-rtpmux.xml" />
     <xi:include href="xml/element-scaletempo.xml" />
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
@@ -131,6 +133,7 @@
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-real.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
+    <xi:include href="xml/plugin-rtpmux.xml" />
     <xi:include href="xml/plugin-scaletempo.xml" />
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-sdp.xml" />

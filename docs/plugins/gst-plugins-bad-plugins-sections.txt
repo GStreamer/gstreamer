@@ -946,3 +946,33 @@ GST_RTP_DTMF_DEPAY_CLASS
 gst_rtp_dtmf_depay_plugin_init
 </SECTION>
 
+<SECTION>
+<FILE>element-rtpmux</FILE>
+<TITLE>rtpmux</TITLE>
+GstRTPMux
+<SUBSECTION Standard>
+GST_IS_RTP_MUX
+GST_IS_RTP_MUX_CLASS
+GST_RTP_MUX
+GST_RTP_MUX_CLASS
+GST_RTP_MUX_GET_CLASS
+GST_TYPE_RTP_MUX
+GstRTPMuxClass
+gst_rtp_mux_plugin_init
+gst_rtp_session_set_ssrc
+</SECTION>
+
+<SECTION>
+<FILE>element-rtpdtmfmux</FILE>
+<TITLE>rtpdtmfmux</TITLE>
+GstRTPDTMFMux
+<SUBSECTION Standard>
+GST_IS_RTP_DTMF_MUX
+GST_IS_RTP_DTMF_MUX_CLASS
+GST_TYPE_RTP_DTMF_MUX
+GstRTPDTMFMuxClass
+GST_RTP_DTMF_MUX
+GST_RTP_DTMF_MUX_CLASS
+gst_rtp_dtmf_mux_get_type
+gst_rtp_dtmf_mux_plugin_init
+</SECTION>
