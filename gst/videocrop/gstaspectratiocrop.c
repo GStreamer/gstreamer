@@ -204,6 +204,8 @@ gst_aspect_ratio_crop_finalize (GObject * object)
 
   if (aspect_ratio_crop->crop_lock)
     g_mutex_free (aspect_ratio_crop->crop_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
