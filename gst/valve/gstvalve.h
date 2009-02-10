@@ -45,8 +45,14 @@ typedef struct _GstValve GstValve;
 typedef struct _GstValveClass GstValveClass;
 typedef struct _GstValvePrivate GstValvePrivate;
 
+/**
+ * GstValve:
+ *
+ * The private valve structure
+ */
 struct _GstValve
 {
+  /*< private >*/
   GstElement parent;
 
   /* Protected by the object lock */
