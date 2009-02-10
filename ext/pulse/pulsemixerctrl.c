@@ -93,10 +93,10 @@ gst_pulsemixer_ctrl_sink_info_cb (pa_context * context, const pa_sink_info * i,
   c->type = GST_PULSEMIXER_SINK;
 
   if (c->track) {
-    int i = g_atomic_int_get (&c->track->flags);
+    int i = g_atomic_int_get ((gint *) & c->track->flags);
 
     i = (i & ~GST_MIXER_TRACK_MUTE) | (c->muted ? GST_MIXER_TRACK_MUTE : 0);
-    g_atomic_int_set (&c->track->flags, i);
+    g_atomic_int_set ((gint *) & c->track->flags, i);
   }
 
   c->operation_success = 1;
@@ -142,10 +142,10 @@ gst_pulsemixer_ctrl_source_info_cb (pa_context * context,
   c->type = GST_PULSEMIXER_SOURCE;
 
   if (c->track) {
-    int i = g_atomic_int_get (&c->track->flags);
+    int i = g_atomic_int_get ((gint *) & c->track->flags);
 
     i = (i & ~GST_MIXER_TRACK_MUTE) | (c->muted ? GST_MIXER_TRACK_MUTE : 0);
-    g_atomic_int_set (&c->track->flags, i);
+    g_atomic_int_set ((gint *) & c->track->flags, i);
   }
 
   c->operation_success = 1;
@@ -572,10 +572,10 @@ gst_pulsemixer_ctrl_set_mute (GstPulseMixerCtrl * c, GstMixerTrack * track,
   c->update_mute = TRUE;
 
   if (c->track) {
-    int i = g_atomic_int_get (&c->track->flags);
+    int i = g_atomic_int_get ((gint *) & c->track->flags);
 
     i = (i & ~GST_MIXER_TRACK_MUTE) | (c->muted ? GST_MIXER_TRACK_MUTE : 0);
-    g_atomic_int_set (&c->track->flags, i);
+    g_atomic_int_set ((gint *) & c->track->flags, i);
   }
 
   restart_time_event (c);
