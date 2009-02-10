@@ -219,20 +219,9 @@ static guint camerabin_signals[LAST_SIGNAL];
 #define USE_COLOR_CONVERTER 1
 
 /* FIXME: Make sure this can work with autovideosrc and use that. */
-static const char SRC_VID_SRC[] = "v4l2src";
+#define DEFAULT_SRC_VID_SRC "v4l2src"
 
-static const char ZOOM_CROP[] = "videocrop";
-static const char ZOOM_SCALE[] = "videoscale";
-
-static const char CAPS_FILTER[] = "capsfilter";
-
-static const char COLOR_CONVERTER[] = "ffmpegcolorspace";
-
-static const char SRC_OUT_SEL[] = "output-selector";
-
-static const char VIEW_IN_SEL[] = "input-selector";
-static const char VIEW_SCALE[] = "videoscale";
-static const char VIEW_SINK[] = "autovideosink";
+#define DEFAULT_VIEW_SINK "autovideosink"
 
 /*
  * static helper functions declaration
@@ -551,26 +540,26 @@ camerabin_create_src_elements (GstCameraBin * camera)
       goto done;
     }
   } else if (!(camera->src_vid_src =
-          gst_camerabin_create_and_add_element (cbin, SRC_VID_SRC)))
+          gst_camerabin_create_and_add_element (cbin, DEFAULT_SRC_VID_SRC)))
     goto done;
 #ifdef USE_COLOR_CONVERTER
-  if (!gst_camerabin_create_and_add_element (cbin, COLOR_CONVERTER))
+  if (!gst_camerabin_create_and_add_element (cbin, "ffmpegcolorspace"))
     goto done;
 #endif
   if (!(camera->src_filter =
-          gst_camerabin_create_and_add_element (cbin, CAPS_FILTER)))
+          gst_camerabin_create_and_add_element (cbin, "capsfilter")))
     goto done;
   if (!(camera->src_zoom_crop =
-          gst_camerabin_create_and_add_element (cbin, ZOOM_CROP)))
+          gst_camerabin_create_and_add_element (cbin, "videocrop")))
     goto done;
   if (!(camera->src_zoom_scale =
-          gst_camerabin_create_and_add_element (cbin, ZOOM_SCALE)))
+          gst_camerabin_create_and_add_element (cbin, "videoscale")))
     goto done;
   if (!(camera->src_zoom_filter =
-          gst_camerabin_create_and_add_element (cbin, CAPS_FILTER)))
+          gst_camerabin_create_and_add_element (cbin, "capsfilter")))
     goto done;
   if (!(camera->src_out_sel =
-          gst_camerabin_create_and_add_element (cbin, SRC_OUT_SEL)))
+          gst_camerabin_create_and_add_element (cbin, "output-selector")))
     goto done;
 
   camera->srcpad_zoom_filter =
@@ -636,7 +625,7 @@ camerabin_create_view_elements (GstCameraBin * camera)
 
   if (!(camera->view_in_sel =
           gst_camerabin_create_and_add_element (GST_BIN (camera),
-              VIEW_IN_SEL))) {
+              "input-selector"))) {
     goto error;
   }
 
@@ -650,11 +639,12 @@ camerabin_create_view_elements (GstCameraBin * camera)
 
   if (!(camera->view_scale =
           gst_camerabin_create_and_add_element (GST_BIN (camera),
-              VIEW_SCALE))) {
+              "videoscale"))) {
     goto error;
   }
 #ifdef USE_COLOR_CONVERTER
-  if (!gst_camerabin_create_and_add_element (GST_BIN (camera), COLOR_CONVERTER)) {
+  if (!gst_camerabin_create_and_add_element (GST_BIN (camera),
+          "ffmpegcolorspace")) {
     goto error;
   }
 #endif
@@ -664,7 +654,8 @@ camerabin_create_view_elements (GstCameraBin * camera)
       goto error;
     }
   } else if (!(camera->view_sink =
-          gst_camerabin_create_and_add_element (GST_BIN (camera), VIEW_SINK))) {
+          gst_camerabin_create_and_add_element (GST_BIN (camera),
+              DEFAULT_VIEW_SINK))) {
     goto error;
   }
 
@@ -2007,8 +1998,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_VF_SINK,
       g_param_spec_object ("vfsink", "View finder sink",
-          "View finder sink GStreamer element (default is autovideosink)",
-          GST_TYPE_ELEMENT, G_PARAM_READWRITE));
+          "View finder sink GStreamer element (default is " DEFAULT_VIEW_SINK
+          ")", GST_TYPE_ELEMENT, G_PARAM_READWRITE));
 
   /**
    *  GstCameraBin:videosrc:
@@ -2021,7 +2012,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_SRC,
       g_param_spec_object ("videosrc", "Video source element",
-          "Video source GStreamer element (default is v4l2src)",
+          "Video source GStreamer element (default is " DEFAULT_SRC_VID_SRC ")",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
   /**
    *  GstCameraBin:audiosrc:
