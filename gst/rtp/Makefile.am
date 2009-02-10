@@ -46,6 +46,8 @@ libgstrtp_la_SOURCES = \
 	gstrtpmp4gpay.c \
 	gstrtpmp4adepay.c \
 	gstrtpmp4apay.c \
+	gstrtpsirenpay.c \
+	gstrtpsirendepay.c \
 	gstrtpspeexdepay.c \
 	gstrtpspeexpay.c \
 	gstrtpsv3vdepay.c \
@@ -55,7 +57,7 @@ libgstrtp_la_SOURCES = \
 	gstrtpvorbispay.c  \
 	gstrtpvrawdepay.c  \
 	gstrtpvrawpay.c 
-	
+
 
 if HAVE_WINSOCK2_H
 WINSOCK2_LIBS = -lws2_32
@@ -116,6 +118,8 @@ noinst_HEADERS =			\
 		 gstrtpmp4apay.h        \
 		 gstrtpdepay.h		\
 		 gstasteriskh263.h	\
+		 gstrtpsirenpay.h 	\
+		 gstrtpsirendepay.h 	\
 		 gstrtpspeexdepay.h	\
 		 gstrtpspeexpay.h	\
 		 gstrtpsv3vdepay.h	\
