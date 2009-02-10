@@ -88,9 +88,7 @@ gst_rtsp_session_pool_get_property (GObject *object, guint propid,
 
   switch (propid) {
     case PROP_MAX_SESSIONS:
-      g_mutex_lock (pool->lock);
-      g_value_set_uint (value, pool->max_sessions);
-      g_mutex_unlock (pool->lock);
+      g_value_set_uint (value, gst_rtsp_session_pool_get_max_sessions (pool));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -106,9 +104,7 @@ gst_rtsp_session_pool_set_property (GObject *object, guint propid,
 
   switch (propid) {
     case PROP_MAX_SESSIONS:
-      g_mutex_lock (pool->lock);
-      pool->max_sessions = g_value_get_uint (value);
-      g_mutex_unlock (pool->lock);
+      gst_rtsp_session_pool_set_max_sessions (pool, g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
