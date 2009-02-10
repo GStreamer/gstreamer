@@ -6257,8 +6257,8 @@
   )
 )
 
-(define-function tag_get_type
-  (c-name "gst_tag_get_type")
+(define-function tag_get_tag_type
+  (c-name "gst_tag_get_tag_type")
   (return-type "GType")
   (parameters
     '("const-gchar*" "tag")
