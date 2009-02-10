@@ -218,11 +218,8 @@ static guint camerabin_signals[LAST_SIGNAL];
 
 #define USE_COLOR_CONVERTER 1
 
-/* FIXME: use autovideosrc
- * v4l2camsrc should have GST_RANK_PRIMARY in maemo and _NONE in plugins-bad
- * for now */
-static const char SRC_VID_SRC[] = "v4l2camsrc";
-/*static const char SRC_VID_SRC[] = "v4l2src"; */
+/* FIXME: Make sure this can work with autovideosrc and use that. */
+static const char SRC_VID_SRC[] = "v4l2src";
 
 static const char ZOOM_CROP[] = "videocrop";
 static const char ZOOM_SCALE[] = "videoscale";
@@ -2017,14 +2014,14 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
    *  GstCameraBin:videosrc:
    *
    * Set up a video source element.
-   * By default "v4l2camsrc" will be the src element.
+   * By default "v4l2src" will be the src element.
    * This property can only be set while #GstCameraBin is in NULL state.
    * The ownership of the element will be taken by #GstCameraBin.
    */
 
   g_object_class_install_property (gobject_class, ARG_VIDEO_SRC,
       g_param_spec_object ("videosrc", "Video source element",
-          "Video source GStreamer element (default is v4l2camsrc)",
+          "Video source GStreamer element (default is v4l2src)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE));
   /**
    *  GstCameraBin:audiosrc:
