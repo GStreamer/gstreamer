@@ -35,11 +35,10 @@ GST_DEBUG_CATEGORY (valve_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_valve_details =
-GST_ELEMENT_DETAILS (
-  "Valve element",
-  "Filter",
-  "This element drops all packets when drop is TRUE",
-  "Olivier Crete <olivier.crete@collabora.co.uk>");
+GST_ELEMENT_DETAILS ("Valve element",
+    "Filter",
+    "This element drops all packets when drop is TRUE",
+    "Olivier Crete <olivier.crete@collabora.co.uk>");
 
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -68,22 +67,21 @@ enum
 
 
 
-static void gst_valve_set_property (GObject *object,
+static void gst_valve_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_valve_get_property (GObject *object,
-    guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_valve_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_valve_event (GstPad *pad, GstEvent *event);
+static gboolean gst_valve_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_valve_buffer_alloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
-static GstFlowReturn gst_valve_chain (GstPad *pad, GstBuffer *buffer);
-static GstCaps *gst_valve_getcaps (GstPad *pad);
+static GstFlowReturn gst_valve_chain (GstPad * pad, GstBuffer * buffer);
+static GstCaps *gst_valve_getcaps (GstPad * pad);
 
 static void
 _do_init (GType type)
 {
-  GST_DEBUG_CATEGORY_INIT
-    (valve_debug, "valve", 0, "Valve");
+  GST_DEBUG_CATEGORY_INIT (valve_debug, "valve", 0, "Valve");
 }
 
 GST_BOILERPLATE_FULL (GstValve, gst_valve, GstElement,
@@ -103,7 +101,7 @@ gst_valve_base_init (gpointer klass)
 }
 
 static void
-gst_valve_class_init (GstValveClass *klass)
+gst_valve_class_init (GstValveClass * klass)
 {
   GObjectClass *gobject_class;
 
@@ -114,15 +112,15 @@ gst_valve_class_init (GstValveClass *klass)
 
   g_object_class_install_property (gobject_class, ARG_DROP,
       g_param_spec_boolean ("drop",
-        "Drops all buffers if TRUE",
-        "If this property if TRUE, the element will drop all buffers, if its FALSE, it will let them through",
+          "Drops all buffers if TRUE",
+          "If this property if TRUE, the element will drop all buffers, if its FALSE, it will let them through",
           FALSE, G_PARAM_READWRITE));
 
   parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
-gst_valve_init (GstValve *valve, GstValveClass *klass)
+gst_valve_init (GstValve * valve, GstValveClass * klass)
 {
   valve->drop = FALSE;
   valve->discont = FALSE;
@@ -146,8 +144,8 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
 
 
 static void
-gst_valve_set_property (GObject *object,
-    guint prop_id, const GValue *value, GParamSpec *pspec)
+gst_valve_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstValve *valve = GST_VALVE (object);
 
@@ -164,8 +162,8 @@ gst_valve_set_property (GObject *object,
 }
 
 static void
-gst_valve_get_property (GObject *object,
-    guint prop_id, GValue *value, GParamSpec *pspec)
+gst_valve_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstValve *valve = GST_VALVE (object);
 
@@ -182,7 +180,7 @@ gst_valve_get_property (GObject *object,
 }
 
 static GstFlowReturn
-gst_valve_chain (GstPad *pad, GstBuffer *buffer)
+gst_valve_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
   GstFlowReturn ret = GST_FLOW_OK;
@@ -191,8 +189,7 @@ gst_valve_chain (GstPad *pad, GstBuffer *buffer)
   GST_OBJECT_LOCK (GST_OBJECT (valve));
   drop = valve->drop;
 
-  if (!drop && valve->discont)
-  {
+  if (!drop && valve->discont) {
     buffer = gst_buffer_make_metadata_writable (buffer);
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
     valve->discont = FALSE;
@@ -217,7 +214,7 @@ gst_valve_chain (GstPad *pad, GstBuffer *buffer)
 
 
 static gboolean
-gst_valve_event (GstPad *pad, GstEvent *event)
+gst_valve_event (GstPad * pad, GstEvent * event)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
   gboolean ret = TRUE;
@@ -243,7 +240,7 @@ gst_valve_event (GstPad *pad, GstEvent *event)
 
 static GstFlowReturn
 gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
-                        GstCaps * caps, GstBuffer ** buf)
+    GstCaps * caps, GstBuffer ** buf)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent_element (pad));
   GstFlowReturn ret = GST_FLOW_OK;
@@ -270,7 +267,7 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
 
 
 gboolean
-gst_valve_plugin_init (GstPlugin *plugin)
+gst_valve_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "fsvalve",
       GST_RANK_MARGINAL, GST_TYPE_VALVE);
@@ -280,10 +277,10 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "fsvalve",
     "Valve",
-    gst_valve_plugin_init, VERSION, "LGPL", "Farsight", "http://farsight.sf.net")
+    gst_valve_plugin_init, VERSION, "LGPL", "Farsight",
+    "http://farsight.sf.net")
 
-static GstCaps *
-gst_valve_getcaps (GstPad *pad)
+     static GstCaps *gst_valve_getcaps (GstPad * pad)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent (pad));
   GstCaps *caps;
