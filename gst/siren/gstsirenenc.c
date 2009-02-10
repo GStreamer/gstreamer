@@ -19,6 +19,15 @@
  * Boston, MA 02111-1307, USA.
  *
  */
+/**
+ * SECTION:element-sirenenc
+ *
+ * This encodes audio buffers into the Siren 16 codec (a 16khz extension of
+ * G.722.1) that is meant to be compatible with the Microsoft Windows Live
+ * Messenger(tm) implementation.
+ *
+ * Ref: http://www.polycom.com/company/about_us/technology/siren_g7221/index.html
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
