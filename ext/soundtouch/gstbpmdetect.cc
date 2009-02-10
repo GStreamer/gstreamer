@@ -207,12 +207,24 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
    * data but our buffer data shouldn't be modified.
    */
   if (filter->format.channels == 1) {
-    bpm_detect->priv->detect->inputSamples ((gfloat *) GST_BUFFER_DATA (in),
-        nsamples);
+    gfloat *inbuf = (gfloat *) GST_BUFFER_DATA (in);
+
+    while (nsamples > 0) {
+      bpm_detect->priv->detect->inputSamples (inbuf, MIN (nsamples, 2048));
+      nsamples -= 2048;
+      inbuf += 2048;
+    }
   } else {
-    gfloat *data =
+    gfloat *data, *inbuf;
+
+    data = inbuf =
         (gfloat *) g_memdup (GST_BUFFER_DATA (in), GST_BUFFER_SIZE (in));
-    bpm_detect->priv->detect->inputSamples (data, nsamples);
+
+    while (nsamples > 0) {
+      bpm_detect->priv->detect->inputSamples (inbuf, MIN (nsamples, 2048));
+      nsamples -= 2048;
+      inbuf += 2048 * 2;
+    }
     g_free (data);
   }
 
