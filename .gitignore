@@ -34,3 +34,5 @@ gst-plugins-ugly-*.tar.*
 /m4
 Makefile.in
 Makefile
+*~
+*.bak
