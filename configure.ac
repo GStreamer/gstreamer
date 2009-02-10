@@ -274,6 +274,7 @@ AG_GST_CHECK_PLUGIN(speed)
 AG_GST_CHECK_PLUGIN(subenc)
 AG_GST_CHECK_PLUGIN(stereo)
 AG_GST_CHECK_PLUGIN(tta)
+AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
 AG_GST_CHECK_PLUGIN(y4m)
@@ -1448,6 +1449,7 @@ gst/speed/Makefile
 gst/subenc/Makefile
 gst/stereo/Makefile
 gst/tta/Makefile
+gst/valve/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/real/Makefile

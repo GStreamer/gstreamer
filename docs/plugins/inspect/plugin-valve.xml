@@ -1,0 +1,34 @@
+<plugin>
+  <name>valve</name>
+  <description>Valve</description>
+  <filename>../../gst/valve/.libs/libfsvalve.so</filename>
+  <basename>libfsvalve.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>valve</name>
+      <longname>Valve element</longname>
+      <class>Filter</class>
+      <description>This element drops all packets when drop is TRUE</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
