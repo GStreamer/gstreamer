@@ -30,18 +30,17 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_LIVE_ADDER            (gst_live_adder_get_type())
 #define GST_LIVE_ADDER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LIVE_ADDER,GstLiveAdder))
 #define GST_IS_LIVE_ADDER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LIVE_ADDER))
 #define GST_LIVE_ADDER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_LIVE_ADDER,GstLiveAdderClass))
 #define GST_IS_LIVE_ADDER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_LIVE_ADDER))
 #define GST_LIVE_ADDER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_LIVE_ADDER,GstLiveAdderClass))
+typedef struct _GstLiveAdder GstLiveAdder;
+typedef struct _GstLiveAdderClass GstLiveAdderClass;
 
-typedef struct _GstLiveAdder             GstLiveAdder;
-typedef struct _GstLiveAdderClass        GstLiveAdderClass;
-
-typedef enum {
+typedef enum
+{
   GST_LIVE_ADDER_FORMAT_UNSET,
   GST_LIVE_ADDER_FORMAT_INT,
   GST_LIVE_ADDER_FORMAT_FLOAT
@@ -54,55 +53,55 @@ typedef void (*GstLiveAdderFunction) (gpointer out, gpointer in, guint size);
  *
  * The adder object structure.
  */
-struct _GstLiveAdder {
-  GstElement      element;
+struct _GstLiveAdder
+{
+  GstElement element;
 
-  GstPad         *srcpad;
+  GstPad *srcpad;
   /* pad counter, used for creating unique request pads */
-  gint            padcount;
-  GList          *sinkpads;
+  gint padcount;
+  GList *sinkpads;
 
-  GstFlowReturn   srcresult;
-  GstClockID      clock_id;
+  GstFlowReturn srcresult;
+  GstClockID clock_id;
 
   /* the queue is ordered head to tail */
-  GQueue         *buffers;
-  GCond          *not_empty_cond;
+  GQueue *buffers;
+  GCond *not_empty_cond;
 
-  GstClockTime    next_timestamp;
+  GstClockTime next_timestamp;
 
   /* the next are valid for both int and float */
-  GstLiveAdderFormat  format;
-  gint            rate;
-  gint            channels;
-  gint            width;
-  gint            endianness;
+  GstLiveAdderFormat format;
+  gint rate;
+  gint channels;
+  gint width;
+  gint endianness;
 
   /* the next are valid only for format == GST_LIVE_ADDER_FORMAT_INT */
-  gint            depth;
-  gboolean        is_signed;
+  gint depth;
+  gboolean is_signed;
 
   /* number of bytes per sample, actually width/8 * channels */
-  gint            bps;
+  gint bps;
 
   /* function to add samples */
   GstLiveAdderFunction func;
 
-  GstClockTime    latency_ms;
-  GstClockTime    peer_latency;
+  GstClockTime latency_ms;
+  GstClockTime peer_latency;
 
-  gboolean        segment_pending;
+  gboolean segment_pending;
 
-  gboolean        playing;
+  gboolean playing;
 };
 
-struct _GstLiveAdderClass {
+struct _GstLiveAdderClass
+{
   GstElementClass parent_class;
 };
 
-GType    gst_live_adder_get_type (void);
+GType gst_live_adder_get_type (void);
 
 G_END_DECLS
-
-
 #endif /* __GST_LIVE_ADDER_H__ */
