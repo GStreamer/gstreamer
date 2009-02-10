@@ -265,22 +265,8 @@ gst_valve_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   return ret;
 }
 
-
-gboolean
-gst_valve_plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "fsvalve",
-      GST_RANK_MARGINAL, GST_TYPE_VALVE);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "fsvalve",
-    "Valve",
-    gst_valve_plugin_init, VERSION, "LGPL", "Farsight",
-    "http://farsight.sf.net")
-
-     static GstCaps *gst_valve_getcaps (GstPad * pad)
+static GstCaps *
+gst_valve_getcaps (GstPad * pad)
 {
   GstValve *valve = GST_VALVE (gst_pad_get_parent (pad));
   GstCaps *caps;
@@ -297,3 +283,17 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 
   return caps;
 }
+
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "valve",
+      GST_RANK_MARGINAL, GST_TYPE_VALVE);
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "valve",
+    "Valve",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
