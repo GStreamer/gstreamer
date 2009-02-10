@@ -308,6 +308,7 @@ static void paint_setup_YVYU (paintinfo * p, unsigned char *dest);
 static void paint_setup_IYU2 (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y41B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
+static void paint_setup_Y444 (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
 static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
 static void paint_setup_NV12 (paintinfo * p, unsigned char *dest);
@@ -342,6 +343,7 @@ static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y41B (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y42B (paintinfo * p, int x, int y, int w);
+static void paint_hline_Y444 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
 static void paint_hline_AYUV (paintinfo * p, int x, int y, int w);
 
@@ -413,6 +415,8 @@ struct fourcc_list_struct fourcc_list[] = {
   {VTS_YUV, "Y41B", "Y41B", 12, paint_setup_Y41B, paint_hline_Y41B},
   /* Y42B */
   {VTS_YUV, "Y42B", "Y42B", 16, paint_setup_Y42B, paint_hline_Y42B},
+  /* Y444 */
+  {VTS_YUV, "Y444", "Y444", 24, paint_setup_Y444, paint_hline_Y444},
   /* Y800 grayscale */
   {VTS_YUV, "Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
 
@@ -444,6 +448,7 @@ struct fourcc_list_struct fourcc_list[] = {
 
   {VTS_BAYER, "BAY8", "Bayer", 8, paint_setup_bayer, paint_hline_bayer}
 };
+
 int n_fourccs = G_N_ELEMENTS (fourcc_list);
 
 struct fourcc_list_struct *
@@ -1523,6 +1528,26 @@ paint_hline_Y42B (paintinfo * p, int x, int y, int w)
   oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->yuv_color->U, x2 - x1);
   oil_splat_u8_ns (p->vp + offset1 + x1, &p->yuv_color->V, x2 - x1);
+}
+
+static void
+paint_setup_Y444 (paintinfo * p, unsigned char *dest)
+{
+  p->yp = dest;
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->up = p->yp + p->ystride * p->height;
+  p->vp = p->up + p->ystride * p->height;
+  p->endptr = p->vp + p->ystride * p->height;
+}
+
+static void
+paint_hline_Y444 (paintinfo * p, int x, int y, int w)
+{
+  int offset = y * p->ystride;
+
+  oil_splat_u8_ns (p->yp + offset + x, &p->yuv_color->Y, w);
+  oil_splat_u8_ns (p->up + offset + x, &p->yuv_color->U, w);
+  oil_splat_u8_ns (p->vp + offset + x, &p->yuv_color->V, w);
 }
 
 static void
