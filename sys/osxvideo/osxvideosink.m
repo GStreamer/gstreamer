@@ -83,7 +83,6 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
   GstOSXWindow *osxwindow = NULL;
   GstStructure *s;
   GstMessage *msg;
-  guint8 *viewdata;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   g_return_val_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink), NULL);
@@ -120,8 +119,10 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
 static void
 gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink)
 {
+  NSAutoreleasePool *pool;
+
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  pool = [[NSAutoreleasePool alloc] init];
 
   if (osxvideosink->osxwindow) {
     [osxvideosink->osxwindow->gstview release];
@@ -211,23 +212,21 @@ gst_osx_video_sink_change_state (GstElement * element,
           GST_VIDEO_SINK_WIDTH (osxvideosink),
           GST_VIDEO_SINK_HEIGHT (osxvideosink));
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    default:
       break;
   }
 
   ret = (GST_ELEMENT_CLASS (parent_class))->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_VIDEO_SINK_WIDTH (osxvideosink) = 0;
       GST_VIDEO_SINK_HEIGHT (osxvideosink) = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_osx_video_sink_osxwindow_destroy (osxvideosink);
+      break;
+    default:
       break;
   }
 
@@ -242,7 +241,7 @@ gst_osx_video_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   osxvideosink = GST_OSX_VIDEO_SINK (bsink);
-  viewdata = [osxvideosink->osxwindow->gstview getTextureBuffer];
+  viewdata = (guint8 *) [osxvideosink->osxwindow->gstview getTextureBuffer];
 
   GST_DEBUG ("show_frame");
   memcpy (viewdata, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
