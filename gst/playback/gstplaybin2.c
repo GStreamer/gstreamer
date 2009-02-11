@@ -2139,13 +2139,13 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   if (group->uridecodebin) {
     GST_DEBUG_OBJECT (playbin, "reusing existing uridecodebin");
     REMOVE_SIGNAL (group->uridecodebin, group->pad_added_id);
+    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
     REMOVE_SIGNAL (group->uridecodebin, group->no_more_pads_id);
     REMOVE_SIGNAL (group->uridecodebin, group->notify_source_id);
     REMOVE_SIGNAL (group->uridecodebin, group->drained_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_factories_id);
     REMOVE_SIGNAL (group->uridecodebin, group->autoplug_select_id);
     gst_element_set_state (group->uridecodebin, GST_STATE_NULL);
-    REMOVE_SIGNAL (group->uridecodebin, group->pad_removed_id);
     uridecodebin = group->uridecodebin;
   } else {
     GST_DEBUG_OBJECT (playbin, "making new uridecodebin");
@@ -2198,9 +2198,9 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
     if (group->suburidecodebin) {
       GST_DEBUG_OBJECT (playbin, "reusing existing suburidecodebin");
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_added_id);
+      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
       REMOVE_SIGNAL (group->suburidecodebin, group->sub_no_more_pads_id);
       gst_element_set_state (group->suburidecodebin, GST_STATE_NULL);
-      REMOVE_SIGNAL (group->suburidecodebin, group->sub_pad_removed_id);
       suburidecodebin = group->suburidecodebin;
     } else {
       GST_DEBUG_OBJECT (playbin, "making new suburidecodebin");
