@@ -23,38 +23,38 @@ struct _SourceData
 };
 typedef struct _SourceData SourceData;
 
-static GstBusSyncReply 
-create_window (GstBus *bus, GstMessage *message, GtkWidget *widget)
+static GstBusSyncReply
+create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
 {
-    // ignore anything but 'prepare-xwindow-id' element messages
-    if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
-        return GST_BUS_PASS;
+  // ignore anything but 'prepare-xwindow-id' element messages
+  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
+    return GST_BUS_PASS;
 
-    if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
-        return GST_BUS_PASS;
+  if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
+    return GST_BUS_PASS;
 
 #ifdef WIN32
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        (gulong)GDK_WINDOW_HWND(widget->window));
+  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+      (gulong) GDK_WINDOW_HWND (widget->window));
 #else
-    gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-        GDK_WINDOW_XWINDOW(widget->window));
+  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
+      GDK_WINDOW_XWINDOW (widget->window));
 #endif
 
-    gst_message_unref (message);
+  gst_message_unref (message);
 
-    return GST_BUS_DROP;
+  return GST_BUS_DROP;
 }
 
-static gboolean 
-expose_cb(GtkWidget *widget, GdkEventExpose *event, GstElement *videosink)
+static gboolean
+expose_cb (GtkWidget * widget, GdkEventExpose * event, GstElement * videosink)
 {
-    gst_x_overlay_expose (GST_X_OVERLAY (videosink));
-    return FALSE;
+  gst_x_overlay_expose (GST_X_OVERLAY (videosink));
+  return FALSE;
 }
 
 static void
-destroy_cb (GtkWidget *widget, GdkEvent *event, GstElement *pipeline)
+destroy_cb (GtkWidget * widget, GdkEvent * event, GstElement * pipeline)
 {
   g_message ("destroy callback");
 
@@ -112,9 +112,8 @@ set_location_delayed (gpointer data)
 
 static void
 on_drag_data_received (GtkWidget * widget,
-                       GdkDragContext * context, int x, int y,
-                       GtkSelectionData * seldata, guint inf, guint time,
-                       gpointer data)
+    GdkDragContext * context, int x, int y,
+    GtkSelectionData * seldata, guint inf, guint time, gpointer data)
 {
   GdkPixbufFormat *format;
   SourceData *userdata = g_new0 (SourceData, 1);
@@ -127,7 +126,7 @@ on_drag_data_received (GtkWidget * widget,
   format = gdk_pixbuf_get_file_info (filename, NULL, NULL);
   g_return_if_fail (format);
   g_print ("received %s image: %s\n", filename,
-           gdk_pixbuf_format_get_name (format));
+      gdk_pixbuf_format_get_name (format));
   userdata->nick = "location";
   userdata->value = g_strdup (filename);
   userdata->data = data;
@@ -135,9 +134,9 @@ on_drag_data_received (GtkWidget * widget,
   if (delay > 0) {
     g_print ("%d\n", delay);
     g_timeout_add_seconds (1, set_location_delayed, userdata);
-  }
-  else
-    g_object_set (G_OBJECT (userdata->data), userdata->nick, userdata->value, NULL);
+  } else
+    g_object_set (G_OBJECT (userdata->data), userdata->nick, userdata->value,
+        NULL);
   g_free (filename);
 }
 
@@ -163,11 +162,17 @@ main (gint argc, gchar * argv[])
 
   GOptionContext *context;
   GOptionEntry options[] = {
-    { "source-bin", 's', 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array,
-      "Use a custom source bin description (gst-launch style)", NULL },
-    { "method", 'm', 0, G_OPTION_ARG_INT, &method, "1 for gstdifferencematte, 2 for gloverlay", "M" },
-    { "delay", 'd', 0, G_OPTION_ARG_INT, &delay, "Wait N seconds before to send the image to gstreamer (useful with differencematte)", "N" },
-    { NULL }
+    {"source-bin", 's', 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array,
+        "Use a custom source bin description (gst-launch style)", NULL}
+    ,
+    {"method", 'm', 0, G_OPTION_ARG_INT, &method,
+        "1 for gstdifferencematte, 2 for gloverlay", "M"}
+    ,
+    {"delay", 'd', 0, G_OPTION_ARG_INT, &delay,
+          "Wait N seconds before to send the image to gstreamer (useful with differencematte)",
+        "N"}
+    ,
+    {NULL}
   };
 
   g_thread_init (NULL);
@@ -181,20 +186,23 @@ main (gint argc, gchar * argv[])
     return -1;
   }
   g_option_context_free (context);
-  
+
   if (source_desc_array != NULL) {
     source_desc = g_strjoinv (" ", source_desc_array);
     g_strfreev (source_desc_array);
   }
   if (source_desc == NULL) {
-    source_desc = g_strdup ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
+    source_desc =
+        g_strdup
+        ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
   }
 
-  sourcebin = gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
+  sourcebin =
+      gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
   g_free (source_desc);
   if (error) {
-    g_print ("Error while parsing source bin description: %s\n", 
-             GST_STR_NULL (error->message));
+    g_print ("Error while parsing source bin description: %s\n",
+        GST_STR_NULL (error->message));
     return -1;
   }
 
@@ -221,9 +229,9 @@ main (gint argc, gchar * argv[])
   }
 
   g_signal_connect (G_OBJECT (window), "delete-event",
-                    G_CALLBACK (destroy_cb), pipeline);
+      G_CALLBACK (destroy_cb), pipeline);
   g_signal_connect (G_OBJECT (window), "destroy-event",
-                    G_CALLBACK (destroy_cb), pipeline);
+      G_CALLBACK (destroy_cb), pipeline);
 
   screen = gtk_drawing_area_new ();
 
@@ -265,7 +273,7 @@ main (gint argc, gchar * argv[])
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, screen);
   gst_object_unref (bus);
-  g_signal_connect(screen, "expose-event", G_CALLBACK(expose_cb), sink);
+  g_signal_connect (screen, "expose-event", G_CALLBACK (expose_cb), sink);
 
   gtk_drag_dest_set (screen, GTK_DEST_DEFAULT_ALL, NULL, 0, GDK_ACTION_COPY);
   gtk_drag_dest_add_uri_targets (screen);
