@@ -357,7 +357,7 @@ mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, guint size)
   timestamp->hour = GST_READ_UINT8 (data + 4);
   timestamp->minute = GST_READ_UINT8 (data + 5);
   timestamp->second = GST_READ_UINT8 (data + 6);
-  timestamp->quarter_msecond = GST_READ_UINT8 (data + 7);
+  timestamp->msecond = (GST_READ_UINT8 (data + 7) * 1000) / 256;
 
   return TRUE;
 }
@@ -385,10 +385,19 @@ mxf_timestamp_compare (const MXFTimestamp * a, const MXFTimestamp * b)
     return diff;
   else if ((diff = a->second - b->second) != 0)
     return diff;
-  else if ((diff = a->quarter_msecond - b->quarter_msecond) != 0)
+  else if ((diff = a->msecond - b->msecond) != 0)
     return diff;
   else
     return 0;
+}
+
+gchar *
+mxf_timestamp_to_string (const MXFTimestamp * t, gchar str[32])
+{
+  g_snprintf (str, 32,
+      "%04d-%02u-%02u %02u:%02u:%02u.%03u", t->year, t->month,
+      t->day, t->hour, t->minute, t->second, t->msecond);
+  return str;
 }
 
 gboolean

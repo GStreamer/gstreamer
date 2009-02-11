@@ -78,6 +78,7 @@ gboolean mxf_fraction_parse (MXFFraction *fraction, const guint8 *data, guint si
 gboolean mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, guint size);
 gboolean mxf_timestamp_is_unknown (const MXFTimestamp *a);
 gint mxf_timestamp_compare (const MXFTimestamp *a, const MXFTimestamp *b);
+gchar *mxf_timestamp_to_string (const MXFTimestamp *t, gchar str[32]);
 
 gboolean mxf_ul_array_parse (MXFUL **array, guint32 *count, const guint8 *data, guint size);
 

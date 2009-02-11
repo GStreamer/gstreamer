@@ -203,14 +203,8 @@ mxf_metadata_wave_audio_essence_descriptor_handle_tag (MXFMetadataBase *
       if (!mxf_timestamp_parse (&self->peak_envelope_timestamp,
               tag_data, tag_size))
         goto error;
-      GST_DEBUG ("  peak envelope timestamp = %d/%u/%u %u:%u:%u.%u",
-          self->peak_envelope_timestamp.year,
-          self->peak_envelope_timestamp.month,
-          self->peak_envelope_timestamp.day,
-          self->peak_envelope_timestamp.hour,
-          self->peak_envelope_timestamp.minute,
-          self->peak_envelope_timestamp.second,
-          (self->peak_envelope_timestamp.quarter_msecond * 1000) / 256);
+      GST_DEBUG ("  peak envelope timestamp = %s",
+          mxf_timestamp_to_string (&self->peak_envelope_timestamp, str));
       break;
     case 0x3d31:
       self->peak_envelope_data = g_memdup (tag_data, tag_size);

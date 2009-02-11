@@ -342,12 +342,8 @@ mxf_metadata_preface_handle_tag (MXFMetadataBase * metadata,
     case 0x3b02:
       if (!mxf_timestamp_parse (&self->last_modified_date, tag_data, tag_size))
         goto error;
-      GST_DEBUG ("  last modified date = %d/%u/%u %u:%u:%u.%u",
-          self->last_modified_date.year, self->last_modified_date.month,
-          self->last_modified_date.day, self->last_modified_date.hour,
-          self->last_modified_date.minute,
-          self->last_modified_date.second,
-          (self->last_modified_date.quarter_msecond * 1000) / 256);
+      GST_DEBUG ("  last modified date = %s",
+          mxf_timestamp_to_string (&self->last_modified_date, str));
       break;
     case 0x3b05:
       if (tag_size != 2)
@@ -594,14 +590,8 @@ mxf_metadata_identification_handle_tag (MXFMetadataBase * metadata,
     case 0x3c06:
       if (!mxf_timestamp_parse (&self->modification_date, tag_data, tag_size))
         goto error;
-      GST_DEBUG ("  modification date = %d/%u/%u %u:%u:%u.%u",
-          self->modification_date.year,
-          self->modification_date.month,
-          self->modification_date.day,
-          self->modification_date.hour,
-          self->modification_date.minute,
-          self->modification_date.second,
-          (self->modification_date.quarter_msecond * 1000) / 256);
+      GST_DEBUG ("  modification date = %s",
+          mxf_timestamp_to_string (&self->modification_date, str));
       break;
     case 0x3c07:
       if (!mxf_product_version_parse (&self->toolkit_version,
@@ -982,27 +972,15 @@ mxf_metadata_generic_package_handle_tag (MXFMetadataBase * metadata,
       if (!mxf_timestamp_parse (&self->package_creation_date,
               tag_data, tag_size))
         goto error;
-      GST_DEBUG ("  creation date = %d/%u/%u %u:%u:%u.%u",
-          self->package_creation_date.year,
-          self->package_creation_date.month,
-          self->package_creation_date.day,
-          self->package_creation_date.hour,
-          self->package_creation_date.minute,
-          self->package_creation_date.second,
-          (self->package_creation_date.quarter_msecond * 1000) / 256);
+      GST_DEBUG ("  creation date = %s",
+          mxf_timestamp_to_string (&self->package_creation_date, str));
       break;
     case 0x4404:
       if (!mxf_timestamp_parse (&self->package_modified_date,
               tag_data, tag_size))
         goto error;
-      GST_DEBUG ("  modification date = %d/%u/%u %u:%u:%u.%u",
-          self->package_modified_date.year,
-          self->package_modified_date.month,
-          self->package_modified_date.day,
-          self->package_modified_date.hour,
-          self->package_modified_date.minute,
-          self->package_modified_date.second,
-          (self->package_modified_date.quarter_msecond * 1000) / 256);
+      GST_DEBUG ("  modification date = %s",
+          mxf_timestamp_to_string (&self->package_modified_date, str));
       break;
     case 0x4403:
       if (!mxf_ul_array_parse (&self->tracks_uids, &self->n_tracks, tag_data,

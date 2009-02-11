@@ -42,7 +42,7 @@ typedef struct {
   guint8 hour;
   guint8 minute;
   guint8 second;
-  guint8 quarter_msecond;
+  guint16 msecond;
 } MXFTimestamp;
 
 /* SMPTE 377M 3.3 */

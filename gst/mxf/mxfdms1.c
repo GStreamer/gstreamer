@@ -1237,14 +1237,8 @@ mxf_dms1_clip_framework_handle_tag (MXFMetadataBase * metadata,
     if (!mxf_timestamp_parse (&self->clip_creation_date_and_time, tag_data,
             tag_size))
       goto error;
-    GST_DEBUG ("  clip creation date and time = %d/%u/%u %u:%u:%u.%u",
-        self->clip_creation_date_and_time.year,
-        self->clip_creation_date_and_time.month,
-        self->clip_creation_date_and_time.day,
-        self->clip_creation_date_and_time.hour,
-        self->clip_creation_date_and_time.minute,
-        self->clip_creation_date_and_time.second,
-        (self->clip_creation_date_and_time.quarter_msecond * 1000) / 256);
+    GST_DEBUG ("  clip creation date and time = %s",
+        mxf_timestamp_to_string (&self->clip_creation_date_and_time, str));
   } else if (memcmp (tag_ul, &take_number_ul, 16) == 0) {
     if (tag_size != 2)
       goto error;
@@ -2666,6 +2660,9 @@ mxf_dms1_setting_period_handle_tag (MXFMetadataBase * metadata,
 {
   MXFDMS1SettingPeriod *self = MXF_DMS1_SETTING_PERIOD (metadata);
   gboolean ret = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[32];
+#endif
   MXFUL *tag_ul = NULL;
   static const guint8 setting_date_and_time_ul[] = {
     0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x04, 0x07,
@@ -2689,12 +2686,8 @@ mxf_dms1_setting_period_handle_tag (MXFMetadataBase * metadata,
     if (!mxf_timestamp_parse (&self->setting_date_and_time, tag_data, tag_size))
       goto error;
 
-    GST_DEBUG ("  last modified date = %d/%u/%u %u:%u:%u.%u",
-        self->setting_date_and_time.year, self->setting_date_and_time.month,
-        self->setting_date_and_time.day, self->setting_date_and_time.hour,
-        self->setting_date_and_time.minute,
-        self->setting_date_and_time.second,
-        (self->setting_date_and_time.quarter_msecond * 1000) / 256);
+    GST_DEBUG ("  last modified date = %s",
+        mxf_timestamp_to_string (&self->setting_date_and_time, str));
   } else if (memcmp (tag_ul, &time_period_keyword_ul, 16) == 0) {
     self->time_period_keyword = mxf_utf16_to_utf8 (tag_data, tag_size);
     GST_DEBUG ("  time period keyword = %s",
@@ -4586,6 +4579,9 @@ mxf_dms1_rights_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
   MXFDMS1Rights *self = MXF_DMS1_RIGHTS (metadata);
   gboolean ret = TRUE;
   MXFUL *tag_ul = NULL;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[32];
+#endif
   static const guint8 copyright_owner_ul[] = {
     0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x03, 0x02,
     0x05, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00
@@ -4669,27 +4665,15 @@ mxf_dms1_rights_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
             tag_size))
       goto error;
 
-    GST_DEBUG ("  rights start date and time = %d/%u/%u %u:%u:%u.%u",
-        self->rights_start_date_and_time.year,
-        self->rights_start_date_and_time.month,
-        self->rights_start_date_and_time.day,
-        self->rights_start_date_and_time.hour,
-        self->rights_start_date_and_time.minute,
-        self->rights_start_date_and_time.second,
-        (self->rights_start_date_and_time.quarter_msecond * 1000) / 256);
+    GST_DEBUG ("  rights start date and time = %s",
+        mxf_timestamp_to_string (&self->rights_start_date_and_time, str));
   } else if (memcmp (tag_ul, &rights_stop_date_and_time_ul, 16) == 0) {
     if (!mxf_timestamp_parse (&self->rights_start_date_and_time, tag_data,
             tag_size))
       goto error;
 
-    GST_DEBUG ("  rights stop date and time = %d/%u/%u %u:%u:%u.%u",
-        self->rights_stop_date_and_time.year,
-        self->rights_stop_date_and_time.month,
-        self->rights_stop_date_and_time.day,
-        self->rights_stop_date_and_time.hour,
-        self->rights_stop_date_and_time.minute,
-        self->rights_stop_date_and_time.second,
-        (self->rights_stop_date_and_time.quarter_msecond * 1000) / 256);
+    GST_DEBUG ("  rights stop date and time = %s",
+        mxf_timestamp_to_string (&self->rights_stop_date_and_time, str));
   } else if (memcmp (tag_ul, &maximum_number_of_usages_ul, 16) == 0) {
     if (tag_size != 2)
       goto error;
