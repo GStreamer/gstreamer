@@ -389,6 +389,7 @@ SUBDIRS=\
 DIST_SUBDIRS = \
 	alsaspdif \
 	amrwb \
+	assrender \
 	apexsink \
 	bz2 \
 	cdaudio \
