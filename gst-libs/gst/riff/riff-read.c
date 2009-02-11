@@ -153,6 +153,10 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
   GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
       GST_FOURCC_ARGS (fourcc), size);
 
+  /* be paranoid: size may be nonsensical value here, such as (guint) -1 */
+  if (G_UNLIKELY (size > G_MAXINT))
+    goto bogus_size;
+
   if (bufsize < size + 8 + offset) {
     GST_DEBUG_OBJECT (element,
         "Needed chunk data (%d) is more than available (%d), shortcutting",
@@ -181,6 +185,11 @@ too_small:
     GST_DEBUG_OBJECT (element,
         "Failed to parse chunk header (offset %d, %d available, %d needed)",
         offset, bufsize, 8);
+    return FALSE;
+  }
+bogus_size:
+  {
+    GST_ERROR_OBJECT (element, "Broken file: bogus chunk size %u", size);
     return FALSE;
   }
 }
