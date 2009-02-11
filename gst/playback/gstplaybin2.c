@@ -1627,6 +1627,12 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
     }
   }
 
+  /* We got a pad-change after our group got switched out; no need to notify */
+  if (!select) {
+    GST_PLAY_BIN_UNLOCK (playbin);
+    return;
+  }
+
   switch (select->type) {
     case GST_PLAY_SINK_TYPE_VIDEO:
     case GST_PLAY_SINK_TYPE_VIDEO_RAW:
