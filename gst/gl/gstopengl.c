@@ -96,31 +96,31 @@ plugin_init (GstPlugin * plugin)
   }
 #ifdef HAVE_GDKPIXBUF
   if (!gst_element_register (plugin, "glpixbufoverlay",
-          GST_RANK_NONE, gst_gl_pixbufoverlay_get_type ())) {
+          GST_RANK_NONE, gst_gl_pixbufoverlay_get_type())) {
     return FALSE;
   }
   if (!gst_element_register (plugin, "gldifferencematte",
-          GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
+          GST_RANK_NONE, gst_gl_differencematte_get_type())) {
     return FALSE;
   }
   if (!gst_element_register (plugin, "glbumper",
-          GST_RANK_NONE, gst_gl_bumper_get_type ())) {
+          GST_RANK_NONE, gst_gl_bumper_get_type())) {
     return FALSE;
   }
 #endif
 
   if (!gst_element_register (plugin, "gleffects",
-          GST_RANK_NONE, gst_gl_effects_get_type ())) {
+          GST_RANK_NONE, gst_gl_effects_get_type())) {
     return FALSE;
   }
 
   if (!gst_element_register (plugin, "glfilterblur",
-          GST_RANK_NONE, gst_gl_filterblur_get_type ())) {
+          GST_RANK_NONE, gst_gl_filterblur_get_type())) {
     return FALSE;
   }
 
   if (!gst_element_register (plugin, "glfiltersobel",
-          GST_RANK_NONE, gst_gl_filtersobel_get_type ())) {
+          GST_RANK_NONE, gst_gl_filtersobel_get_type())) {
     return FALSE;
   }
 

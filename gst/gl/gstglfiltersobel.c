@@ -85,41 +85,37 @@ GST_ELEMENT_DETAILS ("Gstreamer OpenGL Sobel",
   GST_DEBUG_CATEGORY_INIT (gst_gl_filtersobel_debug, "glfiltersobel", 0, "glfiltersobel element");
 
 GST_BOILERPLATE_FULL (GstGLFilterSobel, gst_gl_filtersobel, GstGLFilter,
-    GST_TYPE_GL_FILTER, DEBUG_INIT);
+		      GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filtersobel_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_filtersobel_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_gl_filter_filtersobel_reset (GstGLFilter * filter);
-static void gst_gl_filtersobel_draw_texture (GstGLFilterSobel * filtersobel,
-    GLuint tex);
+static void gst_gl_filter_filtersobel_reset (GstGLFilter* filter);
+static void gst_gl_filtersobel_draw_texture (GstGLFilterSobel * filtersobel, GLuint tex);
 
-static void gst_gl_filtersobel_init_shader (GstGLFilter * filter);
+static void gst_gl_filtersobel_init_shader (GstGLFilter* filter);
 static gboolean gst_gl_filtersobel_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
-static void gst_gl_filtersobel_callback (gint width, gint height, guint texture,
-    gpointer stuff);
+                                           GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+static void gst_gl_filtersobel_callback (gint width, gint height, guint texture, gpointer stuff);
 
 static void
-gst_gl_filtersobel_init_resources (GstGLFilter * filter)
+gst_gl_filtersobel_init_resources (GstGLFilter *filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
   glGenTextures (1, &filtersobel->midtexture);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, filtersobel->midtexture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-      filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glBindTexture(GL_TEXTURE_RECTANGLE_ARB, filtersobel->midtexture);
+  glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+	       filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 static void
-gst_gl_filtersobel_reset_resources (GstGLFilter * filter)
+gst_gl_filtersobel_reset_resources (GstGLFilter *filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
@@ -144,24 +140,23 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
   gobject_class->get_property = gst_gl_filtersobel_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtersobel_filter;
-  GST_GL_FILTER_CLASS (klass)->display_init_cb =
-      gst_gl_filtersobel_init_resources;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
-      gst_gl_filtersobel_reset_resources;
+  GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_filtersobel_init_resources;
+  GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filtersobel_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filtersobel_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_filtersobel_reset;
 
-  g_object_class_install_property (gobject_class,
-      PROP_INVERT,
-      g_param_spec_boolean ("invert",
-          "Invert the colors",
-          "Invert colors to get dark edges on bright background",
-          FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (
+    gobject_class,
+    PROP_INVERT,
+    g_param_spec_boolean ("invert",
+                          "Invert the colors",
+                          "Invert colors to get dark edges on bright background",
+                          FALSE,
+                          G_PARAM_READWRITE));
 }
 
 static void
-gst_gl_filtersobel_init (GstGLFilterSobel * filtersobel,
-    GstGLFilterSobelClass * klass)
+gst_gl_filtersobel_init (GstGLFilterSobel * filtersobel, GstGLFilterSobelClass * klass)
 {
   filtersobel->shader0 = NULL;
   filtersobel->midtexture = 0;
@@ -169,9 +164,9 @@ gst_gl_filtersobel_init (GstGLFilterSobel * filtersobel,
 }
 
 static void
-gst_gl_filter_filtersobel_reset (GstGLFilter * filter)
+gst_gl_filter_filtersobel_reset (GstGLFilter* filter)
 {
-  GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  GstGLFilterSobel* filtersobel = GST_GL_FILTERSOBEL(filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (filter->display, filtersobel->shader0);
@@ -184,12 +179,12 @@ gst_gl_filtersobel_set_property (GObject * object, guint prop_id,
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (object);
 
   switch (prop_id) {
-    case PROP_INVERT:
-      filtersobel->invert = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  case PROP_INVERT:
+    filtersobel->invert = g_value_get_boolean (value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    break;
   }
 }
 
@@ -200,23 +195,22 @@ gst_gl_filtersobel_get_property (GObject * object, guint prop_id,
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (object);
 
   switch (prop_id) {
-    case PROP_INVERT:
-      g_value_set_boolean (value, filtersobel->invert);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  case PROP_INVERT:
+    g_value_set_boolean (value, filtersobel->invert);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    break;
   }
 }
 
 static void
-gst_gl_filtersobel_init_shader (GstGLFilter * filter)
+gst_gl_filtersobel_init_shader (GstGLFilter* filter)
 {
-  GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  GstGLFilterSobel* filtersobel = GST_GL_FILTERSOBEL (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, sobel_fragment_source,
-      &filtersobel->shader0);
+  gst_gl_display_gen_shader (filter->display, 0, sobel_fragment_source, &filtersobel->shader0);
 }
 
 static void
@@ -232,11 +226,11 @@ gst_gl_filtersobel_draw_texture (GstGLFilterSobel * filtersobel, GLuint tex)
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, 0.0);
+  glTexCoord2f ((gfloat)filter->width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
+  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) filter->height);
+  glTexCoord2f (0.0, (gfloat)filter->height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
@@ -259,34 +253,33 @@ change_view (GstGLDisplay *display, gpointer data)
   }*/
 
 static gboolean
-gst_gl_filtersobel_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filtersobel_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
+				GstGLBuffer* outbuf)
 {
-  GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  GstGLFilterSobel* filtersobel = GST_GL_FILTERSOBEL(filter);
 
 //  gst_gl_display_thread_add (filter->display, change_view, filtersobel);
 
   gst_gl_filter_render_to_target (filter, inbuf->texture, outbuf->texture,
-      gst_gl_filtersobel_callback, filtersobel);
+				  gst_gl_filtersobel_callback, filtersobel);
 
   return TRUE;
 }
 
 static void
-gst_gl_filtersobel_callback (gint width, gint height, guint texture,
-    gpointer stuff)
+gst_gl_filtersobel_callback (gint width, gint height, guint texture, gpointer stuff)
 {
-  GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (stuff);
+  GstGLFilterSobel* filtersobel = GST_GL_FILTERSOBEL (stuff);
 
-  gfloat hkern[9] = {
+  gfloat hkern[9] = { 
     1.0, 0.0, -1.0,
     2.0, 0.0, -2.0,
     1.0, 0.0, -1.0
   };
-
+  
   gfloat vkern[9] = {
-    1.0, 2.0, 1.0,
-    0.0, 0.0, 0.0,
+     1.0,  2.0,  1.0,
+     0.0,  0.0,  0.0,
     -1.0, -2.0, -1.0
   };
 
@@ -305,8 +298,7 @@ gst_gl_filtersobel_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filtersobel->shader0, "hkern", 9, hkern);
   gst_gl_shader_set_uniform_1fv (filtersobel->shader0, "vkern", 9, vkern);
 
-  gst_gl_shader_set_uniform_1i (filtersobel->shader0, "invert",
-      filtersobel->invert);
+  gst_gl_shader_set_uniform_1i (filtersobel->shader0, "invert", filtersobel->invert);
 
   gst_gl_filtersobel_draw_texture (filtersobel, texture);
 }

@@ -20,62 +20,61 @@
 
 #include <gstgleffects.h>
 
-static gfloat gauss_kernel[9] = { 0.060493f, 0.075284f, 0.088016f,
-  0.096667f, 0.099736f, 0.096667f,
-  0.088016f, 0.075284f, 0.060493f
-};
+static gfloat gauss_kernel[9] = { 0.060493f, 0.075284f, 0.088016f, 
+                                  0.096667f, 0.099736f, 0.096667f, 
+                                  0.088016f, 0.075284f, 0.060493f };
 
 static void
-gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
-    gpointer data)
+gst_gl_effects_glow_step_one (gint width, gint height, guint texture, gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLEffects* effects = GST_GL_EFFECTS (data);
 
   GstGLShader *shader;
-
+          
   shader = g_hash_table_lookup (effects->shaderstable, "glow0");
-
+  
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "glow0", shader);
   }
-
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          luma_threshold_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  
+  g_return_if_fail (
+    gst_gl_shader_compile_and_check (shader, luma_threshold_fragment_source,
+				     GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
-
+  
   gst_gl_shader_use (shader);
 
   glActiveTexture (GL_TEXTURE0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-
+     
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-
+  
   gst_gl_effects_draw_texture (effects, texture);
 }
 
 static void
-gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
-    gpointer stuff)
+gst_gl_effects_glow_step_two (gint width, gint height, guint texture, gpointer stuff)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (stuff);
+  GstGLEffects* effects = GST_GL_EFFECTS (stuff);
   GstGLShader *shader;
-
+          
   /* hard coded kernel, it could be easily generated at runtime with a
    * property to change standard deviation */
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow1");
-
+  
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "glow1", shader);
   }
-
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          hconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  
+  g_return_if_fail (
+    gst_gl_shader_compile_and_check (shader, hconv9_fragment_source,
+				     GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -97,21 +96,21 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
 }
 
 void
-gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
-    gpointer stuff)
+gst_gl_effects_glow_step_three (gint width, gint height, guint texture, gpointer stuff)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (stuff);
+  GstGLEffects* effects = GST_GL_EFFECTS (stuff);
   GstGLShader *shader;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow2");
-
+  
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "glow2", shader);
   }
-
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          vconv9_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  
+  g_return_if_fail (
+    gst_gl_shader_compile_and_check (shader, vconv9_fragment_source,
+				     GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -133,21 +132,21 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
 }
 
 void
-gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
-    gpointer stuff)
+gst_gl_effects_glow_step_four (gint width, gint height, guint texture, gpointer stuff)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (stuff);
+  GstGLEffects* effects = GST_GL_EFFECTS (stuff);
   GstGLShader *shader;
 
   shader = g_hash_table_lookup (effects->shaderstable, "glow3");
-
+  
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "glow3", shader);
   }
-
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          sum_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  
+  g_return_if_fail (
+    gst_gl_shader_compile_and_check (shader, sum_fragment_source,
+				     GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -157,36 +156,35 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   glActiveTexture (GL_TEXTURE2);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->intexture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
+  glDisable(GL_TEXTURE_RECTANGLE_ARB);
+  
   gst_gl_shader_set_uniform_1f (shader, "alpha", 1.0);
   gst_gl_shader_set_uniform_1i (shader, "base", 2);
-
+    
   glActiveTexture (GL_TEXTURE1);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
-
-  gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1 / 3.5f);
+  glDisable(GL_TEXTURE_RECTANGLE_ARB);
+  
+  gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1/3.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
   gst_gl_effects_draw_texture (effects, texture);
 }
 
 void
-gst_gl_effects_glow (GstGLEffects * effects)
-{
+gst_gl_effects_glow (GstGLEffects *effects) {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   /* threshold */
-  gst_gl_filter_render_to_target (filter, effects->intexture,
-      effects->midtexture[0], gst_gl_effects_glow_step_one, effects);
+  gst_gl_filter_render_to_target (filter, effects->intexture, effects->midtexture[0],
+				  gst_gl_effects_glow_step_one, effects);
   /* blur */
-  gst_gl_filter_render_to_target (filter, effects->midtexture[0],
-      effects->midtexture[1], gst_gl_effects_glow_step_two, effects);
-  gst_gl_filter_render_to_target (filter, effects->midtexture[1],
-      effects->midtexture[2], gst_gl_effects_glow_step_three, effects);
+  gst_gl_filter_render_to_target (filter, effects->midtexture[0], effects->midtexture[1],
+				  gst_gl_effects_glow_step_two, effects);
+  gst_gl_filter_render_to_target (filter, effects->midtexture[1], effects->midtexture[2],
+                                  gst_gl_effects_glow_step_three, effects);
   /* add blurred luma to intexture */
-  gst_gl_filter_render_to_target (filter, effects->midtexture[2],
-      effects->outtexture, gst_gl_effects_glow_step_four, effects);
+  gst_gl_filter_render_to_target (filter, effects->midtexture[2], effects->outtexture,
+                                  gst_gl_effects_glow_step_four, effects);
 }

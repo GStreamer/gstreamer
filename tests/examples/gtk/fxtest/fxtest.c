@@ -17,11 +17,10 @@ static gboolean
 expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 {
   GstXOverlay *overlay =
-      GST_X_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
-          GST_TYPE_X_OVERLAY));
+    GST_X_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
+                                             GST_TYPE_X_OVERLAY));
 #ifdef WIN32
-  gst_x_overlay_set_xwindow_id (overlay,
-      (gulong) GDK_WINDOW_HWND (widget->window));
+  gst_x_overlay_set_xwindow_id (overlay, (gulong)GDK_WINDOW_HWND(widget->window));
 #else
   gst_x_overlay_set_xwindow_id (overlay, GDK_WINDOW_XWINDOW (widget->window));
 #endif
@@ -30,7 +29,7 @@ expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
 }
 
 static void
-destroy_cb (GtkWidget * widget, GdkEvent * event, GstElement * pipeline)
+destroy_cb (GtkWidget *widget, GdkEvent *event, GstElement *pipeline)
 {
   g_message ("destroy callback");
 
@@ -112,10 +111,9 @@ main (gint argc, gchar * argv[])
 
   GOptionContext *context;
   GOptionEntry options[] = {
-    {"source-bin", 's', 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array,
-        "Use a custom source bin description (gst-launch style)", NULL}
-    ,
-    {NULL}
+    { "source-bin", 's', 0, G_OPTION_ARG_STRING_ARRAY, &source_desc_array,
+      "Use a custom source bin description (gst-launch style)", NULL },
+    { NULL }
   };
 
   g_thread_init (NULL);
@@ -129,23 +127,20 @@ main (gint argc, gchar * argv[])
     return -1;
   }
   g_option_context_free (context);
-
+  
   if (source_desc_array != NULL) {
     source_desc = g_strjoinv (" ", source_desc_array);
     g_strfreev (source_desc_array);
   }
   if (source_desc == NULL) {
-    source_desc =
-        g_strdup
-        ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
+    source_desc = g_strdup ("videotestsrc ! video/x-raw-rgb, width=352, height=288 ! identity");
   }
 
-  sourcebin =
-      gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
+  sourcebin = gst_parse_bin_from_description (g_strdup (source_desc), TRUE, &error);
   g_free (source_desc);
   if (error) {
-    g_print ("Error while parsing source bin description: %s\n",
-        GST_STR_NULL (error->message));
+    g_print ("Error while parsing source bin description: %s\n", 
+             GST_STR_NULL (error->message));
     return -1;
   }
 
@@ -168,9 +163,9 @@ main (gint argc, gchar * argv[])
   }
 
   g_signal_connect (G_OBJECT (window), "delete-event",
-      G_CALLBACK (destroy_cb), pipeline);
+                    G_CALLBACK (destroy_cb), pipeline);
   g_signal_connect (G_OBJECT (window), "destroy-event",
-      G_CALLBACK (destroy_cb), pipeline);
+                    G_CALLBACK (destroy_cb), pipeline);
 
   screen = gtk_drawing_area_new ();
 

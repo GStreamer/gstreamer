@@ -31,8 +31,7 @@
 #define W 320
 #define H 240
 
-struct GstGLClutterActor_
-{
+struct GstGLClutterActor_ {
   Window win;
   Window root;
   ClutterActor *texture;
@@ -42,45 +41,44 @@ struct GstGLClutterActor_
 typedef struct GstGLClutterActor_ GstGLClutterActor;
 
 static gboolean
-create_actor (GstGLClutterActor * actor)
-{
+create_actor (GstGLClutterActor *actor) {
   ClutterKnot knot[2];
   ClutterTimeline *timeline;
   ClutterEffectTemplate *effect_template;
 
-  actor->texture = g_object_new (CLUTTER_GLX_TYPE_TEXTURE_PIXMAP,
-      "window", actor->win, "automatic-updates", TRUE, NULL);
-  clutter_container_add_actor (CLUTTER_CONTAINER (actor->stage),
-      actor->texture);
-  clutter_actor_set_scale (actor->texture, 0.2, 0.2);
+  actor->texture = g_object_new (CLUTTER_GLX_TYPE_TEXTURE_PIXMAP, 
+			     "window", actor->win,
+			     "automatic-updates", TRUE, NULL);
+  clutter_container_add_actor (CLUTTER_CONTAINER (actor->stage), actor->texture);
+  clutter_actor_set_scale (actor->texture, 0.2 , 0.2);
   clutter_actor_set_opacity (actor->texture, 0);
-  clutter_actor_show (actor->texture);
+  clutter_actor_show (actor->texture);  
 
-  timeline =
-      clutter_timeline_new (120 /* frames */ , 50 /* frames per second. */ );
-  clutter_timeline_set_loop (timeline, TRUE);
-  clutter_timeline_start (timeline);
-
+  timeline = clutter_timeline_new(120 /* frames */, 50 /* frames per second. */);
+  clutter_timeline_set_loop(timeline, TRUE); 
+  clutter_timeline_start(timeline);
+  
   /* Instead of our custom callback, 
    * we could use a standard callback. For instance, CLUTTER_ALPHA_SINE_INC. 
    */
-  effect_template =
-      clutter_effect_template_new (timeline, CLUTTER_ALPHA_SINE_INC);
-
+  effect_template = 
+    clutter_effect_template_new (timeline, CLUTTER_ALPHA_SINE_INC);
+  
   knot[0].x = -10;
   knot[0].y = -10;
-  knot[1].x = 160;
-  knot[1].y = 120;
-
+  knot[1].x= 160;
+  knot[1].y= 120;
+ 
   // Move the actor along the path:
-  clutter_effect_path (effect_template, actor->texture, knot,
-      sizeof (knot) / sizeof (ClutterKnot), NULL, NULL);
+  clutter_effect_path (effect_template, actor->texture, knot, 
+		       sizeof(knot) / sizeof(ClutterKnot), NULL, NULL);
   clutter_effect_scale (effect_template, actor->texture, 1.0, 1.0, NULL, NULL);
-  clutter_effect_rotate (effect_template, actor->texture,
-      CLUTTER_Z_AXIS, 360.0, W / 2.0, H / 2.0, 0.0,
-      CLUTTER_ROTATE_CW, NULL, NULL);
-  clutter_effect_rotate (effect_template, actor->texture,
-      CLUTTER_X_AXIS, 360.0, 0.0, W / 4.0, 0.0, CLUTTER_ROTATE_CW, NULL, NULL);
+  clutter_effect_rotate (effect_template, actor->texture, 
+			 CLUTTER_Z_AXIS, 360.0, W/2.0, H/2.0, 0.0, 
+			 CLUTTER_ROTATE_CW, NULL, NULL);
+  clutter_effect_rotate (effect_template, actor->texture, 
+			 CLUTTER_X_AXIS, 360.0, 0.0, W/4.0, 0.0, 
+			 CLUTTER_ROTATE_CW, NULL, NULL); 
 
   // Also change the actor's opacity while moving it along the path:
   // (You would probably want to use a different ClutterEffectTemplate, 
@@ -90,7 +88,7 @@ create_actor (GstGLClutterActor * actor)
   g_object_unref (effect_template);
   g_object_unref (timeline);
 
-  return FALSE;
+   return FALSE;
 }
 
 static GstBusSyncReply
@@ -100,16 +98,15 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
   // ignore anything but 'prepare-xwindow-id' element messages
   if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
     return GST_BUS_PASS;
-
+  
   if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
     return GST_BUS_PASS;
-
+  
   g_debug ("CREATING WINDOW");
-
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-      actor->win);
+  
+  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)), actor->win); 
   clutter_threads_add_idle ((GSourceFunc) create_actor, actor);
-
+  
   gst_message_unref (message);
   return GST_BUS_DROP;
 }
@@ -117,8 +114,8 @@ create_window (GstBus * bus, GstMessage * message, gpointer data)
 int
 main (int argc, char *argv[])
 {
-  GstPipeline *pipeline;
-  GstBus *bus;
+  GstPipeline      *pipeline;
+  GstBus	   *bus;
   ClutterActor *stage;
   GstGLClutterActor *actor;
   Display *disp;
@@ -128,10 +125,10 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   disp = clutter_x11_get_default_display ();
-  if (!clutter_x11_has_composite_extension ()) {
+  if(!clutter_x11_has_composite_extension ()) {
     g_error ("XComposite extension missing");
   }
-
+  
 
   stage = clutter_stage_get_default ();
 //  clutter_actor_set_size (CLUTTER_ACTOR (stage), W*3+2, H);
@@ -145,10 +142,8 @@ main (int argc, char *argv[])
   XMapRaised (disp, actor->win);
   XSync (disp, FALSE);
 
-  pipeline =
-      GST_PIPELINE (gst_parse_launch
-      ("videotestsrc ! video/x-raw-rgb, width=320, height=240, framerate=(fraction)30/1 ! "
-          "glupload ! gleffects effect=twirl ! glimagesink", NULL));
+  pipeline = GST_PIPELINE (gst_parse_launch ("videotestsrc ! video/x-raw-rgb, width=320, height=240, framerate=(fraction)30/1 ! "
+                                             "glupload ! gleffects effect=twirl ! glimagesink", NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
@@ -158,10 +153,10 @@ main (int argc, char *argv[])
 
   clutter_actor_show_all (stage);
 
-  clutter_main ();
+  clutter_main();
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   g_object_unref (pipeline);
-
+  
   return 0;
 }

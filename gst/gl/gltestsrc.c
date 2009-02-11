@@ -101,8 +101,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
         vts_colors[i].B * (1 / 255.0f), 1.0f);
     glBegin (GL_QUADS);
     glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0 * (2.0f / 3.0f), 0);
-    glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f),
-        -1.0f + 2.0f * (2.0f / 3.0f), 0);
+    glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f), 0);
     glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f), -1.0f, 0);
     glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f, 0);
     glEnd ();
@@ -121,10 +120,8 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
         vts_colors[k].B * (1 / 255.0f), 1.0f);
     glBegin (GL_QUADS);
     glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f),
-        0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f),
-        0);
+    glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
+    glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f), 0);
     glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f), 0);
     glEnd ();
   }
@@ -145,8 +142,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
     glBegin (GL_QUADS);
     glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
     glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f),
-        0);
+    glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
     glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
     glEnd ();
   }
@@ -166,12 +162,11 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstGLBuffer * buffer, int w, int h)
         vts_colors[k].B * (1 / 255.0f), 1.0f);
     glBegin (GL_QUADS);
     glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)), -1.0 + 2.0f * 1, 0);
-    glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)),
-        -1.0f + 2.0f * 1, 0);
+    glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)), -1.0f + 2.0f * 1, 0);
     glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)),
         -1.0f + 2.0f * (3.0f / 4.0f), 0);
-    glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)),
-        -1.0f + 2.0f * (3.0f / 4.0f), 0);
+    glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)), -1.0f + 2.0f * (3.0f / 4.0f),
+        0);
     glEnd ();
   }
 

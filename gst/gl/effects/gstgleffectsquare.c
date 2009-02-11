@@ -21,45 +21,44 @@
 #include <gstgleffects.h>
 
 static void
-gst_gl_effects_square_callback (gint width, gint height, guint texture,
-    gpointer data)
+gst_gl_effects_square_callback (gint width, gint height, guint texture, gpointer data)
 {
-  GstGLEffects *effects = GST_GL_EFFECTS (data);
+  GstGLEffects* effects = GST_GL_EFFECTS (data);
 
   GstGLShader *shader;
-
+          
   shader = g_hash_table_lookup (effects->shaderstable, "square0");
-
+  
   if (!shader) {
     shader = gst_gl_shader_new ();
     g_hash_table_insert (effects->shaderstable, "square0", shader);
   }
-
-  g_return_if_fail (gst_gl_shader_compile_and_check (shader,
-          square_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE));
+  
+  g_return_if_fail (
+    gst_gl_shader_compile_and_check (shader, square_fragment_source,
+				     GST_GL_SHADER_FRAGMENT_SOURCE));
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
-
+  
   gst_gl_shader_use (shader);
 
   glActiveTexture (GL_TEXTURE0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-
+     
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
-
-  gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
+  
+  gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f); 
   gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
-
+  
   gst_gl_effects_draw_texture (effects, texture);
 }
 
 void
-gst_gl_effects_square (GstGLEffects * effects)
-{
+gst_gl_effects_square (GstGLEffects *effects) {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-  gst_gl_filter_render_to_target (filter, effects->intexture,
-      effects->outtexture, gst_gl_effects_square_callback, effects);
+  gst_gl_filter_render_to_target (filter, effects->intexture, effects->outtexture,
+				  gst_gl_effects_square_callback, effects);
 }
