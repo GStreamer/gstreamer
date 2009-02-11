@@ -76,26 +76,26 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
   GST_DEBUG_CATEGORY_INIT (gst_gl_overlay_debug, "gloverlay", 0, "gloverlay element");
 
 GST_BOILERPLATE_FULL (GstGLOverlay, gst_gl_overlay, GstGLFilter,
-		      GST_TYPE_GL_FILTER, DEBUG_INIT);
+    GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_overlay_set_property (GObject * object, guint prop_id,
-					 const GValue * value, GParamSpec * pspec);
+    const GValue * value, GParamSpec * pspec);
 static void gst_gl_overlay_get_property (GObject * object, guint prop_id,
-					 GValue * value, GParamSpec * pspec);
+    GValue * value, GParamSpec * pspec);
 
-static void gst_gl_overlay_init_resources (GstGLFilter* filter);
-static void gst_gl_overlay_reset_resources (GstGLFilter* filter);
+static void gst_gl_overlay_init_resources (GstGLFilter * filter);
+static void gst_gl_overlay_reset_resources (GstGLFilter * filter);
 
 static gboolean gst_gl_overlay_filter (GstGLFilter * filter,
-				       GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 
-static gboolean gst_gl_overlay_loader (GstGLFilter* filter);
+static gboolean gst_gl_overlay_loader (GstGLFilter * filter);
 
-static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
-  "Gstreamer OpenGL Overlay",
-  "Filter/Effect",
-  "Overlay GL video texture with a PNG image",
-  "Filippo Argiolas <filippo.argiolas@gmail.com>");
+static const GstElementDetails element_details =
+GST_ELEMENT_DETAILS ("Gstreamer OpenGL Overlay",
+    "Filter/Effect",
+    "Overlay GL video texture with a PNG image",
+    "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
 enum
 {
@@ -112,17 +112,17 @@ enum
 
 /* init resources that need a gl context */
 static void
-gst_gl_overlay_init_gl_resources (GstGLFilter *filter)
+gst_gl_overlay_init_gl_resources (GstGLFilter * filter)
 {
 //  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 }
 
 /* free resources that need a gl context */
 static void
-gst_gl_overlay_reset_gl_resources (GstGLFilter *filter)
+gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
-  
+
   glDeleteTextures (1, &overlay->pbuftexture);
 }
 
@@ -144,25 +144,26 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
   gobject_class->get_property = gst_gl_overlay_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_overlay_filter;
-  GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_overlay_init_gl_resources;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_overlay_reset_gl_resources;
+  GST_GL_FILTER_CLASS (klass)->display_init_cb =
+      gst_gl_overlay_init_gl_resources;
+  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
+      gst_gl_overlay_reset_gl_resources;
   GST_GL_FILTER_CLASS (klass)->onStart = gst_gl_overlay_init_resources;
   GST_GL_FILTER_CLASS (klass)->onStop = gst_gl_overlay_reset_resources;
 
   g_object_class_install_property (gobject_class,
-                                   PROP_LOCATION,
-                                   g_param_spec_string ("location",
-                                                        "Location of the image", 
-                                                        "Location of the image", 
-                                                        NULL, G_PARAM_READWRITE));
+      PROP_LOCATION,
+      g_param_spec_string ("location",
+          "Location of the image",
+          "Location of the image", NULL, G_PARAM_READWRITE));
   /*
-  g_object_class_install_property (gobject_class,
-                                   PROP_STRETCH,
-                                   g_param_spec_boolean ("stretch",
-                                                         "Stretch the image to texture size", 
-                                                         "Stretch the image to fit video texture size", 
-                                                         TRUE, G_PARAM_READWRITE));
-  */
+     g_object_class_install_property (gobject_class,
+     PROP_STRETCH,
+     g_param_spec_boolean ("stretch",
+     "Stretch the image to texture size", 
+     "Stretch the image to fit video texture size", 
+     TRUE, G_PARAM_READWRITE));
+   */
 }
 
 void
@@ -190,15 +191,16 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 
   glEnd ();
 
-  if (overlay->pbuftexture == 0) return;
+  if (overlay->pbuftexture == 0)
+    return;
 
 //  if (overlay->stretch) {
-    width = (gfloat) overlay->width;
-    height = (gfloat) overlay->height;
+  width = (gfloat) overlay->width;
+  height = (gfloat) overlay->height;
 //  }
 
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glEnable(GL_BLEND);
+  glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glEnable (GL_BLEND);
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
@@ -221,8 +223,7 @@ gst_gl_overlay_draw_texture (GstGLOverlay * overlay, GLuint tex)
 }
 
 static void
-gst_gl_overlay_init (GstGLOverlay * overlay, 
-                           GstGLOverlayClass * klass)
+gst_gl_overlay_init (GstGLOverlay * overlay, GstGLOverlayClass * klass)
 {
   overlay->location = NULL;
   overlay->pixbuf = NULL;
@@ -235,7 +236,7 @@ gst_gl_overlay_init (GstGLOverlay * overlay,
 }
 
 static void
-gst_gl_overlay_reset_resources (GstGLFilter* filter)
+gst_gl_overlay_reset_resources (GstGLFilter * filter)
 {
   // GstGLOverlay* overlay = GST_GL_OVERLAY(filter);
 }
@@ -244,21 +245,22 @@ static void
 gst_gl_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstGLOverlay *overlay = GST_GL_OVERLAY (object); 
+  GstGLOverlay *overlay = GST_GL_OVERLAY (object);
 
   switch (prop_id) {
-  case PROP_LOCATION:
-    if (overlay->location != NULL) g_free (overlay->location);
-    overlay->pbuf_has_changed = TRUE;
-    overlay->location = g_value_dup_string (value);
-    break;
+    case PROP_LOCATION:
+      if (overlay->location != NULL)
+        g_free (overlay->location);
+      overlay->pbuf_has_changed = TRUE;
+      overlay->location = g_value_dup_string (value);
+      break;
 /*  case PROP_STRETCH:
     overlay->stretch = g_value_get_boolean (value);
     break;
 */
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-    break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
@@ -269,21 +271,21 @@ gst_gl_overlay_get_property (GObject * object, guint prop_id,
   GstGLOverlay *overlay = GST_GL_OVERLAY (object);
 
   switch (prop_id) {
-  case PROP_LOCATION:
-    g_value_set_string (value, overlay->location);
-    break;
+    case PROP_LOCATION:
+      g_value_set_string (value, overlay->location);
+      break;
 /*  case PROP_STRETCH:
     g_value_set_boolean (value, overlay->stretch);
     break;
 */
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-    break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }
 
 static void
-gst_gl_overlay_init_resources (GstGLFilter* filter)
+gst_gl_overlay_init_resources (GstGLFilter * filter)
 {
 //  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 }
@@ -291,42 +293,42 @@ gst_gl_overlay_init_resources (GstGLFilter* filter)
 static void
 gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 {
-  GstGLOverlay* overlay = GST_GL_OVERLAY (stuff);
-  
+  GstGLOverlay *overlay = GST_GL_OVERLAY (stuff);
+
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 
   gst_gl_overlay_draw_texture (overlay, texture);
 }
 
-static void init_pixbuf_texture (GstGLDisplay *display, gpointer data)
+static void
+init_pixbuf_texture (GstGLDisplay * display, gpointer data)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (data);
-  
+
   if (overlay->pixbuf) {
 
     glDeleteTextures (1, &overlay->pbuftexture);
     glGenTextures (1, &overlay->pbuftexture);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-                  (gint)overlay->width, (gint)overlay->height, 0,
-                  GL_RGBA, GL_UNSIGNED_BYTE, overlay->pixbuf);
-  }
-  else
+        (gint) overlay->width, (gint) overlay->height, 0,
+        GL_RGBA, GL_UNSIGNED_BYTE, overlay->pixbuf);
+  } else
     display->isAlive = FALSE;
 }
 
 static gboolean
-gst_gl_overlay_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
-				GstGLBuffer* outbuf)
+gst_gl_overlay_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
+    GstGLBuffer * outbuf)
 {
-  GstGLOverlay* overlay = GST_GL_OVERLAY(filter);
+  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 
   if (overlay->pbuf_has_changed && (overlay->location != NULL)) {
 
     if (!gst_gl_overlay_loader (filter))
       overlay->pixbuf = NULL;
-    
+
     /* if loader failed then display is turned off */
     gst_gl_display_thread_add (filter->display, init_pixbuf_texture, overlay);
 
@@ -337,25 +339,25 @@ gst_gl_overlay_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
 
     overlay->pbuf_has_changed = FALSE;
   }
-  
+
   gst_gl_filter_render_to_target (filter, inbuf->texture, outbuf->texture,
-				  gst_gl_overlay_callback, overlay);
+      gst_gl_overlay_callback, overlay);
 
   return TRUE;
 }
 
-static void 
-user_warning_fn(png_structp png_ptr, png_const_charp warning_msg)
+static void
+user_warning_fn (png_structp png_ptr, png_const_charp warning_msg)
 {
-    g_warning("%s\n", warning_msg);
+  g_warning ("%s\n", warning_msg);
 }
 
 #define LOAD_ERROR(msg) { GST_WARNING ("unable to load %s: %s", overlay->location, msg); return FALSE; }
 
 static gboolean
-gst_gl_overlay_loader (GstGLFilter* filter)
+gst_gl_overlay_loader (GstGLFilter * filter)
 {
-  GstGLOverlay* overlay = GST_GL_OVERLAY(filter);
+  GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
 
   png_structp png_ptr;
   png_infop info_ptr;
@@ -372,60 +374,57 @@ gst_gl_overlay_loader (GstGLFilter* filter)
   if (!filter->display)
     return TRUE;
 
-  if ((fp = fopen(overlay->location, "rb")) == NULL)
+  if ((fp = fopen (overlay->location, "rb")) == NULL)
     LOAD_ERROR ("file not found");
 
-  png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+  png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
-  if (png_ptr == NULL)
-  {
-    fclose(fp);
+  if (png_ptr == NULL) {
+    fclose (fp);
     LOAD_ERROR ("failed to initialize the png_struct");
   }
 
   png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
 
-  info_ptr = png_create_info_struct(png_ptr);
-  if (info_ptr == NULL)
-  {
-    fclose(fp);
-    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+  info_ptr = png_create_info_struct (png_ptr);
+  if (info_ptr == NULL) {
+    fclose (fp);
+    png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
     LOAD_ERROR ("failed to initialize the memory for image information");
   }
 
-  png_init_io(png_ptr, fp);
+  png_init_io (png_ptr, fp);
 
-  png_set_sig_bytes(png_ptr, sig_read);
+  png_set_sig_bytes (png_ptr, sig_read);
 
-  png_read_info(png_ptr, info_ptr);
+  png_read_info (png_ptr, info_ptr);
 
-  png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-     &interlace_type, int_p_NULL, int_p_NULL);
+  png_get_IHDR (png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
+      &interlace_type, int_p_NULL, int_p_NULL);
 
-  if (color_type != PNG_COLOR_TYPE_RGB_ALPHA)
-  {
-    fclose(fp);
-    png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
+  if (color_type != PNG_COLOR_TYPE_RGB_ALPHA) {
+    fclose (fp);
+    png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
     LOAD_ERROR ("color type is not rgb");
   }
 
   overlay->width = width;
   overlay->height = height;
 
-  overlay->pixbuf = (guchar*) malloc ( sizeof(guchar) * width * height * 4 );
+  overlay->pixbuf = (guchar *) malloc (sizeof (guchar) * width * height * 4);
 
-  rows = (guchar**)malloc(sizeof(guchar*) * height);
+  rows = (guchar **) malloc (sizeof (guchar *) * height);
 
-  for (y = 0;  y < height; ++y)
-    rows[y] = (guchar*) (overlay->pixbuf + y * width * 4);
+  for (y = 0; y < height; ++y)
+    rows[y] = (guchar *) (overlay->pixbuf + y * width * 4);
 
-  png_read_image(png_ptr, rows);
+  png_read_image (png_ptr, rows);
 
-  free(rows);
+  free (rows);
 
-  png_read_end(png_ptr, info_ptr);
-  png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
-  fclose(fp);
+  png_read_end (png_ptr, info_ptr);
+  png_destroy_read_struct (&png_ptr, &info_ptr, png_infopp_NULL);
+  fclose (fp);
 
   return TRUE;
 }

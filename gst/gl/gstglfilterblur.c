@@ -66,45 +66,39 @@ GType gst_gl_glfilterblur_get_type (void);
 
 /* horizontal convolution */
 static const gchar *hconv9_fragment_source =
-"#extension GL_ARB_texture_rectangle : enable\n"
-"uniform sampler2DRect tex;"
-"uniform float norm_const;"
-"uniform float norm_offset;"
-"uniform float kernel[9];"
-"void main () {"
-"  float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);"
-"  vec2 texturecoord = gl_TexCoord[0].st;"
-"  int i;"
-"  vec4 sum = vec4 (0.0);"
-"  for (i = 0; i < 9; i++) { "
-"    if (kernel[i] != 0.0) {"
-"        vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s+offset[i], texturecoord.t)); "
-"        sum += neighbor * kernel[i]/norm_const; "
-"      }"
-"  }"
-"  gl_FragColor = sum + norm_offset;"
-"}";
+    "#extension GL_ARB_texture_rectangle : enable\n"
+    "uniform sampler2DRect tex;"
+    "uniform float norm_const;"
+    "uniform float norm_offset;"
+    "uniform float kernel[9];"
+    "void main () {"
+    "  float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);"
+    "  vec2 texturecoord = gl_TexCoord[0].st;"
+    "  int i;"
+    "  vec4 sum = vec4 (0.0);"
+    "  for (i = 0; i < 9; i++) { "
+    "    if (kernel[i] != 0.0) {"
+    "        vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s+offset[i], texturecoord.t)); "
+    "        sum += neighbor * kernel[i]/norm_const; "
+    "      }" "  }" "  gl_FragColor = sum + norm_offset;" "}";
 
 /* vertical convolution */
 static const gchar *vconv9_fragment_source =
-"#extension GL_ARB_texture_rectangle : enable\n"
-"uniform sampler2DRect tex;"
-"uniform float norm_const;"
-"uniform float norm_offset;"
-"uniform float kernel[9];"
-"void main () {"
-"  float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);"
-"  vec2 texturecoord = gl_TexCoord[0].st;"
-"  int i;"
-"  vec4 sum = vec4 (0.0);"
-"  for (i = 0; i < 9; i++) { "
-"    if (kernel[i] != 0.0) {"
-"        vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s, texturecoord.t+offset[i])); "
-"        sum += neighbor * kernel[i]/norm_const; "
-"      }"
-"  }"
-"  gl_FragColor = sum + norm_offset;"
-"}";
+    "#extension GL_ARB_texture_rectangle : enable\n"
+    "uniform sampler2DRect tex;"
+    "uniform float norm_const;"
+    "uniform float norm_offset;"
+    "uniform float kernel[9];"
+    "void main () {"
+    "  float offset[9] = float[9] (-4.0, -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0);"
+    "  vec2 texturecoord = gl_TexCoord[0].st;"
+    "  int i;"
+    "  vec4 sum = vec4 (0.0);"
+    "  for (i = 0; i < 9; i++) { "
+    "    if (kernel[i] != 0.0) {"
+    "        vec4 neighbor = texture2DRect(tex, vec2(texturecoord.s, texturecoord.t+offset[i])); "
+    "        sum += neighbor * kernel[i]/norm_const; "
+    "      }" "  }" "  gl_FragColor = sum + norm_offset;" "}";
 
 #define GST_CAT_DEFAULT gst_gl_filterblur_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -119,39 +113,44 @@ GST_ELEMENT_DETAILS ("Gstreamer OpenGL Blur",
   GST_DEBUG_CATEGORY_INIT (gst_gl_filterblur_debug, "glfilterblur", 0, "glfilterblur element");
 
 GST_BOILERPLATE_FULL (GstGLFilterBlur, gst_gl_filterblur, GstGLFilter,
-		      GST_TYPE_GL_FILTER, DEBUG_INIT);
+    GST_TYPE_GL_FILTER, DEBUG_INIT);
 
 static void gst_gl_filterblur_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_filterblur_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_gl_filter_filterblur_reset (GstGLFilter* filter);
-static void gst_gl_filterblur_draw_texture (GstGLFilterBlur * filterblur, GLuint tex);
+static void gst_gl_filter_filterblur_reset (GstGLFilter * filter);
+static void gst_gl_filterblur_draw_texture (GstGLFilterBlur * filterblur,
+    GLuint tex);
 
-static void gst_gl_filterblur_init_shader (GstGLFilter* filter);
+static void gst_gl_filterblur_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filterblur_filter (GstGLFilter * filter,
-                                           GstGLBuffer * inbuf, GstGLBuffer * outbuf);
-static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture, gpointer stuff);
-static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture, gpointer stuff);
+    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
+    gpointer stuff);
+static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
+    gpointer stuff);
 
 
 static void
-gst_gl_filterblur_init_resources (GstGLFilter *filter)
+gst_gl_filterblur_init_resources (GstGLFilter * filter)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   glGenTextures (1, &filterblur->midtexture);
-  glBindTexture(GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
-  glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-	       filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
+  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+      filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      GL_CLAMP_TO_EDGE);
 }
 
 static void
-gst_gl_filterblur_reset_resources (GstGLFilter *filter)
+gst_gl_filterblur_reset_resources (GstGLFilter * filter)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
@@ -176,14 +175,17 @@ gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
   gobject_class->get_property = gst_gl_filterblur_get_property;
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filterblur_filter;
-  GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_filterblur_init_resources;
-  GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_filterblur_reset_resources;
+  GST_GL_FILTER_CLASS (klass)->display_init_cb =
+      gst_gl_filterblur_init_resources;
+  GST_GL_FILTER_CLASS (klass)->display_reset_cb =
+      gst_gl_filterblur_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filterblur_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_filterblur_reset;
 }
 
 static void
-gst_gl_filterblur_init (GstGLFilterBlur * filterblur, GstGLFilterBlurClass * klass)
+gst_gl_filterblur_init (GstGLFilterBlur * filterblur,
+    GstGLFilterBlurClass * klass)
 {
   filterblur->shader0 = NULL;
   filterblur->shader1 = NULL;
@@ -191,9 +193,9 @@ gst_gl_filterblur_init (GstGLFilterBlur * filterblur, GstGLFilterBlurClass * kla
 }
 
 static void
-gst_gl_filter_filterblur_reset (GstGLFilter* filter)
+gst_gl_filter_filterblur_reset (GstGLFilter * filter)
 {
-  GstGLFilterBlur* filterblur = GST_GL_FILTERBLUR(filter);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (filter->display, filterblur->shader0);
@@ -229,15 +231,17 @@ gst_gl_filterblur_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_gl_filterblur_init_shader (GstGLFilter* filter)
+gst_gl_filterblur_init_shader (GstGLFilter * filter)
 {
-  GstGLFilterBlur* blur_filter = GST_GL_FILTERBLUR (filter);
+  GstGLFilterBlur *blur_filter = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, hconv9_fragment_source, &blur_filter->shader0);
+  gst_gl_display_gen_shader (filter->display, 0, hconv9_fragment_source,
+      &blur_filter->shader0);
 
   //blocking call, wait the opengl thread has compiled the shader
-  gst_gl_display_gen_shader (filter->display, 0, vconv9_fragment_source, &blur_filter->shader1);
+  gst_gl_display_gen_shader (filter->display, 0, vconv9_fragment_source,
+      &blur_filter->shader1);
 }
 
 static void
@@ -253,18 +257,18 @@ gst_gl_filterblur_draw_texture (GstGLFilterBlur * filterblur, GLuint tex)
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat)filter->width, 0.0);
+  glTexCoord2f ((gfloat) filter->width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat)filter->width, (gfloat)filter->height);
+  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat)filter->height);
+  glTexCoord2f (0.0, (gfloat) filter->height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
 }
 
 static void
-change_view (GstGLDisplay *display, gpointer data)
+change_view (GstGLDisplay * display, gpointer data)
 {
 //  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (data);
 
@@ -280,33 +284,35 @@ change_view (GstGLDisplay *display, gpointer data)
 }
 
 static gboolean
-gst_gl_filterblur_filter (GstGLFilter* filter, GstGLBuffer* inbuf,
-				GstGLBuffer* outbuf)
+gst_gl_filterblur_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
+    GstGLBuffer * outbuf)
 {
-  GstGLFilterBlur* filterblur = GST_GL_FILTERBLUR(filter);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
-  gst_gl_filter_render_to_target (filter, inbuf->texture, filterblur->midtexture,
-				  gst_gl_filterblur_hcallback, filterblur);
+  gst_gl_filter_render_to_target (filter, inbuf->texture,
+      filterblur->midtexture, gst_gl_filterblur_hcallback, filterblur);
 
   gst_gl_display_thread_add (filter->display, change_view, filterblur);
 
-  gst_gl_filter_render_to_target (filter, filterblur->midtexture, outbuf->texture,
-				  gst_gl_filterblur_vcallback, filterblur);
+  gst_gl_filter_render_to_target (filter, filterblur->midtexture,
+      outbuf->texture, gst_gl_filterblur_vcallback, filterblur);
 
   return TRUE;
 }
 
 static void
-gst_gl_filterblur_hcallback (gint width, gint height, guint texture, gpointer stuff)
+gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
+    gpointer stuff)
 {
-  GstGLFilterBlur* filterblur = GST_GL_FILTERBLUR (stuff);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (stuff);
 
   /* hard coded kernel, it could be easily generated at runtime with a
    * property to change standard deviation */
   gfloat gauss_kernel[9] = {
     0.026995f, 0.064759f, 0.120985f,
     0.176033f, 0.199471f, 0.176033f,
-    0.120985f, 0.064759f, 0.026995f };
+    0.120985f, 0.064759f, 0.026995f
+  };
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -320,7 +326,8 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture, gpointer st
 
   gst_gl_shader_set_uniform_1i (filterblur->shader0, "tex", 1);
 
-  gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 9, gauss_kernel);
+  gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 9,
+      gauss_kernel);
   gst_gl_shader_set_uniform_1f (filterblur->shader0, "norm_const", 0.977016f);
   gst_gl_shader_set_uniform_1f (filterblur->shader0, "norm_offset", 0.0f);
 
@@ -329,16 +336,18 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture, gpointer st
 
 
 static void
-gst_gl_filterblur_vcallback (gint width, gint height, guint texture, gpointer stuff)
+gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
+    gpointer stuff)
 {
-  GstGLFilterBlur* filterblur = GST_GL_FILTERBLUR (stuff);
+  GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (stuff);
 
   /* hard coded kernel, it could be easily generated at runtime with a
    * property to change standard deviation */
   gfloat gauss_kernel[9] = {
     0.026995f, 0.064759f, 0.120985f,
     0.176033f, 0.199471f, 0.176033f,
-    0.120985f, 0.064759f, 0.026995f };
+    0.120985f, 0.064759f, 0.026995f
+  };
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -352,7 +361,8 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture, gpointer st
 
   gst_gl_shader_set_uniform_1i (filterblur->shader1, "tex", 1);
 
-  gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 9, gauss_kernel);
+  gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 9,
+      gauss_kernel);
   gst_gl_shader_set_uniform_1f (filterblur->shader1, "norm_const", 0.977016f);
   gst_gl_shader_set_uniform_1f (filterblur->shader1, "norm_offset", 0.0f);
 

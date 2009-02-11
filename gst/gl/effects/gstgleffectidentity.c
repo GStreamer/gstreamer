@@ -21,9 +21,10 @@
 #include <gstgleffects.h>
 
 static void
-gst_gl_effects_identity_callback (gint width, gint height, guint texture, gpointer data)
+gst_gl_effects_identity_callback (gint width, gint height, guint texture,
+    gpointer data)
 {
-  GstGLEffects* effects = GST_GL_EFFECTS (data);
+  GstGLEffects *effects = GST_GL_EFFECTS (data);
 
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
@@ -32,9 +33,10 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture, gpoint
 }
 
 void
-gst_gl_effects_identity (GstGLEffects *effects) {
+gst_gl_effects_identity (GstGLEffects * effects)
+{
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-  gst_gl_filter_render_to_target (filter, effects->intexture, effects->outtexture,
-				  gst_gl_effects_identity_callback, effects);
+  gst_gl_filter_render_to_target (filter, effects->intexture,
+      effects->outtexture, gst_gl_effects_identity_callback, effects);
 }
