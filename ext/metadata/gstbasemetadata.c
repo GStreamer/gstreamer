@@ -602,6 +602,10 @@ gst_base_metadata_parse (GstBaseMetadata * filter, const guint8 * buf,
       GST_ELEMENT_ERROR (filter, STREAM, TYPE_NOT_FOUND, (NULL),
           ("Only jpeg and png are supported"));
       goto done;
+    } else {
+      GST_ELEMENT_ERROR (filter, STREAM, FAILED, (NULL),
+          ("Failed to parse stream."));
+      goto done;
     }
   } else if (ret == META_PARSING_NEED_MORE_DATA) {
     filter->need_more_data = TRUE;
@@ -1143,6 +1147,7 @@ gst_base_metadata_calculate_offsets (GstBaseMetadata * base)
 
   if (base->state != MT_STATE_PARSED) {
     ret = FALSE;
+    GST_ELEMENT_ERROR (base, STREAM, FAILED, (NULL), ("Invalid state."));
     goto done;
   }
 
