@@ -779,6 +779,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       etrack->handler = mxf_essence_element_handler_find (track);
       if (!etrack->handler) {
         gchar essence_container[48];
+        gchar essence_compression[48];
         gchar *name;
 
         GST_WARNING_OBJECT (demux,
@@ -788,12 +789,39 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
             essence_container);
 
         if (track->parent.type == MXF_METADATA_TRACK_PICTURE_ESSENCE) {
-          name = g_strdup_printf ("video/x-mxf-%s", essence_container);
+          if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+                  parent.descriptor[0]))
+            mxf_ul_to_string (&MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
+                (track->parent.descriptor[0])->picture_essence_coding,
+                essence_compression);
+
+          name =
+              g_strdup_printf ("video/x-mxf-%s-%s", essence_container,
+              essence_compression);
         } else if (track->parent.type == MXF_METADATA_TRACK_SOUND_ESSENCE) {
-          name = g_strdup_printf ("audio/x-mxf-%s", essence_container);
+          if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+                  parent.descriptor[0]))
+            mxf_ul_to_string (&MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR
+                (track->parent.descriptor[0])->sound_essence_compression,
+                essence_compression);
+
+          name =
+              g_strdup_printf ("audio/x-mxf-%s-%s", essence_container,
+              essence_compression);
+        } else if (track->parent.type == MXF_METADATA_TRACK_DATA_ESSENCE) {
+          if (MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (track->
+                  parent.descriptor[0]))
+            mxf_ul_to_string (&MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR
+                (track->parent.descriptor[0])->data_essence_compression,
+                essence_compression);
+
+          name =
+              g_strdup_printf ("application/x-mxf-%s-%s", essence_container,
+              essence_compression);
         } else {
-          name = g_strdup_printf ("application/x-mxf-%s", essence_container);
+          g_assert_not_reached ();
         }
+
         caps = gst_caps_new_simple (name, NULL);
         g_free (name);
       } else {
