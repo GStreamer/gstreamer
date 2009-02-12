@@ -353,6 +353,9 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       bpp = depth = 8;
       endianness = G_BYTE_ORDER;
       break;
+    case PIX_FMT_V308:
+      fmt = GST_MAKE_FOURCC ('V', '3', '0', '8');
+      break;
     case PIX_FMT_AYUV4444:
       fmt = GST_MAKE_FOURCC ('A', 'Y', 'U', 'V');
       break;
@@ -614,6 +617,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('Y', 'V', 'U', '9'):
           context->pix_fmt = PIX_FMT_YVU410P;
           break;
+        case GST_MAKE_FOURCC ('V', '3', '0', '8'):
+          context->pix_fmt = PIX_FMT_V308;
+          break;
         case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
           context->pix_fmt = PIX_FMT_AYUV4444;
           break;
@@ -851,6 +857,14 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_YUV422:
     case PIX_FMT_UYVY422:
       stride = GST_ROUND_UP_4 (width * 2);
+      size = stride * height;
+      picture->data[0] = ptr;
+      picture->data[1] = NULL;
+      picture->data[2] = NULL;
+      picture->linesize[0] = stride;
+      return size;
+    case PIX_FMT_V308:
+      stride = GST_ROUND_UP_4 (width * 3);
       size = stride * height;
       picture->data[0] = ptr;
       picture->data[1] = NULL;

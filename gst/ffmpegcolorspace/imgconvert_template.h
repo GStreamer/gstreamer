@@ -1300,6 +1300,58 @@ static void rgb24_to_ayuv4444(AVPicture *dst, const AVPicture *src,
         d += dst_wrap;
     }
 }
+
+static void v308_to_rgb24(AVPicture *dst, const AVPicture *src,
+                             int width, int height)
+{
+    uint8_t *s, *d, *d1, *s1;
+    int w, y, cb, cr, r_add, g_add, b_add;
+    uint8_t *cm = cropTbl + MAX_NEG_CROP;
+    unsigned int r, g, b;
+
+    d = dst->data[0];
+    s = src->data[0];
+    for(;height > 0; height --) {
+        d1 = d;
+        s1 = s;
+        for(w = width; w > 0; w--) {
+            YUV_TO_RGB1_CCIR(s1[1], s1[2]);
+
+            YUV_TO_RGB2_CCIR(r, g, b, s1[0]);
+            RGB_OUT(d1, r, g, b);
+            d1 += BPP;
+            s1 += 3;
+        }
+        d += dst->linesize[0];
+        s += src->linesize[0];
+    }
+}
+
+static void rgb24_to_v308(AVPicture *dst, const AVPicture *src,
+                             int width, int height)
+{
+    int src_wrap, dst_wrap, x, y;
+    int r, g, b;
+    uint8_t *d;
+    const uint8_t *p;
+
+    src_wrap = src->linesize[0] - width * BPP;
+    dst_wrap = dst->linesize[0] - width * 3;
+    d = dst->data[0];
+    p = src->data[0];
+    for(y=0;y<height;y++) {
+        for(x=0;x<width;x++) {
+            RGB_IN(r, g, b, p);
+            d[0] = RGB_TO_Y_CCIR(r, g, b);
+            d[1] = RGB_TO_U_CCIR(r, g, b, 0);
+            d[2] = RGB_TO_V_CCIR(r, g, b, 0);
+            p += BPP;
+            d += 3;
+        }
+        p += src_wrap;
+        d += dst_wrap;
+    }
+}
 #endif /* FMT_RGB24 */
 
 #if defined(FMT_RGB24) || defined(FMT_RGBA32)

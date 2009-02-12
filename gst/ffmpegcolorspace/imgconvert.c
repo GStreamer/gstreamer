@@ -130,6 +130,17 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         /* .y_chroma_shift = */ 0,
         /* .depth          = */ 8,
       },
+  /* [PIX_FMT_V308] = */ {
+        /* .format         = */ PIX_FMT_V308,
+        /* .name           = */ "v308",
+        /* .nb_channels    = */ 1,
+        /* .color_type     = */ FF_COLOR_YUV,
+        /* .pixel_type     = */ FF_PIXEL_PACKED,
+        /* .is_alpha       = */ 0,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth          = */ 8,
+      },
   /* [PIX_FMT_YUV410P] = */ {
         /* .format         = */ PIX_FMT_YUV410P,
         /* .name           = */ "yuv410p",
@@ -2182,6 +2193,7 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_RGB24, PIX_FMT_YUVJ420P, rgb24_to_yuvj420p},
   {PIX_FMT_RGB24, PIX_FMT_YUVJ444P, rgb24_to_yuvj444p},
   {PIX_FMT_RGB24, PIX_FMT_AYUV4444, rgb24_to_ayuv4444},
+  {PIX_FMT_RGB24, PIX_FMT_V308, rgb24_to_v308},
 
   {PIX_FMT_RGB32, PIX_FMT_RGB24, rgb32_to_rgb24},
   {PIX_FMT_RGB32, PIX_FMT_RGB555, rgba32_to_rgb555},
@@ -2303,9 +2315,10 @@ static ConvertEntry convert_table[] = {
 
   {PIX_FMT_UYVY411, PIX_FMT_YUV411P, uyvy411_to_yuv411p},
 
-  {PIX_FMT_AYUV4444, PIX_FMT_RGBA32, ayuv4444_to_rgba32},
+  {PIX_FMT_V308, PIX_FMT_RGB24, v308_to_rgb24},
 
-  {PIX_FMT_AYUV4444, PIX_FMT_RGB24, ayuv4444_to_rgb24}
+  {PIX_FMT_AYUV4444, PIX_FMT_RGBA32, ayuv4444_to_rgba32},
+  {PIX_FMT_AYUV4444, PIX_FMT_RGB24, ayuv4444_to_rgb24},
 };
 
 static ConvertEntry *
@@ -2766,6 +2779,7 @@ deinterlace_line (uint8_t * dst,
   }
 #endif
 }
+
 static void
 deinterlace_line_inplace (uint8_t * lum_m4, uint8_t * lum_m3, uint8_t * lum_m2,
     uint8_t * lum_m1, uint8_t * lum, int size)
