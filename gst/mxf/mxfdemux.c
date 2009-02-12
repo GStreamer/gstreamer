@@ -38,6 +38,7 @@
  *     be generalized/simplified
  *   - Seeking support: Use IndexTableSegments
  *   - Handle timecode tracks correctly (where is this documented?)
+ *   - Handle drop-frame field of timecode tracks
  *   - Handle Generic container system items
  *   - Implement correct support for clip-wrapped essence elements.
  *   - Post structural metadata and descriptive metadata trees as a message on the bus
