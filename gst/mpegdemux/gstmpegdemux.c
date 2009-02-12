@@ -2728,6 +2728,7 @@ gst_flups_demux_change_state (GstElement * element, GstStateChange transition)
       gst_flups_demux_reset_psm (demux);
       gst_segment_init (&demux->sink_segment, GST_FORMAT_UNDEFINED);
       gst_segment_init (&demux->src_segment, GST_FORMAT_TIME);
+      gst_flups_demux_flush (demux);
       break;
     default:
       break;
