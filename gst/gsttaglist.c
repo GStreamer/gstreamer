@@ -156,6 +156,12 @@ _gst_tag_initialize (void)
       _
       ("Origin of media as a URI (location, where the original of the file or stream is hosted)"),
       gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_HOMEPAGE, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("homepage"),
+      _
+      ("Homepage for this media (i.e. artist or movie homepage)"),
+      gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_DESCRIPTION, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("description"), _("short text describing the content of the data"),
       gst_tag_merge_strings_with_comma);

@@ -470,6 +470,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  */
 #define GST_TAG_LOCATION               "location"
 /**
+ * GST_TAG_HOMEPAGE:
+ *
+ * Homepage for this media (i.e. artist or movie homepage) (string)
+ *
+ * Since: 0.10.23
+ */
+#define GST_TAG_HOMEPAGE               "homepage"
+/**
  * GST_TAG_DESCRIPTION:
  *
  * short text describing the content of the data (string)
