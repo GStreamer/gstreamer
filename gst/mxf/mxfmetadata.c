@@ -487,7 +487,7 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, GHashTable * metadata)
   for (i = 0; i < self->n_identifications; i++) {
     current = g_hash_table_lookup (metadata, &self->identifications_uids[i]);
     if (current && MXF_IS_METADATA_IDENTIFICATION (current)) {
-      if (mxf_metadata_base_resolve (m, metadata))
+      if (mxf_metadata_base_resolve (current, metadata))
         self->identifications[i] = MXF_METADATA_IDENTIFICATION (current);
     }
     current = NULL;
