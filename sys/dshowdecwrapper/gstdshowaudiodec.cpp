@@ -726,13 +726,6 @@ dshowaudiodec_set_input_format (GstDshowAudioDec *adec, GstCaps *caps)
       mp3format->nBlockSize = 1;
       mp3format->nFramesPerBlock = 1;
       mp3format->nCodecDelay = 0;
-
-      /* The XP decoder also has problems with some MP3 frames. If it tries
-       * to decode one, then forever after it outputs silence.
-       * If we recognise such a frame, just skip decoding it.
-       */
-     if (adec->decoder_is_xp_mp3)
-        adec->check_mp3_frames = TRUE;
     }
     else {
       format = (WAVEFORMATEX *)g_malloc0 (size);
