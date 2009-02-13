@@ -124,6 +124,12 @@ struct _GstRTSPMedia {
 
   /* the pipeline for the media */
   GstElement   *pipeline;
+  GSource      *source;
+  guint         id;
+
+  gboolean      is_live;
+  gboolean      buffering;
+  GstState      target_state;
 
   /* RTP session manager */
   GstElement   *rtpbin;
@@ -135,8 +141,24 @@ struct _GstRTSPMedia {
   GstRTSPTimeRange range;
 };
 
+/**
+ * GstRTSPMediaClass:
+ * @context: the main context for dispatching messages
+ * @loop: the mainloop for message.
+ * @thread: the thread dispatching messages.
+ * @handle_message: handle a message
+ *
+ * The RTSP media class
+ */
 struct _GstRTSPMediaClass {
   GObjectClass  parent_class;
+
+  /* thread for the mainloop */
+  GMainContext *context;
+  GMainLoop    *loop;
+  GThread      *thread;
+
+  gboolean     (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
 };
 
 GType                 gst_rtsp_media_get_type         (void);

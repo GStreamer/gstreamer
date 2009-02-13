@@ -77,7 +77,6 @@ struct _GstRTSPMediaFactory {
  *       pay%d to create the streams.
  * @configure: configure the media created with @construct. The default
  *       implementation will configure the 'shared' property of the media.
- * @handle_message: Handle a bus message for @media created from @factory.
  *
  * The #GstRTSPMediaFactory class structure.
  */
@@ -89,9 +88,6 @@ struct _GstRTSPMediaFactoryClass {
   GstElement *      (*get_element)    (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   GstRTSPMedia *    (*construct)      (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   void              (*configure)      (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
-
-  void              (*handle_message) (GstRTSPMediaFactory *factory, GstRTSPMedia *media, 
-                                       GstMessage *message);
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);
