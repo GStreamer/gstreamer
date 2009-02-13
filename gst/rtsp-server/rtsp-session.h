@@ -119,7 +119,8 @@ guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *se
 
 /* session timeout stuff */
 void                   gst_rtsp_session_touch                (GstRTSPSession *session);
-gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session);
+gint                   gst_rtsp_session_next_timeout         (GstRTSPSession *session, GTimeVal *now);
+gboolean               gst_rtsp_session_is_expired           (GstRTSPSession *session, GTimeVal *now);
 
 /* handle media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_manage_media         (GstRTSPSession *sess,

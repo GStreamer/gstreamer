@@ -400,30 +400,52 @@ gst_rtsp_session_touch (GstRTSPSession *session)
 }
 
 /**
+ * gst_rtsp_session_next_timeout:
+ * @session: a #GstRTSPSession
+ * @now: the current system time
+ *
+ * Get the amount of milliseconds till the session will expire.
+ *
+ * Returns: the amount of milliseconds since the session will time out.
+ */
+gint
+gst_rtsp_session_next_timeout (GstRTSPSession *session, GTimeVal *now)
+{
+  gint res;
+  GstClockTime last_access, now_ns;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), -1);
+  g_return_val_if_fail (now != NULL, -1);
+
+  last_access = GST_TIMEVAL_TO_TIME (session->last_access);
+  /* add timeout */
+  last_access += session->timeout * GST_SECOND;
+
+  now_ns = GST_TIMEVAL_TO_TIME (*now);
+
+  if (last_access > now_ns) 
+    res =  GST_TIME_AS_MSECONDS (last_access - now_ns);
+  else
+    res =  0;
+
+  return res;
+}
+
+/**
  * gst_rtsp_session_is_expired:
  * @session: a #GstRTSPSession
+ * @now: the current system time
  *
  * Check if @session timeout out. 
  *
  * Returns: %TRUE if @session timed out
  */
 gboolean
-gst_rtsp_session_is_expired (GstRTSPSession *session)
+gst_rtsp_session_is_expired (GstRTSPSession *session, GTimeVal *now)
 {
   gboolean res;
-  GstClockTime last_access, now_ns;
-  GTimeVal now;
 
-  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), FALSE);
-
-  last_access = GST_TIMEVAL_TO_TIME (session->last_access);
-  /* add timeout */
-  last_access += session->timeout * GST_SECOND;
-
-  g_get_current_time (&now);
-  now_ns = GST_TIMEVAL_TO_TIME (now);
-
-  res = now_ns > last_access;
+  res = (gst_rtsp_session_next_timeout (session, now) == 0);
 
   return res;
 }
