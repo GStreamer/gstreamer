@@ -300,7 +300,8 @@ not_negotiated:
 alloc_failed:
   {
     gst_buffer_unref (buffer);
-    GST_ERROR_OBJECT (alawdec, "pad alloc failed");
+    GST_DEBUG_OBJECT (alawdec, "pad alloc failed %d (%s)", ret,
+        gst_flow_get_name (ret));
     return ret;
   }
 }

@@ -264,7 +264,8 @@ not_negotiated:
   }
 alloc_failed:
   {
-    GST_ERROR_OBJECT (mulawdec, "pad alloc failed");
+    GST_DEBUG_OBJECT (mulawdec, "pad alloc failed %d (%s)", ret,
+        gst_flow_get_name (ret));
     gst_buffer_unref (buffer);
     return ret;
   }
