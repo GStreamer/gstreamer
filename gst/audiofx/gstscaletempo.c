@@ -342,7 +342,7 @@ reinit_buffers (GstScaletempo * scaletempo)
     p->buf_overlap = g_realloc (p->buf_overlap, p->bytes_overlap);
     p->table_blend = g_realloc (p->table_blend, p->samples_overlap * 4);        /* sizeof (gint32|gfloat) */
     if (p->bytes_overlap > prev_overlap) {
-      memset (p->buf_overlap + prev_overlap, 0,
+      memset ((guint8 *) p->buf_overlap + prev_overlap, 0,
           p->bytes_overlap - prev_overlap);
     }
     if (p->use_int) {
@@ -384,7 +384,7 @@ reinit_buffers (GstScaletempo * scaletempo)
       gint32 n = 8589934588LL / (t * t);        /* 4 * (2^31 - 1) / t^2 */
       gint32 *pw;
 
-      memset (p->buf_pre_corr + bytes_pre_corr, 0, UNROLL_PADDING);
+      memset ((guint8 *) p->buf_pre_corr + bytes_pre_corr, 0, UNROLL_PADDING);
       pw = p->table_window;
       for (i = 1; i < frames_overlap; i++) {
         gint32 v = (i * (t - i) * n) >> 15;
