@@ -289,7 +289,7 @@ no_prepare:
 
 /* Get the session or NULL when there was no session */
 static GstRTSPSession *
-ensure_session (GstRTSPClient *client, GstRTSPMessage *request)
+find_session (GstRTSPClient *client, GstRTSPMessage *request)
 {
   GstRTSPResult res;
   GstRTSPSession *session;
@@ -314,30 +314,26 @@ ensure_session (GstRTSPClient *client, GstRTSPMessage *request)
   /* ERRORS */
 no_pool:
   {
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, request);
     return NULL;
   }
 session_not_found:
   {
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, request);
     return NULL;
   }
 service_unavailable:
   {
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, request);
     return NULL;
   }
 }
 
 static gboolean
-handle_teardown_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
+handle_teardown_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *session, GstRTSPMessage *request)
 {
   GstRTSPSessionMedia *media;
-  GstRTSPSession *session;
   GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
 
-  if (!(session = ensure_session (client, request)))
+  if (!session)
     goto no_session;
 
   /* get a handle to the configuration of the media in the session */
@@ -359,14 +355,12 @@ handle_teardown_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
 
   send_response (client, session, &response);
 
-  g_object_unref (session);
-
   return FALSE;
 
   /* ERRORS */
 no_session:
   {
-    /* error was sent already */
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, request);
     return FALSE;
   }
 not_found:
@@ -377,14 +371,13 @@ not_found:
 }
 
 static gboolean
-handle_pause_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
+handle_pause_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *session, GstRTSPMessage *request)
 {
   GstRTSPSessionMedia *media;
-  GstRTSPSession *session;
   GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
 
-  if (!(session = ensure_session (client, request)))
+  if (!session)
     goto no_session;
 
   /* get a handle to the configuration of the media in the session */
@@ -407,34 +400,31 @@ handle_pause_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
 
   /* the state is now READY */
   media->state = GST_RTSP_STATE_READY;
-  g_object_unref (session);
 
   return FALSE;
 
   /* ERRORS */
 no_session:
   {
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, request);
     return FALSE;
   }
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
-    g_object_unref (session);
     return FALSE;
   }
 invalid_state:
   {
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, request);
-    g_object_unref (session);
     return FALSE;
   }
 }
 
 static gboolean
-handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
+handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *session, GstRTSPMessage *request)
 {
   GstRTSPSessionMedia *media;
-  GstRTSPSession *session;
   GstRTSPMessage response = { 0 };
   GstRTSPStatusCode code;
   GString *rtpinfo;
@@ -442,7 +432,7 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
   guint timestamp, seqnum;
   gchar *str;
 
-  if (!(session = ensure_session (client, request)))
+  if (!session)
     goto no_session;
 
   /* get a handle to the configuration of the media in the session */
@@ -494,7 +484,6 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
   gst_rtsp_session_media_play (media);
 
   media->state = GST_RTSP_STATE_PLAYING;
-  g_object_unref (session);
 
   return FALSE;
 
@@ -507,27 +496,23 @@ no_session:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
-    g_object_unref (session);
     return FALSE;
   }
 invalid_state:
   {
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, request);
-    g_object_unref (session);
     return FALSE;
   }
 }
 
 static gboolean
-handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
+handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *session, GstRTSPMessage *request)
 {
   GstRTSPResult res;
-  gchar *sessid;
   gchar *transport;
   gchar **transports;
   gboolean have_transport;
   GstRTSPTransport *ct, *st;
-  GstRTSPSession *session;
   gint i;
   GstRTSPLowerTrans supported;
   GstRTSPMessage response = { 0 };
@@ -597,14 +582,8 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   g_free (ct->destination);
   ct->destination = g_strdup (inet_ntoa (client->address.sin_addr));
 
-  /* a setup request creates a session for a client, check if the client already
-   * sent a session id to us */
-  res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);
-  if (res == GST_RTSP_OK) {
-    /* we had a session in the request, find it again */
-    if (!(session = gst_rtsp_session_pool_find (client->session_pool, sessid)))
-      goto session_not_found;
-
+  if (session) {
+    g_object_ref (session);
     /* get a handle to the configuration of the media in the session, this can
      * return NULL if this is a new url to manage in this session. */
     media = gst_rtsp_session_get_media (session, uri);
@@ -669,7 +648,6 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
       media->state = GST_RTSP_STATE_READY;
       break;
   }
-
   g_object_unref (session);
 
   return TRUE;
@@ -683,17 +661,14 @@ bad_request:
 not_found:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
+    g_object_unref (session);
     return FALSE;
   }
 no_stream:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, request);
     g_object_unref (media);
-    return FALSE;
-  }
-session_not_found:
-  {
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, request);
+    g_object_unref (session);
     return FALSE;
   }
 no_transport:
@@ -721,7 +696,7 @@ service_unavailable:
 
 /* for the describe we must generate an SDP */
 static gboolean
-handle_describe_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
+handle_describe_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *session, GstRTSPMessage *request)
 {
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
@@ -787,7 +762,7 @@ no_sdp:
 }
 
 static void
-handle_options_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *request)
+handle_options_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *session, GstRTSPMessage *request)
 {
   GstRTSPMessage response = { 0 };
   GstRTSPMethod options;
@@ -852,6 +827,7 @@ handle_client (GstRTSPClient *client)
 
   while (TRUE) {
     GTimeVal timeout;
+    GstRTSPSession *session;
 
     timeout.tv_sec = client->timeout;
     timeout.tv_usec = 0;
@@ -886,25 +862,28 @@ handle_client (GstRTSPClient *client)
     /* sanitize the uri */
     santize_uri (uri);
 
+    /* get the session if there is any */
+    session = find_session (client, &request);
+
     /* now see what is asked and dispatch to a dedicated handler */
     switch (method) {
       case GST_RTSP_OPTIONS:
-        handle_options_request (client, uri, &request);
+        handle_options_request (client, uri, session, &request);
         break;
       case GST_RTSP_DESCRIBE:
-        handle_describe_request (client, uri, &request);
+        handle_describe_request (client, uri, session, &request);
         break;
       case GST_RTSP_SETUP:
-        handle_setup_request (client, uri, &request);
+        handle_setup_request (client, uri, session, &request);
         break;
       case GST_RTSP_PLAY:
-        handle_play_request (client, uri, &request);
+        handle_play_request (client, uri, session, &request);
         break;
       case GST_RTSP_PAUSE:
-        handle_pause_request (client, uri, &request);
+        handle_pause_request (client, uri, session, &request);
         break;
       case GST_RTSP_TEARDOWN:
-        handle_teardown_request (client, uri, &request);
+        handle_teardown_request (client, uri, session, &request);
         break;
       case GST_RTSP_ANNOUNCE:
       case GST_RTSP_GET_PARAMETER:
@@ -918,6 +897,8 @@ handle_client (GstRTSPClient *client)
         send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &request);
         break;
     }
+    if (session)
+      g_object_unref (session);
     gst_rtsp_url_free (uri);
   }
   g_object_unref (client);
