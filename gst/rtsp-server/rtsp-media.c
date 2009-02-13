@@ -77,6 +77,9 @@ gst_rtsp_media_init (GstRTSPMedia * media)
 static void
 gst_rtsp_media_stream_free (GstRTSPMediaStream *stream)
 {
+  if (stream->session)
+    g_object_unref (stream->session);
+
   if (stream->caps)
     gst_caps_unref (stream->caps);
 
@@ -421,6 +424,36 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
   g_free (capsstr);
 }
 
+static void
+on_new_ssrc (GObject *session, GObject *source, GstRTSPMedia *media)
+{
+  g_message ("%p: new source %p", media, source);
+}
+
+static void
+on_ssrc_active (GObject *session, GObject *source, GstRTSPMedia *media)
+{
+  g_message ("%p: source %p is active", media, source);
+}
+
+static void
+on_bye_ssrc (GObject *session, GObject *source, GstRTSPMedia *media)
+{
+  g_message ("%p: source %p bye", media, source);
+}
+
+static void
+on_bye_timeout (GObject *session, GObject *source, GstRTSPMedia *media)
+{
+  g_message ("%p: source %p bye timeout", media, source);
+}
+
+static void
+on_timeout (GObject *session, GObject *source, GstRTSPMedia *media)
+{
+  g_message ("%p: source %p timeout", media, source);
+}
+
 /* prepare the pipeline objects to handle @stream in @media */
 static gboolean
 setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
@@ -448,6 +481,21 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
   name = g_strdup_printf ("recv_rtcp_sink_%d", idx);
   stream->recv_rtcp_sink = gst_element_get_request_pad (media->rtpbin, name);
   g_free (name);
+
+  /* get the session */
+  g_signal_emit_by_name (media->rtpbin, "get-internal-session", idx,
+		  &stream->session);
+
+  g_signal_connect (stream->session, "on-new-ssrc", (GCallback) on_new_ssrc,
+      media);
+  g_signal_connect (stream->session, "on-ssrc-active", (GCallback) on_ssrc_active,
+      media);
+  g_signal_connect (stream->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
+      media);
+  g_signal_connect (stream->session, "on-bye-timeout", (GCallback) on_bye_timeout,
+      media);
+  g_signal_connect (stream->session, "on-timeout", (GCallback) on_timeout,
+      media);
 
   /* link the RTP pad to the session manager */
   gst_pad_link (stream->srcpad, stream->send_rtp_sink);
@@ -665,7 +713,10 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
       ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
       break;
     case GST_STATE_CHANGE_FAILURE:
+    {
+      unlock_streams (media);
       goto state_failed;
+    }
   }
 
   /* now wait for all pads to be prerolled */
@@ -728,7 +779,6 @@ state_failed:
       }
       gst_message_unref (message);
     }
-    unlock_streams (media);
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
     gst_object_unref (bus);
     return FALSE;
@@ -753,6 +803,9 @@ gst_rtsp_media_play (GstRTSPMedia *media, GArray *transports)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (transports != NULL, FALSE);
   g_return_val_if_fail (media->prepared, FALSE);
+
+  if (media->target_state == GST_STATE_PLAYING)
+    return TRUE;
 
   for (i = 0; i < transports->len; i++) {
     GstRTSPMediaTrans *tr;
@@ -803,6 +856,9 @@ gst_rtsp_media_pause (GstRTSPMedia *media, GArray *transports)
   g_return_val_if_fail (transports != NULL, FALSE);
   g_return_val_if_fail (media->prepared, FALSE);
 
+  if (media->target_state == GST_STATE_PAUSED)
+    return TRUE;
+
   for (i = 0; i < transports->len; i++) {
     GstRTSPMediaTrans *tr;
     GstRTSPMediaStream *stream;
@@ -850,6 +906,9 @@ gst_rtsp_media_stop (GstRTSPMedia *media, GArray *transports)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (transports != NULL, FALSE);
   g_return_val_if_fail (media->prepared, FALSE);
+
+  if (media->target_state == GST_STATE_NULL)
+    return TRUE;
 
   gst_rtsp_media_pause (media, transports);
 

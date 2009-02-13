@@ -84,6 +84,9 @@ struct _GstRTSPMediaStream {
   GstPad       *send_rtp_src;
   GstPad       *send_rtcp_src;
 
+  /* the RTPSession object */
+  GObject      *session;
+
   /* sinks used for sending and receiving RTP and RTCP, they share
    * sockets */
   GstElement   *udpsrc[2];
