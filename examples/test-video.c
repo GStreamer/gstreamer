@@ -21,6 +21,19 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+
+static gboolean
+timeout (GstRTSPServer *server, gboolean ignored)
+{
+  GstRTSPSessionPool *pool;
+
+  pool = gst_rtsp_server_get_session_pool (server);
+  gst_rtsp_session_pool_cleanup (pool);
+  g_object_unref (pool);
+
+  return TRUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -60,6 +73,8 @@ main (int argc, char *argv[])
 
   /* attach the server to the default maincontext */
   gst_rtsp_server_attach (server, NULL);
+
+  g_timeout_add_seconds (2, (GSourceFunc) timeout, server); 
 
   /* start serving */
   g_main_loop_run (loop);
