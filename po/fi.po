@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2009-01-18 15:50+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -362,6 +362,13 @@ msgid ""
 msgstr ""
 "Median alkuperä URI-muodossa (sijainti, jossa alkuperäinen tiedosto tai "
 "virta on tarjolla)"
+
+#, fuzzy
+msgid "homepage"
+msgstr "kuva"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
 
 msgid "description"
 msgstr "kuvaus"

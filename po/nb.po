@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2007-11-02 15:43+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -348,6 +348,13 @@ msgstr "plassering"
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
+msgstr ""
+
+#, fuzzy
+msgid "homepage"
+msgstr "bilde"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
 
 msgid "description"

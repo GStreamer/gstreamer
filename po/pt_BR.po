@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2009-01-17 11:59-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -374,6 +374,13 @@ msgid ""
 msgstr ""
 "A origem da mídia como um URI (localização onde o arquivo ou fluxo original "
 "está hospedado)"
+
+#, fuzzy
+msgid "homepage"
+msgstr "imagem"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
 
 msgid "description"
 msgstr "descrição"

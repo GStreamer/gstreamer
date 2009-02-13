@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2008-09-25 01:50+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -359,6 +359,13 @@ msgid ""
 msgstr ""
 "A média eredete URI címként (az a hely, ahol az eredeti fájl vagy műsor "
 "megtalálható)"
+
+#, fuzzy
+msgid "homepage"
+msgstr "kép"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
 
 msgid "description"
 msgstr "leírás"

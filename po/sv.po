@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2009-01-12 23:18+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -364,6 +364,13 @@ msgid ""
 msgstr ""
 "Ursprunget för mediet som en URI (plats där den ursprungliga filen eller "
 "strömmen finns)"
+
+#, fuzzy
+msgid "homepage"
+msgstr "bild"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
 
 msgid "description"
 msgstr "beskrivning"

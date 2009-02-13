@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -344,6 +344,13 @@ msgstr "場所"
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
+msgstr ""
+
+#, fuzzy
+msgid "homepage"
+msgstr "画像"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
 
 msgid "description"

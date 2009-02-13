@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-05 20:02+0000\n"
+"POT-Creation-Date: 2009-02-13 15:55+0000\n"
 "PO-Revision-Date: 2008-10-09 21:18+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -364,6 +364,13 @@ msgid ""
 msgstr ""
 "oorsprong van het medium als een URI (locatie, waar de oorsprong van het "
 "bestand of stroom wordt gehost)"
+
+#, fuzzy
+msgid "homepage"
+msgstr "afbeelding"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
 
 msgid "description"
 msgstr "omschrijving"
