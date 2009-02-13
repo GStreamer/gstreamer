@@ -269,6 +269,7 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   pulsesink->operation_success = FALSE;
   pulsesink->did_reset = FALSE;
   pulsesink->in_write = FALSE;
+  pulsesink->notify = 0;
 
   pulsesink->mainloop = pa_threaded_mainloop_new ();
   g_assert (pulsesink->mainloop);
@@ -621,13 +622,10 @@ gst_pulsesink_context_subscribe_cb (pa_context * c,
   /* Actually this event is also triggered when other properties of
    * the stream change that are unrelated to the volume. However it is
    * probably cheaper to signal the change here and check for the
-   * volume when the GObject property is read instead of querying it always.
-   *
-   * Lennart thinks this is a race because g_object_notify() is not
-   * thread safe and this function is run from a PA controlled
-   * thread. But folks on #gstreamer told me that was ok. */
+   * volume when the GObject property is read instead of querying it always. */
 
-  g_object_notify (G_OBJECT (pulsesink), "volume");
+  /* inform streaming thread to notify */
+  g_atomic_int_compare_and_exchange (&pulsesink->notify, 0, 1);
 }
 #endif
 
@@ -875,6 +873,10 @@ gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
   size_t sum = 0;
+
+  /* FIXME post message rather than using a signal (as mixer interface) */
+  if (g_atomic_int_compare_and_exchange (&pulsesink->notify, 1, 0))
+    g_object_notify (G_OBJECT (pulsesink), "volume");
 
   pa_threaded_mainloop_lock (pulsesink->mainloop);
 
