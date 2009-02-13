@@ -89,6 +89,8 @@ gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session
 
   g_message ("free session media %p", media);
 
+  gst_rtsp_session_media_stop (media);
+
   for (i = 0; i < size; i++) {
     GstRTSPSessionStream *stream;
 

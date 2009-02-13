@@ -155,7 +155,7 @@ gst_rtsp_client_new (void)
 }
 
 static void
-send_response (GstRTSPClient *client, GstRTSPMessage *response)
+send_response (GstRTSPClient *client, GstRTSPSession *session, GstRTSPMessage *response)
 {
   GTimeVal timeout;
 
@@ -167,6 +167,22 @@ send_response (GstRTSPClient *client, GstRTSPMessage *response)
 
   timeout.tv_sec = client->timeout;
   timeout.tv_usec = 0;
+
+  /* add the new session header for new session ids */
+  if (session) {
+    gchar *str;
+
+    if (session->timeout != 60)
+      str = g_strdup_printf ("%s; timeout=%d", session->sessionid, session->timeout);
+    else
+      str = g_strdup (session->sessionid);
+
+    gst_rtsp_message_take_header (response, GST_RTSP_HDR_SESSION, str);
+  }
+  else {
+    /* remove the session id from the response */
+    gst_rtsp_message_remove_header (response, GST_RTSP_HDR_SESSION, -1);
+  }
 
   gst_rtsp_connection_send (client->connection, response, &timeout);
   gst_rtsp_message_unset (response);
@@ -181,7 +197,7 @@ send_generic_response (GstRTSPClient *client, GstRTSPStatusCode code,
   gst_rtsp_message_init_response (&response, code, 
 	gst_rtsp_status_as_text (code), request);
 
-  send_response (client, &response);
+  send_response (client, NULL, &response);
 }
 
 static gboolean
@@ -336,18 +352,14 @@ handle_teardown_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
   if (!gst_rtsp_session_release_media (session, media)) {
     /* remove the session */
     gst_rtsp_session_pool_remove (client->session_pool, session);
-
-    /* remove the session id from the request, which will also remove it from the
-     * response */
-    gst_rtsp_message_remove_header (request, GST_RTSP_HDR_SESSION, -1);
   }
-  g_object_unref (session);
-
   /* construct the response now */
   code = GST_RTSP_STS_OK;
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
-  send_response (client, &response);
+  send_response (client, session, &response);
+
+  g_object_unref (session);
 
   return FALSE;
 
@@ -391,7 +403,7 @@ handle_pause_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   code = GST_RTSP_STS_OK;
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
-  send_response (client, &response);
+  send_response (client, session, &response);
 
   /* the state is now READY */
   media->state = GST_RTSP_STATE_READY;
@@ -476,7 +488,7 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *req
   str = gst_rtsp_range_to_string (&media->media->range);
   gst_rtsp_message_take_header (&response, GST_RTSP_HDR_RANGE, str);
 
-  send_response (client, &response);
+  send_response (client, session, &response);
 
   /* start playing after sending the request */
   gst_rtsp_session_media_play (media);
@@ -641,22 +653,10 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *re
   code = GST_RTSP_STS_OK;
   gst_rtsp_message_init_response (&response, code, gst_rtsp_status_as_text (code), request);
 
-  /* add the new session header for new session ids */
-  if (need_session) {
-    gchar *str;
-
-    if (session->timeout != 60)
-      str = g_strdup_printf ("%s; timeout=%d", session->sessionid, session->timeout);
-    else
-      str = g_strdup (session->sessionid);
-
-    gst_rtsp_message_take_header (&response, GST_RTSP_HDR_SESSION, str);
-  }
-
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_TRANSPORT, trans_str);
   g_free (trans_str);
 
-  send_response (client, &response);
+  send_response (client, session, &response);
 
   /* update the state */
   switch (media->state) {
@@ -768,7 +768,7 @@ handle_describe_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage 
   gst_rtsp_message_take_body (&response, (guint8 *)str, strlen (str));
   gst_sdp_message_free (sdp);
 
-  send_response (client, &response);
+  send_response (client, NULL, &response);
 
   return TRUE;
 
@@ -808,7 +808,7 @@ handle_options_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPMessage *
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_PUBLIC, str);
   g_free (str);
 
-  send_response (client, &response);
+  send_response (client, NULL, &response);
 }
 
 /* remove duplicate and trailing '/' */
@@ -854,11 +854,16 @@ handle_client (GstRTSPClient *client)
     GTimeVal timeout;
 
     timeout.tv_sec = client->timeout;
+    timeout.tv_usec = 0;
 
     /* start by waiting for a message from the client */
     res = gst_rtsp_connection_receive (client->connection, &request, &timeout);
-    if (res < 0)
+    if (res < 0) {
+      if (res == GST_RTSP_ETIMEOUT)
+        goto timeout;
+
       goto receive_failed;
+    }
 
 #ifdef DEBUG
     gst_rtsp_message_dump (&request);
@@ -919,6 +924,13 @@ handle_client (GstRTSPClient *client)
   return NULL;
 
   /* ERRORS */
+timeout:
+  {
+    g_message ("client timed out");
+    if (client->session_pool)
+      gst_rtsp_session_pool_cleanup (client->session_pool);
+    goto cleanup;
+  }
 receive_failed:
   {
     gchar *str;
@@ -926,6 +938,10 @@ receive_failed:
     g_message ("receive failed %d (%s), disconnect client %p", res, 
 	    str, client);
     g_free (str);
+    goto cleanup;
+  }
+cleanup:
+  {
     gst_rtsp_message_unset (&request);
     gst_rtsp_connection_close (client->connection);
     g_object_unref (client);

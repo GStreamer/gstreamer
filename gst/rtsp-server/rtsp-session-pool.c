@@ -217,8 +217,9 @@ gst_rtsp_session_pool_find (GstRTSPSessionPool *pool, const gchar *sessionid)
     g_object_ref (result);
   g_mutex_unlock (pool->lock);
 
-  if (result)
+  if (result) {
     gst_rtsp_session_touch (result);
+  }
 
   return result;
 }
