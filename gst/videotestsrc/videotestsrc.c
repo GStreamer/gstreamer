@@ -311,7 +311,7 @@ static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y444 (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
 static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
-static void paint_setup_V308 (paintinfo * p, unsigned char *dest);
+static void paint_setup_v308 (paintinfo * p, unsigned char *dest);
 static void paint_setup_NV12 (paintinfo * p, unsigned char *dest);
 static void paint_setup_NV21 (paintinfo * p, unsigned char *dest);
 
@@ -346,7 +346,7 @@ static void paint_hline_Y41B (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y42B (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y444 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
-static void paint_hline_V308 (paintinfo * p, int x, int y, int w);
+static void paint_hline_v308 (paintinfo * p, int x, int y, int w);
 static void paint_hline_AYUV (paintinfo * p, int x, int y, int w);
 
 #if 0
@@ -367,7 +367,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {VTS_YUV, "Y422", "Y422", 16, paint_setup_UYVY, paint_hline_YUY2},
   {VTS_YUV, "UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},    /* FIXME: UYNV? */
   {VTS_YUV, "YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
-  {VTS_YUV, "V308", "V308", 24, paint_setup_V308, paint_hline_V308},
+  {VTS_YUV, "v308", "v308", 24, paint_setup_v308, paint_hline_v308},
   {VTS_YUV, "AYUV", "AYUV", 32, paint_setup_AYUV, paint_hline_AYUV},
 
   /* interlaced */
@@ -1395,7 +1395,7 @@ paint_setup_YV12 (paintinfo * p, unsigned char *dest)
 }
 
 static void
-paint_setup_V308 (paintinfo * p, unsigned char *dest)
+paint_setup_v308 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
   p->up = dest + 1;
@@ -1446,7 +1446,7 @@ paint_setup_YVYU (paintinfo * p, unsigned char *dest)
 }
 
 static void
-paint_hline_V308 (paintinfo * p, int x, int y, int w)
+paint_hline_v308 (paintinfo * p, int x, int y, int w)
 {
   int offset;
 

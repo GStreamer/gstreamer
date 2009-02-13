@@ -354,7 +354,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       endianness = G_BYTE_ORDER;
       break;
     case PIX_FMT_V308:
-      fmt = GST_MAKE_FOURCC ('V', '3', '0', '8');
+      fmt = GST_MAKE_FOURCC ('v', '3', '0', '8');
       break;
     case PIX_FMT_AYUV4444:
       fmt = GST_MAKE_FOURCC ('A', 'Y', 'U', 'V');
@@ -617,7 +617,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         case GST_MAKE_FOURCC ('Y', 'V', 'U', '9'):
           context->pix_fmt = PIX_FMT_YVU410P;
           break;
-        case GST_MAKE_FOURCC ('V', '3', '0', '8'):
+        case GST_MAKE_FOURCC ('v', '3', '0', '8'):
           context->pix_fmt = PIX_FMT_V308;
           break;
         case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
