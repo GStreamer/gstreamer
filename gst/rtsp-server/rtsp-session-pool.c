@@ -58,6 +58,7 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->create_session_id = create_session_id;
+
 }
 
 static void
@@ -350,9 +351,9 @@ gst_rtsp_session_pool_remove (GstRTSPSessionPool *pool, GstRTSPSession *sess)
 }
 
 static gboolean
-cleanup_func (gchar *sessionid, GstRTSPSession *sess, GstRTSPSessionPool *pool)
+cleanup_func (gchar *sessionid, GstRTSPSession *sess, GTimeVal *now)
 {
-  return gst_rtsp_session_is_expired (sess);
+  return gst_rtsp_session_is_expired (sess, now);
 }
 
 /**
@@ -368,12 +369,124 @@ guint
 gst_rtsp_session_pool_cleanup (GstRTSPSessionPool *pool)
 {
   guint result;
+  GTimeVal now;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), 0);
 
+  g_get_current_time (&now);
+
   g_mutex_lock (pool->lock);
-  result = g_hash_table_foreach_remove (pool->sessions, (GHRFunc) cleanup_func, pool);
+  result = g_hash_table_foreach_remove (pool->sessions, (GHRFunc) cleanup_func, &now);
   g_mutex_unlock (pool->lock);
 
   return result;
 }
+
+typedef struct
+{
+  GSource source;
+  GstRTSPSessionPool *pool;
+  gint timeout;
+} GstPoolSource;
+
+static void
+collect_timeout (gchar *sessionid, GstRTSPSession *sess, GstPoolSource *psrc)
+{
+  gint timeout;
+  GTimeVal now;
+
+  g_source_get_current_time ((GSource*)psrc, &now);
+
+  timeout = gst_rtsp_session_next_timeout (sess, &now);
+  g_message ("%p: next timeout: %d", sess, timeout);
+  if (psrc->timeout == -1 || timeout < psrc->timeout)
+    psrc->timeout = timeout;
+}
+
+static gboolean
+gst_pool_source_prepare (GSource * source, gint * timeout)
+{
+  GstPoolSource *psrc;
+  gboolean result;
+
+  psrc = (GstPoolSource *) source;
+  psrc->timeout = -1;
+
+  g_mutex_lock (psrc->pool->lock);
+  g_hash_table_foreach (psrc->pool->sessions, (GHFunc) collect_timeout, psrc);
+  g_mutex_unlock (psrc->pool->lock);
+
+  if (timeout)
+    *timeout = psrc->timeout;
+
+  result = psrc->timeout == 0;
+
+  g_message ("prepare %d, %d", psrc->timeout, result);
+
+  return result;
+}
+
+static gboolean
+gst_pool_source_check (GSource * source)
+{
+  g_message ("check");
+
+  return gst_pool_source_prepare (source, NULL);
+}
+
+static gboolean
+gst_pool_source_dispatch (GSource * source, GSourceFunc callback,
+    gpointer user_data)
+{
+  gboolean res;
+  GstPoolSource *psrc = (GstPoolSource *) source;
+  GstRTSPSessionPoolFunc func = (GstRTSPSessionPoolFunc) callback;
+
+  g_message ("dispatch");
+
+  if (func)
+    res = func (psrc->pool, user_data);
+  else
+    res = FALSE;
+
+  return res;
+}
+
+static void
+gst_pool_source_finalize (GSource * source)
+{
+  GstPoolSource *psrc = (GstPoolSource *) source;
+
+  g_message ("finalize %p", psrc);
+
+  g_object_unref (psrc->pool);
+  psrc->pool = NULL;
+}
+
+static GSourceFuncs gst_pool_source_funcs = {
+  gst_pool_source_prepare,
+  gst_pool_source_check,
+  gst_pool_source_dispatch,
+  gst_pool_source_finalize
+};
+
+/**
+ * gst_rtsp_session_pool_create_watch:
+ * @pool: a #GstRTSPSessionPool
+ *
+ * A GSource that will be dispatched when the session should be cleaned up.
+ */
+GSource *
+gst_rtsp_session_pool_create_watch (GstRTSPSessionPool *pool)
+{
+  GstPoolSource *source;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), NULL);
+
+  source = (GstPoolSource *) g_source_new (&gst_pool_source_funcs,
+      sizeof (GstPoolSource));
+  source->pool = g_object_ref (pool);
+
+  return (GSource *) source;
+}
+

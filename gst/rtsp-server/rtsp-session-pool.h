@@ -67,6 +67,21 @@ struct _GstRTSPSessionPoolClass {
   gchar * (*create_session_id)   (GstRTSPSessionPool *pool);
 };
 
+/**
+ * GstRTSPSessionPoolFunc:
+ * @pool: a #GstRTSPSessionPool object
+ * @user_data: user data that has been given when registering the handler
+ *
+ * The function that will be called from the GSource watch on the session pool.
+ *
+ * The function will be called when the pool must be cleaned up because one or
+ * more sessions timed out.
+ *
+ * Returns: %FALSe if the source should be removed.
+ */
+typedef gboolean (*GstRTSPSessionPoolFunc)  (GstRTSPSessionPool *pool, gpointer user_data);
+
+
 GType                 gst_rtsp_session_pool_get_type          (void);
 
 /* creating a session pool */
@@ -87,6 +102,7 @@ gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPoo
 
 /* perform session maintenance */
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
+GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);
 
 G_END_DECLS
 
