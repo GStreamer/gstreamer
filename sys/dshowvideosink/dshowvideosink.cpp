@@ -869,7 +869,7 @@ static GstStateChangeReturn
 gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition)
 {
   GstDshowVideoSink *sink = GST_DSHOWVIDEOSINK (element);
-  GstStateChangeReturn ret;
+  GstStateChangeReturn ret, rettmp;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -878,7 +878,7 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       ret = gst_dshowvideosink_start_graph (sink);
-      if (ret != GST_STATE_CHANGE_SUCCESS)
+      if (ret == GST_STATE_CHANGE_FAILURE)
         return ret;
       break;
   }
@@ -887,10 +887,14 @@ gst_dshowvideosink_change_state (GstElement * element, GstStateChange transition
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      ret = gst_dshowvideosink_pause_graph (sink);
+      rettmp = gst_dshowvideosink_pause_graph (sink);
+      if (rettmp == GST_STATE_CHANGE_FAILURE)
+        ret = rettmp;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      ret = gst_dshowvideosink_stop_graph (sink);
+      rettmp = gst_dshowvideosink_stop_graph (sink);
+      if (rettmp == GST_STATE_CHANGE_FAILURE)
+        ret = rettmp;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_dshowvideosink_clear (sink);
