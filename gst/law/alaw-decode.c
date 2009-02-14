@@ -293,14 +293,13 @@ gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
 not_negotiated:
   {
     gst_buffer_unref (buffer);
-    GST_ERROR_OBJECT (alawdec, "no format negotiated");
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    return ret;
+    GST_WARNING_OBJECT (alawdec, "no input format set: not-negotiated");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 alloc_failed:
   {
     gst_buffer_unref (buffer);
-    GST_DEBUG_OBJECT (alawdec, "pad alloc failed %d (%s)", ret,
+    GST_DEBUG_OBJECT (alawdec, "pad alloc failed, flow: %s",
         gst_flow_get_name (ret));
     return ret;
   }
