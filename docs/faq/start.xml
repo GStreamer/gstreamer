@@ -18,8 +18,8 @@ If you'd rather learn by trying it out, start with
       </listitem>
       <listitem>
         <para>
-If you want to live on the bleeding edge and develop and use CVS, see
-<xref linkend="title-cvs" endterm="title-cvs"/>
+If you want to live on the bleeding edge and develop and use git, see
+<xref linkend="title-git" endterm="title-git"/>
         </para>
       </listitem>
     </itemizedlist>

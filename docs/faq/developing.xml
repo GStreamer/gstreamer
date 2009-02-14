@@ -9,7 +9,7 @@
 
       <answer>
         <para>
-GStreamer uses pkg-config to assist applications with compilationa and 
+GStreamer uses pkg-config to assist applications with compilation and 
 linking flags. 
 pkg-config is already used by GTK+, GNOME, SDL, and others; so if you are 
 familiar with using it for any of those, you're set.
@@ -31,7 +31,7 @@ not single quotes.
         </para>
         <para>
 For bigger projects, you should integrate pkg-config use in your Makefile,
-or integrate with autoconf using the pkg.m4 macro.
+or integrate with autoconf using the pkg.m4 macro (providing PKG_CONFIG_CHECK).
         </para>
       </answer>
     </qandaentry>
@@ -44,27 +44,30 @@ or integrate with autoconf using the pkg.m4 macro.
       <answer>
         <para>
 It is possible to develop and compile against an uninstalled copy of
-gstreamer and gst-plugins (for example, against CVS copies).
-The easiest way to do this is to use a script like this (for bash):
+gstreamer and gst-plugins-* (for example, against gits checkouts).
+The easiest way to do this is to use a bash script like this (also:
+<ulink url="http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/faq/gst-uninstalled">lastest version of gst-uninstalled</ulink>):
 
 <programlisting>
 &gst-uninstalled;
 </programlisting>
-If you put this script in your path, and symlink it to gst-cvs (if you want
-to develop against cvs HEAD) or to gst-0.8 (if you want to develop against the
-0.8 branch), it will automatically use the uninstalled version from that
-directory.
+If you put this script in your path, and symlink it to gst-git (if you want
+to develop against git master) or to gst-released (if you want to develop
+against the lastest release of each module), it will automatically use the
+uninstalled version from that directory (ie. gst-git will look for a directory
+called 'git', and gst-released will expect the uninstalled modules to be in
+the 'released' directory; you are free to use any name or identifier you like
+here).
         </para>
         <para>
 This requires you to have put your checkouts of gstreamer and gst-plugins
-under ~/gst/cvs (for the HEAD version).  The program is easily modifiable
+under ~/gst/git (for the master version).  The program is easily modifiable
 if this isn't the case.
         </para>
         <para>
-After running this script, you'll be in an environment where you can
-use the uninstalled tools, and where gst-register registers the uninstalled
-plugins by default.  Also, pkg-config wil detect the uninstalled copies
-before any installed copies.
+After running this script, you'll be in an environment where the uninstalled
+tools and plugins will be used by default.  Also, pkg-config will detect the
+uninstalled copies before (and prefer them to) any installed copies.
         </para>
       </answer>
     </qandaentry>
@@ -80,7 +83,8 @@ For GNOME applications it's a good idea to use GConf to find the default ways
 of outputting audio and video.  You can do this by using the 'gconfaudiosink'
 and 'gconfvideosink' elements for audio and video output. They will take
 care of everything GConf-related for you and automatically use the outputs
-that the user configured.
+that the user configured. If you are using gconfaudiosink, your application
+should set the 'profile' property.
         </para>
       </answer>
     </qandaentry>
@@ -136,8 +140,8 @@ Don't hold your breath for that though.
         </para>
         <para>
 During the development cycle, GStreamer also uses a fourth or NANO number.
-If this number is 1, then it's a CVS version.  
-Any tarball or package that has a nano number of 1 is made from CVS and thus 
+If this number is 1, then it's a git development version.  
+Any tarball or package that has a nano number of 1 is made from git and thus 
 not supported.  Additionally, if you didn't get this package or tarball from
 the GStreamer team, don't have high hopes on it doing whatever you want it
 to do.
@@ -162,8 +166,8 @@ Just follow what's already there and you'll be fine.
 The core could use a code cleanup though at this point.
         </para>
         <para>
-Individual plugins in gst-plugins or plugins that you want considered for
-addition to the gst-plugins module should be coded in the same style.
+Individual plugins in gst-plugins-* or plugins that you want considered for
+addition to one of the gst-plugins-* modules should be coded in the same style.
 It's easier if everything is consistent. Consistency is, of course, the goal. 
         </para>
         <para>
@@ -181,11 +185,29 @@ If you use emacs, try these lines:
 </programlisting>
         </para>
         <para>
-Or, run your code through 
+Or, run your code (only the *.c files, not the header files) through 
 <programlisting>
-indent -br -bad -cbi0 -cli2 -bls -l100 -ut -ce
+indent \
+  --braces-on-if-line \
+  --case-brace-indentation0 \
+  --case-indentation2 \
+  --braces-after-struct-decl-line \
+  --line-length80 \
+  --no-tabs \
+  --cuddle-else \
+  --dont-line-up-parentheses \
+  --continuation-indentation4 \
+  --honour-newlines \
+  --tab-size8 \
+  --indent-level2
 </programlisting>
-before submitting a patch (FIXME: check if these are indeed the proper options).
+before submitting a patch. (This is using GNU indent.) There is also a
+gst-indent script in the GStreamer core source tree in the tools directory
+which wraps this and contains the latest option. The easiest way to get the
+indenting right is probably to develop against a git checkout. The local
+git commit hook will ensure correct indentation. We only require code files to
+be indented, header files may be indented manually for better readability
+(however, please use spaces for indenting, not tabs, even in header files).
         </para>
         <para>
 As for the code itself, the 
@@ -194,21 +216,23 @@ Where possible, we try to adhere to the spirit of GObject and use similar
 coding idioms.
         </para>
         <para>
-Patches should be made against CVS or the latest release and should be
+Patches should be made against git master or the latest release and should be
 in 'unified context' format (use diff -u -p). They should be attached to
 a bug report (or feature request) in
 <ulink url="http://bugzilla.gnome.org">bugzilla</ulink> rather than
-sent to the mailing list.
+sent to the mailing list. Also see
+<ulink url="http://gstreamer.freedesktop.org/wiki/SubmittingPatches">SubmittingPatches</ulink>
+in the GStreamer wiki.
         </para>
       </answer>
     </qandaentry>
     <qandaentry>
     <question id="developing-translations">
-    <para>I have translated one of the module .po files into a new language. How do I get it into CVS?</para>
+    <para>I have translated one of the module .po files into a new language. How do I get it included?</para>
     </question>
     <answer>
     <para>GStreamer translations are uniformly managed through the Translation Project (http://translationproject.org). There are some instructions on how to join the Translation Project team and submit new translations at http://translationproject.org/html/translators.html.</para>
-    <para>New translations submitted via the Translation Project are merged periodically into CVS by the maintainers by running 'make download-po' in the various modules.</para>
+    <para>New translations submitted via the Translation Project are merged periodically into git by the maintainers by running 'make download-po' in the various modules.</para>
     </answer>
     </qandaentry>
   </qandaset>

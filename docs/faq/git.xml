@@ -1,11 +1,11 @@
-<sect1 id="chapter-cvs">
-  <title id="title-cvs">Building GStreamer from CVS</title>
+<sect1 id="chapter-git">
+  <title id="title-git">Building GStreamer from git</title>
   <qandaset defaultlabel="qanda">
 
     <qandaentry>
-      <question id="cvs-anon">
+      <question id="git-anon">
         <para>
-How do I check out GStreamer from CVS ?
+How do I check out GStreamer from git ?
         </para>
       </question>
 
@@ -13,16 +13,23 @@ How do I check out GStreamer from CVS ?
         <para>
 GStreamer is hosted on Freedesktop.org.  GStreamer consists of various parts.
 In the beginning, you will be interested in the "gstreamer" module, containing
-the core, and "gst-plugins", containing the basic set of plugins.
+the core, and "gst-plugins-base" and "gst-plugins-good", containing the basic
+set of plugins. Finally, you may also be interested in "gst-plugins-ugly",
+"gst-plugins-bad" and "gst-ffmpeg" for more comprehensive media format support.
         </para>
         <para>
-To check out the HEAD version of the core, use
+To check out the latest git version of the core and the basic modules, use
 <programlisting>
- cvs -d:pserver:anoncvs@anoncvs.freedesktop.org:/cvs/gstreamer co gstreamer
+ for module in gstreamer gst-plugins-base gst-plugins-good; do
+   git clone git://anongit.freedesktop.org:/git/gstreamer/$module ;
+ done
 </programlisting>
-This will create a directory "gstreamer" in your current directory.
-If you want to get another module, replace the last "gstreamer" with the
-name of the module.
+This will create three directories in your current directory: "gstreamer",
+"gst-plugins-base", and "gst-plugins-good". If you want to get another module,
+use the above git clone command line and replace $module with the name of the
+module. Once you have checked out these modules, you will need to change into
+each directory and run ./autogen.sh, which will among other things checkout
+the common module underneath each module checkout.
         </para>
         <para>
 The <ulink url="http://gstreamer.freedesktop.org/modules/">modules page</ulink>
@@ -32,18 +39,20 @@ has a list of active ones together with a short description.
     </qandaentry>
 
     <qandaentry>
-      <question id="cvs-developer">
+      <question id="git-developer">
         <para>
-How do I get developer access to GStreamer CVS ?
+How do I get developer access to GStreamer git ?
         </para>
       </question>
 
       <answer>
         <para>
-If you want to gain developer access to GStreamer CVS, you should ask for
-it on the development lists, or ask one of the maintainers directly.
-If you are not already a registered developer with a user account on
-Freedesktop.org, You will then have to provide them with:
+If you want to gain developer access to GStreamer git, you should ask for
+it on the development lists, or ask one of the maintainers directly. We will
+usually only consider requests by developers who have been active and
+competent GStreamer contributors for some time already. If you are not
+already a registered developer with a user account on Freedesktop.org,
+you will then have to provide them with:
 <orderedlist>
 <listitem><para>your desired unix username</para></listitem>
 <listitem><para>your full name</para></listitem>
@@ -122,7 +131,7 @@ chasing a bug for days that the compiler was giving you hints about.
         </para>
         <para>
 "-Werror" is turned off for actual releases.  It's turned on by default for
-CVS and prereleases so that people actually notice and fix problems found by
+git and prereleases so that people actually notice and fix problems found by
 "-Wall".  We want people to actively hit and report or fix them.
         </para>
         <para>

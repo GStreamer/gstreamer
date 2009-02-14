@@ -1,9 +1,9 @@
 #!/bin/bash -i
 #
-# this script is in CVS as gstreamer/docs/faq/gst-uninstalled
+# this script is in git as gstreamer/docs/faq/gst-uninstalled
 #
 # It will set up the environment to use and develop gstreamer and projects
-# that use gstreamer with an uninstalled CVS checkout of gstreamer and the
+# that use gstreamer with an uninstalled git checkout of gstreamer and the
 # plugin modules.
 #
 # It will set up LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, PKG_CONFIG_PATH,
@@ -27,7 +27,7 @@
 
 # This script is run -i so that PS1 doesn't get cleared
 
-# Change this variable to the location of your gstreamer CVS checkouts
+# Change this variable to the location of your gstreamer git checkouts
 MYGST=$HOME/gst
 
 #

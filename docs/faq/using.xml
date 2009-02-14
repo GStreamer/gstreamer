@@ -149,7 +149,7 @@ When doing a bug report, you should at least describe
 <itemizedlist>
 <listitem><para>your distribution</para></listitem>
 <listitem><para>
-how you installed GStreamer (from cvs, source, packages, which ?)</para></listitem>
+how you installed GStreamer (from git, source, packages, which ?)</para></listitem>
 <listitem><para>if you installed GStreamer before</para></listitem>
 </itemizedlist>
         </para>

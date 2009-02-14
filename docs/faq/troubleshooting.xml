@@ -39,7 +39,7 @@ Make sure to remember to re-run configure after installing the supporting
 library !
 </para></listitem>
 <listitem><para>
-if you run GStreamer from CVS, the same logic applies as for a source install.
+if you run GStreamer from git, the same logic applies as for a source install.
 Go over the reasons why the plug-in didn't get configured for build.
 Check output of config.log for a clue as to why it doesn't get built if
 you're sure you have the library needed installed in a sane place.
@@ -63,7 +63,7 @@ What's  wrong ?
 
       <answer>
         <para>
-If you run GStreamer CVS uninstalled, it means that something changed in
+If you run GStreamer from git uninstalled, it means that something changed in
 the core that requires a recompilation in the plugins. Recompile the
 plugins by doing "make clean &amp;&amp; make".
         </para>
