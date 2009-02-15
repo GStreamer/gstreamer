@@ -131,7 +131,7 @@ mxf_metadata_base_resolve (MXFMetadataBase * self, GHashTable * metadata)
   return ret;
 }
 
-G_DEFINE_TYPE (MXFMetadata, mxf_metadata, MXF_TYPE_METADATA_BASE);
+G_DEFINE_ABSTRACT_TYPE (MXFMetadata, mxf_metadata, MXF_TYPE_METADATA_BASE);
 
 static gboolean
 mxf_metadata_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
@@ -286,7 +286,7 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
     GST_WARNING
         ("No handler for type 0x%04x found -- using generic metadata parser",
         type);
-    t = MXF_TYPE_METADATA;
+    return NULL;
   }
 
 
@@ -3444,8 +3444,6 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
     if (set->id == type) {
       t = set->type;
       break;
-    } else if (set->id == 0x000000) {
-      t = set->type;
     }
   }
 

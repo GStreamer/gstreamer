@@ -37,7 +37,7 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
-G_DEFINE_TYPE (MXFDMS1, mxf_dms1, MXF_TYPE_DESCRIPTIVE_METADATA);
+G_DEFINE_ABSTRACT_TYPE (MXFDMS1, mxf_dms1, MXF_TYPE_DESCRIPTIVE_METADATA);
 
 static gboolean
 mxf_dms1_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
@@ -5558,7 +5558,6 @@ mxf_dms1_initialize (void)
   GSList *dms1_sets = NULL;
   MXFDescriptiveMetadataSet *set;
 
-  ADD_SET (0x000000, MXF_TYPE_DMS1);
   /* SMPTE S380M Table 3 */
   ADD_SET (0x010100, MXF_TYPE_DMS1_PRODUCTION_FRAMEWORK);
   ADD_SET (0x010200, MXF_TYPE_DMS1_CLIP_FRAMEWORK);

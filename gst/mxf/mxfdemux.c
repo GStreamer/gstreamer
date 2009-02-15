@@ -1220,8 +1220,9 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
       GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   if (!metadata) {
-    GST_ERROR_OBJECT (demux, "Parsing metadata failed");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (demux,
+        "Unknown or unhandled metadata of type 0x%04x", type);
+    return GST_FLOW_OK;
   }
 
   old =
