@@ -158,6 +158,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_CELT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
 @USE_MPEG2ENC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
 @USE_MPLEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
+@USE_KATE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
 
 %changelog
 * Thu Mar 12 2009 Christian Schaller <chrisian.schaller at collabora dot co uk>

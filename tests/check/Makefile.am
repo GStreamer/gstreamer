@@ -63,6 +63,13 @@ else
 check_timidity=
 endif
 
+if USE_KATE
+check_kate=elements/kate
+else
+check_kate=
+endif
+
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex
@@ -78,6 +85,7 @@ check_PROGRAMS = \
 	$(check_neon)      \
 	$(check_ofa)        \
 	$(check_timidity)  \
+	$(check_kate)  \
 	elements/aacparse \
 	elements/amrparse \
 	elements/camerabin \
@@ -118,5 +126,8 @@ elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
+
+elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 EXTRA_DIST = gst-plugins-bad.supp

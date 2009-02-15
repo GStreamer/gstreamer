@@ -100,6 +100,11 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosrc.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
+	$(top_srcdir)/ext/kate/gstkateenc.h \
+	$(top_srcdir)/ext/kate/gstkatedec.h \
+	$(top_srcdir)/ext/kate/gstkateparse.h \
+	$(top_srcdir)/ext/kate/gstkatetag.h \
+	$(top_srcdir)/ext/kate/gstkatetiger.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \

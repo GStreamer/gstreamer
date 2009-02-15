@@ -85,6 +85,8 @@ textoverlay      pango            (http://www.pango.org/)
 dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
 effectv (Our ports was relicensed)(http://effectv.sourceforge.net/)
 musepack 			  (http://www.musepack.net/)
+kate             libtiger         (http://libtiger.googlecode.com/)
+                                   Optional, only for the tiger element
 
 Plugins which use a BSD covered library are as follows:
 
@@ -93,6 +95,7 @@ vorbis           libogg/libvorbis (http://www.xiph.org/ogg/vorbis/)
 gsttheora        libtheora        (http://www.theora.org/)
 speex                             (http://www.speex.org/)
 flac             libFLAC          (http://flac.sourceforge.net/)
+kate             libkate          (http://libkate.googlecode.com/)
 
 Plugins based on libraries with other free licenses:
 

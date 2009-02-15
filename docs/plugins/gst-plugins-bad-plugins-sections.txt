@@ -472,6 +472,76 @@ gst_live_adder_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-katedec</FILE>
+<TITLE>katedec</TITLE>
+GstKateDec
+<SUBSECTION Standard>
+GstKateDecClass
+GST_KATE_DEC
+GST_KATE_DEC_CLASS
+GST_IS_KATE_DEC
+GST_IS_KATE_DEC_CLASS
+GST_TYPE_KATE_DEC
+gst_kate_dec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-kateenc</FILE>
+<TITLE>kateenc</TITLE>
+GstKateEnc
+<SUBSECTION Standard>
+GstKateEncClass
+GST_KATE_ENC
+GST_KATE_ENC_CLASS
+GST_IS_KATE_ENC
+GST_IS_KATE_ENC_CLASS
+GST_TYPE_KATE_ENC
+gst_kate_enc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-kateparse</FILE>
+<TITLE>kateparse</TITLE>
+GstKateParse
+<SUBSECTION Standard>
+GstKateParseClass
+GST_KATE_PARSE
+GST_KATE_PARSE_CLASS
+GST_IS_KATE_PARSE
+GST_IS_KATE_PARSE_CLASS
+GST_TYPE_KATE_PARSE
+gst_kate_parse_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-katetag</FILE>
+<TITLE>katetag</TITLE>
+GstKateTag
+<SUBSECTION Standard>
+GstKateTagClass
+GST_KATE_TAG
+GST_KATE_TAG_CLASS
+GST_IS_KATE_TAG
+GST_IS_KATE_TAG_CLASS
+GST_TYPE_KATE_TAG
+gst_kate_tag_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-tiger</FILE>
+<TITLE>tiger</TITLE>
+GstKateTiger
+<SUBSECTION Standard>
+GstKateTigerClass
+GST_KATE_TIGER
+GST_KATE_TIGER_CLASS
+GST_IS_KATE_TIGER
+GST_IS_KATE_TIGER_CLASS
+GST_TYPE_KATE_TIGER
+gst_kate_tiger_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstbasemetadata</FILE>
 <TITLE>GstBaseMetadata</TITLE>
 GstBaseMetadata

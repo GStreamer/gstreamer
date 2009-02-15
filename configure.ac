@@ -944,6 +944,30 @@ AG_GST_CHECK_FEATURE(JP2K, [jp2k], jp2kdec jp2kenc, [
   AC_SUBST(JP2K_LIBS)
 ])
 
+dnl *** kate ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
+AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
+  PKG_CHECK_MODULES(KATE, kate >= 0.1.7, HAVE_KATE="yes", [
+    HAVE_KATE="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(KATE_CFLAGS)
+  AC_SUBST(KATE_LIBS)
+  PKG_CHECK_MODULES(TIGER, tiger >= 0.3.2,
+    [
+      HAVE_TIGER="yes"
+      AC_DEFINE(HAVE_TIGER, 1, [Define if libtiger is available])
+    ],
+    [
+      HAVE_TIGER="no"
+      AC_MSG_RESULT(no)
+    ]
+  )
+  AM_CONDITIONAL(USE_TIGER, test "x$HAVE_TIGER" = "xyes")
+  AC_SUBST(TIGER_CFLAGS)
+  AC_SUBST(TIGER_LIBS)
+])
+
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
 AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
@@ -1526,6 +1550,7 @@ AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
+AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_WININET, false)
 AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
@@ -1698,6 +1723,7 @@ ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/jack/Makefile
 ext/jp2k/Makefile
+ext/kate/Makefile
 ext/ladspa/Makefile
 ext/lv2/Makefile
 ext/libmms/Makefile

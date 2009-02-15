@@ -148,6 +148,12 @@ else
 JP2K_DIR =
 endif
 
+if USE_KATE
+KATE_DIR=kate
+else
+KATE_DIR=
+endif
+
 if USE_LADSPA
 LADSPA_DIR = ladspa
 else
@@ -362,6 +368,7 @@ SUBDIRS=\
 	$(IVORBIS_DIR) \
 	$(JACK_DIR) \
 	$(JP2K_DIR) \
+	$(KATE_DIR) \
 	$(LADSPA_DIR) \
 	$(LV2_DIR) \
 	$(LCS_DIR) \
@@ -411,6 +418,7 @@ DIST_SUBDIRS = \
 	ladspa \
 	jack \
 	jp2k \
+	kate \
 	libmms \
 	lv2 \
 	dts \

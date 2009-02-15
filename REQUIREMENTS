@@ -118,9 +118,11 @@ libtheora	(for Ogg Theora video support)
 libmms		(for MMS protocol support)
 			(http://www.sf.net/projects/libmms)
 libamrnb	(for AMR-NB support)
-			(http://http://www.penguin.cz/~utx/amr)
+			(http://www.penguin.cz/~utx/amr)
 libamrwb	(for AMR-WB support)
-			(http://http://www.penguin.cz/~utx/amr)
+			(http://www.penguin.cz/~utx/amr)
+libkate		(for Kate support)
+			(http://libkate.googlecode.com/)
 
 
 Optional (debian) packages:

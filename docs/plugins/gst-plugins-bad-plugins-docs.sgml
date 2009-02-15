@@ -50,6 +50,10 @@
     <xi:include href="xml/element-ivorbisdec.xml" />
     <xi:include href="xml/element-jackaudiosrc.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
+    <xi:include href="xml/element-kateenc.xml" />
+    <xi:include href="xml/element-katedec.xml" />
+    <xi:include href="xml/element-kateparse.xml" />
+    <xi:include href="xml/element-katetag.xml" />
     <xi:include href="xml/element-legacyresample.xml" />
     <xi:include href="xml/element-liveadder.xml" />
     <xi:include href="xml/element-metadatademux.xml" />
@@ -76,6 +80,7 @@
     <xi:include href="xml/element-speed.xml" />
     <xi:include href="xml/element-stereo.xml" />
     <!--xi:include href="xml/element-theoradecexp.xml" /-->
+    <xi:include href="xml/element-tiger.xml" />
     <xi:include href="xml/element-timidity.xml" />
     <xi:include href="xml/element-trm.xml" />
     <xi:include href="xml/element-valve.xml" />
@@ -120,6 +125,7 @@
     <xi:include href="xml/plugin-gstrtpmanager.xml" />
     <xi:include href="xml/plugin-h264parse.xml" />
     <xi:include href="xml/plugin-jack.xml" />
+    <xi:include href="xml/plugin-kate.xml" />
     <xi:include href="xml/plugin-ladspa.xml" />
     <xi:include href="xml/plugin-liveadder.xml" />
     <xi:include href="xml/plugin-metadata.xml" />
