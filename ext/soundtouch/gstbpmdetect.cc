@@ -225,7 +225,6 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       bpm_detect->priv->detect->inputSamples (intmp, MIN (nsamples, 2048));
       nsamples -= 2048;
       inbuf += 2048 * 2;
-      intmp += 2048 * 2;
     }
   }
 
