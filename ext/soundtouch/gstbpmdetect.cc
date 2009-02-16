@@ -215,17 +215,18 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       inbuf += 2048;
     }
   } else {
-    gfloat *data, *inbuf;
+    gfloat *inbuf, *intmp, data[2*2048];
 
-    data = inbuf =
-        (gfloat *) g_memdup (GST_BUFFER_DATA (in), GST_BUFFER_SIZE (in));
+    inbuf = (gfloat *) GST_BUFFER_DATA (in);
+    intmp = data;
 
     while (nsamples > 0) {
-      bpm_detect->priv->detect->inputSamples (inbuf, MIN (nsamples, 2048));
+      memcpy (intmp, inbuf, sizeof (gfloat) * 2 * MIN (nsamples, 2048));
+      bpm_detect->priv->detect->inputSamples (intmp, MIN (nsamples, 2048));
       nsamples -= 2048;
       inbuf += 2048 * 2;
+      intmp += 2048 * 2;
     }
-    g_free (data);
   }
 
   bpm = bpm_detect->priv->detect->getBpm ();
