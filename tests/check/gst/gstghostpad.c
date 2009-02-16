@@ -148,6 +148,8 @@ GST_START_TEST (test_remove2)
 
 GST_END_TEST;
 
+
+
 /* test if a ghost pad without a target can be linked and
  * unlinked. An untargeted ghostpad has a default ANY caps unless there 
  * is a padtemplate that says something else.
@@ -213,6 +215,46 @@ GST_START_TEST (test_ghost_pads_notarget)
 }
 
 GST_END_TEST;
+
+/* Test that removing the target of a ghostpad properly sets the target of the
+ * ghostpad to NULL */
+GST_START_TEST (test_remove_target)
+{
+  GstElement *b1, *b2, *src, *sink;
+
+  GstPad *sinkpad, *ghost, *target;
+
+  b1 = gst_element_factory_make ("pipeline", NULL);
+  b2 = gst_element_factory_make ("bin", NULL);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+
+  fail_unless (gst_bin_add (GST_BIN (b2), sink));
+  fail_unless (gst_bin_add (GST_BIN (b1), src));
+  fail_unless (gst_bin_add (GST_BIN (b1), b2));
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
+
+  ghost = gst_element_get_static_pad (b2, "sink");
+
+  target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost));
+  fail_unless (target == sinkpad);
+  gst_object_unref (target);
+  gst_object_unref (sinkpad);
+
+  gst_bin_remove (GST_BIN (b2), sink);
+
+  target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghost));
+  fail_unless (target == NULL);
+
+  gst_object_unref (b1);
+}
+
+GST_END_TEST;
+
 
 /* test if linking fails over different bins using a pipeline
  * like this:
@@ -357,9 +399,9 @@ GST_START_TEST (test_ghost_pads)
   ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 1);
 
   ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 2);   /* gsink */
-  ASSERT_OBJECT_REFCOUNT (isink, "isink", 2);   /* gsink */
+  ASSERT_OBJECT_REFCOUNT (isink, "isink", 1);   /* gsink */
   ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 2); /* gsrc */
-  ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 2);     /* gsrc */
+  ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 1);     /* gsrc */
 
   gst_object_unref (gsink);
   ASSERT_OBJECT_REFCOUNT (isink, "isink", 1);
@@ -763,6 +805,7 @@ GST_START_TEST (test_ghost_pads_forward_setcaps)
   gst_object_unref (src_template);
   gst_object_unref (sink_template);
 }
+
 GST_END_TEST;
 
 static gint linked_count1;
@@ -771,26 +814,29 @@ static gint linked_count2;
 static gint unlinked_count2;
 
 static GstPadLinkReturn
-pad_linked1 (GstPad *pad, GstPad *peer)
+pad_linked1 (GstPad * pad, GstPad * peer)
 {
   linked_count1++;
 
   return GST_PAD_LINK_OK;
 }
+
 static void
-pad_unlinked1 (GstPad *pad)
+pad_unlinked1 (GstPad * pad)
 {
   unlinked_count1++;
 }
+
 static GstPadLinkReturn
-pad_linked2 (GstPad *pad, GstPad *peer)
+pad_linked2 (GstPad * pad, GstPad * peer)
 {
   linked_count2++;
 
   return GST_PAD_LINK_OK;
 }
+
 static void
-pad_unlinked2 (GstPad *pad)
+pad_unlinked2 (GstPad * pad)
 {
   unlinked_count2++;
 }
@@ -863,6 +909,7 @@ GST_START_TEST (test_ghost_pads_sink_link_unlink)
   gst_object_unref (srctempl);
   gst_object_unref (sinktempl);
 }
+
 GST_END_TEST;
 
 GST_START_TEST (test_ghost_pads_src_link_unlink)
@@ -965,6 +1012,7 @@ GST_START_TEST (test_ghost_pads_src_link_unlink)
   gst_object_unref (srctempl);
   gst_object_unref (sinktempl);
 }
+
 GST_END_TEST;
 
 static Suite *
@@ -977,6 +1025,7 @@ gst_ghost_pad_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_remove1);
   tcase_add_test (tc_chain, test_remove2);
+  tcase_add_test (tc_chain, test_remove_target);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_ghost_pads);
   tcase_add_test (tc_chain, test_ghost_pads_bin);
