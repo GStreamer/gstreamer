@@ -835,6 +835,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       if (!caps && new) {
         GST_WARNING_OBJECT (demux, "No caps created, ignoring stream");
         g_free (etrack->mapping_data);
+        etrack->mapping_data = NULL;
         if (etrack->tags)
           gst_tag_list_free (etrack->tags);
         goto next;
