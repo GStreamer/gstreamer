@@ -128,6 +128,7 @@ gst_python_plugin_load_file (GstPlugin * plugin, const char *name)
     PyErr_Clear ();
     Py_DECREF (elementfactory);
     Py_DECREF (class);
+    return FALSE;
   }
 
   GST_LOG ("Valid plugin");
