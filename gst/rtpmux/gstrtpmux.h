@@ -60,7 +60,7 @@ struct _GstRTPMux
 
   gint32   ts_offset;
   gint16   seqnum_offset;
-  guint16  seqnum;
+  guint16  seqnum;         /* protected by object lock */
   guint    ssrc;
   guint    current_ssrc;
 };
