@@ -111,6 +111,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_LATENCY, "latency", 0},
   {GST_MESSAGE_ASYNC_START, "async-start", 0},
   {GST_MESSAGE_ASYNC_DONE, "async-done", 0},
+  {GST_MESSAGE_REQUEST_STATE, "request-state", 0},
   {0, NULL, 0}
 };
 
@@ -933,6 +934,35 @@ gst_message_new_latency (GstObject * src)
 }
 
 /**
+ * gst_message_new_request_state:
+ * @src: The object originating the message.
+ * @state: The new requested state
+ *
+ * This message can be posted by elements when they want to have their state
+ * changed. A typical use case would be an audio server that wants to pause the
+ * pipeline because a higher priority stream is being played.
+ *
+ * Returns: The new requst state message. 
+ *
+ * MT safe.
+ *
+ * Since: 0.10.23
+ */
+GstMessage *
+gst_message_new_request_state (GstObject * src, GstState state)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_empty_new ("GstMessageRequestState");
+  gst_structure_id_set (structure,
+      GST_QUARK (NEW_STATE), GST_TYPE_STATE, (gint) state, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_REQUEST_STATE, src, structure);
+
+  return message;
+}
+
+/**
  * gst_message_get_structure:
  * @message: The #GstMessage.
  *
@@ -1430,4 +1460,26 @@ gst_message_parse_async_start (GstMessage * message, gboolean * new_base_time)
     *new_base_time =
         g_value_get_boolean (gst_structure_id_get_value (message->structure,
             GST_QUARK (NEW_BASE_TIME)));
+}
+
+/**
+ * gst_message_parse_request_state:
+ * @message: A valid #GstMessage of type GST_MESSAGE_REQUEST_STATE.
+ * @state: Result location for the requested state or NULL
+ *
+ * Extract the requested state from the request_state message.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.23
+ */
+void
+gst_message_parse_request_state (GstMessage * message, GstState * state)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_REQUEST_STATE);
+
+  if (state)
+    *state = g_value_get_enum (gst_structure_id_get_value (message->structure,
+            GST_QUARK (NEW_STATE)));
 }

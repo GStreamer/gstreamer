@@ -128,4 +128,8 @@ Message types
     Posted by elements when the latency in a pipeline changed and a new global
     latency should be calculated by the pipeline or application.
 
+  GST_MESSAGE_REQUEST_STATE:
 
+    Posted by elements when they want to change the state of the pipeline they
+    are in. A typical use case would be an audio sink that requests the pipeline
+    to pause in order to play a higher priority stream.

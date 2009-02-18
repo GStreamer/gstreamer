@@ -1089,6 +1089,8 @@ gst_message_parse_async_start
 gst_message_new_async_done
 gst_message_new_structure_change
 gst_message_parse_structure_change
+gst_message_new_request_state
+gst_message_parse_request_state
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE

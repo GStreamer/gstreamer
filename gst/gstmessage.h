@@ -81,6 +81,9 @@ typedef struct _GstMessageClass GstMessageClass;
  * pipeline. Since: 0.10.13
  * @GST_MESSAGE_LATENCY: Posted by elements when their latency changes. The
  * pipeline will calculate and distribute a new latency. Since: 0.10.12
+ * @GST_MESSAGE_REQUEST_STATE: Posted by elements when they want the pipeline to
+ * change state. This message is a suggestion to the application which can
+ * decide to perform the state change on (part of) the pipeline. Since: 0.10.23.
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -113,6 +116,7 @@ typedef enum
   GST_MESSAGE_LATENCY           = (1 << 19),
   GST_MESSAGE_ASYNC_START       = (1 << 20),
   GST_MESSAGE_ASYNC_DONE        = (1 << 21),
+  GST_MESSAGE_REQUEST_STATE     = (1 << 22),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -382,6 +386,10 @@ GstMessage *	gst_message_new_structure_change   (GstObject * src, GstStructureCh
                                                     GstElement *owner, gboolean busy);
 void		gst_message_parse_structure_change (GstMessage *message, GstStructureChangeType *type,
                                                     GstElement **owner, gboolean *busy);
+
+/* REQUEST_STATE */
+GstMessage *    gst_message_new_request_state   (GstObject * src, GstState state);
+void            gst_message_parse_request_state (GstMessage * message, GstState *state);
 
 /* custom messages */
 GstMessage *	gst_message_new_custom		(GstMessageType type,

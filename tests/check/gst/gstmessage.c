@@ -186,8 +186,25 @@ GST_START_TEST (test_parsing)
      void            gst_message_parse_warning       (GstMessage *message, GError **gerror, gchar **debug);
    */
 
+  /* GST_MESSAGE_REQUEST_STATE   */
+  {
+    GstState state;
 
+    state = GST_STATE_PAUSED;
 
+    message = gst_message_new_request_state (NULL, state);
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_REQUEST_STATE);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    /* set some wrong values to check if the parse method overwrites them
+     * with the good values */
+    state = GST_STATE_READY;
+    gst_message_parse_request_state (message, &state);
+    fail_unless (state == GST_STATE_PAUSED);
+
+    gst_message_unref (message);
+  }
 }
 
 GST_END_TEST;
