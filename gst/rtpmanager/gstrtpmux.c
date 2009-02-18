@@ -93,6 +93,7 @@ static void gst_rtp_mux_release_pad (GstElement * element, GstPad *pad);
 static GstFlowReturn gst_rtp_mux_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps);
+static GstCaps * gst_rtp_mux_getcaps (GstPad *pad);
 
 static GstStateChangeReturn gst_rtp_mux_change_state (GstElement *
     element, GstStateChange transition);
@@ -284,6 +285,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
 
   /* setup some pad functions */
   gst_pad_set_setcaps_function (sinkpad, gst_rtp_mux_setcaps);
+  gst_pad_set_getcaps_function (sinkpad, gst_rtp_mux_getcaps);
   if (klass->chain_func)
     gst_pad_set_chain_function (sinkpad, klass->chain_func);
   if (klass->sink_event_func)
@@ -426,6 +428,106 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
 
   return ret;
 }
+
+static void
+clear_caps (GstCaps *caps)
+{
+  gint i, j;
+
+  /* Lets only match on the clock-rate */
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    for (j = 0; j < gst_structure_n_fields (s); j++) {
+      const gchar *name = gst_structure_nth_field_name (s, j);
+
+      if (strcmp (name, "clock-rate")) {
+        gst_structure_remove_field (s, name);
+        j--;
+      }
+    }
+  }
+}
+
+static gboolean
+same_clock_rate_fold (gpointer item, GValue *ret, gpointer user_data)
+{
+  GstPad *mypad = user_data;
+  GstPad *pad = item;
+  GstCaps *peercaps;
+  GstCaps *othercaps;
+  const GstCaps *accumcaps;
+  GstCaps *intersect;
+
+  if (pad == mypad)
+    return TRUE;
+
+  peercaps = gst_pad_peer_get_caps (pad);
+  if (!peercaps)
+    return TRUE;
+
+  othercaps = gst_caps_intersect (peercaps,
+      gst_pad_get_pad_template_caps (pad));
+  gst_caps_unref (peercaps);
+
+  accumcaps = gst_value_get_caps (ret);
+
+  clear_caps (othercaps);
+
+  intersect = gst_caps_intersect (accumcaps, othercaps);
+
+  g_value_take_boxed (ret, intersect);
+
+  gst_caps_unref (othercaps);
+
+  return !gst_caps_is_empty (intersect);
+}
+
+static GstCaps *
+gst_rtp_mux_getcaps (GstPad *pad)
+{
+  GstRTPMux *mux = GST_RTP_MUX (gst_pad_get_parent (pad));
+  GstCaps *caps = NULL;
+  GstIterator *iter = NULL;
+  GValue v = {0};
+  GstIteratorResult res;
+  GstCaps *peercaps = gst_pad_peer_get_caps (mux->srcpad);
+  GstCaps *othercaps =  NULL;
+
+  if (peercaps) {
+    othercaps = gst_caps_intersect (peercaps,
+        gst_pad_get_pad_template_caps (pad));
+    gst_caps_unref (peercaps);
+  }
+  else {
+    othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mux->srcpad));
+  }
+
+  clear_caps (othercaps);
+
+  g_value_init (&v, GST_TYPE_CAPS);
+
+  iter = gst_element_iterate_sink_pads (GST_ELEMENT (mux));
+  do {
+    gst_value_set_caps (&v, othercaps);
+    res = gst_iterator_fold (iter, same_clock_rate_fold, &v, pad);
+  } while (res == GST_ITERATOR_RESYNC);
+  gst_iterator_free (iter);
+
+  caps = (GstCaps*) gst_value_get_caps (&v);
+
+  if (res == GST_ITERATOR_ERROR) {
+    gst_caps_unref (caps);
+    caps = gst_caps_new_empty ();
+  }
+
+  if (othercaps)
+    gst_caps_unref (othercaps);
+  gst_object_unref (mux);
+
+  return caps;
+}
+
 
 static void
 gst_rtp_mux_get_property (GObject * object,
