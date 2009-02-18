@@ -918,7 +918,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
         /* no pt field, use the internal pt */
         pt = dtmfsrc->pt;
         gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
-        GST_LOG_OBJECT (dtmfsrc, "using internal pt", pt);
+        GST_LOG_OBJECT (dtmfsrc, "using internal pt %d", pt);
       }
     }
 
