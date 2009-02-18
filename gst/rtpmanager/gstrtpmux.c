@@ -373,8 +373,10 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   buffer = gst_buffer_make_writable(buffer);
 
+  GST_OBJECT_LOCK (rtp_mux);
   rtp_mux->seqnum++;
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+  GST_OBJECT_UNLOCK (rtp_mux);
   GST_BUFFER_CAPS (buffer) = gst_caps_make_writable(GST_BUFFER_CAPS (buffer));
   structure = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0U);
   gst_structure_set (structure, "seqnum-base", G_TYPE_UINT, rtp_mux->seqnum_base, NULL);
@@ -545,7 +547,9 @@ gst_rtp_mux_get_property (GObject * object,
       g_value_set_int (value, rtp_mux->seqnum_offset);
       break;
     case PROP_SEQNUM:
+      GST_OBJECT_LOCK (rtp_mux);
       g_value_set_uint (value, rtp_mux->seqnum);
+      GST_OBJECT_UNLOCK (rtp_mux);
       break;
     case PROP_SSRC:
       g_value_set_uint (value, rtp_mux->ssrc);
@@ -583,6 +587,8 @@ gst_rtp_mux_set_property (GObject * object,
 static void
 gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
 {
+  GST_OBJECT_LOCK (rtp_mux);
+
   if (rtp_mux->ssrc == -1)
     rtp_mux->current_ssrc = g_random_int ();
   else
@@ -599,6 +605,8 @@ gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
   else
     rtp_mux->ts_base = rtp_mux->ts_offset;
     GST_DEBUG_OBJECT (rtp_mux, "set clock-base to %u", rtp_mux->ts_base);
+
+  GST_OBJECT_UNLOCK (rtp_mux);
 }
 
 static GstStateChangeReturn
