@@ -1625,6 +1625,8 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
             gst_element_get_request_pad (playsink->audio_tee, "src%d");
         gst_bin_add (GST_BIN_CAST (playsink), playsink->audio_tee);
         gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
+      } else {
+        gst_element_set_state (playsink->audio_tee, GST_STATE_PAUSED);
       }
       if (!playsink->audio_pad) {
         GST_LOG_OBJECT (playsink, "ghosting tee sinkpad");
