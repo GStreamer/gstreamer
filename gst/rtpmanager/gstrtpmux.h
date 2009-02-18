@@ -64,8 +64,6 @@ struct _GstRTPMux
   guint16  seqnum;
   guint    ssrc;
   guint    current_ssrc;
-
-  guint32 clock_rate;
 };
 
 struct _GstRTPMuxClass
