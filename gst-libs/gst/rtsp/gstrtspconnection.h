@@ -127,6 +127,48 @@ GstRTSPResult      gst_rtsp_connection_set_qos_dscp  (GstRTSPConnection *conn,
 /* accessors */
 const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
 
+/* async IO */
+
+/**
+ * GstRTSPChannel:
+ *
+ * Opaque RTSP channel object that can be used for asynchronous RTSP
+ * operations.
+ */
+typedef struct _GstRTSPChannel GstRTSPChannel;
+
+/**
+ * GstRTSPChannelFuncs:
+ * @message_received: callback when a message was received
+ * @message_sent: callback when a message was sent
+ * @closed: callback when the connection is closed
+ * @error: callback when an error occured
+ *
+ * Callback functions from a #GstRTSPChannel.
+ */
+typedef struct {
+  GstRTSPResult (*message_received) (GstRTSPChannel *channel, GstRTSPMessage *message,
+                                     gpointer user_data);
+  GstRTSPResult (*message_sent)     (GstRTSPChannel *channel, guint cseq, 
+                                     gpointer user_data);
+  GstRTSPResult (*closed)           (GstRTSPChannel *channel, gpointer user_data);
+  GstRTSPResult (*error)            (GstRTSPChannel *channel, GstRTSPResult result,
+                                     gpointer user_data);
+} GstRTSPChannelFuncs;
+
+GstRTSPChannel *   gst_rtsp_channel_new              (GstRTSPConnection *conn,
+                                                      GstRTSPChannelFuncs *funcs,
+						      gpointer user_data,
+						      GDestroyNotify notify);
+void               gst_rtsp_channel_unref            (GstRTSPChannel *channel);
+
+guint              gst_rtsp_channel_attach           (GstRTSPChannel *channel,
+                                                      GMainContext *context);
+
+guint              gst_rtsp_channel_queue_message    (GstRTSPChannel *channel,
+                                                      GstRTSPMessage *message);
+
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_CONNECTION_H__ */
