@@ -163,7 +163,7 @@ build_reset (GstRTSPBuilder * builder)
 /**
  * gst_rtsp_connection_create:
  * @url: a #GstRTSPUrl 
- * @conn: a #GstRTSPConnection
+ * @conn: storage for a #GstRTSPConnection
  *
  * Create a newly allocated #GstRTSPConnection from @url and store it in @conn.
  * The connection will not yet attempt to connect to @url, use
@@ -201,6 +201,62 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
 no_fdset:
   {
     g_free (newconn);
+    return GST_RTSP_ESYS;
+  }
+}
+
+/**
+ * gst_rtsp_connection_accept:
+ * @sock: a socket
+ * @conn: storage for a #GstRTSPConnection
+ *
+ * Accept a new connection on @sock and create a new #GstRTSPConnection for
+ * handling communication on new socket.
+ *
+ * Returns: #GST_RTSP_OK when @conn contains a valid connection.
+ *
+ * Since: 0.10.23
+ */
+GstRTSPResult
+gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
+{
+  int fd;
+  unsigned int address_len;
+  GstRTSPConnection *newconn;
+  struct sockaddr_in address;
+  GstRTSPUrl *url;
+
+  address_len = sizeof (address);
+  memset (&address, 0, address_len);
+
+  fd = accept (sock, (struct sockaddr *) &address, &address_len);
+  if (fd == -1)
+    goto accept_failed;
+
+  /* set to non-blocking mode so that we can cancel the communication */
+#ifndef G_OS_WIN32
+  fcntl (fd, F_SETFL, O_NONBLOCK);
+#else
+  ioctlsocket (fd, FIONBIO, &flags);
+#endif /* G_OS_WIN32 */
+
+  /* create a url for the client address */
+  url = g_new0 (GstRTSPUrl, 1);
+  url->host = g_strdup_printf ("%s", inet_ntoa (address.sin_addr));
+  url->port = address.sin_port;
+
+  /* now create the connection object */
+  gst_rtsp_connection_create (url, &newconn);
+  newconn->fd.fd = fd;
+  gst_poll_add_fd (newconn->fdset, &newconn->fd);
+
+  *conn = newconn;
+
+  return GST_RTSP_OK;
+
+  /* ERRORS */
+accept_failed:
+  {
     return GST_RTSP_ESYS;
   }
 }

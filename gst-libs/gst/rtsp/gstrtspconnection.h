@@ -84,6 +84,7 @@ struct _GstRTSPConnection
 
 /* opening/closing a connection */
 GstRTSPResult      gst_rtsp_connection_create        (GstRTSPUrl *url, GstRTSPConnection **conn);
+GstRTSPResult      gst_rtsp_connection_accept        (gint sock, GstRTSPConnection **conn);
 GstRTSPResult      gst_rtsp_connection_connect       (GstRTSPConnection *conn, GTimeVal *timeout);
 GstRTSPResult      gst_rtsp_connection_close         (GstRTSPConnection *conn);
 GstRTSPResult      gst_rtsp_connection_free          (GstRTSPConnection *conn);

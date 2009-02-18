@@ -1194,6 +1194,7 @@ gst_rtsp_base64_decode_ip
 <INCLUDE>gst/rtsp/gstrtspconnection.h</INCLUDE>
 GstRTSPConnection
 gst_rtsp_connection_create
+gst_rtsp_connection_accept
 gst_rtsp_connection_connect
 gst_rtsp_connection_close
 gst_rtsp_connection_free
