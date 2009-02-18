@@ -830,7 +830,7 @@ gst_rtsp_media_play (GstRTSPMedia *media, GArray *transports)
     g_signal_emit_by_name (stream->udpsink[1], "add", trans->destination, trans->client_port.max, NULL);
   }
 
-  g_message ("playing");
+  g_message ("playing media %p", media);
   media->target_state = GST_STATE_PLAYING;
   ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
 
@@ -882,7 +882,7 @@ gst_rtsp_media_pause (GstRTSPMedia *media, GArray *transports)
     g_signal_emit_by_name (stream->udpsink[1], "remove", trans->destination, trans->client_port.max, NULL);
   }
 
-  g_message ("pause");
+  g_message ("pause media %p", media);
   media->target_state = GST_STATE_PAUSED;
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
 
@@ -912,7 +912,7 @@ gst_rtsp_media_stop (GstRTSPMedia *media, GArray *transports)
 
   gst_rtsp_media_pause (media, transports);
 
-  g_message ("stop");
+  g_message ("stop media %p", media);
   media->target_state = GST_STATE_NULL;
   ret = gst_element_set_state (media->pipeline, GST_STATE_NULL);
 
