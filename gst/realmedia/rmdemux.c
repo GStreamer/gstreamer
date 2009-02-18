@@ -2522,19 +2522,16 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
   data += (2 + 4);
   size -= (2 + 4);
 
-  /* skip other stuff */
-  if (version == 0) {
-    /* uint8 packet_group */
-    /* uint8 flags        */
-    flags = GST_READ_UINT8 (data + 1);
-    data += 2;
-    size -= 2;
-  } else {
-    /* uint16 asm_rule */
-    /* uint8 asm_flags */
-    flags = GST_READ_UINT8 (data + 2);
-    data += 3;
-    size -= 3;
+  /* get flags */
+  flags = GST_READ_UINT8 (data + 1);
+
+  data += 2;
+  size -= 2;
+
+  /* version 1 has an extra byte */
+  if (version == 1) {
+    data += 1;
+    size -= 1;
   }
   key = (flags & 0x02) != 0;
   GST_DEBUG_OBJECT (rmdemux, "flags %d, Keyframe %d", flags, key);
