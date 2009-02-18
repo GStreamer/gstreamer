@@ -70,7 +70,7 @@ struct _GstRTSPClient {
   GObject       parent;
 
   GstRTSPConnection *connection;
-  struct sockaddr_in address;
+  GstRTSPChannel *channel;
   GThread *thread;
 
   guint                 timeout;
