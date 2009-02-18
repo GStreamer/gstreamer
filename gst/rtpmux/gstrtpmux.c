@@ -54,7 +54,6 @@ GST_ELEMENT_DETAILS ("RTP muxer",
 enum
 {
   ARG_0,
-  PROP_CLOCK_RATE,
   PROP_TIMESTAMP_OFFSET,
   PROP_SEQNUM_OFFSET,
   PROP_SEQNUM,
@@ -64,7 +63,6 @@ enum
 #define DEFAULT_TIMESTAMP_OFFSET -1
 #define DEFAULT_SEQNUM_OFFSET    -1
 #define DEFAULT_SSRC             -1
-#define DEFAULT_CLOCK_RATE        0
 
 typedef struct {
   gboolean have_base;
@@ -161,10 +159,6 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
   gobject_class->get_property = gst_rtp_mux_get_property;
   gobject_class->set_property = gst_rtp_mux_set_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLOCK_RATE,
-      g_param_spec_uint ("clock-rate", "clockrate",
-          "The clock-rate of the RTP streams",
-          0, G_MAXUINT, DEFAULT_CLOCK_RATE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
           "Timestamp Offset",
@@ -243,7 +237,6 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
   rtp_mux->ssrc = DEFAULT_SSRC;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
-  rtp_mux->clock_rate = DEFAULT_CLOCK_RATE;
 }
 
 static void
@@ -392,39 +385,16 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_rtp_mux_set_clock_rate (GstRTPMux *rtp_mux, gint clock_rate)
-{
-  gint ret = TRUE;
-
-  if (rtp_mux->clock_rate == 0) {
-    rtp_mux->clock_rate = clock_rate;
-    ret = TRUE;
-  }
-
-  else if (rtp_mux->clock_rate != clock_rate) {
-    GST_WARNING_OBJECT (rtp_mux, "Clock-rate already set to: %u",
-            rtp_mux->clock_rate);
-    ret = FALSE;
-  }
-
-  return ret;
-}
-
-static gboolean
 gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
 {
   GstRTPMux *rtp_mux;
   GstStructure *structure;
   gboolean ret = TRUE;
-  gint clock_rate;
   GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_get_int (structure, "clock-rate", &clock_rate)) {
-    ret = gst_rtp_mux_set_clock_rate (rtp_mux, clock_rate);
-  }
 
   if (!ret)
     goto out;
@@ -460,9 +430,6 @@ gst_rtp_mux_get_property (GObject * object,
   rtp_mux = GST_RTP_MUX (object);
 
   switch (prop_id) {
-    case PROP_CLOCK_RATE:
-      g_value_set_uint (value, rtp_mux->clock_rate);
-      break;
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int (value, rtp_mux->ts_offset);
       break;
@@ -490,9 +457,6 @@ gst_rtp_mux_set_property (GObject * object,
   rtp_mux = GST_RTP_MUX (object);
 
   switch (prop_id) {
-    case PROP_CLOCK_RATE:
-      rtp_mux->clock_rate = g_value_get_uint (value);
-      break;
     case PROP_TIMESTAMP_OFFSET:
       rtp_mux->ts_offset = g_value_get_int (value);
       break;
