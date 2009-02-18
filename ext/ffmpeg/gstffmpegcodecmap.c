@@ -1027,6 +1027,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/qcelp", NULL);
       break;
 
+    case CODEC_ID_AMV:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-amv", NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
@@ -1134,6 +1138,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_IMA_SMJPEG:
     case CODEC_ID_ADPCM_IMA_AMV:
     case CODEC_ID_ADPCM_IMA_ISS:
+    case CODEC_ID_ADPCM_IMA_EA_EACS:
+    case CODEC_ID_ADPCM_IMA_EA_SEAD:
     case CODEC_ID_ADPCM_MS:
     case CODEC_ID_ADPCM_4XM:
     case CODEC_ID_ADPCM_XA:
@@ -1149,6 +1155,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_EA_R1:
     case CODEC_ID_ADPCM_EA_R2:
     case CODEC_ID_ADPCM_EA_R3:
+    case CODEC_ID_ADPCM_EA_MAXIS_XA:
+    case CODEC_ID_ADPCM_EA_XAS:
     case CODEC_ID_ADPCM_THP:
     {
       gchar *layout = NULL;
@@ -1177,6 +1185,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           break;
         case CODEC_ID_ADPCM_IMA_ISS:
           layout = "iss";
+          break;
+        case CODEC_ID_ADPCM_IMA_EA_EACS:
+          layout = "ea-eacs";
+          break;
+        case CODEC_ID_ADPCM_IMA_EA_SEAD:
+          layout = "ea-sead";
           break;
         case CODEC_ID_ADPCM_MS:
           layout = "microsoft";
@@ -1222,6 +1236,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           break;
         case CODEC_ID_ADPCM_EA_R3:
           layout = "ea-r3";
+          break;
+        case CODEC_ID_ADPCM_EA_MAXIS_XA:
+          layout = "ea-maxis-xa";
+          break;
+        case CODEC_ID_ADPCM_EA_XAS:
+          layout = "ea-xas";
           break;
         case CODEC_ID_ADPCM_THP:
           layout = "thp";
