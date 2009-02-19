@@ -432,7 +432,7 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
 }
 
 static void
-clear_caps (GstCaps *caps)
+clear_caps (GstCaps *caps, gboolean only_clock_rate)
 {
   gint i, j;
 
@@ -443,7 +443,8 @@ clear_caps (GstCaps *caps)
     for (j = 0; j < gst_structure_n_fields (s); j++) {
       const gchar *name = gst_structure_nth_field_name (s, j);
 
-      if (strcmp (name, "clock-rate")) {
+      if (strcmp (name, "clock-rate") && (only_clock_rate ||
+              (strcmp (name, "ssrc")))) {
         gst_structure_remove_field (s, name);
         j--;
       }
@@ -474,7 +475,7 @@ same_clock_rate_fold (gpointer item, GValue *ret, gpointer user_data)
 
   accumcaps = gst_value_get_caps (ret);
 
-  clear_caps (othercaps);
+  clear_caps (othercaps, TRUE);
 
   intersect = gst_caps_intersect (accumcaps, othercaps);
 
@@ -505,7 +506,7 @@ gst_rtp_mux_getcaps (GstPad *pad)
     othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mux->srcpad));
   }
 
-  clear_caps (othercaps);
+  clear_caps (othercaps, FALSE);
 
   g_value_init (&v, GST_TYPE_CAPS);
 
