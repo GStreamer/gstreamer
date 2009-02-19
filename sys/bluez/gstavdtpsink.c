@@ -143,8 +143,7 @@ gst_avdtp_sink_stop (GstBaseSink * basesink)
   }
 
   if (self->stream) {
-    g_io_channel_flush (self->stream, NULL);
-    g_io_channel_close (self->stream);
+    g_io_channel_shutdown (self->stream, TRUE, NULL);
     g_io_channel_unref (self->stream);
     self->stream = NULL;
   }
