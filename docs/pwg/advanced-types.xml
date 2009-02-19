@@ -265,11 +265,11 @@ plugin_init (GstPlugin *plugin)
             </entry>
             <entry>endianness</entry>
             <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
+            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
             <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
               means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
               means <quote>big-endian</quote> (byte order is <quote>most
               significant byte first</quote>).
             </entry>
@@ -314,11 +314,11 @@ plugin_init (GstPlugin *plugin)
             </entry>
             <entry>endianness</entry>
             <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
+            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
             <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
               means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
               means <quote>big-endian</quote> (byte order is <quote>most
               significant byte first</quote>).
             </entry>
@@ -797,11 +797,11 @@ plugin_init (GstPlugin *plugin)
           <row>
             <entry>endianness</entry>
             <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (1234) or G_LITTLE_ENDIAN (4321)</entry>
+            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
             <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (4321)
+              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
               means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (1234)
+              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
               means <quote>big-endian</quote> (byte order is <quote>most
               significant byte first</quote>). For 24/32bpp, this should always
               be big endian because the byte order can be given in both.

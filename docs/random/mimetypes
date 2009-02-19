@@ -538,7 +538,7 @@ height = 1 - MAXINT (INT)
 
 2 - Raw video (RGB)
     MIME type: video/x-raw-rgb
-    Properties: endianness = 1234/4321 (INT) <- use G_LITTLE/BIG_ENDIAN
+    Properties: endianness = 1234/4321 (INT) <- use G_LITTLE_ENDIAN/G_BIG_ENDIAN
                 depth = 15/16/24 (INT, color depth)
                 bpp = 16/24/32 (INT, bits used to store each pixel)
                 red_mask = bitmask (0x..) (INT)
@@ -585,7 +585,7 @@ format-specific properties:
 
 rate = 1 - MAXINT (INT, sampling rate)
 channels = 1 - MAXINT (INT, number of audio channels)
-endianness = 1234/4321 (INT) <- use G_BIG/LITTLE_ENDIAN
+endianness = 1234/4321 (INT) <- use G_LITTLE_ENDIAN/G_BIG_ENDIAN/G_BYTE_ORDER
 
 3 - Raw audio (integer format)
     MIME type: audio/x-raw-int
