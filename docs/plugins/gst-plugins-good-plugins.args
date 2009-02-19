@@ -1461,7 +1461,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -19379,6 +19379,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPulseSink::volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume</NICK>
+<BLURB>Volume of this stream.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPulseSrc::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -19611,7 +19621,7 @@
 <ARG>
 <NAME>GstHDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -19774,7 +19784,7 @@
 <RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Delay</NICK>
-<BLURB>Delay of the echo in nanosecondsecho.</BLURB>
+<BLURB>Delay of the echo in nanoseconds.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -19796,6 +19806,16 @@
 <NICK>Intensity</NICK>
 <BLURB>Intensity of the echo.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioEcho::max-delay</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Delay</NICK>
+<BLURB>Maximum delay of the echo in nanoseconds (can't be changed in PLAYING or PAUSED state).</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>

@@ -3,11 +3,11 @@
   <description>ALaw audio conversion routines</description>
   <filename>../../gst/law/.libs/libgstalaw.so</filename>
   <basename>libgstalaw.so</basename>
-  <version>0.10.13.1</version>
+  <version>0.10.14</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <package>GStreamer Good Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>alawdec</name>

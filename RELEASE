@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.11 "Secondary Consideration"
+Release notes for GStreamer Good Plug-ins 0.10.14 "Disaffected Affectation"
         
 
 
@@ -54,52 +54,102 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * HDV capture support
-      * Port flactag element to 0.10
-      * Support FLAC in alternate bit-depths and more samplerates
-      * Matroska muxing improvements
-      * Support Google RTSP variant
-      * Many other bug-fixes and improvements
+      * Add autodetect source elements
+      * Improvements in RTP payload/depayload and RTSP
+      * Support float input in wav, and require depth == width
+      * Support inverted RGB video in avi
+      * Compilation fixes and smarter format selection in V4L2 support
+      * Use libv4l when available
+      * Don't install static plugin libraries any more
+      * Matroska muxing: Add Dirac, fix AAC
+      * Improve qtdemux segment handling
+      * Add presets to equalizer
+      * OS/X video and audio output improvements
+      * Rework Pulseaudio audio output
+      * Support basic and digest auth in souphttpsrc
+      * Use libsoup-gnome instead of libsoup when available
+      * DV demuxer fixes
+      * New IIR and FIR base classes and echo filter in audiofx plugin
+      * Improved spectrum analysis plugin
+      * 8 bit greyscale support in v4l2src and videocrop
+      * New aspectratiocrop element
+      * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 545433 : [wavparse] support tempo tag
-      * 311586 : Matroska mux/demux don't support flac
-      * 350830 : [raw1394] Add HDV support
-      * 413841 : [flactag] needs porting to 0.10.x
-      * 536067 : [matroska] Add support for real audio/video
-      * 537361 : videomixer segment handler fail
-      * 543101 : The udpsrc/udpsink/multiudpsink/dynudpsink elements may l...
-      * 544956 : [videobox] segfault when changing properties at running p...
-      * 545463 : autodetect plugin links to gconf, unnecessarily
-      * 545710 : [rtspsrc] : create rtp/rtcp socket pair + same port for d...
-      * 546465 : can't play m.youtube.com rtsp streams
-      * 547075 : [speex] Encoder doesn't handle non-zero start timestamps ...
-      * 547217 : Implement GstPropertyProbe interface on pulsesrc for dete...
-      * 547227 : Implement GstPropertyProbe interface on pulsesink for det...
-      * 547518 : pulsemixer probe fails after device property is set
-      * 547519 : Add device-name property to pulsesrc
-      * 548530 : wavenc allows audio depth of 25
-      * 548831 : matroska demuxer setting incorrect timestamps
-      * 549073 : buffer_alloc function from new basetransform sometimes fa...
-      * 549090 : v4l2src has no property named norm but notifies it
-      * 549551 : conversion of gst structure names to mime types in multip...
-      * 549784 : Memory Corruption Probing v4l2src with Video4Linux1 device
-      * 550015 : build failure: gstcmmlparser.c:115: error: format not a s...
-      * 550791 : [flacenc] files are too big, mid-side-stereo=true should ...
-      * 551048 : rtsp implementation sends PAUSE even when server doesn't ...
-      * 551570 : plugin ximagesrc is memory leaking...
-      * 551584 : Crash when modifying the videobox " top " and " left " live w...
-      * 552213 : [qtdemux] map tiff fourcc to image/tiff caps
-      * 553191 : udpsrc: bind() fails on OS X
-      * 554771 : totem spins CPU 100% while allocating (infinitely) becaus...
-      * 556010 : AVI muxer segfault
-      * 556381 : [icydemux] test fails with latest core
-      * 556424 : [avidemux] segmentation fault when creating indexes
-      * 557085 : [videobox] support dynamically changing properties
-      * 557610 : udpsrc fails to bind() on Mac OS X (IPv4 vs. IPv6 problem)
-      * 547842 : Vorbis RTP RFC 5215 is out
-      * 550288 : Sound not played - a quicktime file
+      * 561502 : Not-negociated error in udpsrc
+      * 522183 : add preset suport to gstequalizer
+      * 523813 : [autodetect] add autovideosrc and autoaudiosrc
+      * 557709 : goom should have license headers in all source files
+      * 560155 : segfault when trying to set tag to NULL with avimux
+      * 527951 : [new element] aspectratiocrop
+      * 529379 : RTSP seeks when pipeline is in STATE_PAUSED
+      * 532409 : RTP payload/depayloader for G.729
+      * 537539 : [pulse] Rhythmbox starts using 100% of CPU time when puls...
+      * 537540 : [pulse] Causes a deadlock when the pulseserver dies
+      * 537543 : [pulse] sink/src should have " volume " property (was GstMi...
+      * 545033 : [v4l2src] Add support for camera specific formats
+      * 552140 : [soup] use libsoup-gnome for proxy configuration if avail...
+      * 556019 : Add the ability to make souphttpsrc act as a live source
+      * 556484 : Implement getcaps in rtpL16pay
+      * 556641 : rtpL16depay doesn't support multichannel audio
+      * 556802 : Misspelled messages
+      * 556955 : [videocrop] fails to renegotiate
+      * 556986 : pulsesink deadlocks when raising an error
+      * 557260 : [equalizer] Calculates coefficients for every buffer
+      * 557293 : Argument type mismatch on Windows
+      * 557294 : cross mingw32 gcc: getaddrinfo is not in ws2_32.dll befor...
+      * 557710 : Memory leak related to matroskamux's request pads
+      * 558427 : rtpmpapay/depay are too wide
+      * 558638 : Compiler error on v4l2
+      * 558711 : gst-plugins-good-0.10.11 compile fails
+      * 559288 : [qtdemux] deadly embrace!
+      * 559545 : rtspsrc could not receive data from RTSP server because o...
+      * 559547 : Seek bugs when playing rtsp video in m.youtube.com
+      * 560641 : rtp mp4 payloader doesn't flush the last frame upon EOS
+      * 560756 : New Plugin: JPEG RTP Payloader
+      * 561625 : Rtspsrc set segment's last_stop incorrectly
+      * 561775 : souphttpsrc patch to support basic and digest authentication
+      * 561802 : DLNA specific HTTP header missing
+      * 561990 : qtdemux build fails on mingw due to missing definition of...
+      * 562434 : [wavenc] Add support for a-law and mu-law encoded wav files
+      * 562572 : multiudpsink handles errors in _render() too aggressively
+      * 563414 : Fix for SunAudioMixer plugin
+      * 563504 : add libv4l2 support to v4l2 gst plugin - required for mos...
+      * 563509 : [rtp_data_test] Complains about negotiation errors with m...
+      * 563510 : [videocrop] 1x1 unit test fails
+      * 564437 : rtpjpegdepay was unable to handle frame dimensions greate...
+      * 564948 : Fix and clean up osxaudio
+      * 565850 : mov files can contain xvid, fmp4 and ac3 tracks
+      * 566616 : v4l2src: b/w support
+      * 566843 : [pulse] Terminating an audio stream hangs the application
+      * 567577 : [audiofx] Add generic IIR/FIR audio filter elements
+      * 567642 : spectrum element has undocumented arbitrary limitation on...
+      * 567746 : fix for 547227 created a ref loop
+      * 567794 : [PATCH] Rework pulse plugin
+      * 567800 : Mp4 created by Avidemux don't play.
+      * 567853 : osxaudiosrc does not build on 10.4
+      * 567874 : [audiofx] Echo/Reverb filter
+      * 567955 : [spectrum] Need compensation for rounding errors
+      * 567992 : [videocrop] wrong mouse navigation commands while cropping
+      * 568395 : [audiofx] Rename audioreverb to audioecho
+      * 568780 : elements/videocrop check fails
+      * 568809 : Patch needed for building gst-plugins-good 0.10.13 on Sol...
+      * 569820 : In some cases v4l2src element does not return correct norm
+      * 570343 : equalizer bands != specified parameters
+      * 570435 : Read Title element of Matroska files
+      * 571038 : [osxvideosink] build fail
+      * 571150 : aspectratiocrop : Memory leak
+      * 571153 : [pulsemixer] compiler warnings (on ARM)
+      * 571204 : [pulsesink] PA assertion failure triggers abort
+      * 570581 : osxvideosink: non-embedded mode is badly broken and shoul...
+      * 341752 : [rtspsrc] 500 Internal Server Error response with tagessc...
+      * 420658 : gconfaudiosink is not behaving normally
+      * 558554 : [avidemux] avidemux not recognizing certain uncompressed ...
+      * 561580 : GStreamer does not play a specific WAV file
+      * 563056 :  " rtpjpegdepay ! jpegdec " doesnt works
+      * 565441 : Smoke encoder doesn't set caps correctly
+      * 567952 : videocrop: add b/w support
 
 Download
 
@@ -118,8 +168,7 @@ http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
 Developers
 
-CVS is hosted on cvs.freedesktop.org.
-All code is in CVS and can be checked out from there.
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
 Interested developers of the core library, plug-ins, and applications should
 subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
@@ -129,27 +178,45 @@ Applications
   
 Contributors to this release
     
-      * Aurelien Grimaud
-      * Craig Keogh
-      * Daniel Franke
+      * Alexandre Rostovtsev
+      * Andy Wingo
+      * Bastien Nocera
+      * Bjorn Ostby
+      * Brian Cameron
+      * Brijesh Singh
+      * Christian Schaller
+      * Cygwin Ports maintainer
       * David Schleef
       * Edward Hervey
-      * Filippo Argiolas
-      * Frederic Crozat
+      * Eric Zhang
+      * Fabricio Godoy
       * Jan Schmidt
       * Jonathan Matthew
-      * Laszlo Pandy
+      * Julien Moutte
+      * Justin Karnegas
+      * Lennart Poettering
+      * Luotao Fu
       * Mark Nauwelaerts
-      * Mersad Jelacic
       * Michael Smith
-      * Mike Ruprecht
-      * Ole André Vadla Ravnås
+      * Nick Haddad
       * Olivier Crete
+      * Pepijn Van Eeckhoudt
       * Peter Kjellerstedt
+      * Robin Stocker
+      * Ron McOuat
+      * Sascha Hauer
       * Sebastian Dröge
+      * Sjoerd Simons
       * Stefan Kost
+      * Tal Shalif
+      * Thiago Sousa Santos
       * Thijs Vermeir
+      * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
-      * Zaheer Abbas Merali
+      * Yotam
+      * Zeeshan Ali
+      * j^
+      * lrn1986 at gmail dot com
+      * 이문형
  
