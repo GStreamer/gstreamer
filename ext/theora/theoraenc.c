@@ -119,6 +119,7 @@ _ilog (unsigned int v)
 #define THEORA_DEF_KEYFRAME_MINDISTANCE 8
 #define THEORA_DEF_NOISE_SENSITIVITY    1
 #define THEORA_DEF_SHARPNESS            0
+#define THEORA_DEF_SPEEDLEVEL           1
 enum
 {
   ARG_0,
@@ -134,6 +135,7 @@ enum
   ARG_KEYFRAME_MINDISTANCE,
   ARG_NOISE_SENSITIVITY,
   ARG_SHARPNESS,
+  ARG_SPEEDLEVEL,
   /* FILL ME */
 };
 
@@ -265,6 +267,12 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
       g_param_spec_int ("sharpness", "Sharpness", "Sharpness", 0, 2,
           THEORA_DEF_SHARPNESS,
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, ARG_SPEEDLEVEL,
+      g_param_spec_int ("speed-level", "Speed level",
+          "Controls the amount of motion vector searching done while "
+          "encoding.  This property requires libtheora version >= 1.0",
+          0, 2, THEORA_DEF_SPEEDLEVEL,
+          (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state = theora_enc_change_state;
   GST_DEBUG_CATEGORY_INIT (theoraenc_debug, "theoraenc", 0, "Theora encoder");
@@ -307,6 +315,8 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
       "keyframe_frequency_force is %d, granule shift is %d",
       enc->info.keyframe_frequency_force, enc->granule_shift);
   enc->expected_ts = GST_CLOCK_TIME_NONE;
+
+  enc->speed_level = THEORA_DEF_SPEEDLEVEL;
 }
 
 static void
@@ -327,6 +337,10 @@ theora_enc_reset (GstTheoraEnc * enc)
 {
   theora_clear (&enc->state);
   theora_encode_init (&enc->state, &enc->info);
+#ifdef TH_ENCCTL_SET_SPLEVEL
+  theora_control (&enc->state, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
+      sizeof (enc->speed_level));
+#endif
 }
 
 static void
@@ -1101,6 +1115,11 @@ theora_enc_set_property (GObject * object, guint prop_id,
     case ARG_SHARPNESS:
       enc->sharpness = g_value_get_int (value);
       break;
+    case ARG_SPEEDLEVEL:
+#ifdef TH_ENCCTL_SET_SPLEVEL
+      enc->speed_level = g_value_get_int (value);
+#endif
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1149,6 +1168,9 @@ theora_enc_get_property (GObject * object, guint prop_id,
       break;
     case ARG_SHARPNESS:
       g_value_set_int (value, enc->sharpness);
+      break;
+    case ARG_SPEEDLEVEL:
+      g_value_set_int (value, enc->speed_level);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

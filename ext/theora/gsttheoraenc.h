@@ -104,6 +104,8 @@ struct _GstTheoraEnc
   guint64 granulepos_offset;
   guint64 timestamp_offset;
   gint granule_shift;  
+
+  gint speed_level;
 };
 
 struct _GstTheoraEncClass
