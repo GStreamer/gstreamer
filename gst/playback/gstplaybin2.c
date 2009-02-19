@@ -265,6 +265,7 @@ struct _GstSourceSelect
   GPtrArray *channels;
   GstPad *srcpad;               /* the source pad of the selector */
   GstPad *sinkpad;              /* the sinkpad of the sink when the selector is linked */
+  GstElement *fakesink;         /* the fakesink the selector might be linked to */
 };
 
 #define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
@@ -323,6 +324,26 @@ struct _GstSourceGroup
 #define GST_PLAY_BIN_LOCK(bin) (g_mutex_lock (GST_PLAY_BIN_GET_LOCK(bin)))
 #define GST_PLAY_BIN_UNLOCK(bin) (g_mutex_unlock (GST_PLAY_BIN_GET_LOCK(bin)))
 
+/* lock to protect dynamic callbacks, like no-more-pads */
+#define GST_PLAY_BIN_DYN_LOCK(bin)    g_mutex_lock ((bin)->dyn_lock)
+#define GST_PLAY_BIN_DYN_UNLOCK(bin)  g_mutex_unlock ((bin)->dyn_lock)
+
+/* lock for shutdown */
+#define GST_PLAY_BIN_SHUTDOWN_LOCK(bin,label)     \
+G_STMT_START {                                    \
+  if (g_atomic_int_get (&bin->shutdown))          \
+    goto label;                                   \
+  GST_PLAY_BIN_DYN_LOCK (bin);                    \
+  if (g_atomic_int_get (&bin->shutdown)) {        \
+    GST_PLAY_BIN_DYN_UNLOCK (bin);                \
+    goto label;                                   \
+  }                                               \
+} G_STMT_END
+
+/* unlock for shutdown */
+#define GST_PLAY_BIN_SHUTDOWN_UNLOCK(bin)         \
+  GST_PLAY_BIN_DYN_UNLOCK (bin);                  \
+
 /**
  * GstPlayBin2:
  *
@@ -356,6 +377,11 @@ struct _GstPlayBin
 
   /* the last activated source */
   GstElement *source;
+
+  /* lock protecting dynamic adding/removing */
+  GMutex *dyn_lock;
+  /* if we are shutting down or not */
+  gint shutdown;
 
   GValueArray *elements;        /* factories we can use for selecting elements */
 };
@@ -965,6 +991,7 @@ gst_play_bin_init (GstPlayBin * playbin)
   GstFactoryListType type;
 
   playbin->lock = g_mutex_new ();
+  playbin->dyn_lock = g_mutex_new ();
 
   /* init groups */
   playbin->curr_group = &playbin->groups[0];
@@ -1008,6 +1035,7 @@ gst_play_bin_finalize (GObject * object)
   g_value_array_free (playbin->elements);
   g_free (playbin->encoding);
   g_mutex_free (playbin->lock);
+  g_mutex_free (playbin->dyn_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1892,6 +1920,8 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "no more pads in group %p", group);
 
+  GST_PLAY_BIN_SHUTDOWN_LOCK (playbin, shutdown);
+
   GST_SOURCE_GROUP_LOCK (group);
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
@@ -1959,6 +1989,55 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     GST_DEBUG_OBJECT (playbin, "signal other decodebins");
     GST_SOURCE_GROUP_BROADCAST (group);
     GST_SOURCE_GROUP_UNLOCK (group);
+  }
+
+  GST_PLAY_BIN_SHUTDOWN_UNLOCK (playbin);
+
+  return;
+
+shutdown:
+  {
+    GST_DEBUG ("ignoring, we are shutting down");
+    /* unblock selector and link fakesink in READY to make downstream
+     * return WRONG_STATE
+     * (trying to avoid NOT_LINKED leading to confusing errors) */
+    GST_SOURCE_GROUP_LOCK (group);
+    for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
+      GstSourceSelect *select = &group->selector[i];
+
+      /* if we are in normal case, i.e. have a selector etc, plug fakesink */
+      if (select->selector) {
+        if (select->srcpad) {
+          GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
+              select->srcpad);
+          gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
+              NULL);
+        }
+        /* streaming might error with NOT_LINKED if any of this fails,
+         * but at least we tried */
+        GST_DEBUG_OBJECT (playbin, "creating fakesink", select->type);
+        select->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+        if (select->fakesink) {
+          GST_OBJECT_FLAG_UNSET (select->fakesink, GST_ELEMENT_IS_SINK);
+          gst_element_set_state (select->fakesink, GST_STATE_READY);
+          if (gst_bin_add (GST_BIN (playbin), select->fakesink)) {
+            if (!gst_element_link (select->selector, select->fakesink)) {
+              GST_DEBUG_OBJECT (playbin, "could not link fakesink element");
+              gst_object_unref (select->fakesink);
+              select->fakesink = NULL;
+            }
+          } else {
+            GST_DEBUG_OBJECT (playbin, "could not add fakesink element");
+            gst_object_unref (select->fakesink);
+            select->fakesink = NULL;
+          }
+        } else {
+          GST_DEBUG_OBJECT (playbin, "failed to create fakesink");
+        }
+      }
+    }
+    GST_SOURCE_GROUP_UNLOCK (group);
+    return;
   }
 }
 
@@ -2299,6 +2378,13 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
       select->sinkpad = NULL;
     }
 
+    if (select->fakesink) {
+      GST_LOG_OBJECT (playbin, "removing fakesink");
+      gst_element_set_state (select->fakesink, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (playbin), select->fakesink);
+      select->fakesink = NULL;
+    }
+
     gst_object_unref (select->srcpad);
     select->srcpad = NULL;
 
@@ -2421,11 +2507,21 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_LOG_OBJECT (playbin, "clearing shutdown flag");
+      g_atomic_int_set (&playbin->shutdown, 0);
       if (!setup_next_source (playbin))
         goto source_failed;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       /* FIXME unlock our waiting groups */
+      GST_LOG_OBJECT (playbin, "setting shutdown flag");
+      g_atomic_int_set (&playbin->shutdown, 1);
+      /* wait for all callbacks to end by taking the lock.
+       * No dynamic (critical) new callbacks will
+       * be able to happen as we set the shutdown flag. */
+      GST_PLAY_BIN_DYN_LOCK (playbin);
+      GST_LOG_OBJECT (playbin, "dynamic lock taken, we can continue shutdown");
+      GST_PLAY_BIN_DYN_UNLOCK (playbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* unlock so that all groups go to NULL */
