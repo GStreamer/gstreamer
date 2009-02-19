@@ -1,16 +1,18 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 # Finnish messages for gst-plugins-good.
+# Copyright (C) 2009 Tommi Vainikainen.
 # Copyright (C) 2007 Ilkka Tuohela.
 # Suomennos: http://gnome.fi/
 #
+# Tommi Vainikainen <thv@iki.fi>, 2009.
 # Ilkka Tuohela <hile@iki.fi>, 2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-11 23:19+0300\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-09 18:00+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -185,12 +187,11 @@ msgstr ""
 "käytössä."
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
-"Äänilaitetta ei voitu avata toistettavaksi. Laitteen avaamiseen ei ole "
+"Äänilaitetta ei voitu avata toistamista varten. Laitteen avaamiseen ei ole "
 "oikeuksia."
 
 #: sys/oss/gstosssink.c:421
@@ -198,7 +199,6 @@ msgid "Could not open audio device for playback."
 msgstr "Äänilaitetta ei voitu avata toistettavaksi."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -215,7 +215,7 @@ msgid "Gain"
 msgstr "Herkkyys"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Virhe luettaessa %d tavua laitteelta \"%s\"."
 
@@ -225,7 +225,7 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Saatiin odottamaton kehys kooltaan %u odotetun %u sijaan."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Virhe luettaessa %d tavua laitteelta \"%s\"."
 

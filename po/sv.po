@@ -1,15 +1,15 @@
 # Swedish messages for gst-plugins-good.
-# Copyright (C) 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Christian Rose <menthos@menthos.com>, 2004.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-11 23:00+0100\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-09 15:15+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -181,7 +181,6 @@ msgstr ""
 "program."
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -194,7 +193,6 @@ msgid "Could not open audio device for playback."
 msgstr "Kunde inte öppna ljudenheten för uppspelning."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -211,9 +209,9 @@ msgid "Gain"
 msgstr "Förstärk"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Fel vid läsning av %d byte på enheten \"%s\"."
+msgstr "Fel vid läsning av %d byte från enheten \"%s\"."
 
 #: sys/v4l2/gstv4l2src.c:1290
 #, c-format
@@ -221,7 +219,7 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Fick oväntade bildrutstorleken %u istället för %u."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Fel vid läsning av %d byte på enheten \"%s\"."
 

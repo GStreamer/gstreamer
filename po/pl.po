@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2008.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-13 17:33+0200\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-08 19:20+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -178,7 +178,6 @@ msgstr ""
 "jest używane przez inną aplikację."
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -191,7 +190,6 @@ msgid "Could not open audio device for playback."
 msgstr "Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -208,7 +206,7 @@ msgid "Gain"
 msgstr "Wzmocnienie"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Błąd odczytu %d bajtów z urządzenia '%s'."
 
@@ -218,7 +216,7 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Otrzymano nieoczekiwany rozmiar klatki %u zamiast %u."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Błąd odczytu %d bajtów z urządzenia '%s'."
 
@@ -431,6 +429,3 @@ msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana
 #: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Nie udało się uzyskać atrybutów sterujących urządzenia '%s'."

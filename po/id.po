@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-17 20:54+0700\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-11 22:40+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -178,26 +178,24 @@ msgstr ""
 "oleh aplikasi lain."
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
 "Tak dapat membuka divais audio untuk putar kembali. Anda tak memiliki hak "
-"akses untuk membuka divais ini."
+"akses untuk membuka divais."
 
 #: sys/oss/gstosssink.c:421
 msgid "Could not open audio device for playback."
 msgstr "Tak dapat membuka divais audio untuk putar kembali."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
 "Tak dapat membuka divais audio untuk merekam. Anda tak memiliki hak akses "
-"untuk membuka divais ini."
+"untuk membuka divais."
 
 #: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
@@ -208,9 +206,9 @@ msgid "Gain"
 msgstr "Gain"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Galat membaca %d bita di divais '%s'."
+msgstr "Galat membaca %d bita dari divais '%s'."
 
 #: sys/v4l2/gstv4l2src.c:1290
 #, c-format
@@ -218,9 +216,9 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr "Galat membaca %d bita di divais '%s'."
+msgstr "Galat membaca %d bita pada divais '%s'."
 
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format

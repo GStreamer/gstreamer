@@ -1,14 +1,14 @@
-# Italian translation for gst-plugins package of GStreamer project.
-# Copyright (C) 2004 GStreamer core team
+# Italian translation for gst-plugins-good package of GStreamer project.
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-good package.
-# Luca Ferretti <elle.uca@infinito.it>, 2004-2008.
 #
+# Luca Ferretti <elle.uca@infinito.it>, 2004, 2005, 2006, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-11 23:27+0200\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-08 22:09+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -17,7 +17,7 @@ msgstr ""
 
 #: ext/esd/esdsink.c:258 ext/esd/esdsink.c:363
 msgid "Could not establish connection to sound server"
-msgstr "Impossibile stabilire una connessione al server audio"
+msgstr "Impossibile stabilire la connessione al server audio"
 
 #: ext/esd/esdsink.c:265
 msgid "Failed to query sound server capabilities"
@@ -27,7 +27,7 @@ msgstr "Interrogazione delle funzionalità del server audio non riuscita"
 #: ext/libpng/gstpngdec.c:516 ext/wavpack/gstwavpackparse.c:1165
 #: gst/avi/gstavidemux.c:4162 gst/avi/gstavidemux.c:4170
 msgid "Internal data stream error."
-msgstr "Errore interno nel flusso di dati."
+msgstr "Errore interno nello stream dei dati."
 
 #: ext/jpeg/gstjpegdec.c:1049
 msgid "Failed to decode JPEG image"
@@ -96,7 +96,7 @@ msgstr "Altoparl"
 
 #: sys/oss/gstossmixertrack.c:104
 msgid "Line-in"
-msgstr "Canale in"
+msgstr "Linea in"
 
 #: sys/oss/gstossmixertrack.c:105
 msgid "Microphone"
@@ -178,9 +178,7 @@ msgstr ""
 "Impossibile aprire il dispositivo audio per la riproduzione. Il dispositivo "
 "è attualmente usato da un'altra applicazione."
 
-# # NdT: aggiunto spazio che manca nell'originale
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -190,29 +188,28 @@ msgstr ""
 
 #: sys/oss/gstosssink.c:421
 msgid "Could not open audio device for playback."
-msgstr "Impossibile aprire il dispositivo audio in riproduzione."
+msgstr "Impossibile aprire il dispositivo audio per la riproduzione."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
-"Impossibile aprire il dispositivo audio per la riproduzione. Permessi non "
+"Impossibile aprire il dispositivo audio per la registrazione. Permessi non "
 "sufficienti per aprire il dispositivo."
 
 #: sys/oss/gstosssrc.c:385
 msgid "Could not open audio device for recording."
-msgstr "Impossibile aprire il dispositivo audio in registrazione."
+msgstr "Impossibile aprire il dispositivo audio per la registrazione."
 
 #: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Guadagno"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Errore nell'eseguire read() di %d byte sul device «%s»."
+msgstr "Errore nel leggere %d byte dal device «%s»."
 
 #: sys/v4l2/gstv4l2src.c:1290
 #, c-format
@@ -220,9 +217,9 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Ottenuta dimensione inattesa del fotogramma: %u invece di %u."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr "Errore nell'eseguire read() di %d byte sul device «%s»."
+msgstr "Errore nel leggere %d byte sul device «%s»."
 
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format
@@ -270,7 +267,7 @@ msgstr "Impossibile identificare il device «%s»."
 #: sys/v4l2/v4l2_calls.c:469
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Questo non è un device «%s»."
+msgstr "Questo non è un dispositivo «%s»."
 
 #: sys/v4l2/v4l2_calls.c:476
 #, c-format
@@ -280,7 +277,7 @@ msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
 #: sys/v4l2/v4l2_calls.c:483
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Il device «%s» non è un device di cattura."
+msgstr "Il device «%s» non è un dispositivo di cattura."
 
 #: sys/v4l2/v4l2_calls.c:578
 #, c-format
@@ -398,7 +395,7 @@ msgstr "Il device «%s» non supporta la cattura video."
 #: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Il device «%s» non è in grado di catturare a %dx%d"
+msgstr "Il device «%s» non è in grado di catturare a %d×%d"
 
 #: sys/v4l2/v4l2src_calls.c:1322
 #, c-format

@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2009-01-30 23:36+0930\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-12 16:05+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
@@ -183,7 +183,6 @@ msgstr ""
 "dụng khác sử dụng."
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -196,7 +195,6 @@ msgid "Could not open audio device for playback."
 msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -212,9 +210,9 @@ msgid "Gain"
 msgstr "Khuếch đại"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Gặp lỗi khi đọc %d byte trên thiết bị « %s »."
+msgstr "Gặp lỗi khi đọc %d byte từ thiết bị « %s »."
 
 #: sys/v4l2/gstv4l2src.c:1290
 #, c-format
@@ -222,7 +220,7 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Nhận được kích cỡ khung bất thường %u, thay cho %u."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Gặp lỗi khi đọc %d byte trên thiết bị « %s »."
 
@@ -428,6 +426,3 @@ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi ch
 #: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Lỗi lấy các thuộc tính của bộ điều khiển trên thiết bị « %s »."

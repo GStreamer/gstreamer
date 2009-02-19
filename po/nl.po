@@ -1,13 +1,13 @@
-# translation of gst-plugins-good-0.10.10.3.po to Dutch
+# translation of gst-plugins-good-0.10.13.2.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
+# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.10.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-17 19:03+0200\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-08 20:23+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
@@ -181,7 +181,6 @@ msgstr ""
 "een andere applicatie."
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -194,7 +193,6 @@ msgid "Could not open audio device for playback."
 msgstr "Kan het audio-apparaat niet openen voor afspelen."
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -211,7 +209,7 @@ msgid "Gain"
 msgstr "Versterking"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
 
@@ -221,7 +219,7 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Onverwachte framegrootte, %u in plaats van %u."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "Fout bij het lezen van %d bytes van apparaat '%s'."
 
@@ -429,6 +427,3 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 #: sys/ximage/gstximagesrc.c:736
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Kan de knopeigenschappen op apparaat '%s' niet verkrijgen."

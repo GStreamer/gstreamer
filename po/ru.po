@@ -1,13 +1,14 @@
 # Translation for gst-plugins-good messages to Russian
 # This file is put in the public domain.
-# Артём Попов <artfwo@gmail.com>, 2008.
+# Артём Попов <artfwo@gmail.com>, 2009.
+# Pavel Maryanov <acid_jack@ukr.net>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-04-02 08:43+0000\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-12 14:35+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "MIME-Version: 1.0\n"
@@ -47,9 +48,8 @@ msgid "This file contains no playable streams."
 msgstr "Файл не содержит воспроизводимых потоков."
 
 #: gst/qtdemux/qtdemux.c:1106 gst/qtdemux/qtdemux.c:2149
-#, fuzzy
 msgid "This file is invalid and cannot be played."
-msgstr "Файл не полон и не может быть воспроизведён."
+msgstr "Файл некорректен и не может быть воспроизведён."
 
 #: gst/qtdemux/qtdemux.c:1164
 msgid "This file is incomplete and cannot be played."
@@ -178,37 +178,41 @@ msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Не удалось открыть аудио-устройство для воспроизведения. Устройство "
+"используется другим приложением."
 
 #: sys/oss/gstosssink.c:413
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют права "
+"доступа к устройству."
 
 #: sys/oss/gstosssink.c:421
-#, fuzzy
 msgid "Could not open audio device for playback."
-msgstr "Не удалось открыть CD-устройство для чтения."
+msgstr "Не удалось открыть аудио-устройство для воспроизведения."
 
 #: sys/oss/gstosssrc.c:377
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
+"Не удалось открыть аудио-устройство для записи. Отсутствуют права доступа к "
+"устройству."
 
 #: sys/oss/gstosssrc.c:385
-#, fuzzy
 msgid "Could not open audio device for recording."
-msgstr "Не удалось открыть CD-устройство для чтения."
+msgstr "Не удалось открыть аудио-устройство для записи."
 
 #: sys/sunaudio/gstsunaudiomixertrack.c:65
 msgid "Gain"
 msgstr "Усиление"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Ошибка чтения (read) %d байт из устройства «%s»."
+msgstr "Ошибка чтения %d байт из устройства «%s»."
 
 #: sys/v4l2/gstv4l2src.c:1290
 #, c-format
@@ -216,9 +220,9 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "Получен неожиданный размер кадра: %u вместо %u."
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
-msgstr "Ошибка чтения (read) %d байт из устройства «%s»."
+msgstr "Ошибка чтения %d байт из устройства «%s»."
 
 #: sys/v4l2/v4l2_calls.c:93
 #, c-format
@@ -371,22 +375,22 @@ msgstr "Не удалось получить параметры устройст
 
 #: sys/v4l2/v4l2src_calls.c:1279
 msgid "Video input device did not accept new frame rate setting."
-msgstr ""
+msgstr "Устройство видео-захвата не приняло новый параметр кадровой частоты."
 
 #: sys/v4l2/v4l2src_calls.c:1296
 #, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Устройство «%s» не поддерживает видеозахват"
+msgstr "Устройство «%s» не поддерживает захват видео"
 
 #: sys/v4l2/v4l2src_calls.c:1304 sys/v4l2/v4l2src_calls.c:1313
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Устройство «%s» не может осуществить захват при размерах %dx%d"
+msgstr "Устройство «%s» не может осуществлять захват в разрешении %dx%d"
 
 #: sys/v4l2/v4l2src_calls.c:1322
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Устройство «%s» не может осуществить захват в указанном формате"
+msgstr "Устройство «%s» не может осуществлять захват в указанном формате"
 
 #: sys/v4l2/v4l2src_calls.c:1400
 #, c-format
@@ -412,12 +416,12 @@ msgstr ""
 #: sys/v4l2/v4l2src_calls.c:1471
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
-msgstr "Ошибка при запуске потока захвата с устройства «%s»."
+msgstr "Ошибка при запуске потокового захвата с устройства «%s»."
 
 #: sys/v4l2/v4l2src_calls.c:1515
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
-msgstr "Ошибка при остановке потока захвата с устройства «%s»."
+msgstr "Ошибка при остановке потокового захвата с устройства «%s»."
 
 #: sys/ximage/gstximagesrc.c:722
 msgid "Changing resolution at runtime is not yet supported."

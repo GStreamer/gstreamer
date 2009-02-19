@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.10.3\n"
+"Project-Id-Version: gst-plugins-good 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-07 16:02+0000\n"
-"PO-Revision-Date: 2008-10-17 18:54中国标准时间\n"
+"POT-Creation-Date: 2009-02-19 20:06+0000\n"
+"PO-Revision-Date: 2009-02-09 15:35中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
 "sourceforge.net>\n"
@@ -178,7 +178,6 @@ msgid ""
 msgstr "无法打开音频设备播放音频。设备当前由另一个程序使用。"
 
 #: sys/oss/gstosssink.c:413
-#, fuzzy
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
@@ -189,7 +188,6 @@ msgid "Could not open audio device for playback."
 msgstr "无法打开音频设备播放音频。"
 
 #: sys/oss/gstosssrc.c:377
-#, fuzzy
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
@@ -204,9 +202,9 @@ msgid "Gain"
 msgstr "增益"
 
 #: sys/v4l2/gstv4l2src.c:1259
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "读取设备‘%2$s’中的 %1$d 字节时出错。"
+msgstr "从设备‘%2$s’中读取 %1$d 个字节时出错。"
 
 #: sys/v4l2/gstv4l2src.c:1290
 #, c-format
@@ -214,7 +212,7 @@ msgid "Got unexpected frame size of %u instead of %u."
 msgstr "取得了 %u 的不需要的帧大小，而不是 %u。"
 
 #: sys/v4l2/gstv4l2src.c:1308
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes on device '%s'."
 msgstr "读取设备‘%2$s’中的 %1$d 字节时出错。"
 
