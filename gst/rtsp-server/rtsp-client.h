@@ -70,8 +70,7 @@ struct _GstRTSPClient {
   GObject       parent;
 
   GstRTSPConnection *connection;
-  GstRTSPChannel *channel;
-  GThread *thread;
+  GstRTSPWatch      *watch;
 
   guint                 timeout;
   GstRTSPSessionPool   *session_pool;

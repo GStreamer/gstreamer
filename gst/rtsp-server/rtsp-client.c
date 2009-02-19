@@ -187,7 +187,7 @@ send_response (GstRTSPClient *client, GstRTSPSession *session, GstRTSPMessage *r
 #if 0
   gst_rtsp_connection_send (client->connection, response, &timeout);
 #endif
-  gst_rtsp_channel_queue_message (client->channel, response);
+  gst_rtsp_watch_queue_message (client->watch, response);
   gst_rtsp_message_unset (response);
 }
 
@@ -990,7 +990,7 @@ gst_rtsp_client_get_media_mapping (GstRTSPClient *client)
 }
 
 static GstRTSPResult
-message_received (GstRTSPChannel *channel, GstRTSPMessage *message, gpointer user_data)
+message_received (GstRTSPWatch *watch, GstRTSPMessage *message, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
 
@@ -1002,7 +1002,7 @@ message_received (GstRTSPChannel *channel, GstRTSPMessage *message, gpointer use
 }
 
 static GstRTSPResult
-message_sent (GstRTSPChannel *channel, guint cseq, gpointer user_data)
+message_sent (GstRTSPWatch *watch, guint cseq, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
 
@@ -1012,7 +1012,7 @@ message_sent (GstRTSPChannel *channel, guint cseq, gpointer user_data)
 }
 
 static GstRTSPResult
-closed (GstRTSPChannel *channel, gpointer user_data)
+closed (GstRTSPWatch *watch, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
 
@@ -1022,7 +1022,7 @@ closed (GstRTSPChannel *channel, gpointer user_data)
 }
 
 static GstRTSPResult
-error (GstRTSPChannel *channel, GstRTSPResult result, gpointer user_data)
+error (GstRTSPWatch *watch, GstRTSPResult result, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   gchar *str;
@@ -1034,7 +1034,7 @@ error (GstRTSPChannel *channel, GstRTSPResult result, gpointer user_data)
   return GST_RTSP_OK;
 }
 
-static GstRTSPChannelFuncs channel_funcs = {
+static GstRTSPWatchFuncs watch_funcs = {
   message_received,
   message_sent,
   closed,
@@ -1072,11 +1072,11 @@ gst_rtsp_client_accept (GstRTSPClient *client, GIOChannel *channel)
 
   client->connection = conn;
 
-  /* create channel for the connection and attach */
-  client->channel = gst_rtsp_channel_new (client->connection, &channel_funcs,
+  /* create watch for the connection and attach */
+  client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
 		  g_object_ref (client), g_object_unref);
 
-  /* find the context to add the channel */
+  /* find the context to add the watch */
   if ((source = g_main_current_source ()))
     context = g_source_get_context (source);
   else
@@ -1084,8 +1084,8 @@ gst_rtsp_client_accept (GstRTSPClient *client, GIOChannel *channel)
 
   g_message ("attaching to context %p", context);
 
-  gst_rtsp_channel_attach (client->channel, context);
-  gst_rtsp_channel_unref (client->channel);
+  gst_rtsp_watch_attach (client->watch, context);
+  gst_rtsp_watch_unref (client->watch);
 
   return TRUE;
 
