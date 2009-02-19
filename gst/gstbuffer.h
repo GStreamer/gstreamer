@@ -215,8 +215,11 @@ typedef struct _GstBufferClass GstBufferClass;
  * path that ignores the buffer content).
  * @GST_BUFFER_FLAG_DELTA_UNIT: this unit cannot be decoded independently.
  * @GST_BUFFER_FLAG_MEDIA1: a flag whose use is specific to the caps of the buffer.
+ * Since: 0.10.23
  * @GST_BUFFER_FLAG_MEDIA2: a flag whose use is specific to the caps of the buffer.
+ * Since: 0.10.23
  * @GST_BUFFER_FLAG_MEDIA3: a flag whose use is specific to the caps of the buffer.
+ * Since: 0.10.23
  * @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
  *
  * A set of buffer flags used to describe properties of a #GstBuffer.
