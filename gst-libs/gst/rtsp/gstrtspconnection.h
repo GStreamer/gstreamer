@@ -51,36 +51,12 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRTSPConnection GstRTSPConnection;
-
 /**
  * GstRTSPConnection:
  *
  * Opaque RTSP connection object.
  */
-struct _GstRTSPConnection
-{
-  /*< private >*/
-  /* URL for the connection */
-  GstRTSPUrl *url;
-
-  /* connection state */
-  GstPollFD   fd;
-  GstPoll    *fdset;
-  gchar      *ip;
-
-  /* Session state */
-  gint          cseq;                   /* sequence number */
-  gchar         session_id[512];        /* session id */
-  gint          timeout;                /* session timeout in seconds */
-  GTimer       *timer;                  /* timeout timer */
-
-  /* Authentication */
-  GstRTSPAuthMethod  auth_method;
-  gchar             *username;
-  gchar             *passwd;
-  GHashTable        *auth_params;
-};
+typedef struct _GstRTSPConnection GstRTSPConnection;
 
 /* opening/closing a connection */
 GstRTSPResult      gst_rtsp_connection_create        (GstRTSPUrl *url, GstRTSPConnection **conn);
@@ -131,44 +107,46 @@ const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *c
 /* async IO */
 
 /**
- * GstRTSPChannel:
+ * GstRTSPWatch:
  *
- * Opaque RTSP channel object that can be used for asynchronous RTSP
+ * Opaque RTSP watch object that can be used for asynchronous RTSP
  * operations.
  */
-typedef struct _GstRTSPChannel GstRTSPChannel;
+typedef struct _GstRTSPWatch GstRTSPWatch;
 
 /**
- * GstRTSPChannelFuncs:
+ * GstRTSPWatchFuncs:
  * @message_received: callback when a message was received
  * @message_sent: callback when a message was sent
  * @closed: callback when the connection is closed
  * @error: callback when an error occured
  *
- * Callback functions from a #GstRTSPChannel.
+ * Callback functions from a #GstRTSPWatch.
  */
 typedef struct {
-  GstRTSPResult (*message_received) (GstRTSPChannel *channel, GstRTSPMessage *message,
+  GstRTSPResult (*message_received) (GstRTSPWatch *watch, GstRTSPMessage *message,
                                      gpointer user_data);
-  GstRTSPResult (*message_sent)     (GstRTSPChannel *channel, guint cseq, 
+  GstRTSPResult (*message_sent)     (GstRTSPWatch *watch, guint cseq, 
                                      gpointer user_data);
-  GstRTSPResult (*closed)           (GstRTSPChannel *channel, gpointer user_data);
-  GstRTSPResult (*error)            (GstRTSPChannel *channel, GstRTSPResult result,
+  GstRTSPResult (*closed)           (GstRTSPWatch *watch, gpointer user_data);
+  GstRTSPResult (*error)            (GstRTSPWatch *watch, GstRTSPResult result,
                                      gpointer user_data);
-} GstRTSPChannelFuncs;
 
-GstRTSPChannel *   gst_rtsp_channel_new              (GstRTSPConnection *conn,
-                                                      GstRTSPChannelFuncs *funcs,
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+} GstRTSPWatchFuncs;
+
+GstRTSPWatch *     gst_rtsp_watch_new                (GstRTSPConnection *conn,
+                                                      GstRTSPWatchFuncs *funcs,
 						      gpointer user_data,
 						      GDestroyNotify notify);
-void               gst_rtsp_channel_unref            (GstRTSPChannel *channel);
+void               gst_rtsp_watch_unref              (GstRTSPWatch *watch);
 
-guint              gst_rtsp_channel_attach           (GstRTSPChannel *channel,
+guint              gst_rtsp_watch_attach             (GstRTSPWatch *watch,
                                                       GMainContext *context);
 
-guint              gst_rtsp_channel_queue_message    (GstRTSPChannel *channel,
+guint              gst_rtsp_watch_queue_message      (GstRTSPWatch *watch,
                                                       GstRTSPMessage *message);
-
 
 G_END_DECLS
 

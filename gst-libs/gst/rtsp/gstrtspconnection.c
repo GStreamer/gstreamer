@@ -115,6 +115,30 @@
 #define ERRNO_IS_EINPROGRESS (errno == EINPROGRESS)
 #endif
 
+struct _GstRTSPConnection
+{
+  /*< private > */
+  /* URL for the connection */
+  GstRTSPUrl *url;
+
+  /* connection state */
+  GstPollFD fd;
+  GstPoll *fdset;
+  gchar *ip;
+
+  /* Session state */
+  gint cseq;                    /* sequence number */
+  gchar session_id[512];        /* session id */
+  gint timeout;                 /* session timeout in seconds */
+  GTimer *timer;                /* timeout timer */
+
+  /* Authentication */
+  GstRTSPAuthMethod auth_method;
+  gchar *username;
+  gchar *passwd;
+  GHashTable *auth_params;
+};
+
 #ifdef G_OS_WIN32
 static int
 inet_aton (const char *c, struct in_addr *paddr)
@@ -1821,7 +1845,7 @@ typedef struct
 } GstRTSPRec;
 
 /* async functions */
-struct _GstRTSPChannel
+struct _GstRTSPWatch
 {
   GSource source;
 
@@ -1841,7 +1865,7 @@ struct _GstRTSPChannel
   guint write_len;
   guint write_cseq;
 
-  GstRTSPChannelFuncs funcs;
+  GstRTSPWatchFuncs funcs;
 
   gpointer user_data;
   GDestroyNotify notify;
@@ -1850,9 +1874,9 @@ struct _GstRTSPChannel
 static gboolean
 gst_rtsp_source_prepare (GSource * source, gint * timeout)
 {
-  GstRTSPChannel *channel = (GstRTSPChannel *) source;
+  GstRTSPWatch *watch = (GstRTSPWatch *) source;
 
-  *timeout = (channel->conn->timeout * 1000);
+  *timeout = (watch->conn->timeout * 1000);
 
   return FALSE;
 }
@@ -1860,12 +1884,12 @@ gst_rtsp_source_prepare (GSource * source, gint * timeout)
 static gboolean
 gst_rtsp_source_check (GSource * source)
 {
-  GstRTSPChannel *channel = (GstRTSPChannel *) source;
+  GstRTSPWatch *watch = (GstRTSPWatch *) source;
 
-  if (channel->readfd.revents & READ_COND)
+  if (watch->readfd.revents & READ_COND)
     return TRUE;
 
-  if (channel->writefd.revents & WRITE_COND)
+  if (watch->writefd.revents & WRITE_COND)
     return TRUE;
 
   return FALSE;
@@ -1875,13 +1899,13 @@ static gboolean
 gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback,
     gpointer user_data)
 {
-  GstRTSPChannel *channel = (GstRTSPChannel *) source;
+  GstRTSPWatch *watch = (GstRTSPWatch *) source;
   GstRTSPResult res;
 
   /* first read as much as we can */
-  if (channel->readfd.revents & READ_COND) {
+  if (watch->readfd.revents & READ_COND) {
     do {
-      res = build_next (&channel->builder, &channel->message, channel->conn);
+      res = build_next (&watch->builder, &watch->message, watch->conn);
       if (res == GST_RTSP_EINTR)
         break;
       if (res == GST_RTSP_EEOF)
@@ -1889,55 +1913,53 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback,
       if (res != GST_RTSP_OK)
         goto error;
 
-      if (channel->funcs.message_received)
-        channel->funcs.message_received (channel, &channel->message,
-            channel->user_data);
+      if (watch->funcs.message_received)
+        watch->funcs.message_received (watch, &watch->message,
+            watch->user_data);
 
-      gst_rtsp_message_unset (&channel->message);
-      build_reset (&channel->builder);
+      gst_rtsp_message_unset (&watch->message);
+      build_reset (&watch->builder);
     } while (FALSE);
   }
 
-  if (channel->writefd.revents & WRITE_COND) {
+  if (watch->writefd.revents & WRITE_COND) {
     do {
-      if (channel->write_data == NULL) {
+      if (watch->write_data == NULL) {
         GstRTSPRec *data;
 
-        if (!channel->messages)
+        if (!watch->messages)
           goto done;
 
         /* no data, get a new message from the queue */
-        data = channel->messages->data;
-        channel->messages =
-            g_list_delete_link (channel->messages, channel->messages);
+        data = watch->messages->data;
+        watch->messages = g_list_delete_link (watch->messages, watch->messages);
 
-        channel->write_off = 0;
-        channel->write_len = data->str->len;
-        channel->write_data = (guint8 *) g_string_free (data->str, FALSE);
-        channel->write_cseq = data->cseq;
+        watch->write_off = 0;
+        watch->write_len = data->str->len;
+        watch->write_data = (guint8 *) g_string_free (data->str, FALSE);
+        watch->write_cseq = data->cseq;
 
         g_slice_free (GstRTSPRec, data);
       }
 
-      res = write_bytes (channel->writefd.fd, channel->write_data,
-          &channel->write_off, channel->write_len);
+      res = write_bytes (watch->writefd.fd, watch->write_data,
+          &watch->write_off, watch->write_len);
       if (res == GST_RTSP_EINTR)
         break;
       if (res != GST_RTSP_OK)
         goto error;
 
-      if (channel->funcs.message_sent)
-        channel->funcs.message_sent (channel, channel->write_cseq,
-            channel->user_data);
+      if (watch->funcs.message_sent)
+        watch->funcs.message_sent (watch, watch->write_cseq, watch->user_data);
 
     done:
-      if (channel->messages == NULL && channel->write_added) {
-        g_source_remove_poll ((GSource *) channel, &channel->writefd);
-        channel->write_added = FALSE;
-        channel->writefd.revents = 0;
+      if (watch->messages == NULL && watch->write_added) {
+        g_source_remove_poll ((GSource *) watch, &watch->writefd);
+        watch->write_added = FALSE;
+        watch->writefd.revents = 0;
       }
-      g_free (channel->write_data);
-      channel->write_data = NULL;
+      g_free (watch->write_data);
+      watch->write_data = NULL;
     } while (FALSE);
   }
 
@@ -1946,14 +1968,14 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback,
   /* ERRORS */
 eof:
   {
-    if (channel->funcs.closed)
-      channel->funcs.closed (channel, channel->user_data);
+    if (watch->funcs.closed)
+      watch->funcs.closed (watch, watch->user_data);
     return FALSE;
   }
 error:
   {
-    if (channel->funcs.error)
-      channel->funcs.error (channel, res, channel->user_data);
+    if (watch->funcs.error)
+      watch->funcs.error (watch, res, watch->user_data);
     return FALSE;
   }
 }
@@ -1961,22 +1983,22 @@ error:
 static void
 gst_rtsp_source_finalize (GSource * source)
 {
-  GstRTSPChannel *channel = (GstRTSPChannel *) source;
+  GstRTSPWatch *watch = (GstRTSPWatch *) source;
   GList *walk;
 
-  build_reset (&channel->builder);
+  build_reset (&watch->builder);
 
-  for (walk = channel->messages; walk; walk = g_list_next (walk)) {
+  for (walk = watch->messages; walk; walk = g_list_next (walk)) {
     GstRTSPRec *data = walk->data;
 
     g_string_free (data->str, TRUE);
     g_slice_free (GstRTSPRec, data);
   }
-  g_list_free (channel->messages);
-  g_free (channel->write_data);
+  g_list_free (watch->messages);
+  g_free (watch->write_data);
 
-  if (channel->notify)
-    channel->notify (channel->user_data);
+  if (watch->notify)
+    watch->notify (watch->user_data);
 }
 
 static GSourceFuncs gst_rtsp_source_funcs = {
@@ -1987,35 +2009,35 @@ static GSourceFuncs gst_rtsp_source_funcs = {
 };
 
 /**
- * gst_rtsp_channel_new:
+ * gst_rtsp_watch_new:
  * @conn: a #GstRTSPConnection
- * @funcs: channel functions
+ * @funcs: watch functions
  * @user_data: user data to pass to @funcs
  *
- * Create a channel object for @conn. The functions provided in @funcs will be
- * called with @user_data when activity happened on the channel.
+ * Create a watch object for @conn. The functions provided in @funcs will be
+ * called with @user_data when activity happened on the watch.
  *
- * The new channel is usually created so that it can be attached to a
- * maincontext with gst_rtsp_channel_attach(). 
+ * The new watch is usually created so that it can be attached to a
+ * maincontext with gst_rtsp_watch_attach(). 
  *
- * @conn must exist for the entire lifetime of the channel.
+ * @conn must exist for the entire lifetime of the watch.
  *
- * Returns: a #GstRTSPChannel that can be used for asynchronous RTSP
- * communication. Free with gst_rtsp_channel_unref () after usage.
+ * Returns: a #GstRTSPWatch that can be used for asynchronous RTSP
+ * communication. Free with gst_rtsp_watch_unref () after usage.
  *
  * Since: 0.10.23
  */
-GstRTSPChannel *
-gst_rtsp_channel_new (GstRTSPConnection * conn,
-    GstRTSPChannelFuncs * funcs, gpointer user_data, GDestroyNotify notify)
+GstRTSPWatch *
+gst_rtsp_watch_new (GstRTSPConnection * conn,
+    GstRTSPWatchFuncs * funcs, gpointer user_data, GDestroyNotify notify)
 {
-  GstRTSPChannel *result;
+  GstRTSPWatch *result;
 
   g_return_val_if_fail (conn != NULL, NULL);
   g_return_val_if_fail (funcs != NULL, NULL);
 
-  result = (GstRTSPChannel *) g_source_new (&gst_rtsp_source_funcs,
-      sizeof (GstRTSPChannel));
+  result = (GstRTSPWatch *) g_source_new (&gst_rtsp_source_funcs,
+      sizeof (GstRTSPWatch));
 
   result->conn = conn;
   result->builder.state = STATE_START;
@@ -2041,49 +2063,49 @@ gst_rtsp_channel_new (GstRTSPConnection * conn,
 }
 
 /**
- * gst_rtsp_channel_attach:
- * @channel: a #GstRTSPChannel
+ * gst_rtsp_watch_attach:
+ * @watch: a #GstRTSPWatch
  * @context: a GMainContext (if NULL, the default context will be used)
  *
- * Adds a #GstRTSPChannel to a context so that it will be executed within that context.
+ * Adds a #GstRTSPWatch to a context so that it will be executed within that context.
  *
- * Returns: the ID (greater than 0) for the channel within the GMainContext. 
+ * Returns: the ID (greater than 0) for the watch within the GMainContext. 
  *
  * Since: 0.10.23
  */
 guint
-gst_rtsp_channel_attach (GstRTSPChannel * channel, GMainContext * context)
+gst_rtsp_watch_attach (GstRTSPWatch * watch, GMainContext * context)
 {
-  g_return_val_if_fail (channel != NULL, 0);
+  g_return_val_if_fail (watch != NULL, 0);
 
-  return g_source_attach ((GSource *) channel, context);
+  return g_source_attach ((GSource *) watch, context);
 }
 
 /**
- * gst_rtsp_channel_free:
- * @channel: a #GstRTSPChannel
+ * gst_rtsp_watch_free:
+ * @watch: a #GstRTSPWatch
  *
- * Decreases the reference count of @channel by one. If the resulting reference
- * count is zero the channel and associated memory will be destroyed.
+ * Decreases the reference count of @watch by one. If the resulting reference
+ * count is zero the watch and associated memory will be destroyed.
  *
  * Since: 0.10.23
  */
 void
-gst_rtsp_channel_unref (GstRTSPChannel * channel)
+gst_rtsp_watch_unref (GstRTSPWatch * watch)
 {
-  g_return_if_fail (channel != NULL);
+  g_return_if_fail (watch != NULL);
 
-  g_source_unref ((GSource *) channel);
+  g_source_unref ((GSource *) watch);
 }
 
 /**
- * gst_rtsp_channel_queue_message:
- * @channel: a #GstRTSPChannel
+ * gst_rtsp_watch_queue_message:
+ * @watch: a #GstRTSPWatch
  * @message: a #GstRTSPMessage
  *
- * Queue a @message for transmission in @channel. The contents of this 
+ * Queue a @message for transmission in @watch. The contents of this 
  * message will be serialized and transmitted when the connection of the
- * channel becomes writable.
+ * watch becomes writable.
  *
  * The return value of this function will be returned as the cseq argument in
  * the message_sent callback.
@@ -2094,14 +2116,13 @@ gst_rtsp_channel_unref (GstRTSPChannel * channel)
  * Since: 0.10.23
  */
 guint
-gst_rtsp_channel_queue_message (GstRTSPChannel * channel,
-    GstRTSPMessage * message)
+gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
 {
   GstRTSPRec *data;
   gchar *header;
   guint cseq;
 
-  g_return_val_if_fail (channel != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (watch != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
   /* get the cseq from the message, when we finish writing this message on the
@@ -2115,17 +2136,17 @@ gst_rtsp_channel_queue_message (GstRTSPChannel * channel,
 
   /* make a record with the message as a string ans cseq */
   data = g_slice_new (GstRTSPRec);
-  data->str = message_to_string (channel->conn, message);
+  data->str = message_to_string (watch->conn, message);
   data->cseq = cseq;
 
   /* add the record to a queue */
-  channel->messages = g_list_append (channel->messages, data);
+  watch->messages = g_list_append (watch->messages, data);
 
   /* make sure the main context will now also check for writability on the
    * socket */
-  if (!channel->write_added) {
-    g_source_add_poll ((GSource *) channel, &channel->writefd);
-    channel->write_added = TRUE;
+  if (!watch->write_added) {
+    g_source_add_poll ((GSource *) watch, &watch->writefd);
+    watch->write_added = TRUE;
   }
   return cseq;
 }

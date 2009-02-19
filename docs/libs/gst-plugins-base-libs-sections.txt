@@ -1219,12 +1219,12 @@ gst_rtsp_connection_reset_timeout
 gst_rtsp_connection_flush
 gst_rtsp_connection_set_auth
 
-GstRTSPChannel
-GstRTSPChannelFuncs
-gst_rtsp_channel_new
-gst_rtsp_channel_unref
-gst_rtsp_channel_attach
-gst_rtsp_channel_queue_message
+GstRTSPWatch
+GstRTSPWatchFuncs
+gst_rtsp_watch_new
+gst_rtsp_watch_unref
+gst_rtsp_watch_attach
+gst_rtsp_watch_queue_message
 </SECTION>
 
 <SECTION>
