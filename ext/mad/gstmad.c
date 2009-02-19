@@ -1392,6 +1392,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
+      GST_LOG ("sample rate %d", mad->frame.header.samplerate);
       GST_LOG ("decoding one frame now");
 
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
@@ -1408,6 +1409,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             GST_LOG ("sync error, flushing unneeded data");
             goto next_no_samples;
           }
+        } else if (mad->stream.error == MAD_ERROR_BADDATAPTR) {
+          /* Flush data */
+          goto next_no_samples;
         }
         /* we are in an error state */
         mad->in_error = TRUE;
