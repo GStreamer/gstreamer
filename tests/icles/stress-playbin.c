@@ -1,17 +1,18 @@
 #include <gst/gst.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TEST_RUNTIME 120.0      /* how long to run the test, in seconds */
 
 static void
-play_file (const gchar * uri)
+play_file (const gchar * bin, const gint delay, const gchar * uri)
 {
   GstStateChangeReturn sret;
   GstMessage *msg;
   GstElement *play;
   guint wait_nanosecs;
 
-  play = gst_element_factory_make ("playbin", "playbin");
+  play = gst_element_factory_make (bin, "playbin");
 
   g_object_set (play, "uri", uri, NULL);
   sret = gst_element_set_state (play, GST_STATE_PLAYING);
@@ -20,7 +21,7 @@ play_file (const gchar * uri)
     goto next;
   }
 
-  wait_nanosecs = g_random_int_range (0, GST_SECOND / 10);
+  wait_nanosecs = g_random_int_range (0, GST_MSECOND * delay);
   msg = gst_bus_poll (GST_ELEMENT_BUS (play),
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS, wait_nanosecs);
   if (msg) {
@@ -34,6 +35,7 @@ play_file (const gchar * uri)
 
 next:
   gst_element_set_state (play, GST_STATE_NULL);
+  gst_object_unref (play);
 }
 
 static void
@@ -67,8 +69,13 @@ main (int argc, char **argv)
   gchar **args = NULL;
   guint num, i;
   GError *err = NULL;
+  gchar *bin = NULL;
+  gint run = 100;
   GOptionContext *ctx;
   GOptionEntry options[] = {
+    {"bin", '\000', 0, G_OPTION_ARG_STRING, &bin, "playbin factory name", NULL},
+    {"runtime", '\000', 0, G_OPTION_ARG_INT, &run, "maximum play time (ms)",
+        NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &args, NULL},
     {NULL}
   };
@@ -86,6 +93,13 @@ main (int argc, char **argv)
   }
   g_option_context_free (ctx);
 
+  if (!bin)
+    bin = "playbin";
+
+  if (strcmp (bin, "playbin") && strcmp (bin, "playbin2")) {
+    g_print ("Please provide a valid playbin argument; playbin | playbin2");
+    return 1;
+  }
   if (args == NULL || *args == NULL) {
     g_print ("Please provide one or more directories with audio files\n\n");
     return 1;
@@ -113,7 +127,7 @@ main (int argc, char **argv)
     gint32 idx;
 
     idx = g_random_int_range (0, files->len);
-    play_file ((const gchar *) g_ptr_array_index (files, idx));
+    play_file (bin, run, (const gchar *) g_ptr_array_index (files, idx));
   }
 
   g_strfreev (args);
