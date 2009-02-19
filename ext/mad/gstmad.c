@@ -1392,7 +1392,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         }
       }
 
-      GST_LOG ("sample rate %d", mad->frame.header.samplerate);
       GST_LOG ("decoding one frame now");
 
       if (mad_frame_decode (&mad->frame, &mad->stream) == -1) {
