@@ -214,6 +214,9 @@ typedef struct _GstBufferClass GstBufferClass;
  * stream and contains media neutral data (elements can switch to optimized code
  * path that ignores the buffer content).
  * @GST_BUFFER_FLAG_DELTA_UNIT: this unit cannot be decoded independently.
+ * @GST_BUFFER_FLAG_MEDIA1: a flag whose use is specific to the caps of the buffer.
+ * @GST_BUFFER_FLAG_MEDIA2: a flag whose use is specific to the caps of the buffer.
+ * @GST_BUFFER_FLAG_MEDIA3: a flag whose use is specific to the caps of the buffer.
  * @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
  *
  * A set of buffer flags used to describe properties of a #GstBuffer.
@@ -225,7 +228,9 @@ typedef enum {
   GST_BUFFER_FLAG_IN_CAPS    = (GST_MINI_OBJECT_FLAG_LAST << 2),
   GST_BUFFER_FLAG_GAP        = (GST_MINI_OBJECT_FLAG_LAST << 3),
   GST_BUFFER_FLAG_DELTA_UNIT = (GST_MINI_OBJECT_FLAG_LAST << 4),
-  /* padding */
+  GST_BUFFER_FLAG_MEDIA1     = (GST_MINI_OBJECT_FLAG_LAST << 5),
+  GST_BUFFER_FLAG_MEDIA2     = (GST_MINI_OBJECT_FLAG_LAST << 6),
+  GST_BUFFER_FLAG_MEDIA3     = (GST_MINI_OBJECT_FLAG_LAST << 7),
   GST_BUFFER_FLAG_LAST       = (GST_MINI_OBJECT_FLAG_LAST << 8)
 } GstBufferFlag;
 
