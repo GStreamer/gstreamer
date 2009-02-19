@@ -63,6 +63,8 @@ static gboolean tags = FALSE;
 static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
 
+/* convenience macro so we don't have to litter the code with if(!quiet) */
+#define PRINT if(!quiet)g_printerr
 
 #ifndef GST_DISABLE_LOADSAVE
 static GstElement *
@@ -87,20 +89,20 @@ xmllaunch_parse_cmdline (const gchar ** argv)
   err = gst_xml_parse_file (xml, (guchar *) arg, NULL);
 
   if (err != TRUE) {
-    fprintf (stderr, _("ERROR: parse of xml file '%s' failed.\n"), arg);
+    g_printerr (_("ERROR: parse of xml file '%s' failed.\n"), arg);
     exit (1);
   }
 
   l = gst_xml_get_topelements (xml);
   if (!l) {
-    fprintf (stderr, _("ERROR: no toplevel pipeline element in file '%s'.\n"),
-        arg);
+    g_printerr (_("ERROR: no toplevel pipeline element in file '%s'.\n"), arg);
     exit (1);
   }
 
-  if (l->next)
-    fprintf (stderr,
-        _("WARNING: only one toplevel element is supported at this time."));
+  if (l->next) {
+    g_printerr ("%s",
+        _("WARNING: only one toplevel element is supported at this time.\n"));
+  }
 
   pipeline = GST_ELEMENT (l->data);
 
@@ -110,9 +112,8 @@ xmllaunch_parse_cmdline (const gchar ** argv)
     value = strchr (element, '=');
 
     if (!(element < property && property < value)) {
-      fprintf (stderr,
-          _("ERROR: could not parse command line argument %d: %s.\n"), i,
-          element);
+      g_printerr (_("ERROR: could not parse command line argument %d: %s.\n"),
+          i, element);
       g_free (element);
       exit (1);
     }
@@ -122,7 +123,7 @@ xmllaunch_parse_cmdline (const gchar ** argv)
 
     e = gst_bin_get_by_name (GST_BIN (pipeline), element);
     if (!e) {
-      fprintf (stderr, _("WARNING: element named '%s' not found.\n"), element);
+      g_printerr (_("WARNING: element named '%s' not found.\n"), element);
     } else {
       gst_util_set_object_arg (G_OBJECT (e), property, value);
     }
@@ -507,8 +508,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         /* ignore when we are buffering since then we mess with the states
          * ourselves. */
         if (buffering) {
-          fprintf (stderr,
-              _("Prerolled, waiting for buffering to finish...\n"));
+          g_printerr (_("Prerolled, waiting for buffering to finish...\n"));
           break;
         }
 
@@ -523,8 +523,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gint percent;
 
         gst_message_parse_buffering (message, &percent);
-        if (!quiet)
-          fprintf (stderr, "%s %d%%  \r", _("buffering..."), percent);
+        PRINT ("%s %d%%  \r", _("buffering..."), percent);
 
         /* no state management needed for live pipelines */
         if (is_live)
@@ -535,9 +534,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           buffering = FALSE;
           /* if the desired state is playing, go back */
           if (target_state == GST_STATE_PLAYING) {
-            if (!quiet)
-              fprintf (stderr,
-                  _("Done buffering, setting pipeline to PLAYING ...\n"));
+            PRINT (_("Done buffering, setting pipeline to PLAYING ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PLAYING);
           } else
             goto exit;
@@ -545,9 +542,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           /* buffering busy */
           if (buffering == FALSE && target_state == GST_STATE_PLAYING) {
             /* we were not buffering but PLAYING, PAUSE  the pipeline. */
-            if (!quiet)
-              fprintf (stderr,
-                  _("Buffering, setting pipeline to PAUSED ...\n"));
+            PRINT (_("Buffering, setting pipeline to PAUSED ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PAUSED);
           }
           buffering = TRUE;
@@ -556,7 +551,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
       }
       case GST_MESSAGE_LATENCY:
       {
-        fprintf (stderr, _("Redistribute latency...\n"));
+        g_printerr (_("Redistribute latency...\n"));
         gst_bin_recalculate_latency (GST_BIN (pipeline));
         break;
       }
@@ -567,7 +562,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_request_state (message, &state);
 
-        fprintf (stderr, _("Setting state to %s as requested by %s...\n"),
+        g_printerr (_("Setting state to %s as requested by %s...\n"),
             gst_element_state_get_name (state), name);
 
         gst_element_set_state (pipeline, state);
@@ -583,8 +578,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         if (gst_structure_has_name (s, "GstLaunchInterrupt")) {
           /* this application message is posted when we caught an interrupt and
            * we need to stop the pipeline. */
-          if (!quiet)
-            fprintf (stderr, _("Interrupt: Stopping pipeline ...\n"));
+          PRINT (_("Interrupt: Stopping pipeline ...\n"));
           /* return TRUE when we caught an interrupt */
           res = TRUE;
           goto exit;
@@ -703,15 +697,15 @@ main (int argc, char *argv[])
 
   if (!pipeline) {
     if (error) {
-      fprintf (stderr, _("ERROR: pipeline could not be constructed: %s.\n"),
+      g_printerr (_("ERROR: pipeline could not be constructed: %s.\n"),
           GST_STR_NULL (error->message));
       g_error_free (error);
     } else {
-      fprintf (stderr, _("ERROR: pipeline could not be constructed.\n"));
+      g_printerr (_("ERROR: pipeline could not be constructed.\n"));
     }
     return 1;
   } else if (error) {
-    fprintf (stderr, _("WARNING: erroneous pipeline: %s\n"),
+    g_printerr (_("WARNING: erroneous pipeline: %s\n"),
         GST_STR_NULL (error->message));
     g_error_free (error);
     return 1;
@@ -738,61 +732,55 @@ main (int argc, char *argv[])
       GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
 
       if (real_pipeline == NULL) {
-        fprintf (stderr, _("ERROR: the 'pipeline' element wasn't found.\n"));
+        g_printerr (_("ERROR: the 'pipeline' element wasn't found.\n"));
         return 1;
       }
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
       pipeline = real_pipeline;
     }
-    if (!quiet)
-      fprintf (stderr, _("Setting pipeline to PAUSED ...\n"));
+    PRINT (_("Setting pipeline to PAUSED ...\n"));
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
     switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
-        fprintf (stderr, _("ERROR: Pipeline doesn't want to pause.\n"));
+        g_printerr (_("ERROR: Pipeline doesn't want to pause.\n"));
         res = -1;
         event_loop (pipeline, FALSE, GST_STATE_VOID_PENDING);
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
-        if (!quiet)
-          fprintf (stderr,
-              _("Pipeline is live and does not need PREROLL ...\n"));
+        PRINT (_("Pipeline is live and does not need PREROLL ...\n"));
         is_live = TRUE;
         break;
       case GST_STATE_CHANGE_ASYNC:
-        if (!quiet)
-          fprintf (stderr, _("Pipeline is PREROLLING ...\n"));
+        PRINT (_("Pipeline is PREROLLING ...\n"));
         caught_error = event_loop (pipeline, TRUE, GST_STATE_PAUSED);
         if (caught_error) {
-          fprintf (stderr, _("ERROR: pipeline doesn't want to preroll.\n"));
+          g_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
           goto end;
         }
         state = GST_STATE_PAUSED;
         /* fallthrough */
       case GST_STATE_CHANGE_SUCCESS:
-        if (!quiet)
-          fprintf (stderr, _("Pipeline is PREROLLED ...\n"));
+        PRINT (_("Pipeline is PREROLLED ...\n"));
         break;
     }
 
     caught_error = event_loop (pipeline, FALSE, GST_STATE_PLAYING);
 
     if (caught_error) {
-      fprintf (stderr, _("ERROR: pipeline doesn't want to preroll.\n"));
+      g_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
     } else {
       GstClockTime tfthen, tfnow;
       GstClockTimeDiff diff;
 
-      if (!quiet)
-        fprintf (stderr, _("Setting pipeline to PLAYING ...\n"));
+      PRINT (_("Setting pipeline to PLAYING ...\n"));
 
       if (gst_element_set_state (pipeline,
               GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
         GstMessage *err_msg;
         GstBus *bus;
 
-        fprintf (stderr, _("ERROR: pipeline doesn't want to play.\n"));
+        g_printerr (_("ERROR: pipeline doesn't want to play.\n"));
         bus = gst_element_get_bus (pipeline);
         if ((err_msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0))) {
           GError *gerror;
@@ -821,25 +809,21 @@ main (int argc, char *argv[])
     /* iterate mainloop to process pending stuff */
     while (g_main_context_iteration (NULL, FALSE));
 
-    if (!quiet)
-      fprintf (stderr, _("Setting pipeline to PAUSED ...\n"));
+    PRINT (_("Setting pipeline to PAUSED ...\n"));
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     if (!caught_error)
       gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
-    if (!quiet)
-      fprintf (stderr, _("Setting pipeline to READY ...\n"));
+    PRINT (_("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
 
   end:
-    if (!quiet)
-      fprintf (stderr, _("Setting pipeline to NULL ...\n"));
+    PRINT (_("Setting pipeline to NULL ...\n"));
     gst_element_set_state (pipeline, GST_STATE_NULL);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
   }
 
-  if (!quiet)
-    fprintf (stderr, _("Freeing pipeline ...\n"));
+  PRINT (_("Freeing pipeline ...\n"));
   gst_object_unref (pipeline);
 
   gst_deinit ();
