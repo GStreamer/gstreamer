@@ -2,6 +2,11 @@ EXPORTS
 	gst_rtsp_auth_method_get_type
 	gst_rtsp_base64_decode_ip
 	gst_rtsp_base64_encode
+	gst_rtsp_channel_attach
+	gst_rtsp_channel_new
+	gst_rtsp_channel_queue_message
+	gst_rtsp_channel_unref
+	gst_rtsp_connection_accept
 	gst_rtsp_connection_clear_auth_params
 	gst_rtsp_connection_close
 	gst_rtsp_connection_connect
@@ -65,6 +70,7 @@ EXPORTS
 	gst_rtsp_options_as_text
 	gst_rtsp_range_free
 	gst_rtsp_range_parse
+	gst_rtsp_range_to_string
 	gst_rtsp_result_get_type
 	gst_rtsp_state_get_type
 	gst_rtsp_status_as_text
