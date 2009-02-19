@@ -235,6 +235,8 @@ typedef enum {
  * GST_VIDEO_BUFFER_TFF:
  * If the @GstBuffer is interlaced, then the first field in the video frame is
  * the top field.  If unset, the bottom field is first.
+ *
+ * Since: 0.10.23
  */
 #define GST_VIDEO_BUFFER_TFF GST_BUFFER_FLAG_MEDIA1
 
@@ -242,6 +244,8 @@ typedef enum {
  * GST_VIDEO_BUFFER_RFF:
  * If the @GstBuffer is interlaced, then the first field (as defined by the
  * @GST_VIDEO_BUFFER_TFF flag setting) is repeated.
+ *
+ * Since: 0.10.23
  */
 #define GST_VIDEO_BUFFER_RFF GST_BUFFER_FLAG_MEDIA2
 
@@ -249,6 +253,8 @@ typedef enum {
  * GST_VIDEO_BUFFER_ONEFIELD:
  * If the #GstBuffer is interlaced, the only the first field (as defined by the
  * @GST_VIDEO_BUFFER_TFF flag setting) is to be displayed.
+ *
+ * Since: 0.10.23
  */
 #define GST_VIDEO_BUFFER_ONEFIELD GST_BUFFER_FLAG_MEDIA3
 

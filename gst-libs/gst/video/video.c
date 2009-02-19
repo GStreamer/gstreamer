@@ -227,7 +227,7 @@ error_overflow:
  * Extracts whether the caps represents interlaced content or not and places it
  * in @interlaced.
  *
- * Since: 0.10.22
+ * Since: 0.10.23
  *
  * Returns: TRUE if @caps was parsed correctly.
  */
@@ -423,7 +423,7 @@ gst_video_parse_caps_pixel_aspect_ratio (GstCaps * caps, int *par_n, int *par_d)
  *
  * Creates a new #GstCaps object based on the parameters provided.
  *
- * Since: 0.10.22
+ * Since: 0.10.23
  *
  * Returns: a new #GstCaps object, or NULL if there was an error
  */
