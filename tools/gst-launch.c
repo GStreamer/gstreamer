@@ -64,7 +64,7 @@ static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
 
 /* convenience macro so we don't have to litter the code with if(!quiet) */
-#define PRINT if(!quiet)g_printerr
+#define PRINT if(!quiet)g_print
 
 #ifndef GST_DISABLE_LOADSAVE
 static GstElement *
@@ -508,7 +508,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         /* ignore when we are buffering since then we mess with the states
          * ourselves. */
         if (buffering) {
-          g_printerr (_("Prerolled, waiting for buffering to finish...\n"));
+          PRINT (_("Prerolled, waiting for buffering to finish...\n"));
           break;
         }
 
@@ -551,7 +551,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
       }
       case GST_MESSAGE_LATENCY:
       {
-        g_printerr (_("Redistribute latency...\n"));
+        PRINT (_("Redistribute latency...\n"));
         gst_bin_recalculate_latency (GST_BIN (pipeline));
         break;
       }
@@ -562,7 +562,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_request_state (message, &state);
 
-        g_printerr (_("Setting state to %s as requested by %s...\n"),
+        PRINT (_("Setting state to %s as requested by %s...\n"),
             gst_element_state_get_name (state), name);
 
         gst_element_set_state (pipeline, state);
