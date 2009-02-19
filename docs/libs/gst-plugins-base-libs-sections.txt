@@ -25,7 +25,16 @@ GST_TYPE_APP_SRC
 gst_app_src_get_type
 GST_APP_SRC_CLASS
 GST_IS_APP_SRC_CLASS
+GST_APP_BUFFER
+GST_APP_BUFFER_CLASS
+GST_IS_APP_BUFFER
+GST_IS_APP_BUFFER_CLASS
+GST_TYPE_APP_BUFFER
 <SUBSECTION Private>
+GstAppSrcPrivate
+GstAppBuffer
+GstAppBufferClass
+GstAppBufferFinalizeFunc
 gst_app_buffer_get_type
 gst_app_buffer_new
 gst_app_marshal_BOOLEAN__UINT64
@@ -50,7 +59,10 @@ gst_app_sink_set_drop
 gst_app_sink_get_drop
 gst_app_sink_pull_preroll
 gst_app_sink_pull_buffer
+GstAppSinkCallbacks
+gst_app_sink_set_callbacks
 <SUBSECTION Standard>
+GstAppSinkPrivate
 GstAppSinkClass
 GST_APP_SINK
 GST_IS_APP_SINK

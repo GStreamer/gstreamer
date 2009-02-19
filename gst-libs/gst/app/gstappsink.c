@@ -103,6 +103,10 @@ struct _GstAppSinkPrivate
   gboolean flushing;
   gboolean started;
   gboolean is_eos;
+
+  GstAppSinkCallbacks callbacks;
+  gpointer user_data;
+  GDestroyNotify notify;
 };
 
 GST_DEBUG_CATEGORY_STATIC (app_sink_debug);
@@ -400,6 +404,12 @@ gst_app_sink_dispose (GObject * obj)
     gst_caps_unref (appsink->priv->caps);
     appsink->priv->caps = NULL;
   }
+  if (appsink->priv->notify) {
+    appsink->priv->notify (appsink->priv->user_data);
+  }
+  appsink->priv->user_data = NULL;
+  appsink->priv->notify = NULL;
+
   GST_OBJECT_UNLOCK (appsink);
 
   g_mutex_lock (appsink->priv->mutex);
@@ -571,6 +581,9 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
 
       /* emit EOS now */
       g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_EOS], 0);
+
+      if (appsink->priv->callbacks.eos)
+        appsink->priv->callbacks.eos (appsink, appsink->priv->user_data);
       break;
     case GST_EVENT_FLUSH_START:
       /* we don't have to do anything here, the base class will call unlock
@@ -607,6 +620,9 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
 
   if (emit)
     g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_PREROLL], 0);
+
+  if (appsink->priv->callbacks.new_preroll)
+    appsink->priv->callbacks.new_preroll (appsink, appsink->priv->user_data);
 
   return GST_FLOW_OK;
 
@@ -657,6 +673,9 @@ gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
 
   if (emit)
     g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_BUFFER], 0);
+
+  if (appsink->priv->callbacks.new_buffer)
+    appsink->priv->callbacks.new_buffer (appsink, appsink->priv->user_data);
 
   return GST_FLOW_OK;
 
@@ -1072,4 +1091,49 @@ not_started:
     g_mutex_unlock (appsink->priv->mutex);
     return NULL;
   }
+}
+
+/**
+ * gst_app_sink_set_callbacks:
+ * @appsink: a #GstAppSink
+ * @callbacks: the callbacks
+ * @user_data: a user_data argument for the callbacks
+ * @notify: a destroy notify function
+ *
+ * Set callbacks which will be executed for each new preroll, new buffer and eos.
+ * This is an alternative to using the signals, it has lower overhead and is thus
+ * less expensive, but also less flexible.
+ *
+ * Since: 0.10.23
+ */
+void
+gst_app_sink_set_callbacks (GstAppSink * appsink,
+    GstAppSinkCallbacks * callbacks, gpointer user_data, GDestroyNotify notify)
+{
+  GDestroyNotify old_notify;
+
+  g_return_if_fail (appsink != NULL);
+  g_return_if_fail (GST_IS_APP_SINK (appsink));
+  g_return_if_fail (callbacks != NULL);
+
+  GST_OBJECT_LOCK (appsink);
+  old_notify = appsink->priv->notify;
+
+  if (old_notify) {
+    gpointer old_data;
+
+    old_data = appsink->priv->user_data;
+
+    appsink->priv->user_data = NULL;
+    appsink->priv->notify = NULL;
+    GST_OBJECT_UNLOCK (appsink);
+
+    old_notify (old_data);
+
+    GST_OBJECT_LOCK (appsink);
+  }
+  appsink->priv->callbacks = *callbacks;
+  appsink->priv->user_data = user_data;
+  appsink->priv->notify = notify;
+  GST_OBJECT_UNLOCK (appsink);
 }

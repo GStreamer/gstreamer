@@ -89,6 +89,7 @@ check_PROGRAMS = \
 	$(check_vorbis) \
 	$(check_theora) \
 	elements/adder	\
+	elements/appsink	\
 	elements/audioconvert \
 	elements/audiorate \
 	elements/audioresample \
@@ -203,6 +204,14 @@ libs_pbutils_CFLAGS = \
 	$(AM_CFLAGS)
 libs_pbutils_LDADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la $(LDADD)
+
+elements_appsink_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+elements_appsink_LDADD = \
+	$(top_builddir)/gst-libs/gst/app/libgstapp-@GST_MAJORMINOR@.la \
+	$(LDADD)
 
 elements_alsa_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
