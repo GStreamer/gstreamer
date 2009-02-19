@@ -49,31 +49,31 @@
 G_BEGIN_DECLS
 
 
-typedef struct FluTsPmtStreamInfoClass {
+typedef struct MpegTsPmtStreamInfoClass {
   GObjectClass parent_class;
-} FluTsPmtStreamInfoClass;
+} MpegTsPmtStreamInfoClass;
 
-typedef struct FluTsPmtStreamInfo {
+typedef struct MpegTsPmtStreamInfo {
   GObject parent;
 
   guint16 pid;
   GValueArray *languages; /* null terminated 3 character ISO639 language code */
   guint8 stream_type;
   GValueArray *descriptors;
-} FluTsPmtStreamInfo;
+} MpegTsPmtStreamInfo;
 
-FluTsPmtStreamInfo *fluts_pmt_stream_info_new (guint16 pid, guint8 type);
-void fluts_pmt_stream_info_add_language(FluTsPmtStreamInfo* si,
+MpegTsPmtStreamInfo *mpegts_pmt_stream_info_new (guint16 pid, guint8 type);
+void mpegts_pmt_stream_info_add_language(MpegTsPmtStreamInfo* si,
     gchar* language);
-void fluts_pmt_stream_info_add_descriptor (FluTsPmtStreamInfo *pmt_info,
+void mpegts_pmt_stream_info_add_descriptor (MpegTsPmtStreamInfo *pmt_info,
     const gchar *descriptor, guint length);
 
-GType fluts_pmt_stream_info_get_type (void);
+GType mpegts_pmt_stream_info_get_type (void);
 
-#define FLUTS_TYPE_PMT_STREAM_INFO (fluts_pmt_stream_info_get_type ())
+#define MPEGTS_TYPE_PMT_STREAM_INFO (mpegts_pmt_stream_info_get_type ())
 
-#define FLUTS_IS_PMT_STREAM_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), FLUTS_TYPE_PMT_STREAM_INFO))
-#define FLUTS_PMT_STREAM_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),FLUTS_TYPE_PMT_STREAM_INFO, FluTsPmtStreamInfo))
+#define MPEGTS_IS_PMT_STREAM_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), MPEGTS_TYPE_PMT_STREAM_INFO))
+#define MPEGTS_PMT_STREAM_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),MPEGTS_TYPE_PMT_STREAM_INFO, MpegTsPmtStreamInfo))
 
 G_END_DECLS
 

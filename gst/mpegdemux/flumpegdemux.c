@@ -62,7 +62,7 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_flups_demux_plugin_init (plugin))
     return FALSE;
-  if (!gst_fluts_demux_plugin_init (plugin))
+  if (!gst_mpegts_demux_plugin_init (plugin))
     return FALSE;
   if (!gst_mpegtsparse_plugin_init (plugin))
     return FALSE;

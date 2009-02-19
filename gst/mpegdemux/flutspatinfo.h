@@ -50,22 +50,22 @@ G_BEGIN_DECLS
 
 typedef struct FluTsPatInfoClass {
   GObjectClass parent_class;
-} FluTsPatInfoClass;
+} MpegTsPatInfoClass;
 
 typedef struct FluTsPatInfo {
   GObject parent;
 
   guint16 pid;
   guint16 program_no;
-} FluTsPatInfo;
+} MpegTsPatInfo;
 
-#define FLUTS_TYPE_PAT_INFO (fluts_pat_info_get_type ())
-#define FLUTS_IS_PAT_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), FLUTS_TYPE_PAT_INFO))
-#define FLUTS_PAT_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),FLUTS_TYPE_PAT_INFO, FluTsPatInfo))
+#define MPEGTS_TYPE_PAT_INFO (mpegts_pat_info_get_type ())
+#define MPEGTS_IS_PAT_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), MPEGTS_TYPE_PAT_INFO))
+#define MPEGTS_PAT_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),MPEGTS_TYPE_PAT_INFO, MpegTsPatInfo))
 
-GType fluts_pat_info_get_type (void);
+GType mpegts_pat_info_get_type (void);
 
-FluTsPatInfo *fluts_pat_info_new (guint16 program_no, guint16 pid);
+MpegTsPatInfo *mpegts_pat_info_new (guint16 program_no, guint16 pid);
 
 G_END_DECLS
 

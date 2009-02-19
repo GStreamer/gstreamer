@@ -49,11 +49,11 @@
 
 G_BEGIN_DECLS
 
-typedef struct FluTsPmtInfoClass {
+typedef struct MpegTsPmtInfoClass {
   GObjectClass parent_class;
-} FluTsPmtInfoClass;
+} MpegTsPmtInfoClass;
 
-typedef struct FluTsPmtInfo {
+typedef struct MpegTsPmtInfo {
   GObject parent;
 
   guint16 program_no;
@@ -63,18 +63,18 @@ typedef struct FluTsPmtInfo {
 
   GValueArray *descriptors;
   GValueArray *streams;
-} FluTsPmtInfo;
+} MpegTsPmtInfo;
 
-FluTsPmtInfo *fluts_pmt_info_new (guint16 program_no, guint16 pcr_pid, guint8 version);
-void fluts_pmt_info_add_stream (FluTsPmtInfo *pmt_info, FluTsPmtStreamInfo *stream);
-void fluts_pmt_info_add_descriptor (FluTsPmtInfo *pmt_info,	
+MpegTsPmtInfo *mpegts_pmt_info_new (guint16 program_no, guint16 pcr_pid, guint8 version);
+void mpegts_pmt_info_add_stream (MpegTsPmtInfo *pmt_info, MpegTsPmtStreamInfo *stream);
+void mpegts_pmt_info_add_descriptor (MpegTsPmtInfo *pmt_info,	
   const gchar *descriptor, guint length);
 
-GType fluts_pmt_info_get_type (void);
+GType mpegts_pmt_info_get_type (void);
 
-#define FLUTS_TYPE_PMT_INFO (fluts_pmt_info_get_type ())
-#define FLUTS_IS_PMT_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), FLUTS_TYPE_PMT_INFO))
-#define FLUTS_PMT_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),FLUTS_TYPE_PMT_INFO, FluTsPmtInfo))
+#define MPEGTS_TYPE_PMT_INFO (mpegts_pmt_info_get_type ())
+#define MPEGTS_IS_PMT_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), MPEGTS_TYPE_PMT_INFO))
+#define MPEGTS_PMT_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),MPEGTS_TYPE_PMT_INFO, MpegTsPmtInfo))
 
 G_END_DECLS
 

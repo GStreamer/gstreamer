@@ -58,28 +58,28 @@ enum
   PROP_DESCRIPTORS,
 };
 
-GST_BOILERPLATE (FluTsPmtStreamInfo, fluts_pmt_stream_info, GObject,
+GST_BOILERPLATE (MpegTsPmtStreamInfo, mpegts_pmt_stream_info, GObject,
     G_TYPE_OBJECT);
 
-static void fluts_pmt_stream_info_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * spec);
-static void fluts_pmt_stream_info_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * spec);
-static void fluts_pmt_stream_info_finalize (GObject * object);
+static void mpegts_pmt_stream_info_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * spec);
+static void mpegts_pmt_stream_info_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * spec);
+static void mpegts_pmt_stream_info_finalize (GObject * object);
 
 static void
-fluts_pmt_stream_info_base_init (gpointer klass)
+mpegts_pmt_stream_info_base_init (gpointer klass)
 {
 }
 
 static void
-fluts_pmt_stream_info_class_init (FluTsPmtStreamInfoClass * klass)
+mpegts_pmt_stream_info_class_init (MpegTsPmtStreamInfoClass * klass)
 {
   GObjectClass *gobject_klass = (GObjectClass *) klass;
 
-  gobject_klass->set_property = fluts_pmt_stream_info_set_property;
-  gobject_klass->get_property = fluts_pmt_stream_info_get_property;
-  gobject_klass->finalize = fluts_pmt_stream_info_finalize;
+  gobject_klass->set_property = mpegts_pmt_stream_info_set_property;
+  gobject_klass->get_property = mpegts_pmt_stream_info_get_property;
+  gobject_klass->finalize = mpegts_pmt_stream_info_finalize;
 
   g_object_class_install_property (gobject_klass, PROP_PID,
       g_param_spec_uint ("pid", "PID carrying this stream",
@@ -105,27 +105,27 @@ fluts_pmt_stream_info_class_init (FluTsPmtStreamInfoClass * klass)
 }
 
 static void
-fluts_pmt_stream_info_init (FluTsPmtStreamInfo * pmt_stream_info,
-    FluTsPmtStreamInfoClass * klass)
+mpegts_pmt_stream_info_init (MpegTsPmtStreamInfo * pmt_stream_info,
+    MpegTsPmtStreamInfoClass * klass)
 {
   pmt_stream_info->languages = g_value_array_new (0);
   pmt_stream_info->descriptors = g_value_array_new (0);
 }
 
 static void
-fluts_pmt_stream_info_finalize (GObject * object)
+mpegts_pmt_stream_info_finalize (GObject * object)
 {
-  FluTsPmtStreamInfo *info = FLUTS_PMT_STREAM_INFO (object);
+  MpegTsPmtStreamInfo *info = MPEGTS_PMT_STREAM_INFO (object);
 
   g_value_array_free (info->languages);
   g_value_array_free (info->descriptors);
 }
 
-FluTsPmtStreamInfo *
-fluts_pmt_stream_info_new (guint16 pid, guint8 type)
+MpegTsPmtStreamInfo *
+mpegts_pmt_stream_info_new (guint16 pid, guint8 type)
 {
-  FluTsPmtStreamInfo *info;
-  info = g_object_new (FLUTS_TYPE_PMT_STREAM_INFO, NULL);
+  MpegTsPmtStreamInfo *info;
+  info = g_object_new (MPEGTS_TYPE_PMT_STREAM_INFO, NULL);
 
   info->pid = pid;
   info->stream_type = type;
@@ -133,12 +133,12 @@ fluts_pmt_stream_info_new (guint16 pid, guint8 type)
 }
 
 void
-fluts_pmt_stream_info_add_language (FluTsPmtStreamInfo * pmt_info,
+mpegts_pmt_stream_info_add_language (MpegTsPmtStreamInfo * pmt_info,
     gchar * language)
 {
   GValue v = { 0, };
 
-  g_return_if_fail (FLUTS_IS_PMT_STREAM_INFO (pmt_info));
+  g_return_if_fail (MPEGTS_IS_PMT_STREAM_INFO (pmt_info));
 
   g_value_init (&v, G_TYPE_STRING);
   g_value_take_string (&v, language);
@@ -147,13 +147,13 @@ fluts_pmt_stream_info_add_language (FluTsPmtStreamInfo * pmt_info,
 }
 
 void
-fluts_pmt_stream_info_add_descriptor (FluTsPmtStreamInfo * pmt_info,
+mpegts_pmt_stream_info_add_descriptor (MpegTsPmtStreamInfo * pmt_info,
     const gchar * descriptor, guint length)
 {
   GValue value = { 0 };
   GString *string;
 
-  g_return_if_fail (FLUTS_IS_PMT_STREAM_INFO (pmt_info));
+  g_return_if_fail (MPEGTS_IS_PMT_STREAM_INFO (pmt_info));
 
   string = g_string_new_len (descriptor, length);
 
@@ -164,24 +164,24 @@ fluts_pmt_stream_info_add_descriptor (FluTsPmtStreamInfo * pmt_info,
 }
 
 static void
-fluts_pmt_stream_info_set_property (GObject * object, guint prop_id,
+mpegts_pmt_stream_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec)
 {
-  g_return_if_fail (FLUTS_IS_PMT_STREAM_INFO (object));
+  g_return_if_fail (MPEGTS_IS_PMT_STREAM_INFO (object));
 
   /* No settable properties */
   G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
 }
 
 static void
-fluts_pmt_stream_info_get_property (GObject * object, guint prop_id,
+mpegts_pmt_stream_info_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec)
 {
-  FluTsPmtStreamInfo *si;
+  MpegTsPmtStreamInfo *si;
 
-  g_return_if_fail (FLUTS_IS_PMT_STREAM_INFO (object));
+  g_return_if_fail (MPEGTS_IS_PMT_STREAM_INFO (object));
 
-  si = FLUTS_PMT_STREAM_INFO (object);
+  si = MPEGTS_PMT_STREAM_INFO (object);
 
   switch (prop_id) {
     case PROP_STREAM_TYPE:

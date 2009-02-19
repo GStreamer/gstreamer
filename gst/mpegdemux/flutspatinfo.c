@@ -56,19 +56,19 @@ enum
   PROP_PID
 };
 
-static void fluts_pat_info_set_property (GObject * object, guint prop_id,
+static void mpegts_pat_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
-static void fluts_pat_info_get_property (GObject * object, guint prop_id,
+static void mpegts_pat_info_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 
-GST_BOILERPLATE (FluTsPatInfo, fluts_pat_info, GObject, G_TYPE_OBJECT);
+GST_BOILERPLATE (MpegTsPatInfo, mpegts_pat_info, GObject, G_TYPE_OBJECT);
 
-FluTsPatInfo *
-fluts_pat_info_new (guint16 program_no, guint16 pid)
+MpegTsPatInfo *
+mpegts_pat_info_new (guint16 program_no, guint16 pid)
 {
-  FluTsPatInfo *info;
+  MpegTsPatInfo *info;
 
-  info = g_object_new (FLUTS_TYPE_PAT_INFO, NULL);
+  info = g_object_new (MPEGTS_TYPE_PAT_INFO, NULL);
 
   info->program_no = program_no;
   info->pid = pid;
@@ -77,17 +77,17 @@ fluts_pat_info_new (guint16 program_no, guint16 pid)
 }
 
 static void
-fluts_pat_info_base_init (gpointer klass)
+mpegts_pat_info_base_init (gpointer klass)
 {
 }
 
 static void
-fluts_pat_info_class_init (FluTsPatInfoClass * klass)
+mpegts_pat_info_class_init (MpegTsPatInfoClass * klass)
 {
   GObjectClass *gobject_klass = (GObjectClass *) klass;
 
-  gobject_klass->set_property = fluts_pat_info_set_property;
-  gobject_klass->get_property = fluts_pat_info_get_property;
+  gobject_klass->set_property = mpegts_pat_info_set_property;
+  gobject_klass->get_property = mpegts_pat_info_get_property;
 
   g_object_class_install_property (gobject_klass, PROP_PROGRAM_NO,
       g_param_spec_uint ("program-number", "Program Number",
@@ -101,29 +101,29 @@ fluts_pat_info_class_init (FluTsPatInfoClass * klass)
 }
 
 static void
-fluts_pat_info_init (FluTsPatInfo * pat_info, FluTsPatInfoClass * klass)
+mpegts_pat_info_init (MpegTsPatInfo * pat_info, MpegTsPatInfoClass * klass)
 {
 }
 
 static void
-fluts_pat_info_set_property (GObject * object, guint prop_id,
+mpegts_pat_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec)
 {
-  g_return_if_fail (FLUTS_IS_PAT_INFO (object));
+  g_return_if_fail (MPEGTS_IS_PAT_INFO (object));
 
   /* No settable properties */
   G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
 }
 
 static void
-fluts_pat_info_get_property (GObject * object, guint prop_id,
+mpegts_pat_info_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec)
 {
-  FluTsPatInfo *pat_info;
+  MpegTsPatInfo *pat_info;
 
-  g_return_if_fail (FLUTS_IS_PAT_INFO (object));
+  g_return_if_fail (MPEGTS_IS_PAT_INFO (object));
 
-  pat_info = FLUTS_PAT_INFO (object);
+  pat_info = MPEGTS_PAT_INFO (object);
 
   switch (prop_id) {
     case PROP_PROGRAM_NO:

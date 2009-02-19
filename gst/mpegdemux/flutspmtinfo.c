@@ -59,27 +59,27 @@ enum
   PROP_STREAMINFO
 };
 
-GST_BOILERPLATE (FluTsPmtInfo, fluts_pmt_info, GObject, G_TYPE_OBJECT);
+GST_BOILERPLATE (MpegTsPmtInfo, mpegts_pmt_info, GObject, G_TYPE_OBJECT);
 
-static void fluts_pmt_info_finalize (GObject * object);
-static void fluts_pmt_info_set_property (GObject * object, guint prop_id,
+static void mpegts_pmt_info_finalize (GObject * object);
+static void mpegts_pmt_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
-static void fluts_pmt_info_get_property (GObject * object, guint prop_id,
+static void mpegts_pmt_info_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 
 static void
-fluts_pmt_info_base_init (gpointer klass)
+mpegts_pmt_info_base_init (gpointer klass)
 {
 }
 
 static void
-fluts_pmt_info_class_init (FluTsPmtInfoClass * klass)
+mpegts_pmt_info_class_init (MpegTsPmtInfoClass * klass)
 {
   GObjectClass *gobject_klass = (GObjectClass *) klass;
 
-  gobject_klass->finalize = fluts_pmt_info_finalize;
-  gobject_klass->set_property = fluts_pmt_info_set_property;
-  gobject_klass->get_property = fluts_pmt_info_get_property;
+  gobject_klass->finalize = mpegts_pmt_info_finalize;
+  gobject_klass->set_property = mpegts_pmt_info_set_property;
+  gobject_klass->get_property = mpegts_pmt_info_get_property;
 
   g_object_class_install_property (gobject_klass, PROP_PROGRAM_NO,
       g_param_spec_uint ("program-number", "Program Number",
@@ -97,7 +97,8 @@ fluts_pmt_info_class_init (FluTsPmtInfoClass * klass)
           "Array of GObjects containing information about the program streams",
           g_param_spec_object ("flu-pmt-streaminfo", "FluPMTStreamInfo",
               "Fluendo TS Demuxer PMT Stream info object",
-              FLUTS_TYPE_PMT_STREAM_INFO, G_PARAM_READABLE), G_PARAM_READABLE));
+              MPEGTS_TYPE_PMT_STREAM_INFO, G_PARAM_READABLE),
+          G_PARAM_READABLE));
 
   g_object_class_install_property (gobject_klass, PROP_VERSION_NO,
       g_param_spec_uint ("version-number", "Version Number",
@@ -114,18 +115,18 @@ fluts_pmt_info_class_init (FluTsPmtInfoClass * klass)
 }
 
 static void
-fluts_pmt_info_init (FluTsPmtInfo * pmt_info, FluTsPmtInfoClass * klass)
+mpegts_pmt_info_init (MpegTsPmtInfo * pmt_info, MpegTsPmtInfoClass * klass)
 {
   pmt_info->streams = g_value_array_new (0);
   pmt_info->descriptors = g_value_array_new (0);
 }
 
-FluTsPmtInfo *
-fluts_pmt_info_new (guint16 program_no, guint16 pcr_pid, guint8 version_no)
+MpegTsPmtInfo *
+mpegts_pmt_info_new (guint16 program_no, guint16 pcr_pid, guint8 version_no)
 {
-  FluTsPmtInfo *info;
+  MpegTsPmtInfo *info;
 
-  info = g_object_new (FLUTS_TYPE_PMT_INFO, NULL);
+  info = g_object_new (MPEGTS_TYPE_PMT_INFO, NULL);
 
   info->program_no = program_no;
   info->pcr_pid = pcr_pid;
@@ -135,9 +136,9 @@ fluts_pmt_info_new (guint16 program_no, guint16 pcr_pid, guint8 version_no)
 }
 
 static void
-fluts_pmt_info_finalize (GObject * object)
+mpegts_pmt_info_finalize (GObject * object)
 {
-  FluTsPmtInfo *info = FLUTS_PMT_INFO (object);
+  MpegTsPmtInfo *info = MPEGTS_PMT_INFO (object);
 
   g_value_array_free (info->streams);
   g_value_array_free (info->descriptors);
@@ -146,24 +147,24 @@ fluts_pmt_info_finalize (GObject * object)
 }
 
 static void
-fluts_pmt_info_set_property (GObject * object, guint prop_id,
+mpegts_pmt_info_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec)
 {
-  g_return_if_fail (FLUTS_IS_PMT_INFO (object));
+  g_return_if_fail (MPEGTS_IS_PMT_INFO (object));
 
   /* No settable properties */
   G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, spec);
 }
 
 static void
-fluts_pmt_info_get_property (GObject * object, guint prop_id,
+mpegts_pmt_info_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec)
 {
-  FluTsPmtInfo *pmt_info;
+  MpegTsPmtInfo *pmt_info;
 
-  g_return_if_fail (FLUTS_IS_PMT_INFO (object));
+  g_return_if_fail (MPEGTS_IS_PMT_INFO (object));
 
-  pmt_info = FLUTS_PMT_INFO (object);
+  pmt_info = MPEGTS_PMT_INFO (object);
 
   switch (prop_id) {
     case PROP_PROGRAM_NO:
@@ -188,13 +189,13 @@ fluts_pmt_info_get_property (GObject * object, guint prop_id,
 }
 
 void
-fluts_pmt_info_add_descriptor (FluTsPmtInfo * pmt_info,
+mpegts_pmt_info_add_descriptor (MpegTsPmtInfo * pmt_info,
     const gchar * descriptor, guint length)
 {
   GValue value = { 0 };
   GString *string;
 
-  g_return_if_fail (FLUTS_IS_PMT_INFO (pmt_info));
+  g_return_if_fail (MPEGTS_IS_PMT_INFO (pmt_info));
 
   string = g_string_new_len (descriptor, length);
 
@@ -205,12 +206,13 @@ fluts_pmt_info_add_descriptor (FluTsPmtInfo * pmt_info,
 }
 
 void
-fluts_pmt_info_add_stream (FluTsPmtInfo * pmt_info, FluTsPmtStreamInfo * stream)
+mpegts_pmt_info_add_stream (MpegTsPmtInfo * pmt_info,
+    MpegTsPmtStreamInfo * stream)
 {
   GValue v = { 0, };
 
-  g_return_if_fail (FLUTS_IS_PMT_INFO (pmt_info));
-  g_return_if_fail (FLUTS_IS_PMT_STREAM_INFO (stream));
+  g_return_if_fail (MPEGTS_IS_PMT_INFO (pmt_info));
+  g_return_if_fail (MPEGTS_IS_PMT_STREAM_INFO (stream));
 
   g_value_init (&v, G_TYPE_OBJECT);
   g_value_take_object (&v, stream);
