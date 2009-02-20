@@ -57,6 +57,10 @@ struct _GstRTPDTMFMux
 struct _GstRTPDTMFMuxClass
 {
   GstRTPMuxClass parent_class;
+
+  /* signals */
+  void (*locking) (GstElement *element, GstPad *pad);
+  void (*unlocked) (GstElement *element, GstPad *pad);
 };
 
 GType gst_rtp_dtmf_mux_get_type (void);
