@@ -274,6 +274,12 @@ static void
 gst_camerabin_set_allowed_framerate (GstCameraBin * camera,
     GstCaps * filter_caps);
 
+static const GValue *gst_camerabin_find_better_framerate (GstCameraBin * camera,
+    GstStructure * st, const GValue * orig_framerate);
+
+static void
+gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps);
+
 /*
  * GObject callback functions declaration
  */
@@ -295,8 +301,6 @@ static void gst_camerabin_set_property (GObject * object, guint prop_id,
 static void gst_camerabin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static const GValue *gst_camerabin_find_better_framerate (GstCameraBin * camera,
-    GstStructure * st, const GValue * orig_framerate);
 /*
  * GstElement function declarations
  */
@@ -562,6 +566,9 @@ camerabin_create_src_elements (GstCameraBin * camera)
           gst_camerabin_create_and_add_element (cbin, "output-selector")))
     goto done;
 
+  camera->srcpad_videosrc =
+      gst_element_get_static_pad (camera->src_vid_src, "src");
+
   camera->srcpad_zoom_filter =
       gst_element_get_static_pad (camera->src_zoom_filter, "src");
 
@@ -640,6 +647,12 @@ camerabin_create_view_elements (GstCameraBin * camera)
   if (!(camera->view_scale =
           gst_camerabin_create_and_add_element (GST_BIN (camera),
               "videoscale"))) {
+    goto error;
+  }
+
+  if (!(camera->aspect_filter =
+          gst_camerabin_create_and_add_element (GST_BIN (camera),
+              "capsfilter"))) {
     goto error;
   }
 #ifdef USE_COLOR_CONVERTER
@@ -783,6 +796,16 @@ camerabin_destroy_elements (GstCameraBin * camera)
   if (camera->pad_src_view) {
     gst_element_release_request_pad (camera->src_out_sel, camera->pad_src_view);
     camera->pad_src_view = NULL;
+  }
+
+  if (camera->srcpad_zoom_filter) {
+    gst_object_unref (camera->srcpad_zoom_filter);
+    camera->srcpad_zoom_filter = NULL;
+  }
+
+  if (camera->srcpad_videosrc) {
+    gst_object_unref (camera->srcpad_videosrc);
+    camera->srcpad_videosrc = NULL;
   }
 
   camera->view_sink = NULL;
@@ -1264,6 +1287,7 @@ gst_camerabin_set_capsfilter_caps (GstCameraBin * camera, GstCaps * new_caps)
   /* Update capsfilters */
   g_object_set (G_OBJECT (camera->src_filter), "caps", new_caps, NULL);
   g_object_set (G_OBJECT (camera->src_zoom_filter), "caps", new_caps, NULL);
+  gst_camerabin_update_aspect_filter (camera, new_caps);
 }
 
 static void
@@ -1489,7 +1513,7 @@ image_pad_blocked (GstPad * pad, gboolean blocked, gpointer user_data)
   GST_DEBUG_OBJECT (camera, "%s %s:%s",
       blocked ? "blocking" : "unblocking", GST_DEBUG_PAD_NAME (pad));
 
-  if (blocked && (pad == camera->pad_src_img)) {
+  if (blocked && (pad == camera->srcpad_videosrc)) {
     /* Send eos and block until image bin reaches eos */
     GST_DEBUG_OBJECT (camera, "sending eos to image bin");
     gst_element_send_event (camera->imgbin, gst_event_new_eos ());
@@ -1534,12 +1558,6 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstBuffer * buffer,
   /* Check for first buffer after capture start, we want to
      pass it forward directly. */
   if (!camera->num_img_buffers) {
-    /* Restore filter caps for view finder mode if necessary.
-       The v4l2camsrc switches automatically to view finder
-       resolution after hi-res still image capture. */
-    if (camera->image_capture_caps) {
-      gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
-    }
     goto done;
   }
 
@@ -1579,7 +1597,7 @@ done:
     /* Block when next buffer arrives, we want to push eos event
        between frames and make sure that eos reaches the filesink
        before processing the next buffer. */
-    gst_pad_set_blocked_async (pad, TRUE,
+    gst_pad_set_blocked_async (camera->srcpad_videosrc, TRUE,
         (GstPadBlockCallback) image_pad_blocked, camera);
   }
 
@@ -1873,6 +1891,87 @@ gst_camerabin_find_better_framerate (GstCameraBin * camera, GstStructure * st,
   }
 
   return framerate;
+}
+
+/*
+ * gst_camerabin_update_aspect_filter:
+ * @camera: camerabin object
+ * @new_caps: new caps of next buffers arriving to view finder sink element
+ *
+ * Updates aspect ratio capsfilter to maintain aspect ratio, if we need to
+ * scale frames for showing them in view finder.
+ */
+static void
+gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
+{
+  GstCaps *sink_caps, *ar_caps;
+  GstStructure *st;
+  gint in_w = 0, in_h = 0, sink_w = 0, sink_h = 0, target_w = 0, target_h = 0;
+  gdouble ratio_w, ratio_h;
+  GstPad *sink_pad;
+  const GValue *range;
+
+  sink_pad = gst_element_get_static_pad (camera->view_sink, "sink");
+
+  if (sink_pad) {
+    sink_caps = gst_pad_get_caps (sink_pad);
+    gst_object_unref (sink_pad);
+    if (sink_caps) {
+      GST_DEBUG_OBJECT (camera, "sink element caps %" GST_PTR_FORMAT,
+          sink_caps);
+      /* Get maximum resolution that view finder sink accepts */
+      st = gst_caps_get_structure (sink_caps, 0);
+      if (gst_structure_has_field_typed (st, "width", GST_TYPE_INT_RANGE)) {
+        range = gst_structure_get_value (st, "width");
+        sink_w = gst_value_get_int_range_max (range);
+      }
+      if (gst_structure_has_field_typed (st, "height", GST_TYPE_INT_RANGE)) {
+        range = gst_structure_get_value (st, "height");
+        sink_h = gst_value_get_int_range_max (range);
+      }
+      gst_caps_unref (sink_caps);
+      GST_DEBUG_OBJECT (camera, "sink element accepts max %dx%d", sink_w,
+          sink_h);
+
+      /* Get incoming frames' resolution */
+      if (sink_h && sink_w) {
+        st = gst_caps_get_structure (new_caps, 0);
+        gst_structure_get_int (st, "width", &in_w);
+        gst_structure_get_int (st, "height", &in_h);
+        GST_DEBUG_OBJECT (camera, "new caps with %dx%d", in_w, in_h);
+      }
+    }
+  }
+
+  /* If we get bigger frames than view finder sink accepts, then we scale.
+     If we scale we need to adjust aspect ratio capsfilter caps in order
+     to maintain aspect ratio while scaling. */
+  if (in_w && in_h && (in_w > sink_w || in_h > sink_h)) {
+    ratio_w = (gdouble) sink_w / in_w;
+    ratio_h = (gdouble) sink_h / in_h;
+
+    if (ratio_w < ratio_h) {
+      target_w = sink_w;
+      target_h = (gint) (ratio_w * in_h);
+    } else {
+      target_w = (gint) (ratio_h * in_w);
+      target_h = sink_h;
+    }
+
+    GST_DEBUG_OBJECT (camera, "setting %dx%d filter to maintain aspect ratio",
+        target_w, target_h);
+    ar_caps = gst_caps_copy (new_caps);
+    gst_caps_set_simple (ar_caps, "width", G_TYPE_INT, target_w, "height",
+        G_TYPE_INT, target_h, NULL);
+  } else {
+    GST_DEBUG_OBJECT (camera, "no scaling");
+    ar_caps = gst_caps_ref (new_caps);
+  }
+
+  GST_DEBUG_OBJECT (camera, "aspect ratio filter caps %" GST_PTR_FORMAT,
+      ar_caps);
+  g_object_set (G_OBJECT (camera->aspect_filter), "caps", ar_caps, NULL);
+  gst_caps_unref (ar_caps);
 }
 
 /*
@@ -2273,7 +2372,9 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->pad_view_img = NULL;
   camera->pad_src_vid = NULL;
   camera->pad_view_vid = NULL;
+
   camera->srcpad_zoom_filter = NULL;
+  camera->srcpad_videosrc = NULL;
 
   /* source elements */
   camera->src_vid_src = NULL;
@@ -2604,8 +2705,14 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
       } else if (GST_MESSAGE_SRC (msg) == GST_OBJECT (camera->imgbin)) {
         /* Image eos */
         GST_DEBUG_OBJECT (camera, "got image eos message");
+
+        /* Still image capture buffer handled, restore filter caps */
+        if (camera->image_capture_caps) {
+          gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
+        }
+
         /* Unblock pad to process next buffer */
-        gst_pad_set_blocked_async (camera->pad_src_img, FALSE,
+        gst_pad_set_blocked_async (camera->srcpad_videosrc, FALSE,
             (GstPadBlockCallback) image_pad_blocked, camera);
       }
       break;

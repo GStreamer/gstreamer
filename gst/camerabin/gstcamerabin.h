@@ -97,6 +97,7 @@ struct _GstCameraBin
   GstPad *pad_view_vid;
 
   GstPad *srcpad_zoom_filter;
+  GstPad *srcpad_videosrc;
 
   GstElement *imgbin;           /* bin that holds image capturing elements */
   GstElement *vidbin;           /*  bin that holds video capturing elements */
@@ -112,6 +113,7 @@ struct _GstCameraBin
 
   /* view finder elements */
   GstElement *view_in_sel;
+  GstElement *aspect_filter;
   GstElement *view_scale;
   GstElement *view_sink;
 
