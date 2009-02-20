@@ -45,6 +45,7 @@ typedef struct _GstRtpDTMFDepayClass GstRtpDTMFDepayClass;
 
 struct _GstRtpDTMFDepay
 {
+  /*< private >*/
   GstBaseRTPDepayload depayload;
   double sample;
   guint32 previous_ts;

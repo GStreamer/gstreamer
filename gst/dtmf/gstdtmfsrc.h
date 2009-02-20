@@ -71,6 +71,7 @@ typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
 
 struct _GstDTMFSrc
 {
+  /*< private >*/
   GstBaseSrc parent;
   GAsyncQueue *event_queue;
   GstDTMFSrcEvent *last_event;
