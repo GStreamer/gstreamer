@@ -325,22 +325,29 @@ gst_photography_get_capabilities (GstPhotography * photo)
  * gst_photography_prepare_for_capture:
  * @photo: #GstPhotography interface of a #GstElement
  * @func: callback that is called after capturing has been prepared
+ * @caps: #GstCaps defining the desired format of the captured image
  * @user_data: user data that will be passed to the callback @func
  *
  * Start preparations for capture. @func callback is called after
  * preparations are done.
+ *
+ * Returns: TRUE if preparations were started (caps were OK), otherwise FALSE.
  */
-void
+gboolean
 gst_photography_prepare_for_capture (GstPhotography * photo,
-    GstPhotoCapturePrepared func, gpointer user_data)
+    GstPhotoCapturePrepared func, GstCaps * capture_caps, gpointer user_data)
 {
   GstPhotographyInterface *iface;
-  g_return_if_fail (photo != NULL);
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (photo != NULL, FALSE);
 
   iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
   if (iface->prepare_for_capture) {
-    iface->prepare_for_capture (photo, func, user_data);
+    ret = iface->prepare_for_capture (photo, func, capture_caps, user_data);
   }
+
+  return ret;
 }
 
 /**

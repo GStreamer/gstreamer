@@ -143,11 +143,14 @@ typedef struct
 /**
  * GstPhotoCapturePrepared:
  * @data: user data that has been given, when registering the callback
+ * @configured_caps: #GstCaps defining the configured capture format.
+ *     Ownership of these caps stays in the element.
  *
  * This callback will be called when the element has finished preparations
  * for photo capture.
  */
-typedef void (*GstPhotoCapturePrepared) (gpointer data);
+typedef void (*GstPhotoCapturePrepared) (gpointer data,
+    const GstCaps *configured_caps);
 
 /**
  * GstPhotographyInterface:
@@ -210,8 +213,8 @@ typedef struct _GstPhotographyInterface
     gboolean (*set_zoom) (GstPhotography * photo, gfloat zoom);
 
     GstPhotoCaps (*get_capabilities) (GstPhotography * photo);
-  void (*prepare_for_capture) (GstPhotography * photo,
-      GstPhotoCapturePrepared func, gpointer user_data);
+    gboolean (*prepare_for_capture) (GstPhotography * photo,
+      GstPhotoCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
   void (*set_autofocus) (GstPhotography * photo, gboolean on);
 
   /*< private > */
@@ -257,8 +260,8 @@ gboolean gst_photography_set_zoom (GstPhotography * photo, gfloat zoom);
 
 GstPhotoCaps gst_photography_get_capabilities (GstPhotography * photo);
 
-void gst_photography_prepare_for_capture (GstPhotography * photo,
-    GstPhotoCapturePrepared func, gpointer user_data);
+gboolean gst_photography_prepare_for_capture (GstPhotography * photo,
+    GstPhotoCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
 
 void gst_photography_set_autofocus (GstPhotography * photo, gboolean on);
 
