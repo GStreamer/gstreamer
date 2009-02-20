@@ -32,7 +32,6 @@
 #include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_DTMF_SRC               (gst_dtmf_src_get_type())
 #define GST_DTMF_SRC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DTMF_SRC,GstDTMFSrc))
 #define GST_DTMF_SRC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DTMF_SRC,GstDTMFSrcClass))
@@ -40,7 +39,6 @@ G_BEGIN_DECLS
 #define GST_IS_DTMF_SRC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DTMF_SRC))
 #define GST_IS_DTMF_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DTMF_SRC))
 #define GST_DTMF_SRC_CAST(obj)          ((GstDTMFSrc *)(obj))
-
 typedef struct _GstDTMFSrc GstDTMFSrc;
 typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
 
@@ -51,7 +49,8 @@ typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
  * The opaque #GstDTMFSrc data structure.
  */
 
-enum _GstDTMFEventType {
+enum _GstDTMFEventType
+{
   DTMF_EVENT_TYPE_START,
   DTMF_EVENT_TYPE_STOP,
   DTMF_EVENT_TYPE_PAUSE_TASK
@@ -59,32 +58,35 @@ enum _GstDTMFEventType {
 
 typedef enum _GstDTMFEventType GstDTMFEventType;
 
-struct _GstDTMFSrcEvent {
-  GstDTMFEventType  event_type;
-  double            sample;
-  guint16           event_number;
-  guint16           volume;
-  guint32           packet_count;
+struct _GstDTMFSrcEvent
+{
+  GstDTMFEventType event_type;
+  double sample;
+  guint16 event_number;
+  guint16 volume;
+  guint32 packet_count;
 };
 
 typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
 
-struct _GstDTMFSrc {
-  GstBaseSrc        parent;
-  GAsyncQueue*      event_queue;
-  GstDTMFSrcEvent*  last_event;
+struct _GstDTMFSrc
+{
+  GstBaseSrc parent;
+  GAsyncQueue *event_queue;
+  GstDTMFSrcEvent *last_event;
 
-  guint16           interval;
-  GstClockTime      timestamp;
+  guint16 interval;
+  GstClockTime timestamp;
 
-  gboolean          paused;
-  GstClockID        clockid;
+  gboolean paused;
+  GstClockID clockid;
 
-  gint              sample_rate;
+  gint sample_rate;
 };
 
 
-struct _GstDTMFSrcClass {
+struct _GstDTMFSrcClass
+{
   GstBaseSrcClass parent_class;
 };
 
@@ -93,5 +95,4 @@ GType gst_dtmf_src_get_type (void);
 gboolean gst_dtmf_src_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_DTMF_SRC_H__ */

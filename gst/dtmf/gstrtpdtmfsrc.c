@@ -134,9 +134,9 @@
 #include "gstrtpdtmfsrc.h"
 
 #define GST_RTP_DTMF_TYPE_EVENT  1
-#define DEFAULT_PACKET_INTERVAL  50 /* ms */
-#define MIN_PACKET_INTERVAL      10 /* ms */
-#define MAX_PACKET_INTERVAL      50 /* ms */
+#define DEFAULT_PACKET_INTERVAL  50     /* ms */
+#define MIN_PACKET_INTERVAL      10     /* ms */
+#define MAX_PACKET_INTERVAL      50     /* ms */
 #define DEFAULT_SSRC             -1
 #define DEFAULT_PT               96
 #define DEFAULT_TIMESTAMP_OFFSET -1
@@ -149,8 +149,8 @@
 #define MIN_VOLUME               0
 #define MAX_VOLUME               36
 
-#define MIN_INTER_DIGIT_INTERVAL 50 /* ms */
-#define MIN_PULSE_DURATION       70 /* ms */
+#define MIN_INTER_DIGIT_INTERVAL 50     /* ms */
+#define MIN_PULSE_DURATION       70     /* ms */
 
 #define DEFAULT_PACKET_REDUNDANCY 1
 #define MIN_PACKET_REDUNDANCY 1
@@ -198,7 +198,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "ssrc = (int) [ 0, MAX ], "
         "encoding-name = (string) \"TELEPHONE-EVENT\"")
     /*  "events = (string) \"0-15\" */
-
     );
 
 
@@ -215,16 +214,16 @@ static void gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_rtp_dtmf_src_handle_event (GstBaseSrc *basesrc,
+static gboolean gst_rtp_dtmf_src_handle_event (GstBaseSrc * basesrc,
     GstEvent * event);
 static GstStateChangeReturn gst_rtp_dtmf_src_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc *dtmfsrc,
+static void gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc * dtmfsrc,
     gint event_number, gint event_volume);
-static void gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc *dtmfsrc);
+static void gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc * dtmfsrc);
 
-static gboolean gst_rtp_dtmf_src_unlock (GstBaseSrc *src);
-static gboolean gst_rtp_dtmf_src_unlock_stop (GstBaseSrc *src);
+static gboolean gst_rtp_dtmf_src_unlock (GstBaseSrc * src);
+static gboolean gst_rtp_dtmf_src_unlock_stop (GstBaseSrc * src);
 static GstFlowReturn gst_rtp_dtmf_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 static gboolean gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc);
@@ -236,7 +235,7 @@ gst_rtp_dtmf_src_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_src_debug,
-          "rtpdtmfsrc", 0, "rtpdtmfsrc element");
+      "rtpdtmfsrc", 0, "rtpdtmfsrc element");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_dtmf_src_template));
@@ -305,17 +304,13 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_change_state);
 
-  gstbasesrc_class->unlock =
-      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_unlock);
+  gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_unlock);
   gstbasesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_unlock_stop);
 
-  gstbasesrc_class->event =
-      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_handle_event);
-  gstbasesrc_class->create =
-      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_create);
-  gstbasesrc_class->negotiate =
-      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_negotiate);
+  gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_handle_event);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_create);
+  gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_negotiate);
 }
 
 static void
@@ -355,16 +350,16 @@ gst_rtp_dtmf_src_finalize (GObject * object)
 }
 
 static gboolean
-gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc *dtmfsrc,
-        const GstStructure * event_structure)
+gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc * dtmfsrc,
+    const GstStructure * event_structure)
 {
   gint event_type;
   gboolean start;
   gint method;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
-          !gst_structure_get_boolean (event_structure, "start", &start) ||
-          event_type != GST_RTP_DTMF_TYPE_EVENT)
+      !gst_structure_get_boolean (event_structure, "start", &start) ||
+      event_type != GST_RTP_DTMF_TYPE_EVENT)
     goto failure;
 
   if (gst_structure_get_int (event_structure, "method", &method)) {
@@ -378,11 +373,11 @@ gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc *dtmfsrc,
     gint event_volume;
 
     if (!gst_structure_get_int (event_structure, "number", &event_number) ||
-            !gst_structure_get_int (event_structure, "volume", &event_volume))
+        !gst_structure_get_int (event_structure, "volume", &event_volume))
       goto failure;
 
     GST_DEBUG_OBJECT (dtmfsrc, "Received start event %d with volume %d",
-            event_number, event_volume);
+        event_number, event_volume);
     gst_rtp_dtmf_src_add_start_event (dtmfsrc, event_number, event_volume);
   }
 
@@ -397,7 +392,7 @@ failure:
 }
 
 static gboolean
-gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc *dtmfsrc,
+gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc * dtmfsrc,
     GstEvent * event)
 {
   gboolean result = FALSE;
@@ -426,7 +421,7 @@ ret:
 }
 
 static gboolean
-gst_rtp_dtmf_src_handle_event (GstBaseSrc *basesrc, GstEvent * event)
+gst_rtp_dtmf_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
 {
   GstRTPDTMFSrc *dtmfsrc;
   gboolean result = FALSE;
@@ -522,23 +517,23 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_rtp_dtmf_src_set_stream_lock (GstRTPDTMFSrc *dtmfsrc, gboolean lock)
+gst_rtp_dtmf_src_set_stream_lock (GstRTPDTMFSrc * dtmfsrc, gboolean lock)
 {
-   GstEvent *event;
-   GstStructure *structure;
+  GstEvent *event;
+  GstStructure *structure;
 
-   structure = gst_structure_new ("stream-lock",
-                      "lock", G_TYPE_BOOLEAN, lock, NULL);
+  structure = gst_structure_new ("stream-lock",
+      "lock", G_TYPE_BOOLEAN, lock, NULL);
 
-   event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
-   if (!gst_pad_push_event (GST_BASE_SRC_PAD (dtmfsrc), event)) {
-     GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
-   }
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
+  if (!gst_pad_push_event (GST_BASE_SRC_PAD (dtmfsrc), event)) {
+    GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
+  }
 
 }
 
 static void
-gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
+gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc * dtmfsrc)
 {
   GstClock *clock;
   GstClockTime base_time;
@@ -563,19 +558,18 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
   }
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
-      gst_util_uint64_scale_int (
-          gst_segment_to_running_time (&GST_BASE_SRC (dtmfsrc)->segment,
-              GST_FORMAT_TIME, dtmfsrc->timestamp),
-          dtmfsrc->clock_rate, GST_SECOND);
+      gst_util_uint64_scale_int (gst_segment_to_running_time (&GST_BASE_SRC
+          (dtmfsrc)->segment, GST_FORMAT_TIME, dtmfsrc->timestamp),
+      dtmfsrc->clock_rate, GST_SECOND);
 }
 
 
 static void
-gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc *dtmfsrc, gint event_number,
+gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc * dtmfsrc, gint event_number,
     gint event_volume)
 {
 
-  GstRTPDTMFSrcEvent * event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
+  GstRTPDTMFSrcEvent *event = g_malloc (sizeof (GstRTPDTMFSrcEvent));
   event->event_type = RTP_DTMF_EVENT_TYPE_START;
 
   event->payload = g_new0 (GstRTPDTMFPayload, 1);
@@ -587,10 +581,10 @@ gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc *dtmfsrc, gint event_number,
 }
 
 static void
-gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc *dtmfsrc)
+gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc * dtmfsrc)
 {
 
-  GstRTPDTMFSrcEvent * event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
+  GstRTPDTMFSrcEvent *event = g_malloc (sizeof (GstRTPDTMFSrcEvent));
   event->event_type = RTP_DTMF_EVENT_TYPE_STOP;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
@@ -598,7 +592,7 @@ gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc *dtmfsrc)
 
 
 static void
-gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
+gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
 {
   gst_rtp_buffer_set_ssrc (buf, dtmfsrc->current_ssrc);
   gst_rtp_buffer_set_payload_type (buf, dtmfsrc->pt);
@@ -617,7 +611,7 @@ gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
 }
 
 static void
-gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
+gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc * dtmfsrc, GstBuffer * buf)
 {
   GstRTPDTMFPayload *payload;
 
@@ -641,7 +635,7 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
    * if its the end of the event
    */
   if (payload->e &&
-      payload->duration < MIN_PULSE_DURATION * dtmfsrc->clock_rate / 1000 )
+      payload->duration < MIN_PULSE_DURATION * dtmfsrc->clock_rate / 1000)
     payload->duration = MIN_PULSE_DURATION * dtmfsrc->clock_rate / 1000;
 
   payload->duration = g_htons (payload->duration);
@@ -656,7 +650,7 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
 }
 
 static GstBuffer *
-gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
+gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
 {
   GstBuffer *buf = NULL;
 
@@ -676,7 +670,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
   GstRTPDTMFSrcEvent *event;
-  GstRTPDTMFSrc * dtmfsrc;
+  GstRTPDTMFSrc *dtmfsrc;
   GstClock *clock;
   GstClockID *clockid;
   GstClockReturn clockret;
@@ -726,7 +720,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
       g_free (event);
     } else if (!dtmfsrc->first_packet && !dtmfsrc->last_packet &&
-        (dtmfsrc->timestamp - dtmfsrc->start_timestamp)/GST_MSECOND >=
+        (dtmfsrc->timestamp - dtmfsrc->start_timestamp) / GST_MSECOND >=
         MIN_PULSE_DURATION) {
       GST_DEBUG_OBJECT (dtmfsrc, "try popping");
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
@@ -790,7 +784,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     GST_OBJECT_LOCK (dtmfsrc);
     if (dtmfsrc->paused)
       clockret = GST_CLOCK_UNSCHEDULED;
-  } else  {
+  } else {
     clockret = GST_CLOCK_UNSCHEDULED;
   }
   gst_clock_id_unref (clockid);
@@ -801,7 +795,7 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     goto paused;
   }
 
- send_last:
+send_last:
 
   if (dtmfsrc->dirty)
     if (!gst_rtp_dtmf_src_negotiate (basesrc))
@@ -830,11 +824,11 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   return GST_FLOW_OK;
 
- paused_locked:
+paused_locked:
 
   GST_OBJECT_UNLOCK (dtmfsrc);
 
- paused:
+paused:
 
   if (dtmfsrc->payload) {
     dtmfsrc->first_packet = FALSE;
@@ -910,8 +904,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
     } else {
       if (gst_structure_has_field (s, "payload")) {
         /* can only fixate if there is a field */
-        gst_structure_fixate_field_nearest_int (s, "payload",
-            dtmfsrc->pt);
+        gst_structure_fixate_field_nearest_int (s, "payload", dtmfsrc->pt);
         gst_structure_get_int (s, "payload", &pt);
         GST_LOG_OBJECT (dtmfsrc, "using peer pt %d", pt);
       } else {
@@ -922,8 +915,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
       }
     }
 
-    if (gst_structure_get_int (s, "clock-rate", &clock_rate))
-    {
+    if (gst_structure_get_int (s, "clock-rate", &clock_rate)) {
       dtmfsrc->clock_rate = clock_rate;
       GST_LOG_OBJECT (dtmfsrc, "using clock-rate from caps %d",
           dtmfsrc->clock_rate);
@@ -931,8 +923,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
       GST_LOG_OBJECT (dtmfsrc, "using existing clock-rate %d",
           dtmfsrc->clock_rate);
     }
-    gst_structure_set (s, "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
-        NULL);
+    gst_structure_set (s, "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate, NULL);
 
 
     if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
@@ -982,7 +973,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
 
 
 static void
-gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc *dtmfsrc)
+gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc * dtmfsrc)
 {
   if (dtmfsrc->ssrc == -1)
     dtmfsrc->current_ssrc = g_random_int ();
@@ -1008,7 +999,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
   GstRTPDTMFSrc *dtmfsrc;
   GstStateChangeReturn result;
   gboolean no_preroll = FALSE;
-  GstRTPDTMFSrcEvent *event= NULL;
+  GstRTPDTMFSrcEvent *event = NULL;
 
   dtmfsrc = GST_RTP_DTMF_SRC (element);
 
@@ -1037,7 +1028,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
 
-     /* Flushing the event queue */
+      /* Flushing the event queue */
       while ((event = g_async_queue_try_pop (dtmfsrc->event_queue)) != NULL)
         g_free (event);
 
@@ -1063,7 +1054,8 @@ failure:
 
 
 static gboolean
-gst_rtp_dtmf_src_unlock (GstBaseSrc *src) {
+gst_rtp_dtmf_src_unlock (GstBaseSrc * src)
+{
   GstRTPDTMFSrc *dtmfsrc = GST_RTP_DTMF_SRC (src);
   GstRTPDTMFSrcEvent *event = NULL;
 
@@ -1077,7 +1069,7 @@ gst_rtp_dtmf_src_unlock (GstBaseSrc *src) {
   GST_OBJECT_UNLOCK (dtmfsrc);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Pushing the PAUSE_TASK event on unlock request");
-  event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
+  event = g_malloc (sizeof (GstRTPDTMFSrcEvent));
   event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
   g_async_queue_push (dtmfsrc->event_queue, event);
 
@@ -1086,7 +1078,8 @@ gst_rtp_dtmf_src_unlock (GstBaseSrc *src) {
 
 
 static gboolean
-gst_rtp_dtmf_src_unlock_stop (GstBaseSrc *src) {
+gst_rtp_dtmf_src_unlock_stop (GstBaseSrc * src)
+{
   GstRTPDTMFSrc *dtmfsrc = GST_RTP_DTMF_SRC (src);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Unlock stopped");

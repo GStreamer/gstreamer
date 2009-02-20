@@ -30,7 +30,6 @@
 #include "gstrtpdtmfcommon.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_RTP_DTMF_DEPAY \
   (gst_rtp_dtmf_depay_get_type())
 #define GST_RTP_DTMF_DEPAY(obj) \
@@ -41,18 +40,16 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_DTMF_DEPAY))
 #define GST_IS_RTP_DTMF_DEPAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_DTMF_DEPAY))
-
-
 typedef struct _GstRtpDTMFDepay GstRtpDTMFDepay;
 typedef struct _GstRtpDTMFDepayClass GstRtpDTMFDepayClass;
 
 struct _GstRtpDTMFDepay
 {
-  GstBaseRTPDepayload 	depayload;
-  double        	sample;
-  guint32		previous_ts;
-  guint16		previous_duration;
-  GstClockTime		first_gst_ts;
+  GstBaseRTPDepayload depayload;
+  double sample;
+  guint32 previous_ts;
+  guint16 previous_duration;
+  GstClockTime first_gst_ts;
   guint unit_time;
   guint max_duration;
 };
@@ -65,5 +62,4 @@ struct _GstRtpDTMFDepayClass
 gboolean gst_rtp_dtmf_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_RTP_DTMF_DEPAY_H__ */

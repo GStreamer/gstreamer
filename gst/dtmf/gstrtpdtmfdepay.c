@@ -35,9 +35,9 @@
 #endif
 
 
-#define DEFAULT_PACKET_INTERVAL  50 /* ms */
-#define MIN_PACKET_INTERVAL      10 /* ms */
-#define MAX_PACKET_INTERVAL      50 /* ms */
+#define DEFAULT_PACKET_INTERVAL  50     /* ms */
+#define MIN_PACKET_INTERVAL      10     /* ms */
+#define MAX_PACKET_INTERVAL      50     /* ms */
 #define SAMPLE_RATE              8000
 #define SAMPLE_SIZE              16
 #define CHANNELS                 1
@@ -55,51 +55,53 @@
 
 #define DEFAULT_MAX_DURATION     0
 
-typedef struct st_dtmf_key {
-        char *event_name;
-        int event_encoding;
-        float low_frequency;
-        float high_frequency;
+typedef struct st_dtmf_key
+{
+  char *event_name;
+  int event_encoding;
+  float low_frequency;
+  float high_frequency;
 } DTMF_KEY;
 
 static const DTMF_KEY DTMF_KEYS[] = {
-        {"DTMF_KEY_EVENT_0",  0, 941, 1336},
-        {"DTMF_KEY_EVENT_1",  1, 697, 1209},
-        {"DTMF_KEY_EVENT_2",  2, 697, 1336},
-        {"DTMF_KEY_EVENT_3",  3, 697, 1477},
-        {"DTMF_KEY_EVENT_4",  4, 770, 1209},
-        {"DTMF_KEY_EVENT_5",  5, 770, 1336},
-        {"DTMF_KEY_EVENT_6",  6, 770, 1477},
-        {"DTMF_KEY_EVENT_7",  7, 852, 1209},
-        {"DTMF_KEY_EVENT_8",  8, 852, 1336},
-        {"DTMF_KEY_EVENT_9",  9, 852, 1477},
-        {"DTMF_KEY_EVENT_S", 10, 941, 1209},
-        {"DTMF_KEY_EVENT_P", 11, 941, 1477},
-        {"DTMF_KEY_EVENT_A", 12, 697, 1633},
-        {"DTMF_KEY_EVENT_B", 13, 770, 1633},
-        {"DTMF_KEY_EVENT_C", 14, 852, 1633},
-        {"DTMF_KEY_EVENT_D", 15, 941, 1633},
+  {"DTMF_KEY_EVENT_0", 0, 941, 1336},
+  {"DTMF_KEY_EVENT_1", 1, 697, 1209},
+  {"DTMF_KEY_EVENT_2", 2, 697, 1336},
+  {"DTMF_KEY_EVENT_3", 3, 697, 1477},
+  {"DTMF_KEY_EVENT_4", 4, 770, 1209},
+  {"DTMF_KEY_EVENT_5", 5, 770, 1336},
+  {"DTMF_KEY_EVENT_6", 6, 770, 1477},
+  {"DTMF_KEY_EVENT_7", 7, 852, 1209},
+  {"DTMF_KEY_EVENT_8", 8, 852, 1336},
+  {"DTMF_KEY_EVENT_9", 9, 852, 1477},
+  {"DTMF_KEY_EVENT_S", 10, 941, 1209},
+  {"DTMF_KEY_EVENT_P", 11, 941, 1477},
+  {"DTMF_KEY_EVENT_A", 12, 697, 1633},
+  {"DTMF_KEY_EVENT_B", 13, 770, 1633},
+  {"DTMF_KEY_EVENT_C", 14, 852, 1633},
+  {"DTMF_KEY_EVENT_D", 15, 941, 1633},
 };
 
 #define MAX_DTMF_EVENTS 16
 
-enum {
-DTMF_KEY_EVENT_1 = 1,
-DTMF_KEY_EVENT_2 = 2,
-DTMF_KEY_EVENT_3 = 3,
-DTMF_KEY_EVENT_4 = 4,
-DTMF_KEY_EVENT_5 = 5,
-DTMF_KEY_EVENT_6 = 6,
-DTMF_KEY_EVENT_7 = 7,
-DTMF_KEY_EVENT_8 = 8,
-DTMF_KEY_EVENT_9 = 9,
-DTMF_KEY_EVENT_0 = 0,
-DTMF_KEY_EVENT_STAR = 10,
-DTMF_KEY_EVENT_POUND = 11,
-DTMF_KEY_EVENT_A = 12,
-DTMF_KEY_EVENT_B = 13,
-DTMF_KEY_EVENT_C = 14,
-DTMF_KEY_EVENT_D = 15,
+enum
+{
+  DTMF_KEY_EVENT_1 = 1,
+  DTMF_KEY_EVENT_2 = 2,
+  DTMF_KEY_EVENT_3 = 3,
+  DTMF_KEY_EVENT_4 = 4,
+  DTMF_KEY_EVENT_5 = 5,
+  DTMF_KEY_EVENT_6 = 6,
+  DTMF_KEY_EVENT_7 = 7,
+  DTMF_KEY_EVENT_8 = 8,
+  DTMF_KEY_EVENT_9 = 9,
+  DTMF_KEY_EVENT_0 = 0,
+  DTMF_KEY_EVENT_STAR = 10,
+  DTMF_KEY_EVENT_POUND = 11,
+  DTMF_KEY_EVENT_A = 12,
+  DTMF_KEY_EVENT_B = 13,
+  DTMF_KEY_EVENT_C = 14,
+  DTMF_KEY_EVENT_D = 15,
 };
 
 /* elementfactory information */
@@ -141,8 +143,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "depth = (int) 16, "
         "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
         "signed = (boolean) true, "
-        "rate = (int) [0, MAX], "
-        "channels = (int) 1")
+        "rate = (int) [0, MAX], " "channels = (int) 1")
     );
 
 static GstStaticPadTemplate gst_rtp_dtmf_depay_sink_template =
@@ -180,7 +181,7 @@ gst_rtp_dtmf_depay_base_init (gpointer klass)
 
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_depay_debug,
-          "rtpdtmfdepay", 0, "rtpdtmfdepay element");
+      "rtpdtmfdepay", 0, "rtpdtmfdepay element");
   gst_element_class_set_details (element_class, &gst_rtp_dtmfdepay_details);
 }
 
@@ -203,20 +204,20 @@ gst_rtp_dtmf_depay_class_init (GstRtpDTMFDepayClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_UNIT_TIME,
-    g_param_spec_uint ("unit-time", "Duration unittime",
-        "The smallest unit (ms) the duration must be a multiple of (0 disables it)", MIN_UNIT_TIME,
-        MAX_UNIT_TIME, DEFAULT_UNIT_TIME, G_PARAM_READWRITE));
+      g_param_spec_uint ("unit-time", "Duration unittime",
+          "The smallest unit (ms) the duration must be a multiple of (0 disables it)",
+          MIN_UNIT_TIME, MAX_UNIT_TIME, DEFAULT_UNIT_TIME, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_DURATION,
-    g_param_spec_uint ("max-duration", "Maximum duration",
-        "The maxumimum duration (ms) of the outgoing soundpacket. "
-        "(0 = no limit)", 0, G_MAXUINT, DEFAULT_MAX_DURATION,
-        G_PARAM_READWRITE));
+      g_param_spec_uint ("max-duration", "Maximum duration",
+          "The maxumimum duration (ms) of the outgoing soundpacket. "
+          "(0 = no limit)", 0, G_MAXUINT, DEFAULT_MAX_DURATION,
+          G_PARAM_READWRITE));
 
   gstbasertpdepayload_class->process =
-    GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_process);
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_process);
   gstbasertpdepayload_class->set_caps =
-    GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_setcaps);
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_depay_setcaps);
 
 }
 
@@ -231,7 +232,7 @@ static void
 gst_rtp_dtmf_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpDTMFDepay * rtpdtmfdepay;
+  GstRtpDTMFDepay *rtpdtmfdepay;
 
   rtpdtmfdepay = GST_RTP_DTMF_DEPAY (object);
 
@@ -252,7 +253,7 @@ static void
 gst_rtp_dtmf_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstRtpDTMFDepay * rtpdtmfdepay;
+  GstRtpDTMFDepay *rtpdtmfdepay;
 
   rtpdtmfdepay = GST_RTP_DTMF_DEPAY (object);
 
@@ -274,7 +275,7 @@ gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gint clock_rate = 8000;      /* default */
+  gint clock_rate = 8000;       /* default */
 
   gst_structure_get_int (structure, "clock-rate", &clock_rate);
   filter->clock_rate = clock_rate;
@@ -284,8 +285,7 @@ gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
       "depth", G_TYPE_INT, 16,
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE,
-      "channels", G_TYPE_INT, 1,
-      "rate", G_TYPE_INT, clock_rate, NULL);
+      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, clock_rate, NULL);
   gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
@@ -293,7 +293,7 @@ gst_rtp_dtmf_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 }
 
 static void
-gst_dtmf_src_generate_tone(GstRtpDTMFDepay *rtpdtmfdepay,
+gst_dtmf_src_generate_tone (GstRtpDTMFDepay * rtpdtmfdepay,
     GstRTPDTMFPayload payload, GstBuffer * buffer)
 {
   gint16 *p;
@@ -302,16 +302,16 @@ gst_dtmf_src_generate_tone(GstRtpDTMFDepay *rtpdtmfdepay,
   double amplitude, f1, f2;
   double volume_factor;
   DTMF_KEY key = DTMF_KEYS[payload.event];
-  guint32 clock_rate = 8000 /* default */;
-  GstBaseRTPDepayload * depayload = GST_BASE_RTP_DEPAYLOAD (rtpdtmfdepay);
+  guint32 clock_rate = 8000 /* default */ ;
+  GstBaseRTPDepayload *depayload = GST_BASE_RTP_DEPAYLOAD (rtpdtmfdepay);
   gint volume;
 
   clock_rate = depayload->clock_rate;
 
   /* Create a buffer for the tone */
-  tone_size = (payload.duration*SAMPLE_SIZE*CHANNELS)/8;
+  tone_size = (payload.duration * SAMPLE_SIZE * CHANNELS) / 8;
   GST_BUFFER_SIZE (buffer) = tone_size;
-  GST_BUFFER_MALLOCDATA (buffer) = g_malloc(tone_size);
+  GST_BUFFER_MALLOCDATA (buffer) = g_malloc (tone_size);
   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
   GST_BUFFER_DURATION (buffer) = payload.duration * GST_SECOND / clock_rate;
   volume = payload.volume;
@@ -324,12 +324,14 @@ gst_dtmf_src_generate_tone(GstRtpDTMFDepay *rtpdtmfdepay,
    * For each sample point we calculate 'x' as the
    * the amplitude value.
    */
-  for (i = 0; i < (tone_size / (SAMPLE_SIZE/8)); i++) {
+  for (i = 0; i < (tone_size / (SAMPLE_SIZE / 8)); i++) {
     /*
      * We add the fundamental frequencies together.
      */
-    f1 = sin(2 * M_PI * key.low_frequency * (rtpdtmfdepay->sample / clock_rate));
-    f2 = sin(2 * M_PI * key.high_frequency * (rtpdtmfdepay->sample / clock_rate));
+    f1 = sin (2 * M_PI * key.low_frequency * (rtpdtmfdepay->sample /
+            clock_rate));
+    f2 = sin (2 * M_PI * key.high_frequency * (rtpdtmfdepay->sample /
+            clock_rate));
 
     amplitude = (f1 + f2) / 2;
 
@@ -369,7 +371,7 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   payload_len = gst_rtp_buffer_get_payload_len (buf);
   payload = gst_rtp_buffer_get_payload (buf);
 
-  if (payload_len != sizeof(GstRTPDTMFPayload) )
+  if (payload_len != sizeof (GstRTPDTMFPayload))
     goto bad_packet;
 
   memcpy (&dtmf_payload, payload, sizeof (GstRTPDTMFPayload));
@@ -385,12 +387,10 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   dtmf_payload.duration = g_ntohs (dtmf_payload.duration);
 
   /* clip to whole units of unit_time */
-  if (rtpdtmfdepay->unit_time)
-  {
+  if (rtpdtmfdepay->unit_time) {
     guint unit_time_clock =
         (rtpdtmfdepay->unit_time * depayload->clock_rate) / 1000;
-    if (dtmf_payload.duration % unit_time_clock)
-    {
+    if (dtmf_payload.duration % unit_time_clock) {
       /* Make sure we don't overflow the duration */
       if (dtmf_payload.duration < G_MAXUINT16 - unit_time_clock)
         dtmf_payload.duration += unit_time_clock -
@@ -401,8 +401,7 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   /* clip to max duration */
-  if (rtpdtmfdepay->max_duration)
-  {
+  if (rtpdtmfdepay->max_duration) {
     guint max_duration_clock =
         (rtpdtmfdepay->max_duration * depayload->clock_rate) / 1000;
 
@@ -415,7 +414,8 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       "marker=%d - timestamp=%u - event=%d - duration=%d",
       marker, timestamp, dtmf_payload.event, dtmf_payload.duration);
 
-  GST_DEBUG_OBJECT (depayload, "Previous information : timestamp=%u - duration=%d",
+  GST_DEBUG_OBJECT (depayload,
+      "Previous information : timestamp=%u - duration=%d",
       rtpdtmfdepay->previous_ts, rtpdtmfdepay->previous_duration);
 
   /* First packet */
@@ -428,14 +428,14 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     structure = gst_structure_new ("dtmf-event",
         "number", G_TYPE_INT, dtmf_payload.event,
         "volume", G_TYPE_INT, dtmf_payload.volume,
-        "type", G_TYPE_INT, 1,
-        "method", G_TYPE_INT, 1,
-        NULL);
+        "type", G_TYPE_INT, 1, "method", G_TYPE_INT, 1, NULL);
     if (structure) {
-      dtmf_message = gst_message_new_element (GST_OBJECT (depayload), structure);
+      dtmf_message =
+          gst_message_new_element (GST_OBJECT (depayload), structure);
       if (dtmf_message) {
         if (!gst_element_post_message (GST_ELEMENT (depayload), dtmf_message)) {
-          GST_ERROR_OBJECT (depayload, "Unable to send dtmf-event message to bus");
+          GST_ERROR_OBJECT (depayload,
+              "Unable to send dtmf-event message to bus");
         }
       } else {
         GST_ERROR_OBJECT (depayload, "Unable to create dtmf-event message");
@@ -460,7 +460,7 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   /* If late or duplicate packet (like the redundant end packet). Ignore */
   if (dtmf_payload.duration > 0) {
     outbuf = gst_buffer_new ();
-    gst_dtmf_src_generate_tone(rtpdtmfdepay, dtmf_payload, outbuf);
+    gst_dtmf_src_generate_tone (rtpdtmfdepay, dtmf_payload, outbuf);
 
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpdtmfdepay->first_gst_ts +
@@ -468,9 +468,9 @@ gst_rtp_dtmf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         GST_SECOND / depayload->clock_rate;
     GST_BUFFER_OFFSET (outbuf) =
         (rtpdtmfdepay->previous_duration - dtmf_payload.duration) *
-          GST_SECOND / depayload->clock_rate;
+        GST_SECOND / depayload->clock_rate;
     GST_BUFFER_OFFSET_END (outbuf) = rtpdtmfdepay->previous_duration *
-          GST_SECOND / depayload->clock_rate;
+        GST_SECOND / depayload->clock_rate;
 
     GST_DEBUG_OBJECT (depayload, "timestamp : %llu - time %" GST_TIME_FORMAT,
         GST_BUFFER_TIMESTAMP (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
@@ -492,4 +492,3 @@ gst_rtp_dtmf_depay_plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "rtpdtmfdepay",
       GST_RANK_MARGINAL, GST_TYPE_RTP_DTMF_DEPAY);
 }
-
