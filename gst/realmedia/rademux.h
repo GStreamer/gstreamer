@@ -94,6 +94,8 @@ struct _GstRealAudioDemuxClass {
 
 GType  gst_real_audio_demux_get_type (void);
 
+gboolean gst_rademux_plugin_init (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_REAL_AUDIO_DEMUX_H__ */

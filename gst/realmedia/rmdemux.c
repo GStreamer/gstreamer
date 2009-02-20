@@ -29,11 +29,7 @@
 #endif
 
 #include "rmdemux.h"
-#include "rdtdepay.h"
-#include "rdtmanager.h"
-#include "rtspreal.h"
 #include "rmutils.h"
-#include "rademux.h"
 
 #include <string.h>
 #include <ctype.h>
@@ -2591,36 +2587,9 @@ unknown_stream:
   }
 }
 
-static gboolean
+gboolean
 gst_rmdemux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rmdemux",
-      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX) &&
-      gst_element_register (plugin, "rademux",
-      GST_RANK_SECONDARY, GST_TYPE_REAL_AUDIO_DEMUX);
+      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_rmdemux_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rdt_depay_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rdt_manager_plugin_init (plugin))
-    return FALSE;
-
-  if (!gst_rtsp_real_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "realmedia",
-    "RealMedia demuxer and depayloader",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
