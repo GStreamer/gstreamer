@@ -1173,6 +1173,12 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       {
         gchar *session_id;
 
+        if (message->type == GST_RTSP_MESSAGE_DATA) {
+          /* data messages don't have headers */
+          res = GST_RTSP_OK;
+          goto done;
+        }
+
         /* save session id in the connection for further use */
         if (gst_rtsp_message_get_header (message, GST_RTSP_HDR_SESSION,
                 &session_id, 0) == GST_RTSP_OK) {
