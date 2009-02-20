@@ -93,10 +93,8 @@ static void gst_rtp_dtmf_mux_base_init (gpointer g_class);
 static void gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass);
 static void gst_rtp_dtmf_mux_finalize (GObject * object);
 
-static gboolean gst_rtp_dtmf_mux_sink_event (GstPad * pad,
-    GstEvent * event);
-static GstFlowReturn gst_rtp_dtmf_mux_chain (GstPad * pad,
-    GstBuffer * buffer);
+static gboolean gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstRTPMuxClass *parent_class = NULL;
 
@@ -146,15 +144,15 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_rtpdtmfmux_signals[SIGNAL_LOCKING_STREAM] = 
-    g_signal_new ("locking", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-		  G_STRUCT_OFFSET (GstRTPDTMFMuxClass, locking),NULL, NULL,
-		  gst_marshal_VOID__OBJECT, G_TYPE_NONE,1,GST_TYPE_PAD);
+  gst_rtpdtmfmux_signals[SIGNAL_LOCKING_STREAM] =
+      g_signal_new ("locking", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTPDTMFMuxClass, locking), NULL, NULL,
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
-  gst_rtpdtmfmux_signals[SIGNAL_UNLOCKED_STREAM] = 
-    g_signal_new ("unlocked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-		  G_STRUCT_OFFSET (GstRTPDTMFMuxClass, unlocked),NULL, NULL,
-		  gst_marshal_VOID__OBJECT, G_TYPE_NONE,1,GST_TYPE_PAD);
+  gst_rtpdtmfmux_signals[SIGNAL_UNLOCKED_STREAM] =
+      g_signal_new ("unlocked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTPDTMFMuxClass, unlocked), NULL, NULL,
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   gobject_class->finalize = gst_rtp_dtmf_mux_finalize;
   gstrtpmux_class->chain_func = gst_rtp_dtmf_mux_chain;
@@ -202,53 +200,51 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static void
-gst_rtp_dtmf_mux_lock_stream (GstRTPDTMFMux *mux, GstPad * pad)
+gst_rtp_dtmf_mux_lock_stream (GstRTPDTMFMux * mux, GstPad * pad)
 {
   if (mux->special_pad != NULL)
     GST_WARNING_OBJECT (mux,
-            "Stream lock already acquired by pad %s",
-            GST_ELEMENT_NAME (mux->special_pad));
+        "Stream lock already acquired by pad %s",
+        GST_ELEMENT_NAME (mux->special_pad));
 
   else {
     GST_DEBUG_OBJECT (mux,
-            "Stream lock acquired by pad %s",
-            GST_ELEMENT_NAME (pad));
+        "Stream lock acquired by pad %s", GST_ELEMENT_NAME (pad));
     mux->special_pad = gst_object_ref (pad);
   }
 }
 
 static void
-gst_rtp_dtmf_mux_unlock_stream (GstRTPDTMFMux *mux, GstPad * pad)
+gst_rtp_dtmf_mux_unlock_stream (GstRTPDTMFMux * mux, GstPad * pad)
 {
   if (mux->special_pad == NULL)
-    GST_WARNING_OBJECT (mux,
-            "Stream lock not acquired, can't release it");
+    GST_WARNING_OBJECT (mux, "Stream lock not acquired, can't release it");
 
   else if (pad != mux->special_pad)
     GST_WARNING_OBJECT (mux,
-            "pad %s attempted to release Stream lock"
-            " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
-            GST_ELEMENT_NAME (mux->special_pad));
+        "pad %s attempted to release Stream lock"
+        " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
+        GST_ELEMENT_NAME (mux->special_pad));
   else {
     GST_DEBUG_OBJECT (mux,
-            "Stream lock released by pad %s",
-            GST_ELEMENT_NAME (mux->special_pad));
+        "Stream lock released by pad %s", GST_ELEMENT_NAME (mux->special_pad));
     gst_object_unref (mux->special_pad);
     mux->special_pad = NULL;
   }
 }
 
 static gboolean
-gst_rtp_dtmf_mux_handle_stream_lock_event (GstRTPDTMFMux *mux, GstPad * pad,
-        const GstStructure * event_structure)
+gst_rtp_dtmf_mux_handle_stream_lock_event (GstRTPDTMFMux * mux, GstPad * pad,
+    const GstStructure * event_structure)
 {
   gboolean lock;
 
   if (!gst_structure_get_boolean (event_structure, "lock", &lock))
     return FALSE;
 
-  if (lock) 
-    g_signal_emit (G_OBJECT (mux), gst_rtpdtmfmux_signals[SIGNAL_LOCKING_STREAM], 0, pad);
+  if (lock)
+    g_signal_emit (G_OBJECT (mux),
+        gst_rtpdtmfmux_signals[SIGNAL_LOCKING_STREAM], 0, pad);
 
   GST_OBJECT_LOCK (mux);
   if (lock)
@@ -258,14 +254,15 @@ gst_rtp_dtmf_mux_handle_stream_lock_event (GstRTPDTMFMux *mux, GstPad * pad,
   GST_OBJECT_UNLOCK (mux);
 
   if (!lock)
-    g_signal_emit (G_OBJECT (mux), gst_rtpdtmfmux_signals[SIGNAL_UNLOCKED_STREAM], 0, pad);
+    g_signal_emit (G_OBJECT (mux),
+        gst_rtpdtmfmux_signals[SIGNAL_UNLOCKED_STREAM], 0, pad);
 
   return TRUE;
 }
 
 static gboolean
-gst_rtp_dtmf_mux_handle_downstream_event (GstRTPDTMFMux *mux,
-        GstPad * pad, GstEvent * event)
+gst_rtp_dtmf_mux_handle_downstream_event (GstRTPDTMFMux * mux,
+    GstPad * pad, GstEvent * event)
 {
   const GstStructure *structure;
   gboolean ret = FALSE;
@@ -327,4 +324,3 @@ gst_rtp_dtmf_mux_plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "rtpdtmfmux", GST_RANK_NONE,
       GST_TYPE_RTP_DTMF_MUX);
 }
-

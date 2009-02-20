@@ -4,7 +4,7 @@
   <filename>../../gst/aacparse/.libs/libgstaacparse.so</filename>
   <basename>libgstaacparse.so</basename>
   <version>0.10.10.1</version>
-  <license>unknown</license>
+  <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>

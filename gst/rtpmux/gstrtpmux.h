@@ -29,14 +29,12 @@
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_RTP_MUX (gst_rtp_mux_get_type())
 #define GST_RTP_MUX(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_MUX, GstRTPMux))
 #define GST_RTP_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_MUX, GstRTPMux))
 #define GST_RTP_MUX_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTP_MUX, GstRTPMuxClass))
 #define GST_IS_RTP_MUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_MUX))
 #define GST_IS_RTP_MUX_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_MUX))
-
 typedef struct _GstRTPMux GstRTPMux;
 typedef struct _GstRTPMuxClass GstRTPMuxClass;
 
@@ -55,28 +53,26 @@ struct _GstRTPMux
   /* sinkpads */
   gint numpads;
 
-  guint32  ts_base;
-  guint16  seqnum_base;
+  guint32 ts_base;
+  guint16 seqnum_base;
 
-  gint32   ts_offset;
-  gint16   seqnum_offset;
-  guint16  seqnum;         /* protected by object lock */
-  guint    ssrc;
-  guint    current_ssrc;
+  gint32 ts_offset;
+  gint16 seqnum_offset;
+  guint16 seqnum;               /* protected by object lock */
+  guint ssrc;
+  guint current_ssrc;
 };
 
 struct _GstRTPMuxClass
 {
   GstElementClass parent_class;
 
-  GstFlowReturn (* chain_func)  (GstPad * pad, GstBuffer * buffer);
-  gboolean (* sink_event_func)  (GstPad * pad, GstEvent * event);
+    GstFlowReturn (*chain_func) (GstPad * pad, GstBuffer * buffer);
+    gboolean (*sink_event_func) (GstPad * pad, GstEvent * event);
 };
 
 GType gst_rtp_mux_get_type (void);
 gboolean gst_rtp_mux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_RTP_MUX_H__ */
-

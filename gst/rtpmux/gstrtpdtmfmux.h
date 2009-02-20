@@ -30,13 +30,11 @@
 #include <gstrtpmux.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_RTP_DTMF_MUX (gst_rtp_dtmf_mux_get_type())
 #define GST_RTP_DTMF_MUX(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_DTMF_MUX, GstRTPDTMFMux))
 #define GST_RTP_DTMF_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_DTMF_MUX, GstRTPDTMFMux))
 #define GST_IS_RTP_DTMF_MUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_DTMF_MUX))
 #define GST_IS_RTP_DTMF_MUX_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_DTMF_MUX))
-
 typedef struct _GstRTPDTMFMux GstRTPDTMFMux;
 typedef struct _GstRTPDTMFMuxClass GstRTPDTMFMuxClass;
 
@@ -59,14 +57,12 @@ struct _GstRTPDTMFMuxClass
   GstRTPMuxClass parent_class;
 
   /* signals */
-  void (*locking) (GstElement *element, GstPad *pad);
-  void (*unlocked) (GstElement *element, GstPad *pad);
+  void (*locking) (GstElement * element, GstPad * pad);
+  void (*unlocked) (GstElement * element, GstPad * pad);
 };
 
 GType gst_rtp_dtmf_mux_get_type (void);
 gboolean gst_rtp_dtmf_mux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_RTP_DTMF_MUX_H__ */
-

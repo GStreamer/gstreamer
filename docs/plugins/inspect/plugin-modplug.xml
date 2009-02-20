@@ -1,7 +1,7 @@
 <plugin>
   <name>modplug</name>
   <description>.MOD audio decoding</description>
-  <filename>../../gst/modplug/.libs/libgstmodplug.so</filename>
+  <filename>../../ext/modplug/.libs/libgstmodplug.so</filename>
   <basename>libgstmodplug.so</basename>
   <version>0.10.10.1</version>
   <license>LGPL</license>
