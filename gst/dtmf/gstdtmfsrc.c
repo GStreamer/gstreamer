@@ -28,6 +28,7 @@
 /**
  * SECTION:element-dtmfsrc
  * @short_description: Generates DTMF packets
+ * @see_also: rtpdtmsrc, rtpdtmfmuxx
  *
  * The DTMFSrc element generates DTMF (ITU-T Q.23 Specification) tone packets on request
  * from application. The application communicates the beginning and end of a
