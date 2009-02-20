@@ -559,11 +559,11 @@ gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
 
   while (i < msg->hdr_fields->len) {
-    RTSPKeyValue key_value = g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+    RTSPKeyValue *key_value = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
 
-    if (key_value.field == field && (indx == -1 || cnt++ == indx)) {
+    if (key_value->field == field && (indx == -1 || cnt++ == indx)) {
       g_array_remove_index (msg->hdr_fields, i);
-      g_free (key_value.value);
+      g_free (key_value->value);
       res = GST_RTSP_OK;
       if (indx != -1)
         break;
@@ -581,7 +581,8 @@ gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
  * @value: pointer to hold the result
  * @indx: the index of the header
  *
- * Get the @indx header value with key @field from @msg.
+ * Get the @indx header value with key @field from @msg. The result in @value
+ * stays valid as long as it remains present in @msg.
  *
  * Returns: #GST_RTSP_OK when @field was found, #GST_RTSP_ENOTIMPL if the key
  * was not found.
@@ -595,12 +596,16 @@ gst_rtsp_message_get_header (const GstRTSPMessage * msg,
 
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
 
-  for (i = 0; i < msg->hdr_fields->len; i++) {
-    RTSPKeyValue key_value = g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+  /* no header initialized, there are no headers */
+  if (msg->hdr_fields == NULL)
+    return GST_RTSP_ENOTIMPL;
 
-    if (key_value.field == field && cnt++ == indx) {
+  for (i = 0; i < msg->hdr_fields->len; i++) {
+    RTSPKeyValue *key_value = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+
+    if (key_value->field == field && cnt++ == indx) {
       if (value)
-        *value = key_value.value;
+        *value = key_value->value;
       return GST_RTSP_OK;
     }
   }
@@ -627,10 +632,13 @@ gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
   g_return_val_if_fail (str != NULL, GST_RTSP_EINVAL);
 
   for (i = 0; i < msg->hdr_fields->len; i++) {
-    RTSPKeyValue key_value = g_array_index (msg->hdr_fields, RTSPKeyValue, i);
-    const gchar *keystr = gst_rtsp_header_as_text (key_value.field);
+    RTSPKeyValue *key_value;
+    const gchar *keystr;
 
-    g_string_append_printf (str, "%s: %s\r\n", keystr, key_value.value);
+    key_value = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+    keystr = gst_rtsp_header_as_text (key_value->field);
+
+    g_string_append_printf (str, "%s: %s\r\n", keystr, key_value->value);
   }
   return GST_RTSP_OK;
 }
