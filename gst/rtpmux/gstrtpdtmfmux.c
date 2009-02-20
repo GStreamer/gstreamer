@@ -80,6 +80,15 @@ GST_ELEMENT_DETAILS ("RTP muxer",
     "mixes RTP DTMF streams into other RTP streams",
     "Zeeshan Ali <first.last@nokia.com>");
 
+enum
+{
+  SIGNAL_LOCKING_STREAM,
+  SIGNAL_UNLOCKED_STREAM,
+  LAST_SIGNAL
+};
+
+static guint gst_rtpdtmfmux_signals[LAST_SIGNAL] = { 0 };
+
 static void gst_rtp_dtmf_mux_base_init (gpointer g_class);
 static void gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass);
 static void gst_rtp_dtmf_mux_finalize (GObject * object);
@@ -136,6 +145,16 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
   gstrtpmux_class = (GstRTPMuxClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_rtpdtmfmux_signals[SIGNAL_LOCKING_STREAM] = 
+    g_signal_new ("locking", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET (GstRTPDTMFMuxClass, locking),NULL, NULL,
+		  gst_marshal_VOID__OBJECT, G_TYPE_NONE,1,GST_TYPE_PAD);
+
+  gst_rtpdtmfmux_signals[SIGNAL_UNLOCKED_STREAM] = 
+    g_signal_new ("unlocked", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+		  G_STRUCT_OFFSET (GstRTPDTMFMuxClass, unlocked),NULL, NULL,
+		  gst_marshal_VOID__OBJECT, G_TYPE_NONE,1,GST_TYPE_PAD);
 
   gobject_class->finalize = gst_rtp_dtmf_mux_finalize;
   gstrtpmux_class->chain_func = gst_rtp_dtmf_mux_chain;
@@ -228,12 +247,18 @@ gst_rtp_dtmf_mux_handle_stream_lock_event (GstRTPDTMFMux *mux, GstPad * pad,
   if (!gst_structure_get_boolean (event_structure, "lock", &lock))
     return FALSE;
 
+  if (lock) 
+    g_signal_emit (G_OBJECT (mux), gst_rtpdtmfmux_signals[SIGNAL_LOCKING_STREAM], 0, pad);
+
   GST_OBJECT_LOCK (mux);
   if (lock)
     gst_rtp_dtmf_mux_lock_stream (mux, pad);
   else
     gst_rtp_dtmf_mux_unlock_stream (mux, pad);
   GST_OBJECT_UNLOCK (mux);
+
+  if (!lock)
+    g_signal_emit (G_OBJECT (mux), gst_rtpdtmfmux_signals[SIGNAL_UNLOCKED_STREAM], 0, pad);
 
   return TRUE;
 }
