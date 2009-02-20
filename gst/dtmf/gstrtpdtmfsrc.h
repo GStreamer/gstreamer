@@ -69,6 +69,7 @@ typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
  */
 struct _GstRTPDTMFSrc
 {
+  /*< private >*/
   GstBaseSrc basesrc;
 
   GAsyncQueue *event_queue;

@@ -29,25 +29,19 @@
  * SECTION:element-dtmfsrc
  * @short_description: Generates DTMF packets
  *
- * <refsect2>
- *
- * <para>
  * The DTMFSrc element generates DTMF (ITU-T Q.23 Specification) tone packets on request
  * from application. The application communicates the beginning and end of a
  * DTMF event using custom upstream gstreamer events. To report a DTMF event, an
  * application must send an event of type GST_EVENT_CUSTOM_UPSTREAM, having a
  * structure of name "dtmf-event" with fields set according to the following
  * table:
- * </para>
  *
- * <para>
  * <informaltable>
  * <tgroup cols='4'>
  * <colspec colname='Name' />
  * <colspec colname='Type' />
  * <colspec colname='Possible values' />
  * <colspec colname='Purpose' />
- *
  * <thead>
  * <row>
  * <entry>Name</entry>
@@ -56,7 +50,6 @@
  * <entry>Purpose</entry>
  * </row>
  * </thead>
- *
  * <tbody>
  * <row>
  * <entry>type</entry>
@@ -101,14 +94,11 @@
  * </tbody>
  * </tgroup>
  * </informaltable>
- * </para>
  *
- * <para>For example, the following code informs the pipeline (and in turn, the
+ * For example, the following code informs the pipeline (and in turn, the
  * DTMFSrc element inside the pipeline) about the start of a DTMF named
  * event '1' of volume -25 dBm0:
- * </para>
  *
- * <para>
  * <programlisting>
  * structure = gst_structure_new ("dtmf-event",
  *                    "type", G_TYPE_INT, 1,
@@ -119,9 +109,7 @@
  * event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, structure);
  * gst_element_send_event (pipeline, event);
  * </programlisting>
- * </para>
  *
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
