@@ -1622,3 +1622,15 @@ _wrap_gst_pad_start_task(PyGObject *self, PyObject *args)
     Py_INCREF(py_ret);
     return py_ret;
 }
+%%
+override gst_static_pad_template_get_caps noargs
+static PyObject *
+_wrap_gst_static_pad_template_get_caps(PyObject *self)
+{
+    GstCaps *ret;
+
+    ret = gst_static_pad_template_get_caps(pyg_pointer_get(self, GstStaticPadTemplate));
+    /* We take a copy of the caps so they don't disappear */
+    ret = gst_caps_copy(ret);
+    return pyg_boxed_new (GST_TYPE_CAPS, ret, FALSE, TRUE);
+}
