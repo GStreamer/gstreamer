@@ -1537,6 +1537,11 @@ gst_static_caps_get_type
 
 GST_PARAM_CONTROLLABLE
 GST_PARAM_USER_SHIFT
+GST_PARAM_MUTABLE_PAUSED
+GST_PARAM_MUTABLE_PLAYING
+GST_PARAM_MUTABLE_READY
+
+gst_param_spec_is_mutable
 
 <SUBSECTION paramspecfraction>
 GstParamSpecFraction

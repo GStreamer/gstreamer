@@ -205,3 +205,43 @@ gst_param_spec_fraction (const gchar * name, const gchar * nick,
 
   return pspec;
 }
+
+/**
+ * gst_param_spec_is_mutable
+ * @param_spec: a GParamSpec representing a property
+ * @element: the GstElement of the property to be modified
+ *
+ * Checks if an object property for the GstElement given in @element
+ * may be modified given the current state of @element.
+ *
+ * Returns: TRUE if the property may be modified
+ */
+gboolean
+gst_param_spec_is_mutable (GParamSpec * param_spec, GstElement * element)
+{
+  gboolean ret = TRUE;
+  GstState state;
+
+  if (param_spec->flags & GST_PARAM_MUTABLE_PLAYING) {
+    return TRUE;
+  }
+
+  GST_OBJECT_LOCK (element);
+  state = GST_STATE (element);
+  if (param_spec->flags & GST_PARAM_MUTABLE_PAUSED) {
+    if (state > GST_STATE_PAUSED) {
+      ret = FALSE;
+    }
+  } else if (param_spec->flags & GST_PARAM_MUTABLE_READY) {
+    if (state > GST_STATE_READY) {
+      ret = FALSE;
+    }
+  } else {
+    if (state > GST_STATE_NULL) {
+      ret = FALSE;
+    }
+  }
+  GST_OBJECT_UNLOCK (element);
+
+  return ret;
+}

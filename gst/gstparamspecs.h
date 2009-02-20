@@ -20,6 +20,7 @@
 #ifndef __GST_PARAMSPECS_H__
 #define __GST_PARAMSPECS_H__
 
+#include <gst/gstelement.h>
 #include <gst/gstvalue.h>
 
 G_BEGIN_DECLS
@@ -33,6 +34,32 @@ G_BEGIN_DECLS
  * controlled over time. This hint is used by the GstController.
  */
 #define	GST_PARAM_CONTROLLABLE	(1 << (G_PARAM_USER_SHIFT + 1))
+
+/**
+ * GST_PARAM_MUTABLE_READY:
+ *
+ * Use this flag on GObject properties of GstElements to indicate that
+ * they can be changed when the element is in the READY or lower state.
+ */
+#define GST_PARAM_MUTABLE_READY  (1 << (G_PARAM_USER_SHIFT + 2))
+
+/**
+ * GST_PARAM_MUTABLE_PAUSED:
+ *
+ * Use this flag on GObject properties of GstElements to indicate that
+ * they can be changed when the element is in the PAUSED or lower state.
+ * This flag implies GST_PARAM_MUTABLE_READY.
+ */
+#define GST_PARAM_MUTABLE_PAUSED  (1 << (G_PARAM_USER_SHIFT + 3))
+
+/**
+ * GST_PARAM_MUTABLE_PLAYING:
+ *
+ * Use this flag on GObject properties of GstElements to indicate that
+ * they can be changed when the element is in the PLAYING or lower state.
+ * This flag implies GST_PARAM_MUTABLE_PAUSED.
+ */
+#define GST_PARAM_MUTABLE_PLAYING  (1 << (G_PARAM_USER_SHIFT + 4))
 
 /**
  * GST_PARAM_USER_SHIFT:
@@ -89,6 +116,9 @@ GParamSpec  * gst_param_spec_fraction (const gchar * name,
                                        gint max_num, gint max_denom,
                                        gint default_num, gint default_denom,
                                        GParamFlags flags);
+
+gboolean gst_param_spec_is_mutable (GParamSpec *param_spec,
+    GstElement *element);
 
 G_END_DECLS
 
