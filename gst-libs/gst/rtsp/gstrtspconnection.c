@@ -1113,9 +1113,10 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         if (res != GST_RTSP_OK)
           goto done;
 
-        /* we have the complete body now */
+        /* we have the complete body now, store in the message adjusting the
+         * length to include the traling '\0' */
         gst_rtsp_message_take_body (message,
-            (guint8 *) builder->body_data, builder->body_len);
+            (guint8 *) builder->body_data, builder->body_len + 1);
         builder->body_data = NULL;
         builder->body_len = 0;
 
