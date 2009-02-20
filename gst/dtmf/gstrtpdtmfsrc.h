@@ -32,7 +32,6 @@
 #include "gstrtpdtmfcommon.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_RTP_DTMF_SRC		(gst_rtp_dtmf_src_get_type())
 #define GST_RTP_DTMF_SRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_DTMF_SRC,GstRTPDTMFSrc))
 #define GST_RTP_DTMF_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_DTMF_SRC,GstRTPDTMFSrcClass))
@@ -40,14 +39,13 @@ G_BEGIN_DECLS
 #define GST_IS_RTP_DTMF_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_DTMF_SRC))
 #define GST_IS_RTP_DTMF_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_DTMF_SRC))
 #define GST_RTP_DTMF_SRC_CAST(obj)		((GstRTPDTMFSrc *)(obj))
-
-
 typedef struct _GstRTPDTMFSrc GstRTPDTMFSrc;
 typedef struct _GstRTPDTMFSrcClass GstRTPDTMFSrcClass;
 
 
 
-enum _GstRTPDTMFEventType {
+enum _GstRTPDTMFEventType
+{
   RTP_DTMF_EVENT_TYPE_START,
   RTP_DTMF_EVENT_TYPE_STOP,
   RTP_DTMF_EVENT_TYPE_PAUSE_TASK
@@ -55,9 +53,10 @@ enum _GstRTPDTMFEventType {
 
 typedef enum _GstRTPDTMFEventType GstRTPDTMFEventType;
 
-struct _GstRTPDTMFSrcEvent {
-  GstRTPDTMFEventType  event_type;
-  GstRTPDTMFPayload*   payload;
+struct _GstRTPDTMFSrcEvent
+{
+  GstRTPDTMFEventType event_type;
+  GstRTPDTMFPayload *payload;
 };
 
 typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
@@ -68,36 +67,38 @@ typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
  *
  * The opaque #GstRTPDTMFSrc data structure.
  */
-struct _GstRTPDTMFSrc {
-  GstBaseSrc           basesrc;
+struct _GstRTPDTMFSrc
+{
+  GstBaseSrc basesrc;
 
-  GAsyncQueue*	       event_queue;
-  GstClockID           clockid;
-  gboolean             paused;
-  GstRTPDTMFPayload*   payload;
+  GAsyncQueue *event_queue;
+  GstClockID clockid;
+  gboolean paused;
+  GstRTPDTMFPayload *payload;
 
-  GstClockTime      timestamp;
-  GstClockTime      start_timestamp;
-  gboolean          first_packet;
-  gboolean          last_packet;
-  guint32           ts_base;
-  guint16           seqnum_base;
-  gint16            seqnum_offset;
-  guint16           seqnum;
-  gint32            ts_offset;
-  guint32           rtp_timestamp;
-  guint             pt;
-  guint             ssrc;
-  guint             current_ssrc;
-  guint16	    interval;
-  guint16	    packet_redundancy;
-  guint32           clock_rate;
+  GstClockTime timestamp;
+  GstClockTime start_timestamp;
+  gboolean first_packet;
+  gboolean last_packet;
+  guint32 ts_base;
+  guint16 seqnum_base;
+  gint16 seqnum_offset;
+  guint16 seqnum;
+  gint32 ts_offset;
+  guint32 rtp_timestamp;
+  guint pt;
+  guint ssrc;
+  guint current_ssrc;
+  guint16 interval;
+  guint16 packet_redundancy;
+  guint32 clock_rate;
 
-  gboolean          dirty;
-  guint16           redundancy_count;
+  gboolean dirty;
+  guint16 redundancy_count;
 };
 
-struct _GstRTPDTMFSrcClass {
+struct _GstRTPDTMFSrcClass
+{
   GstBaseSrcClass parent_class;
 };
 
@@ -107,5 +108,4 @@ gboolean gst_rtp_dtmf_src_plugin_init (GstPlugin * plugin);
 
 
 G_END_DECLS
-
 #endif /* __GST_RTP_DTMF_SRC_H__ */
