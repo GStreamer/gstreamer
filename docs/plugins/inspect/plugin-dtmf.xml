@@ -1,0 +1,64 @@
+<plugin>
+  <name>dtmf</name>
+  <description>DTMF plugins</description>
+  <filename>../../gst/dtmf/.libs/libgstdtmf.so</filename>
+  <basename>libgstdtmf.so</basename>
+  <version>0.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>DTMF</package>
+  <origin></origin>
+  <elements>
+    <element>
+      <name>dtmfsrc</name>
+      <longname>DTMF tone generator</longname>
+      <class>Source/Audio</class>
+      <description>Generates DTMF tones</description>
+      <author>Youness Alaoui &lt;youness.alaoui@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpdtmfdepay</name>
+      <longname>RTP DTMF packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Generates DTMF Sound from telephone-event RTP packets</description>
+      <author>Youness Alaoui &lt;youness.alaoui@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 0, 2147483647 ], encoding-name=(string)TELEPHONE-EVENT</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 0, 2147483647 ], channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpdtmfsrc</name>
+      <longname>RTP DTMF packet generator</longname>
+      <class>Source/Network</class>
+      <description>Generates RTP DTMF packets</description>
+      <author>Zeeshan Ali &lt;zeeshan.ali@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 0, 2147483647 ], ssrc=(int)[ 0, 2147483647 ], encoding-name=(string)TELEPHONE-EVENT</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

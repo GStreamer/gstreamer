@@ -246,6 +246,7 @@ AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(dccp)
 AG_GST_CHECK_PLUGIN(deinterlace)
 AG_GST_CHECK_PLUGIN(deinterlace2)
+AG_GST_CHECK_PLUGIN(dtmf)
 AG_GST_CHECK_PLUGIN(dvdspu)
 AG_GST_CHECK_PLUGIN(festival)
 AG_GST_CHECK_PLUGIN(flv)
@@ -1422,6 +1423,7 @@ gst/cdxaparse/Makefile
 gst/dccp/Makefile
 gst/deinterlace/Makefile
 gst/deinterlace2/Makefile
+gst/dtmf/Makefile
 gst/dvdspu/Makefile
 gst/festival/Makefile
 gst/flv/Makefile

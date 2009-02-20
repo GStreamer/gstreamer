@@ -146,6 +146,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/valve/gstvalve.h \
 	$(top_srcdir)/gst/y4m/gsty4mencode.h \
 	$(top_srcdir)/gst/liveadder/liveadder.h \
+	$(top_srcdir)/gst/dtmf/gstdtmfsrc.h \
+	$(top_srcdir)/gst/dtmf/gstrtpdtmfsrc.h \
+	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
+	$(top_srcdir)/gst/dtmf/gstrtpdtmfcommon.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h
 
 # Images to copy into HTML directory.

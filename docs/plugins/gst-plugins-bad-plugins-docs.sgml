@@ -32,6 +32,7 @@
     <xi:include href="xml/element-dccpserversrc.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
+    <xi:include href="xml/element-dtmfsrc.xml" />
     <xi:include href="xml/element-dvbsrc.xml" />
     <xi:include href="xml/element-dvdspu.xml" />
     <xi:include href="xml/element-festival.xml" />
@@ -56,6 +57,8 @@
     <xi:include href="xml/element-mxfdemux.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
+    <xi:include href="xml/element-rtpdtmfdepay.xml" />
+    <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-scaletempo.xml" />
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
@@ -90,6 +93,7 @@
     <xi:include href="xml/plugin-celt.xml" />
     <xi:include href="xml/plugin-dccp.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />
+    <xi:include href="xml/plugin-dtmf.xml" />
     <xi:include href="xml/plugin-dtsdec.xml" />
     <xi:include href="xml/plugin-dvbsrc.xml" />
     <xi:include href="xml/plugin-dvb.xml" />
