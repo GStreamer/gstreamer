@@ -27,6 +27,8 @@
 
 #include "gstasfdemux.h"
 #include "gstrtspwms.h"
+#include "gstrtpasfdepay.h"
+
 /* #include "gstasfmux.h" */
 
 static gboolean
@@ -49,6 +51,10 @@ plugin_init (GstPlugin * plugin)
   }
   if (!gst_element_register (plugin, "rtspwms", GST_RANK_SECONDARY,
           GST_TYPE_RTSP_WMS)) {
+    return FALSE;
+  }
+  if (!gst_element_register (plugin, "rtpasfdepay", GST_RANK_MARGINAL,
+      GST_TYPE_RTP_ASF_DEPAY)) {
     return FALSE;
   }
 /*
