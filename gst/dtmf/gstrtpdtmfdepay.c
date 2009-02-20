@@ -19,6 +19,67 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-rtpdtmfdepay
+ * @short_description: Transforms RFC 4733/2833 RTP dtmf packets into sound
+ * @see_also: rtpdtmfsrc, rtpdtmfmux
+ *
+ * This element takes RTP DTMF packets and produces sound. It also emits a
+ * message on the #GstBus.
+ *
+ * The message is called "dtmf-event" and has the following fields
+ * <informaltable>
+ * <tgroup cols='4'>
+ * <colspec colname='Name' />
+ * <colspec colname='Type' />
+ * <colspec colname='Possible values' />
+ * <colspec colname='Purpose' />
+ * <thead>
+ * <row>
+ * <entry>Name</entry>
+ * <entry>GType</entry>
+ * <entry>Possible values</entry>
+ * <entry>Purpose</entry>
+ * </row>
+ * </thead>
+ * <tbody>
+ * <row>
+ * <entry></entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>0-1</entry>
+ * <entry>Which of the two methods
+ * specified in RFC 2833 to use. The value should be 0 for tones and 1 for
+ * named events. Tones are specified by their frequencies and events are specied
+ * by their number. This element currently only recognizes events.
+ * Do not confuse with "method" which specified the output.
+ * </entry>
+ * </row>
+ * <row>
+ * <entry>number</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>0-16</entry>
+ * <entry>The event number.</entry>
+ * </row>
+ * <row>
+ * <entry>volume</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>0-36</entry>
+ * <entry>This field describes the power level of the tone, expressed in dBm0
+ * after dropping the sign. Power levels range from 0 to -63 dBm0. The range of
+ * valid DTMF is from 0 to -36 dBm0.
+ * </entry>
+ * </row>
+ * <row>
+ * <entry>method</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>1</entry>
+ * <entry>This field will always been 1 (ie RTP event) from this element.
+ * </entry>
+ * </row>
+ * </tbody>
+ * </tgroup>
+ * </informaltable>
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
