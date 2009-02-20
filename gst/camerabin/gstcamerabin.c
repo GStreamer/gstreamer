@@ -1266,23 +1266,74 @@ gst_camerabin_set_capsfilter_caps (GstCameraBin * camera, GstCaps * new_caps)
   g_object_set (G_OBJECT (camera->src_zoom_filter), "caps", new_caps, NULL);
 }
 
+static void
+gst_camerabin_adapt_video_resolution (GstCameraBin * camera, GstCaps * caps)
+{
+  GstStructure *st;
+  gint width = 0, height = 0;
+  GstCaps *filter_caps = NULL;
+
+  /* Get width and height from caps */
+  st = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (st, "width", &width);
+  gst_structure_get_int (st, "height", &height);
+
+  GST_DEBUG_OBJECT (camera,
+      "changing %dx%d -> %dx%d filter to %" GST_PTR_FORMAT,
+      camera->width, camera->height, width, height, camera->src_filter);
+
+  /* Apply the width and height to filter caps */
+  g_object_get (G_OBJECT (camera->src_filter), "caps", &filter_caps, NULL);
+  filter_caps = gst_caps_make_writable (filter_caps);
+  gst_caps_set_simple (filter_caps, "width", G_TYPE_INT, width,
+      "height", G_TYPE_INT, height, NULL);
+  g_object_set (G_OBJECT (camera->src_filter), "caps", filter_caps, NULL);
+  gst_caps_unref (filter_caps);
+  /* FIXME: implement cropping according to requested aspect ratio */
+}
+
 /*
  * img_capture_prepared:
  * @data: camerabin object
+ * @caps: caps describing the prepared image format
  *
  * Callback which is called after image capture has been prepared.
  */
 static void
-img_capture_prepared (gpointer data)
+img_capture_prepared (gpointer data, GstCaps * caps)
 {
   GstCameraBin *camera = GST_CAMERABIN (data);
+  GstStructure *st, *new_st;
+  gint i;
+  const gchar *field_name;
 
   GST_INFO_OBJECT (camera, "image capture prepared");
 
-  if (camera->image_capture_caps) {
-    /* Set capsfilters to match arriving image data */
-    gst_camerabin_set_capsfilter_caps (camera, camera->image_capture_caps);
+  /* It is possible we are about to get something else that we requested */
+  if (!gst_caps_is_equal (camera->image_capture_caps, caps)) {
+    /* If capture preparation has added new fields to requested caps,
+       we need to copy them */
+    st = gst_caps_get_structure (camera->image_capture_caps, 0);
+    new_st = gst_structure_copy (st);
+    st = gst_caps_get_structure (caps, 0);
+    for (i = 0; i < gst_structure_n_fields (st); i++) {
+      field_name = gst_structure_nth_field_name (st, i);
+      if (!gst_structure_has_field (new_st, field_name)) {
+        GST_DEBUG_OBJECT (camera, "new field in prepared caps: %s", field_name);
+        gst_structure_set_value (new_st, field_name,
+            gst_structure_get_value (st, field_name));
+      }
+    }
+    gst_caps_replace (&camera->image_capture_caps,
+        gst_caps_new_full (new_st, NULL));
   }
+
+  /* Update capsfilters */
+  gst_camerabin_set_capsfilter_caps (camera, camera->image_capture_caps);
+
+  /* If incoming buffer resolution is different from what application
+     requested, then we need to fix this in camerabin */
+  gst_camerabin_adapt_video_resolution (camera, caps);
 
   g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
       "active-pad", camera->pad_src_img, NULL);
@@ -1300,9 +1351,7 @@ static void
 gst_camerabin_start_image_capture (GstCameraBin * camera)
 {
   GstStateChangeReturn state_ret;
-  gboolean wait_for_prepare = FALSE;
-  gint width = 0, height = 0, fps_n = 0, fps_d = 0;
-  GstStructure *st;
+  gboolean wait_for_prepare = FALSE, ret = FALSE;
 
   GST_INFO_OBJECT (camera, "starting image capture");
 
@@ -1312,17 +1361,6 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
     /* Start image capture preparations using photography iface */
     wait_for_prepare = TRUE;
     g_mutex_lock (camera->capture_mutex);
-    if (camera->image_capture_caps) {
-      st = gst_caps_get_structure (camera->image_capture_caps, 0);
-    } else {
-      st = gst_caps_get_structure (camera->view_finder_caps, 0);
-    }
-    gst_structure_get_int (st, "width", &width);
-    gst_structure_get_int (st, "height", &height);
-    gst_structure_get_fraction (st, "framerate", &fps_n, &fps_d);
-    /* Set image capture resolution and frame rate */
-    g_signal_emit_by_name (camera->src_vid_src, "user-res-fps",
-        width, height, fps_n, fps_d, 0);
 
     /* Enable still image capture mode in v4l2camsrc */
     if (g_object_class_find_property (G_OBJECT_GET_CLASS (camera->src_vid_src),
@@ -1330,9 +1368,17 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
       g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 1, NULL);
     }
 
+    if (!camera->image_capture_caps) {
+      camera->image_capture_caps = gst_caps_copy (camera->view_finder_caps);
+    }
+
     /* Start preparations for image capture */
-    gst_photography_prepare_for_capture (GST_PHOTOGRAPHY (camera->src_vid_src),
-        (GstPhotoCapturePrepared) img_capture_prepared, camera);
+    GST_DEBUG_OBJECT (camera, "prepare image capture caps %" GST_PTR_FORMAT,
+        camera->image_capture_caps);
+    ret =
+        gst_photography_prepare_for_capture (GST_PHOTOGRAPHY
+        (camera->src_vid_src), (GstPhotoCapturePrepared) img_capture_prepared,
+        camera->image_capture_caps, camera);
     camera->capturing = TRUE;
     g_mutex_unlock (camera->capture_mutex);
   }
@@ -1345,11 +1391,16 @@ gst_camerabin_start_image_capture (GstCameraBin * camera)
       g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,
           "active-pad", camera->pad_src_img, NULL);
       camera->capturing = TRUE;
+      ret = TRUE;
       g_mutex_unlock (camera->capture_mutex);
     } else {
       GST_WARNING_OBJECT (camera, "imagebin state change failed");
       gst_element_set_state (camera->imgbin, GST_STATE_NULL);
     }
+  }
+
+  if (!ret) {
+    GST_WARNING_OBJECT (camera, "starting image capture failed");
   }
 }
 
