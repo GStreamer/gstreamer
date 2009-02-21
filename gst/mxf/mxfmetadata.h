@@ -486,9 +486,8 @@ struct _MXFMetadataSourcePackage
 {
   MXFMetadataGenericPackage parent;
 
-  MXFUL descriptors_uid;
-  guint32 n_descriptors;
-  MXFMetadataGenericDescriptor **descriptors;
+  MXFUL descriptor_uid;
+  MXFMetadataGenericDescriptor *descriptor;
 
   gboolean top_level;
 };

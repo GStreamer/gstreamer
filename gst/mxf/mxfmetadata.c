@@ -1192,18 +1192,6 @@ mxf_metadata_material_package_class_init (MXFMetadataMaterialPackageClass *
 G_DEFINE_TYPE (MXFMetadataSourcePackage, mxf_metadata_source_package,
     MXF_TYPE_METADATA_GENERIC_PACKAGE);
 
-static void
-mxf_metadata_source_package_finalize (GstMiniObject * object)
-{
-  MXFMetadataSourcePackage *self = MXF_METADATA_SOURCE_PACKAGE (object);
-
-  g_free (self->descriptors);
-  self->descriptors = NULL;
-
-  GST_MINI_OBJECT_CLASS (mxf_metadata_source_package_parent_class)->finalize
-      (object);
-}
-
 static gboolean
 mxf_metadata_source_package_handle_tag (MXFMetadataBase * metadata,
     MXFPrimerPack * primer, guint16 tag, const guint8 * tag_data,
@@ -1220,10 +1208,9 @@ mxf_metadata_source_package_handle_tag (MXFMetadataBase * metadata,
       if (tag_size != 16)
         goto error;
 
-      self->n_descriptors = 1;
-      memcpy (&self->descriptors_uid, tag_data, 16);
+      memcpy (&self->descriptor_uid, tag_data, 16);
       GST_DEBUG ("  descriptor = %s",
-          mxf_ul_to_string (&self->descriptors_uid, str));
+          mxf_ul_to_string (&self->descriptor_uid, str));
       break;
     default:
       ret =
@@ -1249,94 +1236,89 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
   MXFMetadataSourcePackage *self = MXF_METADATA_SOURCE_PACKAGE (m);
   MXFMetadataGenericPackage *package = MXF_METADATA_GENERIC_PACKAGE (m);
   MXFMetadataBase *current = NULL;
-  guint i, j;
+  guint i;
   gboolean ret;
-  MXFMetadataGenericDescriptor *d = NULL;
+  MXFMetadataFileDescriptor *d;
 
-  if (mxf_ul_is_zero (&self->descriptors_uid))
+  if (mxf_ul_is_zero (&self->descriptor_uid))
     return
         MXF_METADATA_BASE_CLASS
         (mxf_metadata_source_package_parent_class)->resolve (m, metadata);
 
-  current = g_hash_table_lookup (metadata, &self->descriptors_uid);
-  if (current && MXF_IS_METADATA_GENERIC_DESCRIPTOR (current)) {
-    d = MXF_METADATA_GENERIC_DESCRIPTOR (current);
-  } else {
+  current = g_hash_table_lookup (metadata, &self->descriptor_uid);
+  if (!current) {
     GST_ERROR ("Descriptor not found");
     return FALSE;
   }
 
-  if (!mxf_metadata_base_resolve (MXF_METADATA_BASE (d), metadata)) {
+  if (!mxf_metadata_base_resolve (MXF_METADATA_BASE (current), metadata)) {
     GST_ERROR ("Couldn't resolve descriptor");
     return FALSE;
   }
 
-  if (MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (d)) {
-    MXFMetadataMultipleDescriptor *m = MXF_METADATA_MULTIPLE_DESCRIPTOR (d);
-
-    if (m->sub_descriptors) {
-      self->n_descriptors = m->n_sub_descriptors + 1;
-      if (self->descriptors)
-        g_free (self->descriptors);
-      self->descriptors =
-          g_new0 (MXFMetadataGenericDescriptor *, self->n_descriptors);
-
-      for (i = 0; i < m->n_sub_descriptors; i++) {
-        self->descriptors[i] = m->sub_descriptors[i];
-      }
-      self->descriptors[self->n_descriptors - 1] =
-          MXF_METADATA_GENERIC_DESCRIPTOR (m);
-    }
-  } else {
-    self->n_descriptors = 1;
-    if (self->descriptors)
-      g_free (self->descriptors);
-    self->descriptors = g_new0 (MXFMetadataGenericDescriptor *, 1);
-    self->descriptors[0] = d;
-  }
+  self->descriptor = MXF_METADATA_GENERIC_DESCRIPTOR (current);
 
   ret =
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_source_package_parent_class)->resolve (m, metadata);
 
+  if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptor))
+    return ret;
+
+  d = MXF_METADATA_FILE_DESCRIPTOR (current);
+
   for (i = 0; i < package->n_tracks; i++) {
-    guint n_descriptor = 0, k = 0;
-
-    for (j = 0; j < self->n_descriptors; j++) {
-      MXFMetadataFileDescriptor *d;
-
-      if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptors[j]) ||
-          MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (self->descriptors[j]))
-        continue;
-      d = MXF_METADATA_FILE_DESCRIPTOR (self->descriptors[j]);
-
+    if (!MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (d)) {
       if (d->linked_track_id == package->tracks[i]->track_id ||
-          d->linked_track_id == 0)
-        n_descriptor++;
-    }
+          (d->linked_track_id == 0 && package->n_essence_tracks == 1 &&
+              (package->tracks[i]->type & 0xf0) == 0x30)) {
+        package->tracks[i]->descriptor =
+            g_new0 (MXFMetadataFileDescriptor *, 1);
+        package->tracks[i]->descriptor[0] = d;
+        package->tracks[i]->n_descriptor = 1;
+        break;
+      }
+    } else {
+      guint n_descriptor = 0, j, k = 0;
+      MXFMetadataMultipleDescriptor *md = MXF_METADATA_MULTIPLE_DESCRIPTOR (d);
 
-    if (package->tracks[i]->descriptor)
-      g_free (package->tracks[i]->descriptor);
-    package->tracks[i]->descriptor =
-        g_new0 (MXFMetadataFileDescriptor *, n_descriptor);
-    package->tracks[i]->n_descriptor = n_descriptor;
-    for (j = 0; j < self->n_descriptors; j++) {
-      MXFMetadataFileDescriptor *d;
+      for (j = 0; j < md->n_sub_descriptors; j++) {
+        MXFMetadataFileDescriptor *fd;
 
-      if (!MXF_IS_METADATA_FILE_DESCRIPTOR (self->descriptors[j]) ||
-          MXF_IS_METADATA_MULTIPLE_DESCRIPTOR (self->descriptors[j]))
-        continue;
-      d = MXF_METADATA_FILE_DESCRIPTOR (self->descriptors[j]);
+        if (!md->sub_descriptors[j] ||
+            !MXF_METADATA_FILE_DESCRIPTOR (md->sub_descriptors[j]))
+          continue;
 
-      if (d->linked_track_id == package->tracks[i]->track_id ||
-          (d->linked_track_id == 0 && n_descriptor == 1))
-        package->tracks[i]->descriptor[k++] = d;
+        fd = MXF_METADATA_FILE_DESCRIPTOR (md->sub_descriptors[j]);
+
+        if (fd->linked_track_id == package->tracks[i]->track_id ||
+            (fd->linked_track_id == 0 && package->n_essence_tracks == 1 &&
+                (package->tracks[i]->type & 0xf0) == 0x30))
+          n_descriptor++;
+      }
+
+      package->tracks[i]->descriptor =
+          g_new0 (MXFMetadataFileDescriptor *, n_descriptor);
+      package->tracks[i]->n_descriptor = n_descriptor;
+
+      for (j = 0; j < md->n_sub_descriptors; j++) {
+        MXFMetadataFileDescriptor *fd;
+
+        if (!md->sub_descriptors[j] ||
+            !MXF_METADATA_FILE_DESCRIPTOR (md->sub_descriptors[j]))
+          continue;
+
+        fd = MXF_METADATA_FILE_DESCRIPTOR (md->sub_descriptors[j]);
+
+        if (fd->linked_track_id == package->tracks[i]->track_id ||
+            (fd->linked_track_id == 0 && package->n_essence_tracks == 1 &&
+                (package->tracks[i]->type & 0xf0) == 0x30)) {
+          package->tracks[i]->descriptor[k] = fd;
+          k++;
+        }
+      }
     }
   }
-
-  /* TODO: Check if there is a EssenceContainerData for this source package
-   * and store this in the source package instance. Without
-   * EssenceContainerData this package must be external */
 
   return ret;
 }
@@ -1351,9 +1333,7 @@ static void
 mxf_metadata_source_package_class_init (MXFMetadataSourcePackageClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
-  GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
 
-  miniobject_class->finalize = mxf_metadata_source_package_finalize;
   metadata_base_class->handle_tag = mxf_metadata_source_package_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_package_resolve;
 }

@@ -1055,7 +1055,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
         return GST_FLOW_ERROR;
     }
 
-    if (!source_package->descriptors) {
+    if (!source_package->descriptor) {
       GST_WARNING_OBJECT (demux, "Source package has no descriptors");
       if (!pad)
         continue;
@@ -1450,7 +1450,7 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
     return GST_FLOW_ERROR;
   }
 
-  if (!source_package->descriptors) {
+  if (!source_package->descriptor) {
     GST_ERROR_OBJECT (demux, "Source package has no descriptors");
     return GST_FLOW_ERROR;
   }
