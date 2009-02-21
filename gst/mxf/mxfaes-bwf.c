@@ -781,7 +781,10 @@ mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
     *tags = gst_tag_list_new ();
 
   gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
-      codec_name, GST_TAG_BITRATE, block_align * 8, NULL);
+      codec_name, GST_TAG_BITRATE,
+      (gint) (block_align * 8 *
+          mxf_fraction_to_double (&descriptor->audio_sampling_rate)) /
+      (descriptor->channel_count), NULL);
   g_free (codec_name);
 
   *handler = mxf_aes3_handle_essence_element;
