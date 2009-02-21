@@ -997,6 +997,17 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   guint j, i;
   GstClockTime next;
 
+  /* if a DEFAULT segment is configured, don't send samples past the end
+   * of the segment */
+  if (flacdec->segment.format == GST_FORMAT_DEFAULT &&
+      flacdec->segment.stop != -1 &&
+      flacdec->segment.last_stop > 0 &&
+      flacdec->segment.last_stop + samples > flacdec->segment.stop) {
+    samples = flacdec->segment.stop - flacdec->segment.last_stop;
+    GST_DEBUG_OBJECT (flacdec,
+        "clipping last buffer to %d samples because of segment", samples);
+  }
+
   switch (depth) {
     case 8:
       width = 8;
