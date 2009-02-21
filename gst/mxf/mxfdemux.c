@@ -114,7 +114,8 @@ enum
 {
   PROP_0,
   PROP_PACKAGE,
-  PROP_MAX_DRIFT
+  PROP_MAX_DRIFT,
+  PROP_STRUCTURE
 };
 
 static gboolean gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event);
@@ -3789,6 +3790,23 @@ gst_mxf_demux_get_property (GObject * object, guint prop_id,
     case PROP_MAX_DRIFT:
       g_value_set_uint64 (value, demux->max_drift);
       break;
+    case PROP_STRUCTURE:{
+      GstStructure *s;
+
+      g_mutex_lock (demux->metadata_lock);
+      if (demux->preface)
+        s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
+      else
+        s = NULL;
+
+      gst_value_set_structure (value, s);
+
+      if (s)
+        gst_structure_free (s);
+
+      g_mutex_unlock (demux->metadata_lock);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3868,6 +3886,11 @@ gst_mxf_demux_class_init (GstMXFDemuxClass * klass)
           "Maximum number of nanoseconds by which tracks can differ",
           100 * GST_MSECOND, G_MAXUINT64, 500 * GST_MSECOND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_STRUCTURE,
+      g_param_spec_boxed ("structure", "Structure",
+          "Structural metadata of the MXF file",
+          GST_TYPE_STRUCTURE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_mxf_demux_change_state);
