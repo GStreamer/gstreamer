@@ -2806,8 +2806,8 @@ void mxf_metadata_generic_sound_essence_descriptor_set_caps
   } else {
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT,
-        (gint) ((((gdouble) self->audio_sampling_rate.n) /
-                ((gdouble) self->audio_sampling_rate.d)) + 0.5), NULL);
+        (gint) (mxf_fraction_to_double (&self->audio_sampling_rate)
+            + 0.5), NULL);
   }
 
   if (self->channel_count == 0) {

@@ -74,6 +74,7 @@ gboolean mxf_product_version_parse (MXFProductVersion * product_version,
     const guint8 * data, guint size);
 
 gboolean mxf_fraction_parse (MXFFraction *fraction, const guint8 *data, guint size);
+gdouble mxf_fraction_to_double (const MXFFraction *fraction);
 
 gboolean mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, guint size);
 gboolean mxf_timestamp_is_unknown (const MXFTimestamp *a);

@@ -417,6 +417,12 @@ mxf_fraction_parse (MXFFraction * fraction, const guint8 * data, guint size)
   return TRUE;
 }
 
+gdouble
+mxf_fraction_to_double (const MXFFraction * fraction)
+{
+  return ((gdouble) fraction->n) / ((gdouble) fraction->d);
+}
+
 gchar *
 mxf_utf16_to_utf8 (const guint8 * data, guint size)
 {
