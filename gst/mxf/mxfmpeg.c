@@ -623,6 +623,12 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (codec_name)
       gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
           codec_name, NULL);
+
+    if (p && MXF_IS_METADATA_MPEG_VIDEO_DESCRIPTOR (p)
+        && MXF_METADATA_MPEG_VIDEO_DESCRIPTOR (p)->bitrate) {
+      gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_BITRATE,
+          MXF_METADATA_MPEG_VIDEO_DESCRIPTOR (p)->bitrate, NULL);
+    }
   }
 
   return caps;
