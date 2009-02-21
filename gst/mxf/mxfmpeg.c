@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "mxfmpeg.h"
+#include "mxfquark.h"
 
 #include <gst/base/gstbytereader.h>
 
@@ -210,6 +211,38 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_mpeg_video_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_mpeg_video_descriptor_parent_class)->to_structure (m);
+  MXFMetadataMPEGVideoDescriptor *self = MXF_METADATA_MPEG_VIDEO_DESCRIPTOR (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (SINGLE_SEQUENCE), G_TYPE_BOOLEAN,
+      self->single_sequence, MXF_QUARK (CONST_B_FRAMES), G_TYPE_BOOLEAN,
+      self->const_b_frames, MXF_QUARK (CODED_CONTENT_TYPE), G_TYPE_UCHAR,
+      self->coded_content_type, MXF_QUARK (LOW_DELAY), G_TYPE_BOOLEAN,
+      self->low_delay, MXF_QUARK (CLOSED_GOP), G_TYPE_BOOLEAN, self->closed_gop,
+      MXF_QUARK (IDENTICAL_GOP), G_TYPE_BOOLEAN, self->identical_gop,
+      MXF_QUARK (PROFILE_AND_LEVEL), G_TYPE_UCHAR, self->profile_and_level,
+      NULL);
+
+  if (self->max_gop)
+    gst_structure_id_set (ret, MXF_QUARK (MAX_GOP), G_TYPE_UINT, self->max_gop,
+        NULL);
+
+  if (self->b_picture_count)
+    gst_structure_id_set (ret, MXF_QUARK (B_PICTURE_COUNT), G_TYPE_UINT,
+        self->b_picture_count, NULL);
+
+  if (self->bitrate)
+    gst_structure_id_set (ret, MXF_QUARK (BITRATE), G_TYPE_UINT, self->bitrate,
+        NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_mpeg_video_descriptor_init (MXFMetadataMPEGVideoDescriptor * self)
 {
@@ -224,6 +257,9 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_mpeg_video_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (MPEG_VIDEO_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_mpeg_video_descriptor_to_structure;
 }
 
 typedef enum

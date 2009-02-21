@@ -155,5 +155,7 @@ typedef struct {
 } MXFIndexTableSegment;
 
 #define GST_TAG_MXF_UMID "mxf-umid"
+#define GST_TAG_MXF_STRUCTURE "mxf-structure"
+#define GST_TAG_MXF_DESCRIPTIVE_METADATA_FRAMEWORK "mxf-descriptive-metadata-framework"
 
 #endif /* __MXF_TYPES_H__ */

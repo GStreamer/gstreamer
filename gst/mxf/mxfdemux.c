@@ -498,6 +498,8 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   GList *l, *values;
 #endif
   MXFMetadataBase *m = NULL;
+  GstStructure *structure;
+  GstTagList *taglist;
 
   GST_DEBUG_OBJECT (demux, "Resolve metadata references");
   demux->update_metadata = FALSE;
@@ -541,6 +543,14 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   }
 
   demux->metadata_resolved = TRUE;
+
+  taglist = gst_tag_list_new ();
+  structure =
+      mxf_metadata_base_to_structure (MXF_METADATA_BASE (demux->preface));
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_MXF_STRUCTURE,
+      structure, NULL);
+  gst_element_found_tags (GST_ELEMENT (demux), taglist);
+  gst_structure_free (structure);
 
 #if !GLIB_CHECK_VERSION (2, 16, 0)
   g_list_free (values);
@@ -812,7 +822,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
           if (MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (track->
                   parent.descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR
-                (track->parent.descriptor[0])->data_essence_compression,
+                (track->parent.descriptor[0])->data_essence_coding,
                 essence_compression);
 
           name =

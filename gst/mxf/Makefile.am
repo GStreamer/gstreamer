@@ -2,6 +2,7 @@ plugin_LTLIBRARIES = libgstmxf.la
 
 libgstmxf_la_SOURCES = \
 	mxf.c \
+	mxfquark.c \
 	mxfdemux.c \
 	mxfparse.c \
 	mxfaes-bwf.c \
@@ -21,6 +22,7 @@ libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 libgstmxf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
+	mxfquark.h \
 	mxfdemux.h \
 	mxfparse.h \
 	mxfaes-bwf.h \

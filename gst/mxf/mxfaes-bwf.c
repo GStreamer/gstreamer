@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include "mxfaes-bwf.h"
+#include "mxfquark.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -231,6 +232,79 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_wave_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_wave_audio_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataWaveAudioEssenceDescriptor *self =
+      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (m);
+  gchar str[48];
+
+  gst_structure_id_set (ret, MXF_QUARK (BLOCK_ALIGN), G_TYPE_UINT,
+      self->block_align, NULL);
+
+  if (self->sequence_offset)
+    gst_structure_id_set (ret, MXF_QUARK (SEQUENCE_OFFSET), G_TYPE_UCHAR,
+        self->sequence_offset, NULL);
+
+  if (self->avg_bps)
+    gst_structure_id_set (ret, MXF_QUARK (AVG_BPS), G_TYPE_UINT, self->avg_bps,
+        NULL);
+
+  if (!mxf_ul_is_zero (&self->channel_assignment)) {
+    gst_structure_id_set (ret, MXF_QUARK (CHANNEL_ASSIGNMENT), G_TYPE_STRING,
+        mxf_ul_to_string (&self->channel_assignment, str), NULL);
+  }
+
+  if (self->peak_envelope_version)
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_ENVELOPE_VERSION), G_TYPE_UINT,
+        self->peak_envelope_version, NULL);
+
+  if (self->peak_envelope_format)
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_ENVELOPE_FORMAT), G_TYPE_UINT,
+        self->peak_envelope_format, NULL);
+
+  if (self->points_per_peak_value)
+    gst_structure_id_set (ret, MXF_QUARK (POINTS_PER_PEAK_VALUE), G_TYPE_UINT,
+        self->points_per_peak_value, NULL);
+
+  if (self->peak_envelope_block_size)
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_ENVELOPE_BLOCK_SIZE),
+        G_TYPE_UINT, self->peak_envelope_block_size, NULL);
+
+  if (self->peak_channels)
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_CHANNELS), G_TYPE_UINT,
+        self->peak_channels, NULL);
+
+  if (self->peak_frames)
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_FRAMES), G_TYPE_UINT,
+        self->peak_frames, NULL);
+
+  if (self->peak_of_peaks_position)
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_OF_PEAKS_POSITION), G_TYPE_INT64,
+        self->peak_of_peaks_position, NULL);
+
+  if (!mxf_timestamp_is_unknown (&self->peak_envelope_timestamp))
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_ENVELOPE_TIMESTAMP),
+        G_TYPE_STRING, mxf_timestamp_to_string (&self->peak_envelope_timestamp,
+            str), NULL);
+
+  if (self->peak_envelope_data) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (self->peak_envelope_data_length);
+
+    memcpy (GST_BUFFER_DATA (buf), self->peak_envelope_data,
+        self->peak_envelope_data_length);
+    gst_structure_id_set (ret, MXF_QUARK (PEAK_ENVELOPE_DATA), GST_TYPE_BUFFER,
+        buf, NULL);
+    gst_buffer_unref (buf);
+  }
+
+  return ret;
+}
+
 static void
     mxf_metadata_wave_audio_essence_descriptor_init
     (MXFMetadataWaveAudioEssenceDescriptor * self)
@@ -246,6 +320,9 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_wave_audio_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (WAVE_AUDIO_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_wave_audio_essence_descriptor_to_structure;
 }
 
 /* SMPTE 382M Annex 2 */
@@ -511,6 +588,122 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataAES3AudioEssenceDescriptor *self =
+      MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR (m);
+
+  if (self->emphasis)
+    gst_structure_id_set (ret, MXF_QUARK (EMPHASIS), G_TYPE_UCHAR,
+        self->emphasis, NULL);
+
+  if (self->block_start_offset)
+    gst_structure_id_set (ret, MXF_QUARK (BLOCK_START_OFFSET), G_TYPE_UINT,
+        self->block_start_offset, NULL);
+
+  if (self->auxiliary_bits_mode)
+    gst_structure_id_set (ret, MXF_QUARK (AUXILIARY_BITS_MODE), G_TYPE_UCHAR,
+        self->auxiliary_bits_mode, NULL);
+
+  if (self->channel_status_mode) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (self->n_channel_status_mode);
+
+    memcpy (GST_BUFFER_DATA (buf), self->channel_status_mode,
+        self->n_channel_status_mode);
+    gst_structure_id_set (ret, MXF_QUARK (CHANNEL_STATUS_MODE), GST_TYPE_BUFFER,
+        buf, NULL);
+    gst_buffer_unref (buf);
+  }
+
+  if (self->channel_status_mode) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (self->n_channel_status_mode);
+
+    memcpy (GST_BUFFER_DATA (buf), self->channel_status_mode,
+        self->n_channel_status_mode);
+    gst_structure_id_set (ret, MXF_QUARK (CHANNEL_STATUS_MODE), GST_TYPE_BUFFER,
+        buf, NULL);
+    gst_buffer_unref (buf);
+  }
+
+  if (self->fixed_channel_status_data) {
+    guint i;
+    GValue va = { 0, }
+    , v = {
+    0,};
+    GstBuffer *buf;
+
+    g_value_init (&va, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_fixed_channel_status_data; i++) {
+      buf = gst_buffer_new_and_alloc (24);
+      g_value_init (&v, GST_TYPE_BUFFER);
+
+      memcpy (GST_BUFFER_DATA (buf), self->fixed_channel_status_data[i], 24);
+      gst_value_set_buffer (&v, buf);
+      gst_value_array_append_value (&va, &v);
+      gst_buffer_unref (buf);
+      g_value_unset (&v);
+    }
+
+    if (gst_value_array_get_size (&va) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (FIXED_CHANNEL_STATUS_DATA),
+          &va);
+    g_value_unset (&va);
+  }
+
+
+  if (self->user_data_mode) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (self->n_user_data_mode);
+
+    memcpy (GST_BUFFER_DATA (buf), self->user_data_mode,
+        self->n_user_data_mode);
+    gst_structure_id_set (ret, MXF_QUARK (USER_DATA_MODE), GST_TYPE_BUFFER, buf,
+        NULL);
+    gst_buffer_unref (buf);
+  }
+
+  if (self->fixed_user_data) {
+    guint i;
+    GValue va = { 0, }
+    , v = {
+    0,};
+    GstBuffer *buf;
+
+    g_value_init (&va, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_fixed_user_data; i++) {
+      buf = gst_buffer_new_and_alloc (24);
+      g_value_init (&v, GST_TYPE_BUFFER);
+
+      memcpy (GST_BUFFER_DATA (buf), self->fixed_user_data[i], 24);
+      gst_value_set_buffer (&v, buf);
+      gst_value_array_append_value (&va, &v);
+      gst_buffer_unref (buf);
+      g_value_unset (&v);
+    }
+
+    if (gst_value_array_get_size (&va) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (FIXED_USER_DATA), &va);
+    g_value_unset (&va);
+  }
+
+  if (self->linked_timecode_track_id)
+    gst_structure_id_set (ret, MXF_QUARK (LINKED_TIMECODE_TRACK_ID),
+        G_TYPE_UINT, self->linked_timecode_track_id, NULL);
+
+  if (self->stream_number)
+    gst_structure_id_set (ret, MXF_QUARK (STREAM_NUMBER), G_TYPE_UCHAR,
+        self->stream_number, NULL);
+
+  return ret;
+}
+
+
 static void
     mxf_metadata_aes3_audio_essence_descriptor_init
     (MXFMetadataAES3AudioEssenceDescriptor * self)
@@ -529,6 +722,9 @@ static void
       mxf_metadata_aes3_audio_essence_descriptor_finalize;
   metadata_base_class->handle_tag =
       mxf_metadata_aes3_audio_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (AES3_AUDIO_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_aes3_audio_essence_descriptor_to_structure;
 }
 
 static gboolean

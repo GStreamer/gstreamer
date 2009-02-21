@@ -385,6 +385,9 @@ struct _MXFMetadataBaseClass {
 
   gboolean (*handle_tag) (MXFMetadataBase *self, MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint tag_size);
   gboolean (*resolve) (MXFMetadataBase *self, GHashTable *metadata);
+  GstStructure * (*to_structure) (MXFMetadataBase *self);
+
+  GQuark name_quark;
 };
 
 struct _MXFMetadata {
@@ -699,7 +702,7 @@ struct _MXFMetadataGenericSoundEssenceDescriptor {
 struct _MXFMetadataGenericDataEssenceDescriptor {
   MXFMetadataFileDescriptor parent;
 
-  MXFUL data_essence_compression;
+  MXFUL data_essence_coding;
 };
 
 struct _MXFMetadataMultipleDescriptor {
@@ -747,6 +750,7 @@ struct _MXFDescriptiveMetadataFrameworkInterface {
 
 gboolean mxf_metadata_base_parse (MXFMetadataBase *self, MXFPrimerPack *primer, const guint8 *data, guint size);
 gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, GHashTable *metadata);
+GstStructure * mxf_metadata_base_to_structure (MXFMetadataBase *self);
 
 MXFMetadata *mxf_metadata_new (guint16 type, MXFPrimerPack *primer, guint64 offset, const guint8 *data, guint size);
 void mxf_metadata_register (guint16 type_id, GType type);

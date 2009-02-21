@@ -26,6 +26,7 @@
 
 #include "mxfparse.h"
 #include "mxfmetadata.h"
+#include "mxfquark.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -61,6 +62,83 @@ mxf_metadata_base_resolve_default (MXFMetadataBase * self,
   return TRUE;
 }
 
+static GstStructure *
+mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
+{
+  MXFMetadataBaseClass *klass = MXF_METADATA_BASE_GET_CLASS (self);
+  GstStructure *ret;
+  gchar str[48];
+
+  g_return_val_if_fail (klass->name_quark != 0, NULL);
+
+  ret = gst_structure_id_empty_new (klass->name_quark);
+
+  if (!mxf_ul_is_zero (&self->instance_uid)) {
+    mxf_ul_to_string (&self->instance_uid, str);
+    gst_structure_id_set (ret, MXF_QUARK (INSTANCE_UID), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (!mxf_ul_is_zero (&self->generation_uid)) {
+    mxf_ul_to_string (&self->generation_uid, str);
+    gst_structure_id_set (ret, MXF_QUARK (GENERATION_UID), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (self->other_tags) {
+    MXFLocalTag *tag;
+    GValue va = { 0, };
+    GValue v = { 0, };
+    GstStructure *s;
+    GstBuffer *buf;
+#if GLIB_CHECK_VERSION (2, 16, 0)
+    GHashTableIter iter;
+
+    g_hash_table_iter_init (&iter, self->other_tags);
+#else
+    GList *l, *values;
+
+    values = g_hash_table_get_values (self->other_tags);
+#endif
+
+    g_value_init (&va, GST_TYPE_ARRAY);
+
+#if GLIB_CHECK_VERSION (2, 16, 0)
+    while (g_hash_table_iter_next (&iter, NULL, (gpointer) & tag)) {
+#else
+    for (l = values; l; l = l->next) {
+      tag = l->data;
+#endif
+
+      g_value_init (&v, GST_TYPE_STRUCTURE);
+      s = gst_structure_id_empty_new (MXF_QUARK (TAG));
+
+      mxf_ul_to_string (&tag->key, str);
+
+      buf = gst_buffer_new_and_alloc (tag->size);
+      memcpy (GST_BUFFER_DATA (buf), tag->data, tag->size);
+
+      gst_structure_id_set (s, MXF_QUARK (NAME), G_TYPE_STRING, str,
+          MXF_QUARK (DATA), GST_TYPE_BUFFER, buf, NULL);
+
+      gst_value_set_structure (&v, s);
+      gst_structure_free (s);
+      gst_buffer_unref (buf);
+      gst_value_array_append_value (&va, &v);
+      g_value_unset (&v);
+    }
+
+    gst_structure_id_set_value (ret, MXF_QUARK (OTHER_TAGS), &va);
+    g_value_unset (&va);
+
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+    g_list_free (values);
+#endif
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_base_init (MXFMetadataBase * self)
 {
@@ -75,6 +153,7 @@ mxf_metadata_base_class_init (MXFMetadataBaseClass * klass)
   miniobject_class->finalize = mxf_metadata_base_finalize;
   klass->handle_tag = mxf_metadata_base_handle_tag;
   klass->resolve = mxf_metadata_base_resolve_default;
+  klass->to_structure = mxf_metadata_base_to_structure_default;
 }
 
 gboolean
@@ -117,7 +196,7 @@ mxf_metadata_base_resolve (MXFMetadataBase * self, GHashTable * metadata)
   else if (self->resolved != MXF_METADATA_BASE_RESOLVE_STATE_NONE)
     return FALSE;
 
-  self->resolved = MXF_METADATA_BASE_RESOLVE_STATE_RUNNING;;
+  self->resolved = MXF_METADATA_BASE_RESOLVE_STATE_RUNNING;
 
   klass = MXF_METADATA_BASE_GET_CLASS (self);
 
@@ -129,6 +208,24 @@ mxf_metadata_base_resolve (MXFMetadataBase * self, GHashTable * metadata)
       MXF_METADATA_BASE_RESOLVE_STATE_FAILURE;
 
   return ret;
+}
+
+GstStructure *
+mxf_metadata_base_to_structure (MXFMetadataBase * self)
+{
+  MXFMetadataBaseClass *klass;
+
+  g_return_val_if_fail (MXF_IS_METADATA_BASE (self), NULL);
+
+  g_return_val_if_fail (self->resolved ==
+      MXF_METADATA_BASE_RESOLVE_STATE_SUCCESS, NULL);
+
+  klass = MXF_METADATA_BASE_GET_CLASS (self);
+
+  if (klass->to_structure)
+    return klass->to_structure (self);
+
+  return NULL;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadata, mxf_metadata, MXF_TYPE_METADATA_BASE);
@@ -498,6 +595,135 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, GHashTable * metadata)
       metadata);
 }
 
+static GstStructure *
+mxf_metadata_preface_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS (mxf_metadata_preface_parent_class)->to_structure
+      (m);
+  MXFMetadataPreface *self = MXF_METADATA_PREFACE (m);
+  gchar str[48];
+  guint i;
+
+  if (!mxf_timestamp_is_unknown (&self->last_modified_date)) {
+    mxf_timestamp_to_string (&self->last_modified_date, str);
+    gst_structure_id_set (ret, MXF_QUARK (LAST_MODIFIED_DATE), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  if (self->version != 0)
+    gst_structure_id_set (ret, MXF_QUARK (VERSION), G_TYPE_UINT, self->version,
+        NULL);
+
+  if (self->object_model_version != 0)
+    gst_structure_id_set (ret, MXF_QUARK (OBJECT_MODEL_VERSION), G_TYPE_UINT,
+        self->object_model_version, NULL);
+
+  if (!mxf_ul_is_zero (&self->primary_package_uid)) {
+    mxf_ul_to_string (&self->primary_package_uid, str);
+    gst_structure_id_set (ret, MXF_QUARK (PRIMARY_PACKAGE), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (self->n_identifications > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_identifications; i++) {
+      GstStructure *s;
+
+      if (self->identifications[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
+          (self->identifications[i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (IDENTIFICATIONS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  if (self->content_storage) {
+    GstStructure *s =
+        mxf_metadata_base_to_structure (MXF_METADATA_BASE
+        (self->content_storage));
+    gst_structure_id_set (ret, MXF_QUARK (CONTENT_STORAGE), GST_TYPE_STRUCTURE,
+        s, NULL);
+    gst_structure_free (s);
+  }
+
+  if (!mxf_ul_is_zero (&self->operational_pattern)) {
+    mxf_ul_to_string (&self->operational_pattern, str);
+    gst_structure_id_set (ret, MXF_QUARK (OPERATIONAL_PATTERN), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  if (self->n_essence_containers > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_essence_containers; i++) {
+      if (mxf_ul_is_zero (&self->essence_containers[i]))
+        continue;
+
+      g_value_init (&val, G_TYPE_STRING);
+
+      mxf_ul_to_string (&self->essence_containers[i], str);
+      g_value_set_string (&val, str);
+
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (ESSENCE_CONTAINERS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  if (self->n_dm_schemes > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_dm_schemes; i++) {
+      if (mxf_ul_is_zero (&self->dm_schemes[i]))
+        continue;
+
+      g_value_init (&val, G_TYPE_STRING);
+
+      mxf_ul_to_string (&self->dm_schemes[i], str);
+      g_value_set_string (&val, str);
+
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (DM_SCHEMES), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_preface_init (MXFMetadataPreface * self)
 {
@@ -513,6 +739,8 @@ mxf_metadata_preface_class_init (MXFMetadataPrefaceClass * klass)
   miniobject_class->finalize = mxf_metadata_preface_finalize;
   metadata_base_class->handle_tag = mxf_metadata_preface_handle_tag;
   metadata_base_class->resolve = mxf_metadata_preface_resolve;
+  metadata_base_class->to_structure = mxf_metadata_preface_to_structure;
+  metadata_base_class->name_quark = MXF_QUARK (PREFACE);
 }
 
 G_DEFINE_TYPE (MXFMetadataIdentification, mxf_metadata_identification,
@@ -624,6 +852,76 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_identification_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_identification_parent_class)->to_structure (m);
+  MXFMetadataIdentification *self = MXF_METADATA_IDENTIFICATION (m);
+  gchar str[48];
+
+  if (!mxf_ul_is_zero (&self->this_generation_uid)) {
+    mxf_ul_to_string (&self->this_generation_uid, str);
+    gst_structure_id_set (ret, MXF_QUARK (THIS_GENERATION_UID), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  if (self->company_name)
+    gst_structure_id_set (ret, MXF_QUARK (COMPANY_NAME), G_TYPE_STRING,
+        self->company_name, NULL);
+
+  if (self->product_name)
+    gst_structure_id_set (ret, MXF_QUARK (PRODUCT_NAME), G_TYPE_STRING,
+        self->product_name, NULL);
+
+  if (self->product_version.major ||
+      self->product_version.minor ||
+      self->product_version.patch ||
+      self->product_version.build || self->product_version.release) {
+    g_snprintf (str, 48, "%u.%u.%u.%u.%u", self->product_version.major,
+        self->product_version.minor,
+        self->product_version.patch,
+        self->product_version.build, self->product_version.release);
+    gst_structure_id_set (ret, MXF_QUARK (PRODUCT_VERSION), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (self->version_string)
+    gst_structure_id_set (ret, MXF_QUARK (VERSION_STRING), G_TYPE_STRING,
+        self->version_string, NULL);
+
+  if (!mxf_ul_is_zero (&self->product_uid)) {
+    mxf_ul_to_string (&self->product_uid, str);
+    gst_structure_id_set (ret, MXF_QUARK (PRODUCT_UID), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (!mxf_timestamp_is_unknown (&self->modification_date)) {
+    mxf_timestamp_to_string (&self->modification_date, str);
+    gst_structure_id_set (ret, MXF_QUARK (MODIFICATION_DATE), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  if (self->toolkit_version.major ||
+      self->toolkit_version.minor ||
+      self->toolkit_version.patch ||
+      self->toolkit_version.build || self->toolkit_version.release) {
+    g_snprintf (str, 48, "%u.%u.%u.%u.%u", self->toolkit_version.major,
+        self->toolkit_version.minor,
+        self->toolkit_version.patch,
+        self->toolkit_version.build, self->toolkit_version.release);
+    gst_structure_id_set (ret, MXF_QUARK (TOOLKIT_VERSION), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (self->platform)
+    gst_structure_id_set (ret, MXF_QUARK (PLATFORM), G_TYPE_STRING,
+        self->platform, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_identification_init (MXFMetadataIdentification * self)
 {
@@ -638,6 +936,8 @@ mxf_metadata_identification_class_init (MXFMetadataIdentificationClass * klass)
 
   miniobject_class->finalize = mxf_metadata_identification_finalize;
   metadata_base_class->handle_tag = mxf_metadata_identification_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (IDENTIFICATION);
+  metadata_base_class->to_structure = mxf_metadata_identification_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataContentStorage, mxf_metadata_content_storage,
@@ -788,6 +1088,77 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
       (mxf_metadata_content_storage_parent_class)->resolve (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_content_storage_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_content_storage_parent_class)->to_structure (m);
+  MXFMetadataContentStorage *self = MXF_METADATA_CONTENT_STORAGE (m);
+  guint i;
+
+  if (self->n_packages > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_packages; i++) {
+      GstStructure *s;
+
+      if (self->packages[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->packages
+              [i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (PACKAGES), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  if (self->n_essence_container_data > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_essence_container_data; i++) {
+      GstStructure *s;
+
+      if (self->essence_container_data[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
+          (self->essence_container_data[i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (ESSENCE_CONTAINER_DATA),
+          &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_content_storage_init (MXFMetadataContentStorage * self)
 {
@@ -803,6 +1174,8 @@ mxf_metadata_content_storage_class_init (MXFMetadataContentStorageClass * klass)
   miniobject_class->finalize = mxf_metadata_content_storage_finalize;
   metadata_base_class->handle_tag = mxf_metadata_content_storage_handle_tag;
   metadata_base_class->resolve = mxf_metadata_content_storage_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (CONTENT_STORAGE);
+  metadata_base_class->to_structure = mxf_metadata_content_storage_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataEssenceContainerData,
@@ -908,6 +1281,29 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
       (mxf_metadata_essence_container_data_parent_class)->resolve (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_essence_container_data_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_essence_container_data_parent_class)->to_structure (m);
+  MXFMetadataEssenceContainerData *self =
+      MXF_METADATA_ESSENCE_CONTAINER_DATA (m);
+  gchar str[96];
+
+  if (!mxf_umid_is_zero (&self->linked_package_uid)) {
+    mxf_umid_to_string (&self->linked_package_uid, str);
+    gst_structure_id_set (ret, MXF_QUARK (LINKED_PACKAGE), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  gst_structure_id_set (ret, MXF_QUARK (INDEX_SID), G_TYPE_UINT,
+      self->index_sid, MXF_QUARK (BODY_SID), G_TYPE_UINT, self->body_sid, NULL);
+
+
+  return ret;
+}
+
 static void
 mxf_metadata_essence_container_data_init (MXFMetadataEssenceContainerData *
     self)
@@ -924,6 +1320,9 @@ static void
   metadata_base_class->handle_tag =
       mxf_metadata_essence_container_data_handle_tag;
   metadata_base_class->resolve = mxf_metadata_essence_container_data_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (ESSENCE_CONTAINER_DATA);
+  metadata_base_class->to_structure =
+      mxf_metadata_essence_container_data_to_structure;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataGenericPackage, mxf_metadata_generic_package,
@@ -1063,6 +1462,66 @@ mxf_metadata_generic_package_resolve (MXFMetadataBase * m,
       (mxf_metadata_generic_package_parent_class)->resolve (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_generic_package_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_package_parent_class)->to_structure (m);
+  MXFMetadataGenericPackage *self = MXF_METADATA_GENERIC_PACKAGE (m);
+  guint i;
+  gchar str[96];
+
+  mxf_umid_to_string (&self->package_uid, str);
+  gst_structure_id_set (ret, MXF_QUARK (PACKAGE_UID), G_TYPE_STRING, str, NULL);
+
+  if (self->name)
+    gst_structure_id_set (ret, MXF_QUARK (NAME), G_TYPE_STRING, self->name,
+        NULL);
+
+  if (!mxf_timestamp_is_unknown (&self->package_creation_date)) {
+    mxf_timestamp_to_string (&self->package_creation_date, str);
+    gst_structure_id_set (ret, MXF_QUARK (PACKAGE_CREATION_DATE), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  if (!mxf_timestamp_is_unknown (&self->package_modified_date)) {
+    mxf_timestamp_to_string (&self->package_modified_date, str);
+    gst_structure_id_set (ret, MXF_QUARK (PACKAGE_MODIFIED_DATE), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  if (self->n_tracks > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_tracks; i++) {
+      GstStructure *s;
+
+      if (self->tracks[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->tracks[i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (TRACKS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_generic_package_init (MXFMetadataGenericPackage * self)
 {
@@ -1078,6 +1537,7 @@ mxf_metadata_generic_package_class_init (MXFMetadataGenericPackageClass * klass)
   miniobject_class->finalize = mxf_metadata_generic_package_finalize;
   metadata_base_class->handle_tag = mxf_metadata_generic_package_handle_tag;
   metadata_base_class->resolve = mxf_metadata_generic_package_resolve;
+  metadata_base_class->to_structure = mxf_metadata_generic_package_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataMaterialPackage, mxf_metadata_material_package,
@@ -1187,6 +1647,7 @@ mxf_metadata_material_package_class_init (MXFMetadataMaterialPackageClass *
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
 
   metadata_base_class->resolve = mxf_metadata_material_package_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (MATERIAL_PACKAGE);
 }
 
 G_DEFINE_TYPE (MXFMetadataSourcePackage, mxf_metadata_source_package,
@@ -1323,6 +1784,25 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
   return ret;
 }
 
+static GstStructure *
+mxf_metadata_source_package_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_source_package_parent_class)->to_structure (m);
+  MXFMetadataSourcePackage *self = MXF_METADATA_SOURCE_PACKAGE (m);
+  GstStructure *s;
+
+  if (!self->descriptor)
+    return ret;
+
+  s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->descriptor));
+  gst_structure_id_set (ret, MXF_QUARK (DESCRIPTOR), GST_TYPE_STRUCTURE, s,
+      NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_source_package_init (MXFMetadataSourcePackage * self)
 {
@@ -1336,6 +1816,8 @@ mxf_metadata_source_package_class_init (MXFMetadataSourcePackageClass * klass)
 
   metadata_base_class->handle_tag = mxf_metadata_source_package_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_package_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (SOURCE_PACKAGE);
+  metadata_base_class->to_structure = mxf_metadata_source_package_to_structure;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataTrack, mxf_metadata_track,
@@ -1448,6 +1930,34 @@ mxf_metadata_track_resolve (MXFMetadataBase * m, GHashTable * metadata)
       metadata);
 }
 
+static GstStructure *
+mxf_metadata_track_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS (mxf_metadata_track_parent_class)->to_structure
+      (m);
+  MXFMetadataTrack *self = MXF_METADATA_TRACK (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (TRACK_ID), G_TYPE_UINT, self->track_id,
+      MXF_QUARK (TRACK_NUMBER), G_TYPE_UINT, self->track_number, NULL);
+
+  if (self->track_name)
+    gst_structure_id_set (ret, MXF_QUARK (TRACK_NAME), G_TYPE_STRING,
+        self->track_name, NULL);
+
+  if (self->sequence) {
+    GstStructure *s =
+        mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->sequence));
+
+    gst_structure_id_set (ret, MXF_QUARK (SEQUENCE), GST_TYPE_STRUCTURE, s,
+        NULL);
+    gst_structure_free (s);
+  }
+
+
+  return ret;
+}
+
 static void
 mxf_metadata_track_init (MXFMetadataTrack * self)
 {
@@ -1463,6 +1973,7 @@ mxf_metadata_track_class_init (MXFMetadataTrackClass * klass)
   miniobject_class->finalize = mxf_metadata_track_finalize;
   metadata_base_class->handle_tag = mxf_metadata_track_handle_tag;
   metadata_base_class->resolve = mxf_metadata_track_resolve;
+  metadata_base_class->to_structure = mxf_metadata_track_to_structure;
 }
 
 /* SMPTE RP224 */
@@ -1551,6 +2062,21 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_timeline_track_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_timeline_track_parent_class)->to_structure (m);
+  MXFMetadataTimelineTrack *self = MXF_METADATA_TIMELINE_TRACK (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (EDIT_RATE), GST_TYPE_FRACTION,
+      self->edit_rate.n, self->edit_rate.d, MXF_QUARK (ORIGIN), G_TYPE_INT64,
+      self->origin, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_timeline_track_init (MXFMetadataTimelineTrack * self)
 {
@@ -1563,6 +2089,8 @@ mxf_metadata_timeline_track_class_init (MXFMetadataTimelineTrackClass * klass)
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_timeline_track_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (TIMELINE_TRACK);
+  metadata_base_class->to_structure = mxf_metadata_timeline_track_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataEventTrack, mxf_metadata_event_track,
@@ -1606,6 +2134,21 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_event_track_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_event_track_parent_class)->to_structure (m);
+  MXFMetadataEventTrack *self = MXF_METADATA_EVENT_TRACK (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (EVENT_EDIT_RATE), GST_TYPE_FRACTION,
+      self->event_edit_rate.n, self->event_edit_rate.d,
+      MXF_QUARK (EVENT_ORIGIN), G_TYPE_INT64, self->event_origin, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_event_track_init (MXFMetadataEventTrack * self)
 {
@@ -1618,6 +2161,8 @@ mxf_metadata_event_track_class_init (MXFMetadataEventTrackClass * klass)
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_event_track_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (EVENT_TRACK);
+  metadata_base_class->to_structure = mxf_metadata_event_track_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataStaticTrack, mxf_metadata_static_track,
@@ -1631,6 +2176,9 @@ mxf_metadata_static_track_init (MXFMetadataStaticTrack * self)
 static void
 mxf_metadata_static_track_class_init (MXFMetadataStaticTrackClass * klass)
 {
+  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+
+  metadata_base_class->name_quark = MXF_QUARK (STATIC_TRACK);
 }
 
 G_DEFINE_TYPE (MXFMetadataSequence, mxf_metadata_sequence, MXF_TYPE_METADATA);
@@ -1744,6 +2292,52 @@ mxf_metadata_sequence_resolve (MXFMetadataBase * m, GHashTable * metadata)
 
 }
 
+static GstStructure *
+mxf_metadata_sequence_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS (mxf_metadata_sequence_parent_class)->to_structure
+      (m);
+  MXFMetadataSequence *self = MXF_METADATA_SEQUENCE (m);
+  guint i;
+  gchar str[48];
+
+  mxf_ul_to_string (&self->data_definition, str);
+  gst_structure_id_set (ret, MXF_QUARK (DATA_DEFINITION), G_TYPE_STRING, str,
+      MXF_QUARK (DURATION), G_TYPE_INT64, self->duration, NULL);
+
+  if (self->n_structural_components > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_structural_components; i++) {
+      GstStructure *s;
+
+      if (self->structural_components[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
+          (self->structural_components[i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (STRUCTURAL_COMPONENTS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_sequence_init (MXFMetadataSequence * self)
 {
@@ -1759,6 +2353,8 @@ mxf_metadata_sequence_class_init (MXFMetadataSequenceClass * klass)
   miniobject_class->finalize = mxf_metadata_sequence_finalize;
   metadata_base_class->handle_tag = mxf_metadata_sequence_handle_tag;
   metadata_base_class->resolve = mxf_metadata_sequence_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (SEQUENCE);
+  metadata_base_class->to_structure = mxf_metadata_sequence_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataStructuralComponent,
@@ -1808,6 +2404,22 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_structural_component_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_structural_component_parent_class)->to_structure (m);
+  MXFMetadataStructuralComponent *self = MXF_METADATA_STRUCTURAL_COMPONENT (m);
+  gchar str[48];
+
+  mxf_ul_to_string (&self->data_definition, str);
+  gst_structure_id_set (ret, MXF_QUARK (DATA_DEFINITION), G_TYPE_STRING, str,
+      MXF_QUARK (DURATION), G_TYPE_INT64, self->duration, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_structural_component_init (MXFMetadataStructuralComponent * self)
 {
@@ -1822,6 +2434,8 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_structural_component_handle_tag;
+  metadata_base_class->to_structure =
+      mxf_metadata_structural_component_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataTimecodeComponent, mxf_metadata_timecode_component,
@@ -1873,6 +2487,22 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_timecode_component_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_timecode_component_parent_class)->to_structure (m);
+  MXFMetadataTimecodeComponent *self = MXF_METADATA_TIMECODE_COMPONENT (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (START_TIMECODE), G_TYPE_INT64,
+      self->start_timecode, MXF_QUARK (ROUNDED_TIMECODE_BASE), G_TYPE_UINT,
+      self->rounded_timecode_base, MXF_QUARK (DROP_FRAME), G_TYPE_BOOLEAN,
+      self->drop_frame, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_timecode_component_init (MXFMetadataTimecodeComponent * self)
 {
@@ -1886,6 +2516,9 @@ mxf_metadata_timecode_component_class_init (MXFMetadataTimecodeComponentClass *
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_timecode_component_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (TIMECODE_COMPONENT);
+  metadata_base_class->to_structure =
+      mxf_metadata_timecode_component_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataSourceClip, mxf_metadata_source_clip,
@@ -1982,6 +2615,24 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
       (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_source_clip_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_source_clip_parent_class)->to_structure (m);
+  MXFMetadataSourceClip *self = MXF_METADATA_SOURCE_CLIP (m);
+  gchar str[96];
+
+  mxf_umid_to_string (&self->source_package_id, str);
+  gst_structure_id_set (ret, MXF_QUARK (START_POSITION), G_TYPE_INT64,
+      self->start_position, MXF_QUARK (SOURCE_PACKAGE), G_TYPE_STRING, str,
+      MXF_QUARK (SOURCE_TRACK_ID), G_TYPE_UINT, self->source_track_id, NULL);
+
+  return ret;
+}
+
+
 static void
 mxf_metadata_source_clip_init (MXFMetadataSourceClip * self)
 {
@@ -1995,6 +2646,8 @@ mxf_metadata_source_clip_class_init (MXFMetadataSourceClipClass * klass)
 
   metadata_base_class->handle_tag = mxf_metadata_source_clip_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_clip_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (SOURCE_CLIP);
+  metadata_base_class->to_structure = mxf_metadata_source_clip_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataDMSourceClip, mxf_metadata_dm_source_clip,
@@ -2072,6 +2725,39 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_dm_source_clip_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_dm_source_clip_parent_class)->to_structure (m);
+  MXFMetadataDMSourceClip *self = MXF_METADATA_DM_SOURCE_CLIP (m);
+  guint i;
+
+  if (self->n_track_ids > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_track_ids; i++) {
+      g_value_init (&val, G_TYPE_UINT);
+
+      g_value_set_uint (&val, self->track_ids[i]);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (TRACK_IDS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_dm_source_clip_init (MXFMetadataDMSourceClip * self)
 {
@@ -2086,6 +2772,8 @@ mxf_metadata_dm_source_clip_class_init (MXFMetadataDMSourceClipClass * klass)
 
   miniobject_class->finalize = mxf_metadata_dm_source_clip_finalize;
   metadata_base_class->handle_tag = mxf_metadata_dm_source_clip_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (DM_SOURCE_CLIP);
+  metadata_base_class->to_structure = mxf_metadata_dm_source_clip_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataDMSegment, mxf_metadata_dm_segment,
@@ -2211,6 +2899,55 @@ mxf_metadata_dm_segment_resolve (MXFMetadataBase * m, GHashTable * metadata)
       (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_dm_segment_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_dm_segment_parent_class)->to_structure (m);
+  MXFMetadataDMSegment *self = MXF_METADATA_DM_SEGMENT (m);
+  guint i;
+
+  gst_structure_id_set (ret, MXF_QUARK (EVENT_START_POSITION), G_TYPE_INT64,
+      self->event_start_position, NULL);
+
+  if (self->event_comment)
+    gst_structure_id_set (ret, MXF_QUARK (EVENT_COMMENT), G_TYPE_STRING,
+        self->event_comment, NULL);
+
+  if (self->dm_framework) {
+    GstStructure *s =
+        mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->dm_framework));
+
+    gst_structure_id_set (ret, MXF_QUARK (DM_FRAMEWORK), GST_TYPE_STRUCTURE, s,
+        NULL);
+    gst_structure_free (s);
+  }
+
+  if (self->n_track_ids > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_track_ids; i++) {
+      g_value_init (&val, G_TYPE_UINT);
+
+      g_value_set_uint (&val, self->track_ids[i]);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (TRACK_IDS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_dm_segment_init (MXFMetadataDMSegment * self)
 {
@@ -2226,6 +2963,8 @@ mxf_metadata_dm_segment_class_init (MXFMetadataDMSegmentClass * klass)
   miniobject_class->finalize = mxf_metadata_dm_segment_finalize;
   metadata_base_class->handle_tag = mxf_metadata_dm_segment_handle_tag;
   metadata_base_class->resolve = mxf_metadata_dm_segment_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (DM_SEGMENT);
+  metadata_base_class->to_structure = mxf_metadata_dm_segment_to_structure;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataGenericDescriptor,
@@ -2330,6 +3069,47 @@ mxf_metadata_generic_descriptor_resolve (MXFMetadataBase * m,
       (mxf_metadata_generic_descriptor_parent_class)->resolve (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_generic_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_descriptor_parent_class)->to_structure (m);
+  MXFMetadataGenericDescriptor *self = MXF_METADATA_GENERIC_DESCRIPTOR (m);
+  guint i;
+
+  if (self->n_locators > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_locators; i++) {
+      GstStructure *s;
+
+      if (self->locators[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->locators
+              [i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (LOCATORS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_generic_descriptor_init (MXFMetadataGenericDescriptor * self)
 {
@@ -2346,6 +3126,8 @@ mxf_metadata_generic_descriptor_class_init (MXFMetadataGenericDescriptorClass *
   miniobject_class->finalize = mxf_metadata_generic_descriptor_finalize;
   metadata_base_class->handle_tag = mxf_metadata_generic_descriptor_handle_tag;
   metadata_base_class->resolve = mxf_metadata_generic_descriptor_resolve;
+  metadata_base_class->to_structure =
+      mxf_metadata_generic_descriptor_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataFileDescriptor, mxf_metadata_file_descriptor,
@@ -2413,6 +3195,39 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_file_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_file_descriptor_parent_class)->to_structure (m);
+  MXFMetadataFileDescriptor *self = MXF_METADATA_FILE_DESCRIPTOR (m);
+  gchar str[48];
+
+  if (self->linked_track_id)
+    gst_structure_id_set (ret, MXF_QUARK (LINKED_TRACK_ID), G_TYPE_UINT,
+        self->linked_track_id, NULL);
+
+  if (self->sample_rate.n && self->sample_rate.d)
+    gst_structure_id_set (ret, MXF_QUARK (SAMPLE_RATE), GST_TYPE_FRACTION,
+        self->sample_rate.n, self->sample_rate.d, NULL);
+
+  if (self->container_duration)
+    gst_structure_id_set (ret, MXF_QUARK (CONTAINER_DURATION), G_TYPE_INT64,
+        self->container_duration, NULL);
+
+  mxf_ul_to_string (&self->essence_container, str);
+  gst_structure_id_set (ret, MXF_QUARK (ESSENCE_CONTAINER), G_TYPE_STRING, str,
+      NULL);
+
+  if (!mxf_ul_is_zero (&self->codec)) {
+    mxf_ul_to_string (&self->codec, str);
+    gst_structure_id_set (ret, MXF_QUARK (CODEC), G_TYPE_STRING, str, NULL);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_file_descriptor_init (MXFMetadataFileDescriptor * self)
 {
@@ -2425,6 +3240,8 @@ mxf_metadata_file_descriptor_class_init (MXFMetadataFileDescriptorClass * klass)
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_file_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (FILE_DESCRIPTOR);
+  metadata_base_class->to_structure = mxf_metadata_file_descriptor_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataGenericPictureEssenceDescriptor,
@@ -2623,6 +3440,112 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_generic_picture_essence_descriptor_to_structure (MXFMetadataBase *
+    m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataGenericPictureEssenceDescriptor *self =
+      MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (m);
+  gchar str[48];
+
+  gst_structure_id_set (ret, MXF_QUARK (SIGNAL_STANDARD), G_TYPE_UCHAR,
+      self->signal_standard, NULL);
+
+  if (self->frame_layout != 255)
+    gst_structure_id_set (ret, MXF_QUARK (FRAME_LAYOUT), G_TYPE_UCHAR,
+        self->frame_layout, NULL);
+
+  if (self->stored_width != 0 && self->stored_height != 0)
+    gst_structure_id_set (ret, MXF_QUARK (STORED_WIDTH), G_TYPE_UINT,
+        self->stored_width, MXF_QUARK (STORED_HEIGHT), G_TYPE_UINT,
+        self->stored_height, NULL);
+
+  if (self->stored_f2_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (STORED_F2_OFFSET), G_TYPE_INT,
+        self->stored_f2_offset, NULL);
+
+  if (self->sampled_width != 0 && self->sampled_height != 0)
+    gst_structure_id_set (ret, MXF_QUARK (SAMPLED_WIDTH), G_TYPE_UINT,
+        self->sampled_width, MXF_QUARK (SAMPLED_HEIGHT), G_TYPE_UINT,
+        self->sampled_height, NULL);
+
+  if (self->sampled_x_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (SAMPLED_X_OFFSET), G_TYPE_INT,
+        self->sampled_x_offset, NULL);
+
+  if (self->sampled_y_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (SAMPLED_Y_OFFSET), G_TYPE_INT,
+        self->sampled_y_offset, NULL);
+
+  if (self->display_width != 0 && self->display_height != 0)
+    gst_structure_id_set (ret, MXF_QUARK (DISPLAY_WIDTH), G_TYPE_UINT,
+        self->display_width, MXF_QUARK (DISPLAY_HEIGHT), G_TYPE_UINT,
+        self->display_height, NULL);
+
+  if (self->display_x_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (DISPLAY_X_OFFSET), G_TYPE_INT,
+        self->display_x_offset, NULL);
+
+  if (self->display_y_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (DISPLAY_Y_OFFSET), G_TYPE_INT,
+        self->display_y_offset, NULL);
+
+  if (self->display_f2_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (DISPLAY_F2_OFFSET), G_TYPE_INT,
+        self->display_f2_offset, NULL);
+
+  if (self->aspect_ratio.n != 0 && self->aspect_ratio.d != 0)
+    gst_structure_id_set (ret, MXF_QUARK (ASPECT_RATIO), GST_TYPE_FRACTION,
+        self->aspect_ratio.n, self->aspect_ratio.d, NULL);
+
+  if (self->active_format_descriptor)
+    gst_structure_id_set (ret, MXF_QUARK (ACTIVE_FORMAT_DESCRIPTOR),
+        G_TYPE_UCHAR, self->active_format_descriptor, NULL);
+
+  if (self->video_line_map[0] != 0 && self->video_line_map[1] != 0)
+    gst_structure_id_set (ret, MXF_QUARK (VIDEO_LINE_MAP_0), G_TYPE_UINT,
+        self->video_line_map[0], MXF_QUARK (VIDEO_LINE_MAP_1), G_TYPE_UINT,
+        self->video_line_map[1], NULL);
+
+  if (self->alpha_transparency != 0)
+    gst_structure_id_set (ret, MXF_QUARK (ALPHA_TRANSPARENCY), G_TYPE_UCHAR,
+        self->alpha_transparency, NULL);
+
+  if (!mxf_ul_is_zero (&self->capture_gamma)) {
+    mxf_ul_to_string (&self->capture_gamma, str);
+    gst_structure_id_set (ret, MXF_QUARK (CAPTURE_GAMMA), G_TYPE_STRING, str,
+        NULL);
+  }
+
+  if (self->image_alignment_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (IMAGE_ALIGNMENT_OFFSET), G_TYPE_UINT,
+        self->image_alignment_offset, NULL);
+
+  if (self->image_start_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (IMAGE_START_OFFSET), G_TYPE_UINT,
+        self->image_start_offset, NULL);
+
+  if (self->image_end_offset != 0)
+    gst_structure_id_set (ret, MXF_QUARK (IMAGE_END_OFFSET), G_TYPE_UINT,
+        self->image_end_offset, NULL);
+
+  if (self->field_dominance != 0)
+    gst_structure_id_set (ret, MXF_QUARK (FIELD_DOMINANCE), G_TYPE_UCHAR,
+        self->field_dominance, NULL);
+
+  if (!mxf_ul_is_zero (&self->picture_essence_coding)) {
+    mxf_ul_to_string (&self->picture_essence_coding, str);
+    gst_structure_id_set (ret, MXF_QUARK (PICTURE_ESSENCE_CODING),
+        G_TYPE_STRING, str, NULL);
+  }
+
+  return ret;
+}
+
 static void
     mxf_metadata_generic_picture_essence_descriptor_init
     (MXFMetadataGenericPictureEssenceDescriptor * self)
@@ -2639,6 +3562,10 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_picture_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark =
+      MXF_QUARK (GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_generic_picture_essence_descriptor_to_structure;
 }
 
 void mxf_metadata_generic_picture_essence_descriptor_set_caps
@@ -2777,6 +3704,49 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_generic_sound_essence_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_sound_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataGenericSoundEssenceDescriptor *self =
+      MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (AUDIO_SAMPLING_RATE), GST_TYPE_FRACTION,
+      self->audio_sampling_rate.n, self->audio_sampling_rate.d, NULL);
+
+  gst_structure_id_set (ret, MXF_QUARK (LOCKED), G_TYPE_BOOLEAN, self->locked,
+      NULL);
+
+  if (self->electro_spatial_formulation != 0)
+    gst_structure_id_set (ret, MXF_QUARK (ELECTRO_SPATIAL_FORMULATION),
+        G_TYPE_UCHAR, self->electro_spatial_formulation, NULL);
+
+  if (self->channel_count != 0)
+    gst_structure_id_set (ret, MXF_QUARK (CHANNEL_COUNT), G_TYPE_UINT,
+        self->channel_count, NULL);
+
+  if (self->quantization_bits != 0)
+    gst_structure_id_set (ret, MXF_QUARK (QUANTIZATION_BITS), G_TYPE_UINT,
+        self->quantization_bits, NULL);
+
+  if (self->dial_norm != 0)
+    gst_structure_id_set (ret, MXF_QUARK (DIAL_NORM), G_TYPE_CHAR,
+        self->dial_norm, NULL);
+
+  if (!mxf_ul_is_zero (&self->sound_essence_compression)) {
+    gchar str[48];
+
+    mxf_ul_to_string (&self->sound_essence_compression, str);
+    gst_structure_id_set (ret, MXF_QUARK (SOUND_ESSENCE_COMPRESSION),
+        G_TYPE_STRING, str, NULL);
+  }
+
+  return ret;
+}
+
 static void
     mxf_metadata_generic_sound_essence_descriptor_init
     (MXFMetadataGenericSoundEssenceDescriptor * self)
@@ -2793,6 +3763,10 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_sound_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark =
+      MXF_QUARK (GENERIC_SOUND_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_generic_sound_essence_descriptor_to_structure;
 }
 
 void mxf_metadata_generic_sound_essence_descriptor_set_caps
@@ -2912,6 +3886,58 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_cdci_picture_essence_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataCDCIPictureEssenceDescriptor *self =
+      MXF_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR (m);
+
+  if (self->component_depth != 0)
+    gst_structure_id_set (ret, MXF_QUARK (COMPONENT_DEPTH), G_TYPE_UINT,
+        self->component_depth, NULL);
+
+  if (self->horizontal_subsampling != 0)
+    gst_structure_id_set (ret, MXF_QUARK (HORIZONTAL_SUBSAMPLING), G_TYPE_UINT,
+        self->horizontal_subsampling, NULL);
+
+  if (self->vertical_subsampling != 0)
+    gst_structure_id_set (ret, MXF_QUARK (VERTICAL_SUBSAMPLING), G_TYPE_UINT,
+        self->vertical_subsampling, NULL);
+
+  if (self->color_siting != 0)
+    gst_structure_id_set (ret, MXF_QUARK (COLOR_SITING), G_TYPE_UCHAR,
+        self->color_siting, NULL);
+
+  gst_structure_id_set (ret, MXF_QUARK (REVERSED_BYTE_ORDER), G_TYPE_BOOLEAN,
+      self->reversed_byte_order, NULL);
+
+  if (self->padding_bits != 0)
+    gst_structure_id_set (ret, MXF_QUARK (PADDING_BITS), G_TYPE_INT,
+        self->padding_bits, NULL);
+
+  if (self->alpha_sample_depth != 0)
+    gst_structure_id_set (ret, MXF_QUARK (ALPHA_SAMPLE_DEPTH), G_TYPE_UINT,
+        self->alpha_sample_depth, NULL);
+
+  if (self->black_ref_level != 0)
+    gst_structure_id_set (ret, MXF_QUARK (BLACK_REF_LEVEL), G_TYPE_UINT,
+        self->black_ref_level, NULL);
+
+  if (self->white_ref_level != 0)
+    gst_structure_id_set (ret, MXF_QUARK (WHITE_REF_LEVEL), G_TYPE_UINT,
+        self->white_ref_level, NULL);
+
+  if (self->color_range != 0)
+    gst_structure_id_set (ret, MXF_QUARK (COLOR_RANGE), G_TYPE_UINT,
+        self->color_range, NULL);
+
+  return ret;
+}
+
 static void
     mxf_metadata_cdci_picture_essence_descriptor_init
     (MXFMetadataCDCIPictureEssenceDescriptor * self)
@@ -2927,6 +3953,9 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_cdci_picture_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_cdci_picture_essence_descriptor_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataRGBAPictureEssenceDescriptor,
@@ -3038,6 +4067,50 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_rgba_picture_essence_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataRGBAPictureEssenceDescriptor *self =
+      MXF_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR (m);
+
+  if (self->component_max_ref != 255)
+    gst_structure_id_set (ret, MXF_QUARK (COMPONENT_MAX_REF), G_TYPE_UINT,
+        self->component_max_ref, NULL);
+
+  if (self->component_min_ref != 0)
+    gst_structure_id_set (ret, MXF_QUARK (COMPONENT_MIN_REF), G_TYPE_UINT,
+        self->component_min_ref, NULL);
+
+  if (self->alpha_max_ref != 255)
+    gst_structure_id_set (ret, MXF_QUARK (ALPHA_MAX_REF), G_TYPE_UINT,
+        self->alpha_max_ref, NULL);
+
+  if (self->alpha_min_ref != 0)
+    gst_structure_id_set (ret, MXF_QUARK (ALPHA_MIN_REF), G_TYPE_UINT,
+        self->alpha_min_ref, NULL);
+
+  if (self->scanning_direction != 0)
+    gst_structure_id_set (ret, MXF_QUARK (SCANNING_DIRECTION), G_TYPE_UCHAR,
+        self->scanning_direction, NULL);
+
+  if (self->n_pixel_layout != 0) {
+    gchar *pl = g_new0 (gchar, self->n_pixel_layout * 2 + 1);
+
+    memcpy (pl, self->pixel_layout, self->n_pixel_layout * 2);
+
+    gst_structure_id_set (ret, MXF_QUARK (PIXEL_LAYOUT), G_TYPE_STRING, pl,
+        NULL);
+
+    g_free (pl);
+  }
+
+  return ret;
+}
+
 static void
     mxf_metadata_rgba_picture_essence_descriptor_init
     (MXFMetadataRGBAPictureEssenceDescriptor * self)
@@ -3057,6 +4130,9 @@ static void
       mxf_metadata_rgba_picture_essence_descriptor_finalize;
   metadata_base_class->handle_tag =
       mxf_metadata_rgba_picture_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_rgba_picture_essence_descriptor_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataGenericDataEssenceDescriptor,
@@ -3079,9 +4155,9 @@ mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataBase *
     case 0x3e01:
       if (tag_size != 16)
         goto error;
-      memcpy (&self->data_essence_compression, tag_data, 16);
-      GST_DEBUG ("  data essence compression = %s",
-          mxf_ul_to_string (&self->data_essence_compression, str));
+      memcpy (&self->data_essence_coding, tag_data, 16);
+      GST_DEBUG ("  data essence coding = %s",
+          mxf_ul_to_string (&self->data_essence_coding, str));
       break;
     default:
       ret =
@@ -3102,6 +4178,26 @@ error:
   return FALSE;
 }
 
+static GstStructure *
+mxf_metadata_generic_data_essence_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_generic_data_essence_descriptor_parent_class)->to_structure
+      (m);
+  MXFMetadataGenericDataEssenceDescriptor *self =
+      MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (m);
+  gchar str[48];
+
+  if (!mxf_ul_is_zero (&self->data_essence_coding)) {
+    mxf_ul_to_string (&self->data_essence_coding, str);
+    gst_structure_id_set (ret, MXF_QUARK (DATA_ESSENCE_CODING), G_TYPE_STRING,
+        str, NULL);
+  }
+
+  return ret;
+}
+
 static void
     mxf_metadata_generic_data_essence_descriptor_init
     (MXFMetadataGenericDataEssenceDescriptor * self)
@@ -3117,6 +4213,9 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_data_essence_descriptor_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (GENERIC_DATA_ESSENCE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_generic_data_essence_descriptor_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataMultipleDescriptor, mxf_metadata_multiple_descriptor,
@@ -3220,6 +4319,47 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
       (mxf_metadata_multiple_descriptor_parent_class)->resolve (m, metadata);
 }
 
+static GstStructure *
+mxf_metadata_multiple_descriptor_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_multiple_descriptor_parent_class)->to_structure (m);
+  MXFMetadataMultipleDescriptor *self = MXF_METADATA_MULTIPLE_DESCRIPTOR (m);
+  guint i;
+
+  if (self->n_sub_descriptors > 0) {
+    GValue arr = { 0, }
+    , val = {
+    0,};
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (i = 0; i < self->n_sub_descriptors; i++) {
+      GstStructure *s;
+
+      if (self->sub_descriptors[i] == NULL)
+        continue;
+
+      g_value_init (&val, GST_TYPE_STRUCTURE);
+
+      s = mxf_metadata_base_to_structure (MXF_METADATA_BASE
+          (self->sub_descriptors[i]));
+      gst_value_set_structure (&val, s);
+      gst_structure_free (s);
+      gst_value_array_append_value (&arr, &val);
+      g_value_unset (&val);
+    }
+
+    if (gst_value_array_get_size (&arr) > 0)
+      gst_structure_id_set_value (ret, MXF_QUARK (SUB_DESCRIPTORS), &arr);
+
+    g_value_unset (&arr);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_multiple_descriptor_init (MXFMetadataMultipleDescriptor * self)
 {
@@ -3236,6 +4376,9 @@ mxf_metadata_multiple_descriptor_class_init (MXFMetadataMultipleDescriptorClass
   miniobject_class->finalize = mxf_metadata_multiple_descriptor_finalize;
   metadata_base_class->handle_tag = mxf_metadata_multiple_descriptor_handle_tag;
   metadata_base_class->resolve = mxf_metadata_multiple_descriptor_resolve;
+  metadata_base_class->name_quark = MXF_QUARK (MULTIPLE_DESCRIPTOR);
+  metadata_base_class->to_structure =
+      mxf_metadata_multiple_descriptor_to_structure;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataLocator, mxf_metadata_locator,
@@ -3290,6 +4433,20 @@ mxf_metadata_text_locator_handle_tag (MXFMetadataBase * metadata,
   return ret;
 }
 
+static GstStructure *
+mxf_metadata_text_locator_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_text_locator_parent_class)->to_structure (m);
+  MXFMetadataTextLocator *self = MXF_METADATA_TEXT_LOCATOR (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (LOCATOR_NAME), G_TYPE_STRING,
+      self->locator_name, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_text_locator_init (MXFMetadataTextLocator * self)
 {
@@ -3304,6 +4461,8 @@ mxf_metadata_text_locator_class_init (MXFMetadataTextLocatorClass * klass)
 
   miniobject_class->finalize = mxf_metadata_text_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_text_locator_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (TEXT_LOCATOR);
+  metadata_base_class->to_structure = mxf_metadata_text_locator_to_structure;
 }
 
 G_DEFINE_TYPE (MXFMetadataNetworkLocator, mxf_metadata_network_locator,
@@ -3345,6 +4504,20 @@ mxf_metadata_network_locator_handle_tag (MXFMetadataBase * metadata,
   return ret;
 }
 
+static GstStructure *
+mxf_metadata_network_locator_to_structure (MXFMetadataBase * m)
+{
+  GstStructure *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_network_locator_parent_class)->to_structure (m);
+  MXFMetadataNetworkLocator *self = MXF_METADATA_NETWORK_LOCATOR (m);
+
+  gst_structure_id_set (ret, MXF_QUARK (URL_STRING), G_TYPE_STRING,
+      self->url_string, NULL);
+
+  return ret;
+}
+
 static void
 mxf_metadata_network_locator_init (MXFMetadataNetworkLocator * self)
 {
@@ -3358,6 +4531,8 @@ mxf_metadata_network_locator_class_init (MXFMetadataNetworkLocatorClass * klass)
 
   miniobject_class->finalize = mxf_metadata_network_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_network_locator_handle_tag;
+  metadata_base_class->name_quark = MXF_QUARK (NETWORK_LOCATOR);
+  metadata_base_class->to_structure = mxf_metadata_network_locator_to_structure;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFDescriptiveMetadata, mxf_descriptive_metadata,
