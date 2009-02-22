@@ -145,6 +145,8 @@ gst_dccp_server_accept_new_clients (void *arg)
     sink->clients = g_list_append (sink->clients, client);
     pthread_mutex_unlock (&lock);
   }
+
+  return NULL;
 }
 
 /*
