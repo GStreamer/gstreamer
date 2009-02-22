@@ -701,7 +701,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
   if (ximage && ximagesink->cur_image != ximage) {
     if (ximagesink->cur_image) {
       GST_LOG_OBJECT (ximagesink, "unreffing %p", ximagesink->cur_image);
-      gst_buffer_unref (ximagesink->cur_image);
+      gst_buffer_unref (GST_BUFFER_CAST (ximagesink->cur_image));
     }
     GST_LOG_OBJECT (ximagesink, "reffing %p as our current image", ximage);
     ximagesink->cur_image =
@@ -2112,11 +2112,11 @@ gst_ximagesink_reset (GstXImageSink * ximagesink)
     g_thread_join (thread);
 
   if (ximagesink->ximage) {
-    gst_buffer_unref (ximagesink->ximage);
+    gst_buffer_unref (GST_BUFFER_CAST (ximagesink->ximage));
     ximagesink->ximage = NULL;
   }
   if (ximagesink->cur_image) {
-    gst_buffer_unref (ximagesink->cur_image);
+    gst_buffer_unref (GST_BUFFER_CAST (ximagesink->cur_image));
     ximagesink->cur_image = NULL;
   }
 

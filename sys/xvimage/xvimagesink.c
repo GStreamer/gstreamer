@@ -789,7 +789,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
   if (xvimage && xvimagesink->cur_image != xvimage) {
     if (xvimagesink->cur_image) {
       GST_LOG_OBJECT (xvimagesink, "unreffing %p", xvimagesink->cur_image);
-      gst_buffer_unref (xvimagesink->cur_image);
+      gst_buffer_unref (GST_BUFFER_CAST (xvimagesink->cur_image));
     }
     GST_LOG_OBJECT (xvimagesink, "reffing %p as our current image", xvimage);
     xvimagesink->cur_image =
@@ -3141,11 +3141,11 @@ gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
     g_thread_join (thread);
 
   if (xvimagesink->cur_image) {
-    gst_buffer_unref (xvimagesink->cur_image);
+    gst_buffer_unref (GST_BUFFER_CAST (xvimagesink->cur_image));
     xvimagesink->cur_image = NULL;
   }
   if (xvimagesink->xvimage) {
-    gst_buffer_unref (xvimagesink->xvimage);
+    gst_buffer_unref (GST_BUFFER_CAST (xvimagesink->xvimage));
     xvimagesink->xvimage = NULL;
   }
 
