@@ -1285,7 +1285,7 @@ read_beyond_end:
   {
     GST_DEBUG_OBJECT (demux, "attempted read beyond end of file");
     if (*buffer != NULL) {
-      gst_buffer_unref (buffer);
+      gst_buffer_unref (*buffer);
       *buffer = NULL;
     }
     return GST_FLOW_UNEXPECTED;
