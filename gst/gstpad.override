@@ -24,6 +24,17 @@
 %%
 headers
 
+#if ((GST_VERSION_MAJOR > 0) ||                                    \
+     (GST_VERSION_MAJOR == 0 && GST_VERSION_MINOR > 10) ||         \
+     (GST_VERSION_MAJOR == 0 && GST_VERSION_MINOR == 10 &&         \
+      GST_VERSION_MICRO >= 23) ||						   \
+     (GST_VERSION_MAJOR == 0 && GST_VERSION_MINOR == 10 &&         \
+      GST_VERSION_MICRO == 22 && GST_VERSION_NANO > 0))
+#define HAVE_SET_BLOCKED_ASYNC_FULL 1
+#else
+#define HAVE_SET_BLOCKED_ASYNC_FULL 0
+#endif
+
 /* we need to do this until PyClosures get exception handlers */
 #ifndef pyg_closure_set_exception_handler
 #  define pyg_closure_set_exception_handler(ig, nore)
@@ -1331,6 +1342,16 @@ _wrap_gst_pad_get_query_types_default (PyGObject *self)
 %%
 override gst_pad_set_blocked_async args
 
+#if HAVE_SET_BLOCKED_ASYNC_FULL
+static void
+pad_block_destroy_data (gpointer data)
+{
+	PyObject *py_data = (PyObject *) data;
+
+	Py_DECREF (py_data);
+}
+#endif
+
 static void
 pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
 {
@@ -1397,8 +1418,14 @@ _wrap_gst_pad_set_blocked_async (PyGObject *self, PyObject *args)
     if (data == NULL)
         return NULL;
     pyg_begin_allow_threads;
+#if HAVE_SET_BLOCKED_ASYNC_FULL
+    ret = gst_pad_set_blocked_async_full (GST_PAD (self->obj), blocked,
+        (GstPadBlockCallback) pad_block_callback_marshal, data,
+				pad_block_destroy_data);
+#else
     ret = gst_pad_set_blocked_async (GST_PAD (self->obj), blocked,
         (GstPadBlockCallback) pad_block_callback_marshal, data);
+#endif
     pyg_end_allow_threads;
     if (ret)
         pret = Py_True;
