@@ -312,13 +312,13 @@ gst_xvid_image_fill (xvid_image_t * im, void *ptr, gint csp,
       im->stride[0] = stride;
       im->plane[0] = ptr;
       /* chroma */
-      im->plane[1] = im->plane[0] + (stride * h2);
+      im->plane[1] = ((guint8 *) im->plane[0]) + (stride * h2);
       size += stride * height;
       stride = GST_ROUND_UP_8 (width) / 2;
       h2 = GST_ROUND_UP_2 (height) / 2;
       im->stride[1] = stride;
 
-      im->plane[2] = im->plane[1] + (stride * h2);
+      im->plane[2] = ((guint8 *) im->plane[1]) + (stride * h2);
       im->stride[2] = stride;
       size += 2 * (stride * h2);
       break;
