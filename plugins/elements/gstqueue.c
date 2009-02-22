@@ -810,14 +810,14 @@ out_flushing:
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "refusing event, we are flushing");
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    gst_buffer_unref (event);
+    gst_event_unref (event);
     return FALSE;
   }
 out_eos:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "refusing event, we are EOS");
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    gst_buffer_unref (event);
+    gst_event_unref (event);
     return FALSE;
   }
 }
@@ -859,7 +859,7 @@ gst_queue_leak_downstream (GstQueue * queue)
 
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "queue is full, leaking item %p on downstream end", leak);
-    gst_buffer_unref (leak);
+    gst_mini_object_unref (leak);
 
     /* last buffer needs to get a DISCONT flag */
     queue->head_needs_discont = TRUE;
