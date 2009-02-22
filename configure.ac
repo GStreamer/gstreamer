@@ -133,6 +133,9 @@ if test "x$HAVE_UNISTD_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
 fi
 
+dnl used by camerabin
+AC_CHECK_HEADERS([sys/time.h])
+
 dnl used by ext/dts
 AX_CREATE_STDINT_H
 

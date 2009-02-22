@@ -1165,7 +1165,7 @@ gst_camerabin_get_internal_tags (GstCameraBin * camera)
     mid_value = min_value + ((max_value - min_value) / 2);
     cur_value = gst_color_balance_get_value (balance, channel);
 
-    if (!strcasecmp (channel->label, "brightness")) {
+    if (!g_ascii_strcasecmp (channel->label, "brightness")) {
       /* The value of brightness. The unit is the APEX value (Additive System of Photographic Exposure).
        * Ordinarily it is given in the range of -99.99 to 99.99. Note that
        * if the numerator of the recorded value is 0xFFFFFFFF, Unknown shall be indicated.
@@ -1178,20 +1178,20 @@ gst_camerabin_get_internal_tags (GstCameraBin * camera)
        */
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           "capture-brightness", cur_value, 1, NULL);
-    } else if (!strcasecmp (channel->label, "contrast")) {
+    } else if (!g_ascii_strcasecmp (channel->label, "contrast")) {
       /* 0 = Normal, 1 = Soft, 2 = Hard */
 
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           "capture-contrast",
           (cur_value == mid_value) ? 0 : ((cur_value < mid_value) ? 1 : 2),
           NULL);
-    } else if (!strcasecmp (channel->label, "gain")) {
+    } else if (!g_ascii_strcasecmp (channel->label, "gain")) {
       /* 0 = Normal, 1 = Low Up, 2 = High Up, 3 = Low Down, 4 = Hight Down */
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           "capture-gain",
           (guint) (cur_value == mid_value) ? 0 : ((cur_value <
                   mid_value) ? 1 : 3), NULL);
-    } else if (!strcasecmp (channel->label, "saturation")) {
+    } else if (!g_ascii_strcasecmp (channel->label, "saturation")) {
       /* 0 = Normal, 1 = Low, 2 = High */
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           "capture-saturation",

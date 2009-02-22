@@ -21,7 +21,9 @@
 #ifndef __CAMERABIN_GENERAL_H_
 #define __CAMERABIN_GENERAL_H_
 
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #include <time.h>
 
 #include <gst/gst.h>
