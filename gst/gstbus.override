@@ -161,24 +161,30 @@ _wrap_gst_bus_set_sync_handler (PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 1) {
-    PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
-    return NULL;
+	PyErr_SetString(PyExc_TypeError, "Bus requires at least 1 arg");
+	return NULL;
     }
-    callback = PySequence_GetItem(args, 0);
-    if (!PyCallable_Check(callback)) {
-    PyErr_SetString(PyExc_TypeError, "callback is not callable");
-    return NULL;
-    }
-    cbargs = PySequence_GetSlice(args, 1, len);
-    if (cbargs == NULL)
-    return NULL;
-    data = Py_BuildValue("(ON)", callback, cbargs);
-    if (data == NULL)
-    return NULL;
-    gst_bus_set_sync_handler (GST_BUS (self->obj),
-                      (GstBusSyncHandler) bus_sync_handler, 
-                      data);
 
+    callback = PySequence_GetItem(args, 0);
+    if (callback != Py_None) {
+	if (!PyCallable_Check(callback)) {
+	    PyErr_SetString(PyExc_TypeError, "callback is not callable");
+	    return NULL;
+	}
+
+	cbargs = PySequence_GetSlice(args, 1, len);
+	if (cbargs == NULL)
+	    return NULL;
+
+	data = Py_BuildValue("(ON)", callback, cbargs);
+	if (data == NULL)
+	    return NULL;
+
+	gst_bus_set_sync_handler (GST_BUS (self->obj),
+				  (GstBusSyncHandler) bus_sync_handler, 
+				  data);
+    } else
+	gst_bus_set_sync_handler (GST_BUS (self->obj), NULL, NULL);
     Py_INCREF(Py_None);
     return Py_None;
 }
