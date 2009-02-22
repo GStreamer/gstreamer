@@ -2100,9 +2100,6 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       context->extradata_size = size;
     }
 
-    if (free)
-      gst_buffer_unref (GST_BUFFER_CAST (buf));
-
     GST_DEBUG ("have codec data of size %d", size);
   } else if (context->extradata == NULL) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
