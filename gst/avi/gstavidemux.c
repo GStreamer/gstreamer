@@ -1707,7 +1707,7 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
           goto next;
         }
         _dmlh = (gst_riff_dmlh *) GST_BUFFER_DATA (sub);
-        dmlh.totalframes = GUINT32_FROM_LE (_dmlh->totalframes);
+        dmlh.totalframes = GST_READ_UINT32_LE (&_dmlh->totalframes);
 
         GST_INFO_OBJECT (avi, "dmlh tag found:");
         GST_INFO_OBJECT (avi, " totalframes: %u", dmlh.totalframes);
@@ -1799,10 +1799,10 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     GstFormat format;
 
     _entry = &((gst_riff_index_entry *) data)[i];
-    entry.id = GUINT32_FROM_LE (_entry->id);
-    entry.offset = GUINT32_FROM_LE (_entry->offset);
-    entry.flags = GUINT32_FROM_LE (_entry->flags);
-    entry.size = GUINT32_FROM_LE (_entry->size);
+    entry.id = GST_READ_UINT32_LE (&_entry->id);
+    entry.offset = GST_READ_UINT32_LE (&_entry->offset);
+    entry.flags = GST_READ_UINT32_LE (&_entry->flags);
+    entry.size = GST_READ_UINT32_LE (&_entry->size);
     target = &entries[n];
 
     if (entry.id == GST_RIFF_rec || entry.id == 0 ||
