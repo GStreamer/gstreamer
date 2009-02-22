@@ -60,7 +60,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static GstFlowReturn gst_pnm_src_create (GstPushSrc * psrc, GstBuffer ** buf);
 
-static void gst_pnm_src_uri_handler_init (gpointer g_iface, gpointer iface_data);
+static void gst_pnm_src_uri_handler_init (gpointer g_iface,
+    gpointer iface_data);
 
 static void
 _do_init (GType pnmsrc_type)
@@ -75,7 +76,8 @@ _do_init (GType pnmsrc_type)
       &urihandler_info);
 }
 
-GST_BOILERPLATE_FULL (GstPNMSrc, gst_pnm_src, GstPushSrc, GST_TYPE_PUSH_SRC, _do_init);
+GST_BOILERPLATE_FULL (GstPNMSrc, gst_pnm_src, GstPushSrc, GST_TYPE_PUSH_SRC,
+    _do_init);
 
 static void gst_pnm_src_finalize (GObject * object);
 
@@ -230,16 +232,18 @@ gst_pnm_src_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   src = GST_PNM_SRC (psrc);
 
+  if (src->location == NULL)
+    return GST_FLOW_ERROR;
   url = g_strdup_printf ("rtsp%s", &src->location[3]);
 
   /* the only thing we do is redirect to an RTSP url */
   m = gst_message_new_element (GST_OBJECT_CAST (src),
-      gst_structure_new ("redirect",
-          "new-location", G_TYPE_STRING, url, NULL));
+      gst_structure_new ("redirect", "new-location", G_TYPE_STRING, url, NULL));
   g_free (url);
 
   gst_element_post_message (GST_ELEMENT_CAST (src), m);
-  
+
+
   return GST_FLOW_UNEXPECTED;
 }
 
@@ -291,4 +295,3 @@ gst_pnm_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_pnm_src_uri_get_uri;
   iface->set_uri = gst_pnm_src_uri_set_uri;
 }
-
