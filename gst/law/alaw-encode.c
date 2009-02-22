@@ -318,8 +318,8 @@ gst_alaw_enc_getcaps (GstPad * pad)
     GstStructure *structure;
     const GValue *orate, *ochans;
     const GValue *rate, *chans;
-    GValue irate = { 0 }, ichans = {
-    0};
+    GValue irate = { 0 };
+    GValue ichans = { 0 };
 
     if (gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps))
       goto done;
@@ -327,22 +327,20 @@ gst_alaw_enc_getcaps (GstPad * pad)
     structure = gst_caps_get_structure (othercaps, 0);
     orate = gst_structure_get_value (structure, "rate");
     ochans = gst_structure_get_value (structure, "channels");
-    if (!orate || !ochans)
-      goto done;
 
     structure = gst_caps_get_structure (base_caps, 0);
     rate = gst_structure_get_value (structure, "rate");
     chans = gst_structure_get_value (structure, "channels");
-    if (!rate || !chans)
-      goto done;
 
-    gst_value_intersect (&irate, orate, rate);
-    gst_value_intersect (&ichans, ochans, chans);
+    if (orate) {
+      gst_value_intersect (&irate, orate, rate);
+      gst_structure_set_value (structure, "rate", &irate);
+    }
 
-    /* Set the samplerate/channels on the to-be-returned caps */
-    structure = gst_caps_get_structure (base_caps, 0);
-    gst_structure_set_value (structure, "rate", &irate);
-    gst_structure_set_value (structure, "channels", &ichans);
+    if (ochans) {
+      gst_value_intersect (&ichans, ochans, chans);
+      gst_structure_set_value (structure, "channels", &ichans);
+    }
 
   done:
     gst_caps_unref (othercaps);
