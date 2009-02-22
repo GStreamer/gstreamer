@@ -392,6 +392,11 @@ gst_pad_dispose (GObject * object)
 
   gst_pad_set_pad_template (pad, NULL);
 
+  if (pad->block_destroy_data && pad->block_data) {
+    pad->block_destroy_data (pad->block_data);
+    pad->block_data = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -957,6 +962,101 @@ gst_pad_is_active (GstPad * pad)
 }
 
 /**
+ * gst_pad_set_blocked_async_full:
+ * @pad: the #GstPad to block or unblock
+ * @blocked: boolean indicating whether the pad should be blocked or unblocked
+ * @callback: #GstPadBlockCallback that will be called when the
+ *            operation succeeds
+ * @user_data: user data passed to the callback
+ * @destroy_data: #GDestroyNotify for user_data
+ *
+ * Blocks or unblocks the dataflow on a pad. The provided callback
+ * is called when the operation succeeds; this happens right before the next
+ * attempt at pushing a buffer on the pad.
+ *
+ * This can take a while as the pad can only become blocked when real dataflow
+ * is happening.
+ * When the pipeline is stalled, for example in PAUSED, this can
+ * take an indeterminate amount of time.
+ * You can pass NULL as the callback to make this call block. Be careful with
+ * this blocking call as it might not return for reasons stated above.
+ *
+ * Returns: TRUE if the pad could be blocked. This function can fail if the
+ * wrong parameters were passed or the pad was already in the requested state.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.23
+ */
+gboolean
+gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
+    GstPadBlockCallback callback, gpointer user_data,
+    GDestroyNotify destroy_data)
+{
+  gboolean was_blocked = FALSE;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+
+  was_blocked = GST_PAD_IS_BLOCKED (pad);
+
+  if (G_UNLIKELY (was_blocked == blocked))
+    goto had_right_state;
+
+  if (blocked) {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
+
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
+
+    if (pad->block_destroy_data && pad->block_data &&
+        pad->block_data != user_data)
+      pad->block_destroy_data (pad->block_data);
+
+    pad->block_callback = callback;
+    pad->block_data = user_data;
+    pad->block_destroy_data = destroy_data;
+    if (!callback) {
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for block");
+      GST_PAD_BLOCK_WAIT (pad);
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocked");
+    }
+  } else {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad");
+
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
+
+    if (pad->block_destroy_data && pad->block_data &&
+        pad->block_data != user_data)
+      pad->block_destroy_data (pad->block_data);
+
+    pad->block_callback = callback;
+    pad->block_data = user_data;
+    pad->block_destroy_data = destroy_data;
+
+    GST_PAD_BLOCK_BROADCAST (pad);
+    if (!callback) {
+      /* no callback, wait for the unblock to happen */
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for unblock");
+      GST_PAD_BLOCK_WAIT (pad);
+      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocked");
+    }
+  }
+  GST_OBJECT_UNLOCK (pad);
+
+  return TRUE;
+
+had_right_state:
+  {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pad was in right state (%d)", was_blocked);
+    GST_OBJECT_UNLOCK (pad);
+
+    return FALSE;
+  }
+}
+
+/**
  * gst_pad_set_blocked_async:
  * @pad: the #GstPad to block or unblock
  * @blocked: boolean indicating whether the pad should be blocked or unblocked
@@ -984,56 +1084,8 @@ gboolean
 gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GstPadBlockCallback callback, gpointer user_data)
 {
-  gboolean was_blocked = FALSE;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-
-  GST_OBJECT_LOCK (pad);
-
-  was_blocked = GST_PAD_IS_BLOCKED (pad);
-
-  if (G_UNLIKELY (was_blocked == blocked))
-    goto had_right_state;
-
-  if (blocked) {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
-
-    GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
-    pad->block_callback = callback;
-    pad->block_data = user_data;
-    if (!callback) {
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for block");
-      GST_PAD_BLOCK_WAIT (pad);
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocked");
-    }
-  } else {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad");
-
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
-
-    pad->block_callback = callback;
-    pad->block_data = user_data;
-
-    GST_PAD_BLOCK_BROADCAST (pad);
-    if (!callback) {
-      /* no callback, wait for the unblock to happen */
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for unblock");
-      GST_PAD_BLOCK_WAIT (pad);
-      GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocked");
-    }
-  }
-  GST_OBJECT_UNLOCK (pad);
-
-  return TRUE;
-
-had_right_state:
-  {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pad was in right state (%d)", was_blocked);
-    GST_OBJECT_UNLOCK (pad);
-
-    return FALSE;
-  }
+  return gst_pad_set_blocked_async_full (pad, blocked,
+      callback, user_data, NULL);
 }
 
 /**

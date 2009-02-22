@@ -594,6 +594,7 @@ EXPORTS
 	gst_pad_set_active
 	gst_pad_set_blocked
 	gst_pad_set_blocked_async
+	gst_pad_set_blocked_async_full
 	gst_pad_set_bufferalloc_function
 	gst_pad_set_caps
 	gst_pad_set_chain_function

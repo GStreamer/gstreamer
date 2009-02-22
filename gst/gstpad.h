@@ -629,8 +629,11 @@ struct _GstPad {
   /* iterate internal links */
   GstPadIterIntLinkFunction     iterintlinkfunc;
 
+  /* free block_data */
+  GDestroyNotify block_destroy_data;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 struct _GstPadClass {
@@ -809,6 +812,9 @@ gboolean		gst_pad_activate_push			(GstPad *pad, gboolean active);
 gboolean		gst_pad_set_blocked			(GstPad *pad, gboolean blocked);
 gboolean		gst_pad_set_blocked_async		(GstPad *pad, gboolean blocked,
 								 GstPadBlockCallback callback, gpointer user_data);
+gboolean		gst_pad_set_blocked_async_full		(GstPad *pad, gboolean blocked,
+								 GstPadBlockCallback callback, gpointer user_data,
+                 GDestroyNotify destroy_data);
 gboolean		gst_pad_is_blocked			(GstPad *pad);
 gboolean		gst_pad_is_blocking			(GstPad *pad);
 

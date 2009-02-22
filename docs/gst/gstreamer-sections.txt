@@ -1269,6 +1269,7 @@ gst_pad_is_active
 
 gst_pad_set_blocked
 gst_pad_set_blocked_async
+gst_pad_set_blocked_async_full
 GstPadBlockCallback
 gst_pad_is_blocked
 gst_pad_is_blocking
