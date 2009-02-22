@@ -332,8 +332,8 @@ gst_dfbvideosink_surface_destroy (GstDfbVideoSink * dfbvideosink,
     gst_object_unref (dfbvideosink);
   }
 
-  GST_MINI_OBJECT_CLASS (surface_parent_class)->
-      finalize (GST_MINI_OBJECT (surface));
+  GST_MINI_OBJECT_CLASS (surface_parent_class)->finalize (GST_MINI_OBJECT
+      (surface));
 }
 
 static gpointer
@@ -1538,7 +1538,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   if (mem_cpy) {
     IDirectFBSurface *dest = NULL, *surface = NULL;
-    gpointer data;
+    guint8 *data;
     gint dest_pitch, src_pitch, line;
     GstStructure *structure;
 
@@ -1585,7 +1585,7 @@ gst_dfbvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       dfbvideosink->layer->WaitForSync (dfbvideosink->layer);
     }
 
-    res = dest->Lock (dest, DSLF_WRITE, &data, &dest_pitch);
+    res = dest->Lock (dest, DSLF_WRITE, (void *) &data, &dest_pitch);
     if (res != DFB_OK) {
       GST_WARNING_OBJECT (dfbvideosink, "failed locking the external "
           "subsurface for writing");
