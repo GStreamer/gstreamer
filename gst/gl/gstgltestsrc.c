@@ -526,7 +526,7 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   outbuf = gst_gl_buffer_new (src->display, src->width, src->height);
 
   if (!outbuf->texture) {
-    gst_buffer_unref (outbuf);
+    gst_buffer_unref (GST_BUFFER_CAST (outbuf));
     goto eos;
   }
 
@@ -546,7 +546,7 @@ gst_gl_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   if (!gst_gl_display_use_fbo (src->display, src->width, src->height, src->fbo, src->depthbuffer, outbuf->texture, gst_gl_test_src_callback, 0, 0, 0,   //no input texture
           0, src->width, 0, src->height,
           GST_GL_DISPLAY_PROJECTION_ORTHO2D, (gpointer) src)) {
-    gst_buffer_unref (outbuf);
+    gst_buffer_unref (GST_BUFFER_CAST (outbuf));
     goto eos;
   }
 

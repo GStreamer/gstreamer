@@ -378,7 +378,7 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   if (glimage_sink->stored_buffer) {
-    gst_buffer_unref (glimage_sink->stored_buffer);
+    gst_buffer_unref (GST_BUFFER_CAST (glimage_sink->stored_buffer));
     glimage_sink->stored_buffer = NULL;
   }
   if (glimage_sink->display) {
@@ -530,7 +530,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   //the buffer is cleared when an other comes in
   if (glimage_sink->stored_buffer) {
-    gst_buffer_unref (glimage_sink->stored_buffer);
+    gst_buffer_unref (GST_BUFFER_CAST (glimage_sink->stored_buffer));
     glimage_sink->stored_buffer = NULL;
   }
   //store current buffer
