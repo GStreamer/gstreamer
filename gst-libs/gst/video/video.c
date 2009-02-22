@@ -432,6 +432,37 @@ gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
     int height, int framerate_n, int framerate_d, int par_n, int par_d,
     gboolean interlaced)
 {
+  GstCaps *res;
+
+  res =
+      gst_video_format_new_caps (format, width, height, framerate_n,
+      framerate_d, par_n, par_d);
+  if (interlaced && (res != NULL))
+    gst_caps_set_simple (res, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  return res;
+}
+
+/**
+ * gst_video_format_new_caps:
+ * @format: the #GstVideoFormat describing the raw video format
+ * @width: width of video
+ * @height: height of video
+ * @framerate_n: numerator of frame rate
+ * @framerate_d: denominator of frame rate
+ * @par_n: numerator of pixel aspect ratio
+ * @par_d: denominator of pixel aspect ratio
+ *
+ * Creates a new #GstCaps object based on the parameters provided.
+ *
+ * Since: 0.10.16
+ *
+ * Returns: a new #GstCaps object, or NULL if there was an error
+ */
+GstCaps *
+gst_video_format_new_caps (GstVideoFormat format, int width, int height,
+    int framerate_n, int framerate_d, int par_n, int par_d)
+{
   g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
   g_return_val_if_fail (width > 0 && height > 0, NULL);
 
@@ -441,8 +472,7 @@ gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
-        "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
   }
   if (gst_video_format_is_rgb (format)) {
     GstCaps *caps;
@@ -506,8 +536,7 @@ gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "framerate", GST_TYPE_FRACTION, framerate_n, framerate_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
-        "interlaced", G_TYPE_BOOLEAN, interlaced, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
     if (have_alpha) {
       alpha_mask =
           mask >> (8 * gst_video_format_get_component_offset (format, 3, width,
@@ -517,30 +546,6 @@ gst_video_format_new_caps_interlaced (GstVideoFormat format, int width,
     return caps;
   }
   return NULL;
-}
-
-/**
- * gst_video_format_new_caps:
- * @format: the #GstVideoFormat describing the raw video format
- * @width: width of video
- * @height: height of video
- * @framerate_n: numerator of frame rate
- * @framerate_d: denominator of frame rate
- * @par_n: numerator of pixel aspect ratio
- * @par_d: denominator of pixel aspect ratio
- *
- * Creates a new #GstCaps object based on the parameters provided.
- *
- * Since: 0.10.16
- *
- * Returns: a new #GstCaps object, or NULL if there was an error
- */
-GstCaps *
-gst_video_format_new_caps (GstVideoFormat format, int width, int height,
-    int framerate_n, int framerate_d, int par_n, int par_d)
-{
-  return gst_video_format_new_caps_interlaced (format, width, height,
-      framerate_n, framerate_d, par_n, par_d, FALSE);
 }
 
 /**
