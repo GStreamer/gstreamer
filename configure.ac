@@ -625,8 +625,12 @@ dnl LDFLAGS for plugins; includes GST_ALL_LDFLAGS
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
+SHAVE_INIT([common])
+
 AC_CONFIG_FILES(
 Makefile
+common/shave
+common/shave-libtool
 gst/Makefile
 gst/gstconfig.h
 gst/gstversion.h
@@ -708,7 +712,7 @@ Configuration
 	Version                    : ${VERSION}
 	Source code location       : ${srcdir}
 	Prefix                     : ${prefix}
-	Compiler                   : ${CC}
+	Compiler                   : ${SHAVE_SAVED_CC}
 	Package name               : ${GST_PACKAGE_NAME}
 	Package origin             : ${GST_PACKAGE_ORIGIN}
 
