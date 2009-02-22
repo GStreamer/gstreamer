@@ -383,7 +383,9 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
   gst_adapter_push (synaesthesia->adapter, buffer);
 
   /* this is what we want */
-  bytesperread = MAX (FFT_BUFFER_SIZE, synaesthesia->spf) * synaesthesia->channels * sizeof (gint16);
+  bytesperread =
+      MAX (FFT_BUFFER_SIZE,
+      synaesthesia->spf) * synaesthesia->channels * sizeof (gint16);
 
   /* this is what we have */
   avail = gst_adapter_available (synaesthesia->adapter);

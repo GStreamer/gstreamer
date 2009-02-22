@@ -104,7 +104,7 @@ gst_rtp_asf_depay_class_init (GstRtpAsfDepayClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_asf_depay_process);
 
   GST_DEBUG_CATEGORY_INIT (rtpasfdepayload_debug, "rtpasfdepayload", 0,
-    "RTP asf depayloader element");
+      "RTP asf depayloader element");
 }
 
 static void
@@ -126,7 +126,8 @@ gst_rtp_asf_depay_finalize (GObject * object)
 }
 
 static const guint8 asf_marker[16] = { 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66,
-    0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c }; 
+  0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c
+};
 
 static gboolean
 gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
@@ -163,7 +164,8 @@ gst_rtp_asf_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   headers = (guint8 *) g_base64_decode (config_str, &headers_len);
 
-  if (headers == NULL || headers_len < 16 || memcmp (headers, asf_marker, 16) != 0)
+  if (headers == NULL || headers_len < 16
+      || memcmp (headers, asf_marker, 16) != 0)
     goto invalid_headers;
 
   src_caps = gst_caps_new_simple ("video/x-ms-asf", NULL);
@@ -259,7 +261,7 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
      * R: duration present
      * I: locationid present
      */
- 
+
     S = ((payload[0] & 0x80) != 0);
     L = ((payload[0] & 0x40) != 0);
     R = ((payload[0] & 0x20) != 0);
@@ -290,8 +292,7 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (L) {
       /* L bit set, len contains the length of the packet */
       packet_len = len_offs;
-    }
-    else {
+    } else {
       packet_len = 0;
       /* else it contains an offset which we don't handle yet */
       g_assert_not_reached ();
@@ -300,7 +301,8 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (packet_len > payload_len)
       packet_len = payload_len;
 
-    GST_LOG_OBJECT (depay, "packet len %u, payload len %u", packet_len, payload_len);
+    GST_LOG_OBJECT (depay, "packet len %u, payload len %u", packet_len,
+        payload_len);
 
     if (packet_len >= depay->packet_size) {
       GST_LOG_OBJECT (depay, "creating subbuffer");
@@ -310,7 +312,8 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       /* we need to pad with zeroes to packet_size if it's smaller */
       outbuf = gst_buffer_new_and_alloc (depay->packet_size);
       memcpy (GST_BUFFER_DATA (outbuf), payload, packet_len);
-      memset (GST_BUFFER_DATA (outbuf) + packet_len, 0, depay->packet_size - packet_len);
+      memset (GST_BUFFER_DATA (outbuf) + packet_len, 0,
+          depay->packet_size - packet_len);
     }
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));

@@ -77,11 +77,11 @@ struct syn_instance
   double corr_l[FFT_BUFFER_SIZE];
   double corr_r[FFT_BUFFER_SIZE];
   int clarity[FFT_BUFFER_SIZE]; /* Surround sound */
-  
+
   /* pre calculated values */
   int heightFactor;
   int heightAdd;
-  double brightFactor2;  
+  double brightFactor2;
 };
 
 /* Shared lookup tables for the FFT */
@@ -398,19 +398,19 @@ synaesthesia_resize (syn_instance * si, guint resx, guint resy)
   si->resy = resy;
   si->output = output;
   si->display = display;
-  
+
   /* factors for height scaling
    * the bigger FFT_BUFFER_SIZE, the more finegrained steps we have
    * should we report the real hight, so that xvimagesink can scale?
    */
-   // 512 values , resy=256 -> highFc=2
+  // 512 values , resy=256 -> highFc=2
   si->heightFactor = FFT_BUFFER_SIZE / 2 / si->resy + 1;
   actualHeight = FFT_BUFFER_SIZE / 2 / si->heightFactor;
   si->heightAdd = (si->resy + actualHeight) / 2;
-  
+
   /*printf ("resy=%u, heightFactor=%d, heightAdd=%d, actualHeight=%d\n",
-    si->resy, si->heightFactor, si->heightAdd, actualHeight);
-  */
+     si->resy, si->heightFactor, si->heightAdd, actualHeight);
+   */
 
   /* Correct for window size */
   si->brightFactor2 = (si->brightFactor / 65536.0 / FFT_BUFFER_SIZE) *

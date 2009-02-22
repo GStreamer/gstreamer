@@ -387,7 +387,7 @@ gst_rdt_depay_handle_data (GstRDTDepay * rdtdepay, GstClockTime outtime,
   GST_WRITE_UINT16_BE (outdata + 2, size + 12); /* length    */
   GST_WRITE_UINT16_BE (outdata + 4, stream_id); /* stream    */
   GST_WRITE_UINT32_BE (outdata + 6, timestamp); /* timestamp */
-  GST_WRITE_UINT16_BE (outdata + 10, outflags);        /* flags     */
+  GST_WRITE_UINT16_BE (outdata + 10, outflags); /* flags     */
   memcpy (outdata + 12, data, size);
 
   GST_DEBUG_OBJECT (rdtdepay, "Pushing packet, outtime %" GST_TIME_FORMAT,

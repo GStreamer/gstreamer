@@ -969,5 +969,5 @@ gboolean
 gst_rademux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rademux",
-       GST_RANK_SECONDARY, GST_TYPE_REAL_AUDIO_DEMUX);
+      GST_RANK_SECONDARY, GST_TYPE_REAL_AUDIO_DEMUX);
 }

@@ -54,7 +54,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
   if (!gst_element_register (plugin, "rtpasfdepay", GST_RANK_MARGINAL,
-      GST_TYPE_RTP_ASF_DEPAY)) {
+          GST_TYPE_RTP_ASF_DEPAY)) {
     return FALSE;
   }
 /*
