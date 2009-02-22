@@ -3864,7 +3864,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   GST_BUFFER_SIZE (newbuf) = strlen (utf8);
   gst_buffer_copy_metadata (newbuf, *buf,
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
-  gst_buffer_unref (buf);
+  gst_buffer_unref (*buf);
 
   *buf = newbuf;
   return GST_FLOW_OK;
