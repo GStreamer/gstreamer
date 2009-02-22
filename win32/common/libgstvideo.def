@@ -14,7 +14,9 @@ EXPORTS
 	gst_video_format_is_rgb
 	gst_video_format_is_yuv
 	gst_video_format_new_caps
+	gst_video_format_new_caps_interlaced
 	gst_video_format_parse_caps
+	gst_video_format_parse_caps_interlaced
 	gst_video_format_to_fourcc
 	gst_video_frame_rate
 	gst_video_get_size
