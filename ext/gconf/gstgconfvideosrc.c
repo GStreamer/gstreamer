@@ -124,7 +124,7 @@ gst_gconf_video_src_init (GstGConfVideoSrc * src,
   src->client = gconf_client_get_default ();
   gconf_client_add_dir (src->client, GST_GCONF_DIR,
       GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-  gconf_client_notify_add (src->client,
+  src->notify_id = gconf_client_notify_add (src->client,
       GST_GCONF_DIR "/" GST_GCONF_VIDEOSRC_KEY,
       cb_toggle_element, src, NULL, NULL);
 }
@@ -135,6 +135,9 @@ gst_gconf_video_src_dispose (GObject * object)
   GstGConfVideoSrc *src = GST_GCONF_VIDEO_SRC (object);
 
   if (src->client) {
+    if (src->notify_id != 0)
+      gconf_client_notify_remove (src->client, src->notify_id);
+
     g_object_unref (G_OBJECT (src->client));
     src->client = NULL;
   }
