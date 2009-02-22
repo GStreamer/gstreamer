@@ -342,8 +342,6 @@ G_INLINE_FUNC GstBuffer * gst_buffer_ref (GstBuffer * buf);
 static inline GstBuffer *
 gst_buffer_ref (GstBuffer * buf)
 {
-  /* not using a macro here because gcc-4.1 will complain
-   * if the return value isn't used (because of the cast) */
   return (GstBuffer *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (buf));
 }
 
@@ -355,7 +353,15 @@ gst_buffer_ref (GstBuffer * buf)
  * will be freed. If GST_BUFFER_MALLOCDATA() is non-NULL, this pointer will
  * also be freed at this time.
  */
-#define		gst_buffer_unref(buf)		gst_mini_object_unref (GST_MINI_OBJECT_CAST (buf))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_buffer_unref (GstBuffer * buf);
+#endif
+
+static inline void
+gst_buffer_unref (GstBuffer * buf)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (buf));
+}
 
 /* copy buffer */
 /**
@@ -365,7 +371,16 @@ gst_buffer_ref (GstBuffer * buf)
  * Create a copy of the given buffer. This will also make a newly allocated
  * copy of the data the source buffer contains.
  */
-#define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (buf)))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstBuffer * gst_buffer_copy (const GstBuffer * buf);
+#endif
+
+static inline GstBuffer *
+gst_buffer_copy (const GstBuffer * buf)
+{
+  return GST_BUFFER (gst_mini_object_copy (GST_MINI_OBJECT_CAST (buf)));
+}
+
 
 /**
  * GstBufferCopyFlags:

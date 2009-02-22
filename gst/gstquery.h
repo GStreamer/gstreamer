@@ -190,7 +190,16 @@ GstIterator*    gst_query_type_iterate_definitions (void);
  *
  * Increases the refcount of the given query by one.
  */
-#define         gst_query_ref(q)		GST_QUERY (gst_mini_object_ref (GST_MINI_OBJECT (q)))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstQuery * gst_query_ref (GstQuery * q);
+#endif
+
+static inline GstQuery *
+gst_query_ref (GstQuery * q)
+{
+  return GST_QUERY (gst_mini_object_ref (GST_MINI_OBJECT_CAST (q)));
+}
+
 /**
  * gst_query_unref:
  * @q: a #GstQuery to decrease the refcount of.
@@ -198,7 +207,15 @@ GstIterator*    gst_query_type_iterate_definitions (void);
  * Decreases the refcount of the query. If the refcount reaches 0, the query
  * will be freed.
  */
-#define         gst_query_unref(q)		gst_mini_object_unref (GST_MINI_OBJECT (q))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_query_unref (GstQuery * q);
+#endif
+
+static inline void
+gst_query_unref (GstQuery * q)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (q));
+}
 
 /* copy query */
 /**
@@ -208,7 +225,16 @@ GstIterator*    gst_query_type_iterate_definitions (void);
  * Copies the given query using the copy function of the parent #GstData
  * structure.
  */
-#define         gst_query_copy(q)		GST_QUERY (gst_mini_object_copy (GST_MINI_OBJECT (q)))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstQuery * gst_query_copy (const GstQuery * q);
+#endif
+
+static inline GstQuery *
+gst_query_copy (const GstQuery * q)
+{
+  return GST_QUERY (gst_mini_object_copy (GST_MINI_OBJECT_CAST (q)));
+}
+
 /**
  * gst_query_make_writable:
  * @q: a #GstQuery to make writable

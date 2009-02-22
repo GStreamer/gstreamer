@@ -260,8 +260,6 @@ G_INLINE_FUNC GstMessage * gst_message_ref (GstMessage * msg);
 static inline GstMessage *
 gst_message_ref (GstMessage * msg)
 {
-  /* not using a macro here because gcc-4.1 will complain
-   * if the return value isn't used (because of the cast) */
   return (GstMessage *) gst_mini_object_ref (GST_MINI_OBJECT (msg));
 }
 
@@ -272,7 +270,16 @@ gst_message_ref (GstMessage * msg)
  * Convenience macro to decrease the reference count of the message, possibly
  * freeing it.
  */
-#define         gst_message_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void gst_message_unref (GstMessage * msg);
+#endif
+
+static inline void
+gst_message_unref (GstMessage * msg)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (msg));
+}
+
 /* copy message */
 /**
  * gst_message_copy:
@@ -282,7 +289,16 @@ gst_message_ref (GstMessage * msg)
  *
  * MT safe
  */
-#define         gst_message_copy(msg)		GST_MESSAGE (gst_mini_object_copy (GST_MINI_OBJECT (msg)))
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstMessage * gst_message_copy (const GstMessage * msg);
+#endif
+
+static inline GstMessage *
+gst_message_copy (const GstMessage * msg)
+{
+  return GST_MESSAGE (gst_mini_object_copy (GST_MINI_OBJECT_CAST (msg)));
+}
+
 /**
  * gst_message_make_writable:
  * @msg: the message to make writable
