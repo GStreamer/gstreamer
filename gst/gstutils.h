@@ -526,6 +526,10 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gfloat GFLOAT_SWAP_LE_BE (gfloat in);
+#endif
+
 inline static gfloat
 GFLOAT_SWAP_LE_BE(gfloat in)
 {
@@ -549,6 +553,10 @@ GFLOAT_SWAP_LE_BE(gfloat in)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gdouble GDOUBLE_SWAP_LE_BE (gdouble in);
+#endif
+
 inline static gdouble
 GDOUBLE_SWAP_LE_BE(gdouble in)
 {
@@ -677,6 +685,10 @@ GDOUBLE_SWAP_LE_BE(gdouble in)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gfloat GST_READ_FLOAT_LE (const guint8 *data);
+#endif
+
 inline static gfloat
 GST_READ_FLOAT_LE(const guint8 *data)
 {
@@ -699,6 +711,10 @@ GST_READ_FLOAT_LE(const guint8 *data)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gfloat GST_READ_FLOAT_BE (const guint8 *data);
+#endif
+
 inline static gfloat
 GST_READ_FLOAT_BE(const guint8 *data)
 {
@@ -721,6 +737,10 @@ GST_READ_FLOAT_BE(const guint8 *data)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gdouble GST_READ_DOUBLE_LE (const guint8 *data);
+#endif
+
 inline static gdouble
 GST_READ_DOUBLE_LE(const guint8 *data)
 {
@@ -743,6 +763,10 @@ GST_READ_DOUBLE_LE(const guint8 *data)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC gdouble GST_READ_DOUBLE_BE (const guint8 *data);
+#endif
+
 inline static gdouble
 GST_READ_DOUBLE_BE(const guint8 *data)
 {
@@ -766,6 +790,10 @@ GST_READ_DOUBLE_BE(const guint8 *data)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void GST_WRITE_FLOAT_LE (guint8 *data, gfloat num);
+#endif
+
 inline static void
 GST_WRITE_FLOAT_LE(guint8 *data, gfloat num)
 {
@@ -789,6 +817,10 @@ GST_WRITE_FLOAT_LE(guint8 *data, gfloat num)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void GST_WRITE_FLOAT_BE (guint8 *data, gfloat num);
+#endif
+
 inline static void
 GST_WRITE_FLOAT_BE(guint8 *data, gfloat num)
 {
@@ -812,6 +844,10 @@ GST_WRITE_FLOAT_BE(guint8 *data, gfloat num)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void GST_WRITE_DOUBLE_LE (guint8 *data, gdouble num);
+#endif
+
 inline static void
 GST_WRITE_DOUBLE_LE(guint8 *data, gdouble num)
 {
@@ -835,6 +871,10 @@ GST_WRITE_DOUBLE_LE(guint8 *data, gdouble num)
  * Since: 0.10.22
  *
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC void GST_WRITE_DOUBLE_BE (guint8 *data, gdouble num);
+#endif
+
 inline static void
 GST_WRITE_DOUBLE_BE(guint8 *data, gdouble num)
 {
