@@ -421,10 +421,16 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
+SHAVE_INIT([common])
+
 dnl *** output files ***
 
 AC_CONFIG_FILES(
 Makefile
+common/Makefile
+common/m4/Makefile
+common/shave
+common/shave-libtool
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst/Makefile
@@ -451,8 +457,6 @@ docs/plugins/Makefile
 docs/version.entities
 tests/Makefile
 tests/check/Makefile
-common/Makefile
-common/m4/Makefile
 m4/Makefile
 po/Makefile.in
 win32/common/config.h
