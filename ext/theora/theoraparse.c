@@ -394,7 +394,7 @@ theora_parse_clear_queue (GstTheoraParse * parse)
     GstEvent *event;
 
     event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
-    gst_buffer_unref (event);
+    gst_event_unref (event);
   }
 }
 
