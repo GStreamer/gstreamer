@@ -16,6 +16,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #define FLOAT_SAMPLES 1
 #include <soundtouch/BPMDetect.h>
@@ -28,10 +31,6 @@
 #undef PACKAGE_NAME
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiofilter.h>
@@ -47,7 +46,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_bpm_detect_debug);
 struct _GstBPMDetectPrivate
 {
   gfloat bpm;
+#if HAVE_SOUNDTOUCH_1_4
+  soundtouch::BPMDetect *detect;
+#else
   BPMDetect *detect;
+#endif
 };
 
 #define ALLOWED_CAPS \
@@ -197,8 +200,13 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       return GST_FLOW_ERROR;
     }
 
+#if HAVE_SOUNDTOUCH_1_4
+    bpm_detect->priv->detect =
+        new soundtouch::BPMDetect (filter->format.channels, filter->format.rate);
+#else
     bpm_detect->priv->detect =
         new BPMDetect (filter->format.channels, filter->format.rate);
+#endif
   }
 
   nsamples = GST_BUFFER_SIZE (in) / (4 * filter->format.channels);
