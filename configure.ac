@@ -351,8 +351,14 @@ if test x$HAVE_FFMPEG_UNINSTALLED = x1; then
 fi
 AM_CONDITIONAL(HAVE_FFMPEG_UNINSTALLED, test x$HAVE_FFMPEG_UNINSTALLED = x1)
 
+SHAVE_INIT([common])
+
 AC_CONFIG_FILES(
 Makefile
+common/Makefile
+common/m4/Makefile
+common/shave
+common/shave-libtool
 gst-ffmpeg.spec
 ext/Makefile
 ext/ffmpeg/Makefile
@@ -362,8 +368,6 @@ gst-libs/Makefile
 gst-libs/ext/Makefile
 docs/Makefile
 docs/version.entities
-common/Makefile
-common/m4/Makefile
 tests/Makefile
 tests/check/Makefile
 )
