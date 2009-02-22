@@ -88,6 +88,57 @@ mulawdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   return ret;
 }
 
+static GstCaps *
+mulawdec_getcaps (GstPad * pad)
+{
+  GstMuLawDec *mulawdec;
+  GstPad *otherpad;
+  GstCaps *base_caps, *othercaps;
+
+  mulawdec = GST_MULAWDEC (GST_PAD_PARENT (pad));
+
+  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+  if (pad == mulawdec->srcpad) {
+    otherpad = mulawdec->sinkpad;
+  } else {
+    otherpad = mulawdec->srcpad;
+  }
+  othercaps = gst_pad_peer_get_caps (otherpad);
+  if (othercaps) {
+    GstStructure *structure;
+    const GValue *orate, *ochans;
+    const GValue *rate, *chans;
+    GValue irate = { 0 };
+    GValue ichans = { 0 };
+
+    if (gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps))
+      goto done;
+
+    structure = gst_caps_get_structure (othercaps, 0);
+    orate = gst_structure_get_value (structure, "rate");
+    ochans = gst_structure_get_value (structure, "channels");
+
+    structure = gst_caps_get_structure (base_caps, 0);
+    rate = gst_structure_get_value (structure, "rate");
+    chans = gst_structure_get_value (structure, "channels");
+
+    if (orate) {
+      gst_value_intersect (&irate, orate, rate);
+      gst_structure_set_value (structure, "rate", &irate);
+    }
+
+    if (ochans) {
+      gst_value_intersect (&ichans, ochans, chans);
+      gst_structure_set_value (structure, "channels", &ichans);
+    }
+
+  done:
+    gst_caps_unref (othercaps);
+  }
+  return base_caps;
+}
+
 GType
 gst_mulawdec_get_type (void)
 {
@@ -146,12 +197,14 @@ gst_mulawdec_init (GstMuLawDec * mulawdec)
   mulawdec->sinkpad =
       gst_pad_new_from_static_template (&mulaw_dec_sink_factory, "sink");
   gst_pad_set_setcaps_function (mulawdec->sinkpad, mulawdec_sink_setcaps);
+  gst_pad_set_getcaps_function (mulawdec->sinkpad, mulawdec_getcaps);
   gst_pad_set_chain_function (mulawdec->sinkpad, gst_mulawdec_chain);
   gst_element_add_pad (GST_ELEMENT (mulawdec), mulawdec->sinkpad);
 
   mulawdec->srcpad =
       gst_pad_new_from_static_template (&mulaw_dec_src_factory, "src");
   gst_pad_use_fixed_caps (mulawdec->srcpad);
+  gst_pad_set_getcaps_function (mulawdec->srcpad, mulawdec_getcaps);
   gst_element_add_pad (GST_ELEMENT (mulawdec), mulawdec->srcpad);
 }
 
