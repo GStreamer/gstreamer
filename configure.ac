@@ -365,12 +365,15 @@ AM_CHECK_PYTHON_LIBS(,[AC_MSG_ERROR(could not find Python lib)])
 
 AG_GST_SET_PLUGINDIR
 
+SHAVE_INIT([common])
 
 AC_OUTPUT([
   Makefile
   codegen/Makefile
   common/Makefile
   common/m4/Makefile
+  common/shave
+  common/shave-libtool
   gst/Makefile
   gst/gstversion.override
   gst/extend/Makefile
