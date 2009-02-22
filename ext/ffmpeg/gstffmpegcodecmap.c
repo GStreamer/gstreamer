@@ -2101,7 +2101,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     }
 
     if (free)
-      gst_buffer_unref (buf);
+      gst_buffer_unref (GST_BUFFER_CAST (buf));
 
     GST_DEBUG ("have codec data of size %d", size);
   } else if (context->extradata == NULL) {
