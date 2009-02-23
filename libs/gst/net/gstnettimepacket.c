@@ -126,7 +126,11 @@ gst_net_time_packet_receive (gint fd, struct sockaddr * addr, socklen_t * len)
   gint ret;
 
   while (TRUE) {
+#ifdef G_OS_WIN32
+    ret = recvfrom (fd, (char *) buffer, GST_NET_TIME_PACKET_SIZE,
+#else
     ret = recvfrom (fd, buffer, GST_NET_TIME_PACKET_SIZE,
+#endif
         0, (struct sockaddr *) addr, len);
     if (ret < 0) {
       if (errno != EAGAIN && errno != EINTR)
@@ -197,9 +201,12 @@ gst_net_time_packet_send (const GstNetTimePacket * packet, gint fd,
 
 #ifdef G_OS_WIN32
   ioctlsocket (fd, FIONBIO, &flags);    /* Set nonblocking mode */
-#endif
-
+  ret =
+      sendto (fd, (char *) buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr,
+      len);
+#else
   ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr, len);
+#endif
 
 #ifdef __CYGWIN__
   fcntl (fd, F_SETFL, fdflags);
