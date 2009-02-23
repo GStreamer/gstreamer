@@ -128,12 +128,12 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ZNEAR,
       g_param_spec_double ("znear", "Znear",
-          "Specifies the	distance from the viewer to the	near clipping plane",
+          "Specifies the distance from the viewer to the near clipping plane",
           0.0, 100.0, 0.1, G_PARAM_WRITABLE));
 
   g_object_class_install_property (gobject_class, PROP_ZFAR,
       g_param_spec_double ("zfar", "Zfar",
-          "Specifies the	distance from the viewer to the	far clipping plane",
+          "Specifies the distance from the viewer to the far clipping plane",
           0.0, 1000.0, 100.0, G_PARAM_WRITABLE));
 }
 
