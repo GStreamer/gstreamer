@@ -10,6 +10,6 @@ Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@
 
 Libs: -L${libdir}/audio -L${libdir}/cdda -L${libdir}/fft -L${libdir}/floatcast -L${libdir}/interfaces -L${libdir}/netbuffer -L${libdir}/riff -L${libdir}/rtp -L${libdir}/rtsp -L${libdir}/sdp -L${libdir}/tag -L${libdir}/pbutils -L${libdir}/video
-Cflags: -I${includedir}
+Cflags: -I${includedir} -I@srcdir@/../gst-libs
 
 libraries=audio cdda fft floatcast interfaces netbuffer riff tag pbutils video
