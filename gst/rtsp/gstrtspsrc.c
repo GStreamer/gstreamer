@@ -2536,20 +2536,25 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPMessage * request)
   if (src->debug)
     gst_rtsp_message_dump (request);
 
-  res =
-      gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, "OK",
-      request);
-  if (res < 0)
-    goto send_error;
+  res = gst_rtsp_ext_list_receive_request (src->extensions, request);
 
-  GST_DEBUG_OBJECT (src, "replying with OK");
+  if (res == GST_RTSP_ENOTIMPL) {
+    /* default implementation, send OK */
+    res =
+        gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, "OK",
+        request);
+    if (res < 0)
+      goto send_error;
 
-  if (src->debug)
-    gst_rtsp_message_dump (&response);
+    GST_DEBUG_OBJECT (src, "replying with OK");
 
-  res = gst_rtspsrc_connection_send (src, &response, NULL);
-  if (res < 0)
-    goto send_error;
+    if (src->debug)
+      gst_rtsp_message_dump (&response);
+
+    res = gst_rtspsrc_connection_send (src, &response, NULL);
+    if (res < 0)
+      goto send_error;
+  }
 
   return GST_RTSP_OK;
 
