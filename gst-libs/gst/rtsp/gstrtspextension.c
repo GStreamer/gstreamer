@@ -196,6 +196,20 @@ gst_rtsp_extension_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
 }
 
 GstRTSPResult
+gst_rtsp_extension_receive_request (GstRTSPExtension * ext,
+    GstRTSPMessage * msg)
+{
+  GstRTSPExtensionInterface *iface;
+  GstRTSPResult res = GST_RTSP_ENOTIMPL;
+
+  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
+  if (iface->receive_request)
+    res = iface->receive_request (ext, msg);
+
+  return res;
+}
+
+GstRTSPResult
 gst_rtsp_extension_send (GstRTSPExtension * ext, GstRTSPMessage * req,
     GstRTSPMessage * resp)
 {
