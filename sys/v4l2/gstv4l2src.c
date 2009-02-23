@@ -129,6 +129,9 @@ static const guint32 gst_v4l2_formats[] = {
 #ifdef V4L2_PIX_FMT_PWC2
   V4L2_PIX_FMT_PWC2,
 #endif
+#ifdef V4L2_PIX_FMT_YVYU
+  V4L2_PIX_FMT_YVYU,
+#endif
 };
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
@@ -688,6 +691,9 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_UYVY:
     case V4L2_PIX_FMT_Y41P:
     case V4L2_PIX_FMT_YUV422P:
+#ifdef V4L2_PIX_FMT_YVYU
+    case V4L2_PIX_FMT_YVYU:
+#endif
     case V4L2_PIX_FMT_YUV411P:{
       guint32 fcc = 0;
 
@@ -725,6 +731,11 @@ gst_v4l2src_v4l2fourcc_to_structure (guint32 fourcc)
         case V4L2_PIX_FMT_YUV422P:
           fcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
           break;
+#ifdef V4L2_PIX_FMT_YVYU
+        case V4L2_PIX_FMT_YVYU:
+          fcc = GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U');
+          break;
+#endif
         default:
           g_assert_not_reached ();
           break;
@@ -968,6 +979,10 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
         fourcc = V4L2_PIX_FMT_NV21;
         outsize = GST_ROUND_UP_4 (*w) * GST_ROUND_UP_2 (*h);
         outsize += (GST_ROUND_UP_4 (*w) * *h) / 2;
+        break;
+      case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
+        fourcc = V4L2_PIX_FMT_YVYU;
+        outsize = (GST_ROUND_UP_2 (*w) * 2) * *h;
         break;
     }
   } else if (!strcmp (mimetype, "video/x-raw-rgb")) {
