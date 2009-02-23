@@ -1879,6 +1879,9 @@ docs/Makefile
 docs/plugins/Makefile
 docs/plugins/figures/Makefile
 docs/version.entities
+pkgconfig/Makefile
+pkgconfig/gstreamer-plugins-bad.pc
+pkgconfig/gstreamer-plugins-bad-uninstalled.pc
 m4/Makefile
 win32/common/config.h
 )
