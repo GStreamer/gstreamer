@@ -959,7 +959,8 @@ gst_live_live_adder_chain (GstPad * pad, GstBuffer * buffer)
     GST_LOG_OBJECT (adder,
         "Timestamp discontinuity without the DISCONT flag set"
         " (expected %" GST_TIME_FORMAT ", got %" GST_TIME_FORMAT
-        " drift:%ldms)", GST_TIME_ARGS (padprivate->expected_timestamp),
+        " drift:%" G_GINT64_FORMAT "ms)",
+        GST_TIME_ARGS (padprivate->expected_timestamp),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)), drift / GST_MSECOND);
 
     /* We accept drifts of 10ms */
