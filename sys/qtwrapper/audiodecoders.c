@@ -306,7 +306,7 @@ static void
 aac_parse_codec_data (GstBuffer * codec_data, gint * channels)
 {
   guint8 *data = GST_BUFFER_DATA (codec_data);
-  int codec_channels;
+  guint codec_channels;
 
   if (GST_BUFFER_SIZE (codec_data) < 2) {
     GST_WARNING ("Cannot parse codec_data for channel count");
@@ -317,7 +317,7 @@ aac_parse_codec_data (GstBuffer * codec_data, gint * channels)
 
   if (*channels != codec_channels) {
     GST_INFO ("Overwriting channels %d with %d", *channels, codec_channels);
-    *channels = codec_channels;
+    *channels = (gint) codec_channels;
   } else {
     GST_INFO ("Retaining channel count %d", codec_channels);
   }
@@ -447,7 +447,7 @@ open_decoder (QTWrapperAudioDecoder * qtwrapper, GstCaps * caps,
     /* QuickTime/iTunes creates AAC files with the wrong channel count in the header,
        so parse that out of the codec data if we can.
      */
-    aac_parse_codec_data (codec_data, (guint *) & channels);
+    aac_parse_codec_data (codec_data, &channels);
   }
 
   /* If the quicktime demuxer gives us a full esds atom, use that instead of 
