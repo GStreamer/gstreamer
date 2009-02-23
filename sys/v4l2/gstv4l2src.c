@@ -980,10 +980,12 @@ gst_v4l2_get_caps_info (GstV4l2Src * v4l2src, GstCaps * caps,
         outsize = GST_ROUND_UP_4 (*w) * GST_ROUND_UP_2 (*h);
         outsize += (GST_ROUND_UP_4 (*w) * *h) / 2;
         break;
+#ifdef V4L2_PIX_FMT_YVYU
       case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
         fourcc = V4L2_PIX_FMT_YVYU;
         outsize = (GST_ROUND_UP_2 (*w) * 2) * *h;
         break;
+#endif
     }
   } else if (!strcmp (mimetype, "video/x-raw-rgb")) {
     gint depth, endianness, r_mask;
