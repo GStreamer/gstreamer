@@ -357,6 +357,35 @@ gst_udpsrc_getcaps (GstBaseSrc * src)
     return gst_caps_new_any ();
 }
 
+/* read a message from the error queue */
+static void
+clear_error (GstUDPSrc * udpsrc)
+{
+  struct msghdr cmsg;
+  char cbuf[128];
+  char msgbuf[CMSG_SPACE (128)];
+  struct iovec iov;
+
+  /* Flush ERRORS from fd so next poll will not return at once */
+  /* No need for address : We look for local error */
+  cmsg.msg_name = NULL;
+  cmsg.msg_namelen = 0;
+
+  /* IOV */
+  memset (&cbuf, 0, sizeof (cbuf));
+  iov.iov_base = cbuf;
+  iov.iov_len = sizeof (cbuf);
+  cmsg.msg_iov = &iov;
+  cmsg.msg_iovlen = 1;
+
+  /* msg_control */
+  memset (&msgbuf, 0, sizeof (msgbuf));
+  cmsg.msg_control = &msgbuf;
+  cmsg.msg_controllen = sizeof (msgbuf);
+
+  recvmsg (udpsrc->sock.fd, &cmsg, MSG_ERRQUEUE);
+}
+
 static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
@@ -434,8 +463,10 @@ retry:
    * woken up by activity on the socket but it was not a read. We know someone
    * will also do something with the socket so that we don't go into an infinite
    * loop in the select(). */
-  if (G_UNLIKELY (!readsize))
+  if (G_UNLIKELY (!readsize)) {
+    clear_error (udpsrc);
     goto retry;
+  }
 
 no_select:
   GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
@@ -447,10 +478,11 @@ no_select:
     len = sizeof (struct sockaddr);
 #ifdef G_OS_WIN32
     ret = recvfrom (udpsrc->sock.fd, (char *) pktdata, pktsize,
+        0, (struct sockaddr *) &tmpaddr, &len);
 #else
     ret = recvfrom (udpsrc->sock.fd, pktdata, pktsize,
-#endif
         0, (struct sockaddr *) &tmpaddr, &len);
+#endif
     if (G_UNLIKELY (ret < 0)) {
 #ifdef G_OS_WIN32
       /* WSAECONNRESET for a UDP socket means that a packet sent with udpsink
@@ -730,6 +762,7 @@ static gboolean
 gst_udpsrc_start (GstBaseSrc * bsrc)
 {
   guint bc_val;
+  guint err_val;
   gint reuse;
   int port;
   GstUDPSrc *src;
@@ -818,6 +851,15 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
               sizeof (bc_val))) < 0) {
     GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
         ("could not configure socket for broadcast %d: %s (%d)", ret,
+            g_strerror (errno), errno));
+  }
+
+  /* Accept ERRQUEUE to get and flush icmp errors */
+  err_val = 1;
+  if ((ret = setsockopt (src->sock.fd, IPPROTO_IP, IP_RECVERR, &err_val,
+              sizeof (err_val))) < 0) {
+    GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
+        ("could not configure socket for IP_RECVERR %d: %s (%d)", ret,
             g_strerror (errno), errno));
   }
 
