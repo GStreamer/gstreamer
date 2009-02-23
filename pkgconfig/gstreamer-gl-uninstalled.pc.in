@@ -10,6 +10,6 @@ Version: @VERSION@
 Requires: gstreamer-@GST_MAJORMINOR@
 
 Libs: -L${libdir}/gl
-Cflags: -I${includedir}
+Cflags: -I${includedir} -I@srcdir@/..
 
 libraries=gl
