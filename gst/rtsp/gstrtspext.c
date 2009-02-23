@@ -247,3 +247,20 @@ gst_rtsp_ext_list_connect (GstRTSPExtensionList * ext,
     g_signal_connect (elem, detailed_signal, c_handler, data);
   }
 }
+
+GstRTSPResult
+gst_rtsp_ext_list_receive_request (GstRTSPExtensionList * ext,
+    GstRTSPMessage * req)
+{
+  GList *walk;
+  GstRTSPResult res = GST_RTSP_ENOTIMPL;
+
+  for (walk = ext->extensions; walk; walk = g_list_next (walk)) {
+    GstRTSPExtension *elem = (GstRTSPExtension *) walk->data;
+
+    res = gst_rtsp_extension_receive_request (elem, req);
+    if (res != GST_RTSP_ENOTIMPL)
+      break;
+  }
+  return res;
+}
