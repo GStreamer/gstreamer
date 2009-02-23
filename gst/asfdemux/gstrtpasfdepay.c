@@ -26,6 +26,7 @@
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
+#include <stdlib.h>
 
 GST_DEBUG_CATEGORY_STATIC (rtpasfdepayload_debug);
 #define GST_CAT_DEFAULT rtpasfdepayload_debug
