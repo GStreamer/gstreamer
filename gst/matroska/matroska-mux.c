@@ -650,7 +650,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height", &height);
   videocontext->pixel_width = width;
   videocontext->pixel_height = height;
-  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)
+      && fps_n > 0) {
     context->default_duration =
         gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
     GST_LOG_OBJECT (pad, "default duration = %" GST_TIME_FORMAT,
