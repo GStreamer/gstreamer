@@ -1176,7 +1176,7 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   PKG_CHECK_EXISTS(libSoundTouch >= 1.4,
       AC_DEFINE([HAVE_SOUNDTOUCH_1_4], [1],
           [Defined if the available libSoundTouch is >= 1.4]),
-      SOUNDTOUCH_CFLAGS="$SOUNDTOUCH_CFLAGS -lBPM")
+      SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM")
   AC_SUBST(SOUNDTOUCH_CFLAGS)
   AC_SUBST(SOUNDTOUCH_LIBS)
   if test "x$HAVE_CXX" != "xyes"; then
