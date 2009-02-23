@@ -2366,6 +2366,9 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
   if (thiscaps == NULL || gst_caps_is_any (thiscaps))
     goto no_nego_needed;
 
+  if (G_UNLIKELY (gst_caps_is_empty (thiscaps)))
+    goto no_caps;
+
   /* get the peer caps */
   peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
   GST_DEBUG_OBJECT (basesrc, "caps of peer: %" GST_PTR_FORMAT, peercaps);
@@ -2414,6 +2417,15 @@ gst_base_src_default_negotiate (GstBaseSrc * basesrc)
 no_nego_needed:
   {
     GST_DEBUG_OBJECT (basesrc, "no negotiation needed");
+    if (thiscaps)
+      gst_caps_unref (thiscaps);
+    return TRUE;
+  }
+no_caps:
+  {
+    GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
+        ("No supported formats found"),
+        ("This element did not produce valid caps"));
     if (thiscaps)
       gst_caps_unref (thiscaps);
     return TRUE;
