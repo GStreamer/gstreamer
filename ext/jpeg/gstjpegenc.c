@@ -339,9 +339,8 @@ gst_jpegenc_setcaps (GstPad * pad, GstCaps * caps)
   ret = gst_pad_set_caps (jpegenc->srcpad, othercaps);
   gst_caps_unref (othercaps);
 
-  if (GST_PAD_LINK_SUCCESSFUL (ret)) {
+  if (ret)
     gst_jpegenc_resync (jpegenc);
-  }
 
   gst_object_unref (jpegenc);
 
@@ -411,7 +410,6 @@ gst_jpegenc_resync (GstJpegEnc * jpegenc)
   jpeg_suppress_tables (&jpegenc->cinfo, TRUE);
   //jpeg_suppress_tables(&jpegenc->cinfo, FALSE);
 
-  jpegenc->buffer = NULL;
   GST_DEBUG_OBJECT (jpegenc, "resync done");
 }
 
@@ -557,7 +555,6 @@ gst_jpegenc_change_state (GstElement * element, GstStateChange transition)
       filter->line[0] = NULL;
       filter->line[1] = NULL;
       filter->line[2] = NULL;
-      gst_jpegenc_resync (filter);
       break;
     default:
       break;
