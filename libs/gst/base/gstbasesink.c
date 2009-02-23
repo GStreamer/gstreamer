@@ -3579,6 +3579,8 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
        * it to the clock. */
       GST_OBJECT_LOCK (element);
       basesink->priv->latency = latency;
+      if (!basesink->priv->have_latency)
+        forward = FALSE;
       GST_OBJECT_UNLOCK (element);
       GST_DEBUG_OBJECT (basesink, "latency set to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (latency));
