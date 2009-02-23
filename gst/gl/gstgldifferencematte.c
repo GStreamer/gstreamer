@@ -36,6 +36,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <png.h>
 #include <gstglfilter.h>
 #include <gstgleffectssources.h>

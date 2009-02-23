@@ -37,6 +37,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>
 #include <png.h>
 #include "gstglbumper.h"
 
