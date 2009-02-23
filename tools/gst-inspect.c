@@ -1034,7 +1034,7 @@ print_all_uri_handlers (void)
         plugin->desc.name);
 
     for (f = features; f; f = f->next) {
-      GstPluginFeature *feature = GST_PLUGIN_FEATURE (features->data);
+      GstPluginFeature *feature = GST_PLUGIN_FEATURE (f->data);
 
       if (GST_IS_ELEMENT_FACTORY (feature)) {
         GstElementFactory *factory;
