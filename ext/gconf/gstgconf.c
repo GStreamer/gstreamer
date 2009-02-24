@@ -29,7 +29,7 @@
 
 #include <gst/gst.h>
 
-#include "gconf.h"
+#include "gstgconf.h"
 #include "gstgconfelements.h"   /* for debug category */
 
 #ifndef GST_GCONF_DIR
