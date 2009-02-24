@@ -37,7 +37,6 @@ endif (PNG_FOUND AND ZLIB_FOUND)
 add_library (gstopengl SHARED
   gstopengl.c
   gstglimagesink.c
-  gstglimagesink.h
   gstglupload.c
   gstgldownload.c
   gstglfilterblur.c
