@@ -1767,24 +1767,27 @@ gst_rtsp_connection_clear_auth_params (GstRTSPConnection * conn)
 GstRTSPResult
 gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
 {
-  struct sockaddr_storage sa_s;
-  socklen_t sa_sl = sizeof (sa_s);
+  union gst_sockaddr
+  {
+    struct sockaddr_storage sa_s;
+    struct sockaddr_in6 saddr6;
+  } sa;
+  socklen_t sa_sl = sizeof (sa);
   gint af;
   gint tos;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->fd.fd >= 0, GST_RTSP_EINVAL);
 
-  if (getsockname (conn->fd.fd, (struct sockaddr *) &sa_s, &sa_sl) < 0)
+  if (getsockname (conn->fd.fd, (struct sockaddr *) &sa.sa_s, &sa_sl) < 0)
     goto no_getsockname;
 
-  af = sa_s.ss_family;
+  af = sa.sa_s.ss_family;
 
   /* if this is an IPv4-mapped address then do IPv4 QoS */
   if (af == AF_INET6) {
-    struct sockaddr_in6 *saddr6 = (struct sockaddr_in6 *) &sa_s;
 
-    if (IN6_IS_ADDR_V4MAPPED (&saddr6->sin6_addr))
+    if (IN6_IS_ADDR_V4MAPPED (&sa.saddr6.sin6_addr))
       af = AF_INET;
   }
 
