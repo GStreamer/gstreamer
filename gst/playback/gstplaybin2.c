@@ -329,15 +329,15 @@ struct _GstSourceGroup
 #define GST_PLAY_BIN_DYN_UNLOCK(bin)  g_mutex_unlock ((bin)->dyn_lock)
 
 /* lock for shutdown */
-#define GST_PLAY_BIN_SHUTDOWN_LOCK(bin,label)     \
-G_STMT_START {                                    \
-  if (g_atomic_int_get (&bin->shutdown))          \
-    goto label;                                   \
-  GST_PLAY_BIN_DYN_LOCK (bin);                    \
-  if (g_atomic_int_get (&bin->shutdown)) {        \
-    GST_PLAY_BIN_DYN_UNLOCK (bin);                \
-    goto label;                                   \
-  }                                               \
+#define GST_PLAY_BIN_SHUTDOWN_LOCK(bin,label)           \
+G_STMT_START {                                          \
+  if (G_UNLIKELY (g_atomic_int_get (&bin->shutdown)))   \
+    goto label;                                         \
+  GST_PLAY_BIN_DYN_LOCK (bin);                          \
+  if (G_UNLIKELY (g_atomic_int_get (&bin->shutdown))) { \
+    GST_PLAY_BIN_DYN_UNLOCK (bin);                      \
+    goto label;                                         \
+  }                                                     \
 } G_STMT_END
 
 /* unlock for shutdown */
