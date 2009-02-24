@@ -87,16 +87,24 @@ typedef enum
  * @GST_MIXER_FLAG_NONE: No flags
  * @GST_MIXER_FLAG_AUTO_NOTIFICATIONS: The mixer implementation automatically sends
  *    notification messages.
+ * @GST_MIXER_FLAG_HAS_WHITELIST: The mixer implementation flags tracks that should
+ *    be displayed by default (whitelisted). Since: 0.10.23
+ *
+ * @GST_MIXER_FLAG_GROUPING: The mixer implementation will leave some controls
+ *    marked without either input or output.  Controls marked as input or
+ *    output should be grouped with input & output sliders, even if they
+ *    are options or bare switches. Since: 0.10.23
  * 
- * Flags for supported features. Whether the element automatically sends 
- * notifications on the bus is the only one for now. 
+ * Flags for supported features.
  *
  * Since: 0.10.14
  */
 typedef enum
 {
   GST_MIXER_FLAG_NONE                = 0,
-  GST_MIXER_FLAG_AUTO_NOTIFICATIONS  = (1<<0)
+  GST_MIXER_FLAG_AUTO_NOTIFICATIONS  = (1<<0),
+  GST_MIXER_FLAG_HAS_WHITELIST       = (1<<1),
+  GST_MIXER_FLAG_GROUPING            = (1<<2),
 } GstMixerFlags;
 
 struct _GstMixerClass {
