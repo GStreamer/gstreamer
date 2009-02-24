@@ -499,11 +499,6 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstBinaryTypeFindFactory *tff;
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
-    gchar *str;
-
-    /* we copy the caps here so we can simplify them before saving. This is a lot
-     * faster when loading them later on */
-    GstCaps *copy = gst_caps_copy (factory->caps);
 
     tff = g_malloc0 (sizeof (GstBinaryTypeFindFactory));
     chk =
@@ -519,10 +514,21 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
       }
     }
     /* save caps */
-    gst_caps_do_simplify (copy);
-    str = gst_caps_to_string (copy);
-    gst_caps_unref (copy);
-    gst_registry_binary_save_string (list, str);
+    if (factory->caps) {
+      GstCaps *copy = gst_caps_copy (factory->caps);
+      gchar *str;
+
+      /* we copy the caps here so we can simplify them
+       * before saving. This is a lot faster when loading
+       * them later on */
+      gst_caps_do_simplify (copy);
+      str = gst_caps_to_string (copy);
+      gst_caps_unref (copy);
+      gst_registry_binary_save_string (list, str);
+    } else {
+      gst_registry_binary_save_const_string (list, "");
+    }
+
   } else if (GST_IS_INDEX_FACTORY (feature)) {
     GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
