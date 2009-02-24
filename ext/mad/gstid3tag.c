@@ -405,6 +405,7 @@ gst_id3_tag_set_property (GObject * object, guint prop_id, const GValue * value,
         NULL);
   }
 }
+
 static void
 gst_id3_tag_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
@@ -560,18 +561,18 @@ gst_id3_tag_src_event (GstPad * pad, GstEvent * event)
             g_assert_not_reached ();
             break;
         }
+        gst_event_unref (event);
         new = gst_event_new_seek (rate, format, flags,
             cur_type, cur + diff, stop_type, stop);
-        gst_pad_push_event (tag->sinkpad, new);
-        res = TRUE;
+        res = gst_pad_push_event (tag->sinkpad, new);
       }
       break;
     }
     default:
+      res = gst_pad_push_event (tag->sinkpad, event);
       break;
   }
 
-  gst_event_unref (event);
   gst_object_unref (tag);
 
   return res;
@@ -749,6 +750,7 @@ gst_mad_id3_to_tag_list (const struct id3_tag * tag)
 
   return tag_list;
 }
+
 static void
 tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
     gpointer user_data)
@@ -844,6 +846,7 @@ tag_list_to_id3_tag_foreach (const GstTagList * list, const gchar * tag_name,
   }
   id3_field_settextencoding (field, ID3_FIELD_TEXTENCODING_UTF_8);
 }
+
 struct id3_tag *
 gst_mad_tag_list_to_id3_tag (GstTagList * list)
 {
@@ -854,6 +857,7 @@ gst_mad_tag_list_to_id3_tag (GstTagList * list)
   gst_tag_list_foreach (list, tag_list_to_id3_tag_foreach, tag);
   return tag;
 }
+
 static GstTagList *
 gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
 {
@@ -1028,6 +1032,7 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
   }
   return TRUE;
 }
+
 typedef struct
 {
   guint best_probability;
@@ -1048,6 +1053,7 @@ simple_find_peek (gpointer data, gint64 offset, guint size)
   }
   return NULL;
 }
+
 static void
 simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 {
@@ -1061,6 +1067,7 @@ simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
     find->best_probability = probability;
   }
 }
+
 static GstCaps *
 gst_id3_tag_do_typefind (GstID3Tag * tag, GstBuffer * buffer)
 {
@@ -1157,6 +1164,7 @@ gst_id3_tag_src_link (GstPad * pad, GstPad * peer)
   else
     return GST_PAD_LINK_OK;
 }
+
 static void
 gst_id3_tag_send_tag_event (GstID3Tag * tag)
 {
@@ -1178,6 +1186,7 @@ gst_id3_tag_send_tag_event (GstID3Tag * tag)
     gst_pad_push_event (tag->srcpad, event);
   }
 }
+
 static GstFlowReturn
 gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
 {
