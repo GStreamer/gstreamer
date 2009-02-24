@@ -818,6 +818,31 @@ yuv422_to_yuv420p (AVPicture * dst, const AVPicture * src,
 }
 
 static void
+uyvy422_to_gray (AVPicture * dst, const AVPicture * src, int width, int height)
+{
+  const uint8_t *p, *p1;
+  uint8_t *lum, *lum1;
+  int w;
+
+  p1 = src->data[0];
+  lum1 = dst->data[0];
+  for (; height > 0; height--) {
+    p = p1;
+    lum = lum1;
+
+    for (w = width; w >= 2; w -= 2) {
+      lum[0] = p[1];
+      lum[1] = p[3];
+      p += 4;
+      lum += 2;
+    }
+    p1 += src->linesize[0];
+    lum1 += dst->linesize[0];
+  }
+}
+
+
+static void
 uyvy422_to_yuv420p (AVPicture * dst, const AVPicture * src,
     int width, int height)
 {
@@ -2172,6 +2197,7 @@ static ConvertEntry convert_table[] = {
 
   {PIX_FMT_UYVY422, PIX_FMT_YUV420P, uyvy422_to_yuv420p},
   {PIX_FMT_UYVY422, PIX_FMT_YUV422P, uyvy422_to_yuv422p},
+  {PIX_FMT_UYVY422, PIX_FMT_GRAY8, uyvy422_to_gray},
 
   {PIX_FMT_RGB24, PIX_FMT_YUV420P, rgb24_to_yuv420p},
   {PIX_FMT_RGB24, PIX_FMT_NV12, rgb24_to_nv12},
