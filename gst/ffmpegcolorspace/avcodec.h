@@ -84,6 +84,7 @@ enum PixelFormat {
     PIX_FMT_XVMC_MPEG2_MC,///< XVideo Motion Acceleration via common packet passing(xvmc_render.h)
     PIX_FMT_XVMC_MPEG2_IDCT,
     PIX_FMT_UYVY422,   ///< Packed pixel, Cb Y0 Cr Y1 
+    PIX_FMT_YVYU422,   ///< Packed pixel, Y0 Cr Y1 Cb 
     PIX_FMT_UYVY411,   ///< Packed pixel, Cb Y0 Y1 Cr Y2 Y3
     PIX_FMT_V308,      ///< Packed pixel, Y0 Cb Cr
 
