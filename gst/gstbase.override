@@ -812,3 +812,31 @@ _wrap_gst_base_src_query_latency (PyGObject *self)
 			 PyBool_FromLong(live),
 			 minlat, maxlat);
 }
+%%
+override GstBaseTransform__do_src_event kwargs
+static PyObject *
+_wrap_GstBaseTransform__do_src_event(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", "event", NULL };
+    PyGObject *self;
+    int ret;
+    PyGstMiniObject *event;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!:GstBaseTransform.src_event", kwlist, &PyGstBaseTransform_Type, &self, &PyGstEvent_Type, &event))
+        return NULL;
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BASE_TRANSFORM_CLASS(klass)->src_event) {
+        pyg_begin_allow_threads;
+        ret = GST_BASE_TRANSFORM_CLASS(klass)->src_event(GST_BASE_TRANSFORM(self->obj),
+            gst_event_ref (GST_EVENT(event->obj)));
+        pyg_end_allow_threads;
+    } else {
+        PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseTransform.src_event not implemented");
+        g_type_class_unref(klass);
+        return NULL;
+    }
+    g_type_class_unref(klass);
+    return PyBool_FromLong(ret);
+
+}
