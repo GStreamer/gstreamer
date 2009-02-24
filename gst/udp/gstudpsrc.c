@@ -391,7 +391,13 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstUDPSrc *udpsrc;
   GstNetBuffer *outbuf;
-  struct sockaddr_storage tmpaddr;
+  union gst_sockaddr
+  {
+    struct sockaddr_storage sa_stor;
+    struct sockaddr sa;
+    struct sockaddr_in sa_in;
+    struct sockaddr_in6 sa_in6;
+  } sa;
   socklen_t len;
   guint8 *pktdata;
   gint pktsize;
@@ -478,10 +484,10 @@ no_select:
     len = sizeof (struct sockaddr);
 #ifdef G_OS_WIN32
     ret = recvfrom (udpsrc->sock.fd, (char *) pktdata, pktsize,
-        0, (struct sockaddr *) &tmpaddr, &len);
+        0, &sa.sa, &len);
 #else
     ret = recvfrom (udpsrc->sock.fd, pktdata, pktsize,
-        0, (struct sockaddr *) &tmpaddr, &len);
+        0, &sa.sa, &len);
 #endif
     if (G_UNLIKELY (ret < 0)) {
 #ifdef G_OS_WIN32
@@ -518,22 +524,19 @@ no_select:
   GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
-  switch (tmpaddr.ss_family) {
+  switch (sa.sa_stor.ss_family) {
     case AF_INET:
     {
-      gst_netaddress_set_ip4_address (&outbuf->from,
-          ((struct sockaddr_in *) &tmpaddr)->sin_addr.s_addr,
-          ((struct sockaddr_in *) &tmpaddr)->sin_port);
+      gst_netaddress_set_ip4_address (&outbuf->from, sa.sa_in.sin_addr.s_addr,
+          sa.sa_in.sin_port);
     }
       break;
     case AF_INET6:
     {
       guint8 ip6[16];
 
-      memcpy (ip6, &((struct sockaddr_in6 *) &tmpaddr)->sin6_addr,
-          sizeof (ip6));
-      gst_netaddress_set_ip6_address (&outbuf->from, ip6,
-          ((struct sockaddr_in *) &tmpaddr)->sin_port);
+      memcpy (ip6, &sa.sa_in6.sin6_addr, sizeof (ip6));
+      gst_netaddress_set_ip6_address (&outbuf->from, ip6, sa.sa_in6.sin6_port);
     }
       break;
     default:
