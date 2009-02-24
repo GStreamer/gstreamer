@@ -1495,10 +1495,10 @@ sys/wasapi/Makefile
 sys/wininet/Makefile
 sys/winks/Makefile
 sys/winscreencap/Makefile
-examples/Makefile
-examples/directfb/Makefile
-examples/scaletempo/Makefile
-examples/switch/Makefile
+tests/examples/Makefile
+tests/examples/directfb/Makefile
+tests/examples/scaletempo/Makefile
+tests/examples/switch/Makefile
 ext/amrwb/Makefile
 ext/alsaspdif/Makefile
 ext/assrender/Makefile

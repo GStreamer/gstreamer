@@ -29,6 +29,7 @@
 #include <gtk/gtk.h>
 
 gboolean got_channel[2] = { FALSE, FALSE };     /* to see if we got the signal for this one yet */
+
 gint channels = 0;              /* guess at how many channels there are */
 gdouble last_time = 0.0;        /* time of last signal */
 gdouble values[2][3];           /* array of levels from which to print */

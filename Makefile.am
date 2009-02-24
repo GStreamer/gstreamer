@@ -1,20 +1,12 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-if BUILD_EXAMPLES
-SUBDIRS_EXAMPLES = examples
-else
-SUBDIRS_EXAMPLES =
-endif
-
 SUBDIRS = \
 	gst-libs gst sys ext \
-	m4 common docs tests po \
-	$(SUBDIRS_EXAMPLES)
+	m4 common docs tests po
 
 DIST_SUBDIRS = \
 	gst gst-libs sys ext \
-	m4 common docs tests po \
-	examples
+	m4 common docs tests po
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak
