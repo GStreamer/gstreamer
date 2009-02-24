@@ -33,7 +33,39 @@
 #include <gst/gst.h>
 #include <gst/audio/multichannel.h>
 
+#ifndef DTS_OLD
+#include <dca.h>
+#else
 #include <dts.h>
+
+typedef struct dts_state_s dca_state_t;
+#define DCA_MONO DTS_MONO
+#define DCA_CHANNEL DTS_CHANNEL
+#define DCA_STEREO DTS_STEREO
+#define DCA_STEREO_SUMDIFF DTS_STEREO_SUMDIFF
+#define DCA_STEREO_TOTAL DTS_STEREO_TOTAL
+#define DCA_3F DTS_3F
+#define DCA_2F1R DTS_2F1R
+#define DCA_3F1R DTS_3F1R
+#define DCA_2F2R DTS_2F2R
+#define DCA_3F2R DTS_3F2R
+#define DCA_4F2R DTS_4F2R
+#define DCA_DOLBY DTS_DOLBY
+#define DCA_CHANNEL_MAX DTS_CHANNEL_MAX
+#define DCA_CHANNEL_BITS DTS_CHANNEL_BITS
+#define DCA_CHANNEL_MASK DTS_CHANNEL_MASK
+#define DCA_LFE DTS_LFE
+#define DCA_ADJUST_LEVEL DTS_ADJUST_LEVEL
+
+#define dca_init dts_init
+#define dca_syncinfo dts_syncinfo
+#define dca_frame dts_frame
+#define dca_dynrng dts_dynrng
+#define dca_blocks_num dts_blocks_num
+#define dca_block dts_block
+#define dca_samples dts_samples
+#define dca_free dts_free
+#endif
 
 #include "gstdtsdec.h"
 
@@ -180,24 +212,24 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
       return 0;
   }
 
-  switch (flags & DTS_CHANNEL_MASK) {
-    case DTS_MONO:
+  switch (flags & DCA_CHANNEL_MASK) {
+    case DCA_MONO:
       chans = 1;
       if (tpos)
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
       break;
-      /* case DTS_CHANNEL: */
-    case DTS_STEREO:
-    case DTS_STEREO_SUMDIFF:
-    case DTS_STEREO_TOTAL:
-    case DTS_DOLBY:
+      /* case DCA_CHANNEL: */
+    case DCA_STEREO:
+    case DCA_STEREO_SUMDIFF:
+    case DCA_STEREO_TOTAL:
+    case DCA_DOLBY:
       chans = 2;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
         tpos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       break;
-    case DTS_3F:
+    case DCA_3F:
       chans = 3;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
@@ -205,7 +237,7 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
         tpos[2] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       break;
-    case DTS_2F1R:
+    case DCA_2F1R:
       chans = 3;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
@@ -213,7 +245,7 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
         tpos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
       }
       break;
-    case DTS_3F1R:
+    case DCA_3F1R:
       chans = 4;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
@@ -222,7 +254,7 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
         tpos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
       }
       break;
-    case DTS_2F2R:
+    case DCA_2F2R:
       chans = 4;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
@@ -231,7 +263,7 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
         tpos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       break;
-    case DTS_3F2R:
+    case DCA_3F2R:
       chans = 5;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
@@ -241,7 +273,7 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
         tpos[4] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
       }
       break;
-    case DTS_4F2R:
+    case DCA_4F2R:
       chans = 6;
       if (tpos) {
         tpos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
@@ -256,7 +288,7 @@ gst_dtsdec_channels (uint32_t flags, GstAudioChannelPosition ** pos)
       g_warning ("dtsdec: invalid flags 0x%x", flags);
       return 0;
   }
-  if (flags & DTS_LFE) {
+  if (flags & DCA_LFE) {
     if (tpos) {
       tpos[chans] = GST_AUDIO_CHANNEL_POSITION_LFE;
     }
@@ -397,7 +429,7 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
     gst_dtsdec_update_streaminfo (dts);
   }
 
-  if (dts->request_channels == DTS_CHANNEL) {
+  if (dts->request_channels == DCA_CHANNEL) {
     GstCaps *caps;
 
     caps = gst_pad_get_allowed_caps (dts->srcpad);
@@ -406,12 +438,12 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
       GstStructure *structure = gst_caps_get_structure (copy, 0);
       gint channels;
       const int dts_channels[6] = {
-        DTS_MONO,
-        DTS_STEREO,
-        DTS_STEREO | DTS_LFE,
-        DTS_2F2R,
-        DTS_2F2R | DTS_LFE,
-        DTS_3F2R | DTS_LFE,
+        DCA_MONO,
+        DCA_STEREO,
+        DCA_STEREO | DCA_LFE,
+        DCA_2F2R,
+        DCA_2F2R | DCA_LFE,
+        DCA_3F2R | DCA_LFE,
       };
 
       /* Prefer the original number of channels, but fixate to something 
@@ -429,7 +461,7 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
     } else if (flags) {
       dts->request_channels = dts->stream_channels;
     } else {
-      dts->request_channels = DTS_3F2R | DTS_LFE;
+      dts->request_channels = DCA_3F2R | DCA_LFE;
     }
 
     if (caps)
@@ -437,15 +469,15 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
   }
 
   /* process */
-  flags = dts->request_channels | DTS_ADJUST_LEVEL;
+  flags = dts->request_channels | DCA_ADJUST_LEVEL;
   dts->level = 1;
 
-  if (dts_frame (dts->state, data, &flags, &dts->level, dts->bias)) {
+  if (dca_frame (dts->state, data, &flags, &dts->level, dts->bias)) {
     GST_WARNING ("dts_frame error");
     return GST_FLOW_OK;
   }
 
-  channels = flags & (DTS_CHANNEL_MASK | DTS_LFE);
+  channels = flags & (DCA_CHANNEL_MASK | DCA_LFE);
 
   if (dts->using_channels != channels) {
     need_renegotiation = TRUE;
@@ -462,18 +494,18 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
   }
 
   if (dts->dynamic_range_compression == FALSE) {
-    dts_dynrng (dts->state, NULL, NULL);
+    dca_dynrng (dts->state, NULL, NULL);
   }
 
   /* handle decoded data, one block is 256 samples */
-  num_blocks = dts_blocks_num (dts->state);
+  num_blocks = dca_blocks_num (dts->state);
   for (i = 0; i < num_blocks; i++) {
-    if (dts_block (dts->state)) {
+    if (dca_block (dts->state)) {
       GST_WARNING ("dts_block error %d", i);
       continue;
     }
 
-    samples = dts_samples (dts->state);
+    samples = dca_samples (dts->state);
     num_c = gst_dtsdec_channels (dts->using_channels, NULL);
 
     result = gst_pad_alloc_buffer_and_set_caps (dts->srcpad, 0,
@@ -526,7 +558,7 @@ gst_dtsdec_chain_raw (GstPad * pad, GstBuffer * buf)
   size = GST_BUFFER_SIZE (buf);
   length = 0;
   while (size >= 7) {
-    length = dts_syncinfo (dts->state, data, &flags,
+    length = dca_syncinfo (dts->state, data, &flags,
         &sample_rate, &bit_rate, &frame_length);
     if (length == 0) {
       /* shift window to re-find sync */
@@ -647,16 +679,16 @@ gst_dtsdec_change_state (GstElement * element, GstStateChange transition)
       GstDtsDecClass *klass;
 
       klass = GST_DTSDEC_CLASS (G_OBJECT_GET_CLASS (dts));
-      dts->state = dts_init (klass->dts_cpuflags);
+      dts->state = dca_init (klass->dts_cpuflags);
       break;
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      dts->samples = dts_samples (dts->state);
+      dts->samples = dca_samples (dts->state);
       dts->bit_rate = -1;
       dts->sample_rate = -1;
       dts->stream_channels = 0;
       /* FIXME force stereo for now */
-      dts->request_channels = DTS_CHANNEL;
+      dts->request_channels = DCA_CHANNEL;
       dts->using_channels = 0;
       dts->level = 1;
       dts->bias = 0;
@@ -681,7 +713,7 @@ gst_dtsdec_change_state (GstElement * element, GstStateChange transition)
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      dts_free (dts->state);
+      dca_free (dts->state);
       dts->state = NULL;
       break;
     default:
