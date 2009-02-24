@@ -16,3 +16,7 @@ Makefile.in
 *.prerequisites
 *.signals
 doc-registry.xml
+
+*-unused.sgml
+*.bak
+*.sgml

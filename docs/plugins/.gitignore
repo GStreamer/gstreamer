@@ -10,6 +10,7 @@ Makefile.in
 tmpl
 xml
 html
+tmpl/*.sgml
 
 gst-plugins-base-plugins-scan
 gst-plugins-base-plugins-scan.c
