@@ -53,7 +53,7 @@
 #  include "config.h"
 #endif
 
-#include "vorbisparse.h"
+#include "gstvorbisparse.h"
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
 #define GST_CAT_DEFAULT vorbisparse_debug

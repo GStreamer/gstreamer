@@ -40,7 +40,7 @@
 #  include "config.h"
 #endif
 
-#include "vorbisdec.h"
+#include "gstvorbisdec.h"
 #include <string.h>
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>

@@ -54,7 +54,7 @@
 
 #include <vorbis/codec.h>
 
-#include "vorbistag.h"
+#include "gstvorbistag.h"
 
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);

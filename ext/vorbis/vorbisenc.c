@@ -39,10 +39,10 @@
  *
  * Last reviewed on 2006-03-01 (0.10.4)
  */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -51,7 +51,7 @@
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/multichannel.h>
-#include "vorbisenc.h"
+#include "gstvorbisenc.h"
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
 #define GST_CAT_DEFAULT vorbisenc_debug

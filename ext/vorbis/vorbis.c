@@ -23,10 +23,10 @@
 
 #include "gst/tag/tag.h"
 
-#include "vorbisenc.h"
-#include "vorbisdec.h"
-#include "vorbisparse.h"
-#include "vorbistag.h"
+#include "gstvorbisenc.h"
+#include "gstvorbisdec.h"
+#include "gstvorbisparse.h"
+#include "gstvorbistag.h"
 
 GST_DEBUG_CATEGORY (vorbisenc_debug);
 GST_DEBUG_CATEGORY (vorbisdec_debug);

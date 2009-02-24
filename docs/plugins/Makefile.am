@@ -94,10 +94,10 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/theora/gsttheoradec.h \
 	$(top_srcdir)/ext/theora/gsttheoraenc.h \
 	$(top_srcdir)/ext/theora/gsttheoraparse.h \
-	$(top_srcdir)/ext/vorbis/vorbisdec.h \
-	$(top_srcdir)/ext/vorbis/vorbisenc.h \
-	$(top_srcdir)/ext/vorbis/vorbisparse.h \
-	$(top_srcdir)/ext/vorbis/vorbistag.h \
+	$(top_srcdir)/ext/vorbis/gstvorbisdec.h \
+	$(top_srcdir)/ext/vorbis/gstvorbisenc.h \
+	$(top_srcdir)/ext/vorbis/gstvorbisparse.h \
+	$(top_srcdir)/ext/vorbis/gstvorbistag.h \
 	$(top_srcdir)/gst/adder/gstadder.h \
 	$(top_srcdir)/gst/audioconvert/audioconvert.h \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \

@@ -22,7 +22,7 @@
 #ifndef __GST_VORBIS_TAG_H__
 #define __GST_VORBIS_TAG_H__
 
-#include "vorbisparse.h"
+#include "gstvorbisparse.h"
 
 
 G_BEGIN_DECLS

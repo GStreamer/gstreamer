@@ -13,4 +13,4 @@ libgstvorbis_la_LIBADD = \
 libgstvorbis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvorbis_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = vorbisenc.h vorbisdec.h vorbisparse.h vorbistag.h
+noinst_HEADERS = gstvorbisenc.h gstvorbisdec.h gstvorbisparse.h gstvorbistag.h
