@@ -124,6 +124,9 @@ dnl check for libm, for sin() etc.
 AC_CHECK_LIBM
 AC_SUBST(LIBM)
 
+dnl needed for gst/xdgmime
+AC_FUNC_MMAP
+
 dnl *** checks for header files ***
 
 AC_CHECK_HEADERS([unistd.h], HAVE_UNISTD_H=yes)
@@ -282,6 +285,7 @@ AG_GST_CHECK_PLUGIN(tta)
 AG_GST_CHECK_PLUGIN(valve)
 AG_GST_CHECK_PLUGIN(videosignal)
 AG_GST_CHECK_PLUGIN(vmnc)
+AG_GST_CHECK_PLUGIN(xdgmime)
 AG_GST_CHECK_PLUGIN(y4m)
 
 dnl *** plug-ins to exclude ***
@@ -1468,6 +1472,7 @@ gst/valve/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/real/Makefile
+gst/xdgmime/Makefile
 gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
