@@ -449,15 +449,17 @@ is_nal_equal (const guint8 * nal1, const guint8 * nal2, guint len)
   if (!remainder) {
     return TRUE;
   } else if (1 == remainder) {
-    return (nal1[--len] == nal2[len]);
+    --len;
+    return (nal1[len] == nal2[len]);
   } else {                      /* 2 or 3 */
     if (remainder & 1) {        /* -1 if 3 bytes left */
-      if (nal1[--len] != nal2[len])
+      --len;
+      if (nal1[len] != nal2[len])
         return FALSE;
     }
     /* last 2 bytes */
-    return ((nal1[--len] == nal2[len])  /* -1 */
-        &&(nal1[--len] == nal2[len]));  /* -2 */
+    return ((nal1[len - 1] == nal2[len - 1])    /* -1 */
+        &&(nal1[len - 2] == nal2[len - 2]));    /* -2 */
   }
 }
 
