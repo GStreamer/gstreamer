@@ -199,8 +199,22 @@ GstRTSPResult
 gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
 {
   GstRTSPConnection *newconn;
+#ifdef G_OS_WIN32
+  WSADATA w;
+  int error;
+#endif
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+
+#ifdef G_OS_WIN32
+  error = WSAStartup (0x0202, &w);
+
+  if (error)
+    goto startup_error;
+
+  if (w.wVersion != 0x0202)
+    goto version_error;
+#endif
 
   newconn = g_new0 (GstRTSPConnection, 1);
 
@@ -222,9 +236,26 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
   return GST_RTSP_OK;
 
   /* ERRORS */
+#ifdef G_OS_WIN32
+startup_error:
+  {
+    g_warning ("Error %d on WSAStartup", error);
+    return GST_RTSP_EWSASTART;
+  }
+version_error:
+  {
+    g_warning ("Windows sockets are not version 0x202 (current 0x%x)",
+        w.wVersion);
+    WSACleanup ();
+    return GST_RTSP_EWSAVERSION;
+  }
+#endif
 no_fdset:
   {
     g_free (newconn);
+#ifdef G_OS_WIN32
+    WSACleanup ();
+#endif
     return GST_RTSP_ESYS;
   }
 }
@@ -865,23 +896,8 @@ gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
   GString *str = NULL;
   GstRTSPResult res;
 
-#ifdef G_OS_WIN32
-  WSADATA w;
-  int error;
-#endif
-
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
-
-#ifdef G_OS_WIN32
-  error = WSAStartup (0x0202, &w);
-
-  if (error)
-    goto startup_error;
-
-  if (w.wVersion != 0x0202)
-    goto version_error;
-#endif
 
   if (!(str = message_to_string (conn, message)))
     goto no_message;
@@ -899,20 +915,6 @@ no_message:
     g_warning ("Wrong message");
     return GST_RTSP_EINVAL;
   }
-#ifdef G_OS_WIN32
-startup_error:
-  {
-    g_warning ("Error %d on WSAStartup", error);
-    return GST_RTSP_EWSASTART;
-  }
-version_error:
-  {
-    g_warning ("Windows sockets are not version 0x202 (current 0x%x)",
-        w.wVersion);
-    WSACleanup ();
-    return GST_RTSP_EWSAVERSION;
-  }
-#endif
 }
 
 static void
@@ -1429,9 +1431,6 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
     gst_poll_remove_fd (conn->fdset, &conn->fd);
     res = CLOSE_SOCKET (conn->fd.fd);
     conn->fd.fd = -1;
-#ifdef G_OS_WIN32
-    WSACleanup ();
-#endif
     if (res != 0)
       goto sys_error;
   }
@@ -1461,14 +1460,14 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
 
   res = gst_rtsp_connection_close (conn);
   gst_poll_free (conn->fdset);
-#ifdef G_OS_WIN32
-  WSACleanup ();
-#endif
   g_timer_destroy (conn->timer);
   g_free (conn->username);
   g_free (conn->passwd);
   gst_rtsp_connection_clear_auth_params (conn);
   g_free (conn);
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
 
   return res;
 }
