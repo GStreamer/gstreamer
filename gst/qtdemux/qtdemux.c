@@ -3109,11 +3109,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
             index = QT_UINT32 ((guint8 *) stps->data + offset);
             if (index > 0 && index <= stream->n_samples) {
               samples[index - 1].keyframe = TRUE;
-            offset += 4;
+              offset += 4;
+            }
           }
         }
       }
-    }
     } else {
       /* no stss, all samples are keyframes */
       stream->all_keyframe = TRUE;
@@ -4184,6 +4184,7 @@ static const struct
   FOURCC__des, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
   FOURCC__day, GST_TAG_DATE, NULL, qtdemux_tag_add_date}, {
   FOURCC__too, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
+  FOURCC__inf, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
   FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, qtdemux_tag_add_num}, {
   FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
         qtdemux_tag_add_num}, {
