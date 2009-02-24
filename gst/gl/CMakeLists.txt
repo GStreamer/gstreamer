@@ -1,15 +1,10 @@
 add_definitions(-DHAVE_CONFIG_H)
 
-if (PNG_FOUND AND ZLIB_FOUND)
-add_definitions(-DHAVE_LIBPNG)
-include_directories(AFTER 
-  ${PNG_INCLUDE_DIR}
-  ${ZLIB_INCLUDE_DIR})
-endif (PNG_FOUND AND ZLIB_FOUND)
-
 include_directories(AFTER
   ${GSTREAMER_INCLUDE_DIR}
   ${GLIB2_INCLUDE_DIR}
+  ${PNG_INCLUDE_DIR}
+  ${ZLIB_INCLUDE_DIR}
   ../../gst-libs/gst/gl
   ${GLEW_INCLUDE_DIR}
   ../../gst-libs
@@ -27,13 +22,6 @@ if (WIN32)
   include_directories(AFTER ../../win32/common)
 endif (WIN32)
 
-if (PNG_FOUND AND ZLIB_FOUND)
-  set(OTHER_ELEMENTS
-    gstgloverlay.c
-    gstgldifferencematte.c
-    gstglbumper.c)
-endif (PNG_FOUND AND ZLIB_FOUND)
-
 add_library (gstopengl SHARED
   gstopengl.c
   gstglimagesink.c
@@ -48,7 +36,9 @@ add_library (gstopengl SHARED
   gstglcolorscale.c
   gltestsrc.c
   gstgltestsrc.c
-  ${OTHER_ELEMENTS}
+  gstgloverlay.c
+  gstgldifferencematte.c
+  gstglbumper.c
   gstgleffects.c
   effects/gstgleffectssources.c
   effects/gstgleffectidentity.c
