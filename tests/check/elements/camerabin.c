@@ -90,8 +90,10 @@ capture_done (GstElement * elem, GString * filename, gpointer user_data)
 
   if (continuous) {
     g_string_assign (filename, make_test_seq_file_name (BURST_IMAGE_FILENAME));
-    //g_object_set (G_OBJECT (elem), "filename",
-    //  make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
+    /* on needs to modify the pssed GString, the code below won't work
+       g_object_set (G_OBJECT (elem), "filename",
+       make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
+     */
   }
 
   return continuous;
