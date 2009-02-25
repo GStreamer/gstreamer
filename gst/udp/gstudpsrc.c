@@ -361,6 +361,7 @@ gst_udpsrc_getcaps (GstBaseSrc * src)
 static void
 clear_error (GstUDPSrc * udpsrc)
 {
+#if defined (MSG_ERRQUEUE)
   struct msghdr cmsg;
   char cbuf[128];
   char msgbuf[CMSG_SPACE (128)];
@@ -384,6 +385,7 @@ clear_error (GstUDPSrc * udpsrc)
   cmsg.msg_controllen = sizeof (msgbuf);
 
   recvmsg (udpsrc->sock.fd, &cmsg, MSG_ERRQUEUE);
+#endif
 }
 
 static GstFlowReturn
@@ -858,12 +860,14 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   /* Accept ERRQUEUE to get and flush icmp errors */
   err_val = 1;
+#if defined (IP_RECVERR)
   if ((ret = setsockopt (src->sock.fd, IPPROTO_IP, IP_RECVERR, &err_val,
               sizeof (err_val))) < 0) {
     GST_ELEMENT_WARNING (src, RESOURCE, SETTINGS, (NULL),
         ("could not configure socket for IP_RECVERR %d: %s (%d)", ret,
             g_strerror (errno), errno));
   }
+#endif
 
   if (src->auto_multicast && gst_udp_is_multicast (&src->myaddr)) {
     GST_DEBUG_OBJECT (src, "joining multicast group %s", src->multi_group);
