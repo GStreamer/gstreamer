@@ -2195,6 +2195,9 @@ gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux, guint64 * pos,
 
     /* read some data */
     ret = gst_pad_pull_range (demux->sinkpad, offset, to_read, &buffer);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      return FALSE;
+
     data = GST_BUFFER_DATA (buffer);
     end_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
     /* scan the block */
@@ -2242,6 +2245,9 @@ gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux, guint64 * pos,
     }
     /* read some data */
     ret = gst_pad_pull_range (demux->sinkpad, offset, to_read, &buffer);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      return FALSE;
+
     start_scan = GST_BUFFER_SIZE (buffer) - scan_sz;
     data = GST_BUFFER_DATA (buffer) + start_scan;
     /* scan the block */
