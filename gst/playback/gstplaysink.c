@@ -134,6 +134,7 @@ struct _GstPlaySink
   gboolean mute;
   gchar *font_desc;             /* font description */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
+  gint count;
 };
 
 struct _GstPlaySinkClass
@@ -1603,6 +1604,7 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   GstPad *res = NULL;
   gboolean created = FALSE;
   gboolean raw = FALSE;
+  gboolean activate = TRUE;
 
   GST_DEBUG_OBJECT (playsink, "request pad type %d", type);
 
@@ -1658,6 +1660,19 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       }
       res = playsink->text_pad;
       break;
+    case GST_PLAY_SINK_TYPE_FLUSHING:
+    {
+      gchar *padname;
+
+      /* we need a unique padname for the flushing pad. */
+      padname = g_strdup_printf ("flushing_%d", playsink->count);
+      res = gst_ghost_pad_new_no_target (padname, GST_PAD_SINK);
+      g_free (padname);
+      playsink->count++;
+      activate = FALSE;
+      created = TRUE;
+      break;
+    }
     default:
       res = NULL;
       break;
@@ -1665,8 +1680,12 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
   GST_PLAY_SINK_UNLOCK (playsink);
 
   if (created && res) {
+    /* we have to add the pad when it's active or we get an error when the
+     * element is 'running' */
     gst_pad_set_active (res, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (playsink), res);
+    if (!activate)
+      gst_pad_set_active (res, activate);
   }
 
   return res;
@@ -1686,6 +1705,9 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
     res = &playsink->audio_pad;
   } else if (pad == playsink->text_pad) {
     res = &playsink->text_pad;
+  } else {
+    /* try to release the given pad anyway, these could be the FLUSHING pads. */
+    res = &pad;
   }
   GST_PLAY_SINK_UNLOCK (playsink);
 
