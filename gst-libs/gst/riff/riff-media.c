@@ -173,6 +173,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
     case GST_MAKE_FOURCC ('M', 'P', 'G', '2'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '2'):
+    case GST_MAKE_FOURCC (0x02, 0x00, 0x00, 0x10):
       caps = gst_caps_new_simple ("video/mpeg",
           "systemstream", G_TYPE_BOOLEAN, FALSE,
           "mpegversion", G_TYPE_INT, 2, NULL);
