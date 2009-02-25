@@ -2185,6 +2185,7 @@ notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
   g_object_notify (G_OBJECT (playbin), "source");
 }
 
+/* must be called with the group lock */
 static gboolean
 group_set_locked_state_unlocked (GstPlayBin * playbin, GstSourceGroup * group,
     gboolean locked)
@@ -2311,7 +2312,14 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
     /* we have 2 pending no-more-pads */
     group->pending = 2;
+  }
 
+  /* release the group lock before setting the state of the decodebins, they
+   * might fire signals in this thread that we need to handle with the
+   * group_lock taken. */
+  GST_SOURCE_GROUP_UNLOCK (group);
+
+  if (suburidecodebin) {
     if (gst_element_set_state (suburidecodebin,
             GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
       goto suburidecodebin_failure;
@@ -2320,6 +2328,7 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
           GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
     goto uridecodebin_failure;
 
+  GST_SOURCE_GROUP_LOCK (group);
   /* alow state changes of the playbin2 affect the group elements now */
   group_set_locked_state_unlocked (playbin, group, FALSE);
   group->active = TRUE;
@@ -2336,13 +2345,11 @@ no_decodebin:
 suburidecodebin_failure:
   {
     GST_DEBUG_OBJECT (playbin, "failed state change of subtitle uridecodebin");
-    GST_SOURCE_GROUP_UNLOCK (group);
     return FALSE;
   }
 uridecodebin_failure:
   {
     GST_DEBUG_OBJECT (playbin, "failed state change of uridecodebin");
-    GST_SOURCE_GROUP_UNLOCK (group);
     return FALSE;
   }
 }
@@ -2546,6 +2553,8 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       save_current_group (playbin);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* make sure the groups don't perform a state change anymore until we
+       * enable them again */
       groups_set_locked_state (playbin, TRUE);
       break;
     default:
