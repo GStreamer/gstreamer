@@ -15,6 +15,7 @@ play_file (const gchar * bin, const gint delay, const gchar * uri)
   play = gst_element_factory_make (bin, "playbin");
 
   g_object_set (play, "uri", uri, NULL);
+  g_printerr ("Playing %s\n", uri);
   sret = gst_element_set_state (play, GST_STATE_PLAYING);
   if (sret != GST_STATE_CHANGE_ASYNC) {
     g_printerr ("ERROR: state change failed, sret=%d\n", sret);
