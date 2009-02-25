@@ -802,8 +802,11 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
    * If @pad is the same as the current active pad, the element will cancel any
    * previous block without adjusting segments.
    *
-   * Since: 0.10.7 the signal changed from accepting the pad name to the pad
-   * object.
+   * <note><simpara>
+   * the signal changed from accepting the pad name to the pad object.
+   * </simpara></note>
+   *
+   * Since: 0.10.7
    */
   gst_input_selector_signals[SIGNAL_SWITCH] =
       g_signal_new ("switch", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
