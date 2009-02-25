@@ -25,7 +25,25 @@ play_file (const gchar * bin, const gint delay, const gchar * uri)
   msg = gst_bus_poll (GST_ELEMENT_BUS (play),
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS, wait_nanosecs);
   if (msg) {
-    g_printerr ("Got %s messge\n", GST_MESSAGE_TYPE_NAME (msg));
+    switch (GST_MESSAGE_TYPE (msg)) {
+      case GST_MESSAGE_ERROR:
+      {
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_error (msg, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (msg), gerror, debug);
+        g_error_free (gerror);
+        g_free (debug);
+        break;
+      }
+      case GST_MESSAGE_EOS:
+        g_printerr ("Got EOS\n");
+        break;
+      default:
+        g_printerr ("Got unexpected %s messge\n", GST_MESSAGE_TYPE_NAME (msg));
+        break;
+    }
     gst_message_unref (msg);
     goto next;
   }
