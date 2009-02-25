@@ -250,6 +250,7 @@ struct _GstXvImageSink {
   GValue *par;
 
   GMutex *pool_lock;
+  gboolean pool_invalid;
   GSList *image_pool;
 
   gboolean synchronous;

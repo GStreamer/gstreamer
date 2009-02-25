@@ -2209,8 +2209,16 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       gst_xvimagesink_update_colorbalance (xvimagesink);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      g_mutex_lock (xvimagesink->pool_lock);
+      xvimagesink->pool_invalid = FALSE;
+      g_mutex_unlock (xvimagesink->pool_lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (xvimagesink->pool_lock);
+      xvimagesink->pool_invalid = TRUE;
+      g_mutex_unlock (xvimagesink->pool_lock);
       break;
     default:
       break;
@@ -2336,8 +2344,13 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   GstCaps *intersection = NULL;
   GstStructure *structure = NULL;
   gint width, height, image_format;
+  GstCaps *new_caps;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
+
+  g_mutex_lock (xvimagesink->pool_lock);
+  if (G_UNLIKELY (xvimagesink->pool_invalid))
+    goto invalid;
 
   if (G_LIKELY (xvimagesink->xcontext->last_caps &&
           gst_caps_is_equal (caps, xvimagesink->xcontext->last_caps))) {
@@ -2366,7 +2379,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   if (gst_caps_is_empty (intersection)) {
     /* So we don't support this kind of buffer, let's define one we'd like */
-    GstCaps *new_caps = gst_caps_copy (caps);
+    new_caps = gst_caps_copy (caps);
 
     structure = gst_caps_get_structure (new_caps, 0);
 
@@ -2392,15 +2405,8 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       gst_caps_unref (intersection);
       intersection = gst_caps_intersect (xvimagesink->xcontext->caps, new_caps);
 
-      if (gst_caps_is_empty (intersection)) {
-        GST_WARNING_OBJECT (xvimagesink, "we were requested a buffer with "
-            "caps %" GST_PTR_FORMAT ", but our xcontext caps %" GST_PTR_FORMAT
-            " are completely incompatible with those caps", new_caps,
-            xvimagesink->xcontext->caps);
-        gst_caps_unref (new_caps);
-        ret = GST_FLOW_UNEXPECTED;
-        goto beach;
-      }
+      if (gst_caps_is_empty (intersection))
+        goto incompatible;
     }
 
     /* Clean this copy */
@@ -2424,12 +2430,8 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   structure = gst_caps_get_structure (intersection, 0);
   if (!gst_structure_get_int (structure, "width", &width) ||
       !gst_structure_get_int (structure, "height", &height) ||
-      image_format == -1) {
-    GST_WARNING_OBJECT (xvimagesink, "invalid caps for buffer allocation %"
-        GST_PTR_FORMAT, intersection);
-    ret = GST_FLOW_UNEXPECTED;
-    goto beach;
-  }
+      image_format == -1)
+    goto invalid_caps;
 
   /* Store our caps and format as the last_caps to avoid expensive
    * caps intersection next time */
@@ -2439,8 +2441,6 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   xvimagesink->xcontext->last_height = height;
 
 reuse_last_caps:
-
-  g_mutex_lock (xvimagesink->pool_lock);
 
   /* Walking through the pool cleaning unusable images and searching for a
      suitable one */
@@ -2466,8 +2466,6 @@ reuse_last_caps:
     }
   }
 
-  g_mutex_unlock (xvimagesink->pool_lock);
-
   if (!xvimage) {
     /* We found no suitable image in the pool. Creating... */
     GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
@@ -2480,6 +2478,7 @@ reuse_last_caps:
       xvimage = NULL;
     }
   }
+  g_mutex_unlock (xvimagesink->pool_lock);
 
   if (xvimage) {
     /* Make sure the buffer is cleared of any previously used flags */
@@ -2495,6 +2494,34 @@ beach:
   }
 
   return ret;
+
+  /* ERRORS */
+invalid:
+  {
+    GST_DEBUG_OBJECT (xvimagesink, "the pool is flushing");
+    ret = GST_FLOW_WRONG_STATE;
+    g_mutex_unlock (xvimagesink->pool_lock);
+    goto beach;
+  }
+incompatible:
+  {
+    GST_WARNING_OBJECT (xvimagesink, "we were requested a buffer with "
+        "caps %" GST_PTR_FORMAT ", but our xcontext caps %" GST_PTR_FORMAT
+        " are completely incompatible with those caps", new_caps,
+        xvimagesink->xcontext->caps);
+    gst_caps_unref (new_caps);
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    g_mutex_unlock (xvimagesink->pool_lock);
+    goto beach;
+  }
+invalid_caps:
+  {
+    GST_WARNING_OBJECT (xvimagesink, "invalid caps for buffer allocation %"
+        GST_PTR_FORMAT, intersection);
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    g_mutex_unlock (xvimagesink->pool_lock);
+    goto beach;
+  }
 }
 
 /* Interfaces stuff */
@@ -3135,6 +3162,12 @@ gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
   thread = xvimagesink->event_thread;
   xvimagesink->event_thread = NULL;
   GST_OBJECT_UNLOCK (xvimagesink);
+
+  /* invalidate the pool, current allocations continue, new buffer_alloc fails
+   * with wrong_state */
+  g_mutex_lock (xvimagesink->pool_lock);
+  xvimagesink->pool_invalid = TRUE;
+  g_mutex_unlock (xvimagesink->pool_lock);
 
   /* Wait for our event thread to finish before we clean up our stuff. */
   if (thread)
