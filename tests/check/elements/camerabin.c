@@ -90,7 +90,7 @@ capture_done (GstElement * elem, GString * filename, gpointer user_data)
 
   if (continuous) {
     g_string_assign (filename, make_test_seq_file_name (BURST_IMAGE_FILENAME));
-    /* on needs to modify the pssed GString, the code below won't work
+    /* on needs to modify the passed GString, the code below won't work
        g_object_set (G_OBJECT (elem), "filename",
        make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
      */
@@ -347,8 +347,8 @@ GST_START_TEST (test_video_recording)
       "filename", make_test_file_name (VIDEO_FILENAME), NULL);
 
   g_signal_emit_by_name (camera, "user-start", 0);
-  /* Record for few seconds  */
-  g_usleep (2 * G_USEC_PER_SEC);
+  /* Record for one seconds  */
+  g_usleep (G_USEC_PER_SEC);
   g_signal_emit_by_name (camera, "user-stop", 0);
 }
 
@@ -368,6 +368,7 @@ GST_START_TEST (test_image_video_cycle)
     /* Take a picture */
     g_signal_emit_by_name (camera, "user-start", 0);
     g_signal_emit_by_name (camera, "user-stop", 0);
+    GST_DEBUG ("image captured");
 
     /* Set video recording mode */
     g_object_set (camera, "mode", 1,
@@ -375,17 +376,19 @@ GST_START_TEST (test_image_video_cycle)
 
     /* Record video */
     g_signal_emit_by_name (camera, "user-start", 0);
-    g_usleep (2 * G_USEC_PER_SEC);
+    g_usleep (G_USEC_PER_SEC);
     g_signal_emit_by_name (camera, "user-stop", 0);
+    GST_DEBUG ("video captured");
   }
 }
 
 GST_END_TEST;
 
-GST_START_TEST (validate_captured_files)
+GST_START_TEST (validate_captured_image_files)
 {
   GString *filename;
   gint i;
+
   /* validate single image */
   check_file_validity (SINGLE_IMAGE_FILENAME);
 
@@ -397,13 +400,19 @@ GST_START_TEST (validate_captured_files)
   }
   g_string_free (filename, TRUE);
 
+  /* validate cycled image */
+  check_file_validity (CYCLE_IMAGE_FILENAME);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (validate_captured_video_files)
+{
   /* validate video recording */
   check_file_validity (VIDEO_FILENAME);
 
-  /* validate cycled image and video */
-  check_file_validity (CYCLE_IMAGE_FILENAME);
+  /* validate cycled  video */
   check_file_validity (CYCLE_VIDEO_FILENAME);
-
 }
 
 GST_END_TEST;
@@ -417,8 +426,8 @@ camerabin_suite (void)
 
   /* Test that basic operations run without errors */
   suite_add_tcase (s, tc_basic);
-  /* Increase timeout due to video recording for now */
-  tcase_set_timeout (tc_basic, 10);
+  /* Increase timeout due to video recording */
+  tcase_set_timeout (tc_basic, 20);
   tcase_add_checked_fixture (tc_basic, setup, teardown);
   tcase_add_test (tc_basic, test_single_image_capture);
   tcase_add_test (tc_basic, test_burst_image_capture);
@@ -427,7 +436,10 @@ camerabin_suite (void)
 
   /* Validate captured files */
   suite_add_tcase (s, tc_validate);
-  tcase_add_test (tc_validate, validate_captured_files);
+  /* Increase timeout due to file playback */
+  tcase_set_timeout (tc_validate, 20);
+  tcase_add_test (tc_validate, validate_captured_image_files);
+  tcase_add_test (tc_validate, validate_captured_video_files);
 
   return s;
 }
