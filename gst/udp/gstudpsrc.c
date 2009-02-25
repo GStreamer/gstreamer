@@ -481,7 +481,7 @@ no_select:
   pktsize = readsize;
 
   while (TRUE) {
-    slen = sizeof (struct sockaddr);
+    slen = sizeof (sa);
 #ifdef G_OS_WIN32
     ret = recvfrom (udpsrc->sock.fd, (char *) pktdata, pktsize, 0, &sa.sa,
         &slen);
