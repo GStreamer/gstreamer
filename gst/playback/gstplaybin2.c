@@ -265,7 +265,6 @@ struct _GstSourceSelect
   GPtrArray *channels;
   GstPad *srcpad;               /* the source pad of the selector */
   GstPad *sinkpad;              /* the sinkpad of the sink when the selector is linked */
-  GstElement *fakesink;         /* the fakesink the selector might be linked to */
 };
 
 #define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
@@ -1998,43 +1997,27 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 shutdown:
   {
     GST_DEBUG ("ignoring, we are shutting down");
-    /* unblock selector and link fakesink in READY to make downstream
-     * return WRONG_STATE
-     * (trying to avoid NOT_LINKED leading to confusing errors) */
+    /* Request a flushing pad from playsink that we then link to the selector.
+     * Then we unblock the selectors so that they stop with a WRONG_STATE
+     * instead of a NOT_LINKED error.
+     */
     GST_SOURCE_GROUP_LOCK (group);
     for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
-      /* if we are in normal case, i.e. have a selector etc, plug fakesink */
-      if (select->selector) {
-        if (select->srcpad) {
-          GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
-              select->srcpad);
-          gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
-              NULL);
-        }
-        /* streaming might error with NOT_LINKED if any of this fails,
-         * but at least we tried */
-        GST_DEBUG_OBJECT (playbin, "creating fakesink (sinktype:%d)",
-            select->type);
-        select->fakesink = gst_element_factory_make ("fakesink", "fakesink");
-        if (select->fakesink) {
-          GST_OBJECT_FLAG_UNSET (select->fakesink, GST_ELEMENT_IS_SINK);
-          gst_element_set_state (select->fakesink, GST_STATE_READY);
-          if (gst_bin_add (GST_BIN (playbin), select->fakesink)) {
-            if (!gst_element_link (select->selector, select->fakesink)) {
-              GST_DEBUG_OBJECT (playbin, "could not link fakesink element");
-              gst_object_unref (select->fakesink);
-              select->fakesink = NULL;
-            }
-          } else {
-            GST_DEBUG_OBJECT (playbin, "could not add fakesink element");
-            gst_object_unref (select->fakesink);
-            select->fakesink = NULL;
-          }
-        } else {
-          GST_DEBUG_OBJECT (playbin, "failed to create fakesink");
-        }
+      if (select->selector && select->sinkpad == NULL) {
+        GST_DEBUG_OBJECT (playbin, "requesting new flushing sink pad");
+        select->sinkpad =
+            gst_play_sink_request_pad (playbin->playsink,
+            GST_PLAY_SINK_TYPE_FLUSHING);
+        res = gst_pad_link (select->srcpad, select->sinkpad);
+        GST_DEBUG_OBJECT (playbin, "linked flushing, result: %d", res);
+      }
+      if (select->srcpad) {
+        GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
+            select->srcpad);
+        gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
+            NULL);
       }
     }
     GST_SOURCE_GROUP_UNLOCK (group);
@@ -2384,13 +2367,6 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
       GST_LOG_OBJECT (playbin, "release sink pad");
       gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
       select->sinkpad = NULL;
-    }
-
-    if (select->fakesink) {
-      GST_LOG_OBJECT (playbin, "removing fakesink");
-      gst_element_set_state (select->fakesink, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (playbin), select->fakesink);
-      select->fakesink = NULL;
     }
 
     gst_object_unref (select->srcpad);
