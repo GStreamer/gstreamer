@@ -1794,12 +1794,14 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
       MPEGAudioSeekEntry *entry = NULL, *start_entry = NULL, *stop_entry = NULL;
 
       GList *start_node, *stop_node;
+      gint64 seek_ts = (cur > mp3parse->max_bitreservoir) ?
+          (cur - mp3parse->max_bitreservoir) : 0;
 
       for (start_node = mp3parse->seek_table; start_node;
           start_node = start_node->next) {
         entry = start_node->data;
 
-        if (cur - mp3parse->max_bitreservoir >= entry->timestamp) {
+        if (seek_ts >= entry->timestamp) {
           start_entry = entry;
           break;
         }
