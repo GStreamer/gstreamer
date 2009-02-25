@@ -931,7 +931,8 @@ static void pad_removed_cb (GstElement * element, GstPad * pad,
     GstDecodeBin * dbin);
 static void no_more_pads_cb (GstElement * element, GstDecodeBin * dbin);
 
-static GstDecodeGroup *get_current_group (GstDecodeBin * dbin);
+static GstDecodeGroup *get_current_group (GstDecodeBin * dbin,
+    gboolean create, gboolean demux, gboolean * created);
 
 /* called when a new pad is discovered. It will perform some basic actions
  * before trying to link something to it.
@@ -1106,13 +1107,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GST_LOG_OBJECT (src, "is a demuxer, connecting the pad through multiqueue");
 
     if (!group)
-      if (!(group = get_current_group (dbin))) {
-        group = gst_decode_group_new (dbin, TRUE);
-        DECODE_BIN_LOCK (dbin);
-        GST_LOG_OBJECT (dbin, "added group %p", group);
-        dbin->groups = g_list_append (dbin->groups, group);
-        DECODE_BIN_UNLOCK (dbin);
-      }
+      group = get_current_group (dbin, TRUE, TRUE, NULL);
 
     gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), NULL);
     if (!(mqpad = gst_decode_group_control_demuxer_pad (group, pad)))
@@ -1385,14 +1380,7 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   isdemux = is_demuxer_element (src);
 
   if (!group)
-    if (!(group = get_current_group (dbin))) {
-      group = gst_decode_group_new (dbin, isdemux);
-      DECODE_BIN_LOCK (dbin);
-      GST_LOG_OBJECT (dbin, "added group %p", group);
-      dbin->groups = g_list_append (dbin->groups, group);
-      DECODE_BIN_UNLOCK (dbin);
-      newgroup = TRUE;
-    }
+    group = get_current_group (dbin, TRUE, isdemux, &newgroup);
 
   if (isdemux) {
     GST_LOG_OBJECT (src, "connecting the pad through multiqueue");
@@ -1529,7 +1517,7 @@ no_more_pads_cb (GstElement * element, GstDecodeBin * dbin)
   GST_LOG_OBJECT (element, "No more pads, setting current group to complete");
 
   /* Find the non-complete group, there should only be one */
-  if (!(group = get_current_group (dbin)))
+  if (!(group = get_current_group (dbin, FALSE, FALSE, NULL)))
     goto no_group;
 
   gst_decode_group_set_complete (group);
@@ -1719,13 +1707,18 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
 }
 
 /* get_current_group:
+ * @dbin: the decodebin
+ * @create: create the group when not present
+ * @as_demux: create the group as a demuxer
+ * @created: result when the group was created
  *
  * Returns the current non-completed group.
  *
  * Returns: %NULL if no groups are available, or all groups are completed.
  */
 static GstDecodeGroup *
-get_current_group (GstDecodeBin * dbin)
+get_current_group (GstDecodeBin * dbin, gboolean create, gboolean as_demux,
+    gboolean * created)
 {
   GList *tmp;
   GstDecodeGroup *group = NULL;
@@ -1740,6 +1733,13 @@ get_current_group (GstDecodeBin * dbin)
       group = this;
       break;
     }
+  }
+  if (group == NULL && create) {
+    group = gst_decode_group_new (dbin, as_demux);
+    GST_LOG_OBJECT (dbin, "added group %p, demux %d", group, as_demux);
+    dbin->groups = g_list_append (dbin->groups, group);
+    if (created)
+      *created = TRUE;
   }
   DECODE_BIN_UNLOCK (dbin);
 
@@ -1976,7 +1976,7 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
  *
  * Expose this group's pads.
  *
- * Not MT safe, please take the group lock
+ * Not MT safe, please take the decodebin lock
  */
 static gboolean
 gst_decode_group_expose (GstDecodeGroup * group)
