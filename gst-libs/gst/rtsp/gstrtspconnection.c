@@ -1769,17 +1769,18 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
 {
   union gst_sockaddr
   {
-    struct sockaddr_storage sa_s;
-    struct sockaddr_in6 saddr6;
+    struct sockaddr sa;
+    struct sockaddr_in6 sa_in6;
+    struct sockaddr_storage sa_stor;
   } sa;
-  socklen_t sa_sl = sizeof (sa);
+  socklen_t slen = sizeof (sa);
   gint af;
   gint tos;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->fd.fd >= 0, GST_RTSP_EINVAL);
 
-  if (getsockname (conn->fd.fd, (struct sockaddr *) &sa.sa_s, &sa_sl) < 0)
+  if (getsockname (conn->fd.fd, &sa.sa, &slen) < 0)
     goto no_getsockname;
 
   af = sa.sa_s.ss_family;
@@ -1787,7 +1788,7 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
   /* if this is an IPv4-mapped address then do IPv4 QoS */
   if (af == AF_INET6) {
 
-    if (IN6_IS_ADDR_V4MAPPED (&sa.saddr6.sin6_addr))
+    if (IN6_IS_ADDR_V4MAPPED (&sa.sa_in6.sin6_addr))
       af = AF_INET;
   }
 

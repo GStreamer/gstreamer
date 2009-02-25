@@ -703,8 +703,9 @@ setup_dscp_client (GstMultiFdSink * sink, GstTCPClient * client)
   gint ret;
   union gst_sockaddr
   {
-    struct sockaddr_storage ssaddr;
-    struct sockaddr_in6 saddr6;
+    struct sockaddr sa;
+    struct sockaddr_in6 sa_in6;
+    struct sockaddr_storage sa_stor;
   } sa;
   socklen_t slen = sizeof (sa);
   gint af;
@@ -713,20 +714,18 @@ setup_dscp_client (GstMultiFdSink * sink, GstTCPClient * client)
   if (sink->qos_dscp < 0)
     return 0;
 
-  if ((ret =
-          getsockname (client->fd.fd, (struct sockaddr *) &sa.ssaddr,
-              &slen)) < 0) {
+  if ((ret = getsockname (client->fd.fd, &sa.sa, &slen)) < 0) {
     GST_DEBUG_OBJECT (sink, "could not get sockname: %s", g_strerror (errno));
     return ret;
   }
 
-  af = sa.ssaddr.ss_family;
+  af = sa.sa.sa_family;
 
   /* if this is an IPv4-mapped address then do IPv4 QoS */
   if (af == AF_INET6) {
 
     GST_DEBUG_OBJECT (sink, "check IP6 socket");
-    if (IN6_IS_ADDR_V4MAPPED (&(sa.saddr6.sin6_addr))) {
+    if (IN6_IS_ADDR_V4MAPPED (&(sa.sa_in6.sin6_addr))) {
       GST_DEBUG_OBJECT (sink, "mapped to IPV4");
       af = AF_INET;
     }
