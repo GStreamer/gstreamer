@@ -625,7 +625,7 @@ dnl LDFLAGS for plugins; includes GST_ALL_LDFLAGS
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS, "$GST_PLUGIN_LDFLAGS")
 
-SHAVE_INIT([common])
+SHAVE_INIT([common],[enable])
 
 AC_CONFIG_FILES(
 Makefile
