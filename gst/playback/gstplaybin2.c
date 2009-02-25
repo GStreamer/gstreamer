@@ -2015,7 +2015,8 @@ shutdown:
         }
         /* streaming might error with NOT_LINKED if any of this fails,
          * but at least we tried */
-        GST_DEBUG_OBJECT (playbin, "creating fakesink", select->type);
+        GST_DEBUG_OBJECT (playbin, "creating fakesink (sinktype:%d)",
+            select->type);
         select->fakesink = gst_element_factory_make ("fakesink", "fakesink");
         if (select->fakesink) {
           GST_OBJECT_FLAG_UNSET (select->fakesink, GST_ELEMENT_IS_SINK);
