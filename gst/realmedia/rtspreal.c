@@ -361,6 +361,9 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
 
     media = gst_sdp_message_get_media (sdp, i);
 
+    if (media->media && !strcmp (media->media, "data"))
+      continue;
+
     stream = g_new0 (GstRTSPRealStream, 1);
     ctx->streams = g_list_append (ctx->streams, stream);
 
