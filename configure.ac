@@ -365,7 +365,7 @@ AM_CHECK_PYTHON_LIBS(,[AC_MSG_ERROR(could not find Python lib)])
 
 AG_GST_SET_PLUGINDIR
 
-SHAVE_INIT([common])
+SHAVE_INIT([common],[enable])
 
 AC_OUTPUT([
   Makefile
