@@ -3599,7 +3599,7 @@ static GstBuffer *
 gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 {
   GstStructure *s;
-  gint y, h = stream->strf.vids->height;
+  gint y, w, h;
   gint bpp, stride;
   guint8 *tmp = NULL;
 
@@ -3616,7 +3616,14 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
     return buf;
   }
 
-  stride = stream->strf.vids->width * (bpp / 8);
+  if (stream->strf.vids == NULL) {
+    GST_WARNING ("Failed to retrieve vids for stream");
+    return buf;
+  }
+
+  h = stream->strf.vids->height;
+  w = stream->strf.vids->width;
+  stride = w * (bpp / 8);
 
   buf = gst_buffer_make_writable (buf);
   if (GST_BUFFER_SIZE (buf) < (stride * h)) {
