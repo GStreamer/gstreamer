@@ -393,12 +393,12 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   GstNetBuffer *outbuf;
   union gst_sockaddr
   {
-    struct sockaddr_storage sa_stor;
     struct sockaddr sa;
     struct sockaddr_in sa_in;
     struct sockaddr_in6 sa_in6;
+    struct sockaddr_storage sa_stor;
   } sa;
-  socklen_t len;
+  socklen_t slen;
   guint8 *pktdata;
   gint pktsize;
 #ifdef G_OS_UNIX
@@ -481,13 +481,12 @@ no_select:
   pktsize = readsize;
 
   while (TRUE) {
-    len = sizeof (struct sockaddr);
+    slen = sizeof (struct sockaddr);
 #ifdef G_OS_WIN32
-    ret = recvfrom (udpsrc->sock.fd, (char *) pktdata, pktsize,
-        0, &sa.sa, &len);
+    ret = recvfrom (udpsrc->sock.fd, (char *) pktdata, pktsize, 0, &sa.sa,
+        &slen);
 #else
-    ret = recvfrom (udpsrc->sock.fd, pktdata, pktsize,
-        0, &sa.sa, &len);
+    ret = recvfrom (udpsrc->sock.fd, pktdata, pktsize, 0, &sa.sa, &slen);
 #endif
     if (G_UNLIKELY (ret < 0)) {
 #ifdef G_OS_WIN32
@@ -524,7 +523,7 @@ no_select:
   GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
-  switch (sa.sa_stor.ss_family) {
+  switch (sa.sa.sa_family) {
     case AF_INET:
     {
       gst_netaddress_set_ip4_address (&outbuf->from, sa.sa_in.sin_addr.s_addr,
