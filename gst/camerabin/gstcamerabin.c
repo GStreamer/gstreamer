@@ -19,15 +19,13 @@
  */
 
 /**
- * SECTION:gstcamerabin
+ * SECTION:element-camerabin
  * @short_description: camera capture bin
  *
- * <refsect2>
- * <para>
  * GstCameraBin is a high-level camera object that encapsulates the gstreamer
  * internals and provides a task based API for the application. It consists of
  * three main data paths: view-finder, image capture and video capture.
- * </para>
+ *
  * <informalfigure>
  *   <mediaobject>
  *     <imageobject><imagedata fileref="camerabin.png"/></imageobject>
@@ -35,14 +33,12 @@
  *     <caption><para>Structural decomposition of CameraBin object.</para></caption>
  *   </mediaobject>
  * </informalfigure>
- * </refsect2>
+ *
  * <refsect2>
  * <title>Example launch line</title>
- * <para>
- * <programlisting>
+ * |[
  * gst-launch -v -m camerabin filename=test.jpeg
- * </programlisting>
- * </para>
+ * ]|
  * </refsect2>
  * <refsect2>
  * <title>Image capture</title>
@@ -53,8 +49,7 @@
  * shot) or stop capturing. The last captured image is shown
  * until one switches back to view finder using #GstCameraBin::user-stop action
  * signal.
- * </para>
- * <para>
+ * 
  * Available resolutions can be taken from the #GstCameraBin:inputcaps property.
  * Image capture resolution can be set with #GstCameraBin::user-image-res
  * action signal.
@@ -66,8 +61,7 @@
  * Video capture is started with the #GstCameraBin::user-start action signal too.
  * In addition to image capture one can use #GstCameraBin::user-pause to
  * pause recording and #GstCameraBin::user-stop to end recording.
- * </para>
- * <para>
+ * 
  * Available resolutions and fps can be taken from the #GstCameraBin:inputcaps
  * property. #GstCameraBin::user-res-fps action signal can be used to set frame
  * rate and resolution for the video recording and view finder as well.
@@ -2309,8 +2303,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   camerabin_signals[IMG_DONE_SIGNAL] =
       g_signal_new ("img-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstCameraBinClass, img_done),
-      g_signal_accumulator_true_handled, NULL, gst_marshal_BOOLEAN__POINTER,
-      G_TYPE_BOOLEAN, 1, G_TYPE_POINTER);
+      g_signal_accumulator_true_handled, NULL,
+      gst_camerabin_marshal_BOOLEAN__STRING, G_TYPE_BOOLEAN, 1, G_TYPE_GSTRING);
 
   klass->user_start = gst_camerabin_user_start;
   klass->user_stop = gst_camerabin_user_stop;
