@@ -1783,7 +1783,7 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
   if (getsockname (conn->fd.fd, &sa.sa, &slen) < 0)
     goto no_getsockname;
 
-  af = sa.sa_s.ss_family;
+  af = sa.sa.sa_family;
 
   /* if this is an IPv4-mapped address then do IPv4 QoS */
   if (af == AF_INET6) {
