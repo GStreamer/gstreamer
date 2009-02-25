@@ -116,6 +116,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/x264/gstx264enc.h \
 	$(top_srcdir)/gst/aacparse/gstaacparse.h \
 	$(top_srcdir)/gst/amrparse/gstamrparse.h \
+	$(top_srcdir)/gst/camerabin/gstcamerabin.h \
 	$(top_srcdir)/gst/legacyresample/gstlegacyresample.h \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
@@ -155,7 +156,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h
 
 # Images to copy into HTML directory.
-HTML_IMAGES =
+HTML_IMAGES = $(srcdir)/figures/*.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files =

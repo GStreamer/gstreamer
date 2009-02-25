@@ -1,0 +1,14 @@
+<plugin>
+  <name>xdgmime</name>
+  <description>XDG-MIME</description>
+  <filename>../../gst/xdgmime/.libs/libgstxdgmime.so</filename>
+  <basename>libgstxdgmime.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+
+  </elements>
+</plugin>

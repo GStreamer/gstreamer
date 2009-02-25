@@ -83,6 +83,21 @@ gst_audio_parse_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-camerabin</FILE>
+<TITLE>camerabin</TITLE>
+GstCameraBin
+GstCameraBinMode
+<SUBSECTION Standard>
+GstCameraBinClass
+GST_CAMERABIN
+GST_IS_CAMERABIN
+GST_TYPE_CAMERABIN
+GST_CAMERABIN_CLASS
+GST_IS_CAMERABIN_CLASS
+gst_camerabin_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-celtdec</FILE>
 <TITLE>celtdec</TITLE>
 GstCeltDec

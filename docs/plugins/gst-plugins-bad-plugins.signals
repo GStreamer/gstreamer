@@ -415,3 +415,68 @@ GstDCCPServerSrc *gstdccpserversrc
 gint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstCameraBin::img-done</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstCameraBin *gstcamerabin
+GString *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::user-image-res</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+gint  arg1
+gint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::user-pause</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::user-res-fps</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+gint  arg1
+gint  arg2
+gint  arg3
+gint  arg4
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::user-start</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstCameraBin::user-stop</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstCameraBin *gstcamerabin
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDTMFMux::locking</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDTMFMux *gstrtpdtmfmux
+GstPad *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDTMFMux::unlocked</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDTMFMux *gstrtpdtmfmux
+GstPad *arg1
+</SIGNAL>
+

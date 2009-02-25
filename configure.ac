@@ -1544,6 +1544,7 @@ ext/xvid/Makefile
 po/Makefile.in
 docs/Makefile
 docs/plugins/Makefile
+docs/plugins/figures/Makefile
 docs/version.entities
 common/Makefile
 common/m4/Makefile

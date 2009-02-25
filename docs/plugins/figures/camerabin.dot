@@ -1,0 +1,23 @@
+/* dot -Tpng camerabin.dot -o camerabin.png */
+
+digraph camera {
+  rankdir=LR;
+  fontname="Bitstream Vera Sans";
+  fontsize="8";
+  labelloc=t;
+  nodesep=.15;
+  label="Camera Pipeline";
+  node [style=filled, fillcolor="#eeeeee", shape=box, fontsize="7", fontname="Bitstream Vera Sans"];
+  edge [labelfontsize="7", fontsize="7", labelfontname="Bitstream Vera Sans", fontname="Bitstream Vera Sans"];
+
+  view_finder [ label="view finder" ];
+  image_capture [ label="image capture" ];
+  video_capture [ label="video capture" ];
+  
+  capture -> view_finder;
+  capture -> image_capture;
+  capture -> video_capture;
+  image_capture -> view_finder;
+  video_capture -> view_finder;
+}
+
