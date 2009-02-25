@@ -569,7 +569,7 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
  * @clock_rate: clock-rate of @rtptime
  * @last_rtptime: last seen rtptime.
  *
- * Returns the relation between the RTP timestamp and the GStreamer timestamp
+ * Calculates the relation between the RTP timestamp and the GStreamer timestamp
  * used for constructing timestamps.
  *
  * For extended RTP timestamp @rtptime with a clock-rate of @clock_rate,
