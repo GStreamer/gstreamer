@@ -1670,9 +1670,9 @@ gst_camerabin_reset_to_view_finder (GstCameraBin * camera)
     gst_pad_set_blocked_async (camera->srcpad_zoom_filter, FALSE,
         (GstPadBlockCallback) image_pad_blocked, camera);
   }
-  /* Unblock, if dataflow to image bin is blocked due to waiting for eos */
-  if (camera->pad_src_img && gst_pad_is_blocked (camera->pad_src_img)) {
-    gst_pad_set_blocked_async (camera->pad_src_img, FALSE,
+  /* Unblock, if dataflow in videosrc is blocked due to waiting for eos */
+  if (camera->srcpad_videosrc && gst_pad_is_blocked (camera->srcpad_videosrc)) {
+    gst_pad_set_blocked_async (camera->srcpad_videosrc, FALSE,
         (GstPadBlockCallback) image_pad_blocked, camera);
   }
 
@@ -1916,7 +1916,7 @@ gst_camerabin_update_aspect_filter (GstCameraBin * camera, GstCaps * new_caps)
   if (sink_pad) {
     sink_caps = gst_pad_get_caps (sink_pad);
     gst_object_unref (sink_pad);
-    if (sink_caps) {
+    if (sink_caps && !gst_caps_is_any (sink_caps)) {
       GST_DEBUG_OBJECT (camera, "sink element caps %" GST_PTR_FORMAT,
           sink_caps);
       /* Get maximum resolution that view finder sink accepts */
