@@ -958,7 +958,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
 
     /* load caps */
     unpack_string (*in, str);
-    factory->caps = gst_caps_from_string (str);
+    factory->caps = (g_str_equal (str, "")) ? NULL : gst_caps_from_string (str);
     g_free (str);
     /* load extensions */
     if (tff->nextensions) {
