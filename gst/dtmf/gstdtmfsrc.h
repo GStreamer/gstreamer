@@ -42,13 +42,6 @@ G_BEGIN_DECLS
 typedef struct _GstDTMFSrc GstDTMFSrc;
 typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
 
-/**
- * GstDTMFSrc:
- * @element: the parent element.
- *
- * The opaque #GstDTMFSrc data structure.
- */
-
 enum _GstDTMFEventType
 {
   DTMF_EVENT_TYPE_START,
@@ -69,6 +62,12 @@ struct _GstDTMFSrcEvent
 
 typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
 
+/**
+ * GstDTMFSrc:
+ * @element: the parent element.
+ *
+ * The opaque #GstDTMFSrc data structure.
+ */
 struct _GstDTMFSrc
 {
   /*< private >*/

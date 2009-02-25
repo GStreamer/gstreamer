@@ -25,7 +25,6 @@
 
 /**
  * SECTION:element-rtpdtmfsrc
- * @short_description: Generates RTP DTMF packets
  * @see_also: dtmfsrc, rtpdtmfdepay, rtpdtmfmux
  *
  * The RTPDTMFSrc element generates RTP DTMF (RFC 2833) event packets on request

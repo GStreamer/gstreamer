@@ -117,14 +117,18 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/aacparse/gstaacparse.h \
 	$(top_srcdir)/gst/amrparse/gstamrparse.h \
 	$(top_srcdir)/gst/camerabin/gstcamerabin.h \
-	$(top_srcdir)/gst/legacyresample/gstlegacyresample.h \
 	$(top_srcdir)/gst/deinterlace/gstdeinterlace.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsink.h \
 	$(top_srcdir)/gst/dccp/gstdccpclientsrc.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversink.h \
 	$(top_srcdir)/gst/dccp/gstdccpserversrc.h \
+	$(top_srcdir)/gst/dtmf/gstdtmfsrc.h \
+	$(top_srcdir)/gst/dtmf/gstrtpdtmfsrc.h \
+	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
+	$(top_srcdir)/gst/legacyresample/gstlegacyresample.h \
+	$(top_srcdir)/gst/liveadder/liveadder.h \
 	$(top_srcdir)/gst/mxf/mxfdemux.h \
 	$(top_srcdir)/gst/nuvdemux/gstnuvdemux.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
@@ -148,11 +152,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h \
 	$(top_srcdir)/gst/valve/gstvalve.h \
 	$(top_srcdir)/gst/y4m/gsty4mencode.h \
-	$(top_srcdir)/gst/liveadder/liveadder.h \
-	$(top_srcdir)/gst/dtmf/gstdtmfsrc.h \
-	$(top_srcdir)/gst/dtmf/gstrtpdtmfsrc.h \
-	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
-	$(top_srcdir)/gst/dtmf/gstrtpdtmfcommon.h \
 	$(top_srcdir)/sys/dvb/gstdvbsrc.h
 
 # Images to copy into HTML directory.

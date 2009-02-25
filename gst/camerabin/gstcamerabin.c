@@ -20,7 +20,6 @@
 
 /**
  * SECTION:element-camerabin
- * @short_description: camera capture bin
  *
  * GstCameraBin is a high-level camera object that encapsulates the gstreamer
  * internals and provides a task based API for the application. It consists of
