@@ -44,6 +44,36 @@ static gboolean continuous = FALSE;
 static guint captured_images = 0;
 
 static GstElement *camera;
+static GCond *cam_cond;
+static GMutex *cam_mutex;
+
+
+/* helper function for filenames */
+static const gchar *
+make_test_file_name (const gchar * base_name)
+{
+  static gchar file_name[1000];
+
+  g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S "%s",
+      g_get_tmp_dir (), base_name);
+
+  GST_INFO ("capturing to: %s", file_name);
+  return file_name;
+}
+
+static const gchar *
+make_test_seq_file_name (const gchar * base_name)
+{
+  static gchar file_name[1000];
+
+  g_snprintf (file_name, 999, "%s" G_DIR_SEPARATOR_S "%02u_%s",
+      g_get_tmp_dir (), captured_images, base_name);
+
+  GST_INFO ("capturing to: %s", file_name);
+  return file_name;
+}
+
+/* signal handlers */
 
 static gboolean
 capture_done (GstElement * elem, GString * filename, gpointer user_data)
@@ -51,33 +81,38 @@ capture_done (GstElement * elem, GString * filename, gpointer user_data)
   captured_images++;
 
   if (captured_images >= MAX_BURST_IMAGES) {
+    /* release the shutter button */
+    g_mutex_lock (cam_mutex);
+    g_cond_signal (cam_cond);
+    g_mutex_unlock (cam_mutex);
     continuous = FALSE;
   }
 
   if (continuous) {
-    g_string_printf (filename, "%02u_%s", captured_images,
-        BURST_IMAGE_FILENAME);
-    g_object_set (G_OBJECT (elem), "filename", filename->str, NULL);
+    g_string_assign (filename, make_test_seq_file_name (BURST_IMAGE_FILENAME));
+    //g_object_set (G_OBJECT (elem), "filename",
+    //  make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
   }
 
   return continuous;
 }
 
+/* configuration */
+
 static void
 setup_camerabin_elements (GstElement * camera)
 {
+  GstElement *vfsink, *audiosrc, *videosrc;
+
   /* Use fakesink for view finder */
-  GstElement *elem = gst_element_factory_make ("fakesink", NULL);
-  g_object_set (camera, "vfsink", elem, NULL);
+  vfsink = gst_element_factory_make ("fakesink", NULL);
+  audiosrc = gst_element_factory_make ("audiotestsrc", NULL);
+  g_object_set (audiosrc, "is-live", TRUE, NULL);
+  videosrc = gst_element_factory_make ("videotestsrc", NULL);
+  g_object_set (videosrc, "is-live", TRUE, NULL);
 
-  elem = gst_element_factory_make ("audiotestsrc", NULL);
-  g_object_set (elem, "is-live", TRUE, NULL);
-  g_object_set (camera, "audiosrc", elem, NULL);
-
-  elem = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (elem, "is-live", TRUE, NULL);
-  g_object_set (camera, "videosrc", elem, NULL);
-
+  g_object_set (camera, "vfsink", vfsink, "audiosrc", audiosrc,
+      "videosrc", videosrc, NULL);
 }
 
 static void
@@ -85,6 +120,9 @@ setup (void)
 {
   GstTagSetter *setter;
   gchar *desc_str;
+
+  cam_cond = g_cond_new ();
+  cam_mutex = g_mutex_new ();
 
   camera = gst_check_setup_element ("camerabin");
 
@@ -109,6 +147,8 @@ setup (void)
 static void
 teardown (void)
 {
+  g_mutex_free (cam_mutex);
+  g_cond_free (cam_cond);
   gst_check_teardown_element (camera);
 }
 
@@ -235,17 +275,14 @@ check_file_validity (const gchar * filename)
 {
   GstBus *bus;
   GMainLoop *loop = g_main_loop_new (NULL, TRUE);
-  GstElement *playbin = gst_element_factory_make ("playbin", NULL);
+  GstElement *playbin = gst_element_factory_make ("playbin2", NULL);
   GstElement *fakevideo = gst_element_factory_make ("fakesink", NULL);
   GstElement *fakeaudio = gst_element_factory_make ("fakesink", NULL);
-  gchar *current_dir = g_get_current_dir ();
-  gchar *uri = g_strconcat ("file://", current_dir, "/", filename, NULL);
-  g_free (current_dir);
+  gchar *uri = g_strconcat ("file://", make_test_file_name (filename), NULL);
 
   GST_DEBUG ("setting uri: %s", uri);
-  g_object_set (G_OBJECT (playbin), "uri", uri, NULL);
-  g_object_set (G_OBJECT (playbin), "video-sink", fakevideo, NULL);
-  g_object_set (G_OBJECT (playbin), "audio-sink", fakeaudio, NULL);
+  g_object_set (G_OBJECT (playbin), "uri", uri, "video-sink", fakevideo,
+      "audio-sink", fakeaudio, NULL);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
   gst_bus_add_watch (bus, (GstBusFunc) validity_bus_cb, loop);
@@ -265,8 +302,8 @@ check_file_validity (const gchar * filename)
 GST_START_TEST (test_single_image_capture)
 {
   /* set still image mode */
-  g_object_set (camera, "mode", 0, NULL);
-  g_object_set (camera, "filename", SINGLE_IMAGE_FILENAME, NULL);
+  g_object_set (camera, "mode", 0,
+      "filename", make_test_file_name (SINGLE_IMAGE_FILENAME), NULL);
 
   continuous = FALSE;
 
@@ -282,23 +319,21 @@ GST_END_TEST;
 
 GST_START_TEST (test_burst_image_capture)
 {
-  gchar *filename = g_strconcat ("00_", BURST_IMAGE_FILENAME, NULL);
-
   /* set still image mode */
-  g_object_set (camera, "mode", 0, NULL);
-  g_object_set (camera, "filename", filename, NULL);
+  g_object_set (camera, "mode", 0,
+      "filename", make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
 
   /* set burst mode */
   continuous = TRUE;
 
   g_signal_emit_by_name (camera, "user-start", 0);
 
-  /* This blocks, and actually overwrites last burst captured image */
-  g_signal_emit_by_name (camera, "user-start", 0);
+  GST_DEBUG ("waiting for img-done");
+  g_mutex_lock (cam_mutex);
+  g_cond_wait (cam_cond, cam_mutex);
+  g_mutex_unlock (cam_mutex);
 
   g_signal_emit_by_name (camera, "user-stop", 0);
-
-  g_free (filename);
 }
 
 GST_END_TEST;
@@ -306,8 +341,8 @@ GST_END_TEST;
 GST_START_TEST (test_video_recording)
 {
   /* Set video recording mode */
-  g_object_set (camera, "mode", 1, NULL);
-  g_object_set (camera, "filename", VIDEO_FILENAME, NULL);
+  g_object_set (camera, "mode", 1,
+      "filename", make_test_file_name (VIDEO_FILENAME), NULL);
 
   g_signal_emit_by_name (camera, "user-start", 0);
   /* Record for few seconds  */
@@ -325,16 +360,16 @@ GST_START_TEST (test_image_video_cycle)
 
   for (i = 0; i < 2; i++) {
     /* Set still image mode */
-    g_object_set (camera, "mode", 0, NULL);
-    g_object_set (camera, "filename", CYCLE_IMAGE_FILENAME, NULL);
+    g_object_set (camera, "mode", 0,
+        "filename", make_test_file_name (CYCLE_IMAGE_FILENAME), NULL);
 
     /* Take a picture */
     g_signal_emit_by_name (camera, "user-start", 0);
     g_signal_emit_by_name (camera, "user-stop", 0);
 
     /* Set video recording mode */
-    g_object_set (camera, "mode", 1, NULL);
-    g_object_set (camera, "filename", CYCLE_VIDEO_FILENAME, NULL);
+    g_object_set (camera, "mode", 1,
+        "filename", make_test_file_name (CYCLE_VIDEO_FILENAME), NULL);
 
     /* Record video */
     g_signal_emit_by_name (camera, "user-start", 0);
