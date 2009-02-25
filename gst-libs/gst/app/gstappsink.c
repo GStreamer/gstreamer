@@ -171,16 +171,18 @@ static guint gst_app_sink_signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (GstAppSink, gst_app_sink, GstBaseSink, GST_TYPE_BASE_SINK);
 
-void
-gst_app_marshal_OBJECT__VOID (GClosure * closure,
+/* Can't use glib-genmarshal for this, as it doesn't know how to handle
+ * GstMiniObject-based types, which are a new fundamental type */
+static void
+gst_app_marshal_BUFFER__VOID (GClosure * closure,
     GValue * return_value,
     guint n_param_values,
     const GValue * param_values,
     gpointer invocation_hint, gpointer marshal_data)
 {
-  typedef GstBuffer *(*GMarshalFunc_OBJECT__VOID) (gpointer data1,
+  typedef GstBuffer *(*GMarshalFunc_BUFFER__VOID) (gpointer data1,
       gpointer data2);
-  register GMarshalFunc_OBJECT__VOID callback;
+  register GMarshalFunc_BUFFER__VOID callback;
   register GCClosure *cc = (GCClosure *) closure;
   register gpointer data1, data2;
   GstBuffer *v_return;
@@ -196,7 +198,7 @@ gst_app_marshal_OBJECT__VOID (GClosure * closure,
     data2 = closure->data;
   }
   callback =
-      (GMarshalFunc_OBJECT__VOID) (marshal_data ? marshal_data : cc->callback);
+      (GMarshalFunc_BUFFER__VOID) (marshal_data ? marshal_data : cc->callback);
 
   v_return = callback (data1, data2);
 
@@ -334,7 +336,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_PULL_PREROLL] =
       g_signal_new ("pull-preroll", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
-          pull_preroll), NULL, NULL, gst_app_marshal_OBJECT__VOID,
+          pull_preroll), NULL, NULL, gst_app_marshal_BUFFER__VOID,
       GST_TYPE_BUFFER, 0, G_TYPE_NONE);
   /**
    * GstAppSink::pull-buffer:
@@ -360,7 +362,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_PULL_BUFFER] =
       g_signal_new ("pull-buffer", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSinkClass,
-          pull_buffer), NULL, NULL, gst_app_marshal_OBJECT__VOID,
+          pull_buffer), NULL, NULL, gst_app_marshal_BUFFER__VOID,
       GST_TYPE_BUFFER, 0, G_TYPE_NONE);
 
   basesink_class->unlock = gst_app_sink_unlock_start;

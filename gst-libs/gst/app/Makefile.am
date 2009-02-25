@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libgstapp-@GST_MAJORMINOR@.la
 
 glib_enum_define = GST_APP
-glib_enum_prefix = gst_app
+glib_enum_prefix = __gst_app
 
 include $(top_srcdir)/common/glib-gen.mak
 
@@ -17,7 +17,7 @@ libgstapp_@GST_MAJORMINOR@_la_SOURCES = gstappsrc.c gstappbuffer.c gstappsink.c
 libgstapp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstapp_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS)
-libgstapp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_ALL_LDFLAGS)
+libgstapp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 libgstapp_@GST_MAJORMINOR@_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstapp_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/app

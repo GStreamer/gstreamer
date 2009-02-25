@@ -393,7 +393,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_app_src_signals[SIGNAL_NEED_DATA] =
       g_signal_new ("need-data", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSrcClass, need_data),
-      NULL, NULL, gst_app_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+      NULL, NULL, __gst_app_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
    * GstAppSrc::enough-data:
@@ -422,7 +422,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_app_src_signals[SIGNAL_SEEK_DATA] =
       g_signal_new ("seek-data", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSrcClass, seek_data),
-      NULL, NULL, gst_app_marshal_BOOLEAN__UINT64, G_TYPE_BOOLEAN, 1,
+      NULL, NULL, __gst_app_marshal_BOOLEAN__UINT64, G_TYPE_BOOLEAN, 1,
       G_TYPE_UINT64);
 
    /**
@@ -440,7 +440,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_app_src_signals[SIGNAL_PUSH_BUFFER] =
       g_signal_new ("push-buffer", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSrcClass,
-          push_buffer), NULL, NULL, gst_app_marshal_ENUM__OBJECT,
+          push_buffer), NULL, NULL, __gst_app_marshal_ENUM__OBJECT,
       GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
 
    /**
@@ -452,7 +452,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_app_src_signals[SIGNAL_END_OF_STREAM] =
       g_signal_new ("end-of-stream", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstAppSrcClass,
-          end_of_stream), NULL, NULL, gst_app_marshal_ENUM__VOID,
+          end_of_stream), NULL, NULL, __gst_app_marshal_ENUM__VOID,
       GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
 
   basesrc_class->create = gst_app_src_create;
@@ -1358,6 +1358,7 @@ gst_app_src_uri_get_protocols (void)
 
   return protocols;
 }
+
 static const gchar *
 gst_app_src_uri_get_uri (GstURIHandler * handler)
 {
