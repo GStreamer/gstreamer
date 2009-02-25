@@ -25,8 +25,6 @@
 
 /**
  * SECTION:element-rtpmux
- * @short_description: Muxer that takes one or several RTP streams
- * and muxes them to a single rtp stream.
  *
  * The rtp muxer takes multiple RTP streams having the same clock-rate and
  * muxes into a single stream with a single SSRC.

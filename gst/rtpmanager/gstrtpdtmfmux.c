@@ -25,7 +25,6 @@
 
 /**
  * SECTION:element-rtpdtmfmux
- * @short_description: mixes RTP DTMF streams into other RTP streams
  * @see_also: rtpdtmfsrc, dtmfsrc
  *
  * The RTPDTMFMuxer mixes/muxes RTP DTMF stream(s) into other RTP
