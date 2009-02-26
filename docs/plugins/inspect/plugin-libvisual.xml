@@ -7,7 +7,7 @@
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins CVS/prerelease</package>
-  <origin>Unknown package origin</origin>
+  <origin>http://gstreamer.freedesktop.org</origin>
   <elements>
     <element>
       <name>libvisual_bumpscope</name>
@@ -35,6 +35,27 @@
       <longname>libvisual libvisual corona plugin plugin v.0.1</longname>
       <class>Visualization</class>
       <description>Libvisual corona plugin</description>
+      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)255, green_mask=(int)65280, blue_mask=(int)16711680, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, bpp=(int)16, depth=(int)16, endianness=(int)1234, red_mask=(int)63488, green_mask=(int)2016, blue_mask=(int)31, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>libvisual_gforce</name>
+      <longname>libvisual libvisual G-Force plugin plugin v.0.1.0</longname>
+      <class>Visualization</class>
+      <description>Libvisual G-Force plugin</description>
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
       <pads>
         <caps>
@@ -98,27 +119,6 @@
       <longname>libvisual jess plugin plugin v.0.1</longname>
       <class>Visualization</class>
       <description>Jess visual plugin</description>
-      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, channels=(int){ 1, 2 }, rate=(int){ 8000, 11250, 22500, 32000, 44100, 48000, 96000 }</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw-rgb, bpp=(int)32, depth=(int)24, endianness=(int)4321, red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, red_mask=(int)255, green_mask=(int)65280, blue_mask=(int)16711680, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw-rgb, bpp=(int)16, depth=(int)16, endianness=(int)1234, red_mask=(int)63488, green_mask=(int)2016, blue_mask=(int)31, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
-      <name>libvisual_lv_analyzer</name>
-      <longname>libvisual libvisual analyzer plugin v.1.0</longname>
-      <class>Visualization</class>
-      <description>Libvisual analyzer plugin</description>
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
       <pads>
         <caps>

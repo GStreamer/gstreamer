@@ -139,24 +139,7 @@
  *
  * Other more specific meta information like width/height/framerate of video
  * streams or samplerate/number of channels of audio streams can be obtained
- * using the #GstPlayBin2:stream-info property, which will return a GList of stream info
- * objects, one for each stream. These are opaque objects that can only be
- * accessed via the standard GObject property interface, ie. g_object_get().
- * Each stream info object has the following properties:
- * <itemizedlist>
- * <listitem>"object" (GstObject) (the decoder source pad usually)</listitem>
- * <listitem>"type" (enum) (if this is an audio/video/subtitle stream)</listitem>
- * <listitem>"decoder" (string) (name of decoder used to decode this stream)</listitem>
- * <listitem>"mute" (boolean) (to mute or unmute this stream)</listitem>
- * <listitem>"caps" (GstCaps) (caps of the decoded stream)</listitem>
- * <listitem>"language-code" (string) (ISO-639 language code for this stream, mostly used for audio/subtitle streams)</listitem>
- * <listitem>"codec" (string) (format this stream was encoded in)</listitem>
- * </itemizedlist>
- * Stream information from the #GstPlayBin2:stream-info property is best queried once
- * playbin has changed into PAUSED or PLAYING state (which can be detected
- * via a state-changed message on the bus where old_state=READY and
- * new_state=PAUSED), since before that the list might not be complete yet or
- * not contain all available information (like language-codes).
+ * from the negotiated caps on the sink pads of the sinks.
  * </para>
  * </refsect2>
  * <refsect2>

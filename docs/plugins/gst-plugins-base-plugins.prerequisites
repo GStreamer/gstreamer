@@ -1,10 +1,10 @@
 GstChildProxy GstObject
+GstTagSetter GstObject GstElement
 GFile GObject
 GDesktopAppInfoLookup GObject
 GDrive GObject
 GMount GObject
 GVolume GObject
-GstTagSetter GstObject GstElement
 GstImplementsInterface GstObject GstElement
 GstMixer GstObject GstImplementsInterface GstElement
 GstXOverlay GstObject GstImplementsInterface GstElement
