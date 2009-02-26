@@ -64,6 +64,9 @@ typedef struct {
   void (*eos)           (GstAppSink *sink, gpointer user_data);
   void (*new_preroll)   (GstAppSink *sink, gpointer user_data);
   void (*new_buffer)    (GstAppSink *sink, gpointer user_data);
+
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
 } GstAppSinkCallbacks;
 
 struct _GstAppSink

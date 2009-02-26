@@ -37,10 +37,6 @@ GstAppBufferClass
 GstAppBufferFinalizeFunc
 gst_app_buffer_get_type
 gst_app_buffer_new
-gst_app_marshal_BOOLEAN__UINT64
-gst_app_marshal_ENUM__OBJECT
-gst_app_marshal_ENUM__VOID
-gst_app_marshal_VOID__UINT
 </SECTION>
 
 <SECTION>

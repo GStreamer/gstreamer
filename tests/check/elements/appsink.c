@@ -185,6 +185,7 @@ GST_START_TEST (test_notify1)
 
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks,
       &testdata, (*notify_function));
+  /* Setting new callbacks should trigger the destroy of the old data */
   gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks, &testdata, NULL);
 
   testdata = operate_on_data (testdata);
@@ -193,7 +194,6 @@ GST_START_TEST (test_notify1)
   fail_unless (testdata == global_testdata);
 
   GST_DEBUG ("cleaning up appsink");
-  /* Destroying sink should call our notify_function */
   gst_object_unref (sink);
 }
 
