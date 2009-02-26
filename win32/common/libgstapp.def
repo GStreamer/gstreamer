@@ -16,13 +16,16 @@ EXPORTS
 	gst_app_sink_set_max_buffers
 	gst_app_src_end_of_stream
 	gst_app_src_get_caps
+	gst_app_src_get_emit_signals
 	gst_app_src_get_latency
 	gst_app_src_get_max_bytes
 	gst_app_src_get_size
 	gst_app_src_get_stream_type
 	gst_app_src_get_type
 	gst_app_src_push_buffer
+	gst_app_src_set_callbacks
 	gst_app_src_set_caps
+	gst_app_src_set_emit_signals
 	gst_app_src_set_latency
 	gst_app_src_set_max_bytes
 	gst_app_src_set_size

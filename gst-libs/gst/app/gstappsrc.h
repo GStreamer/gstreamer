@@ -41,6 +41,32 @@ typedef struct _GstAppSrcClass GstAppSrcClass;
 typedef struct _GstAppSrcPrivate GstAppSrcPrivate;
 
 /**
+ * GstAppSrcCallbacks:
+ * @need_data: Called when the appsrc needs more data. A buffer or EOS should be
+ *    pushed to appsrc from this thread or another thread. @length is just a hint
+ *    and when it is set to -1, any number of bytes can be pushed into @appsrc.
+ * @enough_data: Called when appsrc has enough data. It is recommended that the
+ *    application stops calling push-buffer until the need_data callback is
+ *    emited again to avoid excessive buffer queueing.
+ * @seek_data: Called when a seek should be performed to the offset.
+ *    The next push-buffer should produce buffers from the new @offset.
+ *    This callback is only called for seekable stream types.
+ *
+ * A set of callbacks that can be installed on the appsrc with
+ * gst_app_src_set_callbacks().
+ *
+ * Since: 0.10.23
+ */
+typedef struct {
+  void      (*need_data)    (GstAppSrc *src, guint length, gpointer user_data);
+  void      (*enough_data)  (GstAppSrc *src, gpointer user_data);
+  gboolean  (*seek_data)    (GstAppSrc *src, guint64 offset, gpointer user_data);
+
+  /*< private >*/
+  gpointer     _gst_reserved[GST_PADDING];
+} GstAppSrcCallbacks;
+
+/**
  * GstAppStreamType:
  * @GST_APP_STREAM_TYPE_STREAM: No seeking is supported in the stream, such as a
  * live stream.
@@ -103,8 +129,16 @@ guint64          gst_app_src_get_max_bytes    (GstAppSrc *appsrc);
 void             gst_app_src_set_latency      (GstAppSrc *appsrc, guint64 min, guint64 max);
 void             gst_app_src_get_latency      (GstAppSrc *appsrc, guint64 *min, guint64 *max);
 
+void             gst_app_src_set_emit_signals (GstAppSrc *appsrc, gboolean emit);
+gboolean         gst_app_src_get_emit_signals (GstAppSrc *appsrc);
+
 GstFlowReturn    gst_app_src_push_buffer      (GstAppSrc *appsrc, GstBuffer *buffer);
 GstFlowReturn    gst_app_src_end_of_stream    (GstAppSrc *appsrc);
+
+void             gst_app_src_set_callbacks    (GstAppSrc * appsrc,
+                                               GstAppSrcCallbacks *callbacks,
+                                               gpointer user_data,
+                                               GDestroyNotify notify);
 
 G_END_DECLS
 

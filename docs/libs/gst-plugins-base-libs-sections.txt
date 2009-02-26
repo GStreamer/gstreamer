@@ -15,6 +15,10 @@ gst_app_src_set_stream_type
 gst_app_src_get_stream_type
 gst_app_src_set_max_bytes
 gst_app_src_get_max_bytes
+gst_app_src_get_emit_signals
+gst_app_src_set_emit_signals
+GstAppSrcCallbacks
+gst_app_src_set_callbacks
 gst_app_src_push_buffer
 gst_app_src_end_of_stream
 <SUBSECTION Standard>
