@@ -9,6 +9,7 @@ EXPORTS
 	gst_app_sink_is_eos
 	gst_app_sink_pull_buffer
 	gst_app_sink_pull_preroll
+	gst_app_sink_set_callbacks
 	gst_app_sink_set_caps
 	gst_app_sink_set_drop
 	gst_app_sink_set_emit_signals
