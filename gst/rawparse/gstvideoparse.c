@@ -393,7 +393,7 @@ gst_video_parse_get_caps (GstRawParse * rp)
         "height", G_TYPE_INT, vp->height,
         "format", GST_TYPE_FOURCC,
         gst_video_parse_format_to_fourcc (vp->format), "framerate",
-        GST_TYPE_FRACTION, fps_n, fps_d, "pixel_aspect_ratio",
+        GST_TYPE_FRACTION, fps_n, fps_d, "pixel-aspect-ratio",
         GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
   } else if (vp->format == GST_VIDEO_PARSE_FORMAT_RGB) {
     caps = gst_caps_new_simple ("video/x-raw-rgb",
@@ -402,7 +402,7 @@ gst_video_parse_get_caps (GstRawParse * rp)
         "bpp", G_TYPE_INT, vp->bpp,
         "depth", G_TYPE_INT, vp->depth,
         "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-        "pixel_aspect_ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d,
         "red_mask", G_TYPE_INT, vp->red_mask,
         "green_mask", G_TYPE_INT, vp->green_mask,
         "blue_mask", G_TYPE_INT, vp->blue_mask,
@@ -415,7 +415,7 @@ gst_video_parse_get_caps (GstRawParse * rp)
         "bpp", G_TYPE_INT, vp->bpp,
         "depth", G_TYPE_INT, vp->depth,
         "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-        "pixel_aspect_ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
   }
   return caps;
 }
