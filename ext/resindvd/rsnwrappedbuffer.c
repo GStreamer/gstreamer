@@ -26,18 +26,12 @@
 
 #include "rsnwrappedbuffer.h"
 
-GST_BOILERPLATE (RsnWrappedBuffer, rsn_wrappedbuffer,
-    GstBuffer, GST_TYPE_BUFFER);
+G_DEFINE_TYPE (RsnWrappedBuffer, rsn_wrappedbuffer, GST_TYPE_BUFFER);
 
 static gboolean
 rsn_wrapped_buffer_default_release (GstElement * owner, RsnWrappedBuffer * buf);
 
 static void rsn_wrapped_buffer_finalize (RsnWrappedBuffer * wrap_buf);
-
-static void
-rsn_wrappedbuffer_base_init (gpointer gclass)
-{
-}
 
 static void
 rsn_wrappedbuffer_class_init (RsnWrappedBufferClass * klass)
@@ -49,9 +43,9 @@ rsn_wrappedbuffer_class_init (RsnWrappedBufferClass * klass)
 }
 
 static void
-rsn_wrappedbuffer_init (RsnWrappedBuffer * buf, RsnWrappedBufferClass * gclass)
+rsn_wrappedbuffer_init (RsnWrappedBuffer * self)
 {
-  buf->release = rsn_wrapped_buffer_default_release;
+  self->release = rsn_wrapped_buffer_default_release;
 }
 
 static void
@@ -64,7 +58,8 @@ rsn_wrapped_buffer_finalize (RsnWrappedBuffer * wrap_buf)
       return;
   }
 
-  GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (wrap_buf));
+  GST_MINI_OBJECT_CLASS (rsn_wrappedbuffer_parent_class)->finalize
+      (GST_MINI_OBJECT (wrap_buf));
 }
 
 RsnWrappedBuffer *

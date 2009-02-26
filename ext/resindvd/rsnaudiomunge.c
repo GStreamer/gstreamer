@@ -60,7 +60,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("ANY")
     );
 
-GST_BOILERPLATE (RsnAudioMunge, rsn_audiomunge, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (RsnAudioMunge, rsn_audiomunge, GST_TYPE_ELEMENT);
 
 static void rsn_audiomunge_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -75,15 +75,16 @@ static GstStateChangeReturn
 rsn_audiomunge_change_state (GstElement * element, GstStateChange transition);
 
 static void
-rsn_audiomunge_base_init (gpointer gclass)
+rsn_audiomunge_class_init (RsnAudioMungeClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) (klass);
+  GstElementClass *element_class = (GstElementClass *) (klass);
   static GstElementDetails element_details = {
     "RsnAudioMunge",
     "Audio/Filter",
     "Resin DVD audio stream regulator",
     "Jan Schmidt <thaytan@noraisin.net>"
   };
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   GST_DEBUG_CATEGORY_INIT (rsn_audiomunge_debug, "rsn_audiomunge",
       0, "Resin audio stream regulator");
@@ -94,25 +95,15 @@ rsn_audiomunge_base_init (gpointer gclass)
       gst_static_pad_template_get (&sink_template));
 
   gst_element_class_set_details (element_class, &element_details);
-}
-
-static void
-rsn_audiomunge_class_init (RsnAudioMungeClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gobject_class->set_property = rsn_audiomunge_set_property;
   gobject_class->get_property = rsn_audiomunge_get_property;
 
-  gstelement_class->change_state = rsn_audiomunge_change_state;
+  element_class->change_state = rsn_audiomunge_change_state;
 }
 
 static void
-rsn_audiomunge_init (RsnAudioMunge * munge, RsnAudioMungeClass * gclass)
+rsn_audiomunge_init (RsnAudioMunge * munge)
 {
   munge->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_setcaps_function (munge->sinkpad,
@@ -380,7 +371,9 @@ rsn_audiomunge_change_state (GstElement * element, GstStateChange transition)
   if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
     rsn_audiomunge_reset (munge);
 
-  ret = parent_class->change_state (element, transition);
+  ret =
+      GST_ELEMENT_CLASS (rsn_audiomunge_parent_class)->change_state (element,
+      transition);
 
   return ret;
 }
