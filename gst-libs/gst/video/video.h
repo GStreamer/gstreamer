@@ -35,16 +35,16 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_YUY2: packed 4:2:2 YUV (Y0-U0-Y1-V0 Y2-U2-Y3-V2 Y4 ...)
  * @GST_VIDEO_FORMAT_UYVY: packed 4:2:2 YUV (U0-Y0-V0-Y1 U2-Y2-V2-Y3 U4 ...) 
  * @GST_VIDEO_FORMAT_AYUV: packed 4:4:4 YUV with alpha channel (A0-Y0-U0-V0 ...)
- * @GST_VIDEO_FORMAT_RGBx:
- * @GST_VIDEO_FORMAT_BGRx:
- * @GST_VIDEO_FORMAT_xRGB:
- * @GST_VIDEO_FORMAT_xBGR:
- * @GST_VIDEO_FORMAT_RGBA:
- * @GST_VIDEO_FORMAT_BGRA:
- * @GST_VIDEO_FORMAT_ARGB:
- * @GST_VIDEO_FORMAT_ABGR:
- * @GST_VIDEO_FORMAT_RGB:
- * @GST_VIDEO_FORMAT_BGR:
+ * @GST_VIDEO_FORMAT_RGBx: sparse rgb packed into 32 bit, space last
+ * @GST_VIDEO_FORMAT_BGRx: sparse reverse rgb packed into 32 bit, space last
+ * @GST_VIDEO_FORMAT_xRGB: sparse rgb packed into 32 bit, space first
+ * @GST_VIDEO_FORMAT_xBGR: sparse reverse rgb packed into 32 bit, space first
+ * @GST_VIDEO_FORMAT_RGBA: rgb with alpha channel last
+ * @GST_VIDEO_FORMAT_BGRA: reverse rgb with alpha channel last
+ * @GST_VIDEO_FORMAT_ARGB: rgb with alpha channel first
+ * @GST_VIDEO_FORMAT_ABGR: reverse rgb with alpha channel first
+ * @GST_VIDEO_FORMAT_RGB: rgb
+ * @GST_VIDEO_FORMAT_BGR: reverse rgb
  * @GST_VIDEO_FORMAT_Y41B: planar 4:1:1 YUV (Since: 0.10.18)
  * @GST_VIDEO_FORMAT_Y42B: planar 4:2:2 YUV (Since: 0.10.18)
  *
@@ -233,7 +233,8 @@ typedef enum {
 
 /**
  * GST_VIDEO_BUFFER_TFF:
- * If the @GstBuffer is interlaced, then the first field in the video frame is
+ *
+ * If the #GstBuffer is interlaced, then the first field in the video frame is
  * the top field.  If unset, the bottom field is first.
  *
  * Since: 0.10.23
@@ -242,8 +243,9 @@ typedef enum {
 
 /**
  * GST_VIDEO_BUFFER_RFF:
- * If the @GstBuffer is interlaced, then the first field (as defined by the
- * @GST_VIDEO_BUFFER_TFF flag setting) is repeated.
+ *
+ * If the #GstBuffer is interlaced, then the first field (as defined by the
+ * %GST_VIDEO_BUFFER_TFF flag setting) is repeated.
  *
  * Since: 0.10.23
  */
@@ -251,8 +253,9 @@ typedef enum {
 
 /**
  * GST_VIDEO_BUFFER_ONEFIELD:
+ *
  * If the #GstBuffer is interlaced, the only the first field (as defined by the
- * @GST_VIDEO_BUFFER_TFF flag setting) is to be displayed.
+ * %GST_VIDEO_BUFFER_TFF flag setting) is to be displayed.
  *
  * Since: 0.10.23
  */
