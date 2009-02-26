@@ -722,7 +722,7 @@ img_copy (AVPicture * dst, const AVPicture * src,
     int pix_fmt, int width, int height)
 {
   int bwidth, bits, i;
-  PixFmtInfo *pf = get_pix_fmt_info (pix_fmt);
+  const PixFmtInfo *pf;
 
   pf = get_pix_fmt_info (pix_fmt);
   switch (pf->pixel_type) {
@@ -2831,7 +2831,7 @@ get_alpha_info_pal8 (const AVPicture * src, int width, int height)
 int
 img_get_alpha_info (const AVPicture * src, int pix_fmt, int width, int height)
 {
-  PixFmtInfo *pf = get_pix_fmt_info (pix_fmt);
+  const PixFmtInfo *pf;
   int ret;
 
   pf = get_pix_fmt_info (pix_fmt);

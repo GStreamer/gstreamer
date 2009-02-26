@@ -139,11 +139,8 @@ static GstCaps *
 gst_ffmpegcsp_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstFFMpegCsp *space;
   GstCaps *template;
   GstCaps *result;
-
-  space = GST_FFMPEGCSP (btrans);
 
   template = gst_ffmpegcsp_codectype_to_caps (CODEC_TYPE_VIDEO, NULL);
   result = gst_caps_intersect (caps, template);
@@ -379,15 +376,12 @@ static gboolean
 gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstFFMpegCsp *space = NULL;
   GstStructure *structure = NULL;
   AVCodecContext *ctx = NULL;
   gboolean ret = TRUE;
   gint width, height;
 
   g_assert (size);
-
-  space = GST_FFMPEGCSP (btrans);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
