@@ -21,9 +21,15 @@
 #ifndef __GST_GL_WINDOW_H__
 #define __GST_GL_WINDOW_H__
 
-
+#if (!GNUSTEP && MACOS)
+#include <OpenGL/glew.h>
+#include <OpenGL/OpenGL.h>
+#include <OpenGL/gl.h>
+#else
 #include <GL/glew.h>
 #include <GL/gl.h>
+#endif
+
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
