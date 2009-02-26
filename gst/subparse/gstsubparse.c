@@ -1170,7 +1170,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     gst_caps_unref (caps);
   }
 
-  while ((line = get_next_line (self)) && !self->flushing) {
+  while (!self->flushing && (line = get_next_line (self))) {
     guint offset = 0;
 
     /* Set segment on our parser state machine */
