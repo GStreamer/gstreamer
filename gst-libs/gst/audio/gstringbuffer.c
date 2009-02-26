@@ -901,12 +901,12 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
  *
  * Activate @buf to start or stop pulling data.
  *
+ * MT safe.
+ *
  * Returns: TRUE if the device could be activated in the requested mode,
  * FALSE on error.
  *
  * Since: 0.10.22.
- *
- * MT safe.
  */
 gboolean
 gst_ring_buffer_activate (GstRingBuffer * buf, gboolean active)
@@ -970,11 +970,11 @@ activate_failed:
  *
  * Check if @buf is activated.
  *
+ * MT safe.
+ *
  * Returns: TRUE if the device is active.
  *
  * Since: 0.10.22.
- *
- * MT safe.
  */
 gboolean
 gst_ring_buffer_is_active (GstRingBuffer * buf)
@@ -1552,13 +1552,13 @@ G_STMT_START {					\
  * interrupted, one can resume the processing by passing the previously returned
  * @accum value back to this function.
  *
+ * MT safe.
+ *
  * Returns: The number of samples written to the ringbuffer or -1 on error. The
  * number of samples written can be less than @out_samples when @buf was interrupted
  * with a flush or stop.
  *
  * Since: 0.10.11.
- *
- * MT safe.
  */
 guint
 gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
@@ -1956,9 +1956,9 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
  * Tell the ringbuffer that it is allowed to start playback when
  * the ringbuffer is filled with samples. 
  *
- * Since: 0.10.6
- *
  * MT safe.
+ *
+ * Since: 0.10.6
  */
 void
 gst_ring_buffer_may_start (GstRingBuffer * buf, gboolean allowed)

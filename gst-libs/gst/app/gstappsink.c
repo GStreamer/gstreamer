@@ -72,9 +72,9 @@
  * The eos signal can also be used to be informed when the EOS state is reached
  * to avoid polling.
  *
- * Since: 0.10.22
- *
  * Last reviewed on 2008-12-17 (0.10.22)
+ *
+ * Since: 0.10.22
  */
 
 #ifdef HAVE_CONFIG_H

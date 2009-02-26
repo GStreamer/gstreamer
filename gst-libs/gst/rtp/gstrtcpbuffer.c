@@ -41,9 +41,9 @@
  * </para>
  * </refsect2>
  *
- * Since: 0.10.13
- *
  * Last reviewed on 2007-03-26 (0.10.13)
+ *
+ * Since: 0.10.13
  */
 
 #include <string.h>
