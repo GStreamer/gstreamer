@@ -22,7 +22,8 @@
     <xi:include href="xml/element-amrwbdec.xml" />
     <xi:include href="xml/element-amrwbenc.xml" />
     <xi:include href="xml/element-amrwbparse.xml" />
-    <xi:include href="xml/element-audioparse.xml" />
+    <xi:include href="xml/element-amrwbparse.xml" />
+    <xi:include href="xml/element-autoconvert.xml" />
     <xi:include href="xml/element-camerabin.xml" />
     <xi:include href="xml/element-celtdec.xml" />
     <xi:include href="xml/element-celtenc.xml" />
@@ -87,6 +88,7 @@
     <title>gst-plugins-bad Plugins</title>
     <xi:include href="xml/plugin-aacparse.xml" />
     <xi:include href="xml/plugin-amrparse.xml" />
+    <xi:include href="xml/plugin-autoconvert.xml" />
     <xi:include href="xml/plugin-legacyresample.xml" />
     <xi:include href="xml/plugin-alsaspdif.xml" />
     <xi:include href="xml/plugin-amrwb.xml" />

@@ -245,6 +245,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 AG_GST_CHECK_PLUGIN(aacparse)
 AG_GST_CHECK_PLUGIN(aiffparse)
 AG_GST_CHECK_PLUGIN(amrparse)
+AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(camerabin)
 AG_GST_CHECK_PLUGIN(legacyresample)
 AG_GST_CHECK_PLUGIN(bayer)
@@ -1433,6 +1434,7 @@ gst/Makefile
 gst/aacparse/Makefile
 gst/aiffparse/Makefile
 gst/amrparse/Makefile
+gst/autoconvert/Makefile
 gst/legacyresample/Makefile
 gst/liveadder/Makefile
 gst/bayer/Makefile

@@ -82,6 +82,20 @@ GST_TYPE_AUDIO_PARSE
 gst_audio_parse_get_type
 </SECTION>
 
+
+<SECTION>
+<FILE>element-autoconvert</FILE>
+<TITLE>autoconvert</TITLE>
+GstAutoConvert
+<SUBSECTION Standard>
+GstAutoConvertClass
+GST_TYPE_AUTO_CONVERT
+GST_AUTO_CONVERT
+GST_AUTO_CONVERT_CLASS
+GST_IS_AUTO_CONVERT
+GST_IS_AUTO_CONVERT_CLASS
+</SECTION>
+
 <SECTION>
 <FILE>element-camerabin</FILE>
 <TITLE>camerabin</TITLE>
