@@ -20,12 +20,56 @@ GstAdderInputChannel
 <FILE>element-appsrc</FILE>
 <TITLE>appsrc</TITLE>
 GstAppSrc
+<SUBSECTION Standard>
+gst_app_src_set_caps
+gst_app_src_get_caps
+gst_app_src_set_size
+gst_app_src_get_size
+gst_app_src_set_stream_type
+gst_app_src_get_stream_type
+gst_app_src_set_max_bytes
+gst_app_src_get_max_bytes
+gst_app_src_set_latency
+gst_app_src_get_latency
+gst_app_src_push_buffer
+gst_app_src_end_of_stream
+GstAppSrcClass
+GstAppSrcPrivate
+GstAppStreamType
+GST_APP_SRC
+GST_IS_APP_SRC
+GST_TYPE_APP_SRC
+gst_app_src_get_type
+GST_APP_SRC_CLASS
+GST_IS_APP_SRC_CLASS
 </SECTION>
 
 <SECTION>
 <FILE>element-appsink</FILE>
 <TITLE>appsink</TITLE>
 GstAppSink
+<SUBSECTION Standard>
+gst_app_sink_set_caps
+gst_app_sink_get_caps
+gst_app_sink_is_eos
+gst_app_sink_set_emit_signals
+gst_app_sink_get_emit_signals
+gst_app_sink_set_max_buffers
+gst_app_sink_get_max_buffers
+gst_app_sink_set_drop
+gst_app_sink_get_drop
+gst_app_sink_pull_preroll
+gst_app_sink_pull_buffer
+gst_app_sink_set_callbacks
+GstAppSinkClass
+GstAppSinkPrivate
+GstAppSinkCallbacks
+GST_APP_SINK
+GST_IS_APP_SINK
+GST_TYPE_APP_SINK
+gst_app_sink_get_type
+GST_APP_SINK_CLASS
+GST_IS_APP_SINK_CLASS
 </SECTION>
 
 <SECTION>
@@ -412,6 +456,7 @@ GstTCPClientSrc
 <SUBSECTION Standard>
 GstTCPClientSrcClass
 GST_TCP_CLIENT_SRC
+GST_TCP_CLIENT_SINK_CLASS
 GstTCPClientSrcFlags
 GST_TYPE_TCP_CLIENT_SRC
 gst_tcp_client_src_get_type
@@ -426,6 +471,7 @@ GstTCPClientSink
 <SUBSECTION Standard>
 GstTCPClientSinkClass
 GST_TCP_CLIENT_SINK
+GST_TCP_CLIENT_SRC_CLASS
 GstTCPClientSinkFlags
 GST_TYPE_TCP_CLIENT_SINK
 gst_tcp_client_sink_get_type
@@ -441,6 +487,7 @@ GstTCPServerSrc
 <SUBSECTION Standard>
 GstTCPServerSrcClass
 GST_TCP_SERVER_SRC
+GST_TCP_SERVER_SRC_CLASS
 GstTCPServerSrcFlags
 GST_TYPE_TCP_SERVER_SRC
 gst_tcp_server_src_get_type
@@ -455,6 +502,7 @@ GstTCPServerSink
 <SUBSECTION Standard>
 GstTCPServerSinkClass
 GST_TCP_SERVER_SINK
+GST_TCP_SERVER_SINK_CLASS
 GstTCPServerSinkFlags
 GST_TYPE_TCP_SERVER_SINK
 gst_tcp_server_sink_get_type
@@ -608,6 +656,7 @@ GST_IS_VIDEO_SCALE_CLASS
 <TITLE>videotestsrc</TITLE>
 GstVideoTestSrc
 GstVideoTestSrcPattern
+GstVideoTestSrcColorSpec
 <SUBSECTION Standard>
 GST_VIDEO_TEST_SRC
 GST_VIDEO_TEST_SRC_CLASS
@@ -655,7 +704,6 @@ GstVorbisEncClass
 GST_IS_VORBISENC
 GST_VORBISENC_CLASS
 GST_VORBISENC
-GST_TCP_SERVER_SINK_CLASS
 GST_TYPE_VORBISENC
 GST_IS_VORBISENC_CLASS
 gst_vorbis_enc_get_type
