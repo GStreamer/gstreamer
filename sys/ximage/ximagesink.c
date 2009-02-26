@@ -1679,7 +1679,7 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       !gst_structure_get_int (structure, "height", &height)) {
     GST_WARNING_OBJECT (ximagesink, "invalid caps for buffer allocation %"
         GST_PTR_FORMAT, caps);
-    ret = GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
 
