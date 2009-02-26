@@ -70,7 +70,6 @@ gst_mpeg4vparse_set_new_caps (GstMpeg4VParse * parse,
     gint aspect_ratio_width, gint aspect_ratio_height, gint width, gint height)
 {
   gboolean res;
-
   GstCaps *out_caps = gst_caps_new_simple ("video/mpeg",
       "mpegversion", G_TYPE_INT, 4,
       "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -146,7 +145,6 @@ typedef struct
 static gboolean
 get_bits (bitstream_t * b, int num, guint32 * bits)
 {
-
   *bits = 0;
 
   if (b->offset + ((b->b_offset + num) / 8) > b->size)
@@ -216,90 +214,16 @@ static gint aspect_ratio_table[6][2] = { {-1, -1}, {1, 1}, {12, 11},
 {10, 11}, {16, 11}, {40, 33}
 };
 
-
-/* Returns whether we successfully set the caps downstream if needed */
 static gboolean
-gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
+gst_mpeg4vparse_handle_vo (GstMpeg4VParse * parse, const guint8 * data,
     gsize size)
 {
-  /* Skip the startcode */
   guint32 bits;
-
-  guint16 time_increment_resolution = 0;
-
-  guint16 fixed_time_increment = 0;
-
-  gint aspect_ratio_width = -1, aspect_ratio_height = -1;
-
-  gint height = -1, width = -1;
-
-  guint8 profile;
-
-  gboolean equal;
   bitstream_t bs = { data, 0, 0, size };
-
-  /* Parse the config from the VOS frame */
-  bs.offset = 5;
-
-  profile = data[4];
-
-  /* invalid profile, yikes */
-  if (profile == 0)
-    return FALSE;
-
-  equal = FALSE;
-  if (G_LIKELY (parse->config &&
-          memcmp (GST_BUFFER_DATA (parse->config), data, size) == 0))
-    equal = TRUE;
-
-  if (G_LIKELY (parse->profile == profile && equal)) {
-    /* We know this profile and config data, so we can just keep the same caps
-     */
-    return TRUE;
-  }
-
-  /* Even if we fail to parse, then some other element might succeed, so always
-   * put the VOS in the config */
-  parse->profile = profile;
-  if (parse->config != NULL)
-    gst_buffer_unref (parse->config);
-
-  parse->config = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (parse->config), data, size);
-
-  /* Expect Visual Object startcode */
-  GET_BITS (&bs, 32, &bits);
-
-  if (bits != VISUAL_OBJECT_STARTCODE_MARKER)
-    goto failed;
-
-  GET_BITS (&bs, 1, &bits);
-  if (bits == 0x1) {
-    /* Skip visual_object_verid and priority */
-    GET_BITS (&bs, 7, &bits);
-  }
-
-  GET_BITS (&bs, 4, &bits);
-  /* Only support video ID */
-  if (bits != 0x1)
-    goto failed;
-
-  /* video signal type */
-  GET_BITS (&bs, 1, &bits);
-
-  if (bits == 0x1) {
-    /* video signal type, ignore format and range */
-    GET_BITS (&bs, 4, &bits);
-
-    GET_BITS (&bs, 1, &bits);
-    if (bits == 0x1) {
-      /* ignore color description */
-      GET_BITS (&bs, 24, &bits);
-    }
-  }
-
-  if (!next_start_code (&bs))
-    goto failed;
+  guint16 time_increment_resolution = 0;
+  guint16 fixed_time_increment = 0;
+  gint aspect_ratio_width = -1, aspect_ratio_height = -1;
+  gint height = -1, width = -1;
 
   /* expecting a video object startcode */
   GET_BITS (&bs, 32, &bits);
@@ -386,20 +310,120 @@ gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
   height = bits;
   MARKER_BIT (&bs);
 
+  /* ok we know there is enough data in the stream to decode it and we can start
+   * pushing the data */
+  parse->have_config = TRUE;
+
 out:
   return gst_mpeg4vparse_set_new_caps (parse, time_increment_resolution,
       fixed_time_increment, aspect_ratio_width, aspect_ratio_height,
       width, height);
 
+  /* ERRORS */
 failed:
-  GST_WARNING_OBJECT (parse, "Failed to parse config data");
-  goto out;
+  {
+    GST_WARNING_OBJECT (parse, "Failed to parse config data");
+    goto out;
+  }
+}
+
+/* Returns whether we successfully set the caps downstream if needed */
+static gboolean
+gst_mpeg4vparse_handle_vos (GstMpeg4VParse * parse, const guint8 * data,
+    gsize size)
+{
+  /* Skip the startcode */
+  guint32 bits;
+
+  guint8 profile;
+  gboolean equal;
+  bitstream_t bs = { data, 0, 0, size };
+
+  /* Parse the config from the VOS frame */
+  bs.offset = 5;
+
+  profile = data[4];
+
+  /* invalid profile, yikes */
+  if (profile == 0)
+    return FALSE;
+
+  equal = FALSE;
+  if (G_LIKELY (parse->config &&
+          memcmp (GST_BUFFER_DATA (parse->config), data, size) == 0))
+    equal = TRUE;
+
+  if (G_LIKELY (parse->profile == profile && equal)) {
+    /* We know this profile and config data, so we can just keep the same caps
+     */
+    return TRUE;
+  }
+
+  /* Even if we fail to parse, then some other element might succeed, so always
+   * put the VOS in the config */
+  parse->profile = profile;
+  if (parse->config != NULL)
+    gst_buffer_unref (parse->config);
+
+  parse->config = gst_buffer_new_and_alloc (size);
+  memcpy (GST_BUFFER_DATA (parse->config), data, size);
+
+  parse->have_config = TRUE;
+
+  /* Expect Visual Object startcode */
+  GET_BITS (&bs, 32, &bits);
+
+  if (bits != VISUAL_OBJECT_STARTCODE_MARKER)
+    goto failed;
+
+  GET_BITS (&bs, 1, &bits);
+  if (bits == 0x1) {
+    /* Skip visual_object_verid and priority */
+    GET_BITS (&bs, 7, &bits);
+  }
+
+  GET_BITS (&bs, 4, &bits);
+  /* Only support video ID */
+  if (bits != 0x1)
+    goto failed;
+
+  /* video signal type */
+  GET_BITS (&bs, 1, &bits);
+
+  if (bits == 0x1) {
+    /* video signal type, ignore format and range */
+    GET_BITS (&bs, 4, &bits);
+
+    GET_BITS (&bs, 1, &bits);
+    if (bits == 0x1) {
+      /* ignore color description */
+      GET_BITS (&bs, 24, &bits);
+    }
+  }
+
+  if (!next_start_code (&bs))
+    goto failed;
+
+  data = &bs.data[bs.offset];
+  size -= bs.offset;
+
+  return gst_mpeg4vparse_handle_vo (parse, data, size);
+
+out:
+  return gst_mpeg4vparse_set_new_caps (parse, 0, 0, -1, -1, -1, -1);
+
+  /* ERRORS */
+failed:
+  {
+    GST_WARNING_OBJECT (parse, "Failed to parse config data");
+    goto out;
+  }
 }
 
 static void
 gst_mpeg4vparse_push (GstMpeg4VParse * parse, gsize size)
 {
-  if (G_UNLIKELY (parse->config == NULL && parse->drop)) {
+  if (G_UNLIKELY (!parse->have_config && parse->drop)) {
     GST_LOG_OBJECT (parse, "Dropping %d bytes", parse->offset);
     gst_adapter_flush (parse->adapter, size);
   } else {
@@ -428,9 +452,7 @@ static GstFlowReturn
 gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-
   const guint8 *data = NULL;
-
   guint available = 0;
 
   available = gst_adapter_available (parse->adapter);
@@ -449,26 +471,44 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
 
       switch (parse->state) {
         case PARSE_NEED_START:
-          switch (data[parse->offset + 3]) {
+        {
+          gboolean found = FALSE;
+          guint8 code;
+
+          code = data[parse->offset + 3];
+
+          switch (code) {
             case VOP_STARTCODE:
             case VOS_STARTCODE:
             case GOP_STARTCODE:
-              /* valid starts of a frame */
-              parse->state = PARSE_START_FOUND;
-              if (parse->offset > 0) {
-                GST_LOG_OBJECT (parse, "Flushing %u bytes", parse->offset);
-                gst_adapter_flush (parse->adapter, parse->offset);
-                parse->offset = 0;
-                available = gst_adapter_available (parse->adapter);
-                data = gst_adapter_peek (parse->adapter, available);
-              }
+              found = TRUE;
               break;
             default:
-              parse->offset += 4;
+              if (code <= 0x11f)
+                found = TRUE;
+              break;
           }
+          if (found) {
+            /* valid starts of a frame */
+            parse->state = PARSE_START_FOUND;
+            if (parse->offset > 0) {
+              GST_LOG_OBJECT (parse, "Flushing %u bytes", parse->offset);
+              gst_adapter_flush (parse->adapter, parse->offset);
+              parse->offset = 0;
+              available = gst_adapter_available (parse->adapter);
+              data = gst_adapter_peek (parse->adapter, available);
+            }
+          } else
+            parse->offset += 4;
           break;
+        }
         case PARSE_START_FOUND:
-          switch (data[parse->offset + 3]) {
+        {
+          guint8 code;
+
+          code = data[parse->offset + 3];
+
+          switch (code) {
             case VOP_STARTCODE:
               GST_LOG_OBJECT (parse, "found VOP start marker at %u",
                   parse->offset);
@@ -484,9 +524,32 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
               parse->vos_offset = parse->offset;
               parse->state = PARSE_VOS_FOUND;
               break;
+            default:
+              if (code <= 0x11f) {
+                GST_LOG_OBJECT (parse, "found VO start marker at %u",
+                    parse->offset);
+                parse->vos_offset = parse->offset;
+                parse->state = PARSE_VO_FOUND;
+              }
+              break;
           }
           /* Jump over it */
           parse->offset += 4;
+          break;
+        }
+        case PARSE_VO_FOUND:
+          switch (data[parse->offset + 3]) {
+            case GOP_STARTCODE:
+            case VOP_STARTCODE:
+              /* end of VOS found, interpret the config data and restart the
+               * search for the VOP */
+              gst_mpeg4vparse_handle_vo (parse, data + parse->vos_offset,
+                  parse->offset - parse->vos_offset);
+              parse->state = PARSE_START_FOUND;
+              break;
+            default:
+              parse->offset += 4;
+          }
           break;
         case PARSE_VOS_FOUND:
           switch (data[parse->offset + 3]) {
@@ -531,7 +594,6 @@ static GstFlowReturn
 gst_mpeg4vparse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (parse, "received buffer of %u bytes with ts %"
@@ -553,11 +615,8 @@ static gboolean
 gst_mpeg4vparse_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   gboolean res = TRUE;
-
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-
   GstStructure *s;
-
   const GValue *value;
 
   GST_DEBUG_OBJECT (parse, "setcaps called with %" GST_PTR_FORMAT, caps);
@@ -584,7 +643,6 @@ static gboolean
 gst_mpeg4vparse_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (parse, "handling event type %s",
@@ -614,7 +672,6 @@ static gboolean
 gst_mpeg4vparse_src_query (GstPad * pad, GstQuery * query)
 {
   GstMpeg4VParse *parse = GST_MPEG4VIDEOPARSE (gst_pad_get_parent (pad));
-
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -671,6 +728,7 @@ gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
   }
 
   parse->state = PARSE_NEED_START;
+  parse->have_config = FALSE;
   parse->offset = 0;
 }
 
@@ -753,9 +811,7 @@ static void
 gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstElementClass *gstelement_class;
-
   gstelement_class = (GstElementClass *) klass;
   gobject_class = G_OBJECT_CLASS (klass);
 
