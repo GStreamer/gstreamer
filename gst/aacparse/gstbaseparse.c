@@ -838,7 +838,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   parse = GST_BASE_PARSE (GST_OBJECT_PARENT (pad));
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  if (parse->pending_segment) {
+  if (G_UNLIKELY (parse->pending_segment)) {
     GST_DEBUG_OBJECT (parse, "chain pushing a pending segment");
     gst_pad_push_event (parse->srcpad, parse->pending_segment);
     parse->pending_segment = NULL;
@@ -854,7 +854,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_clear (parse->adapter);
   }
 
-  if (parse->priv->pending_events) {
+  if (G_UNLIKELY (parse->priv->pending_events)) {
     GList *l;
 
     for (l = parse->priv->pending_events; l != NULL; l = l->next) {
@@ -864,13 +864,9 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     parse->priv->pending_events = NULL;
   }
 
-  if (buffer) {
-    GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
-        GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
-
-
-    gst_adapter_push (parse->adapter, buffer);
-  }
+  GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
+      GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
+  gst_adapter_push (parse->adapter, buffer);
 
   /* Parse and push as many frames as possible */
   /* Stop either when adapter is empty or we are flushing */
