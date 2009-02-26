@@ -3520,9 +3520,6 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
     if (!result)
       goto activate_failed;
 
-    /* but if starting the thread fails, set it back */
-    if (!result)
-      basesink->pad_mode = GST_ACTIVATE_NONE;
   } else {
     if (G_UNLIKELY (basesink->pad_mode != GST_ACTIVATE_PULL)) {
       g_warning ("Internal GStreamer activation error!!!");
@@ -3545,6 +3542,9 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
   /* ERRORS */
 activate_failed:
   {
+    /* reset, as starting the thread failed */
+    basesink->pad_mode = GST_ACTIVATE_NONE;
+
     GST_ERROR_OBJECT (basesink, "subclass failed to activate in pull mode");
     return FALSE;
   }
