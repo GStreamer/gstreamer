@@ -167,9 +167,10 @@ gst_rtsp_range_parse (const gchar * rangestr, GstRTSPTimeRange ** range)
   } else
     goto invalid;
 
-  if (ret == GST_RTSP_OK)
-    *range = res;
+  if (ret != GST_RTSP_OK)
+    goto invalid;
 
+  *range = res;
   return ret;
 
   /* ERRORS */
@@ -271,8 +272,5 @@ gst_rtsp_range_to_string (const GstRTSPTimeRange * range)
 void
 gst_rtsp_range_free (GstRTSPTimeRange * range)
 {
-  if (range == NULL)
-    return;
-
   g_free (range);
 }
