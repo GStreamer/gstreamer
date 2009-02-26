@@ -201,12 +201,15 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
           "ISO-8859-15 will be assumed.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPlayBin:connection-speed
+   * GstPlayBaseBin:connection-speed
    *
    * Network connection speed in kbps (0 = unknown)
+   * <note><simpara>
+   * Since version 0.10.10 in #GstPlayBin, at 0.10.15 moved to #GstPlayBaseBin
+   * </simpara></note>
    *
-   * Since: 0.10.10 at gstplaybin.c, 0.10.15 moved to gstplaybasebin
-   **/
+   * Since: 0.10.10
+   */
   g_object_class_install_property (gobject_klass, ARG_CONNECTION_SPEED,
       g_param_spec_uint ("connection-speed", "Connection Speed",
           "Network connection speed in kbps (0 = unknown)",
