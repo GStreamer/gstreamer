@@ -43,6 +43,7 @@
 #endif
 #include <string.h>
 #include <math.h>
+#include <gst/video/video.h>
 
 #include "gstdvdec.h"
 
@@ -328,7 +329,7 @@ gst_dvdec_src_negotiate (GstDVDec * dvdec)
       "framerate", GST_TYPE_FRACTION, dvdec->framerate_numerator,
       dvdec->framerate_denominator,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, dvdec->par_x,
-      dvdec->par_y, NULL);
+      dvdec->par_y, "interlaced", G_TYPE_BOOLEAN, dvdec->interlaced, NULL);
 
   gst_pad_set_caps (dvdec->srcpad, othercaps);
   gst_caps_unref (othercaps);
@@ -434,6 +435,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
 
   dvdec->height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
 
+  dvdec->interlaced = !dv_is_progressive (dvdec->decoder);
 
   /* negotiate if not done yet */
   if (!dvdec->src_negotiated) {
@@ -465,6 +467,12 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   GST_DEBUG_OBJECT (dvdec, "decoding and pushing buffer");
   dv_decode_full_frame (dvdec->decoder, inframe,
       e_dv_color_yuv, outframe_ptrs, outframe_pitches);
+
+  if (dvdec->PAL) {
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_TFF);
+  } else {
+    GST_BUFFER_FLAG_SET (outbuf, GST_VIDEO_BUFFER_TFF);
+  }
 
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
   GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_END (buf);
