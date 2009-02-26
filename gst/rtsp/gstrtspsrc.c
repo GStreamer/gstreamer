@@ -146,6 +146,7 @@ enum
 #define DEFAULT_LATENCY_MS       3000
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
+#define DEFAULT_DO_RTCP          TRUE
 
 enum
 {
@@ -159,6 +160,7 @@ enum
   PROP_LATENCY,
   PROP_CONNECTION_SPEED,
   PROP_NAT_METHOD,
+  PROP_DO_RTCP,
   PROP_LAST
 };
 
@@ -335,6 +337,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           GST_TYPE_RTSP_NAT_METHOD, DEFAULT_NAT_METHOD,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstRTSPSrc::do-rtcp
+   *
+   * Enable RTCP support. Some old server don't like RTCP and then this property
+   * needs to be set to FALSE.
+   *
+   * Since: 0.10.15
+   */
+  g_object_class_install_property (gobject_class, PROP_DO_RTCP,
+      g_param_spec_boolean ("do-rtcp", "Do RTCP",
+          "Don't send RTCP packets",
+          DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -454,6 +469,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_NAT_METHOD:
       rtspsrc->nat_method = g_value_get_enum (value);
       break;
+    case PROP_DO_RTCP:
+      rtspsrc->do_rtcp = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -501,6 +519,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NAT_METHOD:
       g_value_set_enum (value, rtspsrc->nat_method);
+      break;
+    case PROP_DO_RTCP:
+      g_value_set_boolean (value, rtspsrc->do_rtcp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1942,8 +1963,8 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     }
     gst_object_unref (template);
   }
-  /* setup RTCP transport back to the server */
-  if (src->session) {
+  /* setup RTCP transport back to the server if we have to. */
+  if (src->session && src->do_rtcp) {
     GstPad *pad;
 
     template = gst_static_pad_template_get (&anysinktemplate);
@@ -2162,7 +2183,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
   }
   /* it's possible that the server does not want us to send RTCP in which case
    * the port is -1 */
-  if (rtcp_port != -1 && src->session != NULL) {
+  if (rtcp_port != -1 && src->session != NULL && src->do_rtcp) {
     GST_DEBUG_OBJECT (src, "configure RTCP UDP sink for %s:%d", destination,
         rtcp_port);
 
@@ -3944,7 +3965,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
         stream->setup_url);
 
-retry:
+  retry:
     /* create a string with all the transports */
     res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
     if (res < 0)
