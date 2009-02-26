@@ -245,7 +245,6 @@ gst_gio_sink_start (GstBaseSink * base_sink)
   GstGioSink *sink = GST_GIO_SINK (base_sink);
   GOutputStream *stream;
   GCancellable *cancel = GST_GIO_BASE_SINK (sink)->cancel;
-  gboolean success;
   GError *err = NULL;
   gchar *uri;
 
@@ -263,26 +262,23 @@ gst_gio_sink_start (GstBaseSink * base_sink)
       G_OUTPUT_STREAM (g_file_create (sink->file, G_FILE_CREATE_NONE, cancel,
           &err));
 
-  success = (stream != NULL);
+  if (!stream) {
+    if (!gst_gio_error (sink, "g_file_create", &err, NULL)) {
+      /*if (GST_GIO_ERROR_MATCHES (err, EXISTS)) */
+      /* FIXME: Retry with replace if overwrite == TRUE! */
 
-  if (!success && !gst_gio_error (sink, "g_file_create", &err, NULL)) {
+      if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND))
+        GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
+            ("Could not open location %s for writing: %s", uri, err->message));
+      else
+        GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ, (NULL),
+            ("Could not open location %s for writing: %s", uri, err->message));
 
-    /*if (GST_GIO_ERROR_MATCHES (err, EXISTS)) */
-    /* FIXME: Retry with replace if overwrite == TRUE! */
-
-    if (GST_GIO_ERROR_MATCHES (err, NOT_FOUND))
-      GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND, (NULL),
-          ("Could not open location %s for writing: %s", uri, err->message));
-    else
-      GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_READ, (NULL),
-          ("Could not open location %s for writing: %s", uri, err->message));
-
+      g_clear_error (&err);
+    }
     g_free (uri);
-    g_clear_error (&err);
-  }
-
-  if (!success)
     return FALSE;
+  }
 
   GST_DEBUG_OBJECT (sink, "opened location %s", uri);
 
