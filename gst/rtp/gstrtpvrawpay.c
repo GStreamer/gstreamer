@@ -211,6 +211,7 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstVideoFormat sampling;
   const gchar *depthstr, *samplingstr, *colorimetrystr;
   gchar *wstr, *hstr;
+  gboolean interlaced;
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
 
@@ -228,6 +229,13 @@ gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   res &= gst_structure_get_int (s, "height", &height);
   if (!res)
     goto missing_dimension;
+
+  /* fail on interlaced video for now */
+  if (!gst_structure_get_boolean (s, "interlaced", &interlaced))
+    interlaced = FALSE;
+
+  if (interlaced)
+    goto interlaced;
 
   yp = up = vp = 0;
   xinc = yinc = 1;
@@ -358,6 +366,11 @@ unknown_fourcc:
     GST_ERROR_OBJECT (payload, "invalid or missing fourcc");
     return FALSE;
   }
+interlaced:
+  {
+    GST_ERROR_OBJECT (payload, "interlaced video not supported yet");
+    return FALSE;
+  }
 missing_dimension:
   {
     GST_ERROR_OBJECT (payload, "missing width or height property");
@@ -409,7 +422,7 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
     GstBuffer *out;
     guint8 *outdata, *headers;
     gboolean next_line;
-    guint length, cont, pixels;
+    guint length, cont, pixels, fieldid;
 
     /* get the max allowed payload length size, we try to fill the complete MTU */
     left = gst_rtp_buffer_calc_payload_len (mtu, 0, 0);
@@ -421,6 +434,24 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
     GST_LOG_OBJECT (rtpvrawpay, "created buffer of size %u for MTU %u", left,
         mtu);
+
+    /*
+     *   0                   1                   2                   3
+     *   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |   Extended Sequence Number    |            Length             |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |F|          Line No            |C|           Offset            |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |            Length             |F|          Line No            |
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     *  |C|           Offset            |                               .
+     *  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               .
+     *  .                                                               .
+     *  .                 Two (partial) lines of video data             .
+     *  .                                                               .
+     *  +---------------------------------------------------------------+
+     */
 
     /* need 2 bytes for the extended sequence number */
     *outdata++ = 0;
@@ -456,8 +487,12 @@ gst_rtp_vraw_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
       /* write length */
       *outdata++ = (length >> 8) & 0xff;
       *outdata++ = length & 0xff;
+
+      /* always 0 for now */
+      fieldid = 0x00;
+
       /* write line no */
-      *outdata++ = (line >> 8) & 0x7f;
+      *outdata++ = ((line >> 8) & 0x7f) | fieldid;
       *outdata++ = line & 0xff;
 
       if (next_line) {
