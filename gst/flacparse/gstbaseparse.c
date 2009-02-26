@@ -982,20 +982,16 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
   /* Make sure that adapter doesn't have any old data after
      newsegment has been received and update our offset */
-  if (parse->pending_segment) {
-    gst_adapter_clear (parse->priv->adapter);
+  if (G_UNLIKELY (parse->pending_segment)) {
     parse->priv->offset = parse->priv->pending_offset;
+    gst_adapter_clear (parse->priv->adapter);
   }
 
   gst_base_parse_update_upstream_durations (parse);
 
-  if (buffer) {
-    GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
-        GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
-
-
-    gst_adapter_push (parse->priv->adapter, buffer);
-  }
+  GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
+      GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
+  gst_adapter_push (parse->priv->adapter, buffer);
 
   /* Parse and push as many frames as possible */
   /* Stop either when adapter is empty or we are flushing */
