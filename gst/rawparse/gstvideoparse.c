@@ -37,6 +37,7 @@ typedef enum
   GST_VIDEO_PARSE_FORMAT_YV12,
   GST_VIDEO_PARSE_FORMAT_YUY2,
   GST_VIDEO_PARSE_FORMAT_UYVY,
+  GST_VIDEO_PARSE_FORMAT_v210,
   GST_VIDEO_PARSE_FORMAT_RGB = 10,
   GST_VIDEO_PARSE_FORMAT_GRAY
 } GstVideoParseFormat;
@@ -94,6 +95,7 @@ gst_video_parse_format_get_type (void)
     {GST_VIDEO_PARSE_FORMAT_YV12, "YV12", "YV12"},
     {GST_VIDEO_PARSE_FORMAT_YUY2, "YUY2", "YUY2"},
     {GST_VIDEO_PARSE_FORMAT_UYVY, "UYVY", "UYVY"},
+    {GST_VIDEO_PARSE_FORMAT_v210, "v210", "v210"},
     {GST_VIDEO_PARSE_FORMAT_RGB, "RGB", "RGB"},
     {GST_VIDEO_PARSE_FORMAT_GRAY, "GRAY", "GRAY"},
     {0, NULL, NULL}
@@ -143,7 +145,8 @@ gst_video_parse_base_init (gpointer g_class)
 
   caps =
       gst_caps_from_string (GST_VIDEO_CAPS_YUV
-      ("{ I420, YV12, YUY2, UYVY }") ";" "video/x-raw-rgb; video/x-raw-gray");
+      ("{ I420, YV12, YUY2, UYVY, v210 }") ";"
+      "video/x-raw-rgb; video/x-raw-gray");
 
   gst_raw_parse_class_set_src_pad_template (rp_class, caps);
   gst_raw_parse_class_set_multiple_frames_per_buffer (rp_class, FALSE);
@@ -348,6 +351,8 @@ gst_video_parse_format_to_fourcc (GstVideoParseFormat format)
       return GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
     case GST_VIDEO_PARSE_FORMAT_UYVY:
       return GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+    case GST_VIDEO_PARSE_FORMAT_v210:
+      return GST_MAKE_FOURCC ('v', '2', '1', '0');
     default:
       g_assert_not_reached ();
   }
@@ -368,6 +373,8 @@ gst_video_parse_update_frame_size (GstVideoParse * vp)
   } else if (vp->format == GST_VIDEO_PARSE_FORMAT_YUY2
       || vp->format == GST_VIDEO_PARSE_FORMAT_UYVY) {
     framesize = GST_ROUND_UP_4 (vp->width * 2) * vp->height;
+  } else if (vp->format == GST_VIDEO_PARSE_FORMAT_v210) {
+    framesize = ((vp->width + 47) / 48) * 128 * vp->height;
   } else if (vp->format == GST_VIDEO_PARSE_FORMAT_RGB) {
     framesize = GST_ROUND_UP_4 (vp->width * vp->bpp / 8) * vp->height;
   } else {
