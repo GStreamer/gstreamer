@@ -33,7 +33,7 @@ ifeq ($(GNUSTEP_TARGET_OS), mingw32)
     -ID:/workspace/gstreamer/include \
     -ID:/workspace/glib/lib/glib-2.0/include \
     -ID:/workspace/png/include \
-    -ID:/workspace/z/include \
+    -ID:/workspace/zlib/include \
     -ID:/workspace/glew/include
 endif
 
