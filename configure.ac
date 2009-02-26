@@ -1497,6 +1497,7 @@ sys/winks/Makefile
 sys/winscreencap/Makefile
 tests/examples/Makefile
 tests/examples/directfb/Makefile
+tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
 tests/examples/switch/Makefile
 ext/amrwb/Makefile
