@@ -1483,10 +1483,6 @@ gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     default:
-      if (rtpsession->send_rtcp_src) {
-        gst_event_ref (event);
-        ret = gst_pad_push_event (rtpsession->send_rtcp_src, event);
-      }
       ret = gst_pad_push_event (rtpsession->sync_src, event);
       break;
   }
