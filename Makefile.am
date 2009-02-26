@@ -60,6 +60,8 @@ WIN32_COPY = \
 
 win32-update:
 	for f in $(WIN32_COPY); do cp $$f win32/common;done
+	cp $(top_builddir)/win32/common/config.h-new \
+	    $(top_srcdir)/win32/common/config.h
 
 include $(top_srcdir)/common/coverage/lcov.mak
 
