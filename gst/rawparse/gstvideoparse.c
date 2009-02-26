@@ -54,6 +54,8 @@ static void gst_video_parse_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_video_parse_get_caps (GstRawParse * rp);
+static void gst_video_parse_set_buffer_flags (GstRawParse * rp,
+    GstBuffer * buffer);
 
 static void gst_video_parse_update_frame_size (GstVideoParse * vp);
 
@@ -75,6 +77,8 @@ enum
   ARG_FORMAT,
   ARG_PAR,
   ARG_FRAMERATE,
+  ARG_INTERLACED,
+  ARG_TOP_FIELD_FIRST,
   ARG_BPP,
   ARG_DEPTH,
   ARG_ENDIANNESS,
@@ -163,6 +167,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
   gobject_class->get_property = gst_video_parse_get_property;
 
   rp_class->get_caps = gst_video_parse_get_caps;
+  rp_class->set_buffer_flags = gst_video_parse_set_buffer_flags;
 
   g_object_class_install_property (gobject_class, ARG_WIDTH,
       g_param_spec_int ("width", "Width", "Width of images in raw stream",
@@ -178,6 +183,13 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
       gst_param_spec_fraction ("framerate", "Frame Rate",
           "Frame rate of images in raw stream", 0, 1, 100, 1, 25, 1,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_INTERLACED,
+      g_param_spec_boolean ("interlaced", "Interlaced flag",
+          "True if video is interlaced", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_TOP_FIELD_FIRST,
+      g_param_spec_boolean ("top-field-first", "Top field first",
+          "True if top field is earlier than bottom field", TRUE,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PAR,
       gst_param_spec_fraction ("pixel_aspect_ratio", "Pixel Aspect Ratio",
           "Pixel aspect ratio of images in raw stream", 1, 100, 100, 1, 1, 1,
@@ -186,8 +198,8 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
       g_param_spec_int ("bpp", "Bpp", "Bits per pixel of images in raw stream",
           0, INT_MAX, 24, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DEPTH,
-      g_param_spec_int ("depth", "Depth", "Depth of images in raw stream",
-          0, INT_MAX, 24, G_PARAM_READWRITE));
+      g_param_spec_int ("depth", "Depth", "Depth of images in raw stream", 0,
+          INT_MAX, 24, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_ENDIANNESS,
       g_param_spec_enum ("endianness", "Endianness",
           "Endianness of images in raw stream", GST_VIDEO_PARSE_ENDIANNESS,
@@ -253,6 +265,12 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
           gst_value_get_fraction_numerator (value),
           gst_value_get_fraction_denominator (value));
       break;
+    case ARG_INTERLACED:
+      vp->interlaced = g_value_get_boolean (value);
+      break;
+    case ARG_TOP_FIELD_FIRST:
+      vp->top_field_first = g_value_get_boolean (value);
+      break;
     case ARG_PAR:
       vp->par_n = gst_value_get_fraction_numerator (value);
       vp->par_d = gst_value_get_fraction_denominator (value);
@@ -309,6 +327,12 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
       gst_value_set_fraction (value, fps_n, fps_d);
       break;
     }
+    case ARG_INTERLACED:
+      g_value_set_boolean (value, vp->interlaced);
+      break;
+    case ARG_TOP_FIELD_FIRST:
+      g_value_set_boolean (value, vp->top_field_first);
+      break;
     case ARG_PAR:
       gst_value_set_fraction (value, vp->par_n, vp->par_d);
       break;
@@ -401,7 +425,8 @@ gst_video_parse_get_caps (GstRawParse * rp)
         "format", GST_TYPE_FOURCC,
         gst_video_parse_format_to_fourcc (vp->format), "framerate",
         GST_TYPE_FRACTION, fps_n, fps_d, "pixel-aspect-ratio",
-        GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
+        GST_TYPE_FRACTION, vp->par_n, vp->par_d,
+        "interlaced", G_TYPE_BOOLEAN, vp->interlaced, NULL);
   } else if (vp->format == GST_VIDEO_PARSE_FORMAT_RGB) {
     caps = gst_caps_new_simple ("video/x-raw-rgb",
         "width", G_TYPE_INT, vp->width,
@@ -409,6 +434,7 @@ gst_video_parse_get_caps (GstRawParse * rp)
         "bpp", G_TYPE_INT, vp->bpp,
         "depth", G_TYPE_INT, vp->depth,
         "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+        "interlaced", G_TYPE_BOOLEAN, vp->interlaced,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d,
         "red_mask", G_TYPE_INT, vp->red_mask,
         "green_mask", G_TYPE_INT, vp->green_mask,
@@ -422,7 +448,26 @@ gst_video_parse_get_caps (GstRawParse * rp)
         "bpp", G_TYPE_INT, vp->bpp,
         "depth", G_TYPE_INT, vp->depth,
         "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+        "interlaced", G_TYPE_BOOLEAN, vp->interlaced,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
   }
   return caps;
+}
+
+static void
+gst_video_parse_set_buffer_flags (GstRawParse * rp, GstBuffer * buffer)
+{
+  GstVideoParse *vp = GST_VIDEO_PARSE (rp);
+
+/* remove this after -bad deps on -base-0.10.23 */
+#ifndef GST_VIDEO_BUFFER_TFF
+#define GST_VIDEO_BUFFER_TFF (GST_MINI_OBJECT_FLAG_LAST << 5)
+#endif
+  if (vp->interlaced) {
+    if (vp->top_field_first) {
+      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_TFF);
+    } else {
+      GST_BUFFER_FLAG_UNSET (buffer, GST_VIDEO_BUFFER_TFF);
+    }
+  }
 }

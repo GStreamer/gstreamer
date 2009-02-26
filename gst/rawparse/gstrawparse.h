@@ -78,6 +78,7 @@ struct _GstRawParseClass
   GstElementClass parent_class;
 
   GstCaps * (*get_caps) (GstRawParse *rp);
+  void (*set_buffer_flags) (GstRawParse *rp, GstBuffer *buffer);
 
   gboolean multiple_frames_per_buffer;
 };

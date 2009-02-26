@@ -54,6 +54,8 @@ struct _GstVideoParse
   guint32 format;
   int par_n;
   int par_d;
+  gboolean interlaced;
+  gboolean top_field_first;
   int bpp;
   int depth;
   int endianness;

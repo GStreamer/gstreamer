@@ -213,6 +213,9 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
 {
   GstFlowReturn ret;
   gint nframes;
+  GstRawParseClass *rpclass;
+
+  rpclass = GST_RAW_PARSE_GET_CLASS (rp);
 
   nframes = GST_BUFFER_SIZE (buffer) / rp->framesize;
 
@@ -235,6 +238,10 @@ gst_raw_parse_push_buffer (GstRawParse * rp, GstBuffer * buffer)
     GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   }
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (rp->srcpad));
+
+  if (rpclass->set_buffer_flags) {
+    rpclass->set_buffer_flags (rp, buffer);
+  }
 
   if (rp->discont) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
