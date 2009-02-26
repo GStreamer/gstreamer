@@ -493,9 +493,13 @@ gst_alsa_find_device_name_no_handle (GstObject * obj, const gchar * devcard,
         break;
       }
 
-      ret = g_strdup (snd_pcm_info_get_name (pcminfo));
+      ret = (gchar *) snd_pcm_info_get_name (pcminfo);
       snd_pcm_info_free (pcminfo);
-      GST_LOG_OBJECT (obj, "name from pcminfo: %s", GST_STR_NULL (ret));
+      if (ret) {
+        ret = g_strdup (ret);
+        GST_LOG_OBJECT (obj, "name from pcminfo: %s", ret);
+        break;
+      }
     }
   }
 
