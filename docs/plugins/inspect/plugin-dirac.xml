@@ -1,0 +1,34 @@
+<plugin>
+  <name>dirac</name>
+  <description>Dirac plugin</description>
+  <filename>../../ext/dirac/.libs/libgstdirac.so</filename>
+  <basename>libgstdirac.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>diracenc</name>
+      <longname>Dirac Encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>Encode raw YUV video into Dirac stream</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc){ I420, YUY2, UYVY, AYUV }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-dirac</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -17,9 +17,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* TODO: - Port to libdca API instead of relying on the compat header.
- *         libdca is the successor of libdts:
- *         http://www.videolan.org/developers/libdca.html
+/**
+ * SECTION:element-dtsdec
+ *
+ * Digital Theatre System (DTS) audio decoder
+ * 
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch dvdreadsrc title=1 ! mpegpsdemux ! dtsdec ! audioresample ! audioconvert ! alsasink
+ * ]| Play a DTS audio track from a dvd.
+ * |[
+ * gst-launch filesrc location=abc.dts ! dtsdec ! audioresample ! audioconvert ! alsasink
+ * ]| Decode a standalone file and play it.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -162,6 +173,14 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
 
   gstelement_class->change_state = gst_dtsdec_change_state;
 
+  /**
+   * GstDtsDec::drc
+   *
+   * Set to true to apply the recommended DTS dynamic range compression
+   * to the audio stream. Dynamic range compression makes loud sounds
+   * softer and soft sounds louder, so you can more easily listen
+   * to the stream without disturbing other people.
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
       g_param_spec_boolean ("drc", "Dynamic Range Compression",
           "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));

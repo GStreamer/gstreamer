@@ -34,6 +34,7 @@
     <xi:include href="xml/element-deinterlace.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-dtmfsrc.xml" />
+    <xi:include href="xml/element-dtsdec.xml" />
     <xi:include href="xml/element-dvbsrc.xml" />
     <xi:include href="xml/element-dvdspu.xml" />
     <xi:include href="xml/element-festival.xml" />
@@ -97,6 +98,7 @@
     <xi:include href="xml/plugin-celt.xml" />
     <xi:include href="xml/plugin-dccp.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />
+    <xi:include href="xml/plugin-dirac.xml" />
     <xi:include href="xml/plugin-dtmf.xml" />
     <xi:include href="xml/plugin-dtsdec.xml" />
     <xi:include href="xml/plugin-dvbsrc.xml" />

@@ -48,6 +48,8 @@
 GST_DEBUG_CATEGORY_STATIC (celtdec_debug);
 #define GST_CAT_DEFAULT celtdec_debug
 
+#define DEC_MAX_FRAME_SIZE 2000
+
 static GstStaticPadTemplate celt_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

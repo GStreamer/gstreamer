@@ -6,6 +6,7 @@ Makefile.in
 *-undocumented.txt
 *-undeclared.txt
 *-unused.txt
+*.bak
 
 tmpl
 xml
@@ -13,7 +14,7 @@ html
 
 gst-plugins-bad-plugins-scan
 gst-plugins-bad-plugins-scan.c
-inspect-registry.
+inspect-registry.*
 
 html-build.stamp
 html.stamp
