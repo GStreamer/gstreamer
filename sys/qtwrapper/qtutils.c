@@ -387,7 +387,9 @@ dump_codec_decompress_params (CodecDecompressParams * params)
   GST_LOG ("capabilities:%p", params->capabilities);
   GST_LOG ("port:%p", params->port);
   GST_LOG ("dstPixMap");
+#if DEBUG_DUMP
   gst_util_dump_mem ((const guchar *) &params->dstPixMap, sizeof (PixMap));
+#endif
 
   GST_LOG ("maskBits:%p", params->maskBits);
   GST_LOG ("mattePixMap:%p", params->mattePixMap);
