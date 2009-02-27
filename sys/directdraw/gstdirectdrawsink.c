@@ -610,7 +610,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
               !gst_directdraw_sink_surface_check (ddrawsink, surface))
           ) {
         gst_directdraw_sink_surface_destroy (ddrawsink, surface);
-        gst_buffer_unref (surface);
+        gst_buffer_unref (GST_BUFFER_CAST (surface));
         surface = NULL;
       } else {
         /* We found a suitable surface */
@@ -629,7 +629,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
     DDSURFACEDESC2 surface_desc;
     DDSURFACEDESC2 *sd;
 
-    if (!gst_structure_get_int (structure, "depth", &depth)) {
+    if (!gst_structure_get_int (structure, "depth", (gint *) & depth)) {
       GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
           "Can't get depth from buffer_alloc caps");
       return GST_FLOW_ERROR;
@@ -663,7 +663,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
           gint bpp, endianness, red_mask, green_mask, blue_mask;
 
           /* get new display mode properties */
-          gst_structure_get_int (display_structure, "depth", &depth);
+          gst_structure_get_int (display_structure, "depth", (gint *) & depth);
           gst_structure_get_int (display_structure, "bpp", &bpp);
           gst_structure_get_int (display_structure, "endianness", &endianness);
           gst_structure_get_int (display_structure, "red_mask", &red_mask);
@@ -997,7 +997,7 @@ gst_ddrawvideosink_get_format_from_caps (GstDirectDrawSink * ddrawsink,
       pPixelFormat->dwBBitMask = GUINT32_TO_BE (pPixelFormat->dwBBitMask);
     }
   } else if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
-    gint fourcc;
+    guint32 fourcc;
 
     pPixelFormat->dwFlags = DDPF_FOURCC;
     ret &= gst_structure_get_fourcc (structure, "format", &fourcc);
@@ -1894,7 +1894,7 @@ gst_directdraw_sink_bufferpool_clear (GstDirectDrawSink * ddrawsink)
     ddrawsink->buffer_pool = g_slist_delete_link (ddrawsink->buffer_pool,
         ddrawsink->buffer_pool);
     gst_directdraw_sink_surface_destroy (ddrawsink, surface);
-    gst_buffer_unref (surface);
+    gst_buffer_unref (GST_BUFFER_CAST (surface));
   }
   g_mutex_unlock (ddrawsink->pool_lock);
 }
