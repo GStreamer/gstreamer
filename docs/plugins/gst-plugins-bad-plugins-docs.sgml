@@ -98,6 +98,7 @@
     <xi:include href="xml/plugin-celt.xml" />
     <xi:include href="xml/plugin-dccp.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />
+    <xi:include href="xml/plugin-dirac.xml" />
     <xi:include href="xml/plugin-dtmf.xml" />
     <xi:include href="xml/plugin-dtsdec.xml" />
     <xi:include href="xml/plugin-dvbsrc.xml" />
