@@ -29,6 +29,7 @@
 #include "resindvdsrc.h"
 #include "rsnstreamselector.h"
 #include "rsnaudiomunge.h"
+#include "rsnaudiodec.h"
 #include "rsnparsetter.h"
 
 #include "gstmpegdemux.h"
@@ -36,7 +37,6 @@
 GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define GST_CAT_DEFAULT resindvd_debug
 
-#define DECODEBIN_AUDIO 0
 #define USE_VIDEOQ 0
 
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
@@ -89,10 +89,6 @@ static void demux_pad_added (GstElement * element, GstPad * pad,
     RsnDvdBin * dvdbin);
 static void viddec_pad_added (GstElement * element, GstPad * pad,
     gboolean last, RsnDvdBin * dvdbin);
-#if DECODEBIN_AUDIO
-static void auddec_pad_added (GstElement * element, GstPad * pad,
-    gboolean last, RsnDvdBin * dvdbin);
-#endif
 static void rsn_dvdbin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void rsn_dvdbin_get_property (GObject * object, guint prop_id,
@@ -443,16 +439,6 @@ create_elements (RsnDvdBin * dvdbin)
           RSN_TYPE_AUDIOMUNGE, "audiomunge", "Audio output filter"))
     return FALSE;
 
-#if DECODEBIN_AUDIO
-  /* Decodebin will throw a missing element message to find a suitable
-   * decoder */
-  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, "decodebin", 0, "auddec",
-          "audio decoder"))
-    return FALSE;
-
-  g_signal_connect (G_OBJECT (dvdbin->pieces[DVD_ELEM_AUDDEC]),
-      "new-decoded-pad", G_CALLBACK (auddec_pad_added), dvdbin);
-#else
   if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, "a52dec", 0, "auddec",
           "audio decoder"))
     return FALSE;
@@ -467,7 +453,6 @@ create_elements (RsnDvdBin * dvdbin)
   gst_object_unref (sink);
   gst_object_unref (src);
   src = sink = NULL;
-#endif
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_SELECT], "src");
   sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUDDEC], "sink");
@@ -739,23 +724,6 @@ viddec_pad_added (GstElement * element, GstPad * pad, gboolean last,
     }
   }
 }
-
-#if DECODEBIN_AUDIO
-static void
-auddec_pad_added (GstElement * element, GstPad * pad, gboolean last,
-    RsnDvdBin * dvdbin)
-{
-  GstPad *out_pad;
-
-  GST_DEBUG_OBJECT (dvdbin, "New audio pad: %" GST_PTR_FORMAT, pad);
-
-  out_pad =
-      gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_MUNGE], "sink");
-  gst_pad_link (pad, out_pad);
-
-  gst_object_unref (out_pad);
-}
-#endif
 
 static void
 rsn_dvdbin_set_property (GObject * object, guint prop_id,
