@@ -55,10 +55,25 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GstCaps *caps = NULL;
+  guint major, minor, micro, nano;
+  gboolean ret;
+
+  /* FIXME: GStreamer before 0.10.22.1 produced assertions
+   * when storing typefind factories with NULL caps */
+  gst_version (&major, &minor, &micro, &nano);
+  if (major <= 0 && minor <= 10 && micro <= 22 && nano <= 0)
+    caps = gst_caps_new_empty ();
+
   GST_DEBUG_CATEGORY_INIT (xdgmime_debug, "xdgmime", 0, "XDG-MIME");
 
-  return gst_type_find_register (plugin,
-      "xdgmime", GST_RANK_MARGINAL, xdgmime_typefind, NULL, NULL, NULL, NULL);
+  ret = gst_type_find_register (plugin,
+      "xdgmime", GST_RANK_MARGINAL, xdgmime_typefind, NULL, caps, NULL, NULL);
+
+  if (caps)
+    gst_caps_unref (caps);
+
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
