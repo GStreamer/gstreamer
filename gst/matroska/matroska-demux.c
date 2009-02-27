@@ -5135,9 +5135,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       guint rformat;
       guint subformat;
 
-      gst_util_dump_mem (data, size);
-      gst_util_dump_mem (data + 0x1a, size - 0x1a);
-
       subformat = GST_READ_UINT32_BE (data + 0x1a);
       rformat = GST_READ_UINT32_BE (data + 0x1e);
 
@@ -5503,7 +5500,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       guint extra_data_size;
 
       GST_ERROR ("real audio raversion:%d", raversion);
-      gst_util_dump_mem (data, size);
       if (raversion == 8) {
         /* COOK */
         flavor = GST_READ_UINT16_BE (data + 22);

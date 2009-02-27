@@ -139,6 +139,11 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     goto no_height;
   height = atoi (str);
 
+  /* optional interlace value but we don't handle interlaced
+   * formats yet */
+  if ((str = gst_structure_get_string (structure, "interlace")))
+    goto interlaced;
+
   if (!(str = gst_structure_get_string (structure, "sampling")))
     goto no_sampling;
 
@@ -246,6 +251,11 @@ no_width:
 no_height:
   {
     GST_ERROR_OBJECT (depayload, "no height specified");
+    return FALSE;
+  }
+interlaced:
+  {
+    GST_ERROR_OBJECT (depayload, "interlaced formats not supported yet");
     return FALSE;
   }
 no_sampling:

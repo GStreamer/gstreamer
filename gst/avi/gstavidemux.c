@@ -619,9 +619,13 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* handle seeking */
-      res = gst_avi_demux_handle_seek (avi, pad, event);
-      gst_event_unref (event);
+      /* handle seeking only in pull mode */
+      if (!avi->streaming) {
+        res = gst_avi_demux_handle_seek (avi, pad, event);
+        gst_event_unref (event);
+      } else {
+        res = gst_pad_event_default (pad, event);
+      }
       break;
     case GST_EVENT_QOS:
     case GST_EVENT_NAVIGATION:
@@ -4246,6 +4250,7 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   if (active) {
     avi->segment_running = TRUE;
+    avi->streaming = FALSE;
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
         sinkpad);
   } else {
@@ -4257,9 +4262,11 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 static gboolean
 gst_avi_demux_activate_push (GstPad * pad, gboolean active)
 {
+  GstAviDemux *avi = GST_AVI_DEMUX (GST_OBJECT_PARENT (pad));
 
   if (active) {
     GST_DEBUG ("avi: activating push/chain function");
+    avi->streaming = TRUE;
   } else {
     GST_DEBUG ("avi: deactivating push/chain function");
   }
