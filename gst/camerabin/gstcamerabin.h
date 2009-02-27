@@ -32,7 +32,6 @@
 #include "camerabinvideo.h"
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_CAMERABIN \
   (gst_camerabin_get_type())
@@ -44,7 +43,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAMERABIN))
 #define GST_IS_CAMERABIN_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAMERABIN))
-
 typedef struct _GstCameraBin GstCameraBin;
 typedef struct _GstCameraBinClass GstCameraBinClass;
 
@@ -147,7 +145,7 @@ struct _GstCameraBinClass
 
   /* signals (callback) */
 
-    gboolean (*img_done) (GstCameraBin * camera, GString * filename);
+    gboolean (*img_done) (GstCameraBin * camera, const gchar * filename);
 };
 
 /**
@@ -166,5 +164,4 @@ typedef enum
 GType gst_camerabin_get_type (void);
 
 G_END_DECLS
-
 #endif /* #ifndef __GST_CAMERABIN_H__ */

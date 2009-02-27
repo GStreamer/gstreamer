@@ -868,22 +868,37 @@ camerabin_dispose_elements (GstCameraBin * camera)
 /*
  * gst_camerabin_image_capture_continue:
  * @camera: camerabin object
- * @filename: new filename set by user
- * @cont: TRUE to continue image capture, FALSE otherwise
  *
- * Check if user wants to continue image capturing by using g_signal.
+ * Check if application wants to continue image capturing by using g_signal.
+ *
+ * Returns TRUE if another image should be captured, FALSE otherwise.
  */
-static void
-gst_camerabin_image_capture_continue (GstCameraBin * camera, GString * filename,
-    gboolean * cont)
+static gboolean
+gst_camerabin_image_capture_continue (GstCameraBin * camera)
 {
-  GST_DEBUG_OBJECT (camera, "emitting img_done signal, filename: %s",
-      filename->str);
+  gchar *filename = NULL;
+  gboolean cont = FALSE;
+
+  /* Check the filename of the written image */
+  g_object_get (G_OBJECT (camera->imgbin), "filename", &filename, NULL);
+
+  GST_DEBUG_OBJECT (camera, "emitting img_done signal, filename: %s", filename);
   g_signal_emit (G_OBJECT (camera), camerabin_signals[IMG_DONE_SIGNAL], 0,
-      filename, cont);
+      filename, &cont);
+
+  g_free (filename);
 
   GST_DEBUG_OBJECT (camera, "emitted img_done, new filename: %s, continue: %d",
-      filename->str, *cont);
+      camera->filename->str, cont);
+
+  /* If the app wants to continue make sure new filename has been set */
+  if (cont && g_str_equal (camera->filename->str, "")) {
+    GST_ELEMENT_ERROR (camera, RESOURCE, NOT_FOUND,
+        ("cannot continue capture, no filename has been set"), (NULL));
+    cont = FALSE;
+  }
+
+  return cont;
 }
 
 /*
@@ -920,7 +935,6 @@ gst_camerabin_change_mode (GstCameraBin * camera, gint mode)
  * @name: new filename for capture
  *
  * Change filename for image or video capture.
- * Changing filename will stop ongoing capture.
  */
 static void
 gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
@@ -928,14 +942,6 @@ gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
   if (0 != strcmp (camera->filename->str, name)) {
     GST_DEBUG_OBJECT (camera, "changing filename from %s to %s",
         camera->filename->str, name);
-    /* Interrupt ongoing capture */
-    gst_camerabin_do_stop (camera);
-    gst_camerabin_reset_to_view_finder (camera);
-
-    if (camera->active_bin) {
-      g_object_set (G_OBJECT (camera->active_bin), "filename", name, NULL);
-    }
-
     g_string_assign (camera->filename, name);
   }
 }
@@ -1557,8 +1563,11 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstBuffer * buffer,
   /* Close the file of saved image */
   gst_element_set_state (camera->imgbin, GST_STATE_READY);
 
+  /* Reset filename to force application set new filename */
+  g_string_assign (camera->filename, "");
+
   /* Check if the application wants to continue */
-  gst_camerabin_image_capture_continue (camera, camera->filename, &ret);
+  ret = gst_camerabin_image_capture_continue (camera);
 
   if (ret && !camera->stop_requested) {
     GST_DEBUG_OBJECT (camera, "capturing image \"%s\"", camera->filename->str);
@@ -1568,8 +1577,6 @@ gst_camerabin_have_img_buffer (GstPad * pad, GstBuffer * buffer,
   } else {
     GST_DEBUG_OBJECT (camera, "not continuing (cont:%d, stop_req:%d)",
         ret, camera->stop_requested);
-    /* Reset filename to force application set new filename */
-    g_string_assign (camera->filename, "");
 
     /* Block dataflow to the output-selector to show preview image in
        view finder. Continue and unblock when capture is stopped */
@@ -1715,7 +1722,7 @@ gst_camerabin_do_stop (GstCameraBin * camera)
 /*
  * gst_camerabin_default_signal_img_done:
  * @camera: camerabin object
- * @fname: new filename
+ * @fname: filename of the recently saved image
  *
  * Default handler for #GstCameraBin::img-done signal,
  * stops always capture.
@@ -1723,7 +1730,8 @@ gst_camerabin_do_stop (GstCameraBin * camera)
  * Returns: FALSE always
  */
 static gboolean
-gst_camerabin_default_signal_img_done (GstCameraBin * camera, GString * fname)
+gst_camerabin_default_signal_img_done (GstCameraBin * camera,
+    const gchar * fname)
 {
   return FALSE;
 }
@@ -2290,10 +2298,11 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
   /**
    * GstCameraBin::img-done:
    * @camera: the camera bin element
-   * @filename: the name of the file just saved as a GString*
+   * @filename: the name of the file just saved
    *
-   * Signal emited when the file has just been saved. To continue taking
-   * pictures just update @filename and return TRUE, otherwise return FALSE.
+   * Signal emitted when the file has just been saved. To continue taking
+   * pictures set new filename using #GstCameraBin:filename property and return
+   * TRUE, otherwise return FALSE.
    *
    * Don't call any #GstCameraBin method from this signal, if you do so there
    * will be a deadlock.
@@ -2303,8 +2312,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       g_signal_new ("img-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstCameraBinClass, img_done),
       g_signal_accumulator_true_handled, NULL,
-      __gst_camerabin_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
-      G_TYPE_POINTER);
+      __gst_camerabin_marshal_BOOLEAN__STRING, G_TYPE_BOOLEAN, 1,
+      G_TYPE_STRING);
 
   klass->user_start = gst_camerabin_user_start;
   klass->user_stop = gst_camerabin_user_stop;

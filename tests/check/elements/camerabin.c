@@ -76,7 +76,7 @@ make_test_seq_file_name (const gchar * base_name)
 /* signal handlers */
 
 static gboolean
-capture_done (GstElement * elem, GString * filename, gpointer user_data)
+capture_done (GstElement * elem, const gchar * filename, gpointer user_data)
 {
   captured_images++;
 
@@ -90,11 +90,9 @@ capture_done (GstElement * elem, GString * filename, gpointer user_data)
   }
 
   if (continuous) {
-    g_string_assign (filename, make_test_seq_file_name (BURST_IMAGE_FILENAME));
-    /* on needs to modify the passed GString, the code below won't work
-       g_object_set (G_OBJECT (elem), "filename",
-       make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
-     */
+    /* Must set filename for new picture */
+    g_object_set (G_OBJECT (elem), "filename",
+        make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
   }
 
   return continuous;
