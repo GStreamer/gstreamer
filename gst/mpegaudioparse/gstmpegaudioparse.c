@@ -1914,6 +1914,8 @@ mp3parse_src_query (GstPad * pad, GstQuery * query)
 
   g_return_val_if_fail (mp3parse != NULL, FALSE);
 
+  GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
       gst_query_parse_position (query, &format, NULL);
@@ -1957,6 +1959,44 @@ mp3parse_src_query (GstPad * pad, GstQuery * query)
           goto out;
         gst_query_set_duration (query, format, total);
         res = TRUE;
+      }
+      break;
+    case GST_QUERY_SEEKING:
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+
+      /* does upstream handle ? */
+      if ((peer = gst_pad_get_peer (mp3parse->sinkpad)) != NULL) {
+        res = gst_pad_query (peer, query);
+        gst_object_unref (peer);
+      }
+      /* we may be able to help if in TIME */
+      if (format == GST_FORMAT_TIME) {
+        gboolean seekable;
+
+        gst_query_parse_seeking (query, &format, &seekable, NULL, NULL);
+        /* already OK if upstream takes care */
+        if (res && !seekable) {
+          gint64 pos;
+
+          seekable = TRUE;
+          if (!mp3parse_total_time (mp3parse, &total) || total == -1) {
+            seekable = FALSE;
+          } else if (!mp3parse_time_to_bytepos (mp3parse, 0, &pos)) {
+            seekable = FALSE;
+          } else {
+            GstQuery *q;
+
+            q = gst_query_new_seeking (GST_FORMAT_BYTES);
+            if (!gst_pad_peer_query (mp3parse->sinkpad, q)) {
+              seekable = FALSE;
+            } else {
+              gst_query_parse_seeking (q, &format, &seekable, NULL, NULL);
+            }
+            gst_query_unref (q);
+          }
+          gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, total);
+          res = TRUE;
+        }
       }
       break;
     default:
