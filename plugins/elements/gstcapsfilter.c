@@ -165,26 +165,32 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
       nego = GST_PAD_CAPS (GST_BASE_TRANSFORM_SINK_PAD (object));
       if (nego) {
-        GstStructure *s1, *s2;
-
-        /* first check if the name is the same */
-        s1 = gst_caps_get_structure (nego, 0);
-        s2 = gst_caps_get_structure (new_caps, 0);
-
         GST_DEBUG_OBJECT (capsfilter, "we had negotiated caps %" GST_PTR_FORMAT,
             nego);
 
-        if (gst_structure_get_name_id (s1) == gst_structure_get_name_id (s2)) {
-          /* same name, copy all fields from the new caps into the previously
-           * negotiated caps */
-          suggest = gst_caps_copy (nego);
-          s1 = gst_caps_get_structure (suggest, 0);
-          gst_structure_foreach (s2, (GstStructureForeachFunc) copy_func, s1);
-          GST_DEBUG_OBJECT (capsfilter, "copied structure fields");
+        if (G_UNLIKELY (gst_caps_is_any (new_caps))) {
+          GST_DEBUG_OBJECT (capsfilter, "not settings any suggestion");
+
+          suggest = NULL;
         } else {
-          GST_DEBUG_OBJECT (capsfilter, "different structure names");
-          /* different names, we can only suggest the complete caps */
-          suggest = gst_caps_copy (new_caps);
+          GstStructure *s1, *s2;
+
+          /* first check if the name is the same */
+          s1 = gst_caps_get_structure (nego, 0);
+          s2 = gst_caps_get_structure (new_caps, 0);
+
+          if (gst_structure_get_name_id (s1) == gst_structure_get_name_id (s2)) {
+            /* same name, copy all fields from the new caps into the previously
+             * negotiated caps */
+            suggest = gst_caps_copy (nego);
+            s1 = gst_caps_get_structure (suggest, 0);
+            gst_structure_foreach (s2, (GstStructureForeachFunc) copy_func, s1);
+            GST_DEBUG_OBJECT (capsfilter, "copied structure fields");
+          } else {
+            GST_DEBUG_OBJECT (capsfilter, "different structure names");
+            /* different names, we can only suggest the complete caps */
+            suggest = gst_caps_copy (new_caps);
+          }
         }
       } else {
         GST_DEBUG_OBJECT (capsfilter, "no negotiated caps");
