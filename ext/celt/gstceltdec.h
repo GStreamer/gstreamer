@@ -41,8 +41,6 @@ G_BEGIN_DECLS
 typedef struct _GstCeltDec GstCeltDec;
 typedef struct _GstCeltDecClass GstCeltDecClass;
 
-#define DEC_MAX_FRAME_SIZE 2000
-
 struct _GstCeltDec {
   GstElement            element;
 
