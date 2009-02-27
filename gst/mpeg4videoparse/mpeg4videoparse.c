@@ -484,7 +484,7 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
               found = TRUE;
               break;
             default:
-              if (code <= 0x11f)
+              if (code <= 0x1f)
                 found = TRUE;
               break;
           }
@@ -525,7 +525,7 @@ gst_mpeg4vparse_drain (GstMpeg4VParse * parse, GstBuffer * last_buffer)
               parse->state = PARSE_VOS_FOUND;
               break;
             default:
-              if (code <= 0x11f) {
+              if (code <= 0x1f) {
                 GST_LOG_OBJECT (parse, "found VO start marker at %u",
                     parse->offset);
                 parse->vos_offset = parse->offset;
