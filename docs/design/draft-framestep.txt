@@ -17,7 +17,7 @@ The following requirements are needed:
  - The ability to walk forwards and backwards in the stream.
  - Arbitrary increments in any supported format (time, frames, bytes ...)
  - High speed, minimal overhead. This mechanism is not more expensive than
-   simple playback.
+   simple playback. 
  - switching between forwards and backwards stepping should be fast.
  - Maintain synchronisation between streams.
  - Get feedback of the amount of skipped data.
@@ -107,17 +107,29 @@ events
      the end of the segment.
 
   "rate", G_TYPE_DOUBLE
-     The rate and direction at which the frames should be stepped in PLAYING
-     mode. 1.0 is the normal playback speed and direction of the segment, 2.0
-     is double speed. A negative rate will step backwards. A speed of 0.0 is
-     not allowed. When performing a flushing step, the speed is not relevant. 
+     The rate at which the frames should be stepped in PLAYING mode. 1.0 is
+     the normal playback speed and direction of the segment, 2.0
+     is double speed. A speed of 0.0 is not allowed. When performing a
+     flushing step, the speed is not relevant. Note that we don't allow negative
+     rates here, use a seek with a negative rate first to reverse the playback
+     direction.
+
+  "intermediate", G_TYPE_BOOLEAN
+     Signal that this step operation is an intermediate step, part of a series
+     of step operations. It is mostly interesting for stepping in the PAUSED state
+     because the sink will only perform a preroll after a non-intermediate step
+     operation completes. Intermediate steps are usefull to flush out data from
+     other sinks in order to not cause excessive queueing. In the PLAYING state
+     the intermediate flag has no visual effect. In all states, the intermediate
+     flag is passed to the corresponding GST_MESSAGE_STEP_DONE.
 
   "flush", G_TYPE_BOOLEAN
      when flushing is TRUE, the step is performed immediatly: 
 
       - In the PAUSED state the pipeline loses the PAUSED state, the requested
-        amount of data is skipped and the pipeline prerolls again. When the
-	pipeline was stepping while the event is sent, the current step
+        amount of data is skipped and the pipeline prerolls again when a
+	non-intermediate step completes.
+	When the pipeline was stepping while the event is sent, the current step
 	operation is updated with the new amount and format. The sink will do a
 	best effort to comply with the new amount.
       - In the PLAYING state, the requested amount of data is skipped (not
@@ -132,7 +144,8 @@ events
 	current step operation completes. If there was no previous step
 	operation, the step operation will be performed from the position of the
 	last PAUSED state.
- 
+
+
  The application will create a STEP event to start or stop the stepping
  operation. Both stepping in PAUSED and PLAYING can be performed by means of 
  the flush flag.
@@ -142,6 +155,10 @@ events
  frames only, the event should only be sent to the video sink and upon reception
  of the STEP_DONE message, one can step the other sinks to align the streams
  again.
+
+ For large stepping amounts, there needs to be enough queueing in front of all
+ the sinks. If large steps need to be performed, they can be split up into
+ smaller step operations using the "intermediate" flag on the step. 
 
  Since the step event does not update the base_time of any of the elements, the
  sinks should keep track of the amount of stepped data in order to remain
@@ -162,6 +179,9 @@ messages
 
   "rate", G_TYPE_DOUBLE
      The rate and direction at which the frames were stepped.
+
+  "intermediate", G_TYPE_BOOLEAN
+     If this is an intermediate step operation that completed.
 
   "duration", G_TYPE_UINT64
      The total duration of the stepped units in GST_FORMAT_TIME.
