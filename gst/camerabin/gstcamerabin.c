@@ -882,7 +882,7 @@ gst_camerabin_image_capture_continue (GstCameraBin * camera, GString * filename,
   g_signal_emit (G_OBJECT (camera), camerabin_signals[IMG_DONE_SIGNAL], 0,
       filename, cont);
 
-  GST_DEBUG_OBJECT (camera, "emitted img_done, new filename:%s, continue:%d",
+  GST_DEBUG_OBJECT (camera, "emitted img_done, new filename: %s, continue: %d",
       filename->str, *cont);
 }
 
@@ -2265,7 +2265,7 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_res_fps),
-      NULL, NULL, gst_camerabin_marshal_VOID__INT_INT_INT_INT, G_TYPE_NONE, 4,
+      NULL, NULL, __gst_camerabin_marshal_VOID__INT_INT_INT_INT, G_TYPE_NONE, 4,
       G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
   /**
@@ -2284,13 +2284,13 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBinClass, user_image_res),
-      NULL, NULL, gst_camerabin_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
+      NULL, NULL, __gst_camerabin_marshal_VOID__INT_INT, G_TYPE_NONE, 2,
       G_TYPE_INT, G_TYPE_INT);
 
   /**
    * GstCameraBin::img-done:
    * @camera: the camera bin element
-   * @filename: the name of the file just saved
+   * @filename: the name of the file just saved as a GString*
    *
    * Signal emited when the file has just been saved. To continue taking
    * pictures just update @filename and return TRUE, otherwise return FALSE.
@@ -2303,7 +2303,8 @@ gst_camerabin_class_init (GstCameraBinClass * klass)
       g_signal_new ("img-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstCameraBinClass, img_done),
       g_signal_accumulator_true_handled, NULL,
-      gst_camerabin_marshal_BOOLEAN__STRING, G_TYPE_BOOLEAN, 1, G_TYPE_GSTRING);
+      __gst_camerabin_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
+      G_TYPE_POINTER);
 
   klass->user_start = gst_camerabin_user_start;
   klass->user_stop = gst_camerabin_user_stop;

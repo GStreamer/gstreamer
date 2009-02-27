@@ -1,4 +1,4 @@
-glib_enum_prefix = gst_camerabin
+glib_enum_prefix = __gst_camerabin
 
 include $(top_srcdir)/common/glib-gen.mak
 

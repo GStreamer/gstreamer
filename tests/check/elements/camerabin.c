@@ -82,6 +82,7 @@ capture_done (GstElement * elem, GString * filename, gpointer user_data)
 
   if (captured_images >= MAX_BURST_IMAGES) {
     /* release the shutter button */
+    GST_DEBUG ("signal for img-done");
     g_mutex_lock (cam_mutex);
     g_cond_signal (cam_cond);
     g_mutex_unlock (cam_mutex);
@@ -334,6 +335,7 @@ GST_START_TEST (test_burst_image_capture)
   g_mutex_lock (cam_mutex);
   g_cond_wait (cam_cond, cam_mutex);
   g_mutex_unlock (cam_mutex);
+  GST_DEBUG ("received img-done");
 
   g_signal_emit_by_name (camera, "user-stop", 0);
 }
