@@ -92,7 +92,7 @@ enum
 #define PEAK_FORMAT ".06f"
 
 #define VALID_GAIN(x) ((x) > -60.00 && (x) < 60.00)
-#define VALID_PEAK(x) ((x) > 0.)
+#define VALID_PEAK(x) ((x) > 0. && (x) < 1.)
 
 /* Same template caps as GstVolume, for I don't like having just ANY caps. */
 
