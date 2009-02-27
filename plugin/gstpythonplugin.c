@@ -252,22 +252,32 @@ pygst_require (gchar * version)
 {
   PyObject *pygst, *gst;
   PyObject *require;
+  PyObject *modules;
 
-  if (!(pygst = PyImport_ImportModule ("pygst"))) {
-    GST_ERROR ("the pygst module is not available!");
-    goto error;
-  }
+  modules = PySys_GetObject ("modules");
+  /* Try to see if 'gst' is already imported */
+  if (!(gst = PyMapping_GetItemString (modules, "gst"))) {
 
-  if (!(PyObject_CallMethod (pygst, "require", "s", version))) {
-    GST_ERROR ("the required version, %s, of gst-python is not available!");
-    Py_DECREF (pygst);
-    goto error;
-  }
+    /* if not, see if 'pygst' was already imported. If so, we assume that
+     * 'pygst.require' has already been called. */
+    if (!(pygst = PyMapping_GetItemString (modules, "pygst"))) {
+      if (!(pygst = PyImport_ImportModule ("pygst"))) {
+        GST_ERROR ("the pygst module is not available!");
+        goto error;
+      }
 
-  if (!(gst = PyImport_ImportModule ("gst"))) {
-    GST_ERROR ("couldn't import the gst module");
-    Py_DECREF (pygst);
-    goto error;
+      if (!(PyObject_CallMethod (pygst, "require", "s", version))) {
+        GST_ERROR ("the required version, %s, of gst-python is not available!",
+            version);
+        Py_DECREF (pygst);
+        goto error;
+      }
+    }
+    if (!(gst = PyImport_ImportModule ("gst"))) {
+      GST_ERROR ("couldn't import the gst module");
+      Py_DECREF (pygst);
+      goto error;
+    }
   }
 #define IMPORT(x, y) \
     _PyGst##x##_Type = (PyTypeObject *)PyObject_GetAttrString(gst, y); \
