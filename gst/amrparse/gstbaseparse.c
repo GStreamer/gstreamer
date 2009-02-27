@@ -864,9 +864,11 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
     parse->priv->pending_events = NULL;
   }
 
-  GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
-      GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
-  gst_adapter_push (parse->adapter, buffer);
+  if (G_LIKELY (buffer)) {
+    GST_LOG_OBJECT (parse, "buffer size: %d, offset = %lld",
+        GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
+    gst_adapter_push (parse->adapter, buffer);
+  }
 
   /* Parse and push as many frames as possible */
   /* Stop either when adapter is empty or we are flushing */
@@ -895,7 +897,7 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       if (parse->priv->discont) {
         GST_DEBUG_OBJECT (parse, "marking DISCONT");
-        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+        GST_BUFFER_FLAG_SET (tmpbuf, GST_BUFFER_FLAG_DISCONT);
       }
 
       skip = -1;
