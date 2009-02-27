@@ -249,6 +249,20 @@ gst_dtmf_src_plugin_init
 </SECTION>
 
 <SECTION>
+<FILE>element-dtsdec</FILE>
+<TITLE>dtsdec</TITLE>
+GstDtsDec
+<SUBSECTION Standard>
+GstDtsDecClass
+gst_dtsdec_get_type
+GST_TYPE_DTSDEC
+GST_DTSDEC
+GST_DTSDEC_CLASS
+GST_IS_DTSDEC
+GST_IS_DTSDEC_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-dvbsrc</FILE>
 <TITLE>dvbsrc</TITLE>
 GstDvbSrc
