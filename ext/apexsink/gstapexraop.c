@@ -231,7 +231,17 @@ gst_apexraop_connect (GstApExRAOP * con)
       creq[GST_APEX_RAOP_SDP_DEFAULT_LENGTH],
       hreq[GST_APEX_RAOP_HDR_DEFAULT_LENGTH], *req;
   RSA *rsa;
-  guchar *mod, *exp, buf[4 + 8 + 16], rsakey[512];
+  guchar *mod, *exp, rsakey[512];
+  union gst_randbytes
+  {
+    struct asvals
+    {
+      gulong url_key;
+      guint64 conn_id;
+      guchar challenge[16];
+    } v;
+    guchar buf[4 + 8 + 16];
+  } randbuf;
   gsize size;
   struct sockaddr_in ioaddr;
   socklen_t iolen;
@@ -257,12 +267,9 @@ gst_apexraop_connect (GstApExRAOP * con)
           sizeof (conn->ctrl_sd_in)) < 0)
     return GST_RTSP_STS_DESTINATION_UNREACHABLE;
 
-  RAND_bytes (buf, sizeof (buf));
-  sprintf ((gchar *) conn->url_abspath, "%lu", *((gulong *) buf));
-  ac = g_base64_encode (buf + 12, 16);
-  g_strdel (ac, '=');
-  sprintf ((char *) conn->cid, "%08lx%08lx", *((gulong *) (buf + 4)),
-      *((gulong *) (buf + 8)));
+  RAND_bytes (randbuf.buf, sizeof (randbuf));
+  sprintf ((gchar *) conn->url_abspath, "%lu", randbuf.v.url_key);
+  sprintf ((char *) conn->cid, "%16" G_GINT64_MODIFIER "x", randbuf.v.conn_id);
 
   RAND_bytes (conn->aes_ky, AES_BLOCK_SIZE);
   RAND_bytes (conn->aes_iv, AES_BLOCK_SIZE);
@@ -284,6 +291,9 @@ gst_apexraop_connect (GstApExRAOP * con)
   iolen = sizeof (struct sockaddr);
   getsockname (conn->ctrl_sd, (struct sockaddr *) &ioaddr, &iolen);
   inet_ntop (AF_INET, &(ioaddr.sin_addr), inaddr, INET_ADDRSTRLEN);
+
+  ac = g_base64_encode (randbuf.v.challenge, 16);
+  g_strdel (ac, '=');
 
   sprintf (creq,
       "v=0\r\n"
