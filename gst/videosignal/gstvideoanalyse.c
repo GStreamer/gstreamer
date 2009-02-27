@@ -200,7 +200,7 @@ gst_video_analyse_420 (GstVideoAnalyse * videoanalyse, guint8 * data,
   /* do brightness as average of pixel brightness in 0.0 to 1.0 */
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
-      sum += data[j];
+      sum += d[j];
     }
     d += GST_VIDEO_I420_Y_ROWSTRIDE (width);
   }
