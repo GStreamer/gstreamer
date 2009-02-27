@@ -149,7 +149,11 @@ gst_udp_set_loop_ttl (int sockfd, gboolean loop, int ttl)
       break;
     }
     default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
       errno = EAFNOSUPPORT;
+#endif
   }
 #endif
   return ret;
