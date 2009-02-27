@@ -110,7 +110,8 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
                                   enum CodecID ** video_codec_list,
-                                  enum CodecID ** audio_codec_list);
+                                  enum CodecID ** audio_codec_list,
+				  AVOutputFormat * plugin);
 
 /*
  * Since FFMpeg has such really cool and useful descriptions

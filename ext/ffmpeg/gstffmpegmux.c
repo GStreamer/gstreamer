@@ -703,6 +703,27 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
     enum CodecID *video_ids = NULL, *audio_ids = NULL;
 
+    if ((!strncmp (in_plugin->name, "u16", 3)) ||
+        (!strncmp (in_plugin->name, "s16", 3)) ||
+        (!strncmp (in_plugin->name, "u24", 3)) ||
+        (!strncmp (in_plugin->name, "s24", 3)) ||
+        (!strncmp (in_plugin->name, "u8", 2)) ||
+        (!strncmp (in_plugin->name, "s8", 2)) ||
+        (!strncmp (in_plugin->name, "u32", 3)) ||
+        (!strncmp (in_plugin->name, "s32", 3)) ||
+        (!strncmp (in_plugin->name, "f32", 3)) ||
+        (!strncmp (in_plugin->name, "f64", 3)) ||
+        (!strncmp (in_plugin->name, "raw", 3)) ||
+        (!strncmp (in_plugin->name, "crc", 3)) ||
+        (!strncmp (in_plugin->name, "null", 4)) ||
+        (!strncmp (in_plugin->name, "gif", 3)) ||
+        (!strncmp (in_plugin->name, "frame", 5)) ||
+        (!strncmp (in_plugin->name, "image", 5))
+        ) {
+      GST_LOG ("Ignoring muxer %s", in_plugin->name);
+      goto next;
+    }
+
     /* Try to find the caps that belongs here */
     srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
     if (!srccaps) {
@@ -710,7 +731,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       goto next;
     }
     if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
-            &video_ids, &audio_ids)) {
+            &video_ids, &audio_ids, in_plugin)) {
       gst_caps_unref (srccaps);
       GST_WARNING
           ("Couldn't get sink caps for muxer %s. Most likely because no input format mapping exists.",

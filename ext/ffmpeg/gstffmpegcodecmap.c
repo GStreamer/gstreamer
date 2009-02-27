@@ -2344,8 +2344,17 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
 
 gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
-    enum CodecID ** video_codec_list, enum CodecID ** audio_codec_list)
+    enum CodecID ** video_codec_list, enum CodecID ** audio_codec_list,
+    AVOutputFormat * plugin)
 {
+  static enum CodecID tmp_vlist[] = {
+    CODEC_ID_NONE,
+    CODEC_ID_NONE
+  };
+  static enum CodecID tmp_alist[] = {
+    CODEC_ID_NONE,
+    CODEC_ID_NONE
+  };
 
   GST_LOG ("format_name : %s", format_name);
 
@@ -2471,6 +2480,13 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     };
     *video_codec_list = gif_image_list;
     *audio_codec_list = NULL;
+  } else if ((plugin->audio_codec != CODEC_ID_NONE) ||
+      (plugin->video_codec != CODEC_ID_NONE)) {
+    tmp_vlist[0] = plugin->video_codec;
+    tmp_alist[0] = plugin->audio_codec;
+
+    *video_codec_list = tmp_vlist;
+    *audio_codec_list = tmp_alist;
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;
