@@ -326,6 +326,8 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_RT24           (0x0052)
 #define GST_RIFF_WAVE_FORMAT_PAC            (0x0053)
 #define GST_RIFF_WAVE_FORMAT_MPEGL3         (0x0055)
+#define GST_RIFF_WAVE_FORMAT_AMR_NB         (0x0057)
+#define GST_RIFF_WAVE_FORMAT_AMR_WB         (0x0058)
 #define GST_RIFF_WAVE_FORMAT_LUCENT_G723    (0x0059)
 #define GST_RIFF_WAVE_FORMAT_CIRRUS         (0x0060)
 #define GST_RIFF_WAVE_FORMAT_ADPCM_IMA_DK4  (0x0061)  /* not official */
@@ -339,7 +341,11 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_G726_ADPCM     (0x0064)
 #define GST_RIFF_WAVE_FORMAT_G722_ADPCM     (0x0065)
 #define GST_RIFF_WAVE_FORMAT_DSAT_DISPLAY   (0x0067)
+#define GST_RIFF_WAVE_FORMAT_ADPCM_IMA_WAV (0x0069)
+/* FIXME: where are these from? are they used at all? */
+#if 0
 #define GST_RIFF_WAVE_FORMAT_VOXWARE_BYTE_ALIGNED (0x0069)
+#endif
 #define GST_RIFF_WAVE_FORMAT_VOXWARE_AC8    (0x0070)
 #define GST_RIFF_WAVE_FORMAT_VOXWARE_AC10   (0x0071)
 #define GST_RIFF_WAVE_FORMAT_VOXWARE_AC16   (0x0072)
