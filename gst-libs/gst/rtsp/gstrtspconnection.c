@@ -280,11 +280,18 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
   GstRTSPConnection *newconn = NULL;
   struct sockaddr_in address;
   GstRTSPUrl *url;
+#ifdef G_OS_WIN32
+  gulong flags = 1;
+#endif
 
   address_len = sizeof (address);
   memset (&address, 0, address_len);
 
+#ifndef G_OS_WIN32
   fd = accept (sock, (struct sockaddr *) &address, &address_len);
+#else
+  fd = accept (sock, (struct sockaddr *) &address, (gint *) & address_len);
+#endif /* G_OS_WIN32 */
   if (fd == -1)
     goto accept_failed;
 
@@ -427,7 +434,11 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   /* we can still have an error connecting on windows */
   if (gst_poll_fd_has_error (conn->fdset, &conn->fd)) {
     socklen_t len = sizeof (errno);
+#ifndef G_OS_WIN32
     getsockopt (conn->fd.fd, SOL_SOCKET, SO_ERROR, &errno, &len);
+#else
+    getsockopt (conn->fd.fd, SOL_SOCKET, SO_ERROR, (char *) &errno, &len);
+#endif
     goto sys_error;
   }
 
