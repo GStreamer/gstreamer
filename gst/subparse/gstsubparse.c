@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <glib.h>
 #include <regex.h>
 
 #include "gstsubparse.h"
@@ -969,6 +970,44 @@ parser_state_dispose (ParserState * state)
 #endif
 }
 
+/* regex type enum */
+typedef enum
+{
+  GST_SUB_PARSE_REGEX_UNKNOWN = 0,
+  GST_SUB_PARSE_REGEX_MDVDSUB = 1,
+  GST_SUB_PARSE_REGEX_SUBRIP = 2,
+} GstSubParseRegex;
+
+static gpointer
+gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
+{
+  gpointer result = NULL;
+  GError *gerr = NULL;
+  switch (regtype) {
+    case GST_SUB_PARSE_REGEX_MDVDSUB:
+      result =
+          (gpointer) g_regex_new ("^\\{[0-9]+\\}\\{[0-9]+\\}", 0, 0, &gerr);
+      if (result == NULL) {
+        g_warning ("Compilation of mdvd regex failed: %s", gerr->message);
+        g_error_free (gerr);
+      }
+      break;
+    case GST_SUB_PARSE_REGEX_SUBRIP:
+      result = (gpointer) g_regex_new ("^([ 0-9]){0,3}[0-9](\x0d)?\x0a"
+          "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{2}[0-9]"
+          " --> ([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{2}[0-9]",
+          0, 0, &gerr);
+      if (result == NULL) {
+        g_warning ("Compilation of subrip regex failed: %s", gerr->message);
+        g_error_free (gerr);
+      }
+      break;
+    default:
+      GST_WARNING ("Trying to allocate regex of unknown type %u", regtype);
+  }
+  return result;
+}
+
 /*
  * FIXME: maybe we should pass along a second argument, the preceding
  * text buffer, because that is how this originally worked, even though
@@ -978,33 +1017,29 @@ parser_state_dispose (ParserState * state)
 static GstSubParseFormat
 gst_sub_parse_data_format_autodetect (gchar * match_str)
 {
-  static gboolean need_init_regexps = TRUE;
-  static regex_t mdvd_rx;
-  static regex_t subrip_rx;
   guint n1, n2, n3;
 
-  /* initialize the regexps used the first time around */
-  if (need_init_regexps) {
-    int err;
-    char errstr[128];
+  static GOnce mdvd_rx_once = G_ONCE_INIT;
+  static GOnce subrip_rx_once = G_ONCE_INIT;
 
-    need_init_regexps = FALSE;
-    if ((err = regcomp (&mdvd_rx, "^\\{[0-9]+\\}\\{[0-9]+\\}",
-                REG_EXTENDED | REG_NEWLINE | REG_NOSUB) != 0) ||
-        (err = regcomp (&subrip_rx, "^([ 0-9]){0,3}[0-9](\x0d)?\x0a"
-                "[ 0-9][0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{2}[0-9]"
-                " --> ([ 0-9])?[0-9]:[ 0-9][0-9]:[ 0-9][0-9],[ 0-9]{2}[0-9]",
-                REG_EXTENDED | REG_NEWLINE | REG_NOSUB)) != 0) {
-      regerror (err, &subrip_rx, errstr, 127);
-      GST_WARNING ("Compilation of subrip regex failed: %s", errstr);
-    }
-  }
+  GRegex *mdvd_grx;
+  GRegex *subrip_grx;
 
-  if (regexec (&mdvd_rx, match_str, 0, NULL, 0) == 0) {
+  g_once (&mdvd_rx_once,
+      (GThreadFunc) gst_sub_parse_data_format_autodetect_regex_once,
+      (gpointer) GST_SUB_PARSE_REGEX_MDVDSUB);
+  g_once (&subrip_rx_once,
+      (GThreadFunc) gst_sub_parse_data_format_autodetect_regex_once,
+      (gpointer) GST_SUB_PARSE_REGEX_SUBRIP);
+
+  mdvd_grx = (GRegex *) mdvd_rx_once.retval;
+  subrip_grx = (GRegex *) subrip_rx_once.retval;
+
+  if (g_regex_match (mdvd_grx, match_str, 0, NULL) == TRUE) {
     GST_LOG ("MicroDVD (frame based) format detected");
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
   }
-  if (regexec (&subrip_rx, match_str, 0, NULL, 0) == 0) {
+  if (g_regex_match (subrip_grx, match_str, 0, NULL) == TRUE) {
     GST_LOG ("SubRip (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SUBRIP;
   }
