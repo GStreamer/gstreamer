@@ -102,7 +102,7 @@ static const guint8 _profile_and_level_ul[] = {
 #define MXF_IS_METADATA_MPEG_VIDEO_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR))
 typedef struct _MXFMetadataMPEGVideoDescriptor MXFMetadataMPEGVideoDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataMPEGVideoDescriptorClass;
+typedef MXFMetadataClass MXFMetadataMPEGVideoDescriptorClass;
 GType mxf_metadata_mpeg_video_descriptor_get_type (void);
 
 struct _MXFMetadataMPEGVideoDescriptor
@@ -254,12 +254,15 @@ static void
     (MXFMetadataMPEGVideoDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_mpeg_video_descriptor_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (MPEG_VIDEO_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_mpeg_video_descriptor_to_structure;
+
+  metadata_class->type = 0x0151;
 }
 
 typedef enum
@@ -736,6 +739,6 @@ static const MXFEssenceElementHandler mxf_mpeg_essence_element_handler = {
 void
 mxf_mpeg_init (void)
 {
-  mxf_metadata_register (0x0151, MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR);
+  mxf_metadata_register (MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR);
   mxf_essence_element_handler_register (&mxf_mpeg_essence_element_handler);
 }

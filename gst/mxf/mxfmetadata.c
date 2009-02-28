@@ -295,67 +295,86 @@ typedef struct
 void
 mxf_metadata_init_types (void)
 {
-  _MXFMetadataType *l;
-
   g_return_if_fail (_mxf_metadata_registry == NULL);
 
-#define _add_type(TI, T) \
-    l = g_slice_new (_MXFMetadataType); \
-    l->type_id = TI; \
-    l->type = T; \
-    _mxf_metadata_registry = g_slist_prepend (_mxf_metadata_registry, l);
-
-  /* SMPTE S377M 8.6 Table 14 */
-  _add_type (0x012f, MXF_TYPE_METADATA_PREFACE);
-  _add_type (0x0130, MXF_TYPE_METADATA_IDENTIFICATION);
-  _add_type (0x0118, MXF_TYPE_METADATA_CONTENT_STORAGE);
-  _add_type (0x0123, MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA);
-  _add_type (0x0136, MXF_TYPE_METADATA_MATERIAL_PACKAGE);
-  _add_type (0x0137, MXF_TYPE_METADATA_SOURCE_PACKAGE);
-  _add_type (0x013b, MXF_TYPE_METADATA_TIMELINE_TRACK);
-  _add_type (0x0139, MXF_TYPE_METADATA_EVENT_TRACK);
-  _add_type (0x013a, MXF_TYPE_METADATA_STATIC_TRACK);
-  _add_type (0x010f, MXF_TYPE_METADATA_SEQUENCE);
-  _add_type (0x0111, MXF_TYPE_METADATA_SOURCE_CLIP);
-  _add_type (0x0114, MXF_TYPE_METADATA_TIMECODE_COMPONENT);
-  _add_type (0x0141, MXF_TYPE_METADATA_DM_SEGMENT);
-  _add_type (0x0145, MXF_TYPE_METADATA_DM_SOURCE_CLIP);
-  _add_type (0x0125, MXF_TYPE_METADATA_FILE_DESCRIPTOR);
-  _add_type (0x0127, MXF_TYPE_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
-  _add_type (0x0128, MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
-  _add_type (0x0129, MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
-  _add_type (0x0142, MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
-  _add_type (0x0143, MXF_TYPE_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR);
-  _add_type (0x0144, MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR);
-  _add_type (0x0132, MXF_TYPE_METADATA_NETWORK_LOCATOR);
-  _add_type (0x0133, MXF_TYPE_METADATA_TEXT_LOCATOR);
-
-#undef _add_type
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_PREFACE);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_IDENTIFICATION);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_CONTENT_STORAGE);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_MATERIAL_PACKAGE);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_SOURCE_PACKAGE);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_TIMELINE_TRACK);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_EVENT_TRACK);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_STATIC_TRACK);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_SEQUENCE);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_SOURCE_CLIP);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_TIMECODE_COMPONENT);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_DM_SEGMENT);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_DM_SOURCE_CLIP);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_FILE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_NETWORK_LOCATOR);
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry,
+      (gpointer) MXF_TYPE_METADATA_TEXT_LOCATOR);
 }
 
 void
-mxf_metadata_register (guint16 type_id, GType type)
+mxf_metadata_register (GType type)
 {
   g_return_if_fail (g_type_is_a (type, MXF_TYPE_METADATA));
-  g_return_if_fail (type_id != 0);
-  g_return_if_fail (_mxf_metadata_registry != NULL);
 
-  {
-    GSList *l = _mxf_metadata_registry;
-
-    for (; l; l = l->next) {
-      if (((_MXFMetadataType *) l->data)->type_id == type_id) {
-        return;
-      }
-    }
-  }
-
-  {
-    _MXFMetadataType *l = g_slice_new (_MXFMetadataType);
-    l->type_id = type_id;
-    l->type = type;
-    _mxf_metadata_registry = g_slist_prepend (_mxf_metadata_registry, l);
-  }
+  _mxf_metadata_registry =
+      g_slist_prepend (_mxf_metadata_registry, (gpointer) type);
 }
 
 MXFMetadata *
@@ -371,12 +390,15 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
   g_return_val_if_fail (_mxf_metadata_registry != NULL, NULL);
 
   for (l = _mxf_metadata_registry; l; l = l->next) {
-    _MXFMetadataType *data = l->data;
+    GType tmp = (GType) l->data;
+    MXFMetadataClass *klass = MXF_METADATA_CLASS (g_type_class_ref (tmp));
 
-    if (data->type_id == type) {
-      t = data->type;
+    if (klass->type == type) {
+      g_type_class_unref (klass);
+      t = tmp;
       break;
     }
+    g_type_class_unref (klass);
   }
 
   if (t == G_TYPE_INVALID) {
@@ -397,7 +419,6 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
     return NULL;
   }
 
-  ret->type = type;
   ret->parent.offset = offset;
   return ret;
 }
@@ -735,12 +756,14 @@ mxf_metadata_preface_class_init (MXFMetadataPrefaceClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_preface_finalize;
   metadata_base_class->handle_tag = mxf_metadata_preface_handle_tag;
   metadata_base_class->resolve = mxf_metadata_preface_resolve;
   metadata_base_class->to_structure = mxf_metadata_preface_to_structure;
   metadata_base_class->name_quark = MXF_QUARK (PREFACE);
+  metadata_class->type = 0x012f;
 }
 
 G_DEFINE_TYPE (MXFMetadataIdentification, mxf_metadata_identification,
@@ -933,11 +956,13 @@ mxf_metadata_identification_class_init (MXFMetadataIdentificationClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_identification_finalize;
   metadata_base_class->handle_tag = mxf_metadata_identification_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (IDENTIFICATION);
   metadata_base_class->to_structure = mxf_metadata_identification_to_structure;
+  metadata_class->type = 0x0130;
 }
 
 G_DEFINE_TYPE (MXFMetadataContentStorage, mxf_metadata_content_storage,
@@ -1170,12 +1195,14 @@ mxf_metadata_content_storage_class_init (MXFMetadataContentStorageClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_content_storage_finalize;
   metadata_base_class->handle_tag = mxf_metadata_content_storage_handle_tag;
   metadata_base_class->resolve = mxf_metadata_content_storage_resolve;
   metadata_base_class->name_quark = MXF_QUARK (CONTENT_STORAGE);
   metadata_base_class->to_structure = mxf_metadata_content_storage_to_structure;
+  metadata_class->type = 0x0118;
 }
 
 G_DEFINE_TYPE (MXFMetadataEssenceContainerData,
@@ -1316,6 +1343,7 @@ static void
     (MXFMetadataEssenceContainerDataClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_essence_container_data_handle_tag;
@@ -1323,6 +1351,7 @@ static void
   metadata_base_class->name_quark = MXF_QUARK (ESSENCE_CONTAINER_DATA);
   metadata_base_class->to_structure =
       mxf_metadata_essence_container_data_to_structure;
+  metadata_class->type = 0x0123;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataGenericPackage, mxf_metadata_generic_package,
@@ -1645,9 +1674,11 @@ mxf_metadata_material_package_class_init (MXFMetadataMaterialPackageClass *
     klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->resolve = mxf_metadata_material_package_resolve;
   metadata_base_class->name_quark = MXF_QUARK (MATERIAL_PACKAGE);
+  metadata_class->type = 0x0136;
 }
 
 G_DEFINE_TYPE (MXFMetadataSourcePackage, mxf_metadata_source_package,
@@ -1813,11 +1844,13 @@ static void
 mxf_metadata_source_package_class_init (MXFMetadataSourcePackageClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_source_package_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_package_resolve;
   metadata_base_class->name_quark = MXF_QUARK (SOURCE_PACKAGE);
   metadata_base_class->to_structure = mxf_metadata_source_package_to_structure;
+  metadata_class->type = 0x0137;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataTrack, mxf_metadata_track,
@@ -2087,10 +2120,12 @@ static void
 mxf_metadata_timeline_track_class_init (MXFMetadataTimelineTrackClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_timeline_track_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (TIMELINE_TRACK);
   metadata_base_class->to_structure = mxf_metadata_timeline_track_to_structure;
+  metadata_class->type = 0x013b;
 }
 
 G_DEFINE_TYPE (MXFMetadataEventTrack, mxf_metadata_event_track,
@@ -2159,10 +2194,12 @@ static void
 mxf_metadata_event_track_class_init (MXFMetadataEventTrackClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_event_track_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (EVENT_TRACK);
   metadata_base_class->to_structure = mxf_metadata_event_track_to_structure;
+  metadata_class->type = 0x0139;
 }
 
 G_DEFINE_TYPE (MXFMetadataStaticTrack, mxf_metadata_static_track,
@@ -2177,8 +2214,10 @@ static void
 mxf_metadata_static_track_class_init (MXFMetadataStaticTrackClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->name_quark = MXF_QUARK (STATIC_TRACK);
+  metadata_class->type = 0x013a;
 }
 
 G_DEFINE_TYPE (MXFMetadataSequence, mxf_metadata_sequence, MXF_TYPE_METADATA);
@@ -2349,12 +2388,14 @@ mxf_metadata_sequence_class_init (MXFMetadataSequenceClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_sequence_finalize;
   metadata_base_class->handle_tag = mxf_metadata_sequence_handle_tag;
   metadata_base_class->resolve = mxf_metadata_sequence_resolve;
   metadata_base_class->name_quark = MXF_QUARK (SEQUENCE);
   metadata_base_class->to_structure = mxf_metadata_sequence_to_structure;
+  metadata_class->type = 0x010f;
 }
 
 G_DEFINE_TYPE (MXFMetadataStructuralComponent,
@@ -2514,11 +2555,13 @@ mxf_metadata_timecode_component_class_init (MXFMetadataTimecodeComponentClass *
     klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_timecode_component_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (TIMECODE_COMPONENT);
   metadata_base_class->to_structure =
       mxf_metadata_timecode_component_to_structure;
+  metadata_class->type = 0x0114;
 }
 
 G_DEFINE_TYPE (MXFMetadataSourceClip, mxf_metadata_source_clip,
@@ -2643,11 +2686,13 @@ static void
 mxf_metadata_source_clip_class_init (MXFMetadataSourceClipClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_source_clip_handle_tag;
   metadata_base_class->resolve = mxf_metadata_source_clip_resolve;
   metadata_base_class->name_quark = MXF_QUARK (SOURCE_CLIP);
   metadata_base_class->to_structure = mxf_metadata_source_clip_to_structure;
+  metadata_class->type = 0x0111;
 }
 
 G_DEFINE_TYPE (MXFMetadataDMSourceClip, mxf_metadata_dm_source_clip,
@@ -2769,11 +2814,13 @@ mxf_metadata_dm_source_clip_class_init (MXFMetadataDMSourceClipClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_dm_source_clip_finalize;
   metadata_base_class->handle_tag = mxf_metadata_dm_source_clip_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (DM_SOURCE_CLIP);
   metadata_base_class->to_structure = mxf_metadata_dm_source_clip_to_structure;
+  metadata_class->type = 0x0145;
 }
 
 G_DEFINE_TYPE (MXFMetadataDMSegment, mxf_metadata_dm_segment,
@@ -2959,12 +3006,14 @@ mxf_metadata_dm_segment_class_init (MXFMetadataDMSegmentClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_dm_segment_finalize;
   metadata_base_class->handle_tag = mxf_metadata_dm_segment_handle_tag;
   metadata_base_class->resolve = mxf_metadata_dm_segment_resolve;
   metadata_base_class->name_quark = MXF_QUARK (DM_SEGMENT);
   metadata_base_class->to_structure = mxf_metadata_dm_segment_to_structure;
+  metadata_class->type = 0x0141;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataGenericDescriptor,
@@ -3238,10 +3287,12 @@ static void
 mxf_metadata_file_descriptor_class_init (MXFMetadataFileDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag = mxf_metadata_file_descriptor_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (FILE_DESCRIPTOR);
   metadata_base_class->to_structure = mxf_metadata_file_descriptor_to_structure;
+  metadata_class->type = 0x0125;
 }
 
 G_DEFINE_TYPE (MXFMetadataGenericPictureEssenceDescriptor,
@@ -3559,6 +3610,7 @@ static void
     (MXFMetadataGenericPictureEssenceDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_picture_essence_descriptor_handle_tag;
@@ -3566,6 +3618,7 @@ static void
       MXF_QUARK (GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_generic_picture_essence_descriptor_to_structure;
+  metadata_class->type = 0x0127;
 }
 
 void mxf_metadata_generic_picture_essence_descriptor_set_caps
@@ -3760,6 +3813,7 @@ static void
     (MXFMetadataGenericSoundEssenceDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_sound_essence_descriptor_handle_tag;
@@ -3767,6 +3821,7 @@ static void
       MXF_QUARK (GENERIC_SOUND_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_generic_sound_essence_descriptor_to_structure;
+  metadata_class->type = 0x0142;
 }
 
 void mxf_metadata_generic_sound_essence_descriptor_set_caps
@@ -3950,12 +4005,14 @@ static void
     (MXFMetadataCDCIPictureEssenceDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_cdci_picture_essence_descriptor_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (CDCI_PICTURE_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_cdci_picture_essence_descriptor_to_structure;
+  metadata_class->type = 0x0128;
 }
 
 G_DEFINE_TYPE (MXFMetadataRGBAPictureEssenceDescriptor,
@@ -4125,6 +4182,7 @@ static void
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize =
       mxf_metadata_rgba_picture_essence_descriptor_finalize;
@@ -4133,6 +4191,7 @@ static void
   metadata_base_class->name_quark = MXF_QUARK (RGBA_PICTURE_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_rgba_picture_essence_descriptor_to_structure;
+  metadata_class->type = 0x0129;
 }
 
 G_DEFINE_TYPE (MXFMetadataGenericDataEssenceDescriptor,
@@ -4210,12 +4269,14 @@ static void
     (MXFMetadataGenericDataEssenceDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_generic_data_essence_descriptor_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (GENERIC_DATA_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_generic_data_essence_descriptor_to_structure;
+  metadata_class->type = 0x0143;
 }
 
 G_DEFINE_TYPE (MXFMetadataMultipleDescriptor, mxf_metadata_multiple_descriptor,
@@ -4372,6 +4433,7 @@ mxf_metadata_multiple_descriptor_class_init (MXFMetadataMultipleDescriptorClass
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_multiple_descriptor_finalize;
   metadata_base_class->handle_tag = mxf_metadata_multiple_descriptor_handle_tag;
@@ -4379,6 +4441,7 @@ mxf_metadata_multiple_descriptor_class_init (MXFMetadataMultipleDescriptorClass
   metadata_base_class->name_quark = MXF_QUARK (MULTIPLE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_multiple_descriptor_to_structure;
+  metadata_class->type = 0x0144;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFMetadataLocator, mxf_metadata_locator,
@@ -4458,11 +4521,13 @@ mxf_metadata_text_locator_class_init (MXFMetadataTextLocatorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_text_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_text_locator_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (TEXT_LOCATOR);
   metadata_base_class->to_structure = mxf_metadata_text_locator_to_structure;
+  metadata_class->type = 0x0133;
 }
 
 G_DEFINE_TYPE (MXFMetadataNetworkLocator, mxf_metadata_network_locator,
@@ -4528,11 +4593,13 @@ mxf_metadata_network_locator_class_init (MXFMetadataNetworkLocatorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_metadata_network_locator_finalize;
   metadata_base_class->handle_tag = mxf_metadata_network_locator_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (NETWORK_LOCATOR);
   metadata_base_class->to_structure = mxf_metadata_network_locator_to_structure;
+  metadata_class->type = 0x0133;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFDescriptiveMetadata, mxf_descriptive_metadata,
@@ -4594,12 +4661,16 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
   }
 
   for (l = s->sets; l; l = l->next) {
-    MXFDescriptiveMetadataSet *set = l->data;
+    GType tmp = (GType) l->data;
+    MXFDescriptiveMetadataClass *klass =
+        MXF_DESCRIPTIVE_METADATA_CLASS (g_type_class_ref (tmp));
 
-    if (set->id == type) {
-      t = set->type;
+    if (klass->type == type) {
+      g_type_class_unref (klass);
+      t = tmp;
       break;
     }
+    g_type_class_unref (klass);
   }
 
   if (t == G_TYPE_INVALID) {
@@ -4619,7 +4690,6 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
     return NULL;
   }
 
-  ret->type = type;
   ret->parent.offset = offset;
 
   return ret;

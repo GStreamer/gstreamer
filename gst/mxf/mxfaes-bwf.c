@@ -50,7 +50,7 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataWaveAudioEssenceDescriptor
     MXFMetadataWaveAudioEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataWaveAudioEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataWaveAudioEssenceDescriptorClass;
 GType mxf_metadata_wave_audio_essence_descriptor_get_type (void);
 
 struct _MXFMetadataWaveAudioEssenceDescriptor
@@ -86,7 +86,7 @@ struct _MXFMetadataWaveAudioEssenceDescriptor
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataAES3AudioEssenceDescriptor
     MXFMetadataAES3AudioEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataAES3AudioEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataAES3AudioEssenceDescriptorClass;
 GType mxf_metadata_aes3_audio_essence_descriptor_get_type (void);
 
 struct _MXFMetadataAES3AudioEssenceDescriptor
@@ -317,12 +317,14 @@ static void
     (MXFMetadataWaveAudioEssenceDescriptorClass * klass)
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   metadata_base_class->handle_tag =
       mxf_metadata_wave_audio_essence_descriptor_handle_tag;
   metadata_base_class->name_quark = MXF_QUARK (WAVE_AUDIO_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_wave_audio_essence_descriptor_to_structure;
+  metadata_class->type = 0x0148;
 }
 
 /* SMPTE 382M Annex 2 */
@@ -717,6 +719,7 @@ static void
 {
   MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
 
   miniobject_class->finalize =
       mxf_metadata_aes3_audio_essence_descriptor_finalize;
@@ -725,6 +728,7 @@ static void
   metadata_base_class->name_quark = MXF_QUARK (AES3_AUDIO_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_aes3_audio_essence_descriptor_to_structure;
+  metadata_class->type = 0x0147;
 }
 
 static gboolean
@@ -1050,10 +1054,8 @@ static const MXFEssenceElementHandler mxf_aes_bwf_essence_handler = {
 void
 mxf_aes_bwf_init (void)
 {
-  mxf_metadata_register (0x0148,
-      MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
-  mxf_metadata_register (0x0147,
-      MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR);
+  mxf_metadata_register (MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
+  mxf_metadata_register (MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR);
 
   mxf_essence_element_handler_register (&mxf_aes_bwf_essence_handler);
 }

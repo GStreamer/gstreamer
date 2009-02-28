@@ -50,7 +50,7 @@ GType mxf_metadata_base_get_type (void);
 #define MXF_METADATA_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),MXF_TYPE_METADATA,MXFMetadataClass))
 typedef struct _MXFMetadata MXFMetadata;
-typedef MXFMetadataBaseClass MXFMetadataClass;
+typedef struct _MXFMetadataClass MXFMetadataClass;
 GType mxf_metadata_get_type (void);
 
 #define MXF_TYPE_METADATA_PREFACE \
@@ -60,7 +60,7 @@ GType mxf_metadata_get_type (void);
 #define MXF_IS_METADATA_PREFACE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_PREFACE))
 typedef struct _MXFMetadataPreface MXFMetadataPreface;
-typedef MXFMetadataBaseClass MXFMetadataPrefaceClass;
+typedef MXFMetadataClass MXFMetadataPrefaceClass;
 GType mxf_metadata_preface_get_type (void);
 
 #define MXF_TYPE_METADATA_IDENTIFICATION \
@@ -70,7 +70,7 @@ GType mxf_metadata_preface_get_type (void);
 #define MXF_IS_METADATA_IDENTIFICATION(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_IDENTIFICATION))
 typedef struct _MXFMetadataIdentification MXFMetadataIdentification;
-typedef MXFMetadataBaseClass MXFMetadataIdentificationClass;
+typedef MXFMetadataClass MXFMetadataIdentificationClass;
 GType mxf_metadata_identification_get_type (void);
 
 #define MXF_TYPE_METADATA_CONTENT_STORAGE \
@@ -80,7 +80,7 @@ GType mxf_metadata_identification_get_type (void);
 #define MXF_IS_METADATA_CONTENT_STORAGE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_CONTENT_STORAGE))
 typedef struct _MXFMetadataContentStorage MXFMetadataContentStorage;
-typedef MXFMetadataBaseClass MXFMetadataContentStorageClass;
+typedef MXFMetadataClass MXFMetadataContentStorageClass;
 GType mxf_metadata_content_storage_get_type (void);
 
 #define MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA \
@@ -90,7 +90,7 @@ GType mxf_metadata_content_storage_get_type (void);
 #define MXF_IS_METADATA_ESSENCE_CONTAINER_DATA(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA))
 typedef struct _MXFMetadataEssenceContainerData MXFMetadataEssenceContainerData;
-typedef MXFMetadataBaseClass MXFMetadataEssenceContainerDataClass;
+typedef MXFMetadataClass MXFMetadataEssenceContainerDataClass;
 GType mxf_metadata_essence_container_data_get_type (void);
 
 #define MXF_TYPE_METADATA_GENERIC_PACKAGE \
@@ -100,7 +100,7 @@ GType mxf_metadata_essence_container_data_get_type (void);
 #define MXF_IS_METADATA_GENERIC_PACKAGE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_GENERIC_PACKAGE))
 typedef struct _MXFMetadataGenericPackage MXFMetadataGenericPackage;
-typedef MXFMetadataBaseClass MXFMetadataGenericPackageClass;
+typedef MXFMetadataClass MXFMetadataGenericPackageClass;
 GType mxf_metadata_generic_package_get_type (void);
 
 #define MXF_TYPE_METADATA_MATERIAL_PACKAGE \
@@ -110,7 +110,7 @@ GType mxf_metadata_generic_package_get_type (void);
 #define MXF_IS_METADATA_MATERIAL_PACKAGE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_MATERIAL_PACKAGE))
 typedef MXFMetadataGenericPackage MXFMetadataMaterialPackage;
-typedef MXFMetadataBaseClass MXFMetadataMaterialPackageClass;
+typedef MXFMetadataClass MXFMetadataMaterialPackageClass;
 GType mxf_metadata_material_package_get_type (void);
 
 #define MXF_TYPE_METADATA_SOURCE_PACKAGE \
@@ -120,7 +120,7 @@ GType mxf_metadata_material_package_get_type (void);
 #define MXF_IS_METADATA_SOURCE_PACKAGE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_SOURCE_PACKAGE))
 typedef struct _MXFMetadataSourcePackage MXFMetadataSourcePackage;
-typedef MXFMetadataBaseClass MXFMetadataSourcePackageClass;
+typedef MXFMetadataClass MXFMetadataSourcePackageClass;
 GType mxf_metadata_source_package_get_type (void);
 
 #define MXF_TYPE_METADATA_TRACK \
@@ -130,7 +130,7 @@ GType mxf_metadata_source_package_get_type (void);
 #define MXF_IS_METADATA_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_TRACK))
 typedef struct _MXFMetadataTrack MXFMetadataTrack;
-typedef MXFMetadataBaseClass MXFMetadataTrackClass;
+typedef MXFMetadataClass MXFMetadataTrackClass;
 GType mxf_metadata_track_get_type (void);
 
 #define MXF_TYPE_METADATA_TIMELINE_TRACK \
@@ -140,7 +140,7 @@ GType mxf_metadata_track_get_type (void);
 #define MXF_IS_METADATA_TIMELINE_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_TIMELINE_TRACK))
 typedef struct _MXFMetadataTimelineTrack MXFMetadataTimelineTrack;
-typedef MXFMetadataBaseClass MXFMetadataTimelineTrackClass;
+typedef MXFMetadataClass MXFMetadataTimelineTrackClass;
 GType mxf_metadata_timeline_track_get_type (void);
 
 #define MXF_TYPE_METADATA_EVENT_TRACK \
@@ -150,7 +150,7 @@ GType mxf_metadata_timeline_track_get_type (void);
 #define MXF_IS_METADATA_EVENT_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_EVENT_TRACK))
 typedef struct _MXFMetadataEventTrack MXFMetadataEventTrack;
-typedef MXFMetadataBaseClass MXFMetadataEventTrackClass;
+typedef MXFMetadataClass MXFMetadataEventTrackClass;
 GType mxf_metadata_event_track_get_type (void);
 
 #define MXF_TYPE_METADATA_STATIC_TRACK \
@@ -160,7 +160,7 @@ GType mxf_metadata_event_track_get_type (void);
 #define MXF_IS_METADATA_STATIC_TRACK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_STATIC_TRACK))
 typedef MXFMetadataTrack MXFMetadataStaticTrack;
-typedef MXFMetadataBaseClass MXFMetadataStaticTrackClass;
+typedef MXFMetadataClass MXFMetadataStaticTrackClass;
 GType mxf_metadata_static_track_get_type (void);
 
 #define MXF_TYPE_METADATA_SEQUENCE \
@@ -170,7 +170,7 @@ GType mxf_metadata_static_track_get_type (void);
 #define MXF_IS_METADATA_SEQUENCE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_SEQUENCE))
 typedef struct _MXFMetadataSequence MXFMetadataSequence;
-typedef MXFMetadataBaseClass MXFMetadataSequenceClass;
+typedef MXFMetadataClass MXFMetadataSequenceClass;
 GType mxf_metadata_sequence_get_type (void);
 
 #define MXF_TYPE_METADATA_STRUCTURAL_COMPONENT \
@@ -180,7 +180,7 @@ GType mxf_metadata_sequence_get_type (void);
 #define MXF_IS_METADATA_STRUCTURAL_COMPONENT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_STRUCTURAL_COMPONENT))
 typedef struct _MXFMetadataStructuralComponent MXFMetadataStructuralComponent;
-typedef MXFMetadataBaseClass MXFMetadataStructuralComponentClass;
+typedef MXFMetadataClass MXFMetadataStructuralComponentClass;
 GType mxf_metadata_structural_component_get_type (void);
 
 #define MXF_TYPE_METADATA_SOURCE_CLIP \
@@ -190,7 +190,7 @@ GType mxf_metadata_structural_component_get_type (void);
 #define MXF_IS_METADATA_SOURCE_CLIP(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_SOURCE_CLIP))
 typedef struct _MXFMetadataSourceClip MXFMetadataSourceClip;
-typedef MXFMetadataBaseClass MXFMetadataSourceClipClass;
+typedef MXFMetadataClass MXFMetadataSourceClipClass;
 GType mxf_metadata_source_clip_get_type (void);
 
 #define MXF_TYPE_METADATA_TIMECODE_COMPONENT \
@@ -200,7 +200,7 @@ GType mxf_metadata_source_clip_get_type (void);
 #define MXF_IS_METADATA_TIMECODE_COMPONENT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_TIMECODE_COMPONENT))
 typedef struct _MXFMetadataTimecodeComponent MXFMetadataTimecodeComponent;
-typedef MXFMetadataBaseClass MXFMetadataTimecodeComponentClass;
+typedef MXFMetadataClass MXFMetadataTimecodeComponentClass;
 GType mxf_metadata_timecode_component_get_type (void);
 
 #define MXF_TYPE_METADATA_DM_SOURCE_CLIP \
@@ -210,7 +210,7 @@ GType mxf_metadata_timecode_component_get_type (void);
 #define MXF_IS_METADATA_DM_SOURCE_CLIP(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_DM_SOURCE_CLIP))
 typedef struct _MXFMetadataDMSourceClip MXFMetadataDMSourceClip;
-typedef MXFMetadataBaseClass MXFMetadataDMSourceClipClass;
+typedef MXFMetadataClass MXFMetadataDMSourceClipClass;
 GType mxf_metadata_dm_source_clip_get_type (void);
 
 #define MXF_TYPE_METADATA_DM_SEGMENT \
@@ -220,7 +220,7 @@ GType mxf_metadata_dm_source_clip_get_type (void);
 #define MXF_IS_METADATA_DM_SEGMENT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_DM_SEGMENT))
 typedef struct _MXFMetadataDMSegment MXFMetadataDMSegment;
-typedef MXFMetadataBaseClass MXFMetadataDMSegmentClass;
+typedef MXFMetadataClass MXFMetadataDMSegmentClass;
 GType mxf_metadata_dm_segment_get_type (void);
 
 #define MXF_TYPE_METADATA_GENERIC_DESCRIPTOR \
@@ -230,7 +230,7 @@ GType mxf_metadata_dm_segment_get_type (void);
 #define MXF_IS_METADATA_GENERIC_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_GENERIC_DESCRIPTOR))
 typedef struct _MXFMetadataGenericDescriptor MXFMetadataGenericDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataGenericDescriptorClass;
+typedef MXFMetadataClass MXFMetadataGenericDescriptorClass;
 GType mxf_metadata_generic_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_FILE_DESCRIPTOR \
@@ -240,7 +240,7 @@ GType mxf_metadata_generic_descriptor_get_type (void);
 #define MXF_IS_METADATA_FILE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_FILE_DESCRIPTOR))
 typedef struct _MXFMetadataFileDescriptor MXFMetadataFileDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataFileDescriptorClass;
+typedef MXFMetadataClass MXFMetadataFileDescriptorClass;
 GType mxf_metadata_file_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR \
@@ -250,7 +250,7 @@ GType mxf_metadata_file_descriptor_get_type (void);
 #define MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataGenericPictureEssenceDescriptor MXFMetadataGenericPictureEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataGenericPictureEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataGenericPictureEssenceDescriptorClass;
 GType mxf_metadata_generic_picture_essence_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR \
@@ -260,7 +260,7 @@ GType mxf_metadata_generic_picture_essence_descriptor_get_type (void);
 #define MXF_IS_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataCDCIPictureEssenceDescriptor MXFMetadataCDCIPictureEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataCDCIPictureEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataCDCIPictureEssenceDescriptorClass;
 GType mxf_metadata_cdci_picture_essence_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR \
@@ -270,7 +270,7 @@ GType mxf_metadata_cdci_picture_essence_descriptor_get_type (void);
 #define MXF_IS_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataRGBAPictureEssenceDescriptor MXFMetadataRGBAPictureEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataRGBAPictureEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataRGBAPictureEssenceDescriptorClass;
 GType mxf_metadata_rgba_picture_essence_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR \
@@ -280,7 +280,7 @@ GType mxf_metadata_rgba_picture_essence_descriptor_get_type (void);
 #define MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataGenericSoundEssenceDescriptor MXFMetadataGenericSoundEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataGenericSoundEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataGenericSoundEssenceDescriptorClass;
 GType mxf_metadata_generic_sound_essence_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR \
@@ -290,7 +290,7 @@ GType mxf_metadata_generic_sound_essence_descriptor_get_type (void);
 #define MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR))
 typedef struct _MXFMetadataGenericDataEssenceDescriptor MXFMetadataGenericDataEssenceDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataGenericDataEssenceDescriptorClass;
+typedef MXFMetadataClass MXFMetadataGenericDataEssenceDescriptorClass;
 GType mxf_metadata_generic_data_essence_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR \
@@ -300,7 +300,7 @@ GType mxf_metadata_generic_data_essence_descriptor_get_type (void);
 #define MXF_IS_METADATA_MULTIPLE_DESCRIPTOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR))
 typedef struct _MXFMetadataMultipleDescriptor MXFMetadataMultipleDescriptor;
-typedef MXFMetadataBaseClass MXFMetadataMultipleDescriptorClass;
+typedef MXFMetadataClass MXFMetadataMultipleDescriptorClass;
 GType mxf_metadata_multiple_descriptor_get_type (void);
 
 #define MXF_TYPE_METADATA_LOCATOR \
@@ -310,7 +310,7 @@ GType mxf_metadata_multiple_descriptor_get_type (void);
 #define MXF_IS_METADATA_LOCATOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_LOCATOR))
 typedef struct _MXFMetadataLocator MXFMetadataLocator;
-typedef MXFMetadataBaseClass MXFMetadataLocatorClass;
+typedef MXFMetadataClass MXFMetadataLocatorClass;
 GType mxf_metadata_locator_get_type (void);
 
 #define MXF_TYPE_METADATA_NETWORK_LOCATOR \
@@ -320,7 +320,7 @@ GType mxf_metadata_locator_get_type (void);
 #define MXF_IS_METADATA_NETWORK_LOCATOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_NETWORK_LOCATOR))
 typedef struct _MXFMetadataNetworkLocator MXFMetadataNetworkLocator;
-typedef MXFMetadataBaseClass MXFMetadataNetworkLocatorClass;
+typedef MXFMetadataClass MXFMetadataNetworkLocatorClass;
 GType mxf_metadata_network_locator_get_type (void);
 
 #define MXF_TYPE_METADATA_TEXT_LOCATOR \
@@ -330,7 +330,7 @@ GType mxf_metadata_network_locator_get_type (void);
 #define MXF_IS_METADATA_TEXT_LOCATOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_TEXT_LOCATOR))
 typedef struct _MXFMetadataTextLocator MXFMetadataTextLocator;
-typedef MXFMetadataBaseClass MXFMetadataTextLocatorClass;
+typedef MXFMetadataClass MXFMetadataTextLocatorClass;
 GType mxf_metadata_text_locator_get_type (void);
 
 #define MXF_TYPE_DESCRIPTIVE_METADATA \
@@ -392,7 +392,11 @@ struct _MXFMetadataBaseClass {
 
 struct _MXFMetadata {
   MXFMetadataBase parent;
-  
+};
+
+struct _MXFMetadataClass {
+  MXFMetadataBaseClass parent;
+
   guint16 type;
 };
 
@@ -729,19 +733,15 @@ struct _MXFMetadataTextLocator {
   gchar *locator_name;
 };
 
-typedef struct {
-  guint32 id;
-  GType type;
-} MXFDescriptiveMetadataSet;
-
 struct _MXFDescriptiveMetadata {
   MXFMetadataBase parent;
-
-  guint32 type;
 };
 
 struct _MXFDescriptiveMetadataClass {
   MXFMetadataBase parent;
+
+  guint8 scheme;
+  guint32 type;
 };
 
 struct _MXFDescriptiveMetadataFrameworkInterface {
@@ -753,7 +753,7 @@ gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, GHashTable *metadata)
 GstStructure * mxf_metadata_base_to_structure (MXFMetadataBase *self);
 
 MXFMetadata *mxf_metadata_new (guint16 type, MXFPrimerPack *primer, guint64 offset, const guint8 *data, guint size);
-void mxf_metadata_register (guint16 type_id, GType type);
+void mxf_metadata_register (GType type);
 void mxf_metadata_init_types (void);
 
 MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL * track_identifier);

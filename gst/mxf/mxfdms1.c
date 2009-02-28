@@ -99,8 +99,10 @@ static void
 mxf_dms1_class_init (MXFDMS1Class * klass)
 {
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   metadatabase_class->handle_tag = mxf_dms1_handle_tag;
+  dm_class->scheme = 0x01;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFDMS1TextLanguage, mxf_dms1_text_language,
@@ -1055,10 +1057,13 @@ mxf_dms1_production_framework_class_init (MXFDMS1ProductionFrameworkClass *
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_production_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_production_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_production_framework_resolve;
+
+  dm_class->type = 0x010100;
 }
 
 G_DEFINE_TYPE (MXFDMS1ClipFramework, mxf_dms1_clip_framework,
@@ -1326,10 +1331,12 @@ mxf_dms1_clip_framework_class_init (MXFDMS1ClipFrameworkClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_clip_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_clip_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_clip_framework_resolve;
+  dm_class->type = 0x010200;
 }
 
 G_DEFINE_TYPE (MXFDMS1SceneFramework, mxf_dms1_scene_framework,
@@ -1487,10 +1494,12 @@ mxf_dms1_scene_framework_class_init (MXFDMS1SceneFrameworkClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_scene_framework_finalize;
   metadatabase_class->handle_tag = mxf_dms1_scene_framework_handle_tag;
   metadatabase_class->resolve = mxf_dms1_scene_framework_resolve;
+  dm_class->type = 0x010300;
 }
 
 G_DEFINE_TYPE (MXFDMS1Titles, mxf_dms1_titles, MXF_TYPE_DMS1_TEXT_LANGUAGE);
@@ -1585,9 +1594,11 @@ mxf_dms1_titles_class_init (MXFDMS1TitlesClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_titles_finalize;
   metadatabase_class->handle_tag = mxf_dms1_titles_handle_tag;
+  dm_class->type = 0x100100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Identification, mxf_dms1_identification,
@@ -1691,9 +1702,11 @@ mxf_dms1_identification_class_init (MXFDMS1IdentificationClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_identification_finalize;
   metadatabase_class->handle_tag = mxf_dms1_identification_handle_tag;
+  dm_class->type = 0x110100;
 }
 
 G_DEFINE_TYPE (MXFDMS1GroupRelationship, mxf_dms1_group_relationship,
@@ -1823,9 +1836,11 @@ mxf_dms1_group_relationship_class_init (MXFDMS1GroupRelationshipClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_group_relationship_finalize;
   metadatabase_class->handle_tag = mxf_dms1_group_relationship_handle_tag;
+  dm_class->type = 0x120100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Branding, mxf_dms1_branding, MXF_TYPE_DMS1_TEXT_LANGUAGE);
@@ -1893,9 +1908,11 @@ mxf_dms1_branding_class_init (MXFDMS1BrandingClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_branding_finalize;
   metadatabase_class->handle_tag = mxf_dms1_branding_handle_tag;
+  dm_class->type = 0x130100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Event, mxf_dms1_event, MXF_TYPE_DMS1_THESAURUS);
@@ -2068,10 +2085,12 @@ mxf_dms1_event_class_init (MXFDMS1EventClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_event_finalize;
   metadatabase_class->handle_tag = mxf_dms1_event_handle_tag;
   metadatabase_class->resolve = mxf_dms1_event_resolve;
+  dm_class->type = 0x140100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Publication, mxf_dms1_publication, MXF_TYPE_DMS1);
@@ -2162,9 +2181,11 @@ mxf_dms1_publication_class_init (MXFDMS1PublicationClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_publication_finalize;
   metadatabase_class->handle_tag = mxf_dms1_publication_handle_tag;
+  dm_class->type = 0x140200;
 }
 
 G_DEFINE_TYPE (MXFDMS1Award, mxf_dms1_award, MXF_TYPE_DMS1_THESAURUS);
@@ -2320,10 +2341,12 @@ mxf_dms1_award_class_init (MXFDMS1AwardClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_award_finalize;
   metadatabase_class->handle_tag = mxf_dms1_award_handle_tag;
   metadatabase_class->resolve = mxf_dms1_award_resolve;
+  dm_class->type = 0x150100;
 }
 
 G_DEFINE_TYPE (MXFDMS1CaptionsDescription, mxf_dms1_captions_description,
@@ -2401,9 +2424,11 @@ mxf_dms1_captions_description_class_init (MXFDMS1CaptionsDescriptionClass *
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_captions_description_finalize;
   metadatabase_class->handle_tag = mxf_dms1_captions_description_handle_tag;
+  dm_class->type = 0x160100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Annotation, mxf_dms1_annotation, MXF_TYPE_DMS1_THESAURUS);
@@ -2629,10 +2654,12 @@ mxf_dms1_annotation_class_init (MXFDMS1AnnotationClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_annotation_finalize;
   metadatabase_class->handle_tag = mxf_dms1_annotation_handle_tag;
   metadatabase_class->resolve = mxf_dms1_annotation_resolve;
+  dm_class->type = 0x170100;
 }
 
 G_DEFINE_TYPE (MXFDMS1SettingPeriod, mxf_dms1_setting_period,
@@ -2723,9 +2750,11 @@ mxf_dms1_setting_period_class_init (MXFDMS1SettingPeriodClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_setting_period_finalize;
   metadatabase_class->handle_tag = mxf_dms1_setting_period_handle_tag;
+  dm_class->type = 0x170200;
 }
 
 G_DEFINE_TYPE (MXFDMS1Scripting, mxf_dms1_scripting, MXF_TYPE_DMS1_THESAURUS);
@@ -2824,9 +2853,11 @@ mxf_dms1_scripting_class_init (MXFDMS1ScriptingClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_scripting_finalize;
   metadatabase_class->handle_tag = mxf_dms1_scripting_handle_tag;
+  dm_class->type = 0x170300;
 }
 
 G_DEFINE_TYPE (MXFDMS1Classification, mxf_dms1_classification,
@@ -2945,10 +2976,12 @@ mxf_dms1_classification_class_init (MXFDMS1ClassificationClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_classification_finalize;
   metadatabase_class->handle_tag = mxf_dms1_classification_handle_tag;
   metadatabase_class->resolve = mxf_dms1_classification_resolve;
+  dm_class->type = 0x170400;
 }
 
 G_DEFINE_TYPE (MXFDMS1Shot, mxf_dms1_shot, MXF_TYPE_DMS1_TEXT_LANGUAGE);
@@ -3151,10 +3184,12 @@ mxf_dms1_shot_class_init (MXFDMS1ShotClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_shot_finalize;
   metadatabase_class->handle_tag = mxf_dms1_shot_handle_tag;
   metadatabase_class->resolve = mxf_dms1_shot_resolve;
+  dm_class->type = 0x170500;
 }
 
 G_DEFINE_TYPE (MXFDMS1KeyPoint, mxf_dms1_key_point, MXF_TYPE_DMS1_THESAURUS);
@@ -3238,9 +3273,11 @@ mxf_dms1_key_point_class_init (MXFDMS1KeyPointClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_key_point_finalize;
   metadatabase_class->handle_tag = mxf_dms1_key_point_handle_tag;
+  dm_class->type = 0x170600;
 }
 
 G_DEFINE_TYPE (MXFDMS1Participant, mxf_dms1_participant,
@@ -3436,10 +3473,12 @@ mxf_dms1_participant_class_init (MXFDMS1ParticipantClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_participant_finalize;
   metadatabase_class->handle_tag = mxf_dms1_participant_handle_tag;
   metadatabase_class->resolve = mxf_dms1_participant_resolve;
+  dm_class->type = 0x180100;
 }
 
 G_DEFINE_ABSTRACT_TYPE (MXFDMS1Contact, mxf_dms1_contact,
@@ -3821,10 +3860,12 @@ mxf_dms1_person_class_init (MXFDMS1PersonClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_person_finalize;
   metadatabase_class->handle_tag = mxf_dms1_person_handle_tag;
   metadatabase_class->resolve = mxf_dms1_person_resolve;
+  dm_class->type = 0x1a0200;
 }
 
 G_DEFINE_TYPE (MXFDMS1Organisation, mxf_dms1_organisation,
@@ -3915,9 +3956,11 @@ mxf_dms1_organisation_class_init (MXFDMS1OrganisationClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_organisation_finalize;
   metadatabase_class->handle_tag = mxf_dms1_organisation_handle_tag;
+  dm_class->type = 0x1a0300;
 }
 
 G_DEFINE_TYPE (MXFDMS1Location, mxf_dms1_location, MXF_TYPE_DMS1_CONTACT);
@@ -3984,9 +4027,11 @@ mxf_dms1_location_class_init (MXFDMS1LocationClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_location_finalize;
   metadatabase_class->handle_tag = mxf_dms1_location_handle_tag;
+  dm_class->type = 0x1a0400;
 }
 
 G_DEFINE_TYPE (MXFDMS1Address, mxf_dms1_address, MXF_TYPE_DMS1);
@@ -4260,10 +4305,12 @@ mxf_dms1_address_class_init (MXFDMS1AddressClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_address_finalize;
   metadatabase_class->handle_tag = mxf_dms1_address_handle_tag;
   metadatabase_class->resolve = mxf_dms1_address_resolve;
+  dm_class->type = 0x1b0100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Communications, mxf_dms1_communications, MXF_TYPE_DMS1);
@@ -4379,9 +4426,11 @@ mxf_dms1_communications_class_init (MXFDMS1CommunicationsClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_communications_finalize;
   metadatabase_class->handle_tag = mxf_dms1_communications_handle_tag;
+  dm_class->type = 0x1b0200;
 }
 
 G_DEFINE_TYPE (MXFDMS1Contract, mxf_dms1_contract, MXF_TYPE_DMS1_THESAURUS);
@@ -4532,10 +4581,12 @@ mxf_dms1_contract_class_init (MXFDMS1ContractClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_contract_finalize;
   metadatabase_class->handle_tag = mxf_dms1_contract_handle_tag;
   metadatabase_class->resolve = mxf_dms1_contract_resolve;
+  dm_class->type = 0x1c0100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Rights, mxf_dms1_rights, MXF_TYPE_DMS1_THESAURUS);
@@ -4706,9 +4757,11 @@ mxf_dms1_rights_class_init (MXFDMS1RightsClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_rights_finalize;
   metadatabase_class->handle_tag = mxf_dms1_rights_handle_tag;
+  dm_class->type = 0x1c0200;
 }
 
 G_DEFINE_TYPE (MXFDMS1PictureFormat, mxf_dms1_picture_format, MXF_TYPE_DMS1);
@@ -4795,9 +4848,11 @@ mxf_dms1_picture_format_class_init (MXFDMS1PictureFormatClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_picture_format_finalize;
   metadatabase_class->handle_tag = mxf_dms1_picture_format_handle_tag;
+  dm_class->type = 0x1d0100;
 }
 
 G_DEFINE_TYPE (MXFDMS1DeviceParameters, mxf_dms1_device_parameters,
@@ -4997,10 +5052,12 @@ mxf_dms1_device_parameters_class_init (MXFDMS1DeviceParametersClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_device_parameters_finalize;
   metadatabase_class->handle_tag = mxf_dms1_device_parameters_handle_tag;
   metadatabase_class->resolve = mxf_dms1_device_parameters_resolve;
+  dm_class->type = 0x1e0100;
 }
 
 G_DEFINE_TYPE (MXFDMS1NameValue, mxf_dms1_name_value, MXF_TYPE_DMS1);
@@ -5087,9 +5144,11 @@ mxf_dms1_name_value_class_init (MXFDMS1NameValueClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_name_value_finalize;
   metadatabase_class->handle_tag = mxf_dms1_name_value_handle_tag;
+  dm_class->type = 0x1f0100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Processing, mxf_dms1_processing, MXF_TYPE_DMS1);
@@ -5214,9 +5273,11 @@ mxf_dms1_processing_class_init (MXFDMS1ProcessingClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_processing_finalize;
   metadatabase_class->handle_tag = mxf_dms1_processing_handle_tag;
+  dm_class->type = 0x200100;
 }
 
 G_DEFINE_TYPE (MXFDMS1Project, mxf_dms1_project, MXF_TYPE_DMS1);
@@ -5289,9 +5350,11 @@ mxf_dms1_project_class_init (MXFDMS1ProjectClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_project_finalize;
   metadatabase_class->handle_tag = mxf_dms1_project_handle_tag;
+  dm_class->type = 0x200200;
 }
 
 G_DEFINE_TYPE (MXFDMS1ContactsList, mxf_dms1_contacts_list, MXF_TYPE_DMS1);
@@ -5471,10 +5534,12 @@ mxf_dms1_contacts_list_class_init (MXFDMS1ContactsListClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_contacts_list_finalize;
   metadatabase_class->handle_tag = mxf_dms1_contacts_list_handle_tag;
   metadatabase_class->resolve = mxf_dms1_contacts_list_resolve;
+  dm_class->type = 0x190100;
 }
 
 G_DEFINE_TYPE (MXFDMS1CueWords, mxf_dms1_cue_words,
@@ -5541,56 +5606,65 @@ mxf_dms1_cue_words_class_init (MXFDMS1CueWordsClass * klass)
 {
   GstMiniObjectClass *miniobject_class = (GstMiniObjectClass *) klass;
   MXFMetadataBaseClass *metadatabase_class = (MXFMetadataBaseClass *) klass;
+  MXFDescriptiveMetadataClass *dm_class = (MXFDescriptiveMetadataClass *) klass;
 
   miniobject_class->finalize = mxf_dms1_cue_words_finalize;
   metadatabase_class->handle_tag = mxf_dms1_cue_words_handle_tag;
+  dm_class->type = 0x170800;
 }
-
-#define ADD_SET(ID, TYPE) \
-    set = g_slice_new (MXFDescriptiveMetadataSet); \
-    set->id = ID; \
-    set->type = TYPE; \
-    dms1_sets = g_slist_prepend (dms1_sets, set);
 
 void
 mxf_dms1_initialize (void)
 {
   GSList *dms1_sets = NULL;
-  MXFDescriptiveMetadataSet *set;
 
-  /* SMPTE S380M Table 3 */
-  ADD_SET (0x010100, MXF_TYPE_DMS1_PRODUCTION_FRAMEWORK);
-  ADD_SET (0x010200, MXF_TYPE_DMS1_CLIP_FRAMEWORK);
-  ADD_SET (0x010300, MXF_TYPE_DMS1_SCENE_FRAMEWORK);
-  ADD_SET (0x100100, MXF_TYPE_DMS1_TITLES);
-  ADD_SET (0x110100, MXF_TYPE_DMS1_IDENTIFICATION);
-  ADD_SET (0x120100, MXF_TYPE_DMS1_GROUP_RELATIONSHIP);
-  ADD_SET (0x130100, MXF_TYPE_DMS1_BRANDING);
-  ADD_SET (0x140100, MXF_TYPE_DMS1_EVENT);
-  ADD_SET (0x140200, MXF_TYPE_DMS1_PUBLICATION);
-  ADD_SET (0x150100, MXF_TYPE_DMS1_AWARD);
-  ADD_SET (0x160100, MXF_TYPE_DMS1_CAPTIONS_DESCRIPTION);
-  ADD_SET (0x170100, MXF_TYPE_DMS1_ANNOTATION);
-  ADD_SET (0x170200, MXF_TYPE_DMS1_SETTING_PERIOD);
-  ADD_SET (0x170300, MXF_TYPE_DMS1_SCRIPTING);
-  ADD_SET (0x170400, MXF_TYPE_DMS1_CLASSIFICATION);
-  ADD_SET (0x170500, MXF_TYPE_DMS1_SHOT);
-  ADD_SET (0x170600, MXF_TYPE_DMS1_KEY_POINT);
-  ADD_SET (0x180100, MXF_TYPE_DMS1_PARTICIPANT);
-  ADD_SET (0x1a0200, MXF_TYPE_DMS1_PERSON);
-  ADD_SET (0x1a0300, MXF_TYPE_DMS1_ORGANISATION);
-  ADD_SET (0x1a0400, MXF_TYPE_DMS1_LOCATION);
-  ADD_SET (0x1b0100, MXF_TYPE_DMS1_ADDRESS);
-  ADD_SET (0x1b0200, MXF_TYPE_DMS1_COMMUNICATIONS);
-  ADD_SET (0x1c0100, MXF_TYPE_DMS1_CONTRACT);
-  ADD_SET (0x1c0200, MXF_TYPE_DMS1_RIGHTS);
-  ADD_SET (0x1d0100, MXF_TYPE_DMS1_PICTURE_FORMAT);
-  ADD_SET (0x1e0100, MXF_TYPE_DMS1_DEVICE_PARAMETERS);
-  ADD_SET (0x1f0100, MXF_TYPE_DMS1_NAME_VALUE);
-  ADD_SET (0x200100, MXF_TYPE_DMS1_PROCESSING);
-  ADD_SET (0x200200, MXF_TYPE_DMS1_PROJECT);
-  ADD_SET (0x190100, MXF_TYPE_DMS1_CONTACTS_LIST);
-  ADD_SET (0x170800, MXF_TYPE_DMS1_CUE_WORDS);
+  dms1_sets =
+      g_slist_prepend (dms1_sets,
+      (gpointer) MXF_TYPE_DMS1_PRODUCTION_FRAMEWORK);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CLIP_FRAMEWORK);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SCENE_FRAMEWORK);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_TITLES);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_IDENTIFICATION);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_GROUP_RELATIONSHIP);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_BRANDING);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_EVENT);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PUBLICATION);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_AWARD);
+  dms1_sets =
+      g_slist_prepend (dms1_sets,
+      (gpointer) MXF_TYPE_DMS1_CAPTIONS_DESCRIPTION);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_ANNOTATION);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SETTING_PERIOD);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SCRIPTING);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CLASSIFICATION);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SHOT);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_KEY_POINT);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PARTICIPANT);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PERSON);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_ORGANISATION);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_LOCATION);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_ADDRESS);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_COMMUNICATIONS);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CONTRACT);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_RIGHTS);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PICTURE_FORMAT);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_DEVICE_PARAMETERS);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_NAME_VALUE);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PROCESSING);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PROJECT);
+  dms1_sets =
+      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CONTACTS_LIST);
+  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CUE_WORDS);
 
   mxf_descriptive_metadata_register (0x01, dms1_sets);
 }
