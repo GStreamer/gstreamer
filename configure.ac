@@ -243,7 +243,7 @@ AC_CHECK_FUNC(gethostbyname,,[AC_CHECK_LIB(nsl,gethostbyname)])
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.12])
+AG_GST_GLIB_CHECK([2.14])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.14, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
