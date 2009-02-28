@@ -266,7 +266,7 @@ gst_gio_base_sink_render (GstBaseSink * base_sink, GstBuffer * buffer)
      * doesn't... */
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
         ("Could not write to stream: (short write, only %"
-            G_GUINT64_FORMAT " bytes of %d bytes written)",
+            G_GSSIZE_FORMAT " bytes of %d bytes written)",
             written, GST_BUFFER_SIZE (buffer)));
     return GST_FLOW_ERROR;
   }
