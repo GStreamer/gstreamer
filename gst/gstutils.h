@@ -92,14 +92,8 @@ GType gst_type_register_static_full (GType parent_type,
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
    from Nautilus and GOB. */
 
-/* FIXME: Use g_once_init_* unconditionally once we depend on glib 2.14 */
-#if GLIB_CHECK_VERSION (2, 14, 0)
 #define __gst_once_init_enter(val) (g_once_init_enter (val))
 #define __gst_once_init_leave(val,newval) (g_once_init_leave (val, newval))
-#else
-#define __gst_once_init_enter(val) (G_UNLIKELY (*(val) == 0))
-#define __gst_once_init_leave(val,newval) (*(val) = newval)
-#endif
 
 /**
  * GST_BOILERPLATE_FULL:
