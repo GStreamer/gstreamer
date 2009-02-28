@@ -18,7 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-                                                          /*#include "driver.h" *//* use M.A.M.E. */
+/*#include "driver.h" */
+/* use M.A.M.E. */
 #include "fmopl.h"
 #include <math.h>
 
@@ -594,7 +595,7 @@ init_timetables (FM_OPL * OPL, int ARRATE, int DRRATE)
     OPL->AR_TABLE[i] = (INT32) (rate / ARRATE);
     OPL->DR_TABLE[i] = (INT32) (rate / DRRATE);
   }
-  for (i = 60; i < 76; i++) {
+  for (i = 60; i < 75; i++) {
     OPL->AR_TABLE[i] = EG_AED - 1;
     OPL->DR_TABLE[i] = OPL->DR_TABLE[60];
   }
