@@ -92,7 +92,7 @@ enum
 #define PEAK_FORMAT ".06f"
 
 #define VALID_GAIN(x) ((x) > -60.00 && (x) < 60.00)
-#define VALID_PEAK(x) ((x) > 0. && (x) < 1.)
+#define VALID_PEAK(x) ((x) > 0.)
 
 /* Same template caps as GstVolume, for I don't like having just ANY caps. */
 
@@ -561,6 +561,20 @@ gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event)
     GST_DEBUG_OBJECT (self,
         "ignoring bogus album peak value %" PEAK_FORMAT, self->album_peak);
     has_album_peak = FALSE;
+  }
+
+  /* Clamp peaks >1.0.  Float based decoders can produce spurious samples >1.0,
+   * cutting these files back to 1.0 should not cause any audible distortion.
+   * This is most often seen with Vorbis files. */
+  if (has_track_peak && self->track_peak > 1.) {
+    GST_DEBUG_OBJECT (self,
+        "clamping track peak %" PEAK_FORMAT " to 1.0", self->track_peak);
+    self->track_peak = 1.0;
+  }
+  if (has_album_peak && self->album_peak > 1.) {
+    GST_DEBUG_OBJECT (self,
+        "clamping album peak %" PEAK_FORMAT " to 1.0", self->album_peak);
+    self->album_peak = 1.0;
   }
 
   self->has_track_gain |= has_track_gain;
