@@ -1,7 +1,6 @@
 win32/MANIFEST
 win32/README.txt
 win32/common/config.h
-win32/common/config.h.in
 win32/common/dirent.c
 win32/common/dirent.h
 win32/common/gstconfig.h
