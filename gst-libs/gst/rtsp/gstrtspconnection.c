@@ -277,7 +277,7 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 {
   int fd;
   unsigned int address_len;
-  GstRTSPConnection *newconn;
+  GstRTSPConnection *newconn = NULL;
   struct sockaddr_in address;
   GstRTSPUrl *url;
 
