@@ -1830,6 +1830,7 @@ mxf_metadata_source_package_to_structure (MXFMetadataBase * m)
   s = mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->descriptor));
   gst_structure_id_set (ret, MXF_QUARK (DESCRIPTOR), GST_TYPE_STRUCTURE, s,
       NULL);
+  gst_structure_free (s);
 
   return ret;
 }
