@@ -443,7 +443,9 @@ _xdg_mime_magic_parse_magic_line (FILE * magic_file, XdgMimeMagicMatch * match)
   if (c == '\n') {
     /* We clean up the matchlet, byte swapping if needed */
     if (matchlet->word_size > 1) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
       int i;
+#endif
       if (matchlet->value_length % matchlet->word_size != 0) {
         _xdg_mime_magic_matchlet_free (matchlet);
         return XDG_MIME_MAGIC_ERROR;
