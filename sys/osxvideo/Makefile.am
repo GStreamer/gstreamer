@@ -1,5 +1,3 @@
-# FIXME: clean up this crap
-OBJC=gcc
 
 plugin_LTLIBRARIES = libgstosxvideosink.la
 
