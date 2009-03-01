@@ -39,6 +39,9 @@
 #include <errno.h>
 #include <limits.h>
 
+/* For G_BYTE_ORDER */
+#include <glib.h>
+
 #ifndef	FALSE
 #define	FALSE	(0)
 #endif
@@ -446,7 +449,7 @@ _xdg_mime_magic_parse_magic_line (FILE * magic_file, XdgMimeMagicMatch * match)
         return XDG_MIME_MAGIC_ERROR;
       }
       /* FIXME: need to get this defined in a <config.h> style file */
-#if LITTLE_ENDIAN
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
       for (i = 0; i < matchlet->value_length; i = i + matchlet->word_size) {
         if (matchlet->word_size == 2)
           *((xdg_uint16_t *) matchlet->value + i) =
