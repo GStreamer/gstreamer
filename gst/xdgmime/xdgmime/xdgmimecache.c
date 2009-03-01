@@ -34,7 +34,6 @@
 
 #include <fcntl.h>
 #include <unistd.h>
-#include <fnmatch.h>
 #include <assert.h>
 
 #include <glib.h>
@@ -388,7 +387,7 @@ cache_glob_lookup_fnmatch (const char *file_name,
       mime_type = cache->buffer + mimetype_offset;
 
       /* FIXME: Not UTF-8 safe */
-      if (fnmatch (ptr, file_name, 0) == 0) {
+      if (g_pattern_match_simple (ptr, file_name) != 0) {
         mime_types[n].mime = mime_type;
         mime_types[n].weight = weight;
         n++;

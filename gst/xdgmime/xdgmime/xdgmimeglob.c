@@ -35,7 +35,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include <fnmatch.h>
+
+#include <glib.h>
 
 #ifndef	FALSE
 #define	FALSE	(0)
@@ -362,7 +363,7 @@ _xdg_glob_hash_lookup_file_name (XdgGlobHash * glob_hash,
   if (n == 0) {
     for (list = glob_hash->full_list; list && n < n_mime_types;
         list = list->next) {
-      if (fnmatch ((const char *) list->data, file_name, 0) == 0) {
+      if (g_pattern_match_simple ((const char *) list->data, file_name) != 0) {
         mimes[n].mime = list->mime_type;
         mimes[n].weight = list->weight;
         n++;
