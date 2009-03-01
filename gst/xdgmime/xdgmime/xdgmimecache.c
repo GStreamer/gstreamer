@@ -37,7 +37,7 @@
 #include <fnmatch.h>
 #include <assert.h>
 
-#include <netinet/in.h>         /* for ntohl/ntohs */
+#include <glib.h>
 
 #ifdef HAVE_MMAP
 #include <sys/mman.h>
@@ -82,8 +82,8 @@ struct _XdgMimeCache
   char *buffer;
 };
 
-#define GET_UINT16(cache,offset) (ntohs(*(xdg_uint16_t*)((cache) + (offset))))
-#define GET_UINT32(cache,offset) (ntohl(*(xdg_uint32_t*)((cache) + (offset))))
+#define GET_UINT16(cache,offset) (g_ntohs(*(xdg_uint16_t*)((cache) + (offset))))
+#define GET_UINT32(cache,offset) (g_ntohl(*(xdg_uint32_t*)((cache) + (offset))))
 
 XdgMimeCache *
 _xdg_mime_cache_ref (XdgMimeCache * cache)
