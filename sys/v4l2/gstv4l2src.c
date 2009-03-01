@@ -240,6 +240,10 @@ static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
 /* basesrc methods */
 static gboolean gst_v4l2src_start (GstBaseSrc * src);
 
+static gboolean gst_v4l2src_unlock (GstBaseSrc * src);
+
+static gboolean gst_v4l2src_unlock_stop (GstBaseSrc * src);
+
 static gboolean gst_v4l2src_stop (GstBaseSrc * src);
 
 static gboolean gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps);
@@ -312,6 +316,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_v4l2src_start);
+  basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_v4l2src_unlock);
+  basesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_v4l2src_unlock_stop);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_v4l2src_stop);
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_v4l2src_query);
   basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_v4l2src_fixate);
@@ -1176,6 +1182,29 @@ gst_v4l2src_start (GstBaseSrc * src)
 }
 
 static gboolean
+gst_v4l2src_unlock (GstBaseSrc * src)
+{
+  GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+
+  GST_LOG_OBJECT (src, "Flushing");
+  gst_poll_set_flushing (v4l2src->v4l2object->poll, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_v4l2src_unlock_stop (GstBaseSrc * src)
+{
+  GstV4l2Src *v4l2src = GST_V4L2SRC (src);
+
+  GST_LOG_OBJECT (src, "No longer flushing");
+  gst_poll_set_flushing (v4l2src->v4l2object->poll, FALSE);
+
+  return TRUE;
+}
+
+
+static gboolean
 gst_v4l2src_stop (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
@@ -1203,6 +1232,7 @@ static GstFlowReturn
 gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 {
   gint amount;
+  gint ret;
 
   gint buffersize;
 
@@ -1211,6 +1241,18 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
   *buf = gst_buffer_new_and_alloc (buffersize);
 
   do {
+    ret = gst_poll_wait (v4l2src->v4l2object->poll, GST_CLOCK_TIME_NONE);
+    if (G_UNLIKELY (ret < 0)) {
+      if (errno == EBUSY)
+        goto stopped;
+#ifdef G_OS_WIN32
+      if (WSAGetLastError () != WSAEINTR)
+        goto select_error;
+#else
+      if (errno != EAGAIN && errno != EINTR)
+        goto select_error;
+#endif
+    }
     amount =
         v4l2_read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
         buffersize);
@@ -1270,6 +1312,17 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
   return GST_FLOW_OK;
 
   /* ERRORS */
+select_error:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
+        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
+    return GST_FLOW_ERROR;
+  }
+stopped:
+  {
+    GST_DEBUG ("stop called");
+    return GST_FLOW_WRONG_STATE;
+  }
 read_error:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,

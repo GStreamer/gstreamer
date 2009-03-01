@@ -976,7 +976,7 @@ default_frame_sizes:
 /******************************************************
  * gst_v4l2src_grab_frame ():
  *   grab a frame for capturing
- * return value: GST_FLOW_OK or GST_FLOW_ERROR
+ * return value: GST_FLOW_OK, GST_FLOW_WRONG_STATE or GST_FLOW_ERROR
  ******************************************************/
 GstFlowReturn
 gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
@@ -987,12 +987,28 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   GstBuffer *pool_buffer;
   gboolean need_copy;
   gint index;
+  gint ret;
 
   memset (&buffer, 0x00, sizeof (buffer));
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   buffer.memory = V4L2_MEMORY_MMAP;
 
-  while (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
+  for (;;) {
+    ret = gst_poll_wait (v4l2src->v4l2object->poll, GST_CLOCK_TIME_NONE);
+    if (G_UNLIKELY (ret < 0)) {
+      if (errno == EBUSY)
+        goto stopped;
+#ifdef G_OS_WIN32
+      if (WSAGetLastError () != WSAEINTR)
+        goto select_error;
+#else
+      if (errno != EAGAIN && errno != EINTR)
+        goto select_error;
+#endif
+    }
+
+    if (v4l2_ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) >= 0)
+      break;
 
     GST_WARNING_OBJECT (v4l2src,
         "problem grabbing frame %d (ix=%d), trials=%d, pool-ct=%d, buf.flags=%d",
@@ -1135,6 +1151,17 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   return GST_FLOW_OK;
 
   /* ERRORS */
+select_error:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
+        ("select error %d: %s (%d)", ret, g_strerror (errno), errno));
+    return GST_FLOW_ERROR;
+  }
+stopped:
+  {
+    GST_DEBUG ("stop called");
+    return GST_FLOW_WRONG_STATE;
+  }
 einval:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,

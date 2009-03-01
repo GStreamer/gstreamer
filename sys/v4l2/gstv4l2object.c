@@ -270,6 +270,7 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->update_fps_func = update_fps_func;
 
   v4l2object->video_fd = -1;
+  v4l2object->poll = gst_poll_new (TRUE);
   v4l2object->buffer = NULL;
   v4l2object->videodev = g_strdup (DEFAULT_PROP_DEVICE);
 
@@ -289,6 +290,9 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 
   if (v4l2object->videodev)
     g_free (v4l2object->videodev);
+
+  if (v4l2object->poll)
+    gst_poll_free (v4l2object->poll);
 
   if (v4l2object->channel)
     g_free (v4l2object->channel);
