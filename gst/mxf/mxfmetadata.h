@@ -761,7 +761,7 @@ MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL * track_id
 void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
 void mxf_metadata_generic_sound_essence_descriptor_set_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
 
-void mxf_descriptive_metadata_register (guint8 scheme, GSList *sets);
+void mxf_descriptive_metadata_register (guint8 scheme, GType *types);
 MXFDescriptiveMetadata * mxf_descriptive_metadata_new (guint8 scheme, guint32 type, MXFPrimerPack * primer, guint64 offset, const guint8 * data, guint size);
 
 GHashTable *mxf_metadata_hash_table_new (void);

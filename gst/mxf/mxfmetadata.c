@@ -284,104 +284,61 @@ mxf_metadata_init (MXFMetadata * self)
 {
 }
 
-static GSList *_mxf_metadata_registry = NULL;
+static GArray *_mxf_metadata_registry = NULL;
 
-typedef struct
-{
-  guint16 type_id;
-  GType type;
-} _MXFMetadataType;
+#define _add_metadata_type(type) G_STMT_START { \
+  GType t = type; \
+  \
+  g_array_append_val (_mxf_metadata_registry, t); \
+} G_STMT_END
 
 void
 mxf_metadata_init_types (void)
 {
   g_return_if_fail (_mxf_metadata_registry == NULL);
 
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_PREFACE);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_IDENTIFICATION);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_CONTENT_STORAGE);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_MATERIAL_PACKAGE);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_SOURCE_PACKAGE);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_TIMELINE_TRACK);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_EVENT_TRACK);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_STATIC_TRACK);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_SEQUENCE);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_SOURCE_CLIP);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_TIMECODE_COMPONENT);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_DM_SEGMENT);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_DM_SOURCE_CLIP);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_FILE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_NETWORK_LOCATOR);
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry,
-      (gpointer) MXF_TYPE_METADATA_TEXT_LOCATOR);
+  _mxf_metadata_registry = g_array_new (FALSE, TRUE, sizeof (GType));
+
+  _add_metadata_type (MXF_TYPE_METADATA_PREFACE);
+  _add_metadata_type (MXF_TYPE_METADATA_IDENTIFICATION);
+  _add_metadata_type (MXF_TYPE_METADATA_CONTENT_STORAGE);
+  _add_metadata_type (MXF_TYPE_METADATA_ESSENCE_CONTAINER_DATA);
+  _add_metadata_type (MXF_TYPE_METADATA_MATERIAL_PACKAGE);
+  _add_metadata_type (MXF_TYPE_METADATA_SOURCE_PACKAGE);
+  _add_metadata_type (MXF_TYPE_METADATA_TIMELINE_TRACK);
+  _add_metadata_type (MXF_TYPE_METADATA_EVENT_TRACK);
+  _add_metadata_type (MXF_TYPE_METADATA_STATIC_TRACK);
+  _add_metadata_type (MXF_TYPE_METADATA_SEQUENCE);
+  _add_metadata_type (MXF_TYPE_METADATA_SOURCE_CLIP);
+  _add_metadata_type (MXF_TYPE_METADATA_TIMECODE_COMPONENT);
+  _add_metadata_type (MXF_TYPE_METADATA_DM_SEGMENT);
+  _add_metadata_type (MXF_TYPE_METADATA_DM_SOURCE_CLIP);
+  _add_metadata_type (MXF_TYPE_METADATA_FILE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_MULTIPLE_DESCRIPTOR);
+  _add_metadata_type (MXF_TYPE_METADATA_NETWORK_LOCATOR);
+  _add_metadata_type (MXF_TYPE_METADATA_TEXT_LOCATOR);
 }
+
+#undef _add_metadata_type
 
 void
 mxf_metadata_register (GType type)
 {
   g_return_if_fail (g_type_is_a (type, MXF_TYPE_METADATA));
 
-  _mxf_metadata_registry =
-      g_slist_prepend (_mxf_metadata_registry, (gpointer) type);
+  g_array_append_val (_mxf_metadata_registry, type);
 }
 
 MXFMetadata *
 mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
     const guint8 * data, guint size)
 {
-  GSList *l;
+  guint i;
   GType t = G_TYPE_INVALID;
   MXFMetadata *ret = NULL;
 
@@ -389,8 +346,8 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
   g_return_val_if_fail (primer != NULL, NULL);
   g_return_val_if_fail (_mxf_metadata_registry != NULL, NULL);
 
-  for (l = _mxf_metadata_registry; l; l = l->next) {
-    GType tmp = (GType) l->data;
+  for (i = 0; i < _mxf_metadata_registry->len; i++) {
+    GType tmp = g_array_index (_mxf_metadata_registry, GType, i);
     MXFMetadataClass *klass = MXF_METADATA_CLASS (g_type_class_ref (tmp));
 
     if (klass->type == type) {
@@ -4619,36 +4576,41 @@ mxf_descriptive_metadata_class_init (MXFDescriptiveMetadataClass * klass)
 typedef struct
 {
   guint8 scheme;
-  GSList *sets;
+  GType *types;
 } _MXFDescriptiveMetadataScheme;
 
-static GSList *_dm_schemes = NULL;
+static GArray *_dm_schemes = NULL;
 
 void
-mxf_descriptive_metadata_register (guint8 scheme, GSList * sets)
+mxf_descriptive_metadata_register (guint8 scheme, GType * types)
 {
-  _MXFDescriptiveMetadataScheme *s =
-      g_slice_new (_MXFDescriptiveMetadataScheme);
+  _MXFDescriptiveMetadataScheme s;
 
-  s->scheme = scheme;
-  s->sets = sets;
-  _dm_schemes = g_slist_prepend (_dm_schemes, s);
+  if (!_dm_schemes)
+    _dm_schemes =
+        g_array_new (FALSE, TRUE, sizeof (_MXFDescriptiveMetadataScheme));
+
+  s.scheme = scheme;
+  s.types = types;
+
+  g_array_append_val (_dm_schemes, s);
 }
 
 MXFDescriptiveMetadata *
 mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
     MXFPrimerPack * primer, guint64 offset, const guint8 * data, guint size)
 {
-  GSList *l;
-  GType t = G_TYPE_INVALID;
+  guint i;
+  GType t = G_TYPE_INVALID, *p;
   _MXFDescriptiveMetadataScheme *s = NULL;
   MXFDescriptiveMetadata *ret = NULL;
 
   g_return_val_if_fail (type != 0, NULL);
   g_return_val_if_fail (primer != NULL, NULL);
 
-  for (l = _dm_schemes; l; l = l->next) {
-    _MXFDescriptiveMetadataScheme *data = l->data;
+  for (i = 0; i < _dm_schemes->len; i++) {
+    _MXFDescriptiveMetadataScheme *data =
+        &g_array_index (_dm_schemes, _MXFDescriptiveMetadataScheme, i);
 
     if (data->scheme == scheme) {
       s = data;
@@ -4661,8 +4623,9 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
     return NULL;
   }
 
-  for (l = s->sets; l; l = l->next) {
-    GType tmp = (GType) l->data;
+  p = s->types;
+  while (*p) {
+    GType tmp = *p;
     MXFDescriptiveMetadataClass *klass =
         MXF_DESCRIPTIVE_METADATA_CLASS (g_type_class_ref (tmp));
 
@@ -4672,6 +4635,7 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
       break;
     }
     g_type_class_unref (klass);
+    p++;
   }
 
   if (t == G_TYPE_INVALID) {

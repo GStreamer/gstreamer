@@ -5613,60 +5613,54 @@ mxf_dms1_cue_words_class_init (MXFDMS1CueWordsClass * klass)
   dm_class->type = 0x170800;
 }
 
+#define _add_dm_type(type) G_STMT_START { \
+  GType tmp = type; \
+  \
+  g_array_append_val (dms1_sets, tmp); \
+} G_STMT_END
+
 void
 mxf_dms1_initialize (void)
 {
-  GSList *dms1_sets = NULL;
+  GArray *dms1_sets = g_array_new (TRUE, TRUE, sizeof (GType));
 
-  dms1_sets =
-      g_slist_prepend (dms1_sets,
-      (gpointer) MXF_TYPE_DMS1_PRODUCTION_FRAMEWORK);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CLIP_FRAMEWORK);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SCENE_FRAMEWORK);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_TITLES);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_IDENTIFICATION);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_GROUP_RELATIONSHIP);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_BRANDING);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_EVENT);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PUBLICATION);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_AWARD);
-  dms1_sets =
-      g_slist_prepend (dms1_sets,
-      (gpointer) MXF_TYPE_DMS1_CAPTIONS_DESCRIPTION);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_ANNOTATION);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SETTING_PERIOD);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SCRIPTING);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CLASSIFICATION);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_SHOT);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_KEY_POINT);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PARTICIPANT);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PERSON);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_ORGANISATION);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_LOCATION);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_ADDRESS);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_COMMUNICATIONS);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CONTRACT);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_RIGHTS);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PICTURE_FORMAT);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_DEVICE_PARAMETERS);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_NAME_VALUE);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PROCESSING);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_PROJECT);
-  dms1_sets =
-      g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CONTACTS_LIST);
-  dms1_sets = g_slist_prepend (dms1_sets, (gpointer) MXF_TYPE_DMS1_CUE_WORDS);
+  _add_dm_type (MXF_TYPE_DMS1_PRODUCTION_FRAMEWORK);
+  _add_dm_type (MXF_TYPE_DMS1_CLIP_FRAMEWORK);
+  _add_dm_type (MXF_TYPE_DMS1_SCENE_FRAMEWORK);
+  _add_dm_type (MXF_TYPE_DMS1_TITLES);
+  _add_dm_type (MXF_TYPE_DMS1_IDENTIFICATION);
+  _add_dm_type (MXF_TYPE_DMS1_GROUP_RELATIONSHIP);
+  _add_dm_type (MXF_TYPE_DMS1_BRANDING);
+  _add_dm_type (MXF_TYPE_DMS1_EVENT);
+  _add_dm_type (MXF_TYPE_DMS1_PUBLICATION);
+  _add_dm_type (MXF_TYPE_DMS1_AWARD);
+  _add_dm_type (MXF_TYPE_DMS1_CAPTIONS_DESCRIPTION);
+  _add_dm_type (MXF_TYPE_DMS1_ANNOTATION);
+  _add_dm_type (MXF_TYPE_DMS1_SETTING_PERIOD);
+  _add_dm_type (MXF_TYPE_DMS1_SCRIPTING);
+  _add_dm_type (MXF_TYPE_DMS1_CLASSIFICATION);
+  _add_dm_type (MXF_TYPE_DMS1_SHOT);
+  _add_dm_type (MXF_TYPE_DMS1_KEY_POINT);
+  _add_dm_type (MXF_TYPE_DMS1_PARTICIPANT);
+  _add_dm_type (MXF_TYPE_DMS1_PERSON);
+  _add_dm_type (MXF_TYPE_DMS1_ORGANISATION);
+  _add_dm_type (MXF_TYPE_DMS1_LOCATION);
+  _add_dm_type (MXF_TYPE_DMS1_ADDRESS);
+  _add_dm_type (MXF_TYPE_DMS1_COMMUNICATIONS);
+  _add_dm_type (MXF_TYPE_DMS1_CONTRACT);
+  _add_dm_type (MXF_TYPE_DMS1_RIGHTS);
+  _add_dm_type (MXF_TYPE_DMS1_PICTURE_FORMAT);
+  _add_dm_type (MXF_TYPE_DMS1_DEVICE_PARAMETERS);
+  _add_dm_type (MXF_TYPE_DMS1_NAME_VALUE);
+  _add_dm_type (MXF_TYPE_DMS1_PROCESSING);
+  _add_dm_type (MXF_TYPE_DMS1_PROJECT);
+  _add_dm_type (MXF_TYPE_DMS1_CONTACTS_LIST);
+  _add_dm_type (MXF_TYPE_DMS1_CUE_WORDS);
 
-  mxf_descriptive_metadata_register (0x01, dms1_sets);
+  mxf_descriptive_metadata_register (0x01, (GType *) g_array_free (dms1_sets,
+          FALSE));
 }
+
+#undef _add_dm_type
 
 #undef ADD_SET
