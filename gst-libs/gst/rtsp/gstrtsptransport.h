@@ -81,6 +81,7 @@ typedef enum {
  * @GST_RTSP_LOWER_TRANS_UDP: stream data over UDP
  * @GST_RTSP_LOWER_TRANS_UDP_MCAST: stream data over UDP multicast
  * @GST_RTSP_LOWER_TRANS_TCP: stream data over TCP
+ * @GST_RTSP_LOWER_TRANS_HTTP: stream data tunneled over HTTP. Since: 0.10.23
  *
  * The different transport methods.
  */
@@ -88,7 +89,8 @@ typedef enum {
   GST_RTSP_LOWER_TRANS_UNKNOWN   = 0,
   GST_RTSP_LOWER_TRANS_UDP       = (1 << 0),
   GST_RTSP_LOWER_TRANS_UDP_MCAST = (1 << 1),
-  GST_RTSP_LOWER_TRANS_TCP       = (1 << 2)
+  GST_RTSP_LOWER_TRANS_TCP       = (1 << 2),
+  GST_RTSP_LOWER_TRANS_HTTP      = (1 << 4)
 } GstRTSPLowerTrans;
 
 /**

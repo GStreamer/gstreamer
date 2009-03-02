@@ -82,6 +82,8 @@ gst_rtsp_url_get_type (void)
 #define RTSPU_PROTO_LEN 8
 #define RTSPT_PROTO     "rtspt://"
 #define RTSPT_PROTO_LEN 8
+#define RTSPH_PROTO     "rtsph://"
+#define RTSPH_PROTO_LEN 8
 
 /* format is rtsp[u]://[user:passwd@]host[:port]/abspath[?query] */
 
@@ -118,6 +120,9 @@ gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
   } else if (g_str_has_prefix (p, RTSPT_PROTO)) {
     res->transports = GST_RTSP_LOWER_TRANS_TCP;
     p += RTSPT_PROTO_LEN;
+  } else if (g_str_has_prefix (p, RTSPH_PROTO)) {
+    res->transports = GST_RTSP_LOWER_TRANS_HTTP | GST_RTSP_LOWER_TRANS_TCP;
+    p += RTSPH_PROTO_LEN;
   } else
     goto invalid;
 
