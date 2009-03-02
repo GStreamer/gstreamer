@@ -173,6 +173,7 @@ gst_rtsp_lower_trans_get_type (void)
     {GST_RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
     {GST_RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
     {GST_RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
+    {GST_RTSP_LOWER_TRANS_HTTP, "HTTP tunneled mode", "http"},
     {0, NULL, NULL},
   };
 
@@ -4241,6 +4242,9 @@ restart:
   if ((res = gst_rtsp_connection_create (src->url, &src->connection)) < 0)
     goto could_not_create;
 
+  if (src->url->transports & GST_RTSP_LOWER_TRANS_HTTP)
+    gst_rtsp_connection_set_tunneled (src->connection, TRUE);
+
   /* connect */
   GST_DEBUG_OBJECT (src, "connecting (%s)...", src->req_location);
   if ((res =
@@ -5030,7 +5034,7 @@ gst_rtspsrc_uri_get_type (void)
 static gchar **
 gst_rtspsrc_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "rtsp", "rtspu", "rtspt", NULL };
+  static gchar *protocols[] = { "rtsp", "rtspu", "rtspt", "rtsph", NULL };
 
   return protocols;
 }
