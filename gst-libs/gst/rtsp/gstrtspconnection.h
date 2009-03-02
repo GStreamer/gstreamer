@@ -65,6 +65,7 @@ GstRTSPResult      gst_rtsp_connection_connect       (GstRTSPConnection *conn, G
 GstRTSPResult      gst_rtsp_connection_close         (GstRTSPConnection *conn);
 GstRTSPResult      gst_rtsp_connection_free          (GstRTSPConnection *conn);
 
+
 /* sending/receiving raw bytes */
 GstRTSPResult      gst_rtsp_connection_read          (GstRTSPConnection * conn, guint8 * data,
                                                       guint size, GTimeVal * timeout);
@@ -104,6 +105,9 @@ GstRTSPResult      gst_rtsp_connection_set_qos_dscp  (GstRTSPConnection *conn,
 /* accessors */
 GstRTSPUrl *       gst_rtsp_connection_get_url       (const GstRTSPConnection *conn);
 const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
+
+void               gst_rtsp_connection_set_tunneled  (GstRTSPConnection *conn, gboolean tunneled);
+gboolean           gst_rtsp_connection_is_tunneled   (GstRTSPConnection *conn);
 
 /* async IO */
 

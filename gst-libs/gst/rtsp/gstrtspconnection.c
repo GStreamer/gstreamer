@@ -95,6 +95,12 @@
 #include "gstrtspbase64.h"
 #include "md5.h"
 
+static GstRTSPResult read_line (gint fd, guint8 * buffer, guint * idx,
+    guint size);
+static GstRTSPResult parse_key_value (guint8 * buffer, gchar * key,
+    guint keysize, gchar ** value);
+static void parse_string (gchar * dest, gint size, gchar ** src);
+
 #ifdef G_OS_WIN32
 #define READ_SOCKET(fd, buf, len) recv (fd, (char *)buf, len, 0)
 #define WRITE_SOCKET(fd, buf, len) send (fd, (const char *)buf, len, 0)
@@ -115,20 +121,20 @@
 #define ERRNO_IS_EINPROGRESS (errno == EINPROGRESS)
 #endif
 
-#define ADD_POLLFD(fdset, pfd, fd)       \
-G_STMT_START {                           \
-  pfd.fd = fd;                           \
-  gst_poll_add_fd (fdset, &pfd);         \
+#define ADD_POLLFD(fdset, pfd, fd)        \
+G_STMT_START {                            \
+  (pfd)->fd = fd;                         \
+  gst_poll_add_fd (fdset, pfd);           \
 } G_STMT_END
 
-#define REMOVE_POLLFD(fdset, pfd)        \
-G_STMT_START {                           \
-  if (pfd.fd != -1) {                    \
-    GST_DEBUG ("remove fd %d", pfd.fd);  \
-    gst_poll_remove_fd (fdset, &pfd);    \
-    CLOSE_SOCKET (pfd.fd);               \
-    pfd.fd = -1;                         \
-  }                                      \
+#define REMOVE_POLLFD(fdset, pfd)          \
+G_STMT_START {                             \
+  if ((pfd)->fd != -1) {                   \
+    GST_DEBUG ("remove fd %d", (pfd)->fd); \
+    gst_poll_remove_fd (fdset, pfd);       \
+    CLOSE_SOCKET ((pfd)->fd);              \
+    (pfd)->fd = -1;                        \
+  }                                        \
 } G_STMT_END
 
 struct _GstRTSPConnection
@@ -143,6 +149,8 @@ struct _GstRTSPConnection
 
   GstPollFD *readfd;
   GstPollFD *writefd;
+
+  gboolean tunneled;
 
   GstPoll *fdset;
   gchar *ip;
@@ -247,6 +255,7 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->fd1.fd = -1;
   newconn->timer = g_timer_new ();
   newconn->timeout = 60;
+  newconn->tunneled = FALSE;
 
   newconn->auth_method = GST_RTSP_AUTH_NONE;
   newconn->username = NULL;
@@ -331,7 +340,7 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 
   /* now create the connection object */
   gst_rtsp_connection_create (url, &newconn);
-  ADD_POLLFD (newconn->fdset, newconn->fd0, fd);
+  ADD_POLLFD (newconn->fdset, &newconn->fd0, fd);
 
   newconn->readfd = &newconn->fd0;
   newconn->writefd = &newconn->fd0;
@@ -344,6 +353,331 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 accept_failed:
   {
     return GST_RTSP_ESYS;
+  }
+}
+
+static const gchar *
+do_resolve (const gchar * host)
+{
+  struct hostent *hostinfo;
+  struct in_addr addr;
+  const gchar *ip;
+#ifdef G_OS_WIN32
+  struct in_addr *addrp;
+#else
+  char **addrs;
+  gchar ipbuf[INET_ADDRSTRLEN];
+#endif /* G_OS_WIN32 */
+
+  ip = NULL;
+
+  /* first check if it already is an IP address */
+  if (inet_aton (host, &addr)) {
+    ip = host;
+  } else {
+    hostinfo = gethostbyname (host);
+    if (!hostinfo)
+      goto not_resolved;        /* h_errno set */
+
+    if (hostinfo->h_addrtype != AF_INET)
+      goto not_ip;              /* host not an IP host */
+#ifdef G_OS_WIN32
+    addrp = (struct in_addr *) hostinfo->h_addr_list[0];
+    /* this is not threadsafe */
+    ip = inet_ntoa (*addrp);
+#else
+    addrs = hostinfo->h_addr_list;
+    ip = inet_ntop (AF_INET, (struct in_addr *) addrs[0], ipbuf,
+        sizeof (ipbuf));
+#endif /* G_OS_WIN32 */
+  }
+  return ip;
+
+  /* ERRORS */
+not_resolved:
+  {
+    GST_ERROR ("could not resolve %s", host);
+    return NULL;
+  }
+not_ip:
+  {
+    GST_ERROR ("not an IP address");
+    return NULL;
+  }
+}
+
+static GstRTSPResult
+do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
+    GstPoll * fdset, GTimeVal * timeout)
+{
+  gint fd;
+  struct sockaddr_in sa_in;
+  gint ret;
+#ifdef G_OS_WIN32
+  unsigned long flags = 1;
+#endif /* G_OS_WIN32 */
+  GstClockTime to;
+  gint retval;
+
+  g_message ("connect %s:%u", ip, port);
+
+  memset (&sa_in, 0, sizeof (sa_in));
+  sa_in.sin_family = AF_INET;   /* network socket */
+  sa_in.sin_port = htons (port);        /* on port */
+  sa_in.sin_addr.s_addr = inet_addr (ip);       /* on host ip */
+
+  fd = socket (AF_INET, SOCK_STREAM, 0);
+  if (fd == -1)
+    goto no_socket;
+
+  /* set to non-blocking mode so that we can cancel the connect */
+#ifndef G_OS_WIN32
+  fcntl (fd, F_SETFL, O_NONBLOCK);
+#else
+  ioctlsocket (fd, FIONBIO, &flags);
+#endif /* G_OS_WIN32 */
+
+  /* add the socket to our fdset */
+  ADD_POLLFD (fdset, fdout, fd);
+
+  /* we are going to connect ASYNC now */
+  ret = connect (fd, (struct sockaddr *) &sa_in, sizeof (sa_in));
+  if (ret == 0)
+    goto done;
+  if (!ERRNO_IS_EINPROGRESS)
+    goto sys_error;
+
+  /* wait for connect to complete up to the specified timeout or until we got
+   * interrupted. */
+  gst_poll_fd_ctl_write (fdset, fdout, TRUE);
+
+  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : GST_CLOCK_TIME_NONE;
+
+  do {
+    retval = gst_poll_wait (fdset, to);
+  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
+
+  if (retval == 0)
+    goto timeout;
+  else if (retval == -1)
+    goto sys_error;
+
+  /* we can still have an error connecting on windows */
+  if (gst_poll_fd_has_error (fdset, fdout)) {
+    socklen_t len = sizeof (errno);
+#ifndef G_OS_WIN32
+    getsockopt (fd, SOL_SOCKET, SO_ERROR, &errno, &len);
+#else
+    getsockopt (fd, SOL_SOCKET, SO_ERROR, (char *) &errno, &len);
+#endif
+    goto sys_error;
+  }
+
+  gst_poll_fd_ignored (fdset, fdout);
+done:
+
+  return GST_RTSP_OK;
+
+  /* ERRORS */
+no_socket:
+  {
+    GST_ERROR ("no socket %d (%s)", errno, g_strerror (errno));
+    return GST_RTSP_ESYS;
+  }
+sys_error:
+  {
+    GST_ERROR ("system error %d (%s)", errno, g_strerror (errno));
+    REMOVE_POLLFD (fdset, fdout);
+    return GST_RTSP_ESYS;
+  }
+timeout:
+  {
+    GST_ERROR ("timeout");
+    REMOVE_POLLFD (fdset, fdout);
+    return GST_RTSP_ETIMEOUT;
+  }
+}
+
+static GstRTSPResult
+setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
+{
+  gchar sessionid[24];
+  gint i;
+  GstRTSPResult res;
+  gchar *str;
+  guint idx, line;
+  gint retval;
+  GstClockTime to;
+  const gchar *ip;
+  guint16 port;
+  gchar codestr[4];
+  gint code;
+
+  /* create a random sessionid */
+  for (i = 0; i < 24; i++)
+    sessionid[i] = g_random_int_range ('a', 'z');
+  sessionid[23] = '\0';
+
+  /* */
+  str = g_strdup_printf ("GET %s HTTP/1.0\r\n"
+      "x-sessioncookie: %s\r\n"
+      "Accept: application/x-rtsp-tunnelled\r\n"
+      "Pragma: no-cache\r\n"
+      "Cache-Control: no-cache\r\n" "\r\n", conn->url->host, sessionid);
+
+  /* we start by writing to this fd */
+  conn->writefd = &conn->fd0;
+
+  res = gst_rtsp_connection_write (conn, (guint8 *) str, strlen (str), timeout);
+  g_free (str);
+  if (res != GST_RTSP_OK)
+    goto write_failed;
+
+  gst_poll_fd_ctl_write (conn->fdset, &conn->fd0, FALSE);
+  gst_poll_fd_ctl_read (conn->fdset, &conn->fd0, TRUE);
+
+  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : GST_CLOCK_TIME_NONE;
+
+  line = 0;
+  while (TRUE) {
+    guint8 buffer[4096];
+
+    idx = 0;
+    while (TRUE) {
+      res = read_line (conn->fd0.fd, buffer, &idx, sizeof (buffer));
+      if (res == GST_RTSP_EEOF)
+        goto eof;
+      if (res == GST_RTSP_OK)
+        break;
+      if (res != GST_RTSP_EINTR)
+        goto read_error;
+
+      do {
+        retval = gst_poll_wait (conn->fdset, to);
+      } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
+
+      /* check for timeout */
+      if (retval == 0)
+        goto timeout;
+
+      if (retval == -1) {
+        if (errno == EBUSY)
+          goto stopped;
+        else
+          goto select_error;
+      }
+    }
+
+    /* check for last line */
+    if (buffer[0] == '\r')
+      buffer[0] = '\0';
+    if (buffer[0] == '\0')
+      break;
+
+    if (line == 0) {
+      /* first line, parse response */
+      gchar versionstr[20];
+      gchar *bptr;
+
+      bptr = (gchar *) buffer;
+
+      parse_string (versionstr, sizeof (versionstr), &bptr);
+      parse_string (codestr, sizeof (codestr), &bptr);
+      code = atoi (codestr);
+
+      if (code != 200)
+        goto wrong_result;
+    } else {
+      gchar key[32];
+      gchar *value;
+
+      /* other lines, parse key/value */
+      res = parse_key_value (buffer, key, sizeof (key), &value);
+      if (res == GST_RTSP_OK) {
+        /* we got a new ip address */
+        if (g_ascii_strcasecmp (key, "x-server-ip-address") == 0) {
+          g_free (conn->ip);
+          conn->ip = g_strdup (value);
+        }
+      }
+    }
+    line++;
+  }
+
+  if (!(ip = do_resolve (conn->ip)))
+    goto not_resolved;
+
+  /* get the port from the url */
+  gst_rtsp_url_get_port (conn->url, &port);
+
+  /* connect to the host/port */
+  res = do_connect (ip, port, &conn->fd1, conn->fdset, timeout);
+  if (res != GST_RTSP_OK)
+    goto connect_failed;
+
+  /* this is now our writing socket */
+  conn->writefd = &conn->fd1;
+
+  /* */
+  str = g_strdup_printf ("POST %s HTTP/1.0\r\n"
+      "x-sessioncookie: %s\r\n"
+      "Content-Type: application/x-rtsp-tunnelled\r\n"
+      "Pragma: no-cache\r\n"
+      "Cache-Control: no-cache\r\n"
+      "Content-Length: 32767\r\n"
+      "Expires: Sun, 9 Jan 1972 00:00:00 GMT\r\n"
+      "\r\n", conn->url->host, sessionid);
+
+  /* we start by writing to this fd */
+  conn->writefd = &conn->fd1;
+
+  res = gst_rtsp_connection_write (conn, (guint8 *) str, strlen (str), timeout);
+  g_free (str);
+  if (res != GST_RTSP_OK)
+    goto write_failed;
+
+  return res;
+
+  /* ERRORS */
+write_failed:
+  {
+    GST_ERROR ("write failed", res);
+    return res;
+  }
+eof:
+  {
+    return GST_RTSP_EEOF;
+  }
+read_error:
+  {
+    return res;
+  }
+timeout:
+  {
+    return GST_RTSP_ETIMEOUT;
+  }
+select_error:
+  {
+    return GST_RTSP_ESYS;
+  }
+stopped:
+  {
+    return GST_RTSP_EINTR;
+  }
+wrong_result:
+  {
+    GST_ERROR ("got failure response %d %s", code, codestr);
+    return GST_RTSP_ERROR;
+  }
+not_resolved:
+  {
+    GST_ERROR ("could not resolve %s", conn->ip);
+    return GST_RTSP_ENET;
+  }
+connect_failed:
+  {
+    GST_ERROR ("failed to connect");
+    return res;
   }
 }
 
@@ -364,23 +698,12 @@ accept_failed:
 GstRTSPResult
 gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 {
-  gint fd;
-  struct sockaddr_in sa_in;
-  struct hostent *hostinfo;
+  GstRTSPResult res;
   const gchar *ip;
-  struct in_addr addr;
-  gint ret;
   guint16 port;
   GstRTSPUrl *url;
-  GstClockTime to;
-  gint retval;
-
 #ifdef G_OS_WIN32
   unsigned long flags = 1;
-  struct in_addr *addrp;
-#else
-  char **addrs;
-  gchar ipbuf[INET_ADDRSTRLEN];
 #endif /* G_OS_WIN32 */
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
@@ -389,116 +712,47 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
   url = conn->url;
 
-  /* first check if it already is an IP address */
-  if (inet_aton (url->host, &addr)) {
-    ip = url->host;
-  } else {
-    hostinfo = gethostbyname (url->host);
-    if (!hostinfo)
-      goto not_resolved;        /* h_errno set */
-
-    if (hostinfo->h_addrtype != AF_INET)
-      goto not_ip;              /* host not an IP host */
-#ifdef G_OS_WIN32
-    addrp = (struct in_addr *) hostinfo->h_addr_list[0];
-    /* this is not threadsafe */
-    ip = inet_ntoa (*addrp);
-#else
-    addrs = hostinfo->h_addr_list;
-    ip = inet_ntop (AF_INET, (struct in_addr *) addrs[0], ipbuf,
-        sizeof (ipbuf));
-#endif /* G_OS_WIN32 */
-  }
+  if (!(ip = do_resolve (url->host)))
+    goto not_resolved;
 
   /* get the port from the url */
   gst_rtsp_url_get_port (url, &port);
 
-  memset (&sa_in, 0, sizeof (sa_in));
-  sa_in.sin_family = AF_INET;   /* network socket */
-  sa_in.sin_port = htons (port);        /* on port */
-  sa_in.sin_addr.s_addr = inet_addr (ip);       /* on host ip */
+  /* connect to the host/port */
+  res = do_connect (ip, port, &conn->fd0, conn->fdset, timeout);
+  if (res != GST_RTSP_OK)
+    goto connect_failed;
 
-  fd = socket (AF_INET, SOCK_STREAM, 0);
-  if (fd == -1)
-    goto sys_error;
-
-  /* set to non-blocking mode so that we can cancel the connect */
-#ifndef G_OS_WIN32
-  fcntl (fd, F_SETFL, O_NONBLOCK);
-#else
-  ioctlsocket (fd, FIONBIO, &flags);
-#endif /* G_OS_WIN32 */
-
-  /* add the socket to our fdset */
-  ADD_POLLFD (conn->fdset, conn->fd0, fd);
-
-  conn->readfd = &conn->fd0;
-  conn->writefd = &conn->fd0;
-
-  /* we are going to connect ASYNC now */
-  ret = connect (fd, (struct sockaddr *) &sa_in, sizeof (sa_in));
-  if (ret == 0)
-    goto done;
-  if (!ERRNO_IS_EINPROGRESS)
-    goto sys_error;
-
-  /* wait for connect to complete up to the specified timeout or until we got
-   * interrupted. */
-  gst_poll_fd_ctl_write (conn->fdset, conn->writefd, TRUE);
-
-  to = timeout ? GST_TIMEVAL_TO_TIME (*timeout) : GST_CLOCK_TIME_NONE;
-
-  do {
-    retval = gst_poll_wait (conn->fdset, to);
-  } while (retval == -1 && (errno == EINTR || errno == EAGAIN));
-
-  if (retval == 0)
-    goto timeout;
-  else if (retval == -1)
-    goto sys_error;
-
-  /* we can still have an error connecting on windows */
-  if (gst_poll_fd_has_error (conn->fdset, conn->writefd)) {
-    socklen_t len = sizeof (errno);
-#ifndef G_OS_WIN32
-    getsockopt (fd, SOL_SOCKET, SO_ERROR, &errno, &len);
-#else
-    getsockopt (fd, SOL_SOCKET, SO_ERROR, (char *) &errno, &len);
-#endif
-    goto sys_error;
-  }
-
-  gst_poll_fd_ignored (conn->fdset, conn->writefd);
-  gst_poll_fd_ignored (conn->fdset, conn->readfd);
-
-done:
+  g_free (conn->ip);
   conn->ip = g_strdup (ip);
+
+  /* this is our read URL */
+  conn->readfd = &conn->fd0;
+
+  if (conn->tunneled) {
+    res = setup_tunneling (conn, timeout);
+    if (res != GST_RTSP_OK)
+      goto tunneling_failed;
+  } else {
+    conn->writefd = &conn->fd0;
+  }
 
   return GST_RTSP_OK;
 
-sys_error:
-  {
-    GST_ERROR ("system error %d (%s)", errno, g_strerror (errno));
-    REMOVE_POLLFD (conn->fdset, conn->fd0);
-    REMOVE_POLLFD (conn->fdset, conn->fd1);
-    return GST_RTSP_ESYS;
-  }
 not_resolved:
   {
     GST_ERROR ("could not resolve %s", url->host);
     return GST_RTSP_ENET;
   }
-not_ip:
+connect_failed:
   {
-    GST_ERROR ("not an IP address");
-    return GST_RTSP_ENOTIP;
+    GST_ERROR ("failed to connect");
+    return res;
   }
-timeout:
+tunneling_failed:
   {
-    GST_ERROR ("timeout");
-    REMOVE_POLLFD (conn->fdset, conn->fd0);
-    REMOVE_POLLFD (conn->fdset, conn->fd1);
-    return GST_RTSP_ETIMEOUT;
+    GST_ERROR ("failed to setup tunneling");
+    return res;
   }
 }
 
@@ -922,20 +1176,31 @@ GstRTSPResult
 gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
     GTimeVal * timeout)
 {
-  GString *str = NULL;
+  GString *string = NULL;
   GstRTSPResult res;
+  gchar *str;
+  gsize len;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
-  if (!(str = message_to_string (conn, message)))
+  if (!(string = message_to_string (conn, message)))
     goto no_message;
 
-  /* write request */
-  res =
-      gst_rtsp_connection_write (conn, (guint8 *) str->str, str->len, timeout);
+  if (conn->tunneled) {
+    str = g_base64_encode ((const guchar *) string->str, string->len);
+    g_string_free (string, TRUE);
+    len = strlen (str);
+  } else {
+    str = string->str;
+    len = string->len;
+    g_string_free (string, FALSE);
+  }
 
-  g_string_free (str, TRUE);
+  /* write request */
+  res = gst_rtsp_connection_write (conn, (guint8 *) str, len, timeout);
+
+  g_free (str);
 
   return res;
 
@@ -1056,35 +1321,56 @@ parse_request_line (guint8 * buffer, GstRTSPMessage * msg)
   return res;
 }
 
-/* parsing lines means reading a Key: Value pair */
 static GstRTSPResult
-parse_line (guint8 * buffer, GstRTSPMessage * msg)
+parse_key_value (guint8 * buffer, gchar * key, guint keysize, gchar ** value)
 {
-  gchar key[32];
   gchar *bptr;
-  GstRTSPHeaderField field;
 
   bptr = (gchar *) buffer;
 
   /* read key */
-  parse_key (key, sizeof (key), &bptr);
+  parse_key (key, keysize, &bptr);
   if (*bptr != ':')
     goto no_column;
 
   bptr++;
+  while (g_ascii_isspace (*bptr))
+    bptr++;
 
-  field = gst_rtsp_find_header_field (key);
-  if (field != GST_RTSP_HDR_INVALID) {
-    while (g_ascii_isspace (*bptr))
-      bptr++;
-    gst_rtsp_message_add_header (msg, field, bptr);
-  }
+  *value = bptr;
 
   return GST_RTSP_OK;
 
+  /* ERRORS */
 no_column:
   {
     return GST_RTSP_EPARSE;
+  }
+}
+
+/* parsing lines means reading a Key: Value pair */
+static GstRTSPResult
+parse_line (guint8 * buffer, GstRTSPMessage * msg)
+{
+  GstRTSPResult res;
+  gchar key[32];
+  gchar *value;
+  GstRTSPHeaderField field;
+
+  res = parse_key_value (buffer, key, sizeof (key), &value);
+  if (res != GST_RTSP_OK)
+    goto parse_error;
+
+  field = gst_rtsp_find_header_field (key);
+  if (field != GST_RTSP_HDR_INVALID)
+    gst_rtsp_message_add_header (msg, field, value);
+
+  return GST_RTSP_OK;
+
+  /* ERRORS */
+parse_error:
+  {
+    return res;
   }
 }
 
@@ -1456,8 +1742,8 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
   g_free (conn->ip);
   conn->ip = NULL;
 
-  REMOVE_POLLFD (conn->fdset, conn->fd0);
-  REMOVE_POLLFD (conn->fdset, conn->fd1);
+  REMOVE_POLLFD (conn->fdset, &conn->fd0);
+  REMOVE_POLLFD (conn->fdset, &conn->fd1);
   conn->writefd = NULL;
   conn->readfd = NULL;
 
@@ -1902,6 +2188,45 @@ gst_rtsp_connection_get_ip (const GstRTSPConnection * conn)
   return conn->ip;
 }
 
+/**
+ * gst_rtsp_connection_set_tunneled:
+ * @conn: a #GstRTSPConnection
+ * @tunneled: the new state
+ *
+ * Set the HTTP tunneling state of the connection. This must be configured before
+ * the @conn is connected.
+ *
+ * Since: 0.10.23
+ */
+void
+gst_rtsp_connection_set_tunneled (GstRTSPConnection * conn, gboolean tunneled)
+{
+  g_return_if_fail (conn != NULL);
+  g_return_if_fail (conn->readfd == NULL);
+  g_return_if_fail (conn->writefd == NULL);
+
+  conn->tunneled = tunneled;
+}
+
+/**
+ * gst_rtsp_connection_is_tunneled:
+ * @conn: a #GstRTSPConnection
+ *
+ * Get the tunneling state of the connection. 
+ *
+ * Returns: if @conn is using HTTP tunneling.
+ *
+ * Since: 0.10.23
+ */
+gboolean
+gst_rtsp_connection_is_tunneled (GstRTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, FALSE);
+
+  return conn->tunneled;
+}
+
+
 #define READ_COND   (G_IO_IN | G_IO_HUP | G_IO_ERR)
 #define WRITE_COND  (G_IO_OUT | G_IO_ERR)
 
@@ -2080,6 +2405,7 @@ static GSourceFuncs gst_rtsp_source_funcs = {
  * @conn: a #GstRTSPConnection
  * @funcs: watch functions
  * @user_data: user data to pass to @funcs
+ * @notify: notify when @user_data is not referenced anymore
  *
  * Create a watch object for @conn. The functions provided in @funcs will be
  * called with @user_data when activity happened on the watch.
@@ -2151,7 +2477,7 @@ gst_rtsp_watch_attach (GstRTSPWatch * watch, GMainContext * context)
 }
 
 /**
- * gst_rtsp_watch_free:
+ * gst_rtsp_watch_unref:
  * @watch: a #GstRTSPWatch
  *
  * Decreases the reference count of @watch by one. If the resulting reference
