@@ -871,7 +871,7 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
 
   *length = len;
 
-  GST_DEBUG_OBJECT (flacdec, "length %" G_GINT64_FORMAT, *length);
+  GST_DEBUG_OBJECT (flacdec, "encoded byte length %" G_GINT64_FORMAT, *length);
 
 #ifdef LEGACY_FLAC
   return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_OK;
@@ -996,6 +996,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   guint samples = frame->header.blocksize;
   guint j, i;
   GstClockTime next;
+
+  GST_LOG_OBJECT (flacdec, "samples in frame header: %d", samples);
 
   /* if a DEFAULT segment is configured, don't send samples past the end
    * of the segment */
@@ -2035,8 +2037,9 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * a new segment. If we did not flush and the seek failed, we simply do
    * nothing here and continue where we were. */
   if (seek_ok || flush) {
-    GST_DEBUG_OBJECT (flacdec, "Creating newsegment from %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, segment.last_stop, stop);
+    GST_DEBUG_OBJECT (flacdec, "Creating newsegment from %" GST_TIME_FORMAT
+        " to %" GST_TIME_FORMAT, GST_TIME_ARGS (last_stop),
+        GST_TIME_ARGS (stop));
     /* now replace the old segment so that we send it in the stream thread the
      * next time it is scheduled. */
     if (flacdec->start_segment)
