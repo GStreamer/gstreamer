@@ -58,7 +58,7 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
   GST_DEBUG ("Got mimetype '%s' with prio %d", mimetype, prio);
 
   caps = gst_caps_new_simple (mimetype, NULL);
-  gst_type_find_suggest (find, GST_TYPE_FIND_LIKELY, caps);
+  gst_type_find_suggest (find, GST_TYPE_FIND_POSSIBLE, caps);
 }
 
 static gboolean
