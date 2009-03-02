@@ -25,6 +25,8 @@ ABOUT-NLS
 _stdint.h
 gst-plugins-good-*.tar.*
 
+/m4
+
 .deps
 .libs
 *.lo
