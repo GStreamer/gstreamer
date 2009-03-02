@@ -3624,3 +3624,91 @@ gst_util_get_timestamp (void)
   return GST_TIMEVAL_TO_TIME (now);
 #endif
 }
+
+/**
+ * gst_util_array_binary_search:
+ * @array: the sorted input array
+ * @num_elements: number of elements in the array
+ * @element_size: size of every element in bytes
+ * @search_func: function to compare two elements, @search_data will always be passed as second argument
+ * @mode: search mode that should be used
+ * @search_data: element that should be found
+ * @user_data: data to pass to @search_func
+ *
+ * Searches inside @array for @search_data by using the comparison function
+ * @search_func. @array must be sorted ascending.
+ *
+ * As @search_data is always passed as second argument to @search_func it's
+ * not required that @search_data has the same type as the array elements.
+ *
+ * The complexity of this search function is O(log (num_elements)).
+ *
+ * Returns: The address of the found element or %NULL if nothing was found
+ *
+ * Since: 0.10.23
+ */
+gpointer
+gst_util_array_binary_search (gpointer array, guint num_elements,
+    gsize element_size, GCompareDataFunc search_func, GstSearchMode mode,
+    gconstpointer search_data, gpointer user_data)
+{
+  glong left = 0, right = num_elements - 1, m;
+  gint ret;
+  guint8 *data = (guint8 *) array;
+
+  g_return_val_if_fail (array != NULL, NULL);
+  g_return_val_if_fail (element_size > 0, NULL);
+  g_return_val_if_fail (search_func != NULL, NULL);
+
+  /* 0. No elements => return NULL */
+  if (num_elements == 0)
+    return NULL;
+
+  /* 1. If search_data is before the 0th element return the 0th element */
+  ret = search_func (data, search_data, user_data);
+  if ((ret >= 0 && mode == GST_SEARCH_MODE_AFTER) || ret == 0)
+    return data;
+  else if (ret > 0)
+    return NULL;
+
+  /* 2. If search_data is after the last element return the last element */
+  ret =
+      search_func (data + (num_elements - 1) * element_size, search_data,
+      user_data);
+  if ((ret <= 0 && mode == GST_SEARCH_MODE_BEFORE) || ret == 0)
+    return data + (num_elements - 1) * element_size;
+  else if (ret < 0)
+    return NULL;
+
+  /* 3. else binary search */
+  while (TRUE) {
+    m = left + (right - left) / 2;
+
+    ret = search_func (data + m * element_size, search_data, user_data);
+
+    if (ret == 0) {
+      return data + m * element_size;
+    } else if (ret < 0) {
+      left = m + 1;
+    } else {
+      right = m - 1;
+    }
+
+    /* No exact match found */
+    if (right < left) {
+      if (mode == GST_SEARCH_MODE_EXACT) {
+        return NULL;
+      } else if (mode == GST_SEARCH_MODE_AFTER) {
+        if (ret < 0)
+          return (m < num_elements) ? data + (m + 1) * element_size : NULL;
+        else
+          return data + m * element_size;
+      } else {
+        if (ret < 0)
+          return data + m * element_size;
+        else
+          return (m > 0) ? data + (m - 1) * element_size : NULL;
+      }
+    }
+  }
+}

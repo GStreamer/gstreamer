@@ -2363,10 +2363,14 @@ gst_util_seqnum_compare
 gst_util_set_object_arg
 gst_util_set_value_from_string
 gst_util_get_timestamp
+GstSearchMode
+gst_util_array_binary_search
 <SUBSECTION Private>
 GST_HAVE_UNALIGNED_ACCESS
 gst_util_guint64_to_gdouble
 gst_util_gdouble_to_guint64
+GST_TYPE_SEARCH_MODE
+gst_search_mode_get_type
 </SECTION>
 
 <SECTION>

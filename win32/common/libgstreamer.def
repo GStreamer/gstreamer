@@ -784,6 +784,7 @@ EXPORTS
 	gst_registry_xml_write_cache
 	gst_resource_error_get_type
 	gst_resource_error_quark
+	gst_search_mode_get_type
 	gst_seek_flags_get_type
 	gst_seek_type_get_type
 	gst_segment_clip
@@ -970,6 +971,7 @@ EXPORTS
 	gst_uri_protocol_is_supported
 	gst_uri_protocol_is_valid
 	gst_uri_type_get_type
+	gst_util_array_binary_search
 	gst_util_dump_mem
 	gst_util_gdouble_to_guint64
 	gst_util_get_timestamp

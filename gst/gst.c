@@ -1073,6 +1073,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_uri_type_get_type ());
   g_type_class_ref (gst_parse_error_get_type ());
   g_type_class_ref (gst_parse_flags_get_type ());
+  g_type_class_ref (gst_search_mode_get_type ());
 
   gst_structure_get_type ();
   _gst_value_initialize ();

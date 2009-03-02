@@ -1134,6 +1134,24 @@ GstElement *            gst_parse_bin_from_description_full (const gchar     * b
 
 GstClockTime gst_util_get_timestamp (void);
 
+/**
+ * GstSearchMode:
+ * @GST_SEARCH_MODE_EXACT : Only search for exact matches.
+ * @GST_SEARCH_MODE_BEFORE: Search for an exact match or the element just before.
+ * @GST_SEARCH_MODE_AFTER : Search for an exact match or the element just after.
+ *
+ * The different search modes.
+ *
+ * Since: 0.10.23
+ */
+typedef enum {
+  GST_SEARCH_MODE_EXACT = 0,
+  GST_SEARCH_MODE_BEFORE,
+  GST_SEARCH_MODE_AFTER
+} GstSearchMode;
+
+gpointer gst_util_array_binary_search (gpointer array, guint num_elements, gsize element_size, GCompareDataFunc search_func, GstSearchMode mode, gconstpointer search_data, gpointer user_data);
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */

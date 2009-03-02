@@ -610,6 +610,108 @@ GST_START_TEST (test_set_value_from_string)
 
 GST_END_TEST;
 
+static gint
+_binary_search_compare (guint32 * a, guint32 * b)
+{
+  return *a - *b;
+}
+
+GST_START_TEST (test_binary_search)
+{
+  guint32 data[257];
+  guint32 *match;
+  guint32 search_element = 121 * 2;
+  guint i;
+
+  for (i = 0; i < 257; i++)
+    data[i] = (i + 1) * 2;
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_EXACT,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 120);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_BEFORE,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 120);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_AFTER,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 120);
+
+  search_element = 0;
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_EXACT,
+      &search_element, NULL);
+  fail_unless (match == NULL);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_AFTER,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 0);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_BEFORE,
+      &search_element, NULL);
+  fail_unless (match == NULL);
+
+  search_element = 1000;
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_EXACT,
+      &search_element, NULL);
+  fail_unless (match == NULL);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_AFTER,
+      &search_element, NULL);
+  fail_unless (match == NULL);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_BEFORE,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 256);
+
+  search_element = 121 * 2 - 1;
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_EXACT,
+      &search_element, NULL);
+  fail_unless (match == NULL);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_AFTER,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 120);
+
+  match =
+      (guint32 *) gst_util_array_binary_search (data, 257, sizeof (guint32),
+      (GCompareDataFunc) _binary_search_compare, GST_SEARCH_MODE_BEFORE,
+      &search_element, NULL);
+  fail_unless (match != NULL);
+  fail_unless_equals_int (match - data, 119);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_utils_suite (void)
 {
@@ -630,6 +732,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_element_found_tags);
   tcase_add_test (tc_chain, test_element_unlink);
   tcase_add_test (tc_chain, test_set_value_from_string);
+  tcase_add_test (tc_chain, test_binary_search);
   return s;
 }
 
