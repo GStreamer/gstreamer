@@ -26,6 +26,8 @@
 GST_DEBUG_CATEGORY (xdgmime_debug);
 #define GST_CAT_DEFAULT xdgmime_debug
 
+G_LOCK_DEFINE_STATIC (xdg_lock);
+
 static void
 xdgmime_typefind (GstTypeFind * find, gpointer user_data)
 {
@@ -42,7 +44,14 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
   if ((data = gst_type_find_peek (find, 0, length)) == NULL)
     return;
 
+  /* FIXME: xdg-mime is not thread-safe as it stores the cache globally
+   * and updates it from every call if changes were done without
+   * any locking
+   */
+  G_LOCK (xdg_lock);
   mimetype = xdg_mime_get_mime_type_for_data (data, length, &prio);
+  G_UNLOCK (xdg_lock);
+
   if (mimetype == NULL || g_str_equal (mimetype, XDG_MIME_TYPE_UNKNOWN))
     return;
 
