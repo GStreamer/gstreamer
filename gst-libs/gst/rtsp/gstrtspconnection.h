@@ -102,6 +102,7 @@ GstRTSPResult      gst_rtsp_connection_set_qos_dscp  (GstRTSPConnection *conn,
                                                       guint qos_dscp);
 
 /* accessors */
+GstRTSPUrl *       gst_rtsp_connection_get_url       (const GstRTSPConnection *conn);
 const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
 
 /* async IO */
