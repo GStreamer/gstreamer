@@ -1587,8 +1587,8 @@ refuse_caps:
 refuse_renegotiation:
   {
     GST_WARNING_OBJECT (qtmux,
-        "pad %s refused renegotiation to %" GST_PTR_FORMAT,
-        GST_PAD_NAME (pad), caps);
+        "pad %s refused renegotiation to %" GST_PTR_FORMAT " from %"
+        GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, GST_PAD_CAPS (pad));
     gst_object_unref (qtmux);
     return FALSE;
   }
