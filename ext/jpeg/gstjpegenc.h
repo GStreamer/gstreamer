@@ -57,7 +57,6 @@ struct _GstJpegEnc {
   gint height;
   /* the video buffer */
   gint bufsize;
-  GstBuffer *buffer;
   guint row_stride;
   /* the jpeg line buffer */
   guchar **line[3];

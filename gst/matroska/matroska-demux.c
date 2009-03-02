@@ -3864,7 +3864,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
   GST_BUFFER_SIZE (newbuf) = strlen (utf8);
   gst_buffer_copy_metadata (newbuf, *buf,
       GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_FLAGS);
-  gst_buffer_unref (buf);
+  gst_buffer_unref (*buf);
 
   *buf = newbuf;
   return GST_FLOW_OK;
@@ -5135,9 +5135,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       guint rformat;
       guint subformat;
 
-      gst_util_dump_mem (data, size);
-      gst_util_dump_mem (data + 0x1a, size - 0x1a);
-
       subformat = GST_READ_UINT32_BE (data + 0x1a);
       rformat = GST_READ_UINT32_BE (data + 0x1e);
 
@@ -5503,7 +5500,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       guint extra_data_size;
 
       GST_ERROR ("real audio raversion:%d", raversion);
-      gst_util_dump_mem (data, size);
       if (raversion == 8) {
         /* COOK */
         flavor = GST_READ_UINT16_BE (data + 22);

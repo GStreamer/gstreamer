@@ -57,6 +57,7 @@ struct _GstDVDec {
   gint           quality;
 
   gboolean       PAL;
+  gboolean       interlaced;
   gboolean       wide;
   gint           frame_len;
 

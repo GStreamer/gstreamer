@@ -186,6 +186,7 @@ struct _GstRTSPSrc {
   guint             latency;
   guint             connection_speed;
   GstRTSPNatMethod  nat_method;
+  gboolean          do_rtcp;
 
   /* state */
   GstRTSPState       state;

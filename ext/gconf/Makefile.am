@@ -7,7 +7,7 @@ libgstgconfelements_la_SOURCES = \
 	gstgconfvideosink.c \
 	gstgconfvideosrc.c \
 	gstswitchsink.c \
-	gconf.c
+	gstgconf.c
 
 DIR_CFLAGS = -DGST_GCONF_DIR=\"/system/gstreamer/@GST_MAJORMINOR@\"
 libgstgconfelements_la_CFLAGS = $(GST_CFLAGS) $(GCONF_CFLAGS) $(DIR_CFLAGS)
@@ -22,4 +22,4 @@ noinst_HEADERS = \
 	gstgconfvideosink.h \
 	gstgconfvideosrc.h \
 	gstswitchsink.h \
-	gconf.h
+	gstgconf.h

@@ -40,6 +40,9 @@ typedef struct _GstGConfVideoSrc {
   GstElement *kid;
   GstPad *pad;
 
+  /* gconf key notification id */
+  guint notify_id;
+
   /* Current gconf string */
   gchar *gconf_str;
 } GstGConfVideoSrc;

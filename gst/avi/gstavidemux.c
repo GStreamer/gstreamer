@@ -619,9 +619,13 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      /* handle seeking */
-      res = gst_avi_demux_handle_seek (avi, pad, event);
-      gst_event_unref (event);
+      /* handle seeking only in pull mode */
+      if (!avi->streaming) {
+        res = gst_avi_demux_handle_seek (avi, pad, event);
+        gst_event_unref (event);
+      } else {
+        res = gst_pad_event_default (pad, event);
+      }
       break;
     case GST_EVENT_QOS:
     case GST_EVENT_NAVIGATION:
@@ -1707,7 +1711,7 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
           goto next;
         }
         _dmlh = (gst_riff_dmlh *) GST_BUFFER_DATA (sub);
-        dmlh.totalframes = GUINT32_FROM_LE (_dmlh->totalframes);
+        dmlh.totalframes = GST_READ_UINT32_LE (&_dmlh->totalframes);
 
         GST_INFO_OBJECT (avi, "dmlh tag found:");
         GST_INFO_OBJECT (avi, " totalframes: %u", dmlh.totalframes);
@@ -1799,10 +1803,10 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     GstFormat format;
 
     _entry = &((gst_riff_index_entry *) data)[i];
-    entry.id = GUINT32_FROM_LE (_entry->id);
-    entry.offset = GUINT32_FROM_LE (_entry->offset);
-    entry.flags = GUINT32_FROM_LE (_entry->flags);
-    entry.size = GUINT32_FROM_LE (_entry->size);
+    entry.id = GST_READ_UINT32_LE (&_entry->id);
+    entry.offset = GST_READ_UINT32_LE (&_entry->offset);
+    entry.flags = GST_READ_UINT32_LE (&_entry->flags);
+    entry.size = GST_READ_UINT32_LE (&_entry->size);
     target = &entries[n];
 
     if (entry.id == GST_RIFF_rec || entry.id == 0 ||
@@ -3599,7 +3603,7 @@ static GstBuffer *
 gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
 {
   GstStructure *s;
-  gint y, h = stream->strf.vids->height;
+  gint y, w, h;
   gint bpp, stride;
   guint8 *tmp = NULL;
 
@@ -3616,7 +3620,14 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
     return buf;
   }
 
-  stride = stream->strf.vids->width * (bpp / 8);
+  if (stream->strf.vids == NULL) {
+    GST_WARNING ("Failed to retrieve vids for stream");
+    return buf;
+  }
+
+  h = stream->strf.vids->height;
+  w = stream->strf.vids->width;
+  stride = w * (bpp / 8);
 
   buf = gst_buffer_make_writable (buf);
   if (GST_BUFFER_SIZE (buf) < (stride * h)) {
@@ -4239,6 +4250,7 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   if (active) {
     avi->segment_running = TRUE;
+    avi->streaming = FALSE;
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
         sinkpad);
   } else {
@@ -4250,9 +4262,11 @@ gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 static gboolean
 gst_avi_demux_activate_push (GstPad * pad, gboolean active)
 {
+  GstAviDemux *avi = GST_AVI_DEMUX (GST_OBJECT_PARENT (pad));
 
   if (active) {
     GST_DEBUG ("avi: activating push/chain function");
+    avi->streaming = TRUE;
   } else {
     GST_DEBUG ("avi: deactivating push/chain function");
   }

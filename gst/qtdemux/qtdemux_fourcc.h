@@ -90,6 +90,7 @@ G_BEGIN_DECLS
 #define FOURCC__day     GST_MAKE_FOURCC(0xa9,'d','a','y')
 #define FOURCC__req     GST_MAKE_FOURCC(0xa9,'r','e','q')
 #define FOURCC__enc     GST_MAKE_FOURCC(0xa9,'e','n','c')
+#define FOURCC__inf     GST_MAKE_FOURCC(0xa9,'i','n','f')
 #define FOURCC_cprt     GST_MAKE_FOURCC('c','p','r','t')
 #define FOURCC_gnre     GST_MAKE_FOURCC('g','n','r','e')
 #define FOURCC_disc     GST_MAKE_FOURCC('d','i','s','c')

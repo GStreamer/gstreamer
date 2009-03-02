@@ -115,12 +115,17 @@ beach:
 int
 gst_udp_set_loop_ttl (int sockfd, gboolean loop, int ttl)
 {
+  socklen_t socklen;
+  struct sockaddr_storage addr;
   int ret = -1;
-
-#if 0
   int l = (loop == FALSE) ? 0 : 1;
 
-  switch (addr->ss_family) {
+  socklen = sizeof (addr);
+  if ((ret = getsockname (sockfd, (struct sockaddr *) &addr, &socklen)) < 0) {
+    return ret;
+  }
+
+  switch (addr.ss_family) {
     case AF_INET:
     {
       if ((ret =
@@ -149,9 +154,12 @@ gst_udp_set_loop_ttl (int sockfd, gboolean loop, int ttl)
       break;
     }
     default:
+#ifdef G_OS_WIN32
+      WSASetLastError (WSAEAFNOSUPPORT);
+#else
       errno = EAFNOSUPPORT;
-  }
 #endif
+  }
   return ret;
 }
 

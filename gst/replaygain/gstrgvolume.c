@@ -563,6 +563,20 @@ gst_rg_volume_tag_event (GstRgVolume * self, GstEvent * event)
     has_album_peak = FALSE;
   }
 
+  /* Clamp peaks >1.0.  Float based decoders can produce spurious samples >1.0,
+   * cutting these files back to 1.0 should not cause any audible distortion.
+   * This is most often seen with Vorbis files. */
+  if (has_track_peak && self->track_peak > 1.) {
+    GST_DEBUG_OBJECT (self,
+        "clamping track peak %" PEAK_FORMAT " to 1.0", self->track_peak);
+    self->track_peak = 1.0;
+  }
+  if (has_album_peak && self->album_peak > 1.) {
+    GST_DEBUG_OBJECT (self,
+        "clamping album peak %" PEAK_FORMAT " to 1.0", self->album_peak);
+    self->album_peak = 1.0;
+  }
+
   self->has_track_gain |= has_track_gain;
   self->has_track_peak |= has_track_peak;
   self->has_album_gain |= has_album_gain;

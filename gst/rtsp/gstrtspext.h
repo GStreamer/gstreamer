@@ -76,6 +76,7 @@ GstRTSPResult gst_rtsp_ext_list_stream_select     (GstRTSPExtensionList *ext, Gs
 void          gst_rtsp_ext_list_connect           (GstRTSPExtensionList *ext,
 			                           const gchar *detailed_signal, GCallback c_handler,
                                                    gpointer data);
+GstRTSPResult gst_rtsp_ext_list_receive_request   (GstRTSPExtensionList *ext, GstRTSPMessage *req);
 
 G_END_DECLS
 

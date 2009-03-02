@@ -46,6 +46,9 @@ typedef struct _GstGConfVideoSink {
   GstElement *kid;
   GstPad *pad;
 
+  /* gconf notify id */
+  guint notify_id;
+
   /* Current gconf string */
   gchar *gconf_str;
 } GstGConfVideoSink;

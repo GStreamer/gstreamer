@@ -145,6 +145,57 @@ gst_alaw_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
   return ret;
 }
 
+static GstCaps *
+gst_alaw_dec_getcaps (GstPad * pad)
+{
+  GstALawDec *alawdec;
+  GstPad *otherpad;
+  GstCaps *base_caps, *othercaps;
+
+  alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
+
+  base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+  if (pad == alawdec->srcpad) {
+    otherpad = alawdec->sinkpad;
+  } else {
+    otherpad = alawdec->srcpad;
+  }
+  othercaps = gst_pad_peer_get_caps (otherpad);
+  if (othercaps) {
+    GstStructure *structure;
+    const GValue *orate, *ochans;
+    const GValue *rate, *chans;
+    GValue irate = { 0 };
+    GValue ichans = { 0 };
+
+    if (gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps))
+      goto done;
+
+    structure = gst_caps_get_structure (othercaps, 0);
+    orate = gst_structure_get_value (structure, "rate");
+    ochans = gst_structure_get_value (structure, "channels");
+
+    structure = gst_caps_get_structure (base_caps, 0);
+    rate = gst_structure_get_value (structure, "rate");
+    chans = gst_structure_get_value (structure, "channels");
+
+    if (orate) {
+      gst_value_intersect (&irate, orate, rate);
+      gst_structure_set_value (structure, "rate", &irate);
+    }
+
+    if (ochans) {
+      gst_value_intersect (&ichans, ochans, chans);
+      gst_structure_set_value (structure, "channels", &ichans);
+    }
+
+  done:
+    gst_caps_unref (othercaps);
+  }
+  return base_caps;
+}
+
 static void
 gst_alaw_dec_base_init (gpointer klass)
 {
@@ -177,6 +228,8 @@ gst_alaw_dec_init (GstALawDec * alawdec, GstALawDecClass * klass)
       gst_pad_new_from_static_template (&alaw_dec_sink_factory, "sink");
   gst_pad_set_setcaps_function (alawdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_alaw_dec_sink_setcaps));
+  gst_pad_set_getcaps_function (alawdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_dec_getcaps));
   gst_pad_set_chain_function (alawdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_alaw_dec_chain));
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->sinkpad);
@@ -184,6 +237,8 @@ gst_alaw_dec_init (GstALawDec * alawdec, GstALawDecClass * klass)
   alawdec->srcpad =
       gst_pad_new_from_static_template (&alaw_dec_src_factory, "src");
   gst_pad_use_fixed_caps (alawdec->srcpad);
+  gst_pad_set_getcaps_function (alawdec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_dec_getcaps));
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->srcpad);
 }
 
@@ -238,14 +293,14 @@ gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
 not_negotiated:
   {
     gst_buffer_unref (buffer);
-    GST_ERROR_OBJECT (alawdec, "no format negotiated");
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    return ret;
+    GST_WARNING_OBJECT (alawdec, "no input format set: not-negotiated");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 alloc_failed:
   {
     gst_buffer_unref (buffer);
-    GST_ERROR_OBJECT (alawdec, "pad alloc failed");
+    GST_DEBUG_OBJECT (alawdec, "pad alloc failed, flow: %s",
+        gst_flow_get_name (ret));
     return ret;
   }
 }

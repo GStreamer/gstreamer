@@ -449,15 +449,17 @@ is_nal_equal (const guint8 * nal1, const guint8 * nal2, guint len)
   if (!remainder) {
     return TRUE;
   } else if (1 == remainder) {
-    return (nal1[--len] == nal2[len]);
+    --len;
+    return (nal1[len] == nal2[len]);
   } else {                      /* 2 or 3 */
     if (remainder & 1) {        /* -1 if 3 bytes left */
-      if (nal1[--len] != nal2[len])
+      --len;
+      if (nal1[len] != nal2[len])
         return FALSE;
     }
     /* last 2 bytes */
-    return ((nal1[--len] == nal2[len])  /* -1 */
-        &&(nal1[--len] == nal2[len]));  /* -2 */
+    return ((nal1[len - 1] == nal2[len - 1])    /* -1 */
+        &&(nal1[len - 2] == nal2[len - 2]));    /* -2 */
   }
 }
 
@@ -467,89 +469,71 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 {
   guint8 *sps = NULL, *pps = NULL;
   guint sps_len = 0, pps_len = 0;
+  guint8 header, type;
+  guint len;
 
   /* default is no update */
   *updated = FALSE;
 
-  if (size <= 3) {
-    GST_WARNING ("Encoded buffer len %u <= 3", size);
+  GST_DEBUG ("NAL payload len=%u", size);
+
+  len = size;
+  header = data[0];
+  type = header & 0x1f;
+
+  /* keep sps & pps separately so that we can update either one 
+   * independently */
+  if (SPS_TYPE_ID == type) {
+    /* encode the entire SPS NAL in base64 */
+    GST_DEBUG ("Found SPS %x %x %x Len=%u", (header >> 7),
+        (header >> 5) & 3, type, len);
+
+    sps = data;
+    sps_len = len;
+  } else if (PPS_TYPE_ID == type) {
+    /* encoder the entire PPS NAL in base64 */
+    GST_DEBUG ("Found PPS %x %x %x Len = %u",
+        (header >> 7), (header >> 5) & 3, type, len);
+
+    pps = data;
+    pps_len = len;
   } else {
-    GST_DEBUG ("NAL payload len=%u", size);
+    GST_DEBUG ("NAL: %x %x %x Len = %u", (header >> 7),
+        (header >> 5) & 3, type, len);
+  }
 
-    /* loop through all NAL units and save the locations of any
-     * SPS / PPS for later processing. Only the last seen SPS
-     * or PPS will be considered */
-    while (size > 5) {
-      guint8 header, type;
-      guint len;
 
-      len = next_start_code (data, size);
-      header = data[0];
-      type = header & 0x1f;
+  /* If we encountered an SPS and/or a PPS, check if it's the
+   * same as the one we have. If not, update our version and
+   * set *updated to TRUE
+   */
+  if (sps_len > 0) {
+    if ((payloader->sps_len != sps_len)
+        || !is_nal_equal (payloader->sps, sps, sps_len)) {
+      payloader->profile = (sps[1] << 16) + (sps[2] << 8) + sps[3];
 
-      /* keep sps & pps separately so that we can update either one 
-       * independently */
-      if (SPS_TYPE_ID == type) {
-        /* encode the entire SPS NAL in base64 */
-        GST_DEBUG ("Found SPS %x %x %x Len=%u", (header >> 7),
-            (header >> 5) & 3, type, len);
+      GST_DEBUG ("Profile level IDC = %06x", payloader->profile);
 
-        sps = data;
-        sps_len = len;
-      } else if (PPS_TYPE_ID == type) {
-        /* encoder the entire PPS NAL in base64 */
-        GST_DEBUG ("Found PPS %x %x %x Len = %u",
-            (header >> 7), (header >> 5) & 3, type, len);
+      if (payloader->sps_len)
+        g_free (payloader->sps);
 
-        pps = data;
-        pps_len = len;
-      } else {
-        GST_DEBUG ("NAL: %x %x %x Len = %u", (header >> 7),
-            (header >> 5) & 3, type, len);
-      }
-
-      /* end of loop */
-      if (len >= size - 4) {
-        break;
-      }
-
-      /* next NAL start */
-      data += len + 4;
-      size -= len + 4;
+      payloader->sps = sps_len ? g_new (guint8, sps_len) : NULL;
+      memcpy (payloader->sps, sps, sps_len);
+      payloader->sps_len = sps_len;
+      *updated = TRUE;
     }
+  }
 
-    /* If we encountered an SPS and/or a PPS, check if it's the
-     * same as the one we have. If not, update our version and
-     * set *updated to TRUE
-     */
-    if (sps_len > 0) {
-      if ((payloader->sps_len != sps_len)
-          || !is_nal_equal (payloader->sps, sps, sps_len)) {
-        payloader->profile = (sps[1] << 16) + (sps[2] << 8) + sps[3];
+  if (pps_len > 0) {
+    if ((payloader->pps_len != pps_len)
+        || !is_nal_equal (payloader->pps, pps, pps_len)) {
+      if (payloader->pps_len)
+        g_free (payloader->pps);
 
-        GST_DEBUG ("Profile level IDC = %06x", payloader->profile);
-
-        if (payloader->sps_len)
-          g_free (payloader->sps);
-
-        payloader->sps = sps_len ? g_new (guint8, sps_len) : NULL;
-        memcpy (payloader->sps, sps, sps_len);
-        payloader->sps_len = sps_len;
-        *updated = TRUE;
-      }
-    }
-
-    if (pps_len > 0) {
-      if ((payloader->pps_len != pps_len)
-          || !is_nal_equal (payloader->pps, pps, pps_len)) {
-        if (payloader->pps_len)
-          g_free (payloader->pps);
-
-        payloader->pps = pps_len ? g_new (guint8, pps_len) : NULL;
-        memcpy (payloader->pps, pps, pps_len);
-        payloader->pps_len = pps_len;
-        *updated = TRUE;
-      }
+      payloader->pps = pps_len ? g_new (guint8, pps_len) : NULL;
+      memcpy (payloader->pps, pps, pps_len);
+      payloader->pps_len = pps_len;
+      *updated = TRUE;
     }
   }
 }

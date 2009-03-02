@@ -146,6 +146,7 @@ enum
 #define DEFAULT_LATENCY_MS       3000
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
+#define DEFAULT_DO_RTCP          TRUE
 
 enum
 {
@@ -159,6 +160,7 @@ enum
   PROP_LATENCY,
   PROP_CONNECTION_SPEED,
   PROP_NAT_METHOD,
+  PROP_DO_RTCP,
   PROP_LAST
 };
 
@@ -335,6 +337,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           GST_TYPE_RTSP_NAT_METHOD, DEFAULT_NAT_METHOD,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstRTSPSrc::do-rtcp
+   *
+   * Enable RTCP support. Some old server don't like RTCP and then this property
+   * needs to be set to FALSE.
+   *
+   * Since: 0.10.15
+   */
+  g_object_class_install_property (gobject_class, PROP_DO_RTCP,
+      g_param_spec_boolean ("do-rtcp", "Do RTCP",
+          "Don't send RTCP packets",
+          DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -454,6 +469,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_NAT_METHOD:
       rtspsrc->nat_method = g_value_get_enum (value);
       break;
+    case PROP_DO_RTCP:
+      rtspsrc->do_rtcp = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -501,6 +519,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NAT_METHOD:
       g_value_set_enum (value, rtspsrc->nat_method);
+      break;
+    case PROP_DO_RTCP:
+      g_value_set_boolean (value, rtspsrc->do_rtcp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1942,8 +1963,8 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     }
     gst_object_unref (template);
   }
-  /* setup RTCP transport back to the server */
-  if (src->session) {
+  /* setup RTCP transport back to the server if we have to. */
+  if (src->session && src->do_rtcp) {
     GstPad *pad;
 
     template = gst_static_pad_template_get (&anysinktemplate);
@@ -2162,7 +2183,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
   }
   /* it's possible that the server does not want us to send RTCP in which case
    * the port is -1 */
-  if (rtcp_port != -1 && src->session != NULL) {
+  if (rtcp_port != -1 && src->session != NULL && src->do_rtcp) {
     GST_DEBUG_OBJECT (src, "configure RTCP UDP sink for %s:%d", destination,
         rtcp_port);
 
@@ -2536,20 +2557,25 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPMessage * request)
   if (src->debug)
     gst_rtsp_message_dump (request);
 
-  res =
-      gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, "OK",
-      request);
-  if (res < 0)
-    goto send_error;
+  res = gst_rtsp_ext_list_receive_request (src->extensions, request);
 
-  GST_DEBUG_OBJECT (src, "replying with OK");
+  if (res == GST_RTSP_ENOTIMPL) {
+    /* default implementation, send OK */
+    res =
+        gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, "OK",
+        request);
+    if (res < 0)
+      goto send_error;
 
-  if (src->debug)
-    gst_rtsp_message_dump (&response);
+    GST_DEBUG_OBJECT (src, "replying with OK");
 
-  res = gst_rtspsrc_connection_send (src, &response, NULL);
-  if (res < 0)
-    goto send_error;
+    if (src->debug)
+      gst_rtsp_message_dump (&response);
+
+    res = gst_rtspsrc_connection_send (src, &response, NULL);
+    if (res < 0)
+      goto send_error;
+  }
 
   return GST_RTSP_OK;
 
@@ -3785,7 +3811,8 @@ failed:
 }
 
 static GstRTSPResult
-gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
+gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports,
+    gint orig_rtpport, gint orig_rtcpport)
 {
   GstRTSPSrc *src;
   gint nr_udp, nr_int;
@@ -3814,8 +3841,13 @@ gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
     goto done;
 
   if (nr_udp > 0) {
-    if (!gst_rtspsrc_alloc_udp_ports (stream, &rtpport, &rtcpport))
-      goto failed;
+    if (!orig_rtpport || !orig_rtcpport) {
+      if (!gst_rtspsrc_alloc_udp_ports (stream, &rtpport, &rtcpport))
+        goto failed;
+    } else {
+      rtpport = orig_rtpport;
+      rtcpport = orig_rtcpport;
+    }
   }
 
   str = g_string_new ("");
@@ -3875,6 +3907,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   GstRTSPStream *stream = NULL;
   GstRTSPLowerTrans protocols;
   GstRTSPStatusCode code;
+  gint rtpport, rtcpport;
 
   /* we initially allow all configured lower transports. based on the URL
    * transports and the replies from the server we narrow them down. */
@@ -3887,9 +3920,11 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   src->free_channel = 0;
   src->interleaved = FALSE;
   src->need_activate = FALSE;
+  rtpport = rtcpport = 0;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
+    gint retry = 0;
 
     stream = (GstRTSPStream *) walk->data;
 
@@ -3930,6 +3965,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
         stream->setup_url);
 
+  retry:
     /* create a string with all the transports */
     res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
     if (res < 0)
@@ -3939,7 +3975,8 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
     /* replace placeholders with real values, this function will optionally
      * allocate UDP ports and other info needed to execute the setup request */
-    res = gst_rtspsrc_prepare_transports (stream, &transports);
+    res = gst_rtspsrc_prepare_transports (stream, &transports,
+        retry > 0 ? rtpport : 0, retry > 0 ? rtcpport : 0);
     if (res < 0)
       goto setup_transport_failed;
 
@@ -3966,8 +4003,17 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       case GST_RTSP_STS_UNSUPPORTED_TRANSPORT:
         gst_rtsp_message_unset (&request);
         gst_rtsp_message_unset (&response);
-        /* cleanup of leftover transport and move to the next stream */
+        /* cleanup of leftover transport */
         gst_rtspsrc_stream_free_udp (stream);
+        /* MS WMServer RTSP MUST use same UDP pair in all SETUP requests;
+         * we might be in this case */
+        if (stream->container && rtpport && rtcpport && !retry) {
+          GST_DEBUG_OBJECT (src, "retrying with original port pair %u-%u",
+              rtpport, rtcpport);
+          retry++;
+          goto retry;
+        }
+        /* give up on this stream and move to the next stream */
         continue;
       default:
         /* cleanup of leftover transport and move to the next stream */
@@ -4024,13 +4070,17 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
           break;
       }
 
-      if (!stream->container || !src->interleaved) {
+      if (!stream->container || (!src->interleaved && !retry)) {
         /* now configure the stream with the selected transport */
         if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
           GST_DEBUG_OBJECT (src,
               "could not configure stream %p transport, skipping stream",
               stream);
           goto next;
+        } else if (stream->udpsrc[0] && stream->udpsrc[1]) {
+          /* retain the first allocated UDP port pair */
+          g_object_get (G_OBJECT (stream->udpsrc[0]), "port", &rtpport, NULL);
+          g_object_get (G_OBJECT (stream->udpsrc[1]), "port", &rtcpport, NULL);
         }
       }
       /* we need to activate at least one streams when we detect activity */

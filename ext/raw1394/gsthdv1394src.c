@@ -317,7 +317,7 @@ gst_hdv1394src_iec61883_receive (unsigned char *data, int len,
     return -1;
 
   if (len == IEC61883_MPEG2_TSP_SIZE) {
-    memcpy (dv1394src->outdata + dv1394src->outoffset, data, len);
+    memcpy ((guint8 *) dv1394src->outdata + dv1394src->outoffset, data, len);
     dv1394src->outoffset += len;
   }
   dv1394src->frame_sequence++;

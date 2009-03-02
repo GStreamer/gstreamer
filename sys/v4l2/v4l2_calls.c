@@ -400,6 +400,7 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
 {
   struct stat st;
   int libv4l2_fd;
+  GstPollFD pollfd = GST_POLL_FD_INIT;
 
   GST_DEBUG_OBJECT (v4l2object->element, "Trying to open device %s",
       v4l2object->videodev);
@@ -452,6 +453,10 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   GST_INFO_OBJECT (v4l2object->element,
       "Opened device '%s' (%s) successfully",
       v4l2object->vcap.card, v4l2object->videodev);
+
+  pollfd.fd = v4l2object->video_fd;
+  gst_poll_add_fd (v4l2object->poll, &pollfd);
+  gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
 
   return TRUE;
 
@@ -508,6 +513,7 @@ error:
 gboolean
 gst_v4l2_close (GstV4l2Object * v4l2object)
 {
+  GstPollFD pollfd = GST_POLL_FD_INIT;
   GST_DEBUG_OBJECT (v4l2object->element, "Trying to close %s",
       v4l2object->videodev);
 
@@ -516,6 +522,8 @@ gst_v4l2_close (GstV4l2Object * v4l2object)
 
   /* close device */
   v4l2_close (v4l2object->video_fd);
+  pollfd.fd = v4l2object->video_fd;
+  gst_poll_remove_fd (v4l2object->poll, &pollfd);
   v4l2object->video_fd = -1;
 
   /* empty lists */
