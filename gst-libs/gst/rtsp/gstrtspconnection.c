@@ -419,8 +419,6 @@ do_connect (const gchar * ip, guint16 port, GstPollFD * fdout,
   GstClockTime to;
   gint retval;
 
-  g_message ("connect %s:%u", ip, port);
-
   memset (&sa_in, 0, sizeof (sa_in));
   sa_in.sin_family = AF_INET;   /* network socket */
   sa_in.sin_port = htons (port);        /* on port */
