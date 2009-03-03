@@ -39,6 +39,7 @@ static gchar *convert_to_utf8 (const gchar * text, gint length, guint start,
 static gchar *get_encoding (const gchar * text, guint * start_text,
     gboolean * is_multibyte);
 static gchar *get_encoding_and_convert (const gchar * text, guint length);
+static void mpegts_packetizer_destroy_streams_value (gpointer data);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
@@ -96,6 +97,15 @@ mpegts_packetizer_stream_free (MpegTSPacketizerStream * stream)
 }
 
 static void
+mpegts_packetizer_destroy_streams_value (gpointer data)
+{
+  MpegTSPacketizerStream *stream;
+
+  stream = (MpegTSPacketizerStream *) data;
+  mpegts_packetizer_stream_free (stream);
+}
+
+static void
 mpegts_packetizer_clear_section (MpegTSPacketizer * packetizer,
     MpegTSPacketizerStream * stream)
 {
@@ -120,7 +130,8 @@ static void
 mpegts_packetizer_init (MpegTSPacketizer * packetizer)
 {
   packetizer->adapter = gst_adapter_new ();
-  packetizer->streams = g_hash_table_new (g_direct_hash, g_direct_equal);
+  packetizer->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, mpegts_packetizer_destroy_streams_value);
 }
 
 static void
@@ -138,24 +149,11 @@ mpegts_packetizer_dispose (GObject * object)
     G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose (object);
 }
 
-static gboolean
-stream_foreach_remove (gpointer key, gpointer value, gpointer data)
-{
-  MpegTSPacketizerStream *stream;
-
-  stream = (MpegTSPacketizerStream *) value;
-  mpegts_packetizer_stream_free (stream);
-
-  return TRUE;
-}
-
 static void
 mpegts_packetizer_finalize (GObject * object)
 {
   MpegTSPacketizer *packetizer = GST_MPEGTS_PACKETIZER (object);
 
-  g_hash_table_foreach_remove (packetizer->streams,
-      stream_foreach_remove, packetizer);
   g_hash_table_destroy (packetizer->streams);
 
   if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize)
@@ -1820,16 +1818,6 @@ error:
   return NULL;
 }
 
-static void
-foreach_stream_clear (gpointer key, gpointer value, gpointer data)
-{
-  MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *) value;
-
-  /* remove the stream */
-  g_object_unref (stream->section_adapter);
-  g_free (stream);
-}
-
 static gboolean
 remove_all (gpointer key, gpointer value, gpointer user_data)
 {
@@ -1839,8 +1827,6 @@ remove_all (gpointer key, gpointer value, gpointer user_data)
 void
 mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
 {
-  g_hash_table_foreach (packetizer->streams, foreach_stream_clear, packetizer);
-
   /* FIXME can't use remove_all because we don't depend on 2.12 yet */
   g_hash_table_foreach_remove (packetizer->streams, remove_all, NULL);
   gst_adapter_clear (packetizer->adapter);
