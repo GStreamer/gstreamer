@@ -13,7 +13,7 @@ TESTS_ENVIRONMENT = \
 	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
 	STATE_IGNORE_ELEMENTS="aasink autoaudiosrc autoaudiosink autovideosrc autovideosink cacasink cairotextoverlay gconfaudiosrc gconfvideosrc gconfaudiosink gconfvideosink halaudiosrc halaudiosink v4l2src osssrc osssink pulsesink pulsesrc pulsemixer"
 
-EXTRA_DIST = test-cert.pem test-key.pem
+EXTRA_DIST = test-cert.pem test-key.pem audiotestsrc.flac
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
@@ -98,6 +98,7 @@ check_PROGRAMS = \
 	elements/videocrop \
 	elements/videofilter \
 	pipelines/simple-launch-lines \
+	pipelines/flacdec \
 	$(check_gdkpixbuf) \
 	$(check_soup) \
 	$(check_sunaudio) \
