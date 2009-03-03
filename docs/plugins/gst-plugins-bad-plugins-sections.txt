@@ -1020,3 +1020,30 @@ GST_TYPE_Y4M_ENCODE
 gst_y4m_encode_get_type
 </SECTION>
 
+<SECTION>
+<FILE>element-mimdec</FILE>
+<TITLE>mimdec</TITLE>
+GstMimDec
+<SUBSECTION Standard>
+GstMimDecClass
+GST_IS_MIMDEC
+GST_IS_MIMDEC_CLASS
+GST_MIMDEC
+GST_MIMDEC_CLASS
+GST_TYPE_MIMDEC
+gst_mimdec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-mimenc</FILE>
+<TITLE>mimenc</TITLE>
+GstMimEnc
+<SUBSECTION Standard>
+GstMimEncClass
+GST_IS_MIMENC
+GST_IS_MIMENC_CLASS
+GST_MIMENC
+GST_MIMENC_CLASS
+GST_TYPE_MIMENC
+gst_mimenc_get_type
+</SECTION>

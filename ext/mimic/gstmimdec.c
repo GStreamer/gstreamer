@@ -21,6 +21,15 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-mimdec
+ * @see_also: mimenc
+ *
+ * The MIMIC codec is used by MSN Messenger's webcam support. It consumes the
+ * TCP header for the MIMIC codec.
+ *
+ * Its fourcc is ML20.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

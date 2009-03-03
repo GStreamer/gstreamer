@@ -1,0 +1,55 @@
+<plugin>
+  <name>mimic</name>
+  <description>Mimic codec</description>
+  <filename>../../ext/mimic/.libs/libgstmimic.so</filename>
+  <basename>libgstmimic.so</basename>
+  <version>0.10.10.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mimdec</name>
+      <longname>MimDec</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Mimic decoder</description>
+      <author>Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;, Rob Taylor &lt;robtaylor@fastmail.fm&gt;, Philippe Khalaf &lt;burger@speedy.org&gt;, Ole André Vadla Ravnås &lt;oleavr@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-mimic</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, framerate=(fraction)[ 0/1, 30/1 ], red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, height=(int)[ 16, 4096 ], width=(int)[ 16, 4096 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>mimenc</name>
+      <longname>MimEnc</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>Mimic encoder</description>
+      <author>Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, framerate=(fraction)[ 1/1, 30/1 ], red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)320, height=(int)240; video/x-raw-rgb, bpp=(int)24, depth=(int)24, endianness=(int)4321, framerate=(fraction)[ 1/1, 30/1 ], red_mask=(int)16711680, green_mask=(int)65280, blue_mask=(int)255, width=(int)160, height=(int)120</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-mimic</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
