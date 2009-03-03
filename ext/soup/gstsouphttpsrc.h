@@ -83,6 +83,8 @@ struct _GstSoupHTTPSrc {
   gchar *iradio_genre;
   gchar *iradio_url;
   gchar *iradio_title;
+
+  guint timeout;
 };
 
 struct _GstSoupHTTPSrcClass {
