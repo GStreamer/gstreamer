@@ -835,7 +835,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
    * of the segment */
   if (flacdec->segment.format == GST_FORMAT_DEFAULT &&
       flacdec->segment.stop != -1 &&
-      flacdec->segment.last_stop > 0 &&
+      flacdec->segment.last_stop >= 0 &&
       flacdec->segment.last_stop + samples > flacdec->segment.stop) {
     samples = flacdec->segment.stop - flacdec->segment.last_stop;
     GST_DEBUG_OBJECT (flacdec,
