@@ -30,24 +30,17 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (
-      !gst_element_register (plugin, "mimenc",
-        GST_RANK_NONE, GST_TYPE_MIMENC) ||
-      !gst_element_register (plugin, "mimdec",
-        GST_RANK_NONE, GST_TYPE_MIMDEC)
-    )
+  if (!gst_element_register (plugin, "mimenc",
+          GST_RANK_NONE, GST_TYPE_MIMENC) ||
+      !gst_element_register (plugin, "mimdec", GST_RANK_NONE, GST_TYPE_MIMDEC)
+      )
     return FALSE;
 
   return TRUE;
 }
 
-GST_PLUGIN_DEFINE (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "mimic",
-  "Mimic codec",
-  plugin_init,
-  VERSION,
-  "GPL",
-  "Farsight",
-  "http://farsight.sf.net/")
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "mimic",
+    "Mimic codec",
+    plugin_init, VERSION, "GPL", "Farsight", "http://farsight.sf.net/")

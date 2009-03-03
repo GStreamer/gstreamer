@@ -33,17 +33,13 @@
 GST_DEBUG_CATEGORY (mimdec_debug);
 #define GST_CAT_DEFAULT (mimdec_debug)
 
-static GstStaticPadTemplate sink_factory =
-GST_STATIC_PAD_TEMPLATE (
-  "sink",
-  GST_PAD_SINK,
-  GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/x-mimic")
-);
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-mimic")
+    );
 
-static GstStaticPadTemplate src_factory =
-GST_STATIC_PAD_TEMPLATE (
-    "src",
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
@@ -54,20 +50,16 @@ GST_STATIC_PAD_TEMPLATE (
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
-        "height = (int) [16, 4096], "
-        "width = (int) [16, 4096]"
-    )
-);
+        "height = (int) [16, 4096], " "width = (int) [16, 4096]")
+    );
 
-static void          gst_mimdec_finalize      (GObject        *object);
+static void gst_mimdec_finalize (GObject * object);
 
-static GstFlowReturn gst_mimdec_chain        (GstPad         *pad,
-                                              GstBuffer      *in);
+static GstFlowReturn gst_mimdec_chain (GstPad * pad, GstBuffer * in);
 static GstStateChangeReturn
-                     gst_mimdec_change_state (GstElement     *element,
-                                              GstStateChange  transition);
+gst_mimdec_change_state (GstElement * element, GstStateChange transition);
 
-static gboolean gst_mimdec_sink_event (GstPad *pad, GstEvent *event);
+static gboolean gst_mimdec_sink_event (GstPad * pad, GstEvent * event);
 
 
 GST_BOILERPLATE (GstMimDec, gst_mimdec, GstElement, GST_TYPE_ELEMENT);
@@ -80,9 +72,9 @@ gst_mimdec_base_init (gpointer klass)
     "Codec/Decoder/Video",
     "Mimic decoder",
     "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
-    "Rob Taylor <robtaylor@fastmail.fm>, "
-    "Philippe Khalaf <burger@speedy.org>, "
-    "Ole André Vadla Ravnås <oleavr@gmail.com>"
+        "Rob Taylor <robtaylor@fastmail.fm>, "
+        "Philippe Khalaf <burger@speedy.org>, "
+        "Ole André Vadla Ravnås <oleavr@gmail.com>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -95,13 +87,13 @@ gst_mimdec_base_init (gpointer klass)
 }
 
 static void
-gst_mimdec_class_init (GstMimDecClass *klass)
+gst_mimdec_class_init (GstMimDecClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass*) klass;
-  gstelement_class = (GstElementClass*) klass;
+  gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstelement_class->change_state = gst_mimdec_change_state;
 
   gobject_class->finalize = gst_mimdec_finalize;
@@ -110,16 +102,18 @@ gst_mimdec_class_init (GstMimDecClass *klass)
 }
 
 static void
-gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
+gst_mimdec_init (GstMimDec * mimdec, GstMimDecClass * klass)
 {
-  mimdec->sinkpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&sink_factory), "sink");
+  mimdec->sinkpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
+      "sink");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->sinkpad);
   gst_pad_set_chain_function (mimdec->sinkpad, gst_mimdec_chain);
   gst_pad_set_event_function (mimdec->sinkpad, gst_mimdec_sink_event);
 
-  mimdec->srcpad = gst_pad_new_from_template (
-      gst_static_pad_template_get (&src_factory), "src");
+  mimdec->srcpad =
+      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
+      "src");
   gst_element_add_pad (GST_ELEMENT (mimdec), mimdec->srcpad);
 
   mimdec->adapter = gst_adapter_new ();
@@ -132,7 +126,7 @@ gst_mimdec_init (GstMimDec *mimdec, GstMimDecClass *klass)
 }
 
 static void
-gst_mimdec_finalize (GObject *object)
+gst_mimdec_finalize (GObject * object)
 {
   GstMimDec *mimdec = GST_MIMDEC (object);
 
@@ -141,7 +135,7 @@ gst_mimdec_finalize (GObject *object)
 }
 
 static GstFlowReturn
-gst_mimdec_chain (GstPad *pad, GstBuffer *in)
+gst_mimdec_chain (GstPad * pad, GstBuffer * in)
 {
   GstMimDec *mimdec;
   GstBuffer *out_buf, *buf;
@@ -149,7 +143,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   guint32 fourcc;
   guint16 header_size;
   gint width, height;
-  GstCaps * caps;
+  GstCaps *caps;
   GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG ("in gst_mimdec_chain");
@@ -165,7 +159,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   GST_OBJECT_LOCK (mimdec);
 
   // do we have enough bytes to read a header
-  while (gst_adapter_available (mimdec->adapter) >= (mimdec->have_header ? mimdec->payload_size : 24)) {
+  while (gst_adapter_available (mimdec->adapter) >=
+      (mimdec->have_header ? mimdec->payload_size : 24)) {
     if (!mimdec->have_header) {
       header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
       header_size = GUINT16_FROM_LE (*(guint16 *) (header + 0));
@@ -179,7 +174,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
       fourcc = GST_MAKE_FOURCC ('M', 'L', '2', '0');
       if (GUINT32_FROM_LE (*((guint32 *) (header + 12))) != fourcc) {
-        GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code %d", fourcc);
+        GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code %d",
+            fourcc);
         gst_adapter_flush (mimdec->adapter, 24);
         res = GST_FLOW_ERROR;
         goto out;
@@ -196,19 +192,19 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       mimdec->have_header = TRUE;
     }
 
-    if (gst_adapter_available (mimdec->adapter) < mimdec->payload_size)
-    {
+    if (gst_adapter_available (mimdec->adapter) < mimdec->payload_size) {
       goto out;
     }
 
-    frame_body = (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
+    frame_body =
+        (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
 
     if (mimdec->dec == NULL) {
-      GstEvent * event = NULL;
+      GstEvent *event = NULL;
       gboolean result = TRUE;
 
       /* Check if its a keyframe, otherwise skip it */
-      if (GUINT32_FROM_LE(*((guint32 *) (frame_body + 12))) != 0) {
+      if (GUINT32_FROM_LE (*((guint32 *) (frame_body + 12))) != 0) {
         gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
         mimdec->have_header = FALSE;
         res = GST_FLOW_OK;
@@ -236,7 +232,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
         goto out;
       }
 
-      if (!mimic_get_property (mimdec->dec, "buffer_size", &mimdec->buffer_size)) {
+      if (!mimic_get_property (mimdec->dec, "buffer_size",
+              &mimdec->buffer_size)) {
         GST_WARNING_OBJECT (mimdec,
             "mimic_get_property('buffer_size') error\n");
         mimic_close (mimdec->dec);
@@ -256,8 +253,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       if (event)
         result = gst_pad_push_event (mimdec->srcpad, event);
       GST_OBJECT_LOCK (mimdec);
-      if (!result)
-      {
+      if (!result) {
         GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
         res = GST_FLOW_ERROR;
         goto out;
@@ -266,7 +262,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
     out_buf = gst_buffer_new_and_alloc (mimdec->buffer_size);
 
-    if (!mimic_decode_frame (mimdec->dec, frame_body, GST_BUFFER_DATA (out_buf))) {
+    if (!mimic_decode_frame (mimdec->dec, frame_body,
+            GST_BUFFER_DATA (out_buf))) {
       GST_WARNING_OBJECT (mimdec, "mimic_decode_frame error\n");
 
       gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
@@ -277,10 +274,10 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       goto out;
     }
 
-    GST_BUFFER_TIMESTAMP(out_buf) = mimdec->current_ts * GST_MSECOND;
+    GST_BUFFER_TIMESTAMP (out_buf) = mimdec->current_ts * GST_MSECOND;
 
-    mimic_get_property(mimdec->dec, "width", &width);
-    mimic_get_property(mimdec->dec, "height", &height);
+    mimic_get_property (mimdec->dec, "width", &width);
+    mimic_get_property (mimdec->dec, "height", &height);
     GST_DEBUG_OBJECT (mimdec,
         "got WxH %d x %d payload size %d buffer_size %d",
         width, height, mimdec->payload_size, mimdec->buffer_size);
@@ -292,8 +289,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
         "red_mask", G_TYPE_INT, 16711680,
         "green_mask", G_TYPE_INT, 65280,
         "blue_mask", G_TYPE_INT, 255,
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, NULL);
+        "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
     gst_buffer_set_caps (out_buf, caps);
     gst_caps_unref (caps);
     GST_OBJECT_UNLOCK (mimdec);
@@ -304,7 +300,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
     mimdec->have_header = FALSE;
   }
 
- out:
+out:
   GST_OBJECT_UNLOCK (mimdec);
   gst_object_unref (mimdec);
 
@@ -312,7 +308,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 }
 
 static GstStateChangeReturn
-gst_mimdec_change_state (GstElement *element, GstStateChange transition)
+gst_mimdec_change_state (GstElement * element, GstStateChange transition)
 {
   GstMimDec *mimdec;
 
@@ -343,7 +339,7 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
 }
 
 static gboolean
-gst_mimdec_sink_event (GstPad *pad, GstEvent *event)
+gst_mimdec_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstMimDec *mimdec = GST_MIMDEC (gst_pad_get_parent (pad));
@@ -354,28 +350,28 @@ gst_mimdec_sink_event (GstPad *pad, GstEvent *event)
    */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      {
-        gboolean update;
-        GstFormat format;
-        gdouble rate, arate;
-        gint64 start, stop, time;
+    {
+      gboolean update;
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
 
-        gst_event_parse_new_segment_full (event, &update, &rate, &arate,
-            &format, &start, &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+          &format, &start, &stop, &time);
 
-        /* we need TIME and a positive rate */
-        if (format != GST_FORMAT_TIME)
-          goto newseg_wrong_format;
+      /* we need TIME and a positive rate */
+      if (format != GST_FORMAT_TIME)
+        goto newseg_wrong_format;
 
-        if (rate <= 0.0)
-          goto newseg_wrong_rate;
+      if (rate <= 0.0)
+        goto newseg_wrong_rate;
 
-        GST_OBJECT_LOCK (mimdec);
-        mimdec->need_newsegment = FALSE;
-        GST_OBJECT_UNLOCK (mimdec);
+      GST_OBJECT_LOCK (mimdec);
+      mimdec->need_newsegment = FALSE;
+      GST_OBJECT_UNLOCK (mimdec);
 
-        res = gst_pad_push_event (mimdec->srcpad, event);
-      }
+      res = gst_pad_push_event (mimdec->srcpad, event);
+    }
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (mimdec);
@@ -389,19 +385,19 @@ gst_mimdec_sink_event (GstPad *pad, GstEvent *event)
       break;
   }
 
- done:
+done:
 
   gst_object_unref (mimdec);
 
   return res;
 
- newseg_wrong_format:
+newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (mimdec, "received non TIME newsegment");
     gst_event_unref (event);
     goto done;
   }
- newseg_wrong_rate:
+newseg_wrong_rate:
   {
     GST_DEBUG_OBJECT (mimdec, "negative rates not supported yet");
     gst_event_unref (event);

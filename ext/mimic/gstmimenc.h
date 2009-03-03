@@ -28,7 +28,6 @@
 #include <mimic.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_MIMENC \
   (gst_mimenc_get_type())
 #define GST_MIMENC(obj) \
@@ -39,8 +38,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MIMENC))
 #define GST_IS_MIMENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MIMENC))
-
-typedef struct _GstMimEnc      GstMimEnc;
+typedef struct _GstMimEnc GstMimEnc;
 typedef struct _GstMimEncClass GstMimEncClass;
 
 struct _GstMimEnc
@@ -66,5 +64,4 @@ struct _GstMimEncClass
 GType gst_mimenc_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_MIMENC_H__ */
