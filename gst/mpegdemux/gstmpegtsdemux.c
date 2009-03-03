@@ -325,6 +325,8 @@ gst_mpegts_demux_init (GstMpegTSDemux * demux)
   demux->program_number = DEFAULT_PROP_PROGRAM_NUMBER;
   demux->packetsize = MPEGTS_NORMAL_TS_PACKETSIZE;
   demux->m2ts_mode = FALSE;
+  demux->sync_lut = NULL;
+  demux->sync_lut_len = 0;
 
 #ifdef USE_LIBOIL
   oil_init ();
@@ -2503,7 +2505,17 @@ gst_mpegts_demux_sync_scan (GstMpegTSDemux * demux, const guint8 * in_data,
   const guint8 *end_scan = in_data + size - demux->packetsize;
   guint8 *ptr_data = (guint8 *) in_data;
 
-  while (ptr_data <= end_scan && sync_count < LENGTH_SYNC_LUT) {
+  /* Check if the LUT table is big enough */
+  if (G_UNLIKELY (demux->sync_lut_len < (size / MPEGTS_NORMAL_TS_PACKETSIZE))) {
+    demux->sync_lut_len = size / MPEGTS_NORMAL_TS_PACKETSIZE;
+    if (demux->sync_lut)
+      g_free (demux->sync_lut);
+    demux->sync_lut = g_new0 (guint8 *, demux->sync_lut_len);
+    GST_DEBUG_OBJECT (demux, "created sync LUT table with %u entries",
+        demux->sync_lut_len);
+  }
+
+  while (ptr_data <= end_scan && sync_count < demux->sync_lut_len) {
     /* if sync code is found try to store it in the LUT */
     guint chance = is_mpegts_sync (ptr_data, end_scan, demux->packetsize);
     if (G_LIKELY (chance > 50)) {
@@ -2592,7 +2604,6 @@ gst_mpegts_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       demux->adapter = gst_adapter_new ();
-      demux->sync_lut = g_new0 (guint8 *, LENGTH_SYNC_LUT);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -2608,7 +2619,9 @@ gst_mpegts_demux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       g_object_unref (demux->adapter);
-      g_free (demux->sync_lut);
+      if (demux->sync_lut)
+        g_free (demux->sync_lut);
+      demux->sync_lut = NULL;
       break;
     default:
       break;

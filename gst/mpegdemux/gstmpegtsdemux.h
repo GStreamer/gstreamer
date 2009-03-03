@@ -60,8 +60,6 @@ G_BEGIN_DECLS
 #define MPEGTS_NORMAL_TS_PACKETSIZE  188
 #define MPEGTS_M2TS_TS_PACKETSIZE    192
 
-#define LENGTH_SYNC_LUT             256
-
 #define IS_MPEGTS_SYNC(data) (((data)[0] == 0x47) && \
                                     (((data)[1] & 0x80) == 0x00) && \
                                     (((data)[3] & 0x10) == 0x10))
@@ -182,6 +180,7 @@ struct _GstMpegTSDemux {
   GstPad            * sinkpad;
   GstAdapter        * adapter;
   guint8            ** sync_lut;
+  guint             sync_lut_len;
 
   /* current PMT PID */
   guint16           current_PMT;
