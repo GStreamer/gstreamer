@@ -860,6 +860,16 @@ AG_GST_CHECK_FEATURE(MODPLUG, modplug, modplug, [
   AC_SUBST(MODPLUG_LIBS)
 ])
 
+dnl check for libmimic
+translit(dnm, m, l) AM_CONDITIONAL(USE_MIMIC, true)
+AG_GST_CHECK_FEATURE(MIMIC, [libmimic library], mimic, [
+  MIMDEC_REQUIRED=1.0
+  PKG_CHECK_MODULES(MIMIC, libmimic >= $MIMDEC_REQUIRED,
+      HAVE_MIMIC=yes, HAVE_MIMIC=no)
+  AC_SUBST(MIMIC_CFLAGS)
+  AC_SUBST(MIMIC_LIBS)
+])
+
 dnl *** mjpegtools version info ***
 dnl some may prefer older version (given quirks above)
 dnl hm, no version info seems available within mjpegtools headers
@@ -1344,6 +1354,7 @@ AM_CONDITIONAL(USE_LIBMMS, false)
 AM_CONDITIONAL(USE_MODPLUG, false)
 AM_CONDITIONAL(USE_METADATA, false)
 AM_CONDITIONAL(USE_MPEG2ENC, false)
+AM_CONDITIONAL(USE_MIMIC, false)
 AM_CONDITIONAL(USE_MPLEX, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
 AM_CONDITIONAL(USE_MUSICBRAINZ, false)
@@ -1527,6 +1538,7 @@ ext/Makefile
 ext/nas/Makefile
 ext/modplug/Makefile
 ext/mpeg2enc/Makefile
+ext/mimic/Makefile
 ext/mplex/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
