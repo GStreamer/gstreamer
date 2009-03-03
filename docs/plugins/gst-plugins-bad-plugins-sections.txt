@@ -663,6 +663,7 @@ GST_RTP_MUX_CLASS
 GST_RTP_MUX_GET_CLASS
 GST_TYPE_RTP_MUX
 GstRTPMuxClass
+gst_rtp_mux_get_type
 gst_rtp_mux_plugin_init
 gst_rtp_session_set_ssrc
 </SECTION>
