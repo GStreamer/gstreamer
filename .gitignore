@@ -6,9 +6,10 @@ config.cache
 config.guess
 config.h
 config.h.in
+config.h-new
 config.log
 config.rpath
-config.status
+config.status*
 config.sub
 configure
 gstreamer-[0-9]*
