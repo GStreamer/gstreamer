@@ -1781,7 +1781,7 @@ out_of_segment:
 
 static gint
 gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
-    guint8 * data, guint size,
+    AVCodec * in_plugin, guint8 * data, guint size,
     GstClockTime in_timestamp, GstClockTime in_duration,
     GstBuffer ** outbuf, GstFlowReturn * ret)
 {
@@ -1860,7 +1860,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 
   /* If we don't error out after the first failed read with the AAC decoder,
    * we must *not* carry on pushing data, else we'll cause segfaults... */
-  if ((len == -1) && (oclass->in_plugin->id == CODEC_ID_AAC)) {
+  if (len == -1 && in_plugin->id == CODEC_ID_AAC) {
     GST_WARNING_OBJECT (ffmpegdec, "Decoding of AAC stream by FFMPEG failed.");
     *ret = GST_FLOW_ERROR;
   }
@@ -1923,8 +1923,8 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       break;
     case CODEC_TYPE_AUDIO:
       len =
-          gst_ffmpegdec_audio_frame (ffmpegdec, data, size, in_timestamp,
-          in_duration, &outbuf, ret);
+          gst_ffmpegdec_audio_frame (ffmpegdec, oclass->in_plugin, data, size,
+          in_timestamp, in_duration, &outbuf, ret);
 
       /* if we did not get an output buffer and we have a pending discont, don't
        * clear the input timestamps, we will put them on the next buffer because
