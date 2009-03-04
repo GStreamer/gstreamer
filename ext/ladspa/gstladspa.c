@@ -29,7 +29,6 @@
 
 #include "gstladspa.h"
 #include <ladspa.h>             /* main ladspa sdk include file */
-#include "utils.h"              /* ladspa sdk utility functions */
 
 /* 1.0 and the 1.1 preliminary headers don't define a version, but 1.1 final
    does */
@@ -38,6 +37,11 @@
 #endif
 
 #define GST_LADSPA_DESCRIPTOR_QDATA g_quark_from_static_string("ladspa-descriptor")
+
+#define GST_LADSPA_DEFAULT_PATH \
+  "/usr/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
+  "/usr/local/lib/ladspa" G_SEARCHPATH_SEPARATOR_S \
+  LIBDIR "/ladspa"
 
 static void gst_ladspa_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -568,15 +572,14 @@ gst_ladspa_process (GstSignalProcessor * gsp, guint nframes)
 }
 
 static void
-ladspa_describe_plugin (const char *pcFullFilename,
-    void *pvPluginHandle, LADSPA_Descriptor_Function pfDescriptorFunction)
+ladspa_describe_plugin (LADSPA_Descriptor_Function descriptor_function)
 {
   const LADSPA_Descriptor *desc;
   gint i;
 
   /* walk through all the plugins in this pluginlibrary */
   i = 0;
-  while ((desc = pfDescriptorFunction (i++))) {
+  while ((desc = descriptor_function (i++))) {
     gchar *type_name;
     GTypeInfo typeinfo = {
       sizeof (GstLADSPAClass),
@@ -614,6 +617,90 @@ ladspa_describe_plugin (const char *pcFullFilename,
   }
 }
 
+/* search just the one directory.
+ */
+static gboolean
+ladspa_plugin_directory_search (const char *dir_name)
+{
+  GDir *dir;
+  gchar *file_name;
+  const gchar *entry_name;
+  LADSPA_Descriptor_Function descriptor_function;
+  GModule *plugin;
+  gboolean ok = FALSE;
+
+  GST_INFO ("scanning directory \"%s\"", dir_name);
+
+  dir = g_dir_open (dir_name, 0, NULL);
+  if (!dir)
+    return FALSE;
+
+  while ((entry_name = g_dir_read_name (dir))) {
+    file_name = g_build_filename (dir_name, entry_name, NULL);
+    plugin =
+        g_module_open (file_name, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
+    if (plugin) {
+      /* the file is a shared library */
+      if (g_module_symbol (plugin, "ladspa_descriptor",
+              (gpointer *) & descriptor_function)) {
+        /* we've found a ladspa_descriptor function, now introspect it. */
+        ladspa_describe_plugin (descriptor_function);
+        ok = TRUE;
+      } else {
+        /* it was a library, but not a LADSPA one. Unload it. */
+        g_module_close (plugin);
+      }
+    }
+    g_free (file_name);
+  }
+  g_dir_close (dir);
+
+  return ok;
+}
+
+/* search the plugin path
+ */
+static gboolean
+ladspa_plugin_path_search (void)
+{
+  const char *search_path;
+  char *ladspa_path;
+  gchar **paths;
+  gint i, j, path_entries;
+  gboolean res = FALSE, skip;
+
+  search_path = g_getenv ("LADSPA_PATH");
+  if (search_path) {
+    ladspa_path =
+        g_strdup_printf ("%s" G_SEARCHPATH_SEPARATOR_S GST_LADSPA_DEFAULT_PATH,
+        search_path);
+  } else {
+    ladspa_path = g_strdup (GST_LADSPA_DEFAULT_PATH);
+  }
+
+  paths = g_strsplit (ladspa_path, G_SEARCHPATH_SEPARATOR_S, 0);
+  path_entries = g_strv_length (paths);
+  GST_INFO ("%d dirs in search paths \"%s\"", path_entries, ladspa_path);
+
+  for (i = 0; i < path_entries; i++) {
+    skip = FALSE;
+    for (j = 0; j < i; j++) {
+      if (!strcmp (paths[i], paths[j])) {
+        skip = TRUE;
+        break;
+      }
+    }
+    if (skip)
+      break;
+    res |= ladspa_plugin_directory_search (paths[i]);
+  }
+  g_strfreev (paths);
+
+  g_free (ladspa_path);
+
+  return res;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -622,16 +709,13 @@ plugin_init (GstPlugin * plugin)
 
   gst_plugin_add_dependency_simple (plugin,
       "LADSPA_PATH",
-      "/usr/lib/ladspa:/usr/local/lib/ladspa",
-      NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+      GST_LADSPA_DEFAULT_PATH, NULL, GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   parent_class = g_type_class_ref (GST_TYPE_SIGNAL_PROCESSOR);
 
   ladspa_plugin = plugin;
 
-  LADSPAPluginSearch (ladspa_describe_plugin);
-
-  return TRUE;
+  return ladspa_plugin_path_search ();
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
