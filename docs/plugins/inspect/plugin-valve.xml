@@ -1,13 +1,13 @@
 <plugin>
   <name>valve</name>
   <description>Valve</description>
-  <filename>../../gst/valve/.libs/libfsvalve.so</filename>
-  <basename>libfsvalve.so</basename>
+  <filename>../../gst/valve/.libs/libgstvalve.so</filename>
+  <basename>libgstvalve.so</basename>
   <version>0.10.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org</origin>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>valve</name>
