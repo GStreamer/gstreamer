@@ -1819,6 +1819,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mpc8") ||
         !strcmp (in_plugin->name, "mpegts") ||
         !strcmp (in_plugin->name, "mpegtsraw") ||
+        !strcmp (in_plugin->name, "mxf") ||
         !strcmp (in_plugin->name, "nuv") ||
         !strcmp (in_plugin->name, "swf") ||
         !strcmp (in_plugin->name, "voc") || !strcmp (in_plugin->name, "gif"))
