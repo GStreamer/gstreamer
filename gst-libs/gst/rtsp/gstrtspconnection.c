@@ -282,7 +282,6 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->fd1.fd = -1;
   newconn->timer = g_timer_new ();
   newconn->timeout = 60;
-  newconn->tunneled = FALSE;
 
   newconn->auth_method = GST_RTSP_AUTH_NONE;
   newconn->username = NULL;
@@ -1909,7 +1908,8 @@ cleanup:
  * gst_rtsp_connection_close:
  * @conn: a #GstRTSPConnection
  *
- * Close the connected @conn.
+ * Close the connected @conn. After this call, the connection is in the same
+ * state as when it was first created.
  * 
  * Returns: #GST_RTSP_OK on success.
  */
@@ -1925,6 +1925,17 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
   REMOVE_POLLFD (conn->fdset, &conn->fd1);
   conn->writefd = NULL;
   conn->readfd = NULL;
+  conn->tunneled = FALSE;
+  conn->tstate = TUNNEL_STATE_NONE;
+  conn->ctxp = NULL;
+  g_free (conn->username);
+  conn->username = NULL;
+  g_free (conn->passwd);
+  conn->passwd = NULL;
+  gst_rtsp_connection_clear_auth_params (conn);
+  conn->timeout = 60;
+  conn->cseq = 0;
+  conn->session_id[0] = '\0';
 
   return GST_RTSP_OK;
 }
@@ -1947,9 +1958,6 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   res = gst_rtsp_connection_close (conn);
   gst_poll_free (conn->fdset);
   g_timer_destroy (conn->timer);
-  g_free (conn->username);
-  g_free (conn->passwd);
-  gst_rtsp_connection_clear_auth_params (conn);
   gst_rtsp_url_free (conn->url);
   g_free (conn);
 #ifdef G_OS_WIN32
@@ -2337,7 +2345,7 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
  * Retrieve the URL of the other end of @conn.
  *
  * Returns: The URL. This value remains valid until the
- * connection is closed.
+ * connection is freed.
  *
  * Since: 0.10.23
  */
