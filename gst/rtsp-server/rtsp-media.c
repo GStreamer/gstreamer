@@ -96,6 +96,11 @@ gst_rtsp_media_finalize (GObject * obj)
 
   g_message ("finalize media %p", media);
 
+  if (media->pipeline) {
+    gst_element_set_state (media->pipeline, GST_STATE_NULL);
+    gst_object_unref (media->pipeline);
+  }
+
   for (i = 0; i < media->streams->len; i++) {
     GstRTSPMediaStream *stream;
 
@@ -108,11 +113,6 @@ gst_rtsp_media_finalize (GObject * obj)
   if (media->source) {
     g_source_destroy (media->source);
     g_source_unref (media->source);
-  }
-
-  if (media->pipeline) {
-    gst_element_set_state (media->pipeline, GST_STATE_NULL);
-    gst_object_unref (media->pipeline);
   }
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
@@ -682,6 +682,15 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   media->pipeline = gst_pipeline_new ("media-pipeline");
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (media->pipeline));
 
+  /* add the pipeline bus to our custom mainloop */
+  media->source = gst_bus_create_watch (bus);
+  gst_object_unref (bus);
+
+  g_source_set_callback (media->source, (GSourceFunc) bus_message, media, NULL);
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+  media->id = g_source_attach (media->source, klass->context);
+
   gst_bin_add (GST_BIN_CAST (media->pipeline), media->element);
 
   media->rtpbin = gst_element_factory_make ("gstrtpbin", "rtpbin");
@@ -735,16 +744,6 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
 
   g_message ("object %p is prerolled", media);
 
-  /* add the pipeline bus to our custom mainloop */
-  bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (media->pipeline));
-  media->source = gst_bus_create_watch (bus);
-  gst_object_unref (bus);
-
-  g_source_set_callback (media->source, (GSourceFunc) bus_message, media, NULL);
-
-  klass = GST_RTSP_MEDIA_GET_CLASS (media);
-  media->id = g_source_attach (media->source, klass->context);
-
   media->prepared = TRUE;
 
   return TRUE;
@@ -757,32 +756,7 @@ was_prepared:
   /* ERRORS */
 state_failed:
   {
-    GstMessage *message;
-
-    g_message ("state change failed for media %p", media);
-    while ((message = gst_bus_pop (bus))) {
-      GstMessageType type;
-
-      type = GST_MESSAGE_TYPE (message);
-      switch (type) {
-        case GST_MESSAGE_ERROR:
-        {
-          GError *gerror;
-          gchar *debug;
-
-          gst_message_parse_error (message, &gerror, &debug);
-          g_warning ("%p: got error %s (%s)", media, gerror->message, debug);
-          g_error_free (gerror);
-          g_free (debug);
-          break;
-	}
-	default:
-	  break;
-      }
-      gst_message_unref (message);
-    }
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
-    gst_object_unref (bus);
     return FALSE;
   }
 }
