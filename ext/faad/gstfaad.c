@@ -59,7 +59,7 @@
 #endif
 
 extern long faacDecInit (faacDecHandle, guint8 *, guint32, guint32 *, guint8 *);
-extern int8_t faacDecInit2 (faacDecHandle, guint8 *, guint32,
+extern gint8 faacDecInit2 (faacDecHandle, guint8 *, guint32,
     guint32 *, guint8 *);
 
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
