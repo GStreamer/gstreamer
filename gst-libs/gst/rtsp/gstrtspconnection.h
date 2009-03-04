@@ -105,9 +105,14 @@ GstRTSPResult      gst_rtsp_connection_set_qos_dscp  (GstRTSPConnection *conn,
 /* accessors */
 GstRTSPUrl *       gst_rtsp_connection_get_url       (const GstRTSPConnection *conn);
 const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
+void               gst_rtsp_connection_set_ip        (GstRTSPConnection *conn, const gchar *ip);
 
+/* tunneling */
 void               gst_rtsp_connection_set_tunneled  (GstRTSPConnection *conn, gboolean tunneled);
-gboolean           gst_rtsp_connection_is_tunneled   (GstRTSPConnection *conn);
+gboolean           gst_rtsp_connection_is_tunneled   (const GstRTSPConnection *conn);
+
+const gchar *      gst_rtsp_connection_get_tunnelid  (const GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_do_tunnel     (GstRTSPConnection *conn, GstRTSPConnection *conn2);
 
 /* async IO */
 
@@ -125,17 +130,26 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
  * @message_sent: callback when a message was sent
  * @closed: callback when the connection is closed
  * @error: callback when an error occured
+ * @tunnel_start: a client started a tunneled connection. The tunnelid of the
+ *   connection must be saved.
+ * @tunnel_complete: a client finished a tunneled connection. In this callback
+ *   you usually pair the tunnelid of this connection with the saved one using
+ *   gst_rtsp_connection_do_tunnel().
  *
  * Callback functions from a #GstRTSPWatch.
+ *
+ * Since: 0.10.23
  */
 typedef struct {
-  GstRTSPResult (*message_received) (GstRTSPWatch *watch, GstRTSPMessage *message,
-                                     gpointer user_data);
-  GstRTSPResult (*message_sent)     (GstRTSPWatch *watch, guint cseq, 
-                                     gpointer user_data);
-  GstRTSPResult (*closed)           (GstRTSPWatch *watch, gpointer user_data);
-  GstRTSPResult (*error)            (GstRTSPWatch *watch, GstRTSPResult result,
-                                     gpointer user_data);
+  GstRTSPResult     (*message_received) (GstRTSPWatch *watch, GstRTSPMessage *message,
+                                         gpointer user_data);
+  GstRTSPResult     (*message_sent)     (GstRTSPWatch *watch, guint cseq, 
+                                         gpointer user_data);
+  GstRTSPResult     (*closed)           (GstRTSPWatch *watch, gpointer user_data);
+  GstRTSPResult     (*error)            (GstRTSPWatch *watch, GstRTSPResult result,
+                                         gpointer user_data);
+  GstRTSPStatusCode (*tunnel_start)     (GstRTSPWatch *watch, gpointer user_data);
+  GstRTSPResult     (*tunnel_complete)  (GstRTSPWatch *watch, gpointer user_data);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -145,6 +159,7 @@ GstRTSPWatch *     gst_rtsp_watch_new                (GstRTSPConnection *conn,
                                                       GstRTSPWatchFuncs *funcs,
 						      gpointer user_data,
 						      GDestroyNotify notify);
+void               gst_rtsp_watch_reset              (GstRTSPWatch *watch);
 void               gst_rtsp_watch_unref              (GstRTSPWatch *watch);
 
 guint              gst_rtsp_watch_attach             (GstRTSPWatch *watch,

@@ -1229,17 +1229,23 @@ gst_rtsp_connection_clear_auth_params
 
 gst_rtsp_connection_set_qos_dscp
 
+gst_rtsp_connection_set_ip
 gst_rtsp_connection_get_ip
+
 gst_rtsp_connection_get_url
 
 gst_rtsp_connection_set_tunneled
 gst_rtsp_connection_is_tunneled
+
+gst_rtsp_connection_get_tunnelid
+gst_rtsp_connection_do_tunnel
 
 GstRTSPWatch
 GstRTSPWatchFuncs
 gst_rtsp_watch_new
 gst_rtsp_watch_unref
 gst_rtsp_watch_attach
+gst_rtsp_watch_reset
 gst_rtsp_watch_queue_message
 </SECTION>
 
