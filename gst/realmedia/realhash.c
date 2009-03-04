@@ -36,16 +36,6 @@ void rtsp_ext_real_calc_response_and_checksum (char *response,
  * The following code has been copied from
  * xine-lib-1.1.1/src/input/libreal/real.c.
  */
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define be2me_32(x) GUINT32_SWAP_LE_BE(x)
-#define le2me_32(x) (x)
-#else
-#define le2me_32(x) GUINT32_SWAP_LE_BE(x)
-#define be2me_32(x) (x)
-#endif
-
-#define ALE_32(x) (le2me_32(*(uint32_t*)(x)))
-#define LE_32(x) ALE_32(x)
 
 static const unsigned char xor_table[] = {
   0x05, 0x18, 0x74, 0xd0, 0x0d, 0x09, 0x02, 0x53,
@@ -55,8 +45,9 @@ static const unsigned char xor_table[] = {
   0x10, 0x57, 0x05, 0x18, 0x54, 0x00, 0x00, 0x00
 };
 
-#define BE_32C(x,y) do { *(uint32_t *)(x) = be2me_32((y)); } while(0)
-#define LE_32C(x,y) do { *(uint32_t *)(x) = le2me_32((y)); } while(0)
+#define LE_32(x) GST_READ_UINT32_LE(x)
+#define BE_32C(x,y) GST_WRITE_UINT32_BE(x,y)
+#define LE_32C(x,y) GST_WRITE_UINT32_LE(x,y)
 
 static void
 hash (char *field, char *param)
