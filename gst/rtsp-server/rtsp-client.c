@@ -1036,10 +1036,11 @@ closed (GstRTSPWatch *watch, gpointer user_data)
 
   g_message ("client %p: connection closed", client);
 
-  tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
-  g_mutex_lock (tunnels_lock);
-  g_hash_table_remove (tunnels, tunnelid);
-  g_mutex_unlock (tunnels_lock);
+  if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
+    g_mutex_lock (tunnels_lock);
+    g_hash_table_remove (tunnels, tunnelid);
+    g_mutex_unlock (tunnels_lock);
+  }
 
   return GST_RTSP_OK;
 }
