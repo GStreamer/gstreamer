@@ -2622,6 +2622,7 @@ gst_mpegts_demux_change_state (GstElement * element, GstStateChange transition)
       if (demux->sync_lut)
         g_free (demux->sync_lut);
       demux->sync_lut = NULL;
+      demux->sync_lut_len = 0;
       break;
     default:
       break;
