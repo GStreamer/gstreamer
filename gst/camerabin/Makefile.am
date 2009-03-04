@@ -28,7 +28,7 @@ nodist_libgstcamerabin_la_SOURCES = $(built_sources)
 # libcamerabin_la_HEADERS = gstcamerabin.h
 
 libgstcamerabin_la_CFLAGS = \
-	$(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
+	$(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) -DGST_USE_UNSTABLE_API
 
 libgstcamerabin_la_LIBADD = \
 	$(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \

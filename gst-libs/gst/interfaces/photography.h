@@ -24,6 +24,11 @@
 #ifndef __GST_PHOTOGRAPHY_H__
 #define __GST_PHOTOGRAPHY_H__
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The GstPhotography interface is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning." 
+#endif
+
 #include <gst/gst.h>
 #include <gst/interfaces/photography-enumtypes.h>
 
