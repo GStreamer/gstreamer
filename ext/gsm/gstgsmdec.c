@@ -206,7 +206,7 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   /* Setting up src caps based on the input sample rate. */
   srccaps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, BYTE_ORDER,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "signed", G_TYPE_BOOLEAN, TRUE,
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
