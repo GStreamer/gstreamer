@@ -29,10 +29,10 @@
 static gboolean
 plugin_init (GstPlugin * p)
 {
-  if (!gst_element_register (p, "realvideodec", GST_RANK_PRIMARY,
+  if (!gst_element_register (p, "realvideodec", GST_RANK_MARGINAL,
           GST_TYPE_REAL_VIDEO_DEC))
     return FALSE;
-  if (!gst_element_register (p, "realaudiodec", GST_RANK_SECONDARY,
+  if (!gst_element_register (p, "realaudiodec", GST_RANK_MARGINAL,
           GST_TYPE_REAL_AUDIO_DEC))
     return FALSE;
 
