@@ -83,6 +83,8 @@ static const gchar *rtsp_results[] = {
   "Network error: %s",
   "Host is not a valid IP address",
   "Timeout while waiting for server response",
+  "Tunnel GET request received",
+  "Tunnel POST request received",
   "Unknown error (%d)",
   NULL
 };
