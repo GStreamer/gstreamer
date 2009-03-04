@@ -170,4 +170,4 @@ elements_gdkpixbufsink_LDADD = \
 pipelines_wavpack_LDADD = $(LDADD) $(GST_BASE_LIBS)
 pipelines_wavpack_CFLAGS = $(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
-
+EXTRA_DIST = gst-plugins-good.supp
