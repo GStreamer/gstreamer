@@ -26,37 +26,27 @@
     </para>
     <para>
       The first step is to check out a copy of the
-      <filename>gst-template</filename> CVS module to get an important tool and
+      <filename>gst-template</filename> git module to get an important tool and
       the source code template for a basic &GStreamer; plugin. To check out the
       <filename>gst-template</filename> module, make sure you are connected to
       the internet, and type the following commands at a command console:
     </para>
     <screen>
-<prompt>shell $ </prompt><userinput>cvs -d:pserver:anoncvs@cvs.freedesktop.org/cvs/gstreamer login</userinput>
-Logging in to :pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer
-CVS password: <keycap>[ENTER]</keycap>
-
-<prompt>shell $ </prompt><userinput>cvs -z3 -d:pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer co gst-template</userinput>
-U gst-template/README
-U gst-template/gst-app/AUTHORS
-U gst-template/gst-app/ChangeLog
-U gst-template/gst-app/Makefile.am
-U gst-template/gst-app/NEWS
-U gst-template/gst-app/README
-U gst-template/gst-app/autogen.sh
-U gst-template/gst-app/configure.ac
-U gst-template/gst-app/src/Makefile.am
-...
+<prompt>shell $ </prompt><userinput>git clone git://anongit.freedesktop.org/gstreamer/gst-template.git</userinput>
+Initialized empty Git repository in /some/path/gst-template/.git/
+remote: Counting objects: 373, done.
+remote: Compressing objects: 100% (114/114), done.
+remote: Total 373 (delta 240), reused 373 (delta 240)
+Receiving objects: 100% (373/373), 75.16 KiB | 78 KiB/s, done.
+Resolving deltas: 100% (240/240), done.
     </screen>
     <para>
-      After the first command, you will have to press <keycap>ENTER</keycap> to
-      log in to the CVS server. The second command will check out a series of
-      files and directories into <filename
-      class="directory">./gst-template</filename>. The template you will be
-      using is in <filename
-      class="directory">./gst-template/gst-plugin/</filename> directory. You
-      should look over the files in that directory to get a general idea of the
-      structure of a source tree for a plugin.
+      This command will check out a series of files and directories into
+      <filename class="directory">gst-template</filename>. The template you
+      will be using is in the
+      <filename class="directory">gst-template/gst-plugin/</filename>
+      directory. You should look over the files in that directory to get a
+      general idea of the structure of a source tree for a plugin.
     </para>
   </sect1>
 
@@ -118,8 +108,7 @@ U gst-template/gst-app/src/Makefile.am
       <para>
         It is recommended that you create a copy of the <filename
 	class="directory">gst-plugin</filename>
-	directory before continuing. Do not copy the <filename
-	class="directory">CVS</filename> directories though.
+	directory before continuing.
       </para>
     </note>
   </sect1>

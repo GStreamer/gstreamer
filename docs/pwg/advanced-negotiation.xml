@@ -432,7 +432,7 @@ gst_my_filter_setcaps (GstPad * pad, GstCaps * caps)
     <para>
       Using all the knowledge you've acquired by reading this chapter, you
       should be able to write an element that does correct caps negotiation.
-      If in doubt, look at other elements of the same type in our CVS
+      If in doubt, look at other elements of the same type in our git
       repository to get an idea of how they do what you want to do.
     </para>
   </sect1>
