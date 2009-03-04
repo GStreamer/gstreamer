@@ -193,6 +193,8 @@ gst_adapter_clear (GstAdapter * adapter)
  *
  * Adds the data from @buf to the data stored inside @adapter and takes
  * ownership of the buffer.
+ * Empty buffers will be automatically dereferenced and not stored in the
+ * @adapter.
  */
 void
 gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
@@ -204,18 +206,24 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
 
   size = GST_BUFFER_SIZE (buf);
 
-  adapter->size += size;
-
-  /* Note: merging buffers at this point is premature. */
-  if (G_UNLIKELY (adapter->buflist == NULL)) {
-    GST_LOG_OBJECT (adapter, "pushing first %u bytes", size);
-    adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
+  if (G_UNLIKELY (size == 0)) {
+    GST_LOG_OBJECT (adapter, "discarding empty buffer");
+    gst_buffer_unref (buf);
   } else {
-    /* Otherwise append to the end, and advance our end pointer */
-    GST_LOG_OBJECT (adapter, "pushing %u bytes at end, size now %u", size,
-        adapter->size);
-    adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
-    adapter->buflist_end = g_slist_next (adapter->buflist_end);
+
+    adapter->size += size;
+
+    /* Note: merging buffers at this point is premature. */
+    if (G_UNLIKELY (adapter->buflist == NULL)) {
+      GST_LOG_OBJECT (adapter, "pushing first %u bytes", size);
+      adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
+    } else {
+      /* Otherwise append to the end, and advance our end pointer */
+      GST_LOG_OBJECT (adapter, "pushing %u bytes at end, size now %u", size,
+          adapter->size);
+      adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
+      adapter->buflist_end = g_slist_next (adapter->buflist_end);
+    }
   }
 }
 
