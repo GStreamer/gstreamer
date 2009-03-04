@@ -247,10 +247,12 @@ build_reset (GstRTSPBuilder * builder)
  * The connection will not yet attempt to connect to @url, use
  * gst_rtsp_connection_connect().
  *
+ * A copy of @url will be made.
+ *
  * Returns: #GST_RTSP_OK when @conn contains a valid connection.
  */
 GstRTSPResult
-gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
+gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
 {
   GstRTSPConnection *newconn;
 #ifdef G_OS_WIN32
@@ -275,7 +277,7 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
   if ((newconn->fdset = gst_poll_new (TRUE)) == NULL)
     goto no_fdset;
 
-  newconn->url = url;
+  newconn->url = gst_rtsp_url_copy (url);
   newconn->fd0.fd = -1;
   newconn->fd1.fd = -1;
   newconn->timer = g_timer_new ();
@@ -365,6 +367,8 @@ gst_rtsp_connection_accept (gint sock, GstRTSPConnection ** conn)
 
   /* now create the connection object */
   gst_rtsp_connection_create (url, &newconn);
+  gst_rtsp_url_free (url);
+
   ADD_POLLFD (newconn->fdset, &newconn->fd0, fd);
 
   /* both read and write initially */
@@ -1946,6 +1950,7 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   g_free (conn->username);
   g_free (conn->passwd);
   gst_rtsp_connection_clear_auth_params (conn);
+  gst_rtsp_url_free (conn->url);
   g_free (conn);
 #ifdef G_OS_WIN32
   WSACleanup ();
