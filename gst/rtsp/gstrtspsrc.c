@@ -3334,6 +3334,7 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
   GstRTSPAuthMethod avail_methods = GST_RTSP_AUTH_NONE;
   GstRTSPAuthMethod method;
   GstRTSPResult auth_result;
+  GstRTSPUrl *url;
   gchar *hdr;
 
   /* Identify the available auth methods and see if any are supported */
@@ -3349,10 +3350,12 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
    * data are stale, we just update them in the connection object and
    * return TRUE to retry the request */
 
+  url = gst_rtsp_connection_get_url (src->connection);
+
   /* Do we have username and password available? */
-  if (src->url != NULL && !src->tried_url_auth) {
-    user = src->url->user;
-    pass = src->url->passwd;
+  if (url != NULL && !src->tried_url_auth) {
+    user = url->user;
+    pass = url->passwd;
     src->tried_url_auth = TRUE;
     GST_DEBUG_OBJECT (src,
         "Attempting authentication using credentials from the URL");
@@ -3909,10 +3912,13 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   GstRTSPLowerTrans protocols;
   GstRTSPStatusCode code;
   gint rtpport, rtcpport;
+  GstRTSPUrl *url;
+
+  url = gst_rtsp_connection_get_url (src->connection);
 
   /* we initially allow all configured lower transports. based on the URL
    * transports and the replies from the server we narrow them down. */
-  protocols = src->url->transports & src->cur_protocols;
+  protocols = url->transports & src->cur_protocols;
 
   if (protocols == 0)
     goto no_protocols;
@@ -4095,7 +4101,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     }
   }
 
-  gst_rtsp_ext_list_stream_select (src->extensions, src->url);
+  gst_rtsp_ext_list_stream_select (src->extensions, url);
 
   /* if there is nothing to activate, error out */
   if (!src->need_activate)
@@ -4223,6 +4229,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   GstSDPMessage sdp = { 0 };
   GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
+  GstRTSPUrl *url;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -4242,7 +4249,9 @@ restart:
   if ((res = gst_rtsp_connection_create (src->url, &src->connection)) < 0)
     goto could_not_create;
 
-  if (src->url->transports & GST_RTSP_LOWER_TRANS_HTTP)
+  url = gst_rtsp_connection_get_url (src->connection);
+
+  if (url->transports & GST_RTSP_LOWER_TRANS_HTTP)
     gst_rtsp_connection_set_tunneled (src->connection, TRUE);
 
   /* connect */
@@ -4471,6 +4480,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
+  gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
 
@@ -4519,6 +4529,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
         "TEARDOWN and PLAY not supported, can't do TEARDOWN");
   }
 
+close:
   /* close connection */
   GST_DEBUG_OBJECT (src, "closing connection...");
   gst_rtsp_connection_close (src->connection);
@@ -4534,7 +4545,7 @@ done:
   src->state = GST_RTSP_STATE_INVALID;
   GST_RTSP_STATE_UNLOCK (src);
 
-  return TRUE;
+  return ret;
 
   /* ERRORS */
 create_request_failed:
@@ -4542,7 +4553,8 @@ create_request_failed:
     GST_RTSP_STATE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request."));
-    return FALSE;
+    ret = FALSE;
+    goto close;
   }
 send_error:
   {
@@ -4550,7 +4562,8 @@ send_error:
     gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
-    return FALSE;
+    ret = FALSE;
+    goto close;
   }
 }
 
