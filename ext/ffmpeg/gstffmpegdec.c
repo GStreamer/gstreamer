@@ -2600,6 +2600,12 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_MPEG4:
       case CODEC_ID_MSMPEG4V3:
       case CODEC_ID_H264:
+      case CODEC_ID_RA_144:
+      case CODEC_ID_RA_288:
+      case CODEC_ID_RV10:
+      case CODEC_ID_RV20:
+      case CODEC_ID_RV30:
+      case CODEC_ID_RV40:
       case CODEC_ID_COOK:
         rank = GST_RANK_PRIMARY;
         break;
