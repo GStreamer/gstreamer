@@ -162,9 +162,31 @@ static gboolean
 gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   gboolean res;
+  GstCaps *peercaps;
+  gchar *encoding_name = NULL;
 
-  gst_basertppayload_set_options (payload, "video", TRUE, "H263-1998", 90000);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), FALSE);
+
+  peercaps = gst_pad_peer_get_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload));
+  if (peercaps) {
+    GstCaps *intersect = gst_caps_intersect (peercaps,
+        gst_pad_get_pad_template_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload)));
+
+    gst_caps_unref (peercaps);
+    if (!gst_caps_is_empty (intersect)) {
+      GstStructure *s = gst_caps_get_structure (intersect, 0);
+      encoding_name = g_strdup (gst_structure_get_string (s, "encoding-name"));
+    }
+    gst_caps_unref (intersect);
+  }
+
+  if (!encoding_name)
+    encoding_name = g_strdup ("H263-1998");
+
+  gst_basertppayload_set_options (payload, "video", TRUE,
+      (gchar *) encoding_name, 90000);
   res = gst_basertppayload_set_outcaps (payload, NULL);
+  g_free (encoding_name);
 
   return res;
 }
