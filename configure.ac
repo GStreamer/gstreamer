@@ -738,14 +738,19 @@ dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   HAVE_FAAD="yes"
+  faad_hdr=""
   AG_GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h,
     FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
   if test $HAVE_FAAD = "no"; then
     AG_GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, -lm, neaacdec.h,
       [ FAAD_LIBS="-lfaad -lm"
-	  	AC_DEFINE(FAAD_IS_NEAAC, 1, [Define if AAC is using new api prefix])
-	  ],
-	  HAVE_FAAD="no",)
+        AC_DEFINE(FAAD_IS_NEAAC, 1, [Define if AAC is using new api prefix])
+        faad_hdr="neaacdec.h"
+      ], [
+        HAVE_FAAD="no"
+      ],)
+  else
+    faad_hdr="faad.h"
   fi
   if test $HAVE_FAAD = "yes"; then
     AC_MSG_CHECKING([Checking for FAAD >= 2.0])
@@ -760,6 +765,24 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
     ], [
       HAVE_FAAD="yes"
       AC_MSG_RESULT(yes)
+
+      AC_MSG_CHECKING([Checking FAAD2 version in $faad_hdr])
+      for minor in 10 9 8 7 6 5 0; do
+        if test x$faad2_minor_version = "x"; then
+          AC_EGREP_CPP([2.$minor], [
+              #include <$faad_hdr>
+              FAAD2_VERSION
+            ], [
+              faad2_minor_version=$minor
+            ])
+        fi
+      done
+      if test x$faad2_minor_version = "x"; then
+        AC_MSG_RESULT([no idea])
+      else
+        AC_MSG_RESULT([2.$faad2_minor_version])
+        AC_DEFINE_UNQUOTED([FAAD2_MINOR_VERSION], [$faad2_minor_version], [The x in 2.x])
+      fi
     ], [
       HAVE_FAAD="no"
       AC_MSG_RESULT(no)
