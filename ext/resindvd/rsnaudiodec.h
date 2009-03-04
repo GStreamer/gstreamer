@@ -25,8 +25,8 @@
 G_BEGIN_DECLS
 
 #define RSN_TYPE_AUDIODEC               (rsn_audiodec_get_type())
-#define RSN_AUDIODEC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_AUDIODEC,RsnAudioMunge))
-#define RSN_AUDIODEC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),RSN_TYPE_AUDIODEC,RsnAudioMungeClass))
+#define RSN_AUDIODEC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),RSN_TYPE_AUDIODEC,RsnAudioDec))
+#define RSN_AUDIODEC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),RSN_TYPE_AUDIODEC,RsnAudioDecClass))
 #define RSN_IS_AUDIODEC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),RSN_TYPE_AUDIODEC))
 #define RSN_IS_AUDIODEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),RSN_TYPE_AUDIODEC))
 
@@ -38,10 +38,19 @@ typedef struct _RsnAudioDecClass        RsnAudioDecClass;
 struct _RsnAudioDec {
   GstBin element;
 
+  /* Our sink and source pads */
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GstElement *cur_dec;
+  /* Proxy pads that are linked to the child sink pad
+   * and source pad respectively */
+  GstPad *child_sink_proxy;
+  GstPad *child_src_proxy;
+
+  GstElement *current_decoder;
+  /* Current child's sink and source pads */
+  GstPad *child_sink;
+  GstPad *child_src;
 };
 
 struct _RsnAudioDecClass {

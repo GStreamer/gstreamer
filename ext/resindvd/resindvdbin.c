@@ -439,8 +439,8 @@ create_elements (RsnDvdBin * dvdbin)
           RSN_TYPE_AUDIOMUNGE, "audiomunge", "Audio output filter"))
     return FALSE;
 
-  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, "a52dec", 0, "auddec",
-          "audio decoder"))
+  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, NULL,
+          RSN_TYPE_AUDIODEC, "auddec", "audio decoder"))
     return FALSE;
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUDDEC], "src");
