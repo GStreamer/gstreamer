@@ -113,3 +113,4 @@ elements_camerabin_SOURCES = elements/camerabin.c
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
+EXTRA_DIST = gst-plugins-bad.supp
