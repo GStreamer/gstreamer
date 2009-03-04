@@ -348,7 +348,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_DO_RTCP,
       g_param_spec_boolean ("do-rtcp", "Do RTCP",
-          "Don't send RTCP packets",
+          "Send RTCP packets, disable for old incompatible server.",
           DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_rtspsrc_change_state;
