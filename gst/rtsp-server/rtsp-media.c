@@ -110,8 +110,10 @@ gst_rtsp_media_finalize (GObject * obj)
     g_source_unref (media->source);
   }
 
-  if (media->pipeline)
+  if (media->pipeline) {
+    gst_element_set_state (media->pipeline, GST_STATE_NULL);
     gst_object_unref (media->pipeline);
+  }
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }

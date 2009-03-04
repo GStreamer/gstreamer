@@ -71,6 +71,7 @@ struct _GstRTSPClient {
 
   GstRTSPConnection *connection;
   GstRTSPWatch      *watch;
+  guint              watchid;
 
   guint                 timeout;
   GstRTSPSessionPool   *session_pool;
