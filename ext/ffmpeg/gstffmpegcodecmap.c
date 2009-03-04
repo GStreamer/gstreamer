@@ -2321,7 +2321,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("image/gif");
   } else if (!strcmp (format_name, "ogg")) {
     caps = gst_caps_from_string ("application/ogg");
-  } else if (!strcmp (format_name, "mxf")) {
+  } else if (!strcmp (format_name, "mxf") || !strcmp (format_name, "mxf_d10")) {
     caps = gst_caps_from_string ("application/mxf");
   } else if (!strcmp (format_name, "gxf")) {
     caps = gst_caps_from_string ("application/gxf");
