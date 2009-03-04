@@ -11,4 +11,4 @@ DIRECTFB_DIR=
 endif
 
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) switch
-DIST_SUBDIRS= directfb switch scaletempo
+DIST_SUBDIRS= directfb switch scaletempo mxf

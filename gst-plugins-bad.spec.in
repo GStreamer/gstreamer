@@ -119,6 +119,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideosignal.so
+%{_libdir}/gstreamer-%{majorminor}/libfsvalve.so
+%{_libdir}/gstreamer-%{majorminor}/libgstautoconvert.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
+%{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
+%{_libdir}/gstreamer-%{majorminor}/libgstxdgmime.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
 %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
