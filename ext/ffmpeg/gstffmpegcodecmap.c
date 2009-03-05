@@ -2632,7 +2632,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           guint32 fourcc;
 
           if (gst_structure_get_fourcc (structure, "fourcc", &fourcc)) {
-            if (fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1'))
+            if ((fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1')) ||
+                (fourcc == GST_MAKE_FOURCC ('W', 'M', 'V', 'A')))
               id = CODEC_ID_VC1;
           } else
             id = CODEC_ID_WMV3;
