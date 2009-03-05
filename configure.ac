@@ -860,6 +860,13 @@ AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
     LADSPA_LIBS="-ldl",
     HAVE_LADSPA="no")
   CFLAGS="$save_cflags"
+  
+  PKG_CHECK_MODULES(LRDF, lrdf, HAVE_LRDF=yes, HAVE_LRDF=no)
+  if test $HAVE_LRDF = "yes"; then
+    AC_DEFINE(HAVE_LRDF, 1, [Define if we have liblrdf])
+  fi
+  AC_SUBST(LRDF_LIBS)
+  AC_SUBST(LRDF_CFLAGS)
 ])
 AC_SUBST(LADSPA_LIBS)
 
