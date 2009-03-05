@@ -382,7 +382,7 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len,
       return ret;
 
     GST_WARNING_OBJECT (self, "could not convert string from '%s' to UTF-8: %s",
-        encoding, err->message);
+        self->detected_encoding, err->message);
     g_free (self->detected_encoding);
     self->detected_encoding = NULL;
     g_error_free (err);
