@@ -69,7 +69,7 @@
 static GstRTSPResult
 parse_npt_time (const gchar * str, GstRTSPTime * time)
 {
-  if (strcmp (str, "now") == 0) {
+  if (strncmp (str, "now", 3) == 0) {
     time->type = GST_RTSP_TIME_NOW;
   } else if (str[0] == '\0') {
     time->type = GST_RTSP_TIME_END;
