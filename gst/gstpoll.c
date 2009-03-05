@@ -1452,7 +1452,7 @@ gst_poll_write_control (GstPoll * set)
     SEND_COMMAND (set, GST_POLL_CMD_WAKEUP, result);
     res = (result > 0);
 #else
-    SetEvent (set->wakeup_event);
+    res = SetEvent (set->wakeup_event);
 #endif
   }
   g_mutex_unlock (set->lock);
@@ -1488,7 +1488,7 @@ gst_poll_read_control (GstPoll * set)
     READ_COMMAND (set, cmd, result);
     res = (result > 0);
 #else
-    ResetEvent (set->wakeup_event);
+    res = ResetEvent (set->wakeup_event);
 #endif
   }
   g_mutex_unlock (set->lock);
