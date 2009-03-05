@@ -3565,8 +3565,8 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
   mode = basesink->pad_mode;
   GST_OBJECT_UNLOCK (element);
 
-  /* only push UPSTREAM events upstream and if we are in push mode */
-  forward = GST_EVENT_IS_UPSTREAM (event) && (mode == GST_ACTIVATE_PUSH);
+  /* only push UPSTREAM events upstream */
+  forward = GST_EVENT_IS_UPSTREAM (event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_LATENCY:
