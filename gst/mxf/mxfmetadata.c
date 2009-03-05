@@ -2924,9 +2924,11 @@ mxf_metadata_dm_segment_to_structure (MXFMetadataBase * m)
     GstStructure *s =
         mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->dm_framework));
 
-    gst_structure_id_set (ret, MXF_QUARK (DM_FRAMEWORK), GST_TYPE_STRUCTURE, s,
-        NULL);
-    gst_structure_free (s);
+    if (s) {
+      gst_structure_id_set (ret, MXF_QUARK (DM_FRAMEWORK), GST_TYPE_STRUCTURE,
+          s, NULL);
+      gst_structure_free (s);
+    }
   }
 
   if (self->n_track_ids > 0) {
