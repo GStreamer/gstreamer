@@ -152,14 +152,28 @@ gst_adder_get_type (void)
   return adder_type;
 }
 
-/* clipping versions
+/* clipping versions (for int)
  * FIXME: what about: oil_add_s16 (out, out, in, bytes / sizeof (type))
  */
 #define MAKE_FUNC(name,type,ttype,min,max)                      \
 static void name (type *out, type *in, gint bytes) {            \
   gint i;                                                       \
-  for (i = 0; i < bytes / sizeof (type); i++)                   \
-    out[i] = CLAMP ((ttype)out[i] + (ttype)in[i], min, max);    \
+  ttype add;                                                    \
+  for (i = 0; i < bytes / sizeof (type); i++) {                 \
+    add = (ttype)out[i] + (ttype)in[i];                         \
+    out[i] = CLAMP (add, min, max);                             \
+  }                                                             \
+}
+
+/* unsigned versions (for int) */
+#define MAKE_FUNC_US(name,type,ttype,max)                       \
+static void name (type *out, type *in, gint bytes) {            \
+  gint i;                                                       \
+  ttype add;                                                    \
+  for (i = 0; i < bytes / sizeof (type); i++) {                 \
+    add = (ttype)out[i] + (ttype)in[i];                         \
+    out[i] = ((add <= max) ? add : max);                        \
+  }                                                             \
 }
 
 /* non-clipping versions (for float) */
@@ -171,7 +185,7 @@ static void name (type *out, type *in, gint bytes) {            \
 }
 
 #if 0
-/* right now, the liboil function don't seems to be faster
+/* right now, the liboil function don't seems to be faster on x86
  * time gst-launch audiotestsrc num-buffers=50000 ! audio/x-raw-float ! adder name=m ! fakesink audiotestsrc num-buffers=50000 ! audio/x-raw-float ! m.
  * time gst-launch audiotestsrc num-buffers=50000 ! audio/x-raw-float,width=32 ! adder name=m ! fakesink audiotestsrc num-buffers=50000 ! audio/x-raw-float,width=32 ! m.
  */
@@ -192,9 +206,9 @@ add_float64 (gdouble * out, gdouble * in, gint bytes)
 MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
 MAKE_FUNC (add_int16, gint16, gint32, MIN_INT_16, MAX_INT_16)
 MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
-MAKE_FUNC (add_uint32, guint32, guint64, MIN_UINT_32, MAX_UINT_32)
-MAKE_FUNC (add_uint16, guint16, guint32, MIN_UINT_16, MAX_UINT_16)
-MAKE_FUNC (add_uint8, guint8, guint16, MIN_UINT_8, MAX_UINT_8)
+MAKE_FUNC_US (add_uint32, guint32, guint64, MAX_UINT_32)
+MAKE_FUNC_US (add_uint16, guint16, guint32, MAX_UINT_16)
+MAKE_FUNC_US (add_uint8, guint8, guint16, MAX_UINT_8)
 MAKE_FUNC_NC (add_float64, gdouble)
 MAKE_FUNC_NC (add_float32, gfloat)
 /* *INDENT-ON* */
