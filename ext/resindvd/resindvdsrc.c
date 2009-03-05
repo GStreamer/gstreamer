@@ -777,9 +777,9 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 #endif
 
       if (discont) {
-        g_print ("NAV packet discont: cur_end_ts %" GST_TIME_FORMAT " != "
-            " vobu_start_ptm: %" GST_TIME_FORMAT " base %" GST_TIME_FORMAT
-            "\n",
+        GST_DEBUG_OBJECT (src,
+            "NAV packet discont: cur_end_ts %" GST_TIME_FORMAT " != "
+            " vobu_start_ptm: %" GST_TIME_FORMAT " base %" GST_TIME_FORMAT,
             GST_TIME_ARGS (src->cur_end_ts),
             GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (new_base_time));
         src->need_segment = TRUE;
@@ -930,7 +930,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 
     src->highlight_event = NULL;
     g_mutex_unlock (src->dvd_lock);
-    g_print ("Sending highlight event - button %d\n", src->active_button);
+    GST_DEBUG_OBJECT (src, "Sending highlight event - button %d",
+        src->active_button);
     gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
     g_mutex_lock (src->dvd_lock);
   }
@@ -1009,20 +1010,20 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   /* Push in-band events now that we've dropped the dvd_lock, before
    * we change segment */
   if (streams_event) {
-    g_print ("Pushing stream event\n");
+    GST_LOG_OBJECT (src, "Pushing stream event");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), streams_event);
   }
   if (clut_event) {
-    g_print ("Pushing clut event\n");
+    GST_LOG_OBJECT (src, "Pushing clut event");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), clut_event);
   }
   /* Out of band events */
   if (spu_select_event) {
-    g_print ("Pushing spu_select event\n");
+    GST_LOG_OBJECT (src, "Pushing spu_select event");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), spu_select_event);
   }
   if (audio_select_event) {
-    g_print ("Pushing audio_select event\n");
+    GST_LOG_OBJECT (src, "Pushing audio_select event");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), audio_select_event);
   }
 
@@ -1053,7 +1054,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
     src->next_buf = NULL;
 
     if (src->discont) {
-      g_print ("Discont packet\n");
+      GST_LOG_OBJECT (src, "Marking discont buffer");
       GST_BUFFER_FLAG_SET (*outbuf, GST_BUFFER_FLAG_DISCONT);
       src->discont = FALSE;
     }
@@ -1068,7 +1069,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   g_mutex_unlock (src->dvd_lock);
 
   if (highlight_event) {
-    g_print ("Pushing highlight event with TS %" GST_TIME_FORMAT "\n",
+    GST_LOG_OBJECT (src, "Pushing highlight event with TS %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_EVENT_TIMESTAMP (highlight_event)));
     gst_pad_push_event (GST_BASE_SRC_PAD (src), highlight_event);
   }
@@ -1263,7 +1264,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     if (channel_hop) {
       GstEvent *seek;
 
-      g_print ("flush and jump\n");
+      GST_DEBUG_OBJECT (src, "Processing flush and jump");
       g_mutex_lock (src->branch_lock);
       src->branching = TRUE;
       g_cond_broadcast (src->still_cond);
@@ -1276,7 +1277,8 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       g_mutex_unlock (src->dvd_lock);
 
       if (hl_event) {
-        g_print ("Highlight change - button: %d\n", src->active_button);
+        GST_DEBUG_OBJECT (src, "Sending highlight change event - button: %d",
+            src->active_button);
         gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
       }
 
@@ -1296,7 +1298,8 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     g_mutex_unlock (src->dvd_lock);
 
     if (hl_event) {
-      g_print ("Highlight change - button: %d\n", src->active_button);
+      GST_DEBUG_OBJECT (src, "Sending highlight change event - button: %d",
+          src->active_button);
       gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
     }
   }
@@ -1318,7 +1321,7 @@ rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src, guint8 phys_stream)
     return;
   src->cur_audio_phys_stream = phys_stream;
 
-  g_print ("Preparing audio change, phys %d\n", phys_stream);
+  GST_DEBUG_OBJECT (src, "Preparing audio change, phys %d", phys_stream);
 
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-set-audio-track",
@@ -1345,7 +1348,7 @@ rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src, guint8 phys_stream,
   src->cur_spu_phys_stream = phys_stream;
   src->cur_spu_forced_only = forced_only;
 
-  g_print ("Preparing SPU change, phys %d forced %d\n",
+  GST_DEBUG_OBJECT (src, "Preparing SPU change, phys %d forced %d",
       phys_stream, forced_only);
 
   s = gst_structure_new ("application/x-gst-dvd",
@@ -1587,8 +1590,8 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
       area.ex != src->area.ex || area.ey != src->area.ey ||
       area.palette != src->area.palette) {
 
-    g_print ("Setting highlight. Button %d @ %d,%d active %d palette 0x%x "
-        "(from button %d @ %d,%d palette 0x%x)\n",
+    GST_DEBUG_OBJECT (src, "Setting highlight. Button %d @ %d,%d "
+        "active %d palette 0x%x (from button %d @ %d,%d palette 0x%x)",
         button, src->area.sx, src->area.sy, mode, src->area.palette,
         src->active_button, area.sx, area.sy, area.palette);
 
@@ -2210,10 +2213,9 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
     segment->stop = -1;
     segment->duration = -1;
 
-    g_print ("seek completed. New start TS %" GST_TIME_FORMAT
-        " pos %" GST_TIME_FORMAT " (offset %" GST_TIME_FORMAT ")\n",
-        GST_TIME_ARGS (segment->start),
-        GST_TIME_ARGS (segment->time),
+    GST_DEBUG_OBJECT (src, "seek completed. New start TS %" GST_TIME_FORMAT
+        " pos %" GST_TIME_FORMAT " (offset %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (segment->start), GST_TIME_ARGS (segment->time),
         GST_TIME_ARGS ((GstClockTimeDiff) (segment->start - segment->time)));
 
     src->need_segment = FALSE;
@@ -2221,7 +2223,7 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
 
   return ret;
 fail:
-  g_print ("Seek in format %d failed\n", segment->format);
+  GST_DEBUG_OBJECT (src, "Seek in format %d failed", segment->format);
   return FALSE;
 }
 
