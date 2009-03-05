@@ -330,6 +330,11 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
             continue;           /* not this one */
           }
         }
+        /* FIXME: in the case of n >= vchan.tuners the code below accesses
+         * uninitialised fields in vtun
+         * Not sure if the codeblock below should go into the else above, but
+         * then setting vtun.tuner=0 is a bit pointless.
+         */
         v4lchannel->tuner = n;
         channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
         channel->freq_multiplicator =
