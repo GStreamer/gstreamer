@@ -853,13 +853,12 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
   GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
-      break;
     case GST_EVENT_FLUSH_STOP:
       gst_audio_resample_reset_state (resample);
       resample->next_offset = -1;
       resample->next_ts = -1;
       resample->next_upstream_ts = -1;
+      break;
     case GST_EVENT_NEWSEGMENT:
       gst_audio_resample_push_drain (resample);
       gst_audio_resample_reset_state (resample);
@@ -867,11 +866,10 @@ gst_audio_resample_event (GstBaseTransform * base, GstEvent * event)
       resample->next_ts = -1;
       resample->next_upstream_ts = -1;
       break;
-    case GST_EVENT_EOS:{
+    case GST_EVENT_EOS:
       gst_audio_resample_push_drain (resample);
       gst_audio_resample_reset_state (resample);
       break;
-    }
     default:
       break;
   }
