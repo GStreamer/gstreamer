@@ -1538,6 +1538,10 @@ caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeBin * dbin)
   GST_LOG_OBJECT (dbin, "Notified caps for pad %s:%s",
       GST_DEBUG_PAD_NAME (pad));
 
+  /* Disconnect this; if we still need it, we'll reconnect to this in
+   * analyze_new_pad */
+  g_signal_handlers_disconnect_by_func (pad, caps_notify_cb, dbin);
+
   element = GST_ELEMENT_CAST (gst_pad_get_parent (pad));
 
   pad_added_cb (element, pad, dbin);
@@ -1551,6 +1555,10 @@ caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
   GstElement *element;
 
   GST_LOG_OBJECT (pad, "Notified caps for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  /* Disconnect this; if we still need it, we'll reconnect to this in
+   * analyze_new_pad */
+  g_signal_handlers_disconnect_by_func (pad, caps_notify_group_cb, group);
 
   element = GST_ELEMENT_CAST (gst_pad_get_parent (pad));
 
