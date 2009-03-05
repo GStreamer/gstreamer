@@ -23,6 +23,8 @@
 /*
  * Produces a sweeping sprinkle of tones by dynamically adding and removing
  * elements to adder.
+ *
+ * gcc `pkg-config --cflags --libs gstreamer-0.10` sprinkle3.c -osprinkle3
  */
 
 #ifdef HAVE_CONFIG_H
@@ -36,43 +38,63 @@ static GMainLoop *loop;
 
 typedef struct
 {
-  GstElement *element;
-  GstPad *srcpad;
-  GstPad *sinkpad;
+  GstElement *bin, *src, *fx;
+  GstPad *src_srcpad;
+  GstPad *fx_sinkpad, *fx_srcpad;
+  GstPad *adder_sinkpad;
+  GstPad *bin_srcpad;
   gdouble freq;
+  gfloat pos;
 } SourceInfo;
 
 /* dynamically add the source to the pipeline and link it to a new pad on
  * adder */
 static SourceInfo *
-add_source (gdouble freq)
+add_source (gdouble freq, gfloat pos)
 {
   SourceInfo *info;
 
   info = g_new0 (SourceInfo, 1);
   info->freq = freq;
+  info->pos = pos;
 
   /* make source with unique name */
-  info->element = gst_element_factory_make ("audiotestsrc", NULL);
+  info->bin = gst_element_factory_make ("bin", NULL);
+  info->src = gst_element_factory_make ("audiotestsrc", NULL);
+  info->fx = gst_element_factory_make ("audiopanorama", NULL);
 
-  g_object_set (info->element, "freq", freq, NULL);
+  g_object_set (info->src, "freq", freq, "volume", (gdouble) 0.35, NULL);
+  g_object_set (info->fx, "panorama", pos, NULL);
 
   /* add to the bin */
-  gst_bin_add (GST_BIN (pipeline), info->element);
+  gst_bin_add (GST_BIN (info->bin), info->src);
+  gst_bin_add (GST_BIN (info->bin), info->fx);
 
-  /* get pad from the element */
-  info->srcpad = gst_element_get_static_pad (info->element, "src");
+  /* get pads from the elements */
+  info->src_srcpad = gst_element_get_static_pad (info->src, "src");
+  info->fx_srcpad = gst_element_get_static_pad (info->fx, "src");
+  info->fx_sinkpad = gst_element_get_static_pad (info->fx, "sink");
+
+  /* create and add a pad for the bin */
+  info->bin_srcpad = gst_ghost_pad_new ("src", info->fx_srcpad);
+  gst_element_add_pad (info->bin, info->bin_srcpad);
 
   /* get new pad from adder, adder will now wait for data on this pad */
-  info->sinkpad = gst_element_get_request_pad (adder, "sink%d");
+  info->adder_sinkpad = gst_element_get_request_pad (adder, "sink%d");
 
-  /* link pad to adder */
-  gst_pad_link (info->srcpad, info->sinkpad);
+  /* link inside the bin */
+  gst_pad_link (info->src_srcpad, info->fx_sinkpad);
 
-  /* and play the element */
-  gst_element_set_state (info->element, GST_STATE_PLAYING);
+  /* add bin to pipeline */
+  gst_bin_add (GST_BIN (pipeline), info->bin);
 
-  g_print ("added freq %f\n", info->freq);
+  /* link bin to adder */
+  gst_pad_link (info->bin_srcpad, info->adder_sinkpad);
+
+  /* and play the elements */
+  gst_element_set_state (info->bin, GST_STATE_PLAYING);
+
+  g_print ("added  freq %5.0f, pos %3.1f\n", info->freq, info->pos);
 
   return info;
 }
@@ -81,29 +103,37 @@ add_source (gdouble freq)
 static void
 remove_source (SourceInfo * info)
 {
-  g_print ("remove freq %f\n", info->freq);
+  g_print ("remove freq %5.0f, pos %3.1f\n", info->freq, info->pos);
 
   /* lock the state so that we can put it to NULL without the parent messing
    * with our state */
-  gst_element_set_locked_state (info->element, TRUE);
+  gst_element_set_locked_state (info->bin, TRUE);
 
   /* first stop the source. Remember that this might block when in the PAUSED
    * state. Alternatively one could send EOS to the source, install an event
-   * probe and schedule a state change/unlink/release from the mainthread.
-   * Note that changing the state of a source makes it emit an EOS, which can
-   * make adder go EOS. */
-  gst_element_set_state (info->element, GST_STATE_NULL);
+   * probe and schedule a state change/unlink/release from the mainthread. */
+  /* NOTE that the source inside the bin will emit EOS but it will not reach
+   * adder because the element after the source is shut down first. We will send
+   * EOS later */
+  gst_element_set_state (info->bin, GST_STATE_NULL);
 
-  /* unlink from adder */
-  gst_pad_unlink (info->srcpad, info->sinkpad);
-  gst_object_unref (info->srcpad);
+  /* unlink bin from adder */
+  gst_pad_unlink (info->bin_srcpad, info->adder_sinkpad);
+
+  /* release pads */
+  gst_object_unref (info->src_srcpad);
+  gst_object_unref (info->fx_srcpad);
+  gst_object_unref (info->fx_sinkpad);
 
   /* remove from the bin */
-  gst_bin_remove (GST_BIN (pipeline), info->element);
+  gst_bin_remove (GST_BIN (pipeline), info->bin);
+
+  /* send EOS to the sinkpad to make adder EOS when needed */
+  gst_pad_send_event (info->adder_sinkpad, gst_event_new_eos ());
 
   /* give back the pad */
-  gst_element_release_request_pad (adder, info->sinkpad);
-  gst_object_unref (info->sinkpad);
+  gst_element_release_request_pad (adder, info->adder_sinkpad);
+  gst_object_unref (info->adder_sinkpad);
 
   g_free (info);
 }
@@ -159,12 +189,19 @@ do_sprinkle (SprinkleState * state)
   }
 
   /* add new source, stop adding sources after 10 rounds. */
-  if (state->count < 10) {
-    state->infos[0] = add_source ((state->count * 100) + 200);
+  if (state->count < 20) {
+    state->infos[0] = add_source (
+        (gdouble) ((state->count * 100) + 200),
+        ((gfloat) (state->count % 5) / 2.0 - 1.0));
     state->count++;
   } else {
     state->infos[0] = NULL;
   }
+
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      /*GST_DEBUG_GRAPH_SHOW_ALL, */
+      GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS | GST_DEBUG_GRAPH_SHOW_STATES,
+      "sprinkle3");
   return TRUE;
 }
 
@@ -221,7 +258,7 @@ main (int argc, char *argv[])
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-      "channels", G_TYPE_INT, 1,
+      "channels", G_TYPE_INT, 2,
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
       "rate", G_TYPE_INT, 44100, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
