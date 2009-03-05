@@ -302,8 +302,6 @@ error:
   PyErr_Clear ();
   if (caps1 && !caps1_is_copy)
     gst_caps_unref (caps1);
-  if (caps2 && !caps2_is_copy)
-    gst_caps_unref (caps2);
   return 1;
 }
 
