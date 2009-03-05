@@ -137,11 +137,13 @@ _wrap_gst_install_plugins_sync(PyGObject *self, PyObject *args, PyObject *kwargs
 	    PyErr_SetString(PyExc_TypeError, "Details need to be a non-empty list or tuple of strings");
 	    Py_DECREF(py_str);
 	    Py_DECREF(py_details);
+	    g_strfreev(details);
 	    return NULL;
 	}
 	if (!(str = PyString_AsString(py_str))) {
 	    Py_DECREF(py_str);
 	    Py_DECREF(py_details);
+	    g_strfreev(details);
 	    return NULL;
 	}
 	details[i] = g_strdup(str);
