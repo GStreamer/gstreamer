@@ -60,6 +60,8 @@ struct _GstFFMpegMux
   /*< private > */
   /* event_function is the collectpads default eventfunction */
   GstPadEventFunction event_function;
+  int preload;
+  int max_delay;
 };
 
 typedef struct _GstFFMpegMuxClassParams
@@ -100,6 +102,13 @@ enum
   /* FILL ME */
 };
 
+enum
+{
+  PROP_0,
+  PROP_PRELOAD,
+  PROP_MAXDELAY
+};
+
 /* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass);
 static void gst_ffmpegmux_base_init (gpointer g_class);
@@ -117,6 +126,11 @@ static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_ffmpegmux_change_state (GstElement * element,
     GstStateChange transition);
+
+static void gst_ffmpegmux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_ffmpegmux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 #define GST_FFMUX_PARAMS_QDATA g_quark_from_static_string("ffmux-params")
 
@@ -182,6 +196,19 @@ gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_ffmpegmux_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_ffmpegmux_get_property);
+
+  g_object_class_install_property (gobject_class, PROP_PRELOAD,
+      g_param_spec_int ("preload", "preload",
+          "Set the initial demux-decode delay (in microseconds)", 0, G_MAXINT,
+          0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_MAXDELAY,
+      g_param_spec_int ("maxdelay", "maxdelay",
+          "Set the maximum demux-decode delay (in microseconds)", 0, G_MAXINT,
+          0, G_PARAM_READWRITE));
+
   gstelement_class->request_new_pad = gst_ffmpegmux_request_new_pad;
   gstelement_class->change_state = gst_ffmpegmux_change_state;
   gobject_class->finalize = gst_ffmpegmux_finalize;
@@ -211,7 +238,52 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
 
   ffmpegmux->videopads = 0;
   ffmpegmux->audiopads = 0;
+  ffmpegmux->preload = 0;
+  ffmpegmux->max_delay = 0;
 }
+
+static void
+gst_ffmpegmux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstFFMpegMux *src;
+
+  src = (GstFFMpegMux *) object;
+
+  switch (prop_id) {
+    case PROP_PRELOAD:
+      src->preload = g_value_get_int (value);
+      break;
+    case PROP_MAXDELAY:
+      src->max_delay = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_ffmpegmux_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstFFMpegMux *src;
+
+  src = (GstFFMpegMux *) object;
+
+  switch (prop_id) {
+    case PROP_PRELOAD:
+      g_value_set_int (value, src->preload);
+      break;
+    case PROP_MAXDELAY:
+      g_value_set_int (value, src->max_delay);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 
 static void
 gst_ffmpegmux_finalize (GObject * object)
@@ -309,6 +381,8 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
   collect_pad = (GstFFMpegMuxPad *) gst_pad_get_element_private (pad);
 
   st = ffmpegmux->context->streams[collect_pad->padnum];
+  ffmpegmux->context->preload = ffmpegmux->preload;
+  ffmpegmux->context->max_delay = ffmpegmux->max_delay;
 
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
