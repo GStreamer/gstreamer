@@ -767,7 +767,13 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
         goto peer_failed;
       gst_object_unref (peer);
     } else {
-      goto not_linked;
+      /* there is no peer, this is only fatal when we activate. When we
+       * deactivate, we must assume the application has unlinked the peer and
+       * will deactivate it eventually. */
+      if (active)
+        goto not_linked;
+      else
+        GST_DEBUG_OBJECT (pad, "deactivating unlinked pad");
     }
   } else {
     if (G_UNLIKELY (GST_PAD_GETRANGEFUNC (pad) == NULL))
