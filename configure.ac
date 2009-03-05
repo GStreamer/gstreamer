@@ -200,7 +200,11 @@ esac
 AC_SUBST(DARWIN_LDFLAGS)
 
 dnl *** Check for bz2
-AG_GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzlibVersion, , bzlib.h,, AC_ERROR([libbz2 is required]))
+AG_GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzlibVersion, , bzlib.h, have_bz2=yes, have_bz2=no)
+AM_CONDITIONAL(HAVE_BZ2, test "x$have_bz2" = "xyes")
+if test "x$have_bz2" = "xno"; then
+  AC_WARN([libbz2 not found, matroska demuxer will not be able to read bz2 tracks])
+fi
 
 dnl *** configure external libs ***
 
