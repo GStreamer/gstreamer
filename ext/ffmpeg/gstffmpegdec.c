@@ -2622,6 +2622,12 @@ gst_ffmpegdec_register (GstPlugin * plugin)
            note: if you change this, see the code in gstdv.c in good/ext/dv. */
         rank = GST_RANK_SECONDARY;
         break;
+      case CODEC_ID_AAC:
+        /* The ffmpeg AAC decoder isn't complete, and there's no way to figure out
+         * before decoding whether it will support the given stream or not.
+         * We therefore set it to NONE until it can handle the full specs. */
+        rank = GST_RANK_NONE;
+        break;
       default:
         rank = GST_RANK_MARGINAL;
         break;
