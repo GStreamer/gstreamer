@@ -51,6 +51,7 @@ G_BEGIN_DECLS
 #include <gst/rtsp/gstrtspconnection.h>
 #include <gst/rtsp/gstrtspmessage.h>
 #include <gst/rtsp/gstrtspurl.h>
+#include <gst/rtsp/gstrtsprange.h>
 
 #include "gstrtspext.h"
 
@@ -195,6 +196,7 @@ struct _GstRTSPSrc {
   gboolean           tried_url_auth;
   gchar             *addr;
   gboolean           need_redirect;
+  GstRTSPTimeRange  *range;
 
   /* supported methods */
   gint               methods;

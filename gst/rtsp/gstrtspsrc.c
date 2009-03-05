@@ -93,7 +93,6 @@
 
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/rtp/gstrtppayloads.h>
-#include <gst/rtsp/gstrtsprange.h>
 
 #include "gstrtspsrc.h"
 
@@ -405,7 +404,6 @@ gst_rtspsrc_finalize (GObject * object)
   gst_rtsp_ext_list_free (rtspsrc->extensions);
   g_free (rtspsrc->location);
   g_free (rtspsrc->req_location);
-  g_free (rtspsrc->content_base);
   gst_rtsp_url_free (rtspsrc->url);
 
   /* free locks */
@@ -823,6 +821,13 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
   if (src->props)
     gst_structure_free (src->props);
   src->props = NULL;
+
+  g_free (src->content_base);
+  src->content_base = NULL;
+
+  if (src->range)
+    gst_rtsp_range_free (src->range);
+  src->range = NULL;
 }
 
 #define PARSE_INT(p, del, res)          \
@@ -4173,48 +4178,55 @@ static void
 gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
     GstSegment * segment)
 {
+  gint64 seconds;
   GstRTSPTimeRange *therange;
 
+  if (src->range)
+    gst_rtsp_range_free (src->range);
+
   if (gst_rtsp_range_parse (range, &therange) == GST_RTSP_OK) {
-    gint64 seconds;
-
-    GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
-        GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
-
-    if (therange->min.type == GST_RTSP_TIME_NOW)
-      seconds = 0;
-    else if (therange->min.type == GST_RTSP_TIME_END)
-      seconds = 0;
-    else
-      seconds = therange->min.seconds * GST_SECOND;
-
-    GST_DEBUG_OBJECT (src, "range: min %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (seconds));
-
-    /* we need to start playback without clipping from the position reported by
-     * the server */
-    segment->start = seconds;
-    segment->last_stop = seconds;
-
-    if (therange->max.type == GST_RTSP_TIME_NOW)
-      seconds = -1;
-    else if (therange->max.type == GST_RTSP_TIME_END)
-      seconds = -1;
-    else
-      seconds = therange->max.seconds * GST_SECOND;
-
-    GST_DEBUG_OBJECT (src, "range: max %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (seconds));
-
-    /* don't change duration with unknown value, we might have a valid value
-     * there that we want to keep. */
-    if (seconds != -1)
-      gst_segment_set_duration (segment, GST_FORMAT_TIME, seconds);
-
-    gst_rtsp_range_free (therange);
+    GST_DEBUG_OBJECT (src, "parsed range %s", range);
+    src->range = therange;
   } else {
-    GST_WARNING_OBJECT (src, "could not parse range: '%s'", range);
+    GST_DEBUG_OBJECT (src, "failed to parse range %s", range);
+    src->range = NULL;
+    gst_segment_init (segment, GST_FORMAT_TIME);
+    return;
   }
+
+  GST_DEBUG_OBJECT (src, "range: type %d, min %f - type %d,  max %f ",
+      therange->min.type, therange->min.seconds, therange->max.type,
+      therange->max.seconds);
+
+  if (therange->min.type == GST_RTSP_TIME_NOW)
+    seconds = 0;
+  else if (therange->min.type == GST_RTSP_TIME_END)
+    seconds = 0;
+  else
+    seconds = therange->min.seconds * GST_SECOND;
+
+  GST_DEBUG_OBJECT (src, "range: min %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (seconds));
+
+  /* we need to start playback without clipping from the position reported by
+   * the server */
+  segment->start = seconds;
+  segment->last_stop = seconds;
+
+  if (therange->max.type == GST_RTSP_TIME_NOW)
+    seconds = -1;
+  else if (therange->max.type == GST_RTSP_TIME_END)
+    seconds = -1;
+  else
+    seconds = therange->max.seconds * GST_SECOND;
+
+  GST_DEBUG_OBJECT (src, "range: max %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (seconds));
+
+  /* don't change duration with unknown value, we might have a valid value
+   * there that we want to keep. */
+  if (seconds != -1)
+    gst_segment_set_duration (segment, GST_FORMAT_TIME, seconds);
 }
 
 static gboolean
@@ -4352,8 +4364,10 @@ restart:
     const gchar *range;
 
     range = gst_sdp_message_get_attribute_val (&sdp, "range");
-    if (range)
+    if (range) {
+      /* keep track of the range and configure it in the segment */
       gst_rtspsrc_parse_range (src, range, &src->segment);
+    }
   }
 
   /* create streams */
@@ -4665,6 +4679,23 @@ gst_rtspsrc_get_float (const char *str, gfloat * val)
   RESTORE_LOCALE return result;
 }
 
+static gchar *
+gen_range_header (GstRTSPSrc * src, GstSegment * segment)
+{
+  gchar *res;
+
+  if (src->range && src->range->min.type == GST_RTSP_TIME_NOW) {
+    res = g_strdup_printf ("npt=now-");
+  } else {
+    if (segment->last_stop == 0)
+      res = g_strdup_printf ("npt=0-");
+    else
+      res = gst_rtspsrc_dup_printf ("npt=%f-",
+          ((gdouble) segment->last_stop) / GST_SECOND);
+  }
+  return res;
+}
+
 static gboolean
 gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
 {
@@ -4691,12 +4722,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
     goto create_request_failed;
 
   if (src->need_range) {
-    if (segment->last_stop == 0)
-      hval = g_strdup_printf ("npt=0-");
-    else
-      hval =
-          gst_rtspsrc_dup_printf ("npt=%f-",
-          ((gdouble) segment->last_stop) / GST_SECOND);
+    hval = gen_range_header (src, segment);
 
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
     g_free (hval);
