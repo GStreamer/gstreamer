@@ -536,7 +536,13 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return TRUE;
 
       default:
-        return DefWindowProc (hWnd, uMsg, wParam, lParam);
+        {
+          /* transmit messages to the parrent (ex: mouse/keyboard input) */
+          HWND parent_id = GetProp (hWnd, "gl_window_parent_id");
+          if (parent_id)
+            PostMessage (parent_id, uMsg, wParam, lParam);
+          return DefWindowProc (hWnd, uMsg, wParam, lParam);
+        }
     }
 
     return 0;
