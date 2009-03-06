@@ -2919,17 +2919,17 @@ mxf_metadata_dm_segment_to_structure (MXFMetadataBase * m)
   if (self->event_comment)
     gst_structure_id_set (ret, MXF_QUARK (EVENT_COMMENT), G_TYPE_STRING,
         self->event_comment, NULL);
-
+  /* FIXME: DMS1 doesn't support serializing to a structure yet */
+#if 0
   if (self->dm_framework) {
     GstStructure *s =
         mxf_metadata_base_to_structure (MXF_METADATA_BASE (self->dm_framework));
 
-    if (s) {
-      gst_structure_id_set (ret, MXF_QUARK (DM_FRAMEWORK), GST_TYPE_STRUCTURE,
-          s, NULL);
-      gst_structure_free (s);
-    }
+    gst_structure_id_set (ret, MXF_QUARK (DM_FRAMEWORK), GST_TYPE_STRUCTURE,
+        s, NULL);
+    gst_structure_free (s);
   }
+#endif
 
   if (self->n_track_ids > 0) {
     GValue arr = { 0, }
