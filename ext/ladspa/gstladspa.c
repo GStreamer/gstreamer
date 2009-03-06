@@ -226,10 +226,13 @@ gst_ladspa_base_init (gpointer g_class)
   } else
     klass_tags = "Filter/Effect/Audio/LADSPA";
 
+#if HAVE_LRDF
   if (extra_klass_tags) {
     details->klass = g_strconcat (klass_tags, extra_klass_tags, NULL);
     g_free (extra_klass_tags);
-  } else {
+  } else
+#endif
+  {
     details->klass = klass_tags;
   }
   GST_INFO ("tags : %s", details->klass);
