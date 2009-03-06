@@ -749,6 +749,9 @@ return_data:
      * value */
     gst_structure_set_value (s, "framerate", &rates);
     g_value_unset (&rates);
+  } else {
+    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1,
+        NULL);
   }
   return s;
 
@@ -817,11 +820,13 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
       w = MIN (size.discrete.width, G_MAXINT);
       h = MIN (size.discrete.height, G_MAXINT);
 
-      tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
-          w, h, template);
+      if (w && h) {
+        tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
+            w, h, template);
 
-      if (tmp)
-        results = g_list_prepend (results, tmp);
+        if (tmp)
+          results = g_list_prepend (results, tmp);
+      }
 
       size.index++;
     } while (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
