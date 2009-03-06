@@ -86,6 +86,7 @@ setup_legacyresample (int channels, int inrate, int outrate)
    * later */
   gst_pad_set_caps (mysinkpad, caps);
   gst_pad_use_fixed_caps (mysinkpad);
+  gst_caps_unref (caps);
 
   gst_pad_set_active (mysinkpad, TRUE);
   gst_pad_set_active (mysrcpad, TRUE);
