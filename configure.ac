@@ -718,9 +718,9 @@ AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
   fi
   if test x$HAVE_METADATA = xno; then
     AC_MSG_WARN(no of metadata libraries (exif, iptc or xmp) found)
+  else
+    HAVE_METADATA="yes"
   fi
-  dnl metadata plugin will parse whole chunks anyway
-  HAVE_METADATA="yes"
   AC_SUBST(METADATA_CFLAGS)
   AC_SUBST(METADATA_LIBS)
 ])

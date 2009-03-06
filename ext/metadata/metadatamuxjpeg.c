@@ -211,6 +211,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
   if (jpeg_data->state == JPEG_MUX_NULL) {
 
     if (*bufsize < 2) {
+      GST_INFO ("need more data");
       *next_size = (buf - *next_start) + 2;
       ret = META_PARSING_NEED_MORE_DATA;
       goto done;
@@ -220,6 +221,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
     mark[1] = READ (buf, *bufsize);
 
     if (mark[0] != 0xFF || mark[1] != 0xD8) {
+      GST_INFO ("missing marker");
       ret = META_PARSING_ERROR;
       goto done;
     }
@@ -231,6 +233,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
   while (ret == META_PARSING_DONE) {
     switch (jpeg_data->state) {
       case JPEG_MUX_READING:
+        GST_DEBUG ("start reading");
         ret =
             metadatamux_jpeg_reading (jpeg_data, &buf, bufsize,
             offset, step_buf, next_start, next_size);
@@ -239,6 +242,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
         goto done;
         break;
       default:
+        GST_INFO ("invalid parser state");
         ret = META_PARSING_ERROR;
         break;
     }
@@ -379,6 +383,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
   *next_start = *buf;
 
   if (*bufsize < 2) {
+    GST_INFO ("need more data");
     *next_size = (*buf - *next_start) + 2;
     ret = META_PARSING_NEED_MORE_DATA;
     goto done;
@@ -396,6 +401,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
 
       if (chunk_size >= 16) {
         if (*bufsize < 5) {
+          GST_INFO ("need more data");
           *next_size = (*buf - *next_start) + 5;
           ret = META_PARSING_NEED_MORE_DATA;
           goto done;
@@ -406,11 +412,13 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
         }
       } else {
         /* FIXME: should we check if the first chunk is EXIF? */
+        GST_INFO ("chunk size too small %u", chunk_size);
       }
 
     }
 
     if (!jfif_found) {
+      GST_INFO ("no jfif found");
       ret = META_PARSING_ERROR;
       goto done;
     }
@@ -456,7 +464,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     ret = META_PARSING_DONE;
 
   } else {
-    /* invalid JPEG chunk */
+    GST_INFO ("invalid JPEG chunk");
     ret = META_PARSING_ERROR;
   }
 

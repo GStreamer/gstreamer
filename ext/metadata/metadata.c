@@ -248,28 +248,34 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
 
   switch (meta_data->img_type) {
     case IMG_JPEG:
-      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX)) {
+        GST_DEBUG ("parsing jpeg");
         ret =
             metadataparse_jpeg_parse (&meta_data->format_data.jpeg_parse,
             (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
-      else
+      } else {
+        GST_DEBUG ("formatting jpeg");
         ret =
             metadatamux_jpeg_parse (&meta_data->format_data.jpeg_mux,
             (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
+      }
       break;
     case IMG_PNG:
-      if (G_LIKELY (meta_data->options & META_OPT_DEMUX))
+      if (G_LIKELY (meta_data->options & META_OPT_DEMUX)) {
+        GST_DEBUG ("parsing png");
         ret =
             metadataparse_png_parse (&meta_data->format_data.png_parse,
             (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
-      else
+      } else {
+        GST_DEBUG ("formatting png");
         ret =
             metadatamux_png_parse (&meta_data->format_data.png_mux,
             (guint8 *) buf, &buf_size, meta_data->offset_orig, &next_start,
             next_size);
+      }
       break;
     default:
       /* unexpected */
@@ -286,6 +292,7 @@ done:
   if (ret == META_PARSING_DONE) {
     meta_data->state = STATE_DONE;
   }
+  GST_DEBUG ("parsing/formatting done : %d", ret);
 
   return ret;
 }

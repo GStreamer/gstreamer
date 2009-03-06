@@ -245,6 +245,7 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
        type to be sure it is a JPEG */
 
     if (*bufsize < 2) {
+      GST_INFO ("need more data");
       *next_size = (buf - *next_start) + 2;
       ret = META_PARSING_NEED_MORE_DATA;
       goto done;
@@ -254,6 +255,7 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
     mark[1] = READ (buf, *bufsize);
 
     if (mark[0] != 0xFF || mark[1] != 0xD8) {
+      GST_INFO ("missing marker");
       ret = META_PARSING_ERROR;
       goto done;
     }
@@ -265,21 +267,25 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
   while (ret == META_PARSING_DONE) {
     switch (jpeg_data->state) {
       case JPEG_PARSE_READING:
+        GST_DEBUG ("start reading");
         ret =
             metadataparse_jpeg_reading (jpeg_data, &buf, bufsize,
             offset, step_buf, next_start, next_size);
         break;
       case JPEG_PARSE_JUMPING:
+        GST_DEBUG ("jump");
         ret =
             metadataparse_jpeg_jump (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
       case JPEG_PARSE_EXIF:
+        GST_DEBUG ("parse exif");
         ret =
             metadataparse_jpeg_exif (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
       case JPEG_PARSE_IPTC:
+        GST_DEBUG ("parse iptc");
 #ifdef HAVE_IPTC
         ret =
             metadataparse_jpeg_iptc (jpeg_data, &buf, bufsize, next_start,
@@ -287,6 +293,7 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
 #endif
         break;
       case JPEG_PARSE_XMP:
+        GST_DEBUG ("parse xmp");
         ret =
             metadataparse_jpeg_xmp (jpeg_data, &buf, bufsize, next_start,
             next_size);
@@ -295,6 +302,7 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
         goto done;
         break;
       default:
+        GST_INFO ("invalid parser state");
         ret = META_PARSING_ERROR;
         break;
     }
