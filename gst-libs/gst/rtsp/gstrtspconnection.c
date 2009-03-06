@@ -2395,6 +2395,47 @@ gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
 }
 
 /**
+ * gst_rtsp_connection_get_readfd:
+ * @conn: a #GstRTSPConnection
+ *
+ * Get the file descriptor for reading.
+ *
+ * Returns: the file descriptor used for reading or -1 on error. The file
+ * descriptor remains valid until the connection is closed.
+ *
+ * Since: 0.10.23
+ */
+gint
+gst_rtsp_connection_get_readfd (const GstRTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, -1);
+  g_return_val_if_fail (conn->readfd != NULL, -1);
+
+  return conn->readfd->fd;
+}
+
+/**
+ * gst_rtsp_connection_get_writefd:
+ * @conn: a #GstRTSPConnection
+ *
+ * Get the file descriptor for writing.
+ *
+ * Returns: the file descriptor used for writing or -1 on error. The file
+ * descriptor remains valid until the connection is closed.
+ *
+ * Since: 0.10.23
+ */
+gint
+gst_rtsp_connection_get_writefd (const GstRTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, -1);
+  g_return_val_if_fail (conn->writefd != NULL, -1);
+
+  return conn->writefd->fd;
+}
+
+
+/**
  * gst_rtsp_connection_set_tunneled:
  * @conn: a #GstRTSPConnection
  * @tunneled: the new state

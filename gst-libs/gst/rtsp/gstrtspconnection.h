@@ -107,6 +107,9 @@ GstRTSPUrl *       gst_rtsp_connection_get_url       (const GstRTSPConnection *c
 const gchar *      gst_rtsp_connection_get_ip        (const GstRTSPConnection *conn);
 void               gst_rtsp_connection_set_ip        (GstRTSPConnection *conn, const gchar *ip);
 
+gint               gst_rtsp_connection_get_readfd    (const GstRTSPConnection *conn);
+gint               gst_rtsp_connection_get_writefd   (const GstRTSPConnection *conn);
+
 /* tunneling */
 void               gst_rtsp_connection_set_tunneled  (GstRTSPConnection *conn, gboolean tunneled);
 gboolean           gst_rtsp_connection_is_tunneled   (const GstRTSPConnection *conn);

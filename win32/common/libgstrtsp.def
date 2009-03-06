@@ -11,8 +11,10 @@ EXPORTS
 	gst_rtsp_connection_flush
 	gst_rtsp_connection_free
 	gst_rtsp_connection_get_ip
+	gst_rtsp_connection_get_readfd
 	gst_rtsp_connection_get_tunnelid
 	gst_rtsp_connection_get_url
+	gst_rtsp_connection_get_writefd
 	gst_rtsp_connection_is_tunneled
 	gst_rtsp_connection_next_timeout
 	gst_rtsp_connection_poll
