@@ -307,6 +307,67 @@ gst_ffmpegenc_finalize (GObject * object)
 }
 
 static GstCaps *
+gst_ffmpegenc_get_possible_sizes (GstFFMpegEnc * ffmpegenc, GstPad * pad,
+    const GstCaps * caps)
+{
+  GstCaps *othercaps = NULL;
+  GstCaps *tmpcaps = NULL;
+  GstCaps *intersect = NULL;
+  guint i;
+
+  othercaps = gst_pad_peer_get_caps (ffmpegenc->srcpad);
+
+  if (!othercaps)
+    return gst_caps_copy (caps);
+
+  intersect = gst_caps_intersect (othercaps,
+      gst_pad_get_pad_template_caps (ffmpegenc->srcpad));
+  gst_caps_unref (othercaps);
+
+  if (gst_caps_is_empty (intersect))
+    return intersect;
+
+  if (gst_caps_is_any (intersect))
+    return gst_caps_copy (caps);
+
+  tmpcaps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (intersect); i++) {
+    GstStructure *s = gst_caps_get_structure (intersect, i);
+    const GValue *height = NULL;
+    const GValue *width = NULL;
+    const GValue *framerate = NULL;
+    GstStructure *tmps;
+
+    height = gst_structure_get_value (s, "height");
+    width = gst_structure_get_value (s, "width");
+    framerate = gst_structure_get_value (s, "framerate");
+
+    tmps = gst_structure_new ("video/x-raw-rgb", NULL);
+    if (width)
+      gst_structure_set_value (tmps, "width", width);
+    if (height)
+      gst_structure_set_value (tmps, "height", height);
+    if (framerate)
+      gst_structure_set_value (tmps, "framerate", framerate);
+    gst_caps_merge_structure (tmpcaps, gst_structure_copy (tmps));
+
+    gst_structure_set_name (tmps, "video/x-raw-yuv");
+    gst_caps_merge_structure (tmpcaps, gst_structure_copy (tmps));
+
+    gst_structure_set_name (tmps, "video/x-raw-gray");
+    gst_caps_merge_structure (tmpcaps, tmps);
+  }
+  gst_caps_unref (intersect);
+
+  intersect = gst_caps_intersect (caps, tmpcaps);
+  gst_caps_unref (tmpcaps);
+
+  return intersect;
+}
+
+
+static GstCaps *
 gst_ffmpegenc_getcaps (GstPad * pad)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) GST_PAD_PARENT (pad);
@@ -315,6 +376,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   AVCodecContext *ctx = NULL;
   enum PixelFormat pixfmt;
   GstCaps *caps = NULL;
+  GstCaps *finalcaps = NULL;
   gint i;
 
   GST_DEBUG_OBJECT (ffmpegenc, "getting caps");
@@ -331,7 +393,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
 
   /* cached */
   if (oclass->sinkcaps) {
-    caps = gst_caps_copy (oclass->sinkcaps);
+    caps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, oclass->sinkcaps);
     GST_DEBUG_OBJECT (ffmpegenc, "return cached caps %" GST_PTR_FORMAT, caps);
     return caps;
   }
@@ -430,7 +492,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
 
   /* make sure we have something */
   if (!caps) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad,
+        gst_pad_get_pad_template_caps (pad));
     GST_DEBUG_OBJECT (ffmpegenc, "probing gave nothing, "
         "return template %" GST_PTR_FORMAT, caps);
     return caps;
@@ -439,7 +502,10 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   GST_DEBUG_OBJECT (ffmpegenc, "probed caps gave %" GST_PTR_FORMAT, caps);
   oclass->sinkcaps = gst_caps_copy (caps);
 
-  return caps;
+  finalcaps = gst_ffmpegenc_get_possible_sizes (ffmpegenc, pad, caps);
+  gst_caps_unref (caps);
+
+  return finalcaps;
 }
 
 static gboolean
