@@ -679,7 +679,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   /* ERRORS */
 write_failed:
   {
-    GST_ERROR ("write failed", res);
+    GST_ERROR ("write failed (%d)", res);
     return res;
   }
 eof:
