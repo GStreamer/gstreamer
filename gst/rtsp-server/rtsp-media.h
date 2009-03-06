@@ -91,6 +91,7 @@ struct _GstRTSPMediaStream {
    * sockets */
   GstElement   *udpsrc[2];
   GstElement   *udpsink[2];
+  GstElement   *appsrc[2];
 
   /* server ports for sending/receiving */
   GstRTSPRange  server_port;

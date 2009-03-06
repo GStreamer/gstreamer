@@ -542,7 +542,8 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *se
     goto unsupported_transports;
 
   supported = GST_RTSP_LOWER_TRANS_UDP |
-	GST_RTSP_LOWER_TRANS_UDP_MCAST;
+	GST_RTSP_LOWER_TRANS_UDP_MCAST |
+	GST_RTSP_LOWER_TRANS_TCP;
   if (!(ct->lower_transport & supported))
     goto unsupported_transports;
 
@@ -594,6 +595,11 @@ handle_setup_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *se
     goto no_stream;
 
   /* setup the server transport from the client transport */
+  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
+    ct->port.min = gst_rtsp_connection_get_readfd (client->connection);
+    ct->port.max = gst_rtsp_connection_get_writefd (client->connection);
+  }
+
   st = gst_rtsp_session_stream_set_transport (stream, ct);
 
   /* serialize the server transport */

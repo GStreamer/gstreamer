@@ -415,13 +415,18 @@ static void
 caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
 {
   gchar *capsstr;
+  GstCaps *newcaps, *oldcaps;
 
-  if (stream->caps)
-    gst_caps_unref (stream->caps);
-  if ((stream->caps = GST_PAD_CAPS (pad)))
-    gst_caps_ref (stream->caps);
+  if ((newcaps = GST_PAD_CAPS (pad)))
+    gst_caps_ref (newcaps);
 
-  capsstr = gst_caps_to_string (stream->caps);
+  oldcaps = stream->caps;
+  stream->caps = newcaps;
+
+  if (oldcaps)
+    gst_caps_unref (oldcaps);
+
+  capsstr = gst_caps_to_string (newcaps);
   g_message ("stream %p received caps %s", stream, capsstr);
   g_free (capsstr);
 }
@@ -553,21 +558,30 @@ collect_media_stats (GstRTSPMedia *media)
   gint64 duration;
 
   media->range.unit = GST_RTSP_RANGE_NPT;
-  media->range.min.type = GST_RTSP_TIME_SECONDS;
-  media->range.min.seconds = 0.0;
 
-  /* get the duration */
-  format = GST_FORMAT_TIME;
-  if (!gst_element_query_duration (media->pipeline, &format, &duration)) 
-    duration = -1;
-
-  if (duration == -1) {
+  if (media->is_live) {
+    media->range.min.type = GST_RTSP_TIME_NOW;
+    media->range.min.seconds = -1;
     media->range.max.type = GST_RTSP_TIME_END;
     media->range.max.seconds = -1;
   }
   else {
-    media->range.max.type = GST_RTSP_TIME_SECONDS;
-    media->range.max.seconds = ((gdouble)duration) / GST_SECOND;
+    media->range.min.type = GST_RTSP_TIME_SECONDS;
+    media->range.min.seconds = 0.0;
+
+    /* get the duration */
+    format = GST_FORMAT_TIME;
+    if (!gst_element_query_duration (media->pipeline, &format, &duration)) 
+      duration = -1;
+
+    if (duration == -1) {
+      media->range.max.type = GST_RTSP_TIME_END;
+      media->range.max.seconds = -1;
+    }
+    else {
+      media->range.max.type = GST_RTSP_TIME_SECONDS;
+      media->range.max.seconds = ((gdouble)duration) / GST_SECOND;
+    }
   }
 }
 
@@ -799,11 +813,21 @@ gst_rtsp_media_play (GstRTSPMedia *media, GArray *transports)
 
     /* get the stream and add the destinations */
     stream = gst_rtsp_media_get_stream (media, tr->idx);
+    switch (trans->lower_transport) {
+      case GST_RTSP_LOWER_TRANS_UDP:
+      case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+        g_message ("adding %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
 
-    g_message ("adding %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
-
-    g_signal_emit_by_name (stream->udpsink[0], "add", trans->destination, trans->client_port.min, NULL);
-    g_signal_emit_by_name (stream->udpsink[1], "add", trans->destination, trans->client_port.max, NULL);
+        g_signal_emit_by_name (stream->udpsink[0], "add", trans->destination, trans->client_port.min, NULL);
+        g_signal_emit_by_name (stream->udpsink[1], "add", trans->destination, trans->client_port.max, NULL);
+        break;
+      case GST_RTSP_LOWER_TRANS_TCP:
+        g_message ("TCP transport not yet implemented");
+        break;
+      default:
+        g_message ("Unknown transport %d", trans->lower_transport);
+        break;
+    }
   }
 
   g_message ("playing media %p", media);
@@ -852,12 +876,22 @@ gst_rtsp_media_pause (GstRTSPMedia *media, GArray *transports)
     /* get the stream and add the destinations */
     stream = gst_rtsp_media_get_stream (media, tr->idx);
 
-    g_message ("removing %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
+    switch (trans->lower_transport) {
+      case GST_RTSP_LOWER_TRANS_UDP:
+      case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+        g_message ("removing %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
 
-    g_signal_emit_by_name (stream->udpsink[0], "remove", trans->destination, trans->client_port.min, NULL);
-    g_signal_emit_by_name (stream->udpsink[1], "remove", trans->destination, trans->client_port.max, NULL);
+        g_signal_emit_by_name (stream->udpsink[0], "remove", trans->destination, trans->client_port.min, NULL);
+        g_signal_emit_by_name (stream->udpsink[1], "remove", trans->destination, trans->client_port.max, NULL);
+        break;
+      case GST_RTSP_LOWER_TRANS_TCP:
+        g_message ("TCP transport not yet implemented");
+        break;
+      default:
+        g_message ("Unknown transport %d", trans->lower_transport);
+        break;
+    }
   }
-
   g_message ("pause media %p", media);
   media->target_state = GST_STATE_PAUSED;
   ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);

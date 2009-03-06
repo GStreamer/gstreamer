@@ -46,7 +46,7 @@ main (int argc, char *argv[])
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
   gst_rtsp_media_factory_set_launch (factory, 
-    "( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )");
+    "( videotestsrc is-live=1 ! x264enc ! rtph264pay name=pay0 pt=96 )");
 
   /* attach the test factory to the /test url */
   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
