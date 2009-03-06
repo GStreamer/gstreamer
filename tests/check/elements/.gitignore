@@ -1,6 +1,7 @@
 .dirstamp
 aacparse
 amrparse
+camerabin
 deinterleave
 gdpdepay
 gdppay
