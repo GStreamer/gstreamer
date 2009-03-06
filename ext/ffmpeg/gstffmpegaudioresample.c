@@ -197,7 +197,9 @@ gst_ffmpegaudioresample_transform_size (GstBaseTransform * trans,
     return FALSE;
 
   conv = gst_util_uint64_scale (size, outrate * outchanns, inrate * inchanns);
-  *othersize = (guint) conv;
+  /* Adding padding to the output buffer size, since audio_resample's internal
+   * methods might write a bit further. */
+  *othersize = (guint) conv + 64;
 
   GST_DEBUG_OBJECT (trans, "Transformed size from %d to %d", size, *othersize);
 
