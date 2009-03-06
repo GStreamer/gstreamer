@@ -6,6 +6,7 @@ win32/common/gstrtsp-enumtypes.c
 win32/common/gstrtsp-enumtypes.h
 win32/common/interfaces-enumtypes.c
 win32/common/interfaces-enumtypes.h
+win32/common/libgstapp.def
 win32/common/libgstaudio.def
 win32/common/libgstcdda.def
 win32/common/libgstinterfaces.def
@@ -21,6 +22,8 @@ win32/common/audio-enumtypes.c
 win32/common/audio-enumtypes.h
 win32/common/pbutils-enumtypes.c
 win32/common/pbutils-enumtypes.h
+win32/common/video-enumtypes.c
+win32/common/video-enumtypes.h
 win32/vs6/gst_plugins_base.dsw
 win32/vs6/grammar.dsp
 win32/vs6/libgstadder.dsp
