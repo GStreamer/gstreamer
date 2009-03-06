@@ -141,10 +141,14 @@ setup (void)
 
   gst_tag_setter_add_tags (setter, GST_TAG_MERGE_REPLACE,
       GST_TAG_DESCRIPTION, desc_str, NULL);
-
-  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING);
-
   g_free (desc_str);
+
+  if (gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING) !=
+      GST_STATE_CHANGE_SUCCESS) {
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
+    gst_object_unref (camera);
+    camera = NULL;
+  }
 }
 
 static void
@@ -152,7 +156,8 @@ teardown (void)
 {
   g_mutex_free (cam_mutex);
   g_cond_free (cam_cond);
-  gst_check_teardown_element (camera);
+  if (camera)
+    gst_check_teardown_element (camera);
 }
 
 static void
@@ -304,6 +309,9 @@ check_file_validity (const gchar * filename)
 
 GST_START_TEST (test_single_image_capture)
 {
+  if (!camera)
+    return;
+
   /* set still image mode */
   g_object_set (camera, "mode", 0,
       "filename", make_test_file_name (SINGLE_IMAGE_FILENAME), NULL);
@@ -322,6 +330,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_burst_image_capture)
 {
+  if (!camera)
+    return;
+
   /* set still image mode */
   g_object_set (camera, "mode", 0,
       "filename", make_test_seq_file_name (BURST_IMAGE_FILENAME), NULL);
@@ -344,6 +355,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_recording)
 {
+  if (!camera)
+    return;
+
   /* Set video recording mode */
   g_object_set (camera, "mode", 1,
       "filename", make_test_file_name (VIDEO_FILENAME), NULL);
@@ -359,6 +373,9 @@ GST_END_TEST;
 GST_START_TEST (test_image_video_cycle)
 {
   guint i;
+
+  if (!camera)
+    return;
 
   continuous = FALSE;
 
@@ -391,6 +408,9 @@ GST_START_TEST (validate_captured_image_files)
   GString *filename;
   gint i;
 
+  if (!camera)
+    return;
+
   /* validate single image */
   check_file_validity (SINGLE_IMAGE_FILENAME);
 
@@ -410,6 +430,9 @@ GST_END_TEST;
 
 GST_START_TEST (validate_captured_video_files)
 {
+  if (!camera)
+    return;
+
   /* validate video recording */
   check_file_validity (VIDEO_FILENAME);
 

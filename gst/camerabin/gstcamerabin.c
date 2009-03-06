@@ -2750,13 +2750,15 @@ gst_camerabin_user_start (GstCameraBin * camera)
   }
   g_mutex_unlock (camera->capture_mutex);
 
-  g_object_set (G_OBJECT (camera->active_bin), "filename",
-      camera->filename->str, NULL);
+  if (camera->active_bin) {
+    g_object_set (G_OBJECT (camera->active_bin), "filename",
+        camera->filename->str, NULL);
 
-  if (camera->active_bin == camera->imgbin) {
-    gst_camerabin_start_image_capture (camera);
-  } else if (camera->active_bin == camera->vidbin) {
-    gst_camerabin_start_video_recording (camera);
+    if (camera->active_bin == camera->imgbin) {
+      gst_camerabin_start_image_capture (camera);
+    } else if (camera->active_bin == camera->vidbin) {
+      gst_camerabin_start_video_recording (camera);
+    }
   }
 }
 
