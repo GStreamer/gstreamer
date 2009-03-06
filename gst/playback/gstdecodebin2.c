@@ -105,6 +105,10 @@ struct _GstDecodeBin
   guint have_type_id;           /* signal id for have-type from typefind */
 
   gboolean async_pending;       /* async-start has been emited */
+
+  GMutex *dyn_lock;             /* lock protecting pad blocking */
+  gboolean shutdown;            /* if we are shutting down */
+  GList *blocked_pads;          /* pads that have set to block */
 };
 
 struct _GstDecodeBinClass
@@ -214,6 +218,23 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
 		    "unlocking from thread %p",				\
 		    g_thread_self ());					\
     g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->lock);			\
+} G_STMT_END
+
+#define DECODE_BIN_DYN_LOCK(dbin) G_STMT_START {			\
+    GST_LOG_OBJECT (dbin,						\
+		    "dynlocking from thread %p",			\
+		    g_thread_self ());					\
+    g_mutex_lock (GST_DECODE_BIN_CAST(dbin)->dyn_lock);			\
+    GST_LOG_OBJECT (dbin,						\
+		    "dynlocked from thread %p",				\
+		    g_thread_self ());					\
+} G_STMT_END
+
+#define DECODE_BIN_DYN_UNLOCK(dbin) G_STMT_START {			\
+    GST_LOG_OBJECT (dbin,						\
+		    "dynunlocking from thread %p",			\
+		    g_thread_self ());					\
+    g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->dyn_lock);		\
 } G_STMT_END
 
 /* GstDecodeGroup
@@ -635,6 +656,10 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->activegroup = NULL;
   decode_bin->groups = NULL;
 
+  decode_bin->dyn_lock = g_mutex_new ();
+  decode_bin->shutdown = FALSE;
+  decode_bin->blocked_pads = NULL;
+
   decode_bin->caps =
       gst_caps_from_string ("video/x-raw-yuv;video/x-raw-rgb;video/x-raw-gray;"
       "audio/x-raw-int;audio/x-raw-float;" "text/plain;text/x-pango-markup");
@@ -697,6 +722,11 @@ gst_decode_bin_finalize (GObject * object)
   if (decode_bin->lock) {
     g_mutex_free (decode_bin->lock);
     decode_bin->lock = NULL;
+  }
+
+  if (decode_bin->dyn_lock) {
+    g_mutex_free (decode_bin->dyn_lock);
+    decode_bin->dyn_lock = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -2322,8 +2352,25 @@ source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
 static void
 gst_decode_pad_set_blocked (GstDecodePad * dpad, gboolean blocked)
 {
+  GstDecodeBin *dbin = dpad->dbin;
+
+  DECODE_BIN_DYN_LOCK (dbin);
   gst_pad_set_blocked_async (GST_PAD (dpad), blocked,
       (GstPadBlockCallback) source_pad_blocked_cb, NULL);
+  if (blocked) {
+    if (dbin->shutdown) {
+      /* deactivate to force flushing state to prevent NOT_LINKED errors */
+      gst_pad_set_active (GST_PAD (dpad), FALSE);
+    } else {
+      gst_object_ref (dpad);
+      dbin->blocked_pads = g_list_prepend (dbin->blocked_pads, dpad);
+    }
+  } else {
+    if (g_list_find (dbin->blocked_pads, dpad))
+      gst_object_unref (dpad);
+    dbin->blocked_pads = g_list_remove (dbin->blocked_pads, dpad);
+  }
+  DECODE_BIN_DYN_UNLOCK (dbin);
 }
 
 static void
@@ -2365,6 +2412,7 @@ gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad, GstDecodeGroup * group)
   gst_ghost_pad_construct (GST_GHOST_PAD (dpad));
   gst_ghost_pad_set_target (GST_GHOST_PAD (dpad), pad);
   dpad->group = group;
+  dpad->dbin = dbin;
 
   return dpad;
 }
@@ -2425,6 +2473,30 @@ find_sink_pad (GstElement * element)
   return pad;
 }
 
+/* call with dyn_lock held */
+static void
+unblock_pads (GstDecodeBin * dbin)
+{
+  GList *tmp, *next;
+
+  for (tmp = dbin->blocked_pads; tmp; tmp = next) {
+    GstDecodePad *dpad = (GstDecodePad *) tmp->data;
+
+    next = g_list_next (tmp);
+
+    GST_DEBUG_OBJECT (dpad, "unblocking");
+    gst_pad_set_blocked_async (GST_PAD (dpad), FALSE,
+        (GstPadBlockCallback) source_pad_blocked_cb, NULL);
+    /* make flushing, prevent NOT_LINKED */
+    GST_PAD_SET_FLUSHING (GST_PAD (dpad));
+    gst_object_unref (dpad);
+    GST_DEBUG_OBJECT (dpad, "unblocked");
+  }
+
+  /* clear, no more blocked pads */
+  dbin->blocked_pads = NULL;
+}
+
 static GstStateChangeReturn
 gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2437,10 +2509,20 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
         goto missing_typefind;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      DECODE_BIN_DYN_LOCK (dbin);
+      GST_LOG_OBJECT (dbin, "clearing shutdown flag");
+      dbin->shutdown = FALSE;
+      DECODE_BIN_DYN_UNLOCK (dbin);
       dbin->have_type = FALSE;
       ret = GST_STATE_CHANGE_ASYNC;
       do_async_start (dbin);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      DECODE_BIN_DYN_LOCK (dbin);
+      GST_LOG_OBJECT (dbin, "setting shutdown flag");
+      dbin->shutdown = TRUE;
+      unblock_pads (dbin);
+      DECODE_BIN_DYN_UNLOCK (dbin);
     default:
       break;
   }
