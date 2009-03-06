@@ -273,6 +273,7 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_MV0, "Always try a MB with MV (0,0)", "mv0"},
       {CODEC_FLAG_PART,
           "Store MV, DC and AC coefficients in seperate partitions", "part"},
+      {CODEC_FLAG_LOOP_FILTER, "Loop filter", "loop-filter"},
       {CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
       {CODEC_FLAG_NORMALIZE_AQP,
           "Normalize Adaptive Quantization (masking, etc)", "aqp"},
