@@ -10,7 +10,6 @@ GType
 gst_rtsp_result_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_OK, "GST_RTSP_OK", "ok"},
@@ -28,6 +27,8 @@ gst_rtsp_result_get_type (void)
       {GST_RTSP_ENET, "GST_RTSP_ENET", "enet"},
       {GST_RTSP_ENOTIP, "GST_RTSP_ENOTIP", "enotip"},
       {GST_RTSP_ETIMEOUT, "GST_RTSP_ETIMEOUT", "etimeout"},
+      {GST_RTSP_ETGET, "GST_RTSP_ETGET", "etget"},
+      {GST_RTSP_ETPOST, "GST_RTSP_ETPOST", "etpost"},
       {GST_RTSP_ELAST, "GST_RTSP_ELAST", "elast"},
       {0, NULL, NULL}
     };
@@ -40,7 +41,6 @@ GType
 gst_rtsp_event_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_RTSP_EV_READ, "GST_RTSP_EV_READ", "read"},
@@ -56,7 +56,6 @@ GType
 gst_rtsp_family_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_FAM_NONE, "GST_RTSP_FAM_NONE", "none"},
@@ -73,7 +72,6 @@ GType
 gst_rtsp_state_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_STATE_INVALID, "GST_RTSP_STATE_INVALID", "invalid"},
@@ -93,7 +91,6 @@ GType
 gst_rtsp_version_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_VERSION_INVALID, "GST_RTSP_VERSION_INVALID", "invalid"},
@@ -109,7 +106,6 @@ GType
 gst_rtsp_method_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_RTSP_INVALID, "GST_RTSP_INVALID", "invalid"},
@@ -135,7 +131,6 @@ GType
 gst_rtsp_auth_method_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_AUTH_NONE, "GST_RTSP_AUTH_NONE", "none"},
@@ -152,46 +147,45 @@ GType
 gst_rtsp_header_field_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_HDR_INVALID, "GST_RTSP_HDR_INVALID", "invalid"},
       {GST_RTSP_HDR_ACCEPT, "GST_RTSP_HDR_ACCEPT", "accept"},
       {GST_RTSP_HDR_ACCEPT_ENCODING, "GST_RTSP_HDR_ACCEPT_ENCODING",
-            "accept-encoding"},
+          "accept-encoding"},
       {GST_RTSP_HDR_ACCEPT_LANGUAGE, "GST_RTSP_HDR_ACCEPT_LANGUAGE",
-            "accept-language"},
+          "accept-language"},
       {GST_RTSP_HDR_ALLOW, "GST_RTSP_HDR_ALLOW", "allow"},
       {GST_RTSP_HDR_AUTHORIZATION, "GST_RTSP_HDR_AUTHORIZATION",
-            "authorization"},
+          "authorization"},
       {GST_RTSP_HDR_BANDWIDTH, "GST_RTSP_HDR_BANDWIDTH", "bandwidth"},
       {GST_RTSP_HDR_BLOCKSIZE, "GST_RTSP_HDR_BLOCKSIZE", "blocksize"},
       {GST_RTSP_HDR_CACHE_CONTROL, "GST_RTSP_HDR_CACHE_CONTROL",
-            "cache-control"},
+          "cache-control"},
       {GST_RTSP_HDR_CONFERENCE, "GST_RTSP_HDR_CONFERENCE", "conference"},
       {GST_RTSP_HDR_CONNECTION, "GST_RTSP_HDR_CONNECTION", "connection"},
       {GST_RTSP_HDR_CONTENT_BASE, "GST_RTSP_HDR_CONTENT_BASE", "content-base"},
       {GST_RTSP_HDR_CONTENT_ENCODING, "GST_RTSP_HDR_CONTENT_ENCODING",
-            "content-encoding"},
+          "content-encoding"},
       {GST_RTSP_HDR_CONTENT_LANGUAGE, "GST_RTSP_HDR_CONTENT_LANGUAGE",
-            "content-language"},
+          "content-language"},
       {GST_RTSP_HDR_CONTENT_LENGTH, "GST_RTSP_HDR_CONTENT_LENGTH",
-            "content-length"},
+          "content-length"},
       {GST_RTSP_HDR_CONTENT_LOCATION, "GST_RTSP_HDR_CONTENT_LOCATION",
-            "content-location"},
+          "content-location"},
       {GST_RTSP_HDR_CONTENT_TYPE, "GST_RTSP_HDR_CONTENT_TYPE", "content-type"},
       {GST_RTSP_HDR_CSEQ, "GST_RTSP_HDR_CSEQ", "cseq"},
       {GST_RTSP_HDR_DATE, "GST_RTSP_HDR_DATE", "date"},
       {GST_RTSP_HDR_EXPIRES, "GST_RTSP_HDR_EXPIRES", "expires"},
       {GST_RTSP_HDR_FROM, "GST_RTSP_HDR_FROM", "from"},
       {GST_RTSP_HDR_IF_MODIFIED_SINCE, "GST_RTSP_HDR_IF_MODIFIED_SINCE",
-            "if-modified-since"},
+          "if-modified-since"},
       {GST_RTSP_HDR_LAST_MODIFIED, "GST_RTSP_HDR_LAST_MODIFIED",
-            "last-modified"},
+          "last-modified"},
       {GST_RTSP_HDR_PROXY_AUTHENTICATE, "GST_RTSP_HDR_PROXY_AUTHENTICATE",
-            "proxy-authenticate"},
+          "proxy-authenticate"},
       {GST_RTSP_HDR_PROXY_REQUIRE, "GST_RTSP_HDR_PROXY_REQUIRE",
-            "proxy-require"},
+          "proxy-require"},
       {GST_RTSP_HDR_PUBLIC, "GST_RTSP_HDR_PUBLIC", "public"},
       {GST_RTSP_HDR_RANGE, "GST_RTSP_HDR_RANGE", "range"},
       {GST_RTSP_HDR_REFERER, "GST_RTSP_HDR_REFERER", "referer"},
@@ -207,15 +201,15 @@ gst_rtsp_header_field_get_type (void)
       {GST_RTSP_HDR_USER_AGENT, "GST_RTSP_HDR_USER_AGENT", "user-agent"},
       {GST_RTSP_HDR_VIA, "GST_RTSP_HDR_VIA", "via"},
       {GST_RTSP_HDR_WWW_AUTHENTICATE, "GST_RTSP_HDR_WWW_AUTHENTICATE",
-            "www-authenticate"},
+          "www-authenticate"},
       {GST_RTSP_HDR_CLIENT_CHALLENGE, "GST_RTSP_HDR_CLIENT_CHALLENGE",
-            "client-challenge"},
+          "client-challenge"},
       {GST_RTSP_HDR_REAL_CHALLENGE1, "GST_RTSP_HDR_REAL_CHALLENGE1",
-            "real-challenge1"},
+          "real-challenge1"},
       {GST_RTSP_HDR_REAL_CHALLENGE2, "GST_RTSP_HDR_REAL_CHALLENGE2",
-            "real-challenge2"},
+          "real-challenge2"},
       {GST_RTSP_HDR_REAL_CHALLENGE3, "GST_RTSP_HDR_REAL_CHALLENGE3",
-            "real-challenge3"},
+          "real-challenge3"},
       {GST_RTSP_HDR_SUBSCRIBE, "GST_RTSP_HDR_SUBSCRIBE", "subscribe"},
       {GST_RTSP_HDR_ALERT, "GST_RTSP_HDR_ALERT", "alert"},
       {GST_RTSP_HDR_CLIENT_ID, "GST_RTSP_HDR_CLIENT_ID", "client-id"},
@@ -223,10 +217,10 @@ gst_rtsp_header_field_get_type (void)
       {GST_RTSP_HDR_GUID, "GST_RTSP_HDR_GUID", "guid"},
       {GST_RTSP_HDR_REGION_DATA, "GST_RTSP_HDR_REGION_DATA", "region-data"},
       {GST_RTSP_HDR_MAX_ASM_WIDTH, "GST_RTSP_HDR_MAX_ASM_WIDTH",
-            "max-asm-width"},
+          "max-asm-width"},
       {GST_RTSP_HDR_LANGUAGE, "GST_RTSP_HDR_LANGUAGE", "language"},
       {GST_RTSP_HDR_PLAYER_START_TIME, "GST_RTSP_HDR_PLAYER_START_TIME",
-            "player-start-time"},
+          "player-start-time"},
       {GST_RTSP_HDR_LOCATION, "GST_RTSP_HDR_LOCATION", "location"},
       {0, NULL, NULL}
     };
@@ -239,7 +233,6 @@ GType
 gst_rtsp_status_code_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_RTSP_STS_INVALID, "GST_RTSP_STS_INVALID", "invalid"},
@@ -247,85 +240,85 @@ gst_rtsp_status_code_get_type (void)
       {GST_RTSP_STS_OK, "GST_RTSP_STS_OK", "ok"},
       {GST_RTSP_STS_CREATED, "GST_RTSP_STS_CREATED", "created"},
       {GST_RTSP_STS_LOW_ON_STORAGE, "GST_RTSP_STS_LOW_ON_STORAGE",
-            "low-on-storage"},
+          "low-on-storage"},
       {GST_RTSP_STS_MULTIPLE_CHOICES, "GST_RTSP_STS_MULTIPLE_CHOICES",
-            "multiple-choices"},
+          "multiple-choices"},
       {GST_RTSP_STS_MOVED_PERMANENTLY, "GST_RTSP_STS_MOVED_PERMANENTLY",
-            "moved-permanently"},
+          "moved-permanently"},
       {GST_RTSP_STS_MOVE_TEMPORARILY, "GST_RTSP_STS_MOVE_TEMPORARILY",
-            "move-temporarily"},
+          "move-temporarily"},
       {GST_RTSP_STS_SEE_OTHER, "GST_RTSP_STS_SEE_OTHER", "see-other"},
       {GST_RTSP_STS_NOT_MODIFIED, "GST_RTSP_STS_NOT_MODIFIED", "not-modified"},
       {GST_RTSP_STS_USE_PROXY, "GST_RTSP_STS_USE_PROXY", "use-proxy"},
       {GST_RTSP_STS_BAD_REQUEST, "GST_RTSP_STS_BAD_REQUEST", "bad-request"},
       {GST_RTSP_STS_UNAUTHORIZED, "GST_RTSP_STS_UNAUTHORIZED", "unauthorized"},
       {GST_RTSP_STS_PAYMENT_REQUIRED, "GST_RTSP_STS_PAYMENT_REQUIRED",
-            "payment-required"},
+          "payment-required"},
       {GST_RTSP_STS_FORBIDDEN, "GST_RTSP_STS_FORBIDDEN", "forbidden"},
       {GST_RTSP_STS_NOT_FOUND, "GST_RTSP_STS_NOT_FOUND", "not-found"},
       {GST_RTSP_STS_METHOD_NOT_ALLOWED, "GST_RTSP_STS_METHOD_NOT_ALLOWED",
-            "method-not-allowed"},
+          "method-not-allowed"},
       {GST_RTSP_STS_NOT_ACCEPTABLE, "GST_RTSP_STS_NOT_ACCEPTABLE",
-            "not-acceptable"},
+          "not-acceptable"},
       {GST_RTSP_STS_PROXY_AUTH_REQUIRED, "GST_RTSP_STS_PROXY_AUTH_REQUIRED",
-            "proxy-auth-required"},
+          "proxy-auth-required"},
       {GST_RTSP_STS_REQUEST_TIMEOUT, "GST_RTSP_STS_REQUEST_TIMEOUT",
-            "request-timeout"},
+          "request-timeout"},
       {GST_RTSP_STS_GONE, "GST_RTSP_STS_GONE", "gone"},
       {GST_RTSP_STS_LENGTH_REQUIRED, "GST_RTSP_STS_LENGTH_REQUIRED",
-            "length-required"},
+          "length-required"},
       {GST_RTSP_STS_PRECONDITION_FAILED, "GST_RTSP_STS_PRECONDITION_FAILED",
-            "precondition-failed"},
+          "precondition-failed"},
       {GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE,
             "GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE",
-            "request-entity-too-large"},
+          "request-entity-too-large"},
       {GST_RTSP_STS_REQUEST_URI_TOO_LARGE, "GST_RTSP_STS_REQUEST_URI_TOO_LARGE",
-            "request-uri-too-large"},
+          "request-uri-too-large"},
       {GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE,
-            "GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE", "unsupported-media-type"},
+          "GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE", "unsupported-media-type"},
       {GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD,
             "GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD",
-            "parameter-not-understood"},
+          "parameter-not-understood"},
       {GST_RTSP_STS_CONFERENCE_NOT_FOUND, "GST_RTSP_STS_CONFERENCE_NOT_FOUND",
-            "conference-not-found"},
+          "conference-not-found"},
       {GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH, "GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH",
-            "not-enough-bandwidth"},
+          "not-enough-bandwidth"},
       {GST_RTSP_STS_SESSION_NOT_FOUND, "GST_RTSP_STS_SESSION_NOT_FOUND",
-            "session-not-found"},
+          "session-not-found"},
       {GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
             "GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE",
-            "method-not-valid-in-this-state"},
+          "method-not-valid-in-this-state"},
       {GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE,
             "GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE",
-            "header-field-not-valid-for-resource"},
+          "header-field-not-valid-for-resource"},
       {GST_RTSP_STS_INVALID_RANGE, "GST_RTSP_STS_INVALID_RANGE",
-            "invalid-range"},
+          "invalid-range"},
       {GST_RTSP_STS_PARAMETER_IS_READONLY, "GST_RTSP_STS_PARAMETER_IS_READONLY",
-            "parameter-is-readonly"},
+          "parameter-is-readonly"},
       {GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED,
             "GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED",
-            "aggregate-operation-not-allowed"},
+          "aggregate-operation-not-allowed"},
       {GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED,
             "GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED",
-            "only-aggregate-operation-allowed"},
+          "only-aggregate-operation-allowed"},
       {GST_RTSP_STS_UNSUPPORTED_TRANSPORT, "GST_RTSP_STS_UNSUPPORTED_TRANSPORT",
-            "unsupported-transport"},
+          "unsupported-transport"},
       {GST_RTSP_STS_DESTINATION_UNREACHABLE,
-            "GST_RTSP_STS_DESTINATION_UNREACHABLE", "destination-unreachable"},
+          "GST_RTSP_STS_DESTINATION_UNREACHABLE", "destination-unreachable"},
       {GST_RTSP_STS_INTERNAL_SERVER_ERROR, "GST_RTSP_STS_INTERNAL_SERVER_ERROR",
-            "internal-server-error"},
+          "internal-server-error"},
       {GST_RTSP_STS_NOT_IMPLEMENTED, "GST_RTSP_STS_NOT_IMPLEMENTED",
-            "not-implemented"},
+          "not-implemented"},
       {GST_RTSP_STS_BAD_GATEWAY, "GST_RTSP_STS_BAD_GATEWAY", "bad-gateway"},
       {GST_RTSP_STS_SERVICE_UNAVAILABLE, "GST_RTSP_STS_SERVICE_UNAVAILABLE",
-            "service-unavailable"},
+          "service-unavailable"},
       {GST_RTSP_STS_GATEWAY_TIMEOUT, "GST_RTSP_STS_GATEWAY_TIMEOUT",
-            "gateway-timeout"},
+          "gateway-timeout"},
       {GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
             "GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED",
-            "rtsp-version-not-supported"},
+          "rtsp-version-not-supported"},
       {GST_RTSP_STS_OPTION_NOT_SUPPORTED, "GST_RTSP_STS_OPTION_NOT_SUPPORTED",
-            "option-not-supported"},
+          "option-not-supported"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstRTSPStatusCode", values);

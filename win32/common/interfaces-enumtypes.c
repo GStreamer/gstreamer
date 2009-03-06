@@ -21,7 +21,6 @@ GType
 gst_color_balance_type_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_COLOR_BALANCE_HARDWARE, "GST_COLOR_BALANCE_HARDWARE", "hardware"},
@@ -38,7 +37,6 @@ GType
 gst_mixer_type_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_MIXER_HARDWARE, "GST_MIXER_HARDWARE", "hardware"},
@@ -54,18 +52,21 @@ GType
 gst_mixer_message_type_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GEnumValue values[] = {
       {GST_MIXER_MESSAGE_INVALID, "GST_MIXER_MESSAGE_INVALID", "invalid"},
       {GST_MIXER_MESSAGE_MUTE_TOGGLED, "GST_MIXER_MESSAGE_MUTE_TOGGLED",
-            "mute-toggled"},
+          "mute-toggled"},
       {GST_MIXER_MESSAGE_RECORD_TOGGLED, "GST_MIXER_MESSAGE_RECORD_TOGGLED",
-            "record-toggled"},
+          "record-toggled"},
       {GST_MIXER_MESSAGE_VOLUME_CHANGED, "GST_MIXER_MESSAGE_VOLUME_CHANGED",
-            "volume-changed"},
+          "volume-changed"},
       {GST_MIXER_MESSAGE_OPTION_CHANGED, "GST_MIXER_MESSAGE_OPTION_CHANGED",
-            "option-changed"},
+          "option-changed"},
+      {GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED,
+          "GST_MIXER_MESSAGE_OPTIONS_LIST_CHANGED", "options-list-changed"},
+      {GST_MIXER_MESSAGE_MIXER_CHANGED, "GST_MIXER_MESSAGE_MIXER_CHANGED",
+          "mixer-changed"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstMixerMessageType", values);
@@ -77,12 +78,14 @@ GType
 gst_mixer_flags_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_MIXER_FLAG_NONE, "GST_MIXER_FLAG_NONE", "none"},
       {GST_MIXER_FLAG_AUTO_NOTIFICATIONS, "GST_MIXER_FLAG_AUTO_NOTIFICATIONS",
-            "auto-notifications"},
+          "auto-notifications"},
+      {GST_MIXER_FLAG_HAS_WHITELIST, "GST_MIXER_FLAG_HAS_WHITELIST",
+          "has-whitelist"},
+      {GST_MIXER_FLAG_GROUPING, "GST_MIXER_FLAG_GROUPING", "grouping"},
       {0, NULL, NULL}
     };
     etype = g_flags_register_static ("GstMixerFlags", values);
@@ -95,7 +98,6 @@ GType
 gst_mixer_track_flags_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_MIXER_TRACK_INPUT, "GST_MIXER_TRACK_INPUT", "input"},
@@ -104,6 +106,9 @@ gst_mixer_track_flags_get_type (void)
       {GST_MIXER_TRACK_RECORD, "GST_MIXER_TRACK_RECORD", "record"},
       {GST_MIXER_TRACK_MASTER, "GST_MIXER_TRACK_MASTER", "master"},
       {GST_MIXER_TRACK_SOFTWARE, "GST_MIXER_TRACK_SOFTWARE", "software"},
+      {GST_MIXER_TRACK_NO_RECORD, "GST_MIXER_TRACK_NO_RECORD", "no-record"},
+      {GST_MIXER_TRACK_NO_MUTE, "GST_MIXER_TRACK_NO_MUTE", "no-mute"},
+      {GST_MIXER_TRACK_WHITELIST, "GST_MIXER_TRACK_WHITELIST", "whitelist"},
       {0, NULL, NULL}
     };
     etype = g_flags_register_static ("GstMixerTrackFlags", values);
@@ -116,7 +121,6 @@ GType
 gst_tuner_channel_flags_get_type (void)
 {
   static GType etype = 0;
-
   if (etype == 0) {
     static const GFlagsValue values[] = {
       {GST_TUNER_CHANNEL_INPUT, "GST_TUNER_CHANNEL_INPUT", "input"},
