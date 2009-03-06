@@ -82,7 +82,6 @@ GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT);
 static void gst_collect_pads_clear (GstCollectPads * pads,
     GstCollectData * data);
 static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer);
-static GstFlowReturn gst_collect_pads_check_collected (GstCollectPads * pads);
 static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
 static void gst_collect_pads_finalize (GObject * object);
 static void gst_collect_pads_init (GstCollectPads * pads,
@@ -419,11 +418,6 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   unref_data (data);
 
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
-
-  GST_OBJECT_LOCK (pad);
-  /* make sure we go to eos on last pad */
-  gst_collect_pads_check_collected (pads);
-  GST_OBJECT_UNLOCK (pad);
 
   return TRUE;
 
