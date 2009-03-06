@@ -542,6 +542,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-h263",
           "variant", G_TYPE_STRING, "itu",
           "h263version", G_TYPE_STRING, "h263p", NULL);
+      if (encode && context) {
+
+        gst_caps_set_simple (caps,
+            "annex-f", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_4MV,
+            "annex-j", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_LOOP_FILTER,
+            "annex-i", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_AC_PRED,
+            "annex-t", G_TYPE_BOOLEAN, context->flags & CODEC_FLAG_AC_PRED,
+            NULL);
+      }
       break;
 
     case CODEC_ID_H263I:
@@ -2374,6 +2383,26 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
                 " to a pixel format", GST_FOURCC_ARGS (fourcc));
             break;
         }
+      break;
+    }
+    case CODEC_ID_H263P:
+    {
+      gboolean val;
+
+      if (!gst_structure_get_boolean (str, "annex-f", &val) || val)
+        context->flags |= CODEC_FLAG_4MV;
+      else
+        context->flags &= ~CODEC_FLAG_4MV;
+      if ((!gst_structure_get_boolean (str, "annex-i", &val) || val) &&
+          (!gst_structure_get_boolean (str, "annex-t", &val) || val))
+        context->flags |= CODEC_FLAG_AC_PRED;
+      else
+        context->flags &= ~CODEC_FLAG_AC_PRED;
+      if (!gst_structure_get_boolean (str, "annex-j", &val) || val)
+        context->flags |= CODEC_FLAG_LOOP_FILTER;
+      else
+        context->flags &= ~CODEC_FLAG_LOOP_FILTER;
+      break;
     }
     case CODEC_ID_ADPCM_G726:
     {
