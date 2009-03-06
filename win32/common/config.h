@@ -3,8 +3,6 @@
 /* PREFIX -- specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
 
-#define GST_INSTALL_PLUGINS_HELPER PREFIX "\\libexec\\gst-install-plugins-helper.exe"
-
 /* The implementation that should be used for integer audio resampling witll
    be benchmarked at runtime */
 #undef AUDIORESAMPLE_FORMAT_AUTO
@@ -56,7 +54,7 @@
 #undef GST_GCOV_ENABLED
 
 /* plugin install helper script */
-#undef GST_INSTALL_PLUGINS_HELPER
+#define GST_INSTALL_PLUGINS_HELPER PREFIX "\\libexec\\gst-install-plugins-helper.exe"
 
 /* Default errorlevel to use */
 #define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
