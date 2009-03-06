@@ -1861,7 +1861,8 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   /* If we don't error out after the first failed read with the AAC decoder,
    * we must *not* carry on pushing data, else we'll cause segfaults... */
   if (len == -1 && in_plugin->id == CODEC_ID_AAC) {
-    GST_WARNING_OBJECT (ffmpegdec, "Decoding of AAC stream by FFMPEG failed.");
+    GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, (NULL),
+        ("Decoding of AAC stream by FFMPEG failed."));
     *ret = GST_FLOW_ERROR;
   }
 
