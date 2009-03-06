@@ -1546,6 +1546,12 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
  *
  * Converts @structure to a human-readable string representation.
  *
+ * For debugging purposes its easier to do something like this:
+ * |[
+ * GST_LOG ("structure is %" GST_PTR_FORMAT, structure);
+ * ]|
+ * This prints the structure in human readble form.
+ *
  * Returns: a pointer to string allocated by g_malloc(). g_free() after
  * usage.
  */

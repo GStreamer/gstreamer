@@ -1781,9 +1781,9 @@ gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
  * can be converted back to a #GstCaps by gst_caps_from_string().
  *
  * For debugging purposes its easier to do something like this:
- * <programlisting>
- *  GST_LOG ("caps are %" GST_PTR_FORMAT, caps);
- * </programlisting>
+ * |[
+ * GST_LOG ("caps are %" GST_PTR_FORMAT, caps);
+ * ]|
  * This prints the caps in human readble form.
  *
  * Returns: a newly allocated string representing @caps.
