@@ -99,7 +99,7 @@ test_tags (const gchar * tag_str)
   fail_unless (videotestsrc != NULL);
   g_object_set (G_OBJECT (videotestsrc), "num-buffers", 1, NULL);
 
-  jpegenc = gst_element_factory_make ("q", "enc");
+  jpegenc = gst_element_factory_make ("jpegenc", "enc");
   if (jpegenc == NULL) {
     g_print ("Cannot test - jpegenc not available\n");
     return;
