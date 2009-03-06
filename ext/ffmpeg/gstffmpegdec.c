@@ -1794,8 +1794,12 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration),
       GST_TIME_ARGS (ffmpegdec->next_ts));
 
-  /* outgoing buffer */
-  *outbuf = gst_buffer_new_and_alloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  /* outgoing buffer. We use av_malloc() to have properly aligned memory. */
+  *outbuf = gst_buffer_new ();
+  GST_BUFFER_DATA (*outbuf) = GST_BUFFER_MALLOCDATA (*outbuf) =
+      av_malloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
+  GST_BUFFER_SIZE (*outbuf) = AVCODEC_MAX_AUDIO_FRAME_SIZE;
+  GST_BUFFER_FREE_FUNC (*outbuf) = av_free;
 
   len = avcodec_decode_audio2 (ffmpegdec->context,
       (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, data, size);
