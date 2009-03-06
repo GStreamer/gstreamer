@@ -1225,15 +1225,22 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
     if (head_check (mp3parse, header)) {
       guint bitrate = 0, layer = 0, rate = 0, channels = 0, version = 0, mode =
           0, crc = 0;
+      gboolean caps_change = FALSE;
 
       if (!(bpf = mp3_type_frame_length_from_header (mp3parse, header,
                   &version, &layer, &channels, &bitrate, &rate, &mode, &crc)))
         goto header_error;
 
+      if (channels != mp3parse->channels ||
+          rate != mp3parse->rate || layer != mp3parse->layer ||
+          version != mp3parse->version)
+        caps_change = TRUE;
+
       /*************************************************************************
       * robust seek support
       * - This performs additional frame validation if the resyncing flag is set
-      *   (indicating a discontinuous stream).
+      *   (indicating a discontinuous stream), or if the caps are changing 
+      *   (different sample rate, channels, layer, version)
       * - The current frame header is not accepted as valid unless the NEXT 
       *   frame header has the same values for most fields.  This significantly
       *   increases the probability that we aren't processing random data.
@@ -1242,7 +1249,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
       *   bitrate from previous frames.  In this case, seeking may be more 
       *   complicated because the frames are not independently coded.
       *************************************************************************/
-      if (mp3parse->resyncing) {
+      if (mp3parse->resyncing || caps_change) {
         guint32 header2;
         const guint8 *data2;
 
@@ -1284,9 +1291,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
         break;
       }
 
-      if (channels != mp3parse->channels ||
-          rate != mp3parse->rate || layer != mp3parse->layer ||
-          version != mp3parse->version) {
+      if (caps_change) {
         GstCaps *caps;
 
         caps = mp3_caps_create (version, layer, channels, rate);
