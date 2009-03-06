@@ -752,6 +752,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Mimic webcam");
       break;
 
+    case GST_MAKE_FOURCC ('T', 'H', 'E', 'O'):
+    case GST_MAKE_FOURCC ('t', 'h', 'e', 'o'):
+      caps = gst_caps_new_simple ("video/x-theora", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Theora video codec");
+
+      break;
 
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
@@ -779,8 +786,11 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
   /* extradata */
   if (strf_data || strd_data) {
-    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER,
-        strf_data ? strf_data : strd_data, NULL);
+    GstBuffer *codec_data;
+
+    codec_data = strf_data ? strf_data : strd_data;
+
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
   }
 
   /* palette */
@@ -1691,6 +1701,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('V', 'P', '6', '0'),
     GST_MAKE_FOURCC ('L', 'M', '2', '0'),
     GST_MAKE_FOURCC ('R', 'P', 'Z', 'A'),
+    GST_MAKE_FOURCC ('T', 'H', 'E', 'O'),
     /* FILL ME */
   };
   guint i;
