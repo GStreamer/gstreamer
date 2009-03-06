@@ -42,6 +42,7 @@
  * Note: The prototypes don't need to be defined conditionaly, as the cpp will
  * do that for us.
  */
+#if FAAD2_MINOR_VERSION < 7
 #ifdef FAAD_IS_NEAAC
 #define NeAACDecInit NeAACDecInit_no_definition
 #define NeAACDecInit2 NeAACDecInit2_no_definition
@@ -49,7 +50,11 @@
 #define faacDecInit faacDecInit_no_definition
 #define faacDecInit2 faacDecInit2_no_definition
 #endif
+#endif /* FAAD2_MINOR_VERSION < 7 */
+
 #include "gstfaad.h"
+
+#if FAAD2_MINOR_VERSION < 7
 #ifdef FAAD_IS_NEAAC
 #undef NeAACDecInit
 #undef NeAACDecInit2
@@ -61,6 +66,8 @@
 extern long faacDecInit (faacDecHandle, guint8 *, guint32, guint32 *, guint8 *);
 extern gint8 faacDecInit2 (faacDecHandle, guint8 *, guint32,
     guint32 *, guint8 *);
+
+#endif /* FAAD2_MINOR_VERSION < 7 */
 
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
 #define GST_CAT_DEFAULT faad_debug
@@ -302,7 +309,11 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   faad->packetised = FALSE;
 
   if ((value = gst_structure_get_value (str, "codec_data"))) {
+#if FAAD2_MINOR_VERSION >= 7
+    unsigned long samplerate;
+#else
     guint32 samplerate;
+#endif
     guint8 channels;
     guint8 *cdata;
     guint csize;
@@ -1284,7 +1295,11 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
   /* init if not already done during capsnego */
   if (!faad->init) {
+#if FAAD2_MINOR_VERSION >= 7
+    unsigned long rate;
+#else
     guint32 rate;
+#endif
     guint8 ch;
 
     GST_DEBUG_OBJECT (faad, "initialising ...");
