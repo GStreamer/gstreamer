@@ -1722,13 +1722,17 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     }
 
     if (pad->need_segment) {
+      GstEvent *e;
+
       if (demux->close_seg_event)
         gst_pad_push_event (GST_PAD_CAST (pad),
             gst_event_ref (demux->close_seg_event));
-      gst_pad_push_event (GST_PAD_CAST (pad),
-          gst_event_new_new_segment (FALSE, demux->segment.rate,
-              GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
-              GST_BUFFER_TIMESTAMP (outbuf)));
+
+      e = gst_event_new_new_segment (FALSE, demux->segment.rate,
+          GST_FORMAT_TIME, demux->segment.start, demux->segment.stop,
+          GST_BUFFER_TIMESTAMP (outbuf));
+      gst_event_set_seqnum (e, demux->seqnum);
+      gst_pad_push_event (GST_PAD_CAST (pad), e);
       pad->need_segment = FALSE;
     }
 
@@ -1790,9 +1794,13 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
     }
 
     if (ret == GST_FLOW_UNEXPECTED) {
+      GstEvent *e;
+
       GST_DEBUG_OBJECT (demux, "EOS for track");
       pad->eos = TRUE;
-      gst_pad_push_event (GST_PAD_CAST (pad), gst_event_new_eos ());
+      e = gst_event_new_eos ();
+      gst_event_set_seqnum (e, demux->seqnum);
+      gst_pad_push_event (GST_PAD_CAST (pad), e);
       ret = GST_FLOW_OK;
     }
 
@@ -2491,8 +2499,12 @@ from_index:
           if (!p->eos
               && p->current_essence_track_position >=
               p->current_essence_track->duration) {
+            GstEvent *e;
+
             p->eos = TRUE;
-            gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+            e = gst_event_new_eos ();
+            gst_event_set_seqnum (e, demux->seqnum);
+            gst_pad_push_event (GST_PAD_CAST (p), e);
           }
         }
       }
@@ -2567,8 +2579,12 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
       if (!p->eos
           && p->current_essence_track_position >=
           p->current_essence_track->duration) {
+        GstEvent *e;
+
         p->eos = TRUE;
-        gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+        e = gst_event_new_eos ();
+        gst_event_set_seqnum (e, demux->seqnum);
+        gst_pad_push_event (GST_PAD_CAST (p), e);
       }
     }
 
@@ -2582,9 +2598,13 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
           gst_mxf_demux_find_essence_element (demux, p->current_essence_track,
           &position, FALSE);
       if (offset == -1) {
+        GstEvent *e;
+
         GST_ERROR_OBJECT (demux, "Failed to find offset for essence track");
         p->eos = TRUE;
-        gst_pad_push_event (GST_PAD_CAST (p), gst_event_new_eos ());
+        e = gst_event_new_eos ();
+        gst_event_set_seqnum (e, demux->seqnum);
+        gst_pad_push_event (GST_PAD_CAST (p), e);
         continue;
       }
 
@@ -2628,10 +2648,14 @@ gst_mxf_demux_pull_and_handle_klv_packet (GstMXFDemux * demux)
           gst_mxf_demux_find_essence_element (demux,
           earliest->current_essence_track, &position, FALSE);
       if (offset == -1) {
+        GstEvent *e;
+
         GST_WARNING_OBJECT (demux,
             "Failed to find offset for late essence track");
         earliest->eos = TRUE;
-        gst_pad_push_event (GST_PAD_CAST (earliest), gst_event_new_eos ());
+        e = gst_event_new_eos ();
+        gst_event_set_seqnum (e, demux->seqnum);
+        gst_pad_push_event (GST_PAD_CAST (earliest), e);
         continue;
       }
 
@@ -2741,6 +2765,7 @@ pause:
         /* perform EOS logic */
         if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
           gint64 stop;
+          GstMessage *m;
 
           /* for segment playback we need to post when (in stream time)
            * we stopped, this is either stop (when set) or the duration. */
@@ -2748,21 +2773,30 @@ pause:
             stop = demux->segment.duration;
 
           GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
-          gst_element_post_message (GST_ELEMENT_CAST (demux),
-              gst_message_new_segment_done (GST_OBJECT_CAST (demux),
-                  GST_FORMAT_TIME, stop));
+          m = gst_message_new_segment_done (GST_OBJECT_CAST (demux),
+              GST_FORMAT_TIME, stop);
+          gst_message_set_seqnum (m, demux->seqnum);
+          gst_element_post_message (GST_ELEMENT_CAST (demux), m);
         } else {
+          GstEvent *e;
+
           /* normal playback, send EOS to all linked pads */
           GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          if (!gst_mxf_demux_push_src_event (demux, gst_event_new_eos ())) {
+          e = gst_event_new_eos ();
+          gst_event_set_seqnum (e, demux->seqnum);
+          if (!gst_mxf_demux_push_src_event (demux, e)) {
             GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
           }
         }
       } else {
+        GstEvent *e;
+
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
             ("Internal data stream error."),
             ("stream stopped, reason %s", reason));
-        gst_mxf_demux_push_src_event (demux, gst_event_new_eos ());
+        e = gst_event_new_eos ();
+        gst_event_set_seqnum (e, demux->seqnum);
+        gst_mxf_demux_push_src_event (demux, e);
       }
     }
     gst_object_unref (demux);
@@ -3030,9 +3064,11 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   gboolean update, flush, keyframe;
   GstSegment seeksegment;
   guint i;
+  guint32 seqnum;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
+  seqnum = gst_event_get_seqnum (event);
 
   if (rate <= 0.0)
     goto wrong_rate;
@@ -3059,6 +3095,7 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   if (flush || seeksegment.last_stop != demux->segment.last_stop) {
     gboolean ret;
     guint64 new_offset = -1;
+    GstEvent *e;
 
     g_mutex_lock (demux->metadata_lock);
     if (!demux->metadata_resolved || demux->update_metadata) {
@@ -3095,10 +3132,11 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
 
     GST_DEBUG_OBJECT (demux, "generating an upstream seek at position %"
         G_GUINT64_FORMAT, new_offset);
-    ret = gst_pad_push_event (demux->sinkpad,
-        gst_event_new_seek (seeksegment.rate, GST_FORMAT_BYTES,
-            seeksegment.flags | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
-            new_offset, GST_SEEK_TYPE_NONE, 0));
+    e = gst_event_new_seek (seeksegment.rate, GST_FORMAT_BYTES,
+        seeksegment.flags | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
+        new_offset, GST_SEEK_TYPE_NONE, 0);
+    gst_event_set_seqnum (e, seqnum);
+    ret = gst_pad_push_event (demux->sinkpad, e);
 
     if (G_UNLIKELY (!ret)) {
       goto seek_failed;
@@ -3162,9 +3200,11 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   GstSegment seeksegment;
   guint i;
   gboolean ret = TRUE;
+  guint32 seqnum;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
+  seqnum = gst_event_get_seqnum (event);
 
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
@@ -3176,10 +3216,14 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
+    GstEvent *e;
+
     /* Flush start up and downstream to make sure data flow and loops are
        idle */
-    gst_mxf_demux_push_src_event (demux, gst_event_new_flush_start ());
-    gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
+    e = gst_event_new_flush_start ();
+    gst_event_set_seqnum (e, seqnum);
+    gst_mxf_demux_push_src_event (demux, gst_event_ref (e));
+    gst_pad_push_event (demux->sinkpad, e);
   } else {
     /* Pause the pulling task */
     gst_pad_pause_task (demux->sinkpad);
@@ -3189,8 +3233,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   GST_PAD_STREAM_LOCK (demux->sinkpad);
 
   if (flush) {
+    GstEvent *e;
+
     /* Stop flushing upstream we need to pull */
-    gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop ());
+    e = gst_event_new_flush_stop ();
+    gst_event_set_seqnum (e, seqnum);
+    gst_pad_push_event (demux->sinkpad, e);
   }
 
   /* Work on a copy until we are sure the seek succeeded. */
@@ -3266,8 +3314,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   }
 
   if (flush) {
+    GstEvent *e;
+
     /* Stop flushing, the sinks are at time 0 now */
-    gst_mxf_demux_push_src_event (demux, gst_event_new_flush_stop ());
+    e = gst_event_new_flush_stop ();
+    gst_event_set_seqnum (e, seqnum);
+    gst_mxf_demux_push_src_event (demux, e);
   } else {
     GST_DEBUG_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
         &demux->segment);
@@ -3276,6 +3328,7 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
     demux->close_seg_event = gst_event_new_new_segment (TRUE,
         demux->segment.rate, demux->segment.format,
         demux->segment.start, demux->segment.last_stop, demux->segment.time);
+    gst_event_set_seqnum (demux->close_seg_event, demux->seqnum);
   }
 
   /* Ok seek succeeded, take the newly configured segment */
@@ -3283,9 +3336,12 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
 
   /* Notify about the start of a new segment */
   if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    gst_element_post_message (GST_ELEMENT (demux),
-        gst_message_new_segment_start (GST_OBJECT (demux),
-            demux->segment.format, demux->segment.last_stop));
+    GstMessage *m;
+
+    m = gst_message_new_segment_start (GST_OBJECT (demux),
+        demux->segment.format, demux->segment.last_stop);
+    gst_message_set_seqnum (m, seqnum);
+    gst_element_post_message (GST_ELEMENT (demux), m);
   }
 
   /* Tell all the stream a new segment is needed */
@@ -3299,6 +3355,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
         &g_array_index (demux->essence_tracks, GstMXFDemuxEssenceTrack, i);
     t->position = -1;
   }
+
+  demux->seqnum = seqnum;
 
   gst_pad_start_task (demux->sinkpad,
       (GstTaskFunction) gst_mxf_demux_loop, demux->sinkpad);
@@ -3609,6 +3667,7 @@ gst_mxf_demux_sink_event (GstPad * pad, GstEvent * event)
         t->position = -1;
       }
       demux->current_partition = NULL;
+      demux->seqnum = gst_event_get_seqnum (event);
       gst_event_unref (event);
       ret = TRUE;
       break;
@@ -3737,6 +3796,7 @@ gst_mxf_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      demux->seqnum = gst_util_seqnum_next ();
       break;
     default:
       break;

@@ -132,6 +132,7 @@ struct _GstMXFDemux
   GstAdapter *adapter;
 
   GstSegment segment;
+  guint32 seqnum;
 
   GstEvent *close_seg_event;
 
