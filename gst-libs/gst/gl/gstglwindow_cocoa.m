@@ -175,14 +175,28 @@ gst_gl_window_new (gint width, gint height)
   pool = [[NSAutoreleasePool alloc] init];
   [NSApplication sharedApplication];
 
-  rect.origin.x = x;
-  rect.origin.y = y;
+  rect.origin.x = 0;
+  rect.origin.y = 0;
   rect.size.width = width;
   rect.size.height = height;
 
   priv->internal_win_id =[[GstGLNSWindow alloc] initWithContentRect:rect
     styleMask: (NSTitledWindowMask | NSClosableWindowMask | NSResizableWindowMask | NSMiniaturizableWindowMask)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: priv];
+
+  if (priv->internal_win_id) {
+    NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
+    GST_DEBUG ("main screen rect: %d %d %d %d", (int) mainRect.origin.x, (int) mainRect.origin.y, 
+      (int) mainRect.size.width, (int) mainRect.size.height);
+
+    NSRect windowRect = [priv->internal_win_id frame];
+    GST_DEBUG ("window rect: %d %d %d %d", (int) windowRect.origin.x, (int) windowRect.origin.y, 
+      (int) windowRect.size.width, (int) windowRect.size.height);
+
+    windowRect.origin.x += x;
+    windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
+    [priv->internal_win_id setFrame:windowRect display:NO];
+  }
 
   [pool release];
 
