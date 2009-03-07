@@ -204,15 +204,65 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   g_free (spc);
 }
 
+static gchar *
+debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
+    gboolean * need_free)
+{
+  gchar *media = NULL;
+
+  if (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS) {
+    gchar *tmp = gst_caps_to_string (caps);
+    gboolean in_bracket = FALSE;
+    gint i, sl = strlen (tmp);
+
+    for (i = 0; i < sl; i++) {
+      switch (tmp[i]) {
+        case ';':
+          if (i < (sl - 1))
+            tmp[i] = '\n';
+          else
+            tmp[i] = '\0';
+          break;
+        case ',':
+          if (!in_bracket)
+            tmp[i] = '\n';
+          break;
+        case '(':
+        case '{':
+        case '[':
+          in_bracket = TRUE;
+          break;
+        case ')':
+        case '}':
+        case ']':
+          in_bracket = FALSE;
+          break;
+      }
+    }
+
+    media = g_strescape (tmp, NULL);
+    *need_free = TRUE;
+    g_free (tmp);
+
+  } else {
+    if (GST_CAPS_IS_SIMPLE (caps))
+      media =
+          (gchar *) gst_structure_get_name (gst_caps_get_structure (caps, 0));
+    else
+      media = "*";
+    *need_free = FALSE;
+  }
+  return media;
+}
+
 static void
 debug_dump_element_pad_link (GstPad * pad, GstElement * element,
     GstDebugGraphDetails details, FILE * out, const gint indent)
 {
   GstElement *peer_element, *target_element;
   GstPad *peer_pad, *target_pad, *tmp_pad;
-  GstCaps *caps;
-  GstStructure *structure;
-  gboolean free_caps, free_media;
+  GstCaps *caps, *peer_caps;
+  gboolean free_caps, free_peer_caps, free_media;
   gchar *media = NULL;
   gchar *pad_name, *element_name;
   gchar *peer_pad_name, *peer_element_name;
@@ -238,24 +288,38 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
           media = "?";
         }
       }
+      if ((peer_caps = gst_pad_get_negotiated_caps (peer_pad))) {
+        free_peer_caps = TRUE;
+      } else {
+        free_peer_caps = FALSE;
+        peer_caps = (GstCaps *) gst_pad_get_pad_template_caps (peer_pad);
+      }
       if (caps) {
-        if (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS) {
-          gchar *tmp = g_strdelimit (gst_caps_to_string (caps), ",",
-              '\n');
+        media = debug_dump_describe_caps (caps, details, &free_media);
+        /* check if peer caps are different */
+        if (peer_caps && !gst_caps_is_equal (caps, peer_caps)) {
+          gchar *old_media = media;
+          gchar *tmp;
+          gboolean free_tmp;
 
-          media = g_strescape (tmp, NULL);
+          tmp = debug_dump_describe_caps (peer_caps, details, &free_tmp);
+          if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
+            media = g_strdup_printf ("%s\\n---\\n%s", media, tmp);
+          } else {
+            media = g_strdup_printf ("%s\\n---\\n%s", tmp, media);
+          }
+          if (free_media)
+            g_free (old_media);
+          if (free_tmp)
+            g_free (tmp);
           free_media = TRUE;
-          g_free (tmp);
-        } else {
-          if (GST_CAPS_IS_SIMPLE (caps)) {
-            structure = gst_caps_get_structure (caps, 0);
-            media = (gchar *) gst_structure_get_name (structure);
-          } else
-            media = "*";
         }
         if (free_caps) {
           gst_caps_unref (caps);
         }
+      }
+      if (free_peer_caps && peer_caps) {
+        gst_caps_unref (peer_caps);
       }
     }
 
