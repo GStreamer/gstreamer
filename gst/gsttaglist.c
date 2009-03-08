@@ -1432,12 +1432,13 @@ TAG_MERGE_FUNCS (string, gchar *)
  * gst_tag_list_get_date:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: location for the result
+ * @value: address of a GDate pointer variable to store the result into
  *
- * Copies the contents for the given tag into the value, merging multiple values
- * into one if multiple values are associated with the tag.
+ * Copies the first date for the given tag in the taglist into the variable
+ * pointed to by @value. Free the date with g_date_free() when it is no longer
+ * needed.
  *
- * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
+ * Returns: TRUE, if a date was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
  */
 gboolean
@@ -1464,8 +1465,9 @@ gst_tag_list_get_date (const GstTagList * list, const gchar * tag,
  * @index: number of entry to read out
  * @value: location for the result
  *
- * Gets the value that is at the given index for the given tag in the given
- * list.
+ * Gets the date that is at the given index for the given tag in the given
+ * list and copies it into the variable pointed to by @value. Free the date
+ * with g_date_free() when it is no longer needed.
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
