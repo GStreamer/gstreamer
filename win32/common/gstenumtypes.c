@@ -64,6 +64,9 @@ register_gst_buffer_flag (GType * id)
     {C_FLAGS (GST_BUFFER_FLAG_GAP), "GST_BUFFER_FLAG_GAP", "gap"},
     {C_FLAGS (GST_BUFFER_FLAG_DELTA_UNIT), "GST_BUFFER_FLAG_DELTA_UNIT",
         "delta-unit"},
+    {C_FLAGS (GST_BUFFER_FLAG_MEDIA1), "GST_BUFFER_FLAG_MEDIA1", "media1"},
+    {C_FLAGS (GST_BUFFER_FLAG_MEDIA2), "GST_BUFFER_FLAG_MEDIA2", "media2"},
+    {C_FLAGS (GST_BUFFER_FLAG_MEDIA3), "GST_BUFFER_FLAG_MEDIA3", "media3"},
     {C_FLAGS (GST_BUFFER_FLAG_LAST), "GST_BUFFER_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -79,6 +82,7 @@ gst_buffer_flag_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_buffer_flag, &id);
   return id;
 }
+
 static void
 register_gst_buffer_copy_flags (GType * id)
 {
@@ -123,6 +127,7 @@ gst_bus_flags_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_bus_flags, &id);
   return id;
 }
+
 static void
 register_gst_bus_sync_reply (GType * id)
 {
@@ -192,6 +197,7 @@ gst_clock_return_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_clock_return, &id);
   return id;
 }
+
 static void
 register_gst_clock_entry_type (GType * id)
 {
@@ -212,6 +218,7 @@ gst_clock_entry_type_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_clock_entry_type, &id);
   return id;
 }
+
 static void
 register_gst_clock_flags (GType * id)
 {
@@ -297,6 +304,7 @@ gst_state_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_state, &id);
   return id;
 }
+
 static void
 register_gst_state_change_return (GType * id)
 {
@@ -320,6 +328,7 @@ gst_state_change_return_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_state_change_return, &id);
   return id;
 }
+
 static void
 register_gst_state_change (GType * id)
 {
@@ -350,6 +359,7 @@ gst_state_change_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_state_change, &id);
   return id;
 }
+
 static void
 register_gst_element_flags (GType * id)
 {
@@ -414,6 +424,7 @@ gst_core_error_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_core_error, &id);
   return id;
 }
+
 static void
 register_gst_library_error (GType * id)
 {
@@ -443,6 +454,7 @@ gst_library_error_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_library_error, &id);
   return id;
 }
+
 static void
 register_gst_resource_error (GType * id)
 {
@@ -484,6 +496,7 @@ gst_resource_error_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_resource_error, &id);
   return id;
 }
+
 static void
 register_gst_stream_error (GType * id)
 {
@@ -548,6 +561,7 @@ gst_event_type_flags_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_event_type_flags, &id);
   return id;
 }
+
 static void
 register_gst_event_type (GType * id)
 {
@@ -586,6 +600,7 @@ gst_event_type_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_event_type, &id);
   return id;
 }
+
 static void
 register_gst_seek_type (GType * id)
 {
@@ -608,6 +623,7 @@ gst_seek_type_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_seek_type, &id);
   return id;
 }
+
 static void
 register_gst_seek_flags (GType * id)
 {
@@ -617,6 +633,7 @@ register_gst_seek_flags (GType * id)
     {C_FLAGS (GST_SEEK_FLAG_ACCURATE), "GST_SEEK_FLAG_ACCURATE", "accurate"},
     {C_FLAGS (GST_SEEK_FLAG_KEY_UNIT), "GST_SEEK_FLAG_KEY_UNIT", "key-unit"},
     {C_FLAGS (GST_SEEK_FLAG_SEGMENT), "GST_SEEK_FLAG_SEGMENT", "segment"},
+    {C_FLAGS (GST_SEEK_FLAG_SKIP), "GST_SEEK_FLAG_SKIP", "skip"},
     {0, NULL, NULL}
   };
   *id = g_flags_register_static ("GstSeekFlags", values);
@@ -680,6 +697,7 @@ gst_index_certainty_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_index_certainty, &id);
   return id;
 }
+
 static void
 register_gst_index_entry_type (GType * id)
 {
@@ -703,6 +721,7 @@ gst_index_entry_type_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_index_entry_type, &id);
   return id;
 }
+
 static void
 register_gst_index_lookup_method (GType * id)
 {
@@ -724,6 +743,7 @@ gst_index_lookup_method_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_index_lookup_method, &id);
   return id;
 }
+
 static void
 register_gst_assoc_flags (GType * id)
 {
@@ -748,6 +768,7 @@ gst_assoc_flags_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_assoc_flags, &id);
   return id;
 }
+
 static void
 register_gst_index_resolver_method (GType * id)
 {
@@ -769,6 +790,7 @@ gst_index_resolver_method_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_index_resolver_method, &id);
   return id;
 }
+
 static void
 register_gst_index_flags (GType * id)
 {
@@ -817,6 +839,7 @@ gst_debug_level_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_debug_level, &id);
   return id;
 }
+
 static void
 register_gst_debug_color_flags (GType * id)
 {
@@ -877,6 +900,7 @@ gst_iterator_result_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_iterator_result, &id);
   return id;
 }
+
 static void
 register_gst_iterator_item (GType * id)
 {
@@ -936,6 +960,8 @@ register_gst_message_type (GType * id)
     {C_FLAGS (GST_MESSAGE_ASYNC_START), "GST_MESSAGE_ASYNC_START",
         "async-start"},
     {C_FLAGS (GST_MESSAGE_ASYNC_DONE), "GST_MESSAGE_ASYNC_DONE", "async-done"},
+    {C_FLAGS (GST_MESSAGE_REQUEST_STATE), "GST_MESSAGE_REQUEST_STATE",
+        "request-state"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -949,6 +975,29 @@ gst_message_type_get_type (void)
   static GOnce once = G_ONCE_INIT;
 
   g_once (&once, (GThreadFunc) register_gst_message_type, &id);
+  return id;
+}
+
+static void
+register_gst_structure_change_type (GType * id)
+{
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_STRUCTURE_CHANGE_TYPE_PAD_LINK),
+        "GST_STRUCTURE_CHANGE_TYPE_PAD_LINK", "link"},
+    {C_ENUM (GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK),
+        "GST_STRUCTURE_CHANGE_TYPE_PAD_UNLINK", "unlink"},
+    {0, NULL, NULL}
+  };
+  *id = g_enum_register_static ("GstStructureChangeType", values);
+}
+
+GType
+gst_structure_change_type_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_structure_change_type, &id);
   return id;
 }
 
@@ -1003,6 +1052,7 @@ gst_pad_link_return_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_pad_link_return, &id);
   return id;
 }
+
 static void
 register_gst_flow_return (GType * id)
 {
@@ -1034,6 +1084,7 @@ gst_flow_return_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_flow_return, &id);
   return id;
 }
+
 static void
 register_gst_activate_mode (GType * id)
 {
@@ -1055,6 +1106,7 @@ gst_activate_mode_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_activate_mode, &id);
   return id;
 }
+
 static void
 register_gst_pad_direction (GType * id)
 {
@@ -1076,6 +1128,7 @@ gst_pad_direction_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_pad_direction, &id);
   return id;
 }
+
 static void
 register_gst_pad_flags (GType * id)
 {
@@ -1123,6 +1176,7 @@ gst_pad_presence_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_pad_presence, &id);
   return id;
 }
+
 static void
 register_gst_pad_template_flags (GType * id)
 {
@@ -1192,6 +1246,7 @@ gst_plugin_error_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_plugin_error, &id);
   return id;
 }
+
 static void
 register_gst_plugin_flags (GType * id)
 {
@@ -1209,6 +1264,35 @@ gst_plugin_flags_get_type (void)
   static GOnce once = G_ONCE_INIT;
 
   g_once (&once, (GThreadFunc) register_gst_plugin_flags, &id);
+  return id;
+}
+
+static void
+register_gst_plugin_dependency_flags (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_PLUGIN_DEPENDENCY_FLAG_NONE),
+        "GST_PLUGIN_DEPENDENCY_FLAG_NONE", "none"},
+    {C_FLAGS (GST_PLUGIN_DEPENDENCY_FLAG_RECURSE),
+        "GST_PLUGIN_DEPENDENCY_FLAG_RECURSE", "recurse"},
+    {C_FLAGS (GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY),
+          "GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY",
+        "paths-are-default-only"},
+    {C_FLAGS (GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX),
+          "GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX",
+        "file-name-is-suffix"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstPluginDependencyFlags", values);
+}
+
+GType
+gst_plugin_dependency_flags_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_plugin_dependency_flags, &id);
   return id;
 }
 
@@ -1252,6 +1336,8 @@ register_gst_query_type (GType * id)
     {C_ENUM (GST_QUERY_CONVERT), "GST_QUERY_CONVERT", "convert"},
     {C_ENUM (GST_QUERY_FORMATS), "GST_QUERY_FORMATS", "formats"},
     {C_ENUM (GST_QUERY_BUFFERING), "GST_QUERY_BUFFERING", "buffering"},
+    {C_ENUM (GST_QUERY_CUSTOM), "GST_QUERY_CUSTOM", "custom"},
+    {C_ENUM (GST_QUERY_URI), "GST_QUERY_URI", "uri"},
     {0, NULL, NULL}
   };
   *id = g_enum_register_static ("GstQueryType", values);
@@ -1266,6 +1352,7 @@ gst_query_type_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_query_type, &id);
   return id;
 }
+
 static void
 register_gst_buffering_mode (GType * id)
 {
@@ -1286,6 +1373,29 @@ gst_buffering_mode_get_type (void)
   static GOnce once = G_ONCE_INIT;
 
   g_once (&once, (GThreadFunc) register_gst_buffering_mode, &id);
+  return id;
+}
+
+/* enumerations from "gstsystemclock.h" */
+static void
+register_gst_clock_type (GType * id)
+{
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_CLOCK_TYPE_REALTIME), "GST_CLOCK_TYPE_REALTIME", "realtime"},
+    {C_ENUM (GST_CLOCK_TYPE_MONOTONIC), "GST_CLOCK_TYPE_MONOTONIC",
+        "monotonic"},
+    {0, NULL, NULL}
+  };
+  *id = g_enum_register_static ("GstClockType", values);
+}
+
+GType
+gst_clock_type_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_clock_type, &id);
   return id;
 }
 
@@ -1317,6 +1427,7 @@ gst_tag_merge_mode_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_tag_merge_mode, &id);
   return id;
 }
+
 static void
 register_gst_tag_flag (GType * id)
 {
@@ -1436,6 +1547,29 @@ gst_uri_type_get_type (void)
   return id;
 }
 
+/* enumerations from "gstutils.h" */
+static void
+register_gst_search_mode (GType * id)
+{
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_SEARCH_MODE_EXACT), "GST_SEARCH_MODE_EXACT", "exact"},
+    {C_ENUM (GST_SEARCH_MODE_BEFORE), "GST_SEARCH_MODE_BEFORE", "before"},
+    {C_ENUM (GST_SEARCH_MODE_AFTER), "GST_SEARCH_MODE_AFTER", "after"},
+    {0, NULL, NULL}
+  };
+  *id = g_enum_register_static ("GstSearchMode", values);
+}
+
+GType
+gst_search_mode_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_search_mode, &id);
+  return id;
+}
+
 /* enumerations from "gstparse.h" */
 static void
 register_gst_parse_error (GType * id)
@@ -1466,6 +1600,7 @@ gst_parse_error_get_type (void)
   g_once (&once, (GThreadFunc) register_gst_parse_error, &id);
   return id;
 }
+
 static void
 register_gst_parse_flags (GType * id)
 {
