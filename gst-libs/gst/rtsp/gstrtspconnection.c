@@ -740,9 +740,6 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   const gchar *ip;
   guint16 port;
   GstRTSPUrl *url;
-#ifdef G_OS_WIN32
-  unsigned long flags = 1;
-#endif /* G_OS_WIN32 */
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn->url != NULL, GST_RTSP_EINVAL);
