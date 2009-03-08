@@ -87,4 +87,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);
 gint
 av_smp_format_depth(enum SampleFormat smp_fmt);
 
+GstBuffer *
+new_aligned_buffer (gint size, GstCaps * caps);
+
 #endif /* __GST_FFMPEG_UTILS_H__ */

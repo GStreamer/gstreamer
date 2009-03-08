@@ -110,6 +110,9 @@ struct _GstFFMpegDec
 
   /* reverse playback queue */
   GList *queued;
+
+  /* Can downstream allocate 16bytes aligned data. */
+  gboolean can_allocate_aligned;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -366,6 +369,9 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
   gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
+
+  /* We initially assume downstream can allocate 16 bytes aligned buffers */
+  ffmpegdec->can_allocate_aligned = TRUE;
 }
 
 static void
@@ -792,7 +798,7 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
   fsize = gst_ffmpeg_avpicture_get_size (ffmpegdec->context->pix_fmt,
       width, height);
 
-  if (!ffmpegdec->context->palctrl) {
+  if (!ffmpegdec->context->palctrl && ffmpegdec->can_allocate_aligned) {
     GST_LOG_OBJECT (ffmpegdec, "calling pad_alloc");
     /* no pallete, we can use the buffer size to alloc */
     ret = gst_pad_alloc_buffer_and_set_caps (ffmpegdec->srcpad,
@@ -800,14 +806,23 @@ alloc_output_buffer (GstFFMpegDec * ffmpegdec, GstBuffer ** outbuf,
         GST_PAD_CAPS (ffmpegdec->srcpad), outbuf);
     if (G_UNLIKELY (ret != GST_FLOW_OK))
       goto alloc_failed;
+
+    /* If buffer isn't 128-bit aligned, create a memaligned one ourselves */
+    if (((uintptr_t) GST_BUFFER_DATA (*outbuf)) % 16) {
+      GST_DEBUG_OBJECT (ffmpegdec,
+          "Downstream can't allocate aligned buffers.");
+      ffmpegdec->can_allocate_aligned = FALSE;
+      gst_buffer_unref (*outbuf);
+      *outbuf = new_aligned_buffer (fsize, GST_PAD_CAPS (ffmpegdec->srcpad));
+    }
   } else {
-    GST_LOG_OBJECT (ffmpegdec, "not calling pad_alloc, we have a pallete");
+    GST_LOG_OBJECT (ffmpegdec,
+        "not calling pad_alloc, we have a pallete or downstream can't give 16 byte aligned buffers.");
     /* for paletted data we can't use pad_alloc_buffer(), because
      * fsize contains the size of the palette, so the overall size
      * is bigger than ffmpegcolorspace's unit size, which will
      * prompt GstBaseTransform to complain endlessly ... */
-    *outbuf = gst_buffer_new_and_alloc (fsize);
-    gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+    *outbuf = new_aligned_buffer (fsize, GST_PAD_CAPS (ffmpegdec->srcpad));
     ret = GST_FLOW_OK;
   }
   return ret;
@@ -1815,12 +1830,9 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       in_offset, GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration),
       GST_TIME_ARGS (ffmpegdec->next_ts));
 
-  /* outgoing buffer. We use av_malloc() to have properly aligned memory. */
-  *outbuf = gst_buffer_new ();
-  GST_BUFFER_DATA (*outbuf) = GST_BUFFER_MALLOCDATA (*outbuf) =
-      av_malloc (AVCODEC_MAX_AUDIO_FRAME_SIZE);
-  GST_BUFFER_SIZE (*outbuf) = AVCODEC_MAX_AUDIO_FRAME_SIZE;
-  GST_BUFFER_FREE_FUNC (*outbuf) = av_free;
+  *outbuf =
+      new_aligned_buffer (AVCODEC_MAX_AUDIO_FRAME_SIZE,
+      GST_PAD_CAPS (ffmpegdec->srcpad));
 
   len = avcodec_decode_audio2 (ffmpegdec->context,
       (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, data, size);
@@ -2469,6 +2481,7 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
       g_free (ffmpegdec->padded);
       ffmpegdec->padded = NULL;
       ffmpegdec->padded_size = 0;
+      ffmpegdec->can_allocate_aligned = TRUE;
       break;
     default:
       break;

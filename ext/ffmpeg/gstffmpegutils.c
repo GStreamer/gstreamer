@@ -396,3 +396,22 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
 
   return 0;
 }
+
+/* Create a GstBuffer of the requested size and caps.
+ * The memory will be allocated by ffmpeg, making sure it's properly aligned
+ * for any processing. */
+
+GstBuffer *
+new_aligned_buffer (gint size, GstCaps * caps)
+{
+  GstBuffer *buf;
+
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = av_malloc (size);
+  GST_BUFFER_SIZE (buf) = size;
+  GST_BUFFER_FREE_FUNC (buf) = av_free;
+  if (caps)
+    gst_buffer_set_caps (buf, caps);
+
+  return buf;
+}
