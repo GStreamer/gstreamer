@@ -1515,6 +1515,8 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
   demux = (GstFFMpegDemux *) (GST_PAD_PARENT (sinkpad));
   ffpipe = &(demux->ffpipe);
 
+  GST_DEBUG_OBJECT (demux, "event %s", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
       /* forward event */
@@ -1557,8 +1559,11 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstEvent * event)
       goto done;
     default:
       /* for a serialized event, wait until an earlier data is gone,
-       * though this is no guarantee as to when task is done with it */
-      if (GST_EVENT_IS_SERIALIZED (event)) {
+       * though this is no guarantee as to when task is done with it.
+       *
+       * If the demuxer isn't opened, push straight away, since we'll
+       * be waiting against a cond that will never be signalled. */
+      if (GST_EVENT_IS_SERIALIZED (event) && demux->opened) {
         GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
         while (!ffpipe->needed)
           GST_FFMPEG_PIPE_WAIT (ffpipe);
