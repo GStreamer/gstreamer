@@ -174,10 +174,11 @@ g_signal_connect (bus, "message::eos", G_CALLBACK (cb_message_eos), NULL);
 [..]
     </programlisting>
     <para>
-      If you aren't using GLib mainloop, the message signals won't be available 
-      by default. You can however use a small helper exported by to provide
-      integration with the mainloop you're using, and enable generation of bus
-      signals (see <ulink type="http"
+      If you aren't using GLib mainloop, the asynchronous message signals won't
+      be available by default. You can however install a custom sync handler
+      that wakes up the custom mainloop and that uses
+      <function>gst_bus_async_signal_func ()</function> to emit the signals.
+      (see also <ulink type="http"
       url="&URLAPI;GstBus.html">documentation</ulink> for details)
     </para>
   </sect1>
