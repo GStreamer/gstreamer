@@ -1581,9 +1581,12 @@ gst_ffmpegdemux_chain (GstPad * sinkpad, GstBuffer * buffer)
   if (G_UNLIKELY (ffpipe->srcresult != GST_FLOW_OK))
     goto ignore;
 
+  GST_DEBUG ("Giving a buffer of %d bytes", GST_BUFFER_SIZE (buffer));
   gst_adapter_push (ffpipe->adapter, buffer);
   buffer = NULL;
   while (gst_adapter_available (ffpipe->adapter) >= ffpipe->needed) {
+    GST_DEBUG ("Adapter has more that requested (ffpipe->needed:%d)",
+        ffpipe->needed);
     GST_FFMPEG_PIPE_SIGNAL (ffpipe);
     GST_FFMPEG_PIPE_WAIT (ffpipe);
     /* may have become flushing */

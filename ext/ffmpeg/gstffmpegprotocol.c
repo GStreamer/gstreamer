@@ -337,8 +337,12 @@ gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
   GST_LOG ("requested size %d", size);
 
   GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
+
+  GST_LOG ("requested size %d", size);
+
   while ((available = gst_adapter_available (ffpipe->adapter)) < size
       && !ffpipe->eos) {
+    GST_DEBUG ("Available:%d, requested:%d", available, size);
     ffpipe->needed = size;
     GST_FFMPEG_PIPE_SIGNAL (ffpipe);
     GST_FFMPEG_PIPE_WAIT (ffpipe);
@@ -346,9 +350,12 @@ gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
 
   size = MIN (available, size);
   if (size) {
+    GST_LOG ("Getting %d bytes", size);
     data = gst_adapter_peek (ffpipe->adapter, size);
     memcpy (buf, data, size);
     gst_adapter_flush (ffpipe->adapter, size);
+    GST_LOG ("%d bytes left in adapter",
+        gst_adapter_available (ffpipe->adapter));
     ffpipe->needed = 0;
   }
   GST_FFMPEG_PIPE_MUTEX_UNLOCK (ffpipe);
