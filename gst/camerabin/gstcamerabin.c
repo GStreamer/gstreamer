@@ -2839,17 +2839,26 @@ static void
 gst_camerabin_user_res_fps (GstCameraBin * camera, gint width, gint height,
     gint fps_n, gint fps_d)
 {
-  GstState state;
+  GstState state, pending;
 
   GST_INFO_OBJECT (camera, "switching resolution to %dx%d and fps to %d/%d",
       width, height, fps_n, fps_d);
 
-  state = GST_STATE (camera);
-  gst_element_set_state (GST_ELEMENT (camera), GST_STATE_READY);
+  gst_element_get_state (GST_ELEMENT (camera), &state, &pending, 0);
+  if (state == GST_STATE_PAUSED || state == GST_STATE_PLAYING) {
+    GST_INFO_OBJECT (camera,
+        "changing to READY to initialize videosrc with new format");
+    gst_element_set_state (GST_ELEMENT (camera), GST_STATE_READY);
+  }
   camera->width = width;
   camera->height = height;
   camera->fps_n = fps_n;
   camera->fps_d = fps_d;
+  if (pending != GST_STATE_VOID_PENDING) {
+    GST_LOG_OBJECT (camera, "restoring pending state: %s",
+        gst_element_state_get_name (pending));
+    state = pending;
+  }
   gst_element_set_state (GST_ELEMENT (camera), state);
 }
 
