@@ -1313,17 +1313,35 @@ gst_camerabin_set_capsfilter_caps (GstCameraBin * camera, GstCaps * new_caps)
   gst_camerabin_update_aspect_filter (camera, new_caps);
 }
 
+/*
+ * gst_camerabin_adapt_video_resolution:
+ * @camera: camerabin object
+ * @caps: caps describing the next incoming buffer format
+ *
+ * This function adjusts capsfilter and crop elements in order to modify 
+ * the incoming buffer to the resolution that application requested.
+ *
+ */
 static void
 gst_camerabin_adapt_video_resolution (GstCameraBin * camera, GstCaps * caps)
 {
   GstStructure *st;
   gint width = 0, height = 0;
   GstCaps *filter_caps = NULL;
+  gint top, bottom, left, right, crop;
+  gdouble ratio_w, ratio_h;
+
+  g_return_if_fail (camera->width != 0 && camera->height != 0);
 
   /* Get width and height from caps */
   st = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (st, "width", &width);
   gst_structure_get_int (st, "height", &height);
+
+  if (width == camera->width && height == camera->height) {
+    GST_DEBUG_OBJECT (camera, "no adaptation with resolution needed");
+    return;
+  }
 
   GST_DEBUG_OBJECT (camera,
       "changing %dx%d -> %dx%d filter to %" GST_PTR_FORMAT,
@@ -1336,7 +1354,31 @@ gst_camerabin_adapt_video_resolution (GstCameraBin * camera, GstCaps * caps)
       "height", G_TYPE_INT, height, NULL);
   g_object_set (G_OBJECT (camera->src_filter), "caps", filter_caps, NULL);
   gst_caps_unref (filter_caps);
-  /* FIXME: implement cropping according to requested aspect ratio */
+
+  /* Crop if requested aspect ratio differs from incoming frame aspect ratio */
+
+  /* Don't override original crop values in case we have zoom applied */
+  g_object_get (G_OBJECT (camera->src_zoom_crop), "top", &top, "bottom",
+      &bottom, "left", &left, "right", &right, NULL);
+
+  ratio_w = (gdouble) width / camera->width;
+  ratio_h = (gdouble) height / camera->height;
+
+  if (ratio_w < ratio_h) {
+    crop = height - (camera->height * ratio_w);
+    top += crop / 2;
+    bottom += crop / 2;
+  } else {
+    crop = width - (camera->width * ratio_h);
+    left += crop / 2;
+    right += crop / 2;
+  }
+
+  GST_INFO_OBJECT (camera,
+      "updating crop: left:%d, right:%d, top:%d, bottom:%d", left, right, top,
+      bottom);
+  g_object_set (G_OBJECT (camera->src_zoom_crop), "top", top, "bottom", bottom,
+      "left", left, "right", right, NULL);
 }
 
 /*
@@ -1353,11 +1395,13 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   GstStructure *st, *new_st;
   gint i;
   const gchar *field_name;
+  gboolean adapt = FALSE;
 
   GST_INFO_OBJECT (camera, "image capture prepared");
 
   /* It is possible we are about to get something else that we requested */
   if (!gst_caps_is_equal (camera->image_capture_caps, caps)) {
+    adapt = TRUE;
     /* If capture preparation has added new fields to requested caps,
        we need to copy them */
     st = gst_caps_get_structure (camera->image_capture_caps, 0);
@@ -1378,10 +1422,11 @@ img_capture_prepared (gpointer data, GstCaps * caps)
   /* Update capsfilters */
   gst_camerabin_set_capsfilter_caps (camera, camera->image_capture_caps);
 
-  /* If incoming buffer resolution is different from what application
-     requested, then we need to fix this in camerabin */
-  gst_camerabin_adapt_video_resolution (camera, caps);
-
+  if (adapt) {
+    /* If incoming buffer resolution is different from what application
+       requested, then we can fix this in camerabin */
+    gst_camerabin_adapt_video_resolution (camera, caps);
+  }
   g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
       "active-pad", camera->pad_src_img, NULL);
   gst_camerabin_rewrite_tags (camera);
@@ -2756,8 +2801,13 @@ gst_camerabin_handle_message_func (GstBin * bin, GstMessage * msg)
         /* Image eos */
         GST_DEBUG_OBJECT (camera, "got image eos message");
 
-        /* Still image capture buffer handled, restore filter caps */
+        /* HACK: v4l2camsrc changes to view finder resolution automatically
+           after one captured still image */
         if (camera->image_capture_caps) {
+          GST_DEBUG_OBJECT (camera, "resetting crop in camerabin");
+          g_object_set (camera->src_zoom_crop, "left", 0, "right", 0,
+              "top", 0, "bottom", 0, NULL);
+          /* Still image capture buffer handled, restore filter caps */
           gst_camerabin_set_capsfilter_caps (camera, camera->view_finder_caps);
         }
 
