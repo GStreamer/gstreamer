@@ -855,11 +855,13 @@ add_auth_header (GstRTSPConnection * conn, GstRTSPMessage * message)
 {
   switch (conn->auth_method) {
     case GST_RTSP_AUTH_BASIC:{
-      gchar *user_pass =
-          g_strdup_printf ("%s:%s", conn->username, conn->passwd);
-      gchar *user_pass64 =
-          gst_rtsp_base64_encode (user_pass, strlen (user_pass));
-      gchar *auth_string = g_strdup_printf ("Basic %s", user_pass64);
+      gchar *user_pass;
+      gchar *user_pass64;
+      gchar *auth_string;
+
+      user_pass = g_strdup_printf ("%s:%s", conn->username, conn->passwd);
+      user_pass64 = g_base64_encode ((guchar *) user_pass, strlen (user_pass));
+      auth_string = g_strdup_printf ("Basic %s", user_pass64);
 
       gst_rtsp_message_take_header (message, GST_RTSP_HDR_AUTHORIZATION,
           auth_string);
