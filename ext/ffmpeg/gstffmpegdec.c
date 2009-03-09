@@ -1834,7 +1834,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
      *
      *  1) calculate based on number of samples
      */
-    in_duration = gst_util_uint64_scale_int (have_data, GST_SECOND,
+    in_duration = gst_util_uint64_scale (have_data, GST_SECOND,
         ffmpegdec->format.audio.depth * ffmpegdec->format.audio.channels *
         ffmpegdec->format.audio.samplerate);
 
