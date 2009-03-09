@@ -948,46 +948,40 @@ gst_camerabin_change_filename (GstCameraBin * camera, const gchar * name)
   }
 }
 
-/*
- * gst_camerabin_setup_zoom:
- * @camera: camerabin object
- *
- * Apply zoom configured to camerabin to capture.
- */
-static void
-gst_camerabin_setup_zoom (GstCameraBin * camera)
+static gboolean
+gst_camerabin_set_photo_iface_zoom (GstCameraBin * camera, gint zoom)
 {
-  gint zoom;
-  gboolean done = FALSE;
-
-  g_return_if_fail (camera != NULL);
-  g_return_if_fail (camera->src_zoom_crop != NULL);
-
-  zoom = g_atomic_int_get (&camera->zoom);
-
-  g_return_if_fail (zoom);
+  GstPhotography *photo = NULL;
+  GstPhotoCaps pcaps = GST_PHOTOGRAPHY_CAPS_NONE;
+  gboolean ret = FALSE;
 
   if (GST_IS_ELEMENT (camera->src_vid_src) &&
       gst_element_implements_interface (camera->src_vid_src,
           GST_TYPE_PHOTOGRAPHY)) {
-    /* Try setting (hardware) zoom using photography interface */
-    GstPhotography *photo;
-    GstPhotoCaps pcaps;
-
+    /* Try setting zoom using photography interface */
     photo = GST_PHOTOGRAPHY (camera->src_vid_src);
-    pcaps = gst_photography_get_capabilities (photo);
-
+    if (photo) {
+      pcaps = gst_photography_get_capabilities (photo);
+    }
     if (pcaps & GST_PHOTOGRAPHY_CAPS_ZOOM) {
-      done = gst_photography_set_zoom (photo, (gfloat) zoom / 100.0);
+      GST_DEBUG_OBJECT (camera, "setting zoom %d using photography interface",
+          zoom);
+      ret = gst_photography_set_zoom (photo, (gfloat) zoom / 100.0);
     }
   }
+  return ret;
+}
 
-  if (!done) {
-    /* Update capsfilters to apply the (software) zoom */
-    gint w2_crop = 0;
-    gint h2_crop = 0;
-    GstPad *pad_zoom_sink = NULL;
+static gboolean
+gst_camerabin_set_element_zoom (GstCameraBin * camera, gint zoom)
+{
+  gint w2_crop = 0;
+  gint h2_crop = 0;
+  GstPad *pad_zoom_sink = NULL;
+  gboolean ret = FALSE;
 
+  if (camera->src_zoom_crop) {
+    /* Update capsfilters to apply the zoom */
     GST_INFO_OBJECT (camera, "zoom: %d, orig size: %dx%d", zoom,
         camera->width, camera->height);
 
@@ -1005,11 +999,39 @@ gst_camerabin_setup_zoom (GstCameraBin * camera)
     GST_PAD_STREAM_LOCK (pad_zoom_sink);
     g_object_set (camera->src_zoom_crop, "left", w2_crop, "right", w2_crop,
         "top", h2_crop, "bottom", h2_crop, NULL);
-
     GST_PAD_STREAM_UNLOCK (pad_zoom_sink);
     gst_object_unref (pad_zoom_sink);
+    ret = TRUE;
   }
-  GST_LOG_OBJECT (camera, "zoom set");
+  return ret;
+}
+
+/*
+ * gst_camerabin_setup_zoom:
+ * @camera: camerabin object
+ *
+ * Apply zoom configured to camerabin to capture.
+ */
+static void
+gst_camerabin_setup_zoom (GstCameraBin * camera)
+{
+  gint zoom;
+
+  g_return_if_fail (camera != NULL);
+
+  zoom = g_atomic_int_get (&camera->zoom);
+
+  g_return_if_fail (zoom);
+
+  GST_INFO_OBJECT (camera, "setting zoom %d", zoom);
+
+  if (gst_camerabin_set_photo_iface_zoom (camera, zoom)) {
+    GST_INFO_OBJECT (camera, "zoom set using photography interface");
+  } else if (gst_camerabin_set_element_zoom (camera, zoom)) {
+    GST_INFO_OBJECT (camera, "zoom set using gst elements");
+  } else {
+    GST_INFO_OBJECT (camera, "setting zoom failed");
+  }
 }
 
 /*
