@@ -74,7 +74,11 @@ struct _GstFFMpegDemux
   GstClockTime start_time;
   GstClockTime duration;
 
+  /* TRUE if working in pull-mode */
   gboolean seekable;
+
+  /* TRUE if the avformat demuxer can reliably handle streaming mode */
+  gboolean can_push;
 
   gboolean flushing;
 
@@ -280,6 +284,12 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   demux->ffpipe.tlock = g_mutex_new ();
   demux->ffpipe.cond = g_cond_new ();
   demux->ffpipe.adapter = gst_adapter_new ();
+
+  /* blacklist unreliable push-based demuxers */
+  if (strcmp (oclass->in_plugin->name, "ape"))
+    demux->can_push = TRUE;
+  else
+    demux->can_push = FALSE;
 }
 
 static void
@@ -1647,11 +1657,15 @@ static gboolean
 gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
 {
   GstFFMpegDemux *demux;
-  gboolean res;
+  gboolean res = FALSE;
 
   demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
 
   if (active) {
+    if (demux->can_push == FALSE) {
+      GST_WARNING_OBJECT (demux, "Demuxer can't reliably operate in push-mode");
+      goto beach;
+    }
     demux->ffpipe.eos = FALSE;
     demux->ffpipe.srcresult = GST_FLOW_OK;
     demux->ffpipe.needed = 0;
@@ -1678,6 +1692,7 @@ gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
     demux->seekable = FALSE;
   }
 
+beach:
   gst_object_unref (demux);
 
   return res;
