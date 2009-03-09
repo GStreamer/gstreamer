@@ -576,39 +576,39 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
     /* look for frame header,
      * http://flac.sourceforge.net/format.html#frame_header
      */
-    if (data[0] == 0xff && (data[1] >> 2) == 0x3e) {
+    if (c.data[0] == 0xff && (c.data[1] >> 2) == 0x3e) {
       /* bit 15 in the header must be 0 */
-      if (((data[1] >> 1) & 0x01) == 0x01)
+      if (((c.data[1] >> 1) & 0x01) == 0x01)
         goto advance;
 
       /* blocksize must be != 0x00 */
-      if ((data[2] >> 4) == 0x00)
+      if ((c.data[2] >> 4) == 0x00)
         goto advance;
 
       /* samplerate must be != 0x0f */
-      if ((data[2] & 0x0f) == 0x0f)
+      if ((c.data[2] & 0x0f) == 0x0f)
         goto advance;
       /* also 0 is invalid, as it means get the info from the header and we
        * don't have headers if we are here */
-      if ((data[2] & 0x0f) == 0x00)
+      if ((c.data[2] & 0x0f) == 0x00)
         goto advance;
 
       /* channel assignment must be < 11 */
-      if ((data[3] >> 4) >= 11)
+      if ((c.data[3] >> 4) >= 11)
         goto advance;
 
       /* sample size must be != 0x07 and != 0x05 */
-      if (((data[3] >> 1) & 0x07) == 0x07)
+      if (((c.data[3] >> 1) & 0x07) == 0x07)
         goto advance;
-      if (((data[3] >> 1) & 0x07) == 0x05)
+      if (((c.data[3] >> 1) & 0x07) == 0x05)
         goto advance;
       /* also 0 is invalid, as it means get the info from the header and we
        * don't have headers if we are here */
-      if (((data[3] >> 1) & 0x07) == 0x00)
+      if (((c.data[3] >> 1) & 0x07) == 0x00)
         goto advance;
 
       /* next bit must be 0 */
-      if ((data[3] & 0x01) == 0x01)
+      if ((c.data[3] & 0x01) == 0x01)
         goto advance;
 
       /* FIXME: shouldn't we include the crc check ? */
