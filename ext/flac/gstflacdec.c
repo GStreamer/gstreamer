@@ -331,6 +331,10 @@ gst_flac_dec_reset_decoders (GstFlacDec * flacdec)
     gst_tag_list_free (flacdec->tags);
     flacdec->tags = NULL;
   }
+  if (flacdec->pending) {
+    gst_buffer_unref (flacdec->pending);
+    flacdec->pending = NULL;
+  }
 
   flacdec->segment.last_stop = 0;
   flacdec->offset = 0;
@@ -1090,6 +1094,17 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     flacdec->tags = NULL;
   }
 
+  if (flacdec->pending) {
+    GST_DEBUG_OBJECT (flacdec,
+        "pushing pending samples at offset %" G_GINT64_FORMAT " (%"
+        GST_TIME_FORMAT " + %" GST_TIME_FORMAT ")",
+        GST_BUFFER_OFFSET (flacdec->pending),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (flacdec->pending)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (flacdec->pending)));
+    gst_pad_push (flacdec->srcpad, flacdec->pending);
+    flacdec->pending = NULL;
+  }
+
   ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
       flacdec->segment.last_stop, samples * channels * (width / 8),
       GST_PAD_CAPS (flacdec->srcpad), &outbuf);
@@ -1153,16 +1168,18 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
     if (flacdec->discont) {
+      GST_DEBUG_OBJECT (flacdec, "marking discont");
       outbuf = gst_buffer_make_metadata_writable (outbuf);
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
       flacdec->discont = FALSE;
     }
     ret = gst_pad_push (flacdec->srcpad, outbuf);
+    GST_DEBUG_OBJECT (flacdec, "returned %s", gst_flow_get_name (ret));
   } else {
     GST_DEBUG_OBJECT (flacdec,
         "not pushing %d samples at offset %" G_GINT64_FORMAT
         " (in seek)", samples, GST_BUFFER_OFFSET (outbuf));
-    gst_buffer_unref (outbuf);
+    gst_buffer_replace (&flacdec->pending, outbuf);
     ret = GST_FLOW_OK;
   }
 
@@ -1928,6 +1945,7 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
     /* flushing seek, clear the pipeline of stuff, we need a newsegment after
      * this. */
     GST_DEBUG_OBJECT (flacdec, "flushing");
+    gst_pad_push_event (flacdec->sinkpad, gst_event_new_flush_start ());
     gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_start ());
   } else {
     /* non flushing seek, pause the task */
@@ -1941,25 +1959,34 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * downstream in PAUSED, for example */
   GST_PAD_STREAM_LOCK (flacdec->sinkpad);
 
-  /* operate on segment copy until we know the seek worked. The idea is that
-   * when the seek fails, we want to continue with what we were doing without
-   * having the segment being updated. */
+  /* save a segment copy until we know the seek worked. The idea is that
+   * when the seek fails, we want to restore with what we were doing. */
   segment = flacdec->segment;
 
   /* update the segment with the seek values, last_stop will contain the new
    * position we should seek to */
-  gst_segment_set_seek (&segment, rate, GST_FORMAT_DEFAULT,
+  gst_segment_set_seek (&flacdec->segment, rate, GST_FORMAT_DEFAULT,
       seek_flags, start_type, start, stop_type, stop, &only_update);
 
   GST_DEBUG_OBJECT (flacdec,
       "configured segment: [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
       "] = [%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "]",
-      segment.start, segment.stop,
-      GST_TIME_ARGS (segment.start * GST_SECOND / flacdec->sample_rate),
-      GST_TIME_ARGS (segment.stop * GST_SECOND / flacdec->sample_rate));
+      flacdec->segment.start, flacdec->segment.stop,
+      GST_TIME_ARGS (flacdec->segment.start * GST_SECOND /
+          flacdec->sample_rate),
+      GST_TIME_ARGS (flacdec->segment.stop * GST_SECOND /
+          flacdec->sample_rate));
 
   GST_DEBUG_OBJECT (flacdec, "performing seek to sample %" G_GINT64_FORMAT,
-      segment.last_stop);
+      flacdec->segment.last_stop);
+
+  /* flush sinkpad again because we need to pull and push buffers while doing
+   * the seek */
+  if (flush) {
+    GST_DEBUG_OBJECT (flacdec, "flushing stop");
+    gst_pad_push_event (flacdec->sinkpad, gst_event_new_flush_stop ());
+    gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
+  }
 
   /* mark ourselves as seeking because the above lines will trigger some
    * callbacks that need to behave differently when seeking */
@@ -1968,18 +1995,19 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
   seek_ok =
 #ifdef  LEGACY_FLAC
       FLAC__seekable_stream_decoder_seek_absolute (flacdec->seekable_decoder,
-      segment.last_stop);
+      flacdec->segment.last_stop);
 #else
       FLAC__stream_decoder_seek_absolute (flacdec->seekable_decoder,
-      segment.last_stop);
+      flacdec->segment.last_stop);
 #endif
 
   flacdec->seeking = FALSE;
 
   if (!seek_ok) {
-    /* seek failed, segment was not updated and we start streaming again with
-     * the previous segment values */
     GST_WARNING_OBJECT (flacdec, "seek failed");
+    /* seek failed, restore the segment and start streaming again with
+     * the previous segment values */
+    flacdec->segment = segment;
   } else if (!flush && flacdec->running) {
     /* we are running the current segment and doing a non-flushing seek, 
      * close the segment first based on the last_stop. */
@@ -1987,10 +2015,10 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
         " to %" G_GINT64_FORMAT, segment.start, segment.last_stop);
 
     /* convert the old segment values to time to close the old segment */
-    start = gst_util_uint64_scale_int (flacdec->segment.start, GST_SECOND,
+    start = gst_util_uint64_scale_int (segment.start, GST_SECOND,
         flacdec->sample_rate);
     last_stop =
-        gst_util_uint64_scale_int (flacdec->segment.last_stop, GST_SECOND,
+        gst_util_uint64_scale_int (segment.last_stop, GST_SECOND,
         flacdec->sample_rate);
 
     /* queue the segment for sending in the stream thread, start and time are
@@ -1999,13 +2027,12 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
       gst_event_unref (flacdec->close_segment);
     flacdec->close_segment =
         gst_event_new_new_segment_full (TRUE,
-        flacdec->segment.rate, flacdec->segment.applied_rate, GST_FORMAT_TIME,
+        segment.rate, segment.applied_rate, GST_FORMAT_TIME,
         start, last_stop, start);
   }
 
   if (seek_ok) {
-    /* seek succeeded, copy new segment values */
-    flacdec->segment = segment;
+    /* seek succeeded, flacdec->segment contains the new positions */
     GST_DEBUG_OBJECT (flacdec, "seek successful");
   }
 
@@ -2026,7 +2053,7 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
         flacdec->sample_rate);
 
   /* notify start of new segment when we were asked to do so. */
-  if (segment.flags & GST_SEEK_FLAG_SEGMENT) {
+  if (flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) {
     /* last_stop contains the position we start from */
     gst_element_post_message (GST_ELEMENT (flacdec),
         gst_message_new_segment_start (GST_OBJECT (flacdec),
@@ -2046,15 +2073,8 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
       gst_event_unref (flacdec->start_segment);
     flacdec->start_segment =
         gst_event_new_new_segment_full (FALSE,
-        segment.rate, segment.applied_rate, GST_FORMAT_TIME,
+        flacdec->segment.rate, flacdec->segment.applied_rate, GST_FORMAT_TIME,
         last_stop, stop, last_stop);
-  }
-
-  /* prepare for streaming again, start with a flush stop when we issued a flush
-   * start before. */
-  if (flush) {
-    GST_DEBUG_OBJECT (flacdec, "flushing stop");
-    gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
   }
 
   /* we'll generate a discont on the next buffer */

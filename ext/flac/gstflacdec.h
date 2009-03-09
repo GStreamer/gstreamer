@@ -74,6 +74,7 @@ struct _GstFlacDec {
                                * samples/audio frames (DEFAULT format) */
   gboolean       running;
   gboolean       discont;
+  GstBuffer     *pending;     /* pending buffer, produced in seek */
   GstEvent      *close_segment;
   GstEvent      *start_segment;
   GstTagList    *tags;
