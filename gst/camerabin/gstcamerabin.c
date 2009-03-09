@@ -267,6 +267,8 @@ static void
 gst_camerabin_set_allowed_framerate (GstCameraBin * camera,
     GstCaps * filter_caps);
 
+static guint32 get_srcpad_current_format (GstElement * element);
+
 static const GValue *gst_camerabin_find_better_framerate (GstCameraBin * camera,
     GstStructure * st, const GValue * orig_framerate);
 
@@ -1749,14 +1751,32 @@ gst_camerabin_set_allowed_framerate (GstCameraBin * camera,
     GstCaps * filter_caps)
 {
   GstStructure *structure;
-  GstCaps *allowed_caps = NULL, *intersect = NULL;
+  GstCaps *allowed_caps = NULL, *intersect = NULL, *tmp_caps = NULL;
   const GValue *framerate = NULL;
   guint caps_size, i;
+  guint32 format = 0;
+
+  GST_INFO_OBJECT (camera, "filter caps:%" GST_PTR_FORMAT, filter_caps);
+
+  structure = gst_structure_copy (gst_caps_get_structure (filter_caps, 0));
+
+  /* Set fourcc format according to current videosrc format */
+  format = get_srcpad_current_format (camera->src_vid_src);
+  if (format) {
+    GST_DEBUG_OBJECT (camera,
+        "using format %" GST_FOURCC_FORMAT " for matching",
+        GST_FOURCC_ARGS (format));
+    gst_structure_set (structure, "format", GST_TYPE_FOURCC, format, NULL);
+  } else {
+    GST_DEBUG_OBJECT (camera, "not matching against fourcc format");
+    gst_structure_remove_field (structure, "format");
+  }
+
+  tmp_caps = gst_caps_new_full (structure, NULL);
 
   /* Get supported caps from video src that matches with new filter caps */
-  GST_INFO_OBJECT (camera, "filter caps:%" GST_PTR_FORMAT, filter_caps);
   allowed_caps = gst_camerabin_get_allowed_input_caps (camera);
-  intersect = gst_caps_intersect (allowed_caps, filter_caps);
+  intersect = gst_caps_intersect (allowed_caps, tmp_caps);
   GST_INFO_OBJECT (camera, "intersect caps:%" GST_PTR_FORMAT, intersect);
 
   /* Find the best framerate from the caps */
@@ -1767,6 +1787,7 @@ gst_camerabin_set_allowed_framerate (GstCameraBin * camera,
         gst_camerabin_find_better_framerate (camera, structure, framerate);
   }
 
+  /* Set found frame rate to original caps */
   if (GST_VALUE_HOLDS_FRACTION (framerate)) {
     gst_caps_set_simple (filter_caps,
         "framerate", GST_TYPE_FRACTION,
@@ -1774,11 +1795,15 @@ gst_camerabin_set_allowed_framerate (GstCameraBin * camera,
         gst_value_get_fraction_denominator (framerate), NULL);
   }
 
+  /* Unref helper caps */
   if (allowed_caps) {
     gst_caps_unref (allowed_caps);
   }
   if (intersect) {
     gst_caps_unref (intersect);
+  }
+  if (tmp_caps) {
+    gst_caps_unref (tmp_caps);
   }
 }
 
@@ -2867,7 +2892,6 @@ gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height)
 {
   GstStructure *structure;
   GstCaps *new_caps = NULL;
-  guint32 format = 0;
 
   g_return_if_fail (camera != NULL);
 
@@ -2879,19 +2903,8 @@ gst_camerabin_user_image_res (GstCameraBin * camera, gint width, gint height)
     new_caps = gst_caps_new_simple (gst_structure_get_name (structure),
         "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
 
-    /* Set format according to current videosrc format */
-    format = get_srcpad_current_format (camera->src_vid_src);
-    if (format) {
-      gst_caps_set_simple (new_caps, "format", GST_TYPE_FOURCC, format, NULL);
-    }
-
     /* Set allowed framerate for the resolution. */
     gst_camerabin_set_allowed_framerate (camera, new_caps);
-
-    /* Reset the format to match with view finder mode caps */
-    if (gst_structure_get_fourcc (structure, "format", &format)) {
-      gst_caps_set_simple (new_caps, "format", GST_TYPE_FOURCC, format, NULL);
-    }
   }
 
   GST_INFO_OBJECT (camera,
