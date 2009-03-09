@@ -14,6 +14,7 @@ libgstqtmux_la_SOURCES = gstqtmux.c \
 libgstqtmux_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstqtmux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstqtmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstqtmux_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 noinst_HEADERS = gstqtmux.h \

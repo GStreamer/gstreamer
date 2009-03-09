@@ -30,7 +30,7 @@ libgstcamerabin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstphotography-$(GST_MAJORMINOR).la
 
 libgstcamerabin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcamerabin__la_LIBTOOLFLAGS = --tag=disable-static
+libgstcamerabin_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstcamerabin.h             \
 		 gstcamerabinxoverlay.h     \
