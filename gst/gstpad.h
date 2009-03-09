@@ -633,7 +633,12 @@ struct _GstPad {
   GDestroyNotify block_destroy_data;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 2];
+  union {
+    struct {
+      gboolean                      block_callback_called;
+    } ABI;
+    gpointer _gst_reserved[GST_PADDING - 2];
+  } abidata;
 };
 
 struct _GstPadClass {

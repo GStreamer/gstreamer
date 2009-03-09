@@ -809,6 +809,97 @@ GST_START_TEST (test_block_async_full_destroy_dispose)
 
 GST_END_TEST;
 
+
+static void
+unblock_async_no_flush_cb (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  gboolean *bool_user_data = (gboolean *) user_data;
+
+  /* here we should have blocked == 1 unblocked == 0 */
+
+  fail_unless (blocked == FALSE);
+
+  fail_unless (bool_user_data[0] == TRUE);
+  fail_unless (bool_user_data[1] == TRUE);
+  fail_unless (bool_user_data[2] == FALSE);
+
+  bool_user_data[2] = TRUE;
+}
+
+
+static void
+unblock_async_not_called (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  g_warn_if_reached ();
+}
+
+static void
+block_async_second_no_flush (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  gboolean *bool_user_data = (gboolean *) user_data;
+
+  fail_unless (blocked == TRUE);
+
+  fail_unless (bool_user_data[0] == TRUE);
+  fail_unless (bool_user_data[1] == FALSE);
+  fail_unless (bool_user_data[2] == FALSE);
+
+  bool_user_data[1] = TRUE;
+
+  fail_unless (gst_pad_set_blocked_async (pad, FALSE, unblock_async_no_flush_cb,
+          user_data));
+}
+
+static void
+block_async_first_no_flush (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  static int n_calls = 0;
+  gboolean *bool_user_data = (gboolean *) user_data;
+
+  fail_unless (blocked == TRUE);
+
+  if (++n_calls > 1)
+    /* we expect this callback to be called only once */
+    g_warn_if_reached ();
+
+  *bool_user_data = blocked;
+
+  fail_unless (bool_user_data[0] == TRUE);
+  fail_unless (bool_user_data[1] == FALSE);
+  fail_unless (bool_user_data[2] == FALSE);
+
+  fail_unless (gst_pad_set_blocked_async (pad, FALSE, unblock_async_not_called,
+          NULL));
+
+  /* replace block_async_first with block_async_second so next time the pad is
+   * blocked the latter should be called */
+  fail_unless (gst_pad_set_blocked_async (pad, TRUE,
+          block_async_second_no_flush, user_data));
+}
+
+GST_START_TEST (test_block_async_replace_callback_no_flush)
+{
+  GstPad *pad;
+  gboolean bool_user_data[3] = { FALSE, FALSE, FALSE };
+
+  pad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (pad != NULL);
+  gst_pad_set_active (pad, TRUE);
+
+  fail_unless (gst_pad_set_blocked_async (pad, TRUE, block_async_first_no_flush,
+          bool_user_data));
+
+  gst_pad_push (pad, gst_buffer_new ());
+  fail_unless (bool_user_data[0] == TRUE);
+  fail_unless (bool_user_data[1] == TRUE);
+  fail_unless (bool_user_data[2] == TRUE);
+
+  gst_object_unref (pad);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_pad_suite (void)
 {
@@ -837,6 +928,7 @@ gst_pad_suite (void)
 #endif
   tcase_add_test (tc_chain, test_block_async_full_destroy);
   tcase_add_test (tc_chain, test_block_async_full_destroy_dispose);
+  tcase_add_test (tc_chain, test_block_async_replace_callback_no_flush);
 
   return s;
 }

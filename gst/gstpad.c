@@ -1022,6 +1022,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
     pad->block_callback = callback;
     pad->block_data = user_data;
     pad->block_destroy_data = destroy_data;
+    pad->abidata.ABI.block_callback_called = FALSE;
     if (!callback) {
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for block");
       GST_PAD_BLOCK_WAIT (pad);
@@ -1039,6 +1040,7 @@ gst_pad_set_blocked_async_full (GstPad * pad, gboolean blocked,
     pad->block_callback = callback;
     pad->block_data = user_data;
     pad->block_destroy_data = destroy_data;
+    pad->abidata.ABI.block_callback_called = FALSE;
 
     GST_PAD_BLOCK_BROADCAST (pad);
     if (!callback) {
@@ -3786,31 +3788,38 @@ handle_pad_block (GstPad * pad)
    * all taken when calling this function. */
   gst_object_ref (pad);
 
-  /* we either have a callback installed to notify the block or
-   * some other thread is doing a GCond wait. */
-  callback = pad->block_callback;
-  if (callback) {
-    /* there is a callback installed, call it. We release the
-     * lock so that the callback can do something usefull with the
-     * pad */
-    user_data = pad->block_data;
-    GST_OBJECT_UNLOCK (pad);
-    callback (pad, TRUE, user_data);
-    GST_OBJECT_LOCK (pad);
-
-    /* we released the lock, recheck flushing */
-    if (GST_PAD_IS_FLUSHING (pad))
-      goto flushing;
-  } else {
-    /* no callback, signal the thread that is doing a GCond wait
-     * if any. */
-    GST_PAD_BLOCK_BROADCAST (pad);
-  }
-
-  /* OBJECT_LOCK could have been released when we did the callback, which
-   * then could have made the pad unblock so we need to check the blocking
-   * condition again.   */
   while (GST_PAD_IS_BLOCKED (pad)) {
+    do {
+      /* we either have a callback installed to notify the block or
+       * some other thread is doing a GCond wait. */
+      callback = pad->block_callback;
+      pad->abidata.ABI.block_callback_called = TRUE;
+      if (callback) {
+        /* there is a callback installed, call it. We release the
+         * lock so that the callback can do something usefull with the
+         * pad */
+        user_data = pad->block_data;
+        GST_OBJECT_UNLOCK (pad);
+        callback (pad, TRUE, user_data);
+        GST_OBJECT_LOCK (pad);
+
+        /* we released the lock, recheck flushing */
+        if (GST_PAD_IS_FLUSHING (pad))
+          goto flushing;
+      } else {
+        /* no callback, signal the thread that is doing a GCond wait
+         * if any. */
+        GST_PAD_BLOCK_BROADCAST (pad);
+      }
+    } while (pad->abidata.ABI.block_callback_called == FALSE
+        && GST_PAD_IS_BLOCKED (pad));
+
+    /* OBJECT_LOCK could have been released when we did the callback, which
+     * then could have made the pad unblock so we need to check the blocking
+     * condition again.   */
+    if (!GST_PAD_IS_BLOCKED (pad))
+      break;
+
     /* now we block the streaming thread. It can be unlocked when we
      * deactivate the pad (which will also set the FLUSHING flag) or
      * when the pad is unblocked. A flushing event will also unblock
