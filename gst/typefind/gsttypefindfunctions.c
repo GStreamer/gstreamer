@@ -3197,6 +3197,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mxf_exts[] = { "mxf", NULL };
   static gchar *msword_exts[] = { "doc", NULL };
   static gchar *dsstore_exts[] = { "DS_Store", NULL };
+  static gchar *psd_exts[] = { "psd", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -3424,6 +3425,9 @@ plugin_init (GstPlugin * plugin)
   /* Mac OS X .DS_Store files tend to be taken for video/mpeg */
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/octet-stream",
       GST_RANK_SECONDARY, dsstore_exts, "\000\000\000\001Bud1", 8,
+      GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "image/vnd.adobe.photoshop",
+      GST_RANK_SECONDARY, psd_exts, "8BPS\000\001\000\000\000\000", 10,
       GST_TYPE_FIND_LIKELY);
   return TRUE;
 }
