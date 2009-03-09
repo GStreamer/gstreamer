@@ -544,6 +544,7 @@ gst_rtsp_transport_as_text (GstRTSPTransport * transport)
 
     if ((tmp = rtsp_transport_ltrans_as_text (transport)) == NULL)
       goto invalid_transport;
+
     g_ptr_array_add (strs, g_ascii_strup (tmp, -1));
   }
 
@@ -601,32 +602,36 @@ gst_rtsp_transport_as_text (GstRTSPTransport * transport)
   }
 
   /* add the port parameter */
-  if (transport->trans == GST_RTSP_TRANS_RTP && transport->port.min >= 0) {
-    if (transport->port.min < 65536 && transport->port.max < 65536) {
-      g_ptr_array_add (strs, g_strdup (";port="));
-      g_ptr_array_add (strs, range_as_text (&transport->port));
-    } else
-      goto invalid_transport;
-  }
+  if (transport->lower_transport != GST_RTSP_LOWER_TRANS_TCP) {
+    if (transport->trans == GST_RTSP_TRANS_RTP && transport->port.min >= 0) {
+      if (transport->port.min < 65536 && transport->port.max < 65536) {
+        g_ptr_array_add (strs, g_strdup (";port="));
+        g_ptr_array_add (strs, range_as_text (&transport->port));
+      } else
+        goto invalid_transport;
+    }
 
-  /* add the client_port parameter */
-  if (transport->trans == GST_RTSP_TRANS_RTP && transport->client_port.min >= 0) {
-    if (transport->client_port.min < 65536 &&
-        transport->client_port.max < 65536) {
-      g_ptr_array_add (strs, g_strdup (";client_port="));
-      g_ptr_array_add (strs, range_as_text (&transport->client_port));
-    } else
-      goto invalid_transport;
-  }
+    /* add the client_port parameter */
+    if (transport->trans == GST_RTSP_TRANS_RTP
+        && transport->client_port.min >= 0) {
+      if (transport->client_port.min < 65536
+          && transport->client_port.max < 65536) {
+        g_ptr_array_add (strs, g_strdup (";client_port="));
+        g_ptr_array_add (strs, range_as_text (&transport->client_port));
+      } else
+        goto invalid_transport;
+    }
 
-  /* add the server_port parameter */
-  if (transport->trans == GST_RTSP_TRANS_RTP && transport->server_port.min >= 0) {
-    if (transport->server_port.min < 65536 &&
-        transport->server_port.max < 65536) {
-      g_ptr_array_add (strs, g_strdup (";server_port="));
-      g_ptr_array_add (strs, range_as_text (&transport->server_port));
-    } else
-      goto invalid_transport;
+    /* add the server_port parameter */
+    if (transport->trans == GST_RTSP_TRANS_RTP
+        && transport->server_port.min >= 0) {
+      if (transport->server_port.min < 65536
+          && transport->server_port.max < 65536) {
+        g_ptr_array_add (strs, g_strdup (";server_port="));
+        g_ptr_array_add (strs, range_as_text (&transport->server_port));
+      } else
+        goto invalid_transport;
+    }
   }
 
   /* add the ssrc parameter */
