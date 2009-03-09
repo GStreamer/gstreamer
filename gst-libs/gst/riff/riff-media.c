@@ -761,6 +761,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
       break;
 
+    case GST_MAKE_FOURCC ('F', 'P', 'S', '1'):
+      caps = gst_caps_new_simple ("video/x-fraps", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Fraps video");
+
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
@@ -1703,6 +1710,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('L', 'M', '2', '0'),
     GST_MAKE_FOURCC ('R', 'P', 'Z', 'A'),
     GST_MAKE_FOURCC ('T', 'H', 'E', 'O'),
+    GST_MAKE_FOURCC ('F', 'P', 'S', '1'),
     /* FILL ME */
   };
   guint i;
