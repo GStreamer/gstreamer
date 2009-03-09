@@ -880,6 +880,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_FRAPS:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-fraps", NULL);
+      break;
+
     case CODEC_ID_MDEC:
     case CODEC_ID_ROQ:
     case CODEC_ID_INTERPLAY_VIDEO:
