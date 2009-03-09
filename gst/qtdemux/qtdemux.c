@@ -4207,6 +4207,8 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
   GstBuffer *buf;
   gchar *media_type, *style;
   GstCaps *caps;
+  guint i;
+  guint8 ndata[4];
 
   data = node->data;
   len = QT_UINT32 (data);
@@ -4223,10 +4225,19 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
   else
     style = "iso";
 
+  /* santize the name for the caps. */
+  for (i = 0; i < 4; i++) {
+    guint8 d = data[4 + i];
+    if (g_ascii_isalnum (d))
+      ndata[i] = g_ascii_tolower (d);
+    else
+      ndata[i] = '_';
+  }
+
   media_type = g_strdup_printf ("application/x-gst-qt-%c%c%c%c-tag",
-      (data[4] == 0xa9) ? '_' : g_ascii_tolower (data[4]),
-      g_ascii_tolower (data[5]), g_ascii_tolower (data[6]),
-      g_ascii_tolower (data[7]));
+      ndata[0], ndata[1], ndata[2], ndata[3]);
+  GST_DEBUG_OBJECT (demux, "media type %s", media_type);
+
   caps = gst_caps_new_simple (media_type, "style", G_TYPE_STRING, style, NULL);
   gst_buffer_set_caps (buf, caps);
   gst_caps_unref (caps);
