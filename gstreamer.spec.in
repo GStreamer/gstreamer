@@ -1,7 +1,7 @@
 %define		gstreamer	gstreamer
 %define		majorminor	@GST_MAJORMINOR@
 
-%define 	_glib2		@GLIB2_REQ@
+%define 	_glib2		@GLIB_REQ@
 %define 	_libxml2	@LIBXML2_REQ@
 
 Name: 		%{gstreamer}
