@@ -57,6 +57,7 @@
 
 #include <string.h>
 
+#include <gst/gstutils.h>
 #include "gstrtspmessage.h"
 
 typedef struct _RTSPKeyValue
@@ -741,37 +742,6 @@ gst_rtsp_message_steal_body (GstRTSPMessage * msg, guint8 ** data, guint * size)
 }
 
 static void
-dump_mem (guint8 * mem, guint size)
-{
-  guint i, j;
-  GString *string = g_string_sized_new (50);
-  GString *chars = g_string_sized_new (18);
-
-  i = j = 0;
-  while (i < size) {
-    if (g_ascii_isprint (mem[i]))
-      g_string_append_printf (chars, "%c", mem[i]);
-    else
-      g_string_append_printf (chars, ".");
-
-    g_string_append_printf (string, "%02x ", mem[i]);
-
-    j++;
-    i++;
-
-    if (j == 16 || i == size) {
-      g_print ("%08x (%p): %-48.48s %-16.16s\n", i - j, mem + i - j,
-          string->str, chars->str);
-      g_string_set_size (string, 0);
-      g_string_set_size (chars, 0);
-      j = 0;
-    }
-  }
-  g_string_free (string, TRUE);
-  g_string_free (chars, TRUE);
-}
-
-static void
 dump_key_value (gpointer data, gpointer user_data)
 {
   RTSPKeyValue *key_value = (RTSPKeyValue *) data;
@@ -809,7 +779,7 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       g_print (" body:\n");
       gst_rtsp_message_get_body (msg, &data, &size);
-      dump_mem (data, size);
+      gst_util_dump_mem (data, size);
       break;
     case GST_RTSP_MESSAGE_RESPONSE:
       g_print ("RTSP response message %p\n", msg);
@@ -822,14 +792,14 @@ gst_rtsp_message_dump (GstRTSPMessage * msg)
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       gst_rtsp_message_get_body (msg, &data, &size);
       g_print (" body: length %d\n", size);
-      dump_mem (data, size);
+      gst_util_dump_mem (data, size);
       break;
     case GST_RTSP_MESSAGE_DATA:
       g_print ("RTSP data message %p\n", msg);
       g_print (" channel: '%d'\n", msg->type_data.data.channel);
       g_print (" size:    '%d'\n", msg->body_size);
       gst_rtsp_message_get_body (msg, &data, &size);
-      dump_mem (data, size);
+      gst_util_dump_mem (data, size);
       break;
     default:
       g_print ("unsupported message type %d\n", msg->type);
