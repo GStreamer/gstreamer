@@ -663,8 +663,11 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
   /* add timestamp */
   elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
       gst_util_get_timestamp ());
+
+  /* we don't use GST_TIME_FORMAT as such filenames would fail on some
+   * filesystems like fat */
   ts_file_name =
-      g_strdup_printf ("%" GST_TIME_FORMAT "-%s", GST_TIME_ARGS (elapsed),
+      g_strdup_printf ("%u.%02u.%02u.%09u-%s", GST_TIME_ARGS (elapsed),
       file_name);
 
   _gst_debug_bin_to_dot_file (bin, details, ts_file_name);
