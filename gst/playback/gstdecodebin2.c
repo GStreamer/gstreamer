@@ -301,6 +301,7 @@ struct _GstDecodePad
   GstDecodeGroup *group;
   gboolean blocked;
   gboolean drained;
+  gboolean added;
 };
 
 G_DEFINE_TYPE (GstDecodePad, gst_decode_pad, GST_TYPE_GHOST_PAD);
@@ -2091,6 +2092,8 @@ gst_decode_group_expose (GstDecodeGroup * group)
     if (!gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD (dpad)))
       goto name_problem;
 
+    dpad->added = TRUE;
+
     /* 3. emit signal */
     GST_DEBUG_OBJECT (dbin, "emitting new-decoded-pad");
     g_signal_emit (G_OBJECT (dbin),
@@ -2154,8 +2157,13 @@ gst_decode_group_hide (GstDecodeGroup * group)
   GROUP_MUTEX_LOCK (group);
 
   /* Remove ghost pads */
-  for (tmp = group->endpads; tmp; tmp = g_list_next (tmp))
-    gst_element_remove_pad (GST_ELEMENT (group->dbin), GST_PAD (tmp->data));
+  for (tmp = group->endpads; tmp; tmp = g_list_next (tmp)) {
+    GstDecodePad *dpad = (GstDecodePad *) tmp->data;
+
+    if (dpad->added)
+      gst_element_remove_pad (GST_ELEMENT (group->dbin), GST_PAD (dpad));
+    dpad->added = FALSE;
+  }
 
   group->exposed = FALSE;
 
@@ -2243,9 +2251,15 @@ gst_decode_group_free (GstDecodeGroup * group)
   GROUP_MUTEX_LOCK (group);
 
   /* remove exposed pads */
-  if (group == group->dbin->activegroup)
-    for (tmp = group->endpads; tmp; tmp = g_list_next (tmp))
-      gst_element_remove_pad (GST_ELEMENT (group->dbin), GST_PAD (tmp->data));
+  if (group == group->dbin->activegroup) {
+    for (tmp = group->endpads; tmp; tmp = g_list_next (tmp)) {
+      GstDecodePad *dpad = (GstDecodePad *) tmp->data;
+
+      if (dpad->added)
+        gst_element_remove_pad (GST_ELEMENT (group->dbin), GST_PAD (dpad));
+      dpad->added = FALSE;
+    }
+  }
 
   /* Clear all GstDecodePad */
   for (tmp = group->endpads; tmp; tmp = g_list_next (tmp))
