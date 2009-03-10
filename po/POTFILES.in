@@ -2,7 +2,6 @@ ext/resindvd/resindvdsrc.c
 ext/resindvd/rsnbasesrc.c
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
-ext/twolame/gsttwolame.c
 gst/aiffparse/aiffparse.c
 gst/nuvdemux/gstnuvdemux.c
 sys/dvb/gstdvbsrc.c
