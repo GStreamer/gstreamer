@@ -1,13 +1,14 @@
 # Translation for gst-plugins-ugly messages to Russian
 # This file is put in the public domain.
-# Артём Попов <artfwo@gmail.com>, 2008.
+# Артём Попов <artfwo@gmail.com>, 2009.
+# Pavel Maryanov <acid_jack@ukr.net>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-04-03 10:10+0700\n"
+"PO-Revision-Date: 2009-02-12 14:26+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "MIME-Version: 1.0\n"
@@ -15,18 +16,16 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Не удалось прочесть сведения о разделах для DVD."
+msgstr "Не удалось прочесть CD."
 
 #: ext/cdio/gstcdiocddasrc.c:280
-#, fuzzy
 msgid "Could not open CD device for reading."
-msgstr "Не удалось открыть DVD-раздел %d"
+msgstr "Не удалось открыть CD-устройство для чтения."
 
 #: ext/cdio/gstcdiocddasrc.c:287
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "Диск не в формате аудио-CD."
 
 #: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
@@ -48,7 +47,7 @@ msgstr "Ошибка при открытии DVD-устройства «%s»."
 
 #: ext/dvdnav/dvdnavsrc.c:1996
 msgid "Failed to set PGC based seeking."
-msgstr "Не удалось переключиться в режим PGC-позиционирования."
+msgstr "Не удалось включить PGC-позиционирование."
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -63,26 +62,17 @@ msgstr "Ошибка перехода к эпизоду %d DVD-раздела %d
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Не удалось открыть DVD-раздел %d. Интерактивные разделы не поддерживаются "
-"этим элементом"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Не удалось открыть DVD-раздел %d. Интерактивные разделы не поддерживаются этим элементом"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"Ошибка конфигурирования кодировщика LAME. Проверьте параметры кодирования."
+msgstr "Не удалось настроить кодировщик LAME. Проверьте параметры сжатия."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был "
-"изменён на %d кбит/с."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был изменён на %d кбит/с."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
@@ -90,7 +80,7 @@ msgstr "Поток не содержит данных."
 
 #: gst/asfdemux/gstasfdemux.c:1371
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Внутренняя ошибка потока данных."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Файл зашифрован и не может быть воспроизведён."

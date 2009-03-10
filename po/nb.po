@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"POT-Creation-Date: 2007-06-13 12:52+0200\n"
 "PO-Revision-Date: 2007-11-02 14:39+0100\n"
 "Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -14,41 +14,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/cdio/gstcdiocddasrc.c:205
-#, fuzzy
-msgid "Could not read from CD."
-msgstr "Kunne ikke lese tittelinformasjon for DVD."
-
-#: ext/cdio/gstcdiocddasrc.c:280
-#, fuzzy
-msgid "Could not open CD device for reading."
-msgstr "Kunne ikke åpne DVD-tittel %d."
-
-#: ext/cdio/gstcdiocddasrc.c:287
-msgid "Disc is not an Audio CD."
-msgstr ""
-
-#: ext/dvdnav/dvdnavsrc.c:585 ext/dvdnav/dvdnavsrc.c:1981
 #: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
 msgid "Could not open DVD"
 msgstr "Kunne ikke åpne DVD"
-
-#: ext/dvdnav/dvdnavsrc.c:1822
-msgid "Invalid title information on DVD."
-msgstr "Ugyldig tittelinformasjon på DVD."
-
-#: ext/dvdnav/dvdnavsrc.c:1968
-msgid "Could not read title information for DVD."
-msgstr "Kunne ikke lese tittelinformasjon for DVD."
-
-#: ext/dvdnav/dvdnavsrc.c:1990
-#, c-format
-msgid "Failed to open DVD device '%s'."
-msgstr "Kunne ikke åpne DVD-enhet «%s»."
-
-#: ext/dvdnav/dvdnavsrc.c:1996
-msgid "Failed to set PGC based seeking."
-msgstr "Kunne ikke sette PGC-basert søking."
 
 #: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
 #: ext/dvdread/dvdreadsrc.c:601
@@ -63,33 +31,34 @@ msgstr "Klarte ikke å gå til kapittel %d på DVD tittel %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Kunne ikke åpne DVD-tittel %d. Interaktive titler er ikke støttet av dette "
-"elementet"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Kunne ikke åpne DVD-tittel %d. Interaktive titler er ikke støttet av dette elementet"
 
-#: ext/lame/gstlame.c:624
+#: ext/lame/gstlame.c:560
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:691
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Forespurt bitrate %d kbit/s for egenskap «%s» er ikke tillatt. Bitraten ble "
-"endret til %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Forespurt bitrate %d kbit/s for egenskap «%s» er ikke tillatt. Bitraten ble endret til %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: gst/asfdemux/gstasfdemux.c:322
 msgid "This stream contains no data."
 msgstr "Denne strømmen inneholde ikke data."
 
-#: gst/asfdemux/gstasfdemux.c:1371
-msgid "Internal data stream error."
-msgstr ""
+#: gst/asfdemux/gstasfdemux.c:2936
+msgid "This file is encrypted and cannot be played."
+msgstr "Denne filen er kryptert og kan ikke spilles av."
 
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Denne filen er kryptert og kan ikke spilles av."
+#~ msgid "Invalid title information on DVD."
+#~ msgstr "Ugyldig tittelinformasjon på DVD."
+
+#~ msgid "Could not read title information for DVD."
+#~ msgstr "Kunne ikke lese tittelinformasjon for DVD."
+
+#~ msgid "Failed to open DVD device '%s'."
+#~ msgstr "Kunne ikke åpne DVD-enhet «%s»."
+
+#~ msgid "Failed to set PGC based seeking."
+#~ msgstr "Kunne ikke sette PGC-basert søking."

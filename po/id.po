@@ -61,12 +61,8 @@ msgstr "Gagal pergi ke bab %d dari judul DVD %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen "
-"ini"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen ini"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
@@ -74,12 +70,8 @@ msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi "
-"diubah ke %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi diubah ke %d kbit/s."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."

@@ -64,27 +64,17 @@ msgstr "Falha ao avançar para o capítulo %d do título %d do DVD"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Não foi possível abrir o título %d do DVD. Títulos interativos não são "
-"suportados por este elemento"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Não foi possível abrir o título %d do DVD. Títulos interativos não são suportados por este elemento"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"Falha ao configurar o codificador LAME. Verifique seus parâmetros de "
-"codificação."
+msgstr "Falha ao configurar o codificador LAME. Verifique seus parâmetros de codificação."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"A taxa de bits, %d kbits/s, requisitada pela propriedade \"%s\" não é "
-"permitida. A taxa de bits foi alterada para %d kbits/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "A taxa de bits, %d kbits/s, requisitada pela propriedade \"%s\" não é permitida. A taxa de bits foi alterada para %d kbits/s."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."

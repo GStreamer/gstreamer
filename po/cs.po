@@ -65,26 +65,17 @@ msgstr "Nezdařil se přechod na kapitolu %d titulu DVD %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Nezdařilo se otevření titulu DVD %d. Interaktivní tituly nejsou tímto prvkem "
-"podporovány"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Nezdařilo se otevření titulu DVD %d. Interaktivní tituly nejsou tímto prvkem podporovány"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry kodéru."
+msgstr "Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry kodéru."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Požadovaný datový tok %d kilobitů za sekundu není u vlastnosti \"%s\" "
-"povolen. Datový tok byl změněn na %d kilobitů za sekundu."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Požadovaný datový tok %d kilobitů za sekundu není u vlastnosti \"%s\" povolen. Datový tok byl změněn na %d kilobitů za sekundu."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."

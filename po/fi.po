@@ -68,12 +68,8 @@ msgstr "Ei voitu siirtyä kappaleeseen %d DVD:n ohjelmassa %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"DVD:n ohjelmaa %d ei voitu avata. Tämä elementti ei tue interaktiivisia "
-"ohjelmia"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "DVD:n ohjelmaa %d ei voitu avata. Tämä elementti ei tue interaktiivisia ohjelmia"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
@@ -81,12 +77,8 @@ msgstr "LAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Pyydetty bittinopeus %d kb/s ominaisuudelle \"%s\" ei ole sallittu. "
-"Bittinopeus asetettiin arvoon %d kb/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Pyydetty bittinopeus %d kb/s ominaisuudelle \"%s\" ei ole sallittu. Bittinopeus asetettiin arvoon %d kb/s."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."

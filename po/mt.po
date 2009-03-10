@@ -64,26 +64,17 @@ msgstr "Problema biex immur kapitlu %d mit-titlu %d tad-DVD"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Ma nistax niftaħ titlu %d tad-DVD. Titli nterattivi mhux issapportjati minn "
-"dan l-element"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Ma nistax niftaħ titlu %d tad-DVD. Titli nterattivi mhux issapportjati minn dan l-element"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
+msgstr "Problema biex nissetja LAME encoder. Iċċekkja l-parametri tal-encoding."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Mhux permess il-bitrate %d kbit/s rikjesta għal '%s'. Għalhekk il-bitrate "
-"ġiet mibdula għal %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Mhux permess il-bitrate %d kbit/s rikjesta għal '%s'. Għalhekk il-bitrate ġiet mibdula għal %d kbit/s."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."

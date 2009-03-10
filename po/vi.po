@@ -5,17 +5,17 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-09-08 22:30+0930\n"
+"PO-Revision-Date: 2008-12-25 17:29+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: LocFactoryEditor 1.7b3\n"
+"X-Generator: LocFactoryEditor 1.8\n"
 
 #: ext/cdio/gstcdiocddasrc.c:205
 msgid "Could not read from CD."
@@ -64,9 +64,7 @@ msgstr "Lỗi đi tới chương %d của đĩa DVD tên %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
 msgstr "Không thể mở đĩa DVD tên %d. Phần tử này không hỗ trợ tên tương tác."
 
 #: ext/lame/gstlame.c:624
@@ -75,12 +73,8 @@ msgstr "Lỗi cấu hình bộ biên mã LAME. Hãy kiểm tra các tham số bi
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Không cho phép tỷ lệ đã yêu cầu %d kbit/giây cho thuộc tính « %s » nên tỷ lệ "
-"bit bị thay đổi thành %d kbit/g."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Không cho phép tỷ lệ đã yêu cầu %d kbit/giây cho thuộc tính « %s » nên tỷ lệ bit bị thay đổi thành %d kbit/g."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."

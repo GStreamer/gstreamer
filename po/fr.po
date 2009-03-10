@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the gst-plugins-ugly package.
 #
 # Claude Paroz <claude@2xlibre.net>, 2008.
-#
+# 
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
@@ -63,26 +63,17 @@ msgstr "Impossible d'aller au chapitre %d du titre %d du DVD"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Impossible d'ouvrir le titre %d du DVD. Les titres interactifs ne sont pas "
-"pris en charge par cet élément"
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Impossible d'ouvrir le titre %d du DVD. Les titres interactifs ne sont pas pris en charge par cet élément"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"La configuration du codeur LAME a échoué. Vérifiez vos paramètres de codage."
+msgstr "La configuration du codeur LAME a échoué. Vérifiez vos paramètres de codage."
 
 #: ext/lame/gstlame.c:718
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Le débit binaire demandé de %d kbit/s pour la propriété « %s » n'est pas "
-"autorisé. Le débit binaire a été défini à %d kbits/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Le débit binaire demandé de %d kbit/s pour la propriété « %s » n'est pas autorisé. Le débit binaire a été défini à %d kbits/s."
 
 #: gst/asfdemux/gstasfdemux.c:325
 msgid "This stream contains no data."
