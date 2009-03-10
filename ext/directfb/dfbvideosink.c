@@ -93,6 +93,7 @@
 #include "dfbvideosink.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 /* Debugging category */
 GST_DEBUG_CATEGORY_STATIC (dfbvideosink_debug);
