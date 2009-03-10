@@ -201,13 +201,11 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (GST_BASE_TRANSFORM_SINK_PAD (object));
 
       if (suggest) {
+        GST_DEBUG_OBJECT (capsfilter, "suggest new caps %" GST_PTR_FORMAT,
+            suggest);
         gst_base_transform_suggest (GST_BASE_TRANSFORM (object), suggest, 0);
         gst_caps_unref (suggest);
       }
-
-      /* FIXME: Need to activate these caps on the pads
-       * http://bugzilla.gnome.org/show_bug.cgi?id=361718
-       */
       break;
     }
     default:
@@ -256,6 +254,7 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
   GST_OBJECT_UNLOCK (capsfilter);
 
   ret = gst_caps_intersect (caps, filter_caps);
+  GST_DEBUG_OBJECT (capsfilter, "input:     %" GST_PTR_FORMAT, caps);
   GST_DEBUG_OBJECT (capsfilter, "filter:    %" GST_PTR_FORMAT, filter_caps);
   GST_DEBUG_OBJECT (capsfilter, "intersect: %" GST_PTR_FORMAT, ret);
 
@@ -301,8 +300,7 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 
   if (GST_BUFFER_CAPS (input) != NULL) {
     /* Output buffer already has caps */
-    GST_DEBUG_OBJECT (trans,
-        "Input buffer already has caps (implicitely fixed)");
+    GST_LOG_OBJECT (trans, "Input buffer already has caps (implicitely fixed)");
     /* FIXME : Move this behaviour to basetransform. The given caps are the ones
      * of the source pad, therefore our outgoing buffers should always have
      * those caps. */

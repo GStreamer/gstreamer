@@ -230,7 +230,8 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
     res = gst_pad_get_caps (target);
     gst_object_unref (target);
 
-    GST_DEBUG_OBJECT (pad, "get caps of target: %" GST_PTR_FORMAT, res);
+    GST_DEBUG_OBJECT (pad, "get caps of target %s:%s : %" GST_PTR_FORMAT,
+        GST_DEBUG_PAD_NAME (target), res);
 
     /* filter against the template */
     if (templ && res) {
