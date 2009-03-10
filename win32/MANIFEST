@@ -1,7 +1,6 @@
 win32/MANIFEST
 win32/common/_stdint.h
 win32/common/config.h
-win32/common/config.h.in
 win32/common/gstrtsp-enumtypes.c
 win32/common/gstrtsp-enumtypes.h
 win32/common/interfaces-enumtypes.c
