@@ -3,10 +3,10 @@
   <description>LibMpeg2 decoder</description>
   <filename>../../ext/mpeg2dec/.libs/libgstmpeg2dec.so</filename>
   <basename>libgstmpeg2dec.so</basename>
-  <version>0.10.10</version>
+  <version>0.10.10.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins source release</package>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc){ YV12, I420, Y42B }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw-yuv, format=(fourcc){ YV12, I420, Y42B, Y444 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

@@ -52,6 +52,12 @@ else
 SIDPLAY_DIR =
 endif
 
+if USE_TWOLAME
+TWOLAME_DIR = twolame
+else
+TWOLAME_DIR =
+endif
+
 SUBDIRS = \
 	$(A52DEC_DIR) \
 	$(AMRNB_DIR) \
@@ -61,7 +67,8 @@ SUBDIRS = \
 	$(LAME_DIR) \
 	$(MAD_DIR) \
 	$(MPEG2DEC_DIR) \
-	$(SIDPLAY_DIR)
+	$(SIDPLAY_DIR) \
+	$(TWOLAME_DIR)
 
 DIST_SUBDIRS = \
 	a52dec \
@@ -72,4 +79,5 @@ DIST_SUBDIRS = \
 	lame \
 	mad \
 	mpeg2dec \
-	sidplay
+	sidplay \
+	twolame

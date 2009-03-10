@@ -4,6 +4,7 @@ GstID3Tag GstTagSetter
 GstCddaBaseSrc GstURIHandler
 GstCdioCddaSrc GstURIHandler
 GstDvdReadSrc GstURIHandler
+GstPNMSrc GstURIHandler
 GstLame GstTagSetter
 GstRTSPReal GstRTSPExtension
 GstRTSPWMS GstRTSPExtension

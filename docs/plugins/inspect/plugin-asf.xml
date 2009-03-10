@@ -3,10 +3,10 @@
   <description>Demuxes and muxes audio and video in Microsofts ASF format</description>
   <filename>../../gst/asfdemux/.libs/libgstasf.so</filename>
   <basename>libgstasf.so</basename>
-  <version>0.10.10</version>
+  <version>0.10.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins source release</package>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -33,6 +33,27 @@
           <direction>source</direction>
           <presence>sometimes</presence>
           <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpasfdepay</name>
+      <longname>RTP ASF packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts ASF streams from RTP</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string){ application, video, audio }, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)X-ASF-PF</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-ms-asf</details>
         </caps>
       </pads>
     </element>

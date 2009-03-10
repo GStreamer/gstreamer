@@ -352,6 +352,18 @@ AG_GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
   GST_PATH_SIDPLAY()
 ])
 
+dnl *** twolame ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TWOLAME, true)
+AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
+  PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.0, [
+      HAVE_TWOLAME="yes"], [
+      HAVE_TWOLAME="no"
+      AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(TWOLAME_CFLAGS)
+  AC_SUBST(TWOLAME_LIBS)
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -367,6 +379,7 @@ AM_CONDITIONAL(USE_ID3TAG, false)
 AM_CONDITIONAL(USE_MAD, false)
 AM_CONDITIONAL(USE_MPEG2DEC, false)
 AM_CONDITIONAL(USE_SIDPLAY, false)
+AM_CONDITIONAL(USE_TWOLAME, false)
 
 fi dnl of EXT plugins
 
@@ -452,6 +465,7 @@ ext/lame/Makefile
 ext/mad/Makefile
 ext/mpeg2dec/Makefile
 ext/sidplay/Makefile
+ext/twolame/Makefile
 docs/Makefile
 docs/plugins/Makefile
 docs/version.entities

@@ -19,7 +19,9 @@ GObject
           GstCddaBaseSrc
             GstCdioCddaSrc
           GstDvdReadSrc
+          GstPNMSrc
       GstSidDec
+      GstTwoLame
       GstLame
       GstRMDemux
       GstRealAudioDemux
@@ -37,6 +39,9 @@ GObject
       GstMPEGAudioParse
       GstASFDemux
       GstRTSPWMS
+      GstBaseRTPDepayload
+        GstRtpAsfDepay
+      GstSynaesthesia
     GstBus
     GstTask
     GstClock

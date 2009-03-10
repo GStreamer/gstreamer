@@ -688,3 +688,163 @@
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstPNMSrc::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>PNM Location</NICK>
+<BLURB>Location of the PNM url to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::ath-level</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ATH Level</NICK>
+<BLURB>ATH Level in dB.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,384]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate (kb/s)</NICK>
+<BLURB>Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 192, 224, 256, 320, 384).</BLURB>
+<DEFAULT>192</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::copyright</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Copyright</NICK>
+<BLURB>Mark as copyright.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::emphasis</NAME>
+<TYPE>GstTwoLameEmphasis</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Emphasis</NICK>
+<BLURB>Pre-emphasis to apply to the decoded audio.</BLURB>
+<DEFAULT>No emphasis</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::energy-level-extension</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Energy Level Extension</NICK>
+<BLURB>Write peak PCM level to each frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::error-protection</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Error protection</NICK>
+<BLURB>Adds checksum to every frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::mode</NAME>
+<TYPE>GstTwoLameMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Encoding mode.</BLURB>
+<DEFAULT>Joint Stereo</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::original</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Original</NICK>
+<BLURB>Mark as original.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::padding</NAME>
+<TYPE>GstTwoLamePadding</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Padding</NICK>
+<BLURB>Padding type.</BLURB>
+<DEFAULT>No Padding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::psymodel</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Psychoacoustic Model</NICK>
+<BLURB>Psychoacoustic model used to encode the audio.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::quick-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quick mode</NICK>
+<BLURB>Calculate Psymodel every frames.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::quick-mode-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quick mode count</NICK>
+<BLURB>Calculate Psymodel every n frames.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::vbr</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VBR</NICK>
+<BLURB>Enable variable bitrate mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::vbr-level</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-10,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VBR Level</NICK>
+<BLURB>VBR Level.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTwoLame::vbr-max-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,384]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VBR max bitrate</NICK>
+<BLURB>Specify maximum VBR bitrate (0=off, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 192, 224, 256, 320, 384).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
