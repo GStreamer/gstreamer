@@ -86,7 +86,7 @@ Use cases:
                   |         |                .----------.
                   |         |     .-----.    | decoder2 |
                   |        src2 ->|queue|-> sink       src
-		  '---------'     '-----'    '----------' X
+                  '---------'     '-----'    '----------' X
 
 
  The purpose is to create the pipeline dynamically up to the
