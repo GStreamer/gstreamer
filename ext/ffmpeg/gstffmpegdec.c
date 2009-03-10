@@ -2548,6 +2548,16 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
+    /* No decoders depending on external libraries (we don't build them, but
+     * people who build against an external ffmpeg might have them.
+     * We have native gstreamer plugins for all of those libraries anyway. */
+    if (!strncmp (in_plugin->name, "lib", 3)) {
+      GST_DEBUG
+          ("Not using external library decoder %s. Use the gstreamer-native ones instead.",
+          in_plugin->name);
+      goto next;
+    }
+
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */

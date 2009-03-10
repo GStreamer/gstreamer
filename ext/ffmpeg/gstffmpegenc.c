@@ -1005,6 +1005,16 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
+    /* No encoders depending on external libraries (we don't build them, but
+     * people who build against an external ffmpeg might have them.
+     * We have native gstreamer plugins for all of those libraries anyway. */
+    if (!strncmp (in_plugin->name, "lib", 3)) {
+      GST_DEBUG
+          ("Not using external library encoder %s. Use the gstreamer-native ones instead.",
+          in_plugin->name);
+      goto next;
+    }
+
     /* only encoders */
     if (!in_plugin->encode) {
       goto next;
