@@ -176,7 +176,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
   GST_BUFFER_MALLOCDATA (confbuf) = data;
   GST_BUFFER_SIZE (confbuf) = size;
 
-  GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %u", size);
+  GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %" G_GSIZE_FORMAT, size);
 
   /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                     Number of packed headers                  |
@@ -243,7 +243,8 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
     offset += 6;
 
     GST_DEBUG_OBJECT (rtpvorbisdepay,
-        "header %d, ident 0x%08x, length %u, left %u", i, ident, length, size);
+        "header %d, ident 0x%08x, length %u, left %" G_GSIZE_FORMAT, i, ident,
+        length, size);
 
     if (size < length)
       goto too_small;
