@@ -2106,7 +2106,7 @@ gst_flups_demux_scan_ts (GstFluPSDemux * demux, const guint8 * data,
 
   /* STD buffer size, never for mpeg2 */
   if ((*data & 0xc0) == 0x40)
-    data += 3;
+    data += 2;
 
   /* PTS but no DTS, never for mpeg2 */
   if ((*data & 0xf0) == 0x20) {
