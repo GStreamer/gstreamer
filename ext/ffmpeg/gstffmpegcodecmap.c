@@ -590,7 +590,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_ATRAC3:
-      caps = gst_ff_aud_caps_new (context, codec_id, "audio/atrac3", NULL);
+      caps =
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-vnd.sony.atrac3",
+          NULL);
       break;
 
     case CODEC_ID_DTS:
@@ -2721,7 +2723,8 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-eac3")) {
     id = CODEC_ID_EAC3;
     audio = TRUE;
-  } else if (!strcmp (mimetype, "audio/atrac3")) {
+  } else if (!strcmp (mimetype, "audio/x-vnd.sony.atrac3") ||
+      !strcmp (mimetype, "audio/atrac3")) {
     id = CODEC_ID_ATRAC3;
     audio = TRUE;
   } else if (!strcmp (mimetype, "audio/x-dts")) {
