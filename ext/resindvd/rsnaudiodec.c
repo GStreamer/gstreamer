@@ -205,8 +205,12 @@ error:
 static gboolean
 rsn_audiodec_sink_event (GstPad * pad, GstEvent * event)
 {
-  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (pad);
+  GstPad *sinkpad = GST_PAD (gst_pad_get_parent (pad));
+  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (sinkpad);
   gboolean res;
+
+  gst_object_unref (sinkpad);
+
   if (self == NULL)
     goto error;
 
@@ -225,16 +229,15 @@ error:
 static GstCaps *
 rsn_audiodec_get_proxy_sink_caps (GstPad * pad)
 {
-  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (pad);
+  GstPad *sinkpad = GST_PAD (gst_pad_get_parent (pad));
   GstCaps *ret;
 
-  if (self != NULL && self->child_sink != NULL) {
-    ret = gst_pad_get_caps (self->child_sink);
+  if (sinkpad != NULL) {
+    ret = gst_pad_get_caps (sinkpad);
   } else
     ret = gst_caps_new_any ();
 
-  if (self)
-    gst_object_unref (self);
+  gst_object_unref (sinkpad);
 
   return ret;
 }
@@ -242,16 +245,15 @@ rsn_audiodec_get_proxy_sink_caps (GstPad * pad)
 static GstCaps *
 rsn_audiodec_get_proxy_src_caps (GstPad * pad)
 {
-  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (pad);
+  GstPad *srcpad = GST_PAD (gst_pad_get_parent (pad));
   GstCaps *ret;
 
-  if (self != NULL && self->child_src != NULL) {
-    ret = gst_pad_get_caps (self->child_src);
+  if (srcpad != NULL) {
+    ret = gst_pad_get_caps (srcpad);
   } else
     ret = gst_caps_new_any ();
 
-  if (self)
-    gst_object_unref (self);
+  gst_object_unref (srcpad);
 
   return ret;
 }
@@ -259,19 +261,21 @@ rsn_audiodec_get_proxy_src_caps (GstPad * pad)
 static GstFlowReturn
 rsn_audiodec_proxy_src_chain (GstPad * pad, GstBuffer * buf)
 {
-  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (pad);
+  GstPad *srcpad = GST_PAD (gst_pad_get_parent (pad));
+  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (srcpad);
   GstFlowReturn ret;
 
-  g_print ("srcpad %p\n", self->srcpad);
-  if (self != NULL && self->srcpad != NULL) {
-    GST_DEBUG_OBJECT (self, "Data from decoder, pushing to pad %"
-        GST_PTR_FORMAT, self->srcpad);
-    ret = gst_pad_push (self->srcpad, buf);
-  } else
-    ret = GST_FLOW_ERROR;
+  gst_object_unref (srcpad);
 
-  if (self)
-    gst_object_unref (self);
+  g_print ("srcpad %p\n", self->srcpad);
+  if (self == NULL)
+    return GST_FLOW_ERROR;
+
+  GST_DEBUG_OBJECT (self, "Data from decoder, pushing to pad %"
+      GST_PTR_FORMAT, self->srcpad);
+  ret = gst_pad_push (self->srcpad, buf);
+
+  gst_object_unref (self);
 
   return ret;
 }
@@ -279,17 +283,18 @@ rsn_audiodec_proxy_src_chain (GstPad * pad, GstBuffer * buf)
 static gboolean
 rsn_audiodec_proxy_src_event (GstPad * pad, GstEvent * event)
 {
-  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (pad);
+  GstPad *srcpad = GST_PAD (gst_pad_get_parent (pad));
+  RsnAudioDec *self = (RsnAudioDec *) gst_pad_get_parent (srcpad);
   gboolean ret;
 
-  if (self != NULL && self->srcpad != NULL) {
-    ret = gst_pad_push_event (self->srcpad, event);
-  } else
-    ret = GST_FLOW_ERROR;
+  gst_object_unref (srcpad);
 
-  if (self)
-    gst_object_unref (self);
+  if (self == NULL)
+    return FALSE;
 
+  ret = gst_pad_push_event (self->srcpad, event);
+
+  gst_object_unref (self);
   return ret;
 }
 
@@ -299,17 +304,17 @@ create_proxy_pads (RsnAudioDec * self)
   if (self->child_sink_proxy == NULL) {
     /* A src pad the child can query/send events to */
     self->child_sink_proxy = gst_pad_new ("sink_proxy", GST_PAD_SRC);
+    gst_object_set_parent ((GstObject *) self->child_sink_proxy,
+        (GstObject *) self->sinkpad);
     gst_pad_set_getcaps_function (self->child_sink_proxy,
         GST_DEBUG_FUNCPTR (rsn_audiodec_get_proxy_sink_caps));
-    gst_object_set_parent ((GstObject *) self->child_sink_proxy,
-        (GstObject *) self);
   }
 
   if (self->child_src_proxy == NULL) {
     /* A sink pad the child can push to */
     self->child_src_proxy = gst_pad_new ("src_proxy", GST_PAD_SINK);
     gst_object_set_parent ((GstObject *) self->child_src_proxy,
-        (GstObject *) self);
+        (GstObject *) self->srcpad);
     gst_pad_set_getcaps_function (self->child_src_proxy,
         GST_DEBUG_FUNCPTR (rsn_audiodec_get_proxy_src_caps));
     gst_pad_set_chain_function (self->child_src_proxy,
@@ -341,13 +346,16 @@ rsn_audiodec_set_child (RsnAudioDec * self, GstElement * new_child)
     return TRUE;
 
   self->child_sink = gst_element_get_static_pad (new_child, "sink");
-  if (self->child_sink == NULL)
+  if (self->child_sink == NULL) {
     return FALSE;
+  }
   self->child_src = gst_element_get_static_pad (new_child, "src");
-  if (self->child_src == NULL)
+  if (self->child_src == NULL) {
     return FALSE;
-  if (!gst_bin_add ((GstBin *) self, new_child))
+  }
+  if (!gst_bin_add ((GstBin *) self, new_child)) {
     return FALSE;
+  }
 
   GST_DEBUG_OBJECT (self, "Add child %" GST_PTR_FORMAT, new_child);
   self->current_decoder = new_child;
@@ -361,8 +369,6 @@ rsn_audiodec_set_child (RsnAudioDec * self, GstElement * new_child)
     return FALSE;
   GST_DEBUG_OBJECT (self, "linked child src pad %" GST_PTR_FORMAT
       " to proxy pad %" GST_PTR_FORMAT, self->child_src, self->child_src_proxy);
-
-  g_print ("Returning TRUE\n");
 
   return TRUE;
 }
