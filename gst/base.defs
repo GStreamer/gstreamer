@@ -631,7 +631,7 @@
   (c-name "gst_base_transform_suggest")
   (return-type "none")
   (parameters
-    '("GstCaps*" "caps")
+    '("GstCaps*" "caps" (null-ok))
     '("guint" "size")
   )
 )
