@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 22:32+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-10-16 16:51+0100\n"
 "PO-Revision-Date: 2008-10-18 17:06+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -17,25 +17,21 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:330
 msgid "Could not read title information for DVD."
 msgstr "No se pudo leer la información del título para el DVD."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:336
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Falló abrir el dispositivo DVD «%s»."
-
-#: ext/resindvd/resindvdsrc.c:345
-msgid "Failed to set PGC based seeking."
-msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Error en el reloj interno."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
+#: gst/aiffparse/aiffparse.c:1234
 msgid "Internal data flow error."
 msgstr "Error en el flujo de datos interno."
 
@@ -59,52 +55,40 @@ msgstr "No se pudo escribir en el archivo «%s»."
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Falló al configurar el codificador TwoLAME. Compruebe sus parámetros de "
-"codificación."
+msgstr "Falló al configurar el codificador TwoLAME. Compruebe sus parámetros de codificación."
 
 #: ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"La tasa de bits %d kbps solicitada para la propiedad «%s» no está permitida. "
-"La tasa de bits se cambió a %d kbps."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "La tasa de bits %d kbps solicitada para la propiedad «%s» no está permitida. La tasa de bits se cambió a %d kbps."
 
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "El dispositivo «%s» no existe."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:701
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "No se pudo abrir el dispositivo frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:713
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "No se pudieron obtener los ajustes del dispositivo frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:794
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No se pudo abrir el archivo «%s» para leer."
 
 #: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"No se pudo abrir el dispositivo de sonido para manejar el control del "
-"mezclador."
+msgstr "No se pudo abrir el dispositivo de sonido para manejar el control del mezclador."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"No se pudo abrir el dispositivo para manejar el control del mezclador. Este "
-"elemento no soporta esta versión del Open Sound System."
+msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+msgstr "No se pudo abrir el dispositivo para manejar el control del mezclador. Este elemento no soporta esta versión del Open Sound System."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -371,32 +355,20 @@ msgid "Virtual mixer channel configuration"
 msgstr "Configuración del canal del mezclador virtual"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"No se pudo abrir el dispositivo de sonido para reproducir. Otra aplicación "
-"está usando el dispositivo."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "No se pudo abrir el dispositivo de sonido para reproducir. Otra aplicación está usando el dispositivo."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
-msgstr ""
-"No se pudo abrir el dispositivo de sonido para reproducir. No tiene permiso "
-"para abrir el dispositivo."
+msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgstr "No se pudo abrir el dispositivo de sonido para reproducir. No tiene permiso para abrir el dispositivo."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "No se pudo abrir el dispositivo de sonido para reproducción."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
-msgstr ""
-"No se pudo abrir el dispositivo para reproducir. Este elemento no soporta "
-"esta versión del Open Sound System."
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgstr "No se pudo abrir el dispositivo para reproducir. Este elemento no soporta esta versión del Open Sound System."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."

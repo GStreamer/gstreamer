@@ -1,14 +1,14 @@
 # Italian translation for gst-plugins-bad package of GStreamer project.
-# Copyright (C) 2004-2008 GStreamer core team
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Luca Ferretti <elle.uca@infinito.it>, 2007-2008.
+# Luca Ferretti <elle.uca@infinito.it>, 2007-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 22:32+0000\n"
-"PO-Revision-Date: 2008-10-17 21:14+0200\n"
+"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"PO-Revision-Date: 2009-01-14 10:51+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -26,7 +26,7 @@ msgstr "Apertura del device DVD «%s» non riuscita."
 
 #: ext/resindvd/resindvdsrc.c:345
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Impostazione del posizionamento basato su PGC non riuscita"
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
@@ -35,7 +35,7 @@ msgstr "Errore interno del clock."
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
 #: gst/aiffparse/aiffparse.c:1265
 msgid "Internal data flow error."
-msgstr "Errore interno nello flusso di dati."
+msgstr "Errore interno nel flusso di dati."
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:345
 msgid "No file name specified for writing."
@@ -57,20 +57,13 @@ msgstr "Impossibile scrivere sul file «%s»."
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Configurazione dell'encoder TwoLAME non riuscita. Controllare i parametri "
-"dell'encoder."
+msgstr "Configurazione dell'encoder TwoLAME non riuscita. Controllare i parametri dell'encoder."
 
-# NdT 1: sperando che il primo %d sia plurale....
-# NdT 2: rimosso il richiesto, lo so
+# NdT: rimosso il richiesto, lo so
 #: ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Non sono consentiti %d kbit/s come bitrate per la proprietà «%s». Il bitrate "
-"è stato cambiato a %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Non sono consentiti %d kbit/s come bitrate per la proprietà «%s». Il bitrate è stato cambiato a %d kbit/s."
 
 #: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
@@ -94,18 +87,11 @@ msgstr "Impossibile aprire il file «%s» in lettura."
 
 #: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
-msgstr ""
-"Impossibile aprire il dispositivo audio per la gestione della regolazione "
-"del mixer."
+msgstr "Impossibile aprire il device audio per la gestione della regolazione del mixer."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Impossibile aprire il dispositivo audio per la gestione della regolazione "
-"del mixer. Questa versione di Open Sound System non è supportata da questo "
-"elemento."
+msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+msgstr "Impossibile aprire il device audio per la gestione della regolazione del mixer. Questa versione di Open Sound System non è supportata da questo elemento."
 
 # NdT: questo e i successivi non ho controllato che sono....
 #: sys/oss4/oss4-mixer.c:720
@@ -165,6 +151,8 @@ msgid "Side"
 msgstr "Lato"
 
 # NdT: forse questo? --> http://en.wikipedia.org/wiki/Low-frequency_effect
+#
+# o forse Low Frequency Emitter 
 #: sys/oss4/oss4-mixer.c:734 sys/oss4/oss4-mixer.c:803
 msgid "Center / LFE"
 msgstr "Centro / LFE"
@@ -183,7 +171,7 @@ msgstr "Input"
 
 #: sys/oss4/oss4-mixer.c:738 sys/oss4/oss4-mixer.c:796
 msgid "Line-in"
-msgstr "Canale in"
+msgstr "Linea in"
 
 #: sys/oss4/oss4-mixer.c:739
 msgid "PCM 1"
@@ -287,7 +275,7 @@ msgstr "Funzione connettore rosa"
 
 #: sys/oss4/oss4-mixer.c:777
 msgid "Pink front panel connector function"
-msgstr "Funzione connettore rosso pannello frontale"
+msgstr "Funzione connettore rosa pannello frontale"
 
 #: sys/oss4/oss4-mixer.c:778
 msgid "Blue connector function"
@@ -375,36 +363,24 @@ msgid "Virtual mixer channel configuration"
 msgstr "Configurazione canale mixer virtuale"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Impossibile aprire il dispositivo audio in riproduzione. Il dispositivo è "
-"attualmente usato da un'altra applicazione."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Impossibile aprire il device audio in riproduzione. Il dispositivo è attualmente usato da un'altra applicazione."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
-msgstr ""
-"Impossibile aprire il dispositivo audio in riproduzione. Permessi non "
-"sufficienti per aprire il dispositivo."
+msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgstr "Impossibile aprire il device audio in riproduzione. Permessi non sufficienti per aprire il dispositivo."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
-msgstr "Impossibile aprire il dispositivo audio in riproduzione."
+msgstr "Impossibile aprire il device audio in riproduzione."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
-msgstr ""
-"Impossibile aprire il dispositivo audio in riproduzione. Questa versione di "
-"Open Sound System non è supportata da questo elemento."
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgstr "Impossibile aprire il device audio in riproduzione. Questa versione di Open Sound System non è supportata da questo elemento."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
-msgstr "Questo dispositivo audio non supporta la riproduzione."
+msgstr "Questo device audio non supporta la riproduzione."
 
 #: sys/oss4/oss4-sink.c:529
 msgid "Audio playback error."

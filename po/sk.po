@@ -7,38 +7,33 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 22:32+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-10-16 16:51+0100\n"
 "PO-Revision-Date: 2008-11-04 09:39+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
-"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Poedit-Language: Slovak\n"
 "X-Poedit-Country: SLOVAKIA\n"
 
-#: ext/resindvd/resindvdsrc.c:333
+#: ext/resindvd/resindvdsrc.c:330
 msgid "Could not read title information for DVD."
 msgstr "Nepodarilo sa prečítať titulok DVD."
 
-#: ext/resindvd/resindvdsrc.c:339
+#: ext/resindvd/resindvdsrc.c:336
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nepodarilo sa otvoriť zariadenie DVD '%s'."
-
-#: ext/resindvd/resindvdsrc.c:345
-msgid "Failed to set PGC based seeking."
-msgstr ""
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
 msgstr "Vnútorná chyba časovača."
 
 #: ext/resindvd/rsnbasesrc.c:1904 ext/resindvd/rsnbasesrc.c:1915
-#: gst/aiffparse/aiffparse.c:1265
+#: gst/aiffparse/aiffparse.c:1234
 msgid "Internal data flow error."
 msgstr "Vnútorná chyba prúdu údajov."
 
@@ -62,35 +57,29 @@ msgstr "Nepodarilo sa zapísať do súboru \"%s\"."
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Nepodarilo sa nakonfigurovať TwoLAME enkodér. Skontrolujte parametre "
-"kódovania."
+msgstr "Nepodarilo sa nakonfigurovať TwoLAME enkodér. Skontrolujte parametre kódovania."
 
 #: ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je povolená. "
-"Rýchlosť bola zmenená na %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Požadovaná bitová rýchlosť %d kbit/s pre vlastnosť '%s' nie je povolená. Rýchlosť bola zmenená na %d kbit/s."
 
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:697 sys/dvb/gstdvbsrc.c:790
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zariadenie \"%s\" neexistuje."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:701
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nepodarilo sa otvoriť ovládacie zariadenie \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:713
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nepodarilo sa získať nastavenia od zariadenia \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:794
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nepodarilo sa otvoriť súbor \"%s\" na čítanie."
@@ -100,12 +89,8 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra. Táto "
-"verzia Open Sound System nie je podporovaná týmto prvkom."
+msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie pre obsluhu ovládania mixéra. Táto verzia Open Sound System nie je podporovaná týmto prvkom."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -372,32 +357,20 @@ msgid "Virtual mixer channel configuration"
 msgstr "Konfigurácia kanálov virtuálneho mixéra"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Zariadenie už "
-"používa iná aplikácia."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Zariadenie už používa iná aplikácia."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
-msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Nemáte "
-"oprávnenie na otvorenie tohto zariadenia."
+msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Nemáte oprávnenie na otvorenie tohto zariadenia."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
-msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Túto verziu "
-"Open Sound System nepodporuje tento prvok."
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime prehrávania. Túto verziu Open Sound System nepodporuje tento prvok."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."

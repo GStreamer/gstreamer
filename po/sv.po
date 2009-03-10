@@ -1,27 +1,24 @@
 # Swedish translation for gst-plugins-bad.
-# This file is put in the public domain.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008.
+# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-bad package.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 22:32+0000\n"
-"PO-Revision-Date: 2008-10-17 08:35+0100\n"
+"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"PO-Revision-Date: 2009-01-23 00:44+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# Gränssnitt eller framände?
-# Frontend är ett svårt ord.
 #: ext/resindvd/resindvdsrc.c:333
 msgid "Could not read title information for DVD."
 msgstr "Kunde inte läsa titelinformation för dvd."
 
-# Gränssnitt eller framände?
-# Frontend är ett svårt ord.
 #: ext/resindvd/resindvdsrc.c:339
 #, c-format
 msgid "Failed to open DVD device '%s'."
@@ -29,7 +26,7 @@ msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
 
 #: ext/resindvd/resindvdsrc.c:345
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "Misslyckades med att ställa in PGC-baserad spolning."
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
@@ -53,8 +50,6 @@ msgstr "Kunde inte öppna filen \"%s\" för skrivning."
 msgid "Internal data stream error."
 msgstr "Internt fel i dataström."
 
-# Gränssnitt eller framände?
-# Frontend är ett svårt ord.
 #: ext/sndfile/gstsfsink.c:494 ext/sndfile/gstsfsink.c:502
 #, c-format
 msgid "Could not write to file \"%s\"."
@@ -62,26 +57,18 @@ msgstr "Kunde inte skriva till filen \"%s\"."
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina "
-"kodningsparametrar."
+msgstr "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina kodningsparametrar."
 
 #: ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
-"Bitfrekvensen ändrades till %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. Bitfrekvensen ändrades till %d kbit/s."
 
 #: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheten \"%s\" finns inte."
 
-# Gränssnitt eller framände?
-# Frontend är ett svårt ord.
 #: sys/dvb/gstdvbsrc.c:704
 #, c-format
 msgid "Could not open frontend device \"%s\"."
@@ -102,12 +89,8 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Kunde inte öppna ljudenheten för mixningshantering."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"Kunde inte öppna ljudenheten för mixningshantering. Denna version av Open "
-"Sound System stöds inte av detta element."
+msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+msgstr "Kunde inte öppna ljudenheten för mixningshantering. Denna version av Open Sound System stöds inte av detta element."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -375,34 +358,20 @@ msgid "Virtual mixer channel configuration"
 msgstr "Kanalkonfiguration för virtuell mixer"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat "
-"program."
+msgid "Could not open audio device for playback. Device is being used by another application."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat program."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Du har inte behörighet att "
-"öppna enheten."
+msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Du har inte behörighet att öppna enheten."
 
-# Gränssnitt eller framände?
-# Frontend är ett svårt ord.
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Kunde inte öppna ljudenheten för uppspelning."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
-msgstr ""
-"Kunde inte öppna ljudenheten för uppspelning. Denna version av Open Sound "
-"System stöds inte av detta element."
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+msgstr "Kunde inte öppna ljudenheten för uppspelning. Denna version av Open Sound System stöds inte av detta element."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."

@@ -7,13 +7,12 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-19 22:32+0000\n"
-"PO-Revision-Date: 2008-10-17 18:56中国标准时间\n"
+"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"PO-Revision-Date: 2009-01-14 12:04+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
-"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists."
-"sourceforge.net>\n"
+"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -29,7 +28,7 @@ msgstr "无法打开 DVD 设备“%s”。"
 
 #: ext/resindvd/resindvdsrc.c:345
 msgid "Failed to set PGC based seeking."
-msgstr ""
+msgstr "无法设置基于 PGC 的检索。"
 
 #: ext/resindvd/rsnbasesrc.c:1659
 msgid "Internal clock error."
@@ -64,9 +63,7 @@ msgstr "无法配置 TwoLAME 编码器。请检查您的编码参数。"
 
 #: ext/twolame/gsttwolame.c:502
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
 msgstr "不允许使用“%2$s”所请求的码率 %1$d kbit/s。码率改为 %3$d kbit/s。"
 
 #: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
@@ -94,11 +91,8 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "无法打开音频文件进行混音控制操作。"
 
 #: sys/oss4/oss4-mixer.c:316
-msgid ""
-"Could not open audio device for mixer control handling. This version of the "
-"Open Sound System is not supported by this element."
-msgstr ""
-"无法打开音频设备进行音量控制操作。此部件不支持开放声音系统(OSS)的版本。"
+msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+msgstr "无法打开音频设备进行音量控制操作。此部件不支持开放声音系统(OSS)的版本。"
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -369,15 +363,11 @@ msgid "Virtual mixer channel configuration"
 msgstr "模拟混音器设置"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid ""
-"Could not open audio device for playback. Device is being used by another "
-"application."
+msgid "Could not open audio device for playback. Device is being used by another application."
 msgstr "无法打开音频设备播放音频。设备正由另一程序使用。"
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid ""
-"Could not open audio device for playback. You don't have permission to open "
-"the device."
+msgid "Could not open audio device for playback. You don't have permission to open the device."
 msgstr "无法打开音频设备播放音频。您无权打开此设备"
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
@@ -385,9 +375,7 @@ msgid "Could not open audio device for playback."
 msgstr "无法打开音频设备播放音频。"
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid ""
-"Could not open audio device for playback. This version of the Open Sound "
-"System is not supported by this element."
+msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
 msgstr "无法打开音频设备播放音频。此组件不支持开放声音系统(OSS)版本。"
 
 #: sys/oss4/oss4-sink.c:522
