@@ -242,6 +242,9 @@ gst_adder_sink_getcaps (GstPad * pad)
   }
   GST_OBJECT_UNLOCK (adder);
 
+  GST_LOG_OBJECT (adder, "getting caps on pad %p,%s to %" GST_PTR_FORMAT, pad,
+      GST_PAD_NAME (pad), result);
+
   return result;
 }
 
