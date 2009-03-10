@@ -98,6 +98,8 @@ static GstAllocTrace *_gst_object_trace;
 #define DEBUG_REFCOUNT
 
 /* Object signals and args */
+/* FIXME-0.11: have a read-only parent property instead of the two signals
+ * then we get notify::parent for free */
 enum
 {
   PARENT_SET,
