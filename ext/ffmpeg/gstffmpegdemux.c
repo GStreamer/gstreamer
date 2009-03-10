@@ -1806,7 +1806,19 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strncmp (in_plugin->name, "image", 5) ||
         !strcmp (in_plugin->name, "mpegvideo") ||
         !strcmp (in_plugin->name, "mjpeg") ||
-        !strcmp (in_plugin->name, "redir"))
+        !strcmp (in_plugin->name, "redir") ||
+        !strncmp (in_plugin->name, "u8", 2) ||
+        !strncmp (in_plugin->name, "u16", 3) ||
+        !strncmp (in_plugin->name, "u24", 3) ||
+        !strncmp (in_plugin->name, "u32", 3) ||
+        !strncmp (in_plugin->name, "s8", 2) ||
+        !strncmp (in_plugin->name, "s16", 3) ||
+        !strncmp (in_plugin->name, "s24", 3) ||
+        !strncmp (in_plugin->name, "s32", 3) ||
+        !strncmp (in_plugin->name, "f32", 3) ||
+        !strncmp (in_plugin->name, "f64", 3) ||
+        !strcmp (in_plugin->name, "mulaw") || !strcmp (in_plugin->name, "alaw")
+        )
       goto next;
 
     /* no network demuxers */
@@ -1845,7 +1857,9 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mxf") ||
         !strcmp (in_plugin->name, "nuv") ||
         !strcmp (in_plugin->name, "swf") ||
-        !strcmp (in_plugin->name, "voc") || !strcmp (in_plugin->name, "gif"))
+        !strcmp (in_plugin->name, "voc") ||
+        !strcmp (in_plugin->name, "gif") || !strcmp (in_plugin->name, "vc1test")
+        )
       register_typefind_func = FALSE;
 
     /* Set the rank of demuxers know to work to MARGINAL.
