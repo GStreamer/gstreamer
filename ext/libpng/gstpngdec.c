@@ -246,15 +246,17 @@ buffer_clip (GstPngDec * dec, GstBuffer * buffer)
   gboolean res = TRUE;
   gint64 cstart, cstop;
 
+
   if ((!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) ||
       (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) ||
       (dec->segment.format != GST_FORMAT_TIME))
     goto beach;
 
+  cstart = GST_BUFFER_TIMESTAMP (buffer);
+  cstop = GST_BUFFER_DURATION (buffer);
+
   if ((res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
-              GST_BUFFER_TIMESTAMP (buffer),
-              GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer),
-              &cstart, &cstop))) {
+              cstart, cstart + cstop, &cstart, &cstop))) {
     GST_BUFFER_TIMESTAMP (buffer) = cstart;
     GST_BUFFER_DURATION (buffer) = cstop - cstart;
   }
@@ -301,6 +303,7 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
   GstPngDec *pngdec;
   GstBuffer *buffer;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint size;
 
   pngdec = GST_PNGDEC (png_ptr->io_ptr);
 
@@ -308,10 +311,15 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
       pngdec->offset);
 
   ret = gst_pad_pull_range (pngdec->sinkpad, pngdec->offset, length, &buffer);
-  if ((ret != GST_FLOW_OK) || (GST_BUFFER_SIZE (buffer) != length))
+  if (ret != GST_FLOW_OK)
     goto pause;
 
-  memcpy (data, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+  size = GST_BUFFER_SIZE (buffer);
+
+  if (size != length)
+    goto short_buffer;
+
+  memcpy (data, GST_BUFFER_DATA (buffer), size);
 
   gst_buffer_unref (buffer);
 
@@ -319,14 +327,28 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
 
   return;
 
+  /* ERRORS */
 pause:
-  GST_INFO_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
-  gst_pad_pause_task (pngdec->sinkpad);
-  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-    gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+  {
+    GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
+        gst_flow_get_name (ret));
+    gst_pad_pause_task (pngdec->sinkpad);
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", gst_flow_get_name (ret)));
+      gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+    }
+    return;
+  }
+short_buffer:
+  {
+    gst_buffer_unref (buffer);
     GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
         (_("Internal data stream error.")),
-        ("stream stopped, reason %s", gst_flow_get_name (ret)));
+        ("Read %u, needed %u bytes", size, length));
+    ret = GST_FLOW_ERROR;
+    goto pause;
   }
 }
 
@@ -480,9 +502,8 @@ gst_pngdec_task (GstPad * pad)
   ret =
       gst_pad_alloc_buffer_and_set_caps (pngdec->srcpad, GST_BUFFER_OFFSET_NONE,
       buffer_size, GST_PAD_CAPS (pngdec->srcpad), &buffer);
-  if (ret != GST_FLOW_OK) {
+  if (ret != GST_FLOW_OK)
     goto pause;
-  }
 
   rows = (png_bytep *) g_malloc (sizeof (png_bytep) * pngdec->height);
 
@@ -499,9 +520,8 @@ gst_pngdec_task (GstPad * pad)
 
   /* Push the raw RGB frame */
   ret = gst_pad_push (pngdec->srcpad, buffer);
-  if (ret != GST_FLOW_OK) {
+  if (ret != GST_FLOW_OK)
     goto pause;
-  }
 
   /* And we are done */
   gst_pad_pause_task (pngdec->sinkpad);
@@ -509,13 +529,16 @@ gst_pngdec_task (GstPad * pad)
   return;
 
 pause:
-  GST_INFO_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
-  gst_pad_pause_task (pngdec->sinkpad);
-  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-    GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
-        (_("Internal data stream error.")),
-        ("stream stopped, reason %s", gst_flow_get_name (ret)));
-    gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+  {
+    GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
+        gst_flow_get_name (ret));
+    gst_pad_pause_task (pngdec->sinkpad);
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", gst_flow_get_name (ret)));
+      gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+    }
   }
 }
 
