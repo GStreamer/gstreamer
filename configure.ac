@@ -160,6 +160,10 @@ fi
 AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl *** checks for library functions ***
+AC_CHECK_FUNCS([gmtime_r])
+
+dnl *** checks for headers ***
+AC_CHECK_HEADERS([sys/utsname.h])
 
 dnl *** checks for dependency libraries ***
 

@@ -386,6 +386,7 @@ struct _MXFMetadataBaseClass {
   gboolean (*handle_tag) (MXFMetadataBase *self, MXFPrimerPack *primer, guint16 tag, const guint8 *tag_data, guint tag_size);
   gboolean (*resolve) (MXFMetadataBase *self, GHashTable *metadata);
   GstStructure * (*to_structure) (MXFMetadataBase *self);
+  GList * (*write_tags) (MXFMetadataBase *self, MXFPrimerPack *primer);
 
   GQuark name_quark;
 };
@@ -751,15 +752,20 @@ struct _MXFDescriptiveMetadataFrameworkInterface {
 gboolean mxf_metadata_base_parse (MXFMetadataBase *self, MXFPrimerPack *primer, const guint8 *data, guint size);
 gboolean mxf_metadata_base_resolve (MXFMetadataBase *self, GHashTable *metadata);
 GstStructure * mxf_metadata_base_to_structure (MXFMetadataBase *self);
+GstBuffer * mxf_metadata_base_to_buffer (MXFMetadataBase *self, MXFPrimerPack *primer);
 
 MXFMetadata *mxf_metadata_new (guint16 type, MXFPrimerPack *primer, guint64 offset, const guint8 *data, guint size);
 void mxf_metadata_register (GType type);
 void mxf_metadata_init_types (void);
 
 MXFMetadataTrackType mxf_metadata_track_identifier_parse (const MXFUL * track_identifier);
+const MXFUL * mxf_metadata_track_identifier_get (MXFMetadataTrackType type);
 
 void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
+void mxf_metadata_generic_picture_essence_descriptor_from_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
+
 void mxf_metadata_generic_sound_essence_descriptor_set_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
+void mxf_metadata_generic_sound_essence_descriptor_from_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
 
 void mxf_descriptive_metadata_register (guint8 scheme, GType *types);
 MXFDescriptiveMetadata * mxf_descriptive_metadata_new (guint8 scheme, guint32 type, MXFPrimerPack * primer, guint64 offset, const guint8 * data, guint size);

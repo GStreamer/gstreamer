@@ -65,6 +65,8 @@ typedef struct {
   MXFUL key;
   guint16 size;
   guint8 *data;
+  
+  gboolean g_slice; /* TRUE if data was allocated by GSlice */
 } MXFLocalTag;
 
 /* SMPTE 377M 11.1 */
@@ -114,6 +116,8 @@ typedef struct {
 typedef struct {
   guint64 offset;
   GHashTable *mappings;
+  GHashTable *reverse_mappings;
+  guint16 next_free_tag;
 } MXFPrimerPack;
 
 /* SMPTE 377M 10.2.3 */

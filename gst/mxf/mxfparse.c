@@ -469,6 +469,14 @@ mxf_product_version_parse (MXFProductVersion * product_version,
 }
 
 gboolean
+mxf_product_version_is_valid (const MXFProductVersion * version)
+{
+  static const guint8 null[sizeof (MXFProductVersion)] = { 0, };
+
+  return (memcmp (version, &null, sizeof (MXFProductVersion)) == 0);
+}
+
+gboolean
 mxf_ul_array_parse (MXFUL ** array, guint32 * count, const guint8 * data,
     guint size)
 {
@@ -1023,7 +1031,12 @@ mxf_primer_pack_reset (MXFPrimerPack * pack)
 
   if (pack->mappings)
     g_hash_table_destroy (pack->mappings);
+  if (pack->reverse_mappings)
+    g_hash_table_destroy (pack->reverse_mappings);
+
   memset (pack, 0, sizeof (MXFPrimerPack));
+
+  pack->next_free_tag = 0x8000;
 }
 
 /* structural metadata parsing */
@@ -1051,7 +1064,10 @@ mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
 void
 mxf_local_tag_free (MXFLocalTag * tag)
 {
-  g_free (tag->data);
+  if (tag->g_slice)
+    g_slice_free1 (tag->size, tag->data);
+  else
+    g_free (tag->data);
   g_slice_free (MXFLocalTag, tag);
 }
 
@@ -1096,6 +1112,32 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
   } else {
     GST_WARNING ("Local tag with no entry in primer pack: 0x%04x", tag);
   }
+
+  return TRUE;
+}
+
+gboolean
+mxf_local_tag_insert (MXFLocalTag * tag, GHashTable ** hash_table)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
+
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (hash_table != NULL, FALSE);
+
+  if (*hash_table == NULL)
+    *hash_table =
+        g_hash_table_new_full ((GHashFunc) mxf_ul_hash,
+        (GEqualFunc) mxf_ul_is_equal, (GDestroyNotify) NULL,
+        (GDestroyNotify) mxf_local_tag_free);
+
+  g_return_val_if_fail (*hash_table != NULL, FALSE);
+
+  GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
+      mxf_ul_to_string (&tag->key, str), tag->size);
+
+  g_hash_table_insert (*hash_table, &tag->key, tag);
 
   return TRUE;
 }

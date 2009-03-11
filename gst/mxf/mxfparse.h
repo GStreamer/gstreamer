@@ -72,6 +72,7 @@ gchar * mxf_utf16_to_utf8 (const guint8 * data, guint size);
 
 gboolean mxf_product_version_parse (MXFProductVersion * product_version,
     const guint8 * data, guint size);
+gboolean mxf_product_version_is_valid (const MXFProductVersion *version);
 
 gboolean mxf_fraction_parse (MXFFraction *fraction, const guint8 *data, guint size);
 gdouble mxf_fraction_to_double (const MXFFraction *fraction);
@@ -96,11 +97,12 @@ void mxf_index_table_segment_reset (MXFIndexTableSegment *segment);
 
 gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
     guint16 * tag_size, const guint8 ** tag_data);
-void gst_mxf_local_tag_free (MXFLocalTag *tag);
+void mxf_local_tag_free (MXFLocalTag *tag);
 
 gboolean mxf_local_tag_add_to_hash_table (const MXFPrimerPack *primer,
   guint16 tag, const guint8 *tag_data, guint16 tag_size,
   GHashTable **hash_table);
+gboolean mxf_local_tag_insert (MXFLocalTag *tag, GHashTable **hash_table);
 
 void mxf_essence_element_handler_register (const MXFEssenceElementHandler *handler);
 const MXFEssenceElementHandler * mxf_essence_element_handler_find (const MXFMetadataTimelineTrack *track);
