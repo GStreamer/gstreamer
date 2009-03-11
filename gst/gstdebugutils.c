@@ -45,6 +45,7 @@
 #include "gstghostpad.h"
 #include "gstpad.h"
 #include "gstutils.h"
+#include "gstvalue.h"
 
 /*** PIPELINE GRAPHS **********************************************************/
 
@@ -70,7 +71,7 @@ debug_dump_get_element_state (GstElement * element)
   if (pending == GST_STATE_VOID_PENDING) {
     state_name = g_strdup_printf ("\\n[%c]", state_icons[state]);
   } else {
-    state_name = g_strdup_printf ("\\n[%c]->[%c]", state_icons[state],
+    state_name = g_strdup_printf ("\\n[%c] -> [%c]", state_icons[state],
         state_icons[pending]);
   }
   return state_name;
@@ -204,6 +205,19 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   g_free (spc);
 }
 
+static gboolean
+string_append_field (GQuark field, const GValue * value, gpointer ptr)
+{
+  GString *str = (GString *) ptr;
+  gchar *value_str = gst_value_serialize (value);
+
+  g_string_append_printf (str, "  %15s: %s\\l", g_quark_to_string (field),
+      value_str);
+
+  g_free (value_str);
+  return TRUE;
+}
+
 static gchar *
 debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
     gboolean * need_free)
@@ -211,38 +225,34 @@ debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
   gchar *media = NULL;
 
   if (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS) {
-    gchar *tmp = gst_caps_to_string (caps);
-    gboolean in_bracket = FALSE;
-    gint i, sl = strlen (tmp);
 
-    for (i = 0; i < sl; i++) {
-      switch (tmp[i]) {
-        case ';':
-          if (i < (sl - 1))
-            tmp[i] = '\n';
-          else
-            tmp[i] = '\0';
-          break;
-        case ',':
-          if (!in_bracket)
-            tmp[i] = '\n';
-          break;
-        case '(':
-        case '{':
-        case '[':
-          in_bracket = TRUE;
-          break;
-        case ')':
-        case '}':
-        case ']':
-          in_bracket = FALSE;
-          break;
+    if (gst_caps_is_any (caps) || gst_caps_is_empty (caps)) {
+      media = gst_caps_to_string (caps);
+      *need_free = TRUE;
+
+    } else {
+      GString *str = NULL;
+      guint i;
+      guint slen = 0;
+
+      for (i = 0; i < gst_caps_get_size (caps); i++) {
+        slen +=
+            STRUCTURE_ESTIMATED_STRING_LEN (gst_caps_get_structure (caps, i));
       }
-    }
 
-    media = g_strescape (tmp, NULL);
-    *need_free = TRUE;
-    g_free (tmp);
+      str = g_string_sized_new (slen);
+      for (i = 0; i < gst_caps_get_size (caps); i++) {
+        GstStructure *structure = gst_caps_get_structure (caps, i);
+
+        g_string_append (str, gst_structure_get_name (structure));
+        g_string_append (str, "\\l");
+
+        gst_structure_foreach (structure, string_append_field, (gpointer) str);
+      }
+
+      media = g_string_free (str, FALSE);
+      *need_free = TRUE;
+    }
 
   } else {
     if (GST_CAPS_IS_SIMPLE (caps))
@@ -608,14 +618,14 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     fprintf (out,
         "digraph pipeline {\n"
         "  rankdir=LR;\n"
-        "  fontname=\"Bitstream Vera Sans\";\n"
+        "  fontname=\"sans\";\n"
         "  fontsize=\"8\";\n"
         "  labelloc=t;\n"
         "  nodesep=.1;\n"
         "  ranksep=.2;\n"
         "  label=\"<%s>\\n%s%s%s\";\n"
-        "  node [style=filled, shape=box, fontsize=\"7\", fontname=\"Bitstream Vera Sans\", margin=\"0.0,0.0\"];\n"
-        "  edge [labelfontsize=\"7\", fontsize=\"7\", labelfontname=\"Bitstream Vera Sans\", fontname=\"Bitstream Vera Sans\"];\n"
+        "  node [style=filled, shape=box, fontsize=\"7\", fontname=\"sans\", margin=\"0.0,0.0\"];\n"
+        "  edge [labelfontsize=\"7\", fontsize=\"7\", fontname=\"monospace\"];\n"
         "\n", G_OBJECT_TYPE_NAME (bin), GST_OBJECT_NAME (bin),
         (state_name ? state_name : ""), (param_name ? param_name : "")
         );
