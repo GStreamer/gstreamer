@@ -563,8 +563,8 @@ gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
     RTSPKeyValue *key_value = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
 
     if (key_value->field == field && (indx == -1 || cnt++ == indx)) {
-      g_array_remove_index (msg->hdr_fields, i);
       g_free (key_value->value);
+      g_array_remove_index (msg->hdr_fields, i);
       res = GST_RTSP_OK;
       if (indx != -1)
         break;
