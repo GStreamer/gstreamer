@@ -2558,6 +2558,19 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
+    /* No vdpau plugins until we can figure out how to properly use them
+     * outside of ffmpeg. */
+    if (!strcmp (in_plugin->name, "h264_vdpau") ||
+        !strcmp (in_plugin->name, "mpeg_vdpau") ||
+        !strcmp (in_plugin->name, "mpeg1_vdpau") ||
+        !strcmp (in_plugin->name, "vc1_vdpau") ||
+        !strcmp (in_plugin->name, "wmv3_vdpau")) {
+      GST_DEBUG
+          ("Ignoring VDPAU decoder %s. We can't handle this outside of ffmpeg",
+          in_plugin->name);
+      goto next;
+    }
+
     GST_DEBUG ("Trying plugin %s [%s]", in_plugin->name, in_plugin->long_name);
 
     /* no codecs for which we're GUARANTEED to have better alternatives */
