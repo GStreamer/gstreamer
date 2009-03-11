@@ -2180,7 +2180,7 @@ gst_base_src_loop (GstPad * pad)
   } else
     position = -1;
 
-  GST_LOG_OBJECT (src, "next_ts %" GST_TIME_FORMAT " size %ul",
+  GST_LOG_OBJECT (src, "next_ts %" GST_TIME_FORMAT " size %lu",
       GST_TIME_ARGS (position), blocksize);
 
   ret = gst_base_src_get_range (src, position, blocksize, &buf);
