@@ -552,19 +552,21 @@ static GstStaticCaps flac_caps = GST_STATIC_CAPS ("audio/x-flac");
 static void
 flac_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data;
   DataScanCtx c = { 0, NULL, 0 };
 
-  data = gst_type_find_peek (tf, 0, 5);
-  if (G_LIKELY (data)) {
-    /* standard flac */
-    if (memcmp (data, "fLaC", 4) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
-    }
-    /* flac-in-ogg, see http://flac.sourceforge.net/ogg_mapping.html */
-    else if (memcmp (data, "\177FLAC\001", 6) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
-    }
+  if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 6)))
+    return;
+
+  /* standard flac */
+  if (memcmp (c.data, "fLaC", 4) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
+    return;
+  }
+
+  /* flac-in-ogg, see http://flac.sourceforge.net/ogg_mapping.html */
+  if (memcmp (c.data, "\177FLAC\001", 6) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
+    return;
   }
 
   /* flac without headers (subset format) */
