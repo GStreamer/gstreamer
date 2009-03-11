@@ -296,9 +296,9 @@ name_is_valid (const gchar * name, GstPadPresence presence)
           " allowed in GST_PAD_REQUEST padtemplate", name);
       return FALSE;
     }
-    if (str && (*(str + 1) != 's' && *(str + 1) != 'd')) {
+    if (str && (*(str + 1) != 's' && *(str + 1) != 'd' && *(str + 1) != 'u')) {
       g_warning ("invalid name template %s: conversion specification must be of"
-          " type '%%d' or '%%s' for GST_PAD_REQUEST padtemplate", name);
+          " type '%%d', '%%u' or '%%s' for GST_PAD_REQUEST padtemplate", name);
       return FALSE;
     }
     if (str && (*(str + 2) != '\0')) {
