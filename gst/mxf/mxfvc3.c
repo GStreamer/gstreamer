@@ -26,9 +26,11 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <string.h>
 
 #include "mxfvc3.h"
+#include "mxfwrite.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -154,8 +156,87 @@ static const MXFEssenceElementHandler mxf_vc3_essence_element_handler = {
   mxf_vc3_create_caps
 };
 
+static GstFlowReturn
+mxf_vc3_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
+    GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
+{
+  *outbuf = buffer;
+  return GST_FLOW_OK;
+}
+
+/* FIXME: In which version was this added? Byte 7, assuming version 10 */
+static const guint8 vc3_essence_container_ul[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0A,
+  0x0d, 0x01, 0x03, 0x01, 0x02, 0x11, 0x01, 0x00
+};
+
+static MXFMetadataFileDescriptor *
+mxf_vc3_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  MXFMetadataCDCIPictureEssenceDescriptor *ret;
+  GstStructure *s;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (strcmp (gst_structure_get_name (s), "video/x-dnxhd") != 0)
+    return NULL;
+
+  ret = (MXFMetadataCDCIPictureEssenceDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+
+  memcpy (&ret->parent.parent.essence_container, &vc3_essence_container_ul, 16);
+
+  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+      caps);
+  *handler = mxf_vc3_write_func;
+
+  return (MXFMetadataFileDescriptor *) ret;
+}
+
+static void
+mxf_vc3_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf)
+{
+  return;
+}
+
+static void
+mxf_vc3_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
+    MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
+{
+  (*edit_rate).n = a->sample_rate.n;
+  (*edit_rate).d = a->sample_rate.d;
+}
+
+static guint32
+mxf_vc3_get_track_number_template (MXFMetadataFileDescriptor * a,
+    GstCaps * caps, gpointer mapping_data)
+{
+  return (0x15 << 24) | (0x05 << 8);
+}
+
+static MXFEssenceElementWriter mxf_vc3_essence_element_writer = {
+  mxf_vc3_get_descriptor,
+  mxf_vc3_update_descriptor,
+  mxf_vc3_get_edit_rate,
+  mxf_vc3_get_track_number_template,
+  NULL,
+  {{0,}}
+};
+
 void
 mxf_vc3_init (void)
 {
   mxf_essence_element_handler_register (&mxf_vc3_essence_element_handler);
+
+  mxf_vc3_essence_element_writer.pad_template =
+      gst_pad_template_new ("vc3_video_sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+      gst_caps_from_string ("video/x-dnxhd, width = " GST_VIDEO_SIZE_RANGE
+          ", height = " GST_VIDEO_SIZE_RANGE ", framerate = "
+          GST_VIDEO_FPS_RANGE));
+  memcpy (&mxf_vc3_essence_element_writer.data_definition,
+      mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_PICTURE_ESSENCE),
+      16);
+  mxf_essence_element_writer_register (&mxf_vc3_essence_element_writer);
 }
