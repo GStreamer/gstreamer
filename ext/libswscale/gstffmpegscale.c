@@ -509,7 +509,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps)
     if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
       switch (fourcc) {
         case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-          pix_fmt = PIX_FMT_YUV422;
+          pix_fmt = PIX_FMT_YUYV422;
           break;
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           pix_fmt = PIX_FMT_YUV420P;

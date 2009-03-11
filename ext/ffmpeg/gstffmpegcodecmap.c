@@ -728,7 +728,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         guint32 fourcc;
 
         switch (context->pix_fmt) {
-          case PIX_FMT_YUV422:
+          case PIX_FMT_YUYV422:
             fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
             break;
           case PIX_FMT_YUV420P:
@@ -1464,7 +1464,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     case PIX_FMT_YUV420P:
       fmt = GST_MAKE_FOURCC ('I', '4', '2', '0');
       break;
-    case PIX_FMT_YUV422:
+    case PIX_FMT_YUYV422:
       fmt = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
       break;
     case PIX_FMT_RGB24:
@@ -1489,7 +1489,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     case PIX_FMT_YUV444P:
       fmt = GST_MAKE_FOURCC ('Y', '4', '4', '4');
       break;
-    case PIX_FMT_RGBA32:
+    case PIX_FMT_RGB32:
       bpp = 32;
       depth = 32;
       endianness = G_BIG_ENDIAN;
@@ -1858,7 +1858,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     if (gst_structure_get_fourcc (structure, "format", &fourcc)) {
       switch (fourcc) {
         case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-          context->pix_fmt = PIX_FMT_YUV422;
+          context->pix_fmt = PIX_FMT_YUYV422;
           break;
         case GST_MAKE_FOURCC ('I', '4', '2', '0'):
           context->pix_fmt = PIX_FMT_YUV420P;
@@ -1893,7 +1893,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 #else
             if (rmask == 0x0000ff00)
 #endif
-              context->pix_fmt = PIX_FMT_RGBA32;
+              context->pix_fmt = PIX_FMT_RGB32;
             break;
           case 24:
             if (rmask == 0x0000FF)
@@ -2215,7 +2215,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       if (gst_structure_get_fourcc (str, "format", &fourcc))
         switch (fourcc) {
           case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-            context->pix_fmt = PIX_FMT_YUV422;
+            context->pix_fmt = PIX_FMT_YUYV422;
             break;
           case GST_MAKE_FOURCC ('I', '4', '2', '0'):
             context->pix_fmt = PIX_FMT_YUV420P;
@@ -3141,13 +3141,13 @@ gst_ffmpeg_init_pix_fmt_info ()
   pix_fmt_info[PIX_FMT_YUV444P].x_chroma_shift = 0;
   pix_fmt_info[PIX_FMT_YUV444P].y_chroma_shift = 0;
 
-  pix_fmt_info[PIX_FMT_YUV422].name = g_strdup ("yuv422");
-  pix_fmt_info[PIX_FMT_YUV422].nb_channels = 1;
-  pix_fmt_info[PIX_FMT_YUV422].color_type = FF_COLOR_YUV;
-  pix_fmt_info[PIX_FMT_YUV422].pixel_type = FF_PIXEL_PACKED;
-  pix_fmt_info[PIX_FMT_YUV422].depth = 8;
-  pix_fmt_info[PIX_FMT_YUV422].x_chroma_shift = 1;
-  pix_fmt_info[PIX_FMT_YUV422].y_chroma_shift = 0;
+  pix_fmt_info[PIX_FMT_YUYV422].name = g_strdup ("yuv422");
+  pix_fmt_info[PIX_FMT_YUYV422].nb_channels = 1;
+  pix_fmt_info[PIX_FMT_YUYV422].color_type = FF_COLOR_YUV;
+  pix_fmt_info[PIX_FMT_YUYV422].pixel_type = FF_PIXEL_PACKED;
+  pix_fmt_info[PIX_FMT_YUYV422].depth = 8;
+  pix_fmt_info[PIX_FMT_YUYV422].x_chroma_shift = 1;
+  pix_fmt_info[PIX_FMT_YUYV422].y_chroma_shift = 0;
 
   pix_fmt_info[PIX_FMT_YUV410P].name = g_strdup ("yuv410p");
   pix_fmt_info[PIX_FMT_YUV410P].nb_channels = 3;
@@ -3207,14 +3207,14 @@ gst_ffmpeg_init_pix_fmt_info ()
   pix_fmt_info[PIX_FMT_BGR24].x_chroma_shift = 0;
   pix_fmt_info[PIX_FMT_BGR24].y_chroma_shift = 0;
 
-  pix_fmt_info[PIX_FMT_RGBA32].name = g_strdup ("rgba32");
-  pix_fmt_info[PIX_FMT_RGBA32].nb_channels = 4;
-  pix_fmt_info[PIX_FMT_RGBA32].is_alpha = 1;
-  pix_fmt_info[PIX_FMT_RGBA32].color_type = FF_COLOR_RGB;
-  pix_fmt_info[PIX_FMT_RGBA32].pixel_type = FF_PIXEL_PACKED;
-  pix_fmt_info[PIX_FMT_RGBA32].depth = 8;
-  pix_fmt_info[PIX_FMT_RGBA32].x_chroma_shift = 0;
-  pix_fmt_info[PIX_FMT_RGBA32].y_chroma_shift = 0;
+  pix_fmt_info[PIX_FMT_RGB32].name = g_strdup ("rgba32");
+  pix_fmt_info[PIX_FMT_RGB32].nb_channels = 4;
+  pix_fmt_info[PIX_FMT_RGB32].is_alpha = 1;
+  pix_fmt_info[PIX_FMT_RGB32].color_type = FF_COLOR_RGB;
+  pix_fmt_info[PIX_FMT_RGB32].pixel_type = FF_PIXEL_PACKED;
+  pix_fmt_info[PIX_FMT_RGB32].depth = 8;
+  pix_fmt_info[PIX_FMT_RGB32].x_chroma_shift = 0;
+  pix_fmt_info[PIX_FMT_RGB32].y_chroma_shift = 0;
 
   pix_fmt_info[PIX_FMT_RGB565].name = g_strdup ("rgb565");
   pix_fmt_info[PIX_FMT_RGB565].nb_channels = 3;
@@ -3330,7 +3330,7 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
          case PIX_FMT_BGR32:
          case PIX_FMT_BGRA32:
          case PIX_FMT_RGB32: */
-    case PIX_FMT_RGBA32:
+    case PIX_FMT_RGB32:
       stride = width * 4;
       size = stride * height;
       picture->data[0] = ptr;
@@ -3344,7 +3344,7 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       return size;
     case PIX_FMT_RGB555:
     case PIX_FMT_RGB565:
-    case PIX_FMT_YUV422:
+    case PIX_FMT_YUYV422:
     case PIX_FMT_UYVY422:
       stride = ROUND_UP_4 (width * 2);
       size = stride * height;
@@ -3357,7 +3357,7 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->linesize[2] = 0;
       picture->linesize[3] = 0;
       return size;
-    case PIX_FMT_UYVY411:
+    case PIX_FMT_UYYVYY411:
       /* FIXME, probably not the right stride */
       stride = ROUND_UP_4 (width);
       size = stride * height;
