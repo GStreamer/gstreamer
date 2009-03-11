@@ -1651,7 +1651,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
                 gint to;
 
                 /* if we parsed something valid, configure */
-                if ((to = atoi (&session_id[i + 9])) > 0)
+                if ((to = atoi (&session_id[i + 8])) > 0)
                   conn->timeout = to;
               }
               break;
@@ -2870,7 +2870,7 @@ queue_response (GstRTSPWatch * watch, GString * str, guint cseq)
   data->str = str;
   data->cseq = cseq;
 
-  /* add the record to a queue */
+  /* add the record to a queue. FIXME we would like to have an upper limit here */
   watch->messages = g_list_append (watch->messages, data);
 
   /* make sure the main context will now also check for writability on the
