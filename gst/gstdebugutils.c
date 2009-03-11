@@ -51,6 +51,13 @@
 
 const gchar *priv_gst_dump_dot_dir;     /* NULL *//* set from gst.c */
 
+const gchar spaces[] = {
+  "                                "    /* 32 */
+      "                                "        /* 64 */
+      "                                "        /* 96 */
+      "                                "        /* 128 */
+};
+
 extern GstClockTime _priv_gst_info_start_time;
 
 static gchar *
@@ -135,11 +142,7 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
   gchar *pad_name, *element_name;
   gchar *target_pad_name, *target_element_name;
   gchar *color_name, *style_name;
-  gchar *spc = NULL;
-
-  spc = g_malloc (1 + indent * 2);
-  memset (spc, 32, indent * 2);
-  spc[indent * 2] = '\0';
+  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
 
   dir = gst_pad_get_direction (pad);
   pad_name = debug_dump_make_object_name (GST_OBJECT (pad));
@@ -202,7 +205,6 @@ debug_dump_element_pad (GstPad * pad, GstElement * element,
 
   g_free (pad_name);
   g_free (element_name);
-  g_free (spc);
 }
 
 static gboolean
@@ -211,7 +213,30 @@ string_append_field (GQuark field, const GValue * value, gpointer ptr)
   GString *str = (GString *) ptr;
   gchar *value_str = gst_value_serialize (value);
 
-  g_string_append_printf (str, "  %15s: %s\\l", g_quark_to_string (field),
+  /* some enums can become really long */
+  if (strlen (value_str) > 25) {
+    gint pos = 24;
+
+    /* truncate */
+    value_str[25] = '\0';
+
+    /* mirror any brackets */
+    if (value_str[0] == '<')
+      value_str[pos--] = '>';
+    if (value_str[0] == '[')
+      value_str[pos--] = ']';
+    if (value_str[0] == '(')
+      value_str[pos--] = ')';
+    if (value_str[0] == '{')
+      value_str[pos--] = '}';
+    if (pos != 24)
+      value_str[pos--] = ' ';
+    /* elippsize */
+    value_str[pos--] = '.';
+    value_str[pos--] = '.';
+    value_str[pos--] = '.';
+  }
+  g_string_append_printf (str, "  %18s: %s\\l", g_quark_to_string (field),
       value_str);
 
   g_free (value_str);
@@ -236,7 +261,7 @@ debug_dump_describe_caps (GstCaps * caps, GstDebugGraphDetails details,
       guint slen = 0;
 
       for (i = 0; i < gst_caps_get_size (caps); i++) {
-        slen +=
+        slen += 25 +
             STRUCTURE_ESTIMATED_STRING_LEN (gst_caps_get_structure (caps, i));
       }
 
@@ -272,19 +297,17 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
   GstElement *peer_element, *target_element;
   GstPad *peer_pad, *target_pad, *tmp_pad;
   GstCaps *caps, *peer_caps;
-  gboolean free_caps, free_peer_caps, free_media;
+  gboolean free_caps, free_peer_caps;
+  gboolean free_media, free_media_src, free_media_sink;
   gchar *media = NULL;
+  gchar *media_src = NULL, *media_sink = NULL;
   gchar *pad_name, *element_name;
   gchar *peer_pad_name, *peer_element_name;
   gchar *target_pad_name, *target_element_name;
-  gchar *spc = NULL;
-
-  spc = g_malloc (1 + indent * 2);
-  memset (spc, 32, indent * 2);
-  spc[indent * 2] = '\0';
+  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
 
   if ((peer_pad = gst_pad_get_peer (pad))) {
-    free_media = FALSE;
+    free_media = free_media_src = free_media_sink = FALSE;
     if ((details & GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE) ||
         (details & GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS)
         ) {
@@ -308,21 +331,23 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
         media = debug_dump_describe_caps (caps, details, &free_media);
         /* check if peer caps are different */
         if (peer_caps && !gst_caps_is_equal (caps, peer_caps)) {
-          gchar *old_media = media;
           gchar *tmp;
           gboolean free_tmp;
 
           tmp = debug_dump_describe_caps (peer_caps, details, &free_tmp);
           if (gst_pad_get_direction (pad) == GST_PAD_SRC) {
-            media = g_strdup_printf ("%s\\n---\\n%s", media, tmp);
+            media_src = media;
+            free_media_src = free_media;
+            media_sink = tmp;
+            free_media_sink = free_tmp;
           } else {
-            media = g_strdup_printf ("%s\\n---\\n%s", tmp, media);
+            media_src = tmp;
+            free_media_src = free_tmp;
+            media_sink = media;
+            free_media_sink = free_media;
           }
-          if (free_media)
-            g_free (old_media);
-          if (free_tmp)
-            g_free (tmp);
-          free_media = TRUE;
+          media = NULL;
+          free_media = FALSE;
         }
         if (free_caps) {
           gst_caps_unref (caps);
@@ -391,7 +416,7 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
            * theoretically we need to:
            * pad=gst_object_ref(target_pad);
            * goto line 280: if ((peer_pad = gst_pad_get_peer (pad)))
-           * as this would e ugly we need to refactor ...
+           * as this would be ugly we need to refactor ...
            */
           debug_dump_element_pad_link (target_pad, target_element, details, out,
               indent);
@@ -413,6 +438,18 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
       if (free_media) {
         g_free (media);
       }
+    } else if (media_src && media_sink) {
+      /* dot has some issues with placement of head and taillabels,
+       * we need an empty label to make space */
+      fprintf (out, "%s%s_%s -> %s_%s [labeldistance=\"5\", labelangle=\"0\", "
+          "label=\"                         \", "
+          "headlabel=\"%s\", taillabel=\"%s\"]\n",
+          spc, element_name, pad_name, peer_element_name, peer_pad_name,
+          media_src, media_sink);
+      if (free_media_src)
+        g_free (media_src);
+      if (free_media_sink)
+        g_free (media_sink);
     } else {
       fprintf (out, "%s%s_%s -> %s_%s\n", spc,
           element_name, pad_name, peer_element_name, peer_pad_name);
@@ -429,7 +466,6 @@ debug_dump_element_pad_link (GstPad * pad, GstElement * element,
     }
     gst_object_unref (peer_pad);
   }
-  g_free (spc);
 }
 
 /*
@@ -453,11 +489,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
   gchar *element_name;
   gchar *state_name = NULL;
   gchar *param_name = NULL;
-  gchar *spc = NULL;
-
-  spc = g_malloc (1 + indent * 2);
-  memset (spc, 32, indent * 2);
-  spc[indent * 2] = '\0';
+  const gchar *spc = &spaces[MAX (sizeof (spaces) - (1 + indent * 2), 0)];
 
   element_iter = gst_bin_iterate_elements (bin);
   elements_done = FALSE;
@@ -567,7 +599,6 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
     }
   }
   gst_iterator_free (element_iter);
-  g_free (spc);
 }
 
 /*
