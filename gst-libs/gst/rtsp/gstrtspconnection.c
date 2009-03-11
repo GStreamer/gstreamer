@@ -103,6 +103,7 @@ typedef struct
   guint cin;
   gchar out[3];
   guint cout;
+  guint coutl;
 } DecodeCtx;
 
 static GstRTSPResult read_line (gint fd, guint8 * buffer, guint * idx,
@@ -976,7 +977,7 @@ fill_bytes (gint fd, guint8 * buffer, guint size, DecodeCtx * ctx)
     gint r;
 
     while (size > 0) {
-      while (size > 0 && ctx->cout < 3) {
+      while (size > 0 && ctx->cout < ctx->coutl) {
         /* we have some leftover bytes */
         *buffer++ = ctx->out[ctx->cout];
         ctx->cout++;
@@ -1000,6 +1001,7 @@ fill_bytes (gint fd, guint8 * buffer, guint size, DecodeCtx * ctx)
         r = g_base64_decode_step ((const gchar *) ctx->in, 4,
             (guchar *) ctx->out, &ctx->state, &ctx->save);
         ctx->cout = 0;
+        ctx->coutl = r;
         ctx->cin = 0;
       }
     }
