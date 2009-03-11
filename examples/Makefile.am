@@ -1,4 +1,4 @@
-noinst_PROGRAMS = test-video test-ogg test-mp4 test-readme
+noinst_PROGRAMS = test-video test-ogg test-mp4 test-readme test-launch
 
 INCLUDES = -I$(top_srcdir) -I$(srcdir)
 
