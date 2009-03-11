@@ -132,9 +132,7 @@ gboolean               gst_rtsp_session_release_media        (GstRTSPSession *se
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const GstRTSPUrl *uri);
 /* control media */
-gboolean               gst_rtsp_session_media_play           (GstRTSPSessionMedia *media);
-gboolean               gst_rtsp_session_media_pause          (GstRTSPSessionMedia *media);
-gboolean               gst_rtsp_session_media_stop           (GstRTSPSessionMedia *media);
+gboolean               gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media, GstState state);
 
 /* get stream config */
 GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedia *media,
@@ -143,6 +141,11 @@ GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedi
 /* configure transport */
 GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
                                                               GstRTSPTransport *ct);
+void                   gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream *stream,
+                                                              GstRTSPSendFunc send_rtp,
+                                                              GstRTSPSendFunc send_rtcp,
+                                                              gpointer user_data,
+                                                              GDestroyNotify  notify);
 
 G_END_DECLS
 

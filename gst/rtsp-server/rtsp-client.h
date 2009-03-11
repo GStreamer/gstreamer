@@ -59,10 +59,14 @@ typedef struct _GstRTSPClientClass GstRTSPClientClass;
  * GstRTSPClient:
  *
  * @connection: the connection object handling the client request.
- * @address: the address of the connection
- * @media: handle to the media handled by the client.
- * @pool: handle to the session pool used by the client.
- * @thread: thread to handle the client connection
+ * @watch: watch for the connection
+ * @watchid: id of the watch
+ * @timeout: the session timeout
+ * @session_pool: handle to the session pool used by the client.
+ * @media_mapping: handle to the media mapping used by the client.
+ * @uri: cached uri
+ * @media: cached media
+ * @streams: a list of streams using @connection.
  *
  * The client structure.
  */
@@ -79,6 +83,8 @@ struct _GstRTSPClient {
 
   GstRTSPUrl     *uri;
   GstRTSPMedia   *media;
+
+  GList *streams;
 };
 
 struct _GstRTSPClientClass {

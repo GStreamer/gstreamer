@@ -89,7 +89,7 @@ gst_rtsp_session_free_media (GstRTSPSessionMedia *media, GstRTSPSession *session
 
   g_message ("free session media %p", media);
 
-  gst_rtsp_session_media_stop (media);
+  gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
 
   for (i = 0; i < size; i++) {
     GstRTSPSessionStream *stream;
@@ -476,75 +476,59 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
   st->profile = ct->profile;
   st->lower_transport = ct->lower_transport;
   st->client_port = ct->client_port;
+  st->interleaved = ct->interleaved;
+  st->server_port.min = stream->media_stream->server_port.min;
+  st->server_port.max = stream->media_stream->server_port.max;
 
-  /* keep track of the transports */
+  /* keep track of the transports in the stream. */
   if (stream->trans.transport)
     gst_rtsp_transport_free (stream->trans.transport);
   stream->trans.transport = ct;
-
-  st->server_port.min = stream->media_stream->server_port.min;
-  st->server_port.max = stream->media_stream->server_port.max;
 
   return st;
 }
 
 /**
- * gst_rtsp_session_media_play:
- * @media: a #GstRTSPSessionMedia
+ * gst_rtsp_session_stream_set_callbacks:
+ * @stream: a #GstRTSPSessionStream
+ * @send_rtp: a callback called when RTP should be send
+ * @send_rtcp: a callback called when RTCP should be send
+ * @user_data: user data passed to callbacks
+ * @notify: called with the user_data when no longer needed.
  *
- * Tell the media object @media to start playing and streaming to the client.
- *
- * Returns: %TRUE on success.
+ * Install callbacks that will be called when data for a stream should be sent
+ * to a client. This is usually used when sending RTP/RTCP over TCP.
  */
-gboolean
-gst_rtsp_session_media_play (GstRTSPSessionMedia *media)
+void
+gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream *stream,
+    GstRTSPSendFunc send_rtp, GstRTSPSendFunc send_rtcp, gpointer user_data,
+    GDestroyNotify  notify)
 {
-  gboolean ret;
-
-  g_return_val_if_fail (media != NULL, FALSE);
-
-  ret = gst_rtsp_media_play (media->media, media->streams);
-
-  return ret;
+  stream->trans.send_rtp = send_rtp;
+  stream->trans.send_rtcp = send_rtcp;
+  if (stream->trans.notify)
+    stream->trans.notify (stream->trans.user_data);
+  stream->trans.user_data = user_data;
+  stream->trans.notify = notify;
 }
 
 /**
- * gst_rtsp_session_media_pause:
+ * gst_rtsp_session_media_set_state:
  * @media: a #GstRTSPSessionMedia
+ * @state: the new state
  *
- * Tell the media object @media to pause.
+ * Tell the media object @media to change to @state.
  *
  * Returns: %TRUE on success.
  */
 gboolean
-gst_rtsp_session_media_pause (GstRTSPSessionMedia *media)
+gst_rtsp_session_media_set_state (GstRTSPSessionMedia *media, GstState state)
 {
   gboolean ret;
 
   g_return_val_if_fail (media != NULL, FALSE);
 
-  ret = gst_rtsp_media_pause (media->media, media->streams);
-
-  return ret;
-}
-
-/**
- * gst_rtsp_session_media_stop:
- * @media: a #GstRTSPSessionMedia
- *
- * Tell the media object @media to stop playing. After this call the media
- * cannot be played or paused anymore
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_session_media_stop (GstRTSPSessionMedia *media)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (media != NULL, FALSE);
-
-  ret = gst_rtsp_media_stop (media->media, media->streams);
+  ret = gst_rtsp_media_set_state (media->media, state, media->streams);
 
   return ret;
 }

@@ -41,9 +41,15 @@ typedef struct _GstRTSPMedia GstRTSPMedia;
 typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaTrans GstRTSPMediaTrans;
 
+typedef gboolean (*GstRTSPSendFunc) (GstBuffer *buffer, guint8 channel, gpointer user_data);
+
 /**
  * GstRTSPMediaTrans:
  * @idx: a stream index
+ * @send_rtp: callback for sending RTP messages
+ * @send_rtcp: callback for sending RTCP messages
+ * @user_data: user data passed in the callbacks
+ * @notify: free function for the user_data.
  * @transport: a transport description
  *
  * A Transport description for stream @idx
@@ -51,13 +57,17 @@ typedef struct _GstRTSPMediaTrans GstRTSPMediaTrans;
 struct _GstRTSPMediaTrans {
   guint idx;
 
+  GstRTSPSendFunc send_rtp;
+  GstRTSPSendFunc send_rtcp;
+  gpointer        user_data;
+  GDestroyNotify  notify;
+
   GstRTSPTransport *transport;
 };
 
 /**
  * GstRTSPMediaStream:
  *
- * @media: the owner #GstRTSPMedia
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
  * @prepared: if the stream is prepared for streaming
@@ -68,8 +78,12 @@ struct _GstRTSPMediaTrans {
  * @recv_rtcp_src: srcpad for RTCP buffers
  * @udpsrc: the udp source elements for RTP/RTCP
  * @udpsink: the udp sink elements for RTP/RTCP
+ * @appsrc: the app source elements for RTP/RTCP
+ * @appsink: the app sink elements for RTP/RTCP
+ * @server_port: the server ports for this stream
  * @caps_sig: the signal id for detecting caps
  * @caps: the caps of the stream
+ * @tranports: the current transports being streamed
  *
  * The definition of a media stream. The streams are identified by @id.
  */
@@ -91,7 +105,9 @@ struct _GstRTSPMediaStream {
    * sockets */
   GstElement   *udpsrc[2];
   GstElement   *udpsink[2];
+  /* for TCP transport */
   GstElement   *appsrc[2];
+  GstElement   *appsink[2];
 
   /* server ports for sending/receiving */
   GstRTSPRange  server_port;
@@ -99,17 +115,25 @@ struct _GstRTSPMediaStream {
   /* the caps of the stream */
   gulong        caps_sig;
   GstCaps      *caps;
+
+  /* transports we stream to */
+  GList        *transports;
 };
 
 /**
  * GstRTSPMedia:
  * @shared: if this media can be shared between clients
  * @element: the data providing element
- * @stream: the different streams provided by @element
+ * @streams: the different streams provided by @element
  * @prepared: if the media is prepared for streaming
  * @pipeline: the toplevel pipeline
+ * @source: the bus watch for pipeline messages.
+ * @id: the id of the watch
+ * @is_live: if the pipeline is live
+ * @buffering: if the pipeline is buffering
+ * @target_state: the desired target state of the pipeline
  * @rtpbin: the rtpbin
- * @multifdsink: multifdsink element for TCP transport
+ * @range: the range of the media being streamed
  *
  * A class that contains the GStreamer element along with a list of
  * #GstRTSPediaStream objects that can produce data.
@@ -120,7 +144,6 @@ struct _GstRTSPMedia {
   GObject       parent;
 
   gboolean      shared;
-  gboolean      complete;
 
   GstElement   *element;
   GArray       *streams;
@@ -137,9 +160,6 @@ struct _GstRTSPMedia {
 
   /* RTP session manager */
   GstElement   *rtpbin;
-
-  /* for TCP transport */
-  GstElement   *multifdsink;
 
   /* the range of media */
   GstRTSPTimeRange range;
@@ -180,9 +200,10 @@ gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPMediaStream *  gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
 
-gboolean              gst_rtsp_media_play             (GstRTSPMedia *media, GArray *trans);
-gboolean              gst_rtsp_media_pause            (GstRTSPMedia *media, GArray *trans);
-gboolean              gst_rtsp_media_stop             (GstRTSPMedia *media, GArray *trans);
+GstFlowReturn         gst_rtsp_media_stream_rtp       (GstRTSPMediaStream *stream, GstBuffer *buffer);
+GstFlowReturn         gst_rtsp_media_stream_rtcp      (GstRTSPMediaStream *stream, GstBuffer *buffer);
+
+gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state, GArray *trans);
 
 G_END_DECLS
 

@@ -220,7 +220,6 @@ gst_rtsp_server_set_session_pool (GstRTSPServer *server, GstRTSPSessionPool *poo
   }
 }
 
-
 /**
  * gst_rtsp_server_get_session_pool:
  * @server: a #GstRTSPServer
