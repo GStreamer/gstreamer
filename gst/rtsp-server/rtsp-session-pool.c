@@ -214,13 +214,11 @@ gst_rtsp_session_pool_find (GstRTSPSessionPool *pool, const gchar *sessionid)
 
   g_mutex_lock (pool->lock);
   result = g_hash_table_lookup (pool->sessions, sessionid);
-  if (result) 
-    g_object_ref (result);
-  g_mutex_unlock (pool->lock);
-
   if (result) {
+    g_object_ref (result);
     gst_rtsp_session_touch (result);
   }
+  g_mutex_unlock (pool->lock);
 
   return result;
 }

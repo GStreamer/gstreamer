@@ -61,12 +61,12 @@ typedef struct _GstRTSPClientClass GstRTSPClientClass;
  * @connection: the connection object handling the client request.
  * @watch: watch for the connection
  * @watchid: id of the watch
- * @timeout: the session timeout
  * @session_pool: handle to the session pool used by the client.
  * @media_mapping: handle to the media mapping used by the client.
  * @uri: cached uri
  * @media: cached media
  * @streams: a list of streams using @connection.
+ * @sessions: a list of sessions managed by @connection.
  *
  * The client structure.
  */
@@ -77,7 +77,6 @@ struct _GstRTSPClient {
   GstRTSPWatch      *watch;
   guint              watchid;
 
-  guint                 timeout;
   GstRTSPSessionPool   *session_pool;
   GstRTSPMediaMapping  *media_mapping;
 
@@ -85,6 +84,7 @@ struct _GstRTSPClient {
   GstRTSPMedia   *media;
 
   GList *streams;
+  GList *sessions;
 };
 
 struct _GstRTSPClientClass {
@@ -102,9 +102,6 @@ GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 void                  gst_rtsp_client_set_media_mapping (GstRTSPClient *client, 
                                                          GstRTSPMediaMapping *mapping);
 GstRTSPMediaMapping * gst_rtsp_client_get_media_mapping (GstRTSPClient *client);
-
-void                  gst_rtsp_client_set_timeout       (GstRTSPClient *client, guint timeout);
-guint                 gst_rtsp_client_get_timeout       (GstRTSPClient *client);
 
 gboolean              gst_rtsp_client_accept            (GstRTSPClient *client, 
                                                          GIOChannel *channel);

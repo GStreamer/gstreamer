@@ -22,9 +22,7 @@
 #include "rtsp-client.h"
 #include "rtsp-sdp.h"
 
-#undef DEBUG
-
-#define DEFAULT_TIMEOUT  60
+#define DEBUG
 
 static GMutex *tunnels_lock;
 static GHashTable *tunnels;
@@ -32,7 +30,6 @@ static GHashTable *tunnels;
 enum
 {
   PROP_0,
-  PROP_TIMEOUT,
   PROP_SESSION_POOL,
   PROP_MEDIA_MAPPING,
   PROP_LAST
@@ -43,6 +40,8 @@ static void gst_rtsp_client_get_property (GObject *object, guint propid,
 static void gst_rtsp_client_set_property (GObject *object, guint propid,
     const GValue *value, GParamSpec *pspec);
 static void gst_rtsp_client_finalize (GObject * obj);
+
+static void client_session_finalized (GstRTSPClient *client, GstRTSPSession *session);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -56,10 +55,6 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gobject_class->get_property = gst_rtsp_client_get_property;
   gobject_class->set_property = gst_rtsp_client_set_property;
   gobject_class->finalize = gst_rtsp_client_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
-      g_param_spec_uint ("timeout", "Timeout", "The client timeout",
-          0, G_MAXUINT, DEFAULT_TIMEOUT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
       g_param_spec_object ("session-pool", "Session Pool",
@@ -78,7 +73,6 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
-  client->timeout = DEFAULT_TIMEOUT;
 }
 
 /* A client is finalized when the connection is broken */
@@ -86,8 +80,13 @@ static void
 gst_rtsp_client_finalize (GObject * obj)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (obj);
+  GList *walk;
 
   g_message ("finalize client %p", client);
+
+  for (walk = client->sessions; walk; walk = g_list_next (walk))
+    g_object_weak_unref (G_OBJECT (walk->data), (GWeakNotify) client_session_finalized, client);
+  g_list_free (client->sessions);
 
   gst_rtsp_connection_free (client->connection);
   if (client->session_pool)
@@ -110,9 +109,6 @@ gst_rtsp_client_get_property (GObject *object, guint propid,
   GstRTSPClient *client = GST_RTSP_CLIENT (object);
 
   switch (propid) {
-    case PROP_TIMEOUT:
-      g_value_set_uint (value, gst_rtsp_client_get_timeout (client));
-      break;
     case PROP_SESSION_POOL:
       g_value_take_object (value, gst_rtsp_client_get_session_pool (client));
       break;
@@ -131,9 +127,6 @@ gst_rtsp_client_set_property (GObject *object, guint propid,
   GstRTSPClient *client = GST_RTSP_CLIENT (object);
 
   switch (propid) {
-    case PROP_TIMEOUT:
-      gst_rtsp_client_set_timeout (client, g_value_get_uint (value));
-      break;
     case PROP_SESSION_POOL:
       gst_rtsp_client_set_session_pool (client, g_value_get_object (value));
       break;
@@ -163,16 +156,10 @@ gst_rtsp_client_new (void)
 static void
 send_response (GstRTSPClient *client, GstRTSPSession *session, GstRTSPMessage *response)
 {
-  GTimeVal timeout;
-
   gst_rtsp_message_add_header (response, GST_RTSP_HDR_SERVER, "GStreamer RTSP server");
 
-#ifdef DEBUG
-  gst_rtsp_message_dump (response);
-#endif
-
-  timeout.tv_sec = client->timeout;
-  timeout.tv_usec = 0;
+  /* remove any previous header */
+  gst_rtsp_message_remove_header (response, GST_RTSP_HDR_SESSION, -1);
 
   /* add the new session header for new session ids */
   if (session) {
@@ -185,10 +172,10 @@ send_response (GstRTSPClient *client, GstRTSPSession *session, GstRTSPMessage *r
 
     gst_rtsp_message_take_header (response, GST_RTSP_HDR_SESSION, str);
   }
-  else {
-    /* remove the session id from the response */
-    gst_rtsp_message_remove_header (response, GST_RTSP_HDR_SESSION, -1);
-  }
+
+#ifdef DEBUG
+  gst_rtsp_message_dump (response);
+#endif
 
   gst_rtsp_watch_queue_message (client->watch, response);
   gst_rtsp_message_unset (response);
@@ -807,7 +794,7 @@ handle_describe_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession 
   gst_rtsp_message_take_body (&response, (guint8 *)str, strlen (str));
   gst_sdp_message_free (sdp);
 
-  send_response (client, NULL, &response);
+  send_response (client, session, &response);
 
   return TRUE;
 
@@ -847,7 +834,7 @@ handle_options_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *
   gst_rtsp_message_add_header (&response, GST_RTSP_HDR_PUBLIC, str);
   g_free (str);
 
-  send_response (client, NULL, &response);
+  send_response (client, session, &response);
 }
 
 /* remove duplicate and trailing '/' */
@@ -875,6 +862,37 @@ santize_uri (GstRTSPUrl *uri)
   if (len > 1 && *(d-1) == '/')
     d--;
   *d = '\0';
+}
+
+static void
+client_session_finalized (GstRTSPClient *client, GstRTSPSession *session)
+{
+  g_message ("session %p finalized", session);
+
+  client->sessions = g_list_remove (client->sessions, session);
+  if (client->sessions == NULL) {
+    g_message ("all sessions finalized");
+    g_source_destroy ((GSource*)client->watch);
+  }
+}
+
+static void
+client_watch_session (GstRTSPClient *client, GstRTSPSession *session)
+{
+  GList *walk;
+
+  for (walk = client->sessions; walk; walk = g_list_next (walk)) {
+    GstRTSPSession *msession = (GstRTSPSession *) walk->data;
+
+    /* we already know about this session */
+    if (msession == session)
+      return;
+  }
+
+  g_message ("watching session %p", session);
+
+  g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized, client);
+  client->sessions = g_list_prepend (client->sessions, session);
 }
 
 static void
@@ -921,7 +939,7 @@ handle_request (GstRTSPClient *client, GstRTSPMessage *request)
     if (!(session = gst_rtsp_session_pool_find (client->session_pool, sessid)))
       goto session_not_found;
 
-    client->timeout = gst_rtsp_session_get_timeout (session);
+    client_watch_session (client, session);
   }
   else
     session = NULL;
@@ -1023,33 +1041,6 @@ handle_data (GstRTSPClient *client, GstRTSPMessage *message)
     }
   }
   gst_buffer_unref (buffer);
-}
-
-/**
- * gst_rtsp_client_set_timeout:
- * @client: a #GstRTSPClient
- * @timeout: a timeout in seconds
- *
- * Set the connection timeout to @timeout seconds for @client.
- */
-void
-gst_rtsp_client_set_timeout (GstRTSPClient *client, guint timeout)
-{
-  client->timeout = timeout;
-}
-
-/**
- * gst_rtsp_client_get_timeout:
- * @client: a #GstRTSPClient
- *
- * Get the connection timeout @client.
- *
- * Returns: the connection timeout for @client in seconds.
- */
-guint
-gst_rtsp_client_get_timeout (GstRTSPClient *client)
-{
-  return client->timeout;
 }
 
 /**
