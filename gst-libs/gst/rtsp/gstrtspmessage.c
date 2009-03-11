@@ -412,7 +412,7 @@ GstRTSPResult
 gst_rtsp_message_parse_data (GstRTSPMessage * msg, guint8 * channel)
 {
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (msg->type != GST_RTSP_MESSAGE_DATA, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type == GST_RTSP_MESSAGE_DATA, GST_RTSP_EINVAL);
 
   if (channel)
     *channel = msg->type_data.data.channel;
