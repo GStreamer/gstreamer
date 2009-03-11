@@ -373,6 +373,10 @@ handle_teardown_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession 
   /* unlink the all TCP callbacks */
   unlink_session_streams (client, media);
 
+  /* remove the session from the watched sessions */
+  g_object_weak_unref (G_OBJECT (session), (GWeakNotify) client_session_finalized, client);
+  client->sessions = g_list_remove (client->sessions, session);
+
   gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
 
   /* unmanage the media in the session, returns false if all media session
@@ -867,11 +871,8 @@ santize_uri (GstRTSPUrl *uri)
 static void
 client_session_finalized (GstRTSPClient *client, GstRTSPSession *session)
 {
-  g_message ("session %p finalized", session);
-
-  client->sessions = g_list_remove (client->sessions, session);
-  if (client->sessions == NULL) {
-    g_message ("all sessions finalized");
+  if (!(client->sessions = g_list_remove (client->sessions, session))) {
+    g_message ("all sessions finalized, close the connection");
     g_source_destroy ((GSource*)client->watch);
   }
 }
@@ -939,6 +940,9 @@ handle_request (GstRTSPClient *client, GstRTSPMessage *request)
     if (!(session = gst_rtsp_session_pool_find (client->session_pool, sessid)))
       goto session_not_found;
 
+    /* we add the session to the client list of watched sessions. When a session
+     * disappears because it times out, we will be notified. If all sessions are
+     * gone, we will close the connection */
     client_watch_session (client, session);
   }
   else
