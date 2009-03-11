@@ -35,6 +35,7 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#include "mxfwrite.h"
 #include "mxfaes-bwf.h"
 #include "mxfquark.h"
 
@@ -305,6 +306,210 @@ mxf_metadata_wave_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
   return ret;
 }
 
+static GList *
+mxf_metadata_wave_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
+    MXFPrimerPack * primer)
+{
+  MXFMetadataWaveAudioEssenceDescriptor *self =
+      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (m);
+  GList *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_wave_audio_essence_descriptor_parent_class)->write_tags (m,
+      primer);
+  MXFLocalTag *t;
+  static const guint8 block_align_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x03, 0x02, 0x01, 0x00, 0x00, 0x00
+  };
+  static const guint8 sequence_offset_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x03, 0x02, 0x02, 0x00, 0x00, 0x00
+  };
+  static const guint8 avg_bps_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x03, 0x03, 0x05, 0x00, 0x00, 0x00
+  };
+  static const guint8 channel_assignment_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x07,
+    0x04, 0x02, 0x01, 0x01, 0x05, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_envelope_version_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x06, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_envelope_format_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x07, 0x00, 0x00, 0x00
+  };
+  static const guint8 points_per_peak_value_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x08, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_envelope_block_size_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x09, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_channels_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x0A, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_frames_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x0B, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_of_peaks_position_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x0C, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_envelope_timestamp_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x0D, 0x00, 0x00, 0x00
+  };
+  static const guint8 peak_envelope_data_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x08,
+    0x04, 0x02, 0x03, 0x01, 0x0E, 0x00, 0x00, 0x00
+  };
+
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->key, &block_align_ul, 16);
+  t->size = 2;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT16_BE (t->data, self->block_align);
+  mxf_primer_pack_add_mapping (primer, 0x3d0a, &t->key);
+  ret = g_list_prepend (ret, t);
+
+  if (self->sequence_offset) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &sequence_offset_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, self->sequence_offset);
+    mxf_primer_pack_add_mapping (primer, 0x3d0b, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  t = g_slice_new0 (MXFLocalTag);
+  memcpy (&t->key, &avg_bps_ul, 16);
+  t->size = 4;
+  t->data = g_slice_alloc (t->size);
+  t->g_slice = TRUE;
+  GST_WRITE_UINT32_BE (t->data, self->avg_bps);
+  mxf_primer_pack_add_mapping (primer, 0x3d09, &t->key);
+  ret = g_list_prepend (ret, t);
+
+  if (!mxf_ul_is_zero (&self->channel_assignment)) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &channel_assignment_ul, 16);
+    t->size = 16;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    memcpy (t->data, &self->channel_assignment, 16);
+    mxf_primer_pack_add_mapping (primer, 0x3d32, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_envelope_version) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_envelope_version_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->peak_envelope_version);
+    mxf_primer_pack_add_mapping (primer, 0x3d29, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_envelope_format) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_envelope_format_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->peak_envelope_format);
+    mxf_primer_pack_add_mapping (primer, 0x3d2a, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->points_per_peak_value) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &points_per_peak_value_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->points_per_peak_value);
+    mxf_primer_pack_add_mapping (primer, 0x3d2b, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_envelope_block_size) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_envelope_block_size_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->peak_envelope_block_size);
+    mxf_primer_pack_add_mapping (primer, 0x3d2c, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_channels) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_channels_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->peak_channels);
+    mxf_primer_pack_add_mapping (primer, 0x3d2d, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_frames) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_frames_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->peak_frames);
+    mxf_primer_pack_add_mapping (primer, 0x3d2e, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_of_peaks_position) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_of_peaks_position_ul, 16);
+    t->size = 8;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT64_BE (t->data, self->peak_of_peaks_position);
+    mxf_primer_pack_add_mapping (primer, 0x3d2f, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (!mxf_timestamp_is_unknown (&self->peak_envelope_timestamp)) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_envelope_timestamp_ul, 16);
+    t->size = 8;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    mxf_timestamp_write (&self->peak_envelope_timestamp, t->data);
+    mxf_primer_pack_add_mapping (primer, 0x3d30, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->peak_envelope_data) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &peak_envelope_data_ul, 16);
+    t->size = self->peak_envelope_data_length;
+    t->data = g_memdup (self->peak_envelope_data, t->size);
+    mxf_primer_pack_add_mapping (primer, 0x3d31, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  return ret;
+}
+
 static void
     mxf_metadata_wave_audio_essence_descriptor_init
     (MXFMetadataWaveAudioEssenceDescriptor * self)
@@ -324,6 +529,8 @@ static void
   metadata_base_class->name_quark = MXF_QUARK (WAVE_AUDIO_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_wave_audio_essence_descriptor_to_structure;
+  metadata_base_class->write_tags =
+      mxf_metadata_wave_audio_essence_descriptor_write_tags;
   metadata_class->type = 0x0148;
 }
 
@@ -705,6 +912,139 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
   return ret;
 }
 
+static GList *
+mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
+    MXFPrimerPack * primer)
+{
+  MXFMetadataAES3AudioEssenceDescriptor *self =
+      MXF_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR (m);
+  GList *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_aes3_audio_essence_descriptor_parent_class)->write_tags (m,
+      primer);
+  MXFLocalTag *t;
+  static const guint8 emphasis_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x05, 0x01, 0x06, 0x00, 0x00, 0x00
+  };
+  static const guint8 block_start_offset_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x03, 0x02, 0x03, 0x00, 0x00, 0x00
+  };
+  static const guint8 auxiliary_bits_mode_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x05, 0x01, 0x01, 0x00, 0x00, 0x00
+  };
+  static const guint8 channel_status_mode_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x05, 0x01, 0x02, 0x00, 0x00, 0x00
+  };
+  static const guint8 fixed_channel_status_data_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x05, 0x01, 0x03, 0x00, 0x00, 0x00
+  };
+  static const guint8 user_data_mode_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x05, 0x01, 0x04, 0x00, 0x00, 0x00
+  };
+  static const guint8 fixed_user_data_ul[] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
+    0x04, 0x02, 0x05, 0x01, 0x05, 0x00, 0x00, 0x00
+  };
+
+  if (self->emphasis) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &emphasis_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, self->emphasis);
+    mxf_primer_pack_add_mapping (primer, 0x3d0d, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->block_start_offset) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &block_start_offset_ul, 16);
+    t->size = 2;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT16_BE (t->data, self->block_start_offset);
+    mxf_primer_pack_add_mapping (primer, 0x3d0f, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->auxiliary_bits_mode) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &auxiliary_bits_mode_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, self->auxiliary_bits_mode);
+    mxf_primer_pack_add_mapping (primer, 0x3d08, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->channel_status_mode) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &channel_status_mode_ul, 16);
+    t->size = 8 + self->n_channel_status_mode;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->n_channel_status_mode);
+    GST_WRITE_UINT32_BE (t->data + 4, 1);
+    memcpy (t->data + 8, self->channel_status_mode, t->size);
+    mxf_primer_pack_add_mapping (primer, 0x3d10, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->fixed_channel_status_data) {
+    guint i;
+
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &fixed_channel_status_data_ul, 16);
+    t->size = 8 + 24 * self->n_fixed_channel_status_data;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->n_fixed_channel_status_data);
+    GST_WRITE_UINT32_BE (t->data + 4, 24);
+    for (i = 0; i < self->n_fixed_channel_status_data; i++)
+      memcpy (t->data + 8 + 24 * i, self->fixed_channel_status_data[i], 24);
+    mxf_primer_pack_add_mapping (primer, 0x3d11, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->user_data_mode) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &user_data_mode_ul, 16);
+    t->size = 8 + self->n_user_data_mode;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->n_user_data_mode);
+    GST_WRITE_UINT32_BE (t->data + 4, 1);
+    memcpy (t->data + 8, self->user_data_mode, t->size);
+    mxf_primer_pack_add_mapping (primer, 0x3d12, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->fixed_user_data) {
+    guint i;
+
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &fixed_user_data_ul, 16);
+    t->size = 8 + 24 * self->n_fixed_user_data;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->n_fixed_user_data);
+    GST_WRITE_UINT32_BE (t->data + 4, 24);
+    for (i = 0; i < self->n_fixed_user_data; i++)
+      memcpy (t->data + 8 + 24 * i, self->fixed_user_data[i], 24);
+    mxf_primer_pack_add_mapping (primer, 0x3d11, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  return ret;
+}
 
 static void
     mxf_metadata_aes3_audio_essence_descriptor_init
@@ -728,6 +1068,8 @@ static void
   metadata_base_class->name_quark = MXF_QUARK (AES3_AUDIO_ESSENCE_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_aes3_audio_essence_descriptor_to_structure;
+  metadata_base_class->write_tags =
+      mxf_metadata_aes3_audio_essence_descriptor_write_tags;
   metadata_class->type = 0x0147;
 }
 
@@ -1051,6 +1393,202 @@ static const MXFEssenceElementHandler mxf_aes_bwf_essence_handler = {
   mxf_aes_bwf_create_caps
 };
 
+typedef struct
+{
+  guint64 error;
+  gint width, rate, channels;
+  MXFFraction edit_rate;
+} BWFMappingData;
+
+static GstFlowReturn
+mxf_bwf_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
+    GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
+{
+  BWFMappingData *md = mapping_data;
+  guint bytes;
+
+  if (buffer) {
+    guint64 speu =
+        gst_util_uint64_scale (md->rate, md->edit_rate.d, md->edit_rate.n);
+
+    md->error += (GST_SECOND * md->edit_rate.d * md->rate) % (md->edit_rate.n);
+    if (md->error >= md->edit_rate.n) {
+      md->error = 0;
+      speu += 1;
+    }
+
+    bytes = (speu * md->channels * md->width) / 8;
+
+    gst_adapter_push (adapter, buffer);
+    if (gst_adapter_available (adapter) >= bytes) {
+      *outbuf = gst_adapter_take_buffer (adapter, bytes);
+    }
+  } else if (flush && (bytes = gst_adapter_available (adapter))) {
+    *outbuf = gst_adapter_take_buffer (adapter, bytes);
+  }
+
+  return GST_FLOW_OK;
+}
+
+static const guint8 bwf_essence_container_ul[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01,
+  0x0d, 0x01, 0x03, 0x01, 0x02, 0x06, 0x01, 0x00
+};
+
+static MXFMetadataFileDescriptor *
+mxf_bwf_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  MXFMetadataWaveAudioEssenceDescriptor *ret;
+  GstStructure *s;
+  BWFMappingData *md;
+  gint width, rate, channels, endianness;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (strcmp (gst_structure_get_name (s), "audio/x-raw-int") != 0)
+    return NULL;
+
+  if (!gst_structure_get_int (s, "width", &width) ||
+      !gst_structure_get_int (s, "rate", &rate) ||
+      !gst_structure_get_int (s, "channels", &channels) ||
+      !gst_structure_get_int (s, "endianness", &endianness))
+    return NULL;
+
+  ret = (MXFMetadataWaveAudioEssenceDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
+
+  memcpy (&ret->parent.parent.essence_container, &bwf_essence_container_ul, 16);
+  if (endianness == G_LITTLE_ENDIAN)
+    memcpy (&ret->parent.sound_essence_compression,
+        &mxf_sound_essence_compression_uncompressed, 16);
+  else
+    memcpy (&ret->parent.sound_essence_compression,
+        &mxf_sound_essence_compression_aiff, 16);
+
+  ret->block_align = (width / 8) * channels;
+  ret->parent.quantization_bits = width;
+  ret->avg_bps = ret->block_align * rate;
+  mxf_metadata_generic_sound_essence_descriptor_from_caps (&ret->parent, caps);
+  *handler = mxf_bwf_write_func;
+
+  md = g_new0 (BWFMappingData, 1);
+  md->width = width;
+  md->rate = rate;
+  md->channels = channels;
+  *mapping_data = md;
+
+  return (MXFMetadataFileDescriptor *) ret;
+}
+
+static void
+mxf_bwf_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf)
+{
+  return;
+}
+
+static guint
+gst_greatest_common_divisor (guint a, guint b)
+{
+  while (b != 0) {
+    guint temp = a;
+
+    a = b;
+    b = temp % b;
+  }
+
+  return a;
+}
+
+static void
+mxf_bwf_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
+    MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
+{
+  guint i;
+  gdouble min = G_MAXDOUBLE;
+  MXFMetadataWaveAudioEssenceDescriptor *d =
+      MXF_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (a);
+  BWFMappingData *md = mapping_data;
+
+  for (i = 0; i < package->parent.n_tracks; i++) {
+    MXFMetadataTimelineTrack *tmp;
+
+    if (!MXF_IS_METADATA_TIMELINE_TRACK (package->parent.tracks[i]) ||
+        package->parent.tracks[i] == (MXFMetadataTrack *) track)
+      continue;
+
+    tmp = MXF_METADATA_TIMELINE_TRACK (package->parent.tracks[i]);
+    if (((gdouble) tmp->edit_rate.n) / ((gdouble) tmp->edit_rate.d) < min) {
+      min = ((gdouble) tmp->edit_rate.n) / ((gdouble) tmp->edit_rate.d);
+      memcpy (edit_rate, &tmp->edit_rate, sizeof (MXFFraction));
+    }
+  }
+
+  if (min == G_MAXDOUBLE) {
+    guint32 nu, de;
+    guint gcd;
+
+    /* 50ms edit units */
+    nu = d->parent.audio_sampling_rate.n;
+    de = d->parent.audio_sampling_rate.d * 20;
+    gcd = gst_greatest_common_divisor (nu, de);
+    nu /= gcd;
+    de /= gcd;
+
+    (*edit_rate).n = nu;
+    (*edit_rate).d = de;
+  }
+
+  memcpy (&md->edit_rate, edit_rate, sizeof (MXFFraction));
+}
+
+static guint32
+mxf_bwf_get_track_number_template (MXFMetadataFileDescriptor * a,
+    GstCaps * caps, gpointer mapping_data)
+{
+  return (0x16 << 24) | (0x01 << 8);
+}
+
+static MXFEssenceElementWriter mxf_bwf_essence_element_writer = {
+  mxf_bwf_get_descriptor,
+  mxf_bwf_update_descriptor,
+  mxf_bwf_get_edit_rate,
+  mxf_bwf_get_track_number_template,
+  NULL,
+  {{0,}}
+};
+
+#define BWF_CAPS \
+      "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+      "width = (int) 32, " \
+      "depth = (int) 32, " \
+      "signed = (boolean) TRUE; " \
+      "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+      "width = (int) 24, " \
+      "depth = (int) 24, " \
+      "signed = (boolean) TRUE; " \
+      "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+      "width = (int) 16, " \
+      "depth = (int) 16, " \
+      "signed = (boolean) TRUE; " \
+      "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+      "width = (int) 8, " \
+      "depth = (int) 8, " \
+      "signed = (boolean) FALSE"
+
 void
 mxf_aes_bwf_init (void)
 {
@@ -1058,4 +1596,11 @@ mxf_aes_bwf_init (void)
   mxf_metadata_register (MXF_TYPE_METADATA_AES3_AUDIO_ESSENCE_DESCRIPTOR);
 
   mxf_essence_element_handler_register (&mxf_aes_bwf_essence_handler);
+
+  mxf_bwf_essence_element_writer.pad_template =
+      gst_pad_template_new ("bwf_audio_sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+      gst_caps_from_string (BWF_CAPS));
+  memcpy (&mxf_bwf_essence_element_writer.data_definition,
+      mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_SOUND_ESSENCE), 16);
+  mxf_essence_element_writer_register (&mxf_bwf_essence_element_writer);
 }
