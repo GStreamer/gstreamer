@@ -2660,7 +2660,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     gst_rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
     /* see if the timeout period expired */
-    if ((tv_timeout.tv_usec | tv_timeout.tv_usec) == 0) {
+    if ((tv_timeout.tv_sec | tv_timeout.tv_usec) == 0) {
       GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
       /* send keep-alive, ignore the result, a warning will be posted. */
       res = gst_rtspsrc_send_keep_alive (src);
