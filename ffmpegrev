@@ -1,4 +1,4 @@
-FFMPEG_REVISION=17805
+FFMPEG_REVISION=17887
 FFMPEG_CO_DIR=gst-libs/ext/ffmpeg
 FFMPEG_SVN=svn://svn.ffmpeg.org/ffmpeg/branches/0.5
 # Because ffmpeg checks out libswscale via an svn:externals, checking
