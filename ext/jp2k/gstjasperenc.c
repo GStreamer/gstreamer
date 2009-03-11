@@ -62,9 +62,11 @@ static GstStaticPadTemplate gst_jasper_enc_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-j2c, "
+    GST_STATIC_CAPS ("image/x-j2c, width = " GST_VIDEO_SIZE_RANGE ", height = "
+        GST_VIDEO_SIZE_RANGE ", fourcc = (GstFourcc) { sRGB, sYUV },"
         "framerate = " GST_VIDEO_FPS_RANGE ", " "fields = (int) 1; "
-        "image/x-jpc, "
+        "image/x-jpc, width = " GST_VIDEO_SIZE_RANGE ", height = "
+        GST_VIDEO_SIZE_RANGE ", fourcc = (GstFourcc) { sRGB, sYUV },"
         "framerate = " GST_VIDEO_FPS_RANGE ", " "fields = (int) 1; "
         "image/jp2")
     );
