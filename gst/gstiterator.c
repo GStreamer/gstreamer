@@ -199,7 +199,7 @@ gst_list_iterator_free (GstListIterator * it)
  *
  * When a concurrent update to the list is performed, usually by @owner while
  * holding @lock, @master_cookie will be updated. The iterator implementation
- * will notice the update of the cookie and will return #GST_ITERATOR_RESYNC to
+ * will notice the update of the cookie and will return %GST_ITERATOR_RESYNC to
  * the user of the iterator in the next call to gst_iterator_next().
  *
  * @owner will be passed to the @free function when the iterator is freed.
@@ -375,7 +375,7 @@ gst_iterator_free (GstIterator * it)
  * @other: The #GstIterator to push
  *
  * Pushes @other iterator onto @it. All calls performed on @it are
- * forwarded to @other. If @other returns #GST_ITERATOR_DONE, it is
+ * forwarded to @other. If @other returns %GST_ITERATOR_DONE, it is
  * popped again and calls are handled by @it again.
  *
  * This function is mainly used by objects implementing the iterator
@@ -510,13 +510,13 @@ gst_iterator_filter (GstIterator * it, GCompareFunc func, gpointer user_data)
  * of this procedure is to accumulate the results of operating on the objects in
  * @ret.
  *
- * This procedure can be used (and is used internally) to implement the foreach
- * and find_custom operations.
+ * This procedure can be used (and is used internally) to implement the
+ * gst_iterator_foreach() and gst_iterator_find_custom() operations.
  *
  * The fold will proceed as long as @func returns TRUE. When the iterator has no
- * more arguments, #GST_ITERATOR_DONE will be returned. If @func returns FALSE,
- * the fold will stop, and #GST_ITERATOR_OK will be returned. Errors or resyncs
- * will cause fold to return #GST_ITERATOR_ERROR or #GST_ITERATOR_RESYNC as
+ * more arguments, %GST_ITERATOR_DONE will be returned. If @func returns FALSE,
+ * the fold will stop, and %GST_ITERATOR_OK will be returned. Errors or resyncs
+ * will cause fold to return %GST_ITERATOR_ERROR or %GST_ITERATOR_RESYNC as
  * appropriate.
  *
  * The iterator will not be freed.
