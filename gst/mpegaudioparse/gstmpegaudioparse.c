@@ -1781,20 +1781,23 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
       }
 
     }
-    g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
     event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type,
         byte_cur, stop_type, byte_stop);
+    g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
+    seek->upstream_start = byte_cur;
+    seek->timestamp_start = start;
+    mp3parse->pending_accurate_seeks =
+        g_slist_prepend (mp3parse->pending_accurate_seeks, seek);
+    g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
     if (gst_pad_push_event (mp3parse->sinkpad, event)) {
       mp3parse->exact_position = TRUE;
-      seek->upstream_start = byte_cur;
-      seek->timestamp_start = start;
-      mp3parse->pending_accurate_seeks =
-          g_slist_prepend (mp3parse->pending_accurate_seeks, seek);
-      g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
       return TRUE;
     } else {
-      g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
       mp3parse->exact_position = TRUE;
+      g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
+      mp3parse->pending_accurate_seeks =
+          g_slist_remove (mp3parse->pending_accurate_seeks, seek);
+      g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
       g_free (seek);
       return TRUE;
     }
