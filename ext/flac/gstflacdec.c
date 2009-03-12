@@ -1410,7 +1410,7 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:{
-      if (dec->stream_decoder) {
+      if (dec->init == FALSE) {
         FLAC__stream_decoder_flush (dec->stream_decoder);
         gst_adapter_clear (dec->adapter);
       }
@@ -1459,10 +1459,13 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:{
       GST_LOG_OBJECT (dec, "EOS, with %u bytes available in adapter",
           gst_adapter_available (dec->adapter));
-      if (gst_adapter_available (dec->adapter) > 0) {
-        FLAC__stream_decoder_process_until_end_of_stream (dec->stream_decoder);
+      if (dec->init == FALSE) {
+        if (gst_adapter_available (dec->adapter) > 0) {
+          FLAC__stream_decoder_process_until_end_of_stream (dec->
+              stream_decoder);
+        }
+        FLAC__stream_decoder_flush (dec->stream_decoder);
       }
-      FLAC__stream_decoder_flush (dec->stream_decoder);
       gst_adapter_clear (dec->adapter);
       res = gst_pad_push_event (dec->srcpad, event);
       break;
