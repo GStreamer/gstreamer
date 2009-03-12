@@ -36,7 +36,6 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
   guint64 tf_length;
   gint prio;
   guint8 *data;
-  GstCaps *caps;
 
   if ((tf_length = gst_type_find_get_length (find)) > 0)
     length = MIN (length, tf_length);
@@ -57,8 +56,25 @@ xdgmime_typefind (GstTypeFind * find, gpointer user_data)
 
   GST_DEBUG ("Got mimetype '%s' with prio %d", mimetype, prio);
 
-  caps = gst_caps_new_simple (mimetype, NULL);
-  gst_type_find_suggest (find, GST_TYPE_FIND_POSSIBLE, caps);
+  /* Ignore audio/video types:
+   *  - our own typefinders in -base are likely to be better at this
+   *    (and if they're not, we really want to fix them, that's why we don't
+   *    report xdg-detected audio/video types at all, not even with a low
+   *    probability)
+   *  - we want to detect GStreamer media types and not MIME types
+   *  - the purpose of this xdg mime finder is mainly to prevent false
+   *    positives of non-media formats, not to typefind audio/video formats */
+  if (g_str_has_prefix (mimetype, "audio/") ||
+      g_str_has_prefix (mimetype, "video/")) {
+    GST_LOG ("Ignoring audio/video mime type");
+    return;
+  }
+
+  /* Again, we mainly want the xdg typefinding to prevent false-positives on
+   * non-media formats, so suggest the type with a probability that trumps
+   * uncertain results of our typefinders, but not more than that. */
+  GST_LOG ("Suggesting '%s' with probability POSSIBLE", mimetype);
+  gst_type_find_suggest_simple (find, GST_TYPE_FIND_POSSIBLE, mimetype, NULL);
 }
 
 static gboolean
