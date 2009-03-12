@@ -4858,7 +4858,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "connection is idle now");
   GST_RTSP_CONN_UNLOCK (src);
 
-  if (!src->connection)
+  if (!src->connection || !src->connected)
     goto no_connection;
 
   GST_DEBUG_OBJECT (src, "stop connection flush");
