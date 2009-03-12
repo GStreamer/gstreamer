@@ -825,7 +825,7 @@ handle_options_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *
 
   options = GST_RTSP_DESCRIBE |
 	    GST_RTSP_OPTIONS |
-    //        GST_RTSP_PAUSE |
+            GST_RTSP_PAUSE |
             GST_RTSP_PLAY |
             GST_RTSP_SETUP |
             GST_RTSP_TEARDOWN;
