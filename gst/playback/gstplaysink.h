@@ -76,6 +76,9 @@ GstElement *     gst_play_sink_get_audio_sink (GstPlaySink * playsink);
 void             gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis);
 GstElement *     gst_play_sink_get_vis_plugin (GstPlaySink * playsink);
 
+void             gst_play_sink_set_text_sink  (GstPlaySink * playsink, GstElement * sink);
+GstElement *     gst_play_sink_get_text_sink  (GstPlaySink * playsink);
+
 void             gst_play_sink_set_volume     (GstPlaySink *playsink, gdouble volume);
 gdouble          gst_play_sink_get_volume     (GstPlaySink *playsink);
 

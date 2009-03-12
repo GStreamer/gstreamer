@@ -411,6 +411,7 @@ struct _GstPlayBinClass
 #define DEFAULT_AUDIO_SINK        NULL
 #define DEFAULT_VIDEO_SINK        NULL
 #define DEFAULT_VIS_PLUGIN        NULL
+#define DEFAULT_TEXT_SINK         NULL
 #define DEFAULT_VOLUME            1.0
 #define DEFAULT_MUTE              FALSE
 #define DEFAULT_FRAME             NULL
@@ -436,13 +437,15 @@ enum
   PROP_AUDIO_SINK,
   PROP_VIDEO_SINK,
   PROP_VIS_PLUGIN,
+  PROP_TEXT_SINK,
   PROP_VOLUME,
   PROP_MUTE,
   PROP_FRAME,
   PROP_FONT_DESC,
   PROP_CONNECTION_SPEED,
   PROP_BUFFER_SIZE,
-  PROP_BUFFER_DURATION
+  PROP_BUFFER_DURATION,
+  PROP_LAST
 };
 
 /* signals */
@@ -689,6 +692,10 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   g_object_class_install_property (gobject_klass, PROP_VIS_PLUGIN,
       g_param_spec_object ("vis-plugin", "Vis plugin",
           "the visualization element to use (NULL = default)",
+          GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
+      g_param_spec_object ("text-sink", "Text plugin",
+          "the text output element to use (NULL = default textoverlay)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_klass, PROP_VOLUME,
@@ -1424,6 +1431,10 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       gst_play_sink_set_vis_plugin (playbin->playsink,
           g_value_get_object (value));
       break;
+    case PROP_TEXT_SINK:
+      gst_play_sink_set_text_sink (playbin->playsink,
+          g_value_get_object (value));
+      break;
     case PROP_VOLUME:
       gst_play_sink_set_volume (playbin->playsink, g_value_get_double (value));
       break;
@@ -1557,6 +1568,10 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_VIS_PLUGIN:
       g_value_set_object (value,
           gst_play_sink_get_vis_plugin (playbin->playsink));
+      break;
+    case PROP_TEXT_SINK:
+      g_value_set_object (value,
+          gst_play_sink_get_text_sink (playbin->playsink));
       break;
     case PROP_VOLUME:
       g_value_set_double (value, gst_play_sink_get_volume (playbin->playsink));
