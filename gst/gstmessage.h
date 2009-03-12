@@ -287,6 +287,8 @@ gst_message_unref (GstMessage * msg)
  *
  * Creates a copy of the message. Returns a copy of the message.
  *
+ * Returns: a new copy of @msg.
+ *
  * MT safe
  */
 #ifdef _FOOL_GTK_DOC_

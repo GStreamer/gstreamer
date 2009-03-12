@@ -370,6 +370,8 @@ gst_buffer_unref (GstBuffer * buf)
  *
  * Create a copy of the given buffer. This will also make a newly allocated
  * copy of the data the source buffer contains.
+ *
+ * Returns: a new copy of @buf.
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstBuffer * gst_buffer_copy (const GstBuffer * buf);

@@ -189,6 +189,8 @@ GstIterator*    gst_query_type_iterate_definitions (void);
  * @q: a #GstQuery to increase the refcount of.
  *
  * Increases the refcount of the given query by one.
+ *
+ * Returns: @q
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstQuery * gst_query_ref (GstQuery * q);
@@ -224,6 +226,8 @@ gst_query_unref (GstQuery * q)
  *
  * Copies the given query using the copy function of the parent #GstData
  * structure.
+ *
+ * Returns: a new copy of @q.
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstQuery * gst_query_copy (const GstQuery * q);

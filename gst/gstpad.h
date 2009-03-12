@@ -558,6 +558,7 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @do_buffer_signals: counter counting installed buffer signals
  * @do_event_signals: counter counting installed event signals
  * @iterintlinkfunc: get the internal links iterator of this pad
+ * @block_destroy_data: notify function for gst_pad_set_blocked_async_full()
  *
  * The #GstPad structure. Use the functions to update the variables.
  */
@@ -819,7 +820,7 @@ gboolean		gst_pad_set_blocked_async		(GstPad *pad, gboolean blocked,
 								 GstPadBlockCallback callback, gpointer user_data);
 gboolean		gst_pad_set_blocked_async_full		(GstPad *pad, gboolean blocked,
 								 GstPadBlockCallback callback, gpointer user_data,
-                 GDestroyNotify destroy_data);
+                                                                 GDestroyNotify destroy_data);
 gboolean		gst_pad_is_blocked			(GstPad *pad);
 gboolean		gst_pad_is_blocking			(GstPad *pad);
 

@@ -348,14 +348,14 @@ G_INLINE_FUNC GstEvent * gst_event_ref (GstEvent * event);
 #endif
 
 static inline GstEvent *
-gst_event_ref (GstEvent * ev)
+gst_event_ref (GstEvent * event)
 {
-  return (GstEvent *) gst_mini_object_ref (GST_MINI_OBJECT (ev));
+  return (GstEvent *) gst_mini_object_ref (GST_MINI_OBJECT (event));
 }
 
 /**
  * gst_event_unref:
- * @ev: The event to refcount
+ * @event: The event to refcount
  *
  * Decrease the refcount of an event, freeing it if the refcount reaches 0.
  */
@@ -364,15 +364,15 @@ G_INLINE_FUNC void gst_event_unref (GstEvent * event);
 #endif
 
 static inline void
-gst_event_unref (GstEvent * ev)
+gst_event_unref (GstEvent * event)
 {
-  gst_mini_object_unref (GST_MINI_OBJECT (ev));
+  gst_mini_object_unref (GST_MINI_OBJECT (event));
 }
 
 /* copy event */
 /**
  * gst_event_copy:
- * @ev: The event to copy
+ * @event: The event to copy
  *
  * Copy the event using the event specific copy function.
  */
@@ -381,9 +381,9 @@ G_INLINE_FUNC void gst_event_copy (GstEvent * event);
 #endif
 
 static inline GstEvent *
-gst_event_copy (const GstEvent * ev)
+gst_event_copy (const GstEvent * event)
 {
-  return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT (ev)));
+  return GST_EVENT_CAST (gst_mini_object_copy (GST_MINI_OBJECT (event)));
 }
 
 
