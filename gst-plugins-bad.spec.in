@@ -156,8 +156,14 @@ rm -rf $RPM_BUILD_ROOT
 @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 @USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 @USE_SNDFILE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
+@USE_CELT_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
+@USE_MPEG2ENC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
+@USE_MPLEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
 
 %changelog
+* Thu Mar 12 2009 Christian Schaller <chrisian.schaller at collabora dot co uk>
+- Add Celt, mpeg2enc and mplex plugins to spec file
+
 * Thu Oct 9 2008 Christian Schaller <chrisian.schaller at collabora dot co uk>
 - flacparse, flvmux and j2kdec plugins added
 
