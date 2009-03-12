@@ -20,6 +20,8 @@ BuildRequires: 	  %{gstreamer}-devel >= %{gst_minver}
 
 BuildRequires:  gcc-c++
 BuildRequires:  gtk-doc >= 1.3
+BuildRequires:  liboil-devel >= 0.3.14 
+Requires:       liboil => 0.3.14 
 
 @USE_GNOME_VFS_TRUE@Requires:      gnome-vfs2 > 1.9.4.00
 @USE_GNOME_VFS_TRUE@BuildRequires: gnome-vfs2-devel > 1.9.4.00
@@ -27,6 +29,18 @@ BuildRequires:  gtk-doc >= 1.3
 @USE_VORBIS_TRUE@Requires:      libvorbis >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libogg-devel >= 1.0
 @USE_VORBIS_TRUE@BuildRequires: libvorbis-devel >= 1.0
+@USE_XVIDEO_TRUE@BuildRequires:  libXv-devel
+@USE_XVIDEO_TRUE@Requires:       libXv-devel
+@USE_ALSA_TRUE@BuildRequires: alsa-lib-devel
+@USE_ALSA_TRUE@Requires:      alsa-lib
+@USE_CDPARANOIA_TRUE@BuildRequires: cdparanoia-devel
+@USE_CDPARANOIA_TRUE@Requires:      cdparanoia
+@USE_LIBVISUAL_TRUE@BuildRequires: libvisual-devel
+@USE_LIBVISUAL_TRUE@Requires:      libvisual
+@USE_PANGO_TRUE@BuildRequires: pango-devel
+@USE_PANGO_TRUE@Requires: pango
+@USE_THEORA_TRUE@BuildRequires: libtheora-devel >= 1.0
+@USE_THEORA_TRUE@Requires:      libtheora >= 1.0
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
