@@ -157,6 +157,50 @@ do_loop (GstRTSPMediaClass *klass)
   return NULL;
 }
 
+static void
+collect_media_stats (GstRTSPMedia *media)
+{
+  GstFormat format;
+  gint64 position, duration;
+
+  media->range.unit = GST_RTSP_RANGE_NPT;
+
+  if (media->is_live) {
+    media->range.min.type = GST_RTSP_TIME_NOW;
+    media->range.min.seconds = -1;
+    media->range.max.type = GST_RTSP_TIME_END;
+    media->range.max.seconds = -1;
+  }
+  else {
+    /* get the position */
+    format = GST_FORMAT_TIME;
+    if (!gst_element_query_position (media->pipeline, &format, &position)) 
+      position = 0;
+
+    /* get the duration */
+    format = GST_FORMAT_TIME;
+    if (!gst_element_query_duration (media->pipeline, &format, &duration)) 
+      duration = -1;
+
+    if (position == -1) {
+      media->range.min.type = GST_RTSP_TIME_NOW;
+      media->range.min.seconds = -1;
+    }
+    else {
+      media->range.min.type = GST_RTSP_TIME_SECONDS;
+      media->range.min.seconds = ((gdouble)position) / GST_SECOND;
+    }
+    if (duration == -1) {
+      media->range.max.type = GST_RTSP_TIME_END;
+      media->range.max.seconds = -1;
+    }
+    else {
+      media->range.max.type = GST_RTSP_TIME_SECONDS;
+      media->range.max.seconds = ((gdouble)duration) / GST_SECOND;
+    }
+  }
+}
+
 /**
  * gst_rtsp_media_new:
  *
@@ -248,6 +292,97 @@ gst_rtsp_media_get_stream (GstRTSPMedia *media, guint idx)
     res = NULL;
 
   return res;
+}
+
+/**
+ * gst_rtsp_media_seek:
+ * @stream: a #GstRTSPMediaStream
+ * @range: a #GstRTSPTimeRange
+ *
+ * Seek the pipeline to @range.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_seek (GstRTSPMedia *media, GstRTSPTimeRange *range)
+{
+  GstSeekFlags flags;
+  gboolean res;
+  gint64 start, stop;
+  GstSeekType start_type, stop_type;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (range != NULL, FALSE);
+
+  if (range->unit != GST_RTSP_RANGE_NPT)
+    goto not_supported;
+
+  /* depends on the current playing state of the pipeline. We might need to
+   * queue this until we get EOS. */
+  flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE;
+
+  start_type = stop_type = GST_SEEK_TYPE_NONE;
+
+  switch (range->min.type) {
+    case GST_RTSP_TIME_NOW:
+      start = -1;
+      break;
+    case GST_RTSP_TIME_SECONDS:
+      start = range->min.seconds * GST_SECOND;
+      start_type = GST_SEEK_TYPE_SET;
+      break;
+    case GST_RTSP_TIME_END:
+    default:
+      goto weird_type;
+  }
+  switch (range->max.type) {
+    case GST_RTSP_TIME_SECONDS:
+      stop = range->max.seconds * GST_SECOND;
+      stop_type = GST_SEEK_TYPE_SET;
+      break;
+    case GST_RTSP_TIME_END:
+      stop = -1;
+      stop_type = GST_SEEK_TYPE_SET;
+      break;
+    case GST_RTSP_TIME_NOW:
+    default:
+      goto weird_type;
+  }
+  
+  if (start != -1 || stop != -1) {
+    g_message ("seeking to %"GST_TIME_FORMAT" - %"GST_TIME_FORMAT,
+		GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+#if 0
+    res = gst_element_seek (media->pipeline, 1.0, GST_FORMAT_TIME,
+  	flags, start_type, start, stop_type, stop);
+#endif
+    res = TRUE;
+
+    /* and block for the seek to complete */
+    gst_element_get_state (media->pipeline, NULL, NULL, -1);
+    g_message ("done seeking %d", res);
+
+    collect_media_stats (media);
+  }
+  else {
+    g_message ("no seek needed");
+    res = TRUE;
+  }
+
+  return res;
+
+  /* ERRORS */
+not_supported:
+  {
+    g_warning ("seek unit %d not supported", range->unit);
+    return FALSE;
+  }
+weird_type:
+  {
+    g_warning ("weird range type %d not supported", range->min.type);
+    return FALSE;
+  }
 }
 
 /**
@@ -696,40 +831,6 @@ unlock_streams (GstRTSPMedia *media)
 
     gst_element_set_locked_state (stream->udpsrc[0], FALSE);
     gst_element_set_locked_state (stream->udpsrc[1], FALSE);
-  }
-}
-
-static void
-collect_media_stats (GstRTSPMedia *media)
-{
-  GstFormat format;
-  gint64 duration;
-
-  media->range.unit = GST_RTSP_RANGE_NPT;
-
-  if (media->is_live) {
-    media->range.min.type = GST_RTSP_TIME_NOW;
-    media->range.min.seconds = -1;
-    media->range.max.type = GST_RTSP_TIME_END;
-    media->range.max.seconds = -1;
-  }
-  else {
-    media->range.min.type = GST_RTSP_TIME_SECONDS;
-    media->range.min.seconds = 0.0;
-
-    /* get the duration */
-    format = GST_FORMAT_TIME;
-    if (!gst_element_query_duration (media->pipeline, &format, &duration)) 
-      duration = -1;
-
-    if (duration == -1) {
-      media->range.max.type = GST_RTSP_TIME_END;
-      media->range.max.seconds = -1;
-    }
-    else {
-      media->range.max.type = GST_RTSP_TIME_SECONDS;
-      media->range.max.seconds = ((gdouble)duration) / GST_SECOND;
-    }
   }
 }
 

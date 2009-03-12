@@ -471,6 +471,8 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
   guint n_streams, i;
   guint timestamp, seqnum;
   gchar *str;
+  GstRTSPTimeRange *range;
+  GstRTSPResult res;
 
   if (!session)
     goto no_session;
@@ -484,6 +486,16 @@ handle_play_request (GstRTSPClient *client, GstRTSPUrl *uri, GstRTSPSession *ses
   if (media->state != GST_RTSP_STATE_PLAYING &&
       media->state != GST_RTSP_STATE_READY)
     goto invalid_state;
+
+  /* parse the range header if we have one */
+  res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_RANGE, &str, 0);
+  if (res == GST_RTSP_OK) {
+    if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
+      /* we have a range, seek to the position */
+      gst_rtsp_media_seek (media->media, range);
+      gst_rtsp_range_free (range);
+    }
+  }
 
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
