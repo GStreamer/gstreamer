@@ -877,6 +877,10 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
   g_return_if_fail (tag != NULL);
 
+  if (mode == GST_TAG_MERGE_REPLACE_ALL) {
+    gst_structure_remove_all_fields (list);
+  }
+
   while (tag != NULL) {
     quark = g_quark_from_string (tag);
     info = gst_tag_lookup (quark);
