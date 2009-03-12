@@ -1374,7 +1374,7 @@ setup_source (GstURIDecodeBin * decoder)
     GST_DEBUG_OBJECT (decoder, "Source provides all raw data");
     /* source provides raw data, we added the pads and we can now signal a
      * no_more pads because we are done. */
-    /* FIXME, actually do this... */
+    gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
     return TRUE;
   }
   if (!have_out && !is_dynamic) {
