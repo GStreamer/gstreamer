@@ -386,7 +386,7 @@ accept_failed:
   }
 }
 
-static const gchar *
+static gchar *
 do_resolve (const gchar * host)
 {
   struct hostent *hostinfo;
@@ -421,7 +421,7 @@ do_resolve (const gchar * host)
         sizeof (ipbuf));
 #endif /* G_OS_WIN32 */
   }
-  return ip;
+  return g_strdup (ip);
 
   /* ERRORS */
 not_resolved:
@@ -535,7 +535,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   guint idx, line;
   gint retval;
   GstClockTime to;
-  const gchar *ip;
+  gchar *ip;
   guint16 port;
   gchar codestr[4], *resultstr;
   gint code;
@@ -649,6 +649,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
 
   /* connect to the host/port */
   res = do_connect (ip, port, &conn->fd1, conn->fdset, timeout);
+  g_free (ip);
   if (res != GST_RTSP_OK)
     goto connect_failed;
 
@@ -738,7 +739,7 @@ GstRTSPResult
 gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 {
   GstRTSPResult res;
-  const gchar *ip;
+  gchar *ip;
   guint16 port;
   GstRTSPUrl *url;
 
@@ -760,7 +761,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
     goto connect_failed;
 
   g_free (conn->ip);
-  conn->ip = g_strdup (ip);
+  conn->ip = ip;
 
   /* this is our read URL */
   conn->readfd = &conn->fd0;
@@ -783,6 +784,7 @@ not_resolved:
 connect_failed:
   {
     GST_ERROR ("failed to connect");
+    g_free (ip);
     return res;
   }
 tunneling_failed:
