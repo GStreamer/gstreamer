@@ -635,7 +635,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
     client = (GstUDPClient *) clients->data;
     if (sink->auto_multicast && gst_udp_is_multicast (&client->theiraddr))
-      gst_udp_join_group (*(client->sock), &client->theiraddr);
+      gst_udp_join_group (*(client->sock), &client->theiraddr, NULL);
   }
   return TRUE;
 
@@ -687,7 +687,7 @@ gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
       GST_DEBUG_OBJECT (sink, "multicast address detected");
       if (sink->auto_multicast) {
         GST_DEBUG_OBJECT (sink, "joining multicast group");
-        gst_udp_join_group (*(client->sock), &client->theiraddr);
+        gst_udp_join_group (*(client->sock), &client->theiraddr, NULL);
       }
     } else {
       GST_DEBUG_OBJECT (sink, "normal address detected");

@@ -142,6 +142,7 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
 
 #define UDP_DEFAULT_PORT                4951
 #define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
+#define UDP_DEFAULT_MULTICAST_IFACE     NULL
 #define UDP_DEFAULT_URI                 "udp://"UDP_DEFAULT_MULTICAST_GROUP":"G_STRINGIFY(UDP_DEFAULT_PORT)
 #define UDP_DEFAULT_CAPS                NULL
 #define UDP_DEFAULT_SOCKFD              -1
@@ -158,6 +159,7 @@ enum
 
   PROP_PORT,
   PROP_MULTICAST_GROUP,
+  PROP_MULTICAST_IFACE,
   PROP_URI,
   PROP_CAPS,
   PROP_SOCKFD,
@@ -253,6 +255,10 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_string ("multicast_group", "Multicast Group",
           "The Address of multicast group to join", UDP_DEFAULT_MULTICAST_GROUP,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
+      g_param_spec_string ("multicast_iface", "Multicast Interface",
+          "The network interface on which to join the multicast group",
+          UDP_DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "URI",
           "URI in the form of udp://multicast_group:port", UDP_DEFAULT_URI,
@@ -306,6 +312,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->sockfd = UDP_DEFAULT_SOCKFD;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
+  udpsrc->multi_iface = g_strdup (UDP_DEFAULT_MULTICAST_IFACE);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
   udpsrc->buffer_size = UDP_DEFAULT_BUFFER_SIZE;
   udpsrc->timeout = UDP_DEFAULT_TIMEOUT;
@@ -334,6 +341,7 @@ gst_udpsrc_finalize (GObject * object)
   if (udpsrc->caps)
     gst_caps_unref (udpsrc->caps);
   g_free (udpsrc->multi_group);
+  g_free (udpsrc->multi_iface);
   g_free (udpsrc->uri);
 
   if (udpsrc->sockfd >= 0 && udpsrc->closefd)
@@ -667,6 +675,14 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
         udpsrc->multi_group = g_value_dup_string (value);
       gst_udpsrc_update_uri (udpsrc);
       break;
+    case PROP_MULTICAST_IFACE:
+      g_free (udpsrc->multi_iface);
+
+      if (g_value_get_string (value) == NULL)
+        udpsrc->multi_iface = g_strdup (UDP_DEFAULT_MULTICAST_IFACE);
+      else
+        udpsrc->multi_iface = g_value_dup_string (value);
+      break;
     case PROP_URI:
       gst_udpsrc_set_uri (udpsrc, g_value_get_string (value));
       break;
@@ -730,6 +746,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MULTICAST_GROUP:
       g_value_set_string (value, udpsrc->multi_group);
+      break;
+    case PROP_MULTICAST_IFACE:
+      g_value_set_string (value, udpsrc->multi_iface);
       break;
     case PROP_URI:
       g_value_set_string (value, udpsrc->uri);
@@ -871,7 +890,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   if (src->auto_multicast && gst_udp_is_multicast (&src->myaddr)) {
     GST_DEBUG_OBJECT (src, "joining multicast group %s", src->multi_group);
-    ret = gst_udp_join_group (src->sock.fd, &src->myaddr);
+    ret = gst_udp_join_group (src->sock.fd, &src->myaddr, src->multi_iface);
     if (ret < 0)
       goto membership;
   }

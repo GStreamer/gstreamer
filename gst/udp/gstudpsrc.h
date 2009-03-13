@@ -56,6 +56,7 @@ struct _GstUDPSrc {
   gchar     *uri;
   int        port;
   gchar     *multi_group;
+  gchar     *multi_iface;
   gint       ttl;
   GstCaps   *caps;
   gint       buffer_size;

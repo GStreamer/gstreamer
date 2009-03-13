@@ -40,6 +40,7 @@
 #else
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <net/if.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -81,7 +82,8 @@ int gst_udp_is_multicast  (struct sockaddr_storage *addr);
 
 int gst_udp_set_loop_ttl  (int sockfd, gboolean loop, int ttl);
 
-int gst_udp_join_group    (int sockfd, struct sockaddr_storage *addr);
+int gst_udp_join_group    (int sockfd, struct sockaddr_storage *addr,
+                           gchar *iface);
 int gst_udp_leave_group   (int sockfd, struct sockaddr_storage *addr);
 
 #endif /* __GST_UDP_NET_UTILS_H__*/
