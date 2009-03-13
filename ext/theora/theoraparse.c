@@ -270,7 +270,9 @@ theora_parse_set_header_on_caps (GstTheoraParse * parse, GstCaps * caps)
   g_value_init (&array, GST_TYPE_ARRAY);
 
   for (i = 0; i < 3; i++) {
-    g_assert (bufs[i]);
+    if (bufs[i] == NULL)
+      continue;
+
     bufs[i] = gst_buffer_make_metadata_writable (bufs[i]);
     GST_BUFFER_FLAG_SET (bufs[i], GST_BUFFER_FLAG_IN_CAPS);
 
@@ -320,6 +322,9 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
     int ret;
 
     buf = parse->streamheader[i];
+    if (buf == NULL)
+      continue;
+
     gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
 
     packet.packet = GST_BUFFER_DATA (buf);
@@ -375,10 +380,12 @@ theora_parse_push_headers (GstTheoraParse * parse)
 
   /* ignore return values, we pass along the result of pushing data packets only
    */
-  for (i = 0; i < 3; i++)
-    gst_pad_push (parse->srcpad, gst_buffer_ref (parse->streamheader[i]));
+  for (i = 0; i < 3; i++) {
+    GstBuffer *buf;
 
-  parse->send_streamheader = FALSE;
+    if ((buf = parse->streamheader[i]))
+      gst_pad_push (parse->srcpad, gst_buffer_ref (buf));
+  }
 }
 
 static void
@@ -568,7 +575,18 @@ theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
 
   parse_granulepos (parse, granulepos, &keyframe, &frame);
 
+  GST_DEBUG ("draining queue of length %d",
+      g_queue_get_length (parse->buffer_queue));
+
+  GST_LOG_OBJECT (parse, "gp %" G_GINT64_FORMAT ", kf %" G_GINT64_FORMAT
+      ", frame %" G_GINT64_FORMAT, granulepos, keyframe, frame);
+
   prev_frame = frame - g_queue_get_length (parse->buffer_queue);
+
+  GST_LOG_OBJECT (parse,
+      "new prev %" G_GINT64_FORMAT ", prev %" G_GINT64_FORMAT, prev_frame,
+      parse->prev_frame);
+
   if (prev_frame < parse->prev_frame) {
     GST_WARNING ("jumped %" G_GINT64_FORMAT
         " frames backwards! not sure what to do here",
@@ -582,9 +600,6 @@ theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
       parse->prev_keyframe = keyframe;
     parse->prev_frame = prev_frame;
   }
-
-  GST_DEBUG ("draining queue of length %d",
-      g_queue_get_length (parse->buffer_queue));
 
   while (!g_queue_is_empty (parse->buffer_queue)) {
     GstBuffer *buf;
@@ -635,24 +650,38 @@ static GstFlowReturn
 theora_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret;
-  GstBuffer *buf;
   GstTheoraParse *parse;
+  guint8 *data;
+  guint size;
+  gboolean have_header;
 
   parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
 
-  buf = GST_BUFFER (buffer);
-  parse->packetno++;
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
 
-  if (parse->packetno <= 3) {
-    /* if 1 <= packetno <= 3, it's streamheader,
-     * so put it on the streamheader list and return */
-    parse->streamheader[parse->packetno - 1] = buf;
+  have_header = FALSE;
+  if (size >= 1) {
+    if (data[0] & 0x80)
+      have_header = TRUE;
+  }
+
+  if (have_header) {
+    if (parse->send_streamheader) {
+      /* we need to collect the headers still */
+      /* so put it on the streamheader list and return */
+      if (data[0] >= 0x80 && data[0] <= 0x82)
+        parse->streamheader[data[0] - 0x80] = buffer;
+    }
     ret = GST_FLOW_OK;
   } else {
-    if (parse->send_streamheader)
+    /* data packet, push the headers we collected before */
+    if (parse->send_streamheader) {
       theora_parse_push_headers (parse);
+      parse->send_streamheader = FALSE;
+    }
 
-    ret = theora_parse_queue_buffer (parse, buf);
+    ret = theora_parse_queue_buffer (parse, buffer);
   }
 
   gst_object_unref (parse);
@@ -876,7 +905,6 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       theora_info_init (&parse->info);
       theora_comment_init (&parse->comment);
-      parse->packetno = 0;
       parse->send_streamheader = TRUE;
       parse->buffer_queue = g_queue_new ();
       parse->event_queue = g_queue_new ();

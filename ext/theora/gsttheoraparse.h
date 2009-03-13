@@ -54,7 +54,6 @@ struct _GstTheoraParse {
   GstPad *              sinkpad;
   GstPad *              srcpad;
 
-  guint                 packetno;
   gboolean              send_streamheader;
   gboolean              streamheader_received;
   gboolean		is_old_bitstream;
