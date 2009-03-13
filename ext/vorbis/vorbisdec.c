@@ -693,8 +693,9 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
 
-  buf = gst_buffer_new_and_alloc (packet->bytes);
+  buf = gst_buffer_new ();
   GST_BUFFER_DATA (buf) = packet->packet;
+  GST_BUFFER_SIZE (buf) = packet->bytes;
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
