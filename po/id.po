@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-09 22:53+0000\n"
-"PO-Revision-Date: 2009-01-13 21:15+0700\n"
+"POT-Creation-Date: 2009-03-10 01:12+0000\n"
+"PO-Revision-Date: 2009-03-10 22:23+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -54,31 +54,22 @@ msgstr "Galat arus data internal."
 msgid "Could not write to file \"%s\"."
 msgstr "Tak dapat menulis ke berkas \"%s\"."
 
-#: ext/twolame/gsttwolame.c:427
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
-
-#: ext/twolame/gsttwolame.c:502
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tak diizinkan. Bitrasi telah diubah ke %d kbit/s."
-
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Divais \"%s\" tak ada."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:703
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Tak dapat membuka divais ujung-depan \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:715
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Tak dapat mendapatkan pengaturan dari divais ujung-depan \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:796
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
@@ -386,3 +377,9 @@ msgstr "Perekaman tak didukung oleh divais audio ini."
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Galat ketika merekam dari divais audio."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
+
+#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+#~ msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tak diizinkan. Bitrasi telah diubah ke %d kbit/s."
