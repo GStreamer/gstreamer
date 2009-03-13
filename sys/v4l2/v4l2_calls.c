@@ -181,8 +181,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     }
 
     v4l2object->channels =
-        g_list_append (v4l2object->channels, (gpointer) channel);
+        g_list_prepend (v4l2object->channels, (gpointer) channel);
   }
+  v4l2object->channels = g_list_reverse (v4l2object->channels);
 
   GST_DEBUG_OBJECT (e, "  norms");
   /* norms... */
@@ -221,8 +222,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         standard.frameperiod.denominator, standard.frameperiod.numerator);
     v4l2norm->index = standard.id;
 
-    v4l2object->norms = g_list_append (v4l2object->norms, (gpointer) norm);
+    v4l2object->norms = g_list_prepend (v4l2object->norms, (gpointer) norm);
   }
+  v4l2object->norms = g_list_reverse (v4l2object->norms);
 
   GST_DEBUG_OBJECT (e, "  controls+menus");
   /* and lastly, controls+menus (if appropriate) */
@@ -364,8 +366,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         break;
     }
 
-    v4l2object->colors = g_list_append (v4l2object->colors, (gpointer) channel);
+    v4l2object->colors =
+        g_list_prepend (v4l2object->colors, (gpointer) channel);
   }
+  v4l2object->colors = g_list_reverse (v4l2object->colors);
 
   GST_DEBUG_OBJECT (e, "done");
   return TRUE;
