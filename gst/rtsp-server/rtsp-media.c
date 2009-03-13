@@ -36,6 +36,7 @@ static void gst_rtsp_media_finalize (GObject * obj);
 
 static gpointer do_loop (GstRTSPMediaClass *klass);
 static gboolean default_handle_message (GstRTSPMedia *media, GstMessage *message);
+static void unlock_streams (GstRTSPMedia *media);
 
 G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
 
@@ -96,6 +97,7 @@ gst_rtsp_media_finalize (GObject * obj)
   g_message ("finalize media %p", media);
 
   if (media->pipeline) {
+    unlock_streams (media);
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
     gst_object_unref (media->pipeline);
   }
@@ -174,13 +176,20 @@ collect_media_stats (GstRTSPMedia *media)
   else {
     /* get the position */
     format = GST_FORMAT_TIME;
-    if (!gst_element_query_position (media->pipeline, &format, &position)) 
+    if (!gst_element_query_position (media->pipeline, &format, &position)) {
+      g_message ("position query failed");
       position = 0;
+    }
 
     /* get the duration */
     format = GST_FORMAT_TIME;
-    if (!gst_element_query_duration (media->pipeline, &format, &duration)) 
+    if (!gst_element_query_duration (media->pipeline, &format, &duration)) {
+      g_message ("duration query failed");
       duration = -1;
+    }
+
+    g_message ("stats: position %"GST_TIME_FORMAT", duration %"GST_TIME_FORMAT,
+	GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
 
     if (position == -1) {
       media->range.min.type = GST_RTSP_TIME_NOW;
@@ -328,8 +337,13 @@ gst_rtsp_media_seek (GstRTSPMedia *media, GstRTSPTimeRange *range)
       start = -1;
       break;
     case GST_RTSP_TIME_SECONDS:
-      start = range->min.seconds * GST_SECOND;
-      start_type = GST_SEEK_TYPE_SET;
+      /* only seek when something changed */
+      if (media->range.min.seconds == range->min.seconds) {
+        start = -1;
+      } else {
+        start = range->min.seconds * GST_SECOND;
+        start_type = GST_SEEK_TYPE_SET;
+      }
       break;
     case GST_RTSP_TIME_END:
     default:
@@ -337,8 +351,13 @@ gst_rtsp_media_seek (GstRTSPMedia *media, GstRTSPTimeRange *range)
   }
   switch (range->max.type) {
     case GST_RTSP_TIME_SECONDS:
-      stop = range->max.seconds * GST_SECOND;
-      stop_type = GST_SEEK_TYPE_SET;
+      /* only seek when something changed */
+      if (media->range.max.seconds == range->max.seconds) {
+        stop = -1;
+      } else {
+        stop = range->max.seconds * GST_SECOND;
+        stop_type = GST_SEEK_TYPE_SET;
+      }
       break;
     case GST_RTSP_TIME_END:
       stop = -1;
@@ -353,15 +372,13 @@ gst_rtsp_media_seek (GstRTSPMedia *media, GstRTSPTimeRange *range)
     g_message ("seeking to %"GST_TIME_FORMAT" - %"GST_TIME_FORMAT,
 		GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-#if 0
     res = gst_element_seek (media->pipeline, 1.0, GST_FORMAT_TIME,
   	flags, start_type, start, stop_type, stop);
-#endif
-    res = TRUE;
 
     /* and block for the seek to complete */
-    gst_element_get_state (media->pipeline, NULL, NULL, -1);
     g_message ("done seeking %d", res);
+    gst_element_get_state (media->pipeline, NULL, NULL, -1);
+    g_message ("prerolled again");
 
     collect_media_stats (media);
   }
@@ -1019,9 +1036,6 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   /* collect stats about the media */
   collect_media_stats (media);
 
-  /* unlock the streams so that they follow the state changes from now on */
-  unlock_streams (media);
-
   g_message ("object %p is prerolled", media);
 
   media->prepared = TRUE;
@@ -1075,6 +1089,8 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
 
   switch (state) {
     case GST_STATE_NULL:
+      /* unlock the streams so that they follow the state changes from now on */
+      unlock_streams (media);
     case GST_STATE_PAUSED:
       /* we're going from PLAYING to READY or NULL, remove */
       if (media->target_state == GST_STATE_PLAYING)
@@ -1133,6 +1149,10 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
   g_message ("state %s media %p", gst_element_state_get_name (state), media);
   media->target_state = state;
   ret = gst_element_set_state (media->pipeline, state);
+
+  /* remember where we are */
+  if (state == GST_STATE_PAUSED)
+    collect_media_stats (media);
 
   return TRUE;
 }
