@@ -247,8 +247,6 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
 
   g_list_free (parse->streamheader);
   parse->streamheader = NULL;
-
-  parse->streamheader_sent = TRUE;
 }
 
 static void
@@ -393,18 +391,34 @@ static GstFlowReturn
 vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
 {
   GstFlowReturn ret;
+  guint8 *data;
+  guint size;
+  gboolean have_header;
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
   parse->packetno++;
 
-  if (parse->packetno <= 3) {
-    /* if 1 <= packetno <= 3, it's streamheader,
-     * so put it on the streamheader list and return */
-    parse->streamheader = g_list_append (parse->streamheader, buf);
+  have_header = FALSE;
+  if (size >= 1) {
+    if (data[0] >= 0x01 && data[0] <= 0x05)
+      have_header = TRUE;
+  }
+
+  if (have_header) {
+    if (!parse->streamheader_sent) {
+      /* we need to collect the headers still */
+      /* so put it on the streamheader list and return */
+      parse->streamheader = g_list_append (parse->streamheader, buf);
+    }
     ret = GST_FLOW_OK;
   } else {
-    if (!parse->streamheader_sent)
+    /* data packet, push the headers we collected before */
+    if (!parse->streamheader_sent) {
       vorbis_parse_push_headers (parse);
-
+      parse->streamheader_sent = TRUE;
+    }
     ret = vorbis_parse_queue_buffer (parse, buf);
   }
 
