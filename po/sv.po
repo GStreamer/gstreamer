@@ -1,14 +1,14 @@
 # Swedish translation for gst-plugins-ugly.
-# Copyright (C) 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2008.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-08-12 23:05+0100\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"PO-Revision-Date: 2009-03-10 16:12+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -69,16 +69,20 @@ msgstr "Kunde inte öppna dvd-titel %d. Interaktiva titlar stöds inte av det h�
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Misslyckades med att konfigurera LAME-kodaren. Kontrollera dina kodningsparametrar."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
 msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
 msgstr "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. Bitfrekvensen ändrades till %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina kodningsparametrar."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Den här strömmen innehåller inget data."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Fel i intern dataström."
 

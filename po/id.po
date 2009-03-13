@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-08-13 20:19+0700\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"PO-Revision-Date: 2009-03-10 22:25+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -68,15 +68,19 @@ msgstr "Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh ele
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
 msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
 msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi diubah ke %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Arus ini tidak berisi data."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."

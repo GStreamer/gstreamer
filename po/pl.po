@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-ugly.
 # This file is distributed under the same license as the gst-plugins-ugly package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2008.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-08-16 18:41+0200\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"PO-Revision-Date: 2009-03-10 21:42+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -68,15 +68,19 @@ msgstr "Nie udało się otworzyć tytułu DVD %d. Interaktywne tytułu nie są o
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Nie udało się skonfigurować kodera LAME. Proszę sprawdzić parametry kodowania."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
 msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
 msgstr "Żądana prędkość bitowa %d kbit/s dla właściwości '%s' nie jest dozwolona. Prędkość bitowa zmieniona na %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "Nie udało się skonfigurować kodera TwoLAME. Proszę sprawdzić parametry kodowania."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Ten strumień nie zawiera danych."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Błąd wewnętrzny strumienia danych."

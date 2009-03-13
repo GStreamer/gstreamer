@@ -1,18 +1,18 @@
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Finnish messages for gst-plugins-ugly.
 # Copyright (C) 2007 Ilkka Tuohela.
-# Copyright (C) 2008 Tommi Vainikainen.
+# Copyright (C) 2008-2009 Tommi Vainikainen.
 # Suomennos: http://gnome.fi/
 #
 # Ilkka Tuohela <hile@iki.fi>, 2007.
-# Tommi Vainikainen <thv@iki.fi>, 2008.
+# Tommi Vainikainen <thv@iki.fi>, 2008-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
-"PO-Revision-Date: 2008-08-16 14:56+0300\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"PO-Revision-Date: 2009-03-10 20:41+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -75,16 +75,20 @@ msgstr "DVD:n ohjelmaa %d ei voitu avata. Tämä elementti ei tue interaktiivisi
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "LAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
 msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
 msgstr "Pyydetty bittinopeus %d kb/s ominaisuudelle \"%s\" ei ole sallittu. Bittinopeus asetettiin arvoon %d kb/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "TwoLAME-kodekkia ei voitu määritellä. Tarkista kodekkiasetuksesi."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Virta ei sisällä tietoa."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Sisäinen tietovirtavirhe."
 
