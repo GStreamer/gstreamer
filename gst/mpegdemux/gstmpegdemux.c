@@ -2276,6 +2276,8 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
   GstFormat format = GST_FORMAT_BYTES;
   gint64 length = 0;
   guint64 offset;
+  guint i;
+  guint64 scr = 0;
 
   /* init the sink segment */
   gst_segment_init (&demux->sink_segment, format);
@@ -2301,10 +2303,10 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
   /* scan for first SCR in the stream */
   offset = demux->sink_segment.start;
   gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &demux->first_scr);
-  demux->base_time = MPEGTIME_TO_GSTTIME (demux->first_scr);
   GST_DEBUG_OBJECT (demux, "First SCR: %" G_GINT64_FORMAT " %" GST_TIME_FORMAT
       " in packet starting at %" G_GUINT64_FORMAT,
-      demux->first_scr, GST_TIME_ARGS (demux->base_time), offset);
+      demux->first_scr, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->first_scr)),
+      offset);
   demux->first_scr_offset = offset;
   /* scan for last SCR in the stream */
   offset = demux->sink_segment.stop;
@@ -2328,6 +2330,31 @@ gst_flups_sink_get_duration (GstFluPSDemux * demux)
       " in packet starting at %" G_GUINT64_FORMAT,
       demux->last_pts, GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->last_pts)),
       offset);
+  /* Detect wrong SCR values */
+  if (demux->first_scr > demux->last_scr) {
+    GST_DEBUG_OBJECT (demux, "Wrong SCR values detected, searching for "
+        "a better first SCR value");
+    offset = demux->first_scr_offset;
+    for (i = 0; i < 10; i++) {
+      offset++;
+      gst_flups_demux_scan_forward_ts (demux, &offset, SCAN_SCR, &scr);
+      if (scr < demux->last_scr) {
+        demux->first_scr = scr;
+        demux->first_scr_offset = offset;
+        /* Start demuxing from the right place */
+        demux->sink_segment.last_stop = offset;
+        GST_DEBUG_OBJECT (demux, "Replaced First SCR: %" G_GINT64_FORMAT
+            " %" GST_TIME_FORMAT " in packet starting at %" G_GUINT64_FORMAT,
+            demux->first_scr,
+            GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->first_scr)), offset);
+        break;
+      }
+    }
+  }
+  /* Set the base_time and avg rate */
+  demux->base_time = MPEGTIME_TO_GSTTIME (demux->first_scr);
+  demux->scr_rate_n = demux->last_scr_offset - demux->first_scr_offset;
+  demux->scr_rate_d = demux->last_scr - demux->first_scr;
 
   if (G_LIKELY (demux->first_pts != G_MAXUINT64 &&
           demux->last_pts != G_MAXUINT64)) {
