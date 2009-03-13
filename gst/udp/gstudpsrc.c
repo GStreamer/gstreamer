@@ -252,11 +252,11 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
           UDP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
-      g_param_spec_string ("multicast_group", "Multicast Group",
+      g_param_spec_string ("multicast-group", "Multicast Group",
           "The Address of multicast group to join", UDP_DEFAULT_MULTICAST_GROUP,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
-      g_param_spec_string ("multicast_iface", "Multicast Interface",
+      g_param_spec_string ("multicast-iface", "Multicast Interface",
           "The network interface on which to join the multicast group",
           UDP_DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_URI,
