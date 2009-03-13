@@ -1556,6 +1556,7 @@ gst_rtp_session_event_send_rtcp_src (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (rtpsession, "received EVENT");
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
     case GST_EVENT_LATENCY:
       gst_event_unref (event);
       ret = TRUE;
