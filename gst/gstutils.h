@@ -1014,10 +1014,10 @@ gboolean		gst_element_link_pads_filtered	(GstElement * src, const gchar * srcpad
                                                          GstElement * dest, const gchar * destpadname,
                                                          GstCaps *filter);
 
-gboolean        gst_element_seek_simple (GstElement   *element,
-                                         GstFormat     format,
-                                         GstSeekFlags  seek_flags,
-                                         gint64        seek_pos);
+gboolean                gst_element_seek_simple         (GstElement   *element,
+                                                         GstFormat     format,
+                                                         GstSeekFlags  seek_flags,
+                                                         gint64        seek_pos);
 
 /* util elementfactory functions */
 gboolean		gst_element_factory_can_src_caps(GstElementFactory *factory, const GstCaps *caps);
@@ -1132,7 +1132,7 @@ GstElement *            gst_parse_bin_from_description_full (const gchar     * b
                                                              GstParseFlags     flags,
                                                              GError         ** err);
 
-GstClockTime gst_util_get_timestamp (void);
+GstClockTime            gst_util_get_timestamp          (void);
 
 /**
  * GstSearchMode:
@@ -1150,7 +1150,10 @@ typedef enum {
   GST_SEARCH_MODE_AFTER
 } GstSearchMode;
 
-gpointer gst_util_array_binary_search (gpointer array, guint num_elements, gsize element_size, GCompareDataFunc search_func, GstSearchMode mode, gconstpointer search_data, gpointer user_data);
+gpointer                gst_util_array_binary_search      (gpointer array, guint num_elements,
+                                                           gsize element_size, GCompareDataFunc search_func,
+							   GstSearchMode mode, gconstpointer search_data,
+							   gpointer user_data);
 
 G_END_DECLS
 
