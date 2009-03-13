@@ -62,6 +62,7 @@ struct _GstMPEGAudioParse {
 
   GstSegment segment;
   GstClockTime next_ts;
+  gboolean discont;
 
   /* Offset as supplied by incoming buffers */
   gint64 cur_offset;

@@ -623,24 +623,20 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
    * here */
   if (GST_CLOCK_TIME_IS_VALID (mp3parse->pending_ts)) {
     if (mp3parse->tracked_offset >= mp3parse->pending_offset) {
-      /* If the incoming timestamp differs from our expected by more than 2
-       * 90khz MPEG ticks, then take it and, if needed, set the discont flag. 
+      /* If the incoming timestamp differs from our expected by more than 
+       * half a frame, then take it instead of our calculated timestamp.
        * This avoids creating imperfect streams just because of 
-       * quantization in the MPEG clock sampling */
+       * quantization in the container timestamping */
       GstClockTimeDiff diff = mp3parse->next_ts - mp3parse->pending_ts;
+      GstClockTimeDiff thresh = GST_BUFFER_DURATION (outbuf) / 2;
 
-      if (diff < -2 * (GST_SECOND / 90000) || diff > 2 * (GST_SECOND / 90000)) {
+      if (diff < -thresh || diff > thresh) {
         GST_DEBUG_OBJECT (mp3parse, "Updating next_ts from %" GST_TIME_FORMAT
             " to pending ts %" GST_TIME_FORMAT
             " at offset %lld (pending offset was %lld)",
             GST_TIME_ARGS (mp3parse->next_ts),
             GST_TIME_ARGS (mp3parse->pending_ts), mp3parse->tracked_offset,
             mp3parse->pending_offset);
-
-        /* Only set discont if we sent out some timestamps already and we're
-         * adjusting */
-        if (GST_CLOCK_TIME_IS_VALID (mp3parse->next_ts))
-          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
         mp3parse->next_ts = mp3parse->pending_ts;
       }
       mp3parse->pending_ts = GST_CLOCK_TIME_NONE;
@@ -829,6 +825,13 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
       g_list_free (mp3parse->pending_events);
       mp3parse->pending_events = NULL;
     }
+
+    /* set discont if needed */
+    if (mp3parse->discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      mp3parse->discont = FALSE;
+    }
+
     ret = gst_pad_push (mp3parse->srcpad, outbuf);
   }
 
@@ -1173,6 +1176,8 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (mp3parse, "buffer of %d bytes", GST_BUFFER_SIZE (buf));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
+
+  mp3parse->discont |= GST_BUFFER_IS_DISCONT (buf);
 
   /* If we don't yet have a next timestamp, save it and the incoming offset
    * so we can apply it to the right outgoing buffer */
