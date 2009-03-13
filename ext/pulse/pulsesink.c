@@ -896,7 +896,7 @@ gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
         goto unlock_and_fail;
       }
 
-      if (l > 0)
+      if (l >= length)
         break;
 
       if (pulsesink->did_reset)
