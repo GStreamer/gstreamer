@@ -2149,7 +2149,10 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 
   /* seek failed, make sure we continue the current chain */
   if (!res) {
+    GST_DEBUG_OBJECT (ogg, "seek failed");
     chain = ogg->current_chain;
+  } else {
+    GST_DEBUG_OBJECT (ogg, "seek success");
   }
 
   if (!chain)
