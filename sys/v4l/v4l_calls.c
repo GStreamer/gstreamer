@@ -295,7 +295,7 @@ gst_v4l_get_num_chans (GstV4lElement * v4lelement)
 GList *
 gst_v4l_get_chan_names (GstV4lElement * v4lelement)
 {
-  struct video_channel vchan;
+  struct video_channel vchan = { 0 };
   GList *list = NULL;
   gint i;
 
@@ -305,16 +305,20 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
     return NULL;
 
   for (i = 0; i < gst_v4l_get_num_chans (v4lelement); i++) {
-    GstV4lTunerChannel *v4lchannel = g_object_new (GST_TYPE_V4L_TUNER_CHANNEL,
-        NULL);
-    GstTunerChannel *channel = GST_TUNER_CHANNEL (v4lchannel);
+    GstV4lTunerChannel *v4lchannel;
+    GstTunerChannel *channel;
 
     vchan.channel = i;
-    if (ioctl (v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0)
-      return NULL;              /* memleak... */
+    if (ioctl (v4lelement->video_fd, VIDIOCGCHAN, &vchan) < 0) {
+      /* Skip this channel */
+      continue;
+    }
+    v4lchannel = g_object_new (GST_TYPE_V4L_TUNER_CHANNEL, NULL);
+    v4lchannel->index = i;
+
+    channel = GST_TUNER_CHANNEL (v4lchannel);
     channel->label = g_strdup (vchan.name);
     channel->flags = GST_TUNER_CHANNEL_INPUT;
-    v4lchannel->index = i;
     if (vchan.flags & VIDEO_VC_TUNER) {
       struct video_tuner vtun;
       gint n;
@@ -362,10 +366,10 @@ gst_v4l_get_chan_names (GstV4lElement * v4lelement)
         }
       }
     }
-    list = g_list_append (list, (gpointer) channel);
+    list = g_list_prepend (list, (gpointer) channel);
   }
 
-  return list;
+  return g_list_reverse (list);
 }
 
 
