@@ -738,9 +738,15 @@ gst_celt_enc_encode (GstCeltEnc * enc, gboolean flush)
 
     GST_DEBUG_OBJECT (enc, "encoding %d samples (%d bytes)", frame_size, bytes);
 
+#ifdef HAVE_CELT_0_4
     outsize =
-        celt_encode (enc->state, data, GST_BUFFER_DATA (outbuf),
-        bytes_per_packet);
+        celt_encode (enc->state, data,
+        GST_BUFFER_DATA (outbuf), bytes_per_packet);
+#else
+    outsize =
+        celt_encode (enc->state, data, NULL,
+        GST_BUFFER_DATA (outbuf), bytes_per_packet);
+#endif
 
     g_free (data);
 
