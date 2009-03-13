@@ -1446,6 +1446,7 @@ gst_app_src_end_of_stream (GstAppSrc * appsrc)
   /* ERRORS */
 flushing:
   {
+    g_mutex_unlock (appsrc->priv->mutex);
     GST_DEBUG_OBJECT (appsrc, "refuse EOS, we are flushing");
     return GST_FLOW_WRONG_STATE;
   }
