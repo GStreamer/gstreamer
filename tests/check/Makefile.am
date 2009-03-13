@@ -21,7 +21,7 @@ $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)
 
 # elements to ignore for the state tests
-STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_ alsasrc alsasink
+STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_ alsasrc alsamixer alsasink
 
 TESTS = $(check_PROGRAMS)
 
