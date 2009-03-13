@@ -808,8 +808,9 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 
   GST_DEBUG_OBJECT (dec, "parsing comment packet");
 
-  buf = gst_buffer_new_and_alloc (packet->bytes);
-  memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
+  buf = gst_buffer_new ();
+  GST_BUFFER_SIZE (buf) = packet->bytes;
+  GST_BUFFER_DATA (buf) = packet->packet;
 
   list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\201theora", 7,
