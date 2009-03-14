@@ -19,6 +19,8 @@
 
 """GStreamer Development Utilities Common GUI module."""
 
+import os
+
 import logging
 
 import pygtk
@@ -28,6 +30,7 @@ del pygtk
 import gobject
 import gtk
 
+import GstDebugViewer
 from GstDebugViewer.Common import utils
 
 def widget_add_popup_menu (widget, menu, button = 3):
@@ -72,9 +75,10 @@ class Actions (dict):
 
 class Widgets (dict):
 
-    def __init__ (self, glade_tree):
+    def __init__ (self, builder):
 
-        widgets = glade_tree.get_widget_prefix ("")
+        widgets = (obj for obj in builder.get_objects ()
+                   if hasattr (obj, "name"))
         dict.__init__ (self, ((w.name, w,) for w in widgets))
 
     def __getattr__ (self, name):
@@ -92,24 +96,34 @@ class Widgets (dict):
 
 class WidgetFactory (object):
 
-    def __init__ (self, glade_filename):
+    def __init__ (self, directory):
 
-        self.filename = glade_filename
+        self.directory = directory
 
-    def make (self, widget_name, autoconnect = None):
+    def get_builder (self, filename):
 
-        glade_tree = gtk.glade.XML (self.filename, widget_name)
+        builder_filename = os.path.join (self.directory, filename)
+
+        builder = gtk.Builder ()
+        builder.set_translation_domain (GstDebugViewer.GETTEXT_DOMAIN)
+        builder.add_from_file (builder_filename)
+
+        return builder
+
+    def make (self, filename, widget_name, autoconnect = None):
+
+        builder = self.get_builder (filename)
 
         if autoconnect is not None:
-            glade_tree.signal_autoconnect (autoconnect)
+            builder.connect_signals (autoconnect)
 
-        return Widgets (glade_tree)
+        return Widgets (builder)
 
-    def make_one (self, widget_name):
+    def make_one (self, filename, widget_name):
 
-        glade_tree = gtk.glade.XML (self.filename, widget_name)
+        builder = self.get_builder (filename)
 
-        return glade_tree.get_widget (widget_name)
+        return builder.get_object (widget_name)
 
 class UIFactory (object):
 

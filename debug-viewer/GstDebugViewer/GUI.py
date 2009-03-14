@@ -38,7 +38,6 @@ pygtk.require ("2.0")
 
 import gobject
 import gtk
-import gtk.glade
 
 from GstDebugViewer import Common, Data, Main
 
@@ -1550,7 +1549,7 @@ class ProgressDialog (object):
 
     def __init__ (self, window, title = ""):
 
-        widgets = window.widget_factory.make ("progress_dialog")
+        widgets = window.widget_factory.make ("progress-dialog.ui", "progress_dialog")
         dialog = widgets.progress_dialog
         dialog.connect ("response", self.__handle_dialog_response)
 
@@ -1637,9 +1636,8 @@ class Window (object):
         self.log_file = None
         self.setup_model (LazyLogModel ())
 
-        glade_filename = os.path.join (Main.Paths.data_dir, "gst-debug-viewer.glade")
-        self.widget_factory = Common.GUI.WidgetFactory (glade_filename)
-        self.widgets = self.widget_factory.make ("main_window")
+        self.widget_factory = Common.GUI.WidgetFactory (Main.Paths.data_dir)
+        self.widgets = self.widget_factory.make ("main-window.ui", "main_window")
 
         ui_filename = os.path.join (Main.Paths.data_dir,
                                     "gst-debug-viewer.ui")
@@ -2057,7 +2055,7 @@ class Window (object):
 
         from GstDebugViewer import version
 
-        dialog = self.widget_factory.make_one ("about_dialog")
+        dialog = self.widget_factory.make_one ("about-dialog.ui", "about_dialog")
         dialog.props.version = version
         dialog.run ()
         dialog.destroy ()

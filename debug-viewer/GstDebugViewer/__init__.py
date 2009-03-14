@@ -23,4 +23,4 @@ version = "0.1"
 
 __version__ = version
 
-from GstDebugViewer.Main import Paths, main as run
+from GstDebugViewer.Main import Paths, GETTEXT_DOMAIN, main as run
