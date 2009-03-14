@@ -1,77 +1,62 @@
 <?xml version="1.0"?>
-<!--*- mode: xml -*-->
 <interface>
+  <!-- interface-requires gtk+ 2.12 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkDialog" id="progress_dialog">
     <property name="visible">True</property>
-    <property name="title" translatable="yes"/>
-    <property name="type">GTK_WINDOW_TOPLEVEL</property>
-    <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
-    <property name="modal">True</property>
     <property name="resizable">False</property>
-    <property name="destroy_with_parent">False</property>
-    <property name="decorated">True</property>
-    <property name="skip_taskbar_hint">False</property>
-    <property name="skip_pager_hint">False</property>
-    <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
-    <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
-    <property name="focus_on_map">True</property>
-    <property name="urgency_hint">False</property>
+    <property name="modal">True</property>
+    <property name="window_position">center-on-parent</property>
+    <property name="type_hint">dialog</property>
     <property name="has_separator">False</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox1">
         <property name="visible">True</property>
-        <property name="homogeneous">False</property>
-        <property name="spacing">0</property>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area1">
-            <property name="visible">True</property>
-            <property name="layout_style">GTK_BUTTONBOX_END</property>
-            <child>
-              <object class="GtkButton" id="cancel_button">
-                <property name="visible">True</property>
-                <property name="can_default">True</property>
-                <property name="can_focus">True</property>
-                <property name="label">gtk-cancel</property>
-                <property name="use_stock">True</property>
-                <property name="relief">GTK_RELIEF_NORMAL</property>
-                <property name="focus_on_click">True</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="padding">0</property>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">GTK_PACK_END</property>
-          </packing>
-        </child>
         <child>
           <object class="GtkVBox" id="vbox3">
-            <property name="border_width">6</property>
             <property name="visible">True</property>
-            <property name="homogeneous">False</property>
-            <property name="spacing">0</property>
+            <property name="border_width">6</property>
             <child>
               <object class="GtkProgressBar" id="progress_bar">
                 <property name="width_request">250</property>
                 <property name="visible">True</property>
-                <property name="orientation">GTK_PROGRESS_LEFT_TO_RIGHT</property>
-                <property name="fraction">0</property>
                 <property name="pulse_step">0.10000000149</property>
-                <property name="text" translatable="yes"/>
-                <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
               </object>
               <packing>
-                <property name="padding">12</property>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
+                <property name="padding">12</property>
+                <property name="position">0</property>
               </packing>
             </child>
           </object>
           <packing>
-            <property name="padding">0</property>
-            <property name="expand">True</property>
             <property name="fill">False</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="cancel_button">
+                <property name="label" translatable="yes">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="can_default">True</property>
+                <property name="receives_default">False</property>
+                <property name="use_stock">True</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
           </packing>
         </child>
       </object>

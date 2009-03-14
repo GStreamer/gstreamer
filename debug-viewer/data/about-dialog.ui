@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
-<!--*- mode: xml -*-->
 <interface>
+  <!-- interface-requires gtk+ 2.12 -->
+  <!-- interface-naming-policy toplevel-contextual -->
   <object class="GtkAboutDialog" id="about_dialog">
-    <property name="border_width">5</property>
     <property name="visible">True</property>
-    <property name="destroy_with_parent">False</property>
-    <property name="name" translatable="yes">GStreamer Debug Viewer</property>
+    <property name="border_width">5</property>
+    <property name="type_hint">dialog</property>
     <property name="copyright" translatable="yes">Copyright &#xA9; 2007 Ren&#xE9; Stadler</property>
     <property name="comments" translatable="yes">View and analyze GStreamer debug files</property>
     <property name="license">                    GNU GENERAL PUBLIC LICENSE
@@ -682,9 +682,20 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 &lt;http://www.gnu.org/philosophy/why-not-lgpl.html&gt;.</property>
-    <property name="wrap_license">False</property>
     <property name="authors">Ren&#xE9; Stadler &lt;mail@renestadler.de&gt;</property>
-    <property comments="TRANSLATORS: Replace this string with your names, one name per line." name="translator_credits" translatable="yes">translator-credits</property>
+    <property name="translator_credits" translatable="yes" comments="TRANSLATORS: Replace this string with your names, one name per line.">translator-credits</property>
     <property name="logo">gst-debug-viewer.png</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1"/>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
   </object>
 </interface>
