@@ -33,6 +33,8 @@ gst_update_registry
 <SUBSECTION Private>
 GST_QUARK
 GstQuarkId
+GstPluginLoader
+GstPluginLoaderFuncs
 </SECTION>
 
 <SECTION>

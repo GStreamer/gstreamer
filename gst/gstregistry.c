@@ -113,6 +113,8 @@
 #include "gstmarshal.h"
 #include "gstfilter.h"
 
+#include "gstpluginloader.h"
+
 #include "gst-i18n-lib.h"
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
@@ -138,6 +140,9 @@ extern GSList *_priv_gst_preload_plugins;
 /*set to TRUE when registry needn't to be updated */
 gboolean _priv_gst_disable_registry_update = FALSE;
 extern GList *_priv_gst_plugin_paths;
+
+/* Set to TRUE when the registry cache should be disabled */
+gboolean _gst_disable_registry_cache = FALSE;
 #endif
 
 /* Element signals and args */
@@ -819,15 +824,109 @@ gst_registry_lookup (GstRegistry * registry, const char *filename)
   return plugin;
 }
 
+typedef enum
+{
+  REGISTRY_SCAN_HELPER_NOT_STARTED = 0,
+  REGISTRY_SCAN_HELPER_DISABLED,
+  REGISTRY_SCAN_HELPER_RUNNING
+} GstRegistryScanHelperState;
+
+typedef struct
+{
+  GstRegistry *registry;
+  GstRegistryScanHelperState helper_state;
+  GstPluginLoader *helper;
+  gboolean changed;
+} GstRegistryScanContext;
+
+static void
+init_scan_context (GstRegistryScanContext * context, GstRegistry * registry)
+{
+  gboolean do_fork;
+
+  context->registry = registry;
+
+  /* see if forking is enabled and set up the scan helper state accordingly */
+  do_fork = _gst_enable_registry_fork;
+  if (do_fork) {
+    const gchar *fork_env;
+
+    /* forking enabled, see if it is disabled with an env var */
+    if ((fork_env = g_getenv ("GST_REGISTRY_FORK"))) {
+      /* fork enabled for any value different from "no" */
+      do_fork = strcmp (fork_env, "no") != 0;
+    }
+  }
+
+  if (do_fork)
+    context->helper_state = REGISTRY_SCAN_HELPER_NOT_STARTED;
+  else
+    context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
+
+  context->helper = NULL;
+  context->changed = FALSE;
+}
+
+static void
+clear_scan_context (GstRegistryScanContext * context)
+{
+  if (context->helper) {
+    context->changed |= _priv_gst_plugin_loader_funcs.destroy (context->helper);
+    context->helper = NULL;
+  }
+}
+
 static gboolean
-gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
-    int level)
+gst_registry_scan_plugin_file (GstRegistryScanContext * context,
+    const gchar * filename)
+{
+  gboolean changed = FALSE;
+  GstPlugin *newplugin = NULL;
+
+  /* Have a plugin to load - see if the scan-helper needs starting */
+  if (context->helper_state == REGISTRY_SCAN_HELPER_NOT_STARTED) {
+    GST_DEBUG ("Starting plugin scanner for file %s", filename);
+    context->helper = _priv_gst_plugin_loader_funcs.create (context->registry);
+    if (context->helper != NULL)
+      context->helper_state = REGISTRY_SCAN_HELPER_RUNNING;
+    else
+      context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
+  }
+
+  if (context->helper_state == REGISTRY_SCAN_HELPER_RUNNING) {
+    GST_DEBUG ("Using scan-helper to load plugin %s", filename);
+    if (!_priv_gst_plugin_loader_funcs.load (context->helper, filename)) {
+      g_warning ("External plugin loader failed...");
+      context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
+    }
+  } else {
+    /* Load plugin the old fashioned way... */
+
+    /* We don't use a GError here because a failure to load some shared
+     * objects as plugins is normal (particularly in the uninstalled case)
+     */
+    newplugin = gst_plugin_load_file (filename, NULL);
+  }
+
+  if (newplugin) {
+    GST_DEBUG_OBJECT (context->registry, "marking new plugin %p as registered",
+        newplugin);
+    newplugin->registered = TRUE;
+    gst_object_unref (newplugin);
+    changed = TRUE;
+  }
+
+  return changed;
+}
+
+static gboolean
+gst_registry_scan_path_level (GstRegistryScanContext * context,
+    const gchar * path, int level)
 {
   GDir *dir;
   const gchar *dirent;
   gchar *filename;
   GstPlugin *plugin;
-  GstPlugin *newplugin;
   gboolean changed = FALSE;
 
   dir = g_dir_open (path, 0, NULL);
@@ -849,7 +948,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       /* skip the .debug directory, these contain elf files that are not
        * useful or worse, can crash dlopen () */
       if (g_str_equal (dirent, ".debug") || g_str_equal (dirent, ".git")) {
-        GST_LOG_OBJECT (registry, "ignoring .debug or .git directory");
+        GST_LOG_OBJECT (context->registry, "ignoring .debug or .git directory");
         g_free (filename);
         continue;
       }
@@ -857,17 +956,19 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
        * is inconsistent with other PATH environment variables
        */
       if (level > 0) {
-        GST_LOG_OBJECT (registry, "recursing into directory %s", filename);
-        changed |= gst_registry_scan_path_level (registry, filename, level - 1);
+        GST_LOG_OBJECT (context->registry, "recursing into directory %s",
+            filename);
+        changed |= gst_registry_scan_path_level (context, filename, level - 1);
       } else {
-        GST_LOG_OBJECT (registry, "not recursing into directory %s, "
+        GST_LOG_OBJECT (context->registry, "not recursing into directory %s, "
             "recursion level too deep", filename);
       }
       g_free (filename);
       continue;
     }
     if (!(file_status.st_mode & S_IFREG)) {
-      GST_LOG_OBJECT (registry, "%s is not a regular file, ignoring", filename);
+      GST_LOG_OBJECT (context->registry, "%s is not a regular file, ignoring",
+          filename);
       g_free (filename);
       continue;
     }
@@ -876,22 +977,24 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
         && !g_str_has_suffix (dirent, GST_EXTRA_MODULE_SUFFIX)
 #endif
         ) {
-      GST_LOG_OBJECT (registry, "extension is not recognized as module file, "
-          "ignoring file %s", filename);
+      GST_LOG_OBJECT (context->registry,
+          "extension is not recognized as module file, ignoring file %s",
+          filename);
       g_free (filename);
       continue;
     }
 
-    GST_LOG_OBJECT (registry, "file %s looks like a possible module", filename);
+    GST_LOG_OBJECT (context->registry, "file %s looks like a possible module",
+        filename);
 
     /* plug-ins are considered unique by basename; if the given name
      * was already seen by the registry, we ignore it */
-    plugin = gst_registry_lookup (registry, filename);
+    plugin = gst_registry_lookup (context->registry, filename);
     if (plugin) {
       gboolean env_vars_changed, deps_changed = FALSE;
 
       if (plugin->registered) {
-        GST_DEBUG_OBJECT (registry,
+        GST_DEBUG_OBJECT (context->registry,
             "plugin already registered from path \"%s\"",
             GST_STR_NULL (plugin->filename));
         g_free (filename);
@@ -901,52 +1004,37 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
       env_vars_changed = _priv_plugin_deps_env_vars_changed (plugin);
 
+      /* If a file with a certain basename is seen on a different path,
+       * update the plugin to ensure the registry cache will reflect up
+       * to date information */
+
       if (plugin->file_mtime == file_status.st_mtime &&
           plugin->file_size == file_status.st_size && !env_vars_changed &&
-          !(deps_changed = _priv_plugin_deps_files_changed (plugin))) {
-        GST_LOG_OBJECT (registry, "file %s cached", filename);
+          !(deps_changed = _priv_plugin_deps_files_changed (plugin)) &&
+          strcmp (plugin->filename, filename) == 0) {
+        GST_LOG_OBJECT (context->registry, "file %s cached", filename);
         plugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
-        GST_LOG_OBJECT (registry, "marking plugin %p as registered as %s",
-            plugin, filename);
+        GST_LOG_OBJECT (context->registry,
+            "marking plugin %p as registered as %s", plugin, filename);
         plugin->registered = TRUE;
-        /* Update the file path on which we've seen this cached plugin
-         * to ensure the registry cache will reflect up to date information */
-        if (strcmp (plugin->filename, filename) != 0) {
-          g_free (plugin->filename);
-          plugin->filename = g_strdup (filename);
-          changed = TRUE;
-        }
       } else {
-        GST_INFO_OBJECT (registry, "cached info for %s is stale", filename);
-        GST_DEBUG_OBJECT (registry, "mtime %ld != %ld or size %"
+        GST_INFO_OBJECT (context->registry, "cached info for %s is stale",
+            filename);
+        GST_DEBUG_OBJECT (context->registry, "mtime %ld != %ld or size %"
             G_GINT64_FORMAT " != %" G_GINT64_FORMAT " or external dependency "
             "env_vars changed: %d or external dependencies changed: %d",
             plugin->file_mtime, file_status.st_mtime,
             (gint64) plugin->file_size, (gint64) file_status.st_size,
             env_vars_changed, deps_changed);
-        gst_registry_remove_plugin (gst_registry_get_default (), plugin);
-        /* We don't use a GError here because a failure to load some shared 
-         * objects as plugins is normal (particularly in the uninstalled case)
-         */
-        newplugin = gst_plugin_load_file (filename, NULL);
-        if (newplugin) {
-          GST_DEBUG_OBJECT (registry, "marking new plugin %p as registered",
-              newplugin);
-          newplugin->registered = TRUE;
-          gst_object_unref (newplugin);
-        }
-        changed = TRUE;
+        gst_registry_remove_plugin (context->registry, plugin);
+        changed |= gst_registry_scan_plugin_file (context, filename);
       }
       gst_object_unref (plugin);
 
     } else {
-      GST_DEBUG_OBJECT (registry, "file %s not yet in registry", filename);
-      newplugin = gst_plugin_load_file (filename, NULL);
-      if (newplugin) {
-        newplugin->registered = TRUE;
-        gst_object_unref (newplugin);
-        changed = TRUE;
-      }
+      GST_DEBUG_OBJECT (context->registry, "file %s not yet in registry",
+          filename);
+      changed |= gst_registry_scan_plugin_file (context, filename);
     }
 
     g_free (filename);
@@ -954,6 +1042,20 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
   g_dir_close (dir);
 
+  return changed;
+}
+
+static gboolean
+gst_registry_scan_path_internal (GstRegistryScanContext * context,
+    const gchar * path)
+{
+  gboolean changed;
+
+  GST_DEBUG_OBJECT (context->registry, "scanning path %s", path);
+  changed = gst_registry_scan_path_level (context, path, 10);
+
+  GST_DEBUG_OBJECT (context->registry, "registry changed in path %s: %d", path,
+      changed);
   return changed;
 }
 
@@ -970,17 +1072,20 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 gboolean
 gst_registry_scan_path (GstRegistry * registry, const gchar * path)
 {
-  gboolean changed;
+  GstRegistryScanContext context;
+  gboolean result;
 
   g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
   g_return_val_if_fail (path != NULL, FALSE);
 
-  GST_DEBUG_OBJECT (registry, "scanning path %s", path);
-  changed = gst_registry_scan_path_level (registry, path, 10);
+  init_scan_context (&context, registry);
 
-  GST_DEBUG_OBJECT (registry, "registry changed in path %s: %d", path, changed);
+  result = gst_registry_scan_path_internal (&context, path);
 
-  return changed;
+  clear_scan_context (&context);
+  result |= context.changed;
+
+  return result;
 }
 
 static gboolean
@@ -1157,8 +1262,12 @@ scan_and_update_registry (GstRegistry * default_registry,
   const gchar *plugin_path;
   gboolean changed = FALSE;
   GList *l;
+  GstRegistryScanContext context;
 
-  GST_INFO ("Validating registry cache: %s", registry_file);
+  GST_INFO ("Validating plugins from registry cache: %s", registry_file);
+
+  init_scan_context (&context, default_registry);
+
   /* It sounds tempting to just compare the mtime of directories with the mtime
    * of the registry cache, but it does not work. It would not catch updated
    * plugins, which might bring more or less features.
@@ -1168,7 +1277,7 @@ scan_and_update_registry (GstRegistry * default_registry,
   GST_DEBUG ("scanning paths added via --gst-plugin-path");
   for (l = _priv_gst_plugin_paths; l != NULL; l = l->next) {
     GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
-    changed |= gst_registry_scan_path (default_registry, (gchar *) l->data);
+    changed |= gst_registry_scan_path_internal (&context, (gchar *) l->data);
   }
   /* keep plugin_paths around in case a re-scan is forced later on */
 
@@ -1182,7 +1291,7 @@ scan_and_update_registry (GstRegistry * default_registry,
     GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
     list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
     for (i = 0; list[i]; i++) {
-      changed |= gst_registry_scan_path (default_registry, list[i]);
+      changed |= gst_registry_scan_path_internal (&context, list[i]);
     }
     g_strfreev (list);
   } else {
@@ -1203,12 +1312,12 @@ scan_and_update_registry (GstRegistry * default_registry,
     home_plugins = g_build_filename (g_get_home_dir (),
         ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
     GST_DEBUG ("scanning home plugins %s", home_plugins);
-    changed |= gst_registry_scan_path (default_registry, home_plugins);
+    changed |= gst_registry_scan_path_internal (&context, home_plugins);
     g_free (home_plugins);
 
     /* add the main (installed) library path */
     GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
-    changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
+    changed |= gst_registry_scan_path_internal (&context, PLUGINDIR);
 
 #ifdef G_OS_WIN32
     {
@@ -1222,7 +1331,7 @@ scan_and_update_registry (GstRegistry * default_registry,
       dir = g_build_filename (base_dir, "lib", "gstreamer-0.10", NULL);
       GST_DEBUG ("scanning DLL dir %s", dir);
 
-      changed |= gst_registry_scan_path (default_registry, dir);
+      changed |= gst_registry_scan_path_internal (&context, dir);
 
       g_free (dir);
       g_free (base_dir);
@@ -1235,10 +1344,13 @@ scan_and_update_registry (GstRegistry * default_registry,
     GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
     list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
     for (i = 0; list[i]; i++) {
-      changed |= gst_registry_scan_path (default_registry, list[i]);
+      changed |= gst_registry_scan_path_internal (&context, list[i]);
     }
     g_strfreev (list);
   }
+
+  clear_scan_context (&context);
+  changed |= context.changed;
 
   /* Remove cached plugins so stale info is cleared. */
   changed |= gst_registry_remove_cache_plugins (default_registry);
@@ -1266,130 +1378,13 @@ scan_and_update_registry (GstRegistry * default_registry,
 }
 
 static gboolean
-ensure_current_registry_nonforking (GstRegistry * default_registry,
-    const gchar * registry_file, GError ** error)
-{
-  /* fork() not available */
-  GST_DEBUG ("Updating registry cache in-process");
-  scan_and_update_registry (default_registry, registry_file, TRUE, error);
-  return TRUE;
-}
-
-/* when forking is not available this function always does nothing but return
- * TRUE immediatly */
-static gboolean
-ensure_current_registry_forking (GstRegistry * default_registry,
-    const gchar * registry_file, GError ** error)
-{
-#ifdef HAVE_FORK
-  pid_t pid;
-  int pfd[2];
-  int ret;
-
-  /* We fork here, and let the child read and possibly rebuild the registry.
-   * After that, the parent will re-read the freshly generated registry. */
-  GST_DEBUG ("forking to update registry");
-
-  if (pipe (pfd) == -1) {
-    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        _("Error re-scanning registry %s: %s"),
-        ", could not create pipes. Error", g_strerror (errno));
-    return FALSE;
-  }
-
-  pid = fork ();
-  if (pid == -1) {
-    GST_ERROR ("Failed to fork()");
-    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        _("Error re-scanning registry %s: %s"),
-        ", failed to fork. Error", g_strerror (errno));
-    return FALSE;
-  }
-
-  if (pid == 0) {
-    gint result_code;
-
-    /* this is the child. Close the read pipe */
-    (void) close (pfd[0]);
-
-    GST_DEBUG ("child reading registry cache");
-    result_code =
-        scan_and_update_registry (default_registry, registry_file, TRUE, NULL);
-
-    /* need to use _exit, so that any exit handlers registered don't
-     * bring down the main program */
-    GST_DEBUG ("child exiting: %d", result_code);
-
-    /* make valgrind happy (yes, you can call it insane) */
-    g_free ((char *) registry_file);
-
-    /* write a result byte to the pipe */
-    do {
-      ret = write (pfd[1], &result_code, sizeof (result_code));
-    } while (ret == -1 && errno == EINTR);
-    /* if ret == -1 now, we could not write to pipe, probably
-     * means parent has exited before us */
-    (void) close (pfd[1]);
-
-    _exit (0);
-  } else {
-    gint result_code;
-
-    /* parent. Close write pipe */
-    (void) close (pfd[1]);
-
-    /* Wait for result from the pipe */
-    GST_DEBUG ("Waiting for data from child");
-    do {
-      ret = read (pfd[0], &result_code, sizeof (result_code));
-    } while (ret == -1 && errno == EINTR);
-
-    if (ret == -1) {
-      g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-          _("Error re-scanning registry %s: %s"),
-          ", read returned error", g_strerror (errno));
-      close (pfd[0]);
-      return FALSE;
-    }
-    (void) close (pfd[0]);
-
-    /* Wait to ensure the child is reaped, but ignore the result */
-    GST_DEBUG ("parent waiting on child");
-    waitpid (pid, NULL, 0);
-    GST_DEBUG ("parent done waiting on child");
-
-    if (ret == 0) {
-      GST_ERROR ("child did not exit normally, terminated by signal");
-      g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-          _("Error re-scanning registry %s"), ", child terminated by signal");
-      return FALSE;
-    }
-
-    if (result_code == REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED) {
-      GST_DEBUG ("Child succeeded. Parent reading registry cache");
-      gst_registry_remove_cache_plugins (default_registry);
-#ifdef USE_BINARY_REGISTRY
-      gst_registry_binary_read_cache (default_registry, registry_file);
-#else
-      gst_registry_xml_read_cache (default_registry, registry_file);
-#endif
-    } else if (result_code == REGISTRY_SCAN_AND_UPDATE_FAILURE) {
-      GST_DEBUG ("Child failed. Parent re-scanning registry, ignoring errors.");
-      scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
-    }
-  }
-#endif /* HAVE_FORK */
-  return TRUE;
-}
-
-static gboolean
 ensure_current_registry (GError ** error)
 {
   gchar *registry_file;
   GstRegistry *default_registry;
   gboolean ret = TRUE;
-  gboolean do_update;
-  gboolean have_cache;
+  gboolean do_update = TRUE;
+  gboolean have_cache = TRUE;
 
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -1398,8 +1393,11 @@ ensure_current_registry (GError ** error)
         ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
   }
 
-  GST_INFO ("reading registry cache: %s", registry_file);
-  have_cache = gst_registry_binary_read_cache (default_registry, registry_file);
+  if (!_gst_disable_registry_cache) {
+    GST_INFO ("reading registry cache: %s", registry_file);
+    have_cache = gst_registry_binary_read_cache (default_registry,
+        registry_file);
+  }
 
   if (have_cache) {
     do_update = !_priv_gst_disable_registry_update;
@@ -1410,8 +1408,6 @@ ensure_current_registry (GError ** error)
         /* do update for any value different from "no" */
         do_update = (strcmp (update_env, "no") != 0);
       }
-    } else {
-      do_update = TRUE;
     }
   }
 

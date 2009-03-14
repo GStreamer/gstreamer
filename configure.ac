@@ -681,6 +681,7 @@ libs/gst/check/libcheck/Makefile
 libs/gst/check/libcheck/check.h
 libs/gst/controller/Makefile
 libs/gst/dataprotocol/Makefile
+libs/gst/helpers/Makefile
 libs/gst/net/Makefile
 plugins/Makefile
 plugins/indexers/Makefile

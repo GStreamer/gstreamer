@@ -99,13 +99,13 @@ void  _gst_value_initialize (void);
 /* Private registry functions */
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 void _priv_gst_registry_cleanup (void);
+gboolean _gst_plugin_loader_client_run (void);
 
 /* used in both gststructure.c and gstcaps.c; numbers are completely made up */
 #define STRUCTURE_ESTIMATED_STRING_LEN(s) (16 + (s)->fields->len * 22)
 
 gboolean  priv_gst_structure_append_to_gstring (const GstStructure * structure,
                                                 GString            * s);
-
 /* registry cache backends */
 /* FIXME 0.11: use priv_ prefix */
 gboolean 		gst_registry_binary_read_cache 	(GstRegistry * registry, const char *location);
@@ -116,6 +116,11 @@ gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
     ((c) == '.'))
+
+#ifndef GST_DISABLE_REGISTRY
+/* Secret variable to initialise gst without registry cache */
+extern gboolean _gst_disable_registry_cache;
+#endif
 
 /*** debugging categories *****************************************************/
 
