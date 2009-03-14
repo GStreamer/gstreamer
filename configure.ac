@@ -1422,6 +1422,14 @@ AG_GST_CHECK_FEATURE(ACM, [Windows ACM library], acm, [
       ], [HAVE_ACM="no"])
 ])
 
+dnl *** vdpau ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VDPAU, true)
+AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
+  AC_MSG_CHECKING([Checking for up to date vdpau installation])
+  AC_CHECK_HEADERS([vdpau/vdpau.h vdpau/vdpau_x11.h],
+      [HAVE_VDPAU="yes"], [HAVE_VDPAU="no"])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -1476,6 +1484,7 @@ AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_WININET, false)
 AM_CONDITIONAL(USE_ACM, false)
+AM_CONDITIONAL(USE_VDPAU, false)
 
 fi dnl of EXT plugins
 
@@ -1608,6 +1617,7 @@ sys/oss4/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile
+sys/vdpau/Makefile
 sys/wasapi/Makefile
 sys/wininet/Makefile
 sys/winks/Makefile

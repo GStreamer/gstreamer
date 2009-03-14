@@ -70,8 +70,14 @@ else
 ACM_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSS4_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(VCD_DIR) $(WININET_DIR)
+if USE_VDPAU
+VDPAU_DIR=vdpau
+else
+VDPAU_DIR=
+endif
+
+SUBDIRS = $(ACM_DIR) $(DIRECTDRAW_DIR) $(DVB_DIR) $(FBDEV_DIR) $(OSS4_DIR) $(OSX_VIDEO_DIR) $(QT_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR)
 
 DIST_SUBDIRS = acmenc acmmp3dec directdraw dvb fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
-			   oss4 osxvideo qtwrapper vcd wasapi wininet winks winscreencap
+			   oss4 osxvideo qtwrapper vcd vdpau wasapi wininet winks winscreencap
 
