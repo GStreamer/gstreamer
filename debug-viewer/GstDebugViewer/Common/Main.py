@@ -107,7 +107,7 @@ class MainLoopWrapper (ExceptionHandler):
             self.enter ()
         finally:
             ExceptHookManager.unregister_handler (self)
-    
+
         if self.exc_info != (None,) * 3:
             # Re-raise unhandled exception that occured while running the loop.
             exc_type, exc_value, exc_tb = self.exc_info
@@ -199,7 +199,7 @@ class ExceptHookManagerClass (object):
         for handler in sorted (self.handlers,
                                key = attrgetter ("priority"),
                                reverse = True):
-            
+
             if handler._handling_exception:
                 continue
 
@@ -253,7 +253,7 @@ class PathsBase (object):
         if cls.data_dir is None:
             source_dir = os.path.dirname (os.path.dirname (os.path.abspath (__file__)))
             cls.setup_uninstalled (source_dir)
-    
+
     def __new__ (cls):
 
         raise RuntimeError ("do not create instances of this class -- "
@@ -319,7 +319,7 @@ class OptionParser (object):
 
         if not description:
             description = ""
-        
+
         if arg_name is None:
             flags |= gobject.OPTION_FLAG_NO_ARG
         elif arg_parser is not None:
@@ -360,7 +360,7 @@ class OptionParser (object):
         group = gobject.OptionGroup (None, None, None, self.__handle_option)
         context.set_main_group (group)
         group.add_entries (self.__entries)
-        
+
         try:
             result_argv = context.parse (argv)
         except gobject.GError, exc:
@@ -377,7 +377,7 @@ class OptionParser (object):
     def handle_parse_complete (self, remaining_args):
 
         pass
-        
+
 class LogOptionParser (OptionParser):
 
     """Like OptionParser, but adds a --log-level option."""

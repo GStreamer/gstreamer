@@ -299,7 +299,7 @@ class TestDynamicFilter (TestCase):
         self.assertEquals (rows_ranged, range (5, 16))
 
         self.__dump_model (filtered_model, "filtered model (nofilter, 5, 15)")
-        
+
         rows_filtered = row_list (filtered_model)
         self.assertEquals (rows_ranged, rows_filtered)
 
@@ -450,6 +450,6 @@ class TestDynamicFilter (TestCase):
             print
         else:
             print comment
-            
+
 if __name__ == "__main__":
     test_main ()

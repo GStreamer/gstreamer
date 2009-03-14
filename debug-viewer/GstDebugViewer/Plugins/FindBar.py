@@ -38,7 +38,7 @@ class SearchOperation (object):
 
         col_id = GUI.LogModelBase.COL_MESSAGE
         len_search_text = len (search_text)
-        
+
         def match_func (model_row):
 
             message = model_row[col_id]
@@ -247,7 +247,7 @@ class FindBarFeature (FeatureBase):
         ui.insert_action_group (self.action_group, 0)
 
         self.log_view = window.log_view
-        
+
         self.merge_id = ui.new_merge_id ()
         for name, action_name in [("ViewFindBar", "show-find-bar",),
                                   ("ViewNextResult", "goto-next-search-result",),

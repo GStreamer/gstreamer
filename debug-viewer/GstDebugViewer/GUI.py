@@ -180,7 +180,7 @@ class LogModelBase (gtk.GenericTreeModel):
     columns = ("COL_TIME", gobject.TYPE_UINT64,
                "COL_PID", int,
                "COL_THREAD", gobject.TYPE_UINT64,
-               "COL_LEVEL", object,               
+               "COL_LEVEL", object,
                "COL_CATEGORY", str,
                "COL_FILENAME", str,
                "COL_LINE_NUMBER", int,
@@ -226,7 +226,7 @@ class LogModelBase (gtk.GenericTreeModel):
         return flags
 
     def on_get_n_columns (self):
-        
+
         return len (self.column_types)
 
     def on_get_column_type (self, col_id):
@@ -369,7 +369,7 @@ class FilteredLogModelBase (LogModelBase):
         self.super_model = super_model
         self.access_offset = super_model.access_offset
         self.ensure_cached = super_model.ensure_cached
-        self.line_cache = super_model.line_cache    
+        self.line_cache = super_model.line_cache
 
     def line_index_to_super (self, line_index):
 
@@ -382,7 +382,7 @@ class FilteredLogModelBase (LogModelBase):
     def line_index_to_top (self, line_index):
 
         _log_indices = [line_index]
-        
+
         super_index = line_index
         for model in self._iter_hierarchy ():
             super_index = model.line_index_to_super (super_index)
@@ -1249,7 +1249,7 @@ class ColumnManager (Common.GUI.Manager):
                 col_class = self.find_item_class (name = column.name)
                 new_order.append (col_class)
                 new_order.extend (self.__iter_next_hidden (col_class))
-            
+
             names = (column.name for column in new_visible)
             self.logger.debug ("visible columns reordered: %s",
                                ", ".join (names))
@@ -1643,7 +1643,7 @@ class Window (object):
         self.ui_factory = Common.GUI.UIFactory (ui_filename, self.actions)
 
         self.ui_manager = ui = self.ui_factory.make ()
-        menubar = ui.get_widget ("/ui/menubar")        
+        menubar = ui.get_widget ("/ui/menubar")
         self.widgets.vbox_main.pack_start (menubar, False, False, 0)
 
         self.gtk_window = self.widgets.main_window
@@ -1762,7 +1762,7 @@ class Window (object):
         model = self.log_view.props.model
         if model is None:
             return
-        
+
         try:
             line_index = self.get_active_line_index ()
         except ValueError:
@@ -1801,7 +1801,7 @@ class Window (object):
 
         selected_index = self.default_index
         start_index = self.default_start_index
-        
+
         if selected_index is not None:
 
             try:
@@ -2088,7 +2088,7 @@ class Window (object):
 
             try:
                 self.setup_model (LazyLogModel ())
-                
+
                 self.dispatcher = Common.Data.GSourceDispatcher ()
                 self.log_file = Data.LogFile (filename, self.dispatcher)
             except EnvironmentError, exc:
@@ -2186,7 +2186,7 @@ class AppStateSection (Common.GUI.StateSection):
     maximized = Common.GUI.StateBool ("window-maximized")
 
     column_order = Common.GUI.StateItemList ("column-order", ViewColumnManager)
-    columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)    
+    columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)
 
 class AppState (Common.GUI.State):
 

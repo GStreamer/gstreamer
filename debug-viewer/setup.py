@@ -289,7 +289,7 @@ class install_scripts_custom (install_scripts):
 
         install = self.distribution.get_command_obj ("install")
         install.ensure_finalized ()
-        
+
         values = {"DATADIR" : install.install_data or "",
                   "PREFIX" : install.home or install.prefix or "",
                   "SCRIPTSDIR" : self.install_dir or ""}
@@ -317,7 +317,7 @@ class install_scripts_custom (install_scripts):
 cmdclass = {"build" : build_custom,
             "clean" : clean_custom,
             "install_scripts" : install_scripts_custom,
-            
+
             "build_l10n" : build_l10n,
             "distcheck" : distcheck,
             "tests" : tests}
@@ -334,7 +334,7 @@ setup (cmdclass = cmdclass,
                                                  "data/progress-dialog.ui"],),
                      ("share/icons/hicolor/48x48/apps", ["data/gst-debug-viewer.png"],),
                      ("share/icons/hicolor/scalable/apps", ["data/gst-debug-viewer.svg"],)],
-       
+
        name = "gst-debug-viewer",
        version = "0.4",
        description = "GStreamer Debug Viewer",

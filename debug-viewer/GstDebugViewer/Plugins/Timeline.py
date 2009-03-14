@@ -587,7 +587,7 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.move_to (-size // 2, 0)
             ctx.line_to ((size + 1) // 2, 0)
             ctx.line_to (0, size / 1.41)
-            ctx.close_path ()            
+            ctx.close_path ()
 
         for level in (Data.debug_level_warning, Data.debug_level_error,):
             ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
@@ -612,7 +612,7 @@ class TimelineWidget (gtk.DrawingArea):
 
         ctx.line_to (i, h)
         ctx.close_path ()
-        
+
         ctx.fill ()
 
     def __have_position (self):
@@ -713,7 +713,7 @@ class AttachedWindow (object):
                    "hide-after-line", gtk.UI_MANAGER_MENUITEM, False)
         ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowHiddenLines",
                    "show-hidden-lines", gtk.UI_MANAGER_MENUITEM, False)
-        
+
         box = window.get_top_attach_point ()
 
         self.timeline = TimelineWidget ()
@@ -771,7 +771,7 @@ class AttachedWindow (object):
             self.timeline.clear ()
             self.vtimeline.clear ()
             return
-        
+
         self.timeline.update (model)
 
         # Need to dispatch these idly with a low priority to avoid triggering a
@@ -805,7 +805,7 @@ class AttachedWindow (object):
                                model.COL_TIME)
         ts2 = model.get_value (model.get_iter (end_path),
                                model.COL_TIME)
-        
+
         self.timeline.update_position (ts1, ts2)
 
     def handle_show_action_toggled (self, action):
@@ -876,7 +876,7 @@ class AttachedWindow (object):
         view.scroll_to_cell (path, use_align = True, row_align = .5)
         sel = view.get_selection ()
         sel.select_path (path)
-        
+
         return False
 
 class TimelineFeature (FeatureBase):

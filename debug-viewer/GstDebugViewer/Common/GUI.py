@@ -164,11 +164,11 @@ class MetaModel (gobject.GObjectMeta):
     ...
 
     Example: A gtk.ListStore derived model can use
-    
+
         columns = ("COL_NAME", str, "COL_VALUE", str)
-        
+
     and use this in __init__:
-    
+
         gtk.ListStore.__init__ (self, *self.column_types)
 
     Then insert data like this:
@@ -177,20 +177,20 @@ class MetaModel (gobject.GObjectMeta):
                   self.COL_NAME, "spam",
                   self.COL_VALUE, "ham")
     """
-    
+
     def __init__ (cls, name, bases, dict):
-        
+
         super (MetaModel, cls).__init__ (name, bases, dict)
-        
+
         spec = tuple (cls.columns)
-        
+
         column_names = spec[::2]
         column_types = spec[1::2]
         column_indices = range (len (column_names))
-        
+
         for col_index, col_name, in zip (column_indices, column_names):
             setattr (cls, col_name, col_index)
-        
+
         cls.column_types = column_types
         cls.column_ids = tuple (column_indices)
 
@@ -342,7 +342,7 @@ class StateItem (StateString):
             return None
 
         return self.parse_item (value)
-        
+
     def set (self, section, value):
 
         if value is None:
@@ -359,7 +359,7 @@ class StateItem (StateString):
         try:
             return self.manager.find_item_class (name = name)
         except KeyError:
-            return None        
+            return None
 
 class StateItemList (StateItem):
 
@@ -471,7 +471,7 @@ class WindowState (object):
 
         self.window = window
         self.state = state
-        
+
         self.window.connect ("window-state-event",
                              self.handle_window_state_event)
 
@@ -501,7 +501,7 @@ class WindowState (object):
 
         if not event.changed_mask & gtk.gdk.WINDOW_STATE_MAXIMIZED:
             return
-        
+
         if event.new_window_state & gtk.gdk.WINDOW_STATE_MAXIMIZED:
             self.logger.debug ("maximized")
             self.is_maximized = True

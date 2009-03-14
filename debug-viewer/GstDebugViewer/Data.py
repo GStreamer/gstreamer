@@ -145,7 +145,7 @@ def default_log_line_regex_ ():
     return expressions
 
 def default_log_line_regex ():
-    
+
     expressions = default_log_line_regex_ ()
     return re.compile ("".join (expressions))
 

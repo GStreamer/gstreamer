@@ -321,4 +321,4 @@ class DevhelpClient (object):
         except OSError, exc:
             self._check_os_error (exc)
             raise
-        
+
