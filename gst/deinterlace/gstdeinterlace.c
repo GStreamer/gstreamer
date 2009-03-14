@@ -353,6 +353,9 @@ gst_deinterlace_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         height = filter->uv_height;
         fill_value = 128;
         break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
 
     for (x = 0; x < width; x++) {
