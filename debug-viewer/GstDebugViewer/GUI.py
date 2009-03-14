@@ -1639,8 +1639,7 @@ class Window (object):
         self.widget_factory = Common.GUI.WidgetFactory (Main.Paths.data_dir)
         self.widgets = self.widget_factory.make ("main-window.ui", "main_window")
 
-        ui_filename = os.path.join (Main.Paths.data_dir,
-                                    "gst-debug-viewer.ui")
+        ui_filename = os.path.join (Main.Paths.data_dir, "menus.ui")
         self.ui_factory = Common.GUI.UIFactory (ui_filename, self.actions)
 
         self.ui_manager = ui = self.ui_factory.make ()
