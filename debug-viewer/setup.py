@@ -336,7 +336,7 @@ setup (cmdclass = cmdclass,
                      ("share/icons/hicolor/scalable/apps", ["data/gst-debug-viewer.svg"],)],
 
        name = "gst-debug-viewer",
-       version = "0.4",
+       version = "0.1",
        description = "GStreamer Debug Viewer",
        long_description = """""",
        license = "GNU GPL",
