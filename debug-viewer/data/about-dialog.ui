@@ -6,7 +6,7 @@
     <property name="visible">True</property>
     <property name="border_width">5</property>
     <property name="type_hint">dialog</property>
-    <property name="copyright" translatable="yes">Copyright &#xA9; 2007 Ren&#xE9; Stadler</property>
+    <property name="copyright" translatable="yes">Copyright &#xA9; 2007-2009 Ren&#xE9; Stadler</property>
     <property name="comments" translatable="yes">View and analyze GStreamer debug files</property>
     <property name="license">                    GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
