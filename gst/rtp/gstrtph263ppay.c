@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 
@@ -66,8 +67,10 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 /*
- * We also set all of those as required:
+ * We also return these in getcaps() as required by the SDP caps
  *
+ * width = (int) [16, 4096]
+ * height = (int) [16, 4096]
  * "annex-f = (boolean) {true, false},"
  * "annex-i = (boolean) {true, false},"
  * "annex-j = (boolean) {true, false},"
@@ -206,6 +209,28 @@ gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
   return res;
 }
+
+static void
+caps_append (GstCaps * caps, GstStructure * in_s, guint x, guint y, guint mpi)
+{
+  GstStructure *s;
+
+  if (!in_s)
+    return;
+
+  if (mpi < 1 || mpi > 32)
+    return;
+
+  s = gst_structure_copy (in_s);
+
+  gst_structure_set (s,
+      "width", GST_TYPE_INT_RANGE, 1, x,
+      "height", GST_TYPE_INT_RANGE, 1, y,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 1001 * mpi, NULL);
+
+  gst_caps_merge_structure (caps, s);
+}
+
 
 static GstCaps *
 gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
@@ -353,12 +378,80 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
         if (!v)
           gst_structure_set (new_s, "annex-v", G_TYPE_BOOLEAN, FALSE, NULL);
 
-        /* FIXME:
-         * Ignore the profile for now, gst-ffmpeg need to accept
-         * height/width/framerates first
-         */
 
-        gst_caps_merge_structure (caps, new_s);
+        if (level <= 10 || level == 45) {
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 176,
+              "height", GST_TYPE_INT_RANGE, 1, 144,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 2002, NULL);
+          gst_caps_merge_structure (caps, new_s);
+        } else if (level <= 20) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 2002, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 176,
+              "height", GST_TYPE_INT_RANGE, 1, 144,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else if (level <= 40) {
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 30000, 1001, NULL);
+          gst_caps_merge_structure (caps, new_s);
+        } else if (level <= 50) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 50, 1, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 352,
+              "height", GST_TYPE_INT_RANGE, 1, 240,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else if (level <= 60) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 288,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 50, 1, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 240,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else if (level <= 70) {
+          GstStructure *s_copy = gst_structure_copy (new_s);
+
+          gst_structure_set (new_s,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 576,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 50, 1, NULL);
+          gst_caps_merge_structure (caps, new_s);
+
+          gst_structure_set (s_copy,
+              "width", GST_TYPE_INT_RANGE, 1, 720,
+              "height", GST_TYPE_INT_RANGE, 1, 480,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60000, 1001, NULL);
+          gst_caps_merge_structure (caps, s_copy);
+        } else {
+          gst_caps_merge_structure (caps, new_s);
+        }
+
       } else {
         GstStructure *new_s = gst_structure_new ("video/x-h263",
             "variant", G_TYPE_STRING, "itu",
@@ -379,6 +472,7 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
       GstStructure *new_s = gst_structure_new ("video/x-h263",
           "variant", G_TYPE_STRING, "itu",
           NULL);
+      gboolean added = FALSE;
 
       str = gst_structure_get_string (s, "f");
       if (str && !strcmp (str, "1"))
@@ -424,7 +518,63 @@ gst_rtp_h263p_pay_sink_getcaps (GstBaseRTPPayload * payload, GstPad * pad)
       if (!t)
         gst_structure_set (new_s, "annex-t", G_TYPE_BOOLEAN, FALSE, NULL);
 
-      gst_caps_merge_structure (caps, new_s);
+
+      str = gst_structure_get_string (s, "custom");
+      if (str) {
+        unsigned int xmax, ymax, mpi;
+        if (sscanf (str, "%u,%u,%u", &xmax, &ymax, &mpi) == 3) {
+          if (xmax % 4 && ymax % 4 && mpi >= 1 && mpi <= 32) {
+            caps_append (caps, new_s, xmax, ymax, mpi);
+            added = TRUE;
+          } else {
+            GST_WARNING_OBJECT (rtph263ppay, "Invalid custom framesize/MPI"
+                " %u x %u at %u, ignoring", xmax, ymax, mpi);
+          }
+        } else {
+          GST_WARNING_OBJECT (rtph263ppay, "Invalid custom framesize/MPI: %s,"
+              " ignoring", str);
+        }
+      }
+
+      str = gst_structure_get_string (s, "16cif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 1408, 1152, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "4cif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 704, 576, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "cif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 352, 288, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "qcif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 176, 144, mpi);
+        added = TRUE;
+      }
+
+      str = gst_structure_get_string (s, "sqcif");
+      if (str) {
+        int mpi = atoi (str);
+        caps_append (caps, new_s, 128, 96, mpi);
+        added = TRUE;
+      }
+
+      if (added)
+        gst_structure_free (new_s);
+      else
+        gst_caps_merge_structure (caps, new_s);
     }
   }
 
