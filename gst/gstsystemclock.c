@@ -43,6 +43,8 @@
 #include "gstsystemclock.h"
 #include "gstpoll.h"
 
+#include <errno.h>
+
 /* Define this to get some extra debug about jitter from each clock_wait */
 #undef WAIT_DEBUGGING
 
@@ -322,7 +324,9 @@ gst_system_clock_wakeup_async_unlocked (GstSystemClock * sysclock)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "writing control");
 
   while (!gst_poll_write_control (sysclock->priv->timer)) {
-    g_warning ("gstsystemclock: write control failed, trying again\n");
+    g_warning
+        ("gstsystemclock: write control failed in wakeup_async, trying again : %d:%s\n",
+        errno, g_strerror (errno));
   }
   sysclock->priv->async_wakeup_count++;
 }
@@ -758,7 +762,9 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
      * is usually done when shutting down or some other exceptional case. */
     GST_CAT_DEBUG (GST_CAT_CLOCK, "writing control");
     while (!gst_poll_write_control (GST_SYSTEM_CLOCK_CAST (clock)->priv->timer)) {
-      g_warning ("gstsystemclock: write control failed, trying again\n");
+      g_warning
+          ("gstsystemclock: write control failed in unschedule, trying again\n : %d:%s\n",
+          errno, g_strerror (errno));
     }
   }
   /* when it leaves the poll, it'll detect the unscheduled */
