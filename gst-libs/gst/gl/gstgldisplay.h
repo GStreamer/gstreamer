@@ -96,6 +96,13 @@ struct _GstGLDisplay {
   GLuint redisplay_texture;
   GLuint redisplay_texture_width;
   GLuint redisplay_texture_height;
+#ifdef OPENGL_ES2
+  GstGLShader* redisplay_shader;
+  GLbyte* redisplay_vertex_shader_str;
+  GLbyte* redisplay_fragment_shader_str;
+  GLint redisplay_attr_position_loc;
+  GLint redisplay_attr_texture_loc;
+#endif
 
   //action gen and del texture
   GLuint gen_texture;
@@ -183,6 +190,12 @@ struct _GstGLDisplay {
   gchar* text_shader_upload_AYUV;
   GstGLShader* shader_upload_AYUV;
 
+#ifdef OPENGL_ES2
+  GLbyte* text_vertex_shader_upload;
+  GLint shader_upload_attr_position_loc;
+  GLint shader_upload_attr_texture_loc;
+#endif
+
   //fragement shader download
   gchar* text_shader_download_YUY2_UYVY;
   GstGLShader* shader_download_YUY2;
@@ -193,6 +206,15 @@ struct _GstGLDisplay {
 
   gchar* text_shader_download_AYUV;
   GstGLShader* shader_download_AYUV;
+
+#ifdef OPENGL_ES2
+  GLbyte* text_vertex_shader_download;
+  GLint shader_download_attr_position_loc;
+  GLint shader_download_attr_texture_loc;
+  GLbyte* text_fragment_shader_download_RGB;
+  GstGLShader* shader_download_RGB;
+#endif
+
 };
 
 

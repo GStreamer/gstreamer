@@ -510,6 +510,22 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
   glUniform1iARB (location, value);
 }
 
+void
+gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
+    GLsizei count, GLboolean transpose, const GLfloat* value)
+{
+  GstGLShaderPrivate *priv;
+  GLint location = -1;
+
+  priv = shader->priv;
+
+  g_return_if_fail (priv->program_handle != 0);
+
+  location = glGetUniformLocationARB (priv->program_handle, name);
+
+  glUniformMatrix4fvARB (location, count, transpose, value);
+}
+
 GLint
 gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
 {
