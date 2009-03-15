@@ -1856,12 +1856,14 @@ gst_flac_dec_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
+      GST_DEBUG_OBJECT (flacdec, "received seek event %p", event);
       /* first, see if we're before a demuxer that
        * might handle the seek for us */
       gst_event_ref (event);
       res = gst_pad_event_default (pad, event);
       /* if not, try to handle it ourselves */
       if (!res) {
+        GST_DEBUG_OBJECT (flacdec, "default failed, handling ourselves");
         res = gst_flac_dec_handle_seek_event (flacdec, event);
       }
       gst_event_unref (event);
