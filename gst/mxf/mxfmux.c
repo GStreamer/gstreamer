@@ -268,6 +268,8 @@ gst_mxf_mux_setcaps (GstPad * pad, GstCaps * caps)
   MXFUL d_instance_uid = { {0,} };
   MXFMetadataFileDescriptor *old_descriptor = cpad->descriptor;
 
+  GST_DEBUG_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
+
   if (old_descriptor) {
     memcpy (&d_instance_uid, &MXF_METADATA_BASE (old_descriptor)->instance_uid,
         16);
@@ -368,6 +370,7 @@ gst_mxf_mux_request_new_pad (GstElement * element,
   pad_number = g_atomic_int_exchange_and_add ((gint *) & mux->n_pads, 1);
   name = g_strdup_printf (GST_PAD_TEMPLATE_NAME_TEMPLATE (templ), pad_number);
 
+  GST_DEBUG_OBJECT (mux, "Creating pad '%s'", name);
   pad = gst_pad_new_from_template (templ, name);
   g_free (name);
   cpad = (GstMXFMuxPad *)
@@ -412,8 +415,13 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
   GSList *l;
   GArray *tmp;
 
+  GST_DEBUG_OBJECT (mux, "Creating MXF metadata");
+
   for (l = mux->collect->data; l; l = l->next) {
     GstMXFMuxPad *cpad = l->data;
+
+    if (!cpad || !cpad->descriptor || !GST_PAD_CAPS (cpad->collect.pad))
+      return GST_FLOW_ERROR;
 
     if (cpad->writer->update_descriptor)
       cpad->writer->update_descriptor (cpad->descriptor,
@@ -701,6 +709,11 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
                 sizeof (MXFFraction));
           }
 
+          if (track->edit_rate.d <= 0 || track->edit_rate.n <= 0) {
+            GST_ERROR_OBJECT (mux, "Invalid edit rate");
+            return GST_FLOW_ERROR;
+          }
+
           if (min_edit_rate_d >
               ((gdouble) track->edit_rate.n) / ((gdouble) track->edit_rate.d)) {
             min_edit_rate_d =
@@ -980,6 +993,10 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 slen, ber[9];
 
+  GST_DEBUG_OBJECT (mux,
+      "Handling buffer of size %u for track %u at position %" G_GINT64_FORMAT,
+      GST_BUFFER_SIZE (buf), cpad->source_track->parent.track_id, cpad->pos);
+
   if ((ret =
           cpad->write_func (buf, GST_PAD_CAPS (cpad->collect.pad),
               cpad->mapping_data, cpad->adapter, &outbuf,
@@ -1251,6 +1268,8 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
       return ret;
     mux->state = GST_MXF_MUX_STATE_DATA;
   }
+
+  g_return_val_if_fail (g_hash_table_size (mux->metadata) > 0, GST_FLOW_ERROR);
 
   for (sl = mux->collect->data; sl; sl = sl->next) {
     GstMXFMuxPad *cpad = sl->data;
