@@ -142,16 +142,22 @@ GST_START_TEST (test_decode_seek_partial)
   /* do a partial seek to get the first 1024 samples or 2048 bytes */
   event = gst_event_new_seek (1.0, GST_FORMAT_DEFAULT, GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 1024);
+  GST_DEBUG ("seeking");
   result = gst_element_send_event (appsink, event);
+  GST_DEBUG ("seeked");
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   do {
+    GST_DEBUG ("pulling buffer");
     g_signal_emit_by_name (appsink, "pull-buffer", &buffer);
+    GST_DEBUG ("pulled buffer %x", buffer);
     if (buffer == NULL)
       break;
-    if (firstbyte == 0)
+    if (firstbyte == 0) {
+      fail_unless_equals_int (GST_BUFFER_OFFSET (buffer), 0L);
       firstbyte = GST_BUFFER_DATA (buffer)[0];
+    }
     size += buffer->size;
   }
   while (TRUE);
