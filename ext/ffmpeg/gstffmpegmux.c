@@ -222,6 +222,7 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
   GstPadTemplate *templ = gst_element_class_get_pad_template (klass, "src");
 
   ffmpegmux->srcpad = gst_pad_new_from_template (templ, "src");
+  gst_pad_set_caps (ffmpegmux->srcpad, gst_pad_template_get_caps (templ));
   gst_element_add_pad (GST_ELEMENT (ffmpegmux), ffmpegmux->srcpad);
 
   ffmpegmux->collect = gst_collect_pads_new ();
