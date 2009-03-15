@@ -616,7 +616,7 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
       /* FIXME: shouldn't we include the crc check ? */
 
       GST_DEBUG ("Found flac without headers at %d", (gint) c.offset);
-      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, FLAC_CAPS);
+      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, FLAC_CAPS);
       return;
     }
   advance:
