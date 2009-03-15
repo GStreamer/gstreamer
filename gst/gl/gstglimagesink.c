@@ -124,6 +124,7 @@ GST_ELEMENT_DETAILS ("OpenGL video sink",
     "A videosink based on OpenGL",
     "Julien Isorce <julien.isorce@gmail.com>");
 
+#ifndef OPENGL_ES2
 static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -136,6 +137,19 @@ static GstStaticPadTemplate gst_glimage_sink_template =
         GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
     );
+#else
+static GstStaticPadTemplate gst_glimage_sink_template =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+        GST_GL_VIDEO_CAPS ";"
+        GST_VIDEO_CAPS_RGB  ";" 
+        GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
+    );
+#endif
 
 enum
 {

@@ -21,7 +21,14 @@
 #ifndef __GST_GL_SHADER_H__
 #define __GST_GL_SHADER_H__
 
+/* OpenGL 2.0 for Embedded Systems */
+#ifdef OPENGL_ES2
+#include <GLES2/gl2.h>
+#include "gstgles2.h"
+/* OpenGL for usual systems */
+#else
 #include <GL/glew.h>
+#endif
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -88,6 +95,8 @@ void gst_gl_shader_use (GstGLShader *shader);
 void gst_gl_shader_set_uniform_1i (GstGLShader *shader, const gchar *name, gint value);
 void gst_gl_shader_set_uniform_1f (GstGLShader *shader, const gchar *name, gfloat value);
 void gst_gl_shader_set_uniform_1fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
+void gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
+  GLsizei count, GLboolean transpose, const GLfloat* value);
 
 GLint gst_gl_shader_get_attribute_location (GstGLShader *shader, const gchar *name);
 

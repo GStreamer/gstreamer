@@ -39,6 +39,10 @@ struct _GstGLFilterCube
 {
     GstGLFilter filter;
 
+#ifdef OPENGL_ES2
+    GstGLShader *shader;
+#endif
+
     //background color
     gfloat red;
     gfloat green;

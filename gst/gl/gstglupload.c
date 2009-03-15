@@ -89,17 +89,36 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* Source pad definition */
+#ifndef OPENGL_ES2
 static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
+    GST_STATIC_CAPS (
+        GST_VIDEO_CAPS_RGB  ";" 
+        GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_BGR  ";"
+        GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_BGRA ";"
+        GST_VIDEO_CAPS_xRGB ";"
+        GST_VIDEO_CAPS_xBGR ";"
+        GST_VIDEO_CAPS_ARGB ";"
+        GST_VIDEO_CAPS_ABGR ";"
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
     );
+#else
+static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (
+        GST_VIDEO_CAPS_RGB  ";" 
+        GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
+    );
+#endif
 
 /* Properties */
 enum

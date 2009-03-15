@@ -80,11 +80,59 @@ static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
+#ifdef OPENGL_ES2
+static void gst_gl_filter_cube_reset (GstGLFilter * filter);
+static void gst_gl_filter_cube_init_shader (GstGLFilter * filter);
+#endif
 static gboolean gst_gl_filter_cube_filter (GstGLFilter * filter,
     GstGLBuffer * inbuf, GstGLBuffer * outbuf);
 static void gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     gpointer stuff);
 
+#ifdef OPENGL_ES2
+//vertex source
+static const gchar *cube_v_src =
+    "attribute vec4 a_position;                                   \n"
+    "attribute vec2 a_texCoord;                                   \n"
+    "uniform mat4 u_matrix;                                       \n"
+    "uniform float xrot_degree, yrot_degree, zrot_degree;         \n"
+    "varying vec2 v_texCoord;                                     \n"
+    "void main()                                                  \n"
+    "{                                                            \n"
+    "   float PI = 3.14159265;                                    \n"
+    "   float xrot = xrot_degree*2.0*PI/360.0;                    \n"
+    "   float yrot = yrot_degree*2.0*PI/360.0;                    \n"
+    "   float zrot = zrot_degree*2.0*PI/360.0;                    \n"
+    "   mat4 matX = mat4 (                                        \n"
+    "            1.0,        0.0,        0.0, 0.0,                \n"
+    "            0.0,  cos(xrot),  sin(xrot), 0.0,                \n"
+    "            0.0, -sin(xrot),  cos(xrot), 0.0,                \n"
+    "            0.0,        0.0,        0.0, 1.0 );              \n"
+    "   mat4 matY = mat4 (                                        \n"
+    "      cos(yrot),        0.0, -sin(yrot), 0.0,                \n"
+    "            0.0,        1.0,        0.0, 0.0,                \n"
+    "      sin(yrot),        0.0,  cos(yrot), 0.0,                \n"
+    "            0.0,        0.0,       0.0,  1.0 );              \n"
+    "   mat4 matZ = mat4 (                                        \n"
+    "      cos(zrot),  sin(zrot),        0.0, 0.0,                \n"
+    "     -sin(zrot),  cos(zrot),        0.0, 0.0,                \n"
+    "            0.0,        0.0,        1.0, 0.0,                \n"
+    "            0.0,        0.0,        0.0, 1.0 );              \n"
+
+    "   gl_Position = matZ * matY * matX * u_matrix * a_position; \n"
+    "   v_texCoord = a_texCoord;                                  \n"
+    "}                                                            \n";
+
+//fragment source
+static const gchar *cube_f_src =
+    "precision mediump float;                            \n"
+    "varying vec2 v_texCoord;                            \n"
+    "uniform sampler2D s_texture;                        \n"
+    "void main()                                         \n"
+    "{                                                   \n"
+    "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+    "}                                                   \n";
+#endif
 
 static void
 gst_gl_filter_cube_base_init (gpointer klass)
@@ -103,6 +151,10 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   gobject_class->set_property = gst_gl_filter_cube_set_property;
   gobject_class->get_property = gst_gl_filter_cube_get_property;
 
+#ifdef OPENGL_ES2
+  GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_cube_init_shader;
+  GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_cube_reset;
+#endif
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_cube_set_caps;
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_cube_filter;
 
@@ -140,6 +192,9 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 static void
 gst_gl_filter_cube_init (GstGLFilterCube * filter, GstGLFilterCubeClass * klass)
 {
+#ifdef OPENGL_ES
+  filter->shader = NULL;
+#endif
   filter->fovy = 45;
   filter->aspect = 0;
   filter->znear = 0.1;
@@ -205,6 +260,27 @@ gst_gl_filter_cube_set_caps (GstGLFilter * filter, GstCaps * incaps,
   return TRUE;
 }
 
+#ifdef OPENGL_ES2
+static void
+gst_gl_filter_cube_reset (GstGLFilter * filter)
+{
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+
+  //blocking call, wait the opengl thread has destroyed the shader
+  gst_gl_display_del_shader (filter->display, cube_filter->shader);
+}
+
+static void
+gst_gl_filter_cube_init_shader (GstGLFilter * filter)
+{
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+
+  //blocking call, wait the opengl thread has compiled the shader
+  gst_gl_display_gen_shader (filter->display, cube_v_src, cube_f_src,
+      &cube_filter->shader);
+}
+#endif
+
 static gboolean
 gst_gl_filter_cube_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
     GstGLBuffer * outbuf)
@@ -227,12 +303,13 @@ static void
 gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
+
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
-  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
-
+#ifndef OPENGL_ES2
   glEnable (GL_DEPTH_TEST);
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -247,6 +324,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
 
   glClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   glMatrixMode (GL_MODELVIEW);
   glLoadIdentity ();
 
@@ -312,10 +390,131 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex3f (-1.0f, 1.0f, -1.0f);
   glEnd ();
+#else
+  const GLfloat v_vertices [] = {
+     
+    //front face
+     1.0f,   1.0f, -1.0f,
+     1.0f,   0.0f,
+     1.0f,  -1.0f, -1.0f,
+     1.0f,   1.0f,
+    -1.0f,  -1.0f, -1.0f,
+     0.0f,   1.0f,
+    -1.0f,   1.0f, -1.0f,
+     0.0f,   0.0f,
+     //back face
+     1.0f,   1.0f,  1.0f,
+     1.0f,   0.0f,
+    -1.0f,   1.0f,  1.0f,
+     0.0f,   0.0f,
+    -1.0f,  -1.0f,  1.0f,
+     0.0f,   1.0f,
+     1.0f,  -1.0f,  1.0f,
+     1.0f,   1.0f, 
+     //right face
+     1.0f,   1.0f,  1.0f,
+             1.0f,  0.0f,
+     1.0f,  -1.0f,  1.0f,
+             0.0f,  0.0f,
+     1.0f,  -1.0f, -1.0f,
+             0.0f,  1.0f,
+     1.0f,   1.0f, -1.0f,
+             1.0f,  1.0f,
+     //left face
+     -1.0f,  1.0f,  1.0f,
+             1.0f,  0.0f,
+     -1.0f,  1.0f, -1.0f,
+             1.0f,  1.0f,
+     -1.0f, -1.0f, -1.0f,
+             0.0f,  1.0f,
+     -1.0f, -1.0f,  1.0f,
+             0.0f,  0.0f,
+     //top face
+      1.0f, -1.0f,  1.0f,
+      1.0f,         0.0f,
+     -1.0f, -1.0f,  1.0f,
+      0.0f,         0.0f,
+     -1.0f, -1.0f, -1.0f,
+      0.0f,         1.0f,
+      1.0f, -1.0f, -1.0f,
+      1.0f,         1.0f,
+      //bottom face
+      1.0f,  1.0f,  1.0f,
+      1.0f,         0.0f,
+      1.0f,  1.0f, -1.0f,
+      1.0f,         1.0f,     
+     -1.0f,  1.0f, -1.0f,
+      0.0f,         1.0f,
+     -1.0f,  1.0f,  1.0f,
+      0.0f,         0.0f
+    };
+
+  GLushort indices[] = {
+     0,  1,  2, 
+     0,  2,  3,
+     4,  5,  6,
+     4,  6,  7,
+     8,  9, 10,
+     8, 10, 11,
+    12, 13, 14,
+    12, 14, 15,
+    16, 17, 18,
+    16, 18, 19,
+    20, 21, 22,
+    20, 22, 23
+    };
+
+  GLint attr_position_loc = 0;
+  GLint attr_texture_loc = 0;
+
+  const GLfloat matrix[] = {
+    0.5f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.5f, 0.0f, 0.0f,
+    0.0f, 0.0f, 0.5f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f};
+
+  glEnable (GL_DEPTH_TEST);
+
+  glClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  gst_gl_shader_use (cube_filter->shader);
+
+  attr_position_loc = 
+    gst_gl_shader_get_attribute_location (cube_filter->shader, 
+    "a_position");
+  attr_texture_loc = 
+    gst_gl_shader_get_attribute_location (cube_filter->shader, 
+    "a_texCoord");
+
+  //Load the vertex position
+  glVertexAttribPointer (attr_position_loc, 3, GL_FLOAT, 
+    GL_FALSE, 5 * sizeof(GLfloat), v_vertices);
+
+  //Load the texture coordinate
+  glVertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
+    GL_FALSE, 5 * sizeof(GLfloat), &v_vertices[3]);
+
+  glEnableVertexAttribArray (attr_position_loc);
+  glEnableVertexAttribArray (attr_texture_loc);
+
+  glActiveTexture (GL_TEXTURE0);
+  glBindTexture (GL_TEXTURE_2D, texture);
+  gst_gl_shader_set_uniform_1i (cube_filter->shader, "s_texture", 0);
+  gst_gl_shader_set_uniform_1f (cube_filter->shader, "xrot_degree", xrot);
+  gst_gl_shader_set_uniform_1f (cube_filter->shader, "yrot_degree", yrot);
+  gst_gl_shader_set_uniform_1f (cube_filter->shader, "zrot_degree", zrot);
+  gst_gl_shader_set_uniform_matrix_4fv (cube_filter->shader, "u_matrix", 1, GL_FALSE, matrix);
+
+  glDrawElements (GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, indices);
+
+  glDisableVertexAttribArray (attr_position_loc);
+  glDisableVertexAttribArray (attr_texture_loc);
+#endif
+
+  glDisable (GL_DEPTH_TEST);
 
   xrot += 0.3f;
   yrot += 0.2f;
   zrot += 0.4f;
-
-  glDisable (GL_DEPTH_TEST);
 }

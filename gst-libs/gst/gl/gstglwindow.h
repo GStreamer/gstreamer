@@ -21,6 +21,15 @@
 #ifndef __GST_GL_WINDOW_H__
 #define __GST_GL_WINDOW_H__
 
+/* OpenGL 2.0 for Embedded Systems */
+#ifdef OPENGL_ES2
+#undef UNICODE
+#include <EGL/egl.h>
+#define UNICODE
+#include <GLES2/gl2.h>
+#include "gstgles2.h"
+/* OpenGL for usual systems */
+#else
 #if (!GNUSTEP && MACOS)
 #include <OpenGL/glew.h>
 #include <OpenGL/OpenGL.h>
@@ -28,6 +37,7 @@
 #else
 #include <GL/glew.h>
 #include <GL/gl.h>
+#endif
 #endif
 
 #include <gst/gst.h>

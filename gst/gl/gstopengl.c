@@ -43,21 +43,25 @@
 #include "config.h"
 #endif
 
-#include "gstgltestsrc.h"
 #include "gstglupload.h"
+#include "gstgldownload.h"
+#include "gstglimagesink.h"
+
 #include "gstglfiltercube.h"
+
+GType gst_gl_filter_cube_get_type (void);
+
+#ifndef OPENGL_ES2
+#include "gstgltestsrc.h"
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterglass.h"
 #include "gstglfilterapp.h"
-#include "gstgldownload.h"
-#include "gstglimagesink.h"
 #include "gstglcolorscale.h"
 #include "gstgleffects.h"
 #include "gstglbumper.h"
 
 GType gst_gl_effects_get_type (void);
 GType gst_gl_filter_app_get_type (void);
-GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_filterblur_get_type (void);
 GType gst_gl_filtersobel_get_type (void);
 GType gst_gl_filter_edge_get_type (void);
@@ -66,6 +70,7 @@ GType gst_gl_filter_glass_get_type (void);
 GType gst_gl_overlay_get_type (void);
 GType gst_gl_differencematte_get_type (void);
 GType gst_gl_bumper_get_type (void);
+#endif
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -76,13 +81,18 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
 
-  if (!gst_element_register (plugin, "gltestsrc",
-          GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
+  if (!gst_element_register (plugin, "glupload",
+          GST_RANK_NONE, GST_TYPE_GL_UPLOAD)) {
     return FALSE;
   }
 
-  if (!gst_element_register (plugin, "glupload",
-          GST_RANK_NONE, GST_TYPE_GL_UPLOAD)) {
+  if (!gst_element_register (plugin, "gldownload",
+          GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glimagesink",
+          GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK)) {
     return FALSE;
   }
 
@@ -90,6 +100,13 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_FILTER_CUBE)) {
     return FALSE;
   }
+
+#ifndef OPENGL_ES2
+  if (!gst_element_register (plugin, "gltestsrc",
+          GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
+    return FALSE;
+  }
+
   if (!gst_element_register (plugin, "gloverlay",
           GST_RANK_NONE, gst_gl_overlay_get_type ())) {
     return FALSE;
@@ -133,20 +150,11 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
-  if (!gst_element_register (plugin, "gldownload",
-          GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK)) {
-    return FALSE;
-  }
-
   if (!gst_element_register (plugin, "glcolorscale",
           GST_RANK_NONE, GST_TYPE_GL_COLORSCALE)) {
     return FALSE;
   }
+#endif
 
   return TRUE;
 }
