@@ -946,6 +946,8 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
 
   data->pos += size;
 
+  GST_LOG_OBJECT (pads, "Flushing %d bytes, requested %u", flushsize, size);
+
   if (data->pos >= GST_BUFFER_SIZE (buffer))
     /* _clear will also reset data->pos to 0 */
     gst_collect_pads_clear (pads, data);
@@ -1171,6 +1173,8 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
   }
 
 forward:
+  GST_DEBUG_OBJECT (pads, "forward unhandled event: %s",
+      GST_EVENT_TYPE_NAME (event));
   res = gst_pad_event_default (pad, event);
 
 done:
@@ -1243,6 +1247,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 
   /* While we have data queued on this pad try to collect stuff */
   do {
+    GST_DEBUG ("Pad %s:%s checking", GST_DEBUG_PAD_NAME (pad));
     /* Check if our collected condition is matched and call the collected function
      * if it is */
     ret = gst_collect_pads_check_collected (pads);
@@ -1285,6 +1290,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   while (data->buffer != NULL);
 
 unlock_done:
+  GST_DEBUG ("Pad %s:%s done", GST_DEBUG_PAD_NAME (pad));
   GST_OBJECT_UNLOCK (pads);
   unref_data (data);
   gst_buffer_unref (buffer);
