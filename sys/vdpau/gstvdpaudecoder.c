@@ -124,8 +124,7 @@ gst_vdpaudecoder_init (GstVDPAUDecoder * dec, GstVDPAUDecoderClass * klass)
   dec->src = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (dec), dec->src);
 
-  dec->sink =
-      gst_pad_new_from_template (gst_element_class_get_pad_template
+  dec->sink = gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (klass), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (dec), dec->sink);
 }
