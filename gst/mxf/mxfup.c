@@ -24,7 +24,6 @@
 /* TODO: 
  *   - Handle CDCI essence
  *   - Handle more formats with RGBA descriptor (4:4:4 / 4:4:4:4 YUV, RGB656, ...)
- *   - Correctly transform for the GStreamer strides
  *   - Handle all the dimensions and other properties in the picture
  *     essence descriptors correctly according to S377M Annex E
  *   - Handle interlaced correctly, i.e. weave until we support one-field-per-buffer
@@ -50,36 +49,40 @@ static const struct
   const gchar *caps;
   guint32 n_pixel_layout;
   guint8 pixel_layout[10];
+  guint32 fourcc;
 } _rgba_mapping_table[] = {
   {
     GST_VIDEO_CAPS_RGB, 3, {
-  'R', 8, 'G', 8, 'B', 8}}, {
+  'R', 8, 'G', 8, 'B', 8}, GST_MAKE_FOURCC ('R', 'G', 'B', ' ')}, {
     GST_VIDEO_CAPS_BGR, 3, {
-  'B', 8, 'G', 8, 'R', 8}}, {
+  'B', 8, 'G', 8, 'R', 8}, GST_MAKE_FOURCC ('B', 'G', 'R', ' ')}, {
     GST_VIDEO_CAPS_YUV ("v308"), 3, {
-  'Y', 8, 'U', 8, 'V', 8}}, {
+  'Y', 8, 'U', 8, 'V', 8}, GST_MAKE_FOURCC ('v', '3', '0', '8')}, {
     GST_VIDEO_CAPS_xRGB, 4, {
-  'F', 8, 'R', 8, 'G', 8, 'B', 8}}, {
+  'F', 8, 'R', 8, 'G', 8, 'B', 8}, GST_MAKE_FOURCC ('x', 'R', 'G', 'B')}, {
     GST_VIDEO_CAPS_RGBx, 4, {
-  'R', 8, 'G', 8, 'B', 8, 'F', 8}}, {
+  'R', 8, 'G', 8, 'B', 8, 'F', 8}, GST_MAKE_FOURCC ('R', 'G', 'B', 'x')}, {
     GST_VIDEO_CAPS_xBGR, 4, {
-  'F', 8, 'B', 8, 'G', 8, 'R', 8}}, {
+  'F', 8, 'B', 8, 'G', 8, 'R', 8}, GST_MAKE_FOURCC ('x', 'B', 'G', 'R')}, {
     GST_VIDEO_CAPS_BGRx, 4, {
-  'B', 8, 'G', 8, 'R', 8, 'F', 8}}, {
+  'B', 8, 'G', 8, 'R', 8, 'F', 8}, GST_MAKE_FOURCC ('B', 'G', 'R', 'x')}, {
     GST_VIDEO_CAPS_RGBA, 4, {
-  'R', 8, 'G', 8, 'B', 8, 'A', 8}}, {
+  'R', 8, 'G', 8, 'B', 8, 'A', 8}, GST_MAKE_FOURCC ('R', 'G', 'B', 'A')}, {
     GST_VIDEO_CAPS_ARGB, 4, {
-  'A', 8, 'R', 8, 'G', 8, 'B', 8}}, {
+  'A', 8, 'R', 8, 'G', 8, 'B', 8}, GST_MAKE_FOURCC ('A', 'R', 'G', 'B')}, {
     GST_VIDEO_CAPS_BGRA, 4, {
-  'B', 8, 'G', 8, 'R', 8, 'A', 8}}, {
+  'B', 8, 'G', 8, 'R', 8, 'A', 8}, GST_MAKE_FOURCC ('B', 'G', 'R', 'A')}, {
     GST_VIDEO_CAPS_ABGR, 4, {
-  'A', 8, 'B', 8, 'G', 8, 'R', 8}}, {
+  'A', 8, 'B', 8, 'G', 8, 'R', 8}, GST_MAKE_FOURCC ('A', 'B', 'G', 'R')}, {
     GST_VIDEO_CAPS_YUV ("AYUV"), 4, {
-  'A', 8, 'Y', 8, 'U', 8, 'V', 8}}
+  'A', 8, 'Y', 8, 'U', 8, 'V', 8}, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')}
 };
 
 typedef struct
 {
+  guint32 fourcc;               /* fourcc or RGB format specifier */
+  gint width, height;
+  guint bpp;
   guint32 image_start_offset;
   guint32 image_end_offset;
 } MXFUPMappingData;
@@ -127,7 +130,6 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   }
 
   if (!data || (data->image_start_offset == 0 && data->image_end_offset == 0)) {
-    *outbuf = buffer;
   } else {
     if (data->image_start_offset + data->image_end_offset
         > GST_BUFFER_SIZE (buffer)) {
@@ -138,8 +140,36 @@ mxf_up_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
       GST_BUFFER_DATA (buffer) += data->image_start_offset;
       GST_BUFFER_SIZE (buffer) -= data->image_start_offset;
       GST_BUFFER_SIZE (buffer) -= data->image_end_offset;
-      *outbuf = buffer;
     }
+  }
+
+  if (GST_BUFFER_SIZE (buffer) != data->bpp * data->width * data->height) {
+    GST_ERROR ("Invalid buffer size");
+    return GST_FLOW_ERROR;
+  }
+
+  if (data->bpp != 4
+      || GST_ROUND_UP_4 (data->width * data->bpp) != data->width * data->bpp) {
+    guint y;
+    GstBuffer *ret;
+    guint8 *indata, *outdata;
+
+    ret =
+        gst_buffer_new_and_alloc (GST_ROUND_UP_4 (data->width * data->bpp) *
+        data->height);
+    indata = GST_BUFFER_DATA (buffer);
+    outdata = GST_BUFFER_DATA (ret);
+
+    for (y = 0; y < data->height; y++) {
+      memcpy (outdata, indata, data->width * data->bpp);
+      outdata += GST_ROUND_UP_4 (data->width * data->bpp);
+      indata += data->width * data->bpp;
+    }
+
+    gst_buffer_unref (buffer);
+    *outbuf = ret;
+  } else {
+    *outbuf = buffer;
   }
 
   return GST_FLOW_OK;
@@ -152,6 +182,8 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
 {
   GstCaps *caps = NULL;
   guint i;
+  guint32 fourcc;
+  guint bpp;
 
   if (!d->pixel_layout) {
     GST_ERROR ("No pixel layout");
@@ -165,13 +197,24 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
     if (memcmp (d->pixel_layout, &_rgba_mapping_table[i].pixel_layout,
             _rgba_mapping_table[i].n_pixel_layout * 2) == 0) {
       caps = gst_caps_from_string (_rgba_mapping_table[i].caps);
+      fourcc = _rgba_mapping_table[i].fourcc;
+      bpp = _rgba_mapping_table[i].n_pixel_layout;
       break;
     }
   }
 
   if (caps) {
     MXFUPMappingData *data = g_new0 (MXFUPMappingData, 1);
+    GstStructure *s;
 
+    mxf_metadata_generic_picture_essence_descriptor_set_caps (&d->parent, caps);
+
+    s = gst_caps_get_structure (caps, 0);
+    gst_structure_get_int (s, "width", &data->width);
+    gst_structure_get_int (s, "height", &data->height);
+
+    data->fourcc = fourcc;
+    data->bpp = bpp;
     data->image_start_offset =
         ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_start_offset;
     data->image_end_offset =
@@ -236,10 +279,6 @@ mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     return NULL;
   }
 
-  if (caps) {
-    mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
-  }
-
   return caps;
 }
 
@@ -252,7 +291,40 @@ static GstFlowReturn
 mxf_up_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
     GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
 {
-  *outbuf = buffer;
+  MXFUPMappingData *data = mapping_data;
+
+  if (!buffer)
+    return GST_FLOW_OK;
+
+  if (GST_BUFFER_SIZE (buffer) !=
+      GST_ROUND_UP_4 (data->bpp * data->width) * data->height) {
+    GST_ERROR ("Invalid buffer size");
+    return GST_FLOW_ERROR;
+  }
+
+  if (data->bpp != 4
+      || GST_ROUND_UP_4 (data->width * data->bpp) != data->width * data->bpp) {
+    guint y;
+    GstBuffer *ret;
+    guint8 *indata, *outdata;
+
+    ret = gst_buffer_new_and_alloc (data->width * data->bpp * data->height);
+    indata = GST_BUFFER_DATA (buffer);
+    outdata = GST_BUFFER_DATA (ret);
+
+    for (y = 0; y < data->height; y++) {
+      memcpy (outdata, indata, data->width * data->bpp);
+      indata += GST_ROUND_UP_4 (data->width * data->bpp);
+      outdata += data->width * data->bpp;
+    }
+
+    gst_buffer_unref (buffer);
+
+    *outbuf = ret;
+  } else {
+    *outbuf = buffer;
+  }
+
   return GST_FLOW_OK;
 }
 
@@ -268,6 +340,9 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   MXFMetadataRGBAPictureEssenceDescriptor *ret;
   guint i;
   GstCaps *tmp, *intersection;
+  MXFUPMappingData *md = g_new0 (MXFUPMappingData, 1);
+
+  *mapping_data = md;
 
   ret = (MXFMetadataRGBAPictureEssenceDescriptor *)
       gst_mini_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
@@ -281,6 +356,8 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
       gst_caps_unref (intersection);
       ret->n_pixel_layout = _rgba_mapping_table[i].n_pixel_layout;
       ret->pixel_layout = g_new0 (guint8, ret->n_pixel_layout * 2);
+      md->fourcc = _rgba_mapping_table[i].fourcc;
+      md->bpp = _rgba_mapping_table[i].n_pixel_layout;
       memcpy (ret->pixel_layout, _rgba_mapping_table[i].pixel_layout,
           ret->n_pixel_layout * 2);
       break;
@@ -292,6 +369,9 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
       caps);
+
+  md->width = ret->parent.stored_width;
+  md->height = ret->parent.stored_height;
 
   *handler = mxf_up_write_func;
 
