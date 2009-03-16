@@ -40,6 +40,7 @@
 #include <gst/video/video.h>
 
 #include "mxfup.h"
+#include "mxfwrite.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -273,8 +274,175 @@ static const MXFEssenceElementHandler mxf_up_essence_element_handler = {
   mxf_up_create_caps
 };
 
+static GstFlowReturn
+mxf_up_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
+    GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
+{
+  *outbuf = buffer;
+  return GST_FLOW_OK;
+}
+
+static const guint8 up_essence_container_ul[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01,
+  0x0D, 0x01, 0x03, 0x01, 0x02, 0x05, 0x7F, 0x01
+};
+
+static const struct
+{
+  const gchar *caps;
+  guint32 n_pixel_layout;
+  guint8 pixel_layout[10];
+} _rgba_mapping_table[] = {
+  {
+    GST_VIDEO_CAPS_RGB, 3, {
+  'R', 8, 'G', 8, 'B', 8}}, {
+    GST_VIDEO_CAPS_BGR, 3, {
+  'B', 8, 'G', 8, 'R', 8}}, {
+    GST_VIDEO_CAPS_YUV ("v308"), 3, {
+  'Y', 8, 'U', 8, 'V', 8}}, {
+    GST_VIDEO_CAPS_xRGB, 4, {
+  'F', 8, 'R', 8, 'G', 8, 'B', 8}}, {
+    GST_VIDEO_CAPS_RGBx, 4, {
+  'R', 8, 'G', 8, 'B', 8, 'F', 8}}, {
+    GST_VIDEO_CAPS_xBGR, 4, {
+  'F', 8, 'B', 8, 'G', 8, 'R', 8}}, {
+    GST_VIDEO_CAPS_BGRx, 4, {
+  'B', 8, 'G', 8, 'R', 8, 'F', 8}}, {
+    GST_VIDEO_CAPS_RGBA, 4, {
+  'R', 8, 'G', 8, 'B', 8, 'A', 8}}, {
+    GST_VIDEO_CAPS_ARGB, 4, {
+  'A', 8, 'R', 8, 'G', 8, 'B', 8}}, {
+    GST_VIDEO_CAPS_BGRA, 4, {
+  'B', 8, 'G', 8, 'R', 8, 'A', 8}}, {
+    GST_VIDEO_CAPS_ABGR, 4, {
+  'A', 8, 'B', 8, 'G', 8, 'R', 8}}, {
+    GST_VIDEO_CAPS_YUV ("AYUV"), 4, {
+  'A', 8, 'Y', 8, 'U', 8, 'V', 8}}
+};
+
+static MXFMetadataFileDescriptor *
+mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  MXFMetadataRGBAPictureEssenceDescriptor *ret;
+  guint i;
+  GstCaps *tmp, *intersection;
+
+  ret = (MXFMetadataRGBAPictureEssenceDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
+
+  for (i = 0; i < G_N_ELEMENTS (_rgba_mapping_table); i++) {
+    tmp = gst_caps_from_string (_rgba_mapping_table[i].caps);
+    intersection = gst_caps_intersect (caps, tmp);
+    gst_caps_unref (tmp);
+
+    if (!gst_caps_is_empty (intersection)) {
+      gst_caps_unref (intersection);
+      ret->n_pixel_layout = _rgba_mapping_table[i].n_pixel_layout;
+      ret->pixel_layout = g_new0 (guint8, ret->n_pixel_layout * 2);
+      memcpy (ret->pixel_layout, _rgba_mapping_table[i].pixel_layout,
+          ret->n_pixel_layout * 2);
+      break;
+    }
+    gst_caps_unref (intersection);
+  }
+
+  memcpy (&ret->parent.parent.essence_container, &up_essence_container_ul, 16);
+
+  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+      caps);
+
+  *handler = mxf_up_write_func;
+
+  return (MXFMetadataFileDescriptor *) ret;
+}
+
+static MXFMetadataFileDescriptor *
+mxf_up_get_cdci_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  g_assert_not_reached ();
+  return NULL;
+}
+
+static MXFMetadataFileDescriptor *
+mxf_up_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  GstStructure *s;
+
+  s = gst_caps_get_structure (caps, 0);
+  if (strcmp (gst_structure_get_name (s), "video/x-raw-rgb") == 0) {
+    return mxf_up_get_rgba_descriptor (tmpl, caps, handler, mapping_data);
+  } else if (strcmp (gst_structure_get_name (s), "video/x-raw-yuv") == 0) {
+    guint32 fourcc;
+
+    if (!gst_structure_get_fourcc (s, "format", &fourcc))
+      return NULL;
+
+    if (fourcc == GST_MAKE_FOURCC ('A', 'Y', 'U', 'V') ||
+        fourcc == GST_MAKE_FOURCC ('v', '3', '0', '8'))
+      return mxf_up_get_rgba_descriptor (tmpl, caps, handler, mapping_data);
+
+    return mxf_up_get_cdci_descriptor (tmpl, caps, handler, mapping_data);
+  }
+
+  g_assert_not_reached ();
+}
+
+static void
+mxf_up_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf)
+{
+  return;
+}
+
+static void
+mxf_up_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
+    MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
+{
+  edit_rate->n = a->sample_rate.n;
+  edit_rate->d = a->sample_rate.d;
+}
+
+static guint32
+mxf_up_get_track_number_template (MXFMetadataFileDescriptor * a,
+    GstCaps * caps, gpointer mapping_data)
+{
+  return (0x15 << 24) | (0x02 << 8);
+}
+
+static MXFEssenceElementWriter mxf_up_essence_element_writer = {
+  mxf_up_get_descriptor,
+  mxf_up_update_descriptor,
+  mxf_up_get_edit_rate,
+  mxf_up_get_track_number_template,
+  NULL,
+  {{0,}}
+};
+
 void
 mxf_up_init (void)
 {
   mxf_essence_element_handler_register (&mxf_up_essence_element_handler);
+
+  mxf_up_essence_element_writer.pad_template =
+      gst_pad_template_new ("up_video_sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+      gst_caps_from_string (GST_VIDEO_CAPS_RGB "; "
+          GST_VIDEO_CAPS_BGR "; "
+          GST_VIDEO_CAPS_RGBx "; "
+          GST_VIDEO_CAPS_xRGB "; "
+          GST_VIDEO_CAPS_BGRx "; "
+          GST_VIDEO_CAPS_xBGR "; "
+          GST_VIDEO_CAPS_ARGB "; "
+          GST_VIDEO_CAPS_RGBA "; "
+          GST_VIDEO_CAPS_ABGR "; "
+          GST_VIDEO_CAPS_BGRA "; "
+          GST_VIDEO_CAPS_YUV ("AYUV") "; " GST_VIDEO_CAPS_YUV ("v308")));
+
+  memcpy (&mxf_up_essence_element_writer.data_definition,
+      mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_PICTURE_ESSENCE),
+      16);
+  mxf_essence_element_writer_register (&mxf_up_essence_element_writer);
 }
