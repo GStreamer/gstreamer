@@ -33,6 +33,9 @@ gst_jack_connect_get_type (void)
         "Don't automatically connect ports to physical ports", "none"},
     {GST_JACK_CONNECT_AUTO,
         "Automatically connect ports to physical ports", "auto"},
+    {GST_JACK_CONNECT_AUTO_FORCED,
+          "Automatically connect ports to as many physical ports as possible",
+        "auto-forced"},
     {0, NULL, NULL},
   };
 
