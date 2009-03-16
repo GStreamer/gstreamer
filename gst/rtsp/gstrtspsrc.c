@@ -2797,9 +2797,16 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
      * using the RTP timestamps. */
     GST_OBJECT_LOCK (src);
     if (GST_ELEMENT_CLOCK (src)) {
-      GstClockTime now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
+      GstClockTime now;
+      GstClockTime base_time;
 
-      src->base_time = now - GST_ELEMENT_CAST (src)->base_time;
+      now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
+      base_time = GST_ELEMENT_CAST (src)->base_time;
+
+      src->base_time = now - base_time;
+
+      GST_DEBUG_OBJECT (src, "first buffer at time %" GST_TIME_FORMAT ", base %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (now), GST_TIME_ARGS (base_time));
     }
     GST_OBJECT_UNLOCK (src);
   }
@@ -2810,6 +2817,9 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     stream->discont = FALSE;
     /* first buffer gets the timestamp, other buffers are not timestamped and
      * their presentation time will be interpollated from the rtp timestamps. */
+    GST_DEBUG_OBJECT (src, "setting timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (src->base_time));
+
     GST_BUFFER_TIMESTAMP (buf) = src->base_time;
   }
 
