@@ -446,10 +446,23 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
   tmp = g_array_new (FALSE, FALSE, sizeof (MXFUL));
   for (l = mux->collect->data; l; l = l->next) {
     GstMXFMuxPad *cpad = l->data;
+    guint i;
+    gboolean found = FALSE;
 
     if (!cpad || !cpad->descriptor ||
         mxf_ul_is_zero (&cpad->descriptor->essence_container))
       return GST_FLOW_ERROR;
+
+    for (i = 0; i < tmp->len; i++) {
+      if (mxf_ul_is_equal (&cpad->descriptor->essence_container,
+              &g_array_index (tmp, MXFUL, i))) {
+        found = TRUE;
+        break;
+      }
+    }
+
+    if (found)
+      continue;
 
     g_array_append_val (tmp, cpad->descriptor->essence_container);
   }
@@ -893,12 +906,18 @@ gst_mxf_mux_create_header_partition_pack (GstMXFMux * mux)
   for (l = mux->collect->data; l; l = l->next) {
     GstMXFMuxPad *cpad = l->data;
     guint j;
+    gboolean found = FALSE;
 
-    for (j = 0; j < i; j++) {
+    for (j = 0; j <= i; j++) {
       if (mxf_ul_is_equal (&cpad->descriptor->essence_container,
-              &mux->partition.essence_containers[j]))
-        continue;
+              &mux->partition.essence_containers[j])) {
+        found = TRUE;
+        break;
+      }
     }
+
+    if (found)
+      continue;
 
     memcpy (&mux->partition.essence_containers[i],
         &cpad->descriptor->essence_container, 16);
