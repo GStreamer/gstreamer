@@ -1959,8 +1959,13 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     while (group->pending) {
       GST_DEBUG_OBJECT (playbin, "%d pending in group %p, waiting",
           group->pending, group);
+
+      GST_PLAY_BIN_SHUTDOWN_UNLOCK (playbin);
+
       /* FIXME, unlock when shutting down */
       GST_SOURCE_GROUP_WAIT (group);
+
+      GST_PLAY_BIN_SHUTDOWN_LOCK (playbin, shutdown2);
     }
   }
   GST_SOURCE_GROUP_UNLOCK (group);
@@ -1992,6 +1997,11 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
   return;
 
+shutdown2:
+  {
+    GST_SOURCE_GROUP_UNLOCK (group);
+    goto shutdown;
+  }
 shutdown:
   {
     GST_DEBUG ("ignoring, we are shutting down");
@@ -2498,6 +2508,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       /* FIXME unlock our waiting groups */
       GST_LOG_OBJECT (playbin, "setting shutdown flag");
       g_atomic_int_set (&playbin->shutdown, 1);
+
       /* wait for all callbacks to end by taking the lock.
        * No dynamic (critical) new callbacks will
        * be able to happen as we set the shutdown flag. */
