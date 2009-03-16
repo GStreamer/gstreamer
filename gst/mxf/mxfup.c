@@ -45,6 +45,39 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
+static const struct
+{
+  const gchar *caps;
+  guint32 n_pixel_layout;
+  guint8 pixel_layout[10];
+} _rgba_mapping_table[] = {
+  {
+    GST_VIDEO_CAPS_RGB, 3, {
+  'R', 8, 'G', 8, 'B', 8}}, {
+    GST_VIDEO_CAPS_BGR, 3, {
+  'B', 8, 'G', 8, 'R', 8}}, {
+    GST_VIDEO_CAPS_YUV ("v308"), 3, {
+  'Y', 8, 'U', 8, 'V', 8}}, {
+    GST_VIDEO_CAPS_xRGB, 4, {
+  'F', 8, 'R', 8, 'G', 8, 'B', 8}}, {
+    GST_VIDEO_CAPS_RGBx, 4, {
+  'R', 8, 'G', 8, 'B', 8, 'F', 8}}, {
+    GST_VIDEO_CAPS_xBGR, 4, {
+  'F', 8, 'B', 8, 'G', 8, 'R', 8}}, {
+    GST_VIDEO_CAPS_BGRx, 4, {
+  'B', 8, 'G', 8, 'R', 8, 'F', 8}}, {
+    GST_VIDEO_CAPS_RGBA, 4, {
+  'R', 8, 'G', 8, 'B', 8, 'A', 8}}, {
+    GST_VIDEO_CAPS_ARGB, 4, {
+  'A', 8, 'R', 8, 'G', 8, 'B', 8}}, {
+    GST_VIDEO_CAPS_BGRA, 4, {
+  'B', 8, 'G', 8, 'R', 8, 'A', 8}}, {
+    GST_VIDEO_CAPS_ABGR, 4, {
+  'A', 8, 'B', 8, 'G', 8, 'R', 8}}, {
+    GST_VIDEO_CAPS_YUV ("AYUV"), 4, {
+  'A', 8, 'Y', 8, 'U', 8, 'V', 8}}
+};
+
 typedef struct
 {
   guint32 image_start_offset;
@@ -118,83 +151,22 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   GstCaps *caps = NULL;
+  guint i;
 
   if (!d->pixel_layout) {
     GST_ERROR ("No pixel layout");
     return NULL;
   }
 
-  if (d->n_pixel_layout == 3) {
-    if (d->pixel_layout[0] == 'R' && d->pixel_layout[2] == 'G'
-        && d->pixel_layout[4] == 'B' && d->pixel_layout[1] == 8
-        && d->pixel_layout[3] == 8 && d->pixel_layout[5] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_RGB);
-    } else if (d->pixel_layout[0] == 'B' && d->pixel_layout[2] == 'G'
-        && d->pixel_layout[4] == 'R' && d->pixel_layout[1] == 8
-        && d->pixel_layout[3] == 8 && d->pixel_layout[5] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_BGR);
-    } else if (d->pixel_layout[0] == 'Y' && d->pixel_layout[2] == 'U'
-        && d->pixel_layout[4] == 'V' && d->pixel_layout[1] == 8
-        && d->pixel_layout[3] == 8 && d->pixel_layout[5] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("v308"));
-    } else {
-      GST_ERROR ("Unsupport 3 component pixel layout");
-      return NULL;
+  for (i = 0; i < G_N_ELEMENTS (_rgba_mapping_table); i++) {
+    if (d->n_pixel_layout != _rgba_mapping_table[i].n_pixel_layout)
+      continue;
+
+    if (memcmp (d->pixel_layout, &_rgba_mapping_table[i].pixel_layout,
+            _rgba_mapping_table[i].n_pixel_layout * 2) == 0) {
+      caps = gst_caps_from_string (_rgba_mapping_table[i].caps);
+      break;
     }
-  } else if (d->n_pixel_layout == 4) {
-    if (d->pixel_layout[0] == 'R' && d->pixel_layout[2] == 'G'
-        && d->pixel_layout[4] == 'B' && d->pixel_layout[6] == 'F'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBx);
-    } else if (d->pixel_layout[0] == 'B' && d->pixel_layout[2] == 'G'
-        && d->pixel_layout[4] == 'R' && d->pixel_layout[6] == 'F'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_BGRx);
-    } else if (d->pixel_layout[0] == 'F' && d->pixel_layout[2] == 'R'
-        && d->pixel_layout[4] == 'G' && d->pixel_layout[6] == 'B'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_xRGB);
-    } else if (d->pixel_layout[0] == 'F' && d->pixel_layout[2] == 'B'
-        && d->pixel_layout[4] == 'G' && d->pixel_layout[6] == 'R'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_xBGR);
-    } else if (d->pixel_layout[0] == 'A' && d->pixel_layout[2] == 'R'
-        && d->pixel_layout[4] == 'G' && d->pixel_layout[6] == 'B'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_ARGB);
-    } else if (d->pixel_layout[0] == 'A' && d->pixel_layout[2] == 'B'
-        && d->pixel_layout[4] == 'G' && d->pixel_layout[6] == 'R'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_ABGR);
-    } else if (d->pixel_layout[0] == 'R' && d->pixel_layout[2] == 'G'
-        && d->pixel_layout[4] == 'B' && d->pixel_layout[6] == 'A'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBA);
-    } else if (d->pixel_layout[0] == 'B' && d->pixel_layout[2] == 'G'
-        && d->pixel_layout[4] == 'R' && d->pixel_layout[6] == 'A'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_BGRA);
-    } else if (d->pixel_layout[0] == 'A' && d->pixel_layout[2] == 'Y'
-        && d->pixel_layout[4] == 'U' && d->pixel_layout[6] == 'V'
-        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
-        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("AYUV"));
-    } else {
-      GST_ERROR ("Unsupport 4 component pixel layout");
-      return NULL;
-    }
-  } else {
-    GST_ERROR ("Pixel layouts with %u components not supported yet",
-        d->n_pixel_layout);
-    return NULL;
   }
 
   if (caps) {
@@ -206,6 +178,8 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
         ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_end_offset;
 
     *mapping_data = data;
+  } else {
+    GST_WARNING ("Unsupported pixel layout");
   }
 
   return caps;
@@ -285,39 +259,6 @@ mxf_up_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
 static const guint8 up_essence_container_ul[] = {
   0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01,
   0x0D, 0x01, 0x03, 0x01, 0x02, 0x05, 0x7F, 0x01
-};
-
-static const struct
-{
-  const gchar *caps;
-  guint32 n_pixel_layout;
-  guint8 pixel_layout[10];
-} _rgba_mapping_table[] = {
-  {
-    GST_VIDEO_CAPS_RGB, 3, {
-  'R', 8, 'G', 8, 'B', 8}}, {
-    GST_VIDEO_CAPS_BGR, 3, {
-  'B', 8, 'G', 8, 'R', 8}}, {
-    GST_VIDEO_CAPS_YUV ("v308"), 3, {
-  'Y', 8, 'U', 8, 'V', 8}}, {
-    GST_VIDEO_CAPS_xRGB, 4, {
-  'F', 8, 'R', 8, 'G', 8, 'B', 8}}, {
-    GST_VIDEO_CAPS_RGBx, 4, {
-  'R', 8, 'G', 8, 'B', 8, 'F', 8}}, {
-    GST_VIDEO_CAPS_xBGR, 4, {
-  'F', 8, 'B', 8, 'G', 8, 'R', 8}}, {
-    GST_VIDEO_CAPS_BGRx, 4, {
-  'B', 8, 'G', 8, 'R', 8, 'F', 8}}, {
-    GST_VIDEO_CAPS_RGBA, 4, {
-  'R', 8, 'G', 8, 'B', 8, 'A', 8}}, {
-    GST_VIDEO_CAPS_ARGB, 4, {
-  'A', 8, 'R', 8, 'G', 8, 'B', 8}}, {
-    GST_VIDEO_CAPS_BGRA, 4, {
-  'B', 8, 'G', 8, 'R', 8, 'A', 8}}, {
-    GST_VIDEO_CAPS_ABGR, 4, {
-  'A', 8, 'B', 8, 'G', 8, 'R', 8}}, {
-    GST_VIDEO_CAPS_YUV ("AYUV"), 4, {
-  'A', 8, 'Y', 8, 'U', 8, 'V', 8}}
 };
 
 static MXFMetadataFileDescriptor *
