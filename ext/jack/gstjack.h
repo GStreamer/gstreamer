@@ -31,13 +31,17 @@
  * @GST_JACK_CONNECT_AUTO: In this mode, the element will try to connect each
  *     output port to a random physical jack input pin. The sink will
  *     expose the number of physical channels on its pad caps.
+ * @GST_JACK_CONNECT_AUTO_FORCED: In this mode, the element will try to connect each
+ *     output port to a random physical jack input pin. The  element will accept any number
+ *     of input channels.
  *
  * Specify how the output ports will be connected.
  */
 
 typedef enum {
   GST_JACK_CONNECT_NONE,
-  GST_JACK_CONNECT_AUTO
+  GST_JACK_CONNECT_AUTO,
+  GST_JACK_CONNECT_AUTO_FORCED
 } GstJackConnect;
 
 typedef jack_default_audio_sample_t sample_t;

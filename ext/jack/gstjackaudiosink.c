@@ -454,7 +454,8 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
 
   /* if we need to automatically connect the ports, do so now. We must do this
    * after activating the client. */
-  if (sink->connect == GST_JACK_CONNECT_AUTO) {
+  if (sink->connect == GST_JACK_CONNECT_AUTO
+      || sink->connect == GST_JACK_CONNECT_AUTO_FORCED) {
     /* find all the physical input ports. A physical input port is a port
      * associated with a hardware device. Someone needs connect to a physical
      * port in order to hear something. */
