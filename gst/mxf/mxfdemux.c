@@ -489,6 +489,15 @@ gst_mxf_demux_handle_primer_pack (GstMXFDemux * demux, const MXFUL * key,
   return GST_FLOW_OK;
 }
 
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+static void
+set_resolve_state_none (gpointer key, gpointer value, gpointer user_data)
+{
+  MXFMetadataBase *m = (MXFMetadataBase *) value;
+  m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
+}
+#endif
+
 static GstFlowReturn
 gst_mxf_demux_resolve_references (GstMXFDemux * demux)
 {
@@ -515,11 +524,7 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
     m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
   }
 #else
-  values = g_hash_table_get_values (demux->metadata);
-  for (l = values; l; l = l->next) {
-    m = l->data;
-    m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
-  }
+  g_hash_table_foreach (demux->metadata, set_resolve_state_none, NULL);
 #endif
 
 #if GLIB_CHECK_VERSION (2, 16, 0)

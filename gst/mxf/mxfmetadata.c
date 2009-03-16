@@ -62,6 +62,14 @@ mxf_metadata_base_resolve_default (MXFMetadataBase * self,
   return TRUE;
 }
 
+#if !GLIB_CHECK_VERSION (2, 16, 0)
+static void
+build_values_in_hash_table (gpointer key, gpointer value, GList ** valuelist)
+{
+  *valuelist = g_list_prepend (*valuelist, value);
+}
+#endif
+
 static GstStructure *
 mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 {
@@ -96,9 +104,10 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 
     g_hash_table_iter_init (&iter, self->other_tags);
 #else
-    GList *l, *values;
+    GList *l, *values = NULL;
 
-    values = g_hash_table_get_values (self->other_tags);
+    g_hash_table_foreach (self->other_tags, build_values_in_hash_table,
+        &values);
 #endif
 
     g_value_init (&va, GST_TYPE_ARRAY);
@@ -1227,9 +1236,9 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
 
   g_hash_table_iter_init (&iter, metadata);
 #else
-  GList *l, *values;
+  GList *l, *values = NULL;
 
-  values = g_hash_table_get_values (metadata);
+  g_hash_table_foreach (metadata, build_values_in_hash_table, &values);
 #endif
 
 #if GLIB_CHECK_VERSION (2, 16, 0)
@@ -2586,9 +2595,9 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
 
   g_hash_table_iter_init (&iter, metadata);
 #else
-  GList *l, *values;
+  GList *l, *values = NULL;
 
-  values = g_hash_table_get_values (metadata);
+  g_hash_table_foreach (metadata, build_values_in_hash_table, &values);
 #endif
 
 #if GLIB_CHECK_VERSION (2, 16, 0)
@@ -3457,8 +3466,8 @@ mxf_metadata_generic_picture_essence_descriptor_to_structure (MXFMetadataBase *
 {
   GstStructure *ret =
       MXF_METADATA_BASE_CLASS
-      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->to_structure
-      (m);
+      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
+      to_structure (m);
   MXFMetadataGenericPictureEssenceDescriptor *self =
       MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (m);
   gchar str[48];
