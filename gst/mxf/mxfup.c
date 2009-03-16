@@ -78,6 +78,21 @@ static const struct
   'A', 8, 'Y', 8, 'U', 8, 'V', 8}, GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')}
 };
 
+static const struct
+{
+  const gchar *caps;
+  guint bpp;
+  guint horizontal_subsampling;
+  guint vertical_subsampling;
+  gboolean reversed_byte_order;
+  guint32 fourcc;
+} _cdci_mapping_table[] = {
+  {
+  GST_VIDEO_CAPS_YUV ("YUY2"), 2, 1, 0, TRUE, GST_MAKE_FOURCC ('Y', 'U', 'Y',
+        '2')}, {
+GST_VIDEO_CAPS_YUV ("UYVY"), 2, 1, 0, FALSE, GST_MAKE_FOURCC ('U', 'Y', 'V',
+        'Y')},};
+
 typedef struct
 {
   guint32 fourcc;               /* fourcc or RGB format specifier */
@@ -226,6 +241,52 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
 }
 
 static GstCaps *
+mxf_up_cdci_create_caps (MXFMetadataTimelineTrack * track,
+    MXFMetadataCDCIPictureEssenceDescriptor * d, GstTagList ** tags,
+    MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
+{
+  GstCaps *caps = NULL;
+  guint i;
+  guint32 fourcc;
+  guint bpp;
+
+  for (i = 0; i < G_N_ELEMENTS (_cdci_mapping_table); i++) {
+    if (_cdci_mapping_table[i].horizontal_subsampling ==
+        d->horizontal_subsampling
+        && _cdci_mapping_table[i].vertical_subsampling ==
+        d->vertical_subsampling
+        && _cdci_mapping_table[i].reversed_byte_order ==
+        d->reversed_byte_order) {
+      caps = gst_caps_from_string (_cdci_mapping_table[i].caps);
+      fourcc = _cdci_mapping_table[i].fourcc;
+      bpp = _cdci_mapping_table[i].bpp;
+      break;
+    }
+  }
+
+  if (caps) {
+    MXFUPMappingData *data = g_new0 (MXFUPMappingData, 1);
+
+    mxf_metadata_generic_picture_essence_descriptor_set_caps (&d->parent, caps);
+
+    data->width = d->parent.stored_width;
+    data->height = d->parent.stored_height;
+    data->fourcc = fourcc;
+    data->bpp = bpp;
+    data->image_start_offset =
+        ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_start_offset;
+    data->image_end_offset =
+        ((MXFMetadataGenericPictureEssenceDescriptor *) d)->image_end_offset;
+
+    *mapping_data = data;
+  } else {
+    GST_WARNING ("Unsupported CDCI format");
+  }
+
+  return caps;
+}
+
+static GstCaps *
 mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
@@ -271,8 +332,9 @@ mxf_up_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
   if (r) {
     caps = mxf_up_rgba_create_caps (track, r, tags, handler, mapping_data);
+  } else if (c) {
+    caps = mxf_up_cdci_create_caps (track, c, tags, handler, mapping_data);
   } else {
-    GST_ERROR ("CDCI uncompressed picture essence not supported yet");
     return NULL;
   }
 
@@ -379,8 +441,45 @@ static MXFMetadataFileDescriptor *
 mxf_up_get_cdci_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
     MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
 {
-  g_assert_not_reached ();
-  return NULL;
+  MXFMetadataCDCIPictureEssenceDescriptor *ret;
+  guint i;
+  GstCaps *tmp, *intersection;
+  MXFUPMappingData *md = g_new0 (MXFUPMappingData, 1);
+
+  *mapping_data = md;
+
+  ret = (MXFMetadataCDCIPictureEssenceDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+
+  for (i = 0; i < G_N_ELEMENTS (_cdci_mapping_table); i++) {
+    tmp = gst_caps_from_string (_cdci_mapping_table[i].caps);
+    intersection = gst_caps_intersect (caps, tmp);
+    gst_caps_unref (tmp);
+
+    if (!gst_caps_is_empty (intersection)) {
+      gst_caps_unref (intersection);
+      ret->horizontal_subsampling =
+          _cdci_mapping_table[i].horizontal_subsampling;
+      ret->vertical_subsampling = _cdci_mapping_table[i].vertical_subsampling;
+      ret->reversed_byte_order = _cdci_mapping_table[i].reversed_byte_order;
+      md->fourcc = _cdci_mapping_table[i].fourcc;
+      md->bpp = _cdci_mapping_table[i].bpp;
+      break;
+    }
+    gst_caps_unref (intersection);
+  }
+
+  memcpy (&ret->parent.parent.essence_container, &up_essence_container_ul, 16);
+
+  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+      caps);
+
+  md->width = ret->parent.stored_width;
+  md->height = ret->parent.stored_height;
+
+  *handler = mxf_up_write_func;
+
+  return (MXFMetadataFileDescriptor *) ret;
 }
 
 static MXFMetadataFileDescriptor *
@@ -457,7 +556,9 @@ mxf_up_init (void)
           GST_VIDEO_CAPS_RGBA "; "
           GST_VIDEO_CAPS_ABGR "; "
           GST_VIDEO_CAPS_BGRA "; "
-          GST_VIDEO_CAPS_YUV ("AYUV") "; " GST_VIDEO_CAPS_YUV ("v308")));
+          GST_VIDEO_CAPS_YUV ("AYUV") "; "
+          GST_VIDEO_CAPS_YUV ("v308") "; "
+          GST_VIDEO_CAPS_YUV ("UYVY") "; " GST_VIDEO_CAPS_YUV ("YUY2")));
 
   memcpy (&mxf_up_essence_element_writer.data_definition,
       mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_PICTURE_ESSENCE),
