@@ -205,14 +205,11 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
 
   if (caps) {
     MXFUPMappingData *data = g_new0 (MXFUPMappingData, 1);
-    GstStructure *s;
 
     mxf_metadata_generic_picture_essence_descriptor_set_caps (&d->parent, caps);
 
-    s = gst_caps_get_structure (caps, 0);
-    gst_structure_get_int (s, "width", &data->width);
-    gst_structure_get_int (s, "height", &data->height);
-
+    data->width = d->parent.stored_width;
+    data->height = d->parent.stored_height;
     data->fourcc = fourcc;
     data->bpp = bpp;
     data->image_start_offset =
