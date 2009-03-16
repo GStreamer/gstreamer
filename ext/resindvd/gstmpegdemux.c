@@ -591,7 +591,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
 
-    /* Create a video pad to ensure it exists before emit no more pads */
+    /* Create a video pad to ensure it exists before emitting no more pads */
     temp = gst_flups_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2);
     /* Send a video format event downstream */
     {
@@ -623,11 +623,13 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
         continue;
 
       demux->audio_stream_types[i] = stream_format;
-
       switch (stream_format) {
         case 0x0:
           /* AC3 */
           stream_id = 0x80 + i;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - AC3", i,
+              stream_format, stream_id);
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_AC3);
           break;
         case 0x2:
@@ -635,17 +637,26 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           /* MPEG audio without and with extension stream are 
            * treated the same */
           stream_id = 0xC0 + i;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - MPEG audio", i,
+              stream_format, stream_id);
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_AUDIO_MPEG1);
           break;
         case 0x4:
           /* LPCM */
           stream_id = 0xA0 + i;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - DVD LPCM", i,
+              stream_format, stream_id);
           temp =
               gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_LPCM);
           break;
         case 0x6:
           /* DTS */
           stream_id = 0x88 + i;
+          GST_DEBUG_OBJECT (demux,
+              "Audio stream %d format %d ID 0x%02x - DTS", i,
+              stream_format, stream_id);
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_DTS);
           break;
         case 0x7:
@@ -667,6 +678,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
       if (!gst_structure_get_int (structure, cur_stream_name, &stream_format))
         continue;
+
+      GST_DEBUG_OBJECT (demux, "Subpicture stream %d ID 0x%02x", i, 0x20 + i);
 
       /* Retrieve the subpicture stream to force pad creation */
       temp = gst_flups_demux_get_stream (demux, 0x20 + i, ST_PS_DVD_SUBPICTURE);
