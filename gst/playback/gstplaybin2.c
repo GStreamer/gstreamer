@@ -1253,7 +1253,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
   if (!(channels = group->video_channels))
     goto no_channels;
 
-  if (stream == -1 || channels->len < stream) {
+  if (stream == -1 || channels->len <= stream) {
     sinkpad = NULL;
   } else {
     /* take channel from selected stream */
@@ -1295,7 +1295,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
   if (!(channels = group->audio_channels))
     goto no_channels;
 
-  if (stream == -1 || channels->len < stream) {
+  if (stream == -1 || channels->len <= stream) {
     sinkpad = NULL;
   } else {
     /* take channel from selected stream */
@@ -1337,7 +1337,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
   if (!(channels = group->text_channels))
     goto no_channels;
 
-  if (stream == -1 || channels->len < stream) {
+  if (stream == -1 || channels->len <= stream) {
     sinkpad = NULL;
   } else {
     /* take channel from selected stream */
