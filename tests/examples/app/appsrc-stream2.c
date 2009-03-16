@@ -123,7 +123,7 @@ found_source (GObject * object, GObject * orig, GParamSpec * pspec, App * app)
   /* we can set the length in appsrc. This allows some elements to estimate the
    * total duration of the stream. It's a good idea to set the property when you
    * can but it's not required. */
-  g_object_set (app->appsrc, "size", app->length, NULL);
+  g_object_set (app->appsrc, "size", (gint64) app->length, NULL);
 
   /* configure the appsrc, we will push a buffer to appsrc when it needs more
    * data */
