@@ -132,6 +132,10 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
         && d->pixel_layout[4] == 'R' && d->pixel_layout[1] == 8
         && d->pixel_layout[3] == 8 && d->pixel_layout[5] == 8) {
       caps = gst_caps_from_string (GST_VIDEO_CAPS_BGR);
+    } else if (d->pixel_layout[0] == 'Y' && d->pixel_layout[2] == 'U'
+        && d->pixel_layout[4] == 'V' && d->pixel_layout[1] == 8
+        && d->pixel_layout[3] == 8 && d->pixel_layout[5] == 8) {
+      caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("v308"));
     } else {
       GST_ERROR ("Unsupport 3 component pixel layout");
       return NULL;
@@ -177,6 +181,11 @@ mxf_up_rgba_create_caps (MXFMetadataTimelineTrack * track,
         && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
         && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
       caps = gst_caps_from_string (GST_VIDEO_CAPS_BGRA);
+    } else if (d->pixel_layout[0] == 'A' && d->pixel_layout[2] == 'Y'
+        && d->pixel_layout[4] == 'U' && d->pixel_layout[6] == 'V'
+        && d->pixel_layout[1] == 8 && d->pixel_layout[3] == 8
+        && d->pixel_layout[5] == 8 && d->pixel_layout[7] == 8) {
+      caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("AYUV"));
     } else {
       GST_ERROR ("Unsupport 4 component pixel layout");
       return NULL;
