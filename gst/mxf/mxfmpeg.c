@@ -863,6 +863,12 @@ static const MXFEssenceElementHandler mxf_mpeg_essence_element_handler = {
   mxf_mpeg_create_caps
 };
 
+typedef struct
+{
+  guint spf;
+  guint rate;
+} MPEGAudioMappingData;
+
 static GstFlowReturn
 mxf_mpeg_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
     GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
@@ -882,6 +888,11 @@ mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 {
   MXFMetadataGenericSoundEssenceDescriptor *ret;
   GstStructure *s;
+  MPEGAudioMappingData *md = g_new0 (MPEGAudioMappingData, 1);
+  gint rate;
+
+  md->spf = -1;
+  *mapping_data = md;
 
   ret = (MXFMetadataGenericSoundEssenceDescriptor *)
       gst_mini_object_new (MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
@@ -910,18 +921,32 @@ mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
         memcpy (&ret->sound_essence_compression,
             &sound_essence_compression_mpeg2_layer1, 16);
 
+      if (layer == 1)
+        md->spf = 384;
+      else if (layer == 2 || mpegversion == 1)
+        md->spf = 1152;
+      else
+        md->spf = 576;          /* MPEG-2 or 2.5 */
+
       /* Otherwise all 0x00, must be some kind of mpeg1 audio */
     } else if (mpegversion == 2) {
       memcpy (&ret->sound_essence_compression, &sound_essence_compression_aac,
           16);
+      md->spf = 1024;           /* FIXME: is this correct? */
     }
   } else if (strcmp (gst_structure_get_name (s), "audio/x-ac3") == 0) {
     memcpy (&ret->sound_essence_compression, &sound_essence_compression_ac3,
         16);
+    md->spf = 256;              /* FIXME: is this correct? */
   } else {
     g_assert_not_reached ();
   }
 
+  if (!gst_structure_get_int (s, "rate", &rate)) {
+    GST_ERROR ("Invalid rate");
+    return NULL;
+  }
+  md->rate = rate;
 
   memcpy (&ret->parent.essence_container, &mpeg_essence_container_ul, 16);
 
@@ -938,34 +963,15 @@ mxf_mpeg_audio_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
   return;
 }
 
-static guint64
-gst_greatest_common_divisor (guint64 a, guint64 b)
-{
-  while (b != 0) {
-    guint temp = a;
-
-    a = b;
-    b = temp % b;
-  }
-
-  return a;
-}
-
 static void
 mxf_mpeg_audio_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
     gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
     MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
 {
-  GstClockTime duration = GST_BUFFER_DURATION (buf);
-  guint64 gcd;
+  MPEGAudioMappingData *md = mapping_data;
 
-  g_assert (duration != -1);
-
-  /* FIXME: Get the real edit rate for the format */
-  gcd = gst_greatest_common_divisor (GST_SECOND, duration);
-
-  edit_rate->n = GST_SECOND / gcd;
-  edit_rate->d = duration / gcd;
+  edit_rate->n = md->rate;
+  edit_rate->d = md->spf;
 }
 
 static guint32
