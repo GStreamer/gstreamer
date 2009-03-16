@@ -21,7 +21,7 @@ set of plugins. Finally, you may also be interested in "gst-plugins-ugly",
 To check out the latest git version of the core and the basic modules, use
 <programlisting>
  for module in gstreamer gst-plugins-base gst-plugins-good; do
-   git clone git://anongit.freedesktop.org:/git/gstreamer/$module ;
+   git clone git://anongit.freedesktop.org/git/gstreamer/$module ;
  done
 </programlisting>
 This will create three directories in your current directory: "gstreamer",
