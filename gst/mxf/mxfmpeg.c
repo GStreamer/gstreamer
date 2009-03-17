@@ -507,8 +507,6 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
     }
   }
 
-  g_assert_not_reached ();
-
   return FALSE;
 }
 
