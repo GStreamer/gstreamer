@@ -252,7 +252,6 @@ static void
 gst_video_scale_class_init (GstVideoScaleClass * klass)
 {
   GObjectClass *gobject_class;
-
   GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
@@ -339,13 +338,9 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstVideoScale *videoscale;
-
   GstCaps *ret;
-
   GstStructure *structure;
-
   const GValue *par;
-
   gint method;
 
   /* this function is always called with a simple caps */
@@ -407,7 +402,6 @@ static int
 gst_video_scale_get_format (GstCaps * caps)
 {
   int i;
-
   GstCaps *icaps, *scaps;
 
   for (i = 0; i < G_N_ELEMENTS (gst_video_scale_format_caps); i++) {
@@ -502,7 +496,6 @@ static gboolean
 parse_caps (GstCaps * caps, gint * format, gint * width, gint * height)
 {
   gboolean ret;
-
   GstStructure *structure;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -519,7 +512,6 @@ static gboolean
 gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
   GstVideoScale *videoscale;
-
   gboolean ret;
 
   videoscale = GST_VIDEO_SCALE (trans);
@@ -561,9 +553,7 @@ gst_video_scale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     guint * size)
 {
   GstVideoScale *videoscale;
-
   gint format, width, height;
-
   VSImage img;
 
   g_assert (size);
@@ -585,7 +575,6 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *ins, *outs;
-
   const GValue *from_par, *to_par;
 
   g_return_if_fail (gst_caps_is_fixed (caps));
@@ -733,21 +722,13 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     GstBuffer * out)
 {
   GstVideoScale *videoscale;
-
   GstFlowReturn ret = GST_FLOW_OK;
-
   VSImage *dest;
-
   VSImage *src;
-
   VSImage dest_u;
-
   VSImage dest_v;
-
   VSImage src_u;
-
   VSImage src_v;
-
   gint method;
 
   videoscale = GST_VIDEO_SCALE (trans);
@@ -896,11 +877,8 @@ static gboolean
 gst_video_scale_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVideoScale *videoscale;
-
   gboolean ret;
-
   double a;
-
   GstStructure *structure;
 
   videoscale = GST_VIDEO_SCALE (trans);
