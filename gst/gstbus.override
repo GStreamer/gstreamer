@@ -155,8 +155,12 @@ override gst_bus_set_sync_handler args
 static PyObject *
 _wrap_gst_bus_set_sync_handler (PyGObject *self, PyObject *args)
 {
-    PyObject *callback, *cbargs = NULL, *data;
+    PyObject *callback = NULL;
+    PyObject *cbargs = NULL;
+    PyObject *data = NULL;
+    PyObject *old_data = NULL;
     gint len;
+    static GQuark sync_handler_data_quark = 0;
 
     len = PyTuple_Size(args);
 
@@ -165,26 +169,54 @@ _wrap_gst_bus_set_sync_handler (PyGObject *self, PyObject *args)
 	return NULL;
     }
 
+    if (sync_handler_data_quark == 0)
+	sync_handler_data_quark = \
+			g_quark_from_static_string("PyGst::BusSyncHandlerData");
+
     callback = PySequence_GetItem(args, 0);
     if (callback != Py_None) {
 	if (!PyCallable_Check(callback)) {
+	    Py_DECREF (callback);
 	    PyErr_SetString(PyExc_TypeError, "callback is not callable");
 	    return NULL;
 	}
 
 	cbargs = PySequence_GetSlice(args, 1, len);
-	if (cbargs == NULL)
+	if (cbargs == NULL) {
+	    Py_DECREF (callback);
 	    return NULL;
+	}
 
 	data = Py_BuildValue("(ON)", callback, cbargs);
-	if (data == NULL)
+	Py_DECREF (cbargs);
+	if (data == NULL) {
+	    Py_DECREF (callback);
 	    return NULL;
+	}
+
+	old_data = g_object_get_qdata (self->obj, sync_handler_data_quark);
+	if (old_data != NULL) {
+	   Py_DECREF (old_data);
+	}
+
+	g_object_set_qdata (self->obj, sync_handler_data_quark, data);
 
 	gst_bus_set_sync_handler (GST_BUS (self->obj),
-				  (GstBusSyncHandler) bus_sync_handler, 
+				  (GstBusSyncHandler) bus_sync_handler,
 				  data);
-    } else
+    } else {
+	old_data = g_object_get_qdata (self->obj, sync_handler_data_quark);
+	if (old_data != NULL) {
+	    Py_DECREF (old_data);
+	}
+
+	g_object_set_qdata (self->obj, sync_handler_data_quark, NULL);
+
 	gst_bus_set_sync_handler (GST_BUS (self->obj), NULL, NULL);
+    }
+
+    Py_DECREF (callback);
+
     Py_INCREF(Py_None);
     return Py_None;
 }

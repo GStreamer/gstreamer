@@ -22,6 +22,7 @@ from common import gst, unittest, TestCase
 
 import gobject
 import time
+import sys
 
 class BusSignalTest(TestCase):
     def testGoodConstructor(self):
@@ -109,8 +110,37 @@ class BusSignalTest(TestCase):
         loop.quit()
         return True
 
+    def testSyncHandlerCallbackRefcount(self):
+        def callback1():
+            pass
 
-    
+        def callback2():
+            pass
+
+        bus = gst.Bus()
+
+        # set
+        self.failUnless(sys.getrefcount(callback1), 2)
+        bus.set_sync_handler(callback1)
+        self.failUnless(sys.getrefcount(callback1), 3)
+
+        # set again
+        self.failUnless(sys.getrefcount(callback1), 3)
+        bus.set_sync_handler(callback1)
+        self.failUnless(sys.getrefcount(callback1), 3)
+
+        # replace
+        # this erros out in gst_bus_set_sync_handler, but we need to check that
+        # we don't leak anyway
+        self.failUnless(sys.getrefcount(callback2), 2)
+        bus.set_sync_handler(callback2)
+        self.failUnless(sys.getrefcount(callback1), 2)
+        self.failUnless(sys.getrefcount(callback2), 3)
+
+        # unset
+        bus.set_sync_handler(None)
+        self.failUnless(sys.getrefcount(callback2), 2)
+
 class BusAddWatchTest(TestCase):
 
     def testADumbExample(self):
