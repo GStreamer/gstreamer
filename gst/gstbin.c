@@ -2922,13 +2922,37 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gst_message_unref (message);
       break;
     }
-    case GST_MESSAGE_SEGMENT_START:
+    case GST_MESSAGE_SEGMENT_START:{
+      gboolean post = FALSE;
+      GstFormat format;
+      gint64 position;
+
+      gst_message_parse_segment_start (message, &format, &position);
+      seqnum = gst_message_get_seqnum (message);
+
       GST_OBJECT_LOCK (bin);
+      /* if this is the first segment-start, post to parent but not to the
+       * application */
+      if (!find_message (bin, NULL, GST_MESSAGE_SEGMENT_START) &&
+          (GST_OBJECT_PARENT (bin) != NULL)) {
+        post = TRUE;
+      }
       /* replace any previous segment_start message from this source
        * with the new segment start message */
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
       GST_OBJECT_UNLOCK (bin);
+      if (post) {
+        tmessage = gst_message_new_segment_start (GST_OBJECT_CAST (bin),
+            format, position);
+        gst_message_set_seqnum (tmessage, seqnum);
+
+        /* post segment start with initial format and position. */
+        GST_DEBUG_OBJECT (bin, "posting SEGMENT_START (%u) bus message: %p",
+            seqnum, message);
+        gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
+      }
       break;
+    }
     case GST_MESSAGE_SEGMENT_DONE:
     {
       gboolean post = FALSE;
@@ -2957,6 +2981,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         gst_message_set_seqnum (tmessage, seqnum);
 
         /* post segment done with latest format and position. */
+        GST_DEBUG_OBJECT (bin, "posting SEGMENT_DONE (%u) bus message: %p",
+            seqnum, message);
         gst_element_post_message (GST_ELEMENT_CAST (bin), tmessage);
       }
       break;
