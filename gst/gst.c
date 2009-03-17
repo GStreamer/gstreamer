@@ -103,9 +103,8 @@
  * Last reviewed on 2006-08-11 (0.10.10)
  */
 
-#include "gstconfig.h"
-
 #include "gst_private.h"
+#include "gstconfig.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
