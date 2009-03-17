@@ -189,7 +189,8 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
         "width", G_TYPE_INT, context->width,
         "height", G_TYPE_INT, context->height,
         "framerate", GST_TYPE_FRACTION,
-        context->time_base.den, context->time_base.num, NULL);
+        context->time_base.den / context->ticks_per_frame,
+        context->time_base.num, NULL);
   } else if (context) {
     /* so we are after restricted caps in this case */
     switch (codec_id) {
@@ -1829,6 +1830,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
     /* somehow these seem mixed up.. */
     context->time_base.den = gst_value_get_fraction_numerator (fps);
     context->time_base.num = gst_value_get_fraction_denominator (fps);
+    context->ticks_per_frame = 1;
 
     GST_DEBUG ("setting framerate %d/%d = %lf",
         context->time_base.den, context->time_base.num,

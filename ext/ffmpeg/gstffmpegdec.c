@@ -1649,7 +1649,8 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
               ffmpegdec->context->time_base.den < 1000)) {
         GST_LOG_OBJECT (ffmpegdec, "using decoder's framerate for duration");
         out_duration = gst_util_uint64_scale_int (GST_SECOND,
-            ffmpegdec->context->time_base.num,
+            ffmpegdec->context->time_base.num /
+            ffmpegdec->context->ticks_per_frame,
             ffmpegdec->context->time_base.den);
       } else {
         GST_LOG_OBJECT (ffmpegdec, "no valid duration found");

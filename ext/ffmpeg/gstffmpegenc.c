@@ -346,6 +346,7 @@ gst_ffmpegenc_getcaps (GstPad * pad)
     ctx->height = DEFAULT_HEIGHT;
     ctx->time_base.num = 1;
     ctx->time_base.den = 25;
+    ctx->ticks_per_frame = 1;
     ctx->bit_rate = DEFAULT_VIDEO_BITRATE;
     /* makes it silent */
     ctx->strict_std_compliance = -1;
@@ -491,6 +492,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (!ffmpegenc->context->time_base.den) {
     ffmpegenc->context->time_base.den = 25;
     ffmpegenc->context->time_base.num = 1;
+    ffmpegenc->context->ticks_per_frame = 1;
   } else if ((oclass->in_plugin->id == CODEC_ID_MPEG4)
       && (ffmpegenc->context->time_base.den > 65535)) {
     /* MPEG4 Standards do not support time_base denominator greater than
@@ -515,7 +517,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
     ctx = ffmpegenc->context;
     ctx->gop_size = (ffmpegenc->max_key_interval < 0) ?
         (-ffmpegenc->max_key_interval
-        * (ctx->time_base.den / ctx->time_base.num))
+        * (ctx->time_base.den * ctx->ticks_per_frame / ctx->time_base.num))
         : ffmpegenc->max_key_interval;
   }
 
@@ -636,8 +638,8 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   g_return_val_if_fail (frame_size == GST_BUFFER_SIZE (inbuf), GST_FLOW_ERROR);
 
   ffmpegenc->picture->pts =
-      gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf),
-      ffmpegenc->context->time_base);
+      gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf) /
+      ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
 
   ffmpegenc_setup_working_buf (ffmpegenc);
 
