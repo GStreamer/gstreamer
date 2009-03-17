@@ -156,14 +156,13 @@ packages is very much appreciated.
 
     <qandaentry>
       <question id="developing-coding-style">
-        <para>What is the coding style for GStreamer core ?</para>
+        <para>What is the coding style for GStreamer code?</para>
       </question>
 
       <answer>
         <para>
-The core is basically coded in K&amp;R with 2-space indenting. 
-Just follow what's already there and you'll be fine. 
-The core could use a code cleanup though at this point.
+The core and almost all plugin modules are basically coded in K&amp;R with
+2-space indenting. Just follow what's already there and you'll be fine.
         </para>
         <para>
 Individual plugins in gst-plugins-* or plugins that you want considered for
@@ -171,21 +170,7 @@ addition to one of the gst-plugins-* modules should be coded in the same style.
 It's easier if everything is consistent. Consistency is, of course, the goal. 
         </para>
         <para>
-If you use emacs, try these lines:
-<programlisting>
-(defun gstreamer-c-mode ()
-  "C mode with adjusted defaults for use with GStreamer."
-  (interactive)
-  (c-mode)
-  (c-set-style "K&amp;R")
-  (setq c-basic-offset 2))
-
-(setq auto-mode-alist (cons '("gst.*/.*\\.[ch]$" . gstreamer-c-mode)
-                       auto-mode-alist))
-</programlisting>
-        </para>
-        <para>
-Or, run your code (only the *.c files, not the header files) through 
+Simply run your code (only the *.c files, not the header files) through
 <programlisting>
 indent \
   --braces-on-if-line \
