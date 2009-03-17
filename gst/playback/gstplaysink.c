@@ -928,7 +928,8 @@ gen_text_chain (GstPlaySink * playsink)
     if (chain->sink) {
       elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
       if (elem) {
-        g_object_set (elem, "async", TRUE, NULL);
+        /* make sure the sparse subtitles don't participate in the preroll */
+        g_object_set (elem, "async", FALSE, NULL);
         /* we have a custom sink, this will be our textsinkpad */
         textsinkpad = gst_element_get_static_pad (chain->sink, "sink");
         if (textsinkpad) {
@@ -941,6 +942,11 @@ gen_text_chain (GstPlaySink * playsink)
           gst_object_unref (chain->sink);
           chain->sink = NULL;
         }
+        /* try to set sync to true but it's no biggie when we can't */
+        if ((elem =
+                gst_play_sink_find_property_sinks (playsink, chain->sink,
+                    "async")))
+          g_object_set (elem, "sync", TRUE, NULL);
       } else {
         GST_WARNING_OBJECT (playsink,
             "can't find async property in custom text sink");
@@ -1537,8 +1543,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
-              chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
+              vischain->chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       gst_pad_link (playsink->audio_tee_vissrc, playsink->vischain->sinkpad);
       gst_pad_link (srcpad, playsink->videochain->sinkpad);
