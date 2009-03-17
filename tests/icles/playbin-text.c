@@ -56,6 +56,7 @@ bus_message (GstBus * bus, GstMessage * message, App * app)
       g_main_loop_quit (app->loop);
       break;
     case GST_MESSAGE_EOS:
+      g_message ("received EOS");
       g_main_loop_quit (app->loop);
       break;
     default:
@@ -65,18 +66,25 @@ bus_message (GstBus * bus, GstMessage * message, App * app)
 }
 
 static void
-have_subtitle (GstElement * fakesink, GstBuffer * buffer,
-    GstPad * pad, App * app)
+have_subtitle (GstElement * appsink, App * app)
 {
-  guint8 *data;
-  guint size;
+  GstBuffer *buffer;
 
-  g_print ("received a subtitle\n");
+  /* get the buffer, we can also wakeup the mainloop to get the subtitle from
+   * appsink in the mainloop */
+  g_signal_emit_by_name (appsink, "pull-buffer", &buffer);
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  if (buffer) {
+    guint8 *data;
+    guint size;
 
-  gst_util_dump_mem (data, size);
+    g_message ("received a subtitle");
+
+    data = GST_BUFFER_DATA (buffer);
+    size = GST_BUFFER_SIZE (buffer);
+
+    gst_util_dump_mem (data, size);
+  }
 }
 
 int
@@ -98,10 +106,12 @@ main (int argc, char *argv[])
   app->playbin = gst_element_factory_make ("playbin2", NULL);
   g_assert (app->playbin);
 
-  /* set fakesink to get the subtitles */
-  app->textsink = gst_element_factory_make ("fakesink", "subtitle_sink");
-  g_object_set (G_OBJECT (app->textsink), "signal-handoffs", TRUE, NULL);
-  g_signal_connect (app->textsink, "handoff", G_CALLBACK (have_subtitle), app);
+  /* set appsink to get the subtitles */
+  app->textsink = gst_element_factory_make ("appsink", "subtitle_sink");
+  g_object_set (G_OBJECT (app->textsink), "emit-signals", TRUE, NULL);
+  g_signal_connect (app->textsink, "new-buffer", G_CALLBACK (have_subtitle),
+      app);
+
   g_object_set (G_OBJECT (app->playbin), "text-sink", app->textsink, NULL);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->playbin));
@@ -118,7 +128,7 @@ main (int argc, char *argv[])
   /* this mainloop is stopped when we receive an error or EOS */
   g_main_loop_run (app->loop);
 
-  GST_DEBUG ("stopping");
+  g_message ("stopping");
 
   gst_element_set_state (app->playbin, GST_STATE_NULL);
 
