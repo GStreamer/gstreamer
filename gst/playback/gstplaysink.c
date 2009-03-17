@@ -632,11 +632,17 @@ add_chain (GstPlayChain * chain, gboolean add)
 static gboolean
 activate_chain (GstPlayChain * chain, gboolean activate)
 {
+  GstState state;
+
   if (chain->activated == activate)
     return TRUE;
 
+  GST_OBJECT_LOCK (chain->playsink);
+  state = GST_STATE_TARGET (chain->playsink);
+  GST_OBJECT_UNLOCK (chain->playsink);
+
   if (activate)
-    gst_element_set_state (chain->bin, GST_STATE_PAUSED);
+    gst_element_set_state (chain->bin, state);
   else
     gst_element_set_state (chain->bin, GST_STATE_NULL);
 
