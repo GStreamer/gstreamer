@@ -1784,10 +1784,14 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     switch (select->type) {
       case GST_PLAY_SINK_TYPE_VIDEO:
       case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+        /* we want to return NOT_LINKED for unselected pads but only for audio
+         * and video pads because text pads might come from an external file. */
+        g_object_set (sinkpad, "always-ok", FALSE, NULL);
         signal = SIGNAL_VIDEO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_AUDIO:
       case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+        g_object_set (sinkpad, "always-ok", FALSE, NULL);
         signal = SIGNAL_AUDIO_CHANGED;
         break;
       case GST_PLAY_SINK_TYPE_TEXT:
