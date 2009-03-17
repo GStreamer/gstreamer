@@ -32,16 +32,6 @@
 
 #include "gstrtspbase64.h"
 
-static char base64table[64] = {
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
-  'P',
-  'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e',
-  'f',
-  'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
-  'v',
-  'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
-};
-
 /**
  * gst_rtsp_base64_encode:
  * @data: the binary data to encode
@@ -49,44 +39,19 @@ static char base64table[64] = {
  *
  * Encode a sequence of binary data into its Base-64 stringified representation.
  *
+ * Deprecated: Use g_base64_encode()
+ *
  * Returns: a newly allocated, zero-terminated Base-64 encoded string
  * representing @data.
  */
 /* This isn't efficient, but it doesn't need to be */
+#ifndef GST_REMOVE_DEPRECATED
 gchar *
 gst_rtsp_base64_encode (const gchar * data, gsize len)
 {
-  gchar *out = g_malloc (len * 4 / 3 + 4);
-  gchar *result = out;
-  int chunk;
-
-  while (len > 0) {
-    chunk = (len > 3) ? 3 : len;
-    *out++ = base64table[(*data & 0xFC) >> 2];
-    *out++ = base64table[((*data & 0x03) << 4) | ((*(data + 1) & 0xF0) >> 4)];
-    switch (chunk) {
-      case 3:
-        *out++ =
-            base64table[((*(data + 1) & 0x0F) << 2) | ((*(data +
-                        2) & 0xC0) >> 6)];
-        *out++ = base64table[(*(data + 2)) & 0x3F];
-        break;
-      case 2:
-        *out++ = base64table[((*(data + 1) & 0x0F) << 2)];
-        *out++ = '=';
-        break;
-      case 1:
-        *out++ = '=';
-        *out++ = '=';
-        break;
-    }
-    data += chunk;
-    len -= chunk;
-  }
-  *out = 0;
-
-  return result;
+  return g_base64_encode ((const guchar *) data, len);
 }
+#endif
 
 /**
  * gst_rtsp_base64_decode_ip:
@@ -96,51 +61,24 @@ gst_rtsp_base64_encode (const gchar * data, gsize len)
  * Decode the base64 string pointed to by @data in-place. When @len is not #NULL
  * it will contain the length of the decoded data.
  */
+/* FIXME: Deprecate this once we depend on GLib 2.20 and
+ * use g_base64_decode_inplace then.
+ */
 void
 gst_rtsp_base64_decode_ip (gchar * data, gsize * len)
 {
-  char dtable[256];
-  int i, j, k = 0, n = strlen (data);
+  gint input_length, output_length, state = 0;
+  guint save = 0;
 
-  for (i = 0; i < 255; i++)
-    dtable[i] = 0x80;
-  for (i = 'A'; i <= 'Z'; i++)
-    dtable[i] = 0 + (i - 'A');
-  for (i = 'a'; i <= 'z'; i++)
-    dtable[i] = 26 + (i - 'a');
-  for (i = '0'; i <= '9'; i++)
-    dtable[i] = 52 + (i - '0');
-  dtable['+'] = 62;
-  dtable['/'] = 63;
-  dtable['='] = 0;
+  g_return_if_fail (data != NULL);
 
-  for (j = 0; j < n; j += 4) {
-    char a[4], b[4];
+  input_length = strlen (data);
 
-    for (i = 0; i < 4; i++) {
-      int c = data[i + j];
+  g_return_if_fail (input_length > 1);
 
-      if (dtable[c] & 0x80) {
-        if (len)
-          *len = 0;
-        return;
-      }
-      a[i] = (char) c;
-      b[i] = (char) dtable[c];
-    }
-    data[k++] = (b[0] << 2) | (b[1] >> 4);
-    data[k++] = (b[1] << 4) | (b[2] >> 2);
-    data[k++] = (b[2] << 6) | b[3];
-    i = a[2] == '=' ? 1 : (a[3] == '=' ? 2 : 3);
-    if (i < 3) {
-      data[k] = 0;
-      if (len)
-        *len = k;
-      return;
-    }
-  }
-  data[k] = 0;
+  output_length =
+      g_base64_decode_step (data, input_length, (guchar *) data, &state, &save);
+
   if (len)
-    *len = k;
-  return;
+    *len = output_length;
 }
