@@ -19,7 +19,7 @@
  */
 
 #include <gst/check/gstcheck.h>
-#include <gst-libs/gst/app/gstappsink.h>
+#include <gst/app/gstappsink.h>
 
 gint global_testdata;
 
