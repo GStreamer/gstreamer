@@ -1552,6 +1552,7 @@ no_more_pads_cb (GstElement * element, GstDecodeBin * dbin)
     goto no_group;
 
   gst_decode_group_set_complete (group);
+
   return;
 
 no_group:
@@ -1687,6 +1688,10 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
 
   /* if we haven't exposed the group, do it */
   DECODE_BIN_LOCK (group->dbin);
+  /* decrease the number of dynamic elements, we don't expect anything anymore
+   * and we need the groups to be 0 for the expose to work */
+  if (group->nbdynamic > 0)
+    group->nbdynamic--;
   gst_decode_group_expose (group);
   DECODE_BIN_UNLOCK (group->dbin);
 }
@@ -1751,7 +1756,8 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
  * @as_demux: create the group as a demuxer
  * @created: result when the group was created
  *
- * Returns the current non-completed group.
+ * Returns the current non-completed group. The dynamic refcount of the group is
+ * increased when dealing with a demuxer.
  *
  * Returns: %NULL if no groups are available, or all groups are completed.
  */
@@ -1766,11 +1772,15 @@ get_current_group (GstDecodeBin * dbin, gboolean create, gboolean as_demux,
   for (tmp = dbin->groups; tmp; tmp = g_list_next (tmp)) {
     GstDecodeGroup *this = (GstDecodeGroup *) tmp->data;
 
+    GROUP_MUTEX_LOCK (this);
     GST_LOG_OBJECT (dbin, "group %p, complete:%d", this, this->complete);
 
     if (!this->complete) {
       group = this;
+      GROUP_MUTEX_UNLOCK (this);
       break;
+    } else {
+      GROUP_MUTEX_UNLOCK (this);
     }
   }
   if (group == NULL && create) {
@@ -1779,6 +1789,9 @@ get_current_group (GstDecodeBin * dbin, gboolean create, gboolean as_demux,
     dbin->groups = g_list_append (dbin->groups, group);
     if (created)
       *created = TRUE;
+    /* demuxers are dynamic, we need no-more-pads or overrun now */
+    if (as_demux)
+      group->nbdynamic++;
   }
   DECODE_BIN_UNLOCK (dbin);
 
@@ -1936,12 +1949,16 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
 
   /* we are drained. Check if there is a next group to activate */
   if ((group == dbin->activegroup) && dbin->groups) {
+    GstDecodeGroup *newgroup;
+
+    newgroup = (GstDecodeGroup *) dbin->groups->data;
+
     GST_DEBUG_OBJECT (dbin, "Switching to new group");
 
     /* hide current group */
     gst_decode_group_hide (group);
     /* expose next group */
-    gst_decode_group_expose ((GstDecodeGroup *) dbin->groups->data);
+    gst_decode_group_expose (newgroup);
     /* we're not yet drained now */
     drained = FALSE;
   }
@@ -2138,8 +2155,10 @@ gst_decode_group_expose (GstDecodeGroup * group)
   return TRUE;
 
 name_problem:
-  g_warning ("error adding pad to decodebin2");
-  return FALSE;
+  {
+    g_warning ("error adding pad to decodebin2");
+    return FALSE;
+  }
 }
 
 static void
@@ -2303,11 +2322,11 @@ gst_decode_group_set_complete (GstDecodeGroup * group)
 
   GROUP_MUTEX_LOCK (group);
   group->complete = TRUE;
+  if (group->nbdynamic > 0)
+    group->nbdynamic--;
   gst_decode_group_check_if_blocked (group);
   GROUP_MUTEX_UNLOCK (group);
 }
-
-
 
 /*************************
  * GstDecodePad functions
