@@ -38,6 +38,7 @@ GST_DEBUG_CATEGORY_EXTERN (resindvd_debug);
 #define GST_CAT_DEFAULT resindvd_debug
 
 #define USE_VIDEOQ 0
+#define USE_HARDCODED_AUDIODEC 1
 
 #define DVDBIN_LOCK(d) g_mutex_lock((d)->dvd_lock)
 #define DVDBIN_UNLOCK(d) g_mutex_unlock((d)->dvd_lock)
@@ -434,13 +435,19 @@ create_elements (RsnDvdBin * dvdbin)
           RSN_TYPE_STREAM_SELECTOR, "audioselect", "Audio stream selector"))
     return FALSE;
 
+#if USE_HARDCODED_AUDIODEC
+  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, "a52dec", 0,
+          "auddec", "audio decoder"))
+    return FALSE;
+#else
+  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, NULL,
+          RSN_TYPE_AUDIODEC, "auddec", "audio decoder"))
+    return FALSE;
+#endif
+
   /* rsnaudiomunge goes after the audio decoding to regulate the stream */
   if (!try_create_piece (dvdbin, DVD_ELEM_AUD_MUNGE, NULL,
           RSN_TYPE_AUDIOMUNGE, "audiomunge", "Audio output filter"))
-    return FALSE;
-
-  if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, NULL,
-          RSN_TYPE_AUDIODEC, "auddec", "audio decoder"))
     return FALSE;
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUDDEC], "src");
