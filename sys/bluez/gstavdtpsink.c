@@ -1026,32 +1026,63 @@ static gboolean
 gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
 {
   gchar buf[BT_SUGGESTED_BUFFER_SIZE];
+  struct bt_open_req *open_req = (void *) buf;
+  struct bt_open_rsp *open_rsp = (void *) buf;
   struct bt_set_configuration_req *req = (void *) buf;
   struct bt_set_configuration_rsp *rsp = (void *) buf;
   gboolean ret;
   GIOError io_error;
   gchar *temp;
   GstStructure *structure;
+  codec_capabilities_t *codec = NULL;
 
   temp = gst_caps_to_string (caps);
   GST_DEBUG_OBJECT (self, "configuring device with caps: %s", temp);
   g_free (temp);
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_name (structure, "audio/x-sbc"))
+    codec = (void *) gst_avdtp_find_caps (self, BT_A2DP_CODEC_SBC);
+  else if (gst_structure_has_name (structure, "audio/mpeg"))
+    codec = (void *) gst_avdtp_find_caps (self, BT_A2DP_CODEC_MPEG12);
+
+  if (codec == NULL) {
+    GST_ERROR_OBJECT (self, "Couldn't parse caps " "to packet configuration");
+    return FALSE;
+  }
+
+  memset (req, 0, BT_SUGGESTED_BUFFER_SIZE);
+  open_req->h.type = BT_REQUEST;
+  open_req->h.name = BT_OPEN;
+  open_req->h.length = sizeof (*open_req);
+
+  strncpy (open_req->destination, self->device, 18);
+  open_req->seid = codec->seid;
+  open_req->lock = BT_WRITE_LOCK;
+
+  io_error = gst_avdtp_sink_audioservice_send (self, &open_req->h);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error ocurred while sending " "open packet");
+    return FALSE;
+  }
+
+  open_rsp->h.length = sizeof (*open_rsp);
+  io_error = gst_avdtp_sink_audioservice_expect (self, &open_rsp->h, BT_OPEN);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while receiving device " "confirmation");
+    return FALSE;
+  }
 
   memset (req, 0, sizeof (buf));
   req->h.type = BT_REQUEST;
   req->h.name = BT_SET_CONFIGURATION;
   req->h.length = sizeof (*req);
 
-  req->access_mode = BT_CAPABILITIES_ACCESS_MODE_WRITE;
-  strncpy (req->destination, self->device, 18);
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (gst_structure_has_name (structure, "audio/x-sbc"))
+  if (codec->type == BT_A2DP_CODEC_SBC)
     ret = gst_avdtp_sink_init_sbc_pkt_conf (self, caps, (void *) &req->codec);
-  else if (gst_structure_has_name (structure, "audio/mpeg"))
-    ret = gst_avdtp_sink_init_mp3_pkt_conf (self, caps, (void *) &req->codec);
   else
-    ret = FALSE;
+    ret = gst_avdtp_sink_init_mp3_pkt_conf (self, caps, (void *) &req->codec);
 
   if (!ret) {
     GST_ERROR_OBJECT (self, "Couldn't parse caps " "to packet configuration");
