@@ -784,30 +784,27 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #undef PRINT_FMT
     g_free (color);
 #else
-    gint pidcolor, levelcolor, color, pid;
     const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-
+#define SET_COLOR(c) \
+  SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c));
     /* timestamp */
     g_printerr ("%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
     /* pid */
-    pidcolor = available_colors[pid % 6];
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), pidcolor);
+    SET_COLOR (available_colors[pid % 6]);
     g_printerr (PID_FMT, pid);
     /* thread */
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
+    SET_COLOR (clear);
     g_printerr (" " PTR_FMT " ", g_thread_self ());
     /* level */
-    levelcolor = levelcolormap[level];
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), levelcolor);
+    SET_COLOR (levelcolormap[level]);
     g_printerr ("%s ", gst_debug_level_get_name (level));
     /* category */
-    color = gst_debug_construct_win_color (gst_debug_category_get_color
-        (category));
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), color);
+    SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
+            (category)));
     g_printerr (CAT_FMT, gst_debug_category_get_name (category),
         file, line, function, obj);
     /* message */
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
+    SET_COLOR (clear);
     g_printerr (" %s\n", gst_debug_message_get (message));
 #endif
   } else {
