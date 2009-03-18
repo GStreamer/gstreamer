@@ -496,6 +496,14 @@ set_resolve_state_none (gpointer key, gpointer value, gpointer user_data)
   MXFMetadataBase *m = (MXFMetadataBase *) value;
   m->resolved = MXF_METADATA_BASE_RESOLVE_STATE_NONE;
 }
+
+static void
+build_values_in_hash_table (gpointer key, gpointer value, gpointer user_data)
+{
+  GList **valuelist = (GList **) (user_data);
+
+  *valuelist = g_list_prepend (*valuelist, value);
+}
 #endif
 
 static GstFlowReturn
@@ -505,7 +513,7 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
 #if GLIB_CHECK_VERSION (2, 16, 0)
   GHashTableIter iter;
 #else
-  GList *l, *values;
+  GList *l, *values = NULL;
 #endif
   MXFMetadataBase *m = NULL;
   GstStructure *structure;
@@ -532,6 +540,7 @@ gst_mxf_demux_resolve_references (GstMXFDemux * demux)
   while (g_hash_table_iter_next (&iter, NULL, (gpointer) & m)) {
     gboolean resolved;
 #else
+  g_hash_table_foreach (demux->metadata, build_values_in_hash_table, &values);
   for (l = values; l; l = l->next) {
     gboolean resolved;
 
@@ -641,11 +650,11 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
 
   for (i = 0; i < demux->preface->content_storage->n_packages; i++) {
     if (demux->preface->content_storage->packages[i] &&
-        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->
-            content_storage->packages[i])) {
+        MXF_IS_METADATA_MATERIAL_PACKAGE (demux->preface->content_storage->
+            packages[i])) {
       ret =
-          MXF_METADATA_GENERIC_PACKAGE (demux->preface->
-          content_storage->packages[i]);
+          MXF_METADATA_GENERIC_PACKAGE (demux->preface->content_storage->
+          packages[i]);
       break;
     }
   }
@@ -805,8 +814,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
             essence_container);
 
         if (track->parent.type == MXF_METADATA_TRACK_PICTURE_ESSENCE) {
-          if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
-                  parent.descriptor[0]))
+          if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
+                  descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
                 (track->parent.descriptor[0])->picture_essence_coding,
                 essence_compression);
@@ -815,8 +824,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
               g_strdup_printf ("video/x-mxf-%s-%s", essence_container,
               essence_compression);
         } else if (track->parent.type == MXF_METADATA_TRACK_SOUND_ESSENCE) {
-          if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
-                  parent.descriptor[0]))
+          if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
+                  descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR
                 (track->parent.descriptor[0])->sound_essence_compression,
                 essence_compression);
@@ -825,8 +834,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
               g_strdup_printf ("audio/x-mxf-%s-%s", essence_container,
               essence_compression);
         } else if (track->parent.type == MXF_METADATA_TRACK_DATA_ESSENCE) {
-          if (MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (track->
-                  parent.descriptor[0]))
+          if (MXF_IS_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR (track->parent.
+                  descriptor[0]))
             mxf_ul_to_string (&MXF_METADATA_GENERIC_DATA_ESSENCE_DESCRIPTOR
                 (track->parent.descriptor[0])->data_essence_coding,
                 essence_compression);
@@ -1417,8 +1426,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
       pad->current_component_index);
 
   pad->current_component =
-      MXF_METADATA_SOURCE_CLIP (sequence->
-      structural_components[pad->current_component_index]);
+      MXF_METADATA_SOURCE_CLIP (sequence->structural_components[pad->
+          current_component_index]);
   if (pad->current_component == NULL) {
     GST_ERROR_OBJECT (demux, "No such structural component");
     return GST_FLOW_ERROR;
@@ -1426,8 +1435,8 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
 
   if (!pad->current_component->source_package
       || !pad->current_component->source_package->top_level
-      || !MXF_METADATA_GENERIC_PACKAGE (pad->
-          current_component->source_package)->tracks) {
+      || !MXF_METADATA_GENERIC_PACKAGE (pad->current_component->
+          source_package)->tracks) {
     GST_ERROR_OBJECT (demux, "Invalid component");
     return GST_FLOW_ERROR;
   }
@@ -3002,8 +3011,8 @@ gst_mxf_demux_pad_set_last_stop (GstMXFDemux * demux, GstMXFDemuxPad * p,
   for (i = 0; i < p->material_track->parent.sequence->n_structural_components;
       i++) {
     clip =
-        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.
-        sequence->structural_components[i]);
+        MXF_METADATA_SOURCE_CLIP (p->material_track->parent.sequence->
+        structural_components[i]);
 
     if (clip->parent.duration <= 0)
       break;

@@ -64,8 +64,9 @@ mxf_metadata_base_resolve_default (MXFMetadataBase * self,
 
 #if !GLIB_CHECK_VERSION (2, 16, 0)
 static void
-build_values_in_hash_table (gpointer key, gpointer value, GList ** valuelist)
+build_values_in_hash_table (gpointer key, gpointer value, gpointer user_data)
 {
+  GList **valuelist = (GList **) (user_data);
   *valuelist = g_list_prepend (*valuelist, value);
 }
 #endif
@@ -1595,8 +1596,8 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
         MXFMetadataTimelineTrack *tmp;
 
         if (!sc->source_package->parent.tracks[k] ||
-            !MXF_IS_METADATA_TIMELINE_TRACK (sc->source_package->
-                parent.tracks[k]))
+            !MXF_IS_METADATA_TIMELINE_TRACK (sc->source_package->parent.
+                tracks[k]))
           continue;
 
         tmp =
@@ -3444,8 +3445,8 @@ mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -3466,8 +3467,8 @@ mxf_metadata_generic_picture_essence_descriptor_to_structure (MXFMetadataBase *
 {
   GstStructure *ret =
       MXF_METADATA_BASE_CLASS
-      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
-      to_structure (m);
+      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->to_structure
+      (m);
   MXFMetadataGenericPictureEssenceDescriptor *self =
       MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (m);
   gchar str[48];
@@ -3710,8 +3711,8 @@ mxf_metadata_generic_sound_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -3894,8 +3895,8 @@ mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -4077,8 +4078,8 @@ mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -4190,8 +4191,8 @@ mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_data_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_data_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
