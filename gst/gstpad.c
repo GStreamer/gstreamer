@@ -1925,6 +1925,42 @@ no_format:
 }
 
 /**
+ * gst_pad_can_link:
+ * @srcpad: the source #GstPad.
+ * @sinkpad: the sink #GstPad.
+ *
+ * Checks if the source pad and the sink pad are compatible so they can be
+ * linked. 
+ *
+ * Returns: TRUE if the pads can be linked.
+ */
+gboolean
+gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
+{
+  GstPadLinkReturn result;
+
+  /* generic checks */
+  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
+
+  GST_CAT_INFO (GST_CAT_PADS, "check if %s:%s can link with %s:%s",
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+
+  /* gst_pad_link_prepare does everything for us, we only release the locks
+   * on the pads that it gets us. If this function returns !OK the locks are not
+   * taken anymore. */
+  result = gst_pad_link_prepare (srcpad, sinkpad) == GST_PAD_LINK_OK;
+  if (result != GST_PAD_LINK_OK)
+    goto done;
+
+  GST_OBJECT_UNLOCK (srcpad);
+  GST_OBJECT_UNLOCK (sinkpad);
+
+done:
+  return result == GST_PAD_LINK_OK;
+}
+
+/**
  * gst_pad_link:
  * @srcpad: the source #GstPad to link.
  * @sinkpad: the sink #GstPad to link.

@@ -848,6 +848,7 @@ void			gst_pad_set_event_function		(GstPad *pad, GstPadEventFunction event);
 void			gst_pad_set_link_function		(GstPad *pad, GstPadLinkFunction link);
 void			gst_pad_set_unlink_function		(GstPad *pad, GstPadUnlinkFunction unlink);
 
+gboolean                gst_pad_can_link                        (GstPad *srcpad, GstPad *sinkpad);
 GstPadLinkReturn        gst_pad_link				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_unlink				(GstPad *srcpad, GstPad *sinkpad);
 gboolean		gst_pad_is_linked			(GstPad *pad);

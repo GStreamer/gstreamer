@@ -39,7 +39,6 @@
 #include "gstparse.h"
 #include "gst-i18n-lib.h"
 
-
 /**
  * gst_util_dump_mem:
  * @mem: a pointer to the memory to dump
@@ -919,6 +918,60 @@ gst_element_request_compatible_pad (GstElement * element,
 }
 
 /**
+ * Checks if the source pad and the sink pad can be linked.
+ * Both @srcpad and @sinkpad must be unlinked and have a parent.
+ */
+static gboolean
+gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
+{
+  /* FIXME This function is gross.  It's almost a direct copy of
+   * gst_pad_link_filtered().  Any decent programmer would attempt
+   * to merge the two functions, which I will do some day. --ds
+   */
+
+  /* generic checks */
+  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
+  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
+
+  GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+
+  /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
+  if (GST_PAD_PEER (srcpad) != NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Source pad %s:%s has a peer, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
+    return FALSE;
+  }
+  if (GST_PAD_PEER (sinkpad) != NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s has a peer, failed",
+        GST_DEBUG_PAD_NAME (sinkpad));
+    return FALSE;
+  }
+  if (!GST_PAD_IS_SRC (srcpad)) {
+    GST_CAT_INFO (GST_CAT_PADS, "Src pad %s:%s is not source pad, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
+    return FALSE;
+  }
+  if (!GST_PAD_IS_SINK (sinkpad)) {
+    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s is not sink pad, failed",
+        GST_DEBUG_PAD_NAME (sinkpad));
+    return FALSE;
+  }
+  if (GST_PAD_PARENT (srcpad) == NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Src pad %s:%s has no parent, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
+    return FALSE;
+  }
+  if (GST_PAD_PARENT (sinkpad) == NULL) {
+    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s has no parent, failed",
+        GST_DEBUG_PAD_NAME (srcpad));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_element_get_compatible_pad:
  * @element: a #GstElement in which the pad should be found.
  * @pad: the #GstPad to find a compatible one for.
@@ -969,7 +1022,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
         peer = gst_pad_get_peer (current);
 
-        if (peer == NULL && gst_pad_can_link (pad, current)) {
+        if (peer == NULL && gst_pad_check_link (pad, current)) {
           GstCaps *temp, *temp2, *intersection;
 
           /* Now check if the two pads' caps are compatible */
@@ -2108,66 +2161,6 @@ gst_element_seek_simple (GstElement * element, GstFormat format,
 }
 
 /**
- * gst_pad_can_link:
- * @srcpad: the source #GstPad to link.
- * @sinkpad: the sink #GstPad to link.
- *
- * Checks if the source pad and the sink pad can be linked.
- * Both @srcpad and @sinkpad must be unlinked.
- *
- * Returns: TRUE if the pads can be linked, FALSE otherwise.
- */
-gboolean
-gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
-{
-  /* FIXME This function is gross.  It's almost a direct copy of
-   * gst_pad_link_filtered().  Any decent programmer would attempt
-   * to merge the two functions, which I will do some day. --ds
-   */
-
-  /* generic checks */
-  g_return_val_if_fail (GST_IS_PAD (srcpad), FALSE);
-  g_return_val_if_fail (GST_IS_PAD (sinkpad), FALSE);
-
-  GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
-      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-
-  /* FIXME: shouldn't we convert this to g_return_val_if_fail? */
-  if (GST_PAD_PEER (srcpad) != NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Source pad %s:%s has a peer, failed",
-        GST_DEBUG_PAD_NAME (srcpad));
-    return FALSE;
-  }
-  if (GST_PAD_PEER (sinkpad) != NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s has a peer, failed",
-        GST_DEBUG_PAD_NAME (sinkpad));
-    return FALSE;
-  }
-  if (!GST_PAD_IS_SRC (srcpad)) {
-    GST_CAT_INFO (GST_CAT_PADS, "Src pad %s:%s is not source pad, failed",
-        GST_DEBUG_PAD_NAME (srcpad));
-    return FALSE;
-  }
-  if (!GST_PAD_IS_SINK (sinkpad)) {
-    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s is not sink pad, failed",
-        GST_DEBUG_PAD_NAME (sinkpad));
-    return FALSE;
-  }
-  if (GST_PAD_PARENT (srcpad) == NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Src pad %s:%s has no parent, failed",
-        GST_DEBUG_PAD_NAME (srcpad));
-    return FALSE;
-  }
-  if (GST_PAD_PARENT (sinkpad) == NULL) {
-    GST_CAT_INFO (GST_CAT_PADS, "Sink pad %s:%s has no parent, failed",
-        GST_DEBUG_PAD_NAME (srcpad));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-/**
  * gst_pad_use_fixed_caps:
  * @pad: the pad to use
  *
@@ -2210,9 +2203,7 @@ gst_pad_get_fixed_caps_func (GstPad * pad)
         "using pad caps %p %" GST_PTR_FORMAT, result, result);
 
     result = gst_caps_ref (result);
-    goto done;
-  }
-  if (GST_PAD_PAD_TEMPLATE (pad)) {
+  } else if (GST_PAD_PAD_TEMPLATE (pad)) {
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
     result = GST_PAD_TEMPLATE_CAPS (templ);
@@ -2221,12 +2212,10 @@ gst_pad_get_fixed_caps_func (GstPad * pad)
         result);
 
     result = gst_caps_ref (result);
-    goto done;
+  } else {
+    GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
+    result = gst_caps_new_empty ();
   }
-  GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
-  result = gst_caps_new_empty ();
-
-done:
   GST_OBJECT_UNLOCK (pad);
 
   return result;
