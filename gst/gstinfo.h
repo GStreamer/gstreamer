@@ -397,7 +397,7 @@ G_CONST_RETURN gchar *
 GSList *
         gst_debug_get_all_categories	(void);
 
-gchar *	gst_debug_construct_term_color	(guint colorinfo);
+gchar * gst_debug_construct_term_color	(guint colorinfo);
 gint    gst_debug_construct_win_color (guint colorinfo);
 
 
