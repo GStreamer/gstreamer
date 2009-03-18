@@ -104,6 +104,10 @@
 #  include <process.h>          /* getpid on win32 */
 #endif
 #include <string.h>             /* G_VA_COPY */
+#ifdef G_OS_WIN32
+#  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
+#  include <windows.h>          /* GetStdHandle, windows console */
+#endif
 
 #include "gst_private.h"
 #include "gstutils.h"
@@ -576,6 +580,8 @@ gst_debug_print_segment (gpointer ptr)
 
 #endif /* HAVE_PRINTF_EXTENSION */
 
+#ifndef G_OS_WIN32
+
 /**
  * gst_debug_construct_term_color:
  * @colorinfo: the color info
@@ -707,6 +713,144 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   if (free_obj)
     g_free (obj);
 }
+
+#else /* !G_OS_WIN32 */
+
+/**
+ * gst_debug_construct_win_color:
+ * @colorinfo: the color info
+ *
+ * Constructs an integer that can be used for getting the desired color in
+ * windows' terminals (cmd.exe). As there is no mean to underline, we simply
+ * ignore this attribute.
+ *
+ * Returns: an integer containing the color definition
+ */
+gint
+gst_debug_construct_win_color (guint colorinfo)
+{
+  gint color = 0;
+  static const guchar ansi_to_win_fg[8] = {
+    0,                          /* black   */
+    FOREGROUND_RED,             /* red     */
+    FOREGROUND_GREEN,           /* green   */
+    FOREGROUND_RED | FOREGROUND_GREEN,  /* yellow  */
+    FOREGROUND_BLUE,            /* blue    */
+    FOREGROUND_RED | FOREGROUND_BLUE,   /* magenta */
+    FOREGROUND_GREEN | FOREGROUND_BLUE, /* cyan    */
+    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE /* white   */
+  };
+  static const guchar ansi_to_win_bg[8] = {
+    0,
+    BACKGROUND_RED,
+    BACKGROUND_GREEN,
+    BACKGROUND_RED | BACKGROUND_GREEN,
+    BACKGROUND_BLUE,
+    BACKGROUND_RED | BACKGROUND_BLUE,
+    BACKGROUND_GREEN | FOREGROUND_BLUE,
+    BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE
+  };
+
+  /* we draw black as white, as cmd.exe can only have black bg */
+  if (colorinfo == 0) {
+    return ansi_to_win_fg[7];
+  }
+
+  if (colorinfo & GST_DEBUG_BOLD) {
+    color |= FOREGROUND_INTENSITY;
+  }
+  if (colorinfo & GST_DEBUG_FG_MASK) {
+    color |= ansi_to_win_fg[colorinfo & GST_DEBUG_FG_MASK];
+  }
+  if (colorinfo & GST_DEBUG_BG_MASK) {
+    color |= ansi_to_win_bg[(colorinfo & GST_DEBUG_BG_MASK) >> 4];
+  }
+
+  return color;
+}
+
+void
+gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, GstDebugMessage * message, gpointer unused)
+{
+  gint pidcolor, levelcolor, color, pid;
+  const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+  gchar *obj = NULL;
+  GstClockTime elapsed;
+  gboolean free_obj = TRUE;
+  static const guchar levelcolormap[] = {
+    /* GST_LEVEL_NONE */
+    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
+    /* GST_LEVEL_ERROR */
+    FOREGROUND_RED | FOREGROUND_INTENSITY,
+    /* GST_LEVEL_WARNING */
+    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+    /* GST_LEVEL_INFO */
+    FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+    /* GST_LEVEL_DEBUG */
+    FOREGROUND_GREEN | FOREGROUND_BLUE,
+    /* GST_LEVEL_LOG */
+    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+  };
+  static const guchar available_colors[6] = {
+    FOREGROUND_RED, FOREGROUND_GREEN, FOREGROUND_RED | FOREGROUND_GREEN,
+    FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE,
+    FOREGROUND_GREEN | FOREGROUND_BLUE,
+  };
+
+  if (level > gst_debug_category_get_threshold (category))
+    return;
+
+  pid = getpid ();
+
+  if (object) {
+    obj = gst_debug_print_object (object);
+  } else {
+    obj = "\0";
+    free_obj = FALSE;
+  }
+
+  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
+      gst_util_get_timestamp ());
+
+  /* color info */
+  if (gst_debug_is_colored ()) {
+    /* timestamp */
+    g_printerr ("%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
+    /* pid */
+    pidcolor = available_colors[pid % 6];
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), pidcolor);
+    g_printerr ("%5d", pid);
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
+    /* thread */
+    g_printerr (" %p ", g_thread_self ());
+    /* level */
+    levelcolor = levelcolormap[level];
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), levelcolor);
+    g_printerr ("%s ", gst_debug_level_get_name (level));
+    /* category */
+    color = gst_debug_construct_win_color (gst_debug_category_get_color
+        (category));
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), color);
+    g_printerr ("%20s  %s:%d:%s:%s", gst_debug_category_get_name (category),
+        file, line, function, obj);
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
+    /* message */
+    g_printerr (" %s\n", gst_debug_message_get (message));
+  } else {
+    g_printerr ("%" GST_TIME_FORMAT
+        " %5d %p %s %20s %s:%d:%s:%s %s\n", GST_TIME_ARGS (elapsed), pid,
+        g_thread_self (), gst_debug_level_get_name (level),
+        gst_debug_category_get_name (category), file, line, function, obj,
+        gst_debug_message_get (message));
+  }
+
+  if (free_obj)
+    g_free (obj);
+}
+
+#endif /* !G_OS_WIN32 */
 
 /**
  * gst_debug_level_get_name:
@@ -946,6 +1090,7 @@ gst_debug_get_default_threshold (void)
 {
   return (GstDebugLevel) g_atomic_int_get (&__default_level);
 }
+
 static void
 gst_debug_reset_threshold (gpointer category, gpointer unused)
 {
@@ -970,6 +1115,7 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
 exit:
   g_static_mutex_unlock (&__level_name_mutex);
 }
+
 static void
 gst_debug_reset_all_thresholds (void)
 {
@@ -977,6 +1123,7 @@ gst_debug_reset_all_thresholds (void)
   g_slist_foreach (__categories, gst_debug_reset_threshold, NULL);
   g_static_mutex_unlock (&__cat_mutex);
 }
+
 static void
 for_each_threshold_by_entry (gpointer data, gpointer user_data)
 {

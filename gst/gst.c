@@ -117,6 +117,10 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef G_OS_WIN32
+#define WIN32_LEAN_AND_MEAN     /* prevents from including too many things */
+#include <windows.h>            /* GetStdHandle, windows console */
+#endif
 
 #include "gst-i18n-lib.h"
 #include <locale.h>             /* for LC_ALL */
@@ -1170,6 +1174,20 @@ gst_debug_help (void)
     GstDebugCategory *cat = (GstDebugCategory *) walk->data;
 
     if (gst_debug_is_colored ()) {
+#ifdef G_OS_WIN32
+      gint color = gst_debug_construct_win_color (cat->color);
+      const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+
+      SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), color);
+      g_print ("%-20s", gst_debug_category_get_name (cat));
+      SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), clear);
+      g_print (" %1d %s ", gst_debug_category_get_threshold (cat),
+          gst_debug_level_get_name (gst_debug_category_get_threshold (cat)));
+      SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), color);
+      g_print ("%s", gst_debug_category_get_description (cat));
+      SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), clear);
+      g_print ("\n");
+#else /* G_OS_WIN32 */
       gchar *color = gst_debug_construct_term_color (cat->color);
 
       g_print ("%s%-20s\033[00m  %1d %s  %s%s\033[00m\n",
@@ -1179,6 +1197,7 @@ gst_debug_help (void)
           gst_debug_level_get_name (gst_debug_category_get_threshold (cat)),
           color, gst_debug_category_get_description (cat));
       g_free (color);
+#endif /* G_OS_WIN32 */
     } else {
       g_print ("%-20s  %1d %s  %s\n", gst_debug_category_get_name (cat),
           gst_debug_category_get_threshold (cat),

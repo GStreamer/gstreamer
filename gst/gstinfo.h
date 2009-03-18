@@ -398,6 +398,7 @@ GSList *
         gst_debug_get_all_categories	(void);
 
 gchar *	gst_debug_construct_term_color	(guint colorinfo);
+gint 	gst_debug_construct_win_color (guint colorinfo);
 
 
 /**
@@ -963,6 +964,7 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define gst_debug_category_get_description(cat)		("")
 #define gst_debug_get_all_categories()			(NULL)
 #define gst_debug_construct_term_color(colorinfo)	(g_strdup ("00"))
+#define gst_debug_construct_win_color(colorinfo)	(0)
 
 #ifdef G_HAVE_ISO_VARARGS
 
