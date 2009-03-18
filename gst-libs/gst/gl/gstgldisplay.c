@@ -3175,6 +3175,7 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
 
 #ifndef OPENGL_ES2
       glMatrixMode (GL_PROJECTION);
+      glLoadIdentity ();
 #else
       glVertexAttribPointer (display->shader_download_attr_position_loc, 3,
         GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
