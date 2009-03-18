@@ -2262,6 +2262,9 @@ nothing_lost:
  * An application can use gst_element_get_state() to wait for the completion
  * of the state change or it can wait for a state change message on the bus.
  *
+ * State changes to %GST_STATE_READY or %GST_STATE_NULL never return
+ * #GST_STATE_CHANGE_ASYNC.
+ *
  * Returns: Result of the state change using #GstStateChangeReturn.
  *
  * MT safe.
