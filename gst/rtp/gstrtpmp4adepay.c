@@ -208,9 +208,9 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       for (i = 0; i < size; i++) {
         data[i] = ((data[i + 1] & 1) << 7) | ((data[i + 2] & 0xfe) >> 1);
       }
-      /* last bit, this is probably not needed. */
-      data[i] = ((data[i + 1] & 1) << 7);
-      GST_BUFFER_SIZE (buffer) = size + 1;
+
+      /* ignore remaining bit, we're only interested in full bytes */
+      GST_BUFFER_SIZE (buffer) = size;
 
       gst_caps_set_simple (srccaps,
           "codec_data", GST_TYPE_BUFFER, buffer, NULL);
