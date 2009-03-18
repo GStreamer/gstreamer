@@ -580,8 +580,6 @@ gst_debug_print_segment (gpointer ptr)
 
 #endif /* HAVE_PRINTF_EXTENSION */
 
-#ifndef G_OS_WIN32
-
 /**
  * gst_debug_construct_term_color:
  * @colorinfo: the color info
@@ -618,105 +616,6 @@ gst_debug_construct_term_color (guint colorinfo)
 }
 
 /**
- * gst_debug_log_default:
- * @category: category to log
- * @level: level of the message
- * @file: the file that emitted the message, usually the __FILE__ identifier
- * @function: the function that emitted the message
- * @line: the line from that the message was emitted, usually __LINE__
- * @message: the actual message
- * @object: the object this message relates to or NULL if none
- * @unused: an unused variable, reserved for some user_data.
- *
- * The default logging handler used by GStreamer. Logging functions get called
- * whenever a macro like GST_DEBUG or similar is used. This function outputs the
- * message and additional info using the glib error handler.
- * You can add other handlers by using gst_debug_add_log_function().
- * And you can remove this handler by calling
- * gst_debug_remove_log_function(gst_debug_log_default);
- */
-void
-gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
-    const gchar * file, const gchar * function, gint line,
-    GObject * object, GstDebugMessage * message, gpointer unused)
-{
-  gchar *color = NULL;
-  gchar *clear;
-  gchar *obj = NULL;
-  gchar pidcolor[10];
-  const gchar *levelcolor;
-  gint pid;
-  GstClockTime elapsed;
-  gboolean free_color = TRUE;
-  gboolean free_obj = TRUE;
-  static const gchar *levelcolormap[] = {
-    "\033[37m",                 /* GST_LEVEL_NONE */
-    "\033[31;01m",              /* GST_LEVEL_ERROR */
-    "\033[33;01m",              /* GST_LEVEL_WARNING */
-    "\033[32;01m",              /* GST_LEVEL_INFO */
-    "\033[36m",                 /* GST_LEVEL_DEBUG */
-    "\033[37m"                  /* GST_LEVEL_LOG */
-  };
-
-  if (level > gst_debug_category_get_threshold (category))
-    return;
-
-  pid = getpid ();
-
-  /* color info */
-  if (gst_debug_is_colored ()) {
-    color = gst_debug_construct_term_color (gst_debug_category_get_color
-        (category));
-    clear = "\033[00m";
-    g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
-    levelcolor = levelcolormap[level];
-  } else {
-    color = "\0";
-    free_color = FALSE;
-    clear = "";
-    pidcolor[0] = '\0';
-    levelcolor = "\0";
-  }
-
-  if (object) {
-    obj = gst_debug_print_object (object);
-  } else {
-    obj = "\0";
-    free_obj = FALSE;
-  }
-
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
-      gst_util_get_timestamp ());
-
-#if defined (GLIB_SIZEOF_VOID_P) && GLIB_SIZEOF_VOID_P == 8
-  /* width of %p varies depending on actual value of pointer, which can make
-   * output unevenly aligned if multiple threads are involved, hence the %14p
-   * (should really be %18p, but %14p seems a good compromise between too many
-   * white spaces and likely unalignment on my system) */
-  g_printerr ("%" GST_TIME_FORMAT
-      " %s%5d%s %14p %s%s%s %s%20s %s:%d:%s:%s%s %s\n", GST_TIME_ARGS (elapsed),
-      pidcolor, pid, clear, g_thread_self (), levelcolor,
-      gst_debug_level_get_name (level), clear, color,
-      gst_debug_category_get_name (category), file, line, function, obj, clear,
-      gst_debug_message_get (message));
-#else
-  g_printerr ("%" GST_TIME_FORMAT
-      " %s%5d%s %10p %s%s%s %s%20s %s:%d:%s:%s%s %s\n", GST_TIME_ARGS (elapsed),
-      pidcolor, pid, clear, g_thread_self (), levelcolor,
-      gst_debug_level_get_name (level), clear, color,
-      gst_debug_category_get_name (category), file, line, function, obj, clear,
-      gst_debug_message_get (message));
-#endif
-
-  if (free_color)
-    g_free (color);
-  if (free_obj)
-    g_free (obj);
-}
-
-#else /* !G_OS_WIN32 */
-
-/**
  * gst_debug_construct_win_color:
  * @colorinfo: the color info
  *
@@ -724,12 +623,17 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
  * windows' terminals (cmd.exe). As there is no mean to underline, we simply
  * ignore this attribute.
  *
+ * This function returns 0 on non-windows machines.
+ *
  * Returns: an integer containing the color definition
+ *
+ * Since: 0.10.23
  */
 gint
 gst_debug_construct_win_color (guint colorinfo)
 {
   gint color = 0;
+#ifdef G_OS_WIN32
   static const guchar ansi_to_win_fg[8] = {
     0,                          /* black   */
     FOREGROUND_RED,             /* red     */
@@ -765,44 +669,91 @@ gst_debug_construct_win_color (guint colorinfo)
   if (colorinfo & GST_DEBUG_BG_MASK) {
     color |= ansi_to_win_bg[(colorinfo & GST_DEBUG_BG_MASK) >> 4];
   }
-
+#endif
   return color;
 }
 
+/* width of %p varies depending on actual value of pointer, which can make
+ * output unevenly aligned if multiple threads are involved, hence the %14p
+ * (should really be %18p, but %14p seems a good compromise between too many
+ * white spaces and likely unalignment on my system) */
+#if defined (GLIB_SIZEOF_VOID_P) && GLIB_SIZEOF_VOID_P == 8
+#define PTR_FMT "%14p"
+#else
+#define PTR_FMT "%10p"
+#endif
+#define PID_FMT "%5d"
+#define CAT_FMT "%20s %s:%d:%s:%s"
+
+#ifdef G_OS_WIN32
+static const guchar levelcolormap[] = {
+  /* GST_LEVEL_NONE */
+  FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
+  /* GST_LEVEL_ERROR */
+  FOREGROUND_RED | FOREGROUND_INTENSITY,
+  /* GST_LEVEL_WARNING */
+  FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+  /* GST_LEVEL_INFO */
+  FOREGROUND_GREEN | FOREGROUND_INTENSITY,
+  /* GST_LEVEL_DEBUG */
+  FOREGROUND_GREEN | FOREGROUND_BLUE,
+  /* GST_LEVEL_LOG */
+  FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+};
+
+static const guchar available_colors[6] = {
+  FOREGROUND_RED, FOREGROUND_GREEN, FOREGROUND_RED | FOREGROUND_GREEN,
+  FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE,
+  FOREGROUND_GREEN | FOREGROUND_BLUE,
+};
+#else
+static const gchar *levelcolormap[] = {
+  "\033[37m",                   /* GST_LEVEL_NONE */
+  "\033[31;01m",                /* GST_LEVEL_ERROR */
+  "\033[33;01m",                /* GST_LEVEL_WARNING */
+  "\033[32;01m",                /* GST_LEVEL_INFO */
+  "\033[36m",                   /* GST_LEVEL_DEBUG */
+  "\033[37m"                    /* GST_LEVEL_LOG */
+};
+#endif
+
+/**
+ * gst_debug_log_default:
+ * @category: category to log
+ * @level: level of the message
+ * @file: the file that emitted the message, usually the __FILE__ identifier
+ * @function: the function that emitted the message
+ * @line: the line from that the message was emitted, usually __LINE__
+ * @message: the actual message
+ * @object: the object this message relates to or NULL if none
+ * @unused: an unused variable, reserved for some user_data.
+ *
+ * The default logging handler used by GStreamer. Logging functions get called
+ * whenever a macro like GST_DEBUG or similar is used. This function outputs the
+ * message and additional info using the glib error handler.
+ * You can add other handlers by using gst_debug_add_log_function().
+ * And you can remove this handler by calling
+ * gst_debug_remove_log_function(gst_debug_log_default);
+ */
 void
 gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, GstDebugMessage * message, gpointer unused)
 {
-  gint pidcolor, levelcolor, color, pid;
-  const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-  gchar *obj = NULL;
+  gint pid;
   GstClockTime elapsed;
+  gchar *obj = NULL;
   gboolean free_obj = TRUE;
-  static const guchar levelcolormap[] = {
-    /* GST_LEVEL_NONE */
-    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
-    /* GST_LEVEL_ERROR */
-    FOREGROUND_RED | FOREGROUND_INTENSITY,
-    /* GST_LEVEL_WARNING */
-    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY,
-    /* GST_LEVEL_INFO */
-    FOREGROUND_GREEN | FOREGROUND_INTENSITY,
-    /* GST_LEVEL_DEBUG */
-    FOREGROUND_GREEN | FOREGROUND_BLUE,
-    /* GST_LEVEL_LOG */
-    FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
-  };
-  static const guchar available_colors[6] = {
-    FOREGROUND_RED, FOREGROUND_GREEN, FOREGROUND_RED | FOREGROUND_GREEN,
-    FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE,
-    FOREGROUND_GREEN | FOREGROUND_BLUE,
-  };
+  gboolean is_colored;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
 
   pid = getpid ();
+  is_colored = gst_debug_is_colored ();
+
+  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
+      gst_util_get_timestamp ());
 
   if (object) {
     obj = gst_debug_print_object (object);
@@ -811,20 +762,40 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     free_obj = FALSE;
   }
 
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
-      gst_util_get_timestamp ());
+  if (is_colored) {
+#ifndef G_OS_WIN32
+    gchar *color = NULL;
+    gchar *clear;
+    gchar pidcolor[10];
+    const gchar *levelcolor;
 
-  /* color info */
-  if (gst_debug_is_colored ()) {
+    color = gst_debug_construct_term_color (gst_debug_category_get_color
+        (category));
+    clear = "\033[00m";
+    g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
+    levelcolor = levelcolormap[level];
+
+#define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
+    g_printerr ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+        pidcolor, pid, clear, g_thread_self (), levelcolor,
+        gst_debug_level_get_name (level), clear, color,
+        gst_debug_category_get_name (category), file, line, function, obj,
+        clear, gst_debug_message_get (message));
+#undef PRINT_FMT
+    g_free (color);
+#else
+    gint pidcolor, levelcolor, color, pid;
+    const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+
     /* timestamp */
     g_printerr ("%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
     /* pid */
     pidcolor = available_colors[pid % 6];
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), pidcolor);
-    g_printerr ("%5d", pid);
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
+    g_printerr (PID_FMT, pid);
     /* thread */
-    g_printerr (" %p ", g_thread_self ());
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
+    g_printerr (" " PTR_FMT " ", g_thread_self ());
     /* level */
     levelcolor = levelcolormap[level];
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), levelcolor);
@@ -833,24 +804,24 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     color = gst_debug_construct_win_color (gst_debug_category_get_color
         (category));
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), color);
-    g_printerr ("%20s  %s:%d:%s:%s", gst_debug_category_get_name (category),
+    g_printerr (CAT_FMT, gst_debug_category_get_name (category),
         file, line, function, obj);
-    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
     /* message */
+    SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), clear);
     g_printerr (" %s\n", gst_debug_message_get (message));
+#endif
   } else {
-    g_printerr ("%" GST_TIME_FORMAT
-        " %5d %p %s %20s %s:%d:%s:%s %s\n", GST_TIME_ARGS (elapsed), pid,
+#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
+    g_printerr ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed), pid,
         g_thread_self (), gst_debug_level_get_name (level),
         gst_debug_category_get_name (category), file, line, function, obj,
         gst_debug_message_get (message));
+#undef PRINT_FMT
   }
 
   if (free_obj)
     g_free (obj);
 }
-
-#endif /* !G_OS_WIN32 */
 
 /**
  * gst_debug_level_get_name:
