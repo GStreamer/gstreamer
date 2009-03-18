@@ -607,11 +607,6 @@ gst_aacparse_check_valid_frame (GstBaseParse * parse,
     ret = gst_aacparse_detect_stream (aacparse, data, GST_BUFFER_SIZE (buffer),
         framesize, skipsize);
 
-    if (!ret) {
-      GST_DEBUG ("buffer didn't contain valid frame, skip = %d", *skipsize);
-      gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), 1024);
-    }
-
   } else if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
     guint needed_data = 1024;
 
