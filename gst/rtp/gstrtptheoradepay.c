@@ -124,6 +124,7 @@ gst_rtp_theora_depay_init (GstRtpTheoraDepay * rtptheoradepay,
 {
   rtptheoradepay->adapter = gst_adapter_new ();
 }
+
 static void
 gst_rtp_theora_depay_finalize (GObject * object)
 {
@@ -134,54 +135,6 @@ gst_rtp_theora_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static const guint8 a2bin[256] = {
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
-  52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
-  64, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
-  64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
-};
-
-static guint
-decode_base64 (const gchar * in, guint8 * out)
-{
-  guint8 v1, v2;
-  guint len = 0;
-
-  v1 = a2bin[(gint) * in];
-  while (v1 <= 63) {
-    /* read 4 bytes, write 3 bytes, invalid base64 are zeroes */
-    v2 = a2bin[(gint) * ++in];
-    *out++ = (v1 << 2) | ((v2 & 0x3f) >> 4);
-    v1 = (v2 > 63 ? 64 : a2bin[(gint) * ++in]);
-    *out++ = (v2 << 4) | ((v1 & 0x3f) >> 2);
-    v2 = (v1 > 63 ? 64 : a2bin[(gint) * ++in]);
-    *out++ = (v1 << 6) | (v2 & 0x3f);
-    v1 = (v2 > 63 ? 64 : a2bin[(gint) * ++in]);
-    len += 3;
-  }
-  /* move to '\0' */
-  while (*in != '\0')
-    in++;
-
-  /* subtract padding */
-  while (len > 0 && *--in == '=')
-    len--;
-
-  return len;
-}
-
 static gboolean
 gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
     const gchar * configuration)
@@ -189,15 +142,14 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
   GstBuffer *buf;
   guint32 num_headers;
   guint8 *data;
-  guint size;
+  gsize size;
   gint i, j;
 
   /* deserialize base64 to buffer */
   size = strlen (configuration);
   GST_DEBUG_OBJECT (rtptheoradepay, "base64 config size %u", size);
 
-  data = g_malloc (size);
-  size = decode_base64 (configuration, data);
+  data = g_base64_decode (configuration, &size);
 
   GST_DEBUG_OBJECT (rtptheoradepay, "config size %u", size);
 

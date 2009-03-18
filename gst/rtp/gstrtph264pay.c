@@ -206,31 +206,6 @@ gst_rtp_h264_pay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static gchar *
-encode_base64 (const guint8 * in, guint size, guint * len)
-{
-  gchar *ret, *d;
-  static const gchar *v =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-  *len = ((size + 2) / 3) * 4;
-  d = ret = (gchar *) g_malloc (*len + 1);
-  for (; size; in += 3) {       /* process tuplets */
-    *d++ = v[in[0] >> 2];       /* byte 1: high 6 bits (1) */
-    /* byte 2: low 2 bits (1), high 4 bits (2) */
-    *d++ = v[((in[0] << 4) + (--size ? (in[1] >> 4) : 0)) & 0x3f];
-    /* byte 3: low 4 bits (2), high 2 bits (3) */
-    *d++ = size ? v[((in[1] << 2) + (--size ? (in[2] >> 6) : 0)) & 0x3f] : '=';
-    /* byte 4: low 6 bits (3) */
-    *d++ = size ? v[in[2] & 0x3f] : '=';
-    if (size)
-      size--;                   /* count third character if processed */
-  }
-  *d = '\0';                    /* tie off string */
-
-  return ret;                   /* return the resulting string */
-}
-
 static gboolean
 gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 {
@@ -295,7 +270,6 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
     for (i = 0; i < num_sps; i++) {
       gchar *set;
-      guint len;
 
       if (size < 2)
         goto avcc_error;
@@ -309,7 +283,7 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
       if (size < nal_size)
         goto avcc_error;
 
-      set = encode_base64 (data, nal_size, &len);
+      set = g_base64_encode (data, nal_size);
       g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
       count++;
       g_free (set);
@@ -328,7 +302,6 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
     GST_DEBUG_OBJECT (rtph264pay, "num PPS %u", num_pps);
     for (i = 0; i < num_pps; i++) {
       gchar *set;
-      guint len;
 
       if (size < 2)
         goto avcc_error;
@@ -342,7 +315,7 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
       if (size < nal_size)
         goto avcc_error;
 
-      set = encode_base64 (data, nal_size, &len);
+      set = g_base64_encode (data, nal_size);
       g_string_append_printf (sprops, "%s%s", count ? "," : "", set);
       count++;
       g_free (set);
@@ -553,16 +526,15 @@ gst_rtp_h264_pay_parse_sps_pps (GstBaseRTPPayload * basepayload,
     gchar *sps;
     gchar *pps;
     gchar *sprops;
-    guint len;
 
     /* profile is 24 bit. Force it to respect the limit */
     profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
 
     /* build the sprop-parameter-sets */
     sps = (payloader->sps_len > 0)
-        ? encode_base64 (payloader->sps, payloader->sps_len, &len) : NULL;
+        ? g_base64_encode (payloader->sps, payloader->sps_len) : NULL;
     pps = (payloader->pps_len > 0)
-        ? encode_base64 (payloader->pps, payloader->pps_len, &len) : NULL;
+        ? g_base64_encode (payloader->pps, payloader->pps_len) : NULL;
 
     if (sps)
       sprops = g_strjoin (",", sps, pps, NULL);
