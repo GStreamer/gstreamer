@@ -48,13 +48,31 @@ bus_message (GstBus * bus, GstMessage * message, App * app)
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
-      g_error ("received error");
+    {
+      GError *gerror;
+      gchar *debug;
+
+      gst_message_parse_error (message, &gerror, &debug);
+      gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+      g_error_free (gerror);
+      g_free (debug);
+
       g_main_loop_quit (app->loop);
       break;
+    }
     case GST_MESSAGE_WARNING:
-      g_error ("received error");
+    {
+      GError *gerror;
+      gchar *debug;
+
+      gst_message_parse_warning (message, &gerror, &debug);
+      gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+      g_error_free (gerror);
+      g_free (debug);
+
       g_main_loop_quit (app->loop);
       break;
+    }
     case GST_MESSAGE_EOS:
       g_message ("received EOS");
       g_main_loop_quit (app->loop);
