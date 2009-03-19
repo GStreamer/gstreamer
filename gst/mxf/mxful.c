@@ -89,7 +89,7 @@ mxf_ul_is_equal (const MXFUL * a, const MXFUL * b)
 gboolean
 mxf_ul_is_subclass (const MXFUL * class, const MXFUL * subclass)
 {
-  guint i, j;
+  guint i;
 
   g_return_val_if_fail (class != NULL, FALSE);
   g_return_val_if_fail (subclass != NULL, FALSE);
@@ -99,23 +99,7 @@ mxf_ul_is_subclass (const MXFUL * class, const MXFUL * subclass)
       /* registry version */
       continue;
 
-    if (class->u[i] == 0x00) {
-      gboolean terminated = TRUE;
-
-      for (j = i; j < 16; j++) {
-        if (class->u[j] != 0x00) {
-          terminated = FALSE;
-          break;
-        }
-      }
-
-      if (terminated)
-        return TRUE;
-
-      continue;
-    }
-
-    if (class->u[i] != subclass->u[i])
+    if (class->u[i] != 0x00 && class->u[i] != subclass->u[i])
       return FALSE;
   }
 
