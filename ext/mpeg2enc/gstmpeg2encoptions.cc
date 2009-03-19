@@ -24,6 +24,9 @@
 #endif
 
 #include "gstmpeg2encoptions.hh"
+#if WIN32
+#  include <windows.h> //For GetSystemInfo
+#endif
 
 #include <gst/gst.h>
 
@@ -285,7 +288,13 @@ GstMpeg2EncOptions::GstMpeg2EncOptions ():
 MPEG2EncOptions ()
 {
   /* autodetect number of CPUs */
+#ifndef WIN32
   num_cpus = sysconf (_SC_NPROCESSORS_ONLN);
+#else
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  num_cpus = si.dwNumberOfProcessors;
+#endif
   if (num_cpus < 0)
     num_cpus = 1;
   if (num_cpus > 32)
