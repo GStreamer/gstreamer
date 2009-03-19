@@ -51,6 +51,8 @@ AC_ARG_ENABLE(sdltest,
   else
     SDL_CFLAGS=`$SDL_CONFIG $sdlconf_args --cflags`
     SDL_LIBS=`$SDL_CONFIG $sdlconf_args --libs`
+    SDL_STATIC_LIBS=`$SDL_CONFIG $sdlconf_args --static-libs`
+
 
     sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
            sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
@@ -62,7 +64,7 @@ AC_ARG_ENABLE(sdltest,
       ac_save_CFLAGS="$CFLAGS"
       ac_save_LIBS="$LIBS"
       CFLAGS="$CFLAGS $SDL_CFLAGS"
-      LIBS="$LIBS $SDL_LIBS"
+      LIBS="$LIBS $SDL_STATIC_LIBS"
 dnl
 dnl Now check if the installed SDL is sufficiently new. (Also sanity
 dnl checks the results of sdl-config to some extent
