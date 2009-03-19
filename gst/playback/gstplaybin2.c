@@ -251,13 +251,8 @@ struct _GstSourceSelect
 };
 
 #define GST_SOURCE_GROUP_GET_LOCK(group) (((GstSourceGroup*)(group))->lock)
-#define GST_SOURCE_GROUP_GET_COND(group) (((GstSourceGroup*)(group))->cond)
 #define GST_SOURCE_GROUP_LOCK(group) (g_mutex_lock (GST_SOURCE_GROUP_GET_LOCK(group)))
 #define GST_SOURCE_GROUP_UNLOCK(group) (g_mutex_unlock (GST_SOURCE_GROUP_GET_LOCK(group)))
-#define GST_SOURCE_GROUP_WAIT(group) (g_cond_wait \
-		(GST_SOURCE_GROUP_GET_COND (group),GST_SOURCE_GROUP_GET_LOCK(group)))
-#define GST_SOURCE_GROUP_BROADCAST(group) (g_cond_broadcast \
-		(GST_SOURCE_GROUP_GET_COND (group)))
 
 /* a structure to hold the objects for decoding a uri and the subtitle uri
  */
@@ -266,7 +261,6 @@ struct _GstSourceGroup
   GstPlayBin *playbin;
 
   GMutex *lock;
-  GCond *cond;
 
   gboolean valid;               /* the group has valid info to start playback */
   gboolean active;              /* the group is active */
@@ -341,8 +335,6 @@ struct _GstPlayBin
   GstSourceGroup groups[2];     /* array with group info */
   GstSourceGroup *curr_group;   /* pointer to the currently playing group */
   GstSourceGroup *next_group;   /* pointer to the next group */
-
-  gboolean about_to_finish;     /* the about-to-finish signal is emitted */
 
   /* properties */
   guint connection_speed;       /* connection speed in bits/sec (0 = unknown) */
@@ -943,7 +935,6 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
   group->lock = g_mutex_new ();
-  group->cond = g_cond_new ();
   /* init selectors */
   group->playbin = playbin;
   group->selector[0].media = "audio/x-raw-";
@@ -971,7 +962,6 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
   g_mutex_free (group->lock);
-  g_cond_free (group->cond);
 }
 
 static void
@@ -1959,18 +1949,6 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   } else {
     GST_LOG_OBJECT (playbin, "have more pending groups");
     configure = FALSE;
-    /* check if there are more decodebins to wait for */
-    while (group->pending) {
-      GST_DEBUG_OBJECT (playbin, "%d pending in group %p, waiting",
-          group->pending, group);
-
-      GST_PLAY_BIN_SHUTDOWN_UNLOCK (playbin);
-
-      /* FIXME, unlock when shutting down */
-      GST_SOURCE_GROUP_WAIT (group);
-
-      GST_PLAY_BIN_SHUTDOWN_LOCK (playbin, shutdown2);
-    }
   }
   GST_SOURCE_GROUP_UNLOCK (group);
 
@@ -1992,8 +1970,6 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
             NULL);
       }
     }
-    GST_DEBUG_OBJECT (playbin, "signal other decodebins");
-    GST_SOURCE_GROUP_BROADCAST (group);
     GST_SOURCE_GROUP_UNLOCK (group);
   }
 
@@ -2001,11 +1977,6 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
 
   return;
 
-shutdown2:
-  {
-    GST_SOURCE_GROUP_UNLOCK (group);
-    goto shutdown;
-  }
 shutdown:
   {
     GST_DEBUG ("ignoring, we are shutting down");
@@ -2046,17 +2017,11 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
 
   GST_DEBUG_OBJECT (playbin, "about to finish in group %p", group);
 
-  /* mark us as sending out the about-to-finish signal. When the app sets a URI
-   * when this signal is emitted, we're marking it as next-uri */
-  playbin->about_to_finish = TRUE;
-
   /* after this call, we should have a next group to activate or we EOS */
   g_signal_emit (G_OBJECT (playbin),
       gst_play_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
 
-  playbin->about_to_finish = FALSE;
-
-  /* now activate the next group. If the app did not set a next-uri, this will
+  /* now activate the next group. If the app did not set a uri, this will
    * fail and we can do EOS */
   setup_next_source (playbin);
 }
@@ -2170,8 +2135,9 @@ notify_source_cb (GstElement * uridecodebin, GParamSpec * pspec,
 
   playbin = group->playbin;
 
-  GST_OBJECT_LOCK (playbin);
   g_object_get (group->uridecodebin, "source", &source, NULL);
+
+  GST_OBJECT_LOCK (playbin);
   if (playbin->source)
     gst_object_unref (playbin->source);
   playbin->source = source;
