@@ -247,12 +247,13 @@ struct _GstDecodeGroup
   GstDecodeBin *dbin;
   GMutex *lock;
   GstElement *multiqueue;
+
   gboolean exposed;             /* TRUE if this group is exposed */
-  gboolean drained;             /* TRUE if EOS went throug all endpads */
+  gboolean drained;             /* TRUE if EOS went through all endpads */
   gboolean blocked;             /* TRUE if all endpads are blocked */
   gboolean complete;            /* TRUE if we are not expecting anymore streams 
                                  * on this group */
-  gulong overrunsig;
+  gulong overrunsig;            /* the overrun signal for multiqueue */
   guint nbdynamic;              /* number of dynamic pads in the group. */
 
   GList *endpads;               /* List of GstDecodePad of source pads to be exposed */
@@ -293,15 +294,15 @@ static void gst_decode_group_free (GstDecodeGroup * group);
  *
  * GstPad private used for source pads of groups
  */
-
 struct _GstDecodePad
 {
   GstGhostPad parent;
   GstDecodeBin *dbin;
   GstDecodeGroup *group;
-  gboolean blocked;
-  gboolean drained;
-  gboolean added;
+
+  gboolean blocked;             /* the pad is blocked */
+  gboolean drained;             /* an EOS has been seen on the pad */
+  gboolean added;               /* the pad is added to decodebin */
 };
 
 G_DEFINE_TYPE (GstDecodePad, gst_decode_pad, GST_TYPE_GHOST_PAD);
@@ -313,15 +314,6 @@ static GstDecodePad *gst_decode_pad_new (GstDecodeBin * dbin, GstPad * pad,
 static void gst_decode_pad_activate (GstDecodePad * dpad,
     GstDecodeGroup * group);
 static void gst_decode_pad_unblock (GstDecodePad * dpad);
-
-/* TempPadStruct
- * Internal structure used for pads which have more than one structure.
- */
-typedef struct _TempPadStruct
-{
-  GstDecodeBin *dbin;
-  GstDecodeGroup *group;
-} TempPadStruct;
 
 /********************************
  * Standard GObject boilerplate *
@@ -1814,7 +1806,7 @@ get_current_group (GstDecodeBin * dbin, gboolean create, gboolean as_demux,
   if (group == NULL && create) {
     group = gst_decode_group_new (dbin, as_demux);
     GST_LOG_OBJECT (dbin, "added group %p, demux %d", group, as_demux);
-    dbin->groups = g_list_append (dbin->groups, group);
+    dbin->groups = g_list_prepend (dbin->groups, group);
     if (created)
       *created = TRUE;
     /* demuxers are dynamic, we need no-more-pads or overrun now */
@@ -1855,7 +1847,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
     goto beach;
   }
 
-  group->reqpads = g_list_append (group->reqpads, sinkpad);
+  group->reqpads = g_list_prepend (group->reqpads, sinkpad);
 
   sinkname = gst_pad_get_name (sinkpad);
   nb = sinkname + 4;
@@ -1890,7 +1882,7 @@ gst_decode_group_control_source_pad (GstDecodeGroup * group,
   gst_decode_pad_activate (dpad, group);
 
   GROUP_MUTEX_LOCK (group);
-  group->endpads = g_list_append (group->endpads, gst_object_ref (dpad));
+  group->endpads = g_list_prepend (group->endpads, gst_object_ref (dpad));
   GROUP_MUTEX_UNLOCK (group);
 
   return TRUE;
@@ -2240,7 +2232,7 @@ gst_decode_group_hide (GstDecodeGroup * group)
   GROUP_MUTEX_UNLOCK (group);
 
   group->dbin->activegroup = NULL;
-  group->dbin->oldgroups = g_list_append (group->dbin->oldgroups, group);
+  group->dbin->oldgroups = g_list_prepend (group->dbin->oldgroups, group);
 }
 
 static void
@@ -2376,8 +2368,11 @@ static void
 gst_decode_group_set_complete (GstDecodeGroup * group)
 {
   gboolean expose = FALSE;
+  GstDecodeBin *dbin;
 
-  GST_LOG_OBJECT (group->dbin, "Setting group %p to COMPLETE", group);
+  dbin = group->dbin;
+
+  GST_LOG_OBJECT (dbin, "Setting group %p to COMPLETE", group);
 
   GROUP_MUTEX_LOCK (group);
   group->complete = TRUE;
@@ -2388,10 +2383,10 @@ gst_decode_group_set_complete (GstDecodeGroup * group)
 
   /* don't do anything if not blocked completely */
   if (expose) {
-    DECODE_BIN_LOCK (group->dbin);
+    DECODE_BIN_LOCK (dbin);
     if (!gst_decode_group_expose (group))
-      GST_WARNING_OBJECT (group->dbin, "Couldn't expose group");
-    DECODE_BIN_UNLOCK (group->dbin);
+      GST_WARNING_OBJECT (dbin, "Couldn't expose group");
+    DECODE_BIN_UNLOCK (dbin);
   }
 }
 
