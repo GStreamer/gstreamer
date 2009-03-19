@@ -1,0 +1,33 @@
+***********************************************
+
+typedef struct {
+  int pre_count;
+  int post_count;
+  Mutex *lock;
+} RWLock;
+
+
+reader:
+
+  retry:
+    post = atomic_get (lock->post_count);
+
+    ... do read ...
+
+    if (atomic_get (lock->pre_count) != post) {
+      /* wait for writer to finish then retry */
+      lock (lock->mutex);
+      unlock (lock->mutex);
+      goto retry;
+    }
+
+
+writer:
+
+   lock (lock->mutex);
+   atomic_inc (lock->pre_count);
+
+   ... update ...
+
+   atomic_inc (lock->post_count);
+   unlock (lock->mutex);
