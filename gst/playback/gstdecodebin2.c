@@ -2130,12 +2130,10 @@ gst_decode_group_expose (GstDecodeGroup * group)
 
   GST_LOG ("Exposing group %p", group);
 
-
   /* re-order pads : video, then audio, then others */
   group->endpads = g_list_sort (group->endpads, (GCompareFunc) sort_end_pads);
 
   /* Expose pads */
-
   for (tmp = group->endpads; tmp; tmp = next) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
     gchar *padname;
@@ -2151,9 +2149,11 @@ gst_decode_group_expose (GstDecodeGroup * group)
     g_free (padname);
 
     /* 2. activate and add */
-    if (!gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD (dpad)))
-      goto name_problem;
-
+    if (!gst_element_add_pad (GST_ELEMENT (dbin), GST_PAD (dpad))) {
+      /* not really fatal, we can try to add the other pads */
+      g_warning ("error adding pad to decodebin2");
+      continue;
+    }
     dpad->added = TRUE;
 
     /* 3. emit signal */
@@ -2162,7 +2162,6 @@ gst_decode_group_expose (GstDecodeGroup * group)
         gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, dpad,
         (next == NULL));
     GST_DEBUG_OBJECT (dbin, "emitted new-decoded-pad");
-
   }
 
   /* signal no-more-pads. This allows the application to hook stuff to the
@@ -2198,12 +2197,6 @@ gst_decode_group_expose (GstDecodeGroup * group)
 
   GST_LOG_OBJECT (dbin, "Group %p exposed", group);
   return TRUE;
-
-name_problem:
-  {
-    g_warning ("error adding pad to decodebin2");
-    return FALSE;
-  }
 }
 
 /* must be called with the decodebin lock */
