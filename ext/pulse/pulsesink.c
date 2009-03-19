@@ -872,6 +872,7 @@ static guint
 gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstPulseSink *pulsesink = GST_PULSESINK (asink);
+  pa_operation *o = NULL;
   size_t sum = 0;
 
   /* FIXME post message rather than using a signal (as mixer interface) */
@@ -881,6 +882,25 @@ gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
   pa_threaded_mainloop_lock (pulsesink->mainloop);
 
   pulsesink->in_write = TRUE;
+
+  /* Make sure the stream is uncorked - it might not be on a caps change */
+  if (pa_stream_is_corked (pulsesink->stream)) {
+    if (!(o = pa_stream_cork (pulsesink->stream, FALSE, NULL, NULL))) {
+      GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
+          ("pa_stream_cork() failed: %s",
+              pa_strerror (pa_context_errno (pulsesink->context))), (NULL));
+      goto unlock_and_fail;
+    }
+
+    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+      if (gst_pulsesink_is_dead (pulsesink))
+        goto unlock_and_fail;
+      pa_threaded_mainloop_wait (pulsesink->mainloop);
+    }
+
+    pa_operation_unref (o);
+    o = NULL;
+  }
 
   while (length > 0) {
     size_t l;
@@ -932,6 +952,9 @@ unlock_and_fail:
 
   pulsesink->did_reset = FALSE;
   pulsesink->in_write = FALSE;
+
+  if (o)
+    pa_operation_unref (o);
 
   pa_threaded_mainloop_unlock (pulsesink->mainloop);
   return (guint) - 1;
@@ -1194,7 +1217,6 @@ gst_pulsesink_pause (GstPulseSink * pulsesink, gboolean b)
     goto unlock;
 
   if (!(o = pa_stream_cork (pulsesink->stream, b, NULL, NULL))) {
-
     GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
         ("pa_stream_cork() failed: %s",
             pa_strerror (pa_context_errno (pulsesink->context))), (NULL));
@@ -1202,15 +1224,12 @@ gst_pulsesink_pause (GstPulseSink * pulsesink, gboolean b)
   }
 
   while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
-
     if (gst_pulsesink_is_dead (pulsesink))
       goto unlock;
-
     pa_threaded_mainloop_wait (pulsesink->mainloop);
   }
 
 unlock:
-
   if (o)
     pa_operation_unref (o);
 
