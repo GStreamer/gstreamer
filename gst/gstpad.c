@@ -1949,7 +1949,7 @@ gst_pad_can_link (GstPad * srcpad, GstPad * sinkpad)
   /* gst_pad_link_prepare does everything for us, we only release the locks
    * on the pads that it gets us. If this function returns !OK the locks are not
    * taken anymore. */
-  result = gst_pad_link_prepare (srcpad, sinkpad) == GST_PAD_LINK_OK;
+  result = gst_pad_link_prepare (srcpad, sinkpad);
   if (result != GST_PAD_LINK_OK)
     goto done;
 
