@@ -769,7 +769,7 @@ gst_avdtp_sink_get_capabilities (GstAvdtpSink * self)
 
   if (self->device == NULL)
     return FALSE;
-  strncpy (req->device, self->device, 18);
+  strncpy (req->destination, self->device, 18);
   if (self->autoconnect)
     req->flags |= BT_FLAG_AUTOCONNECT;
 
@@ -1043,7 +1043,7 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
   req->h.length = sizeof (*req);
 
   req->access_mode = BT_CAPABILITIES_ACCESS_MODE_WRITE;
-  strncpy (req->device, self->device, 18);
+  strncpy (req->destination, self->device, 18);
   structure = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_has_name (structure, "audio/x-sbc"))
