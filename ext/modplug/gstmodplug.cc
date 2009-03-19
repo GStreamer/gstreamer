@@ -44,7 +44,7 @@
 #endif
 
 #include <stdafx.h>
-#include <sndfile.h>
+#include <libmodplug/sndfile.h>
 
 #include "gstmodplug.h"
 
