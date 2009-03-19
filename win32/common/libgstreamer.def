@@ -208,6 +208,7 @@ EXPORTS
 	gst_debug_category_set_threshold
 	gst_debug_color_flags_get_type
 	gst_debug_construct_term_color
+	gst_debug_construct_win_color
 	gst_debug_get_all_categories
 	gst_debug_get_default_threshold
 	gst_debug_graph_details_get_type
