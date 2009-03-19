@@ -251,10 +251,13 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       guint save = 0;
       gint state = 0;
 
-      GST_DEBUG_OBJECT (depayload, "decoding param %d", i);
+      GST_DEBUG_OBJECT (depayload, "decoding param %d (%s)", i, params[i]);
       memcpy (b64, sync_bytes, sizeof (sync_bytes));
       b64 += sizeof (sync_bytes);
-      len = g_base64_decode_step (params[i], -1, b64, &state, &save);
+      len =
+          g_base64_decode_step (params[i], strlen (params[i]), b64, &state,
+          &save);
+      GST_DEBUG_OBJECT (depayload, "decoded %d bytes", len);
       total += len + sizeof (sync_bytes);
       b64 += len;
     }
