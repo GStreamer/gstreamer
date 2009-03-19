@@ -33,57 +33,20 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 static const MXFTimestamp mxf_timestamp_unknown = { 0, 0, 0, 0, 0, 0, 0 };
 
 static const MXFUMID umid_zero = { {0,} };
-static const MXFUL key_zero = { {0,} };
-
-/* UL common to all MXF UL */
-static const guint8 mxf_key[] = { 0x06, 0x0e, 0x2b, 0x34 };
-
-/* SMPTE 377M 6.1 */
-static const guint8 partition_pack_key[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0d, 0x01, 0x02, 0x01,
-  0x01
-};
-
-/* SMPTE 336M */
-static const guint8 fill_key[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x01, 0x03, 0x01, 0x02, 0x10,
-  0x01, 0x00, 0x00, 0x00
-};
-
-/* SMPTE 377M 8.1 */
-static const guint8 primer_pack_key[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0d, 0x01, 0x02, 0x01,
-  0x01, 0x05, 0x01, 0x00
-};
-
-/* SMPTE 377M 8.6 */
-static const guint8 metadata_key[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0d, 0x01, 0x01, 0x01,
-  0x01
-};
-
-static const guint8 random_index_pack_key[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0d, 0x01, 0x02, 0x01,
-  0x01, 0x11, 0x01, 0x00
-};
-
-static const guint8 index_table_segment_key[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x53, 0x01, 0x01, 0x0d, 0x01, 0x02, 0x01,
-  0x01, 0x10, 0x01, 0x00
-};
 
 gboolean
-mxf_is_mxf_packet (const MXFUL * key)
+mxf_is_mxf_packet (const MXFUL * ul)
 {
-  return (memcmp (key, mxf_key, 4) == 0);
+  return mxf_ul_is_subclass (MXF_UL (SMPTE), ul);
 }
 
 /* SMPTE 377M 6.1: Check if this is a valid partition pack */
 gboolean
-mxf_is_partition_pack (const MXFUL * key)
+mxf_is_partition_pack (const MXFUL * ul)
 {
-  if (memcmp (key, partition_pack_key, 13) == 0 && key->u[13] >= 0x02
-      && key->u[13] <= 0x04 && key->u[14] < 0x05 && key->u[15] == 0x00)
+  if (mxf_ul_is_subclass (MXF_UL (PARTITION_PACK), ul) &&
+      ul->u[13] >= 0x02 && ul->u[13] <= 0x04 &&
+      ul->u[14] < 0x05 && ul->u[15] == 0x00)
     return TRUE;
 
   return FALSE;
@@ -91,10 +54,9 @@ mxf_is_partition_pack (const MXFUL * key)
 
 /* SMPTE 377M 6.2: header partition pack has byte 14 == 0x02 */
 gboolean
-mxf_is_header_partition_pack (const MXFUL * key)
+mxf_is_header_partition_pack (const MXFUL * ul)
 {
-  if (memcmp (key, partition_pack_key, 13) == 0 && key->u[13] == 0x02 &&
-      key->u[14] < 0x05 && key->u[15] == 0x00)
+  if (mxf_is_partition_pack (ul) && ul->u[13] == 0x02)
     return TRUE;
 
   return FALSE;
@@ -102,10 +64,9 @@ mxf_is_header_partition_pack (const MXFUL * key)
 
 /* SMPTE 377M 6.3: body partition pack has byte 14 == 0x03 */
 gboolean
-mxf_is_body_partition_pack (const MXFUL * key)
+mxf_is_body_partition_pack (const MXFUL * ul)
 {
-  if (memcmp (key, partition_pack_key, 13) == 0 && key->u[13] == 0x03 &&
-      key->u[14] < 0x05 && key->u[15] == 0x00)
+  if (mxf_is_partition_pack (ul) && ul->u[13] == 0x03)
     return TRUE;
 
   return FALSE;
@@ -113,159 +74,92 @@ mxf_is_body_partition_pack (const MXFUL * key)
 
 /* SMPTE 377M 6.4: footer partition pack has byte 14 == 0x04 */
 gboolean
-mxf_is_footer_partition_pack (const MXFUL * key)
+mxf_is_footer_partition_pack (const MXFUL * ul)
 {
-  if (memcmp (key, partition_pack_key, 13) == 0 && key->u[13] == 0x04 &&
-      key->u[14] < 0x05 && key->u[15] == 0x00)
+  if (mxf_is_partition_pack (ul) && ul->u[13] == 0x04)
     return TRUE;
 
   return FALSE;
 }
 
 gboolean
-mxf_is_fill (const MXFUL * key)
+mxf_is_fill (const MXFUL * ul)
 {
-  return (memcmp (key, fill_key, 16) == 0);
+  return (mxf_ul_is_subclass (MXF_UL (FILL), ul));
 }
 
 gboolean
-mxf_is_primer_pack (const MXFUL * key)
+mxf_is_primer_pack (const MXFUL * ul)
 {
-  return (memcmp (key, primer_pack_key, 16) == 0);
+  return (mxf_ul_is_subclass (MXF_UL (PRIMER_PACK), ul));
 }
 
 gboolean
-mxf_is_metadata (const MXFUL * key)
+mxf_is_metadata (const MXFUL * ul)
 {
-  return (memcmp (key, metadata_key, 13) == 0 && key->u[15] == 0x00);
+  return (mxf_ul_is_subclass (MXF_UL (METADATA), ul));
 }
 
 /* SMPTE 377M 8.7.3 */
 gboolean
-mxf_is_descriptive_metadata (const MXFUL * key)
+mxf_is_descriptive_metadata (const MXFUL * ul)
 {
-  return (memcmp (key, mxf_key, 4) == 0 &&
-      key->u[4] == 0x02 &&
-      key->u[6] == 0x01 &&
-      key->u[7] == 0x01 &&
-      key->u[8] == 0x0d &&
-      key->u[9] == 0x01 && key->u[10] == 0x04 && key->u[11] == 0x01);
+  return (mxf_ul_is_subclass (MXF_UL (DESCRIPTIVE_METADATA), ul));
 }
 
 gboolean
-mxf_is_random_index_pack (const MXFUL * key)
+mxf_is_random_index_pack (const MXFUL * ul)
 {
-  return (memcmp (key, random_index_pack_key, 16) == 0);
+  return (mxf_ul_is_subclass (MXF_UL (RANDOM_INDEX_PACK), ul));
 }
 
 gboolean
-mxf_is_index_table_segment (const MXFUL * key)
+mxf_is_index_table_segment (const MXFUL * ul)
 {
-  return (memcmp (key, index_table_segment_key, 16) == 0);
+  return (mxf_ul_is_subclass (MXF_UL (INDEX_TABLE_SEGMENT), ul));
 }
 
 /* SMPTE 379M 6.2.1 */
 gboolean
-mxf_is_generic_container_system_item (const MXFUL * key)
+mxf_is_generic_container_system_item (const MXFUL * ul)
 {
-  return (memcmp (key, mxf_key, 4) == 0 && key->u[4] == 0x02
-      && key->u[6] == 0x01 && key->u[8] == 0x0d && key->u[9] == 0x01
-      && key->u[10] == 0x03 && key->u[11] == 0x01 && (key->u[12] == 0x04
-          || key->u[12] == 0x14));
+  return (mxf_ul_is_subclass (MXF_UL (GENERIC_CONTAINER_SYSTEM_ITEM), ul) &&
+      (ul->u[12] == 0x04 || ul->u[12] == 0x14));
 }
 
 /* SMPTE 379M 7.1 */
 gboolean
-mxf_is_generic_container_essence_element (const MXFUL * key)
+mxf_is_generic_container_essence_element (const MXFUL * ul)
 {
-  return (memcmp (key, mxf_key, 4) == 0 && key->u[4] == 0x01
-      && key->u[5] == 0x02 && key->u[6] == 0x01 && key->u[8] == 0x0d
-      && key->u[9] == 0x01 && key->u[10] == 0x03 && key->u[11] == 0x01
-      && (key->u[12] == 0x05 || key->u[12] == 0x06 || key->u[12] == 0x07
-          || key->u[12] == 0x15 || key->u[12] == 0x16 || key->u[12] == 0x17
-          || key->u[12] == 0x18));
+  return (mxf_ul_is_subclass (MXF_UL (GENERIC_CONTAINER_ESSENCE_ELEMENT), ul)
+      && (ul->u[12] == 0x05 || ul->u[12] == 0x06
+          || ul->u[12] == 0x07 || ul->u[12] == 0x15
+          || ul->u[12] == 0x16 || ul->u[12] == 0x17 || ul->u[12] == 0x18));
 }
 
 /* SMPTE 379M 8 */
 gboolean
-mxf_is_generic_container_essence_container_label (const MXFUL * key)
+mxf_is_generic_container_essence_container_label (const MXFUL * ul)
 {
-  return (key->u[0] == 0x06 &&
-      key->u[1] == 0x0e &&
-      key->u[2] == 0x2b &&
-      key->u[3] == 0x34 &&
-      key->u[4] == 0x04 &&
-      key->u[5] == 0x01 &&
-      key->u[6] == 0x01 &&
-      key->u[8] == 0x0d &&
-      key->u[9] == 0x01 &&
-      key->u[10] == 0x03 &&
-      key->u[11] == 0x01 && (key->u[12] == 0x01 || key->u[12] == 0x02));
+  return (mxf_ul_is_subclass (MXF_UL
+          (GENERIC_CONTAINER_ESSENCE_CONTAINER_LABEL), ul) && (ul->u[12] == 0x01
+          || ul->u[12] == 0x02));
 }
 
 /* Essence container label found in files generated by Avid */
-static const guint8 avid_essence_container_label[] = {
-  0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0xff, 0x4b, 0x46, 0x41, 0x41, 0x00,
-  0x0d, 0x4d, 0x4f
-};
-
 gboolean
-mxf_is_avid_essence_container_label (const MXFUL * key)
+mxf_is_avid_essence_container_label (const MXFUL * ul)
 {
-  return (memcmp (&key->u, avid_essence_container_label, 16) == 0);
+  return (mxf_ul_is_subclass (MXF_UL (AVID_ESSENCE_CONTAINER_ESSENCE_LABEL),
+          ul));
 }
 
 /* Essence element key found in files generated by Avid */
-static const guint8 avid_essence_element_ul[] = {
-  0x06, 0x0e, 0x2b, 0x34, 0x01, 0x02, 0x01, 0x01, 0x0e, 0x04, 0x03, 0x01, 0x00,
-  0x00, 0x00, 0x00
-};
-
 gboolean
-mxf_is_avid_essence_container_essence_element (const MXFUL * key)
+mxf_is_avid_essence_container_essence_element (const MXFUL * ul)
 {
-  return (memcmp (&key->u, avid_essence_element_ul, 12) == 0);
-}
-
-gboolean
-mxf_ul_is_equal (const MXFUL * a, const MXFUL * b)
-{
-  return (memcmp (a, b, 16) == 0);
-}
-
-gboolean
-mxf_ul_is_zero (const MXFUL * key)
-{
-  return (memcmp (key, &key_zero, 16) == 0);
-}
-
-guint
-mxf_ul_hash (const MXFUL * key)
-{
-  guint32 ret = 0;
-  guint i;
-
-  for (i = 0; i < 4; i++)
-    ret ^=
-        (key->u[i * 4 + 0] << 24) | (key->u[i * 4 + 1] << 16) | (key->u[i * 4 +
-            2] << 8) | (key->u[i * 4 + 3] << 0);
-
-  return ret;
-}
-
-gchar *
-mxf_ul_to_string (const MXFUL * key, gchar str[48])
-{
-  g_return_val_if_fail (key != NULL, NULL);
-  g_return_val_if_fail (str != NULL, NULL);
-
-  g_snprintf (str, 48,
-      "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-      key->u[0], key->u[1], key->u[2], key->u[3], key->u[4], key->u[5],
-      key->u[6], key->u[7], key->u[8], key->u[9], key->u[10], key->u[11],
-      key->u[12], key->u[13], key->u[14], key->u[15]);
-
-  return str;
+  return (mxf_ul_is_subclass (MXF_UL (AVID_ESSENCE_CONTAINER_ESSENCE_ELEMENT),
+          ul));
 }
 
 gboolean
@@ -474,57 +368,6 @@ mxf_product_version_is_valid (const MXFProductVersion * version)
   static const guint8 null[sizeof (MXFProductVersion)] = { 0, };
 
   return (memcmp (version, &null, sizeof (MXFProductVersion)) == 0);
-}
-
-gboolean
-mxf_ul_array_parse (MXFUL ** array, guint32 * count, const guint8 * data,
-    guint size)
-{
-  guint32 element_count, element_size;
-  guint i;
-
-  g_return_val_if_fail (array != NULL, FALSE);
-  g_return_val_if_fail (count != NULL, FALSE);
-  g_return_val_if_fail (data != NULL, FALSE);
-
-  if (size < 8)
-    return FALSE;
-
-  element_count = GST_READ_UINT32_BE (data);
-  data += 4;
-  size -= 4;
-
-  if (element_count == 0) {
-    *array = NULL;
-    *count = 0;
-    return TRUE;
-  }
-
-  element_size = GST_READ_UINT32_BE (data);
-  data += 4;
-  size -= 4;
-
-  if (element_size != 16) {
-    *array = NULL;
-    *count = 0;
-    return FALSE;
-  }
-
-  if (16 * element_count < size) {
-    *array = NULL;
-    *count = 0;
-    return FALSE;
-  }
-
-  *array = g_new (MXFUL, element_count);
-  *count = element_count;
-
-  for (i = 0; i < element_count; i++) {
-    memcpy (&((*array)[i]), data, 16);
-    data += 16;
-  }
-
-  return TRUE;
 }
 
 /* SMPTE 377M 6.1, Table 2 */

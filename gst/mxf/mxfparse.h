@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "mxftypes.h"
+#include "mxful.h"
 #include "mxfmetadata.h"
 
 typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, gpointer mapping_data, GstBuffer **outbuf);
@@ -33,11 +34,6 @@ typedef struct {
   gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);
   GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
 } MXFEssenceElementHandler;
-
-gchar * mxf_ul_to_string (const MXFUL *ul, gchar str[48]);
-gboolean mxf_ul_is_equal (const MXFUL *a, const MXFUL *b);
-gboolean mxf_ul_is_zero (const MXFUL *ul);
-guint mxf_ul_hash (const MXFUL *ul);
 
 gchar *mxf_umid_to_string (const MXFUMID * umid, gchar str[96]);
 MXFUMID *mxf_umid_from_string (const gchar *str, MXFUMID * umid);
@@ -81,8 +77,6 @@ gboolean mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, gui
 gboolean mxf_timestamp_is_unknown (const MXFTimestamp *a);
 gint mxf_timestamp_compare (const MXFTimestamp *a, const MXFTimestamp *b);
 gchar *mxf_timestamp_to_string (const MXFTimestamp *t, gchar str[32]);
-
-gboolean mxf_ul_array_parse (MXFUL **array, guint32 *count, const guint8 *data, guint size);
 
 gboolean mxf_partition_pack_parse (const MXFUL *key, MXFPartitionPack *pack, const guint8 *data, guint size);
 void mxf_partition_pack_reset (MXFPartitionPack *pack);

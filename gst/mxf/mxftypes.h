@@ -29,6 +29,10 @@ typedef struct {
   guint8 u[16];
 } MXFUL;
 
+typedef struct {
+  guint8 u[16];
+} MXFUUID;
+
 /* SMPTE 377M 3.2 */
 typedef struct {
   guint8 u[32];
