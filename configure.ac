@@ -1259,16 +1259,18 @@ AG_GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
 dnl *** soundtouch ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUNDTOUCH, true)
 AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
-  PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
-    HAVE_SOUNDTOUCH=yes, 
-    [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
-      HAVE_SOUNDTOUCH=yes,
-      HAVE_SOUNDTOUCH=no)])
   dnl We only need -lBPM on soundtouch < 1.4
-  PKG_CHECK_EXISTS(libSoundTouch >= 1.4,
-      AC_DEFINE([HAVE_SOUNDTOUCH_1_4], [1],
-          [Defined if the available libSoundTouch is >= 1.4]),
-      SOUNDTOUCH_LIBS="$SOUNDTOUCH_LIBS -lBPM")
+  dnl We check for libSoundTouch since Debian used it before upstream
+  dnl added a pkgconfig file.
+  PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.4,
+    HAVE_SOUNDTOUCH=yes, 
+    [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
+      HAVE_SOUNDTOUCH=yes
+      SOUNDTOUCH_LIBS=$"SOUNDTOUCH_LIBS -lBPM", 
+      [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
+        HAVE_SOUNDTOUCH=yes
+        SOUNDTOUCH_LIBS=$"SOUNDTOUCH_LIBS -lBPM", 
+        HAVE_SOUNDTOUCH=no)])])
   AC_SUBST(SOUNDTOUCH_CFLAGS)
   AC_SUBST(SOUNDTOUCH_LIBS)
   if test "x$HAVE_CXX" != "xyes"; then
