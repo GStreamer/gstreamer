@@ -38,6 +38,12 @@ G_BEGIN_DECLS
 GST_DEBUG_CATEGORY_EXTERN (check_debug);
 #define GST_CAT_DEFAULT check_debug
 
+#define __CHECK_VERSION_LATER_THAN(major,minor,micro) \
+    (CHECK_MAJOR_VERSION > major || \
+     (CHECK_MAJOR_VERSION == (major) && CHECK_MINOR_VERSION > (minor)) || \
+     (CHECK_MAJOR_VERSION == (major) && CHECK_MINOR_VERSION == (minor) && \
+      CHECK_MICRO_VERSION > (micro)))
+
 /* logging function for tests
  * a test uses g_message() to log a debug line
  * a gst unit test can be run with GST_TEST_DEBUG env var set to see the
@@ -108,9 +114,7 @@ gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
  *
  * wrapper for checks END_TEST
  */
-#if CHECK_MAJOR_VERSION > 0 || \
-    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION > 9) || \
-    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION == 9 && CHECK_MICRO_VERSION > 3)
+#if __CHECK_VERSION_LATER_THAN(0,9,3)
 #define GST_START_TEST(__testname) \
 static void __testname (int __i__)\
 {\
@@ -421,9 +425,16 @@ int main (int argc, char **argv)				\
 
 gboolean _gst_check_run_test_func (const gchar * func_name);
 
-#if CHECK_MAJOR_VERSION > 0 || \
-    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION > 9) || \
-    (CHECK_MAJOR_VERSION == 0 && CHECK_MINOR_VERSION == 9 && CHECK_MICRO_VERSION > 3)
+#if __CHECK_VERSION_LATER_THAN(0,9,6)
+static inline void
+__gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal,
+    int allowed_exit_value, int start, int end)
+{
+  if (_gst_check_run_test_func (fname)) {
+    _tcase_add_test (tc, tf, fname, signal, allowed_exit_value, start, end);
+  }
+}
+#elif __CHECK_VERSION_LATER_THAN(0,9,3)
 static inline void
 __gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal,
     int start, int end)
@@ -443,6 +454,8 @@ __gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal)
 #endif
 
 #define _tcase_add_test __gst_tcase_add_test
+
+#undef __CHECK_VERSION_LATER_THAN
 
 G_END_DECLS
 
