@@ -252,7 +252,7 @@ gst_avdtp_find_caps (GstAvdtpSink * sink, uint8_t codec_type)
   int bytes_left = rsp->h.length - sizeof (*rsp);
 
   while (bytes_left > 0) {
-    if (codec->type == codec_type)
+    if ((codec->type == codec_type) && !(codec->lock & BT_WRITE_LOCK))
       break;
 
     bytes_left -= codec->length;
