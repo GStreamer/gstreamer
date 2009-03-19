@@ -172,7 +172,7 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr, gchar * iface)
   switch (addr->ss_family) {
     case AF_INET:
     {
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) || (defined (__SVR4) && defined (__sun))
       struct ip_mreq mreq4;
 #else
       struct ip_mreqn mreq4;
@@ -180,7 +180,7 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr, gchar * iface)
 
       mreq4.imr_multiaddr.s_addr =
           ((struct sockaddr_in *) addr)->sin_addr.s_addr;
-#ifdef G_OS_WIN32
+#if defined (G_OS_WIN32) || (defined (__SVR4) && defined (__sun))
       mreq4.imr_interface.s_addr = INADDR_ANY;
 #else
       if (iface)
