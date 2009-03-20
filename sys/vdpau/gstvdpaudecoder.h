@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#ifndef __GST_VDPAUDECODER_H__
-#define __GST_VDPAUDECODER_H__
+#ifndef __GST_VDPAU_DECODER_H__
+#define __GST_VDPAU_DECODER_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
@@ -29,21 +29,21 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDPAUDECODER \
+#define GST_TYPE_VDPAU_DECODER \
   (gst_vdpaudecoder_get_type())
-#define GST_VDPAUDECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAUDECODER,GstVDPAUDecoder))
-#define GST_VDPAUDECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAUDECODER,GstVDPAUDecoderClass))
-#define GST_IS_VDPAUDECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAUDECODER))
-#define GST_IS_VDPAUDECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAUDECODER))
+#define GST_VDPAU_DECODER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpauDecoder))
+#define GST_VDPAU_DECODER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpauDecoderClass))
+#define GST_IS_VDPAU_DECODER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_DECODER))
+#define GST_IS_VDPAU_DECODER_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_DECODER))
 
-typedef struct _GstVDPAUDecoder      GstVDPAUDecoder;
-typedef struct _GstVDPAUDecoderClass GstVDPAUDecoderClass;
+typedef struct _GstVdpauDecoder      GstVdpauDecoder;
+typedef struct _GstVdpauDecoderClass GstVdpauDecoderClass;
 
-struct _GstVDPAUDecoder {
+struct _GstVdpauDecoder {
   GstElement element;
 
   gchar *display;
@@ -52,10 +52,12 @@ struct _GstVDPAUDecoder {
   GstPad *src;
   GstPad *sink;
 
+  GstCaps *src_caps;
+
   gboolean silent;
 };
 
-struct _GstVDPAUDecoderClass {
+struct _GstVdpauDecoderClass {
   GstBaseTransformClass parent_class;
 };
 
@@ -63,4 +65,4 @@ GType gst_vdpaudecoder_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VDPAUDECODER_H__ */
+#endif /* __GST_VDPAU_DECODER_H__ */
