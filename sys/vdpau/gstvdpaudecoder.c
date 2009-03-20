@@ -288,7 +288,7 @@ gst_vdpaudecoder_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class,
       "VdpauDecoder",
-      "Generic/Filter",
+      "Codec/Decoder/Video",
       "VDPAU decoder base class",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
