@@ -2121,6 +2121,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
   gst_adapter_push (demux->adapter, inbuf);
 
+  /* we never really mean to buffer that much */
+  if (demux->neededbytes == -1)
+    goto eos;
+
   GST_DEBUG_OBJECT (demux, "pushing in inbuf %p, neededbytes:%u, available:%u",
       inbuf, demux->neededbytes, gst_adapter_available (demux->adapter));
 
@@ -2157,6 +2161,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             demux->state = QTDEMUX_STATE_MOVIE;
             demux->neededbytes = next_entry_size (demux);
           } else {
+            /* sanity check */
+            if (size > 10 * (2 << 20))
+              goto no_moov;
             demux->state = QTDEMUX_STATE_BUFFER_MDAT;
             demux->neededbytes = size;
             demux->mdatoffset = demux->offset;
@@ -2221,9 +2228,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             demux->mdatoffset);
         if (demux->mdatbuffer)
           gst_buffer_unref (demux->mdatbuffer);
-        demux->mdatbuffer = gst_buffer_new ();
-        gst_buffer_set_data (demux->mdatbuffer,
-            gst_adapter_take (demux->adapter, demux->neededbytes),
+        demux->mdatbuffer = gst_adapter_take_buffer (demux->adapter,
             demux->neededbytes);
         GST_DEBUG_OBJECT (demux, "mdatbuffer starts with %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (QT_UINT32 (demux->mdatbuffer)));
@@ -2235,7 +2240,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         break;
       }
       case QTDEMUX_STATE_MOVIE:{
-        guint8 *data;
         GstBuffer *outbuf;
         QtDemuxStream *stream = NULL;
         int i = -1;
@@ -2274,14 +2278,12 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
                   0, GST_CLOCK_TIME_NONE, 0));
         }
 
-        /* get data */
-        data = gst_adapter_take (demux->adapter, demux->neededbytes);
-
         /* Put data in a buffer, set timestamps, caps, ... */
-        outbuf = gst_buffer_new ();
-        gst_buffer_set_data (outbuf, data, demux->neededbytes);
+        outbuf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
         GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (stream->fourcc));
+
+        g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
 
         if (stream->samples[stream->sample_index].pts_offset) {
           demux->last_ts = stream->samples[stream->sample_index].timestamp;
@@ -2355,6 +2357,13 @@ invalid_state:
   {
     GST_ELEMENT_ERROR (demux, STREAM, FAILED,
         (NULL), ("qtdemuxer invalid state %d", demux->state));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+no_moov:
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+        (NULL), ("no 'moov' atom withing first 10 MB"));
     ret = GST_FLOW_ERROR;
     goto done;
   }
