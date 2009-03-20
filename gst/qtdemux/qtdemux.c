@@ -484,6 +484,8 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
   gboolean res = FALSE;
   GstQTDemux *qtdemux = GST_QTDEMUX (gst_pad_get_parent (pad));
 
+  GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
       if (GST_CLOCK_TIME_IS_VALID (qtdemux->segment.last_stop)) {
@@ -509,14 +511,27 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
+      gboolean seekable;
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       if (fmt == GST_FORMAT_TIME) {
         gint64 duration = -1;
 
         gst_qtdemux_get_duration (qtdemux, &duration);
-        gst_query_set_seeking (query, GST_FORMAT_TIME, qtdemux->pullbased,
-            0, duration);
+        seekable = TRUE;
+        if (!qtdemux->pullbased) {
+          GstQuery *q;
+
+          /* we might be able with help from upstream */
+          seekable = FALSE;
+          q = gst_query_new_seeking (GST_FORMAT_BYTES);
+          if ((res = gst_pad_peer_query (qtdemux->sinkpad, q))) {
+            gst_query_parse_seeking (q, &fmt, &seekable, NULL, NULL);
+            GST_LOG_OBJECT (qtdemux, "upstream BYTE seekable %d", seekable);
+          }
+          gst_query_unref (q);
+        }
+        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, duration);
         res = TRUE;
       }
       break;
@@ -688,6 +703,177 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
   str->discont = TRUE;
 }
 
+static void
+gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
+    gint64 * key_time, gint64 * key_offset)
+{
+  guint64 min_offset;
+  gint64 min_byte_offset = -1;
+  gint n;
+
+  min_offset = desired_time;
+
+  /* for each stream, find the index of the sample in the segment
+   * and move back to the previous keyframe. */
+  for (n = 0; n < qtdemux->n_streams; n++) {
+    QtDemuxStream *str;
+    guint32 index, kindex;
+    guint32 seg_idx;
+    guint64 media_start;
+    guint64 media_time;
+    guint64 seg_time;
+    QtDemuxSegment *seg;
+
+    str = qtdemux->streams[n];
+
+    seg_idx = gst_qtdemux_find_segment (qtdemux, str, desired_time);
+    GST_DEBUG_OBJECT (qtdemux, "align segment %d", seg_idx);
+
+    /* segment not found, continue with normal flow */
+    if (seg_idx == -1)
+      continue;
+
+    /* get segment and time in the segment */
+    seg = &str->segments[seg_idx];
+    seg_time = desired_time - seg->time;
+
+    /* get the media time in the segment */
+    media_start = seg->media_start + seg_time;
+
+    /* get the index of the sample with media time */
+    index = gst_qtdemux_find_index (qtdemux, str, media_start);
+    GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
+        GST_TIME_ARGS (media_start), index);
+
+    /* find previous keyframe */
+    kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
+
+    /* if the keyframe is at a different position, we need to update the
+     * requested seek time */
+    if (index != kindex) {
+      index = kindex;
+
+      /* get timestamp of keyframe */
+      media_time = str->samples[kindex].timestamp;
+      GST_DEBUG_OBJECT (qtdemux, "keyframe at %u with time %" GST_TIME_FORMAT,
+          kindex, GST_TIME_ARGS (media_time));
+
+      /* keyframes in the segment get a chance to change the
+       * desired_offset. keyframes out of the segment are
+       * ignored. */
+      if (media_time >= seg->media_start) {
+        guint64 seg_time;
+
+        /* this keyframe is inside the segment, convert back to
+         * segment time */
+        seg_time = (media_time - seg->media_start) + seg->time;
+        if (seg_time < min_offset)
+          min_offset = seg_time;
+      }
+    }
+
+    if (min_byte_offset < 0 || str->samples[index].offset < min_byte_offset)
+      min_byte_offset = str->samples[index].offset;
+  }
+
+  if (key_time)
+    *key_time = min_offset;
+  if (key_offset)
+    *key_offset = min_byte_offset;
+}
+
+static gboolean
+gst_qtdemux_convert_seek (GstPad * pad, GstFormat * format,
+    GstSeekType cur_type, gint64 * cur, GstSeekType stop_type, gint64 * stop)
+{
+  gboolean res;
+  GstFormat fmt;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (cur != NULL, FALSE);
+  g_return_val_if_fail (stop != NULL, FALSE);
+
+  if (*format == GST_FORMAT_TIME)
+    return TRUE;
+
+  fmt = GST_FORMAT_TIME;
+  res = TRUE;
+  if (cur_type != GST_SEEK_TYPE_NONE)
+    res = gst_pad_query_convert (pad, *format, *cur, &fmt, cur);
+  if (res && stop_type != GST_SEEK_TYPE_NONE)
+    res = gst_pad_query_convert (pad, *format, *stop, &fmt, stop);
+
+  if (res)
+    *format = GST_FORMAT_TIME;
+
+  return res;
+}
+
+/* perform seek in push based mode:
+   find BYTE position to move to based on time and delegate to upstream
+*/
+static gboolean
+gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
+{
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  gboolean res;
+  gint64 byte_cur;
+
+  GST_DEBUG_OBJECT (qtdemux, "doing push-based seek");
+
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+
+  if (stop_type != GST_SEEK_TYPE_NONE)
+    goto unsupported_seek;
+  stop = -1;
+
+  /* convert to TIME if needed and possible */
+  if (!gst_qtdemux_convert_seek (pad, &format, cur_type, &cur,
+          stop_type, &stop))
+    goto no_format;
+
+  /* find reasonable corresponding BYTE position,
+   * also try to mind about keyframes, since we can not go back a bit for them
+   * later on */
+  gst_qtdemux_adjust_seek (qtdemux, cur, NULL, &byte_cur);
+
+  if (byte_cur == -1)
+    goto abort_seek;
+
+  GST_DEBUG_OBJECT (qtdemux, "Pushing BYTE seek rate %g, "
+      "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT, rate, byte_cur,
+      stop);
+  /* BYTE seek event */
+  event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, byte_cur,
+      stop_type, stop);
+  res = gst_pad_push_event (qtdemux->sinkpad, event);
+
+  return res;
+
+  /* ERRORS */
+abort_seek:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "could not determine byte position to seek to, "
+        "seek aborted.");
+    return FALSE;
+  }
+unsupported_seek:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "unsupported seek, seek aborted.");
+    return FALSE;
+  }
+no_format:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "unsupported format given, seek aborted.");
+    return FALSE;
+  }
+}
+
 /* perform the seek.
  *
  * We set all segment_indexes in the streams to unknown and
@@ -716,71 +902,11 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
       GST_TIME_ARGS (desired_offset));
 
   if (segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
-    guint64 min_offset;
+    gint64 min_offset;
 
-    min_offset = desired_offset;
-
-    /* for each stream, find the index of the sample in the segment
-     * and move back to the previous keyframe. */
-    for (n = 0; n < qtdemux->n_streams; n++) {
-      QtDemuxStream *str;
-      guint32 index, kindex;
-      guint32 seg_idx;
-      guint64 media_start;
-      guint64 media_time;
-      guint64 seg_time;
-      QtDemuxSegment *seg;
-
-      str = qtdemux->streams[n];
-
-      seg_idx = gst_qtdemux_find_segment (qtdemux, str, desired_offset);
-      GST_DEBUG_OBJECT (qtdemux, "align segment %d", seg_idx);
-
-      /* segment not found, continue with normal flow */
-      if (seg_idx == -1)
-        continue;
-
-      /* get segment and time in the segment */
-      seg = &str->segments[seg_idx];
-      seg_time = desired_offset - seg->time;
-
-      /* get the media time in the segment */
-      media_start = seg->media_start + seg_time;
-
-      /* get the index of the sample with media time */
-      index = gst_qtdemux_find_index (qtdemux, str, media_start);
-      GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
-          GST_TIME_ARGS (media_start), index);
-
-      /* find previous keyframe */
-      kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
-
-      /* if the keyframe is at a different position, we need to update the
-       * requiested seek time */
-      if (index != kindex) {
-        index = kindex;
-
-        /* get timestamp of keyframe */
-        media_time = str->samples[kindex].timestamp;
-        GST_DEBUG_OBJECT (qtdemux, "keyframe at %u with time %" GST_TIME_FORMAT,
-            kindex, GST_TIME_ARGS (media_time));
-
-        /* keyframes in the segment get a chance to change the
-         * desired_offset. keyframes out of the segment are
-         * ignored. */
-        if (media_time >= seg->media_start) {
-          guint64 seg_time;
-
-          /* this keyframe is inside the segment, convert back to
-           * segment time */
-          seg_time = (media_time - seg->media_start) + seg->time;
-          if (seg_time < min_offset)
-            min_offset = seg_time;
-        }
-      }
-    }
+    gst_qtdemux_adjust_seek (qtdemux, desired_offset, &min_offset, NULL);
     GST_DEBUG_OBJECT (qtdemux, "keyframe seek, align to %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (desired_offset));
+        GST_TIME_FORMAT, GST_TIME_ARGS (min_offset));
     desired_offset = min_offset;
   }
 
@@ -826,20 +952,9 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
     /* we have to have a format as the segment format. Try to convert
      * if not. */
-    if (format != GST_FORMAT_TIME) {
-      GstFormat fmt;
-
-      fmt = GST_FORMAT_TIME;
-      res = TRUE;
-      if (cur_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (pad, format, cur, &fmt, &cur);
-      if (res && stop_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (pad, format, stop, &fmt, &stop);
-      if (!res)
-        goto no_format;
-
-      format = fmt;
-    }
+    if (!gst_qtdemux_convert_seek (pad, &format, cur_type, &cur,
+            stop_type, &stop))
+      goto no_format;
   } else {
     GST_DEBUG_OBJECT (qtdemux, "doing seek without event");
     flags = 0;
@@ -947,8 +1062,11 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
       if (qtdemux->pullbased) {
         res = gst_qtdemux_do_seek (qtdemux, pad, event);
+      } else if (qtdemux->state == QTDEMUX_STATE_MOVIE && qtdemux->n_streams) {
+        res = gst_qtdemux_do_push_seek (qtdemux, pad, event);
       } else {
-        GST_DEBUG_OBJECT (qtdemux, "cannot seek in streaming mode");
+        GST_DEBUG_OBJECT (qtdemux,
+            "ignoring seek in push mode in current state");
         res = FALSE;
       }
       gst_event_unref (event);
@@ -968,18 +1086,151 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+/* stream/index return sample that is min/max w.r.t. byte position,
+ * time is min/max w.r.t. time of samples,
+ * the latter need not be time of the former sample */
+static void
+gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
+    gboolean set, QtDemuxStream ** _stream, gint * _index, gint64 * _time)
+{
+  gint i, n, index;
+  gint64 time, min_time;
+  QtDemuxStream *stream;
+
+  min_time = -1;
+  stream = NULL;
+  index = -1;
+
+  for (n = 0; n < qtdemux->n_streams; ++n) {
+    QtDemuxStream *str;
+    gint inc;
+
+    str = qtdemux->streams[n];
+
+    if (fw) {
+      i = 0;
+      inc = 1;
+    } else {
+      i = str->n_samples - 1;
+      inc = -1;
+    }
+    for (; (i >= 0) && (i < str->n_samples); i += inc) {
+      if (str->samples[i].size &&
+          ((fw && (str->samples[i].offset >= byte_pos)) ||
+              (!fw &&
+                  (str->samples[i].offset + str->samples[i].size <=
+                      byte_pos)))) {
+        /* move stream to first available sample */
+        if (set)
+          gst_qtdemux_move_stream (qtdemux, str, i);
+        /* determine min/max time */
+        time = str->samples[i].timestamp + str->samples[i].pts_offset;
+        if (min_time == -1 || (fw && min_time > time) ||
+            (!fw && min_time < time)) {
+          min_time = time;
+        }
+        /* determine stream with leading sample, to get its position */
+        /* only needed in fw case */
+        if (fw && (!stream ||
+                str->samples[i].offset < stream->samples[index].offset)) {
+          stream = str;
+          index = i;
+        }
+        break;
+      }
+    }
+  }
+
+  if (_time)
+    *_time = min_time;
+  if (_stream)
+    *_stream = stream;
+  if (_index)
+    *_index = index;
+}
+
 static gboolean
 gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
 {
   GstQTDemux *demux = GST_QTDEMUX (GST_PAD_PARENT (sinkpad));
   gboolean res;
 
+  GST_LOG_OBJECT (demux, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      /* We need to convert it to a GST_FORMAT_TIME new segment */
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time, offset = 0;
+      QtDemuxStream *stream;
+      gint idx;
+      gboolean update;
+      GstSegment segment;
+
+      /* some debug output */
+      gst_segment_init (&segment, GST_FORMAT_UNDEFINED);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+      gst_segment_set_newsegment_full (&segment, update, rate, arate, format,
+          start, stop, time);
+      GST_DEBUG_OBJECT (demux,
+          "received format %d newsegment %" GST_SEGMENT_FORMAT, format,
+          &segment);
+
+      /* chain will send initial newsegment after pads have been added */
+      if (demux->state != QTDEMUX_STATE_MOVIE || !demux->n_streams) {
+        GST_DEBUG_OBJECT (demux, "still starting, eating event");
+        goto exit;
+      }
+
+      /* we only expect a BYTE segment, e.g. following a seek */
+      if (format == GST_FORMAT_BYTES) {
+        if (start > 0) {
+          offset = start;
+          gst_qtdemux_find_sample (demux, start, TRUE, FALSE, NULL, NULL,
+              &start);
+          start = MAX (start, 0);
+        }
+        if (stop > 0) {
+          gst_qtdemux_find_sample (demux, stop, FALSE, FALSE, NULL, NULL,
+              &stop);
+          stop = MAX (stop, 0);
+        }
+      } else {
+        GST_DEBUG_OBJECT (demux, "unsupported segment format, ignoring");
+        goto exit;
+      }
+
+      /* accept upstream's notion of segment and distribute along */
+      gst_segment_set_newsegment_full (&demux->segment, update, rate, arate,
+          GST_FORMAT_TIME, start, stop, start);
+      GST_DEBUG_OBJECT (demux, "Pushing newseg update %d, rate %g, "
+          "applied rate %g, format %d, start %" G_GINT64_FORMAT ", "
+          "stop %" G_GINT64_FORMAT, update, rate, arate, GST_FORMAT_TIME,
+          start, stop);
+      gst_qtdemux_push_event (demux,
+          gst_event_new_new_segment_full (update, rate, arate, GST_FORMAT_TIME,
+              start, stop, start));
+
+      /* clear leftover in current segment, if any */
+      gst_adapter_clear (demux->adapter);
+      /* set up streaming thread */
+      gst_qtdemux_find_sample (demux, offset, TRUE, TRUE, &stream, &idx, NULL);
+      demux->offset = offset;
+      if (stream) {
+        demux->todrop = stream->samples[idx].offset - offset;
+        demux->neededbytes = demux->todrop + stream->samples[idx].size;
+      } else {
+        /* set up for EOS */
+        demux->neededbytes = -1;
+        demux->todrop = 0;
+      }
+    exit:
       gst_event_unref (event);
       res = TRUE;
       break;
+    }
     case GST_EVENT_EOS:
       /* If we are in push mode, and get an EOS before we've seen any streams,
        * then error out - we have nowhere to send the EOS */
@@ -2272,7 +2523,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           goto unknown_stream;
 
         /* first buffer? */
-        /* FIXME : this should be handled in sink_event */
+        /* initial newsegment sent here after having added pads,
+         * possible others in sink_event */
         if (demux->last_ts == GST_CLOCK_TIME_NONE) {
           gst_qtdemux_push_event (demux,
               gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
