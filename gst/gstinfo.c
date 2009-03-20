@@ -530,6 +530,22 @@ gst_debug_print_object (gpointer ptr)
     g_free (s);
     return ret;
   }
+  if (GST_IS_QUERY (object)) {
+    GstQuery *query = GST_QUERY_CAST (object);
+
+    if (query->structure) {
+      return gst_structure_to_string (query->structure);
+    } else {
+      const gchar *query_type_name;
+
+      query_type_name = gst_query_type_get_name (query->type);
+      if (G_LIKELY (query_type_name != NULL)) {
+        return g_strdup_printf ("%s query", query_type_name);
+      } else {
+        return g_strdup_printf ("query of unknown type %d", query->type);
+      }
+    }
+  }
 
   return g_strdup_printf ("%p", ptr);
 }
