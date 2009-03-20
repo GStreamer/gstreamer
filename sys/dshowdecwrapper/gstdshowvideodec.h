@@ -105,6 +105,7 @@ struct _GstDshowVideoDec
   /* settings */
   gint width, height;
   gint fps_n, fps_d;
+  gint par_n, par_d;
 
   /* current segment */
   GstSegment *segment;
