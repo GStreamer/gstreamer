@@ -41,8 +41,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_METADATAPARSE_XMP_H__
-#define __GST_METADATAPARSE_XMP_H__
+#ifndef __GST_METADATA_XMP_H__
+#define __GST_METADATA_XMP_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
@@ -67,4 +67,4 @@ metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 *size,
     const GstTagList * taglist);
 
 G_END_DECLS
-#endif /* __GST_METADATAPARSE_XMP_H__ */
+#endif /* __GST_METADATA_XMP_H__ */
