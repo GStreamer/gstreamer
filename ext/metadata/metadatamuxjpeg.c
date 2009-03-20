@@ -416,11 +416,8 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
       }
 
     }
-
     if (!jfif_found) {
-      GST_INFO ("no jfif found");
-      ret = META_PARSING_ERROR;
-      goto done;
+      GST_INFO ("no jfif found, will insert it as needed");
     }
 
     new_chunk_offset = 2;
