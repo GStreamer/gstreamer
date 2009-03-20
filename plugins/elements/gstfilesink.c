@@ -41,8 +41,17 @@
 #include <errno.h>
 #include "gstfilesink.h"
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
+
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+#endif
+
+#include <sys/stat.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -421,7 +430,7 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
 
 #ifdef HAVE_FSEEKO
 # define __GST_STDIO_SEEK_FUNCTION "fseeko"
-#elif defined (G_OS_UNIX)
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
 # define __GST_STDIO_SEEK_FUNCTION "lseek"
 #else
 # define __GST_STDIO_SEEK_FUNCTION "fseek"
@@ -439,7 +448,7 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
 #ifdef HAVE_FSEEKO
   if (fseeko (filesink->file, (off_t) new_offset, SEEK_SET) != 0)
     goto seek_failed;
-#elif defined (G_OS_UNIX)
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
   if (lseek (fileno (filesink->file), (off_t) new_offset,
           SEEK_SET) == (off_t) - 1)
     goto seek_failed;
@@ -537,11 +546,11 @@ flush_failed:
 static gboolean
 gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
 {
-  off_t ret;
+  off_t ret = -1;
 
 #ifdef HAVE_FTELLO
   ret = ftello (filesink->file);
-#elif defined (G_OS_UNIX)
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
   if (fflush (filesink->file)) {
     GST_DEBUG_OBJECT (filesink, "Flush failed: %s", g_strerror (errno));
     /* ignore and continue */

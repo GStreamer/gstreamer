@@ -40,6 +40,15 @@
 #include "../../gst/gst-i18n-lib.h"
 
 #include <sys/types.h>
+
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+#endif
+
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <fcntl.h>
