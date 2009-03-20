@@ -27,9 +27,8 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
 
-# disabling metadata test until #574401 is fixed
 #if USE_METADATA
-#check_metadata = pipelines/metadata
+check_metadata = pipelines/metadata
 #else
 check_metadata =
 #endif
