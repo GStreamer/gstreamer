@@ -114,7 +114,9 @@ struct _GstQueryTypeDefinition
 #define GST_IS_QUERY_CLASS(klass)              (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QUERY))
 #define GST_QUERY_GET_CLASS(obj)               (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_QUERY, GstQueryClass))
 #define GST_QUERY(obj)                         (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QUERY, GstQuery))
+#define GST_QUERY_CAST(obj)                    ((GstQuery*)(obj)) /* only since 0.10.23 */
 #define GST_QUERY_CLASS(klass)                 (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QUERY, GstQueryClass))
+
 
 /**
  * GST_QUERY_TYPE:
