@@ -125,7 +125,7 @@ metadata_init (MetaData ** meta_data, const MetaOptions options)
     /* when parsing we will probably strip only 3 chunk (exif, iptc and xmp)
        so we use 4 just in case there is more than one chunk of them.
        But this is just for convinience, 'cause the chunk_array increases
-       dinamically */
+       dynamically */
     metadata_chunk_array_init (&(*meta_data)->strip_chunks, 4);
     /* at most 1 chunk will be injected (JPEG JFIF) */
     metadata_chunk_array_init (&(*meta_data)->inject_chunks, 1);
@@ -304,15 +304,14 @@ done:
  * This function must be called after #metadata_parse and after the element
  * has modified the segments (chunks)
  * Data written to #META_DATA_INJECT_CHUNKS will be properly wrapped
- * This function is really importante in case o muxing 'cause:
- * 1- 'cause gives the oportunity to muxers to wrapper new segments with
- * apropriate bytes
+ * This function is really important in case of muxing because it gives the
+ * oportunity to muxers:
+ * 1:  to frame new segments
  *   ex: in case of JPEG it can wrap the EXIF chunk (created using tags) with
- * chunk id and chunk size
- * 2- 'cause gives the oportunity to muxer to decide if some chunks should
- * still be striped/injected
+ *       chunk id and chunk size
+ * 2: to decide if some chunks should still be striped/injected
  *   ex: if there is no EXIF chunk to be inserted, the muxer decides to not
- * strip JFIF anymore
+ *       strip JFIF anymore
  * @see_also: #metadata_parse #META_DATA_INJECT_CHUNKS
  *
  * Returns: nothing
