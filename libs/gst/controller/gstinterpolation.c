@@ -134,7 +134,7 @@ interpolate_none_get_##type##_value_array (GstInterpolationControlSource *self, 
   \
   g_mutex_lock (self->lock); \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    ret = _interpolate_none_get_##type (self, timestamp); \
+    ret = _interpolate_none_get_##type (self, ts); \
     if (!ret) { \
       g_mutex_unlock (self->lock); \
       return FALSE; \
@@ -207,7 +207,7 @@ interpolate_none_get_boolean_value_array (GstInterpolationControlSource * self,
 
   g_mutex_lock (self->lock);
   for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_none_get (self, timestamp);
+    ret = _interpolate_none_get (self, ts);
     if (!ret) {
       g_mutex_unlock (self->lock);
       return FALSE;
@@ -231,7 +231,7 @@ interpolate_none_get_enum_value_array (GstInterpolationControlSource * self,
 
   g_mutex_lock (self->lock);
   for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_none_get (self, timestamp);
+    ret = _interpolate_none_get (self, ts);
     if (!ret) {
       g_mutex_unlock (self->lock);
       return FALSE;
@@ -255,7 +255,7 @@ interpolate_none_get_string_value_array (GstInterpolationControlSource * self,
 
   g_mutex_lock (self->lock);
   for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_none_get (self, timestamp);
+    ret = _interpolate_none_get (self, ts);
     if (!ret) {
       g_mutex_unlock (self->lock);
       return FALSE;
@@ -350,7 +350,7 @@ interpolate_trigger_get_##type##_value_array (GstInterpolationControlSource *sel
   \
   g_mutex_lock (self->lock); \
   for(i = 0; i < value_array->nbsamples; i++) { \
-    ret = _interpolate_trigger_get_##type (self, timestamp); \
+    ret = _interpolate_trigger_get_##type (self, ts); \
     if (!ret) { \
       g_mutex_unlock (self->lock); \
       return FALSE; \
@@ -425,7 +425,7 @@ interpolate_trigger_get_boolean_value_array (GstInterpolationControlSource *
 
   g_mutex_lock (self->lock);
   for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_trigger_get (self, timestamp);
+    ret = _interpolate_trigger_get (self, ts);
     if (!ret) {
       g_mutex_unlock (self->lock);
       return FALSE;
@@ -449,7 +449,7 @@ interpolate_trigger_get_enum_value_array (GstInterpolationControlSource * self,
 
   g_mutex_lock (self->lock);
   for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_trigger_get (self, timestamp);
+    ret = _interpolate_trigger_get (self, ts);
     if (!ret) {
       g_mutex_unlock (self->lock);
       return FALSE;
@@ -473,7 +473,7 @@ interpolate_trigger_get_string_value_array (GstInterpolationControlSource *
 
   g_mutex_lock (self->lock);
   for (i = 0; i < value_array->nbsamples; i++) {
-    ret = _interpolate_trigger_get (self, timestamp);
+    ret = _interpolate_trigger_get (self, ts);
     if (!ret) {
       g_mutex_unlock (self->lock);
       return FALSE;
