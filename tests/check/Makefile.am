@@ -27,11 +27,11 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
 
-#if USE_METADATA
+if USE_METADATA
 check_metadata = pipelines/metadata
-#else
+else
 check_metadata =
-#endif
+endif
 
 if USE_MPEG2ENC
 check_mpeg2enc = elements/mpeg2enc
