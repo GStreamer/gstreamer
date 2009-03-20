@@ -75,6 +75,14 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+#endif
+
 #include "gstqtmux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_qt_mux_debug);
@@ -603,8 +611,17 @@ gst_qt_mux_send_buffered_data (GstQTMux * qtmux, guint64 * offset)
   if (fflush (qtmux->fast_start_file))
     goto flush_failed;
 
-  if (fseek (qtmux->fast_start_file, 0, SEEK_SET))
+#ifdef HAVE_FSEEKO
+  if (fseeko (qtmux->fast_start_file, (off_t) 0, SEEK_SET) != 0)
     goto seek_failed;
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
+  if (lseek (fileno (qtmux->fast_start_file), (off_t) 0,
+          SEEK_SET) == (off_t) - 1)
+    goto seek_failed;
+#else
+  if (fseek (qtmux->fast_start_file, (long) 0, SEEK_SET) != 0)
+    goto seek_failed;
+#endif
 
   /* hm, this could all take a really really long time,
    * but there may not be another way to get moov atom first
