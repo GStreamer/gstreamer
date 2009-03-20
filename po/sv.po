@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-01-23 00:44+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -55,31 +55,22 @@ msgstr "Internt fel i dataström."
 msgid "Could not write to file \"%s\"."
 msgstr "Kunde inte skriva till filen \"%s\"."
 
-#: ext/twolame/gsttwolame.c:427
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina kodningsparametrar."
-
-#: ext/twolame/gsttwolame.c:502
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. Bitfrekvensen ändrades till %d kbit/s."
-
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Enheten \"%s\" finns inte."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:703
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kunde inte öppna framändsenheten \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:715
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunde inte få inställningar från framändsenheten \"%s\"."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:796
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
@@ -89,8 +80,12 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Kunde inte öppna ljudenheten för mixningshantering."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Kunde inte öppna ljudenheten för mixningshantering. Denna version av Open Sound System stöds inte av detta element."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Kunde inte öppna ljudenheten för mixningshantering. Denna version av Open "
+"Sound System stöds inte av detta element."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -358,20 +353,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Kanalkonfiguration för virtuell mixer"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat program."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Kunde inte öppna ljudenheten för uppspelning. Enheten används av ett annat "
+"program."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Kunde inte öppna ljudenheten för uppspelning. Du har inte behörighet att öppna enheten."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Kunde inte öppna ljudenheten för uppspelning. Du har inte behörighet att "
+"öppna enheten."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Kunde inte öppna ljudenheten för uppspelning."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Kunde inte öppna ljudenheten för uppspelning. Denna version av Open Sound System stöds inte av detta element."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Kunde inte öppna ljudenheten för uppspelning. Denna version av Open Sound "
+"System stöds inte av detta element."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
@@ -388,6 +395,18 @@ msgstr "Inspelning stöds inte av denna ljudenhet."
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Fel vid inspelning från ljudenhet."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Misslyckades med att konfigurera TwoLAME-kodaren. Kontrollera dina "
+#~ "kodningsparametrar."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Den begärda bitfrekvensen %d kbit/s för egenskapen \"%s\" tillåts inte. "
+#~ "Bitfrekvensen ändrades till %d kbit/s."
 
 #~ msgid "This file is corrupt and cannot be played."
 #~ msgstr "Den här filen är skadad och kan inte spelas upp."

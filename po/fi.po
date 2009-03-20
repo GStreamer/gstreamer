@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-10 01:12+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-03-11 08:23+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -86,8 +86,12 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi. Tämä elementti ei tue tätä versiota Open Sound Systemistä."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Äänilaitetta ei voitu avata mikserinhallinnan käsiteltäväksi. Tämä elementti "
+"ei tue tätä versiota Open Sound Systemistä."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -354,20 +358,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Näennäinen mikserikanava-asetus"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Äänialaitetta ei voitu avata toistoa varten. Laite on toisen sovelluksen käytössä."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Äänialaitetta ei voitu avata toistoa varten. Laite on toisen sovelluksen "
+"käytössä."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Äänialaitetta ei voitu avata toistoa varten. Sinulla ei ole oikeuksia avata laitetta."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Äänialaitetta ei voitu avata toistoa varten. Sinulla ei ole oikeuksia avata "
+"laitetta."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Äänialaitetta ei voitu avata toistoa varten."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Äänialaitetta ei voitu avata toistoa varten. Tämä elementti ei tue tätä versiota Open Sound Systemistä."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Äänialaitetta ei voitu avata toistoa varten. Tämä elementti ei tue tätä "
+"versiota Open Sound Systemistä."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."

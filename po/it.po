@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-01-14 10:51+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -55,43 +55,40 @@ msgstr "Errore interno nello stream di dati."
 msgid "Could not write to file \"%s\"."
 msgstr "Impossibile scrivere sul file «%s»."
 
-#: ext/twolame/gsttwolame.c:427
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Configurazione dell'encoder TwoLAME non riuscita. Controllare i parametri dell'encoder."
-
-# NdT: rimosso il richiesto, lo so
-#: ext/twolame/gsttwolame.c:502
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Non sono consentiti %d kbit/s come bitrate per la proprietà «%s». Il bitrate è stato cambiato a %d kbit/s."
-
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Il device «%s» non esiste."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:703
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Impossibile aprire il device frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:715
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Impossibile ottenere le impostazioni dal device frontend «%s»."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:796
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
 
 #: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
-msgstr "Impossibile aprire il device audio per la gestione della regolazione del mixer."
+msgstr ""
+"Impossibile aprire il device audio per la gestione della regolazione del "
+"mixer."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Impossibile aprire il device audio per la gestione della regolazione del mixer. Questa versione di Open Sound System non è supportata da questo elemento."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Impossibile aprire il device audio per la gestione della regolazione del "
+"mixer. Questa versione di Open Sound System non è supportata da questo "
+"elemento."
 
 # NdT: questo e i successivi non ho controllato che sono....
 #: sys/oss4/oss4-mixer.c:720
@@ -363,20 +360,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Configurazione canale mixer virtuale"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Impossibile aprire il device audio in riproduzione. Il dispositivo è attualmente usato da un'altra applicazione."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Impossibile aprire il device audio in riproduzione. Il dispositivo è "
+"attualmente usato da un'altra applicazione."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Impossibile aprire il device audio in riproduzione. Permessi non sufficienti per aprire il dispositivo."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Impossibile aprire il device audio in riproduzione. Permessi non sufficienti "
+"per aprire il dispositivo."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Impossibile aprire il device audio in riproduzione."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Impossibile aprire il device audio in riproduzione. Questa versione di Open Sound System non è supportata da questo elemento."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Impossibile aprire il device audio in riproduzione. Questa versione di Open "
+"Sound System non è supportata da questo elemento."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
@@ -393,3 +402,16 @@ msgstr "Questo dispositivo audio non supporta la registrazione."
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Errore nel registrare dal dispositivo audio."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Configurazione dell'encoder TwoLAME non riuscita. Controllare i parametri "
+#~ "dell'encoder."
+
+# NdT: rimosso il richiesto, lo so
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Non sono consentiti %d kbit/s come bitrate per la proprietà «%s». Il "
+#~ "bitrate è stato cambiato a %d kbit/s."

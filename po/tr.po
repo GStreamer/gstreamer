@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-10 01:12+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-03-11 08:01+0200\n"
 "Last-Translator: Server Acim <sacim@kde.org.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -80,8 +80,12 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Karıştırıcı işlemi için ses aygıtı açılamıyor."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Karıştırıcı işlemi için ses aygıtı açılamıyor. Bu öğe tarafından Açık Ses Sistemi'nin bu sürümü desteklenmiyor."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Karıştırıcı işlemi için ses aygıtı açılamıyor. Bu öğe tarafından Açık Ses "
+"Sistemi'nin bu sürümü desteklenmiyor."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -348,11 +352,17 @@ msgid "Virtual mixer channel configuration"
 msgstr "Sanal karıştırıcı kanal yapılandırması"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Çalmak için ses aygıtı açılamıyor. Aygıt başka bir uygulama tarafından kullanılıyor."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Çalmak için ses aygıtı açılamıyor. Aygıt başka bir uygulama tarafından "
+"kullanılıyor."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
 msgstr "Çalmak için ses aygıtı açılamıyor. Aygıtı açma izniniz bulunmuyor."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
@@ -360,8 +370,12 @@ msgid "Could not open audio device for playback."
 msgstr "Çalmak için ses aygıtı açılamıyor."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Çalmak için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü bu öğe tarafından desteklenmiyor."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Çalmak için ses aygıtı açılamıyor. Açık Ses Sistemi'nin bu sürümü bu öğe "
+"tarafından desteklenmiyor."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-10 01:12+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-03-10 22:23+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -79,8 +79,12 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Tak dapat membuka divais audio untuk pengendalian kontrol mixer."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Tak dapat membuka divais audio untuk pengendalian kontrol mixer. Versi Open Sound System ini tak didukung oleh elemen ini."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Tak dapat membuka divais audio untuk pengendalian kontrol mixer. Versi Open "
+"Sound System ini tak didukung oleh elemen ini."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -347,20 +351,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Konfigurasi kanal mixer virtual"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan oleh aplikasi lain."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Tak dapat membuka divais audio untuk putar kembali. Divais sedang digunakan "
+"oleh aplikasi lain."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Tak dapat membuka divais audio untuk putar kembali. Anda tak memiliki hak akses untuk membuka divais."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Tak dapat membuka divais audio untuk putar kembali. Anda tak memiliki hak "
+"akses untuk membuka divais."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Tak dapat membuka divais audio untuk putar kembali."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Tak dapat membuka divais audio untuk putar kembali. Versi Open Sound System ini tak didukung oleh elemen ini."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Tak dapat membuka divais audio untuk putar kembali. Versi Open Sound System "
+"ini tak didukung oleh elemen ini."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
@@ -381,5 +397,9 @@ msgstr "Galat ketika merekam dari divais audio."
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr "Gagal mengatur penyandi TwoLAME. Cek parameter penyandian anda."
 
-#~ msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-#~ msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tak diizinkan. Bitrasi telah diubah ke %d kbit/s."
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Bitrasi %d kbit/s yang diminta untuk properti '%s' tak diizinkan. Bitrasi "
+#~ "telah diubah ke %d kbit/s."

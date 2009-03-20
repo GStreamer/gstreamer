@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-02-12 15:00+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -55,31 +55,22 @@ msgstr "Внутренняя ошибка потока данных."
 msgid "Could not write to file \"%s\"."
 msgstr "Не удалось осуществить запись в файл «%s»."
 
-#: ext/twolame/gsttwolame.c:427
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Не удалось настроить кодировщик TwoLAME. Проверьте параметры сжатия."
-
-#: ext/twolame/gsttwolame.c:502
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт изменён на %d кбит/с."
-
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Устройство «%s» не существует."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:703
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Не удалось открыть DVB-декодер «%s»."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:715
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не удалось получить параметры DVB-декодера «%s»."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:796
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не удалось открыть для чтения файл «%s»."
@@ -89,8 +80,12 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Не удалось открыть аудио-устройство для обработки параметров микшера."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Не удалось открыть аудио-устройство для обработки параметров микшера. Данная версия Open Sound System не поддерживается этим элементом."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Не удалось открыть аудио-устройство для обработки параметров микшера. Данная "
+"версия Open Sound System не поддерживается этим элементом."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -357,20 +352,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Конфигурация виртуальных каналов микшера"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Не удалось открыть аудио-устройство для воспроизведения. Устройство используется другим приложением."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Не удалось открыть аудио-устройство для воспроизведения. Устройство "
+"используется другим приложением."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют права доступа к устройству."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Не удалось открыть аудио-устройство для воспроизведения. Отсутствуют права "
+"доступа к устройству."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Не удалось открыть аудио-устройство для воспроизведения."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Не удалось открыть аудио-устройство для воспроизведения. Данная версия Open Sound System не поддерживается этим элементом."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Не удалось открыть аудио-устройство для воспроизведения. Данная версия Open "
+"Sound System не поддерживается этим элементом."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
@@ -387,3 +394,14 @@ msgstr "Запись не поддерживается данным аудио-�
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Ошибка записи с аудио-устройства."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Не удалось настроить кодировщик TwoLAME. Проверьте параметры сжатия."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Запрашиваемый битрейт %d кбит/с недопустим для свойства «%s». Битрейт "
+#~ "изменён на %d кбит/с."

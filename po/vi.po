@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.9.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-09 22:53+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-01-26 20:24+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -57,31 +57,22 @@ msgstr "Lỗi luồng dữ liệu nội bộ."
 msgid "Could not write to file \"%s\"."
 msgstr "Không thể ghi vào tập tin « %s »."
 
-#: ext/twolame/gsttwolame.c:427
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Không cấu hình được bộ biên mã TwoLAME. Hãy kiểm tra lại các tham số biên mã."
-
-#: ext/twolame/gsttwolame.c:502
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Không cho phép tỷ lệ bit yêu cầu %d kbit/giây cho thuộc tính « %s ». Tỷ lê bit đã được thay đổi thành %d kbit/giây."
-
-#: sys/dvb/gstdvbsrc.c:700 sys/dvb/gstdvbsrc.c:793
+#: sys/dvb/gstdvbsrc.c:699 sys/dvb/gstdvbsrc.c:792
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Thiết bị « %s » không tồn tại."
 
-#: sys/dvb/gstdvbsrc.c:704
+#: sys/dvb/gstdvbsrc.c:703
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Không thể mở thiết bị giao diện « %s »."
 
-#: sys/dvb/gstdvbsrc.c:716
+#: sys/dvb/gstdvbsrc.c:715
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Không thể lấy thiết lập từ thiết bị giao diện « %s »."
 
-#: sys/dvb/gstdvbsrc.c:797
+#: sys/dvb/gstdvbsrc.c:796
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin « %s » để đọc."
@@ -91,8 +82,12 @@ msgid "Could not open audio device for mixer control handling."
 msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên "
+"bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -359,20 +354,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Cấu hình kênh bộ hoà tiếng ảo"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng dụng khác sử dụng."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng dụng "
+"khác sử dụng."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết bị này."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết bị "
+"này."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở "
+"này không được yếu tố này hỗ trợ."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
@@ -389,3 +396,15 @@ msgstr "Thiết bị âm thanh này không hỗ trợ chức năng thu."
 #: sys/oss4/oss4-source.c:527
 msgid "Error recording from audio device."
 msgstr "Lỗi thu từ thiết bị âm thanh."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Không cấu hình được bộ biên mã TwoLAME. Hãy kiểm tra lại các tham số biên "
+#~ "mã."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Không cho phép tỷ lệ bit yêu cầu %d kbit/giây cho thuộc tính « %s ». Tỷ lê "
+#~ "bit đã được thay đổi thành %d kbit/giây."

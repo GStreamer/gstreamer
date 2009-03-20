@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-10 01:12+0000\n"
+"POT-Creation-Date: 2009-03-20 23:36+0000\n"
 "PO-Revision-Date: 2009-03-11 02:31-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -70,7 +70,8 @@ msgstr "Não foi possível abrir o dispositivo de interface \"%s\"."
 #: sys/dvb/gstdvbsrc.c:715
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Não foi possível obter as configurações do dispositivo de interface \"%s\"."
+msgstr ""
+"Não foi possível obter as configurações do dispositivo de interface \"%s\"."
 
 #: sys/dvb/gstdvbsrc.c:796
 #, c-format
@@ -79,11 +80,17 @@ msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
 
 #: sys/oss4/oss4-mixer.c:302
 msgid "Could not open audio device for mixer control handling."
-msgstr "Não foi possível abrir o dispositivo de áudio para manuseio do controle de mixer."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para manuseio do controle de "
+"mixer."
 
 #: sys/oss4/oss4-mixer.c:316
-msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-msgstr "Não foi possível abrir o dispositivo de áudio para manuseio do controle de mixer. Não há suporte a este elemento nesta versão do Open Sound System."
+msgid ""
+"Could not open audio device for mixer control handling. This version of the "
+"Open Sound System is not supported by this element."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para manuseio do controle de "
+"mixer. Não há suporte a este elemento nesta versão do Open Sound System."
 
 #: sys/oss4/oss4-mixer.c:720
 msgid "Fast"
@@ -350,20 +357,32 @@ msgid "Virtual mixer channel configuration"
 msgstr "Configuração de canal do mixer virtual"
 
 #: sys/oss4/oss4-sink.c:376 sys/oss4/oss4-source.c:367
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Não foi possível abrir o dispositivo de áudio para reprodução. O dispositivo está sendo usado por outro aplicativo."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para reprodução. O dispositivo "
+"está sendo usado por outro aplicativo."
 
 #: sys/oss4/oss4-sink.c:386 sys/oss4/oss4-source.c:377
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Não foi possível abrir o dispositivo de áudio para reprodução. Você não tem permissão para abrir o dispositivo."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para reprodução. Você não tem "
+"permissão para abrir o dispositivo."
 
 #: sys/oss4/oss4-sink.c:397 sys/oss4/oss4-source.c:388
 msgid "Could not open audio device for playback."
 msgstr "Não foi possível abrir o dispositivo de áudio para reprodução."
 
 #: sys/oss4/oss4-sink.c:406 sys/oss4/oss4-source.c:398
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Não foi possível abrir o dispositivo de áudio para reprodução. Não há suporte a este elemento nesta versão do Open Sound System."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Não foi possível abrir o dispositivo de áudio para reprodução. Não há "
+"suporte a este elemento nesta versão do Open Sound System."
 
 #: sys/oss4/oss4-sink.c:522
 msgid "Playback is not supported by this audio device."
