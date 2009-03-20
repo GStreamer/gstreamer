@@ -1798,22 +1798,34 @@ update_streams (GstPipeline * pipeline)
 static void
 video_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
 {
-  g_object_set (pipeline, "current-video", gtk_combo_box_get_active (combo),
-      NULL);
+  gint active;
+
+  active = gtk_combo_box_get_active (combo);
+
+  g_print ("setting current video track %d\n", active);
+  g_object_set (pipeline, "current-video", active, NULL);
 }
 
 static void
 audio_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
 {
-  g_object_set (pipeline, "current-audio", gtk_combo_box_get_active (combo),
-      NULL);
+  gint active;
+
+  active = gtk_combo_box_get_active (combo);
+
+  g_print ("setting current audio track %d\n", active);
+  g_object_set (pipeline, "current-audio", active, NULL);
 }
 
 static void
 text_combo_cb (GtkComboBox * combo, GstPipeline * pipeline)
 {
-  g_object_set (pipeline, "current-text", gtk_combo_box_get_active (combo),
-      NULL);
+  gint active;
+
+  active = gtk_combo_box_get_active (combo);
+
+  g_print ("setting current text track %d\n", active);
+  g_object_set (pipeline, "current-text", active, NULL);
 }
 
 static gboolean
