@@ -68,6 +68,7 @@ struct _GstPulseSink
 
   gboolean operation_success;
   gboolean did_reset, in_write;
+  gboolean corked;
   gint notify;
 };
 

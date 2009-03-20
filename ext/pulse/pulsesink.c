@@ -822,6 +822,7 @@ gst_pulsesink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
             pa_strerror (pa_context_errno (pulsesink->context))), (NULL));
     goto unlock_and_fail;
   }
+  pulsesink->corked = TRUE;
 
   for (;;) {
     pa_stream_state_t state;
@@ -884,7 +885,7 @@ gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
   pulsesink->in_write = TRUE;
 
   /* Make sure the stream is uncorked - it might not be on a caps change */
-  if (pa_stream_is_corked (pulsesink->stream)) {
+  if (pulsesink->corked) {
     if (!(o = pa_stream_cork (pulsesink->stream, FALSE, NULL, NULL))) {
       GST_ELEMENT_ERROR (pulsesink, RESOURCE, FAILED,
           ("pa_stream_cork() failed: %s",
@@ -897,6 +898,7 @@ gst_pulsesink_write (GstAudioSink * asink, gpointer data, guint length)
         goto unlock_and_fail;
       pa_threaded_mainloop_wait (pulsesink->mainloop);
     }
+    pulsesink->corked = FALSE;
 
     pa_operation_unref (o);
     o = NULL;
@@ -1228,6 +1230,7 @@ gst_pulsesink_pause (GstPulseSink * pulsesink, gboolean b)
       goto unlock;
     pa_threaded_mainloop_wait (pulsesink->mainloop);
   }
+  pulsesink->corked = b;
 
 unlock:
   if (o)
