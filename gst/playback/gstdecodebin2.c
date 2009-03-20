@@ -1988,7 +1988,7 @@ gst_decode_pad_handle_eos (GstDecodePad * pad)
   for (tmp = group->endpads; tmp; tmp = g_list_next (tmp)) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
 
-    GST_LOG_OBJECT (dbin, "testing dpad %p", dpad);
+    GST_LOG_OBJECT (dbin, "testing dpad %p %d", dpad, dpad->drained);
 
     if (!dpad->drained) {
       drained = FALSE;
@@ -2397,7 +2397,7 @@ gst_decode_pad_init (GstDecodePad * pad)
 {
   pad->group = NULL;
   pad->blocked = FALSE;
-  pad->drained = TRUE;
+  pad->drained = FALSE;
   gst_object_ref (pad);
   gst_object_sink (pad);
 }
