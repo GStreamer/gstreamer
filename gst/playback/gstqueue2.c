@@ -57,6 +57,14 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
+#ifdef G_OS_WIN32
+#include <io.h>                 /* lseek, open, close, read */
+#undef lseek
+#define lseek _lseeki64
+#undef off_t
+#define off_t guint64
+#endif
+
 static const GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
     "Simple data queue",
@@ -827,7 +835,13 @@ gst_queue_write_buffer_to_file (GstQueue * queue, GstBuffer * buffer)
   guint8 *data;
   int ret;
 
+#ifdef HAVE_FSEEKO
+  fseeko (queue->temp_file, (off_t) queue->writing_pos, SEEK_SET);
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
+  lseek (fileno (queue->temp_file), (off_t) queue->writing_pos, SEEK_SET);
+#else
   fseek (queue->temp_file, queue->writing_pos, SEEK_SET);
+#endif
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
@@ -872,7 +886,7 @@ gst_queue_create_read (GstQueue * queue, guint64 offset, guint length,
 #ifdef HAVE_FSEEKO
   if (fseeko (queue->temp_file, (off_t) offset, SEEK_SET) != 0)
     goto seek_failed;
-#elif defined (G_OS_UNIX)
+#elif defined (G_OS_UNIX) || defined (G_OS_WIN32)
   if (lseek (fileno (queue->temp_file), (off_t) offset,
           SEEK_SET) == (off_t) - 1)
     goto seek_failed;
