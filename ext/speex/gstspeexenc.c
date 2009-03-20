@@ -495,8 +495,9 @@ gst_speex_enc_src_query (GstPad * pad, GstQuery * query)
       GstClockTime min_latency, max_latency;
       gint64 latency;
 
-      if ((res = gst_pad_peer_query (pad, query))) {
+      if ((res = gst_pad_peer_query (enc->sinkpad, query))) {
         gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+        GST_LOG_OBJECT (pad, "Upstream latency: %" GST_PTR_FORMAT, query);
 
         latency = gst_speex_enc_get_latency (enc);
 
@@ -506,11 +507,12 @@ gst_speex_enc_src_query (GstPad * pad, GstQuery * query)
           max_latency += latency;
 
         gst_query_set_latency (query, live, min_latency, max_latency);
+        GST_LOG_OBJECT (pad, "Adjusted latency: %" GST_PTR_FORMAT, query);
       }
       break;
     }
     default:
-      res = gst_pad_peer_query (pad, query);
+      res = gst_pad_peer_query (enc->sinkpad, query);
       break;
   }
 
