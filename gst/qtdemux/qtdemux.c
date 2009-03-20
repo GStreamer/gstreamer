@@ -2248,6 +2248,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             demux->offset);
 
         if (demux->todrop) {
+          GST_LOG_OBJECT (demux, "Dropping %d bytes", demux->todrop);
           gst_adapter_flush (demux->adapter, demux->todrop);
           demux->neededbytes -= demux->todrop;
           demux->offset += demux->todrop;
@@ -2296,6 +2297,13 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         }
         GST_BUFFER_DURATION (outbuf) =
             stream->samples[stream->sample_index].duration;
+        if (!stream->all_keyframe &&
+            !stream->samples[stream->sample_index].keyframe)
+          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+        /* position reporting */
+        gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
+            demux->last_ts);
 
         /* send buffer */
         if (stream->pad) {
@@ -3317,6 +3325,16 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stream->n_segments = count;
   }
 done:
+
+  /* push based does not handle segments, so act accordingly here,
+   * and warn if applicable */
+  if (!qtdemux->pullbased) {
+    GST_WARNING_OBJECT (qtdemux, "streaming; discarding edit list segments");
+    /* remove and use default one below, we stream like it anyway */
+    g_free (stream->segments);
+    stream->segments = NULL;
+    stream->n_segments = 0;
+  }
 
   /* no segments, create one to play the complete trak */
   if (stream->n_segments == 0) {
