@@ -77,6 +77,7 @@
  */
 
 #include "metadatamuxjpeg.h"
+#include "metadataxmp.h"
 
 #include <string.h>
 
@@ -203,12 +204,12 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
 {
 
   int ret = META_PARSING_DONE;
-  guint8 mark[2] = { 0x00, 0x00 };
   const guint8 *step_buf = buf;
 
   *next_start = buf;
 
   if (jpeg_data->state == JPEG_MUX_NULL) {
+    guint8 mark[2];
 
     if (*bufsize < 2) {
       GST_INFO ("need more data");
@@ -249,9 +250,8 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
   }
 
 done:
-
+  GST_INFO ("finishing: %d", ret);
   return ret;
-
 }
 
 /*
@@ -268,46 +268,43 @@ done:
 void
 metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
 {
-  gint i = 0;
+  gsize i;
   gboolean has_exif = FALSE;
+  MetadataChunkArray *chunks = jpeg_data->inject_chunks;
 
-  while (i < jpeg_data->inject_chunks->len) {
-    if (jpeg_data->inject_chunks->chunk[i].size > 0 &&
-        jpeg_data->inject_chunks->chunk[i].data) {
-      switch (jpeg_data->inject_chunks->chunk[i].type) {
+  GST_INFO ("checking %d chunks", chunks->len);
+
+  for (i = 0; i < chunks->len; ++i) {
+
+    GST_INFO ("checking chunk[%" G_GSIZE_FORMAT "], type=%d, len=%u",
+        i, chunks->chunk[i].type, chunks->chunk[i].size);
+
+    if (chunks->chunk[i].size > 0 && chunks->chunk[i].data) {
+      switch (chunks->chunk[i].type) {
         case MD_CHUNK_EXIF:
-          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL, 0,
-              0xFF, 0xE1);
+          metadatamux_wrap_chunk (&chunks->chunk[i], NULL, 0, 0xFF, 0xE1);
           has_exif = TRUE;
           break;
         case MD_CHUNK_IPTC:
 #ifdef HAVE_IPTC
-        {
-          if (metadatamux_wrap_iptc_with_ps3 (&jpeg_data->inject_chunks->
-                  chunk[i].data, &jpeg_data->inject_chunks->chunk[i].size)) {
-            metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL,
-                0, 0xFF, 0xED);
+          if (metadatamux_wrap_iptc_with_ps3 (&chunks->chunk[i].data,
+                  &chunks->chunk[i].size)) {
+            metadatamux_wrap_chunk (&chunks->chunk[i], NULL, 0, 0xFF, 0xED);
           } else {
             GST_ERROR ("Invalid IPTC chunk\n");
-            metadata_chunk_array_remove_by_index (jpeg_data->inject_chunks, i);
+            metadata_chunk_array_remove_by_index (chunks, i);
             continue;
           }
-        }
 #endif /* #ifdef HAVE_IPTC */
           break;
         case MD_CHUNK_XMP:
-        {
-          static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
-
-          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i],
-              (guint8 *) XmpHeader, sizeof (XmpHeader), 0xFF, 0xE1);
-        }
+          metadatamux_wrap_chunk (&chunks->chunk[i],
+              (guint8 *) XMP_HEADER, sizeof (XMP_HEADER), 0xFF, 0xE1);
           break;
         default:
           break;
       }
     }
-    ++i;
   }
 
   if (!has_exif) {
@@ -392,22 +389,28 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
   mark[0] = READ (*buf, *bufsize);
   mark[1] = READ (*buf, *bufsize);
 
+  GST_DEBUG ("parsing JPEG marker : 0x%02x%02x", mark[0], mark[1]);
+
   if (mark[0] == 0xFF) {
 
     chunk_size = READ (*buf, *bufsize) << 8;
     chunk_size += READ (*buf, *bufsize);
 
-    if (mark[1] == 0xE0) {      /* may be JFIF */
+    if (mark[1] == 0xE0) {      /* APP0 - may be JFIF */
 
-      if (chunk_size >= 16) {
-        if (*bufsize < 5) {
+      /* FIXME: whats the 14 ? according to
+       * http://en.wikipedia.org/wiki/JFIF#JFIF_segment_format
+       * its the jfif segment without thumbnails
+       */
+      if (chunk_size >= 14 + 2) {
+        if (*bufsize < sizeof (JfifHeader)) {
           GST_INFO ("need more data");
-          *next_size = (*buf - *next_start) + 5;
+          *next_size = (*buf - *next_start) + sizeof (JfifHeader);
           ret = META_PARSING_NEED_MORE_DATA;
           goto done;
         }
 
-        if (0 == memcmp (JfifHeader, *buf, 5)) {
+        if (0 == memcmp (JfifHeader, *buf, sizeof (JfifHeader))) {
           jfif_found = TRUE;
         }
       } else {

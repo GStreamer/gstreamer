@@ -51,6 +51,11 @@
 G_BEGIN_DECLS
 
 /*
+ * defines
+ */
+#define XMP_HEADER "http://ns.adobe.com/xap/1.0/"
+
+/*
  * external function prototypes
  */
 

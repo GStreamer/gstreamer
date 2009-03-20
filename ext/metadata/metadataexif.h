@@ -50,6 +50,12 @@
 
 G_BEGIN_DECLS
 
+/*
+ * defines
+ */
+ 
+#define EXIF_HEADER "Exif\0"
+
 typedef enum {
         GST_META_EXIF_BYTE_ORDER_MOTOROLA,
         GST_META_EXIF_BYTE_ORDER_INTEL

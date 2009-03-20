@@ -51,6 +51,12 @@
 G_BEGIN_DECLS
 
 /*
+ * defines
+ */
+#define PHOTOSHOP_HEADER "Photoshop 3.0"
+
+
+/*
  * external function prototypes
  */
 

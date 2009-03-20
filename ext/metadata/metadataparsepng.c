@@ -363,6 +363,11 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
   mark[2] = READ (*buf, *bufsize);
   mark[3] = READ (*buf, *bufsize);
 
+  /* FIXME: use FOURCECC macros */
+
+  GST_DEBUG ("parsing png : 0x%02x%02x%02x%02x",
+      mark[0], mark[1], mark[2], mark[3]);
+
   if (mark[0] == 'I' && mark[1] == 'E' && mark[2] == 'N' && mark[3] == 'D') {
     ret = META_PARSING_DONE;
     png_data->state = PNG_PARSE_DONE;

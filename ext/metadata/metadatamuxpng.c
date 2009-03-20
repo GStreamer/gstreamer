@@ -344,15 +344,19 @@ void
 metadatamux_png_lazy_update (PngMuxData * png_data)
 {
   gsize i;
+  MetadataChunkArray *chunks = png_data->inject_chunks;
 
-  for (i = 0; i < png_data->inject_chunks->len; ++i) {
-    if (png_data->inject_chunks->chunk[i].size > 0 &&
-        png_data->inject_chunks->chunk[i].data) {
-      switch (png_data->inject_chunks->chunk[i].type) {
+  GST_INFO ("checking %d chunks", chunks->len);
+
+  for (i = 0; i < chunks->len; ++i) {
+
+    GST_INFO ("checking chunk[%" G_GSIZE_FORMAT "], type=%d, len=%u",
+        i, chunks->chunk[i].type, chunks->chunk[i].size);
+
+    if (chunks->chunk[i].size > 0 && chunks->chunk[i].data) {
+      switch (chunks->chunk[i].type) {
         case MD_CHUNK_XMP:
-        {
-          metadatamux_wrap_xmp_chunk (&png_data->inject_chunks->chunk[i]);
-        }
+          metadatamux_wrap_xmp_chunk (&chunks->chunk[i]);
           break;
         default:
           GST_ERROR ("Unexpected chunk for PNG muxer.");
