@@ -1685,7 +1685,6 @@ rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
 
   /* Make sure a callback is scheduled for the first nav packet */
   if (src->nav_clock_id != NULL) {
-    GST_LOG_OBJECT (src, "NAV callback already scheduled");
     return;                     /* Something already scheduled */
   }
   if (src->pending_nav_blocks == NULL) {
@@ -1693,6 +1692,7 @@ rsn_dvdsrc_check_nav_blocks (resinDvdSrc * src)
     return;                     /* No nav blocks available yet */
   }
 
+  GST_LOG_OBJECT (src, "Installing NAV callback");
   next_nav = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
 
   rsn_dvdsrc_schedule_nav_cb (src, next_nav);
