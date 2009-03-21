@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.10 "Under the House"
+Release notes for GStreamer Ugly Plug-ins 0.10.11 "Their swords and their knives"
         
 
 The GStreamer team is proud to announce a new release
@@ -55,27 +55,30 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * asfdemux and rmdemux fixes
-      * RDT support
-      * AMR-NB parser improvements
-      * Fix a52dec channel output negotiation
-      * Compilation fixes for mad, mpeg2dec
+      * Migrate twolame element from -bad
+      * mp3parse improvements
+      * Support scaling in the synaesthsia visualisation
+      * Improve realmedia streaming, supporting RDT and pnm://
+      * Improved ASF demuxing, including streaming-mode seeking
+      * Support for 4:4:4 MPEG-2 video
 
 Bugs fixed in this release
      
-      * 546859 : Asfdemux doesn't properly error out on not-linked
-      * 536274 : handle flush seeking in amrnbparse
-      * 554142 : mad plugin with disable index seeking issue
-      * 554150 : mpeg2dec plugin with disable index seeking issue
-      * 556184 : [PATCH] mpeg2dec: prefer container's pixel aspect ratio o...
-      * 556277 : mp3parse generate discontinuities.
-      * 558277 : generic states test fails
-      * 559569 : GStreamer mp3 consistent and regular stuttering
-      * 559682 : negotiation problem
-      * 561161 : [sidplay] Uses GST_CFLAGS for C++
-      * 424070 : [amrnbdec] add IF2 handling
-      * 536226 : fix query duration
-      * 558896 : DVD playing on Vista using dvddemux element seg-faults on...
+      * 571146 : [mpeg2dec] Probably uses wrong strides for 4:2:2 and 4:4:...
+      * 574461 : [mpeg2dec] Lower rank and make ffdec_mpeg2video PRIMARY
+      * 454228 : [mpegdemux] problem with mark shuttleworth clip
+      * 522699 : pnm:/something.ra streams can't be loaded in Totem from a...
+      * 527112 : [real] Can't play several real audio streams
+      * 556714 : Real Audio streams not working properly
+      * 560348 : plus7.arte.tv plays slooooowly
+      * 562065 : mpeg2dec does not handle STATE_SEQUENCE_MODIFIED from > =l...
+      * 562086 : mpeg2 stream crashes something in gstreamer
+      * 564885 : [mpegstream] memory leak
+      * 568836 : [asfdemux] add seeking support when operating in push mode
+      * 569317 : [PLUGIN-MOVE] Move twolame plugin from -bad to -ugly
+      * 575068 : [mp3parse] deadlock with accurate seeking
+      * 335067 : Need RTP ASF depayloader
+      * 571358 : [real] file playing stops immediately
 
 Download
 
@@ -94,8 +97,7 @@ http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
 Developers
 
-CVS is hosted on cvs.freedesktop.org.
-All code is in CVS and can be checked out from there.
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
 Interested developers of the core library, plug-ins, and applications should
 subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
@@ -105,15 +107,21 @@ Applications
   
 Contributors to this release
     
-      * Benoit Fouet
+      * Alessandro Decina
+      * Cygwin Ports maintainer
+      * David Schleef
       * Edward Hervey
+      * Hans de Goede
       * Jan Schmidt
+      * Mark Nauwelaerts
       * Michael Smith
-      * Robin Stocker
-      * Sameer Naik
+      * René Stadler
+      * Roland Moser
       * Sebastian Dröge
+      * Simon Holm Thøgersen
       * Stefan Kost
-      * Tal Shalif
       * Tim-Philipp Müller
       * Wim Taymans
+      * Yves Lefebvre
+      * Zaheer Merali
  
