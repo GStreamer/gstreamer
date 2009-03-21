@@ -59,6 +59,9 @@ RELEASE PROCEDURE:
       FIXME: Not sure if the translation project bot parses version strings 
       with a nano correctly.
 
+- prepare the release:
+  - Make sure your www is up to date: Run bin/data-get in www/
+  - Update the doap file to insert the new release info
   - bin/new-release (module) (version) (checkoutdir) (release name)
     - updates cvs
     - allows you to update versioning in configure.ac
@@ -78,7 +81,6 @@ RELEASE PROCEDURE:
   - build packages to test
 
 - release:
-  - Update the doap file to insert the new release info
   - cvs commit in the tree
   - tag tree
     for example for 0.6.3 :
