@@ -420,7 +420,7 @@ gint  arg1
 <RETURNS>gboolean</RETURNS>
 <FLAGS>l</FLAGS>
 GstCameraBin *gstcamerabin
-GString *arg1
+gpointer  arg1
 </SIGNAL>
 
 <SIGNAL>

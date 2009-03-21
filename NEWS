@@ -1,4 +1,48 @@
-This is GStreamer Bad Plug-ins 0.10.9, "Keep Them Dogies Rollin"
+This is GStreamer Bad Plug-ins 0.10.10, "A precious stone"
+
+Changes since 0.10.10:
+    
+      * Add ASS/SSA subtitle handling element assrender
+      * Leak fixes in the QuickTime decoder wrapper
+      * Better DirectShow output on Windows
+      * Extend QT muxing support to include AMR and H.263
+      * mms seeking support
+      * Extended MXF file format handling
+      * camerabin and photography API for digital camera interfacing
+      * Merge elements from Farsight: liveadder, sirendec, sirenenc, valve,
+        rtpdtmfsrc, rtpdtmdepay, dtmfsrc, rtpdtmfmux, autoconvert,
+        mimdec, mimenc
+      * typefinder based on xdgmime
+
+Bugs fixed since 0.10.10:
+     
+      * 573369 : [gstfaad] Memory corruption and segfault
+      * 568704 : Metadatamux: unable to configure byte order for EXIF
+      * 354908 : videoflipping interface for v4l2src
+      * 369912 : missing inclusion in rpm spec file
+      * 469930 : [mmssrc] seeking support PATCH
+      * 481075 : Full support for ASS/SSA subtitles
+      * 549645 : merge useful elements from gst-plugins-farsight into core
+      * 567003 : [ladspa] improve plugin scanning
+      * 567371 : [mpegtsparse] memory leak in mpegtspacketizer
+      * 567828 : rtpmanager and RTCP BYE packet
+      * 567965 : [flvdemux] add support for ECMA arrays in script tags
+      * 568480 : gst-plugins-bad dccp plugin won't compile on Soalris
+      * 568483 : Problems linking gst-plugins-bad
+      * 568837 : RFE: allow building against the system modplug library
+      * 569323 : [qtmux] should support audio/AMR sink
+      * 570996 : bpmdetect relibably crashes with SIGSEGV on particular file
+      * 571560 : gstdshowaudio decoder doesn't compile.
+      * 572315 : Compiling camerabin on Windows with Visual Studio
+      * 572900 : gstrtpsession should not forward recv side event to the s...
+      * 573288 : [mpegtsdemux] memory leak when pusi is missed due to pack...
+      * 573391 : [videoanalyse] Wrong brightness calculation
+      * 575157 : xdgmime typefinder: make more conservative
+      * 575565 : [mxf] mxf plugin uses symbols not in glib 2.6 (minimum gl...
+      * 564114 : [PATCH] fbdev: fix depth calculation
+      * 573850 : Use Glib's byte order in gstgsmdec
+      * 573851 : Use glib integer types in gstfaad
+      * 172043 : [mpegpsdemux] wrong video length on mpeg file
 
 Changes since 0.10.9:
 
