@@ -902,6 +902,8 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
     vorbisenc->next_discont = FALSE;
   }
 
+  gst_buffer_set_caps (outbuf, vorbisenc->srccaps);
+
   GST_LOG_OBJECT (vorbisenc, "encoded buffer of %d bytes",
       GST_BUFFER_SIZE (outbuf));
   return outbuf;
