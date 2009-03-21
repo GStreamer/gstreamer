@@ -7,8 +7,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2009-01-08 22:44+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -63,22 +63,35 @@ msgstr "DVDタイトル %d のチャプター %d へ移動できません"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "DVDタイトル %d を開くことが出来ません。このエレメントはインタラクティブタイトルをサポートしていません"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"DVDタイトル %d を開くことが出来ません。このエレメントはインタラクティブタイト"
+"ルをサポートしていません"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください"
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "要求されたビットレート %d kbit/s はプロパティ '%s' では許可されません。そのためビットレートは %d kbit/s へ変更されました"
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"要求されたビットレート %d kbit/s はプロパティ '%s' では許可されません。そのた"
+"めビットレートは %d kbit/s へ変更されました"
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+#, fuzzy
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "LAMEエンコーダーの構成に失敗しました。パラメータをチェックしてください"
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "このストリームはデータを含んでいません"
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"

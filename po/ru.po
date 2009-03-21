@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.9.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2009-02-12 14:26+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -62,23 +62,36 @@ msgstr "Ошибка перехода к эпизоду %d DVD-раздела %d
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Не удалось открыть DVD-раздел %d. Интерактивные разделы не поддерживаются этим элементом"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Не удалось открыть DVD-раздел %d. Интерактивные разделы не поддерживаются "
+"этим элементом"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr "Не удалось настроить кодировщик LAME. Проверьте параметры сжатия."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был изменён на %d кбит/с."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был "
+"изменён на %d кбит/с."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+#, fuzzy
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "Не удалось настроить кодировщик LAME. Проверьте параметры сжатия."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Поток не содержит данных."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
 

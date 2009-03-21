@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2008-09-20 03:56+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -65,23 +65,38 @@ msgstr "Kunne ikke gå til kapitel %d i dvd-titel %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Kunne ikke åbne dvd-titel %d. Interaktive titler er ikke understøttet i dette element"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kunne ikke åbne dvd-titel %d. Interaktive titler er ikke understøttet i "
+"dette element"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Kunne ikke konfigurere LAME-indkoderen. Kontroller dine indkoderparametre."
+msgstr ""
+"Kunne ikke konfigurere LAME-indkoderen. Kontroller dine indkoderparametre."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Den krævede bithastighed %d kbit/s for egenskab %s er ikke tilladt. Bithastigheden blev ændret til %d kbit/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Den krævede bithastighed %d kbit/s for egenskab %s er ikke tilladt. "
+"Bithastigheden blev ændret til %d kbit/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+#, fuzzy
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"Kunne ikke konfigurere LAME-indkoderen. Kontroller dine indkoderparametre."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Denne strøm indeholder ingen data."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Intern datastrømfejl."
 

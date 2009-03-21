@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2009-03-10 22:25+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -61,8 +61,12 @@ msgstr "Gagal pergi ke bab %d dari judul DVD %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen ini"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Tak dapat membuka judul DVD %d. Judul interaktif tidak didukung oleh elemen "
+"ini"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
@@ -70,8 +74,12 @@ msgstr "Gagal mengatur penyandi LAME. Cek parameter penyandian anda."
 
 #: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi diubah ke %d kbit/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Bitrasi %d kbit/s yang diminta untuk properti '%s' tidak diizinkan. Bitrasi "
+"diubah ke %d kbit/s."
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."

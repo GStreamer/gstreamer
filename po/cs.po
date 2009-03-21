@@ -8,8 +8,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2008-08-13 23:12+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -65,22 +65,37 @@ msgstr "Nezdařil se přechod na kapitolu %d titulu DVD %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Nezdařilo se otevření titulu DVD %d. Interaktivní tituly nejsou tímto prvkem podporovány"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Nezdařilo se otevření titulu DVD %d. Interaktivní tituly nejsou tímto prvkem "
+"podporovány"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry kodéru."
+msgstr ""
+"Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry kodéru."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Požadovaný datový tok %d kilobitů za sekundu není u vlastnosti \"%s\" povolen. Datový tok byl změněn na %d kilobitů za sekundu."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Požadovaný datový tok %d kilobitů za sekundu není u vlastnosti \"%s\" "
+"povolen. Datový tok byl změněn na %d kilobitů za sekundu."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+#, fuzzy
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"Nezdařilo se nastavení kodéru LAME. Je nutné zkontrolovat parametry kodéru."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Tento proud neobsahuje žádná data."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Interní chyba datového proudu."

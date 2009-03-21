@@ -3,12 +3,12 @@
 # This file is distributed under the same license as the gst-plugins-ugly package.
 #
 # Claude Paroz <claude@2xlibre.net>, 2008.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.8.2\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-11 23:34+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2008-08-22 11:49+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -63,22 +63,37 @@ msgstr "Impossible d'aller au chapitre %d du titre %d du DVD"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Impossible d'ouvrir le titre %d du DVD. Les titres interactifs ne sont pas pris en charge par cet élément"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Impossible d'ouvrir le titre %d du DVD. Les titres interactifs ne sont pas "
+"pris en charge par cet élément"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "La configuration du codeur LAME a échoué. Vérifiez vos paramètres de codage."
+msgstr ""
+"La configuration du codeur LAME a échoué. Vérifiez vos paramètres de codage."
 
-#: ext/lame/gstlame.c:718
+#: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "Le débit binaire demandé de %d kbit/s pour la propriété « %s » n'est pas autorisé. Le débit binaire a été défini à %d kbits/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"Le débit binaire demandé de %d kbit/s pour la propriété « %s » n'est pas "
+"autorisé. Le débit binaire a été défini à %d kbits/s."
 
-#: gst/asfdemux/gstasfdemux.c:325
+#: ext/twolame/gsttwolame.c:427
+#, fuzzy
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+"La configuration du codeur LAME a échoué. Vérifiez vos paramètres de codage."
+
+#: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
 msgstr "Ce flux ne contient aucune donnée."
 
-#: gst/asfdemux/gstasfdemux.c:1371
+#: gst/asfdemux/gstasfdemux.c:1302
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."

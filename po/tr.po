@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-03-10 01:08+0000\n"
+"POT-Creation-Date: 2009-03-21 00:28+0000\n"
 "PO-Revision-Date: 2009-03-10 22:42+0200\n"
 "Last-Translator: Server Acim <sacim@kde.org.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -61,21 +61,31 @@ msgstr "Bu dosyalara okunamadı:bölüm %d ve DVD başlığı %d"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "DVD başlığı açılamadı %d. Bu öğede etkileşimli Interactive başlıklar desteklenmiyor"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"DVD başlığı açılamadı %d. Bu öğede etkileşimli Interactive başlıklar "
+"desteklenmiyor"
 
 #: ext/lame/gstlame.c:624
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "LAME kodlayıcı yapılandırılamadı. Kodlama parametrelerinizi denetleyiniz."
+msgstr ""
+"LAME kodlayıcı yapılandırılamadı. Kodlama parametrelerinizi denetleyiniz."
 
 #: ext/lame/gstlame.c:718 ext/twolame/gsttwolame.c:502
 #, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "İstenen bit oranı %d kbit/s bu özellik için '%s' onaylanmadı. Bu yüzden bit oranı şuna dönüştürüldü %d kbit/s."
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+"İstenen bit oranı %d kbit/s bu özellik için '%s' onaylanmadı. Bu yüzden bit "
+"oranı şuna dönüştürüldü %d kbit/s."
 
 #: ext/twolame/gsttwolame.c:427
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "TwoLAME kodlayıcı yapılandırılamadı. Kodlama parametrelerinizi denetleyiniz."
+msgstr ""
+"TwoLAME kodlayıcı yapılandırılamadı. Kodlama parametrelerinizi denetleyiniz."
 
 #: gst/asfdemux/gstasfdemux.c:329
 msgid "This stream contains no data."
