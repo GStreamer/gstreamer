@@ -1,5 +1,5 @@
 
-Release notes for GStreamer FFmpeg Plug-ins 0.10.6 "A little itching in our bones"
+Release notes for GStreamer FFmpeg Plug-ins 0.10.7 "Some high ground is not worth taking"
         
 
 The GStreamer team is proud to announce a new release
@@ -34,23 +34,13 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Update ffmpeg and libswscale snapshot
-      * Prefer aspect ratios prescribed by the container over the codec
-      * Improve ffmpeg encoders wrapping
-      * Rewrite ffvideoscale to use libswscale
-      * Improve H.264 wrapping
-
-Bugs fixed in this release
-     
-      * 350738 : [ffvideoscale] GStreamer-Critical when pixel-aspects-rati...
-      * 504056 : [ffvideoscale] Switch to using libswscale
-      * 542216 : cross compilation and mingw32 support
-      * 548304 : missing check for bz2 library and header
-      * 551046 : gst-ffmpeg configure complains about libz2, should be libbz2
-      * 556336 : [PATCH] gstffmpegdec.c: prefer demuxer's pixel aspect rat...
-      * 556405 : gst-ffmpeg fails to build against 20081014 ffmpeg snapshot
-      * 560137 : Two build fixes for using system ffmpeg
-      * 560305 : x264enc & ffmux_* doesnt link
+      * Update to ffmpeg 0.5 release
+      * Support channel layouts for multichannel audio
+      * Add mappings for new codecs: Real Video 3.0, EAC3, QCELP, IMC, MLP and more
+      * Support push-based demuxers
+      * Expose preload and maxdelay muxer properties
+There were no bugs fixed in this release
+    
 
 Download
 
@@ -69,8 +59,7 @@ http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
 Developers
 
-CVS is hosted on cvs.freedesktop.org.
-All code is in CVS and can be checked out from there.
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
 Interested developers of the core library, plug-ins, and applications should
 subscribe to the gstreamer-devel list. If there is sufficient interest we
 will create more lists as necessary.
@@ -80,13 +69,4 @@ Applications
   
 Contributors to this release
     
-      * Alexis Ballier
-      * Damien Lespiau
-      * Edward Hervey
-      * Jan Schmidt
-      * Mark Nauwelaerts
-      * Robin Stocker
-      * Sebastian Dröge
-      * Stefan Kost
-      * Wim Taymans
  

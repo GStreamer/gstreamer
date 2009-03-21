@@ -1,4 +1,35 @@
-This is GStreamer FFmpeg Plug-ins 0.10.6, "A little itching in our bones"
+This is GStreamer FFmpeg Plug-ins 0.10.7, "Some high ground is not worth taking"
+
+Changes since 0.10.6:
+
+      * Update to ffmpeg 0.5 release
+      * Support channel layouts for multichannel audio
+      * Add mappings for new codecs: Real Video 3.0, EAC3, QCELP, IMC,
+        MLP and more
+      * Support push-based demuxers
+      * Expose preload and maxdelay muxer properties
+
+Bugs fixed since 0.10.6:
+     
+      * 573400 : [gstffmpegdec] crashes with hardware-accelerated decoders.
+      * 575759 : Regression in framerates
+      * 392534 : ffdemux enhancement: push based scheduling
+      * 548002 : libavcodec doesn't provide audio channel mappings
+      * 560644 : ffmpegdec leaks memory when gst_ffmpegdec_open is not called
+      * 563305 : gst-ffmpeg 0.10.6 build from tarball fails
+      * 564867 : Killing the gst-ffmpeg dependency on libbz2
+      * 565269 : GStreamer can't play newset Terminator: Salvation HD 1080...
+      * 566647 : [ffenc_amr_*] wrong number of channels and wrong samplera...
+      * 567336 : Text file detected as VC1 video
+      * 569441 : Use AVCodec.sample_fmts for list of compatible sample for...
+      * 570975 : Enable DVD Muxer
+      * 572863 : ffmpeg requires 128bit-aligned buffers.
+      * 573649 : Buffer overflow in gst gstffmpegaudioresample
+      * 574663 : [gstffcodecmap] Unused codec mapping for ATRAC3 codec
+      * 574746 : Disable external library decoders/encoders
+      * 574814 : Bogus muxer/demuxer/typefind are exposed
+      * 575664 : ffmux_amr disappeared
+      * 566250 : [ffdec_aac] Crash in gst_ffmpegdec_audio_frame
 
 Changes since 0.10.5:
     
