@@ -107,8 +107,8 @@ gst_vdpau_h264decoder_base_init (gpointer gclass)
 
   gst_element_class_set_details_simple (element_class,
       "VdpauH264Decoder",
-      "FIXME:Generic",
-      "FIXME:Generic Template Element",
+      "Decoder",
+      "decode h264 stream with vdpau",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
