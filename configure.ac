@@ -355,7 +355,7 @@ AG_GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
 dnl *** twolame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TWOLAME, true)
 AG_GST_CHECK_FEATURE(TWOLAME, [twolame], twolame, [
-  PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.0, [
+  PKG_CHECK_MODULES(TWOLAME, twolame >= 0.3.10, [
       HAVE_TWOLAME="yes"], [
       HAVE_TWOLAME="no"
       AC_MSG_RESULT(no)
