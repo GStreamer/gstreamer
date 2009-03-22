@@ -178,16 +178,22 @@ mxf_vc3_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   GstStructure *s;
 
   s = gst_caps_get_structure (caps, 0);
-  if (strcmp (gst_structure_get_name (s), "video/x-dnxhd") != 0)
+  if (strcmp (gst_structure_get_name (s), "video/x-dnxhd") != 0) {
+    GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
     return NULL;
+  }
 
   ret = (MXFMetadataCDCIPictureEssenceDescriptor *)
       gst_mini_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
 
   memcpy (&ret->parent.parent.essence_container, &vc3_essence_container_ul, 16);
 
-  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
-      caps);
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   *handler = mxf_vc3_write_func;
 
   return (MXFMetadataFileDescriptor *) ret;

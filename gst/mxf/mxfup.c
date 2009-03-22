@@ -424,10 +424,20 @@ mxf_up_get_rgba_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
     gst_caps_unref (intersection);
   }
 
+  if (md->fourcc == 0) {
+    GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
+
   memcpy (&ret->parent.parent.essence_container, &up_essence_container_ul, 16);
 
-  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
-      caps);
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
 
   md->width = ret->parent.stored_width;
   md->height = ret->parent.stored_height;
@@ -469,10 +479,19 @@ mxf_up_get_cdci_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
     gst_caps_unref (intersection);
   }
 
+  if (md->fourcc == 0) {
+    GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   memcpy (&ret->parent.parent.essence_container, &up_essence_container_ul, 16);
 
-  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
-      caps);
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
 
   md->width = ret->parent.stored_width;
   md->height = ret->parent.stored_height;

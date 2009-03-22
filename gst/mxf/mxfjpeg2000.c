@@ -232,11 +232,11 @@ mxf_jpeg2000_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   guint32 fourcc;
 
   s = gst_caps_get_structure (caps, 0);
-  if (strcmp (gst_structure_get_name (s), "image/x-jpc") != 0)
+  if (strcmp (gst_structure_get_name (s), "image/x-jpc") != 0 ||
+      !gst_structure_get_fourcc (s, "fourcc", &fourcc)) {
+    GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
     return NULL;
-
-  if (!gst_structure_get_fourcc (s, "fourcc", &fourcc))
-    return NULL;
+  }
 
   ret = (MXFMetadataRGBAPictureEssenceDescriptor *)
       gst_mini_object_new (MXF_TYPE_METADATA_RGBA_PICTURE_ESSENCE_DESCRIPTOR);
@@ -268,8 +268,12 @@ mxf_jpeg2000_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
     g_assert_not_reached ();
   }
 
-  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
-      caps);
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   *handler = mxf_jpeg2000_write_func;
 
   return (MXFMetadataFileDescriptor *) ret;

@@ -179,8 +179,11 @@ mxf_dv_dif_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   memcpy (&ret->parent.parent.essence_container, &dv_dif_essence_container_ul,
       16);
 
-  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
-      caps);
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
   *handler = mxf_dv_dif_write_func;
 
   return (MXFMetadataFileDescriptor *) ret;

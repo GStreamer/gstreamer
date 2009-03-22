@@ -196,12 +196,12 @@ mxf_alaw_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   gint rate, channels;
 
   s = gst_caps_get_structure (caps, 0);
-  if (strcmp (gst_structure_get_name (s), "audio/x-alaw") != 0)
+  if (strcmp (gst_structure_get_name (s), "audio/x-alaw") != 0 ||
+      !gst_structure_get_int (s, "rate", &rate) ||
+      !gst_structure_get_int (s, "channels", &channels)) {
+    GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
     return NULL;
-
-  if (!gst_structure_get_int (s, "rate", &rate) ||
-      !gst_structure_get_int (s, "channels", &channels))
-    return NULL;
+  }
 
   ret = (MXFMetadataGenericSoundEssenceDescriptor *)
       gst_mini_object_new (MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
@@ -210,7 +210,11 @@ mxf_alaw_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   memcpy (&ret->sound_essence_compression, &mxf_sound_essence_compression_alaw,
       16);
 
-  mxf_metadata_generic_sound_essence_descriptor_from_caps (ret, caps);
+  if (!mxf_metadata_generic_sound_essence_descriptor_from_caps (ret, caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   *handler = mxf_alaw_write_func;
 
   md = g_new0 (ALawMappingData, 1);

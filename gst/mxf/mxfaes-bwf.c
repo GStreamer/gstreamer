@@ -1445,14 +1445,14 @@ mxf_bwf_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   gint width, rate, channels, endianness;
 
   s = gst_caps_get_structure (caps, 0);
-  if (strcmp (gst_structure_get_name (s), "audio/x-raw-int") != 0)
-    return NULL;
-
-  if (!gst_structure_get_int (s, "width", &width) ||
+  if (strcmp (gst_structure_get_name (s), "audio/x-raw-int") != 0 ||
+      !gst_structure_get_int (s, "width", &width) ||
       !gst_structure_get_int (s, "rate", &rate) ||
       !gst_structure_get_int (s, "channels", &channels) ||
-      !gst_structure_get_int (s, "endianness", &endianness))
+      !gst_structure_get_int (s, "endianness", &endianness)) {
+    GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
     return NULL;
+  }
 
   ret = (MXFMetadataWaveAudioEssenceDescriptor *)
       gst_mini_object_new (MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR);
@@ -1468,7 +1468,13 @@ mxf_bwf_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   ret->block_align = (width / 8) * channels;
   ret->parent.quantization_bits = width;
   ret->avg_bps = ret->block_align * rate;
-  mxf_metadata_generic_sound_essence_descriptor_from_caps (&ret->parent, caps);
+
+  if (!mxf_metadata_generic_sound_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   *handler = mxf_bwf_write_func;
 
   md = g_new0 (BWFMappingData, 1);

@@ -5317,23 +5317,24 @@ gst_greatest_common_divisor (gint a, gint b)
   return ABS (a);
 }
 
-void mxf_metadata_generic_picture_essence_descriptor_from_caps
-    (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps)
-{
+gboolean
+    mxf_metadata_generic_picture_essence_descriptor_from_caps
+    (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps) {
   gint par_n, par_d, gcd;
   gint width, height;
   gint fps_n, fps_d;
   MXFMetadataFileDescriptor *f = (MXFMetadataFileDescriptor *) self;
   GstStructure *s;
 
-  g_return_if_fail (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (self));
-  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_val_if_fail (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
+      (self), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   s = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
     GST_ERROR ("Invalid framerate");
-    return;
+    return FALSE;
   }
   f->sample_rate.n = fps_n;
   f->sample_rate.d = fps_d;
@@ -5341,7 +5342,7 @@ void mxf_metadata_generic_picture_essence_descriptor_from_caps
   if (!gst_structure_get_int (s, "width", &width) ||
       !gst_structure_get_int (s, "height", &height)) {
     GST_ERROR ("Invalid width/height");
-    return;
+    return FALSE;
   }
 
   self->stored_width = width;
@@ -5358,6 +5359,8 @@ void mxf_metadata_generic_picture_essence_descriptor_from_caps
       gst_greatest_common_divisor (self->aspect_ratio.n, self->aspect_ratio.d);
   self->aspect_ratio.n /= gcd;
   self->aspect_ratio.d /= gcd;
+
+  return TRUE;
 }
 
 
@@ -5674,30 +5677,35 @@ void mxf_metadata_generic_sound_essence_descriptor_set_caps
   }
 }
 
-void mxf_metadata_generic_sound_essence_descriptor_from_caps
-    (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps)
-{
+gboolean
+    mxf_metadata_generic_sound_essence_descriptor_from_caps
+    (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps) {
   gint rate;
   gint channels;
   GstStructure *s;
 
-  g_return_if_fail (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (self));
-  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_val_if_fail (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (self),
+      FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (s, "rate", &rate)) {
+  if (!gst_structure_get_int (s, "rate", &rate) || rate == 0) {
     GST_WARNING ("No samplerate");
+    return FALSE;
   } else {
     self->audio_sampling_rate.n = rate;
     self->audio_sampling_rate.d = 1;
   }
 
-  if (!gst_structure_get_int (s, "channels", &channels)) {
+  if (!gst_structure_get_int (s, "channels", &channels) || channels == 0) {
     GST_WARNING ("No channels");
+    return FALSE;
   } else {
     self->channel_count = channels;
   }
+
+  return TRUE;
 }
 
 

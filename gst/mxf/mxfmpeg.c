@@ -900,8 +900,11 @@ mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   if (strcmp (gst_structure_get_name (s), "audio/mpeg") == 0) {
     gint mpegversion;
 
-    if (!gst_structure_get_int (s, "mpegversion", &mpegversion))
+    if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
+      GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
+      gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
       return NULL;
+    }
 
     if (mpegversion == 1) {
       gint layer = 0;
@@ -943,13 +946,18 @@ mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
 
   if (!gst_structure_get_int (s, "rate", &rate)) {
     GST_ERROR ("Invalid rate");
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
     return NULL;
   }
   md->rate = rate;
 
   memcpy (&ret->parent.essence_container, &mpeg_essence_container_ul, 16);
 
-  mxf_metadata_generic_sound_essence_descriptor_from_caps (ret, caps);
+  if (!mxf_metadata_generic_sound_essence_descriptor_from_caps (ret, caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   *handler = mxf_mpeg_audio_write_func;
 
   return (MXFMetadataFileDescriptor *) ret;
@@ -1157,8 +1165,11 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   if (strcmp (gst_structure_get_name (s), "video/mpeg") == 0) {
     gint mpegversion;
 
-    if (!gst_structure_get_int (s, "mpegversion", &mpegversion))
+    if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
+      GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
+      gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
       return NULL;
+    }
 
     if (mpegversion == 1) {
       MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
@@ -1201,8 +1212,12 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   }
 
 
-  mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->
-      parent.parent, caps);
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->
+          parent.parent, caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
   *handler = mxf_mpeg_video_write_func;
 
   return (MXFMetadataFileDescriptor *) ret;
