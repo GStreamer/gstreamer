@@ -61,7 +61,8 @@ typedef struct
 typedef enum
 {
   GST_MXF_MUX_STATE_HEADER,
-  GST_MXF_MUX_STATE_DATA
+  GST_MXF_MUX_STATE_DATA,
+  GST_MXF_MUX_STATE_ERROR
 } GstMXFMuxState;
 
 typedef struct _GstMXFMux {

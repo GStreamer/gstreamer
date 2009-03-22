@@ -1254,21 +1254,27 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
   GSList *sl;
   gboolean eos = TRUE;
 
+  if (mux->state == GST_MXF_MUX_STATE_ERROR) {
+    GST_ERROR_OBJECT (mux, "Had an error before -- returning");
+    return GST_FLOW_ERROR;
+  }
+
   if (mux->state == GST_MXF_MUX_STATE_HEADER) {
     if (mux->collect->data == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("No input streams configured"));
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto error;
     }
 
     if (gst_pad_push_event (mux->srcpad,
             gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1,
                 0))) {
       if ((ret = gst_mxf_mux_create_metadata (mux)) != GST_FLOW_OK)
-        return ret;
+        goto error;
 
       if ((ret = gst_mxf_mux_create_header_partition_pack (mux)) != GST_FLOW_OK)
-        return ret;
+        goto error;
 
       ret = gst_mxf_mux_write_header_metadata (mux);
     } else {
@@ -1276,7 +1282,7 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
     }
 
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto error;
 
     /* Sort pads, we will always write in that order */
     mux->collect->data = g_slist_sort (mux->collect->data, _sort_mux_pads);
@@ -1284,7 +1290,7 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
     /* Write body partition */
     ret = gst_mxf_mux_write_body_partition (mux);
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto error;
     mux->state = GST_MXF_MUX_STATE_DATA;
   }
 
@@ -1312,8 +1318,14 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   if (!eos && best) {
-    return gst_mxf_mux_handle_buffer (mux, best);
+    GST_DEBUG_OBJECT (mux, "Handling buffer for pad '%" GST_PTR_FORMAT "'",
+        best->collect.pad);
+    ret = gst_mxf_mux_handle_buffer (mux, best);
+    if (ret != GST_FLOW_OK)
+      goto error;
   } else if (eos) {
+    GST_DEBUG_OBJECT (mux, "Handling EOS");
+
     mux->last_gc_position++;
     mux->last_gc_timestamp =
         gst_util_uint64_scale (mux->last_gc_position * GST_SECOND,
@@ -1323,6 +1335,13 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
     return GST_FLOW_UNEXPECTED;
   } else {
     return GST_FLOW_OK;
+  }
+
+error:
+  {
+    mux->state = GST_MXF_MUX_STATE_ERROR;
+    gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
+    return ret;
   }
 }
 
