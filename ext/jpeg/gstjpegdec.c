@@ -161,9 +161,6 @@ gst_jpeg_dec_finalize (GObject * object)
   if (dec->tempbuf)
     gst_buffer_unref (dec->tempbuf);
 
-  if (dec->segment)
-    gst_segment_free (dec->segment);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -300,8 +297,6 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
   gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-
-  dec->segment = gst_segment_new ();
 
   /* setup jpeglib */
   memset (&dec->cinfo, 0, sizeof (dec->cinfo));
@@ -979,7 +974,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   jpeg_finish_decompress (&dec->cinfo);
 
   /* Clipping */
-  if (dec->segment->format == GST_FORMAT_TIME) {
+  if (dec->segment.format == GST_FORMAT_TIME) {
     gint64 start, stop, clip_start, clip_stop;
 
     GST_LOG_OBJECT (dec, "Attempting clipping");
@@ -990,7 +985,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     else
       stop = start + GST_BUFFER_DURATION (outbuf);
 
-    if (gst_segment_clip (dec->segment, GST_FORMAT_TIME,
+    if (gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
             start, stop, &clip_start, &clip_stop)) {
       GST_LOG_OBJECT (dec, "Clipping start to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (clip_start));
@@ -1103,7 +1098,7 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
           GST_TIME_ARGS (position));
 
-      gst_segment_set_newsegment_full (dec->segment, update, rate,
+      gst_segment_set_newsegment_full (&dec->segment, update, rate,
           applied_rate, format, start, stop, position);
 
       break;
@@ -1172,7 +1167,7 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->caps_height = -1;
       dec->packetized = FALSE;
       dec->next_ts = 0;
-      gst_segment_init (dec->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
     default:
       break;
   }

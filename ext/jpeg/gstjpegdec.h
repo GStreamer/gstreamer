@@ -75,7 +75,7 @@ struct _GstJpegDec {
   /* the (expected) timestamp of the next frame */
   guint64  next_ts;
 
-  GstSegment *segment;
+  GstSegment segment;
 
   /* video state */
   gint framerate_numerator;
