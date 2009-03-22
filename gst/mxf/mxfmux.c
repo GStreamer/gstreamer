@@ -1012,7 +1012,7 @@ gst_mxf_mux_handle_buffer (GstMXFMux * mux, GstMXFMuxPad * cpad)
   GstFlowReturn ret = GST_FLOW_OK;
   guint8 slen, ber[9];
 
-  GST_DEBUG_OBJECT (mux,
+  GST_DEBUG_OBJECT (cpad->collect.pad,
       "Handling buffer of size %u for track %u at position %" G_GINT64_FORMAT,
       GST_BUFFER_SIZE (buf), cpad->source_track->parent.track_id, cpad->pos);
 
@@ -1318,8 +1318,6 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
   }
 
   if (!eos && best) {
-    GST_DEBUG_OBJECT (mux, "Handling buffer for pad '%" GST_PTR_FORMAT "'",
-        best->collect.pad);
     ret = gst_mxf_mux_handle_buffer (mux, best);
     if (ret != GST_FLOW_OK)
       goto error;
@@ -1333,9 +1331,9 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
     gst_mxf_mux_handle_eos (mux);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
-  } else {
-    return GST_FLOW_OK;
   }
+
+  return GST_FLOW_OK;
 
 error:
   {
