@@ -1349,6 +1349,8 @@ setup_source (GstURIDecodeBin * decoder)
   /* delete old src */
   remove_source (decoder);
 
+  decoder->pending = 0;
+
   /* create and configure an element that can handle the uri */
   if (!(decoder->source = gen_source_element (decoder)))
     goto no_source;
