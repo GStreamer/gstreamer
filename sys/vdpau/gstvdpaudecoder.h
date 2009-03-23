@@ -65,6 +65,8 @@ struct _GstVdpauDecoderClass {
 
 GType gst_vdpaudecoder_get_type (void);
 
+gboolean gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec, VdpVideoSurface * surface);
+
 G_END_DECLS
 
 #endif /* __GST_VDPAU_DECODER_H__ */

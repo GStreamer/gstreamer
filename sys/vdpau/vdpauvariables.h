@@ -4,9 +4,9 @@ static VdpVideoSurfaceQueryCapabilities *vdp_video_surface_query_capabilities;
 static VdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities *vdp_video_surface_query_ycbcr_capabilities;
 
 static VdpGetProcAddress                 *vdp_get_proc_address;
-#if 0
-
 static VdpDeviceDestroy                  *vdp_device_destroy;
+
+#if 0
 static VdpVideoSurfaceCreate             *vdp_video_surface_create;
 static VdpVideoSurfaceDestroy            *vdp_video_surface_destroy;
 

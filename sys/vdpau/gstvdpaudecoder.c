@@ -71,7 +71,7 @@ static void gst_vdpaudecoder_set_property (GObject * object, guint prop_id,
 static void gst_vdpaudecoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean
+gboolean
 gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
     VdpVideoSurface * surface)
 {
@@ -82,6 +82,8 @@ gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
     default:
       break;
   }
+
+  return TRUE;
 }
 
 typedef struct
@@ -201,7 +203,7 @@ gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
   if (!display) {
     GST_ELEMENT_ERROR (dec, RESOURCE, READ, ("Could not initialise VDPAU"),
         ("Could not open display"));
-    return GST_STATE_CHANGE_FAILURE;
+    return FALSE;
   }
 
   screen = DefaultScreen (display);
@@ -223,14 +225,38 @@ gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
   vdp_get_proc_address (dec->device,
       VDP_FUNC_ID_VIDEO_SURFACE_QUERY_GET_PUT_BITS_Y_CB_CR_CAPABILITIES,
       (void **) &vdp_video_surface_query_ycbcr_capabilities);
+  vdp_get_proc_address (dec->device,
+      VDP_FUNC_ID_DEVICE_DESTROY, (void **) &vdp_device_destroy);
 
   caps = gst_vdpaudecoder_get_vdpau_support (dec);
-  if (!caps)
+  if (!caps) {
+    vdp_device_destroy (dec->device);
+    dec->device = 0;
     return FALSE;
+  }
 
   dec->src_caps = caps;
 
   return TRUE;
+}
+
+static GstStateChangeReturn
+gst_vdpaudecoder_change_state (GstElement * element, GstStateChange transition)
+{
+  GstVdpauDecoder *dec;
+
+  dec = GST_VDPAU_DECODER (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!gst_vdpaudecoder_init_vdpau (dec))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    default:
+      break;
+  }
+
+  return GST_STATE_CHANGE_SUCCESS;
 }
 
 static gboolean
@@ -329,6 +355,8 @@ gst_vdpaudecoder_class_init (GstVdpauDecoderClass * klass)
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  gstelement_class->change_state = gst_vdpaudecoder_change_state;
 }
 
 static void
@@ -347,8 +375,6 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
       (GST_ELEMENT_CLASS (klass), "sink"), "sink");
   gst_pad_set_setcaps_function (dec->sink, gst_vdpaudecoder_sink_set_caps);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sink);
-
-  gst_vdpaudecoder_init_vdpau (dec);
 }
 
 static void
