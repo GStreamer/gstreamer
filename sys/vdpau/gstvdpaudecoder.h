@@ -54,6 +54,8 @@ struct _GstVdpauDecoder {
 
   GstCaps *src_caps;
 
+  guint32 format;
+
   gboolean silent;
 };
 

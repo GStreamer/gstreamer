@@ -71,6 +71,19 @@ static void gst_vdpaudecoder_set_property (GObject * object, guint prop_id,
 static void gst_vdpaudecoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean
+gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
+    VdpVideoSurface * surface)
+{
+  switch (dec->format) {
+    case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+      /* YV12 specific code */
+      break;
+    default:
+      break;
+  }
+}
+
 typedef struct
 {
   VdpChromaType chroma_type;
@@ -163,8 +176,6 @@ gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
               "height", GST_TYPE_INT_RANGE, 1, max_h,
               "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
           gst_caps_append (caps, format_caps);
-          GST_DEBUG ("fourcc: %" GST_FOURCC_FORMAT "\n",
-              GST_FOURCC_ARGS (formats[j].fourcc));
         }
       }
     }
@@ -231,6 +242,7 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   gint width, height;
   gint framerate_numerator, framerate_denominator;
+  guint32 fourcc_format;
   gboolean res;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -240,9 +252,9 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
       &framerate_numerator, &framerate_denominator);
 
   src_caps = gst_pad_get_allowed_caps (dec->src);
-  GST_DEBUG ("caps: %s\n\n", gst_caps_to_string (src_caps));
 
   structure = gst_caps_get_structure (src_caps, 0);
+  gst_structure_get_fourcc (structure, "format", &fourcc_format);
   gst_structure_set (structure,
       "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height,
@@ -255,10 +267,11 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
   res = gst_pad_set_caps (dec->src, new_caps);
 
   gst_caps_unref (new_caps);
-  GST_DEBUG ("caps: %s\n\n", gst_caps_to_string (gst_pad_get_caps (dec->src)));
 
   if (!res)
     return FALSE;
+
+  dec->format = fourcc_format;
 
   return TRUE;
 }
