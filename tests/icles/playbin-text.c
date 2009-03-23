@@ -95,8 +95,24 @@ have_subtitle (GstElement * appsink, App * app)
   if (buffer) {
     guint8 *data;
     guint size;
+    GstFormat format;
+    gint64 position;
+    GstClock *clock;
+    GstClockTime base_time, running_time;
 
-    g_message ("received a subtitle");
+    format = GST_FORMAT_TIME;
+    gst_element_query_position (appsink, &format, &position);
+
+    clock = gst_element_get_clock (appsink);
+    base_time = gst_element_get_base_time (appsink);
+
+    running_time = gst_clock_get_time (clock) - base_time;
+
+    gst_object_unref (clock);
+
+    g_message ("received a subtitle at position %" GST_TIME_FORMAT
+        ", running_time %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+        GST_TIME_ARGS (running_time));
 
     data = GST_BUFFER_DATA (buffer);
     size = GST_BUFFER_SIZE (buffer);
@@ -127,6 +143,7 @@ main (int argc, char *argv[])
   /* set appsink to get the subtitles */
   app->textsink = gst_element_factory_make ("appsink", "subtitle_sink");
   g_object_set (G_OBJECT (app->textsink), "emit-signals", TRUE, NULL);
+  g_object_set (G_OBJECT (app->textsink), "ts-offset", 0 * GST_SECOND, NULL);
   g_signal_connect (app->textsink, "new-buffer", G_CALLBACK (have_subtitle),
       app);
 
