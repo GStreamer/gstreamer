@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_sink_debug);
 
 #define VOLUME_MAX_DOUBLE 10.0
 
-#define GST_PLAY_CHAIN(c) (GstPlayChain *)(c)
+#define GST_PLAY_CHAIN(c) ((GstPlayChain *)(c))
 
 /* holds the common data fields for the audio and video pipelines. We keep them
  * in a structure to more easily have all the info available. */
@@ -895,6 +895,39 @@ link_failed:
   }
 }
 
+static gboolean
+setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
+{
+  GstElement *elem;
+  GstPlayVideoChain *chain;
+  GstStateChangeReturn ret;
+
+  chain = playsink->videochain;
+
+  /* if the chain was active we don't do anything */
+  if (GST_PLAY_CHAIN (chain)->activated == TRUE)
+    return TRUE;
+
+  /* try to set the sink element to READY again */
+  ret = gst_element_set_state (chain->sink, GST_STATE_READY);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return FALSE;
+
+  /* if we can disable async behaviour of the sink, we can avoid adding a
+   * queue for the audio chain. */
+  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
+  if (elem) {
+    GST_DEBUG_OBJECT (playsink, "setting async property to %d on element %s",
+        async, GST_ELEMENT_NAME (elem));
+    g_object_set (elem, "async", async, NULL);
+    chain->async = async;
+  } else {
+    GST_DEBUG_OBJECT (playsink, "no async property on the sink");
+    chain->async = TRUE;
+  }
+  return TRUE;
+}
+
 /* make an element for playback of video with subtitles embedded.
  *
  *  +----------------------------------------------+
@@ -1121,9 +1154,10 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   /* check if the sink, or something within the sink, has the volume property.
    * If it does we don't need to add a volume element.  */
-  chain->volume =
-      gst_play_sink_find_property_sinks (playsink, chain->sink, "volume");
-  if (chain->volume) {
+  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "volume");
+  if (elem) {
+    chain->volume = elem;
+
     GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
     have_volume = TRUE;
     /* use the sink to control the volume */
@@ -1416,17 +1450,28 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   /* set up video pipeline */
   if (need_video) {
+    gboolean raw, async;
+
+    /* we need a raw sink when we do vis or when we have a raw pad */
+    raw = need_vis ? TRUE : playsink->video_pad_raw;
+    /* we try to set the sink async=FALSE when we need vis, this way we can
+     * avoid a queue in the audio chain. */
+    async = !need_vis;
+
     GST_DEBUG_OBJECT (playsink, "adding video, raw %d",
         playsink->video_pad_raw);
+
+    if (playsink->videochain) {
+      /* try to reactivate the chain */
+      if (!setup_video_chain (playsink, raw, async)) {
+        add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
+        activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
+        free_chain ((GstPlayChain *) playsink->videochain);
+        playsink->videochain = NULL;
+      }
+    }
+
     if (!playsink->videochain) {
-      gboolean raw, async;
-
-      /* we need a raw sink when we do vis or when we have a raw pad */
-      raw = need_vis ? TRUE : playsink->video_pad_raw;
-      /* we try to set the sink async=FALSE when we need vis, this way we can
-       * avoid a queue in the audio chain. */
-      async = !need_vis;
-
       playsink->videochain = gen_video_chain (playsink, raw, async);
     }
     if (playsink->videochain) {
@@ -1544,6 +1589,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         }
         add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+        free_chain ((GstPlayChain *) playsink->audiochain);
+        playsink->audiochain = NULL;
         create_chain = TRUE;
       }
     }
@@ -1968,6 +2015,14 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       if (playsink->audiochain) {
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
+      }
+      if (playsink->vischain) {
+        activate_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
+        add_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
+      }
+      if (playsink->textchain) {
+        activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
+        add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
       }
       break;
     default:
