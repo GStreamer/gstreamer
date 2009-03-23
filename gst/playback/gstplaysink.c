@@ -1444,6 +1444,17 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "no video needed");
     if (playsink->videochain) {
       GST_DEBUG_OBJECT (playsink, "removing video chain");
+      if (playsink->vischain) {
+        GstPad *srcpad;
+
+        GST_DEBUG_OBJECT (playsink, "unlinking vis chain");
+
+        /* also had visualisation, unlink the video from it first */
+        srcpad =
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+                chain.bin), "src");
+        gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
+      }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
     }
@@ -1549,18 +1560,19 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-              vischain->chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+              chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
+      activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       gst_pad_link (playsink->audio_tee_vissrc, playsink->vischain->sinkpad);
       gst_pad_link (srcpad, playsink->videochain->sinkpad);
       gst_object_unref (srcpad);
-      activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no vis needed");
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "removing vis chain");
+      gst_pad_unlink (playsink->audio_tee_vissrc, playsink->vischain->sinkpad);
       add_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), FALSE);
     }
