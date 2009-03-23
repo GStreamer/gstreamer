@@ -1243,23 +1243,25 @@ unlock:
 static GstStateChangeReturn
 gst_pulsesink_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn res;
   GstPulseSink *this = GST_PULSESINK (element);
 
   switch (transition) {
-
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-
-      gst_pulsesink_pause (this,
-          GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED);
+      gst_pulsesink_pause (this, FALSE);
       break;
-
     default:
-      ;
+      break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      gst_pulsesink_pause (this, TRUE);
+      break;
+    default:
+      break;
+  }
+  return res;
 }
