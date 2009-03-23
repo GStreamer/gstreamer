@@ -2232,7 +2232,7 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
         GST_TIME_ARGS (max_lateness));
     /* !!emergency!!, if we did not receive anything valid for more than a 
      * second, render it anyway so the user sees something */
-    if (priv->last_in_time && start - priv->last_in_time > GST_SECOND) {
+    if (priv->last_in_time != -1 && start - priv->last_in_time > GST_SECOND) {
       late = FALSE;
       GST_DEBUG_OBJECT (basesink,
           "**emergency** last buffer at %" GST_TIME_FORMAT " > GST_SECOND",
