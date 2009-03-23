@@ -19,9 +19,18 @@
  */
 
 /**
- * SECTION:tcpclientsink
+ * SECTION:element-tcpclientsink
  * @see_also: #tcpclientsrc
  *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * # server:
+ * nc -l -p 3000
+ * # client:
+ * gst-launch fdsrc fd=1 ! tcpclientsink protocol=none port=3000
+ * ]| everything you type in the client is shown on the server
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

@@ -19,9 +19,18 @@
  */
 
 /**
- * SECTION:tcpserversink
+ * SECTION:element-tcpserversink
  * @see_also: #multifdsink
  *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * # server:
+ * gst-launch fdsrc fd=1 ! tcpserversink protocol=none port=3000
+ * # client:
+ * gst-launch tcpclientsrc protocol=none port=3000 ! fdsink fd=2
+ * ]| 
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
