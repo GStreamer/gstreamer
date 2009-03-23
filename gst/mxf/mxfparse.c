@@ -29,11 +29,6 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
-/* SMPTE 377M 3.3: A value of 0 for every field means unknown timestamp */
-static const MXFTimestamp mxf_timestamp_unknown = { 0, 0, 0, 0, 0, 0, 0 };
-
-static const MXFUMID umid_zero = { {0,} };
-
 gboolean
 mxf_is_mxf_packet (const MXFUL * ul)
 {
@@ -171,7 +166,9 @@ mxf_umid_is_equal (const MXFUMID * a, const MXFUMID * b)
 gboolean
 mxf_umid_is_zero (const MXFUMID * umid)
 {
-  return (memcmp (umid, &umid_zero, 32) == 0);
+  static const MXFUMID zero = { {0,} };
+
+  return (memcmp (umid, &zero, 32) == 0);
 }
 
 gchar *
@@ -256,10 +253,13 @@ mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, guint size)
   return TRUE;
 }
 
+/* SMPTE 377M 3.3: A value of 0 for every field means unknown timestamp */
 gboolean
 mxf_timestamp_is_unknown (const MXFTimestamp * a)
 {
-  return (memcmp (a, &mxf_timestamp_unknown, sizeof (MXFTimestamp)) == 0);
+  static const MXFTimestamp unknown = { 0, 0, 0, 0, 0, 0, 0 };
+
+  return (memcmp (a, &unknown, sizeof (MXFTimestamp)) == 0);
 }
 
 gint
