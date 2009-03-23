@@ -1434,7 +1434,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->videochain), TRUE);
       /* if we are not part of vis or subtitles, set the ghostpad target */
-      if (!need_vis && !need_text) {
+      if (!need_vis && !need_text && playsink->text_pad == NULL) {
         GST_DEBUG_OBJECT (playsink, "ghosting video sinkpad");
         gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
             playsink->videochain->sinkpad);
@@ -1458,8 +1458,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->audio_tee_vissrc = NULL;
         }
         srcpad =
-            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-                vischain->chain.bin), "src");
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+                chain.bin), "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -1484,14 +1484,24 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->textchain->videosinkpad);
       gst_pad_link (playsink->textchain->srcpad, playsink->videochain->sinkpad);
       activate_chain (GST_PLAY_CHAIN (playsink->textchain), TRUE);
+      if (playsink->textchain->overlay)
+        g_object_set (playsink->textchain->overlay, "silent", FALSE, NULL);
     }
   } else {
     GST_DEBUG_OBJECT (playsink, "no text needed");
     /* we have no subtitles/text or we are requested to not show them */
     if (playsink->textchain) {
-      GST_DEBUG_OBJECT (playsink, "removing text chain");
-      add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
-      activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
+      if (playsink->text_pad == NULL) {
+        /* no text pad, remove the chain entirely */
+        GST_DEBUG_OBJECT (playsink, "removing text chain");
+        add_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
+        activate_chain (GST_PLAY_CHAIN (playsink->textchain), FALSE);
+      } else {
+        /* we have a chain and a textpad, turn the subtitles off */
+        GST_DEBUG_OBJECT (playsink, "turning off the text");
+        if (playsink->textchain->overlay)
+          g_object_set (playsink->textchain->overlay, "silent", TRUE, NULL);
+      }
     }
     if (!need_video && playsink->video_pad)
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad), NULL);
@@ -1581,8 +1591,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-              vischain->chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+              chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
