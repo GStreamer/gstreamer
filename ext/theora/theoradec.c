@@ -249,10 +249,11 @@ _theora_granule_start_time (GstTheoraDec * dec, gint64 granulepos)
 
   /* invalid granule results in invalid time */
   if (granulepos == -1)
-    return -1;
+    return GST_CLOCK_TIME_NONE;
 
   /* get framecount */
-  framecount = _theora_granule_frame (dec, granulepos);
+  if ((framecount = _theora_granule_frame (dec, granulepos)) < 0)
+    return GST_CLOCK_TIME_NONE;
 
   return gst_util_uint64_scale_int (framecount * GST_SECOND,
       dec->info.fps_denominator, dec->info.fps_numerator);
