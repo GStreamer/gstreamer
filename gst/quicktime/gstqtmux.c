@@ -75,12 +75,17 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
+#include <sys/types.h>
 #ifdef G_OS_WIN32
 #include <io.h>                 /* lseek, open, close, read */
 #undef lseek
 #define lseek _lseeki64
 #undef off_t
 #define off_t guint64
+#endif
+
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
 #endif
 
 #include "gstqtmux.h"
