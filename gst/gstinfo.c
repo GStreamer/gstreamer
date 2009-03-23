@@ -1469,6 +1469,57 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
 #endif /* HAVE_PRINTF_EXTENSION */
 
 #else /* !GST_DISABLE_GST_DEBUG */
+#ifndef GST_REMOVE_DISABLED
+void
+gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * format, ...)
+{
+}
+
+void
+gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * format, va_list args)
+{
+}
+
+const gchar *
+gst_debug_message_get (GstDebugMessage * message)
+{
+  return "";
+}
+
+gchar *
+gst_debug_construct_term_color (guint colorinfo)
+{
+  return g_strdup ("");
+}
+
+gint
+gst_debug_construct_win_color (guint colorinfo)
+{
+  return 0;
+}
+
+void
+gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, GstDebugMessage * message, gpointer unused)
+{
+}
+
+const gchar *
+gst_debug_level_get_name (GstDebugLevel level)
+{
+  return "";
+}
+
+void
+gst_debug_add_log_function (GstLogFunction func, gpointer data)
+{
+}
+
 guint
 gst_debug_remove_log_function (GstLogFunction func)
 {
@@ -1486,7 +1537,7 @@ _priv_gst_in_valgrind (void)
 {
   return FALSE;
 }
-
+#endif /* GST_REMOVE_DISABLED */
 #endif /* GST_DISABLE_GST_DEBUG */
 
 

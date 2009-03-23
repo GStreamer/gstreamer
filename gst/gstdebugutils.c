@@ -714,5 +714,18 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
   _gst_debug_bin_to_dot_file (bin, details, ts_file_name);
   g_free (ts_file_name);
 }
+#else /* !GST_DISABLE_GST_DEBUG */
+#ifndef GST_REMOVE_DISABLED
+void
+_gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
+    const gchar * file_name)
+{
+}
 
+void
+_gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
+    const gchar * file_name)
+{
+}
+#endif /* GST_REMOVE_DISABLED */
 #endif /* GST_DISABLE_GST_DEBUG */
