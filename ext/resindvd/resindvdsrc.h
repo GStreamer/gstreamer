@@ -60,6 +60,8 @@ struct _resinDvdSrc
 {
   RsnPushSrc parent;
 
+  gboolean	faststart;
+
   GMutex	*dvd_lock;
   GCond		*still_cond;
   GMutex	*branch_lock;

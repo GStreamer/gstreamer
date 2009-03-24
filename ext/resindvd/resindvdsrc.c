@@ -32,6 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rsndvdsrc_debug);
 #define GST_CAT_DEFAULT rsndvdsrc_debug
 
 #define DEFAULT_DEVICE "/dev/dvd"
+#define DEFAULT_FASTSTART TRUE
 
 #define GST_FLOW_WOULD_BLOCK GST_FLOW_CUSTOM_SUCCESS
 
@@ -68,7 +69,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_DEVICE
+  ARG_DEVICE,
+  ARG_FASTSTART
 };
 
 typedef struct
@@ -228,11 +230,18 @@ rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_string ("device", "Device", "DVD device location",
           NULL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_FASTSTART,
+      g_param_spec_boolean ("fast-start", "Fast start",
+          "Skip straight to the DVD menu on start", DEFAULT_FASTSTART,
+          G_PARAM_READWRITE));
 }
 
 static void
 rsn_dvdsrc_init (resinDvdSrc * rsndvdsrc, resinDvdSrcClass * gclass)
 {
+  rsndvdsrc->faststart = DEFAULT_FASTSTART;
+
   rsndvdsrc->device = g_strdup (DEFAULT_DEVICE);
   rsndvdsrc->dvd_lock = g_mutex_new ();
   rsndvdsrc->branch_lock = g_mutex_new ();
@@ -298,6 +307,11 @@ rsn_dvdsrc_set_property (GObject * object, guint prop_id,
         src->device = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (src);
       break;
+    case ARG_FASTSTART:
+      GST_OBJECT_LOCK (src);
+      src->faststart = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (src);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -314,6 +328,11 @@ rsn_dvdsrc_get_property (GObject * object, guint prop_id,
     case ARG_DEVICE:
       GST_OBJECT_LOCK (src);
       g_value_set_string (value, src->device);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case ARG_FASTSTART:
+      GST_OBJECT_LOCK (src);
+      g_value_set_boolean (value, src->faststart);
       GST_OBJECT_UNLOCK (src);
       break;
     default:
@@ -346,6 +365,15 @@ rsn_dvdsrc_start (RsnBaseSrc * bsrc)
     goto fail;
   }
 
+  if (src->faststart) {
+    if (dvdnav_title_play (src->dvdnav, 1) != DVDNAV_STATUS_OK ||
+        (dvdnav_menu_call (src->dvdnav, DVD_MENU_Title) != DVDNAV_STATUS_OK &&
+            dvdnav_menu_call (src->dvdnav,
+                DVD_MENU_Root) != DVDNAV_STATUS_OK)) {
+      /* Fast start failed. Do normal start */
+      dvdnav_reset (src->dvdnav);
+    }
+  }
 
   src->first_seek = TRUE;
   src->running = TRUE;
@@ -635,6 +663,56 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
   return TRUE;
 }
 
+static pgc_t *
+get_current_pgc (resinDvdSrc * src)
+{
+  gint title, part, pgc_n;
+  gint32 vts_ttn;
+  pgc_t *pgc;
+
+  if (dvdnav_is_domain_fp (src->dvdnav)) {
+    return src->vmg_file->first_play_pgc;
+  }
+
+  if (src->vts_n == 0 || src->in_menu) {
+    /* FIXME: look up current menu PGC */
+    return NULL;
+  }
+
+  if (dvdnav_current_title_info (src->dvdnav, &title, &part) !=
+      DVDNAV_STATUS_OK)
+    return NULL;
+
+  /* To find the right tmap, we need the title number within this VTS (vts_ttn)
+   *    * from the VMG tt_srpt table... */
+  if (title < 1 || title > src->vmg_file->tt_srpt->nr_of_srpts)
+    return NULL;
+
+  /* We must be in the correct VTS for any of this to succeed... */
+  if (src->vts_n != src->vmg_file->tt_srpt->title[title - 1].title_set_nr)
+    return NULL;
+
+  /* We must also be in the VTS domain to use the tmap table */
+  if (src->vts_n == 0)
+    return NULL;
+
+  vts_ttn = src->vmg_file->tt_srpt->title[title - 1].vts_ttn;
+
+  if (vts_ttn < 1 || vts_ttn > src->vts_file->vts_ptt_srpt->nr_of_srpts)
+    return NULL;
+
+  if (src->vts_file->vts_ptt_srpt->title[vts_ttn - 1].nr_of_ptts == 0)
+    return NULL;
+
+  pgc_n = src->vts_file->vts_ptt_srpt->title[vts_ttn - 1].ptt[0].pgcn;
+  if (pgc_n > src->vts_file->vts_pgcit->nr_of_pgci_srp)
+    return NULL;
+
+  pgc = src->vts_file->vts_pgcit->pgci_srp[pgc_n - 1].pgc;
+
+  return pgc;
+}
+
 static GstFlowReturn
 rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 {
@@ -677,8 +755,14 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 
       src->in_still_state = FALSE;
 
-      if (new_start_ptm != src->cur_end_ts)
-        discont = TRUE;
+      if (new_start_ptm != src->cur_end_ts) {
+        /* Hack because libdvdnav seems to lose a NAV packet during
+         * angle block changes */
+        GstClockTimeDiff diff = GST_CLOCK_DIFF (src->cur_end_ts, new_start_ptm);
+        if (src->cur_end_ts == GST_CLOCK_TIME_NONE || diff > 2 * GST_SECOND) {
+          discont = TRUE;
+        }
+      }
 
       GST_LOG_OBJECT (src, "NAV packet start TS %" GST_TIME_FORMAT
           " end TS %" GST_TIME_FORMAT " base %" G_GINT64_FORMAT " %s",
@@ -764,7 +848,11 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       dvdnav_cell_change_event_t *event = (dvdnav_cell_change_event_t *) data;
 
       src->pgc_duration = MPEGTIME_TO_GSTTIME (event->pgc_length);
-      src->cur_position = MPEGTIME_TO_GSTTIME (event->cell_start);
+      /* event->cell_start has the wrong time - it doesn't handle
+       * multi-angle correctly (as of libdvdnav 4.1.3). The current_time()
+       * calculates it correctly. */
+      src->cur_position =
+          MPEGTIME_TO_GSTTIME (dvdnav_get_current_time (src->dvdnav));
 
       GST_DEBUG_OBJECT (src,
           "CELL change dur now %" GST_TIME_FORMAT " position now %"
@@ -1908,7 +1996,7 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
   vts_tmap_t *title_tmap;
   gint32 title, part, vts_ttn;
   guint32 entry, sector, logical_sector;
-  gint pgc_n, cell_n;
+  gint cell_n;
   pgc_t *pgc;
 
   if (ts == 0)
@@ -1927,7 +2015,7 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
 
   /* To find the right tmap, we need the title number within this VTS (vts_ttn)
    * from the VMG tt_srpt table... */
-  if (title < 1 || title >= src->vmg_file->tt_srpt->nr_of_srpts)
+  if (title < 1 || title > src->vmg_file->tt_srpt->nr_of_srpts)
     return -1;
 
   /* We must be in the correct VTS for any of this to succeed... */
@@ -1947,10 +2035,11 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
   if (vts_ttn < 1 || vts_ttn > vts_tmapt->nr_of_tmaps)
     return -1;
 
-  /* We'll be needing to look up the PGC later, so it better exist */
-  if (vts_ttn > src->vts_file->vts_ptt_srpt->nr_of_srpts)
+  pgc = get_current_pgc (src);
+  if (pgc == NULL)
     return -1;
 
+  /* Get the time map */
   title_tmap = vts_tmapt->tmap + vts_ttn - 1;
   entry = ts / (title_tmap->tmu * GST_SECOND);
   if (entry == 0)
@@ -1970,23 +2059,21 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
    * the cell that contains the time and sector we want, accumulating
    * the logical sector offsets until we find it
    */
-  if (src->vts_file->vts_ptt_srpt->title[vts_ttn - 1].nr_of_ptts == 0)
-    return -1;
-
-  pgc_n = src->vts_file->vts_ptt_srpt->title[vts_ttn - 1].ptt[0].pgcn;
-  if (pgc_n > src->vts_file->vts_pgcit->nr_of_pgci_srp)
-    return -1;
-
-  pgc = src->vts_file->vts_pgcit->pgci_srp[pgc_n - 1].pgc;
-
   logical_sector = 0;
   for (cell_n = 0; cell_n < pgc->nr_of_cells; cell_n++) {
     cell_playback_t *cell = pgc->cell_playback + cell_n;
+
+    /* This matches how libdvdnav calculates the logical sector
+     * in dvdnav_sector_search(): */
 
     if (sector >= cell->first_sector && sector <= cell->last_sector) {
       logical_sector += sector - cell->first_sector;
       break;
     }
+
+    if (cell->block_type == BLOCK_TYPE_ANGLE_BLOCK &&
+        cell->block_mode != BLOCK_MODE_FIRST_CELL)
+      continue;
 
     logical_sector += (cell->last_sector - cell->first_sector + 1);
   }
