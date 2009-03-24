@@ -1729,7 +1729,7 @@ update_streams (GstPipeline * pipeline)
 
   if (pipeline_type == 16 && need_streams) {
     GstTagList *tags;
-    gchar *name;
+    gchar *name, *str;
     gint active_idx;
     gboolean state;
 
@@ -1746,6 +1746,11 @@ update_streams (GstPipeline * pipeline)
     active_idx = 0;
     for (i = 0; i < n_video; i++) {
       g_signal_emit_by_name (pipeline, "get-video-tags", i, &tags);
+      if (tags) {
+        str = gst_structure_to_string ((GstStructure *) tags);
+        g_print ("video %d: %s\n", i, str);
+        g_free (str);
+      }
       /* find good name for the label */
       name = g_strdup_printf ("video %d", i + 1);
       gtk_combo_box_append_text (GTK_COMBO_BOX (video_combo), name);
@@ -1758,6 +1763,11 @@ update_streams (GstPipeline * pipeline)
     active_idx = 0;
     for (i = 0; i < n_audio; i++) {
       g_signal_emit_by_name (pipeline, "get-audio-tags", i, &tags);
+      if (tags) {
+        str = gst_structure_to_string ((GstStructure *) tags);
+        g_print ("audio %d: %s\n", i, str);
+        g_free (str);
+      }
       /* find good name for the label */
       name = g_strdup_printf ("audio %d", i + 1);
       gtk_combo_box_append_text (GTK_COMBO_BOX (audio_combo), name);
@@ -1770,9 +1780,14 @@ update_streams (GstPipeline * pipeline)
     active_idx = 0;
     for (i = 0; i < n_text; i++) {
       g_signal_emit_by_name (pipeline, "get-text-tags", i, &tags);
+
       name = NULL;
       if (tags) {
         const GValue *value;
+
+        str = gst_structure_to_string ((GstStructure *) tags);
+        g_print ("text %d: %s\n", i, str);
+        g_free (str);
 
         /* get the language code if we can */
         value = gst_tag_list_get_value_index (tags, GST_TAG_LANGUAGE_CODE, 0);
