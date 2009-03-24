@@ -56,10 +56,6 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]"));
 
-/* debug category for fltering log messages
- *
- * FIXME:exchange the string 'Template vdpaudecoder' with your description
- */
 #define DEBUG_INIT(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_vdpaudecoder_debug, "vdpaudecoder", 0, "vdpaudecoder base class");
 
