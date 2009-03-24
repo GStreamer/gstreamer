@@ -1708,6 +1708,11 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       "pad %s:%s with caps %" GST_PTR_FORMAT " added in group %p",
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
+  for (i = 0; blacklisted_mimes[i]; i++) {
+    if (!strcmp (name, blacklisted_mimes[i]))
+      goto blacklisted_type;
+  }
+
   /* major type of the pad, this determines the selector to use */
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     if (g_str_has_prefix (name, group->selector[i].media)) {
@@ -1800,6 +1805,12 @@ done:
   return;
 
   /* ERRORS */
+blacklisted_type:
+  {
+    GST_WARNING_OBJECT (playbin, "blacklisted type %s for pad %s:%s",
+        name, GST_DEBUG_PAD_NAME (pad));
+    goto done;
+  }
 unknown_type:
   {
     GST_ERROR_OBJECT (playbin, "unknown type %s for pad %s:%s",
@@ -2176,6 +2187,8 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
 
   g_return_val_if_fail (group->valid, FALSE);
   g_return_val_if_fail (!group->active, FALSE);
+
+  GST_DEBUG_OBJECT (playbin, "activating group %p", group);
 
   GST_SOURCE_GROUP_LOCK (group);
   if (group->uridecodebin) {
