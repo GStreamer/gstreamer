@@ -1229,6 +1229,20 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
     exit:
       gst_event_unref (event);
       res = TRUE;
+      goto drop;
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+    {
+      gint i;
+
+      /* clean up, force EOS if no more info follows */
+      gst_adapter_clear (demux->adapter);
+      demux->offset = 0;
+      demux->neededbytes = -1;
+      /* reset flow return, e.g. following seek */
+      for (i = 0; i < demux->n_streams; i++)
+        demux->streams[i]->last_ret = GST_FLOW_OK;
       break;
     }
     case GST_EVENT_EOS:
@@ -1239,12 +1253,14 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
             (_("This file contains no playable streams.")),
             ("no known streams found"));
       }
-      /* Fall through */
+      break;
     default:
-      res = gst_pad_event_default (demux->sinkpad, event);
       break;
   }
 
+  res = gst_pad_event_default (demux->sinkpad, event);
+
+drop:
   return res;
 }
 
