@@ -402,16 +402,18 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_TAG:
     {
-      GstTagList *tags;
+      GstTagList *tags, *oldtags, *newtags;
+
+      gst_event_parse_tag (event, &tags);
 
       GST_OBJECT_LOCK (selpad);
-      if (selpad->tags)
-        gst_tag_list_free (selpad->tags);
-      gst_event_parse_tag (event, &tags);
-      if (tags)
-        tags = gst_tag_list_copy (tags);
-      selpad->tags = tags;
-      GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, selpad->tags);
+      oldtags = selpad->tags;
+
+      newtags = gst_tag_list_merge (oldtags, tags, GST_TAG_MERGE_REPLACE);
+      selpad->tags = newtags;
+      if (oldtags)
+        gst_tag_list_free (oldtags);
+      GST_DEBUG_OBJECT (pad, "received tags %" GST_PTR_FORMAT, newtags);
       GST_OBJECT_UNLOCK (selpad);
       break;
     }
