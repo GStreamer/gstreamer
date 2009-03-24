@@ -767,15 +767,16 @@ static const gchar *no_media_mimes[] = {
 };
 #endif
 
-/* mime types we consider raw media */
-static const gchar *raw_mimes[] = {
-  "audio/x-raw", "video/x-raw", NULL
+/* media types we consider raw media */
+static const gchar *raw_media[] = {
+  "audio/x-raw", "video/x-raw", "text/plain", "text/x-pango-markup",
+  "video/x-dvd-subpicture", NULL
 };
 
 #define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_value (blacklisted_uris, uri))
 #define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
-#define IS_RAW_MIME(mime)           (array_has_value (raw_mimes, mime))
+#define IS_RAW_MEDIA(media)         (array_has_value (raw_media, media))
 
 /*
  * Generate and configure a source element.
@@ -788,6 +789,8 @@ gen_source_element (GstURIDecodeBin * decoder)
   if (!decoder->uri)
     goto no_uri;
 
+  GST_LOG_OBJECT (decoder, "finding source for %s", decoder->uri);
+
   if (!gst_uri_is_valid (decoder->uri))
     goto invalid_uri;
 
@@ -798,13 +801,18 @@ gen_source_element (GstURIDecodeBin * decoder)
   if (!source)
     goto no_source;
 
+  GST_LOG_OBJECT (decoder, "found source type %s", G_OBJECT_TYPE_NAME (source));
+
   decoder->is_stream = IS_STREAM_URI (decoder->uri);
+
+  GST_LOG_OBJECT (decoder, "source is stream: %d", decoder->is_stream);
 
   /* make HTTP sources send extra headers so we get icecast
    * metadata in case the stream is an icecast stream */
   if (!strncmp (decoder->uri, "http://", 7) &&
       g_object_class_find_property (G_OBJECT_GET_CLASS (source),
           "iradio-mode")) {
+    GST_LOG_OBJECT (decoder, "configuring iradio-mode");
     g_object_set (source, "iradio-mode", TRUE, NULL);
   }
 
@@ -883,6 +891,8 @@ has_all_raw_caps (GstPad * pad, gboolean * all_raw)
   if (caps == NULL)
     return FALSE;
 
+  GST_DEBUG_OBJECT (pad, "have caps %" GST_PTR_FORMAT, caps);
+
   capssize = gst_caps_get_size (caps);
   /* no caps, skip and move to the next pad */
   if (capssize == 0 || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
@@ -891,12 +901,14 @@ has_all_raw_caps (GstPad * pad, gboolean * all_raw)
   /* count the number of raw formats in the caps */
   for (i = 0; i < capssize; ++i) {
     GstStructure *s;
-    const gchar *mime_type;
+    const gchar *media_type;
 
     s = gst_caps_get_structure (caps, i);
-    mime_type = gst_structure_get_name (s);
+    media_type = gst_structure_get_name (s);
 
-    if (IS_RAW_MIME (mime_type))
+    GST_DEBUG_OBJECT (pad, "check media-type %s", media_type);
+
+    if (IS_RAW_MEDIA (media_type))
       ++num_raw;
   }
 
@@ -1104,6 +1116,8 @@ make_decoder (GstURIDecodeBin * decoder)
 {
   GstElement *decodebin;
 
+  GST_LOG_OBJECT (decoder, "making new decodebin2");
+
   /* now create the decoder element */
   decodebin = gst_element_factory_make ("decodebin2", NULL);
   if (!decodebin)
@@ -1135,6 +1149,7 @@ make_decoder (GstURIDecodeBin * decoder)
   g_object_set (G_OBJECT (decodebin), "subtitle-encoding", decoder->encoding,
       NULL);
   decoder->pending++;
+  GST_LOG_OBJECT (decoder, "have %d pending dynamic objects", decoder->pending);
 
   gst_bin_add (GST_BIN_CAST (decoder), decodebin);
 
