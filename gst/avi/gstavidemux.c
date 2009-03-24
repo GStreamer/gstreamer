@@ -4175,12 +4175,7 @@ pause:
     }
     if (push_eos) {
       GST_INFO_OBJECT (avi, "sending eos");
-      if (!(gst_avi_demux_push_event (avi, gst_event_new_eos ()))) {
-        /* if we don't error out here it will hang */
-        GST_ELEMENT_ERROR (avi, STREAM, FAILED,
-            (_("Internal data stream error.")),
-            ("downstream did not handle EOS"));
-      }
+      gst_avi_demux_push_event (avi, gst_event_new_eos ());
     }
   }
 }
