@@ -908,6 +908,9 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   if (GST_PLAY_CHAIN (chain)->activated == TRUE)
     return TRUE;
 
+  if (chain->chain.raw != raw)
+    return FALSE;
+
   /* try to set the sink element to READY again */
   ret = gst_element_set_state (chain->sink, GST_STATE_READY);
   if (ret == GST_STATE_CHANGE_FAILURE)
@@ -984,7 +987,7 @@ gen_text_chain (GstPlaySink * playsink)
         /* try to set sync to true but it's no biggie when we can't */
         if ((elem =
                 gst_play_sink_find_property_sinks (playsink, chain->sink,
-                    "async")))
+                    "sync")))
           g_object_set (elem, "sync", TRUE, NULL);
       } else {
         GST_WARNING_OBJECT (playsink,
@@ -1285,6 +1288,53 @@ link_failed:
   }
 }
 
+static gboolean
+setup_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
+{
+  GstElement *elem;
+  GstPlayAudioChain *chain;
+  GstStateChangeReturn ret;
+
+  chain = playsink->audiochain;
+
+  /* if the chain was active we don't do anything */
+  if (GST_PLAY_CHAIN (chain)->activated == TRUE)
+    return TRUE;
+
+  if (chain->chain.raw != raw)
+    return FALSE;
+
+  /* try to set the sink element to READY again */
+  ret = gst_element_set_state (chain->sink, GST_STATE_READY);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return FALSE;
+
+  /* check if the sink, or something within the sink, has the volume property.
+   * If it does we don't need to add a volume element.  */
+  elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "volume");
+  if (elem) {
+    chain->volume = elem;
+
+    GST_DEBUG_OBJECT (playsink, "the sink has a volume property");
+    /* use the sink to control the volume */
+    g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
+    /* if the sink also has a mute property we can use this as well. We'll only
+     * use the mute property if there is a volume property. We can simulate the
+     * mute with the volume otherwise. */
+    chain->mute =
+        gst_play_sink_find_property_sinks (playsink, chain->sink, "mute");
+    if (chain->mute) {
+      GST_DEBUG_OBJECT (playsink, "the sink has a mute property");
+    }
+  } else {
+    /* no volume, we need to add a volume element when we can */
+    GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
+    chain->volume = NULL;
+    chain->mute = NULL;
+  }
+  return TRUE;
+}
+
 /*
  *  +-------------------------------------------------------------------+
  *  | visbin                                                            |
@@ -1555,7 +1605,6 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
   }
 
   if (need_audio) {
-    gboolean create_chain = FALSE;
     gboolean raw, queue;
 
     GST_DEBUG_OBJECT (playsink, "adding audio");
@@ -1574,12 +1623,9 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
       queue = FALSE;
     }
 
-    if (!playsink->audiochain) {
-      /* create chain if we don't already have one */
-      create_chain = TRUE;
-    } else {
-      /* we have a chain, check if it's also raw */
-      if (playsink->audiochain->chain.raw != raw) {
+    if (playsink->audiochain) {
+      /* try to reactivate the chain */
+      if (!setup_audio_chain (playsink, raw, queue)) {
         GST_DEBUG_OBJECT (playsink, "removing current audio chain");
         if (playsink->audio_tee_asrc) {
           gst_element_release_request_pad (playsink->audio_tee,
@@ -1591,11 +1637,10 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
         activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
         free_chain ((GstPlayChain *) playsink->audiochain);
         playsink->audiochain = NULL;
-        create_chain = TRUE;
       }
     }
 
-    if (create_chain) {
+    if (!playsink->audiochain) {
       GST_DEBUG_OBJECT (playsink, "creating new audio chain");
       playsink->audiochain = gen_audio_chain (playsink, raw, queue);
     }
