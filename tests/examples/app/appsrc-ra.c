@@ -126,7 +126,8 @@ found_source (GObject * object, GObject * orig, GParamSpec * pspec, App * app)
    * total duration of the stream. It's a good idea to set the property when you
    * can but it's not required. */
   g_object_set (app->appsrc, "size", (gint64) app->length, NULL);
-  g_object_set (app->appsrc, "stream-type", 2, NULL);
+  gst_util_set_object_arg (G_OBJECT (app->appsrc), "stream-type",
+      "random-access");
 
   /* configure the appsrc, we will push a buffer to appsrc when it needs more
    * data */
