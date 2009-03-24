@@ -110,22 +110,30 @@ struct _GstPlaySink
 
   GstPlayFlags flags;
 
+  /* chains */
   GstPlayAudioChain *audiochain;
   GstPlayVideoChain *videochain;
   GstPlayVisChain *vischain;
   GstPlayTextChain *textchain;
 
+  /* audio */
   GstPad *audio_pad;
   gboolean audio_pad_raw;
+  /* audio tee */
   GstElement *audio_tee;
   GstPad *audio_tee_sink;
   GstPad *audio_tee_asrc;
   GstPad *audio_tee_vissrc;
 
+  /* video */
   GstPad *video_pad;
   gboolean video_pad_raw;
 
+  /* text */
   GstPad *text_pad;
+
+  /* subpictures */
+  GstPad *subp_pad;
 
   /* properties */
   GstElement *audio_sink;
@@ -769,12 +777,13 @@ try_element (GstPlaySink * playsink, GstElement * element)
  *           
  */
 static GstPlayVideoChain *
-gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
+gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
+    gboolean queue)
 {
   GstPlayVideoChain *chain;
   GstBin *bin;
   GstPad *pad;
-  GstElement *prev, *elem;
+  GstElement *head, *prev, *elem;
 
   chain = g_new0 (GstPlayVideoChain, 1);
   chain->chain.playsink = playsink;
@@ -821,15 +830,20 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   gst_object_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  /* decouple decoder from sink, this improves playback quite a lot since the
-   * decoder can continue while the sink blocks for synchronisation. We don't
-   * need a lot of buffers as this consumes a lot of memory and we don't want
-   * too little because else we would be context switching too quickly. */
-  chain->queue = gst_element_factory_make ("queue", "vqueue");
-  g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
-      "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
-  gst_bin_add (bin, chain->queue);
-  prev = chain->queue;
+  if (queue) {
+    /* decouple decoder from sink, this improves playback quite a lot since the
+     * decoder can continue while the sink blocks for synchronisation. We don't
+     * need a lot of buffers as this consumes a lot of memory and we don't want
+     * too little because else we would be context switching too quickly. */
+    chain->queue = gst_element_factory_make ("queue", "vqueue");
+    g_object_set (G_OBJECT (chain->queue), "max-size-buffers", 3,
+        "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
+    gst_bin_add (bin, chain->queue);
+    head = prev = chain->queue;
+  } else {
+    head = chain->sink;
+    prev = NULL;
+  }
 
   if (raw && !(playsink->flags & GST_PLAY_FLAG_NATIVE_VIDEO)) {
     GST_DEBUG_OBJECT (playsink, "creating ffmpegcolorspace");
@@ -841,9 +855,12 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
               "ffmpegcolorspace"), ("video rendering might fail"));
     } else {
       gst_bin_add (bin, chain->conv);
-      if (!gst_element_link_pads (prev, "src", chain->conv, "sink"))
-        goto link_failed;
-
+      if (prev) {
+        if (!gst_element_link_pads (prev, "src", chain->conv, "sink"))
+          goto link_failed;
+      } else {
+        head = chain->conv;
+      }
       prev = chain->conv;
     }
 
@@ -856,19 +873,23 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
               "videoscale"), ("possibly a liboil version mismatch?"));
     } else {
       gst_bin_add (bin, chain->scale);
-      if (!gst_element_link_pads (prev, "src", chain->scale, "sink"))
-        goto link_failed;
-
+      if (prev) {
+        if (!gst_element_link_pads (prev, "src", chain->scale, "sink"))
+          goto link_failed;
+      } else {
+        head = chain->scale;
+      }
       prev = chain->scale;
     }
   }
 
-  /* be more careful with the pad from the custom sink element, it might not
-   * be named 'sink' */
-  if (!gst_element_link_pads (prev, "src", chain->sink, NULL))
-    goto link_failed;
+  if (prev) {
+    GST_DEBUG_OBJECT (playsink, "linking to sink");
+    if (!gst_element_link_pads (prev, "src", chain->sink, NULL))
+      goto link_failed;
+  }
 
-  pad = gst_element_get_static_pad (chain->queue, "sink");
+  pad = gst_element_get_static_pad (head, "sink");
   chain->sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
 
@@ -896,7 +917,8 @@ link_failed:
 }
 
 static gboolean
-setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
+setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
+    gboolean queue)
 {
   GstElement *elem;
   GstPlayVideoChain *chain;
@@ -1456,12 +1478,12 @@ gboolean
 gst_play_sink_reconfigure (GstPlaySink * playsink)
 {
   GstPlayFlags flags;
-  gboolean need_audio, need_video, need_vis, need_text;
+  gboolean need_audio, need_video, need_vis, need_text, need_subp;
 
   GST_DEBUG_OBJECT (playsink, "reconfiguring");
 
   /* assume we need nothing */
-  need_audio = need_video = need_vis = need_text = FALSE;
+  need_audio = need_video = need_vis = need_text = need_subp = FALSE;
 
   GST_PLAY_SINK_LOCK (playsink);
   GST_OBJECT_LOCK (playsink);
@@ -1500,20 +1522,22 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
 
   /* set up video pipeline */
   if (need_video) {
-    gboolean raw, async;
+    gboolean raw, async, queue;
 
     /* we need a raw sink when we do vis or when we have a raw pad */
     raw = need_vis ? TRUE : playsink->video_pad_raw;
     /* we try to set the sink async=FALSE when we need vis, this way we can
      * avoid a queue in the audio chain. */
     async = !need_vis;
+    /* put a little queue in front of the video */
+    queue = TRUE;
 
     GST_DEBUG_OBJECT (playsink, "adding video, raw %d",
         playsink->video_pad_raw);
 
     if (playsink->videochain) {
       /* try to reactivate the chain */
-      if (!setup_video_chain (playsink, raw, async)) {
+      if (!setup_video_chain (playsink, raw, async, queue)) {
         add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
         activate_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
         free_chain ((GstPlayChain *) playsink->videochain);
@@ -1522,7 +1546,7 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     }
 
     if (!playsink->videochain) {
-      playsink->videochain = gen_video_chain (playsink, raw, async);
+      playsink->videochain = gen_video_chain (playsink, raw, async, queue);
     }
     if (playsink->videochain) {
       GST_DEBUG_OBJECT (playsink, "adding video chain");
@@ -1553,8 +1577,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->audio_tee_vissrc = NULL;
         }
         srcpad =
-            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
-                chain.bin), "src");
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
+                vischain->chain.bin), "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -1683,8 +1707,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
-              chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
+              vischain->chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
@@ -1925,6 +1949,15 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
       created = TRUE;
       break;
     }
+    case GST_PLAY_SINK_TYPE_SUBPIC:
+      GST_LOG_OBJECT (playsink, "ghosting subpicture pad");
+      if (!playsink->subp_pad) {
+        playsink->subp_pad =
+            gst_ghost_pad_new_no_target ("subp_sink", GST_PAD_SINK);
+        created = TRUE;
+      }
+      res = playsink->subp_pad;
+      break;
     default:
       res = NULL;
       break;

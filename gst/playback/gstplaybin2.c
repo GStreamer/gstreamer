@@ -274,6 +274,7 @@ struct _GstSourceGroup
   GPtrArray *video_channels;    /* links to selector pads */
   GPtrArray *audio_channels;    /* links to selector pads */
   GPtrArray *text_channels;     /* links to selector pads */
+  GPtrArray *subp_channels;     /* links to selector pads */
 
   /* uridecodebins for uri and subtitle uri */
   GstElement *uridecodebin;
@@ -934,8 +935,10 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->video_channels = g_ptr_array_new ();
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
+  group->subp_channels = g_ptr_array_new ();
   group->lock = g_mutex_new ();
-  /* init selectors */
+  /* init selectors. The selector is found by finding the first prefix that
+   * matches the media. */
   group->playbin = playbin;
   group->selector[0].media = "audio/x-raw-";
   group->selector[0].type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
@@ -946,12 +949,15 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->selector[2].media = "video/x-raw-";
   group->selector[2].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
   group->selector[2].channels = group->video_channels;
-  group->selector[3].media = "video/";
-  group->selector[3].type = GST_PLAY_SINK_TYPE_VIDEO;
-  group->selector[3].channels = group->video_channels;
-  group->selector[4].media = "text/";
-  group->selector[4].type = GST_PLAY_SINK_TYPE_TEXT;
-  group->selector[4].channels = group->text_channels;
+  group->selector[3].media = "video/x-dvd-subpicture";
+  group->selector[3].type = GST_PLAY_SINK_TYPE_SUBPIC;
+  group->selector[3].channels = group->subp_channels;
+  group->selector[4].media = "video/";
+  group->selector[4].type = GST_PLAY_SINK_TYPE_VIDEO;
+  group->selector[4].channels = group->video_channels;
+  group->selector[5].media = "text/";
+  group->selector[5].type = GST_PLAY_SINK_TYPE_TEXT;
+  group->selector[5].channels = group->text_channels;
 }
 
 static void
@@ -961,6 +967,7 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->video_channels, TRUE);
   g_ptr_array_free (group->audio_channels, TRUE);
   g_ptr_array_free (group->text_channels, TRUE);
+  g_ptr_array_free (group->subp_channels, TRUE);
   g_mutex_free (group->lock);
 }
 
@@ -1708,11 +1715,6 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       "pad %s:%s with caps %" GST_PTR_FORMAT " added in group %p",
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
-  for (i = 0; blacklisted_mimes[i]; i++) {
-    if (!strcmp (name, blacklisted_mimes[i]))
-      goto blacklisted_type;
-  }
-
   /* major type of the pad, this determines the selector to use */
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     if (g_str_has_prefix (name, group->selector[i].media)) {
@@ -1792,6 +1794,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       case GST_PLAY_SINK_TYPE_TEXT:
         signal = SIGNAL_TEXT_CHANGED;
         break;
+      case GST_PLAY_SINK_TYPE_SUBPIC:
       default:
         signal = -1;
     }
@@ -1805,12 +1808,6 @@ done:
   return;
 
   /* ERRORS */
-blacklisted_type:
-  {
-    GST_WARNING_OBJECT (playbin, "blacklisted type %s for pad %s:%s",
-        name, GST_DEBUG_PAD_NAME (pad));
-    goto done;
-  }
 unknown_type:
   {
     GST_ERROR_OBJECT (playbin, "unknown type %s for pad %s:%s",

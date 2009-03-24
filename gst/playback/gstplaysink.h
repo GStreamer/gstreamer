@@ -55,8 +55,11 @@ typedef enum {
   GST_PLAY_SINK_TYPE_VIDEO     = 2,
   GST_PLAY_SINK_TYPE_VIDEO_RAW = 3,
   GST_PLAY_SINK_TYPE_TEXT      = 4,
-  GST_PLAY_SINK_TYPE_LAST      = 5,
-  GST_PLAY_SINK_TYPE_FLUSHING  = 6
+  GST_PLAY_SINK_TYPE_SUBPIC    = 5,
+  GST_PLAY_SINK_TYPE_LAST      = 6,
+
+  /* this is a dummy pad */
+  GST_PLAY_SINK_TYPE_FLUSHING  = 7
 } GstPlaySinkType;
 
 typedef struct _GstPlaySink GstPlaySink;
