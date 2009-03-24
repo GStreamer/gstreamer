@@ -87,7 +87,7 @@ ANSI escape sequences.  Using this option causes \fIGStreamer\fP
 to print messages without color. Setting the \fBGST_DEBUG_NO_COLOR\fR
 environment variable will achieve the same thing.
 .TP 8
-.B  \-\-gst\-disable\-debug
+.B  \-\-gst\-debug\-disable
 Disables debugging.
 .TP 8
 .B  \-\-gst\-debug\-help
