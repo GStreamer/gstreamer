@@ -37,6 +37,7 @@
 #include "gsterror.h"
 #include "gstinfo.h"
 #include "gstparse.h"
+#include "gstvalue.h"
 #include "gst-i18n-lib.h"
 
 /**
@@ -85,11 +86,14 @@ gst_util_dump_mem (const guchar * mem, guint size)
  *
  * Converts the string to the type of the value and
  * sets the value with it.
+ *
+ * Note that this function is dangerous as it does not return any indication
+ * if the conversion worked or not.
  */
 void
 gst_util_set_value_from_string (GValue * value, const gchar * value_str)
 {
-  gint sscanf_ret;
+  gboolean res;
 
   g_return_if_fail (value != NULL);
   g_return_if_fail (value_str != NULL);
@@ -97,86 +101,13 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
   GST_CAT_DEBUG (GST_CAT_PARAMS, "parsing '%s' to type %s", value_str,
       g_type_name (G_VALUE_TYPE (value)));
 
-  switch (G_VALUE_TYPE (value)) {
-    case G_TYPE_STRING:
-      g_value_set_string (value, value_str);
-      break;
-    case G_TYPE_ENUM:
-    case G_TYPE_INT:{
-      gint i;
-
-      sscanf_ret = sscanf (value_str, "%d", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_int (value, i);
-      break;
-    }
-    case G_TYPE_UINT:{
-      guint i;
-
-      sscanf_ret = sscanf (value_str, "%u", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_uint (value, i);
-      break;
-    }
-    case G_TYPE_LONG:{
-      glong i;
-
-      sscanf_ret = sscanf (value_str, "%ld", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_long (value, i);
-      break;
-    }
-    case G_TYPE_ULONG:{
-      gulong i;
-
-      sscanf_ret = sscanf (value_str, "%lu", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_ulong (value, i);
-      break;
-    }
-    case G_TYPE_BOOLEAN:{
-      gboolean i = FALSE;
-
-      if (!g_ascii_strncasecmp ("true", value_str, 4))
-        i = TRUE;
-      g_value_set_boolean (value, i);
-      break;
-    }
-    case G_TYPE_CHAR:{
-      gchar i;
-
-      sscanf_ret = sscanf (value_str, "%c", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_char (value, i);
-      break;
-    }
-    case G_TYPE_UCHAR:{
-      guchar i;
-
-      sscanf_ret = sscanf (value_str, "%c", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_uchar (value, i);
-      break;
-    }
-    case G_TYPE_FLOAT:{
-      gfloat i;
-
-      sscanf_ret = sscanf (value_str, "%f", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_float (value, i);
-      break;
-    }
-    case G_TYPE_DOUBLE:{
-      gfloat i;
-
-      sscanf_ret = sscanf (value_str, "%g", &i);
-      g_return_if_fail (sscanf_ret == 1);
-      g_value_set_double (value, (gdouble) i);
-      break;
-    }
-    default:
-      break;
+  res = gst_value_deserialize (value, value_str);
+  if (!res && G_VALUE_TYPE (value) == G_TYPE_BOOLEAN) {
+    /* backwards compat, all booleans that fail to parse are false */
+    g_value_set_boolean (value, FALSE);
+    res = TRUE;
   }
+  g_return_if_fail (res);
 }
 
 /**
@@ -187,116 +118,40 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
  *
  * Convertes the string value to the type of the objects argument and
  * sets the argument with it.
+ *
+ * Note that this function silently returns if @object has no property named
+ * @name or when @value cannot be converted to the type of the property.
  */
 void
 gst_util_set_object_arg (GObject * object, const gchar * name,
     const gchar * value)
 {
-  gboolean sscanf_ret;
+  GParamSpec *pspec;
+  GType value_type;
+  GValue v = { 0, };
 
-  if (name && value) {
-    GParamSpec *paramspec;
+  g_return_if_fail (G_IS_OBJECT (object));
+  g_return_if_fail (name != NULL);
+  g_return_if_fail (value != NULL);
 
-    paramspec =
-        g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
+  pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (object), name);
+  if (!pspec)
+    return;
 
-    if (!paramspec) {
-      return;
-    }
+  value_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
 
-    GST_DEBUG ("paramspec->flags is %d, paramspec->value_type is %d",
-        paramspec->flags, (gint) paramspec->value_type);
+  GST_DEBUG ("pspec->flags is %d, pspec->value_type is %d",
+      pspec->flags, (gint) value_type);
 
-    if (paramspec->flags & G_PARAM_WRITABLE) {
-      switch (paramspec->value_type) {
-        case G_TYPE_STRING:
-          g_object_set (G_OBJECT (object), name, value, NULL);
-          break;
-        case G_TYPE_ENUM:
-        case G_TYPE_INT:{
-          gint i;
+  if (!(pspec->flags & G_PARAM_WRITABLE))
+    return;
 
-          sscanf_ret = sscanf (value, "%d", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_UINT:{
-          guint i;
+  g_value_init (&v, value_type);
+  if (!gst_value_deserialize (&v, value))
+    return;
 
-          sscanf_ret = sscanf (value, "%u", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_LONG:{
-          glong i;
-
-          sscanf_ret = sscanf (value, "%ld", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_ULONG:{
-          gulong i;
-
-          sscanf_ret = sscanf (value, "%lu", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_BOOLEAN:{
-          gboolean i = FALSE;
-
-          if (!g_ascii_strncasecmp ("true", value, 4))
-            i = TRUE;
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_CHAR:{
-          gchar i;
-
-          sscanf_ret = sscanf (value, "%c", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_UCHAR:{
-          guchar i;
-
-          sscanf_ret = sscanf (value, "%c", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_FLOAT:{
-          gfloat i;
-
-          sscanf_ret = sscanf (value, "%f", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, i, NULL);
-          break;
-        }
-        case G_TYPE_DOUBLE:{
-          gfloat i;
-
-          sscanf_ret = sscanf (value, "%g", &i);
-          g_return_if_fail (sscanf_ret == 1);
-          g_object_set (G_OBJECT (object), name, (gdouble) i, NULL);
-          break;
-        }
-        default:
-          if (G_IS_PARAM_SPEC_ENUM (paramspec)) {
-            gint i;
-
-            sscanf_ret = sscanf (value, "%d", &i);
-            g_return_if_fail (sscanf_ret == 1);
-            g_object_set (G_OBJECT (object), name, i, NULL);
-          }
-          break;
-      }
-    }
-  }
+  g_object_set_property (object, pspec->name, &v);
+  g_value_unset (&v);
 }
 
 /* work around error C2520: conversion from unsigned __int64 to double
