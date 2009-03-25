@@ -757,9 +757,10 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 
       if (new_start_ptm != src->cur_end_ts) {
         /* Hack because libdvdnav seems to lose a NAV packet during
-         * angle block changes */
+         * angle block changes, triggering a false discont */
         GstClockTimeDiff diff = GST_CLOCK_DIFF (src->cur_end_ts, new_start_ptm);
-        if (src->cur_end_ts == GST_CLOCK_TIME_NONE || diff > 2 * GST_SECOND) {
+        if (src->cur_end_ts == GST_CLOCK_TIME_NONE || diff > 2 * GST_SECOND ||
+            diff < 0) {
           discont = TRUE;
         }
       }
@@ -1209,6 +1210,17 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     } else if (g_str_equal (key, "period")) {
       dvdnav_next_pg_search (src->dvdnav);
       channel_hop = TRUE;
+    } else if (g_str_equal (key, "bracketleft")) {
+      gint32 cur, agls;
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
+          && cur > 0
+          && dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK)
+        g_print ("Switched to angle %d\n", cur - 1);
+    } else if (g_str_equal (key, "bracketright")) {
+      gint32 cur, agls;
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
+          && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK)
+        g_print ("Switched to angle %d\n", cur + 1);
     } else {
       g_print ("Unknown keypress: %s\n", key);
     }
