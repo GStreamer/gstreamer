@@ -1245,13 +1245,8 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     if (G_UNLIKELY (ret < 0)) {
       if (errno == EBUSY)
         goto stopped;
-#ifdef G_OS_WIN32
-      if (WSAGetLastError () != WSAEINTR)
-        goto select_error;
-#else
       if (errno != EAGAIN && errno != EINTR)
         goto select_error;
-#endif
     }
     amount =
         v4l2_read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
