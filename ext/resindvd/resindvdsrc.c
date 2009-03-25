@@ -763,7 +763,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
             diff < 0) {
           discont = TRUE;
           g_print ("Discont NAV packet start TS %" GST_TIME_FORMAT
-              " != end TS %" GST_TIME_FORMAT,
+              " != end TS %" GST_TIME_FORMAT "\n",
               GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (src->cur_end_ts));
         }
       }
