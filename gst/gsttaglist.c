@@ -208,6 +208,9 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_AUDIO_CODEC, GST_TAG_FLAG_ENCODED,
       G_TYPE_STRING,
       _("audio codec"), _("codec the audio data is stored in"), NULL);
+  gst_tag_register (GST_TAG_SUBTITLE_CODEC, GST_TAG_FLAG_ENCODED,
+      G_TYPE_STRING,
+      _("subtitle codec"), _("codec the subtitle data is stored in"), NULL);
   gst_tag_register (GST_TAG_BITRATE, GST_TAG_FLAG_ENCODED,
       G_TYPE_UINT, _("bitrate"), _("exact or average bitrate in bits/s"), NULL);
   gst_tag_register (GST_TAG_NOMINAL_BITRATE, GST_TAG_FLAG_ENCODED,

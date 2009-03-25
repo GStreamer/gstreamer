@@ -566,6 +566,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  */
 #define GST_TAG_AUDIO_CODEC            "audio-codec"
 /**
+ * GST_TAG_SUBTITLE_CODEC:
+ *
+ * codec/format the subtitle data is stored in (string)
+ *
+ * Since: 0.10.23
+ */
+#define GST_TAG_SUBTITLE_CODEC         "subtitle-codec"
+/**
  * GST_TAG_BITRATE:
  *
  * exact or average bitrate in bits/s (unsigned integer)
