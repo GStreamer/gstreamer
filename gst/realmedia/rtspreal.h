@@ -64,6 +64,7 @@ struct _GstRTSPReal {
 
   gchar checksum[34];
   gchar challenge2[64];
+  gchar etag[64];
   gboolean isreal;
 
   guint   n_streams;
