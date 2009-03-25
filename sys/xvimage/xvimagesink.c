@@ -1427,11 +1427,14 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         cr = (xvimagesink->colorkey >> 16);
         cg = (xvimagesink->colorkey >> 8) & 0xFF;
         cb = (xvimagesink->colorkey) & 0xFF;
-        if (bits == 16)
+        if (bits == 16) {       /* RGB 565 */
+          cr >>= 3;
+          cg >>= 2;
+          cb >>= 3;
           ckey = (cr << 11) | (cg << 5) | cb;
-        else if (bits == 24 || bits == 32)
+        } else if (bits == 24 || bits == 32) {  /* RGB 888 / ARGB 8888 */
           ckey = (cr << 16) | (cg << 8) | cb;
-        else
+        } else
           set_attr = FALSE;
 
         if (set_attr) {
@@ -3264,7 +3267,11 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->handle_expose = TRUE;
   xvimagesink->autopaint_colorkey = TRUE;
 
-  xvimagesink->colorkey = (1 << 16) | (2 << 8) | 3;
+  /* on 16bit displays this becomes r,g,b = 1,2,3
+   * on 24bit displays this becomes r,g,b = 8,8,16
+   * as a port atom value
+   */
+  xvimagesink->colorkey = (8 << 16) | (8 << 8) | 16;
   xvimagesink->draw_borders = TRUE;
 }
 
