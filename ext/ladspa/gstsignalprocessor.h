@@ -79,7 +79,9 @@ struct _GstSignalProcessor {
 
   GstActivateMode mode;
 
+  /* pending inputs before processing can take place */
   guint pending_in;
+  /* panding outputs to be filled */
   guint pending_out;
 
   gfloat *control_in;

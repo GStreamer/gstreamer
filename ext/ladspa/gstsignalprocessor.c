@@ -21,6 +21,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION:gstsignalprocessor
+ *
+ * This baseclass allows to write elements that need data on all pads before
+ * their processing function can run.
+ *
+ * In push mode (gst_signal_processor_chain) it operates as follows:
+ * 1. store each received buffer on the pad and decrement pending_in
+ * 2. when pending_in==0, process as much as we can and push outputs
+ *
+ * In pull mode (gst_signal_processor_getrange) is operates as follows:
+ * 1. if there is an output ready, deliver
+ * 2. otherwise pull from each sink-pad, process requested frames and deliver
+ *    the buffer
+ */
 
 #include <stdlib.h>
 
@@ -71,26 +86,33 @@ gst_signal_processor_pad_template_get_type (void)
   return type;
 }
 
-/* FIXME: better allow the caller to pass on the template, right now this can
- * only create mono pads */
+/*
+ * gst_signal_processor_class_add_pad_template:
+ * @klass: element class
+ * @name: pad name
+ * @direction: pad direction (src/sink)
+ * @index: index for the pad per direction (starting from 0)
+ *
+ */
 void
 gst_signal_processor_class_add_pad_template (GstSignalProcessorClass * klass,
     const gchar * name, GstPadDirection direction, guint index)
 {
   GstPadTemplate *new;
+  GstCaps *caps;
 
   g_return_if_fail (GST_IS_SIGNAL_PROCESSOR_CLASS (klass));
   g_return_if_fail (name != NULL);
   g_return_if_fail (direction == GST_PAD_SRC || direction == GST_PAD_SINK);
 
-  new = g_object_new (gst_signal_processor_pad_template_get_type (),
-      "name", name, NULL);
+  /* FIXME: would be nice to have the template as a parameter, right now this can
+   * only create mono pads */
+  caps = gst_caps_copy (gst_static_caps_get (&template_caps));
 
-  GST_PAD_TEMPLATE_NAME_TEMPLATE (new) = g_strdup (name);
-  GST_PAD_TEMPLATE_DIRECTION (new) = direction;
-  GST_PAD_TEMPLATE_PRESENCE (new) = GST_PAD_ALWAYS;
-  GST_PAD_TEMPLATE_CAPS (new) = gst_caps_copy (gst_static_caps_get
-      (&template_caps));
+  new = g_object_new (gst_signal_processor_pad_template_get_type (),
+      "name", name, "name-template", name,
+      "direction", direction, "presence", GST_PAD_ALWAYS, "caps", caps, NULL);
+
   GST_SIGNAL_PROCESSOR_PAD_TEMPLATE (new)->index = index;
 
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass), new);
@@ -110,11 +132,12 @@ struct _GstSignalProcessorPad
 
   GstBuffer *pen;
 
+  /* index for the pad per direction (starting from 0) */
   guint index;
 
   /* these are only used for sink pads */
-  guint samples_avail;
-  gfloat *data;
+  guint samples_avail;          /* available mono sample frames */
+  gfloat *data;                 /* data pointer to read from / write to */
 };
 
 static GType
@@ -140,10 +163,6 @@ GST_BOILERPLATE (GstSignalProcessor, gst_signal_processor, GstElement,
 
 
 static void gst_signal_processor_finalize (GObject * object);
-static void gst_signal_processor_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_signal_processor_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 static gboolean gst_signal_processor_src_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_signal_processor_sink_activate_push (GstPad * pad,
@@ -176,10 +195,6 @@ gst_signal_processor_class_init (GstSignalProcessorClass * klass)
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_signal_processor_finalize);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_signal_processor_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_signal_processor_get_property);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_signal_processor_change_state);
@@ -345,7 +360,7 @@ gst_signal_processor_stop (GstSignalProcessor * self)
     klass->stop (self);
 
   for (sinks = elem->sinkpads; sinks; sinks = sinks->next)
-    /* force set_caps when going to RUNNING, see note in set_caps */
+    /* force set_caps when going to RUNNING, see note in _setcaps () */
     gst_pad_set_caps (GST_PAD (sinks->data), NULL);
 
   /* should also flush our buffers perhaps? */
@@ -449,7 +464,7 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
       gst_signal_processor_cleanup (self);
 
     if (!gst_signal_processor_setup (self, sample_rate))
-      goto start_failed;
+      goto start_or_setup_failed;
 
     self->sample_rate = sample_rate;
     gst_caps_replace (&self->caps, caps);
@@ -464,16 +479,16 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
      when we leave that the processor is RUNNING. */
   if (!GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self)
       && !gst_signal_processor_setup (self, self->sample_rate))
-    goto start_failed;
+    goto start_or_setup_failed;
   if (!GST_SIGNAL_PROCESSOR_IS_RUNNING (self)
       && !gst_signal_processor_start (self))
-    goto start_failed;
+    goto start_or_setup_failed;
 
   gst_object_unref (self);
 
   return TRUE;
 
-start_failed:
+start_or_setup_failed:
   {
     gst_object_unref (self);
     return FALSE;
@@ -501,8 +516,8 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
   bclass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
-  /* FIXME, this probably isn't the correct interface: what about return values, what
-   * about overriding event_default
+  /* FIXME, this probably isn't the correct interface: what about return values,
+   * what about overriding event_default
    * Sync with GstBaseTransform::gst_base_transform_sink_event */
   if (bclass->event)
     bclass->event (self, event);
@@ -544,6 +559,8 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
     samples_avail = MIN (samples_avail, sinkpad->samples_avail);
     self->audio_in[sinkpad->index] = sinkpad->data;
   }
+
+  /* FIXME: return if samples_avail==0 ? */
 
   /* now assign output buffers. we can avoid allocation by reusing input
      buffers, but only if process() can work in place, and if the input buffer
@@ -637,11 +654,13 @@ gst_signal_processor_process (GstSignalProcessor * self, guint nframes)
   GstElement *elem;
   GstSignalProcessorClass *klass;
 
+  /* check if we have buffers enqueued */
   g_return_if_fail (self->pending_in == 0);
   g_return_if_fail (self->pending_out == 0);
 
   elem = GST_ELEMENT (self);
 
+  /* check how much input is available and prepare output buffers */
   nframes = gst_signal_processor_prepare (self, nframes);
   if (G_UNLIKELY (nframes == 0))
     goto flow_error;
@@ -704,6 +723,7 @@ gst_signal_processor_flush (GstSignalProcessor * self)
 
   GST_INFO_OBJECT (self, "flush()");
 
+  /* release enqueued buffers */
   for (pads = GST_ELEMENT (self)->pads; pads; pads = pads->next) {
     GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pads->data;
 
@@ -715,6 +735,7 @@ gst_signal_processor_flush (GstSignalProcessor * self)
     }
   }
 
+  /* no outputs prepared and inputs for each pad needed */
   self->pending_out = 0;
   self->pending_in = klass->num_audio_in;
 }
@@ -861,32 +882,6 @@ gst_signal_processor_chain (GstPad * pad, GstBuffer * buffer)
   gst_object_unref (self);
 
   return self->flow_state;
-}
-
-static void
-gst_signal_processor_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  /* GstSignalProcessor *self = GST_SIGNAL_PROCESSOR (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_signal_processor_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  /* GstSignalProcessor *self = GST_SIGNAL_PROCESSOR (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static gboolean
