@@ -33,6 +33,7 @@ Windows.  It is released under the GNU Library General Public License
 (GNU LGPL).
     </para>
 
+    <xi:include href="building.xml" />
     <xi:include href="running.xml" />
   </chapter>
 

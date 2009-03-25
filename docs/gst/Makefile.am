@@ -78,7 +78,7 @@ IGNORE_HFILES= \
 HTML_IMAGES =
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
-content_files = running.xml
+content_files = building.xml running.xml
 
 # Other files to distribute.
 extra_files =
