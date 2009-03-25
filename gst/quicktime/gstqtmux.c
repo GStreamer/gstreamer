@@ -293,6 +293,13 @@ gst_qt_mux_reset (GstQTMux * qtmux, gboolean alloc)
 
   if (alloc) {
     qtmux->moov = atom_moov_new (qtmux->context);
+    /* ensure all is as nice and fresh as request_new_pad would provide it */
+    for (walk = qtmux->collect->data; walk; walk = g_slist_next (walk)) {
+      GstQTPad *qtpad = (GstQTPad *) walk->data;
+
+      qtpad->trak = atom_trak_new (qtmux->context);
+      atom_moov_add_trak (qtmux->moov, qtpad->trak);
+    }
   }
 }
 
