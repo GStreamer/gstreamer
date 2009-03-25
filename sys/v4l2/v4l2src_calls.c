@@ -1106,35 +1106,6 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   /* this can change at every frame, esp. with jpeg */
   GST_BUFFER_SIZE (pool_buffer) = buffer.bytesused;
 
-  GST_BUFFER_OFFSET (pool_buffer) = v4l2src->offset++;
-  GST_BUFFER_OFFSET_END (pool_buffer) = v4l2src->offset;
-
-  /* timestamps, LOCK to get clock and base time. */
-  {
-    GstClock *clock;
-    GstClockTime timestamp;
-
-    GST_OBJECT_LOCK (v4l2src);
-    if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
-      /* we have a clock, get base time and ref clock */
-      timestamp = GST_ELEMENT (v4l2src)->base_time;
-      gst_object_ref (clock);
-    } else {
-      /* no clock, can't set timestamps */
-      timestamp = GST_CLOCK_TIME_NONE;
-    }
-    GST_OBJECT_UNLOCK (v4l2src);
-
-    if (clock) {
-      /* the time now is the time of the clock minus the base time */
-      timestamp = gst_clock_get_time (clock) - timestamp;
-      gst_object_unref (clock);
-    }
-
-    /* FIXME: use the timestamp from the buffer itself! */
-    GST_BUFFER_TIMESTAMP (pool_buffer) = timestamp;
-  }
-
   if (G_UNLIKELY (need_copy)) {
     *buf = gst_buffer_copy (pool_buffer);
     GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
@@ -1143,6 +1114,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   } else {
     *buf = pool_buffer;
   }
+  /* we set the buffer metadata in gst_v4l2src_create() */
 
   GST_LOG_OBJECT (v4l2src, "grabbed frame %d (ix=%d), flags %08x, pool-ct=%d",
       buffer.sequence, buffer.index, buffer.flags,

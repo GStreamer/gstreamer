@@ -1264,45 +1264,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     }
   } while (TRUE);
 
-  GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
-  GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
-  /* timestamps, LOCK to get clock and base time. */
-  {
-    GstClock *clock;
-
-    GstClockTime timestamp;
-
-    GST_OBJECT_LOCK (v4l2src);
-    if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
-      /* we have a clock, get base time and ref clock */
-      timestamp = GST_ELEMENT (v4l2src)->base_time;
-      gst_object_ref (clock);
-    } else {
-      /* no clock, can't set timestamps */
-      timestamp = GST_CLOCK_TIME_NONE;
-    }
-    GST_OBJECT_UNLOCK (v4l2src);
-
-    if (clock) {
-      GstClockTime latency;
-
-      /* the time now is the time of the clock minus the base time */
-      timestamp = gst_clock_get_time (clock) - timestamp;
-      gst_object_unref (clock);
-
-      latency =
-          gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d,
-          v4l2src->fps_n);
-
-      if (timestamp > latency)
-        timestamp -= latency;
-      else
-        timestamp = 0;
-    }
-
-    /* FIXME: use the timestamp from the buffer itself! */
-    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
-  }
+  /* we set the buffer metadata in gst_v4l2src_create() */
 
   return GST_FLOW_OK;
 
@@ -1387,6 +1349,46 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
     ret = gst_v4l2src_get_mmap (v4l2src, buf);
   } else {
     ret = gst_v4l2src_get_read (v4l2src, buf);
+  }
+  /* set buffer metadata */
+  if (ret == GST_FLOW_OK && *buf) {
+    GstClock *clock;
+    GstClockTime timestamp;
+
+    GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
+    GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
+
+    /* timestamps, LOCK to get clock and base time. */
+    GST_OBJECT_LOCK (v4l2src);
+    if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
+      /* we have a clock, get base time and ref clock */
+      timestamp = GST_ELEMENT (v4l2src)->base_time;
+      gst_object_ref (clock);
+    } else {
+      /* no clock, can't set timestamps */
+      timestamp = GST_CLOCK_TIME_NONE;
+    }
+    GST_OBJECT_UNLOCK (v4l2src);
+
+    if (clock) {
+      GstClockTime latency;
+
+      /* the time now is the time of the clock minus the base time */
+      timestamp = gst_clock_get_time (clock) - timestamp;
+      gst_object_unref (clock);
+
+      latency =
+          gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d,
+          v4l2src->fps_n);
+
+      if (timestamp > latency)
+        timestamp -= latency;
+      else
+        timestamp = 0;
+    }
+
+    /* FIXME: use the timestamp from the buffer itself! */
+    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
   }
   return ret;
 }
