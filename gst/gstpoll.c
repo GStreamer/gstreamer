@@ -505,7 +505,9 @@ not_controllable:
 /**
  * gst_poll_new_timer:
  *
- * Create a new poll object that can be used for scheduling cancelable timeouts.
+ * Create a new poll object that can be used for scheduling cancellable
+ * timeouts.
+ *
  * A timeout is performed with gst_poll_wait(). Multiple timeouts can be
  * performed from different threads. 
  *
@@ -1055,8 +1057,12 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
  * Wait for activity on the file descriptors in @set. This function waits up to
  * the specified @timeout.  A timeout of #GST_CLOCK_TIME_NONE waits forever.
  *
- * When this function is called from multiple threads, -1 will be returned with
- * errno set to EPERM.
+ * For GstPoll objects created with gst_poll_new(), this function can only be
+ * called from a single thread at a time threads. If called from multiple
+ * threads, -1 will be returned with errno set to EPERM.
+ *
+ * This is not true for timer GstPoll objects created with gst_poll_new_timer(),
+ * where it is allowed to have multiple threads waiting simultaneously.
  *
  * Returns: The number of #GstPollFD in @set that have activity or 0 when no
  * activity was detected after @timeout. If an error occurs, -1 is returned
@@ -1424,7 +1430,7 @@ gst_poll_set_flushing (GstPoll * set, gboolean flushing)
  * @set: a #GstPoll.
  *
  * Write a byte to the control socket of the controllable @set.
- * This function is mostly usefull for timer #GstPoll objects created with
+ * This function is mostly useful for timer #GstPoll objects created with
  * gst_poll_new_timer(). 
  *
  * It will make any current and future gst_poll_wait() function return with
@@ -1465,7 +1471,7 @@ gst_poll_write_control (GstPoll * set)
  * @set: a #GstPoll.
  *
  * Read a byte from the control socket of the controllable @set.
- * This function is mostly usefull for timer #GstPoll objects created with
+ * This function is mostly useful for timer #GstPoll objects created with
  * gst_poll_new_timer(). 
  *
  * Returns: %TRUE on success. %FALSE when @set is not controllable or when there
