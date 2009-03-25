@@ -87,7 +87,7 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-mpeg")
+    GST_STATIC_CAPS ("video/x-mpeg, mpegversion = (int) [ 1, 2 ]")
     );
 
 GST_BOILERPLATE (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder, GstVdpauDecoder,
