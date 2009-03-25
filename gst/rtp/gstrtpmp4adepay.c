@@ -316,6 +316,8 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           ("Packet invalid"), ("Not all payload consumed: "
               "possible wrongly encoded packet."));
     }
+
+    gst_buffer_unref (outbuf);
   }
   return NULL;
 
@@ -324,6 +326,7 @@ wrong_size:
   {
     GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,
         ("Packet did not validate"), ("wrong packet size"));
+    gst_buffer_unref (outbuf);
     return NULL;
   }
 }

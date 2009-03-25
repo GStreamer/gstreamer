@@ -447,6 +447,9 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
     fragmented = TRUE;
   }
+
+  gst_buffer_unref (buffer);
+
   return ret;
 }
 
