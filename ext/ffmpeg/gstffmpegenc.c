@@ -102,6 +102,7 @@ static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad,
 static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event);
+static gboolean gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event);
 
 static void gst_ffmpegenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -232,6 +233,7 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
     /* so we know when to flush the buffers on EOS */
     gst_pad_set_event_function (ffmpegenc->sinkpad, gst_ffmpegenc_event_video);
+    gst_pad_set_event_function (ffmpegenc->srcpad, gst_ffmpegenc_event_src);
 
     ffmpegenc->bitrate = DEFAULT_VIDEO_BITRATE;
     ffmpegenc->me_method = ME_EPZS;
@@ -687,6 +689,10 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 
   gst_buffer_unref (inbuf);
 
+  /* Reset frame type */
+  if (ffmpegenc->picture->pict_type)
+    ffmpegenc->picture->pict_type = 0;
+
   return gst_pad_push (ffmpegenc->srcpad, outbuf);
 }
 
@@ -858,11 +864,42 @@ gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event)
       break;
       /* no flushing if flush received,
        * buffers in encoder are considered (in the) past */
+
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      const GstStructure *s;
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        ffmpegenc->picture->pict_type = FF_I_TYPE;
+      }
+      break;
+    }
     default:
       break;
   }
 
   return gst_pad_push_event (ffmpegenc->srcpad, event);
+}
+
+static gboolean
+gst_ffmpegenc_event_src (GstPad * pad, GstEvent * event)
+{
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:{
+      const GstStructure *s;
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        ffmpegenc->picture->pict_type = FF_I_TYPE;
+      }
+      break;
+    }
+
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (ffmpegenc->sinkpad, event);
 }
 
 static void
