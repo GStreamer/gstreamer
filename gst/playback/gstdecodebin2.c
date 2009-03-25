@@ -659,10 +659,42 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 }
 
 static void
+gst_decode_bin_remove_groups (GstDecodeBin * dbin)
+{
+  GList *tmp;
+
+  GST_DEBUG_OBJECT (dbin, "cleaning up");
+
+  if (dbin->activegroup) {
+    GST_DEBUG_OBJECT (dbin, "free active group %p", dbin->activegroup);
+    gst_decode_group_free (dbin->activegroup);
+    dbin->activegroup = NULL;
+  }
+
+  /* remove groups */
+  for (tmp = dbin->groups; tmp; tmp = g_list_next (tmp)) {
+    GstDecodeGroup *group = (GstDecodeGroup *) tmp->data;
+
+    GST_DEBUG_OBJECT (dbin, "free group %p", group);
+    gst_decode_group_free (group);
+  }
+  g_list_free (dbin->groups);
+  dbin->groups = NULL;
+
+  for (tmp = dbin->oldgroups; tmp; tmp = g_list_next (tmp)) {
+    GstDecodeGroup *group = (GstDecodeGroup *) tmp->data;
+
+    GST_DEBUG_OBJECT (dbin, "free old group %p", group);
+    gst_decode_group_free (group);
+  }
+  g_list_free (dbin->oldgroups);
+  dbin->oldgroups = NULL;
+}
+
+static void
 gst_decode_bin_dispose (GObject * object)
 {
   GstDecodeBin *decode_bin;
-  GList *tmp;
 
   decode_bin = GST_DECODE_BIN (object);
 
@@ -670,27 +702,7 @@ gst_decode_bin_dispose (GObject * object)
     g_value_array_free (decode_bin->factories);
   decode_bin->factories = NULL;
 
-  if (decode_bin->activegroup) {
-    gst_decode_group_free (decode_bin->activegroup);
-    decode_bin->activegroup = NULL;
-  }
-
-  /* remove groups */
-  for (tmp = decode_bin->groups; tmp; tmp = g_list_next (tmp)) {
-    GstDecodeGroup *group = (GstDecodeGroup *) tmp->data;
-
-    gst_decode_group_free (group);
-  }
-  g_list_free (decode_bin->groups);
-  decode_bin->groups = NULL;
-
-  for (tmp = decode_bin->oldgroups; tmp; tmp = g_list_next (tmp)) {
-    GstDecodeGroup *group = (GstDecodeGroup *) tmp->data;
-
-    gst_decode_group_free (group);
-  }
-  g_list_free (decode_bin->oldgroups);
-  decode_bin->oldgroups = NULL;
+  gst_decode_bin_remove_groups (decode_bin);
 
   if (decode_bin->caps)
     gst_caps_unref (decode_bin->caps);
@@ -2299,19 +2311,22 @@ beach:
 static void
 gst_decode_group_free (GstDecodeGroup * group)
 {
+  GstDecodeBin *dbin;
   GList *tmp;
 
-  GST_LOG ("group %p", group);
+  dbin = group->dbin;
+
+  GST_LOG_OBJECT (dbin, "group %p", group);
 
   GROUP_MUTEX_LOCK (group);
 
   /* remove exposed pads */
-  if (group == group->dbin->activegroup) {
+  if (group == dbin->activegroup) {
     for (tmp = group->endpads; tmp; tmp = g_list_next (tmp)) {
       GstDecodePad *dpad = (GstDecodePad *) tmp->data;
 
       if (dpad->added)
-        gst_element_remove_pad (GST_ELEMENT (group->dbin), GST_PAD (dpad));
+        gst_element_remove_pad (GST_ELEMENT (dbin), GST_PAD (dpad));
       dpad->added = FALSE;
     }
   }
@@ -2591,6 +2606,7 @@ unblock_pads (GstDecodeBin * dbin)
   }
 
   /* clear, no more blocked pads */
+  g_list_free (dbin->blocked_pads);
   dbin->blocked_pads = NULL;
 }
 
@@ -2630,10 +2646,18 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
     bret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
     if (G_UNLIKELY (bret == GST_STATE_CHANGE_FAILURE))
       goto activate_failed;
+    else if (G_UNLIKELY (bret == GST_STATE_CHANGE_NO_PREROLL)) {
+      do_async_done (dbin);
+      ret = bret;
+    }
   }
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       do_async_done (dbin);
+      gst_decode_bin_remove_groups (dbin);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_decode_bin_remove_groups (dbin);
       break;
     default:
       break;
