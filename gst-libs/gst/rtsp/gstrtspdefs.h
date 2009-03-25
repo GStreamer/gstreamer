@@ -283,8 +283,11 @@ typedef enum {
   GST_RTSP_HDR_PLAYER_START_TIME,   /* PlayerStarttime */
 
   /* Since 0.10.16 */
-  GST_RTSP_HDR_LOCATION             /* Location */
+  GST_RTSP_HDR_LOCATION,            /* Location */
 
+  /* Since 0.10.23 */
+  GST_RTSP_HDR_ETAG,                /* ETag */
+  GST_RTSP_HDR_IF_MATCH             /* If-Match */
 } GstRTSPHeaderField;
 
 typedef enum {

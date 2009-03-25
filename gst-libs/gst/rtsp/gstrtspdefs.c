@@ -161,6 +161,8 @@ static const gchar *rtsp_headers[] = {
   "PlayerStarttime",            /* PlayerStarttime */
 
   "Location",                   /* Location */
+  "ETag",                       /* ETag */
+  "If-Match",                   /* If-Match */
 
   NULL
 };
