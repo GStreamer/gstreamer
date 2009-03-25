@@ -2,6 +2,7 @@
 
 static VdpVideoSurfaceQueryCapabilities *vdp_video_surface_query_capabilities;
 static VdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities *vdp_video_surface_query_ycbcr_capabilities;
+static VdpVideoSurfaceGetBitsYCbCr *vdp_video_surface_get_bits_ycbcr;
 
 static VdpGetProcAddress                 *vdp_get_proc_address;
 static VdpDeviceDestroy                  *vdp_device_destroy;

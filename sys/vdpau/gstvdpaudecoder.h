@@ -54,6 +54,7 @@ struct _GstVdpauDecoder {
 
   GstCaps *src_caps;
 
+  gint width, height;
   guint32 format;
 
   gboolean silent;
@@ -65,7 +66,7 @@ struct _GstVdpauDecoderClass {
 
 GType gst_vdpaudecoder_get_type (void);
 
-gboolean gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec, VdpVideoSurface * surface);
+gboolean gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec, VdpVideoSurface surface);
 
 G_END_DECLS
 

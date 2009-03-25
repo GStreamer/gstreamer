@@ -69,12 +69,36 @@ static void gst_vdpaudecoder_get_property (GObject * object, guint prop_id,
 
 gboolean
 gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
-    VdpVideoSurface * surface)
+    VdpVideoSurface surface)
 {
   switch (dec->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-      /* YV12 specific code */
+    {
+      gint size;
+      GstFlowReturn result;
+      GstBuffer *buffer;
+      VdpStatus status;
+      guint8 *data[3];
+
+      size = dec->height * dec->width + dec->height * dec->width / 2;
+      result =
+          gst_pad_alloc_buffer_and_set_caps (dec->src, GST_BUFFER_OFFSET_NONE,
+          size, GST_PAD_CAPS (dec->src), &buffer);
+      if (G_UNLIKELY (result != GST_FLOW_OK))
+        return FALSE;
+
+      data[0] = GST_BUFFER_DATA (buffer);
+      data[1] = data[0] + dec->height * dec->width;
+      data[2] = data[1] + dec->height * dec->width / 4;
+
+      status =
+          vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_YV12,
+          (void *) data, NULL);
+      if (G_UNLIKELY (status != VDP_STATUS_OK))
+        return FALSE;
+
       break;
+    }
     default:
       break;
   }
@@ -223,6 +247,9 @@ gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
       (void **) &vdp_video_surface_query_ycbcr_capabilities);
   vdp_get_proc_address (dec->device,
       VDP_FUNC_ID_DEVICE_DESTROY, (void **) &vdp_device_destroy);
+  vdp_get_proc_address (dec->device,
+      VDP_FUNC_ID_VIDEO_SURFACE_GET_BITS_Y_CB_CR,
+      (void **) &vdp_video_surface_get_bits_ycbcr);
 
   caps = gst_vdpaudecoder_get_vdpau_support (dec);
   if (!caps) {
@@ -293,6 +320,8 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
   if (!res)
     return FALSE;
 
+  dec->width = width;
+  dec->height = height;
   dec->format = fourcc_format;
 
   return TRUE;
@@ -362,6 +391,10 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
   dec->device = 0;
   dec->silent = FALSE;
   dec->src_caps = NULL;
+
+  dec->height = 0;
+  dec->width = 0;
+  dec->format = 0;
 
   dec->src = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_getcaps_function (dec->src, gst_vdpaudecoder_src_getcaps);
