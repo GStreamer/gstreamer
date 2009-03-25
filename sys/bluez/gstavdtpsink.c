@@ -275,7 +275,7 @@ gst_avdtp_sink_init_sbc_pkt_conf (GstAvdtpSink * sink,
   gint rate, subbands, blocks;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
 
-  cfg = (void *) gst_avdtp_find_caps (sink, BT_A2DP_CODEC_SBC);
+  cfg = (void *) gst_avdtp_find_caps (sink, BT_A2DP_SBC_SINK);
   name = gst_structure_get_name (structure);
 
   if (!(IS_SBC (name))) {
@@ -734,8 +734,8 @@ gst_avdtp_sink_update_caps (GstAvdtpSink * self)
 
   GST_LOG_OBJECT (self, "updating device caps");
 
-  sbc = (void *) gst_avdtp_find_caps (self, BT_A2DP_CODEC_SBC);
-  mpeg = (void *) gst_avdtp_find_caps (self, BT_A2DP_CODEC_MPEG12);
+  sbc = (void *) gst_avdtp_find_caps (self, BT_A2DP_SBC_SINK);
+  mpeg = (void *) gst_avdtp_find_caps (self, BT_A2DP_MPEG12_SINK);
 
   sbc_structure = gst_avdtp_sink_parse_sbc_caps (self, sbc);
   mpeg_structure = gst_avdtp_sink_parse_mpeg_caps (self, mpeg);
@@ -1042,9 +1042,9 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_has_name (structure, "audio/x-sbc"))
-    codec = (void *) gst_avdtp_find_caps (self, BT_A2DP_CODEC_SBC);
+    codec = (void *) gst_avdtp_find_caps (self, BT_A2DP_SBC_SINK);
   else if (gst_structure_has_name (structure, "audio/mpeg"))
-    codec = (void *) gst_avdtp_find_caps (self, BT_A2DP_CODEC_MPEG12);
+    codec = (void *) gst_avdtp_find_caps (self, BT_A2DP_MPEG12_SINK);
 
   if (codec == NULL) {
     GST_ERROR_OBJECT (self, "Couldn't parse caps " "to packet configuration");
@@ -1078,7 +1078,7 @@ gst_avdtp_sink_configure (GstAvdtpSink * self, GstCaps * caps)
   req->h.name = BT_SET_CONFIGURATION;
   req->h.length = sizeof (*req);
 
-  if (codec->type == BT_A2DP_CODEC_SBC)
+  if (codec->type == BT_A2DP_SBC_SINK)
     ret = gst_avdtp_sink_init_sbc_pkt_conf (self, caps, (void *) &req->codec);
   else
     ret = gst_avdtp_sink_init_mp3_pkt_conf (self, caps, (void *) &req->codec);
