@@ -37,11 +37,13 @@ GST_ELEMENT_DETAILS ("RTP MPEG4 audio payloader",
     "Payload MPEG4 audio as RTP packets (RFC 3016)",
     "Wim Taymans <wim.taymans@gmail.com>");
 
+/* FIXME: add framed=(boolean)true once our encoders have this field set
+ * on their output caps */
 static GstStaticPadTemplate gst_rtp_mp4a_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg," "mpegversion=(int) 4")
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion=(int)4")
     );
 
 static GstStaticPadTemplate gst_rtp_mp4a_pay_src_template =
@@ -280,7 +282,7 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstRtpMP4APay *rtpmp4apay;
   GstStructure *structure;
   const GValue *codec_data;
-  gboolean res;
+  gboolean res, framed = TRUE;
 
   rtpmp4apay = GST_RTP_MP4A_PAY (payload);
 
@@ -337,6 +339,10 @@ gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
         gst_buffer_unref (rtpmp4apay->config);
       rtpmp4apay->config = cbuffer;
     }
+  }
+
+  if (gst_structure_get_boolean (structure, "framed", &framed) && !framed) {
+    GST_WARNING_OBJECT (payload, "Need framed AAC data as input!");
   }
 
   gst_basertppayload_set_options (payload, "audio", TRUE, "MP4A-LATM",
