@@ -37,6 +37,7 @@ plugin_init (GstPlugin * plugin)
 #ifdef ENABLE_NLS
   setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
   if (!gst_element_register (plugin, "avidemux", GST_RANK_PRIMARY,
