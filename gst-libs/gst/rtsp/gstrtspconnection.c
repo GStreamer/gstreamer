@@ -283,6 +283,7 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->fd1.fd = -1;
   newconn->timer = g_timer_new ();
   newconn->timeout = 60;
+  newconn->cseq = 1;
 
   newconn->auth_method = GST_RTSP_AUTH_NONE;
   newconn->username = NULL;
