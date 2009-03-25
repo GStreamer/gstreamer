@@ -94,6 +94,8 @@
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/rtp/gstrtppayloads.h>
 
+#include "gst/gst-i18n-plugin.h"
+
 #include "gstrtspsrc.h"
 
 #ifdef G_OS_WIN32
@@ -3904,6 +3906,23 @@ failed:
   }
 }
 
+static gboolean
+gst_rtspsrc_stream_is_real_media (GstRTSPStream * stream)
+{
+  gboolean res = FALSE;
+
+  if (stream->caps) {
+    GstStructure *s;
+    const gchar *enc = NULL;
+
+    s = gst_caps_get_structure (stream->caps, 0);
+    if ((enc = gst_structure_get_string (s, "encoding-name"))) {
+      res = (strstr (enc, "-REAL") != NULL);
+    }
+  }
+  return res;
+}
+
 /* Perform the SETUP request for all the streams. 
  *
  * We ask the server for a specific transport, which initially includes all the
@@ -3926,6 +3945,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   GstRTSPStream *stream = NULL;
   GstRTSPLowerTrans protocols;
   GstRTSPStatusCode code;
+  gboolean unsupported_real = FALSE;
   gint rtpport, rtcpport;
   GstRTSPUrl *url;
 
@@ -4035,7 +4055,11 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
           retry++;
           goto retry;
         }
-        /* give up on this stream and move to the next stream */
+        /* give up on this stream and move to the next stream,
+         * but not without doing some postprocessing so we can
+         * post a nicer/more useful error message later */
+        if (!unsupported_real)
+          unsupported_real = gst_rtspsrc_stream_is_real_media (stream);
         continue;
       default:
         /* cleanup of leftover transport and move to the next stream */
@@ -4172,8 +4196,17 @@ no_transport:
   }
 nothing_to_activate:
   {
-    GST_ELEMENT_ERROR (src, STREAM, FORMAT, (NULL),
-        ("No supported stream was found."));
+    /* none of the available error codes is really right .. */
+    if (unsupported_real) {
+      GST_ELEMENT_ERROR (src, STREAM, CODEC_NOT_FOUND,
+          (_("No supported stream was found. You might need to install a "
+                  "GStreamer RTSP extension plugin for Real media streams.")),
+          (NULL));
+    } else {
+      GST_ELEMENT_ERROR (src, STREAM, CODEC_NOT_FOUND,
+          (_("No supported stream was found. You might be missing the right "
+                  "GStreamer RTSP extension plugin.")), (NULL));
+    }
     return FALSE;
   }
 cleanup_error:
