@@ -762,6 +762,9 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
         if (src->cur_end_ts == GST_CLOCK_TIME_NONE || diff > 2 * GST_SECOND ||
             diff < 0) {
           discont = TRUE;
+          g_print ("Discont NAV packet start TS %" GST_TIME_FORMAT
+              " != end TS %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (src->cur_end_ts));
         }
       }
 
@@ -903,12 +906,12 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
 
       rsn_dvdsrc_prepare_spu_stream_event (src, phys_track, forced_only);
 
-      GST_DEBUG_OBJECT (src, "  physical_wide: %d", event->physical_wide);
-      GST_DEBUG_OBJECT (src, "  physical_letterbox: %d",
+      GST_DEBUG_OBJECT (src, "  physical_wide: %x", event->physical_wide);
+      GST_DEBUG_OBJECT (src, "  physical_letterbox: %x",
           event->physical_letterbox);
-      GST_DEBUG_OBJECT (src, "  physical_pan_scan: %d",
+      GST_DEBUG_OBJECT (src, "  physical_pan_scan: %x",
           event->physical_pan_scan);
-      GST_DEBUG_OBJECT (src, "  logical: %d", event->logical);
+      GST_DEBUG_OBJECT (src, "  logical: %x", event->logical);
       break;
     }
     case DVDNAV_HIGHLIGHT:{
@@ -1297,6 +1300,7 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
       /* Send ourselves a seek event to wake everything up and flush */
       seek = gst_event_new_seek (1.0, rsndvd_format, GST_SEEK_FLAG_FLUSH,
           GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_NONE, -1);
+      src->flushing_seek = TRUE;
       gst_element_send_event (GST_ELEMENT (src), seek);
 
       g_mutex_lock (src->dvd_lock);
@@ -1682,6 +1686,9 @@ rsn_dvdsrc_activate_nav_block (resinDvdSrc * src, GstBuffer * nav_buf)
 static void
 rsn_dvdsrc_clear_nav_blocks (resinDvdSrc * src)
 {
+  GST_DEBUG_OBJECT (src, "Clearing %d pending navpacks",
+      g_slist_length (src->pending_nav_blocks));
+
   while (src->pending_nav_blocks) {
     RsnDvdPendingNav *cur = (RsnDvdPendingNav *) src->pending_nav_blocks->data;
 
@@ -2206,7 +2213,8 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
       g_mutex_unlock (src->dvd_lock);
     }
 
-    GST_LOG_OBJECT (src, "Entering prepare_next_block after seek");
+    GST_LOG_OBJECT (src, "Entering prepare_next_block after seek."
+        " Flushing = %d", src->flushing_seek);
     if (rsn_dvdsrc_prepare_next_block (src, FALSE) != GST_FLOW_OK)
       goto fail;
     GST_LOG_OBJECT (src, "prepare_next_block after seek done");
