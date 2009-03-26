@@ -68,13 +68,13 @@ mxf_dms1_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       goto error;
     memcpy (&MXF_METADATA_BASE (self)->instance_uid, tag_data, 16);
     GST_DEBUG ("  instance uid = %s",
-        mxf_ul_to_string (&MXF_METADATA_BASE (self)->instance_uid, str));
+        mxf_uuid_to_string (&MXF_METADATA_BASE (self)->instance_uid, str));
   } else if (memcmp (tag_ul, &generation_uid_ul, 16) == 0) {
     if (tag_size != 16)
       goto error;
     memcpy (&MXF_METADATA_BASE (self)->generation_uid, tag_data, 16);
     GST_DEBUG ("  generation uid = %s",
-        mxf_ul_to_string (&MXF_METADATA_BASE (self)->generation_uid, str));
+        mxf_uuid_to_string (&MXF_METADATA_BASE (self)->generation_uid, str));
   } else {
     ret =
         MXF_METADATA_BASE_CLASS (mxf_dms1_parent_class)->handle_tag
@@ -442,7 +442,7 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  original extended spoken language code = %s",
         self->original_extended_spoken_language_code);
   } else if (memcmp (tag_ul, &metadata_server_locators_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->metadata_server_locators_uids,
+    if (!mxf_uuid_array_parse (&self->metadata_server_locators_uids,
             &self->n_metadata_server_locators, tag_data, tag_size))
       goto error;
 
@@ -453,12 +453,12 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_metadata_server_locators; i++) {
         GST_DEBUG ("    metadata server locator %u = %s", i,
-            mxf_ul_to_string (&self->metadata_server_locators_uids[i], str));
+            mxf_uuid_to_string (&self->metadata_server_locators_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &titles_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->titles_sets_uids, &self->n_titles_sets,
+    if (!mxf_uuid_array_parse (&self->titles_sets_uids, &self->n_titles_sets,
             tag_data, tag_size))
       goto error;
 
@@ -468,12 +468,12 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_titles_sets; i++) {
         GST_DEBUG ("    titles sets %u = %s", i,
-            mxf_ul_to_string (&self->titles_sets_uids[i], str));
+            mxf_uuid_to_string (&self->titles_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &annotation_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->annotation_sets_uids,
+    if (!mxf_uuid_array_parse (&self->annotation_sets_uids,
             &self->n_annotation_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of annotation sets = %u", self->n_annotation_sets);
@@ -482,12 +482,12 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_annotation_sets; i++) {
         GST_DEBUG ("    annotation sets %u = %s", i,
-            mxf_ul_to_string (&self->annotation_sets_uids[i], str));
+            mxf_uuid_to_string (&self->annotation_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &participant_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->participant_sets_uids,
+    if (!mxf_uuid_array_parse (&self->participant_sets_uids,
             &self->n_participant_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of participant sets = %u", self->n_participant_sets);
@@ -496,7 +496,7 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_participant_sets; i++) {
         GST_DEBUG ("    participant sets %u = %s", i,
-            mxf_ul_to_string (&self->participant_sets_uids[i], str));
+            mxf_uuid_to_string (&self->participant_sets_uids[i], str));
       }
     }
 #endif
@@ -506,10 +506,10 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
 
     memcpy (&self->contacts_list_set_uid, tag_data, 16);
     GST_DEBUG ("  contacts list = %s",
-        mxf_ul_to_string (&self->contacts_list_set_uid, str));
+        mxf_uuid_to_string (&self->contacts_list_set_uid, str));
   } else if (memcmp (tag_ul, &location_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->location_sets_uids, &self->n_location_sets,
-            tag_data, tag_size))
+    if (!mxf_uuid_array_parse (&self->location_sets_uids,
+            &self->n_location_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of location sets = %u", self->n_location_sets);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -517,7 +517,7 @@ mxf_dms1_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_location_sets; i++) {
         GST_DEBUG ("    location sets %u = %s", i,
-            mxf_ul_to_string (&self->location_sets_uids[i], str));
+            mxf_uuid_to_string (&self->location_sets_uids[i], str));
       }
     }
 #endif
@@ -672,9 +672,9 @@ mxf_dms1_production_clip_framework_handle_tag (MXFMetadataBase * metadata,
 
     memcpy (&self->picture_format_set_uid, tag_data, 16);
     GST_DEBUG ("  picture format set = %s",
-        mxf_ul_to_string (&self->picture_format_set_uid, str));
+        mxf_uuid_to_string (&self->picture_format_set_uid, str));
   } else if (memcmp (tag_ul, &captions_description_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->captions_description_sets_uids,
+    if (!mxf_uuid_array_parse (&self->captions_description_sets_uids,
             &self->n_captions_description_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of captions description sets = %u",
@@ -684,13 +684,13 @@ mxf_dms1_production_clip_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_captions_description_sets; i++) {
         GST_DEBUG ("    captions description sets %u = %s", i,
-            mxf_ul_to_string (&self->captions_description_sets_uids[i], str));
+            mxf_uuid_to_string (&self->captions_description_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &contract_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->contract_sets_uids, &self->n_contract_sets,
-            tag_data, tag_size))
+    if (!mxf_uuid_array_parse (&self->contract_sets_uids,
+            &self->n_contract_sets, tag_data, tag_size))
       goto error;
 
     GST_DEBUG ("  number of contract sets = %u", self->n_contract_sets);
@@ -699,7 +699,7 @@ mxf_dms1_production_clip_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_contract_sets; i++) {
         GST_DEBUG ("    contract sets %u = %s", i,
-            mxf_ul_to_string (&self->contract_sets_uids[i], str));
+            mxf_uuid_to_string (&self->contract_sets_uids[i], str));
       }
     }
 #endif
@@ -708,7 +708,7 @@ mxf_dms1_production_clip_framework_handle_tag (MXFMetadataBase * metadata,
       goto error;
 
     memcpy (&self->project_set_uid, tag_data, 16);
-    GST_DEBUG ("  project set = %s", mxf_ul_to_string (&self->project_set_uid,
+    GST_DEBUG ("  project set = %s", mxf_uuid_to_string (&self->project_set_uid,
             str));
   } else {
     ret =
@@ -941,7 +941,7 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  integration indication = %s",
         GST_STR_NULL (self->integration_indication));
   } else if (memcmp (tag_ul, &identification_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->identification_sets_uids,
+    if (!mxf_uuid_array_parse (&self->identification_sets_uids,
             &self->n_identification_sets, tag_data, tag_size))
       goto error;
 
@@ -952,12 +952,12 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_identification_sets; i++) {
         GST_DEBUG ("    identification sets %u = %s", i,
-            mxf_ul_to_string (&self->identification_sets_uids[i], str));
+            mxf_uuid_to_string (&self->identification_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &group_relationship_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->group_relationship_sets_uids,
+    if (!mxf_uuid_array_parse (&self->group_relationship_sets_uids,
             &self->n_group_relationship_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of group relationship sets = %u",
@@ -967,13 +967,13 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_group_relationship_sets; i++) {
         GST_DEBUG ("    group relationship sets %u = %s", i,
-            mxf_ul_to_string (&self->group_relationship_sets_uids[i], str));
+            mxf_uuid_to_string (&self->group_relationship_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &branding_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->branding_sets_uids, &self->n_branding_sets,
-            tag_data, tag_size))
+    if (!mxf_uuid_array_parse (&self->branding_sets_uids,
+            &self->n_branding_sets, tag_data, tag_size))
       goto error;
 
     GST_DEBUG ("  number of branding sets = %u", self->n_branding_sets);
@@ -982,12 +982,12 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_branding_sets; i++) {
         GST_DEBUG ("    branding sets %u = %s", i,
-            mxf_ul_to_string (&self->branding_sets_uids[i], str));
+            mxf_uuid_to_string (&self->branding_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &event_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->event_sets_uids, &self->n_event_sets,
+    if (!mxf_uuid_array_parse (&self->event_sets_uids, &self->n_event_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of event sets = %u", self->n_event_sets);
@@ -996,12 +996,12 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_event_sets; i++) {
         GST_DEBUG ("    event sets %u = %s", i,
-            mxf_ul_to_string (&self->event_sets_uids[i], str));
+            mxf_uuid_to_string (&self->event_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &award_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->award_sets_uids, &self->n_award_sets,
+    if (!mxf_uuid_array_parse (&self->award_sets_uids, &self->n_award_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of award sets = %u", self->n_award_sets);
@@ -1010,12 +1010,12 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_award_sets; i++) {
         GST_DEBUG ("    award sets %u = %s", i,
-            mxf_ul_to_string (&self->award_sets_uids[i], str));
+            mxf_uuid_to_string (&self->award_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &setting_period_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->setting_period_sets_uids,
+    if (!mxf_uuid_array_parse (&self->setting_period_sets_uids,
             &self->n_setting_period_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of setting period sets = %u",
@@ -1025,7 +1025,7 @@ mxf_dms1_production_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_setting_period_sets; i++) {
         GST_DEBUG ("    setting period sets %u = %s", i,
-            mxf_ul_to_string (&self->setting_period_sets_uids[i], str));
+            mxf_uuid_to_string (&self->setting_period_sets_uids[i], str));
       }
     }
 #endif
@@ -1255,7 +1255,7 @@ mxf_dms1_clip_framework_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  slate information = %s",
         GST_STR_NULL (self->slate_information));
   } else if (memcmp (tag_ul, &scripting_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->scripting_sets_uids,
+    if (!mxf_uuid_array_parse (&self->scripting_sets_uids,
             &self->n_scripting_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of scripting sets = %u", self->n_scripting_sets);
@@ -1264,12 +1264,12 @@ mxf_dms1_clip_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_scripting_sets; i++) {
         GST_DEBUG ("    scripting sets %u = %s", i,
-            mxf_ul_to_string (&self->scripting_sets_uids[i], str));
+            mxf_uuid_to_string (&self->scripting_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &shot_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->shot_sets_uids, &self->n_shot_sets,
+    if (!mxf_uuid_array_parse (&self->shot_sets_uids, &self->n_shot_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of shot sets = %u", self->n_shot_sets);
@@ -1278,12 +1278,12 @@ mxf_dms1_clip_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_shot_sets; i++) {
         GST_DEBUG ("    shot sets %u = %s", i,
-            mxf_ul_to_string (&self->shot_sets_uids[i], str));
+            mxf_uuid_to_string (&self->shot_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &device_parameters_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->device_parameters_sets_uids,
+    if (!mxf_uuid_array_parse (&self->device_parameters_sets_uids,
             &self->n_device_parameters_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of device parameters sets = %u",
@@ -1293,7 +1293,7 @@ mxf_dms1_clip_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_device_parameters_sets; i++) {
         GST_DEBUG ("    device parameters sets %u = %s", i,
-            mxf_ul_to_string (&self->device_parameters_sets_uids[i], str));
+            mxf_uuid_to_string (&self->device_parameters_sets_uids[i], str));
       }
     }
 #endif
@@ -1303,7 +1303,7 @@ mxf_dms1_clip_framework_handle_tag (MXFMetadataBase * metadata,
 
     memcpy (&self->processing_set_uid, tag_data, 16);
     GST_DEBUG ("  processing set = %s",
-        mxf_ul_to_string (&self->processing_set_uid, str));
+        mxf_uuid_to_string (&self->processing_set_uid, str));
   } else {
     ret =
         MXF_METADATA_BASE_CLASS
@@ -1439,7 +1439,7 @@ mxf_dms1_scene_framework_handle_tag (MXFMetadataBase * metadata,
     memcpy (self->scene_number, tag_data, tag_size);
     GST_DEBUG ("  scene number = %s", self->scene_number);
   } else if (memcmp (tag_ul, &setting_period_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->setting_period_sets_uids,
+    if (!mxf_uuid_array_parse (&self->setting_period_sets_uids,
             &self->n_setting_period_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of setting period sets = %u",
@@ -1449,12 +1449,12 @@ mxf_dms1_scene_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_setting_period_sets; i++) {
         GST_DEBUG ("    setting period sets %u = %s", i,
-            mxf_ul_to_string (&self->setting_period_sets_uids[i], str));
+            mxf_uuid_to_string (&self->setting_period_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &shot_scene_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->shot_scene_sets_uids,
+    if (!mxf_uuid_array_parse (&self->shot_scene_sets_uids,
             &self->n_shot_scene_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of shot sets = %u", self->n_shot_scene_sets);
@@ -1463,7 +1463,7 @@ mxf_dms1_scene_framework_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_shot_scene_sets; i++) {
         GST_DEBUG ("    shot sets %u = %s", i,
-            mxf_ul_to_string (&self->shot_scene_sets_uids[i], str));
+            mxf_uuid_to_string (&self->shot_scene_sets_uids[i], str));
       }
     }
 #endif
@@ -1669,7 +1669,7 @@ mxf_dms1_identification_handle_tag (MXFMetadataBase * metadata,
     memcpy (&self->identification_locator, tag_data, 16);
 
     GST_DEBUG ("  identification locator = %s",
-        mxf_ul_to_string (&self->identification_locator, str));
+        mxf_uuid_to_string (&self->identification_locator, str));
   } else if (memcmp (tag_ul, &identification_issuing_authority_ul, 16) == 0) {
     self->identification_issuing_authority =
         mxf_utf16_to_utf8 (tag_data, tag_size);
@@ -2033,7 +2033,7 @@ mxf_dms1_event_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     memcpy (self->event_end_date_and_time, tag_data, tag_size);
     GST_DEBUG ("  event end date and time = %s", self->event_end_date_and_time);
   } else if (memcmp (tag_ul, &publication_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->publication_sets_uids,
+    if (!mxf_uuid_array_parse (&self->publication_sets_uids,
             &self->n_publication_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of publication sets = %u", self->n_publication_sets);
@@ -2042,12 +2042,12 @@ mxf_dms1_event_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_publication_sets; i++) {
         GST_DEBUG ("    publication sets %u = %s", i,
-            mxf_ul_to_string (&self->publication_sets_uids[i], str));
+            mxf_uuid_to_string (&self->publication_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &annotation_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->annotation_sets_uids,
+    if (!mxf_uuid_array_parse (&self->annotation_sets_uids,
             &self->n_annotation_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of annotation sets = %u", self->n_annotation_sets);
@@ -2056,7 +2056,7 @@ mxf_dms1_event_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_annotation_sets; i++) {
         GST_DEBUG ("    annotation sets %u = %s", i,
-            mxf_ul_to_string (&self->annotation_sets_uids[i], str));
+            mxf_uuid_to_string (&self->annotation_sets_uids[i], str));
       }
     }
 #endif
@@ -2303,7 +2303,7 @@ mxf_dms1_award_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     GST_DEBUG ("  nomination category = %s",
         GST_STR_NULL (self->nomination_category));
   } else if (memcmp (tag_ul, &participant_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->participant_sets_uids,
+    if (!mxf_uuid_array_parse (&self->participant_sets_uids,
             &self->n_participant_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of participant sets = %u", self->n_participant_sets);
@@ -2312,7 +2312,7 @@ mxf_dms1_award_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_participant_sets; i++) {
         GST_DEBUG ("    participant sets %u = %s", i,
-            mxf_ul_to_string (&self->participant_sets_uids[i], str));
+            mxf_uuid_to_string (&self->participant_sets_uids[i], str));
       }
     }
 #endif
@@ -2578,7 +2578,7 @@ mxf_dms1_annotation_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  related material description = %s",
         GST_STR_NULL (self->related_material_description));
   } else if (memcmp (tag_ul, &classification_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->classification_sets_uids,
+    if (!mxf_uuid_array_parse (&self->classification_sets_uids,
             &self->n_classification_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of classification sets = %u",
@@ -2588,7 +2588,7 @@ mxf_dms1_annotation_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_classification_sets; i++) {
         GST_DEBUG ("    classification sets %u = %s", i,
-            mxf_ul_to_string (&self->classification_sets_uids[i], str));
+            mxf_uuid_to_string (&self->classification_sets_uids[i], str));
       }
     }
 #endif
@@ -2598,9 +2598,9 @@ mxf_dms1_annotation_handle_tag (MXFMetadataBase * metadata,
 
     memcpy (&self->cue_words_set_uid, tag_data, 16);
     GST_DEBUG ("  cue words set = %s",
-        mxf_ul_to_string (&self->cue_words_set_uid, str));
+        mxf_uuid_to_string (&self->cue_words_set_uid, str));
   } else if (memcmp (tag_ul, &related_material_locators_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->related_material_locators,
+    if (!mxf_uuid_array_parse (&self->related_material_locators,
             &self->n_related_material_locators, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of related material locators = %u",
@@ -2610,12 +2610,12 @@ mxf_dms1_annotation_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_related_material_locators; i++) {
         GST_DEBUG ("    related material locators %u = %s", i,
-            mxf_ul_to_string (&self->related_material_locators[i], str));
+            mxf_uuid_to_string (&self->related_material_locators[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &participant_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->participant_sets_uids,
+    if (!mxf_uuid_array_parse (&self->participant_sets_uids,
             &self->n_participant_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of participant sets = %u", self->n_participant_sets);
@@ -2624,7 +2624,7 @@ mxf_dms1_annotation_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_participant_sets; i++) {
         GST_DEBUG ("    participant sets %u = %s", i,
-            mxf_ul_to_string (&self->participant_sets_uids[i], str));
+            mxf_uuid_to_string (&self->participant_sets_uids[i], str));
       }
     }
 #endif
@@ -2813,7 +2813,7 @@ mxf_dms1_scripting_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  scripting description = %s",
         GST_STR_NULL (self->scripting_text));
   } else if (memcmp (tag_ul, &scripting_locators_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->scripting_locators,
+    if (!mxf_uuid_array_parse (&self->scripting_locators,
             &self->n_scripting_locators, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of scripting locators = %u",
@@ -2823,7 +2823,7 @@ mxf_dms1_scripting_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_scripting_locators; i++) {
         GST_DEBUG ("   scripting locators %u = %s", i,
-            mxf_ul_to_string (&self->scripting_locators[i], str));
+            mxf_uuid_to_string (&self->scripting_locators[i], str));
       }
     }
 #endif
@@ -2936,7 +2936,7 @@ mxf_dms1_classification_handle_tag (MXFMetadataBase * metadata,
     memcpy (self->content_classification, tag_data, tag_size);
     GST_DEBUG ("  content classification = %s", self->content_classification);
   } else if (memcmp (tag_ul, &name_value_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->name_value_sets_uids,
+    if (!mxf_uuid_array_parse (&self->name_value_sets_uids,
             &self->n_name_value_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of name-value sets = %u", self->n_name_value_sets);
@@ -2945,7 +2945,7 @@ mxf_dms1_classification_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_name_value_sets; i++) {
         GST_DEBUG ("    name-value sets %u = %s", i,
-            mxf_ul_to_string (&self->name_value_sets_uids[i], str));
+            mxf_uuid_to_string (&self->name_value_sets_uids[i], str));
       }
     }
 #endif
@@ -3144,9 +3144,9 @@ mxf_dms1_shot_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
 
     memcpy (&self->cue_words_set_uid, tag_data, 16);
     GST_DEBUG ("  cue words set = %s",
-        mxf_ul_to_string (&self->cue_words_set_uid, str));
+        mxf_uuid_to_string (&self->cue_words_set_uid, str));
   } else if (memcmp (tag_ul, &key_point_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->key_point_sets_uids,
+    if (!mxf_uuid_array_parse (&self->key_point_sets_uids,
             &self->n_key_point_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of key point sets = %u", self->n_key_point_sets);
@@ -3155,7 +3155,7 @@ mxf_dms1_shot_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_key_point_sets; i++) {
         GST_DEBUG ("    key point sets %u = %s", i,
-            mxf_ul_to_string (&self->key_point_sets_uids[i], str));
+            mxf_uuid_to_string (&self->key_point_sets_uids[i], str));
       }
     }
 #endif
@@ -3401,7 +3401,7 @@ mxf_dms1_participant_handle_tag (MXFMetadataBase * metadata,
 
     memcpy (&self->participant_uid, tag_data, 16);
     GST_DEBUG ("  participant uid = %s",
-        mxf_ul_to_string (&self->participant_uid, str));
+        mxf_uuid_to_string (&self->participant_uid, str));
   } else if (memcmp (tag_ul, &contribution_status_ul, 16) == 0) {
     self->contribution_status = mxf_utf16_to_utf8 (tag_data, tag_size);
     GST_DEBUG ("  contribution status = %s",
@@ -3420,7 +3420,7 @@ mxf_dms1_participant_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  role or identity name = %s",
         GST_STR_NULL (self->role_or_identity_name));
   } else if (memcmp (tag_ul, &person_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->person_sets_uids, &self->n_person_sets,
+    if (!mxf_uuid_array_parse (&self->person_sets_uids, &self->n_person_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of person sets = %u", self->n_person_sets);
@@ -3429,12 +3429,12 @@ mxf_dms1_participant_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_person_sets; i++) {
         GST_DEBUG ("    person sets %u = %s", i,
-            mxf_ul_to_string (&self->person_sets_uids[i], str));
+            mxf_uuid_to_string (&self->person_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &organisation_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->organisation_sets_uids,
+    if (!mxf_uuid_array_parse (&self->organisation_sets_uids,
             &self->n_organisation_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of organisation sets = %u", self->n_organisation_sets);
@@ -3443,7 +3443,7 @@ mxf_dms1_participant_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_organisation_sets; i++) {
         GST_DEBUG ("    organisation sets %u = %s", i,
-            mxf_ul_to_string (&self->organisation_sets_uids[i], str));
+            mxf_uuid_to_string (&self->organisation_sets_uids[i], str));
       }
     }
 #endif
@@ -3574,10 +3574,10 @@ mxf_dms1_contact_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       goto error;
 
     memcpy (&self->contact_uid, tag_data, 16);
-    GST_DEBUG ("  contact uid = %s", mxf_ul_to_string (&self->contact_uid,
+    GST_DEBUG ("  contact uid = %s", mxf_uuid_to_string (&self->contact_uid,
             str));
   } else if (memcmp (tag_ul, &name_value_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->name_value_sets_uids,
+    if (!mxf_uuid_array_parse (&self->name_value_sets_uids,
             &self->n_name_value_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of name-value sets = %u", self->n_name_value_sets);
@@ -3586,12 +3586,12 @@ mxf_dms1_contact_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_name_value_sets; i++) {
         GST_DEBUG ("    name-value sets %u = %s", i,
-            mxf_ul_to_string (&self->name_value_sets_uids[i], str));
+            mxf_uuid_to_string (&self->name_value_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &address_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->address_sets_uids, &self->n_address_sets,
+    if (!mxf_uuid_array_parse (&self->address_sets_uids, &self->n_address_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of address sets = %u", self->n_address_sets);
@@ -3600,7 +3600,7 @@ mxf_dms1_contact_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_address_sets; i++) {
         GST_DEBUG ("    address sets %u = %s", i,
-            mxf_ul_to_string (&self->address_sets_uids[i], str));
+            mxf_uuid_to_string (&self->address_sets_uids[i], str));
       }
     }
 #endif
@@ -3822,7 +3822,7 @@ mxf_dms1_person_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     self->citizenship = mxf_utf16_to_utf8 (tag_data, tag_size);
     GST_DEBUG ("  citizenship = %s", GST_STR_NULL (self->citizenship));
   } else if (memcmp (tag_ul, &organisation_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->organisation_sets_uids,
+    if (!mxf_uuid_array_parse (&self->organisation_sets_uids,
             &self->n_organisation_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of organisation sets = %u", self->n_organisation_sets);
@@ -3831,7 +3831,7 @@ mxf_dms1_person_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_organisation_sets; i++) {
         GST_DEBUG ("    organisation sets %u = %s", i,
-            mxf_ul_to_string (&self->organisation_sets_uids[i], str));
+            mxf_uuid_to_string (&self->organisation_sets_uids[i], str));
       }
     }
 #endif
@@ -4252,7 +4252,7 @@ mxf_dms1_address_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
     GST_DEBUG ("  astronomical body name = %s",
         GST_STR_NULL (self->astronomical_body_name));
   } else if (memcmp (tag_ul, &communications_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->communications_sets_uids,
+    if (!mxf_uuid_array_parse (&self->communications_sets_uids,
             &self->n_communications_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of communications sets = %u",
@@ -4262,12 +4262,12 @@ mxf_dms1_address_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_communications_sets; i++) {
         GST_DEBUG ("    communications sets %u = %s", i,
-            mxf_ul_to_string (&self->communications_sets_uids[i], str));
+            mxf_uuid_to_string (&self->communications_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &name_value_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->name_value_sets_uids,
+    if (!mxf_uuid_array_parse (&self->name_value_sets_uids,
             &self->n_name_value_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of name-value sets = %u", self->n_name_value_sets);
@@ -4276,7 +4276,7 @@ mxf_dms1_address_handle_tag (MXFMetadataBase * metadata, MXFPrimerPack * primer,
       guint i;
       for (i = 0; i < self->n_name_value_sets; i++) {
         GST_DEBUG ("    name-value sets %u = %s", i,
-            mxf_ul_to_string (&self->name_value_sets_uids[i], str));
+            mxf_uuid_to_string (&self->name_value_sets_uids[i], str));
       }
     }
 #endif
@@ -4528,7 +4528,7 @@ mxf_dms1_contract_handle_tag (MXFMetadataBase * metadata,
     memcpy (self->supply_contract_number, tag_data, tag_size);
     GST_DEBUG ("  supply contract number = %s", self->supply_contract_number);
   } else if (memcmp (tag_ul, &rights_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->rights_sets_uids, &self->n_rights_sets,
+    if (!mxf_uuid_array_parse (&self->rights_sets_uids, &self->n_rights_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of rights sets = %u", self->n_rights_sets);
@@ -4537,12 +4537,12 @@ mxf_dms1_contract_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_rights_sets; i++) {
         GST_DEBUG ("    rights sets %u = %s", i,
-            mxf_ul_to_string (&self->rights_sets_uids[i], str));
+            mxf_uuid_to_string (&self->rights_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &participant_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->participant_sets_uids,
+    if (!mxf_uuid_array_parse (&self->participant_sets_uids,
             &self->n_participant_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of participant sets = %u", self->n_participant_sets);
@@ -4551,7 +4551,7 @@ mxf_dms1_contract_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_participant_sets; i++) {
         GST_DEBUG ("    participant sets %u = %s", i,
-            mxf_ul_to_string (&self->participant_sets_uids[i], str));
+            mxf_uuid_to_string (&self->participant_sets_uids[i], str));
       }
     }
 #endif
@@ -5012,7 +5012,7 @@ mxf_dms1_device_parameters_handle_tag (MXFMetadataBase * metadata,
     GST_DEBUG ("  device usage description = %s",
         GST_STR_NULL (self->device_usage_description));
   } else if (memcmp (tag_ul, &name_value_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->name_value_sets_uids,
+    if (!mxf_uuid_array_parse (&self->name_value_sets_uids,
             &self->n_name_value_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of name-value sets = %u", self->n_name_value_sets);
@@ -5021,7 +5021,7 @@ mxf_dms1_device_parameters_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_name_value_sets; i++) {
         GST_DEBUG ("    name-value sets %u = %s", i,
-            mxf_ul_to_string (&self->name_value_sets_uids[i], str));
+            mxf_uuid_to_string (&self->name_value_sets_uids[i], str));
       }
     }
 #endif
@@ -5117,7 +5117,7 @@ mxf_dms1_name_value_handle_tag (MXFMetadataBase * metadata,
 
     memcpy (&self->smpte_universal_label_locator, tag_data, 16);
     GST_DEBUG ("  SMPTE universal label locator = %s",
-        mxf_ul_to_string (&self->smpte_universal_label_locator, str));
+        mxf_uuid_to_string (&self->smpte_universal_label_locator, str));
   } else {
     ret =
         MXF_METADATA_BASE_CLASS (mxf_dms1_name_value_parent_class)->handle_tag
@@ -5466,7 +5466,7 @@ mxf_dms1_contacts_list_handle_tag (MXFMetadataBase * metadata,
     return FALSE;
 
   if (memcmp (tag_ul, &person_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->person_sets_uids, &self->n_person_sets,
+    if (!mxf_uuid_array_parse (&self->person_sets_uids, &self->n_person_sets,
             tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of person sets = %u", self->n_person_sets);
@@ -5475,12 +5475,12 @@ mxf_dms1_contacts_list_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_person_sets; i++) {
         GST_DEBUG ("    person sets %u = %s", i,
-            mxf_ul_to_string (&self->person_sets_uids[i], str));
+            mxf_uuid_to_string (&self->person_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &organisation_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->organisation_sets_uids,
+    if (!mxf_uuid_array_parse (&self->organisation_sets_uids,
             &self->n_organisation_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of organisation sets = %u", self->n_organisation_sets);
@@ -5489,13 +5489,13 @@ mxf_dms1_contacts_list_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_organisation_sets; i++) {
         GST_DEBUG ("    organisation sets %u = %s", i,
-            mxf_ul_to_string (&self->organisation_sets_uids[i], str));
+            mxf_uuid_to_string (&self->organisation_sets_uids[i], str));
       }
     }
 #endif
   } else if (memcmp (tag_ul, &location_sets_ul, 16) == 0) {
-    if (!mxf_ul_array_parse (&self->location_sets_uids, &self->n_location_sets,
-            tag_data, tag_size))
+    if (!mxf_uuid_array_parse (&self->location_sets_uids,
+            &self->n_location_sets, tag_data, tag_size))
       goto error;
     GST_DEBUG ("  number of location sets = %u", self->n_location_sets);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -5503,7 +5503,7 @@ mxf_dms1_contacts_list_handle_tag (MXFMetadataBase * metadata,
       guint i;
       for (i = 0; i < self->n_location_sets; i++) {
         GST_DEBUG ("    location sets %u = %s", i,
-            mxf_ul_to_string (&self->location_sets_uids[i], str));
+            mxf_uuid_to_string (&self->location_sets_uids[i], str));
       }
     }
 #endif

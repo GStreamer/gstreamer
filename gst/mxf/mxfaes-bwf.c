@@ -371,139 +371,139 @@ mxf_metadata_wave_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
   };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->key, &block_align_ul, 16);
+  memcpy (&t->ul, &block_align_ul, 16);
   t->size = 2;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
   GST_WRITE_UINT16_BE (t->data, self->block_align);
-  mxf_primer_pack_add_mapping (primer, 0x3d0a, &t->key);
+  mxf_primer_pack_add_mapping (primer, 0x3d0a, &t->ul);
   ret = g_list_prepend (ret, t);
 
   if (self->sequence_offset) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &sequence_offset_ul, 16);
+    memcpy (&t->ul, &sequence_offset_ul, 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT8 (t->data, self->sequence_offset);
-    mxf_primer_pack_add_mapping (primer, 0x3d0b, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d0b, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->key, &avg_bps_ul, 16);
+  memcpy (&t->ul, &avg_bps_ul, 16);
   t->size = 4;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
   GST_WRITE_UINT32_BE (t->data, self->avg_bps);
-  mxf_primer_pack_add_mapping (primer, 0x3d09, &t->key);
+  mxf_primer_pack_add_mapping (primer, 0x3d09, &t->ul);
   ret = g_list_prepend (ret, t);
 
   if (!mxf_ul_is_zero (&self->channel_assignment)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &channel_assignment_ul, 16);
+    memcpy (&t->ul, &channel_assignment_ul, 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     memcpy (t->data, &self->channel_assignment, 16);
-    mxf_primer_pack_add_mapping (primer, 0x3d32, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d32, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_envelope_version) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_envelope_version_ul, 16);
+    memcpy (&t->ul, &peak_envelope_version_ul, 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->peak_envelope_version);
-    mxf_primer_pack_add_mapping (primer, 0x3d29, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d29, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_envelope_format) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_envelope_format_ul, 16);
+    memcpy (&t->ul, &peak_envelope_format_ul, 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->peak_envelope_format);
-    mxf_primer_pack_add_mapping (primer, 0x3d2a, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d2a, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->points_per_peak_value) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &points_per_peak_value_ul, 16);
+    memcpy (&t->ul, &points_per_peak_value_ul, 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->points_per_peak_value);
-    mxf_primer_pack_add_mapping (primer, 0x3d2b, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d2b, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_envelope_block_size) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_envelope_block_size_ul, 16);
+    memcpy (&t->ul, &peak_envelope_block_size_ul, 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->peak_envelope_block_size);
-    mxf_primer_pack_add_mapping (primer, 0x3d2c, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d2c, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_channels) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_channels_ul, 16);
+    memcpy (&t->ul, &peak_channels_ul, 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->peak_channels);
-    mxf_primer_pack_add_mapping (primer, 0x3d2d, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d2d, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_frames) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_frames_ul, 16);
+    memcpy (&t->ul, &peak_frames_ul, 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->peak_frames);
-    mxf_primer_pack_add_mapping (primer, 0x3d2e, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d2e, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_of_peaks_position) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_of_peaks_position_ul, 16);
+    memcpy (&t->ul, &peak_of_peaks_position_ul, 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT64_BE (t->data, self->peak_of_peaks_position);
-    mxf_primer_pack_add_mapping (primer, 0x3d2f, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d2f, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (!mxf_timestamp_is_unknown (&self->peak_envelope_timestamp)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_envelope_timestamp_ul, 16);
+    memcpy (&t->ul, &peak_envelope_timestamp_ul, 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     mxf_timestamp_write (&self->peak_envelope_timestamp, t->data);
-    mxf_primer_pack_add_mapping (primer, 0x3d30, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d30, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->peak_envelope_data) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &peak_envelope_data_ul, 16);
+    memcpy (&t->ul, &peak_envelope_data_ul, 16);
     t->size = self->peak_envelope_data_length;
     t->data = g_memdup (self->peak_envelope_data, t->size);
-    mxf_primer_pack_add_mapping (primer, 0x3d31, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d31, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
@@ -954,47 +954,47 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->emphasis) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &emphasis_ul, 16);
+    memcpy (&t->ul, &emphasis_ul, 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT8 (t->data, self->emphasis);
-    mxf_primer_pack_add_mapping (primer, 0x3d0d, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d0d, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->block_start_offset) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &block_start_offset_ul, 16);
+    memcpy (&t->ul, &block_start_offset_ul, 16);
     t->size = 2;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT16_BE (t->data, self->block_start_offset);
-    mxf_primer_pack_add_mapping (primer, 0x3d0f, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d0f, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->auxiliary_bits_mode) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &auxiliary_bits_mode_ul, 16);
+    memcpy (&t->ul, &auxiliary_bits_mode_ul, 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT8 (t->data, self->auxiliary_bits_mode);
-    mxf_primer_pack_add_mapping (primer, 0x3d08, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d08, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->channel_status_mode) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &channel_status_mode_ul, 16);
+    memcpy (&t->ul, &channel_status_mode_ul, 16);
     t->size = 8 + self->n_channel_status_mode;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->n_channel_status_mode);
     GST_WRITE_UINT32_BE (t->data + 4, 1);
     memcpy (t->data + 8, self->channel_status_mode, t->size);
-    mxf_primer_pack_add_mapping (primer, 0x3d10, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d10, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
@@ -1002,7 +1002,7 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &fixed_channel_status_data_ul, 16);
+    memcpy (&t->ul, &fixed_channel_status_data_ul, 16);
     t->size = 8 + 24 * self->n_fixed_channel_status_data;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -1010,20 +1010,20 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     GST_WRITE_UINT32_BE (t->data + 4, 24);
     for (i = 0; i < self->n_fixed_channel_status_data; i++)
       memcpy (t->data + 8 + 24 * i, self->fixed_channel_status_data[i], 24);
-    mxf_primer_pack_add_mapping (primer, 0x3d11, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d11, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   if (self->user_data_mode) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &user_data_mode_ul, 16);
+    memcpy (&t->ul, &user_data_mode_ul, 16);
     t->size = 8 + self->n_user_data_mode;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
     GST_WRITE_UINT32_BE (t->data, self->n_user_data_mode);
     GST_WRITE_UINT32_BE (t->data + 4, 1);
     memcpy (t->data + 8, self->user_data_mode, t->size);
-    mxf_primer_pack_add_mapping (primer, 0x3d12, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d12, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
@@ -1031,7 +1031,7 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->key, &fixed_user_data_ul, 16);
+    memcpy (&t->ul, &fixed_user_data_ul, 16);
     t->size = 8 + 24 * self->n_fixed_user_data;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -1039,7 +1039,7 @@ mxf_metadata_aes3_audio_essence_descriptor_write_tags (MXFMetadataBase * m,
     GST_WRITE_UINT32_BE (t->data + 4, 24);
     for (i = 0; i < self->n_fixed_user_data; i++)
       memcpy (t->data + 8 + 24 * i, self->fixed_user_data[i], 24);
-    mxf_primer_pack_add_mapping (primer, 0x3d11, &t->key);
+    mxf_primer_pack_add_mapping (primer, 0x3d11, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 

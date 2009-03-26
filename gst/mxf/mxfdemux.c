@@ -31,11 +31,6 @@
  */
 
 /* TODO:
- *   - Differentiate UL and UUIDs, the former can define an object system
- *     (i.e. mxf_ul_is_a() and friends could be implemented), see SMPTE S336M.
- *     The latter are just 16 byte unique identifiers
- *   - Check everything for correctness vs. SMPTE S336M, some things can probably
- *     be generalized/simplified
  *   - Seeking support: Use IndexTableSegments
  *   - Handle timecode tracks correctly (where is this documented?)
  *   - Handle drop-frame field of timecode tracks
@@ -1262,7 +1257,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
     GST_DEBUG_OBJECT (demux,
         "Metadata with instance uid %s already exists and has different type '%s',"
         " expected '%s'",
-        mxf_ul_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str),
+        mxf_uuid_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str),
         g_type_name (G_TYPE_FROM_INSTANCE (old)),
         g_type_name (G_TYPE_FROM_INSTANCE (metadata)));
     gst_mini_object_unref (GST_MINI_OBJECT (metadata));
@@ -1276,7 +1271,7 @@ gst_mxf_demux_handle_metadata (GstMXFDemux * demux, const MXFUL * key,
 
     GST_DEBUG_OBJECT (demux,
         "Metadata with instance uid %s already exists and is newer",
-        mxf_ul_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str));
+        mxf_uuid_to_string (&MXF_METADATA_BASE (metadata)->instance_uid, str));
     gst_mini_object_unref (GST_MINI_OBJECT (metadata));
     return GST_FLOW_OK;
   }
@@ -1352,7 +1347,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
     GST_DEBUG_OBJECT (demux,
         "Metadata with instance uid %s already exists and has different type '%s',"
         " expected '%s'",
-        mxf_ul_to_string (&MXF_METADATA_BASE (m)->instance_uid, str),
+        mxf_uuid_to_string (&MXF_METADATA_BASE (m)->instance_uid, str),
         g_type_name (G_TYPE_FROM_INSTANCE (old)),
         g_type_name (G_TYPE_FROM_INSTANCE (m)));
     gst_mini_object_unref (GST_MINI_OBJECT (m));
@@ -1365,7 +1360,7 @@ gst_mxf_demux_handle_descriptive_metadata (GstMXFDemux * demux,
 
     GST_DEBUG_OBJECT (demux,
         "Metadata with instance uid %s already exists and is newer",
-        mxf_ul_to_string (&MXF_METADATA_BASE (m)->instance_uid, str));
+        mxf_uuid_to_string (&MXF_METADATA_BASE (m)->instance_uid, str));
     gst_mini_object_unref (GST_MINI_OBJECT (m));
     return GST_FLOW_OK;
   }

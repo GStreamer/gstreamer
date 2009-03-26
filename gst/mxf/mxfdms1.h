@@ -432,44 +432,44 @@ struct _MXFDMS1Framework {
   gchar original_extended_spoken_language_code[13];
 
   guint32 n_metadata_server_locators;
-  MXFUL *metadata_server_locators_uids;
+  MXFUUID *metadata_server_locators_uids;
   /* TODO */
 
   guint32 n_titles_sets;
-  MXFUL *titles_sets_uids;
+  MXFUUID *titles_sets_uids;
   MXFDMS1Titles **titles_sets;
 
   guint32 n_annotation_sets;
-  MXFUL *annotation_sets_uids;
+  MXFUUID *annotation_sets_uids;
   MXFDMS1Annotation **annotation_sets;
 
   guint32 n_participant_sets;
-  MXFUL *participant_sets_uids;
+  MXFUUID *participant_sets_uids;
   MXFDMS1Participant **participant_sets;
 
-  MXFUL contacts_list_set_uid;
+  MXFUUID contacts_list_set_uid;
   MXFDMS1ContactsList *contacts_list_set;
 
   guint32 n_location_sets;
-  MXFUL *location_sets_uids;
+  MXFUUID *location_sets_uids;
   MXFDMS1Location **location_sets;
 };
 
 struct _MXFDMS1ProductionClipFramework {
   MXFDMS1Framework parent;
 
-  MXFUL picture_format_set_uid;
+  MXFUUID picture_format_set_uid;
   MXFDMS1PictureFormat *picture_format;
   
   guint32 n_captions_description_sets;
-  MXFUL *captions_description_sets_uids;
+  MXFUUID *captions_description_sets_uids;
   MXFDMS1CaptionsDescription **captions_description_sets;
 
   guint32 n_contract_sets;
-  MXFUL *contract_sets_uids;
+  MXFUUID *contract_sets_uids;
   MXFDMS1Contract **contract_sets;
 
-  MXFUL project_set_uid;
+  MXFUUID project_set_uid;
   MXFDMS1Project *project_set;
 };
 
@@ -479,27 +479,27 @@ struct _MXFDMS1ProductionFramework {
   gchar *integration_indication;
   
   guint32 n_identification_sets;
-  MXFUL *identification_sets_uids;
+  MXFUUID *identification_sets_uids;
   MXFDMS1Identification **identification_sets;
 
   guint32 n_group_relationship_sets;
-  MXFUL *group_relationship_sets_uids;
+  MXFUUID *group_relationship_sets_uids;
   MXFDMS1GroupRelationship **group_relationship_sets;
 
   guint32 n_branding_sets;
-  MXFUL *branding_sets_uids;
+  MXFUUID *branding_sets_uids;
   MXFDMS1Branding **branding_sets;
 
   guint32 n_event_sets;
-  MXFUL *event_sets_uids;
+  MXFUUID *event_sets_uids;
   MXFDMS1Event **event_sets;
 
   guint32 n_award_sets;
-  MXFUL *award_sets_uids;
+  MXFUUID *award_sets_uids;
   MXFDMS1Award **award_sets;
 
   guint32 n_setting_period_sets;
-  MXFUL *setting_period_sets_uids;
+  MXFUUID *setting_period_sets_uids;
   MXFDMS1SettingPeriod **setting_period_sets;
 };
 
@@ -519,18 +519,18 @@ struct _MXFDMS1ClipFramework {
   gchar *slate_information;
 
   guint32 n_scripting_sets;
-  MXFUL *scripting_sets_uids;
+  MXFUUID *scripting_sets_uids;
   MXFDMS1Scripting **scripting_sets;
 
   guint32 n_shot_sets;
-  MXFUL *shot_sets_uids;
+  MXFUUID *shot_sets_uids;
   MXFDMS1Shot **shot_sets;
 
   guint32 n_device_parameters_sets;
-  MXFUL *device_parameters_sets_uids;
+  MXFUUID *device_parameters_sets_uids;
   MXFDMS1DeviceParameters **device_parameters_sets;
 
-  MXFUL processing_set_uid;
+  MXFUUID processing_set_uid;
   MXFDMS1Processing *processing_set;
 };
 
@@ -540,11 +540,11 @@ struct _MXFDMS1SceneFramework {
   gchar scene_number[33];
 
   guint32 n_setting_period_sets;
-  MXFUL *setting_period_sets_uids;
+  MXFUUID *setting_period_sets_uids;
   MXFDMS1SettingPeriod **setting_period_sets;
 
   guint32 n_shot_scene_sets;
-  MXFUL *shot_scene_sets_uids;
+  MXFUUID *shot_scene_sets_uids;
   MXFDMS1Shot **shot_scene_sets;
 };
 
@@ -564,7 +564,7 @@ struct _MXFDMS1Identification {
   gchar identifier_kind[33];
   guint8 *identifier_value;
   guint16 identifier_value_length;
-  MXFUL identification_locator;
+  MXFUUID identification_locator;
   gchar *identification_issuing_authority;
 };
 
@@ -595,11 +595,11 @@ struct _MXFDMS1Event {
   gchar event_end_date_and_time[33];
   
   guint32 n_publication_sets;
-  MXFUL *publication_sets_uids;
+  MXFUUID *publication_sets_uids;
   MXFDMS1Publication **publication_sets;
 
   guint32 n_annotation_sets;
-  MXFUL *annotation_sets_uids;
+  MXFUUID *annotation_sets_uids;
   MXFDMS1Annotation **annotation_sets;
 };
 
@@ -622,7 +622,7 @@ struct _MXFDMS1Award {
   gchar *nomination_category;
 
   guint32 n_participant_sets;
-  MXFUL *participant_sets_uids;
+  MXFUUID *participant_sets_uids;
   MXFDMS1Participant **participant_sets;
 };
 
@@ -642,18 +642,18 @@ struct _MXFDMS1Annotation {
   gchar *related_material_description;
 
   guint32 n_classification_sets;
-  MXFUL *classification_sets_uids;
+  MXFUUID *classification_sets_uids;
   MXFDMS1Classification **classification_sets;
 
-  MXFUL cue_words_set_uid;
+  MXFUUID cue_words_set_uid;
   MXFDMS1CueWords *cue_words_set;
 
   guint32 n_related_material_locators;
-  MXFUL *related_material_locators;
+  MXFUUID *related_material_locators;
   /* TODO */
   
   guint32 n_participant_sets;
-  MXFUL *participant_sets_uids;
+  MXFUUID *participant_sets_uids;
   MXFDMS1Participant **participant_sets;
 };
 
@@ -672,7 +672,7 @@ struct _MXFDMS1Scripting {
   gchar *scripting_text;
 
   guint32 n_scripting_locators;
-  MXFUL *scripting_locators;
+  MXFUUID *scripting_locators;
   /* TODO */
 };
 
@@ -682,7 +682,7 @@ struct _MXFDMS1Classification {
   gchar content_classification[128];
 
   guint32 n_name_value_sets;
-  MXFUL *name_value_sets_uids;
+  MXFUUID *name_value_sets_uids;
   MXFDMS1NameValue **name_value_sets;
 };
 
@@ -699,11 +699,11 @@ struct _MXFDMS1Shot {
   gchar *shot_comment_kind;
   gchar *shot_comment;
 
-  MXFUL cue_words_set_uid;
+  MXFUUID cue_words_set_uid;
   MXFDMS1CueWords *cue_words_set;
 
   guint32 n_key_point_sets;
-  MXFUL *key_point_sets_uids;
+  MXFUUID *key_point_sets_uids;
   MXFDMS1KeyPoint **key_point_sets;
 };
 
@@ -718,7 +718,7 @@ struct _MXFDMS1KeyPoint {
 struct _MXFDMS1Participant {
   MXFDMS1Thesaurus parent;
 
-  MXFUL participant_uid;
+  MXFUUID participant_uid;
 
   gchar *contribution_status;
   gchar *job_function;
@@ -726,25 +726,25 @@ struct _MXFDMS1Participant {
   gchar *role_or_identity_name;
 
   guint32 n_person_sets;
-  MXFUL *person_sets_uids;
+  MXFUUID *person_sets_uids;
   MXFDMS1Person **person_sets;
 
   guint32 n_organisation_sets;
-  MXFUL *organisation_sets_uids;
+  MXFUUID *organisation_sets_uids;
   MXFDMS1Organisation **organisation_sets;
 };
 
 struct _MXFDMS1Contact {
   MXFDMS1Thesaurus parent;
 
-  MXFUL contact_uid;
+  MXFUUID contact_uid;
 
   guint32 n_name_value_sets;
-  MXFUL *name_value_sets_uids;
+  MXFUUID *name_value_sets_uids;
   MXFDMS1NameValue **name_value_sets;
 
   guint32 n_address_sets;
-  MXFUL *address_sets_uids;
+  MXFUUID *address_sets_uids;
   MXFDMS1Address **address_sets;
 };
 
@@ -765,7 +765,7 @@ struct _MXFDMS1Person {
   gchar *citizenship;
 
   guint32 n_organisation_sets;
-  MXFUL *organisation_sets_uids;
+  MXFUUID *organisation_sets_uids;
   MXFDMS1Organisation **organisation_sets;
 };
 
@@ -803,11 +803,11 @@ struct _MXFDMS1Address {
   gchar *astronomical_body_name;
 
   guint32 n_communications_sets;
-  MXFUL *communications_sets_uids;
+  MXFUUID *communications_sets_uids;
   MXFDMS1Communications **communications_sets;
 
   guint32 n_name_value_sets;
-  MXFUL *name_value_sets_uids;
+  MXFUUID *name_value_sets_uids;
   MXFDMS1NameValue **name_value_sets;
 };
 
@@ -828,11 +828,11 @@ struct _MXFDMS1Contract {
   gchar supply_contract_number[33];
 
   guint32 n_rights_sets;
-  MXFUL *rights_sets_uids;
+  MXFUUID *rights_sets_uids;
   MXFDMS1Rights **rights_sets;
 
   guint32 n_participant_sets;
-  MXFUL *participant_sets_uids;
+  MXFUUID *participant_sets_uids;
   MXFDMS1Participant **participant_sets;
 };
 
@@ -873,7 +873,7 @@ struct _MXFDMS1DeviceParameters {
   gchar *device_usage_description;
 
   guint32 n_name_value_sets;
-  MXFUL *name_value_sets_uids;
+  MXFUUID *name_value_sets_uids;
   MXFDMS1NameValue **name_value_sets;
 };
 
@@ -883,7 +883,7 @@ struct _MXFDMS1NameValue {
   gchar *item_name;
   gchar *item_value;
 
-  MXFUL smpte_universal_label_locator;
+  MXFUUID smpte_universal_label_locator;
 };
 
 struct _MXFDMS1Processing {
@@ -909,15 +909,15 @@ struct _MXFDMS1ContactsList {
   MXFDMS1 parent;
 
   guint32 n_person_sets;
-  MXFUL *person_sets_uids;
+  MXFUUID *person_sets_uids;
   MXFDMS1Person **person_sets;
 
   guint32 n_organisation_sets;
-  MXFUL *organisation_sets_uids;
+  MXFUUID *organisation_sets_uids;
   MXFDMS1Organisation **organisation_sets;
 
   guint32 n_location_sets;
-  MXFUL *location_sets_uids;
+  MXFUUID *location_sets_uids;
   MXFDMS1Location **location_sets;
 };
 

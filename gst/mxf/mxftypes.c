@@ -188,7 +188,7 @@ mxf_ber_encode_size (guint size, guint8 ber[9])
 }
 
 GstBuffer *
-mxf_fill_new (guint size)
+mxf_fill_to_buffer (guint size)
 {
   GstBuffer *ret;
   guint slen;
@@ -205,16 +205,162 @@ mxf_fill_new (guint size)
 }
 
 void
-mxf_ul_set (MXFUL * ul, GHashTable * hashtable)
+mxf_uuid_init (MXFUUID * uuid, GHashTable * hashtable)
 {
   guint i;
 
   do {
     for (i = 0; i < 4; i++)
-      GST_WRITE_UINT32_BE (&ul->u[i * 4], g_random_int ());
+      GST_WRITE_UINT32_BE (&uuid->u[i * 4], g_random_int ());
 
-  } while (hashtable
-      && g_hash_table_lookup_extended (hashtable, ul, NULL, NULL));
+  } while (hashtable && (mxf_uuid_is_zero (uuid) ||
+          g_hash_table_lookup_extended (hashtable, uuid, NULL, NULL)));
+}
+
+gboolean
+mxf_uuid_is_equal (const MXFUUID * a, const MXFUUID * b)
+{
+  g_return_val_if_fail (a != NULL, FALSE);
+  g_return_val_if_fail (b != NULL, FALSE);
+
+  return (memcmp (a, b, 16) == 0);
+}
+
+gboolean
+mxf_uuid_is_zero (const MXFUUID * a)
+{
+  static const guint8 zero[16] = { 0x00, };
+
+  g_return_val_if_fail (a != NULL, FALSE);
+
+  return (memcmp (a, zero, 16) == 0);
+}
+
+guint
+mxf_uuid_hash (const MXFUUID * uuid)
+{
+  guint32 ret = 0;
+  guint i;
+
+  g_return_val_if_fail (uuid != NULL, 0);
+
+  for (i = 0; i < 4; i++)
+    ret ^= (uuid->u[i * 4 + 0] << 24) |
+        (uuid->u[i * 4 + 1] << 16) |
+        (uuid->u[i * 4 + 2] << 8) | (uuid->u[i * 4 + 3] << 0);
+
+  return ret;
+}
+
+gchar *
+mxf_uuid_to_string (const MXFUUID * uuid, gchar str[48])
+{
+  gchar *ret = str;
+
+  g_return_val_if_fail (uuid != NULL, NULL);
+
+  if (ret == NULL)
+    ret = g_malloc (48);
+
+  g_snprintf (ret, 48,
+      "%02x.%02x.%02x.%02x."
+      "%02x.%02x.%02x.%02x."
+      "%02x.%02x.%02x.%02x."
+      "%02x.%02x.%02x.%02x",
+      uuid->u[0], uuid->u[1], uuid->u[2], uuid->u[3],
+      uuid->u[4], uuid->u[5], uuid->u[6], uuid->u[7],
+      uuid->u[8], uuid->u[9], uuid->u[10], uuid->u[11],
+      uuid->u[12], uuid->u[13], uuid->u[14], uuid->u[15]);
+
+  return ret;
+}
+
+MXFUUID *
+mxf_uuid_from_string (const gchar * str, MXFUUID * uuid)
+{
+  MXFUUID *ret = uuid;
+  gint len;
+  guint i, j;
+
+  g_return_val_if_fail (str != NULL, NULL);
+
+  len = strlen (str);
+  if (len != 47) {
+    GST_ERROR ("Invalid UUID string length %d, should be 47", len);
+    return NULL;
+  }
+
+  if (ret == NULL)
+    ret = g_new0 (MXFUUID, 1);
+
+  memset (ret, 0, 16);
+
+  for (i = 0, j = 0; i < 16; i++) {
+    if (!g_ascii_isxdigit (str[j]) ||
+        !g_ascii_isxdigit (str[j + 1]) ||
+        (str[j + 2] != '.' && str[j + 2] != '\0')) {
+      GST_ERROR ("Invalid UL string '%s'", str);
+      if (uuid == NULL)
+        g_free (ret);
+      return NULL;
+    }
+
+    ret->u[i] = (g_ascii_xdigit_value (str[j]) << 4) |
+        (g_ascii_xdigit_value (str[j + 1]));
+    j += 3;
+  }
+  return ret;
+}
+
+gboolean
+mxf_uuid_array_parse (MXFUUID ** array, guint32 * count, const guint8 * data,
+    guint size)
+{
+  guint32 element_count, element_size;
+  guint i;
+
+  g_return_val_if_fail (array != NULL, FALSE);
+  g_return_val_if_fail (count != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  if (size < 8)
+    return FALSE;
+
+  element_count = GST_READ_UINT32_BE (data);
+  data += 4;
+  size -= 4;
+
+  if (element_count == 0) {
+    *array = NULL;
+    *count = 0;
+    return TRUE;
+  }
+
+  element_size = GST_READ_UINT32_BE (data);
+  data += 4;
+  size -= 4;
+
+  if (element_size != 16) {
+    *array = NULL;
+    *count = 0;
+    return FALSE;
+  }
+
+  if (16 * element_count < size) {
+    *array = NULL;
+    *count = 0;
+    return FALSE;
+  }
+
+  *array = g_new (MXFUUID, element_count);
+  *count = element_count;
+
+  for (i = 0; i < element_count; i++) {
+    memcpy (&((*array)[i]), data, 16);
+    data += 16;
+  }
+
+  return TRUE;
 }
 
 gboolean
@@ -232,28 +378,29 @@ mxf_umid_is_zero (const MXFUMID * umid)
 }
 
 gchar *
-mxf_umid_to_string (const MXFUMID * key, gchar str[96])
+mxf_umid_to_string (const MXFUMID * umid, gchar str[96])
 {
-  g_return_val_if_fail (key != NULL, NULL);
+  g_return_val_if_fail (umid != NULL, NULL);
   g_return_val_if_fail (str != NULL, NULL);
 
   g_snprintf (str, 96,
       "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x."
       "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-      key->u[0], key->u[1], key->u[2], key->u[3], key->u[4], key->u[5],
-      key->u[6], key->u[7], key->u[8], key->u[9], key->u[10], key->u[11],
-      key->u[12], key->u[13], key->u[14], key->u[15],
-      key->u[16],
-      key->u[17],
-      key->u[18],
-      key->u[19],
-      key->u[20],
-      key->u[21],
-      key->u[22],
-      key->u[23],
-      key->u[24],
-      key->u[25],
-      key->u[26], key->u[27], key->u[28], key->u[29], key->u[30], key->u[31]
+      umid->u[0], umid->u[1], umid->u[2], umid->u[3], umid->u[4], umid->u[5],
+      umid->u[6], umid->u[7], umid->u[8], umid->u[9], umid->u[10], umid->u[11],
+      umid->u[12], umid->u[13], umid->u[14], umid->u[15],
+      umid->u[16],
+      umid->u[17],
+      umid->u[18],
+      umid->u[19],
+      umid->u[20],
+      umid->u[21],
+      umid->u[22],
+      umid->u[23],
+      umid->u[24],
+      umid->u[25],
+      umid->u[26], umid->u[27], umid->u[28], umid->u[29], umid->u[30],
+      umid->u[31]
       );
 
   return str;
@@ -609,7 +756,7 @@ mxf_op_set_generalized (MXFUL * ul, MXFOperationalPattern pattern,
 
 /* SMPTE 377M 6.1, Table 2 */
 gboolean
-mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
+mxf_partition_pack_parse (const MXFUL * ul, MXFPartitionPack * pack,
     const guint8 * data, guint size)
 {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -624,19 +771,19 @@ mxf_partition_pack_parse (const MXFUL * key, MXFPartitionPack * pack,
 
   GST_DEBUG ("Parsing partition pack:");
 
-  if (key->u[13] == 0x02)
+  if (ul->u[13] == 0x02)
     pack->type = MXF_PARTITION_PACK_HEADER;
-  else if (key->u[13] == 0x03)
+  else if (ul->u[13] == 0x03)
     pack->type = MXF_PARTITION_PACK_BODY;
-  else if (key->u[13] == 0x04)
+  else if (ul->u[13] == 0x04)
     pack->type = MXF_PARTITION_PACK_FOOTER;
 
   GST_DEBUG ("  type = %s",
       (pack->type == MXF_PARTITION_PACK_HEADER) ? "header" : (pack->type ==
           MXF_PARTITION_PACK_BODY) ? "body" : "footer");
 
-  pack->closed = (key->u[14] == 0x02 || key->u[14] == 0x04);
-  pack->complete = (key->u[14] == 0x03 || key->u[14] == 0x04);
+  pack->closed = (ul->u[14] == 0x02 || ul->u[14] == 0x04);
+  pack->complete = (ul->u[14] == 0x03 || ul->u[14] == 0x04);
 
   GST_DEBUG ("  closed = %s, complete = %s", (pack->closed) ? "yes" : "no",
       (pack->complete) ? "yes" : "no");
@@ -828,7 +975,7 @@ mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
 
 /* SMPTE 377M 11.1 */
 gboolean
-mxf_random_index_pack_parse (const MXFUL * key, const guint8 * data, guint size,
+mxf_random_index_pack_parse (const MXFUL * ul, const guint8 * data, guint size,
     GArray ** array)
 {
   guint len, i;
@@ -900,7 +1047,7 @@ mxf_random_index_pack_to_buffer (const GArray * array)
 
 /* SMPTE 377M 10.2.3 */
 gboolean
-mxf_index_table_segment_parse (const MXFUL * key,
+mxf_index_table_segment_parse (const MXFUL * ul,
     MXFIndexTableSegment * segment, const MXFPrimerPack * primer,
     const guint8 * data, guint size)
 {
@@ -910,7 +1057,7 @@ mxf_index_table_segment_parse (const MXFUL * key,
   guint16 tag, tag_size;
   const guint8 *tag_data;
 
-  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (ul != NULL, FALSE);
   g_return_val_if_fail (data != NULL, FALSE);
   g_return_val_if_fail (primer != NULL, FALSE);
 
@@ -931,7 +1078,7 @@ mxf_index_table_segment_parse (const MXFUL * key,
           goto error;
         memcpy (&segment->instance_id, tag_data, 16);
         GST_DEBUG ("  instance id = %s",
-            mxf_ul_to_string (&segment->instance_id, str));
+            mxf_uuid_to_string (&segment->instance_id, str));
         break;
       case 0x3f0b:
         if (!mxf_fraction_parse (&segment->index_edit_rate, tag_data, tag_size))
@@ -1154,7 +1301,7 @@ _mxf_mapping_ul_free (MXFUL * ul)
 }
 
 gboolean
-mxf_primer_pack_parse (const MXFUL * key, MXFPrimerPack * pack,
+mxf_primer_pack_parse (const MXFUL * ul, MXFPrimerPack * pack,
     const guint8 * data, guint size)
 {
   guint i;
@@ -1379,7 +1526,7 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
     GHashTable ** hash_table)
 {
   MXFLocalTag *local_tag;
-  MXFUL *key;
+  MXFUL *ul;
 
   g_return_val_if_fail (primer != NULL, FALSE);
   g_return_val_if_fail (tag_data != NULL, FALSE);
@@ -1394,23 +1541,23 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
 
   g_return_val_if_fail (*hash_table != NULL, FALSE);
 
-  key = (MXFUL *) g_hash_table_lookup (primer->mappings,
+  ul = (MXFUL *) g_hash_table_lookup (primer->mappings,
       GUINT_TO_POINTER (((guint) tag)));
 
-  if (key) {
+  if (ul) {
 #ifndef GST_DISABLE_GST_DEBUG
     gchar str[48];
 #endif
 
     GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
-        mxf_ul_to_string (key, str), tag_size);
+        mxf_ul_to_string (ul, str), tag_size);
 
     local_tag = g_slice_new (MXFLocalTag);
-    memcpy (&local_tag->key, key, sizeof (MXFUL));
+    memcpy (&local_tag->ul, ul, sizeof (MXFUL));
     local_tag->size = tag_size;
     local_tag->data = g_memdup (tag_data, tag_size);
 
-    g_hash_table_insert (*hash_table, &local_tag->key, local_tag);
+    g_hash_table_insert (*hash_table, &local_tag->ul, local_tag);
   } else {
     GST_WARNING ("Local tag with no entry in primer pack: 0x%04x", tag);
   }
@@ -1437,9 +1584,9 @@ mxf_local_tag_insert (MXFLocalTag * tag, GHashTable ** hash_table)
   g_return_val_if_fail (*hash_table != NULL, FALSE);
 
   GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
-      mxf_ul_to_string (&tag->key, str), tag->size);
+      mxf_ul_to_string (&tag->ul, str), tag->size);
 
-  g_hash_table_insert (*hash_table, &tag->key, tag);
+  g_hash_table_insert (*hash_table, &tag->ul, tag);
 
   return TRUE;
 }
