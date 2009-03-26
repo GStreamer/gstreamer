@@ -201,8 +201,8 @@ mxf_dv_dif_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
     gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
     MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
 {
-  (*edit_rate).n = a->sample_rate.n;
-  (*edit_rate).d = a->sample_rate.d;
+  edit_rate->n = a->sample_rate.n;
+  edit_rate->d = a->sample_rate.d;
 }
 
 static guint32
