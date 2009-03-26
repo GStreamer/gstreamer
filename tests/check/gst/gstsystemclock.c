@@ -169,6 +169,7 @@ GST_START_TEST (test_single_shot)
   GST_DEBUG ("waiting id %p", id);
   result = gst_clock_id_wait_async (id, ok_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
+
   GST_DEBUG ("waiting id %p", id2);
   result = gst_clock_id_wait_async (id2, error_callback, NULL);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
@@ -177,9 +178,11 @@ GST_START_TEST (test_single_shot)
   gst_clock_id_unschedule (id2);
   GST_DEBUG ("canceled id %p", id2);
   gst_clock_id_unref (id2);
-  g_usleep (TIME_UNIT / (2 * 1000));
 
-  gst_clock_id_unschedule (id);
+  /* wait for the entry to time out */
+  g_usleep (TIME_UNIT / 1000 * 5);
+  fail_unless (((GstClockEntry *) id)->status == GST_CLOCK_OK,
+      "Waiting did not finish");
   gst_clock_id_unref (id);
 
   gst_object_unref (clock);

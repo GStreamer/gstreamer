@@ -374,6 +374,7 @@ gst_system_clock_async_thread (GstClock * clock)
     /* if it was unscheduled, just move on to the next entry */
     if (entry->status == GST_CLOCK_UNSCHEDULED) {
       GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p was unscheduled", entry);
+      gst_system_clock_clear_async_wakeups_unlocked (sysclock);
       goto next_entry;
     }
 
@@ -407,6 +408,7 @@ gst_system_clock_async_thread (GstClock * clock)
           gst_system_clock_clear_async_wakeups_unlocked (sysclock);
         }
         if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
+          GST_CAT_DEBUG (GST_CAT_CLOCK, "updating periodic entry %p", entry);
           /* adjust time now */
           entry->time = requested + entry->interval;
           /* and resort the list now */
@@ -426,6 +428,13 @@ gst_system_clock_async_thread (GstClock * clock)
         GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry %p needs restart", entry);
         /* clear async wakeups, if any */
         gst_system_clock_clear_async_wakeups_unlocked (sysclock);
+
+        if (clock->entries->data != entry) {
+          /* if the new head is not this entry, we set the entry back to the OK
+           * state. This is needed so that the _unschedule() code can see if an
+           * entry is currently being waited on (when its state is BUSY). */
+          entry->status = GST_CLOCK_OK;
+        }
         continue;
       default:
         GST_CAT_DEBUG (GST_CAT_CLOCK,
