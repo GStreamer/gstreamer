@@ -439,7 +439,7 @@ mxf_umid_from_string (const gchar * str, MXFUMID * umid)
 }
 
 void
-mxf_umid_set (MXFUMID * umid)
+mxf_umid_init (MXFUMID * umid)
 {
   guint i;
   guint32 tmp;
