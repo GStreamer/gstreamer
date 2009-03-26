@@ -99,10 +99,7 @@ gst_segment_copy (GstSegment * segment)
   GstSegment *result = NULL;
 
   if (segment) {
-    /* we do not use g_slice_dup or g_slice_copy here because those were
-     * added in GLib 2.14 and we require only >= 2.12 */
-    result = g_slice_new (GstSegment);
-    *result = *segment;
+    result = g_slice_dup (GstSegment, segment);
   }
   return result;
 }
