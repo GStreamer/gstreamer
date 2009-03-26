@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "mxfwrite.h"
+#include "mxful.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -366,10 +367,6 @@ mxf_product_version_write (const MXFProductVersion * version, guint8 * data)
 GstBuffer *
 mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
 {
-  static const guint8 partition_pack_ul[] =
-      { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01,
-    0x0d, 0x01, 0x02, 0x01, 0x01
-  };
   guint slen;
   guint8 ber[9];
   GstBuffer *ret;
@@ -382,7 +379,7 @@ mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
   slen = mxf_ber_encode_size (size, ber);
 
   ret = gst_buffer_new_and_alloc (16 + slen + size);
-  memcpy (GST_BUFFER_DATA (ret), &partition_pack_ul, 13);
+  memcpy (GST_BUFFER_DATA (ret), MXF_UL (PARTITION_PACK), 13);
   if (pack->type == MXF_PARTITION_PACK_HEADER)
     GST_BUFFER_DATA (ret)[13] = 0x02;
   else if (pack->type == MXF_PARTITION_PACK_BODY)
@@ -447,10 +444,6 @@ mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
 GstBuffer *
 mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
 {
-  static const guint8 primer_pack_ul[] =
-      { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0d, 0x01, 0x02, 0x01,
-    0x01, 0x05, 0x01, 0x00
-  };
   guint slen;
   guint8 ber[9];
   GstBuffer *ret;
@@ -465,7 +458,7 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
   slen = mxf_ber_encode_size (8 + 18 * n, ber);
 
   ret = gst_buffer_new_and_alloc (16 + slen + 8 + 18 * n);
-  memcpy (GST_BUFFER_DATA (ret), &primer_pack_ul, 16);
+  memcpy (GST_BUFFER_DATA (ret), MXF_UL (PRIMER_PACK), 16);
   memcpy (GST_BUFFER_DATA (ret) + 16, &ber, slen);
 
   data = GST_BUFFER_DATA (ret) + 16 + slen;
@@ -511,10 +504,6 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
 GstBuffer *
 mxf_fill_new (guint size)
 {
-  static const guint8 fill_ul[] =
-      { 0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x03, 0x01, 0x02, 0x10, 0x01, 0x00, 0x00, 0x00
-  };
   GstBuffer *ret;
   guint slen;
   guint8 ber[9];
@@ -522,17 +511,12 @@ mxf_fill_new (guint size)
   slen = mxf_ber_encode_size (size, ber);
 
   ret = gst_buffer_new_and_alloc (16 + slen + size);
-  memcpy (GST_BUFFER_DATA (ret), &fill_ul, 16);
+  memcpy (GST_BUFFER_DATA (ret), MXF_UL (FILL), 16);
   memcpy (GST_BUFFER_DATA (ret) + 16, &ber, slen);
   memset (GST_BUFFER_DATA (ret) + slen, 0, size);
 
   return ret;
 }
-
-static const guint8 random_index_pack_ul[] =
-    { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01,
-  0x0d, 0x01, 0x02, 0x01, 0x01, 0x11, 0x01, 0x00
-};
 
 GstBuffer *
 mxf_random_index_pack_to_buffer (const GArray * array)
@@ -550,7 +534,7 @@ mxf_random_index_pack_to_buffer (const GArray * array)
   size = array->len * 12 + 4;
   slen = mxf_ber_encode_size (size, ber);
   ret = gst_buffer_new_and_alloc (16 + slen + size);
-  memcpy (GST_BUFFER_DATA (ret), random_index_pack_ul, 16);
+  memcpy (GST_BUFFER_DATA (ret), MXF_UL (RANDOM_INDEX_PACK), 16);
   memcpy (GST_BUFFER_DATA (ret) + 16, ber, slen);
 
   data = GST_BUFFER_DATA (ret) + 16 + slen;
