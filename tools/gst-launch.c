@@ -54,10 +54,19 @@ static void fault_restore (void);
 static void fault_spin (void);
 static void sigint_restore (void);
 static gboolean caught_intr = FALSE;
+static gboolean waiting_eos = FALSE;
 #endif
 
+/* event_loop return codes */
+typedef enum _EventLoopResult
+{
+  ELR_NO_ERROR = 0,
+  ELR_ERROR,
+  ELR_INTERRUPT
+} EventLoopResult;
+
 static GstElement *pipeline;
-static gboolean caught_error = FALSE;
+static EventLoopResult caught_error = ELR_NO_ERROR;
 static gboolean quiet = FALSE;
 static gboolean tags = FALSE;
 static gboolean messages = FALSE;
@@ -287,8 +296,14 @@ sigint_handler_sighandler (int signum)
 {
   g_print ("Caught interrupt -- ");
 
-  sigint_restore ();
-
+  /* If we were waiting for an EOS, we still want to catch
+   * the next signal to shutdown properly (and the following one
+   * will quit the program). */
+  if (waiting_eos) {
+    waiting_eos = FALSE;
+  } else {
+    sigint_restore ();
+  }
   /* we set a flag that is checked by the mainloop, we cannot do much in the
    * interrupt handler (no mutex or other blocking stuff) */
   caught_intr = TRUE;
@@ -365,13 +380,15 @@ play_signal_setup (void)
 }
 #endif /* DISABLE_FAULT_HANDLER */
 
-/* returns TRUE if there was an error or we caught a keyboard interrupt. */
-static gboolean
+/* returns ELR_ERROR if there was an error
+ * or ELR_INTERRUPT if we caught a keyboard interrupt
+ * or ELR_NO_ERROR otherwise. */
+static EventLoopResult
 event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 {
   GstBus *bus;
   GstMessage *message = NULL;
-  gboolean res = FALSE;
+  EventLoopResult res = ELR_NO_ERROR;
   gboolean buffering = FALSE;
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
@@ -483,7 +500,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         g_error_free (gerror);
         g_free (debug);
         /* we have an error */
-        res = TRUE;
+        res = ELR_ERROR;
         goto exit;
       }
       case GST_MESSAGE_STATE_CHANGED:{
@@ -579,8 +596,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           /* this application message is posted when we caught an interrupt and
            * we need to stop the pipeline. */
           PRINT (_("Interrupt: Stopping pipeline ...\n"));
-          /* return TRUE when we caught an interrupt */
-          res = TRUE;
+          res = ELR_INTERRUPT;
           goto exit;
         }
       }
@@ -609,6 +625,7 @@ main (int argc, char *argv[])
   gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
   gboolean trace = FALSE;
+  gboolean eos_on_shutdown = FALSE;
   gchar *savefile = NULL;
   gchar *exclude_args = NULL;
   GOptionEntry options[] = {
@@ -630,6 +647,8 @@ main (int argc, char *argv[])
         N_("Do not install a fault handler"), NULL},
     {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},
+    {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
+        N_("Force EOS on sources before shutting the pipeline down"), NULL},
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
@@ -799,6 +818,20 @@ main (int argc, char *argv[])
 
       tfthen = gst_util_get_timestamp ();
       caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
+      if (eos_on_shutdown && caught_error == ELR_INTERRUPT) {
+        PRINT (_("EOS on shutdown enabled -- Forcing EOS on the pipeline\n"));
+        waiting_eos = TRUE;
+        gst_element_send_event (pipeline, gst_event_new_eos ());
+        PRINT (_("Waiting for EOS...\n"));
+        caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
+
+        if (caught_error == ELR_NO_ERROR) {
+          /* we got EOS */
+          PRINT (_("EOS received - stopping pipeline...\n"));
+        } else if (caught_error == ELR_ERROR) {
+          PRINT (_("An error happened while waiting for EOS\n"));
+        }
+      }
       tfnow = gst_util_get_timestamp ();
 
       diff = GST_CLOCK_DIFF (tfthen, tfnow);
@@ -811,7 +844,7 @@ main (int argc, char *argv[])
 
     PRINT (_("Setting pipeline to PAUSED ...\n"));
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    if (!caught_error)
+    if (caught_error == ELR_NO_ERROR)
       gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
     PRINT (_("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
