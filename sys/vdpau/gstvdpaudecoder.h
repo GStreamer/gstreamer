@@ -29,16 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDPAU_DECODER \
-  (gst_vdpaudecoder_get_type())
-#define GST_VDPAU_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpauDecoder))
-#define GST_VDPAU_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpauDecoderClass))
-#define GST_IS_VDPAU_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_DECODER))
-#define GST_IS_VDPAU_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_DECODER))
+#define GST_TYPE_VDPAU_DECODER            (gst_vdpaudecoder_get_type())
+#define GST_VDPAU_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpauDecoder))
+#define GST_VDPAU_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpauDecoderClass))
+#define GST_VDPAU_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DECODER, GstVdpauDecoderClass))
+#define GST_IS_VDPAU_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_DECODER))
+#define GST_IS_VDPAU_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_DECODER))
 
 typedef struct _GstVdpauDecoder      GstVdpauDecoder;
 typedef struct _GstVdpauDecoderClass GstVdpauDecoderClass;
@@ -62,6 +58,8 @@ struct _GstVdpauDecoder {
 
 struct _GstVdpauDecoderClass {
   GstBaseTransformClass parent_class;
+
+  gboolean (*set_caps) (GstVdpauDecoder *dec, GstCaps *caps);
 };
 
 GType gst_vdpaudecoder_get_type (void);

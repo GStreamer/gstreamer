@@ -87,7 +87,8 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-mpeg, mpegversion = (int) [ 1, 2 ]")
+    GST_STATIC_CAPS ("video/mpeg, mpegversion = (int) [ 1, 2 ], "
+        "systemstream = (boolean) false")
     );
 
 GST_BOILERPLATE (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder, GstVdpauDecoder,
@@ -97,6 +98,20 @@ static void gst_vdpau_mpeg_decoder_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_vdpau_mpeg_decoder_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+
+static gboolean
+gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
+{
+  GstVdpauMpegDecoder *mpeg_dec;
+  GstStructure *structure;
+
+  mpeg_dec = GST_VDPAU_MPEG_DECODER (dec);
+
+  structure = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (structure, "mpegversion", &mpeg_dec->version);
+
+  return TRUE;
+}
 
 /* GObject vmethod implementations */
 
@@ -121,9 +136,11 @@ gst_vdpau_mpeg_decoder_class_init (GstVdpauMpegDecoderClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstVdpauDecoderClass *vdpaudec_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  vdpaudec_class = (GstVdpauDecoderClass *) klass;
 
   gobject_class->set_property = gst_vdpau_mpeg_decoder_set_property;
   gobject_class->get_property = gst_vdpau_mpeg_decoder_get_property;
@@ -131,6 +148,8 @@ gst_vdpau_mpeg_decoder_class_init (GstVdpauMpegDecoderClass * klass)
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
           FALSE, G_PARAM_READWRITE));
+
+  vdpaudec_class->set_caps = gst_vdpau_mpeg_decoder_set_caps;
 }
 
 static void

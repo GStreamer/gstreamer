@@ -53,16 +53,11 @@
 G_BEGIN_DECLS
 
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_VDPAU_MPEG_DECODER \
-  (gst_vdpau_mpeg_decoder_get_type())
-#define GST_VDPAU_MPEG_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoder))
-#define GST_VDPAU_MPEG_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoderClass))
-#define GST_IS_VDPAU_MPEG_DECODER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_MPEG_DECODER))
-#define GST_IS_VDPAU_MPEG_DECODER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_MPEG_DECODER))
+#define GST_TYPE_VDPAU_MPEG_DECODER            (gst_vdpau_mpeg_decoder_get_type())
+#define GST_VDPAU_MPEG_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoder))
+#define GST_VDPAU_MPEG_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoderClass))
+#define GST_IS_VDPAU_MPEG_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_MPEG_DECODER))
+#define GST_IS_VDPAU_MPEG_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_MPEG_DECODER))
 
 typedef struct _GstVdpauMpegDecoder      GstVdpauMpegDecoder;
 typedef struct _GstVdpauMpegDecoderClass GstVdpauMpegDecoderClass;
@@ -71,9 +66,9 @@ struct _GstVdpauMpegDecoder
 {
   GstVdpauDecoder dec;
 
-  GstPad *sinkpad, *srcpad;
-
   gboolean silent;
+
+  gint version;
 };
 
 struct _GstVdpauMpegDecoderClass 

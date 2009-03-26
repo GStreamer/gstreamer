@@ -286,6 +286,7 @@ static gboolean
 gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstVdpauDecoder *dec = GST_VDPAU_DECODER (GST_OBJECT_PARENT (pad));
+  GstVdpauDecoderClass *dec_class = GST_VDPAU_DECODER_GET_CLASS (dec);
 
   GstCaps *src_caps, *new_caps;
   GstStructure *structure;
@@ -323,6 +324,9 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
   dec->width = width;
   dec->height = height;
   dec->format = fourcc_format;
+
+  if (dec_class->set_caps && !dec_class->set_caps (dec, caps))
+    return FALSE;
 
   return TRUE;
 }
@@ -404,6 +408,7 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
       (GST_ELEMENT_CLASS (klass), "sink"), "sink");
   gst_pad_set_setcaps_function (dec->sink, gst_vdpaudecoder_sink_set_caps);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sink);
+  gst_pad_set_active (dec->sink, TRUE);
 }
 
 static void
