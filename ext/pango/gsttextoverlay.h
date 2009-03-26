@@ -109,6 +109,7 @@ struct _GstTextOverlay {
     gint                     height;
     gint                     fps_n;
     gint                     fps_d;
+    guint32                  format;
 
     GstTextOverlayVAlign     valign;
     GstTextOverlayHAlign     halign;

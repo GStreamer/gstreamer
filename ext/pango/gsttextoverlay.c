@@ -2,6 +2,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) <2006> Julien Moutte <julien@moutte.net>
+ * Copyright (C) <2006> Zeeshan Ali <zeeshan.ali@nokia.com>
  * Copyright (C) <2006-2008> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
@@ -94,7 +95,7 @@ static const GstElementDetails text_overlay_details =
 GST_ELEMENT_DETAILS ("Text overlay",
     "Filter/Editor/Video",
     "Adds text strings on top of a video buffer",
-    "David Schleef <ds@schleef.org>");
+    "David Schleef <ds@schleef.org>, " "Zeeshan Ali <zeeshan.ali@nokia.com>");
 
 
 #define DEFAULT_PROP_TEXT 	""
@@ -137,19 +138,20 @@ enum
   PROP_LAST
 };
 
-
 static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY"))
     );
 
 static GstStaticPadTemplate video_sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("video_sink",
+    GST_STATIC_PAD_TEMPLATE ("video_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420") ";"
+        GST_VIDEO_CAPS_YUV ("UYVY"))
     );
 
 static GstStaticPadTemplate text_sink_template_factory =
@@ -158,7 +160,6 @@ static GstStaticPadTemplate text_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("text/x-pango-markup; text/plain")
     );
-
 
 #define GST_TYPE_TEXT_OVERLAY_VALIGN (gst_text_overlay_valign_get_type())
 static GType
@@ -581,6 +582,7 @@ gst_text_overlay_setcaps (GstPad * pad, GstCaps * caps)
 
   if (gst_structure_get_int (structure, "width", &overlay->width) &&
       gst_structure_get_int (structure, "height", &overlay->height) &&
+      gst_structure_get_fourcc (structure, "format", &overlay->format) &&
       fps != NULL) {
     ret = gst_pad_set_caps (overlay->srcpad, caps);
   }
@@ -856,7 +858,7 @@ gst_text_overlay_getcaps (GstPad * pad)
 #define BOX_YPAD         6
 
 static inline void
-gst_text_overlay_shade_y (GstTextOverlay * overlay, guchar * dest,
+gst_text_overlay_shade_I420_y (GstTextOverlay * overlay, guchar * dest,
     gint x0, gint x1, gint y0, gint y1)
 {
   gint i, j, dest_stride;
@@ -879,6 +881,33 @@ gst_text_overlay_shade_y (GstTextOverlay * overlay, guchar * dest,
   }
 }
 
+static inline void
+gst_text_overlay_shade_UYVY_y (GstTextOverlay * overlay, guchar * dest,
+    gint x0, gint x1, gint y0, gint y1)
+{
+  gint i, j;
+  guint dest_stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_UYVY, 0,
+      overlay->width);
+
+  x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
+  x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
+
+  y0 = CLAMP (y0 - BOX_YPAD, 0, overlay->height);
+  y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);
+
+  for (i = y0; i < y1; i++) {
+    for (j = x0; j < x1; j++) {
+      gint y;
+      gint y_pos;
+
+      y_pos = (i * dest_stride) + j * 2 + 1;
+      y = dest[y_pos] + overlay->shading_value;
+
+      dest[y_pos] = CLAMP (y, 0, 255);
+    }
+  }
+}
+
 /* FIXME:
  *  - use proper strides and offset for I420
  *  - don't draw over the edge of the picture (try a longer
@@ -886,7 +915,7 @@ gst_text_overlay_shade_y (GstTextOverlay * overlay, guchar * dest,
  */
 
 static inline void
-gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
+gst_text_overlay_blit_I420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
     guint8 * yuv_pixels, gint x0, gint y0)
 {
   int y;                        /* text bitmap coordinates */
@@ -979,6 +1008,58 @@ gst_text_overlay_blit_yuv420 (GstTextOverlay * overlay, FT_Bitmap * bitmap,
       bitp++;
     }
     skip_y = !skip_y;
+  }
+}
+
+static inline void
+gst_text_overlay_blit_UYVY (GstTextOverlay * overlay, FT_Bitmap * bitmap,
+    guint8 * yuv_pixels, gint x0, gint y0)
+{
+  int y;                        /* text bitmap coordinates */
+  int x1, y1;                   /* video buffer coordinates */
+  int bit_rowinc;
+  guint8 *p, *bitp;
+  int video_width, video_height;
+  int bitmap_x0 = 0;            //x0 < 1 ? -(x0 - 1) : 1;       /* 1 pixel border */
+  int bitmap_y0 = y0 < 1 ? -(y0 - 1) : 1;       /* 1 pixel border */
+  int bitmap_width = bitmap->width - bitmap_x0;
+  int bitmap_height = bitmap->rows - bitmap_y0;
+
+  video_width =
+      gst_video_format_get_row_stride (GST_VIDEO_FORMAT_UYVY, 0,
+      overlay->width);
+  video_height = overlay->height;
+
+  /*g_debug ("bliting bitmap(%d, %d) on yuv (%d,%d) at %d,%d",
+     bitmap_width, bitmap_height,
+     video_width, video_height,
+     x0, y0); */
+
+  if (x0 + bitmap_x0 + bitmap_width > overlay->width - 1)       /* 1 pixel border */
+    bitmap_width -= x0 + bitmap_x0 + bitmap_width - overlay->width + 1;
+  if (y0 + bitmap_y0 + bitmap_height > video_height - 1)        /* 1 pixel border */
+    bitmap_height -= y0 + bitmap_y0 + bitmap_height - video_height + 1;
+
+  bit_rowinc = bitmap->pitch - bitmap_width;
+
+  y1 = y0 + bitmap_y0;
+  x1 = x0 + bitmap_x0;
+  bitp = bitmap->buffer + bitmap->pitch * bitmap_y0 + bitmap_x0;
+  for (y = bitmap_y0; y < bitmap_y0 + bitmap_height; y++) {
+    int n;
+
+    /* Go to the Y0 of the first macroblock we wan't to write to */
+    p = yuv_pixels + (y0 + y) * video_width + (x1 * 2) + 1;
+    for (n = bitmap_width; n > 0; --n) {
+      if (*bitp) {
+        *p = *bitp;
+        *(p - 1) = 0x80;
+      }
+
+      p += 2;
+      bitp++;
+    }
+    bitp += bit_rowinc;
   }
 }
 
@@ -1093,15 +1174,36 @@ gst_text_overlay_push_frame (GstTextOverlay * overlay, GstBuffer * video_frame)
 
   /* shaded background box */
   if (overlay->want_shading) {
-    gst_text_overlay_shade_y (overlay,
-        GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->bitmap.width,
-        ypos, ypos + overlay->bitmap.rows);
+    switch (overlay->format) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        gst_text_overlay_shade_I420_y (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->bitmap.width,
+            ypos, ypos + overlay->bitmap.rows);
+        break;
+      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+        gst_text_overlay_shade_UYVY_y (overlay,
+            GST_BUFFER_DATA (video_frame), xpos, xpos + overlay->bitmap.width,
+            ypos, ypos + overlay->bitmap.rows);
+        break;
+      default:
+        g_assert_not_reached ();
+    }
   }
 
 
   if (overlay->bitmap.buffer) {
-    gst_text_overlay_blit_yuv420 (overlay, &overlay->bitmap,
-        GST_BUFFER_DATA (video_frame), xpos, ypos);
+    switch (overlay->format) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        gst_text_overlay_blit_I420 (overlay, &overlay->bitmap,
+            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        break;
+      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+        gst_text_overlay_blit_UYVY (overlay, &overlay->bitmap,
+            GST_BUFFER_DATA (video_frame), xpos, ypos);
+        break;
+      default:
+        g_assert_not_reached ();
+    }
   }
 
   return gst_pad_push (overlay->srcpad, video_frame);
