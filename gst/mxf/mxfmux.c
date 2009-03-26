@@ -969,7 +969,7 @@ gst_mxf_mux_write_header_metadata (GstMXFMux * mux)
   }
 
 #if !GLIB_CHECK_VERSION (2, 16, 0)
-  g_list_free (value);
+  g_list_free (values);
 #endif
 
   buffers = g_list_reverse (buffers);

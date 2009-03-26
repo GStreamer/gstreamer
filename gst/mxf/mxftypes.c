@@ -1456,14 +1456,14 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
   data += 8;
 
   if (pack->mappings) {
-    guint16 local_tag;
+    guint local_tag;
     MXFUL *ul;
 #if GLIB_CHECK_VERSION (2, 16, 0)
     GHashTableIter iter;
 
     g_hash_table_iter_init (&iter, pack->mappings);
 #else
-    GList *l, *values;
+    GList *l, *keys;
 
     keys = g_hash_table_get_keys (pack->mappings);
 #endif
@@ -1472,8 +1472,8 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
     while (g_hash_table_iter_next (&iter, (gpointer) & local_tag,
             (gpointer) & ul)) {
 #else
-    for (l = keys l; l = l->next) {
-      local_tag = GPOINTER_TO_GUINT (l->data);
+    for (l = keys; l; l = l->next) {
+      local_tag = GPOINTER_TO_UINT (l->data);
       ul = g_hash_table_lookup (pack->mappings, GUINT_TO_POINTER (local_tag));
 #endif
       GST_WRITE_UINT16_BE (data, local_tag);
@@ -1584,7 +1584,7 @@ mxf_local_tag_insert (MXFLocalTag * tag, GHashTable ** hash_table)
 
   g_return_val_if_fail (*hash_table != NULL, FALSE);
 
-  GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
+  GST_DEBUG ("Adding local tag with UL %s and size %u",
       mxf_ul_to_string (&tag->ul, str), tag->size);
 
   g_hash_table_insert (*hash_table, &tag->ul, tag);
