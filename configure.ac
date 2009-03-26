@@ -1365,7 +1365,10 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_ACM, true)
 AG_GST_CHECK_FEATURE(ACM, [Windows ACM library], acm, [
   AC_MSG_CHECKING([Checking for ACM support])
   AC_CHECK_HEADERS([windows.h msacm.h],
-      [HAVE_ACM="yes"], [HAVE_ACM="no"])
+      [HAVE_ACM="yes"
+       AC_SUBST(ACMENC_CFLAGS)
+       AC_SUBST(ACMMP3DEC_CFLAGS)
+      ], [HAVE_ACM="no"])
 ])
 
 else

@@ -231,7 +231,7 @@ acmenc_setup (ACMEnc * enc)
   enc->header.dwSrcUser = 0;
 
   /* Ask what buffer size we need to use for our output */
-  acmStreamSize (enc->stream, ACM_BUFFER_SIZE, &destBufferSize,
+  acmStreamSize (enc->stream, ACM_BUFFER_SIZE, (LPDWORD) & destBufferSize,
       ACM_STREAMSIZEF_SOURCE);
   enc->header.pbDst = (BYTE *) g_malloc (destBufferSize);
   enc->header.cbDstLength = destBufferSize;
@@ -484,8 +484,12 @@ acmenc_base_init (ACMEncClass * klass)
   if (res) {
     GST_WARNING ("Could not get driver details: %d", res);
   }
-  shortname = g_utf16_to_utf8 (driverdetails.szShortName, -1, NULL, NULL, NULL);
-  longname = g_utf16_to_utf8 (driverdetails.szLongName, -1, NULL, NULL, NULL);
+  shortname =
+      g_utf16_to_utf8 ((gunichar2 *) driverdetails.szShortName, -1, NULL, NULL,
+      NULL);
+  longname =
+      g_utf16_to_utf8 ((gunichar2 *) driverdetails.szLongName, -1, NULL, NULL,
+      NULL);
   details.longname = g_strdup_printf ("ACM Encoder: %s", (shortname
           && *shortname) ? shortname : params->name);
   details.klass = "Codec/Encoder/Audio";
@@ -503,13 +507,12 @@ acmenc_base_init (ACMEncClass * klass)
 static ACMEncParams *
 acmenc_open_driver (wchar_t * filename)
 {
-  HACMDRIVER driver = NULL;
   HACMDRIVERID driverid = NULL;
   HMODULE mod = NULL;
   FARPROC func;
   MMRESULT res;
   ACMEncParams *params;
-  mod = LoadLibrary (filename);
+  mod = LoadLibraryW (filename);
   if (!mod) {
     GST_WARNING ("Failed to load ACM");
     goto done;
@@ -581,22 +584,24 @@ acmenc_register (GstPlugin * plugin)
 {
   int res;
   wchar_t dirname[1024];
-  WIN32_FIND_DATA filedata;
+  WIN32_FIND_DATAW filedata;
   HANDLE find;
-  res = GetSystemDirectory (dirname, sizeof (dirname) / sizeof (wchar_t));
+  res = GetSystemDirectoryW (dirname, sizeof (dirname) / sizeof (wchar_t));
   if (!res || res > 1000) {
     GST_WARNING ("Couldn't get system directory");
     return FALSE;
   }
   wcscat (dirname, L"\\*.acm");
-  find = FindFirstFile (dirname, &filedata);
+  find = FindFirstFileW (dirname, &filedata);
   if (find == INVALID_HANDLE_VALUE) {
     GST_WARNING ("Failed to find ACM files: %x", GetLastError ());
     return FALSE;
   }
 
   do {
-    char *filename = g_utf16_to_utf8 (filedata.cFileName, -1, NULL, NULL, NULL);
+    char *filename =
+        g_utf16_to_utf8 ((gunichar2 *) filedata.cFileName, -1, NULL, NULL,
+        NULL);
     GST_INFO ("Registering ACM filter from file %s", filename);
     if (acmenc_register_file (plugin, filedata.cFileName))
       GST_INFO ("Loading filter from ACM '%s' succeeded", filename);
@@ -604,7 +609,7 @@ acmenc_register (GstPlugin * plugin)
     else
       GST_WARNING ("Loading filter from ACM '%s' failed", filename);
     g_free (filename);
-  } while (FindNextFile (find, &filedata));
+  } while (FindNextFileW (find, &filedata));
   FindClose (find);
   return TRUE;
 }

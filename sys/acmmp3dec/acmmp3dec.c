@@ -153,8 +153,9 @@ acmmp3dec_setup (ACMMP3Dec * dec)
   acmmp3dec_set_input_format (dec);
   acmmp3dec_set_output_format (dec);
 
-  res = acmStreamOpen (&dec->stream, NULL, &dec->infmt, &dec->outfmt,
-      0, 0, 0, 0);
+  res =
+      acmStreamOpen (&dec->stream, NULL, (LPWAVEFORMATEX) & dec->infmt,
+      &dec->outfmt, 0, 0, 0, 0);
   if (res) {
     GST_WARNING_OBJECT (dec, "Failed to open ACM stream: %d", res);
     return FALSE;
@@ -171,7 +172,7 @@ acmmp3dec_setup (ACMMP3Dec * dec)
 
   /* Ask what buffer size we need to use for our output */
   acmStreamSize (dec->stream, ACM_BUFFER_SIZE,
-      &destBufferSize, ACM_STREAMSIZEF_SOURCE);
+      (LPDWORD) & destBufferSize, ACM_STREAMSIZEF_SOURCE);
 
   dec->header.pbDst = (BYTE *) g_malloc (destBufferSize);
   dec->header.cbDstLength = destBufferSize;
@@ -404,7 +405,7 @@ acmmp3dec_class_init (ACMMP3DecClass * klass)
 }
 
 static void
-acmmp3dec_base_init (ACMMP3DecClass * klass)
+acmmp3dec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
