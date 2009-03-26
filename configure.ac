@@ -142,6 +142,13 @@ AC_CHECK_HEADERS([sys/time.h])
 dnl used by ext/dts
 AX_CREATE_STDINT_H
 
+AC_CHECK_HEADERS([pthread.h], HAVE_PTHREAD_H=yes)
+AM_CONDITIONAL(HAVE_PTHREAD_H, test "x$HAVE_PTHREAD_H" = "xyes")
+
+if test "x$HAVE_PTHREAD_H" != "xyes"; then
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/dccp//`
+fi
+
 dnl *** checks for types/defines ***
 
 dnl Check for FIONREAD ioctl declaration
@@ -320,6 +327,10 @@ AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
 if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(librfb)
+fi
+
+if test "x$HAVE_PTHREAD_H" != "xyes"; then
+  AG_GST_DISABLE_PLUGIN(dccp)
 fi
 
 dnl *** sys plug-ins ***
