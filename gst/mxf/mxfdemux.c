@@ -659,7 +659,7 @@ gst_mxf_demux_choose_package (GstMXFDemux * demux)
   }
 
 done:
-  if (memcmp (&ret->package_uid, &demux->current_package_uid, 32) != 0) {
+  if (mxf_umid_is_equal (&ret->package_uid, &demux->current_package_uid)) {
     gchar current_package_string[96];
     GstTagList *tags = gst_tag_list_new ();
 

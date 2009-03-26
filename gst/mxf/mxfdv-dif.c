@@ -42,8 +42,9 @@
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
-static const guint8 picture_essence_coding_dv[13] = {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x02, 0x02, 0x02
+static const MXFUL picture_essence_coding_dv = { {
+        0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x02, 0x02,
+    0x02}
 };
 
 static gboolean
@@ -76,7 +77,7 @@ mxf_is_dv_dif_essence_track (const MXFMetadataTimelineTrack * track)
       p = MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d);
 
       key = &p->picture_essence_coding;
-      if (memcmp (key, &picture_essence_coding_dv, 13) == 0)
+      if (mxf_ul_is_subclass (&picture_essence_coding_dv, key))
         return TRUE;
     }
   }

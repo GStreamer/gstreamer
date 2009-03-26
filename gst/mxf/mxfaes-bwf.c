@@ -1183,8 +1183,8 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
   /* FIXME: set a channel layout */
 
   if (mxf_ul_is_zero (&descriptor->sound_essence_compression) ||
-      mxf_ul_is_equal (&descriptor->sound_essence_compression,
-          &mxf_sound_essence_compression_uncompressed)) {
+      mxf_ul_is_subclass (&mxf_sound_essence_compression_uncompressed,
+          &descriptor->sound_essence_compression)) {
     guint block_align;
 
     if (descriptor->channel_count == 0 ||
@@ -1212,8 +1212,8 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
     codec_name =
         g_strdup_printf ("Uncompressed %u-bit little endian integer PCM audio",
         (block_align / descriptor->channel_count) * 8);
-  } else if (mxf_ul_is_equal (&descriptor->sound_essence_compression,
-          &mxf_sound_essence_compression_aiff)) {
+  } else if (mxf_ul_is_subclass (&mxf_sound_essence_compression_aiff,
+          &descriptor->sound_essence_compression)) {
     guint block_align;
 
     if (descriptor->channel_count == 0 ||
@@ -1242,8 +1242,8 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
     codec_name =
         g_strdup_printf ("Uncompressed %u-bit big endian integer PCM audio",
         (block_align / descriptor->channel_count) * 8);
-  } else if (mxf_ul_is_equal (&descriptor->sound_essence_compression,
-          &mxf_sound_essence_compression_alaw)) {
+  } else if (mxf_ul_is_subclass (&mxf_sound_essence_compression_alaw,
+          &descriptor->sound_essence_compression)) {
 
     if (descriptor->audio_sampling_rate.n != 0 ||
         descriptor->audio_sampling_rate.d != 0 ||
