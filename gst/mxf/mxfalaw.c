@@ -152,28 +152,34 @@ mxf_alaw_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
 {
   ALawMappingData *md = mapping_data;
   guint bytes;
+  guint64 speu =
+      gst_util_uint64_scale (md->rate, md->edit_rate.d, md->edit_rate.n);
 
-  if (buffer) {
-    guint64 speu =
-        gst_util_uint64_scale (md->rate, md->edit_rate.d, md->edit_rate.n);
+  md->error += (md->edit_rate.d * md->rate) % (md->edit_rate.n);
+  if (md->error >= md->edit_rate.n) {
+    md->error = 0;
+    speu += 1;
+  }
 
-    md->error += (GST_SECOND * md->edit_rate.d * md->rate) % (md->edit_rate.n);
-    if (md->error >= md->edit_rate.n) {
-      md->error = 0;
-      speu += 1;
-    }
+  bytes = speu * md->channels;
 
-    bytes = speu * md->channels;
-
+  if (buffer)
     gst_adapter_push (adapter, buffer);
-    if (gst_adapter_available (adapter) >= bytes) {
-      *outbuf = gst_adapter_take_buffer (adapter, bytes);
-    }
-  } else if (flush && (bytes = gst_adapter_available (adapter))) {
+
+  if (gst_adapter_available (adapter) == 0)
+    return GST_FLOW_OK;
+
+  if (flush)
+    bytes = MIN (gst_adapter_available (adapter), bytes);
+
+  if (gst_adapter_available (adapter) >= bytes) {
     *outbuf = gst_adapter_take_buffer (adapter, bytes);
   }
 
-  return GST_FLOW_OK;
+  if (gst_adapter_available (adapter) >= bytes)
+    return GST_FLOW_CUSTOM_SUCCESS;
+  else
+    return GST_FLOW_OK;
 }
 
 static const guint8 alaw_essence_container_ul[] = {
@@ -232,19 +238,6 @@ mxf_alaw_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
   return;
 }
 
-static guint
-gst_greatest_common_divisor (guint a, guint b)
-{
-  while (b != 0) {
-    guint temp = a;
-
-    a = b;
-    b = temp % b;
-  }
-
-  return a;
-}
-
 static void
 mxf_alaw_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
     gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
@@ -252,8 +245,6 @@ mxf_alaw_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
 {
   guint i;
   gdouble min = G_MAXDOUBLE;
-  MXFMetadataGenericSoundEssenceDescriptor *d =
-      MXF_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (a);
   ALawMappingData *md = mapping_data;
 
   for (i = 0; i < package->parent.n_tracks; i++) {
@@ -271,18 +262,9 @@ mxf_alaw_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
   }
 
   if (min == G_MAXDOUBLE) {
-    guint32 nu, de;
-    guint gcd;
-
-    /* 50ms edit units */
-    nu = d->audio_sampling_rate.n;
-    de = d->audio_sampling_rate.d * 20;
-    gcd = gst_greatest_common_divisor (nu, de);
-    nu /= gcd;
-    de /= gcd;
-
-    (*edit_rate).n = nu;
-    (*edit_rate).d = de;
+    /* 100ms edit units */
+    edit_rate->n = 10;
+    edit_rate->d = 1;
   }
 
   memcpy (&md->edit_rate, edit_rate, sizeof (MXFFraction));

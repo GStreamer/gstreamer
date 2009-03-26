@@ -49,6 +49,7 @@ typedef struct
   MXFMetadataFileDescriptor *descriptor;
 
   GstAdapter *adapter;
+  gboolean have_complete_edit_unit;
 
   gpointer mapping_data;
   const MXFEssenceElementWriter *writer;
@@ -62,6 +63,7 @@ typedef enum
 {
   GST_MXF_MUX_STATE_HEADER,
   GST_MXF_MUX_STATE_DATA,
+  GST_MXF_MUX_STATE_EOS,
   GST_MXF_MUX_STATE_ERROR
 } GstMXFMuxState;
 
