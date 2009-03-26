@@ -92,9 +92,6 @@ GType gst_type_register_static_full (GType parent_type,
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
    from Nautilus and GOB. */
 
-#define __gst_once_init_enter(val) (g_once_init_enter (val))
-#define __gst_once_init_leave(val,newval) (g_once_init_leave (val, newval))
-
 /**
  * GST_BOILERPLATE_FULL:
  * @type: the name of the type struct
@@ -139,7 +136,7 @@ type_as_function ## _get_type (void)					\
    * system and whether the compiler is c++ or not. The g_once_init_*	\
    * functions always take a gsize * though ... */			\
   static volatile gsize gonce_data = 0;					\
-  if (__gst_once_init_enter (&gonce_data)) {				\
+  if (g_once_init_enter (&gonce_data)) {				\
     GType _type;							\
     _type = gst_type_register_static_full (parent_type_macro,           \
         g_intern_static_string (#type),					\
@@ -155,7 +152,7 @@ type_as_function ## _get_type (void)					\
         NULL,                                                           \
         (GTypeFlags) 0);				                \
     additional_initializations (_type);				        \
-    __gst_once_init_leave (&gonce_data, (gsize) _type);			\
+    g_once_init_leave (&gonce_data, (gsize) _type);			\
   }									\
   return (GType) gonce_data;						\
 }
