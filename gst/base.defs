@@ -119,6 +119,7 @@
   (of-object "GstAdapter")
   (c-name "gst_adapter_take")
   (return-type "guint8*")
+  (caller-owns-return #t)
   (parameters
     '("guint" "nbytes")
   )
@@ -128,6 +129,7 @@
   (of-object "GstAdapter")
   (c-name "gst_adapter_take_buffer")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
    '("guint" "nbytes")
   )
@@ -904,6 +906,7 @@
   (of-object "GstCollectPads")
   (c-name "gst_collect_pads_take_buffer")
   (return-type "GstBuffer*")
+  (caller-owns-return #t)
   (parameters
     '("GstCollectData*" "data")
     '("guint" "size")
