@@ -73,7 +73,6 @@ static GType gst_videomixer_get_type (void);
 
 
 static void gst_videomixer_pad_class_init (GstVideoMixerPadClass * klass);
-
 static void gst_videomixer_pad_init (GstVideoMixerPad * mixerpad);
 
 static void gst_videomixer_pad_get_property (GObject * object, guint prop_id,
@@ -82,9 +81,7 @@ static void gst_videomixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static gboolean gst_videomixer_src_event (GstPad * pad, GstEvent * event);
-
 static gboolean gst_videomixer_sink_event (GstPad * pad, GstEvent * event);
-
 
 static void gst_videomixer_sort_pads (GstVideoMixer * mix);
 
