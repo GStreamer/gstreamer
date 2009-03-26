@@ -24,7 +24,8 @@
 /* TODO:
  *  - playbin hangs on a lot of MXF/DV-DIF files (bug #563827)
  *  - decodebin2 creates loops inside the linking graph (bug #563828)
- *  - Forwarding of timestamps in dvdemux?
+ *  - track descriptor might be multiple descriptor, one for sound, one for video
+ *  - there might be 2 tracks for one essence, i.e. one audio/one video track
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,9 +33,11 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <string.h>
 
 #include "mxfdv-dif.h"
+#include "mxfwrite.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -104,12 +107,23 @@ mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
 {
   GstCaps *caps = NULL;
+  guint i;
+  MXFMetadataGenericPictureEssenceDescriptor *d = NULL;
 
   g_return_val_if_fail (track != NULL, NULL);
 
   if (track->parent.descriptor == NULL) {
     GST_ERROR ("No descriptor found for this track");
     return NULL;
+  }
+
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
+      d = MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+          parent.descriptor[i]);
+      break;
+    }
   }
 
   *handler = mxf_dv_dif_handle_essence_element;
@@ -122,6 +136,9 @@ mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   caps =
       gst_caps_new_simple ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
       NULL);
+
+  if (d)
+    mxf_metadata_generic_picture_essence_descriptor_set_caps (d, caps);
 
   if (!*tags)
     *tags = gst_tag_list_new ();
@@ -136,8 +153,87 @@ static const MXFEssenceElementHandler mxf_dv_dif_essence_element_handler = {
   mxf_dv_dif_create_caps
 };
 
+static GstFlowReturn
+mxf_dv_dif_write_func (GstBuffer * buffer, GstCaps * caps,
+    gpointer mapping_data, GstAdapter * adapter, GstBuffer ** outbuf,
+    gboolean flush)
+{
+  *outbuf = buffer;
+  return GST_FLOW_OK;
+}
+
+static const guint8 dv_dif_essence_container_ul[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01,
+  0x0d, 0x01, 0x03, 0x01, 0x02, 0x02, 0x7f, 0x01
+};
+
+static MXFMetadataFileDescriptor *
+mxf_dv_dif_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  MXFMetadataCDCIPictureEssenceDescriptor *ret;
+
+  ret = (MXFMetadataCDCIPictureEssenceDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_CDCI_PICTURE_ESSENCE_DESCRIPTOR);
+
+  memcpy (&ret->parent.parent.essence_container, &dv_dif_essence_container_ul,
+      16);
+
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent,
+          caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+  *handler = mxf_dv_dif_write_func;
+
+  return (MXFMetadataFileDescriptor *) ret;
+}
+
+static void
+mxf_dv_dif_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf)
+{
+  return;
+}
+
+static void
+mxf_dv_dif_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
+    MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
+{
+  edit_rate->n = a->sample_rate.n;
+  edit_rate->d = a->sample_rate.d;
+}
+
+static guint32
+mxf_dv_dif_get_track_number_template (MXFMetadataFileDescriptor * a,
+    GstCaps * caps, gpointer mapping_data)
+{
+  return (0x18 << 24) | (0x01 << 8);
+}
+
+static MXFEssenceElementWriter mxf_dv_dif_essence_element_writer = {
+  mxf_dv_dif_get_descriptor,
+  mxf_dv_dif_update_descriptor,
+  mxf_dv_dif_get_edit_rate,
+  mxf_dv_dif_get_track_number_template,
+  NULL,
+  {{0,}}
+};
+
 void
 mxf_dv_dif_init (void)
 {
   mxf_essence_element_handler_register (&mxf_dv_dif_essence_element_handler);
+
+  mxf_dv_dif_essence_element_writer.pad_template =
+      gst_pad_template_new ("dv_dif_video_sink_%u", GST_PAD_SINK,
+      GST_PAD_REQUEST,
+      gst_caps_from_string ("video/x-dv, width = "
+          GST_VIDEO_SIZE_RANGE ", height = " GST_VIDEO_SIZE_RANGE
+          ", framerate = " GST_VIDEO_FPS_RANGE ", systemstream = true"));
+  memcpy (&mxf_dv_dif_essence_element_writer.data_definition,
+      mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_PICTURE_ESSENCE),
+      16);
+  mxf_essence_element_writer_register (&mxf_dv_dif_essence_element_writer);
 }

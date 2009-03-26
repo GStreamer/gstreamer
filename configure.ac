@@ -45,7 +45,7 @@ AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.22
+GST_REQ=0.10.22.1
 GSTPB_REQ=0.10.22
 
 dnl *** autotools stuff ****
@@ -160,6 +160,10 @@ fi
 AM_CONDITIONAL(HAVE_GCC_ASM, test "x$HAVE_GCC_ASM" = "xyes")
 
 dnl *** checks for library functions ***
+AC_CHECK_FUNCS([gmtime_r])
+
+dnl *** checks for headers ***
+AC_CHECK_HEADERS([sys/utsname.h])
 
 dnl *** checks for dependency libraries ***
 

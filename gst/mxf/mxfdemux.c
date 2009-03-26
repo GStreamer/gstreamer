@@ -1779,7 +1779,7 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
           pad->last_stop);
 
     if (ret != GST_FLOW_OK)
-      break;
+      goto out;
 
     pad->current_essence_track_position++;
 

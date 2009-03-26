@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "mxftypes.h"
+#include "mxful.h"
 #include "mxfmetadata.h"
 
 typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, gpointer mapping_data, GstBuffer **outbuf);
@@ -33,11 +34,6 @@ typedef struct {
   gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);
   GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
 } MXFEssenceElementHandler;
-
-gchar * mxf_ul_to_string (const MXFUL *ul, gchar str[48]);
-gboolean mxf_ul_is_equal (const MXFUL *a, const MXFUL *b);
-gboolean mxf_ul_is_zero (const MXFUL *ul);
-guint mxf_ul_hash (const MXFUL *ul);
 
 gchar *mxf_umid_to_string (const MXFUMID * umid, gchar str[96]);
 MXFUMID *mxf_umid_from_string (const gchar *str, MXFUMID * umid);
@@ -72,6 +68,7 @@ gchar * mxf_utf16_to_utf8 (const guint8 * data, guint size);
 
 gboolean mxf_product_version_parse (MXFProductVersion * product_version,
     const guint8 * data, guint size);
+gboolean mxf_product_version_is_valid (const MXFProductVersion *version);
 
 gboolean mxf_fraction_parse (MXFFraction *fraction, const guint8 *data, guint size);
 gdouble mxf_fraction_to_double (const MXFFraction *fraction);
@@ -80,8 +77,6 @@ gboolean mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, gui
 gboolean mxf_timestamp_is_unknown (const MXFTimestamp *a);
 gint mxf_timestamp_compare (const MXFTimestamp *a, const MXFTimestamp *b);
 gchar *mxf_timestamp_to_string (const MXFTimestamp *t, gchar str[32]);
-
-gboolean mxf_ul_array_parse (MXFUL **array, guint32 *count, const guint8 *data, guint size);
 
 gboolean mxf_partition_pack_parse (const MXFUL *key, MXFPartitionPack *pack, const guint8 *data, guint size);
 void mxf_partition_pack_reset (MXFPartitionPack *pack);
@@ -96,11 +91,12 @@ void mxf_index_table_segment_reset (MXFIndexTableSegment *segment);
 
 gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
     guint16 * tag_size, const guint8 ** tag_data);
-void gst_mxf_local_tag_free (MXFLocalTag *tag);
+void mxf_local_tag_free (MXFLocalTag *tag);
 
 gboolean mxf_local_tag_add_to_hash_table (const MXFPrimerPack *primer,
   guint16 tag, const guint8 *tag_data, guint16 tag_size,
   GHashTable **hash_table);
+gboolean mxf_local_tag_insert (MXFLocalTag *tag, GHashTable **hash_table);
 
 void mxf_essence_element_handler_register (const MXFEssenceElementHandler *handler);
 const MXFEssenceElementHandler * mxf_essence_element_handler_find (const MXFMetadataTimelineTrack *track);

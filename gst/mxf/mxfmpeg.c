@@ -33,10 +33,12 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <string.h>
 
 #include "mxfmpeg.h"
 #include "mxfquark.h"
+#include "mxfwrite.h"
 
 #include <gst/base/gstbytereader.h>
 
@@ -243,10 +245,133 @@ mxf_metadata_mpeg_video_descriptor_to_structure (MXFMetadataBase * m)
   return ret;
 }
 
+static GList *
+mxf_metadata_mpeg_video_descriptor_write_tags (MXFMetadataBase * m,
+    MXFPrimerPack * primer)
+{
+  MXFMetadataMPEGVideoDescriptor *self = MXF_METADATA_MPEG_VIDEO_DESCRIPTOR (m);
+  GList *ret =
+      MXF_METADATA_BASE_CLASS
+      (mxf_metadata_mpeg_video_descriptor_parent_class)->write_tags (m, primer);
+  MXFLocalTag *t;
+
+  if (self->single_sequence != -1) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_single_sequence_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, (self->single_sequence) ? 1 : 0);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->const_b_frames) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_constant_b_frames_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, (self->const_b_frames) ? 1 : 0);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->coded_content_type) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_coded_content_type_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, self->coded_content_type);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->low_delay) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_low_delay_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, (self->low_delay) ? 1 : 0);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->closed_gop) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_closed_gop_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, (self->closed_gop) ? 1 : 0);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->identical_gop) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_identical_gop_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, (self->identical_gop) ? 1 : 0);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->max_gop) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_identical_gop_ul, 16);
+    t->size = 2;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT16_BE (t->data, self->max_gop);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->b_picture_count) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_b_picture_count_ul, 16);
+    t->size = 2;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT16_BE (t->data, self->b_picture_count);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->bitrate) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_bitrate_ul, 16);
+    t->size = 4;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT32_BE (t->data, self->bitrate);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  if (self->profile_and_level) {
+    t = g_slice_new0 (MXFLocalTag);
+    memcpy (&t->key, &_profile_and_level_ul, 16);
+    t->size = 1;
+    t->data = g_slice_alloc (t->size);
+    t->g_slice = TRUE;
+    GST_WRITE_UINT8 (t->data, self->profile_and_level);
+    mxf_primer_pack_add_mapping (primer, 0, &t->key);
+    ret = g_list_prepend (ret, t);
+  }
+
+  return ret;
+}
+
 static void
 mxf_metadata_mpeg_video_descriptor_init (MXFMetadataMPEGVideoDescriptor * self)
 {
-
+  self->single_sequence = -1;
 }
 
 static void
@@ -261,6 +386,8 @@ static void
   metadata_base_class->name_quark = MXF_QUARK (MPEG_VIDEO_DESCRIPTOR);
   metadata_base_class->to_structure =
       mxf_metadata_mpeg_video_descriptor_to_structure;
+  metadata_base_class->write_tags =
+      mxf_metadata_mpeg_video_descriptor_write_tags;
 
   metadata_class->type = 0x0151;
 }
@@ -379,8 +506,6 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
       gst_byte_reader_skip (&reader, 1);
     }
   }
-
-  g_assert_not_reached ();
 
   return FALSE;
 }
@@ -577,7 +702,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "MPEG-1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_ac3)) {
-      caps = gst_caps_new_simple ("audio/ac3", NULL);
+      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
       codec_name = "AC3 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_mpeg1_layer1)) {
@@ -736,9 +861,431 @@ static const MXFEssenceElementHandler mxf_mpeg_essence_element_handler = {
   mxf_mpeg_create_caps
 };
 
+typedef struct
+{
+  guint spf;
+  guint rate;
+} MPEGAudioMappingData;
+
+static GstFlowReturn
+mxf_mpeg_audio_write_func (GstBuffer * buffer, GstCaps * caps,
+    gpointer mapping_data, GstAdapter * adapter, GstBuffer ** outbuf,
+    gboolean flush)
+{
+  *outbuf = buffer;
+  return GST_FLOW_OK;
+}
+
+static const guint8 mpeg_essence_container_ul[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x02,
+  0x0d, 0x01, 0x03, 0x01, 0x02, 0x04, 0x01, 0x01
+};
+
+static MXFMetadataFileDescriptor *
+mxf_mpeg_audio_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  MXFMetadataGenericSoundEssenceDescriptor *ret;
+  GstStructure *s;
+  MPEGAudioMappingData *md = g_new0 (MPEGAudioMappingData, 1);
+  gint rate;
+
+  md->spf = -1;
+  *mapping_data = md;
+
+  ret = (MXFMetadataGenericSoundEssenceDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (strcmp (gst_structure_get_name (s), "audio/mpeg") == 0) {
+    gint mpegversion;
+
+    if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
+      GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
+      gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+      return NULL;
+    }
+
+    if (mpegversion == 1) {
+      gint layer = 0;
+      gint mpegaudioversion = 0;
+
+      gst_structure_get_int (s, "layer", &layer);
+      gst_structure_get_int (s, "mpegaudioversion", &mpegaudioversion);
+
+      if (mpegaudioversion == 1 && layer == 1)
+        memcpy (&ret->sound_essence_compression,
+            &sound_essence_compression_mpeg1_layer1, 16);
+      else if (mpegaudioversion == 1 && layer == 2)
+        memcpy (&ret->sound_essence_compression,
+            &sound_essence_compression_mpeg1_layer12, 16);
+      else if (mpegaudioversion == 2 && layer == 1)
+        memcpy (&ret->sound_essence_compression,
+            &sound_essence_compression_mpeg2_layer1, 16);
+
+      if (layer == 1)
+        md->spf = 384;
+      else if (layer == 2 || mpegversion == 1)
+        md->spf = 1152;
+      else
+        md->spf = 576;          /* MPEG-2 or 2.5 */
+
+      /* Otherwise all 0x00, must be some kind of mpeg1 audio */
+    } else if (mpegversion == 2) {
+      memcpy (&ret->sound_essence_compression, &sound_essence_compression_aac,
+          16);
+      md->spf = 1024;           /* FIXME: is this correct? */
+    }
+  } else if (strcmp (gst_structure_get_name (s), "audio/x-ac3") == 0) {
+    memcpy (&ret->sound_essence_compression, &sound_essence_compression_ac3,
+        16);
+    md->spf = 256;              /* FIXME: is this correct? */
+  } else {
+    g_assert_not_reached ();
+  }
+
+  if (!gst_structure_get_int (s, "rate", &rate)) {
+    GST_ERROR ("Invalid rate");
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+  md->rate = rate;
+
+  memcpy (&ret->parent.essence_container, &mpeg_essence_container_ul, 16);
+
+  if (!mxf_metadata_generic_sound_essence_descriptor_from_caps (ret, caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
+  *handler = mxf_mpeg_audio_write_func;
+
+  return (MXFMetadataFileDescriptor *) ret;
+}
+
+static void
+mxf_mpeg_audio_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf)
+{
+  return;
+}
+
+static void
+mxf_mpeg_audio_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
+    MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
+{
+  MPEGAudioMappingData *md = mapping_data;
+
+  edit_rate->n = md->rate;
+  edit_rate->d = md->spf;
+}
+
+static guint32
+mxf_mpeg_audio_get_track_number_template (MXFMetadataFileDescriptor * a,
+    GstCaps * caps, gpointer mapping_data)
+{
+  return (0x16 << 24) | (0x05 << 8);
+}
+
+static MXFEssenceElementWriter mxf_mpeg_audio_essence_element_writer = {
+  mxf_mpeg_audio_get_descriptor,
+  mxf_mpeg_audio_update_descriptor,
+  mxf_mpeg_audio_get_edit_rate,
+  mxf_mpeg_audio_get_track_number_template,
+  NULL,
+  {{0,}}
+};
+
+#define MPEG_AUDIO_CAPS \
+      "audio/mpeg, " \
+      "mpegversion = (int) 1, " \
+      "layer = (int) [ 1, 3 ], " \
+      "rate = (int) [ 8000, 48000 ], " \
+      "channels = (int) [ 1, 2 ], " \
+      "parsed = (boolean) TRUE; " \
+      "audio/x-ac3, " \
+      "rate = (int) [ 4000, 96000 ], " \
+      "channels = (int) [ 1, 6 ]; " \
+      "audio/mpeg, " \
+      "mpegversion = (int) 2, " \
+      "rate = (int) [ 8000, 96000 ], " \
+      "channels = (int) [ 1, 8 ]"
+
+/* See ISO/IEC 13818-2 for MPEG ES format */
+gboolean
+mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
+{
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  guint32 tmp;
+
+  while (gst_byte_reader_get_remaining (&reader) > 3) {
+    if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
+      guint8 type;
+
+      /* Found sync code */
+      gst_byte_reader_skip (&reader, 3);
+
+      if (!gst_byte_reader_get_uint8 (&reader, &type))
+        break;
+
+      /* PICTURE */
+      if (type == 0x00) {
+        return TRUE;
+      }
+    } else {
+      gst_byte_reader_skip (&reader, 1);
+    }
+  }
+
+  return FALSE;
+}
+
+static gboolean
+mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
+{
+  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  guint32 tmp;
+
+  while (gst_byte_reader_get_remaining (&reader) > 3) {
+    if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
+      guint8 type;
+
+      /* Found sync code */
+      gst_byte_reader_skip (&reader, 3);
+
+      if (!gst_byte_reader_get_uint8 (&reader, &type))
+        break;
+
+      /* PICTURE */
+      if (type == 0xb6) {
+        return TRUE;
+      }
+    } else {
+      gst_byte_reader_skip (&reader, 1);
+    }
+  }
+
+  return FALSE;
+}
+
+static GstFlowReturn
+mxf_mpeg_video_write_func (GstBuffer * buffer, GstCaps * caps,
+    gpointer mapping_data, GstAdapter * adapter, GstBuffer ** outbuf,
+    gboolean flush)
+{
+  MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_OTHER;
+
+  if (mapping_data)
+    type = *((MXFMPEGEssenceType *) mapping_data);
+
+  if (type == MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2) {
+    if (buffer && !mxf_mpeg_is_mpeg2_frame (buffer)) {
+      gst_adapter_push (adapter, buffer);
+      *outbuf = NULL;
+      return GST_FLOW_OK;
+    } else if (buffer || gst_adapter_available (adapter)) {
+      guint av = gst_adapter_available (adapter);
+      GstBuffer *ret;
+
+      if (buffer)
+        ret = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) + av);
+      else
+        ret = gst_buffer_new_and_alloc (av);
+
+      if (av) {
+        GstBuffer *tmp = gst_adapter_take_buffer (adapter, av);
+        memcpy (GST_BUFFER_DATA (ret), GST_BUFFER_DATA (tmp), av);
+        gst_buffer_unref (tmp);
+      }
+
+      if (buffer) {
+        memcpy (GST_BUFFER_DATA (ret) + av, GST_BUFFER_DATA (buffer),
+            GST_BUFFER_SIZE (buffer));
+        gst_buffer_unref (buffer);
+      }
+      *outbuf = ret;
+      return GST_FLOW_OK;
+    }
+  } else if (type == MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG4) {
+    if (buffer && !mxf_mpeg_is_mpeg4_frame (buffer)) {
+      gst_adapter_push (adapter, buffer);
+      *outbuf = NULL;
+      return GST_FLOW_OK;
+    } else if (buffer || gst_adapter_available (adapter)) {
+      guint av = gst_adapter_available (adapter);
+      GstBuffer *ret;
+
+      if (buffer)
+        ret = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) + av);
+      else
+        ret = gst_buffer_new_and_alloc (av);
+
+      if (av) {
+        GstBuffer *tmp = gst_adapter_take_buffer (adapter, av);
+        memcpy (GST_BUFFER_DATA (ret), GST_BUFFER_DATA (tmp), av);
+        gst_buffer_unref (tmp);
+      }
+
+      if (buffer) {
+        memcpy (GST_BUFFER_DATA (ret) + av, GST_BUFFER_DATA (buffer),
+            GST_BUFFER_SIZE (buffer));
+        gst_buffer_unref (buffer);
+      }
+      *outbuf = ret;
+      return GST_FLOW_OK;
+    }
+  }
+
+  *outbuf = buffer;
+  return GST_FLOW_OK;
+}
+
+static const guint8 mpeg_video_picture_essence_compression_ul[] = {
+  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x00,
+  0x04, 0x01, 0x02, 0x02, 0x01, 0x00, 0x00, 0x00
+};
+
+static MXFMetadataFileDescriptor *
+mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
+    MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
+{
+  MXFMetadataMPEGVideoDescriptor *ret;
+  GstStructure *s;
+
+  ret = (MXFMetadataMPEGVideoDescriptor *)
+      gst_mini_object_new (MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  memcpy (&ret->parent.parent.parent.essence_container,
+      &mpeg_essence_container_ul, 16);
+  memcpy (&ret->parent.parent.picture_essence_coding,
+      &mpeg_video_picture_essence_compression_ul, 16);
+  if (strcmp (gst_structure_get_name (s), "video/mpeg") == 0) {
+    gint mpegversion;
+
+    if (!gst_structure_get_int (s, "mpegversion", &mpegversion)) {
+      GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
+      gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+      return NULL;
+    }
+
+    if (mpegversion == 1) {
+      MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
+
+      *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
+      memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+      ret->parent.parent.picture_essence_coding.u[13] = 0x10;
+    } else if (mpegversion == 2) {
+      MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG2;
+
+      *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
+      memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+      ret->parent.parent.picture_essence_coding.u[13] = 0x01;
+    } else {
+      const GValue *v;
+      const GstBuffer *codec_data;
+      MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_VIDEO_MPEG4;
+
+      *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
+      memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+
+      ret->parent.parent.picture_essence_coding.u[13] = 0x20;
+      if ((v = gst_structure_get_value (s, "codec_data"))) {
+        MXFLocalTag *t = g_slice_new0 (MXFLocalTag);
+        codec_data = gst_value_get_buffer (v);
+        t->size = GST_BUFFER_SIZE (codec_data);
+        t->data = g_memdup (GST_BUFFER_DATA (codec_data), t->size);
+        memcpy (&t->key, &sony_mpeg4_extradata, 16);
+        mxf_local_tag_insert (t, &MXF_METADATA_BASE (ret)->other_tags);
+      }
+    }
+  } else if (strcmp (gst_structure_get_name (s), "video/x-h264") == 0) {
+    MXFMPEGEssenceType type = MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC;
+
+    *mapping_data = g_new0 (MXFMPEGEssenceType, 1);
+    memcpy (*mapping_data, &type, sizeof (MXFMPEGEssenceType));
+    ret->parent.parent.picture_essence_coding.u[13] = 0x30;
+  } else {
+    g_assert_not_reached ();
+  }
+
+
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->
+          parent.parent, caps)) {
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (ret));
+    return NULL;
+  }
+
+  *handler = mxf_mpeg_video_write_func;
+
+  return (MXFMetadataFileDescriptor *) ret;
+}
+
+static void
+mxf_mpeg_video_update_descriptor (MXFMetadataFileDescriptor * d, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf)
+{
+  return;
+}
+
+static void
+mxf_mpeg_video_get_edit_rate (MXFMetadataFileDescriptor * a, GstCaps * caps,
+    gpointer mapping_data, GstBuffer * buf, MXFMetadataSourcePackage * package,
+    MXFMetadataTimelineTrack * track, MXFFraction * edit_rate)
+{
+  (*edit_rate).n = a->sample_rate.n;
+  (*edit_rate).d = a->sample_rate.d;
+}
+
+static guint32
+mxf_mpeg_video_get_track_number_template (MXFMetadataFileDescriptor * a,
+    GstCaps * caps, gpointer mapping_data)
+{
+  return (0x15 << 24) | (0x05 << 8);
+}
+
+static MXFEssenceElementWriter mxf_mpeg_video_essence_element_writer = {
+  mxf_mpeg_video_get_descriptor,
+  mxf_mpeg_video_update_descriptor,
+  mxf_mpeg_video_get_edit_rate,
+  mxf_mpeg_video_get_track_number_template,
+  NULL,
+  {{0,}}
+};
+
+#define MPEG_VIDEO_CAPS \
+"video/mpeg, " \
+"mpegversion = (int) { 1, 2, 4 }, " \
+"systemstream = (boolean) FALSE, " \
+"width = " GST_VIDEO_SIZE_RANGE ", " \
+"height = " GST_VIDEO_SIZE_RANGE ", " \
+"framerate = " GST_VIDEO_FPS_RANGE "; " \
+"video/x-h264, " \
+"width = " GST_VIDEO_SIZE_RANGE ", " \
+"height = " GST_VIDEO_SIZE_RANGE ", " \
+"framerate = " GST_VIDEO_FPS_RANGE
+
 void
 mxf_mpeg_init (void)
 {
   mxf_metadata_register (MXF_TYPE_METADATA_MPEG_VIDEO_DESCRIPTOR);
   mxf_essence_element_handler_register (&mxf_mpeg_essence_element_handler);
+
+  mxf_mpeg_audio_essence_element_writer.pad_template =
+      gst_pad_template_new ("mpeg_audio_sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+      gst_caps_from_string (MPEG_AUDIO_CAPS));
+  memcpy (&mxf_mpeg_audio_essence_element_writer.data_definition,
+      mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_SOUND_ESSENCE), 16);
+  mxf_essence_element_writer_register (&mxf_mpeg_audio_essence_element_writer);
+
+  mxf_mpeg_video_essence_element_writer.pad_template =
+      gst_pad_template_new ("mpeg_video_sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+      gst_caps_from_string (MPEG_VIDEO_CAPS));
+  memcpy (&mxf_mpeg_video_essence_element_writer.data_definition,
+      mxf_metadata_track_identifier_get (MXF_METADATA_TRACK_PICTURE_ESSENCE),
+      16);
+  mxf_essence_element_writer_register (&mxf_mpeg_video_essence_element_writer);
+
 }

@@ -24,6 +24,7 @@
 
 #include "mxfquark.h"
 #include "mxfdemux.h"
+#include "mxfmux.h"
 #include "mxfaes-bwf.h"
 #include "mxfmpeg.h"
 #include "mxfdv-dif.h"
@@ -53,6 +54,8 @@ mxf_init (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (mxf_debug, "mxf", 0, "MXF");
+
   mxf_init ();
   mxf_quark_initialize ();
   mxf_metadata_init_types ();
@@ -67,10 +70,9 @@ plugin_init (GstPlugin * plugin)
   mxf_dms1_initialize ();
 
   if (!gst_element_register (plugin, "mxfdemux", GST_RANK_PRIMARY,
-          GST_TYPE_MXF_DEMUX))
+          GST_TYPE_MXF_DEMUX) ||
+      !gst_element_register (plugin, "mxfmux", GST_RANK_NONE, GST_TYPE_MXF_MUX))
     return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (mxf_debug, "mxf", 0, "MXF");
 
   return TRUE;
 }
