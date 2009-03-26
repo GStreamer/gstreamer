@@ -372,10 +372,6 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
-  /* a previously unscheduled entry cannot be scheduled again */
-  if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
-    goto unscheduled;
-
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p", id);
@@ -419,12 +415,6 @@ invalid_time:
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
         "invalid time requested, returning _BADTIME");
     return GST_CLOCK_BADTIME;
-  }
-unscheduled:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
-        "entry was unscheduled return _UNSCHEDULED");
-    return GST_CLOCK_UNSCHEDULED;
   }
 not_supported:
   {
@@ -473,10 +463,6 @@ gst_clock_id_wait_async (GstClockID id,
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (requested)))
     goto invalid_time;
 
-  /* a previously unscheduled entry cannot be scheduled again */
-  if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
-    goto unscheduled;
-
   cclass = GST_CLOCK_GET_CLASS (clock);
 
   if (G_UNLIKELY (cclass->wait_async == NULL))
@@ -496,12 +482,6 @@ invalid_time:
     GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
         "invalid time requested, returning _BADTIME");
     return GST_CLOCK_BADTIME;
-  }
-unscheduled:
-  {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
-        "entry was unscheduled return _UNSCHEDULED");
-    return GST_CLOCK_UNSCHEDULED;
   }
 not_supported:
   {

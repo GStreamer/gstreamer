@@ -675,10 +675,20 @@ gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
   GstClockReturn ret;
 
   GST_OBJECT_LOCK (clock);
+  if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
+    goto was_unscheduled;
+
   ret = gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter, TRUE);
   GST_OBJECT_UNLOCK (clock);
 
   return ret;
+
+  /* ERRORS */
+was_unscheduled:
+  {
+    GST_OBJECT_UNLOCK (clock);
+    return GST_CLOCK_UNSCHEDULED;
+  }
 }
 
 /* Start the async clock thread. Must be called with the object lock
@@ -688,12 +698,12 @@ gst_system_clock_start_async (GstSystemClock * clock)
 {
   GError *error = NULL;
 
-  if (clock->thread != NULL)
+  if (G_LIKELY (clock->thread != NULL))
     return TRUE;                /* Thread already running. Nothing to do */
 
   clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,
       clock, TRUE, &error);
-  if (error)
+  if (G_UNLIKELY (error))
     goto no_thread;
 
   /* wait for it to spin up */
@@ -705,6 +715,7 @@ gst_system_clock_start_async (GstSystemClock * clock)
 no_thread:
   {
     g_warning ("could not create async clock thread: %s", error->message);
+    g_error_free (error);
   }
   return FALSE;
 }
@@ -727,10 +738,12 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "adding async entry %p", entry);
 
   GST_OBJECT_LOCK (clock);
-
   /* Start the clock async thread if needed */
-  if (!gst_system_clock_start_async (sysclock))
+  if (G_UNLIKELY (!gst_system_clock_start_async (sysclock)))
     goto thread_error;
+
+  if (G_UNLIKELY (entry->status == GST_CLOCK_UNSCHEDULED))
+    goto was_unscheduled;
 
   if (clock->entries)
     head = clock->entries->data;
@@ -769,9 +782,18 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
 
   return GST_CLOCK_OK;
 
+  /* ERRORS */
 thread_error:
-  /* Could not start the async clock thread */
-  return GST_CLOCK_ERROR;
+  {
+    /* Could not start the async clock thread */
+    GST_OBJECT_UNLOCK (clock);
+    return GST_CLOCK_ERROR;
+  }
+was_unscheduled:
+  {
+    GST_OBJECT_UNLOCK (clock);
+    return GST_CLOCK_UNSCHEDULED;
+  }
 }
 
 /* unschedule an entry. This will set the state of the entry to GST_CLOCK_UNSCHEDULED
