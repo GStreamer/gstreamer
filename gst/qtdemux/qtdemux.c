@@ -231,6 +231,8 @@ struct _QtDemuxStream
   QtDemuxSegment *segments;
   guint32 from_sample;
   guint32 to_sample;
+
+  gboolean sent_eos;
 };
 
 enum QtDemuxState
@@ -922,6 +924,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
     stream->sample_index = -1;
     stream->segment_index = -1;
     stream->last_ret = GST_FLOW_OK;
+    stream->sent_eos = FALSE;
   }
   segment->last_stop = desired_offset;
   segment->time = desired_offset;
@@ -1253,8 +1256,10 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
       demux->offset = 0;
       demux->neededbytes = -1;
       /* reset flow return, e.g. following seek */
-      for (i = 0; i < demux->n_streams; i++)
+      for (i = 0; i < demux->n_streams; i++) {
         demux->streams[i]->last_ret = GST_FLOW_OK;
+        demux->streams[i]->sent_eos = FALSE;
+      }
       break;
     }
     case GST_EVENT_EOS:
@@ -1919,6 +1924,59 @@ next_segment:
   }
 }
 
+static void
+gst_qtdemux_sync_streams (GstQTDemux * demux)
+{
+  gint i;
+
+  if (demux->n_streams <= 1)
+    return;
+
+  for (i = 0; i < demux->n_streams; i++) {
+    QtDemuxStream *stream;
+    GstClockTime end_time;
+
+    stream = demux->streams[i];
+
+    if (!stream->pad)
+      continue;
+
+    /* TODO advance time on subtitle streams here, if any some day */
+
+    /* some clips/trailers may have unbalanced streams at the end,
+     * so send EOS on shorter stream to prevent stalling others */
+
+    /* do not mess with EOS if SEGMENT seeking */
+    if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT)
+      continue;
+
+    if (demux->pullbased) {
+      /* loop mode is sample time based */
+      if (stream->time_position != -1)
+        continue;
+    } else {
+      /* push mode is byte position based */
+      if (stream->samples[stream->n_samples - 1].offset >= demux->offset)
+        continue;
+    }
+
+    if (stream->sent_eos)
+      continue;
+
+    /* only act if some gap */
+    end_time = stream->segments[stream->n_segments - 1].stop_time;
+    GST_LOG_OBJECT (demux, "current position: %" GST_TIME_FORMAT
+        ", stream end: %" GST_TIME_FORMAT, GST_TIME_ARGS (end_time),
+        GST_TIME_ARGS (demux->segment.last_stop));
+    if (end_time + 2 * GST_SECOND < demux->segment.last_stop) {
+      GST_DEBUG_OBJECT (demux, "sending EOS for stream %s",
+          GST_PAD_NAME (stream->pad));
+      stream->sent_eos = TRUE;
+      gst_pad_push_event (stream->pad, gst_event_new_eos ());
+    }
+  }
+}
+
 /* UNEXPECTED and NOT_LINKED need to be combined. This means that we return:
  *  
  *  GST_FLOW_NOT_LINKED: when all pads NOT_LINKED.
@@ -2119,7 +2177,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   /* fetch info for the current sample of this stream */
   if (!gst_qtdemux_prepare_current_sample (qtdemux, stream, &offset, &size,
           &timestamp, &duration, &keyframe))
-    goto eos;
+    goto eos_stream;
 
   GST_LOG_OBJECT (qtdemux,
       "pushing from stream %d, offset %" G_GUINT64_FORMAT
@@ -2159,6 +2217,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   qtdemux->last_ts = min_time;
   if (qtdemux->segment.rate >= 0) {
     gst_segment_set_last_stop (&qtdemux->segment, GST_FORMAT_TIME, min_time);
+    gst_qtdemux_sync_streams (qtdemux);
   }
   if (stream->pad) {
     /* we're going to modify the metadata */
@@ -2217,6 +2276,13 @@ eos:
   {
     GST_DEBUG_OBJECT (qtdemux, "No samples left for any streams - EOS");
     ret = GST_FLOW_UNEXPECTED;
+    goto beach;
+  }
+eos_stream:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "No samples left for stream");
+    /* EOS will be raised if all are EOS */
+    ret = GST_FLOW_OK;
     goto beach;
   }
 }
@@ -2591,6 +2657,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         /* position reporting */
         gst_segment_set_last_stop (&demux->segment, GST_FORMAT_TIME,
             demux->last_ts);
+        gst_qtdemux_sync_streams (demux);
 
         /* send buffer */
         if (stream->pad) {
@@ -3625,14 +3692,22 @@ done:
 
   /* no segments, create one to play the complete trak */
   if (stream->n_segments == 0) {
+    GstClockTime stream_duration = 0;
+
     if (stream->segments == NULL)
       stream->segments = g_new (QtDemuxSegment, 1);
 
+    /* samples know best */
+    if (stream->n_samples > 0)
+      stream_duration =
+          stream->samples[stream->n_samples - 1].timestamp +
+          stream->samples[stream->n_samples - 1].pts_offset;
+
     stream->segments[0].time = 0;
-    stream->segments[0].stop_time = qtdemux->segment.duration;
-    stream->segments[0].duration = qtdemux->segment.duration;
+    stream->segments[0].stop_time = stream_duration;
+    stream->segments[0].duration = stream_duration;
     stream->segments[0].media_start = 0;
-    stream->segments[0].media_stop = qtdemux->segment.duration;
+    stream->segments[0].media_stop = stream_duration;
     stream->segments[0].rate = 1.0;
 
     GST_DEBUG_OBJECT (qtdemux, "created dummy segment");
