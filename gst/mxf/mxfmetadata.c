@@ -6962,17 +6962,11 @@ mxf_descriptive_metadata_new (guint8 scheme, guint32 type,
   return ret;
 }
 
-/* TODO: Remove this once we depend on GLib 2.14 */
-#if GLIB_CHECK_VERSION (2, 14, 0)
-#define __gst_once_init_enter(val) (g_once_init_enter (val))
-#define __gst_once_init_leave(val,newval) (g_once_init_leave (val, newval))
-#endif
-
 GType
 mxf_descriptive_metadata_framework_get_type (void)
 {
   static volatile gsize type = 0;
-  if (__gst_once_init_enter (&type)) {
+  if (g_once_init_enter (&type)) {
     GType _type = 0;
     static const GTypeInfo info = {
       sizeof (MXFDescriptiveMetadataFrameworkInterface),
@@ -6990,7 +6984,7 @@ mxf_descriptive_metadata_framework_get_type (void)
 
     g_type_interface_add_prerequisite (_type, MXF_TYPE_DESCRIPTIVE_METADATA);
 
-    __gst_once_init_leave (&type, (gsize) _type);
+    g_once_init_leave (&type, (gsize) _type);
   }
 
   return (GType) type;
