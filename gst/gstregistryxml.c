@@ -919,6 +919,9 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
   if (!gst_registry_save (registry, "</GST-PluginRegistry>\n"))
     goto fail;
 
+  if (fsync (registry->cache_file) < 0)
+    goto fsync_failed;
+
   /* check return value of close(), write errors may only get reported here */
   if (close (registry->cache_file) < 0)
     goto close_failed;
@@ -948,6 +951,11 @@ fail_after_close:
     g_unlink (tmp_location);
     g_free (tmp_location);
     return FALSE;
+  }
+fsync_failed:
+  {
+    GST_ERROR ("fsync() failed: %s", g_strerror (errno));
+    goto fail_after_close;
   }
 close_failed:
   {
