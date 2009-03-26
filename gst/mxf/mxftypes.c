@@ -1383,6 +1383,7 @@ mxf_primer_pack_add_mapping (MXFPrimerPack * primer, guint16 local_tag,
 #ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
 #endif
+  guint ltag_tmp = local_tag;
 
   if (primer->mappings == NULL) {
     primer->mappings = g_hash_table_new_full (g_direct_hash, g_direct_equal,
@@ -1395,37 +1396,37 @@ mxf_primer_pack_add_mapping (MXFPrimerPack * primer, guint16 local_tag,
         (GDestroyNotify) NULL);
   }
 
-  if (primer->next_free_tag == 0xffff && local_tag == 0) {
+  if (primer->next_free_tag == 0xffff && ltag_tmp == 0) {
     GST_ERROR ("Used too many dynamic tags");
     return 0;
   }
 
-  if (local_tag == 0) {
-    guint16 tmp;
+  if (ltag_tmp == 0) {
+    guint tmp;
 
     tmp = GPOINTER_TO_UINT (g_hash_table_lookup (primer->reverse_mappings, ul));
     if (tmp == 0) {
-      local_tag = primer->next_free_tag;
+      ltag_tmp = primer->next_free_tag;
       primer->next_free_tag++;
     }
   } else {
-    if (g_hash_table_lookup (primer->mappings, GUINT_TO_POINTER (local_tag)))
-      return local_tag;
+    if (g_hash_table_lookup (primer->mappings, GUINT_TO_POINTER (ltag_tmp)))
+      return ltag_tmp;
   }
 
-  g_assert (local_tag != 0);
+  g_assert (ltag_tmp != 0);
 
   uid = g_slice_new (MXFUL);
   memcpy (uid, ul, 16);
 
-  GST_DEBUG ("Adding mapping = 0x%04x -> %s", local_tag,
+  GST_DEBUG ("Adding mapping = 0x%04x -> %s", ltag_tmp,
       mxf_ul_to_string (uid, str));
-  g_hash_table_insert (primer->mappings, GUINT_TO_POINTER (local_tag), uid);
+  g_hash_table_insert (primer->mappings, GUINT_TO_POINTER (ltag_tmp), uid);
   uid = g_slice_dup (MXFUL, uid);
   g_hash_table_insert (primer->reverse_mappings, uid,
-      GUINT_TO_POINTER (local_tag));
+      GUINT_TO_POINTER (ltag_tmp));
 
-  return local_tag;
+  return ltag_tmp;
 }
 
 GstBuffer *
