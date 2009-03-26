@@ -832,6 +832,10 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
     goto unsupported_seek;
   stop = -1;
 
+  /* only forward streaming and seeking is possible */
+  if (rate <= 0)
+    goto unsupported_seek;
+
   /* convert to TIME if needed and possible */
   if (!gst_qtdemux_convert_seek (pad, &format, cur_type, &cur,
           stop_type, &stop))
@@ -1104,8 +1108,11 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
   for (n = 0; n < qtdemux->n_streams; ++n) {
     QtDemuxStream *str;
     gint inc;
+    gboolean set_sample;
+
 
     str = qtdemux->streams[n];
+    set_sample = !set;
 
     if (fw) {
       i = 0;
@@ -1121,8 +1128,10 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
                   (str->samples[i].offset + str->samples[i].size <=
                       byte_pos)))) {
         /* move stream to first available sample */
-        if (set)
+        if (set) {
           gst_qtdemux_move_stream (qtdemux, str, i);
+          set_sample = TRUE;
+        }
         /* determine min/max time */
         time = str->samples[i].timestamp + str->samples[i].pts_offset;
         if (min_time == -1 || (fw && min_time > time) ||
@@ -1139,6 +1148,9 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
         break;
       }
     }
+    /* no sample for this stream, mark eos */
+    if (!set_sample)
+      gst_qtdemux_move_stream (qtdemux, str, str->n_samples);
   }
 
   if (_time)
@@ -2335,6 +2347,11 @@ next_entry_size (GstQTDemux * demux)
     if (stream->sample_index == -1)
       stream->sample_index = 0;
 
+    if (stream->sample_index >= stream->n_samples) {
+      GST_LOG_OBJECT (demux, "stream %d samples exhausted", i);
+      continue;
+    }
+
     GST_LOG_OBJECT (demux,
         "Checking Stream %d (sample_index:%d / offset:%lld / size:%d / chunk:%d)",
         i, stream->sample_index, stream->samples[stream->sample_index].offset,
@@ -2524,6 +2541,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         /* Figure out which stream this is packet belongs to */
         for (i = 0; i < demux->n_streams; i++) {
           stream = demux->streams[i];
+          if (stream->sample_index >= stream->n_samples)
+            continue;
           GST_LOG_OBJECT (demux,
               "Checking stream %d (sample_index:%d / offset:%lld / size:%d / chunk:%d)",
               i, stream->sample_index,
