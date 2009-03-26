@@ -187,6 +187,16 @@
  * possible yet.
  * </refsect2>
  * <refsect2>
+ * <title>Handling redirects</title>
+ * <para>
+ * Some elements may post 'redirect' messages on the bus to tell the
+ * application to open another location. These are element messages containing
+ * a structure named 'redirect' along with a 'new-location' field of string
+ * type. The new location may be a relative or an absolute URI. Examples
+ * for such redirects can be found in many quicktime movie trailers.
+ * </para>
+ * </refsect2>
+ * <refsect2>
  * <title>Examples</title>
  * |[
  * gst-launch -v playbin uri=file:///path/to/somefile.avi
