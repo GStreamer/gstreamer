@@ -1494,3 +1494,67 @@ gst_tag_list_get_date_index (const GstTagList * list,
   *value = (GDate *) g_value_dup_boxed (v);
   return (*value != NULL);
 }
+
+/**
+ * gst_tag_list_get_buffer:
+ * @list: a #GstTagList to get the tag from
+ * @tag: tag to read out
+ * @value: address of a GstBuffer pointer variable to store the result into
+ *
+ * Copies the first buffer for the given tag in the taglist into the variable
+ * pointed to by @value. Free the buffer with gst_buffer_unref() when it is
+ * no longer needed.
+ *
+ * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
+ *              given list or if it was #NULL.
+ *
+ * Since: 0.10.23
+ */
+gboolean
+gst_tag_list_get_buffer (const GstTagList * list, const gchar * tag,
+    GstBuffer ** value)
+{
+  GValue v = { 0, };
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if (!gst_tag_list_copy_value (&v, list, tag))
+    return FALSE;
+  *value = (GstBuffer *) gst_value_dup_mini_object (&v);
+  g_value_unset (&v);
+  return (*value != NULL);
+}
+
+/**
+ * gst_tag_list_get_buffer_index:
+ * @list: a #GstTagList to get the tag from
+ * @tag: tag to read out
+ * @index: number of entry to read out
+ * @value: address of a GstBuffer pointer variable to store the result into
+ *
+ * Gets the buffer that is at the given index for the given tag in the given
+ * list and copies it into the variable pointed to by @value. Free the buffer
+ * with gst_buffer_unref() when it is no longer needed.
+ *
+ * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
+ *              given list or if it was #NULL.
+ *
+ * Since: 0.10.23
+ */
+gboolean
+gst_tag_list_get_buffer_index (const GstTagList * list,
+    const gchar * tag, guint index, GstBuffer ** value)
+{
+  const GValue *v;
+
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
+  g_return_val_if_fail (tag != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)
+    return FALSE;
+  *value = (GstBuffer *) gst_value_dup_mini_object (v);
+  return (*value != NULL);
+}

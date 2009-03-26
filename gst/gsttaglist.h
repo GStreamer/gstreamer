@@ -23,6 +23,7 @@
 #ifndef __GST_TAGLIST_H__
 #define __GST_TAGLIST_H__
 
+#include <gst/gstbuffer.h>
 #include <gst/gststructure.h>
 #include <gst/glib-compat.h>
 
@@ -338,6 +339,13 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
                                              const gchar      * tag,
                                              guint              index,
                                              GDate           ** value);
+gboolean     gst_tag_list_get_buffer        (const GstTagList * list,
+                                             const gchar      * tag,
+                                             GstBuffer       ** value);
+gboolean     gst_tag_list_get_buffer_index  (const GstTagList * list,
+                                             const gchar      * tag,
+                                             guint              index,
+                                             GstBuffer       ** value);
 
 /* GStreamer core tags */
 /**
