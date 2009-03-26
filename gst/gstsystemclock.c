@@ -387,6 +387,14 @@ gst_system_clock_async_thread (GstClock * clock)
         goto exit;
     }
 
+    /* see if we have a pending wakeup because the order of the list
+     * changed. */
+    if (sysclock->priv->async_wakeup) {
+      GST_CAT_DEBUG (GST_CAT_CLOCK, "clear async wakeup");
+      gst_system_clock_remove_wakeup (sysclock);
+      sysclock->priv->async_wakeup = FALSE;
+    }
+
     /* pick the next entry */
     entry = clock->entries->data;
     /* if it was unscheduled, just move on to the next entry */
@@ -396,14 +404,6 @@ gst_system_clock_async_thread (GstClock * clock)
     }
 
     requested = entry->time;
-
-    /* see if we have a pending wakeup because the order of the list
-     * changed. */
-    if (sysclock->priv->async_wakeup) {
-      GST_CAT_DEBUG (GST_CAT_CLOCK, "clear async wakeup", entry);
-      gst_system_clock_remove_wakeup (sysclock);
-      sysclock->priv->async_wakeup = FALSE;
-    }
 
     /* now wait for the entry, we already hold the lock */
     res =
