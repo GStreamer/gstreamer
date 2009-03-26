@@ -10,7 +10,7 @@ libgstxdgmime_la_SOURCES = gstxdgmime.c \
 			   xdgmime/xdgmimemagic.c \
 			   xdgmime/xdgmimeparent.c
 libgstxdgmime_la_CFLAGS = $(GST_CFLAGS) -DXDG_PREFIX=gst_xdg_mime
-libgstxdgmime_la_LIBADD = $(GST_LIBS)
+libgstxdgmime_la_LIBADD = $(GST_LIBS) $(XDG_LIBS)
 libgstxdgmime_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstxdgmime_la_LIBTOOLFLAGS = --tag=disable-static
 

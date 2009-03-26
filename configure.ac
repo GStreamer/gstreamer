@@ -327,7 +327,9 @@ AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
 if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   DCCP_LIBS="$DCCP_LIBS -lws2_32"
+  XDG_LIBS="$XDG_LIBS -lws2_32"
   AC_SUBST(DCCP_LIBS)
+  AC_SUBST(XDG_LIBS)
 fi
 
 if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
