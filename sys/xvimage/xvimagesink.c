@@ -1408,34 +1408,34 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
          */
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
         guint32 ckey = 0;
-        guint32 keymask;
-        gint bits;
         gboolean set_attr = TRUE;
         guint cr, cg, cb;
 
-        /* Count the bits in the colorkey mask 'max' value */
-        bits = 0;
-        for (keymask = (guint32) (attr[i].max_value);
-            keymask != 0; keymask >>= 1)
-          bits++;
-
         /* set a colorkey in the right format RGB565/RGB888
-         * note that the colorkey is independent from the display
-         * depth (xcontext->depth). We only handle these 2 cases, because
-         * they're the only types of devices we've encountered. If we don't
-         * recognise it, leave it alone  */
+         * We only handle these 2 cases, because they're the only types of
+         * devices we've encountered. If we don't recognise it, leave it alone
+         */
         cr = (xvimagesink->colorkey >> 16);
         cg = (xvimagesink->colorkey >> 8) & 0xFF;
         cb = (xvimagesink->colorkey) & 0xFF;
-        if (bits == 16) {       /* RGB 565 */
-          cr >>= 3;
-          cg >>= 2;
-          cb >>= 3;
-          ckey = (cr << 11) | (cg << 5) | cb;
-        } else if (bits == 24 || bits == 32) {  /* RGB 888 / ARGB 8888 */
-          ckey = (cr << 16) | (cg << 8) | cb;
-        } else
-          set_attr = FALSE;
+        switch (xcontext->depth) {
+          case 16:             /* RGB 565 */
+            cr >>= 3;
+            cg >>= 2;
+            cb >>= 3;
+            ckey = (cr << 11) | (cg << 5) | cb;
+            break;
+          case 24:
+          case 32:             /* RGB 888 / ARGB 8888 */
+            ckey = (cr << 16) | (cg << 8) | cb;
+            break;
+          default:
+            GST_DEBUG_OBJECT (xvimagesink,
+                "Unknown bit depth %d for Xv Colorkey - not adjusting",
+                xcontext->depth);
+            set_attr = FALSE;
+            break;
+        }
 
         if (set_attr) {
           ckey = CLAMP (ckey, (guint32) attr[i].min_value,
@@ -1446,9 +1446,6 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
           XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
               (gint) ckey);
-        } else {
-          GST_DEBUG_OBJECT (xvimagesink,
-              "Unknown bit depth %d for Xv Colorkey - not adjusting", bits);
         }
         todo--;
         xvimagesink->have_colorkey = TRUE;
@@ -2357,7 +2354,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   if (G_LIKELY (xvimagesink->xcontext->last_caps &&
           gst_caps_is_equal (caps, xvimagesink->xcontext->last_caps))) {
-    GST_DEBUG_OBJECT (xvimagesink,
+    GST_LOG_OBJECT (xvimagesink,
         "buffer alloc for same last_caps, reusing caps");
     intersection = gst_caps_ref (caps);
     image_format = xvimagesink->xcontext->last_format;
