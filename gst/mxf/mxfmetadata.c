@@ -24,10 +24,9 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#include "mxfparse.h"
+#include "mxftypes.h"
 #include "mxfmetadata.h"
 #include "mxfquark.h"
-#include "mxfwrite.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug

@@ -2,9 +2,13 @@ plugin_LTLIBRARIES = libgstmxf.la
 
 libgstmxf_la_SOURCES = \
 	mxf.c \
+	mxful.c \
+	mxftypes.c \
+	mxfmetadata.c \
+	mxfessence.c \
 	mxfquark.c \
+	mxfmux.c \
 	mxfdemux.c \
-	mxfparse.c \
 	mxfaes-bwf.c \
 	mxfmpeg.c \
 	mxfdv-dif.c \
@@ -13,11 +17,7 @@ libgstmxf_la_SOURCES = \
 	mxfd10.c \
 	mxfup.c \
 	mxfvc3.c \
-	mxfmetadata.c \
-	mxfdms1.c \
-	mxfwrite.c \
-	mxfmux.c \
-	mxful.c
+	mxfdms1.c
 
 libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
@@ -26,9 +26,13 @@ libgstmxf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmxf_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
+	mxful.h \
+	mxftypes.h \
+	mxfmetadata.h \
 	mxfquark.h \
+	mxfessence.h \
 	mxfdemux.h \
-	mxfparse.h \
+	mxfmux.h \
 	mxfaes-bwf.h \
 	mxfmpeg.h \
 	mxfdv-dif.h \
@@ -37,10 +41,5 @@ noinst_HEADERS = \
 	mxfd10.h \
 	mxfup.h \
 	mxfvc3.h \
-	mxftypes.h \
-	mxfmetadata.h \
-	mxfdms1.h \
-	mxfwrite.h \
-	mxfmux.h \
-	mxful.h
+	mxfdms1.h
 

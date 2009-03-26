@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include "mxfjpeg2000.h"
-#include "mxfwrite.h"
+#include "mxfessence.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug

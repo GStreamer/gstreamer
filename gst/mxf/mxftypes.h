@@ -24,10 +24,7 @@
 
 #include <gst/gst.h>
 
-/* SMPTE 377M 3.2 */
-typedef struct {
-  guint8 u[16];
-} MXFUL;
+#include "mxful.h"
 
 typedef struct {
   guint8 u[16];
@@ -78,6 +75,20 @@ typedef struct {
   guint32 body_sid;
   guint64 offset;
 } MXFRandomIndexPackEntry;
+
+typedef enum {
+  MXF_OP_UNKNOWN = 0,
+  MXF_OP_ATOM,
+  MXF_OP_1a,
+  MXF_OP_1b,
+  MXF_OP_1c,
+  MXF_OP_2a,
+  MXF_OP_2b,
+  MXF_OP_2c,
+  MXF_OP_3a,
+  MXF_OP_3b,
+  MXF_OP_3c,
+} MXFOperationalPattern;
 
 typedef enum {
   MXF_PARTITION_PACK_HEADER,
@@ -165,5 +176,89 @@ typedef struct {
 #define GST_TAG_MXF_UMID "mxf-umid"
 #define GST_TAG_MXF_STRUCTURE "mxf-structure"
 #define GST_TAG_MXF_DESCRIPTIVE_METADATA_FRAMEWORK "mxf-descriptive-metadata-framework"
+
+/* FIXME: UUID */
+void mxf_ul_set (MXFUL *ul, GHashTable *hashtable);
+
+gchar *mxf_umid_to_string (const MXFUMID * umid, gchar str[96]);
+MXFUMID *mxf_umid_from_string (const gchar *str, MXFUMID * umid);
+gboolean mxf_umid_is_equal (const MXFUMID *a, const MXFUMID *b);
+gboolean mxf_umid_is_zero (const MXFUMID *umid);
+/* FIXME: _set => init */
+void mxf_umid_set (MXFUMID *umid);
+
+gboolean mxf_is_mxf_packet (const MXFUL *key);
+
+gboolean mxf_is_partition_pack (const MXFUL *key);
+gboolean mxf_is_header_partition_pack (const MXFUL *key);
+gboolean mxf_is_body_partition_pack (const MXFUL *key);
+gboolean mxf_is_footer_partition_pack (const MXFUL *key);
+
+gboolean mxf_is_primer_pack (const MXFUL *key);
+
+gboolean mxf_is_metadata (const MXFUL *key);
+gboolean mxf_is_descriptive_metadata (const MXFUL *key);
+
+gboolean mxf_is_random_index_pack (const MXFUL *key);
+gboolean mxf_is_index_table_segment (const MXFUL *key);
+
+gboolean mxf_is_generic_container_system_item (const MXFUL *key);
+gboolean mxf_is_generic_container_essence_element (const MXFUL *key);
+gboolean mxf_is_avid_essence_container_essence_element (const MXFUL * key);
+
+gboolean mxf_is_generic_container_essence_container_label (const MXFUL *key);
+gboolean mxf_is_avid_essence_container_label (const MXFUL *key);
+
+gboolean mxf_is_fill (const MXFUL *key);
+
+guint mxf_ber_encode_size (guint size, guint8 ber[9]);
+
+gchar * mxf_utf16_to_utf8 (const guint8 * data, guint size);
+guint8 * mxf_utf8_to_utf16 (const gchar *str, guint16 *size);
+
+gboolean mxf_product_version_parse (MXFProductVersion * product_version,
+    const guint8 * data, guint size);
+gboolean mxf_product_version_is_valid (const MXFProductVersion *version);
+void mxf_product_version_write (const MXFProductVersion *version, guint8 *data);
+
+
+gboolean mxf_fraction_parse (MXFFraction *fraction, const guint8 *data, guint size);
+gdouble mxf_fraction_to_double (const MXFFraction *fraction);
+
+gboolean mxf_timestamp_parse (MXFTimestamp * timestamp, const guint8 * data, guint size);
+gboolean mxf_timestamp_is_unknown (const MXFTimestamp *a);
+gint mxf_timestamp_compare (const MXFTimestamp *a, const MXFTimestamp *b);
+gchar *mxf_timestamp_to_string (const MXFTimestamp *t, gchar str[32]);
+void mxf_timestamp_set_now (MXFTimestamp *timestamp);
+void mxf_timestamp_write (const MXFTimestamp *timestamp, guint8 *data);
+
+void mxf_op_set_atom (MXFUL *ul, gboolean single_sourceclip, gboolean single_essence_track);
+void mxf_op_set_generalized (MXFUL *ul, MXFOperationalPattern pattern, gboolean internal_essence, gboolean streamable, gboolean single_track);
+
+GstBuffer * mxf_fill_new (guint size);
+
+gboolean mxf_partition_pack_parse (const MXFUL *key, MXFPartitionPack *pack, const guint8 *data, guint size);
+void mxf_partition_pack_reset (MXFPartitionPack *pack);
+GstBuffer * mxf_partition_pack_to_buffer (const MXFPartitionPack *pack);
+
+gboolean mxf_primer_pack_parse (const MXFUL *key, MXFPrimerPack *pack, const guint8 *data, guint size);
+void mxf_primer_pack_reset (MXFPrimerPack *pack);
+guint16 mxf_primer_pack_add_mapping (MXFPrimerPack *primer, guint16 local_tag, const MXFUL *ul);
+GstBuffer * mxf_primer_pack_to_buffer (const MXFPrimerPack *pack);
+
+gboolean mxf_random_index_pack_parse (const MXFUL *key, const guint8 *data, guint size, GArray **array);
+GstBuffer * mxf_random_index_pack_to_buffer (const GArray *array);
+
+gboolean mxf_index_table_segment_parse (const MXFUL *key, MXFIndexTableSegment *segment, const MXFPrimerPack *primer, const guint8 *data, guint size);
+void mxf_index_table_segment_reset (MXFIndexTableSegment *segment);
+
+gboolean mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
+    guint16 * tag_size, const guint8 ** tag_data);
+void mxf_local_tag_free (MXFLocalTag *tag);
+
+gboolean mxf_local_tag_add_to_hash_table (const MXFPrimerPack *primer,
+  guint16 tag, const guint8 *tag_data, guint16 tag_size,
+  GHashTable **hash_table);
+gboolean mxf_local_tag_insert (MXFLocalTag *tag, GHashTable **hash_table);
 
 #endif /* __MXF_TYPES_H__ */

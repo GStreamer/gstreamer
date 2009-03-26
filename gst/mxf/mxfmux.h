@@ -24,7 +24,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstcollectpads.h>
 
-#include "mxfwrite.h"
+#include "mxfessence.h"
 
 G_BEGIN_DECLS
 

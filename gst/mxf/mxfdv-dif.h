@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_dv_dif_init (void);
 
 #endif /* __MXF_DV_DIF_H__ */

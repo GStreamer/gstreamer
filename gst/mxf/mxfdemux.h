@@ -23,9 +23,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "mxftypes.h"
-#include "mxfparse.h"
-#include "mxfmetadata.h"
+#include "mxfessence.h"
 
 G_BEGIN_DECLS
 

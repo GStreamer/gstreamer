@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include "mxfdms1.h"
-#include "mxfparse.h"
+#include "mxftypes.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug

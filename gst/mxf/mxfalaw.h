@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_alaw_init (void);
 
 #endif /* __MXF_ALAW_H__ */

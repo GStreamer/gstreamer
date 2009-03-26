@@ -38,7 +38,7 @@
 
 #include "mxfmpeg.h"
 #include "mxfquark.h"
-#include "mxfwrite.h"
+#include "mxfessence.h"
 
 #include <gst/base/gstbytereader.h>
 

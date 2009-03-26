@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include "mxfvc3.h"
-#include "mxfwrite.h"
+#include "mxfessence.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug

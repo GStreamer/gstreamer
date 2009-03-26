@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_jpeg2000_init (void);
 
 #endif /* __MXF_JPEG2000_H__ */

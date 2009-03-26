@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_up_init (void);
 
 #endif /* __MXF_UP_H__ */

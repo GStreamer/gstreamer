@@ -35,8 +35,8 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#include "mxfwrite.h"
 #include "mxfaes-bwf.h"
+#include "mxfessence.h"
 #include "mxfquark.h"
 
 GST_DEBUG_CATEGORY_EXTERN (mxf_debug);

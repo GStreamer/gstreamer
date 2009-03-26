@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_vc3_init (void);
 
 #endif /* __MXF_VC3_H__ */

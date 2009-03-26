@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_mpeg_init (void);
 
 gboolean mxf_mpeg_is_mpeg2_keyframe (GstBuffer *buffer);

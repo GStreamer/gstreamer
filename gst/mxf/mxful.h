@@ -22,7 +22,10 @@
 
 #include <gst/gst.h>
 
-#include "mxftypes.h"
+/* SMPTE 377M 3.2 */
+typedef struct {
+  guint8 u[16];
+} MXFUL;
 
 typedef enum {
   MXF_UL_SMPTE = 0,
@@ -38,6 +41,7 @@ typedef enum {
   MXF_UL_GENERIC_CONTAINER_ESSENCE_CONTAINER_LABEL,
   MXF_UL_AVID_ESSENCE_CONTAINER_ESSENCE_ELEMENT,
   MXF_UL_AVID_ESSENCE_CONTAINER_ESSENCE_LABEL,
+  MXF_UL_OPERATIONAL_PATTERN_IDENTIFICATION,
   MXF_UL_MAX
 } MXFULId;
 

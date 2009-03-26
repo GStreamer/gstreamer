@@ -26,8 +26,6 @@
 
 #include <gst/gst.h>
 
-#include "mxfparse.h"
-
 void mxf_d10_init (void);
 
 #endif /* __MXF_D10_H__ */

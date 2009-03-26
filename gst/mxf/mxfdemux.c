@@ -60,8 +60,7 @@
 #endif
 
 #include "mxfdemux.h"
-#include "mxfparse.h"
-#include "mxfmetadata.h"
+#include "mxfessence.h"
 
 #include <string.h>
 
