@@ -1057,12 +1057,13 @@ gst_poll_check_ctrl_commands (GstPoll * set, gint res, gboolean * restarting)
  * Wait for activity on the file descriptors in @set. This function waits up to
  * the specified @timeout.  A timeout of #GST_CLOCK_TIME_NONE waits forever.
  *
- * For GstPoll objects created with gst_poll_new(), this function can only be
- * called from a single thread at a time threads. If called from multiple
- * threads, -1 will be returned with errno set to EPERM.
+ * For #GstPoll objects created with gst_poll_new(), this function can only be
+ * called from a single thread at a time.  If called from multiple threads,
+ * -1 will be returned with errno set to EPERM.
  *
- * This is not true for timer GstPoll objects created with gst_poll_new_timer(),
- * where it is allowed to have multiple threads waiting simultaneously.
+ * This is not true for timer #GstPoll objects created with
+ * gst_poll_new_timer(), where it is allowed to have multiple threads waiting
+ * simultaneously.
  *
  * Returns: The number of #GstPollFD in @set that have activity or 0 when no
  * activity was detected after @timeout. If an error occurs, -1 is returned
