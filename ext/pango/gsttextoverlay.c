@@ -1017,7 +1017,6 @@ gst_text_overlay_blit_UYVY (GstTextOverlay * overlay, FT_Bitmap * bitmap,
 {
   int y;                        /* text bitmap coordinates */
   int x1, y1;                   /* video buffer coordinates */
-  int bit_rowinc;
   guint8 *p, *bitp;
   int video_width, video_height;
   int bitmap_x0 = 0;            //x0 < 1 ? -(x0 - 1) : 1;       /* 1 pixel border */
@@ -1040,27 +1039,44 @@ gst_text_overlay_blit_UYVY (GstTextOverlay * overlay, FT_Bitmap * bitmap,
   if (y0 + bitmap_y0 + bitmap_height > video_height - 1)        /* 1 pixel border */
     bitmap_height -= y0 + bitmap_y0 + bitmap_height - video_height + 1;
 
-  bit_rowinc = bitmap->pitch - bitmap_width;
-
-  y1 = y0 + bitmap_y0;
   x1 = x0 + bitmap_x0;
-  bitp = bitmap->buffer + bitmap->pitch * bitmap_y0 + bitmap_x0;
+  y1 = y0 + bitmap_y0;
+
+  /* draw an outline around the text */
   for (y = bitmap_y0; y < bitmap_y0 + bitmap_height; y++) {
     int n;
 
-    /* Go to the Y0 of the first macroblock we wan't to write to */
+    bitp = bitmap->buffer + (y * bitmap->pitch) + bitmap_x0;
     p = yuv_pixels + (y0 + y) * video_width + (x1 * 2) + 1;
+    for (n = bitmap_width; n > 0; --n) {
+      if (*bitp) {
+        *(p + 2) = CLAMP (*(p + 2) - *bitp, 0, 255);
+        *(p - 2) = CLAMP (*(p - 2) - *bitp, 0, 255);
+        *(p - video_width) = CLAMP (*(p - video_width) - *bitp, 0, 255);
+        *(p + video_width) = CLAMP (*(p + video_width) - *bitp, 0, 255);
+      }
+      p += 2;
+      bitp++;
+    }
+  }
+
+  /* now blit text */
+  for (y = bitmap_y0; y < bitmap_y0 + bitmap_height; y++) {
+    int n;
+
+    bitp = bitmap->buffer + (y * bitmap->pitch) + bitmap_x0;
+    p = yuv_pixels + (y0 + y) * video_width + (x1 * 2) + 1;
+
     for (n = bitmap_width; n > 0; --n) {
       if (*bitp) {
         *p = *bitp;
         *(p - 1) = 0x80;
       }
-
       p += 2;
       bitp++;
     }
-    bitp += bit_rowinc;
   }
+
 }
 
 static void
