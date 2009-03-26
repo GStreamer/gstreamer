@@ -823,8 +823,8 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
     if (file_status.st_mode & S_IFDIR) {
       /* skip the .debug directory, these contain elf files that are not
        * useful or worse, can crash dlopen () */
-      if (g_str_equal (dirent, ".debug")) {
-        GST_LOG_OBJECT (registry, "found .debug directory, ignoring");
+      if (g_str_equal (dirent, ".debug") || g_str_equal (dirent, ".git")) {
+        GST_LOG_OBJECT (registry, "ignoring .debug or .git directory");
         g_free (filename);
         continue;
       }
