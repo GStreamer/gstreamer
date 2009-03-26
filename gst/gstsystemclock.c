@@ -615,7 +615,9 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
           /* wait till all the entries got woken up */
           gst_system_clock_wait_wakeup (sysclock);
 
-          /* we released the lock in the wait, recheck our status */
+          /* we released the lock in the wait, recheck our status, we don't need
+           * to remove the wakeup count because we marked the entry as EARLY
+           * before releasing the object lock. */
           if (entry->status == GST_CLOCK_UNSCHEDULED) {
             GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p got unscheduled", entry);
             break;
