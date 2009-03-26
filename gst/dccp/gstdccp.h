@@ -22,8 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include <sys/socket.h>
-#include <netinet/in.h>                   /* sockaddr_in */
+#include "gstdccp_common.h"
 
 /* DCCP socket general options */
 #define DCCP_BACKLOG	5

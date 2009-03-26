@@ -26,12 +26,7 @@
 
 G_BEGIN_DECLS
 
-#include <netdb.h>                        /* sockaddr_in */
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>                   /* sockaddr_in */
-#include <unistd.h>
-
+#include "gstdccp_common.h"
 
 #define GST_TYPE_DCCP_CLIENT_SRC \
   (gst_dccp_client_src_get_type())

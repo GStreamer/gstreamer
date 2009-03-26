@@ -50,9 +50,6 @@
 
 #include "gstdccpserversrc.h"
 #include "gstdccp.h"
-#include <string.h>             /* memset */
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
 
 #define DCCP_DEFAULT_CAPS        NULL

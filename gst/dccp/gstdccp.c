@@ -22,14 +22,6 @@
 #endif
 
 #include "gstdccp.h"
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <string.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
@@ -58,7 +50,11 @@ gst_dccp_host_to_ip (GstElement * element, const gchar * host)
   GST_DEBUG_OBJECT (element, "resolving host %s", host);
 
   /* first check if it already is an IP address */
+#ifndef G_OS_WIN32
   if (inet_aton (host, &addr)) {
+#else
+  if ((addr.S_un.S_addr = inet_addr (host)) != INADDR_NONE) {
+#endif
     ip = g_strdup (host);
     GST_DEBUG_OBJECT (element, "resolved to IP %s", ip);
     return ip;
@@ -102,9 +98,13 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   int maxfdp1;
   int ret;
   ssize_t bytes_read;
+#ifndef G_OS_WIN32
   int readsize;
   struct msghdr mh;
   struct iovec iov;
+#else
+  unsigned long readsize;
+#endif
 
   *buf = NULL;
 
@@ -121,9 +121,15 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   }
 
   /* ask how much is available for reading on the socket */
+#ifndef G_OS_WIN32
   if ((ret = ioctl (socket, FIONREAD, &readsize)) < 0) {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
         ("read FIONREAD value failed: %s", g_strerror (errno)));
+#else
+  if ((ret = ioctlsocket (socket, FIONREAD, &readsize)) == SOCKET_ERROR) {
+    GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
+        ("read FIONREAD value failed: %s", g_strerror (WSAGetLastError ())));
+#endif
     return GST_FLOW_ERROR;
   }
 
@@ -132,8 +138,8 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
     return GST_FLOW_UNEXPECTED;
   }
 
-  *buf = gst_buffer_new_and_alloc (readsize);
-
+  *buf = gst_buffer_new_and_alloc ((int) readsize);
+#ifndef G_OS_WIN32
   memset (&mh, 0, sizeof (mh));
   mh.msg_name = NULL;
   mh.msg_namelen = 0;
@@ -143,6 +149,11 @@ gst_dccp_read_buffer (GstElement * this, int socket, GstBuffer ** buf)
   mh.msg_iovlen = 1;
 
   bytes_read = recvmsg (socket, &mh, 0);
+#else
+  bytes_read =
+      recvfrom (socket, (char *) GST_BUFFER_DATA (*buf), (int) readsize, 0,
+      NULL, 0);
+#endif
 
   if (bytes_read != readsize) {
     GST_DEBUG_OBJECT (this, ("Error while reading data"));
@@ -181,9 +192,29 @@ gboolean
 gst_dccp_connect_to_server (GstElement * element, struct sockaddr_in server_sin,
     int sock_fd)
 {
+#ifdef G_OS_WIN32
+  int errorCode;
+#endif
   GST_DEBUG_OBJECT (element, "connecting to server");
 
   if (connect (sock_fd, (struct sockaddr *) &server_sin, sizeof (server_sin))) {
+#ifdef G_OS_WIN32
+    errorCode = WSAGetLastError ();
+    switch (errorCode) {
+      case WSAECONNREFUSED:
+        GST_ELEMENT_ERROR (element, RESOURCE, OPEN_WRITE,
+            ("Connection to %s:%d refused.", inet_ntoa (server_sin.sin_addr),
+                ntohs (server_sin.sin_port)), (NULL));
+        return FALSE;
+        break;
+      default:
+        GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ, (NULL),
+            ("Connect to %s:%d failed: %s", inet_ntoa (server_sin.sin_addr),
+                ntohs (server_sin.sin_port), g_strerror (errorCode)));
+        return FALSE;
+        break;
+    }
+#else
     switch (errno) {
       case ECONNREFUSED:
         GST_ELEMENT_ERROR (element, RESOURCE, OPEN_WRITE,
@@ -198,6 +229,7 @@ gst_dccp_connect_to_server (GstElement * element, struct sockaddr_in server_sin,
         return FALSE;
         break;
     }
+#endif
   }
   return TRUE;
 }
@@ -223,7 +255,11 @@ gst_dccp_server_wait_connections (GstElement * element, int server_sock_fd)
 
   if ((client_sock_fd =
           accept (server_sock_fd, (struct sockaddr *) &client_address,
+#ifndef G_OS_WIN32
               &client_address_len)) == -1) {
+#else
+              (int *) &client_address_len)) == -1) {
+#endif
     GST_ELEMENT_ERROR (element, RESOURCE, OPEN_WRITE, (NULL),
         ("Could not accept client on server socket %d: %s (%d)",
             server_sock_fd, g_strerror (errno), errno));
@@ -310,8 +346,10 @@ gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
   size_t bytes_written = 0;
   ssize_t wrote;
 
+#ifndef G_OS_WIN32
   struct iovec iov;
   struct msghdr mh;
+
   memset (&mh, 0, sizeof (mh));
 
   while (bytes_written < size) {
@@ -325,6 +363,15 @@ gst_dccp_socket_write (GstElement * element, int socket, const void *buf,
 
       wrote = sendmsg (socket, &mh, 0);
     } while (wrote == -1 && errno == EAGAIN);
+#else
+  int errorCode = 0;
+  while (bytes_written < size) {
+    do {
+      wrote = sendto (socket, (char *) buf + bytes_written,
+          MIN (packet_size, size - bytes_written), 0, NULL, 0);
+      errorCode = WSAGetLastError ();
+    } while (wrote == SOCKET_ERROR && errorCode == EAGAIN);
+#endif
 
     /* TODO print the send error */
     bytes_written += wrote;
@@ -433,8 +480,14 @@ gst_dccp_set_ccid (GstElement * element, int sock_fd, uint8_t ccid)
   /*
    * Determine which CCIDs are available on the host
    */
+#ifndef G_OS_WIN32
   ret = getsockopt (sock_fd, SOL_DCCP, DCCP_SOCKOPT_AVAILABLE_CCIDS, &ccids,
       &len);
+#else
+  ret =
+      getsockopt (sock_fd, SOL_DCCP, DCCP_SOCKOPT_AVAILABLE_CCIDS,
+      (char *) &ccids, &len);
+#endif
   if (ret < 0) {
     GST_ERROR_OBJECT (element, "Can not determine available CCIDs");
     return FALSE;
@@ -450,8 +503,11 @@ gst_dccp_set_ccid (GstElement * element, int sock_fd, uint8_t ccid)
     GST_ERROR_OBJECT (element, "CCID specified is not supported");
     return FALSE;
   }
-
+#ifndef G_OS_WIN32
   if (setsockopt (sock_fd, SOL_DCCP, DCCP_SOCKOPT_CCID, &ccid,
+#else
+  if (setsockopt (sock_fd, SOL_DCCP, DCCP_SOCKOPT_CCID, (char *) &ccid,
+#endif
           sizeof (ccid)) < 0) {
     GST_ERROR_OBJECT (element, "Can not set CCID");
     return FALSE;
@@ -481,7 +537,11 @@ gst_dccp_get_ccid (GstElement * element, int sock_fd, int tx_or_rx)
   }
 
   ccidlen = sizeof (ccid);
+#ifndef G_OS_WIN32
   ret = getsockopt (sock_fd, SOL_DCCP, tx_or_rx, &ccid, &ccidlen);
+#else
+  ret = getsockopt (sock_fd, SOL_DCCP, tx_or_rx, (char *) &ccid, &ccidlen);
+#endif
   if (ret < 0) {
     GST_ERROR_OBJECT (element, "Can not determine available CCIDs");
     return -1;
@@ -500,8 +560,13 @@ gst_dccp_get_max_packet_size (GstElement * element, int sock)
 {
   int size;
   socklen_t sizelen = sizeof (size);
+#ifndef G_OS_WIN32
   if (getsockopt (sock, SOL_DCCP, DCCP_SOCKOPT_GET_CUR_MPS,
           &size, &sizelen) < 0) {
+#else
+  if (getsockopt (sock, SOL_DCCP, DCCP_SOCKOPT_GET_CUR_MPS,
+          (char *) &size, &sizelen) < 0) {
+#endif
     GST_ELEMENT_ERROR (element, RESOURCE, SETTINGS, (NULL),
         ("Could not get current MTU %d: %s", errno, g_strerror (errno)));
     return -1;

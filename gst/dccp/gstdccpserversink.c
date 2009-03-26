@@ -51,9 +51,6 @@
 
 #include "gstdccpserversink.h"
 #include "gstdccp.h"
-#include <string.h>             /* memset */
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
 
 /* signals */

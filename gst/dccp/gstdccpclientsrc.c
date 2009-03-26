@@ -51,12 +51,7 @@
 
 #include "gstdccpclientsrc.h"
 #include "gstdccp.h"
-#include <string.h>             /* memset */
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <fcntl.h>
-
-#include <sys/ioctl.h>
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
 #endif

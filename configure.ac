@@ -325,8 +325,18 @@ AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 dnl needed for festival
 AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+  DCCP_LIBS="$DCCP_LIBS -lws2_32"
+  AC_SUBST(DCCP_LIBS)
+fi
+
 if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(librfb)
+fi
+
+if test "x$HAVE_PTHREAD_H" = "xyes"; then
+  DCCP_LIBS="$DCCP_LIBS -lpthread"
+  AC_SUBST(DCCP_LIBS)
 fi
 
 if test "x$HAVE_PTHREAD_H" != "xyes"; then
