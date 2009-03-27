@@ -93,6 +93,7 @@ static void gst_system_clock_id_unschedule (GstClock * clock,
     GstClockEntry * entry);
 static void gst_system_clock_async_thread (GstClock * clock);
 static gboolean gst_system_clock_start_async (GstSystemClock * clock);
+static void gst_system_clock_add_wakeup (GstSystemClock * sysclock);
 
 static GStaticMutex _gst_sysclock_mutex = G_STATIC_MUTEX_INIT;
 
@@ -214,6 +215,7 @@ gst_system_clock_dispose (GObject * object)
   g_list_free (clock->entries);
   clock->entries = NULL;
   GST_CLOCK_BROADCAST (clock);
+  gst_system_clock_add_wakeup (sysclock);
   GST_OBJECT_UNLOCK (clock);
 
   if (sysclock->thread)
