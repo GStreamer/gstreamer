@@ -158,10 +158,8 @@ gst_output_selector_init (GstOutputSelector * sel,
 }
 
 static void
-gst_output_selector_dispose (GObject * object)
+gst_output_selector_reset (GstOutputSelector * osel)
 {
-  GstOutputSelector *osel = GST_OUTPUT_SELECTOR (object);
-
   if (osel->pending_srcpad != NULL) {
     gst_object_unref (osel->pending_srcpad);
     osel->pending_srcpad = NULL;
@@ -170,6 +168,15 @@ gst_output_selector_dispose (GObject * object)
     gst_buffer_unref (osel->latest_buffer);
     osel->latest_buffer = NULL;
   }
+  gst_segment_init (&osel->segment, GST_FORMAT_UNDEFINED);
+}
+
+static void
+gst_output_selector_dispose (GObject * object)
+{
+  GstOutputSelector *osel = GST_OUTPUT_SELECTOR (object);
+
+  gst_output_selector_reset (osel);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -379,7 +386,29 @@ static GstStateChangeReturn
 gst_output_selector_change_state (GstElement * element,
     GstStateChange transition)
 {
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  GstOutputSelector *sel;
+  GstStateChangeReturn result;
+
+  sel = GST_OUTPUT_SELECTOR (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    default:
+      break;
+  }
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_output_selector_reset (sel);
+      break;
+    default:
+      break;
+  }
+
+  return result;
 }
 
 static gboolean
@@ -412,7 +441,6 @@ gst_output_selector_handle_sink_event (GstPad * pad, GstEvent * event)
 
       /* Send newsegment to all src pads */
       gst_pad_event_default (pad, event);
-
       break;
     }
     case GST_EVENT_EOS:
