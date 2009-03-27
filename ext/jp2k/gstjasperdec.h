@@ -77,6 +77,13 @@ struct _GstJasperDec
 
   gint framerate_numerator;
   gint framerate_denominator;
+
+  GstSegment segment;
+  gboolean discont;
+
+  /* QoS stuff *//* with LOCK */
+  gdouble proportion;
+  GstClockTime earliest_time;
 };
 
 struct _GstJasperDecClass

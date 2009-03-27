@@ -89,6 +89,13 @@ static GstStateChangeReturn gst_jasper_dec_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_jasper_dec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_jasper_dec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_jasper_dec_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_jasper_dec_sink_event (GstPad * pad, GstEvent * event);
+static void gst_jasper_dec_update_qos (GstJasperDec * dec, gdouble proportion,
+    GstClockTime time);
+static void gst_jasper_dec_reset_qos (GstJasperDec * dec);
+static void gst_jasper_dec_read_qos (GstJasperDec * dec, gdouble * proportion,
+    GstClockTime * time);
 
 /* minor trick:
  * keep original naming but use unique name here for a happy type system
@@ -140,11 +147,15 @@ gst_jasper_dec_init (GstJasperDec * dec, GstJasperDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_jasper_dec_sink_setcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jasper_dec_chain));
+  gst_pad_set_event_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jasper_dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
       gst_pad_new_from_static_template (&gst_jasper_dec_src_template, "src");
   gst_pad_use_fixed_caps (dec->srcpad);
+  gst_pad_set_event_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_jasper_dec_src_event));
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->codec_data = NULL;
@@ -164,6 +175,9 @@ gst_jasper_dec_reset (GstJasperDec * dec)
   dec->fmt = -1;
   dec->clrspc = JAS_CLRSPC_UNKNOWN;
   dec->format = GST_VIDEO_FORMAT_UNKNOWN;
+  gst_jasper_dec_reset_qos (dec);
+  gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+  dec->discont = TRUE;
 }
 
 static gboolean
@@ -547,25 +561,77 @@ fail_negotiate:
   }
 }
 
+/* Perform qos calculations before decoding the next frame. Returns TRUE if the
+ * frame should be decoded, FALSE if the frame can be dropped entirely */
+static gboolean
+gst_jasper_dec_do_qos (GstJasperDec * dec, GstClockTime timestamp)
+{
+  GstClockTime qostime, earliest_time;
+  gdouble proportion;
+
+  /* no timestamp, can't do QoS => decode frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp))) {
+    GST_LOG_OBJECT (dec, "invalid timestamp, can't do QoS, decode frame");
+    return TRUE;
+  }
+
+  /* get latest QoS observation values */
+  gst_jasper_dec_read_qos (dec, &proportion, &earliest_time);
+
+  /* skip qos if we have no observation (yet) => decode frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
+    GST_LOG_OBJECT (dec, "no observation yet, decode frame");
+    return TRUE;
+  }
+
+  /* qos is done on running time */
+  qostime = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
+      timestamp);
+
+  /* see how our next timestamp relates to the latest qos timestamp */
+  GST_LOG_OBJECT (dec, "qostime %" GST_TIME_FORMAT ", earliest %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+
+  if (qostime != GST_CLOCK_TIME_NONE && qostime <= earliest_time) {
+    GST_DEBUG_OBJECT (dec, "we are late, drop frame");
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (dec, "decode frame");
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_jasper_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstJasperDec *dec;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime ts;
   GstBuffer *outbuf = NULL;
   guint8 *data;
   guint size;
-  gboolean discont = FALSE;
+  gboolean decode;
 
-  dec = GST_JASPER_DEC (gst_pad_get_parent (pad));
+  dec = GST_JASPER_DEC (GST_PAD_PARENT (pad));
 
   if (dec->fmt < 0)
     goto not_negotiated;
 
-  GST_LOG_OBJECT (dec, "buffer with ts: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+  ts = GST_BUFFER_TIMESTAMP (buf);
 
-  discont = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  GST_LOG_OBJECT (dec, "buffer with ts: %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))
+    dec->discont = TRUE;
+
+  decode = gst_jasper_dec_do_qos (dec, ts);
+
+  /* FIXME: do clipping */
+
+  if (G_UNLIKELY (!decode)) {
+    dec->discont = TRUE;
+    goto done;
+  }
 
   /* strip possible prefix */
   if (dec->strip) {
@@ -595,16 +661,19 @@ gst_jasper_dec_chain (GstPad * pad, GstBuffer * buf)
 
   if (outbuf) {
     gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
-    if (discont)
+    if (dec->discont) {
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-  }
+      dec->discont = FALSE;
+    }
 
-  if (ret == GST_FLOW_OK && outbuf)
-    ret = gst_pad_push (dec->srcpad, outbuf);
+    if (ret == GST_FLOW_OK)
+      ret = gst_pad_push (dec->srcpad, outbuf);
+    else
+      gst_buffer_unref (outbuf);
+  }
 
 done:
   gst_buffer_unref (buf);
-  gst_object_unref (dec);
 
   return ret;
 
@@ -614,6 +683,139 @@ not_negotiated:
     GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
     ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+}
+
+static void
+gst_jasper_dec_update_qos (GstJasperDec * dec, gdouble proportion,
+    GstClockTime time)
+{
+  GST_OBJECT_LOCK (dec);
+  dec->proportion = proportion;
+  dec->earliest_time = time;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+static void
+gst_jasper_dec_reset_qos (GstJasperDec * dec)
+{
+  gst_jasper_dec_update_qos (dec, 0.5, GST_CLOCK_TIME_NONE);
+}
+
+static void
+gst_jasper_dec_read_qos (GstJasperDec * dec, gdouble * proportion,
+    GstClockTime * time)
+{
+  GST_OBJECT_LOCK (dec);
+  *proportion = dec->proportion;
+  *time = dec->earliest_time;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+static gboolean
+gst_jasper_dec_src_event (GstPad * pad, GstEvent * event)
+{
+  GstJasperDec *dec;
+  gboolean res;
+
+  dec = GST_JASPER_DEC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:{
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+      gdouble proportion;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      gst_jasper_dec_update_qos (dec, proportion, timestamp + diff);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_push_event (dec->sinkpad, event);
+
+  gst_object_unref (dec);
+  return res;
+}
+
+static gboolean
+gst_jasper_dec_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstJasperDec *dec;
+  gboolean res = FALSE;
+
+  dec = GST_JASPER_DEC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_jasper_dec_reset_qos (dec);
+      gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+      dec->discont = TRUE;
+      break;
+    case GST_EVENT_NEWSEGMENT:{
+      gboolean update;
+      GstFormat fmt;
+      gint64 start, stop, time;
+      gdouble rate, arate;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
+          &start, &stop, &time);
+
+      switch (fmt) {
+        case GST_FORMAT_TIME:
+          /* great, our native segment format */
+          break;
+        case GST_FORMAT_BYTES:
+          /* hmm .. */
+          if (start != 0 || time != 0)
+            goto invalid_bytes_segment;
+          /* create bogus segment in TIME format, starting from 0 */
+          gst_event_unref (event);
+          fmt = GST_FORMAT_TIME;
+          start = 0;
+          stop = -1;
+          time = 0;
+          event = gst_event_new_new_segment (update, rate, fmt, start, stop,
+              time);
+          break;
+        default:
+          /* invalid format */
+          goto invalid_format;
+      }
+
+      gst_segment_set_newsegment_full (&dec->segment, update, rate, arate,
+          fmt, start, stop, time);
+
+      GST_DEBUG_OBJECT (dec, "NEWSEGMENT %" GST_SEGMENT_FORMAT, &dec->segment);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_push_event (dec->srcpad, event);
+
+done:
+
+  gst_object_unref (dec);
+  return res;
+
+/* ERRORS */
+invalid_format:
+  {
+    GST_WARNING_OBJECT (dec, "unknown format received in NEWSEGMENT event");
+    gst_event_unref (event);
+    goto done;
+  }
+invalid_bytes_segment:
+  {
+    GST_WARNING_OBJECT (dec, "can't handle NEWSEGMENT event in BYTES format "
+        "with a non-0 start or non-0 time value");
+    gst_event_unref (event);
     goto done;
   }
 }
