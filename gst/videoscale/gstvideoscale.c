@@ -354,19 +354,6 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 
   structure = gst_caps_get_structure (caps, 0);
 
-  /* check compatibility of format and method before we copy the input caps */
-  if (method == GST_VIDEO_SCALE_4TAP) {
-    guint32 fourcc;
-
-    if (!gst_structure_has_name (structure, "video/x-raw-yuv"))
-      goto method_not_implemented_for_format;
-    if (!gst_structure_get_fourcc (structure, "format", &fourcc))
-      goto method_not_implemented_for_format;
-    if (fourcc != GST_MAKE_FOURCC ('I', '4', '2', '0') &&
-        fourcc != GST_MAKE_FOURCC ('Y', 'V', '1', '2'))
-      goto method_not_implemented_for_format;
-  }
-
   ret = gst_caps_copy (caps);
   structure = gst_structure_copy (gst_caps_get_structure (ret, 0));
 
@@ -389,13 +376,6 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
-
-method_not_implemented_for_format:
-  {
-    GST_DEBUG_OBJECT (trans, "method %d not implemented for format %"
-        GST_PTR_FORMAT ", returning empty caps", method, caps);
-    return gst_caps_new_empty ();
-  }
 }
 
 static int
@@ -836,15 +816,44 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
     case GST_VIDEO_SCALE_4TAP:
       GST_LOG_OBJECT (videoscale, "doing 4tap scaling");
       switch (videoscale->format) {
+        case GST_VIDEO_SCALE_RGBx:
+        case GST_VIDEO_SCALE_xRGB:
+        case GST_VIDEO_SCALE_BGRx:
+        case GST_VIDEO_SCALE_xBGR:
+        case GST_VIDEO_SCALE_RGBA:
+        case GST_VIDEO_SCALE_ARGB:
+        case GST_VIDEO_SCALE_BGRA:
+        case GST_VIDEO_SCALE_ABGR:
+        case GST_VIDEO_SCALE_AYUV:
+          vs_image_scale_4tap_RGBA (dest, src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_RGB:
+        case GST_VIDEO_SCALE_BGR:
+          vs_image_scale_4tap_RGB (dest, src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_YUY2:
+        case GST_VIDEO_SCALE_YVYU:
+          vs_image_scale_4tap_YUYV (dest, src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_UYVY:
+          vs_image_scale_4tap_UYVY (dest, src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_Y:
+          vs_image_scale_4tap_Y (dest, src, videoscale->tmp_buf);
+          break;
         case GST_VIDEO_SCALE_I420:
         case GST_VIDEO_SCALE_YV12:
           vs_image_scale_4tap_Y (dest, src, videoscale->tmp_buf);
           vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
           vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
           break;
+        case GST_VIDEO_SCALE_RGB565:
+          vs_image_scale_4tap_RGB565 (dest, src, videoscale->tmp_buf);
+          break;
+        case GST_VIDEO_SCALE_RGB555:
+          vs_image_scale_4tap_RGB555 (dest, src, videoscale->tmp_buf);
+          break;
         default:
-          /* FIXME: update gst_video_scale_transform_caps once RGB and/or
-           * other YUV formats work too */
           goto unsupported;
       }
       break;
