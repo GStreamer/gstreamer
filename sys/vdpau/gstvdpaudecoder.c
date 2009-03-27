@@ -302,6 +302,8 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
       &framerate_numerator, &framerate_denominator);
 
   src_caps = gst_pad_get_allowed_caps (dec->src);
+  if (G_UNLIKELY (!src_caps))
+    return FALSE;
 
   structure = gst_caps_get_structure (src_caps, 0);
   gst_structure_get_fourcc (structure, "format", &fourcc_format);
@@ -318,7 +320,7 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   gst_caps_unref (new_caps);
 
-  if (!res)
+  if (G_UNLIKELY (!res))
     return FALSE;
 
   dec->width = width;

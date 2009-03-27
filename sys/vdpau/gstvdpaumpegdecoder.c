@@ -1,7 +1,5 @@
 /*
  * GStreamer
- * Copyright (C) 2005 Thomas Vander Stichele <thomas@apestaart.org>
- * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -62,6 +60,7 @@
 
 #include <gst/gst.h>
 
+#include "mpegutil.h"
 #include "gstvdpaumpegdecoder.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdpau_mpeg_decoder_debug);
@@ -88,7 +87,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, mpegversion = (int) [ 1, 2 ], "
-        "systemstream = (boolean) false")
+        "systemstream = (boolean) false, parsed = (boolean) true")
     );
 
 GST_BOILERPLATE (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder, GstVdpauDecoder,
@@ -104,11 +103,33 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
 {
   GstVdpauMpegDecoder *mpeg_dec;
   GstStructure *structure;
+  gint version;
 
   mpeg_dec = GST_VDPAU_MPEG_DECODER (dec);
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "mpegversion", &mpeg_dec->version);
+  gst_structure_get_int (structure, "mpegversion", &version);
+  if (version == 1)
+    mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG1;
+
+  else {
+    const GValue *value;
+    GstBuffer *codec_data;
+    MPEGSeqHdr hdr = { 0, };
+
+    value = gst_structure_get_value (structure, "codec_data");
+    codec_data = gst_value_get_buffer (value);
+    mpeg_util_parse_sequence_hdr (&hdr, GST_BUFFER_DATA (codec_data),
+        GST_BUFFER_DATA (codec_data) + GST_BUFFER_SIZE (codec_data));
+    switch (hdr.profile) {
+      case 5:
+        mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG2_SIMPLE;
+        break;
+      default:
+        mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG2_MAIN;
+        break;
+    }
+  }
 
   return TRUE;
 }
