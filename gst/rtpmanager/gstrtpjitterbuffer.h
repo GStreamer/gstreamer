@@ -69,9 +69,10 @@ struct _GstRtpJitterBufferClass
   GstElementClass parent_class;
 
   /* signals */
-  GstCaps* (*request_pt_map) (GstRtpJitterBuffer *buffer, guint pt);
+  GstCaps* (*request_pt_map)   (GstRtpJitterBuffer *buffer, guint pt);
 
-  void     (*handle_sync)    (GstRtpJitterBuffer *buffer, GstStructure *s);
+  void     (*handle_sync)      (GstRtpJitterBuffer *buffer, GstStructure *s);
+  void     (*on_npt_stop)      (GstRtpJitterBuffer *buffer);
 
   /* actions */
   void     (*clear_pt_map)   (GstRtpJitterBuffer *buffer);
