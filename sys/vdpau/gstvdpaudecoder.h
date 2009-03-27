@@ -38,12 +38,15 @@ G_BEGIN_DECLS
 
 typedef struct _GstVdpauDecoder      GstVdpauDecoder;
 typedef struct _GstVdpauDecoderClass GstVdpauDecoderClass;
+typedef struct _VdpauFunctions VdpauFunctions;
 
 struct _GstVdpauDecoder {
   GstElement element;
 
   gchar *display;
   VdpDevice device;
+
+  VdpauFunctions *functions;
 
   GstPad *src;
   GstPad *sink;
@@ -60,6 +63,20 @@ struct _GstVdpauDecoderClass {
   GstBaseTransformClass parent_class;
 
   gboolean (*set_caps) (GstVdpauDecoder *dec, GstCaps *caps);
+};
+
+struct _VdpauFunctions {
+  VdpGetProcAddress                               *vdp_get_proc_address;
+  
+  VdpVideoSurfaceQueryCapabilities                *vdp_video_surface_query_capabilities;
+  VdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities *vdp_video_surface_query_ycbcr_capabilities;
+  VdpVideoSurfaceGetBitsYCbCr                     *vdp_video_surface_get_bits_ycbcr;
+
+  VdpDeviceDestroy                                *vdp_device_destroy;
+
+  VdpDecoderCreate                                *vdp_decoder_create;
+  VdpDecoderDestroy                               *vdp_decoder_destroy;
+  VdpDecoderRender                                *vdp_decoder_render;
 };
 
 GType gst_vdpaudecoder_get_type (void);

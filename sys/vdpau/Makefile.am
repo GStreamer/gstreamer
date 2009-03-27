@@ -12,7 +12,6 @@ libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstvdpaudecoder.h \
-	vdpauvariables.h \
 	gstvdpaumpegdecoder.h \
     mpegutil.h
 	

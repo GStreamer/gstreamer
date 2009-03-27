@@ -29,7 +29,6 @@
 #include <X11/Xlib.h>
 #include <vdpau/vdpau_x11.h>
 
-#include "vdpauvariables.h"
 #include "gstvdpaudecoder.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdpaudecoder_debug);
@@ -71,6 +70,10 @@ gboolean
 gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
     VdpVideoSurface surface)
 {
+  VdpauFunctions *f;
+
+  f = dec->functions;
+
   switch (dec->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
     {
@@ -92,7 +95,7 @@ gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
       data[2] = data[1] + dec->height * dec->width / 4;
 
       status =
-          vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_YV12,
+          f->vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_YV12,
           (void *) data, NULL);
       if (G_UNLIKELY (status != VDP_STATUS_OK))
         return FALSE;
@@ -151,8 +154,11 @@ static VdpauFormats formats[6] = {
 static GstCaps *
 gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
 {
+  VdpauFunctions *f;
   GstCaps *caps;
   gint i;
+
+  f = dec->functions;
 
   caps = gst_caps_new_empty ();
 
@@ -161,7 +167,8 @@ gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
     VdpBool is_supported;
     guint32 max_w, max_h;
 
-    status = vdp_video_surface_query_capabilities (dec->device, chroma_types[i],
+    status =
+        f->vdp_video_surface_query_capabilities (dec->device, chroma_types[i],
         &is_supported, &max_w, &max_h);
 
     if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
@@ -179,7 +186,7 @@ gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
           continue;
 
         status =
-            vdp_video_surface_query_ycbcr_capabilities (dec->device,
+            f->vdp_video_surface_query_ycbcr_capabilities (dec->device,
             formats[j].chroma_type, formats[j].format, &is_supported);
         if (status != VDP_STATUS_OK
             && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
@@ -215,6 +222,7 @@ gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
 {
   Display *display;
   int screen;
+  VdpauFunctions *f;
   VdpStatus status;
   GstCaps *caps;
 
@@ -226,10 +234,12 @@ gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
     return FALSE;
   }
 
+  f = dec->functions;
+
   screen = DefaultScreen (display);
   status =
       vdp_device_create_x11 (display, screen, &dec->device,
-      &vdp_get_proc_address);
+      &f->vdp_get_proc_address);
   if (status != VDP_STATUS_OK) {
     GST_ELEMENT_ERROR (dec, RESOURCE, READ, ("Could not initialise VDPAU"),
         ("Could not create VDPAU device"));
@@ -239,21 +249,21 @@ gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
   }
   XCloseDisplay (display);
 
-  vdp_get_proc_address (dec->device,
+  f->vdp_get_proc_address (dec->device,
       VDP_FUNC_ID_VIDEO_SURFACE_QUERY_CAPABILITIES,
-      (void **) &vdp_video_surface_query_capabilities);
-  vdp_get_proc_address (dec->device,
+      (void **) &f->vdp_video_surface_query_capabilities);
+  f->vdp_get_proc_address (dec->device,
       VDP_FUNC_ID_VIDEO_SURFACE_QUERY_GET_PUT_BITS_Y_CB_CR_CAPABILITIES,
-      (void **) &vdp_video_surface_query_ycbcr_capabilities);
-  vdp_get_proc_address (dec->device,
-      VDP_FUNC_ID_DEVICE_DESTROY, (void **) &vdp_device_destroy);
-  vdp_get_proc_address (dec->device,
+      (void **) &f->vdp_video_surface_query_ycbcr_capabilities);
+  f->vdp_get_proc_address (dec->device,
+      VDP_FUNC_ID_DEVICE_DESTROY, (void **) &f->vdp_device_destroy);
+  f->vdp_get_proc_address (dec->device,
       VDP_FUNC_ID_VIDEO_SURFACE_GET_BITS_Y_CB_CR,
-      (void **) &vdp_video_surface_get_bits_ycbcr);
+      (void **) &f->vdp_video_surface_get_bits_ycbcr);
 
   caps = gst_vdpaudecoder_get_vdpau_support (dec);
   if (!caps) {
-    vdp_device_destroy (dec->device);
+    f->vdp_device_destroy (dec->device);
     dec->device = 0;
     return FALSE;
   }
@@ -401,6 +411,8 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
   dec->height = 0;
   dec->width = 0;
   dec->format = 0;
+
+  dec->functions = g_slice_new0 (VdpauFunctions);
 
   dec->src = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_getcaps_function (dec->src, gst_vdpaudecoder_src_getcaps);
