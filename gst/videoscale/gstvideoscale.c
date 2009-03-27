@@ -92,6 +92,7 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_ABGR),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("v308")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YUY2")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YVYU")),
@@ -115,6 +116,7 @@ enum
   GST_VIDEO_SCALE_ABGR,
   GST_VIDEO_SCALE_RGB,
   GST_VIDEO_SCALE_BGR,
+  GST_VIDEO_SCALE_v308,
   GST_VIDEO_SCALE_AYUV,
   GST_VIDEO_SCALE_YUY2,
   GST_VIDEO_SCALE_YVYU,
@@ -422,6 +424,7 @@ gst_video_scale_prepare_size (GstVideoScale * videoscale, gint format,
       break;
     case GST_VIDEO_SCALE_RGB:
     case GST_VIDEO_SCALE_BGR:
+    case GST_VIDEO_SCALE_v308:
       img->stride = GST_ROUND_UP_4 (img->width * 3);
       *size = img->stride * img->height;
       break;
@@ -741,6 +744,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           break;
         case GST_VIDEO_SCALE_RGB:
         case GST_VIDEO_SCALE_BGR:
+        case GST_VIDEO_SCALE_v308:
           vs_image_scale_nearest_RGB (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_YUY2:
@@ -785,6 +789,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           break;
         case GST_VIDEO_SCALE_RGB:
         case GST_VIDEO_SCALE_BGR:
+        case GST_VIDEO_SCALE_v308:
           vs_image_scale_linear_RGB (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_YUY2:
@@ -829,6 +834,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           break;
         case GST_VIDEO_SCALE_RGB:
         case GST_VIDEO_SCALE_BGR:
+        case GST_VIDEO_SCALE_v308:
           vs_image_scale_4tap_RGB (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_YUY2:
