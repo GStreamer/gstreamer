@@ -697,7 +697,7 @@ AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
 dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
 AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
-  AG_GST_PKG_CHECK_MODULES(FLAC, flac >= 1.1.3)
+  AG_GST_PKG_CHECK_MODULES(FLAC, flac >= 1.1.4)
 ])
 
 dnl *** GConf ***

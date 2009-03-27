@@ -130,45 +130,6 @@ static void gst_flac_dec_setup_seekable_decoder (GstFlacDec * flacdec);
 
 static void gst_flac_dec_setup_stream_decoder (GstFlacDec * flacdec);
 
-#ifdef LEGACY_FLAC
-static FLAC__SeekableStreamDecoderReadStatus
-gst_flac_dec_read_seekable (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__byte buffer[], unsigned *bytes, void *client_data);
-static FLAC__SeekableStreamDecoderSeekStatus
-gst_flac_dec_seek (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__uint64 position, void *client_data);
-static FLAC__SeekableStreamDecoderTellStatus
-gst_flac_dec_tell (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__uint64 * position, void *client_data);
-static FLAC__SeekableStreamDecoderLengthStatus
-gst_flac_dec_length (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__uint64 * length, void *client_data);
-static FLAC__bool gst_flac_dec_eof (const FLAC__SeekableStreamDecoder * decoder,
-    void *client_data);
-static FLAC__StreamDecoderReadStatus
-gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
-    FLAC__byte buffer[], unsigned *bytes, void *client_data);
-static FLAC__StreamDecoderWriteStatus
-gst_flac_dec_write_seekable (const FLAC__SeekableStreamDecoder * decoder,
-    const FLAC__Frame * frame,
-    const FLAC__int32 * const buffer[], void *client_data);
-static FLAC__StreamDecoderWriteStatus
-gst_flac_dec_write_stream (const FLAC__StreamDecoder * decoder,
-    const FLAC__Frame * frame,
-    const FLAC__int32 * const buffer[], void *client_data);
-static void gst_flac_dec_metadata_callback_seekable (const
-    FLAC__SeekableStreamDecoder * decoder,
-    const FLAC__StreamMetadata * metadata, void *client_data);
-static void gst_flac_dec_metadata_callback_stream (const FLAC__StreamDecoder *
-    decoder, const FLAC__StreamMetadata * metadata, void *client_data);
-static void gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
-    const FLAC__StreamMetadata * metadata);
-static void gst_flac_dec_error_callback_seekable (const
-    FLAC__SeekableStreamDecoder * decoder,
-    FLAC__StreamDecoderErrorStatus status, void *client_data);
-static void gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder *
-    decoder, FLAC__StreamDecoderErrorStatus status, void *client_data);
-#else
 static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,
     FLAC__byte buffer[], size_t * bytes, void *client_data);
@@ -194,7 +155,6 @@ static void gst_flac_dec_metadata_callback_stream (const FLAC__StreamDecoder *
     decoder, const FLAC__StreamMetadata * metadata, void *client_data);
 static void gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder *
     decoder, FLAC__StreamDecoderErrorStatus status, void *client_data);
-#endif
 
 GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
 
@@ -299,11 +259,7 @@ static void
 gst_flac_dec_reset_decoders (GstFlacDec * flacdec)
 {
   if (flacdec->seekable_decoder) {
-#ifdef LEGACY_FLAC
-    FLAC__seekable_stream_decoder_delete (flacdec->seekable_decoder);
-#else
     FLAC__stream_decoder_delete (flacdec->seekable_decoder);
-#endif
     flacdec->seekable_decoder = NULL;
   }
 
@@ -350,36 +306,12 @@ gst_flac_dec_setup_seekable_decoder (GstFlacDec * dec)
   gst_tag_list_add (dec->tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_AUDIO_CODEC, "FLAC", NULL);
 
-#ifdef LEGACY_FLAC
-  dec->seekable_decoder = FLAC__seekable_stream_decoder_new ();
-
-  FLAC__seekable_stream_decoder_set_read_callback (dec->seekable_decoder,
-      gst_flac_dec_read_seekable);
-  FLAC__seekable_stream_decoder_set_seek_callback (dec->seekable_decoder,
-      gst_flac_dec_seek);
-  FLAC__seekable_stream_decoder_set_tell_callback (dec->seekable_decoder,
-      gst_flac_dec_tell);
-  FLAC__seekable_stream_decoder_set_length_callback (dec->seekable_decoder,
-      gst_flac_dec_length);
-  FLAC__seekable_stream_decoder_set_eof_callback (dec->seekable_decoder,
-      gst_flac_dec_eof);
-  FLAC__seekable_stream_decoder_set_write_callback (dec->seekable_decoder,
-      gst_flac_dec_write_seekable);
-  FLAC__seekable_stream_decoder_set_metadata_respond (dec->seekable_decoder,
-      FLAC__METADATA_TYPE_VORBIS_COMMENT);
-  FLAC__seekable_stream_decoder_set_metadata_callback (dec->seekable_decoder,
-      gst_flac_dec_metadata_callback_seekable);
-  FLAC__seekable_stream_decoder_set_error_callback (dec->seekable_decoder,
-      gst_flac_dec_error_callback_seekable);
-  FLAC__seekable_stream_decoder_set_client_data (dec->seekable_decoder, dec);
-#else
   dec->seekable_decoder = FLAC__stream_decoder_new ();
   FLAC__stream_decoder_set_metadata_respond (dec->seekable_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
   FLAC__stream_decoder_set_metadata_respond (dec->seekable_decoder,
       FLAC__METADATA_TYPE_PICTURE);
   FLAC__stream_decoder_set_md5_checking (dec->seekable_decoder, false); /* no point calculating since it's never checked here */
-#endif
 }
 
 static void
@@ -395,25 +327,11 @@ gst_flac_dec_setup_stream_decoder (GstFlacDec * dec)
 
   dec->stream_decoder = FLAC__stream_decoder_new ();
 
-#ifdef LEGACY_FLAC
-  FLAC__stream_decoder_set_read_callback (dec->stream_decoder,
-      gst_flac_dec_read_stream);
-  FLAC__stream_decoder_set_write_callback (dec->stream_decoder,
-      gst_flac_dec_write_stream);
-  FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
-      FLAC__METADATA_TYPE_VORBIS_COMMENT);
-  FLAC__stream_decoder_set_metadata_callback (dec->stream_decoder,
-      gst_flac_dec_metadata_callback_stream);
-  FLAC__stream_decoder_set_error_callback (dec->stream_decoder,
-      gst_flac_dec_error_callback_stream);
-  FLAC__stream_decoder_set_client_data (dec->stream_decoder, dec);
-#else
   FLAC__stream_decoder_set_md5_checking (dec->stream_decoder, false);   /* no point calculating since it's never checked here */
   FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
   FLAC__stream_decoder_set_metadata_respond (dec->stream_decoder,
       FLAC__METADATA_TYPE_PICTURE);
-#endif
 }
 
 static void
@@ -637,8 +555,6 @@ gst_flac_dec_scan_for_last_block (GstFlacDec * flacdec, gint64 * samples)
   }
 }
 
-/* FIXME: remove ifndef once we depend on flac >= 1.2.x */
-#ifndef LEGACY_FLAC
 static void
 gst_flac_extract_picture_buffer (GstFlacDec * dec,
     const FLAC__StreamMetadata * metadata)
@@ -667,7 +583,6 @@ gst_flac_extract_picture_buffer (GstFlacDec * dec,
     gst_tag_list_free (tags);
   }
 }
-#endif /* LEGACY_FLAC */
 
 static void
 gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
@@ -715,14 +630,10 @@ gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
       }
       break;
     }
-
-/* FIXME: remove ifndef once we depend on flac >= 1.2.x */
-#ifndef LEGACY_FLAC
     case FLAC__METADATA_TYPE_PICTURE:{
       gst_flac_extract_picture_buffer (flacdec, metadata);
       break;
     }
-#endif
     case FLAC__METADATA_TYPE_VORBIS_COMMENT:
       gst_flac_dec_update_metadata (flacdec, metadata);
       break;
@@ -730,17 +641,6 @@ gst_flac_dec_metadata_callback (GstFlacDec * flacdec,
       break;
   }
 }
-
-#ifdef LEGACY_FLAC
-static void
-gst_flac_dec_metadata_callback_seekable (const FLAC__SeekableStreamDecoder * d,
-    const FLAC__StreamMetadata * metadata, void *client_data)
-{
-  GstFlacDec *dec = GST_FLAC_DEC (client_data);
-
-  gst_flac_dec_metadata_callback (dec, metadata);
-}
-#endif
 
 static void
 gst_flac_dec_metadata_callback_stream (const FLAC__StreamDecoder * decoder,
@@ -776,15 +676,6 @@ gst_flac_dec_error_callback (GstFlacDec * dec,
   dec->last_flow = GST_FLOW_ERROR;
 }
 
-#ifdef LEGACY_FLAC
-static void
-gst_flac_dec_error_callback_seekable (const FLAC__SeekableStreamDecoder * d,
-    FLAC__StreamDecoderErrorStatus status, void *client_data)
-{
-  gst_flac_dec_error_callback (GST_FLAC_DEC (client_data), status);
-}
-#endif
-
 static void
 gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder * d,
     FLAC__StreamDecoderErrorStatus status, void *client_data)
@@ -792,15 +683,9 @@ gst_flac_dec_error_callback_stream (const FLAC__StreamDecoder * d,
   gst_flac_dec_error_callback (GST_FLAC_DEC (client_data), status);
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__SeekableStreamDecoderSeekStatus
-gst_flac_dec_seek (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__uint64 position, void *client_data)
-#else
 static FLAC__StreamDecoderSeekStatus
 gst_flac_dec_seek (const FLAC__StreamDecoder * decoder,
     FLAC__uint64 position, void *client_data)
-#endif
 {
   GstFlacDec *flacdec;
 
@@ -809,22 +694,12 @@ gst_flac_dec_seek (const FLAC__StreamDecoder * decoder,
   GST_DEBUG_OBJECT (flacdec, "seek %" G_GINT64_FORMAT, position);
   flacdec->offset = position;
 
-#ifdef LEGACY_FLAC
-  return FLAC__SEEKABLE_STREAM_DECODER_SEEK_STATUS_OK;
-#else
   return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
-#endif
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__SeekableStreamDecoderTellStatus
-gst_flac_dec_tell (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__uint64 * position, void *client_data)
-#else
 static FLAC__StreamDecoderTellStatus
 gst_flac_dec_tell (const FLAC__StreamDecoder * decoder,
     FLAC__uint64 * position, void *client_data)
-#endif
 {
   GstFlacDec *flacdec;
 
@@ -834,22 +709,12 @@ gst_flac_dec_tell (const FLAC__StreamDecoder * decoder,
 
   GST_DEBUG_OBJECT (flacdec, "tell %" G_GINT64_FORMAT, *position);
 
-#ifdef LEGACY_FLAC
-  return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_OK;
-#else
   return FLAC__STREAM_DECODER_TELL_STATUS_OK;
-#endif
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__SeekableStreamDecoderLengthStatus
-gst_flac_dec_length (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__uint64 * length, void *client_data)
-#else
 static FLAC__StreamDecoderLengthStatus
 gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
     FLAC__uint64 * length, void *client_data)
-#endif
 {
   GstFlacDec *flacdec;
   GstFormat fmt = GST_FORMAT_BYTES;
@@ -859,39 +724,22 @@ gst_flac_dec_length (const FLAC__StreamDecoder * decoder,
   flacdec = GST_FLAC_DEC (client_data);
 
   if (!(peer = gst_pad_get_peer (flacdec->sinkpad)))
-#ifdef LEGACY_FLAC
-    return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_ERROR;
-#else
     return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
-#endif
+
   gst_pad_query_duration (peer, &fmt, &len);
   gst_object_unref (peer);
   if (fmt != GST_FORMAT_BYTES || len == -1)
-#ifdef LEGACY_FLAC
-    return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_ERROR;
-#else
     return FLAC__STREAM_DECODER_LENGTH_STATUS_ERROR;
-#endif
 
   *length = len;
 
   GST_DEBUG_OBJECT (flacdec, "encoded byte length %" G_GINT64_FORMAT, *length);
 
-#ifdef LEGACY_FLAC
-  return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_OK;
-#else
   return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
-#endif
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__bool
-gst_flac_dec_eof (const FLAC__SeekableStreamDecoder * decoder,
-    void *client_data)
-#else
 static FLAC__bool
 gst_flac_dec_eof (const FLAC__StreamDecoder * decoder, void *client_data)
-#endif
 {
   GstFlacDec *flacdec;
   GstFormat fmt;
@@ -920,15 +768,9 @@ gst_flac_dec_eof (const FLAC__StreamDecoder * decoder, void *client_data)
   return ret;
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__SeekableStreamDecoderReadStatus
-gst_flac_dec_read_seekable (const FLAC__SeekableStreamDecoder * decoder,
-    FLAC__byte buffer[], unsigned *bytes, void *client_data)
-#else
 static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,
     FLAC__byte buffer[], size_t * bytes, void *client_data)
-#endif
 {
   GstFlacDec *flacdec;
 
@@ -938,11 +780,7 @@ gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,
 
   if (gst_pad_pull_range (flacdec->sinkpad, flacdec->offset, *bytes,
           &buf) != GST_FLOW_OK)
-#ifdef LEGACY_FLAC
-    return FLAC__SEEKABLE_STREAM_DECODER_READ_STATUS_ERROR;
-#else
     return FLAC__STREAM_DECODER_READ_STATUS_ABORT;
-#endif
 
   GST_DEBUG_OBJECT (flacdec, "Read %d bytes at %" G_GUINT64_FORMAT,
       GST_BUFFER_SIZE (buf), flacdec->offset);
@@ -951,22 +789,12 @@ gst_flac_dec_read_seekable (const FLAC__StreamDecoder * decoder,
   gst_buffer_unref (buf);
   flacdec->offset += *bytes;
 
-#ifdef LEGACY_FLAC
-  return FLAC__SEEKABLE_STREAM_DECODER_READ_STATUS_OK;
-#else
   return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
-#endif
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__StreamDecoderReadStatus
-gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
-    FLAC__byte buffer[], unsigned *bytes, void *client_data)
-#else
 static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
     FLAC__byte buffer[], size_t * bytes, void *client_data)
-#endif
 {
   GstFlacDec *dec = GST_FLAC_DEC (client_data);
   guint len;
@@ -1201,16 +1029,6 @@ done:
   return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
-#ifdef LEGACY_FLAC
-static FLAC__StreamDecoderWriteStatus
-gst_flac_dec_write_seekable (const FLAC__SeekableStreamDecoder * decoder,
-    const FLAC__Frame * frame,
-    const FLAC__int32 * const buffer[], void *client_data)
-{
-  return gst_flac_dec_write (GST_FLAC_DEC (client_data), frame, buffer);
-}
-#endif
-
 static FLAC__StreamDecoderWriteStatus
 gst_flac_dec_write_stream (const FLAC__StreamDecoder * decoder,
     const FLAC__Frame * frame,
@@ -1223,24 +1041,14 @@ static void
 gst_flac_dec_loop (GstPad * sinkpad)
 {
   GstFlacDec *flacdec;
-#ifdef LEGACY_FLAC
-  FLAC__SeekableStreamDecoderState s;
-#else
   FLAC__StreamDecoderState s;
   FLAC__StreamDecoderInitStatus is;
-#endif
 
   flacdec = GST_FLAC_DEC (GST_OBJECT_PARENT (sinkpad));
 
   GST_LOG_OBJECT (flacdec, "entering loop");
 
   if (flacdec->init) {
-#ifdef LEGACY_FLAC
-    GST_DEBUG_OBJECT (flacdec, "initializing legacy decoder");
-    s = FLAC__seekable_stream_decoder_init (flacdec->seekable_decoder);
-    if (s != FLAC__SEEKABLE_STREAM_DECODER_OK)
-      goto analyze_state;
-#else
     GST_DEBUG_OBJECT (flacdec, "initializing new decoder");
     is = FLAC__stream_decoder_init_stream (flacdec->seekable_decoder,
         gst_flac_dec_read_seekable, gst_flac_dec_seek, gst_flac_dec_tell,
@@ -1249,7 +1057,7 @@ gst_flac_dec_loop (GstPad * sinkpad)
         gst_flac_dec_error_callback_stream, flacdec);
     if (is != FLAC__STREAM_DECODER_INIT_STATUS_OK)
       goto analyze_state;
-#endif
+
     /*    FLAC__seekable_stream_decoder_process_metadata (flacdec->seekable_decoder); */
     flacdec->init = FALSE;
   }
@@ -1259,29 +1067,17 @@ gst_flac_dec_loop (GstPad * sinkpad)
   flacdec->last_flow = GST_FLOW_OK;
 
   GST_LOG_OBJECT (flacdec, "processing single");
-#ifdef LEGACY_FLAC
-  FLAC__seekable_stream_decoder_process_single (flacdec->seekable_decoder);
-#else
   FLAC__stream_decoder_process_single (flacdec->seekable_decoder);
-#endif
+
 analyze_state:
 
   GST_LOG_OBJECT (flacdec, "done processing, checking encoder state");
-#ifdef LEGACY_FLAC
-  s = FLAC__seekable_stream_decoder_get_state (flacdec->seekable_decoder);
-#else
   s = FLAC__stream_decoder_get_state (flacdec->seekable_decoder);
-#endif
   switch (s) {
-#ifdef LEGACY_FLAC
-    case FLAC__SEEKABLE_STREAM_DECODER_OK:
-    case FLAC__SEEKABLE_STREAM_DECODER_SEEKING:
-#else
     case FLAC__STREAM_DECODER_SEARCH_FOR_METADATA:
     case FLAC__STREAM_DECODER_READ_METADATA:
     case FLAC__STREAM_DECODER_SEARCH_FOR_FRAME_SYNC:
     case FLAC__STREAM_DECODER_READ_FRAME:
-#endif
     {
       GST_DEBUG_OBJECT (flacdec, "everything ok");
 
@@ -1314,17 +1110,9 @@ analyze_state:
       return;
     }
 
-#ifdef LEGACY_FLAC
-    case FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM:{
-#else
     case FLAC__STREAM_DECODER_END_OF_STREAM:{
-#endif
       GST_DEBUG_OBJECT (flacdec, "EOS");
-#ifdef LEGACY_FLAC
-      FLAC__seekable_stream_decoder_reset (flacdec->seekable_decoder);
-#else
       FLAC__stream_decoder_reset (flacdec->seekable_decoder);
-#endif
 
       if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0) {
         if (flacdec->segment.duration > 0) {
@@ -1338,31 +1126,16 @@ analyze_state:
       goto eos_and_pause;
     }
 
-#ifdef LEGACY_FLAC
-    case FLAC__SEEKABLE_STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
-    case FLAC__SEEKABLE_STREAM_DECODER_STREAM_DECODER_ERROR:
-    case FLAC__SEEKABLE_STREAM_DECODER_READ_ERROR:
-    case FLAC__SEEKABLE_STREAM_DECODER_SEEK_ERROR:
-    case FLAC__SEEKABLE_STREAM_DECODER_ALREADY_INITIALIZED:
-    case FLAC__SEEKABLE_STREAM_DECODER_INVALID_CALLBACK:
-    case FLAC__SEEKABLE_STREAM_DECODER_UNINITIALIZED:
-#else
     case FLAC__STREAM_DECODER_OGG_ERROR:
     case FLAC__STREAM_DECODER_SEEK_ERROR:
     case FLAC__STREAM_DECODER_ABORTED:
     case FLAC__STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
     case FLAC__STREAM_DECODER_UNINITIALIZED:
-#endif
     default:{
       /* fixme: this error sucks -- should try to figure out when/if an more
          specific error was already sent via the callback */
-#ifdef LEGACY_FLAC
-      GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL),
-          ("%s", FLAC__SeekableStreamDecoderStateString[s]));
-#else
       GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL),
           ("%s", FLAC__StreamDecoderStateString[s]));
-#endif
       goto eos_and_pause;
     }
   }
@@ -1461,8 +1234,8 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
           gst_adapter_available (dec->adapter));
       if (dec->init == FALSE) {
         if (gst_adapter_available (dec->adapter) > 0) {
-          FLAC__stream_decoder_process_until_end_of_stream (dec->
-              stream_decoder);
+          FLAC__stream_decoder_process_until_end_of_stream
+              (dec->stream_decoder);
         }
         FLAC__stream_decoder_flush (dec->stream_decoder);
       }
@@ -1483,11 +1256,7 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 {
-#ifdef  LEGACY_FLAC
-  FLAC__StreamDecoderState s;
-#else
   FLAC__StreamDecoderInitStatus s;
-#endif
   GstFlacDec *dec;
   gboolean got_audio_frame;
 
@@ -1499,13 +1268,6 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 
   if (dec->init) {
     GST_DEBUG_OBJECT (dec, "initializing decoder");
-#ifdef  LEGACY_FLAC
-    s = FLAC__stream_decoder_init (dec->stream_decoder);
-    if (s != FLAC__STREAM_DECODER_SEARCH_FOR_METADATA) {
-      GST_ELEMENT_ERROR (GST_ELEMENT (dec), LIBRARY, INIT, (NULL), (NULL));
-      return GST_FLOW_ERROR;
-    }
-#else
     s = FLAC__stream_decoder_init_stream (dec->stream_decoder,
         gst_flac_dec_read_stream, NULL, NULL, NULL, NULL,
         gst_flac_dec_write_stream, gst_flac_dec_metadata_callback_stream,
@@ -1514,7 +1276,6 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_ELEMENT_ERROR (GST_ELEMENT (dec), LIBRARY, INIT, (NULL), (NULL));
       return GST_FLOW_ERROR;
     }
-#endif
     GST_DEBUG_OBJECT (dec, "initialized (framed=%d)", dec->framed);
     dec->init = FALSE;
   }
@@ -1995,14 +1756,8 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
    * callbacks that need to behave differently when seeking */
   flacdec->seeking = TRUE;
 
-  seek_ok =
-#ifdef  LEGACY_FLAC
-      FLAC__seekable_stream_decoder_seek_absolute (flacdec->seekable_decoder,
+  seek_ok = FLAC__stream_decoder_seek_absolute (flacdec->seekable_decoder,
       flacdec->segment.last_stop);
-#else
-      FLAC__stream_decoder_seek_absolute (flacdec->seekable_decoder,
-      flacdec->segment.last_stop);
-#endif
 
   flacdec->seeking = FALSE;
 

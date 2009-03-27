@@ -27,12 +27,6 @@
 
 #include <FLAC/all.h>
 
-#if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
-#define LEGACY_FLAC
-#else
-#undef LEGACY_FLAC
-#endif 
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_FLAC_DEC gst_flac_dec_get_type()
