@@ -1802,6 +1802,16 @@ on_timeout (GstElement * manager, guint session, guint32 ssrc, GstRTSPSrc * src)
   gst_rtspsrc_do_stream_eos (src, session);
 }
 
+static void
+on_npt_stop (GstElement * manager, guint session, guint32 ssrc,
+    GstRTSPSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "SSRC %08x in session %u reached the NPT stop", ssrc,
+      session);
+
+  gst_rtspsrc_do_stream_eos (src, session);
+}
+
 /* try to get and configure a manager */
 static gboolean
 gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
@@ -1859,6 +1869,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       g_signal_connect (src->session, "on-bye-timeout", (GCallback) on_timeout,
           src);
       g_signal_connect (src->session, "on-timeout", (GCallback) on_timeout,
+          src);
+      g_signal_connect (src->session, "on-npt-stop", (GCallback) on_npt_stop,
           src);
     }
 
