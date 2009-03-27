@@ -233,6 +233,7 @@ enum
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
   SIGNAL_ON_SENDER_TIMEOUT,
+  SIGNAL_ON_NPT_STOP,
   LAST_SIGNAL
 };
 
@@ -457,6 +458,13 @@ on_sender_timeout (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
 {
   g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_SENDER_TIMEOUT], 0,
       sess->id, ssrc);
+}
+
+static void
+on_npt_stop (GstElement * jbuf, GstRtpBinStream * stream)
+{
+  g_signal_emit (stream->bin, gst_rtp_bin_signals[SIGNAL_ON_NPT_STOP], 0,
+      stream->session->id, stream->ssrc);
 }
 
 /* create a session with the given id.  Must be called with RTP_BIN_LOCK */
@@ -1091,6 +1099,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   /* provide clock_rate to the jitterbuffer when needed */
   g_signal_connect (buffer, "request-pt-map",
       (GCallback) pt_map_requested, session);
+  g_signal_connect (buffer, "on-npt-stop", (GCallback) on_npt_stop, stream);
 
   /* configure latency and packet lost */
   g_object_set (buffer, "latency", session->bin->latency, NULL);
@@ -1372,6 +1381,20 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SENDER_TIMEOUT] =
       g_signal_new ("on-sender-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_sender_timeout),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
+   * GstRtpBin::on-npt-stop:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify that SSRC sender has sent data up to the configured NPT stop time.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_NPT_STOP] =
+      g_signal_new ("on-npt-stop", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_npt_stop),
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 
