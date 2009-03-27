@@ -1,6 +1,7 @@
 /*
  * Image Scaling Functions (4 tap)
  * Copyright (c) 2005 David A. Schleef <ds@schleef.org>
+ * Copyright (c) 2009 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
