@@ -902,7 +902,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     gchar * end, const gchar * plugin_name)
 {
   GstBinaryPluginFeature *pf = NULL;
-  GstPluginFeature *feature;
+  GstPluginFeature *feature = NULL;
   gchar *type_name = NULL, *str;
   GType type;
   guint i;
