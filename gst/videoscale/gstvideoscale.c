@@ -734,6 +734,9 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
   gst_video_scale_prepare_image (videoscale->format, out, dest, &dest_u,
       &dest_v);
 
+  if (src->height < 4 && method == GST_VIDEO_SCALE_4TAP)
+    method = GST_VIDEO_SCALE_BILINEAR;
+
   switch (method) {
     case GST_VIDEO_SCALE_NEAREST:
       GST_LOG_OBJECT (videoscale, "doing nearest scaling");
