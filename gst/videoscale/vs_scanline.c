@@ -123,18 +123,30 @@ vs_scanline_resample_nearest_RGBA (uint8_t * dest, uint8_t * src, int n,
   *accumulator = acc;
 }
 
+#include <stdio.h>
 void
 vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
-  uint32_t vals[2];
+  if (increment != 0) {
+    uint32_t vals[2];
 
-  vals[0] = *accumulator;
-  vals[1] = increment;
+    vals[0] = *accumulator;
+    vals[1] = increment;
 
-  oil_resample_linear_argb ((uint32_t *) dest, (uint32_t *) src, n, vals);
+    oil_resample_linear_argb ((uint32_t *) dest, (uint32_t *) src, n, vals);
 
-  *accumulator = vals[0];
+    *accumulator = vals[0];
+  } else {
+    int i;
+
+    for (i = 0; i < n; i++) {
+      dest[4 * i + 0] = src[0];
+      dest[4 * i + 1] = src[1];
+      dest[4 * i + 2] = src[2];
+      dest[4 * i + 3] = src[3];
+    }
+  }
 }
 
 void
@@ -193,14 +205,25 @@ vs_scanline_resample_linear_RGB (uint8_t * dest, uint8_t * src, int n,
   int j;
   int x;
 
-  for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i * 3 + 0] = (src[j * 3 + 0] * (65536 - x) + src[j * 3 + 3] * x) >> 16;
-    dest[i * 3 + 1] = (src[j * 3 + 1] * (65536 - x) + src[j * 3 + 4] * x) >> 16;
-    dest[i * 3 + 2] = (src[j * 3 + 2] * (65536 - x) + src[j * 3 + 5] * x) >> 16;
+  if (increment != 0) {
+    for (i = 0; i < n; i++) {
+      j = acc >> 16;
+      x = acc & 0xffff;
+      dest[i * 3 + 0] =
+          (src[j * 3 + 0] * (65536 - x) + src[j * 3 + 3] * x) >> 16;
+      dest[i * 3 + 1] =
+          (src[j * 3 + 1] * (65536 - x) + src[j * 3 + 4] * x) >> 16;
+      dest[i * 3 + 2] =
+          (src[j * 3 + 2] * (65536 - x) + src[j * 3 + 5] * x) >> 16;
 
-    acc += increment;
+      acc += increment;
+    }
+  } else {
+    for (i = 0; i < n; i++) {
+      dest[i * 3 + 0] = src[0];
+      dest[i * 3 + 1] = src[1];
+      dest[i * 3 + 2] = src[2];
+    }
   }
 
   *accumulator = acc;
@@ -276,12 +299,17 @@ vs_scanline_resample_linear_YUYV (uint8_t * dest, uint8_t * src, int n,
   for (i = 0; i < n; i++) {
     j = acc >> 16;
     x = acc & 0xffff;
-    dest[i * 4 + 0] = (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
+
+    if (increment != 0)
+      dest[i * 4 + 0] =
+          (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
+    else
+      dest[i * 4 + 0] = src[0];
 
     j = acc >> 17;
     x = acc & 0x1ffff;
 
-    if (i < n - 1) {
+    if (i < n - 1 && increment != 0) {
       dest[i * 4 + 1] =
           (src[j * 4 + 1] * (131072 - x) + src[j * 4 + 5] * x) >> 17;
       dest[i * 4 + 3] =
@@ -295,7 +323,12 @@ vs_scanline_resample_linear_YUYV (uint8_t * dest, uint8_t * src, int n,
 
     j = acc >> 16;
     x = acc & 0xffff;
-    dest[i * 4 + 2] = (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
+    if (increment != 0)
+      dest[i * 4 + 2] =
+          (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
+    else
+      dest[i * 4 + 2] = src[0];
+
     acc += increment;
   }
 
@@ -381,12 +414,17 @@ vs_scanline_resample_linear_UYVY (uint8_t * dest, uint8_t * src, int n,
   for (i = 0; i < n; i++) {
     j = acc >> 16;
     x = acc & 0xffff;
-    dest[i * 4 + 1] = (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+
+    if (increment != 0)
+      dest[i * 4 + 1] =
+          (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+    else
+      dest[i * 4 + 1] = src[1];
 
     j = acc >> 17;
     x = acc & 0x1ffff;
 
-    if (i < n - 1) {
+    if (i < n - 1 && increment != 0) {
       dest[i * 4 + 0] =
           (src[j * 4 + 0] * (131072 - x) + src[j * 4 + 4] * x) >> 17;
       dest[i * 4 + 2] =
@@ -400,7 +438,11 @@ vs_scanline_resample_linear_UYVY (uint8_t * dest, uint8_t * src, int n,
 
     j = acc >> 16;
     x = acc & 0xffff;
-    dest[i * 4 + 3] = (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+    if (increment != 0)
+      dest[i * 4 + 3] =
+          (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+    else
+      dest[i * 4 + 3] = src[1];
     acc += increment;
   }
 
