@@ -102,6 +102,7 @@ check_PROGRAMS = \
 	elements/playbin \
 	$(check_subparse) \
 	elements/videorate \
+	elements/videoscale \
 	elements/videotestsrc \
 	elements/volume \
 	generic/clock-selection \
