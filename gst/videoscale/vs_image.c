@@ -64,7 +64,8 @@ vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_RGBA (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, dest->width, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -105,8 +106,8 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_RGBA (tmp1, src->pixels, dest->width, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_RGBA (tmp1, src->pixels, src->width, dest->width,
+      &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -120,7 +121,7 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGBA (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -129,8 +130,8 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_RGBA (tmp2,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_RGBA (dest->pixels + i * dest->stride,
@@ -139,8 +140,8 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_RGBA (tmp1,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_RGBA (dest->pixels + i * dest->stride,
@@ -148,11 +149,11 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGBA (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_RGBA (tmp2,
-            src->pixels + (j + 1) * src->stride, dest->width, &xacc,
+            src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
             x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_RGBA (dest->pixels + i * dest->stride,
@@ -194,7 +195,8 @@ vs_image_scale_nearest_RGB (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, dest->width, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -235,8 +237,8 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_RGB (tmp1, src->pixels, dest->width, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_RGB (tmp1, src->pixels, src->width, dest->width,
+      &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -250,7 +252,7 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGB (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -259,8 +261,8 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_RGB (tmp2,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_RGB (dest->pixels + i * dest->stride,
@@ -269,8 +271,8 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_RGB (tmp1,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_RGB (dest->pixels + i * dest->stride,
@@ -278,11 +280,11 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGB (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_RGB (tmp2,
-            src->pixels + (j + 1) * src->stride, dest->width, &xacc,
+            src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
             x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_RGB (dest->pixels + i * dest->stride,
@@ -307,7 +309,6 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
   int j;
   int x;
   int xacc;
-  int n_quads;
 
   if (dest->height == 1)
     y_increment = 0;
@@ -319,7 +320,6 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
   else
     x_increment = ((src->width - 1) << 16) / (dest->width - 1);
 
-  n_quads = ROUND_UP_2 (dest->width) / 2;
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -327,7 +327,8 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_YUYV (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, n_quads, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -348,7 +349,6 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
   int j;
   int x;
   int dest_size;
-  int n_quads;
   int xacc;
 
   if (dest->height == 1)
@@ -362,7 +362,6 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
     x_increment = ((src->width - 1) << 16) / (dest->width - 1);
 
   dest_size = ROUND_UP_4 (dest->width * 2);
-  n_quads = ROUND_UP_2 (dest->width) / 2;
 
   tmp1 = tmpbuf;
   tmp2 = tmpbuf + dest_size;
@@ -370,8 +369,8 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_YUYV (tmp1, src->pixels, n_quads, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_YUYV (tmp1, src->pixels, src->width, dest->width,
+      &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -385,7 +384,7 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_YUYV (tmp1, src->pixels + j * src->stride,
-            n_quads, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -394,31 +393,34 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_YUYV (tmp2,
-              src->pixels + (j + 1) * src->stride, n_quads, &xacc, x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_YUYV (dest->pixels + i * dest->stride,
-            tmp1, tmp2, n_quads, x);
+            tmp1, tmp2, dest->width, x);
       } else if (j == y2) {
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_YUYV (tmp1,
-              src->pixels + (j + 1) * src->stride, n_quads, &xacc, x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_YUYV (dest->pixels + i * dest->stride,
-            tmp2, tmp1, n_quads, x);
+            tmp2, tmp1, dest->width, x);
       } else {
         xacc = 0;
         vs_scanline_resample_linear_YUYV (tmp1, src->pixels + j * src->stride,
-            n_quads, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_YUYV (tmp2,
-            src->pixels + (j + 1) * src->stride, n_quads, &xacc, x_increment);
+            src->pixels + (j + 1) * src->stride, src->width, dest->width,
+            &xacc, x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_YUYV (dest->pixels + i * dest->stride,
-            tmp1, tmp2, n_quads, x);
+            tmp1, tmp2, dest->width, x);
       }
     }
 
@@ -439,7 +441,6 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
   int j;
   int x;
   int xacc;
-  int n_quads;
 
   if (dest->height == 1)
     y_increment = 0;
@@ -451,7 +452,6 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
   else
     x_increment = ((src->width - 1) << 16) / (dest->width - 1);
 
-  n_quads = (dest->width + 1) / 2;
   acc = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -459,7 +459,8 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_UYVY (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, n_quads, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -480,7 +481,6 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
   int j;
   int x;
   int dest_size;
-  int n_quads;
   int xacc;
 
   if (dest->height == 1)
@@ -494,7 +494,6 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
     x_increment = ((src->width - 1) << 16) / (dest->width - 1);
 
   dest_size = ROUND_UP_4 (dest->width * 2);
-  n_quads = ROUND_UP_2 (dest->width) / 2;
 
   tmp1 = tmpbuf;
   tmp2 = tmpbuf + dest_size;
@@ -502,8 +501,8 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_UYVY (tmp1, src->pixels, n_quads, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_UYVY (tmp1, src->pixels, src->width, dest->width,
+      &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -517,7 +516,7 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_UYVY (tmp1, src->pixels + j * src->stride,
-            n_quads, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -526,31 +525,34 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_UYVY (tmp2,
-              src->pixels + (j + 1) * src->stride, n_quads, &xacc, x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_UYVY (dest->pixels + i * dest->stride,
-            tmp1, tmp2, n_quads, x);
+            tmp1, tmp2, dest->width, x);
       } else if (j == y2) {
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_UYVY (tmp1,
-              src->pixels + (j + 1) * src->stride, n_quads, &xacc, x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_UYVY (dest->pixels + i * dest->stride,
-            tmp2, tmp1, n_quads, x);
+            tmp2, tmp1, dest->width, x);
       } else {
         xacc = 0;
         vs_scanline_resample_linear_UYVY (tmp1, src->pixels + j * src->stride,
-            n_quads, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_UYVY (tmp2,
-            src->pixels + (j + 1) * src->stride, n_quads, &xacc, x_increment);
+            src->pixels + (j + 1) * src->stride, src->width, dest->width,
+            &xacc, x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_UYVY (dest->pixels + i * dest->stride,
-            tmp1, tmp2, n_quads, x);
+            tmp1, tmp2, dest->width, x);
       }
     }
 
@@ -589,7 +591,8 @@ vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_Y (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, dest->width, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -630,8 +633,8 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_Y (tmp1, src->pixels, dest->width, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_Y (tmp1, src->pixels, src->width, dest->width,
+      &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -645,7 +648,7 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_Y (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -654,8 +657,8 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_Y (tmp2,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_Y (dest->pixels + i * dest->stride,
@@ -664,8 +667,8 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_Y (tmp1,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_Y (dest->pixels + i * dest->stride,
@@ -673,11 +676,11 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_Y (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_Y (tmp2,
-            src->pixels + (j + 1) * src->stride, dest->width, &xacc,
+            src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
             x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_Y (dest->pixels + i * dest->stride,
@@ -720,7 +723,8 @@ vs_image_scale_nearest_RGB565 (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB565 (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, dest->width, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -761,8 +765,8 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_RGB565 (tmp1, src->pixels, dest->width, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_RGB565 (tmp1, src->pixels, src->width,
+      dest->width, &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -776,7 +780,7 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGB565 (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -785,8 +789,8 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_RGB565 (tmp2,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_RGB565 (dest->pixels + i * dest->stride,
@@ -795,8 +799,8 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_RGB565 (tmp1,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_RGB565 (dest->pixels + i * dest->stride,
@@ -804,11 +808,11 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGB565 (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_RGB565 (tmp2,
-            src->pixels + (j + 1) * src->stride, dest->width, &xacc,
+            src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
             x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_RGB565 (dest->pixels + i * dest->stride,
@@ -851,7 +855,8 @@ vs_image_scale_nearest_RGB555 (const VSImage * dest, const VSImage * src,
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB555 (dest->pixels + i * dest->stride,
-        src->pixels + j * src->stride, dest->width, &xacc, x_increment);
+        src->pixels + j * src->stride, src->width, dest->width, &xacc,
+        x_increment);
 
     acc += y_increment;
   }
@@ -892,8 +897,8 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
   acc = 0;
   xacc = 0;
   y2 = -1;
-  vs_scanline_resample_linear_RGB555 (tmp1, src->pixels, dest->width, &xacc,
-      x_increment);
+  vs_scanline_resample_linear_RGB555 (tmp1, src->pixels, src->width,
+      dest->width, &xacc, x_increment);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
@@ -907,7 +912,7 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGB555 (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
       }
@@ -916,8 +921,8 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
         if (j + 1 != y2) {
           xacc = 0;
           vs_scanline_resample_linear_RGB555 (tmp2,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y2 = j + 1;
         }
         vs_scanline_merge_linear_RGB555 (dest->pixels + i * dest->stride,
@@ -926,8 +931,8 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
         if (j + 1 != y1) {
           xacc = 0;
           vs_scanline_resample_linear_RGB555 (tmp1,
-              src->pixels + (j + 1) * src->stride, dest->width, &xacc,
-              x_increment);
+              src->pixels + (j + 1) * src->stride, src->width, dest->width,
+              &xacc, x_increment);
           y1 = j + 1;
         }
         vs_scanline_merge_linear_RGB555 (dest->pixels + i * dest->stride,
@@ -935,11 +940,11 @@ vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
       } else {
         xacc = 0;
         vs_scanline_resample_linear_RGB555 (tmp1, src->pixels + j * src->stride,
-            dest->width, &xacc, x_increment);
+            src->width, dest->width, &xacc, x_increment);
         y1 = j;
         xacc = 0;
         vs_scanline_resample_linear_RGB555 (tmp2,
-            src->pixels + (j + 1) * src->stride, dest->width, &xacc,
+            src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
             x_increment);
         y2 = (j + 1);
         vs_scanline_merge_linear_RGB555 (dest->pixels + i * dest->stride,
