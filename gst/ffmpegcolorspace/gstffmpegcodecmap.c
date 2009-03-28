@@ -362,10 +362,17 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     case PIX_FMT_AYUV4444:
       fmt = GST_MAKE_FOURCC ('A', 'Y', 'U', 'V');
       break;
-    case PIX_FMT_GRAY8:
+    case PIX_FMT_GRAY8:{
+      GstCaps *tmp;
+
       bpp = depth = 8;
       caps = gst_ff_vid_caps_new (context, "video/x-raw-gray",
           "bpp", G_TYPE_INT, bpp, "depth", G_TYPE_INT, depth, NULL);
+      tmp = gst_ff_vid_caps_new (context, "video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', '8', '0', '0'),
+          NULL);
+      gst_caps_append (caps, tmp);
+    }
       break;
     default:
       /* give up ... */
@@ -631,6 +638,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
           break;
         case GST_MAKE_FOURCC ('Y', '4', '4', '4'):
           context->pix_fmt = PIX_FMT_YUV444P;
+          break;
+        case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
+          context->pix_fmt = PIX_FMT_GRAY8;
           break;
       }
     }
