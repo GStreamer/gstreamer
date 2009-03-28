@@ -771,6 +771,8 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
   }
 
+  memset (GST_BUFFER_DATA (outbuf), 0, GST_BUFFER_SIZE (outbuf));
+
   if (src->pattern_type == GST_VIDEO_TEST_SRC_BLINK) {
     if (src->n_frames & 0x1) {
       gst_video_test_src_white (src, (void *) GST_BUFFER_DATA (outbuf),
