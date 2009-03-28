@@ -101,7 +101,12 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("YV12")),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16),
-  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15)
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_15),
+  GST_STATIC_CAPS ("video/x-raw-gray, "
+      "bpp = 8, "
+      "depth = 8, "
+      "width = " GST_VIDEO_SIZE_RANGE ", "
+      "height = " GST_VIDEO_SIZE_RANGE ", " "framerate = " GST_VIDEO_FPS_RANGE)
 };
 
 enum
@@ -125,7 +130,8 @@ enum
   GST_VIDEO_SCALE_I420,
   GST_VIDEO_SCALE_YV12,
   GST_VIDEO_SCALE_RGB565,
-  GST_VIDEO_SCALE_RGB555
+  GST_VIDEO_SCALE_RGB555,
+  GST_VIDEO_SCALE_GRAY8
 };
 
 #define GST_TYPE_VIDEO_SCALE_METHOD (gst_video_scale_method_get_type())
@@ -435,6 +441,7 @@ gst_video_scale_prepare_size (GstVideoScale * videoscale, gint format,
       *size = img->stride * img->height;
       break;
     case GST_VIDEO_SCALE_Y:
+    case GST_VIDEO_SCALE_GRAY8:
       img->stride = GST_ROUND_UP_4 (img->width);
       *size = img->stride * img->height;
       break;
@@ -755,6 +762,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_nearest_UYVY (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_Y:
+        case GST_VIDEO_SCALE_GRAY8:
           vs_image_scale_nearest_Y (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_I420:
@@ -800,6 +808,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_linear_UYVY (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_Y:
+        case GST_VIDEO_SCALE_GRAY8:
           vs_image_scale_linear_Y (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_I420:
@@ -845,6 +854,7 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           vs_image_scale_4tap_UYVY (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_Y:
+        case GST_VIDEO_SCALE_GRAY8:
           vs_image_scale_4tap_Y (dest, src, videoscale->tmp_buf);
           break;
         case GST_VIDEO_SCALE_I420:
