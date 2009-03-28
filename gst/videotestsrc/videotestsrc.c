@@ -423,6 +423,9 @@ struct fourcc_list_struct fourcc_list[] = {
   /* Y800 grayscale */
   {VTS_YUV, "Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
 
+  /* Not exactly YUV but it's the same as above */
+  {VTS_YUV, "GRAY8", "GRAY8", 8, paint_setup_Y800, paint_hline_Y800},
+
   {VTS_RGB, "RGB ", "xRGB8888", 32, paint_setup_xRGB8888, paint_hline_str4, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
   {VTS_RGB, "RGB ", "xBGR8888", 32, paint_setup_xBGR8888, paint_hline_str4, 24,
@@ -463,7 +466,21 @@ paintinfo_find_by_structure (const GstStructure * structure)
 
   g_return_val_if_fail (structure, NULL);
 
-  if (strcmp (media_type, "video/x-raw-yuv") == 0) {
+  if (strcmp (media_type, "video/x-raw-gray") == 0) {
+    gint bpp, depth;
+
+    ret = gst_structure_get_int (structure, "bpp", &bpp) &&
+        gst_structure_get_int (structure, "depth", &depth);
+    if (!ret || bpp != 8 || depth != 8)
+      return NULL;
+
+    for (i = 0; i < n_fourccs; i++) {
+      if (fourcc_list[i].type == VTS_YUV
+          && strcmp (fourcc_list[i].fourcc, "GRAY8") == 0) {
+        return fourcc_list + i;
+      }
+    }
+  } else if (strcmp (media_type, "video/x-raw-yuv") == 0) {
     char *s;
     int fourcc;
     guint32 format;
@@ -600,8 +617,13 @@ paint_get_structure (struct fourcc_list_struct * format)
       }
       break;
     case VTS_YUV:
-      structure = gst_structure_new ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, fourcc, NULL);
+      if (strcmp (format->fourcc, "GRAY8") == 0) {
+        structure = gst_structure_new ("video/x-raw-gray",
+            "bpp", G_TYPE_INT, 8, "depth", G_TYPE_INT, 8, NULL);
+      } else {
+        structure = gst_structure_new ("video/x-raw-yuv",
+            "format", GST_TYPE_FOURCC, fourcc, NULL);
+      }
       break;
     case VTS_BAYER:
       structure = gst_structure_new ("video/x-raw-bayer", NULL);
