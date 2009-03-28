@@ -280,10 +280,16 @@ vs_scanline_resample_linear_YUYV (uint8_t * dest, uint8_t * src, int n,
 
     j = acc >> 17;
     x = acc & 0x1ffff;
-    dest[i * 4 + 1] =
-        (src[j * 4 + 1] * (131072 - x) + src[j * 4 + 5] * x) >> 17;
-    dest[i * 4 + 3] =
-        (src[j * 4 + 3] * (131072 - x) + src[j * 4 + 7] * x) >> 17;
+
+    if (i < n - 1) {
+      dest[i * 4 + 1] =
+          (src[j * 4 + 1] * (131072 - x) + src[j * 4 + 5] * x) >> 17;
+      dest[i * 4 + 3] =
+          (src[j * 4 + 3] * (131072 - x) + src[j * 4 + 7] * x) >> 17;
+    } else {
+      dest[i * 4 + 1] = src[j * 4 + 1];
+      dest[i * 4 + 3] = src[j * 4 + 3];
+    }
 
     acc += increment;
 
@@ -379,10 +385,16 @@ vs_scanline_resample_linear_UYVY (uint8_t * dest, uint8_t * src, int n,
 
     j = acc >> 17;
     x = acc & 0x1ffff;
-    dest[i * 4 + 0] =
-        (src[j * 4 + 0] * (131072 - x) + src[j * 4 + 4] * x) >> 17;
-    dest[i * 4 + 2] =
-        (src[j * 4 + 2] * (131072 - x) + src[j * 4 + 6] * x) >> 17;
+
+    if (i < n - 1) {
+      dest[i * 4 + 0] =
+          (src[j * 4 + 0] * (131072 - x) + src[j * 4 + 4] * x) >> 17;
+      dest[i * 4 + 2] =
+          (src[j * 4 + 2] * (131072 - x) + src[j * 4 + 6] * x) >> 17;
+    } else {
+      dest[i * 4 + 0] = src[j * 4 + 0];
+      dest[i * 4 + 2] = src[j * 4 + 2];
+    }
 
     acc += increment;
 
