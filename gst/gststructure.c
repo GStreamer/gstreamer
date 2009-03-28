@@ -292,7 +292,7 @@ gst_structure_copy (const GstStructure * structure)
 {
   GstStructure *new_structure;
   GstStructureField *field;
-  guint i;
+  guint i, len;
 
   g_return_val_if_fail (structure != NULL, NULL);
 
@@ -300,7 +300,8 @@ gst_structure_copy (const GstStructure * structure)
       gst_structure_id_empty_new_with_size (structure->name,
       structure->fields->len);
 
-  for (i = 0; i < structure->fields->len; i++) {
+  len = structure->fields->len;
+  for (i = 0; i < len; i++) {
     GstStructureField new_field = { 0 };
 
     field = GST_STRUCTURE_FIELD (structure, i);
@@ -324,12 +325,13 @@ void
 gst_structure_free (GstStructure * structure)
 {
   GstStructureField *field;
-  guint i;
+  guint i, len;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (structure->parent_refcount == NULL);
 
-  for (i = 0; i < structure->fields->len; i++) {
+  len = structure->fields->len;
+  for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
     if (G_IS_VALUE (&field->value)) {
@@ -647,7 +649,7 @@ static void
 gst_structure_set_field (GstStructure * structure, GstStructureField * field)
 {
   GstStructureField *f;
-  guint i;
+  guint i, len = structure->fields->len;
 
   if (G_UNLIKELY (G_VALUE_HOLDS_STRING (&field->value))) {
     const gchar *s;
@@ -677,7 +679,7 @@ gst_structure_set_field (GstStructure * structure, GstStructureField * field)
     }
   }
 
-  for (i = 0; i < structure->fields->len; i++) {
+  for (i = 0; i < len; i++) {
     f = GST_STRUCTURE_FIELD (structure, i);
 
     if (f->name == field->name) {
@@ -696,11 +698,12 @@ static GstStructureField *
 gst_structure_id_get_field (const GstStructure * structure, GQuark field_id)
 {
   GstStructureField *field;
-  guint i;
+  guint i, len;
 
+  len = structure->fields->len;
   g_return_val_if_fail (structure != NULL, NULL);
 
-  for (i = 0; i < structure->fields->len; i++) {
+  for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
     if (field->name == field_id)
@@ -785,15 +788,16 @@ gst_structure_remove_field (GstStructure * structure, const gchar * fieldname)
 {
   GstStructureField *field;
   GQuark id;
-  guint i;
+  guint i, len;
 
   g_return_if_fail (structure != NULL);
   g_return_if_fail (fieldname != NULL);
   g_return_if_fail (IS_MUTABLE (structure));
 
   id = g_quark_from_string (fieldname);
+  len = structure->fields->len;
 
-  for (i = 0; i < structure->fields->len; i++) {
+  for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
     if (field->name == id) {
@@ -962,14 +966,16 @@ gboolean
 gst_structure_foreach (const GstStructure * structure,
     GstStructureForeachFunc func, gpointer user_data)
 {
-  guint i;
+  guint i, len;
   GstStructureField *field;
   gboolean ret;
 
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
 
-  for (i = 0; i < structure->fields->len; i++) {
+  len = structure->fields->len;
+
+  for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
     ret = func (field->name, &field->value, user_data);
@@ -997,15 +1003,16 @@ gboolean
 gst_structure_map_in_place (GstStructure * structure,
     GstStructureMapFunc func, gpointer user_data)
 {
-  guint i;
+  guint i, len;
   GstStructureField *field;
   gboolean ret;
 
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (IS_MUTABLE (structure), FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
+  len = structure->fields->len;
 
-  for (i = 0; i < structure->fields->len; i++) {
+  for (i = 0; i < len; i++) {
     field = GST_STRUCTURE_FIELD (structure, i);
 
     ret = func (field->name, &field->value, user_data);
@@ -1574,12 +1581,13 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
     GString * s)
 {
   GstStructureField *field;
-  guint i;
+  guint i, len;
 
   g_return_val_if_fail (s != NULL, FALSE);
 
   g_string_append (s, g_quark_to_string (structure->name));
-  for (i = 0; i < structure->fields->len; i++) {
+  len = structure->fields->len;
+  for (i = 0; i < len; i++) {
     char *t;
     GType type;
 
