@@ -296,6 +296,18 @@ CREATE_TEST (test_downscale_641x481_30x111_method_2, 2, 641, 481, 30, 111);
 CREATE_TEST (test_upscale_30x111_641x481_method_0, 0, 30, 111, 641, 481);
 CREATE_TEST (test_upscale_30x111_641x481_method_1, 1, 30, 111, 641, 481);
 CREATE_TEST (test_upscale_30x111_641x481_method_2, 2, 30, 111, 641, 481);
+CREATE_TEST (test_downscale_640x480_320x1_method_0, 0, 640, 480, 320, 1);
+CREATE_TEST (test_downscale_640x480_320x1_method_1, 1, 640, 480, 320, 1);
+CREATE_TEST (test_downscale_640x480_320x1_method_2, 2, 640, 480, 320, 1);
+CREATE_TEST (test_upscale_320x1_640x480_method_0, 0, 320, 1, 640, 480);
+CREATE_TEST (test_upscale_320x1_640x480_method_1, 1, 320, 1, 640, 480);
+CREATE_TEST (test_upscale_320x1_640x480_method_2, 2, 320, 1, 640, 480);
+CREATE_TEST (test_downscale_640x480_1x240_method_0, 0, 640, 480, 1, 240);
+CREATE_TEST (test_downscale_640x480_1x240_method_1, 1, 640, 480, 1, 240);
+CREATE_TEST (test_downscale_640x480_1x240_method_2, 2, 640, 480, 1, 240);
+CREATE_TEST (test_upscale_1x240_640x480_method_0, 0, 1, 240, 640, 480);
+CREATE_TEST (test_upscale_1x240_640x480_method_1, 1, 1, 240, 640, 480);
+CREATE_TEST (test_upscale_1x240_640x480_method_2, 2, 1, 240, 640, 480);
 
 static Suite *
 videoscale_suite (void)
@@ -330,6 +342,18 @@ videoscale_suite (void)
   tcase_add_test (tc_chain, test_upscale_30x111_641x481_method_0);
   tcase_add_test (tc_chain, test_upscale_30x111_641x481_method_1);
   tcase_add_test (tc_chain, test_upscale_30x111_641x481_method_2);
+  tcase_add_test (tc_chain, test_downscale_640x480_320x1_method_0);
+  tcase_add_test (tc_chain, test_downscale_640x480_320x1_method_1);
+  tcase_add_test (tc_chain, test_downscale_640x480_320x1_method_2);
+  tcase_add_test (tc_chain, test_upscale_320x1_640x480_method_0);
+  tcase_add_test (tc_chain, test_upscale_320x1_640x480_method_1);
+  tcase_add_test (tc_chain, test_upscale_320x1_640x480_method_2);
+  tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_0);
+  tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_1);
+  tcase_add_test (tc_chain, test_downscale_640x480_1x240_method_2);
+  tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_0);
+  tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_1);
+  tcase_add_test (tc_chain, test_upscale_1x240_640x480_method_2);
 
   return s;
 }
