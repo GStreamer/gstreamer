@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
 
+#include <X11/Xlib.h>
 #include <vdpau/vdpau.h>
 
 G_BEGIN_DECLS
@@ -43,7 +44,8 @@ typedef struct _VdpauFunctions VdpauFunctions;
 struct _GstVdpauDecoder {
   GstElement element;
 
-  gchar *display;
+  gchar *display_name;
+  Display *display;
   VdpDevice device;
 
   VdpauFunctions *functions;
@@ -66,17 +68,22 @@ struct _GstVdpauDecoderClass {
 };
 
 struct _VdpauFunctions {
+  VdpDeviceDestroy                                *vdp_device_destroy;
   VdpGetProcAddress                               *vdp_get_proc_address;
-  
+  VdpGetErrorString                               *vdp_get_error_string;
+
+  VdpVideoSurfaceCreate                           *vdp_video_surface_create;
+  VdpVideoSurfaceDestroy                          *vdp_video_surface_destroy;
   VdpVideoSurfaceQueryCapabilities                *vdp_video_surface_query_capabilities;
   VdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities *vdp_video_surface_query_ycbcr_capabilities;
+  VdpVideoSurfaceGetParameters                    *vdp_video_surface_get_parameters;
   VdpVideoSurfaceGetBitsYCbCr                     *vdp_video_surface_get_bits_ycbcr;
-
-  VdpDeviceDestroy                                *vdp_device_destroy;
 
   VdpDecoderCreate                                *vdp_decoder_create;
   VdpDecoderDestroy                               *vdp_decoder_destroy;
   VdpDecoderRender                                *vdp_decoder_render;
+  VdpDecoderQueryCapabilities                     *vdp_decoder_query_capabilities;
+  VdpDecoderGetParameters                         *vdp_decoder_get_parameters;
 };
 
 GType gst_vdpaudecoder_get_type (void);

@@ -104,13 +104,16 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
   GstVdpauMpegDecoder *mpeg_dec;
   GstStructure *structure;
   gint version;
+  VdpDecoderProfile profile;
+  VdpauFunctions *f;
+  VdpStatus status;
 
   mpeg_dec = GST_VDPAU_MPEG_DECODER (dec);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "mpegversion", &version);
   if (version == 1)
-    mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG1;
+    profile = VDP_DECODER_PROFILE_MPEG1;
 
   else {
     const GValue *value;
@@ -123,14 +126,24 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
         GST_BUFFER_DATA (codec_data) + GST_BUFFER_SIZE (codec_data));
     switch (hdr.profile) {
       case 5:
-        mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG2_SIMPLE;
+        profile = VDP_DECODER_PROFILE_MPEG2_SIMPLE;
         break;
       default:
-        mpeg_dec->profile = VDP_DECODER_PROFILE_MPEG2_MAIN;
+        profile = VDP_DECODER_PROFILE_MPEG2_MAIN;
         break;
     }
   }
 
+  f = dec->functions;
+  status = f->vdp_decoder_create (dec->device, profile, dec->width,
+      dec->height, 2, &mpeg_dec->decoder);
+  if (status != VDP_STATUS_OK) {
+    GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
+        ("Could not create vdpau decoder"),
+        ("Error returned from vdpau was: %s",
+            f->vdp_get_error_string (status)));
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -174,10 +187,12 @@ gst_vdpau_mpeg_decoder_class_init (GstVdpauMpegDecoderClass * klass)
 }
 
 static void
-gst_vdpau_mpeg_decoder_init (GstVdpauMpegDecoder * filter,
+gst_vdpau_mpeg_decoder_init (GstVdpauMpegDecoder * mpeg_dec,
     GstVdpauMpegDecoderClass * gclass)
 {
-  filter->silent = FALSE;
+  mpeg_dec->silent = FALSE;
+
+  mpeg_dec->decoder = VDP_INVALID_HANDLE;
 }
 
 static void

@@ -18,7 +18,40 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "mpegutil.h"
+
+/* default intra quant matrix, in zig-zag order */
+static const guint8 default_intra_quantizer_matrix[64] = {
+  8,
+  16, 16,
+  19, 16, 19,
+  22, 22, 22, 22,
+  22, 22, 26, 24, 26,
+  27, 27, 27, 26, 26, 26,
+  26, 27, 27, 27, 29, 29, 29,
+  34, 34, 34, 29, 29, 29, 27, 27,
+  29, 29, 32, 32, 34, 34, 37,
+  38, 37, 35, 35, 34, 35,
+  38, 38, 40, 40, 40,
+  48, 48, 46, 46,
+  56, 56, 58,
+  69, 69,
+  83
+};
+
+guint8 mpeg2_scan[64] = {
+  /* Zig-Zag scan pattern */
+  0, 1, 8, 16, 9, 2, 3, 10,
+  17, 24, 32, 25, 18, 11, 4, 5,
+  12, 19, 26, 33, 40, 48, 41, 34,
+  27, 20, 13, 6, 7, 14, 21, 28,
+  35, 42, 49, 56, 57, 50, 43, 36,
+  29, 22, 15, 23, 30, 37, 44, 51,
+  58, 59, 52, 45, 38, 31, 39, 46,
+  53, 60, 61, 54, 47, 55, 62, 63
+};
 
 guint8 bits[] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
@@ -133,6 +166,7 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
       /* Parse a Sequence Extension */
       guint8 horiz_size_ext, vert_size_ext;
       guint8 fps_n_ext, fps_d_ext;
+      gint i, offset;
 
       if (G_UNLIKELY ((end - data) < 6))
         /* need at least 10 bytes, minus 4 for the start code 000001b5 */
@@ -148,6 +182,23 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
       hdr->fps_d *= (fps_d_ext + 1);
       hdr->width += (horiz_size_ext << 12);
       hdr->height += (vert_size_ext << 12);
+
+      if (read_bits (data + 7, 6, 1)) {
+        for (i = 0; i < 64; i++)
+          hdr->intra_quantizer_matrix[mpeg2_scan[i]] =
+              read_bits (data + 7 + i, 7, 8);
+        offset = 64;
+      } else
+        memcpy (hdr->intra_quantizer_matrix, default_intra_quantizer_matrix,
+            64);
+
+      if (read_bits (data + 7 + offset, 7, 1)) {
+        for (i = 0; i < 64; i++)
+          hdr->non_intra_quantizer_matrix[mpeg2_scan[i]] =
+              read_bits (data + 8 + offset + i, 0, 8);
+      } else
+        memset (hdr->non_intra_quantizer_matrix, 0, 64);
+
       break;
     }
     default:
@@ -222,6 +273,70 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
     }
     data = mpeg_util_find_start_code (&sync_word, data, end);
   }
+
+  return TRUE;
+}
+
+gboolean
+mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
+{
+  guint32 code;
+
+  if (G_UNLIKELY ((end - data) < 6))
+    return FALSE;               /* Packet too small */
+
+  code = GST_READ_UINT32_BE (data);
+  if (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_PICTURE)))
+    return FALSE;
+
+  /* Skip the start code */
+  data += 4;
+
+  hdr->pic_type = (data[1] >> 3) & 0x07;
+  if (hdr->pic_type == 0 || hdr->pic_type > 4)
+    return FALSE;               /* Corrupted picture packet */
+
+  if (hdr->pic_type == P_FRAME || hdr->pic_type == B_FRAME) {
+    if (G_UNLIKELY ((end - data) < 7))
+      return FALSE;             /* packet too small */
+
+    hdr->full_pel_forward_vector = read_bits (data + 3, 5, 1);
+    hdr->f_code[0][0] = hdr->f_code[0][1] = read_bits (data + 3, 6, 3);
+
+    if (hdr->pic_type == B_FRAME) {
+      hdr->full_pel_backward_vector = read_bits (data + 4, 1, 1);
+      hdr->f_code[1][0] = hdr->f_code[1][1] = read_bits (data + 4, 2, 3);
+    }
+  } else {
+    hdr->full_pel_forward_vector = 0;
+    hdr->full_pel_backward_vector = 0;
+  }
+
+  return TRUE;
+}
+
+gboolean
+mpeg_util_parse_picture_coding_extension (MPEGPictureExt * ext, guint8 * data,
+    guint8 * end)
+{
+  if (G_UNLIKELY ((end - data) < 7))
+    return FALSE;               /* Packet too small */
+
+  if (G_UNLIKELY (read_bits (data, 0, 4) != MPEG_PACKET_EXT_PICTURE_CODING))
+    return FALSE;
+
+  ext->f_code[0][0] = read_bits (data, 4, 4);
+  ext->f_code[0][1] = read_bits (data + 1, 0, 4);
+  ext->f_code[1][0] = read_bits (data + 1, 4, 4);
+  ext->f_code[1][1] = read_bits (data + 2, 0, 4);
+
+  ext->intra_dc_precision = read_bits (data + 2, 4, 2);
+  ext->picture_structure = read_bits (data + 2, 6, 2);
+  ext->top_field_first = read_bits (data + 3, 0, 1);
+  ext->frame_pred_frame_dct = read_bits (data + 3, 1, 1);
+  ext->concealment_motion_vectors = read_bits (data + 3, 2, 1);
+  ext->q_scale_type = read_bits (data + 3, 3, 1);
+  ext->intra_vlc_format = read_bits (data + 3, 4, 1);
 
   return TRUE;
 }

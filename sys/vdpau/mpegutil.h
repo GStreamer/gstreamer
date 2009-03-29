@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 
 typedef struct MPEGSeqHdr MPEGSeqHdr;
+typedef struct MPEGPictureHdr MPEGPictureHdr;
+typedef struct MPEGPictureExt MPEGPictureExt;
 
 /* Packet ID codes for different packet types we
  * care about */
@@ -40,6 +42,12 @@ typedef struct MPEGSeqHdr MPEGSeqHdr;
 #define MPEG_PACKET_EXT_SEQUENCE         0x01
 #define MPEG_PACKET_EXT_SEQUENCE_DISPLAY 0x02
 #define MPEG_PACKET_EXT_QUANT_MATRIX     0x03
+#define MPEG_PACKET_EXT_PICTURE_CODING   0x08
+
+/* frame types */
+#define I_FRAME         1
+#define P_FRAME         2
+#define B_FRAME         3
 
 struct MPEGSeqHdr
 {
@@ -55,9 +63,38 @@ struct MPEGSeqHdr
 
   /* mpeg2 decoder profile */
   gint profile;
+
+  guint8 intra_quantizer_matrix[64];
+  guint8 non_intra_quantizer_matrix[64];
+};
+
+struct MPEGPictureHdr
+{
+  guint8 pic_type;
+
+  guint8 full_pel_forward_vector, full_pel_backward_vector;
+
+  guint8 f_code[2][2];
+};
+
+struct MPEGPictureExt
+{
+  guint8 f_code[2][2];
+
+  guint8 intra_dc_precision;
+  guint8 picture_structure;
+  guint8 top_field_first;
+  guint8 frame_pred_frame_dct;
+  guint8 concealment_motion_vectors;
+  guint8 q_scale_type;
+  guint8 intra_vlc_format;
 };
 
 gboolean mpeg_util_parse_sequence_hdr (MPEGSeqHdr *hdr, 
-    guint8 *data, guint8 *end);
+                                       guint8 *data, guint8 *end);
+
+gboolean mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end);
+
+gboolean mpeg_util_parse_picture_coding_extension (MPEGPictureExt *ext, guint8 *data, guint8 *end);
 
 #endif

@@ -66,7 +66,7 @@ struct _GstVdpauMpegDecoder
 
   gboolean silent;
 
-  VdpDecoderProfile profile;
+  VdpDecoder decoder;
 };
 
 struct _GstVdpauMpegDecoderClass 
