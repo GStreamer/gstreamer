@@ -184,7 +184,7 @@ main (int argc, char *argv[])
     queue[i] = gst_element_factory_make ("queue", NULL);
 /*    upload[i] = gst_element_factory_make ("glupload", NULL);
       effect[i] = gst_element_factory_make ("gleffects", NULL); */
-    sink[i] = gst_element_factory_make ("ximagesink", NULL);
+    sink[i] = gst_element_factory_make ("glimagesink", NULL);
 /*    gst_bin_add_many (GST_BIN (pipeline),
         queue[i], upload[i], effect[i], sink[i], NULL); */
     gst_bin_add_many (GST_BIN (pipeline), queue[i], sink[i], NULL);
