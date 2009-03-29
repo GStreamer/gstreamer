@@ -957,6 +957,14 @@ AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_SUBST(LRDF_CFLAGS)
 ])
 
+dnl *** LV2 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LV2, true)
+AG_GST_CHECK_FEATURE(LV2, [lv2], lv2, [
+  PKG_CHECK_MODULES(SLV2, slv2 >= 0.6.0, HAVE_SLV2="yes", HAVE_SLV2="no")
+  AC_SUBST(SLV2_CFLAGS)
+  AC_SUBST(SLV2_LIBS)
+])
+
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
 AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
