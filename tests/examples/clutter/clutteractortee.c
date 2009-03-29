@@ -55,7 +55,6 @@ create_actor (GstGLClutterActor * actor)
   clutter_actor_set_position (actor->texture, xpos, ypos);
 
   disp = clutter_x11_get_default_display ();
-  XMoveResizeWindow (disp, actor->win, xpos, ypos, W, H);
 
   if (xpos > (COLS - 1) * W) {
     xpos = 0;
