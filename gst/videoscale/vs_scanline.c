@@ -61,27 +61,29 @@ vs_scanline_resample_nearest_Y (uint8_t * dest, uint8_t * src, int src_width,
   *accumulator = acc;
 }
 
+#include <glib.h>
 void
 vs_scanline_resample_linear_Y (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  uint32_t vals[2];
+  int acc = *accumulator;
+  int i;
+  int j;
+  int x;
 
-  vals[0] = *accumulator;
-  vals[1] = increment;
+  for (i = 0; i < n; i++) {
+    j = acc >> 16;
+    x = acc & 0xffff;
 
-  if (src_width % 2 == 0) {
-    oil_resample_linear_u8 (dest, src, n, vals);
-  } else if (src_width > 1) {
-    if (n > 1)
-      oil_resample_linear_u8 (dest, src, n - 1, vals);
-    dest[n - 1] = src[vals[0] >> 16];
-    vals[0] += increment;
-  } else {
-    oil_splat_u8 (dest, 1, &src[0], n);
+    if (j + 1 < src_width)
+      dest[i] = (src[j] * (65536 - x) + src[j + 1] * x) >> 16;
+    else
+      dest[i] = src[j];
+
+    acc += increment;
   }
 
-  *accumulator = vals[0];
+  *accumulator = acc;
 }
 
 void
