@@ -5,7 +5,7 @@
 %version-entities;
 <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
 ]>
-<refentry id="gst-buidling" revision="25 mar 2009">
+<refentry id="gst-building" revision="25 mar 2009">
 <refmeta>
 <refentrytitle>Building GStreamer and GStreamer Applications</refentrytitle>
 <manvolnum>3</manvolnum>
