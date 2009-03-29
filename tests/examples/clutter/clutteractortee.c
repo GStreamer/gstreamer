@@ -126,9 +126,11 @@ main (int argc, char *argv[])
 
   GstElement *srcbin;
   GstElement *tee;
-  GstElement *queue[N_ACTORS], *upload[N_ACTORS], *effect[N_ACTORS],
-      *sink[N_ACTORS];
-
+  GstElement *queue[N_ACTORS], *sink[N_ACTORS];
+/*
+  GstElement *upload[N_ACTORS];
+  GstElement *effect[N_ACTORS];
+*/
   ClutterActor *stage;
   GstGLClutterActor *actor[N_ACTORS];
   Display *disp;
@@ -150,12 +152,12 @@ main (int argc, char *argv[])
       W * COLS + (COLS - 1), H * ROWS + (ROWS - 1));
 
   stage_win = clutter_x11_get_stage_window (CLUTTER_STAGE (stage));
+  XCompositeRedirectSubwindows (disp, stage_win, CompositeRedirectManual);
 
   for (i = 0; i < N_ACTORS; i++) {
     actor[i] = g_new0 (GstGLClutterActor, 1);
     actor[i]->stage = stage;
     actor[i]->win = XCreateSimpleWindow (disp, stage_win, 0, 0, W, H, 0, 0, 0);
-    XCompositeRedirectWindow (disp, actor[i]->win, CompositeRedirectManual);
     XMapRaised (disp, actor[i]->win);
     XSync (disp, FALSE);
   }
@@ -180,29 +182,32 @@ main (int argc, char *argv[])
 
   for (i = 0; i < N_ACTORS; i++) {
     queue[i] = gst_element_factory_make ("queue", NULL);
-    upload[i] = gst_element_factory_make ("glupload", NULL);
-    effect[i] = gst_element_factory_make ("gleffects", NULL);
-    sink[i] = gst_element_factory_make ("glimagesink", NULL);
-    gst_bin_add_many (GST_BIN (pipeline),
-        queue[i], upload[i], effect[i], sink[i], NULL);
+/*    upload[i] = gst_element_factory_make ("glupload", NULL);
+      effect[i] = gst_element_factory_make ("gleffects", NULL); */
+    sink[i] = gst_element_factory_make ("ximagesink", NULL);
+/*    gst_bin_add_many (GST_BIN (pipeline),
+        queue[i], upload[i], effect[i], sink[i], NULL); */
+    gst_bin_add_many (GST_BIN (pipeline), queue[i], sink[i], NULL);
   }
 
   gst_element_link_many (srcbin, tee, NULL);
 
   for (i = 0; i < N_ACTORS; i++) {
     ok |=
-        gst_element_link_many (tee, queue[i], upload[i], effect[i], sink[i],
-        NULL);
+//        gst_element_link_many (tee, queue[i], upload[i], effect[i], sink[i],
+        gst_element_link_many (tee, queue[i], sink[i], NULL);
   }
 
   if (!ok)
     g_error ("Failed to link one or more elements");
 
+/*
   for (i = 0; i < N_ACTORS; i++) {
     g_message ("setting effect %d on %s", i + 1,
         gst_element_get_name (effect[i]));
     g_object_set (G_OBJECT (effect[i]), "effect", i + 1, NULL);
   }
+*/
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
