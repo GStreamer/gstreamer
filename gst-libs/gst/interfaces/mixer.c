@@ -597,7 +597,7 @@ gst_mixer_message_is_mixer_message (GstMessage * message)
  * message and return the GstMixerMessageType identifying which
  * type of notification it is.
  *
- * Returns: The type of the GstMixerMessage, or GST_MIXER_MESSAGE_NONE
+ * Returns: The type of the GstMixerMessage, or GST_MIXER_MESSAGE_INVALID
  * if the message is not a GstMixer notification.
  *
  * Since: 0.10.14
