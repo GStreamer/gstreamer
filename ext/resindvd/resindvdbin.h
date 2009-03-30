@@ -42,7 +42,7 @@ typedef struct _RsnDvdBinClass RsnDvdBinClass;
 #define DVD_ELEM_SOURCE         0
 #define DVD_ELEM_DEMUX          1
 #define DVD_ELEM_MQUEUE         2
-#define DVD_ELEM_SPU            3
+#define DVD_ELEM_SPUQ           3
 #define DVD_ELEM_VIDDEC         4
 #define DVD_ELEM_PARSET         5
 #define DVD_ELEM_AUDDEC         6
