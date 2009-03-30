@@ -24,7 +24,6 @@
 
 #include <gst/check/gstcheck.h>
 
-GList *buffers = NULL;
 static gint overrun_count = 0;
 static gint underrun_count = 0;
 
