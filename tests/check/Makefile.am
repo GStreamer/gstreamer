@@ -112,6 +112,7 @@ check_PROGRAMS = \
 	libs/cddabasesrc \
 	libs/fft \
 	libs/mixer \
+	libs/navigation \
 	libs/netbuffer \
 	libs/pbutils \
 	libs/rtp \
@@ -177,6 +178,16 @@ libs_mixer_CFLAGS = \
         $(AM_CFLAGS)
 
 libs_mixer_LDADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+        $(GST_BASE_LIBS) \
+        $(LDADD)
+
+libs_navigation_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_BASE_CFLAGS) \
+        $(AM_CFLAGS)
+
+libs_navigation_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
         $(GST_BASE_LIBS) \
         $(LDADD)

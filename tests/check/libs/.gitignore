@@ -3,6 +3,7 @@ audio
 cddabasesrc
 fft
 mixer
+navigation
 netbuffer
 pbutils
 rtp
