@@ -25,6 +25,8 @@
 
 #include "gstmpeg2encoptions.hh"
 
+#include <gst/gst.h>
+
 /*
  * Property enumeration.
  */
@@ -290,7 +292,7 @@ MPEG2EncOptions ()
     num_cpus = 32;
 
   /* set some default(s) not set in base class */
-  bitrate = DEFAULT_BITRATE * 1024;
+  bitrate = DEFAULT_BITRATE * 1000;
 }
 
 /*
@@ -321,11 +323,11 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* general encoding stream options */
   g_object_class_install_property (klass, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-          0, 10 * 1024, DEFAULT_BITRATE, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1000, DEFAULT_BITRATE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_NONVIDEO_BITRATE,
       g_param_spec_int ("non-video-bitrate", "Non-video bitrate",
           "Assumed bitrate of non-video for sequence splitting (kbps)",
-          0, 10 * 1024, 0, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1000, 0, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_QUANTISATION,
       g_param_spec_int ("quantisation", "Quantisation",
           "Quantisation factor (-1=cbr, 0=default, 1=best, 31=worst)",
@@ -334,7 +336,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* stills options */
   g_object_class_install_property (klass, ARG_VCD_STILL_SIZE,
       g_param_spec_int ("vcd-still-size", "VCD stills size",
-          "Size of VCD stills (in kB)",
+          "Size of VCD stills (in KB)",
           0, 512, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* motion estimation options */
@@ -485,10 +487,10 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
       g_value_set_enum (value, fieldenc);
       break;
     case ARG_BITRATE:
-      g_value_set_int (value, bitrate / 1024);
+      g_value_set_int (value, bitrate / 1000);
       break;
     case ARG_NONVIDEO_BITRATE:
-      g_value_set_int (value, nonvid_bitrate / 1024);
+      g_value_set_int (value, nonvid_bitrate);
       break;
     case ARG_QUANTISATION:
       g_value_set_int (value, force_cbr ? -1 : quant);
@@ -611,10 +613,15 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
       fieldenc = g_value_get_enum (value);
       break;
     case ARG_BITRATE:
-      bitrate = g_value_get_int (value) * 1024;
+      bitrate = g_value_get_int (value) * 1000;
+      if (bitrate % 400 != 0) {
+        bitrate = (bitrate / 400 + 1) * 400;
+        GST_INFO ("MPEG bitrate must be a multiple of 400",
+            " - rounded up to bitrate %d", bitrate / 1000);
+      }
       break;
     case ARG_NONVIDEO_BITRATE:
-      nonvid_bitrate = g_value_get_int (value) * 1024;
+      nonvid_bitrate = g_value_get_int (value);
       break;
     case ARG_QUANTISATION:
       quant = g_value_get_int (value);
