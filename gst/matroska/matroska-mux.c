@@ -1300,8 +1300,9 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 
     return TRUE;
   } else if (!strcmp (mimetype, "audio/x-raw-int")) {
-    gint endianness, width, depth;
-    gboolean signedness = G_LITTLE_ENDIAN;
+    gint width, depth;
+    gint endianness = G_LITTLE_ENDIAN;
+    gboolean signedness = TRUE;
 
     if (!gst_structure_get_int (structure, "width", &width) ||
         !gst_structure_get_int (structure, "depth", &depth) ||
