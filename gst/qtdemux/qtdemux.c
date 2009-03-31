@@ -962,14 +962,14 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
     if (!gst_qtdemux_convert_seek (pad, &format, cur_type, &cur,
             stop_type, &stop))
       goto no_format;
+
+    GST_DEBUG_OBJECT (qtdemux, "seek format %s", gst_format_get_name (format));
   } else {
     GST_DEBUG_OBJECT (qtdemux, "doing seek without event");
     flags = 0;
   }
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
-
-  GST_DEBUG_OBJECT (qtdemux, "seek format %d", format);
 
   /* stop streaming, either by flushing or by pausing the task */
   if (flush) {
