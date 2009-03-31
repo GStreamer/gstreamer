@@ -748,7 +748,41 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
   if (last_stop != GST_CLOCK_TIME_NONE && GST_BUFFER_DURATION_IS_VALID (buffer))
     last_stop += GST_BUFFER_DURATION (buffer);
 
+  /* should have caps by now */
+  g_return_val_if_fail (GST_PAD_CAPS (parse->srcpad), GST_FLOW_ERROR);
+
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (parse->srcpad));
+
+  /* and should then also be linked downstream, so safe to send some events */
+  if (parse->priv->pad_mode == GST_ACTIVATE_PULL) {
+    if (G_UNLIKELY (parse->close_segment)) {
+      GST_DEBUG_OBJECT (parse, "loop sending close segment");
+      gst_pad_push_event (parse->srcpad, parse->close_segment);
+      parse->close_segment = NULL;
+    }
+
+    if (G_UNLIKELY (parse->pending_segment)) {
+      GST_DEBUG_OBJECT (parse, "loop push pending segment");
+      gst_pad_push_event (parse->srcpad, parse->pending_segment);
+      parse->pending_segment = NULL;
+    }
+  } else {
+    if (G_UNLIKELY (parse->pending_segment)) {
+      GST_DEBUG_OBJECT (parse, "chain pushing a pending segment");
+      gst_pad_push_event (parse->srcpad, parse->pending_segment);
+      parse->pending_segment = NULL;
+    }
+  }
+
+  if (G_UNLIKELY (parse->priv->pending_events)) {
+    GList *l;
+
+    for (l = parse->priv->pending_events; l != NULL; l = l->next) {
+      gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
+    }
+    g_list_free (parse->priv->pending_events);
+    parse->priv->pending_events = NULL;
+  }
 
   /* TODO: Add to seek table */
 
@@ -839,9 +873,6 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
 
   if (G_UNLIKELY (parse->pending_segment)) {
-    GST_DEBUG_OBJECT (parse, "chain pushing a pending segment");
-    gst_pad_push_event (parse->srcpad, parse->pending_segment);
-    parse->pending_segment = NULL;
     parse->priv->offset = parse->priv->pending_offset;
 
     /* Make sure that adapter doesn't have any old data after
@@ -852,16 +883,6 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
        (e.g. paused), chain function exists and next time it gets called
        all this old data gets lost and playback continues from new segment */
     gst_adapter_clear (parse->adapter);
-  }
-
-  if (G_UNLIKELY (parse->priv->pending_events)) {
-    GList *l;
-
-    for (l = parse->priv->pending_events; l != NULL; l = l->next) {
-      gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
-    }
-    g_list_free (parse->priv->pending_events);
-    parse->priv->pending_events = NULL;
   }
 
   if (G_LIKELY (buffer)) {
@@ -1050,18 +1071,6 @@ gst_base_parse_loop (GstPad * pad)
 
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  if (parse->close_segment) {
-    GST_DEBUG_OBJECT (parse, "loop sending close segment");
-    gst_pad_push_event (parse->srcpad, parse->close_segment);
-    parse->close_segment = NULL;
-  }
-
-  if (parse->pending_segment) {
-    GST_DEBUG_OBJECT (parse, "loop push pending segment");
-    gst_pad_push_event (parse->srcpad, parse->pending_segment);
-    parse->pending_segment = NULL;
-  }
 
   /* TODO: Check if we reach segment stop limit */
 
