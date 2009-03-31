@@ -2542,7 +2542,6 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           qtdemux_parse_tree (demux);
 
           g_node_destroy (demux->moov_node);
-          g_free (data);
           demux->moov_node = NULL;
         } else {
           GST_WARNING_OBJECT (demux,
@@ -2550,6 +2549,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
               GST_FOURCC_ARGS (fourcc));
           /* Let's jump that one and go back to initial state */
         }
+        g_free (data);
 
         GST_DEBUG_OBJECT (demux, "Finished parsing the header");
         if (demux->mdatbuffer && demux->n_streams) {
