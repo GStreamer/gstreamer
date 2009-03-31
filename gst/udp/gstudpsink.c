@@ -223,9 +223,9 @@ gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri)
   /* ERRORS */
 wrong_protocol:
   {
-    g_free (protocol);
     GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
         ("error parsing uri %s: wrong protocol (%s != udp)", uri, protocol));
+    g_free (protocol);
     return FALSE;
   }
 }

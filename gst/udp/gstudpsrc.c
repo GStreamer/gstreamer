@@ -645,9 +645,9 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
   /* ERRORS */
 wrong_protocol:
   {
-    g_free (protocol);
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("error parsing uri %s: wrong protocol (%s != udp)", uri, protocol));
+    g_free (protocol);
     return FALSE;
   }
 }
