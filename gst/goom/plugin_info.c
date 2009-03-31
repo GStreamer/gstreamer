@@ -109,7 +109,7 @@ void
 plugin_info_init (PluginInfo * pp, int nbVisuals)
 {
 
-  PluginInfo p;
+  PluginInfo p = { 0, };
   int i;
 
   p.sound.speedvar = p.sound.accelvar = p.sound.totalgoom = 0;
@@ -147,6 +147,7 @@ plugin_info_init (PluginInfo * pp, int nbVisuals)
   p.nbVisuals = nbVisuals;
   p.visuals = (VisualFX **) malloc (sizeof (VisualFX *) * nbVisuals);
 
+  /* huh, we're setting a local variable and now copying it over? */
   *pp = p;
   pp->sound.params.params[0] = &pp->sound.biggoom_speed_limit_p;
   pp->sound.params.params[1] = &pp->sound.biggoom_factor_p;
