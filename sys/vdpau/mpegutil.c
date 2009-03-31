@@ -166,7 +166,6 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
       /* Parse a Sequence Extension */
       guint8 horiz_size_ext, vert_size_ext;
       guint8 fps_n_ext, fps_d_ext;
-      gint i, offset;
 
       if (G_UNLIKELY ((end - data) < 6))
         /* need at least 10 bytes, minus 4 for the start code 000001b5 */
@@ -182,23 +181,6 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
       hdr->fps_d *= (fps_d_ext + 1);
       hdr->width += (horiz_size_ext << 12);
       hdr->height += (vert_size_ext << 12);
-
-      if (read_bits (data + 7, 6, 1)) {
-        for (i = 0; i < 64; i++)
-          hdr->intra_quantizer_matrix[mpeg2_scan[i]] =
-              read_bits (data + 7 + i, 7, 8);
-        offset = 64;
-      } else
-        memcpy (hdr->intra_quantizer_matrix, default_intra_quantizer_matrix,
-            64);
-
-      if (read_bits (data + 7 + offset, 7, 1)) {
-        for (i = 0; i < 64; i++)
-          hdr->non_intra_quantizer_matrix[mpeg2_scan[i]] =
-              read_bits (data + 8 + offset + i, 0, 8);
-      } else
-        memset (hdr->non_intra_quantizer_matrix, 0, 64);
-
       break;
     }
     default:
@@ -217,6 +199,7 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   gboolean constrained_flag;
   gboolean load_intra_flag;
   gboolean load_non_intra_flag;
+  gint i;
 
   if (G_UNLIKELY ((end - data) < 12))
     return FALSE;               /* Too small to be a sequence header */
@@ -241,19 +224,29 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   set_fps_from_code (hdr, fps_idx);
 
   constrained_flag = (data[7] >> 2) & 0x01;
-  load_intra_flag = (data[7] >> 1) & 0x01;
+
+  load_intra_flag = read_bits (data + 7, 6, 1);
   if (load_intra_flag) {
     if (G_UNLIKELY ((end - data) < 64))
       return FALSE;
+    for (i = 0; i < 64; i++) {
+      hdr->intra_quantizer_matrix[mpeg2_scan[i]] =
+          read_bits (data + 7 + i, 7, 8);
+    }
     data += 64;
-  }
 
-  load_non_intra_flag = data[7] & 0x01;
+  } else
+    memcpy (hdr->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
+
+  load_non_intra_flag = read_bits (data + 7, 7 + load_intra_flag, 1);
   if (load_non_intra_flag) {
     if (G_UNLIKELY ((end - data) < 64))
       return FALSE;
-    data += 64;
-  }
+    for (i = 0; i < 64; i++)
+      hdr->non_intra_quantizer_matrix[mpeg2_scan[i]] =
+          read_bits (data + 8 + i, 1 + load_intra_flag, 8);
+  } else
+    memset (hdr->non_intra_quantizer_matrix, 16, 64);
 
   /* Advance past the rest of the MPEG-1 header */
   data += 8;
@@ -282,14 +275,14 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
 {
   guint32 code;
 
-  if (G_UNLIKELY ((end - data) < 6))
+  if (G_UNLIKELY ((end - data) < 8))
     return FALSE;               /* Packet too small */
 
   code = GST_READ_UINT32_BE (data);
   if (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_PICTURE)))
     return FALSE;
 
-  /* Skip the start code */
+  /* Skip the sync word */
   data += 4;
 
   hdr->pic_type = (data[1] >> 3) & 0x07;
@@ -297,7 +290,7 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
     return FALSE;               /* Corrupted picture packet */
 
   if (hdr->pic_type == P_FRAME || hdr->pic_type == B_FRAME) {
-    if (G_UNLIKELY ((end - data) < 7))
+    if (G_UNLIKELY ((end - data) < 5))
       return FALSE;             /* packet too small */
 
     hdr->full_pel_forward_vector = read_bits (data + 3, 5, 1);
@@ -319,11 +312,18 @@ gboolean
 mpeg_util_parse_picture_coding_extension (MPEGPictureExt * ext, guint8 * data,
     guint8 * end)
 {
-  if (G_UNLIKELY ((end - data) < 7))
+  guint32 code;
+
+  if (G_UNLIKELY ((end - data) < 10))
     return FALSE;               /* Packet too small */
 
-  if (G_UNLIKELY (read_bits (data, 0, 4) != MPEG_PACKET_EXT_PICTURE_CODING))
+  code = GST_READ_UINT32_BE (data);
+
+  if (G_UNLIKELY (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_EXTENSION))))
     return FALSE;
+
+  /* Skip the sync word */
+  data += 4;
 
   ext->f_code[0][0] = read_bits (data, 4, 4);
   ext->f_code[0][1] = read_bits (data + 1, 0, 4);
@@ -337,6 +337,81 @@ mpeg_util_parse_picture_coding_extension (MPEGPictureExt * ext, guint8 * data,
   ext->concealment_motion_vectors = read_bits (data + 3, 2, 1);
   ext->q_scale_type = read_bits (data + 3, 3, 1);
   ext->intra_vlc_format = read_bits (data + 3, 4, 1);
+
+  return TRUE;
+}
+
+gboolean
+mpeg_util_parse_picture_gop (MPEGPictureGOP * gop, guint8 * data, guint8 * end)
+{
+  guint32 code;
+  gint hour, minute, second;
+
+  if (G_UNLIKELY ((end - data) < 8))
+    return FALSE;               /* Packet too small */
+
+  code = GST_READ_UINT32_BE (data);
+
+  if (G_UNLIKELY (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_GOP))))
+    return FALSE;
+
+  /* Skip the sync word */
+  data += 4;
+
+  gop->drop_frame_flag = read_bits (data, 0, 1);
+
+  hour = read_bits (data, 1, 5);
+  minute = read_bits (data, 6, 6);
+  second = read_bits (data + 1, 4, 6);
+
+  gop->timestamp = hour * 3600 * GST_SECOND;
+  gop->timestamp += minute * 60 * GST_SECOND;
+  gop->timestamp += second * GST_SECOND;
+
+  gop->frame = read_bits (data + 2, 3, 6);
+
+  return TRUE;
+}
+
+gboolean
+mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, guint8 * data, guint8 * end)
+{
+  guint32 code;
+  gboolean load_intra_flag, load_non_intra_flag;
+  gint i;
+
+  if (G_UNLIKELY ((end - data) < 5))
+    return FALSE;               /* Packet too small */
+
+  code = GST_READ_UINT32_BE (data);
+
+  if (G_UNLIKELY (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_GOP))))
+    return FALSE;
+
+  /* Skip the sync word */
+  data += 4;
+
+  load_intra_flag = read_bits (data, 0, 1);
+  if (load_intra_flag) {
+    if (G_UNLIKELY ((end - data) < 64))
+      return FALSE;
+    for (i = 0; i < 64; i++) {
+      qm->intra_quantizer_matrix[mpeg2_scan[i]] = read_bits (data + i, 1, 8);
+    }
+    data += 64;
+
+  } else
+    memcpy (qm->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
+
+  load_non_intra_flag = read_bits (data, 1 + load_intra_flag, 1);
+  if (load_non_intra_flag) {
+    if (G_UNLIKELY ((end - data) < 64))
+      return FALSE;
+    for (i = 0; i < 64; i++)
+      qm->non_intra_quantizer_matrix[mpeg2_scan[i]] =
+          read_bits (data + i, 2 + load_intra_flag, 8);
+  } else
+    memset (qm->non_intra_quantizer_matrix, 16, 64);
 
   return TRUE;
 }

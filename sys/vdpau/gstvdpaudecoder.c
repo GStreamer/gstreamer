@@ -24,7 +24,7 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
+#include <gst/video/video.h>
 
 #include "gstvdpaudecoder.h"
 #include <vdpau/vdpau_x11.h>
@@ -64,11 +64,12 @@ static void gst_vdpaudecoder_set_property (GObject * object, guint prop_id,
 static void gst_vdpaudecoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-gboolean
-gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
+GstFlowReturn
+gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
     VdpVideoSurface surface)
 {
   VdpauFunctions *f;
+  GstBuffer *buffer;
 
   f = dec->functions;
 
@@ -77,34 +78,98 @@ gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec,
     {
       gint size;
       GstFlowReturn result;
-      GstBuffer *buffer;
       VdpStatus status;
       guint8 *data[3];
+      guint32 stride[3];
 
-      size = dec->height * dec->width + dec->height * dec->width / 2;
+      size =
+          gst_video_format_get_size (GST_VIDEO_FORMAT_YV12, dec->width,
+          dec->height);
       result =
           gst_pad_alloc_buffer_and_set_caps (dec->src, GST_BUFFER_OFFSET_NONE,
           size, GST_PAD_CAPS (dec->src), &buffer);
       if (G_UNLIKELY (result != GST_FLOW_OK))
-        return FALSE;
+        return result;
 
-      data[0] = GST_BUFFER_DATA (buffer);
-      data[1] = data[0] + dec->height * dec->width;
-      data[2] = data[1] + dec->height * dec->width / 4;
+
+      data[0] = GST_BUFFER_DATA (buffer) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
+          0, dec->width, dec->height);
+      data[1] = data[0] +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
+          2, dec->width, dec->height);
+      data[2] = data[0] +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
+          1, dec->width, dec->height);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
+          0, dec->width);
+      stride[1] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
+          2, dec->width);
+      stride[2] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_YV12,
+          1, dec->width);
 
       status =
           f->vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_YV12,
-          (void *) data, NULL);
-      if (G_UNLIKELY (status != VDP_STATUS_OK))
-        return FALSE;
+          (void *) data, stride);
+      if (G_UNLIKELY (status != VDP_STATUS_OK)) {
+        GST_ELEMENT_ERROR (dec, RESOURCE, READ,
+            ("Couldn't get data from vdpau"),
+            ("Error returned from vdpau was: %s",
+                f->vdp_get_error_string (status)));
+        return GST_FLOW_ERROR;
+      }
+      break;
+    }
+    case GST_MAKE_FOURCC ('N', 'V', '1', '2'):
+    {
+      gint size;
+      GstFlowReturn result;
+      VdpStatus status;
+      guint8 *data[2];
+      guint32 stride[2];
 
+      size = dec->width * dec->height + dec->width * dec->height / 2;
+      result =
+          gst_pad_alloc_buffer_and_set_caps (dec->src, GST_BUFFER_OFFSET_NONE,
+          size, GST_PAD_CAPS (dec->src), &buffer);
+      if (G_UNLIKELY (result != GST_FLOW_OK))
+        return result;
+
+
+      data[0] = GST_BUFFER_DATA (buffer);
+      data[1] = data[0] + dec->width * dec->height;
+
+      stride[0] = dec->width;
+      stride[1] = dec->width;
+
+      status =
+          f->vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_NV12,
+          (void *) data, stride);
+      if (G_UNLIKELY (status != VDP_STATUS_OK)) {
+        GST_ELEMENT_ERROR (dec, RESOURCE, READ,
+            ("Couldn't get data from vdpau"),
+            ("Error returned from vdpau was: %s",
+                f->vdp_get_error_string (status)));
+        return GST_FLOW_ERROR;
+      }
       break;
     }
     default:
       break;
   }
 
-  return TRUE;
+  GST_BUFFER_TIMESTAMP (buffer) =
+      gst_util_uint64_scale_int (GST_SECOND * dec->frame_nr,
+      dec->framerate_denominator, dec->framerate_numerator);
+  GST_BUFFER_DURATION (buffer) =
+      gst_util_uint64_scale_int (GST_SECOND, dec->framerate_denominator,
+      dec->framerate_numerator);
+  GST_BUFFER_OFFSET (buffer) = dec->frame_nr;
+  dec->frame_nr++;
+  GST_BUFFER_OFFSET_END (buffer) = dec->frame_nr;
+
+  return gst_pad_push (dec->src, buffer);
 }
 
 typedef struct
@@ -148,6 +213,38 @@ static VdpauFormats formats[6] = {
         GST_MAKE_FOURCC ('Y', 'V', '1', '2')
       }
 };
+
+VdpVideoSurface
+gst_vdpau_decoder_create_video_surface (GstVdpauDecoder * dec)
+{
+  VdpauFunctions *f;
+  VdpChromaType chroma_type;
+  gint i;
+  VdpStatus status;
+  VdpVideoSurface surface;
+
+  f = dec->functions;
+
+  chroma_type = VDP_CHROMA_TYPE_422;
+  for (i = 0; i < 6; i++) {
+    if (formats[i].fourcc == dec->format) {
+      chroma_type = formats[i].chroma_type;
+      break;
+    }
+  }
+
+  status = f->vdp_video_surface_create (dec->device, chroma_type, dec->width,
+      dec->height, &surface);
+  if (status != VDP_STATUS_OK) {
+    GST_ELEMENT_ERROR (dec, RESOURCE, READ,
+        ("Couldn't create a VdpVideoSurface"),
+        ("Error returned from vdpau was: %s",
+            f->vdp_get_error_string (status)));
+    return VDP_INVALID_HANDLE;
+  }
+
+  return surface;
+}
 
 static GstCaps *
 gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
@@ -355,6 +452,7 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   gint width, height;
   gint framerate_numerator, framerate_denominator;
+  gint par_numerator, par_denominator;
   guint32 fourcc_format;
   gboolean res;
 
@@ -363,21 +461,25 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height", &height);
   gst_structure_get_fraction (structure, "framerate",
       &framerate_numerator, &framerate_denominator);
+  gst_structure_get_fraction (structure, "pixel-aspect-ratio",
+      &par_numerator, &par_denominator);
 
   src_caps = gst_pad_get_allowed_caps (dec->src);
   if (G_UNLIKELY (!src_caps))
     return FALSE;
 
-  structure = gst_caps_get_structure (src_caps, 0);
+  new_caps = gst_caps_copy_nth (src_caps, 0);
+  gst_caps_unref (src_caps);
+  structure = gst_caps_get_structure (new_caps, 0);
   gst_structure_get_fourcc (structure, "format", &fourcc_format);
   gst_structure_set (structure,
       "width", G_TYPE_INT, width,
       "height", G_TYPE_INT, height,
       "framerate", GST_TYPE_FRACTION, framerate_numerator,
-      framerate_denominator, NULL);
+      framerate_denominator,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, par_numerator,
+      par_denominator, NULL);
 
-  new_caps = gst_caps_copy_nth (src_caps, 0);
-  gst_caps_unref (src_caps);
   gst_pad_fixate_caps (dec->src, new_caps);
   res = gst_pad_set_caps (dec->src, new_caps);
 
@@ -388,6 +490,8 @@ gst_vdpaudecoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   dec->width = width;
   dec->height = height;
+  dec->framerate_numerator = framerate_numerator;
+  dec->framerate_denominator = framerate_denominator;
   dec->format = fourcc_format;
 
   if (dec_class->set_caps && !dec_class->set_caps (dec, caps))
@@ -464,7 +568,11 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
 
   dec->height = 0;
   dec->width = 0;
+  dec->framerate_numerator = 0;
+  dec->framerate_denominator = 0;
   dec->format = 0;
+
+  dec->frame_nr = 0;
 
   dec->functions = g_slice_new0 (VdpauFunctions);
 

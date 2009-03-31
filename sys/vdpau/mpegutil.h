@@ -26,6 +26,8 @@
 typedef struct MPEGSeqHdr MPEGSeqHdr;
 typedef struct MPEGPictureHdr MPEGPictureHdr;
 typedef struct MPEGPictureExt MPEGPictureExt;
+typedef struct MPEGPictureGOP MPEGPictureGOP;
+typedef struct MPEGQuantMatrix MPEGQuantMatrix;
 
 /* Packet ID codes for different packet types we
  * care about */
@@ -90,11 +92,32 @@ struct MPEGPictureExt
   guint8 intra_vlc_format;
 };
 
+struct MPEGPictureGOP
+{
+  guint8 drop_frame_flag;
+  guint8 frame;
+
+  GstClockTime timestamp;
+};
+
+struct MPEGQuantMatrix
+{
+  guint8 intra_quantizer_matrix[64];
+  guint8 non_intra_quantizer_matrix[64];
+};
+
 gboolean mpeg_util_parse_sequence_hdr (MPEGSeqHdr *hdr, 
                                        guint8 *data, guint8 *end);
 
 gboolean mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end);
 
 gboolean mpeg_util_parse_picture_coding_extension (MPEGPictureExt *ext, guint8 *data, guint8 *end);
+
+gboolean mpeg_util_parse_picture_gop (MPEGPictureGOP * gop, guint8 * data, guint8 * end);
+
+gboolean mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, guint8 * data, guint8 * end);
+
+guint8 *mpeg_util_find_start_code (guint32 * sync_word, guint8 * cur, guint8 * end);
+guint32 read_bits (guint8 * buf, gint start_bit, gint n_bits);
 
 #endif

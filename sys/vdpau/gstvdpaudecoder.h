@@ -56,7 +56,10 @@ struct _GstVdpauDecoder {
   GstCaps *src_caps;
 
   gint width, height;
+  gint framerate_numerator, framerate_denominator;
   guint32 format;
+
+  gint frame_nr;
 
   gboolean silent;
 };
@@ -88,7 +91,9 @@ struct _VdpauFunctions {
 
 GType gst_vdpaudecoder_get_type (void);
 
-gboolean gst_vdpaudecoder_push_video_surface (GstVdpauDecoder * dec, VdpVideoSurface surface);
+gboolean gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
+                                               VdpVideoSurface surface);
+VdpVideoSurface gst_vdpau_decoder_create_video_surface (GstVdpauDecoder *dec);
 
 G_END_DECLS
 

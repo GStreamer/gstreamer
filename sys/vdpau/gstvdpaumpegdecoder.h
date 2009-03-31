@@ -45,6 +45,7 @@
 #define __GST_VDPAU_MPEG_DECODER_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include "gstvdpaudecoder.h"
 
@@ -66,7 +67,16 @@ struct _GstVdpauMpegDecoder
 
   gboolean silent;
 
+  gint version;
+  
   VdpDecoder decoder;
+  VdpPictureInfoMPEG1Or2 vdp_info;
+  
+  GstAdapter *adapter;
+  gint slices;
+
+  GstBuffer *p_buffer;
+  VdpPictureInfoMPEG1Or2 p_vdp_info;
 };
 
 struct _GstVdpauMpegDecoderClass 
