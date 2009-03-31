@@ -89,6 +89,10 @@ GstRTSPResult      gst_rtsp_connection_reset_timeout (GstRTSPConnection *conn);
 /* flushing state */
 GstRTSPResult      gst_rtsp_connection_flush         (GstRTSPConnection *conn, gboolean flush);
 
+/* HTTP proxy support */
+GstRTSPResult      gst_rtsp_connection_set_proxy     (GstRTSPConnection *conn,
+                                                      const gchar *host, guint port);
+
 /* configure authentication data */
 GstRTSPResult      gst_rtsp_connection_set_auth      (GstRTSPConnection *conn, GstRTSPAuthMethod method,
                                                       const gchar *user, const gchar *pass);
