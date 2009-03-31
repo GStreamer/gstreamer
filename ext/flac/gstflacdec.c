@@ -931,6 +931,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         GST_TIME_ARGS (GST_BUFFER_DURATION (flacdec->pending)));
     gst_pad_push (flacdec->srcpad, flacdec->pending);
     flacdec->pending = NULL;
+    flacdec->segment.last_stop += flacdec->pending_samples;
+    flacdec->pending_samples = 0;
   }
 
   ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
@@ -1003,11 +1005,13 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     }
     ret = gst_pad_push (flacdec->srcpad, outbuf);
     GST_DEBUG_OBJECT (flacdec, "returned %s", gst_flow_get_name (ret));
+    flacdec->segment.last_stop += samples;
   } else {
     GST_DEBUG_OBJECT (flacdec,
         "not pushing %d samples at offset %" G_GINT64_FORMAT
         " (in seek)", samples, GST_BUFFER_OFFSET (outbuf));
     gst_buffer_replace (&flacdec->pending, outbuf);
+    flacdec->pending_samples = samples;
     ret = GST_FLOW_OK;
   }
 
@@ -1018,7 +1022,6 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
 done:
 
-  flacdec->segment.last_stop += samples;
 
   /* we act on the flow return value later in the loop function, as we don't
    * want to mess up the internal decoder state by returning ABORT when the
@@ -1760,6 +1763,10 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
       flacdec->segment.last_stop);
 
   flacdec->seeking = FALSE;
+
+  GST_DEBUG_OBJECT (flacdec, "performed seek to sample %" G_GINT64_FORMAT,
+      flacdec->segment.last_stop);
+
 
   if (!seek_ok) {
     GST_WARNING_OBJECT (flacdec, "seek failed");

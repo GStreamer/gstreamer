@@ -69,6 +69,7 @@ struct _GstFlacDec {
   gboolean       running;
   gboolean       discont;
   GstBuffer     *pending;     /* pending buffer, produced in seek */
+  guint          pending_samples;
   GstEvent      *close_segment;
   GstEvent      *start_segment;
   GstTagList    *tags;
