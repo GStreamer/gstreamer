@@ -424,7 +424,7 @@ gst_rtsp_message_parse_data (GstRTSPMessage * msg, guint8 * channel)
  * gst_rtsp_message_unset:
  * @msg: a #GstRTSPMessage
  *
- * Unset the concents of @msg so that it becomes an uninitialized
+ * Unset the contents of @msg so that it becomes an uninitialized
  * #GstRTSPMessage again. This function is mostly used in combination with 
  * gst_rtsp_message_init_request(), gst_rtsp_message_init_response() and
  * gst_rtsp_message_init_data() on stack allocated #GstRTSPMessage structures.
