@@ -148,6 +148,7 @@ enum
 #define DEFAULT_CONNECTION_SPEED 0
 #define DEFAULT_NAT_METHOD       GST_RTSP_NAT_DUMMY
 #define DEFAULT_DO_RTCP          TRUE
+#define DEFAULT_PROXY            NULL
 
 enum
 {
@@ -162,6 +163,7 @@ enum
   PROP_CONNECTION_SPEED,
   PROP_NAT_METHOD,
   PROP_DO_RTCP,
+  PROP_PROXY,
   PROP_LAST
 };
 
@@ -352,6 +354,19 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Send RTCP packets, disable for old incompatible server.",
           DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /**
+   * GstRTSPSrc::proxy
+   *
+   * Set the proxy parameters. This has to be a string of the format
+   * [user:passwd@]host[:port].
+   *
+   * Since: 0.10.15
+   */
+  g_object_class_install_property (gobject_class, PROP_PROXY,
+      g_param_spec_string ("proxy", "Proxy",
+          "Proxy settings for HTTP tunneling. Format: [user:passwd@]host[:port]",
+          DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -423,6 +438,53 @@ gst_rtspsrc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* a proxy string of the format [user:passwd@]host[:port] */
+static gboolean
+gst_rtspsrc_set_proxy (GstRTSPSrc * rtsp, const gchar * proxy)
+{
+  gchar *p, *at, *col;
+
+  g_free (rtsp->proxy_user);
+  rtsp->proxy_user = NULL;
+  g_free (rtsp->proxy_passwd);
+  rtsp->proxy_passwd = NULL;
+  g_free (rtsp->proxy_host);
+  rtsp->proxy_host = NULL;
+  rtsp->proxy_port = 0;
+
+  p = (gchar *) proxy;
+
+  if (p == NULL)
+    return TRUE;
+
+  at = strchr (p, '@');
+  if (at) {
+    /* look for user:passwd */
+    col = strchr (proxy, ':');
+    if (col == NULL || col > at)
+      return FALSE;
+
+    rtsp->proxy_user = g_strndup (p, col - p);
+    col++;
+    rtsp->proxy_passwd = g_strndup (col, at - col);
+
+    /* move to host */
+    p = at + 1;
+  }
+  col = strchr (p, ':');
+
+  if (col) {
+    /* everything before the colon is the hostname */
+    rtsp->proxy_host = g_strndup (p, col - p);
+    p = col + 1;
+    rtsp->proxy_port = strtoul (p, (char **) &p, 10);
+  } else {
+    rtsp->proxy_host = g_strdup (p);
+    rtsp->proxy_port = 8080;
+  }
+  return TRUE;
+}
+
 static void
 gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
@@ -472,6 +534,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_DO_RTCP:
       rtspsrc->do_rtcp = g_value_get_boolean (value);
+      break;
+    case PROP_PROXY:
+      gst_rtspsrc_set_proxy (rtspsrc, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -524,6 +589,19 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DO_RTCP:
       g_value_set_boolean (value, rtspsrc->do_rtcp);
       break;
+    case PROP_PROXY:
+    {
+      gchar *str;
+
+      if (rtspsrc->proxy_host) {
+        str =
+            g_strdup_printf ("%s:%d", rtspsrc->proxy_host, rtspsrc->proxy_port);
+      } else {
+        str = NULL;
+      }
+      g_value_take_string (value, str);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4320,6 +4398,13 @@ restart:
 
   if (url->transports & GST_RTSP_LOWER_TRANS_HTTP)
     gst_rtsp_connection_set_tunneled (src->connection, TRUE);
+
+  if (src->proxy_host) {
+    GST_DEBUG_OBJECT (src, "setting proxy %s:%d", src->proxy_host,
+        src->proxy_port);
+    gst_rtsp_connection_set_proxy (src->connection, src->proxy_host,
+        src->proxy_port);
+  }
 
   /* connect */
   GST_DEBUG_OBJECT (src, "connecting (%s)...", src->req_location);

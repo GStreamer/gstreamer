@@ -188,6 +188,10 @@ struct _GstRTSPSrc {
   guint             connection_speed;
   GstRTSPNatMethod  nat_method;
   gboolean          do_rtcp;
+  gchar            *proxy_host;
+  guint             proxy_port;
+  gchar            *proxy_user;
+  gchar            *proxy_passwd;
 
   /* state */
   GstRTSPState       state;
