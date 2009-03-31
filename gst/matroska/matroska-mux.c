@@ -1846,6 +1846,7 @@ gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
         gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_TAGNAME, tagname_mkv);
         gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TAGSTRING, dest);
         gst_ebml_write_master_finish (ebml, simpletag_master);
+        g_free (dest);
       } else {
         GST_WARNING ("Can't transform tag '%s' to string", tagname_mkv);
       }
