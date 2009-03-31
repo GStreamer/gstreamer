@@ -1322,6 +1322,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 break;
 
               if (datalen != 4) {
+                g_free (data);
                 GST_WARNING_OBJECT (demux,
                     "Invalid TrackVideoColourSpace length %" G_GUINT64_FORMAT,
                     datalen);
@@ -1332,6 +1333,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
               GST_DEBUG_OBJECT (demux,
                   "TrackVideoColourSpace: %" GST_FOURCC_FORMAT,
                   GST_FOURCC_ARGS (videocontext->fourcc));
+              g_free (data);
               break;
             }
 
