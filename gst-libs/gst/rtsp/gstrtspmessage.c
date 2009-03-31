@@ -463,7 +463,7 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
   }
   g_free (msg->body);
 
-  memset (msg, 0, sizeof msg);
+  memset (msg, 0, sizeof *msg);
 
   return GST_RTSP_OK;
 }
