@@ -54,7 +54,6 @@ static void fault_restore (void);
 static void fault_spin (void);
 static void sigint_restore (void);
 static gboolean caught_intr = FALSE;
-static gboolean waiting_eos = FALSE;
 #endif
 
 /* event_loop return codes */
@@ -71,6 +70,7 @@ static gboolean quiet = FALSE;
 static gboolean tags = FALSE;
 static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
+static gboolean waiting_eos = FALSE;
 
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)g_print
@@ -439,6 +439,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         break;
       }
       case GST_MESSAGE_EOS:
+        waiting_eos = FALSE;
         g_print (_
             ("Got EOS from element \"%s\".\n"),
             GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))));
