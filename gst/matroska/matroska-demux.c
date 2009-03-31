@@ -4981,9 +4981,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         return NULL;
       }
       if (size < sizeof (gst_riff_strf_vids)) {
-        vids =
-            (gst_riff_strf_vids *) g_realloc (vids,
-            sizeof (gst_riff_strf_vids));
+        vids = g_new (gst_riff_strf_vids, 1);
+        memcpy (vids, data, size);
       }
 
       /* little-endian -> byte-order */
@@ -5011,6 +5010,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
 
       if (buf)
         gst_buffer_unref (buf);
+
+      if (vids != (gst_riff_strf_vids *) data)
+        g_free (vids);
     }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED)) {
     guint32 fourcc = 0;
