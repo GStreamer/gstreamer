@@ -491,8 +491,8 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
 /**
  * gst_rtsp_session_stream_set_callbacks:
  * @stream: a #GstRTSPSessionStream
- * @send_rtp: a callback called when RTP should be send
- * @send_rtcp: a callback called when RTCP should be send
+ * @send_rtp: a callback called when RTP should be sent
+ * @send_rtcp: a callback called when RTCP should be sent
  * @user_data: user data passed to callbacks
  * @notify: called with the user_data when no longer needed.
  *
