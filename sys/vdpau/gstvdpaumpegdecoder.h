@@ -51,7 +51,6 @@
 
 G_BEGIN_DECLS
 
-/* #defines don't like whitespacey bits */
 #define GST_TYPE_VDPAU_MPEG_DECODER            (gst_vdpau_mpeg_decoder_get_type())
 #define GST_VDPAU_MPEG_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoder))
 #define GST_VDPAU_MPEG_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoderClass))
