@@ -1,6 +1,5 @@
 /*
  * GStreamer
- * Copyright (C) 2006 Stefan Kost <ensonic@users.sf.net>
  * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -27,7 +26,6 @@
 #include <gst/video/video.h>
 
 #include "gstvdpaudecoder.h"
-#include <vdpau/vdpau_x11.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdpaudecoder_debug);
 #define GST_CAT_DEFAULT gst_vdpaudecoder_debug
@@ -68,10 +66,10 @@ GstFlowReturn
 gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
     VdpVideoSurface surface)
 {
-  VdpauFunctions *f;
+  GstVdpauDevice *device;
   GstBuffer *buffer;
 
-  f = dec->functions;
+  device = dec->device;
 
   switch (dec->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
@@ -110,13 +108,13 @@ gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
           1, dec->width);
 
       status =
-          f->vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_YV12,
-          (void *) data, stride);
+          device->vdp_video_surface_get_bits_ycbcr (surface,
+          VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
       if (G_UNLIKELY (status != VDP_STATUS_OK)) {
         GST_ELEMENT_ERROR (dec, RESOURCE, READ,
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
-                f->vdp_get_error_string (status)));
+                device->vdp_get_error_string (status)));
         return GST_FLOW_ERROR;
       }
       break;
@@ -144,13 +142,13 @@ gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
       stride[1] = dec->width;
 
       status =
-          f->vdp_video_surface_get_bits_ycbcr (surface, VDP_YCBCR_FORMAT_NV12,
-          (void *) data, stride);
+          device->vdp_video_surface_get_bits_ycbcr (surface,
+          VDP_YCBCR_FORMAT_NV12, (void *) data, stride);
       if (G_UNLIKELY (status != VDP_STATUS_OK)) {
         GST_ELEMENT_ERROR (dec, RESOURCE, READ,
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
-                f->vdp_get_error_string (status)));
+                device->vdp_get_error_string (status)));
         return GST_FLOW_ERROR;
       }
       break;
@@ -217,13 +215,13 @@ static VdpauFormats formats[6] = {
 VdpVideoSurface
 gst_vdpau_decoder_create_video_surface (GstVdpauDecoder * dec)
 {
-  VdpauFunctions *f;
+  GstVdpauDevice *device;
   VdpChromaType chroma_type;
   gint i;
   VdpStatus status;
   VdpVideoSurface surface;
 
-  f = dec->functions;
+  device = dec->device;
 
   chroma_type = VDP_CHROMA_TYPE_422;
   for (i = 0; i < 6; i++) {
@@ -233,13 +231,14 @@ gst_vdpau_decoder_create_video_surface (GstVdpauDecoder * dec)
     }
   }
 
-  status = f->vdp_video_surface_create (dec->device, chroma_type, dec->width,
+  status =
+      device->vdp_video_surface_create (device->device, chroma_type, dec->width,
       dec->height, &surface);
   if (status != VDP_STATUS_OK) {
     GST_ELEMENT_ERROR (dec, RESOURCE, READ,
         ("Couldn't create a VdpVideoSurface"),
         ("Error returned from vdpau was: %s",
-            f->vdp_get_error_string (status)));
+            device->vdp_get_error_string (status)));
     return VDP_INVALID_HANDLE;
   }
 
@@ -249,11 +248,11 @@ gst_vdpau_decoder_create_video_surface (GstVdpauDecoder * dec)
 static GstCaps *
 gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
 {
-  VdpauFunctions *f;
+  GstVdpauDevice *device;
   GstCaps *caps;
   gint i;
 
-  f = dec->functions;
+  device = dec->device;
 
   caps = gst_caps_new_empty ();
 
@@ -263,14 +262,14 @@ gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
     guint32 max_w, max_h;
 
     status =
-        f->vdp_video_surface_query_capabilities (dec->device, chroma_types[i],
-        &is_supported, &max_w, &max_h);
+        device->vdp_video_surface_query_capabilities (device->device,
+        chroma_types[i], &is_supported, &max_w, &max_h);
 
     if (status != VDP_STATUS_OK && status != VDP_STATUS_INVALID_CHROMA_TYPE) {
       GST_ELEMENT_ERROR (dec, RESOURCE, READ,
           ("Could not get query VDPAU video surface capabilites"),
           ("Error returned from vdpau was: %s",
-              f->vdp_get_error_string (status)));
+              device->vdp_get_error_string (status)));
 
       return NULL;
     }
@@ -282,14 +281,14 @@ gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
           continue;
 
         status =
-            f->vdp_video_surface_query_ycbcr_capabilities (dec->device,
+            device->vdp_video_surface_query_ycbcr_capabilities (device->device,
             formats[j].chroma_type, formats[j].format, &is_supported);
         if (status != VDP_STATUS_OK
             && status != VDP_STATUS_INVALID_Y_CB_CR_FORMAT) {
           GST_ELEMENT_ERROR (dec, RESOURCE, READ,
               ("Could not query VDPAU YCbCr capabilites"),
               ("Error returned from vdpau was: %s",
-                  f->vdp_get_error_string (status)));
+                  device->vdp_get_error_string (status)));
 
           return NULL;
         }
@@ -317,111 +316,25 @@ gst_vdpaudecoder_get_vdpau_support (GstVdpauDecoder * dec)
 static gboolean
 gst_vdpaudecoder_init_vdpau (GstVdpauDecoder * dec)
 {
-  gint screen;
-  VdpStatus status;
-  gint i;
-  VdpauFunctions *f;
   GstCaps *caps;
 
-  typedef struct
-  {
-    int id;
-    void *func;
-  } VdpFunction;
-
-  VdpFunction vdp_function[] = {
-    {VDP_FUNC_ID_DEVICE_DESTROY, &dec->functions->vdp_device_destroy},
-    {VDP_FUNC_ID_VIDEO_SURFACE_CREATE,
-        &dec->functions->vdp_video_surface_create},
-    {VDP_FUNC_ID_VIDEO_SURFACE_DESTROY,
-        &dec->functions->vdp_video_surface_destroy},
-    {VDP_FUNC_ID_VIDEO_SURFACE_QUERY_CAPABILITIES,
-        &dec->functions->vdp_video_surface_query_capabilities},
-    {VDP_FUNC_ID_VIDEO_SURFACE_QUERY_GET_PUT_BITS_Y_CB_CR_CAPABILITIES,
-        &dec->functions->vdp_video_surface_query_ycbcr_capabilities},
-    {VDP_FUNC_ID_VIDEO_SURFACE_GET_BITS_Y_CB_CR,
-        &dec->functions->vdp_video_surface_get_bits_ycbcr},
-    {VDP_FUNC_ID_VIDEO_SURFACE_GET_PARAMETERS,
-        &dec->functions->vdp_video_surface_get_parameters},
-    {VDP_FUNC_ID_DECODER_CREATE, &dec->functions->vdp_decoder_create},
-    {VDP_FUNC_ID_DECODER_RENDER, &dec->functions->vdp_decoder_render},
-    {VDP_FUNC_ID_DECODER_DESTROY, &dec->functions->vdp_decoder_destroy},
-    {VDP_FUNC_ID_DECODER_QUERY_CAPABILITIES,
-        &dec->functions->vdp_decoder_query_capabilities},
-    {VDP_FUNC_ID_DECODER_GET_PARAMETERS,
-        &dec->functions->vdp_decoder_get_parameters},
-    {0, NULL}
-  };
-
-  /* FIXME: We probably want to use the same VdpDevice for every VDPAU element */
-  dec->display = XOpenDisplay (dec->display_name);
-  if (!dec->display) {
-    GST_ELEMENT_ERROR (dec, RESOURCE, READ, ("Could not initialise VDPAU"),
-        ("Could not open display"));
-    return FALSE;
-  }
-
-  f = dec->functions;
-
-  screen = DefaultScreen (dec->display);
-  status =
-      vdp_device_create_x11 (dec->display, screen, &dec->device,
-      &f->vdp_get_proc_address);
-  if (status != VDP_STATUS_OK) {
-    GST_ELEMENT_ERROR (dec, RESOURCE, READ, ("Could not initialise VDPAU"),
-        ("Could not create VDPAU device"));
-    XCloseDisplay (dec->display);
-    dec->display = NULL;
-
-    return FALSE;
-  }
-
-  status = f->vdp_get_proc_address (dec->device,
-      VDP_FUNC_ID_GET_ERROR_STRING, (void **) &f->vdp_get_error_string);
-  if (status != VDP_STATUS_OK) {
-    GST_ELEMENT_ERROR (dec, RESOURCE, READ,
-        ("Could'nt get function pointer from vdpau"),
-        ("Couldn't get vdp_get_error_string function pointer"));
-    goto error;
-  }
-
-  for (i = 0; vdp_function[i].func != NULL; i++) {
-    status = f->vdp_get_proc_address (dec->device,
-        vdp_function[i].id, vdp_function[i].func);
-
-    if (status != VDP_STATUS_OK) {
-      GST_ELEMENT_ERROR (dec, RESOURCE, READ,
-          ("Could not get function pointer from vdpau"),
-          ("Error returned from vdpau was: %s",
-              f->vdp_get_error_string (status)));
-      goto error;
-    }
-  }
+  dec->device = gst_vdpau_get_device (dec->display_name);
 
   caps = gst_vdpaudecoder_get_vdpau_support (dec);
   if (!caps)
-    goto error;
+    return FALSE;
 
   dec->src_caps = caps;
 
   return TRUE;
-
-error:
-  f->vdp_device_destroy (dec->device);
-  dec->device = VDP_INVALID_HANDLE;
-
-  return FALSE;
-
 }
 
 static GstStateChangeReturn
 gst_vdpaudecoder_change_state (GstElement * element, GstStateChange transition)
 {
   GstVdpauDecoder *dec;
-  VdpauFunctions *f;
 
   dec = GST_VDPAU_DECODER (element);
-  f = dec->functions;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -429,11 +342,8 @@ gst_vdpaudecoder_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      f->vdp_device_destroy (dec->device);
-      XCloseDisplay (dec->display);
-
-      dec->device = VDP_INVALID_HANDLE;
-      dec->display = NULL;
+      g_object_unref (dec->device);
+      dec->device = NULL;
       break;
     default:
       break;
@@ -561,8 +471,7 @@ static void
 gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
 {
   dec->display_name = NULL;
-  dec->display = NULL;
-  dec->device = VDP_INVALID_HANDLE;
+  dec->device = NULL;
   dec->silent = FALSE;
   dec->src_caps = NULL;
 
@@ -573,8 +482,6 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
   dec->format = 0;
 
   dec->frame_nr = 0;
-
-  dec->functions = g_slice_new0 (VdpauFunctions);
 
   dec->src = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_getcaps_function (dec->src, gst_vdpaudecoder_src_getcaps);

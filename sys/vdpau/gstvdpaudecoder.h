@@ -1,6 +1,5 @@
 /* 
  * GStreamer
- * Copyright (C) 2006 Stefan Kost <ensonic@users.sf.net>
  * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -23,10 +22,8 @@
 #define __GST_VDPAU_DECODER_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 
-#include <X11/Xlib.h>
-#include <vdpau/vdpau.h>
+#include "gst-vdpau-device.h"
 
 G_BEGIN_DECLS
 
@@ -45,10 +42,7 @@ struct _GstVdpauDecoder {
   GstElement element;
 
   gchar *display_name;
-  Display *display;
-  VdpDevice device;
-
-  VdpauFunctions *functions;
+  GstVdpauDevice *device;
 
   GstPad *src;
   GstPad *sink;
@@ -65,28 +59,9 @@ struct _GstVdpauDecoder {
 };
 
 struct _GstVdpauDecoderClass {
-  GstBaseTransformClass parent_class;
+  GstElementClass parent_class;
 
   gboolean (*set_caps) (GstVdpauDecoder *dec, GstCaps *caps);
-};
-
-struct _VdpauFunctions {
-  VdpDeviceDestroy                                *vdp_device_destroy;
-  VdpGetProcAddress                               *vdp_get_proc_address;
-  VdpGetErrorString                               *vdp_get_error_string;
-
-  VdpVideoSurfaceCreate                           *vdp_video_surface_create;
-  VdpVideoSurfaceDestroy                          *vdp_video_surface_destroy;
-  VdpVideoSurfaceQueryCapabilities                *vdp_video_surface_query_capabilities;
-  VdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities *vdp_video_surface_query_ycbcr_capabilities;
-  VdpVideoSurfaceGetParameters                    *vdp_video_surface_get_parameters;
-  VdpVideoSurfaceGetBitsYCbCr                     *vdp_video_surface_get_bits_ycbcr;
-
-  VdpDecoderCreate                                *vdp_decoder_create;
-  VdpDecoderDestroy                               *vdp_decoder_destroy;
-  VdpDecoderRender                                *vdp_decoder_render;
-  VdpDecoderQueryCapabilities                     *vdp_decoder_query_capabilities;
-  VdpDecoderGetParameters                         *vdp_decoder_get_parameters;
 };
 
 GType gst_vdpaudecoder_get_type (void);

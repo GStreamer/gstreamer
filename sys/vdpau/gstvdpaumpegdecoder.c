@@ -1,29 +1,6 @@
 /*
  * GStreamer
  * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- *
- * Alternatively, the contents of this file may be used under the
- * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
- * which case the following provisions apply instead of the ones
- * mentioned above:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -108,7 +85,7 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
   GstBuffer *codec_data;
   MPEGSeqHdr hdr = { 0, };
   VdpDecoderProfile profile;
-  VdpauFunctions *f;
+  GstVdpauDevice *device;
   VdpStatus status;
 
   mpeg_dec = GST_VDPAU_MPEG_DECODER (dec);
@@ -137,14 +114,14 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
       &hdr.non_intra_quantizer_matrix, 64);
 
-  f = dec->functions;
-  status = f->vdp_decoder_create (dec->device, profile, dec->width,
+  device = dec->device;
+  status = device->vdp_decoder_create (device->device, profile, dec->width,
       dec->height, 2, &mpeg_dec->decoder);
   if (status != VDP_STATUS_OK) {
     GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
         ("Could not create vdpau decoder"),
         ("Error returned from vdpau was: %s",
-            f->vdp_get_error_string (status)));
+            device->vdp_get_error_string (status)));
     return FALSE;
   }
   return TRUE;
@@ -156,7 +133,7 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
   GstVdpauDecoder *dec;
   GstBuffer *buffer;
   VdpVideoSurface surface;
-  VdpauFunctions *f;
+  GstVdpauDevice *device;
   VdpBitstreamBuffer vbit[1];
   VdpStatus status;
   GstFlowReturn ret;
@@ -166,20 +143,16 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
   buffer = gst_adapter_take_buffer (mpeg_dec->adapter,
       gst_adapter_available (mpeg_dec->adapter));
 
-  if (mpeg_dec->vdp_info.picture_coding_type == P_FRAME) {
-    mpeg_dec->p_buffer = buffer;
-  }
-
   surface =
       gst_vdpau_decoder_create_video_surface (GST_VDPAU_DECODER (mpeg_dec));
 
-  f = dec->functions;
+  device = dec->device;
 
   vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
   vbit[0].bitstream = GST_BUFFER_DATA (buffer);
   vbit[0].bitstream_bytes = GST_BUFFER_SIZE (buffer);
 
-  status = f->vdp_decoder_render (mpeg_dec->decoder, surface,
+  status = device->vdp_decoder_render (mpeg_dec->decoder, surface,
       (VdpPictureInfo *) & mpeg_dec->vdp_info, 1, vbit);
   gst_buffer_unref (buffer);
   mpeg_dec->vdp_info.slice_count = 0;
@@ -188,12 +161,12 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
     GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
         ("Could not decode"),
         ("Error returned from vdpau was: %s",
-            f->vdp_get_error_string (status)));
+            device->vdp_get_error_string (status)));
 
     if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-      f->vdp_video_surface_destroy (mpeg_dec->vdp_info.forward_reference);
+      device->vdp_video_surface_destroy (mpeg_dec->vdp_info.forward_reference);
 
-    f->vdp_video_surface_destroy (surface);
+    device->vdp_video_surface_destroy (surface);
 
     return GST_FLOW_ERROR;
   }
@@ -203,7 +176,7 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
       surface);
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-    f->vdp_video_surface_destroy (mpeg_dec->vdp_info.forward_reference);
+    device->vdp_video_surface_destroy (mpeg_dec->vdp_info.forward_reference);
 
   mpeg_dec->vdp_info.forward_reference = surface;
 
@@ -254,8 +227,8 @@ gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
 
   if (pic_hdr.pic_type == I_FRAME &&
       mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
-    dec->functions->vdp_video_surface_destroy (mpeg_dec->vdp_info.
-        forward_reference);
+    dec->device->vdp_video_surface_destroy (mpeg_dec->
+        vdp_info.forward_reference);
     mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
   }
 
