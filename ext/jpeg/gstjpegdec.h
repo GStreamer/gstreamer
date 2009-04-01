@@ -77,6 +77,13 @@ struct _GstJpegDec {
 
   GstSegment segment;
 
+  /* TRUE if the next output buffer should have the DISCONT flag set */
+  gboolean discont;
+
+  /* QoS stuff *//* with LOCK */
+  gdouble proportion;
+  GstClockTime earliest_time;
+
   /* video state */
   gint framerate_numerator;
   gint framerate_denominator;

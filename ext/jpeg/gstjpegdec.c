@@ -124,8 +124,14 @@ static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_jpeg_dec_update_qos (GstJpegDec * dec, gdouble proportion,
+    GstClockTime time);
+static void gst_jpeg_dec_reset_qos (GstJpegDec * dec);
+static void gst_jpeg_dec_read_qos (GstJpegDec * dec, gdouble * proportion,
+    GstClockTime * time);
 
 GType
 gst_jpeg_dec_get_type (void)
@@ -295,6 +301,8 @@ gst_jpeg_dec_init (GstJpegDec * dec)
 
   dec->srcpad =
       gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
+  gst_pad_set_event_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (gst_jpeg_dec_src_event));
   gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
@@ -775,10 +783,76 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
   }
 }
 
+static void
+gst_jpeg_dec_update_qos (GstJpegDec * dec, gdouble proportion,
+    GstClockTime time)
+{
+  GST_OBJECT_LOCK (dec);
+  dec->proportion = proportion;
+  dec->earliest_time = time;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+static void
+gst_jpeg_dec_reset_qos (GstJpegDec * dec)
+{
+  gst_jpeg_dec_update_qos (dec, 0.5, GST_CLOCK_TIME_NONE);
+}
+
+static void
+gst_jpeg_dec_read_qos (GstJpegDec * dec, gdouble * proportion,
+    GstClockTime * time)
+{
+  GST_OBJECT_LOCK (dec);
+  *proportion = dec->proportion;
+  *time = dec->earliest_time;
+  GST_OBJECT_UNLOCK (dec);
+}
+
+/* Perform qos calculations before decoding the next frame. Returns TRUE if the
+ * frame should be decoded, FALSE if the frame can be dropped entirely */
+static gboolean
+gst_jpeg_dec_do_qos (GstJpegDec * dec, GstClockTime timestamp)
+{
+  GstClockTime qostime, earliest_time;
+  gdouble proportion;
+
+  /* no timestamp, can't do QoS => decode frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (timestamp))) {
+    GST_LOG_OBJECT (dec, "invalid timestamp, can't do QoS, decode frame");
+    return TRUE;
+  }
+
+  /* get latest QoS observation values */
+  gst_jpeg_dec_read_qos (dec, &proportion, &earliest_time);
+
+  /* skip qos if we have no observation (yet) => decode frame */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (earliest_time))) {
+    GST_LOG_OBJECT (dec, "no observation yet, decode frame");
+    return TRUE;
+  }
+
+  /* qos is done on running time */
+  qostime = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
+      timestamp);
+
+  /* see how our next timestamp relates to the latest qos timestamp */
+  GST_LOG_OBJECT (dec, "qostime %" GST_TIME_FORMAT ", earliest %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+
+  if (qostime != GST_CLOCK_TIME_NONE && qostime <= earliest_time) {
+    GST_DEBUG_OBJECT (dec, "we are late, drop frame");
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (dec, "decode frame");
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstJpegDec *dec;
   GstBuffer *outbuf;
   gulong size;
@@ -791,13 +865,22 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   guint code;
   GstClockTime timestamp, duration;
 
-  dec = GST_JPEG_DEC (gst_pad_get_parent (pad));
+  dec = GST_JPEG_DEC (GST_PAD_PARENT (pad));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   duration = GST_BUFFER_DURATION (buf);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     dec->next_ts = timestamp;
+
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_DEBUG_OBJECT (dec, "buffer has DISCONT flag set");
+    dec->discont = TRUE;
+    if (!dec->packetized) {
+      GST_WARNING_OBJECT (dec, "DISCONT buffer in non-packetized mode, bad");
+      gst_buffer_replace (&dec->tempbuf, NULL);
+    }
+  }
 
   if (dec->tempbuf) {
     dec->tempbuf = gst_buffer_join (dec->tempbuf, buf);
@@ -823,6 +906,10 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     if (img_len == 0)
       goto need_more_data;
   }
+
+  /* QoS: if we're too late anyway, skip decoding */
+  if (dec->packetized && !gst_jpeg_dec_do_qos (dec, timestamp))
+    goto skip_decoding;
 
   data = (guchar *) GST_BUFFER_DATA (dec->tempbuf);
   size = img_len;
@@ -1005,6 +1092,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
   ret = gst_pad_push (dec->srcpad, outbuf);
 
+skip_decoding:
 done:
   if (GST_BUFFER_SIZE (dec->tempbuf) == img_len) {
     gst_buffer_unref (dec->tempbuf);
@@ -1018,7 +1106,6 @@ done:
   }
 
 exit:
-  gst_object_unref (dec);
 
   return ret;
 
@@ -1072,6 +1159,35 @@ drop_buffer:
 }
 
 static gboolean
+gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
+{
+  GstJpegDec *dec;
+  gboolean res;
+
+  dec = GST_JPEG_DEC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:{
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+      gdouble proportion;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      gst_jpeg_dec_update_qos (dec, proportion, timestamp + diff);
+      break;
+    }
+    default:
+      break;
+  }
+
+  res = gst_pad_push_event (dec->sinkpad, event);
+
+  gst_object_unref (dec);
+  return res;
+}
+
+static gboolean
 gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret = TRUE;
@@ -1083,6 +1199,7 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (dec, "Aborting decompress");
       jpeg_abort_decompress (&dec->cinfo);
+      gst_jpeg_dec_reset_qos (dec);
       break;
     case GST_EVENT_NEWSEGMENT:{
       gboolean update;
@@ -1167,7 +1284,9 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->caps_height = -1;
       dec->packetized = FALSE;
       dec->next_ts = 0;
+      dec->discont = TRUE;
       gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+      gst_jpeg_dec_reset_qos (dec);
     default:
       break;
   }
