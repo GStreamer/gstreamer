@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/interfaces/navigation.h>
 
 #include "resindvdsrc.h"
 
@@ -48,17 +49,9 @@ typedef enum
 {
   RSN_NAV_RESULT_NONE,
   RSN_NAV_RESULT_HIGHLIGHT,
-  RSN_NAV_RESULT_BRANCH
+  RSN_NAV_RESULT_BRANCH,
+  RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT
 } RsnNavResult;
-
-typedef enum
-{
-  RSN_NAV_ACTION_ACTIVATE,
-  RSN_NAV_ACTION_LEFT,
-  RSN_NAV_ACTION_RIGHT,
-  RSN_NAV_ACTION_DOWN,
-  RSN_NAV_ACTION_UP
-} RsnNavAction;
 
 enum
 {
@@ -473,6 +466,7 @@ rsn_dvdsrc_stop (RsnBaseSrc * bsrc)
 {
   resinDvdSrc *src = RESINDVDSRC (bsrc);
   gboolean ret = TRUE;
+  GstMessage *mouse_over_msg = NULL;
 
   g_mutex_lock (src->dvd_lock);
 
@@ -483,6 +477,12 @@ rsn_dvdsrc_stop (RsnBaseSrc * bsrc)
   }
   rsn_dvdsrc_clear_nav_blocks (src);
   src->have_pci = FALSE;
+
+  if (src->was_mouse_over) {
+    mouse_over_msg =
+        gst_navigation_message_new_mouse_over ((GstObject *) src, FALSE);
+    src->was_mouse_over = FALSE;
+  }
 
   /* Clear any allocated output buffer */
   gst_buffer_replace (&src->alloc_buf, NULL);
@@ -534,6 +534,8 @@ rsn_dvdsrc_stop (RsnBaseSrc * bsrc)
 
   g_mutex_unlock (src->dvd_lock);
 
+  if (mouse_over_msg)
+    gst_element_post_message (GST_ELEMENT_CAST (src), mouse_over_msg);
   return ret;
 }
 
@@ -1082,7 +1084,8 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
 }
 
 static RsnNavResult
-rsn_dvdsrc_perform_button_action (resinDvdSrc * src, RsnNavAction action)
+rsn_dvdsrc_perform_button_action (resinDvdSrc * src,
+    GstNavigationCommand action)
 {
   pci_t *pci;
   RsnNavResult result = RSN_NAV_RESULT_NONE;
@@ -1104,49 +1107,120 @@ rsn_dvdsrc_perform_button_action (resinDvdSrc * src, RsnNavAction action)
   btn_info = pci->hli.btnit + button - 1;
 
   switch (action) {
-    case RSN_NAV_ACTION_ACTIVATE:
+    case GST_NAVIGATION_COMMAND_ACTIVATE:
       if (dvdnav_button_activate (src->dvdnav, pci) == DVDNAV_STATUS_OK)
-        result = RSN_NAV_RESULT_BRANCH;
+        result = RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT;
       break;
-    case RSN_NAV_ACTION_LEFT:
+    case GST_NAVIGATION_COMMAND_LEFT:
       if (dvdnav_left_button_select (src->dvdnav, pci) == DVDNAV_STATUS_OK) {
         if (btn_info->left &&
             pci->hli.btnit[btn_info->left - 1].auto_action_mode)
-          result = RSN_NAV_RESULT_BRANCH;
+          result = RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT;
         else
           result = RSN_NAV_RESULT_HIGHLIGHT;
       }
       break;
-    case RSN_NAV_ACTION_RIGHT:
+    case GST_NAVIGATION_COMMAND_RIGHT:
       if (dvdnav_right_button_select (src->dvdnav, pci) == DVDNAV_STATUS_OK) {
         if (btn_info->right &&
             pci->hli.btnit[btn_info->right - 1].auto_action_mode)
-          result = RSN_NAV_RESULT_BRANCH;
+          result = RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT;
         else
           result = RSN_NAV_RESULT_HIGHLIGHT;
       }
       break;
-    case RSN_NAV_ACTION_DOWN:
+    case GST_NAVIGATION_COMMAND_DOWN:
       if (dvdnav_lower_button_select (src->dvdnav, pci) == DVDNAV_STATUS_OK) {
         if (btn_info->down &&
             pci->hli.btnit[btn_info->down - 1].auto_action_mode)
-          result = RSN_NAV_RESULT_BRANCH;
+          result = RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT;
         else
           result = RSN_NAV_RESULT_HIGHLIGHT;
       }
       break;
-    case RSN_NAV_ACTION_UP:
+    case GST_NAVIGATION_COMMAND_UP:
       if (dvdnav_upper_button_select (src->dvdnav, pci) == DVDNAV_STATUS_OK) {
         if (btn_info->up && pci->hli.btnit[btn_info->up - 1].auto_action_mode)
-          result = RSN_NAV_RESULT_BRANCH;
+          result = RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT;
         else
           result = RSN_NAV_RESULT_HIGHLIGHT;
       }
+      break;
+    default:
       break;
   }
 
-  if (result == RSN_NAV_RESULT_HIGHLIGHT)
+  if (result == RSN_NAV_RESULT_HIGHLIGHT) {
+    /* If we're *only* changing the highlight, wake up the still condition.
+     * If we're branching, that will happen anyway */
     g_cond_broadcast (src->still_cond);
+  }
+
+  return result;
+}
+
+static RsnNavResult
+rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
+{
+  RsnNavResult result = RSN_NAV_RESULT_NONE;
+
+  switch (command) {
+    case GST_NAVIGATION_COMMAND_DVD_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Escape) == DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_DVD_TITLE_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Title) == DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_DVD_ROOT_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Root) == DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_DVD_SUBPICTURE_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Subpicture) ==
+          DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_DVD_AUDIO_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Audio) == DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_DVD_ANGLE_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Angle) == DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_DVD_CHAPTER_MENU:
+      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Part) == DVDNAV_STATUS_OK)
+        result = RSN_NAV_RESULT_BRANCH;
+      break;
+    case GST_NAVIGATION_COMMAND_LEFT:
+    case GST_NAVIGATION_COMMAND_RIGHT:
+    case GST_NAVIGATION_COMMAND_UP:
+    case GST_NAVIGATION_COMMAND_DOWN:
+    case GST_NAVIGATION_COMMAND_ACTIVATE:
+      return rsn_dvdsrc_perform_button_action (src, command);
+
+    case GST_NAVIGATION_COMMAND_PREV_ANGLE:{
+      gint32 cur, agls;
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
+          && cur > 0
+          && dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK)
+        g_print ("Switched to angle %d\n", cur - 1);
+      /* Angle switches are seamless and involve no branching */
+      break;
+    }
+    case GST_NAVIGATION_COMMAND_NEXT_ANGLE:{
+      gint32 cur, agls;
+      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
+          && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK)
+        g_print ("Switched to angle %d\n", cur + 1);
+      /* Angle switches are seamless and involve no branching */
+      break;
+    }
+    default:
+      break;
+  }
 
   return result;
 }
@@ -1154,121 +1228,149 @@ rsn_dvdsrc_perform_button_action (resinDvdSrc * src, RsnNavAction action)
 static gboolean
 rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
 {
-  const GstStructure *s = gst_event_get_structure (event);
-  const gchar *event_type;
-  gboolean channel_hop = FALSE;
   gboolean have_lock = FALSE;
   GstEvent *hl_event = NULL;
   RsnNavResult nav_res = RSN_NAV_RESULT_NONE;
+  GstNavigationEventType etype = gst_navigation_event_get_type (event);
+  GstMessage *mouse_over_msg = NULL;
 
-  if (s == NULL)
-    return FALSE;
-  event_type = gst_structure_get_string (s, "event");
-  if (event_type == NULL)
-    return FALSE;
+  switch (etype) {
+    case GST_NAVIGATION_EVENT_KEY_PRESS:{
+      const gchar *key;
+      if (!gst_navigation_event_parse_key_event (event, &key))
+        return FALSE;
 
-  if (strcmp (event_type, "key-press") == 0) {
-    const gchar *key = gst_structure_get_string (s, "key");
+      GST_DEBUG ("dvdnavsrc got a keypress: %s", key);
 
-    if (key == NULL)
-      return FALSE;
+      g_mutex_lock (src->dvd_lock);
+      have_lock = TRUE;
+      if (!src->running)
+        goto not_running;
 
-    GST_DEBUG ("dvdnavsrc got a keypress: %s", key);
+      if (g_str_equal (key, "Return")) {
+        nav_res = rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_ACTIVATE);
+      } else if (g_str_equal (key, "Left")) {
+        nav_res = rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_LEFT);
+      } else if (g_str_equal (key, "Right")) {
+        nav_res = rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_RIGHT);
+      } else if (g_str_equal (key, "Up")) {
+        nav_res = rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_UP);
+      } else if (g_str_equal (key, "Down")) {
+        nav_res = rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_DOWN);
+      } else if (g_str_equal (key, "m")) {
+        nav_res = rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_DVD_MENU);
+      } else if (g_str_equal (key, "t")) {
+        nav_res =
+            rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_DVD_TITLE_MENU);
+      } else if (g_str_equal (key, "r")) {
+        nav_res =
+            rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_DVD_ROOT_MENU);
+      } else if (g_str_equal (key, "comma")) {
+        gint title = 0;
+        gint part = 0;
 
-    g_mutex_lock (src->dvd_lock);
-    have_lock = TRUE;
-    if (!src->running)
-      goto not_running;
-
-    if (g_str_equal (key, "Return")) {
-      nav_res = rsn_dvdsrc_perform_button_action (src, RSN_NAV_ACTION_ACTIVATE);
-    } else if (g_str_equal (key, "Left")) {
-      nav_res = rsn_dvdsrc_perform_button_action (src, RSN_NAV_ACTION_LEFT);
-    } else if (g_str_equal (key, "Right")) {
-      nav_res = rsn_dvdsrc_perform_button_action (src, RSN_NAV_ACTION_RIGHT);
-    } else if (g_str_equal (key, "Up")) {
-      nav_res = rsn_dvdsrc_perform_button_action (src, RSN_NAV_ACTION_UP);
-    } else if (g_str_equal (key, "Down")) {
-      nav_res = rsn_dvdsrc_perform_button_action (src, RSN_NAV_ACTION_DOWN);
-    } else if (g_str_equal (key, "m")) {
-      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Escape) == DVDNAV_STATUS_OK)
-        channel_hop = TRUE;
-    } else if (g_str_equal (key, "t")) {
-      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Title) == DVDNAV_STATUS_OK)
-        channel_hop = TRUE;
-    } else if (g_str_equal (key, "r")) {
-      if (dvdnav_menu_call (src->dvdnav, DVD_MENU_Root) == DVDNAV_STATUS_OK)
-        channel_hop = TRUE;
-    } else if (g_str_equal (key, "comma")) {
-      gint title = 0;
-      gint part = 0;
-
-      if (dvdnav_current_title_info (src->dvdnav, &title, &part) && title > 0
-          && part > 1) {
-        if (dvdnav_part_play (src->dvdnav, title, part - 1) ==
-            DVDNAV_STATUS_ERR)
+        if (dvdnav_current_title_info (src->dvdnav, &title, &part) && title > 0
+            && part > 1) {
+          if (dvdnav_part_play (src->dvdnav, title, part - 1) ==
+              DVDNAV_STATUS_ERR)
+            dvdnav_prev_pg_search (src->dvdnav);
+          nav_res = RSN_NAV_RESULT_BRANCH;
+        } else {
           dvdnav_prev_pg_search (src->dvdnav);
-        channel_hop = TRUE;
+          nav_res = RSN_NAV_RESULT_BRANCH;
+        }
+      } else if (g_str_equal (key, "period")) {
+        dvdnav_next_pg_search (src->dvdnav);
+        nav_res = RSN_NAV_RESULT_BRANCH;
+      } else if (g_str_equal (key, "bracketleft")) {
+        nav_res =
+            rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_PREV_ANGLE);
+      } else if (g_str_equal (key, "bracketright")) {
+        nav_res =
+            rsn_dvdsrc_do_command (src, GST_NAVIGATION_COMMAND_NEXT_ANGLE);
       }
-    } else if (g_str_equal (key, "period")) {
-      dvdnav_next_pg_search (src->dvdnav);
-      channel_hop = TRUE;
-    } else if (g_str_equal (key, "bracketleft")) {
-      gint32 cur, agls;
-      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
-          && cur > 0
-          && dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK)
-        g_print ("Switched to angle %d\n", cur - 1);
-    } else if (g_str_equal (key, "bracketright")) {
-      gint32 cur, agls;
-      if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
-          && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK)
-        g_print ("Switched to angle %d\n", cur + 1);
-    } else {
-      g_print ("Unknown keypress: %s\n", key);
+      break;
     }
+    case GST_NAVIGATION_EVENT_MOUSE_MOVE:{
+      gdouble x, y;
 
-  } else if (strcmp (event_type, "mouse-move") == 0) {
-    gdouble x, y;
+      if (!gst_navigation_event_parse_mouse_move_event (event, &x, &y))
+        return FALSE;
 
-    if (!gst_structure_get_double (s, "pointer_x", &x) ||
-        !gst_structure_get_double (s, "pointer_y", &y))
-      return FALSE;
+      g_mutex_lock (src->dvd_lock);
+      have_lock = TRUE;
+      if (!src->running)
+        goto not_running;
 
-    g_mutex_lock (src->dvd_lock);
-    have_lock = TRUE;
-    if (!src->running)
-      goto not_running;
-
-    if (src->have_pci &&
-        dvdnav_mouse_select (src->dvdnav, &src->cur_pci, (int) x, (int) y) ==
-        DVDNAV_STATUS_OK) {
-      nav_res = RSN_NAV_RESULT_HIGHLIGHT;
+      if (src->have_pci &&
+          dvdnav_mouse_select (src->dvdnav, &src->cur_pci, (int) x, (int) y) ==
+          DVDNAV_STATUS_OK) {
+        nav_res = RSN_NAV_RESULT_HIGHLIGHT;
+        if (!src->was_mouse_over) {
+          GST_DEBUG_OBJECT (src, "Mouse moved onto a button");
+          mouse_over_msg =
+              gst_navigation_message_new_mouse_over ((GstObject *) src, TRUE);
+          src->was_mouse_over = TRUE;
+        }
+      } else if (src->was_mouse_over) {
+        GST_DEBUG_OBJECT (src, "Mouse moved out of a button");
+        mouse_over_msg =
+            gst_navigation_message_new_mouse_over ((GstObject *) src, FALSE);
+        src->was_mouse_over = FALSE;
+      }
+      break;
     }
-  } else if (strcmp (event_type, "mouse-button-release") == 0) {
-    gdouble x, y;
+    case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:{
+      gdouble x, y;
+      gint button;
 
-    if (!gst_structure_get_double (s, "pointer_x", &x) ||
-        !gst_structure_get_double (s, "pointer_y", &y))
-      return FALSE;
+      if (!gst_navigation_event_parse_mouse_button_event (event, &button, &x,
+              &y))
+        return FALSE;
+      if (button != 1)
+        return FALSE;
 
-    GST_DEBUG_OBJECT (src, "Got click at %g, %g", x, y);
+      GST_DEBUG_OBJECT (src, "Got click at %g, %g", x, y);
 
-    g_mutex_lock (src->dvd_lock);
-    have_lock = TRUE;
-    if (!src->running)
-      goto not_running;
+      g_mutex_lock (src->dvd_lock);
+      have_lock = TRUE;
+      if (!src->running)
+        goto not_running;
 
-    if (src->have_pci &&
-        dvdnav_mouse_activate (src->dvdnav, &src->cur_pci, (int) x, (int) y) ==
-        DVDNAV_STATUS_OK) {
-      nav_res = RSN_NAV_RESULT_BRANCH;
+      if (src->have_pci && dvdnav_mouse_activate (src->dvdnav, &src->cur_pci,
+              (int) x, (int) y) == DVDNAV_STATUS_OK) {
+        nav_res = RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT;
+      }
+      break;
     }
+    case GST_NAVIGATION_EVENT_COMMAND:{
+      GstNavigationCommand command;
+
+      if (!gst_navigation_event_parse_command (event, &command))
+        return FALSE;
+      if (command == GST_NAVIGATION_COMMAND_INVALID)
+        return FALSE;
+
+      g_mutex_lock (src->dvd_lock);
+      have_lock = TRUE;
+      if (!src->running)
+        goto not_running;
+
+      GST_LOG_OBJECT (src, "handling navigation command %d", command);
+      nav_res = rsn_dvdsrc_do_command (src, command);
+      break;
+    }
+    default:
+      return TRUE;
   }
 
   if (have_lock) {
+    gboolean channel_hop = FALSE;
+
     if (nav_res != RSN_NAV_RESULT_NONE) {
       if (nav_res == RSN_NAV_RESULT_BRANCH) {
+        channel_hop = TRUE;
+      } else if (nav_res == RSN_NAV_RESULT_BRANCH_AND_HIGHLIGHT) {
         src->active_highlight = TRUE;
         channel_hop = TRUE;
       }
@@ -1320,9 +1422,14 @@ rsn_dvdsrc_handle_navigation_event (resinDvdSrc * src, GstEvent * event)
     }
   }
 
+  if (mouse_over_msg) {
+    gst_element_post_message (GST_ELEMENT_CAST (src), mouse_over_msg);
+  }
+
   return TRUE;
 not_running:
-  g_mutex_unlock (src->dvd_lock);
+  if (have_lock)
+    g_mutex_unlock (src->dvd_lock);
   GST_DEBUG_OBJECT (src, "Element not started. Ignoring navigation event");
   return FALSE;
 }
@@ -1429,6 +1536,9 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
     s_attrs = vts_attr->vts_subp_attr;
     n_subp = vts_attr->nr_of_vts_subp_streams;
   }
+
+  GST_DEBUG_OBJECT (src, "Preparing streamsinfo for %d audio and "
+      "%d subpicture streams", n_audio, n_subp);
 
   /* build event */
   s = gst_structure_new ("application/x-gst-dvd",
@@ -1578,7 +1688,7 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
 
   if (button == 0) {
     /* No highlight available, or no button selected - clear the SPU */
-    if (src->active_button != 0) {
+    if (src->active_button < 1) {
       src->active_button = 0;
 
       s = gst_structure_new ("application/x-gst-dvd", "event",
@@ -1624,7 +1734,7 @@ rsn_dvdsrc_update_highlight (resinDvdSrc * src)
 
     event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, s);
 
-    if (src->active_button == 0) {
+    if (src->active_button < 1) {
       /* When setting the button for the first time, take the
          timestamp into account. */
       GST_EVENT_TIMESTAMP (event) = MPEGTIME_TO_GSTTIME (area.pts);
@@ -1816,14 +1926,15 @@ rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event)
   resinDvdSrc *src = RESINDVDSRC (basesrc);
   gboolean res;
 
-  GST_LOG_OBJECT (src, "handling %s event", GST_EVENT_TYPE_NAME (event));
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
       res = rsn_dvdsrc_handle_navigation_event (src, event);
       break;
     case GST_EVENT_SEEK:{
       GstSeekFlags flags;
+
+      GST_LOG_OBJECT (src, "handling seek event");
+
       gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
       src->flushing_seek = !!(flags & GST_SEEK_FLAG_FLUSH);
       GST_DEBUG_OBJECT (src, "%s seek event",
@@ -1833,6 +1944,8 @@ rsn_dvdsrc_src_event (RsnBaseSrc * basesrc, GstEvent * event)
       break;
     }
     default:
+      GST_LOG_OBJECT (src, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
       res = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
       break;
   }
@@ -2196,6 +2309,7 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
     src->active_button = -1;
 
     if (src->flushing_seek) {
+      GstMessage *mouse_over_msg = NULL;
       g_mutex_lock (src->dvd_lock);
       src->flushing_seek = FALSE;
 
@@ -2210,7 +2324,15 @@ rsn_dvdsrc_do_seek (RsnBaseSrc * bsrc, GstSegment * segment)
         src->nav_clock_id = NULL;
       }
       rsn_dvdsrc_clear_nav_blocks (src);
+      if (src->was_mouse_over) {
+        mouse_over_msg =
+            gst_navigation_message_new_mouse_over ((GstObject *) src, FALSE);
+        src->was_mouse_over = FALSE;
+      }
       g_mutex_unlock (src->dvd_lock);
+
+      if (mouse_over_msg)
+        gst_element_post_message (GST_ELEMENT_CAST (src), mouse_over_msg);
     }
 
     GST_LOG_OBJECT (src, "Entering prepare_next_block after seek."

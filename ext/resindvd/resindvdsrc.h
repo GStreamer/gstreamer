@@ -94,6 +94,8 @@ struct _resinDvdSrc
   gboolean      in_still_state;
   gboolean      in_playing;
 
+  gboolean      was_mouse_over;
+
   GstBuffer	*alloc_buf;
   GstBuffer	*next_buf;
   /* TRUE if the next_buf is a nav block that needs enqueueing */
