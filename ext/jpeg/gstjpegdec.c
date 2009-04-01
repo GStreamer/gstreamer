@@ -218,7 +218,7 @@ gst_jpeg_dec_fill_input_buffer (j_decompress_ptr cinfo)
   src_mgr = (struct GstJpegDecSourceMgr*) &cinfo->src;
   dec = GST_JPEG_DEC (src_mgr->dec);
 */
-  GST_DEBUG ("fill_input_buffer");
+  GST_DEBUG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "fill_input_buffer");
 /*
   g_return_val_if_fail (dec != NULL, TRUE);
 
@@ -231,14 +231,14 @@ gst_jpeg_dec_fill_input_buffer (j_decompress_ptr cinfo)
 static void
 gst_jpeg_dec_init_source (j_decompress_ptr cinfo)
 {
-  GST_DEBUG ("init_source");
+  GST_LOG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "init_source");
 }
 
 
 static void
 gst_jpeg_dec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
 {
-  GST_DEBUG ("skip_input_data: %ld bytes", num_bytes);
+  GST_DEBUG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "skip %ld bytes", num_bytes);
 
   if (num_bytes > 0 && cinfo->src->bytes_in_buffer >= num_bytes) {
     cinfo->src->next_input_byte += (size_t) num_bytes;
@@ -249,14 +249,14 @@ gst_jpeg_dec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
 static boolean
 gst_jpeg_dec_resync_to_restart (j_decompress_ptr cinfo, gint desired)
 {
-  GST_DEBUG ("resync_to_start");
+  GST_LOG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "resync_to_start");
   return TRUE;
 }
 
 static void
 gst_jpeg_dec_term_source (j_decompress_ptr cinfo)
 {
-  GST_DEBUG ("term_source");
+  GST_LOG_OBJECT (CINFO_GET_JPEGDEC (cinfo), "term_source");
   return;
 }
 
@@ -269,7 +269,7 @@ METHODDEF (void)
 METHODDEF (void)
     gst_jpeg_dec_my_emit_message (j_common_ptr cinfo, int msg_level)
 {
-  /* GST_DEBUG ("emit_message: msg_level = %d", msg_level); */
+  /* GST_LOG_OBJECT (CINFO_GET_JPEGDEC (&cinfo), "msg_level=%d", msg_level); */
   return;
 }
 
@@ -937,12 +937,12 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   r_h = dec->cinfo.cur_comp_info[0]->h_samp_factor;
   r_v = dec->cinfo.cur_comp_info[0]->v_samp_factor;
 
-  GST_DEBUG ("r_h = %d, r_v = %d", r_h, r_v);
-  GST_DEBUG ("num_components=%d, comps_in_scan=%d",
+  GST_LOG_OBJECT (dec, "r_h = %d, r_v = %d", r_h, r_v);
+  GST_LOG_OBJECT (dec, "num_components=%d, comps_in_scan=%d",
       dec->cinfo.num_components, dec->cinfo.comps_in_scan);
 
   for (i = 0; i < dec->cinfo.comps_in_scan; ++i) {
-    GST_DEBUG ("[%d] h_samp_factor=%d, v_samp_factor=%d", i,
+    GST_LOG_OBJECT (dec, "[%d] h_samp_factor=%d, v_samp_factor=%d", i,
         dec->cinfo.cur_comp_info[i]->h_samp_factor,
         dec->cinfo.cur_comp_info[i]->v_samp_factor);
   }
