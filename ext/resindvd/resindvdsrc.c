@@ -112,9 +112,9 @@ static GstStateChangeReturn
 rsn_dvdsrc_change_state (GstElement * element, GstStateChange transition);
 
 static void rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src,
-    guint8 phys_stream, gboolean forced_only);
+    guint8 logical_stream, guint8 phys_stream, gboolean forced_only);
 static void rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src,
-    guint8 phys_stream);
+    guint8 logical_stream, guint8 phys_stream);
 static gboolean rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src);
 static void rsn_dvdsrc_prepare_clut_change_event (resinDvdSrc * src,
     const guint32 * clut);
@@ -897,7 +897,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       GST_DEBUG_OBJECT (src, "  physical: %d", event->physical);
       GST_DEBUG_OBJECT (src, "  logical: %d", event->logical);
 
-      rsn_dvdsrc_prepare_audio_stream_event (src, event->physical);
+      rsn_dvdsrc_prepare_audio_stream_event (src,
+          event->logical, event->physical);
       break;
     }
     case DVDNAV_SPU_STREAM_CHANGE:{
@@ -906,7 +907,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       gint phys_track = event->physical_wide & 0x1f;
       gboolean forced_only = (event->physical_wide & 0x80) ? TRUE : FALSE;
 
-      rsn_dvdsrc_prepare_spu_stream_event (src, phys_track, forced_only);
+      rsn_dvdsrc_prepare_spu_stream_event (src, event->logical, phys_track,
+          forced_only);
 
       GST_DEBUG_OBJECT (src, "  physical_wide: %x", event->physical_wide);
       GST_DEBUG_OBJECT (src, "  physical_letterbox: %x",
@@ -1435,7 +1437,8 @@ not_running:
 }
 
 static void
-rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src, guint8 phys_stream)
+rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src, guint8 logical_stream,
+    guint8 phys_stream)
 {
   GstStructure *s;
   GstEvent *e;
@@ -1448,6 +1451,7 @@ rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src, guint8 phys_stream)
 
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-set-audio-track",
+      "logical-id", G_TYPE_INT, (gint) logical_stream,
       "physical-id", G_TYPE_INT, (gint) phys_stream, NULL);
 
   e = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
@@ -1458,8 +1462,8 @@ rsn_dvdsrc_prepare_audio_stream_event (resinDvdSrc * src, guint8 phys_stream)
 }
 
 static void
-rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src, guint8 phys_stream,
-    gboolean forced_only)
+rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src, guint8 logical_stream,
+    guint8 phys_stream, gboolean forced_only)
 {
   GstStructure *s;
   GstEvent *e;
@@ -1476,6 +1480,7 @@ rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src, guint8 phys_stream,
 
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-set-subpicture-track",
+      "logical-id", G_TYPE_INT, (gint) logical_stream,
       "physical-id", G_TYPE_INT, (gint) phys_stream,
       "forced-only", G_TYPE_BOOLEAN, forced_only, NULL);
 
