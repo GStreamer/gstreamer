@@ -71,6 +71,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_BOILERPLATE (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder, GstVdpauDecoder,
     GST_TYPE_VDPAU_DECODER);
 
+static void gst_vdpau_mpeg_decoder_finalize (GObject * object);
 static void gst_vdpau_mpeg_decoder_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_vdpau_mpeg_decoder_get_property (GObject * object,
@@ -227,8 +228,8 @@ gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
 
   if (pic_hdr.pic_type == I_FRAME &&
       mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
-    dec->device->vdp_video_surface_destroy (mpeg_dec->
-        vdp_info.forward_reference);
+    dec->device->vdp_video_surface_destroy (mpeg_dec->vdp_info.
+        forward_reference);
     mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
   }
 
@@ -374,6 +375,7 @@ gst_vdpau_mpeg_decoder_class_init (GstVdpauMpegDecoderClass * klass)
   gstelement_class = (GstElementClass *) klass;
   vdpaudec_class = (GstVdpauDecoderClass *) klass;
 
+  gobject_class->finalize = gst_vdpau_mpeg_decoder_finalize;
   gobject_class->set_property = gst_vdpau_mpeg_decoder_set_property;
   gobject_class->get_property = gst_vdpau_mpeg_decoder_get_property;
 
@@ -412,6 +414,19 @@ gst_vdpau_mpeg_decoder_init (GstVdpauMpegDecoder * mpeg_dec,
   mpeg_dec->adapter = gst_adapter_new ();
 
   gst_pad_set_chain_function (dec->sink, gst_vdpau_mpeg_decoder_chain);
+}
+
+static void
+gst_vdpau_mpeg_decoder_finalize (GObject * object)
+{
+  GstVdpauMpegDecoder *mpeg_dec = (GstVdpauMpegDecoder *) object;
+
+#if 0                           /* FIXME: can't free the decoder since the device already has been freed */
+  if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
+    dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
+#endif
+
+  g_object_unref (mpeg_dec->adapter);
 }
 
 static void

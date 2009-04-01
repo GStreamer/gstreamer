@@ -57,6 +57,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE_FULL (GstVdpauDecoder, gst_vdpaudecoder, GstElement,
     GST_TYPE_ELEMENT, DEBUG_INIT);
 
+static void gst_vdpau_decoder_finalize (GObject * object);
 static void gst_vdpaudecoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_vdpaudecoder_get_property (GObject * object, guint prop_id,
@@ -453,6 +454,7 @@ gst_vdpaudecoder_class_init (GstVdpauDecoderClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->finalize = gst_vdpau_decoder_finalize;
   gobject_class->set_property = gst_vdpaudecoder_set_property;
   gobject_class->get_property = gst_vdpaudecoder_get_property;
 
@@ -492,6 +494,19 @@ gst_vdpaudecoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
   gst_pad_set_setcaps_function (dec->sink, gst_vdpaudecoder_sink_set_caps);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sink);
   gst_pad_set_active (dec->sink, TRUE);
+}
+
+static void
+gst_vdpau_decoder_finalize (GObject * object)
+{
+  GstVdpauDecoder *dec = (GstVdpauDecoder *) object;
+
+  if (dec->src_caps)
+    g_object_unref (dec->src_caps);
+  if (dec->device)
+    g_object_unref (dec->device);
+
+  g_free (dec->display_name);
 }
 
 static void
