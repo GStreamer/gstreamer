@@ -674,6 +674,59 @@ GST_START_TEST (test_pipelines)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_preference_passthrough)
+{
+  GstStateChangeReturn ret;
+  GstElement *pipeline, *src;
+  GstStructure *s;
+  GstMessage *msg;
+  GstCaps *caps;
+  GstPad *pad;
+  GstBus *bus;
+  GError *error = NULL;
+  gint rate = 0;
+
+  pipeline = gst_parse_launch ("audiotestsrc num-buffers=1 name=src ! "
+      "audioresample ! audio/x-raw-int,channels=1,width=16,depth=16,"
+      "endianness=1234,signed=true,rate=8000 ! "
+      "fakesink can-activate-pull=false", &error);
+  fail_unless (pipeline != NULL, "Error parsing pipeline: %s",
+      error ? error->message : "(invalid error)");
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless_equals_int (ret, GST_STATE_CHANGE_ASYNC);
+
+  /* run until we receive EOS */
+  bus = gst_element_get_bus (pipeline);
+  fail_if (bus == NULL);
+  msg = gst_bus_timed_pop_filtered (bus, -1, GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+
+  src = gst_bin_get_by_name (GST_BIN (pipeline), "src");
+  fail_unless (src != NULL);
+  pad = gst_element_get_static_pad (src, "src");
+  fail_unless (pad != NULL);
+  caps = gst_pad_get_negotiated_caps (pad);
+  GST_LOG ("negotiated audiotestsrc caps: %" GST_PTR_FORMAT, caps);
+  fail_unless (caps != NULL);
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_get_int (s, "rate", &rate));
+  /* there's no need to resample, audiotestsrc supports any rate, so make
+   * sure audioresample provided upstream with the right caps to negotiate
+   * this correctly */
+  fail_unless_equals_int (rate, 8000);
+  gst_caps_unref (caps);
+  gst_object_unref (pad);
+  gst_object_unref (src);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 #endif
 
 static Suite *
@@ -692,6 +745,7 @@ audioresample_suite (void)
 #ifndef GST_DISABLE_PARSE
   tcase_set_timeout (tc_chain, 360);
   tcase_add_test (tc_chain, test_pipelines);
+  tcase_add_test (tc_chain, test_preference_passthrough);
 #endif
 
   return s;
