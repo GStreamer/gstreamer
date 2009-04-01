@@ -60,10 +60,8 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
   guint size, codesize, offset = 0;
   guint8 *data;
-  GstClockTime timestamp;
 
   codesize = sbc_get_codesize (&dec->sbc);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   if (dec->buffer) {
     GstBuffer *temp = buffer;
