@@ -2997,7 +2997,7 @@ gst_rtsp_watch_queue_message (GstRTSPWatch * watch, GstRTSPMessage * message)
     cseq = -1;
   }
 
-  /* make a record with the message as a string ans cseq */
+  /* make a record with the message as a string and cseq */
   data = queue_response (watch, message_to_string (watch->conn, message), cseq);
 
   return cseq;
