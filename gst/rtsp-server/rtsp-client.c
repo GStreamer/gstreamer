@@ -313,7 +313,7 @@ static void
 unlink_stream (GstRTSPClient *client, GstRTSPSessionStream *stream)
 {
   gst_rtsp_session_stream_set_callbacks (stream, NULL,
-       NULL, client, g_object_unref);
+       NULL, NULL, NULL);
   client->streams = g_list_remove (client->streams, stream);
 }
 
