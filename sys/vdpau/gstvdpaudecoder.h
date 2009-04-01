@@ -27,7 +27,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDPAU_DECODER            (gst_vdpaudecoder_get_type())
+#define GST_TYPE_VDPAU_DECODER            (gst_vdpau_decoder_get_type())
 #define GST_VDPAU_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpauDecoder))
 #define GST_VDPAU_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpauDecoderClass))
 #define GST_VDPAU_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DECODER, GstVdpauDecoderClass))
@@ -64,7 +64,7 @@ struct _GstVdpauDecoderClass {
   gboolean (*set_caps) (GstVdpauDecoder *dec, GstCaps *caps);
 };
 
-GType gst_vdpaudecoder_get_type (void);
+GType gst_vdpau_decoder_get_type (void);
 
 gboolean gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
                                                VdpVideoSurface surface);
