@@ -38,6 +38,8 @@
 
 #include "gstdvdspu.h"
 
+#define DUMP_DCSQ 0
+
 extern void gst_dvd_spu_render_spu (GstDVDSpu * dvdspu, GstBuffer * buf);
 
 GST_DEBUG_CATEGORY (dvdspu_debug);
@@ -1004,7 +1006,7 @@ gst_dvd_spu_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
   gst_event_unref (event);
 }
 
-#if 0
+#if DUMP_DCSQ
 static void
 gst_dvd_spu_dump_dcsq (GstDVDSpu * dvdspu,
     GstClockTime start_ts, GstBuffer * spu_buf)
@@ -1073,12 +1075,16 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
           dvdspu->video_seg.last_stop);
       GST_LOG_OBJECT (dvdspu,
           "Popped new SPU packet with TS %" GST_TIME_FORMAT
-          ". Video last_stop=%" GST_TIME_FORMAT " (%" GST_TIME_FORMAT ")",
+          ". Video last_stop=%" GST_TIME_FORMAT " (%" GST_TIME_FORMAT
+          ") type %s",
           GST_TIME_ARGS (packet->event_ts), GST_TIME_ARGS (vid_run_ts),
-          GST_TIME_ARGS (dvdspu->video_seg.last_stop));
+          GST_TIME_ARGS (dvdspu->video_seg.last_stop),
+          packet->buf ? "buffer" : "event");
 
       if (packet->buf) {
-        // gst_dvd_spu_dump_dcsq (dvdspu, packet->event_ts, packet->buf);
+#if DUMP_DCSQ
+        gst_dvd_spu_dump_dcsq (dvdspu, packet->event_ts, packet->buf);
+#endif
         gst_dvd_spu_handle_new_spu_buf (dvdspu, packet);
       }
       if (packet->event)
