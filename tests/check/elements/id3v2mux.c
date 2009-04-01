@@ -33,9 +33,10 @@
 #define TEST_TRACK_COUNT      19
 #define TEST_VOLUME_NUMBER    2
 #define TEST_VOLUME_COUNT     3
-
-/* #define TEST_TRACK_GAIN      1.45  (not implemented yet) */
-/* #define TEST_ALBUM_GAIN      0.78  (not implemented yet) */
+#define TEST_TRACK_GAIN      1.45
+#define TEST_ALBUM_GAIN      0.78
+#define TEST_TRACK_PEAK      0.83
+#define TEST_ALBUM_PEAK      0.18
 
 /* for dummy mp3 frame sized MP3_FRAME_SIZE bytes,
  * start: ff fb b0 44 00 00 08 00  00 4b 00 00 00 00 00 00 */
@@ -44,6 +45,18 @@ static const guint8 mp3_dummyhdr[] = { 0xff, 0xfb, 0xb0, 0x44, 0x00, 0x00,
 };
 
 #define MP3_FRAME_SIZE 626
+
+/* the peak and gain values are stored pretty roughly, so check that they're
+ * within 2% of the expected value.
+ */
+#define fail_unless_sorta_equals_float(a, b)				\
+G_STMT_START {								\
+  double first = a;							\
+  double second = b;							\
+  fail_unless(fabs (first - second) < (0.02 * fabs (first)),		\
+      "'" #a "' (%g) is not equal to '" #b "' (%g)", first, second);	\
+} G_STMT_END;
+
 
 static GstTagList *
 test_taglib_id3mux_create_tags (guint32 mask)
@@ -88,12 +101,20 @@ test_taglib_id3mux_create_tags (guint32 mask)
         GST_TAG_ALBUM_VOLUME_COUNT, TEST_VOLUME_COUNT, NULL);
   }
   if (mask & (1 << 8)) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_TRACK_GAIN, TEST_TRACK_GAIN, NULL);
   }
   if (mask & (1 << 9)) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_ALBUM_GAIN, TEST_ALBUM_GAIN, NULL);
   }
   if (mask & (1 << 10)) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_TRACK_PEAK, TEST_TRACK_PEAK, NULL);
   }
   if (mask & (1 << 11)) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
+        GST_TAG_ALBUM_PEAK, TEST_ALBUM_PEAK, NULL);
   }
   if (mask & (1 << 12)) {
   }
@@ -193,23 +214,29 @@ test_taglib_id3mux_check_tags (GstTagList * tags, guint32 mask)
             &count));
     fail_unless (count == TEST_VOLUME_COUNT);
   }
-#if 0
   if (mask & (1 << 8)) {
     gdouble gain;
 
     fail_unless (gst_tag_list_get_double (tags, GST_TAG_TRACK_GAIN, &gain));
-    fail_unless (gain == TEST_TRACK_GAIN);
+    fail_unless_sorta_equals_float (gain, TEST_TRACK_GAIN);
   }
   if (mask & (1 << 9)) {
     gdouble gain;
 
     fail_unless (gst_tag_list_get_double (tags, GST_TAG_ALBUM_GAIN, &gain));
-    fail_unless (gain == TEST_ALBUM_GAIN);
+    fail_unless_sorta_equals_float (gain, TEST_ALBUM_GAIN);
   }
-#endif
   if (mask & (1 << 10)) {
+    gdouble peak;
+
+    fail_unless (gst_tag_list_get_double (tags, GST_TAG_TRACK_PEAK, &peak));
+    fail_unless_sorta_equals_float (peak, TEST_TRACK_PEAK);
   }
   if (mask & (1 << 11)) {
+    gdouble peak;
+
+    fail_unless (gst_tag_list_get_double (tags, GST_TAG_ALBUM_PEAK, &peak));
+    fail_unless_sorta_equals_float (peak, TEST_ALBUM_PEAK);
   }
   if (mask & (1 << 12)) {
   }
@@ -269,6 +296,7 @@ got_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
     memcpy (GST_BUFFER_DATA (*p_buf) + off, GST_BUFFER_DATA (buf), size);
   }
 }
+
 static void
 demux_pad_added (GstElement * id3demux, GstPad * srcpad, GstBuffer ** p_outbuf)
 {

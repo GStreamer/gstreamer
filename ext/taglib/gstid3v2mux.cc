@@ -55,6 +55,7 @@
 #include <textidentificationframe.h>
 #include <uniquefileidentifierframe.h>
 #include <attachedpictureframe.h>
+#include <relativevolumeframe.h>
 #include <commentsframe.h>
 #include <unknownframe.h>
 #include <id3v2synchdata.h>
@@ -560,6 +561,71 @@ add_uri_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
   }
 }
 
+static void
+add_relative_volume_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  const char *gain_tag_name;
+  const char *peak_tag_name;
+  gdouble peak_val;
+  gdouble gain_val;
+  ID3v2::RelativeVolumeFrame * frame;
+
+  frame = new ID3v2::RelativeVolumeFrame ();
+
+  /* figure out tag names and the identification string to use */
+  if (strcmp (tag, GST_TAG_TRACK_PEAK) == 0 ||
+      strcmp (tag, GST_TAG_TRACK_GAIN) == 0) {
+    gain_tag_name = GST_TAG_TRACK_GAIN;
+    peak_tag_name = GST_TAG_TRACK_PEAK;
+    frame->setIdentification ("track");
+    GST_DEBUG ("adding track relative-volume frame");
+  } else {
+    gain_tag_name = GST_TAG_ALBUM_GAIN;
+    peak_tag_name = GST_TAG_ALBUM_PEAK;
+    frame->setIdentification ("album");
+    GST_DEBUG ("adding album relative-volume frame");
+  }
+  
+  /* find the value for the paired tag (gain, if this is peak, and
+   * vice versa).  if both tags exist, only write the frame when
+   * we're processing the peak tag.
+   */
+  if (strcmp (tag, GST_TAG_TRACK_PEAK) == 0 ||
+      strcmp (tag, GST_TAG_ALBUM_PEAK) == 0) {
+    ID3v2::RelativeVolumeFrame::PeakVolume encoded_peak;
+    short peak_int;
+
+    gst_tag_list_get_double (list, tag, &peak_val);
+
+    if (gst_tag_list_get_tag_size (list, gain_tag_name) > 0) {
+      gst_tag_list_get_double (list, gain_tag_name, &gain_val);
+      GST_DEBUG ("setting volume adjustment %g", gain_val);
+      frame->setVolumeAdjustment (gain_val);
+    }
+
+    /* copying mutagen: always write as 16 bits for sanity. */
+    peak_int = (short)(peak_val * G_MAXSHORT);
+    encoded_peak.bitsRepresentingPeak = 16;
+    encoded_peak.peakVolume = ByteVector::fromShort(peak_int, true);
+    GST_DEBUG ("setting peak value %g", peak_val);
+    frame->setPeakVolume(encoded_peak);
+
+  } else {
+    gst_tag_list_get_double (list, tag, &gain_val);
+    GST_DEBUG ("setting volume adjustment %g", gain_val);
+    frame->setVolumeAdjustment (gain_val);
+
+    if (gst_tag_list_get_tag_size (list, peak_tag_name) != 0) {
+      GST_DEBUG ("both gain and peak tags exist, not adding frame this time around");
+      delete frame;
+      return;
+    }
+  }
+
+  id3v2tag->addFrame (frame);
+}
+
 /* id3demux produces these for frames it cannot parse */
 #define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
 
@@ -599,7 +665,11 @@ static const struct
   GST_TAG_ENCODER, add_encoder_tag, ""}, {
   GST_TAG_ENCODER_VERSION, add_encoder_tag, ""}, {
   GST_TAG_COPYRIGHT_URI, add_uri_tag, "WCOP"}, {
-  GST_TAG_LICENSE_URI, add_uri_tag, "WCOP"}
+  GST_TAG_LICENSE_URI, add_uri_tag, "WCOP"}, {
+  GST_TAG_TRACK_PEAK, add_relative_volume_tag, ""}, {
+  GST_TAG_TRACK_GAIN, add_relative_volume_tag, ""}, {
+  GST_TAG_ALBUM_PEAK, add_relative_volume_tag, ""}, {
+  GST_TAG_ALBUM_GAIN, add_relative_volume_tag, ""}
 };
 
 
