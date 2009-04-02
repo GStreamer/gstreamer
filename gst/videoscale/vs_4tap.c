@@ -465,6 +465,13 @@ vs_scanline_resample_4tap_YUYV (uint8_t * dest, uint8_t * src,
   int x;
   int y;
   int quads = (n + 1) / 2;
+  int last_y = 2 * (src_width - 1);
+  int last_u =
+      MAX ((2 * (src_width - 1) % 4 ==
+          0) ? 2 * (src_width - 1) + 1 : 2 * (src_width - 1) - 1, 1);
+  int last_v =
+      MAX ((2 * (src_width - 1) % 4 ==
+          2) ? 2 * (src_width - 1) + 1 : 2 * (src_width - 1) - 1, 1);
 
   acc = *xacc;
   for (i = 0; i < quads; i++) {
@@ -477,14 +484,10 @@ vs_scanline_resample_4tap_YUYV (uint8_t * dest, uint8_t * src,
       y += vs_4tap_taps[x][2] * src[j * 2 + 0 + 2];
       y += vs_4tap_taps[x][3] * src[j * 2 + 0 + 4];
     } else {
-      y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 0 - 2, 0,
-              2 * (src_width - 1) + 0)];
-      y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 0, 0,
-              2 * (src_width - 1) + 0)];
-      y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 0 + 2, 0,
-              2 * (src_width - 1) + 0)];
-      y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 0 + 4, 0,
-              2 * (src_width - 1) + 0)];
+      y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 0 - 2, 0, last_y)];
+      y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 0, 0, last_y)];
+      y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 0 + 2, 0, last_y)];
+      y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 0 + 4, 0, last_y)];
     }
     y += (1 << (SHIFT - 1));
     dest[i * 4 + 0] = CLAMP (y >> SHIFT, 0, 255);
@@ -498,14 +501,10 @@ vs_scanline_resample_4tap_YUYV (uint8_t * dest, uint8_t * src,
       y += vs_4tap_taps[x][2] * src[j * 4 + 1 + 4];
       y += vs_4tap_taps[x][3] * src[j * 4 + 1 + 8];
     } else {
-      y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 1 - 4, 1,
-              (2 * (src_width - 1) & ~1) + 1)];
-      y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 1, 1,
-              (2 * (src_width - 1) & ~1) + 1)];
-      y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 1 + 4, 1,
-              (2 * (src_width - 1) & ~1) + 1)];
-      y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 1 + 8, 1,
-              (2 * (src_width - 1) & ~1) + 1)];
+      y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 1 - 4, 1, last_u)];
+      y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 1, 1, last_u)];
+      y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 1 + 4, 1, last_u)];
+      y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 1 + 8, 1, last_u)];
     }
     y += (1 << (SHIFT - 1));
     dest[i * 4 + 1] = CLAMP (y >> SHIFT, 0, 255);
@@ -517,14 +516,10 @@ vs_scanline_resample_4tap_YUYV (uint8_t * dest, uint8_t * src,
         y += vs_4tap_taps[x][2] * src[j * 4 + 3 + 4];
         y += vs_4tap_taps[x][3] * src[j * 4 + 3 + 8];
       } else {
-        y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 3 - 4, 3,
-                (2 * (src_width - 1) + ~1) + 3)];
-        y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 3, 3,
-                (2 * (src_width - 1) + ~1) + 3)];
-        y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 3 + 4, 3,
-                (2 * (src_width - 1) + ~1) + 3)];
-        y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 3 + 8, 3,
-                (2 * (src_width - 1) + ~1) + 3)];
+        y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 3 - 4, 3, last_v)];
+        y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 3, 3, last_v)];
+        y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 3 + 4, 3, last_v)];
+        y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 3 + 8, 3, last_v)];
       }
       y += (1 << (SHIFT - 1));
       dest[i * 4 + 3] = CLAMP (y >> SHIFT, 0, 255);
@@ -541,14 +536,10 @@ vs_scanline_resample_4tap_YUYV (uint8_t * dest, uint8_t * src,
         y += vs_4tap_taps[x][2] * src[j * 2 + 0 + 2];
         y += vs_4tap_taps[x][3] * src[j * 2 + 0 + 4];
       } else {
-        y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 0 - 2, 0,
-                2 * (src_width - 1) + 0)];
-        y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 0, 0,
-                2 * (src_width - 1) + 0)];
-        y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 0 + 2, 0,
-                2 * (src_width - 1) + 0)];
-        y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 0 + 4, 0,
-                2 * (src_width - 1) + 0)];
+        y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 0 - 2, 0, last_y)];
+        y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 0, 0, last_y)];
+        y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 0 + 2, 0, last_y)];
+        y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 0 + 4, 0, last_y)];
       }
       y += (1 << (SHIFT - 1));
       dest[i * 4 + 2] = CLAMP (y >> SHIFT, 0, 255);
@@ -672,6 +663,13 @@ vs_scanline_resample_4tap_UYVY (uint8_t * dest, uint8_t * src,
   int x;
   int y;
   int quads = (n + 1) / 2;
+  int last_y = 2 * (src_width - 1) + 1;
+  int last_u =
+      MAX ((2 * (src_width - 1) % 4 ==
+          0) ? 2 * (src_width - 1) : 2 * (src_width - 1) - 2, 0);
+  int last_v =
+      MAX ((2 * (src_width - 1) % 4 ==
+          2) ? 2 * (src_width - 1) : 2 * (src_width - 1) - 2, 0);
 
   acc = *xacc;
   for (i = 0; i < quads; i++) {
@@ -684,14 +682,10 @@ vs_scanline_resample_4tap_UYVY (uint8_t * dest, uint8_t * src,
       y += vs_4tap_taps[x][2] * src[j * 2 + 1 + 2];
       y += vs_4tap_taps[x][3] * src[j * 2 + 1 + 4];
     } else {
-      y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 1 - 2, 1,
-              2 * (src_width - 1) + 1)];
-      y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 1, 1,
-              2 * (src_width - 1) + 1)];
-      y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 1 + 2, 1,
-              2 * (src_width - 1) + 1)];
-      y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 1 + 4, 1,
-              2 * (src_width - 1) + 1)];
+      y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 1 - 2, 1, last_y)];
+      y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 1, 1, last_y)];
+      y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 1 + 2, 1, last_y)];
+      y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 1 + 4, 1, last_y)];
     }
     y += (1 << (SHIFT - 1));
     dest[i * 4 + 1] = CLAMP (y >> SHIFT, 0, 255);
@@ -705,14 +699,10 @@ vs_scanline_resample_4tap_UYVY (uint8_t * dest, uint8_t * src,
       y += vs_4tap_taps[x][2] * src[j * 4 + 0 + 4];
       y += vs_4tap_taps[x][3] * src[j * 4 + 0 + 8];
     } else {
-      y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 0 - 4, 0,
-              ((2 * (src_width - 1) + 0)) & ~1)];
-      y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 0, 0,
-              (2 * (src_width - 1) + 0) & ~1)];
-      y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 0 + 4, 0,
-              (2 * (src_width - 1) + 0) & ~1)];
-      y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 0 + 8, 0,
-              (2 * (src_width - 1) + 0) & ~1)];
+      y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 0 - 4, 0, last_u)];
+      y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 0, 0, last_u)];
+      y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 0 + 4, 0, last_u)];
+      y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 0 + 8, 0, last_u)];
     }
     y += (1 << (SHIFT - 1));
     dest[i * 4 + 0] = CLAMP (y >> SHIFT, 0, 255);
@@ -724,14 +714,10 @@ vs_scanline_resample_4tap_UYVY (uint8_t * dest, uint8_t * src,
         y += vs_4tap_taps[x][2] * src[j * 4 + 2 + 4];
         y += vs_4tap_taps[x][3] * src[j * 4 + 2 + 8];
       } else {
-        y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 2 - 4, 2,
-                (2 * (src_width - 1) & ~1) + 2)];
-        y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 2, 2,
-                (2 * (src_width - 1) & ~1) + 2)];
-        y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 2 + 4, 2,
-                (2 * (src_width - 1) & ~1) + 2)];
-        y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 2 + 8, 2,
-                (2 * (src_width - 1) & ~1) + 2)];
+        y = vs_4tap_taps[x][0] * src[CLAMP (j * 4 + 2 - 4, 2, last_v)];
+        y += vs_4tap_taps[x][1] * src[CLAMP (j * 4 + 2, 2, last_v)];
+        y += vs_4tap_taps[x][2] * src[CLAMP (j * 4 + 2 + 4, 2, last_v)];
+        y += vs_4tap_taps[x][3] * src[CLAMP (j * 4 + 2 + 8, 2, last_v)];
       }
       y += (1 << (SHIFT - 1));
       dest[i * 4 + 2] = CLAMP (y >> SHIFT, 0, 255);
@@ -748,14 +734,10 @@ vs_scanline_resample_4tap_UYVY (uint8_t * dest, uint8_t * src,
         y += vs_4tap_taps[x][2] * src[j * 2 + 1 + 2];
         y += vs_4tap_taps[x][3] * src[j * 2 + 1 + 4];
       } else {
-        y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 1 - 2, 1,
-                2 * (src_width - 1) + 1)];
-        y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 1, 1,
-                2 * (src_width - 1) + 1)];
-        y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 1 + 2, 1,
-                2 * (src_width - 1) + 1)];
-        y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 1 + 4, 1,
-                2 * (src_width - 1) + 1)];
+        y = vs_4tap_taps[x][0] * src[CLAMP (j * 2 + 1 - 2, 1, last_y)];
+        y += vs_4tap_taps[x][1] * src[CLAMP (j * 2 + 1, 1, last_y)];
+        y += vs_4tap_taps[x][2] * src[CLAMP (j * 2 + 1 + 2, 1, last_y)];
+        y += vs_4tap_taps[x][3] * src[CLAMP (j * 2 + 1 + 4, 1, last_y)];
       }
       y += (1 << (SHIFT - 1));
       dest[i * 4 + 3] = CLAMP (y >> SHIFT, 0, 255);
