@@ -130,8 +130,9 @@ struct _GstBin {
  * Subclasses can override the @add_element and @remove_element to
  * update the list of children in the bin.
  *
- * The @handle_message method can be overriden to implement custom
- * message handling.
+ * The @handle_message method can be overridden to implement custom
+ * message handling.  @handle_message takes ownership of the message, just like
+ * #gst_element_post_message.
  */
 struct _GstBinClass {
   GstElementClass parent_class;
