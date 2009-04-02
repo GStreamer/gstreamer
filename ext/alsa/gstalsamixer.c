@@ -169,6 +169,7 @@ gst_alsa_mixer_find_master_mixer (GstAlsaMixer * mixer, snd_mixer_t * handle)
   for (i = 0; i < count; i++) {
     if (snd_mixer_selem_has_playback_volume (element) &&
         strcmp (snd_mixer_selem_get_name (element), "Speaker") == 0) {
+      g_static_rec_mutex_unlock (mixer->rec_mutex);
       return element;
     }
     element = snd_mixer_elem_next (element);
@@ -181,6 +182,7 @@ gst_alsa_mixer_find_master_mixer (GstAlsaMixer * mixer, snd_mixer_t * handle)
     if (snd_mixer_selem_has_playback_volume (element) &&
         snd_mixer_selem_has_playback_switch (element) &&
         !snd_mixer_selem_is_playback_mono (element)) {
+      g_static_rec_mutex_unlock (mixer->rec_mutex);
       return element;
     }
     element = snd_mixer_elem_next (element);
@@ -423,6 +425,7 @@ task_monitor_alsa (gpointer data)
   if (nfds <= 0) {
     GST_ERROR ("snd_mixer_poll_descriptors_count <= 0: %d", nfds);
     /* FIXME: sleep ? stop monitoring ? */
+    g_static_rec_mutex_unlock (mixer->rec_mutex);
     return;
   }
 
