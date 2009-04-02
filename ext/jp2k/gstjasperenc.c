@@ -193,6 +193,7 @@ gst_jasper_enc_set_src_caps (GstJasperEnc * enc)
         break;
       }
     }
+    gst_caps_unref (peercaps);
   }
 
   /* enumerated colourspace */
