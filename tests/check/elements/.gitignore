@@ -19,6 +19,7 @@ vorbisdec
 typefindfunctions
 textoverlay
 ffmpegcolorspace
+videoscale
 vorbistag
 playbin
 subparse
