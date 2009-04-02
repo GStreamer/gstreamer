@@ -415,8 +415,9 @@ fail_unless (gst_element_set_state (element,			\
 #define GST_CHECK_MAIN(name)					\
 int main (int argc, char **argv)				\
 {								\
-  Suite *s = name ## _suite ();					\
+  Suite *s;                                                     \
   gst_check_init (&argc, &argv);				\
+  s = name ## _suite ();					\
   return gst_check_run_suite (s, # name, __FILE__);		\
 }
 
