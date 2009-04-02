@@ -358,13 +358,13 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * GstRTSPSrc::proxy
    *
    * Set the proxy parameters. This has to be a string of the format
-   * [user:passwd@]host[:port].
+   * [http://][user:passwd@]host[:port].
    *
    * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
-          "Proxy settings for HTTP tunneling. Format: [user:passwd@]host[:port]",
+          "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
           DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   gstelement_class->change_state = gst_rtspsrc_change_state;
@@ -456,6 +456,10 @@ gst_rtspsrc_set_proxy (GstRTSPSrc * rtsp, const gchar * proxy)
 
   if (p == NULL)
     return TRUE;
+
+  /* we allow http:// in front but ignore it */
+  if (g_str_has_prefix (p, "http://"))
+    p += 7;
 
   at = strchr (p, '@');
   if (at) {
