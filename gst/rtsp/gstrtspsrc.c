@@ -829,14 +829,6 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
 
   for (i = 0; i < 2; i++) {
     if (stream->udpsrc[i]) {
-      GstPad *pad;
-
-      /* unlink the pad */
-      pad = gst_element_get_static_pad (stream->udpsrc[i], "src");
-      if (stream->channelpad[i]) {
-        gst_pad_unlink (pad, stream->channelpad[i]);
-      }
-
       gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (src), stream->udpsrc[i]);
       gst_object_unref (stream->udpsrc[i]);
@@ -1229,6 +1221,7 @@ again:
     GST_DEBUG_OBJECT (src, "free RTCP udpsrc");
     gst_element_set_state (udpsrc1, GST_STATE_NULL);
     gst_object_unref (udpsrc1);
+    udpsrc1 = NULL;
 
     tmp_rtp += 2;
     GST_DEBUG_OBJECT (src, "retry %d", count);
