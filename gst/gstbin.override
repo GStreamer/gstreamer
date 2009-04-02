@@ -183,3 +183,83 @@ _wrap_GstBin__do_handle_message(PyObject *cls, PyObject *args, PyObject *kwargs)
     Py_INCREF(Py_None);
     return Py_None;
 }
+
+%%
+override GstBin__proxy_do_handle_message
+static void
+_wrap_GstBin__proxy_do_handle_message(GstBin *self, GstMessage*message)
+{
+    PyGILState_STATE __py_state;
+    PyObject *py_self;
+    PyObject *py_message = NULL;
+    PyObject *py_retval;
+    PyObject *py_args;
+    PyObject *py_method;
+    
+    __py_state = pyg_gil_state_ensure();
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        pyg_gil_state_release(__py_state);
+        return;
+    }
+    if (message) {
+        py_message = pygstminiobject_new((GstMiniObject *) message);
+        gst_mini_object_unref ((GstMiniObject *) message);
+    } else {
+        Py_INCREF(Py_None);
+        py_message = Py_None;
+    }
+    
+    py_args = PyTuple_New(1);
+    Py_INCREF(py_message);
+    PyTuple_SET_ITEM(py_args, 0, py_message);
+    
+    py_method = PyObject_GetAttrString(py_self, "do_handle_message");
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_args);
+        gst_mini_object_ref ((GstMiniObject *) message); Py_DECREF(py_message);
+        Py_DECREF(py_self);
+        pyg_gil_state_release(__py_state);
+        return;
+    }
+    py_retval = PyObject_CallObject(py_method, py_args);
+    if (!py_retval) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        gst_mini_object_ref ((GstMiniObject *) message); Py_DECREF(py_message);
+        Py_DECREF(py_self);
+        pyg_gil_state_release(__py_state);
+        return;
+    }
+    if (py_retval != Py_None) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        PyErr_SetString(PyExc_TypeError, "retval should be None");
+        Py_DECREF(py_retval);
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        gst_mini_object_ref ((GstMiniObject *) message); Py_DECREF(py_message);
+        Py_DECREF(py_self);
+        pyg_gil_state_release(__py_state);
+        return;
+    }
+    
+    
+    Py_DECREF(py_retval);
+    Py_DECREF(py_method);
+    Py_DECREF(py_args);
+    gst_mini_object_ref ((GstMiniObject *) message); Py_DECREF(py_message);
+
+    /* #577735: since the bus handler will return BUS_DROP, we should unref.
+      This is the only change from the generated code. */
+    gst_mini_object_unref ((GstMiniObject *) message);
+
+    Py_DECREF(py_self);
+    pyg_gil_state_release(__py_state);
+}

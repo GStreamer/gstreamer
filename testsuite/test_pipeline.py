@@ -163,6 +163,51 @@ class PipelineAndBus(TestCase):
         self.assertEquals(self.pipeline.get_state(),
             (gst.STATE_CHANGE_SUCCESS, gst.STATE_NULL, gst.STATE_VOID_PENDING))
         self.gccollect()
-        
+
+class TestPipeSub(gst.Pipeline):
+    def do_handle_message(self, message):
+        self.debug('do_handle_message')
+        gst.Pipeline.do_handle_message(self, message)
+        self.message = True
+gobject.type_register(TestPipeSub)
+
+class TestPipeSubSub(TestPipeSub):
+    def do_handle_message(self, message):
+        self.debug('do_handle_message')
+        TestPipeSub.do_handle_message(self, message)
+        self.message = True
+gobject.type_register(TestPipeSubSub)
+
+
+class TestSubClass(TestCase):
+    def setUp(self):
+        self.gctrack()
+
+    def tearDown(self):
+        self.gccollect()
+        self.gcverify()
+
+    def testSubClass(self):
+        p = TestPipeSub()
+        u = gst.element_factory_make('uridecodebin')
+        self.assertEquals(u.__grefcount__, 1)
+        # adding uridecodebin triggers a clock-provide message;
+        # this message should be dropped, and thus not affect
+        # the refcount of u beyond the parenting.
+        p.add(u)
+        self.failUnless(getattr(p, 'message'))
+        self.assertEquals(u.__grefcount__, 2)
+        del p
+        self.assertEquals(u.__grefcount__, 1)
+
+    def testSubSubClass(self):
+        p = TestPipeSubSub()
+        u = gst.element_factory_make('uridecodebin')
+        self.assertEquals(u.__grefcount__, 1)
+        p.add(u)
+        self.assertEquals(u.__grefcount__, 2)
+        del p
+        self.assertEquals(u.__grefcount__, 1)
+     
 if __name__ == "__main__":
     unittest.main()
