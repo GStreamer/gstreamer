@@ -539,7 +539,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   guint idx, line;
   gint retval;
   GstClockTime to;
-  gchar *ip;
+  gchar *ip, *url_port_str;
   guint16 port, url_port;
   gchar codestr[4], *resultstr;
   gint code;
@@ -557,21 +557,26 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
 
   if (conn->proxy_host) {
     hostparam = g_strdup_printf ("Host: %s:%d\r\n", url->host, url_port);
+    url_port_str = g_strdup_printf (":%d", url_port);
     ip = conn->proxy_host;
     port = conn->proxy_port;
   } else {
     hostparam = NULL;
+    url_port_str = NULL;
     ip = conn->ip;
     port = url_port;
   }
 
   /* */
-  str = g_strdup_printf ("GET %s%s%s HTTP/1.0\r\n"
+  str = g_strdup_printf ("GET %s%s%s%s%s%s HTTP/1.0\r\n"
       "%s"
       "x-sessioncookie: %s\r\n"
       "Accept: application/x-rtsp-tunnelled\r\n"
       "Pragma: no-cache\r\n"
       "Cache-Control: no-cache\r\n" "\r\n",
+      conn->proxy_host ? "http://" : "",
+      conn->proxy_host ? url->host : "",
+      conn->proxy_host ? url_port_str : "",
       url->abspath, url->query ? "?" : "", url->query ? url->query : "",
       hostparam ? hostparam : "", conn->tunnelid);
 
@@ -656,8 +661,10 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
             g_free (url->host);
             url->host = g_strdup (value);
             g_free (hostparam);
+            g_free (url_port_str);
             hostparam =
                 g_strdup_printf ("Host: %s:%d\r\n", url->host, url_port);
+            url_port_str = g_strdup_printf (":%d", url_port);
           } else {
             /* and resolve the new ip address */
             if (!(ip = do_resolve (conn->ip)))
@@ -680,7 +687,7 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
   conn->writefd = &conn->fd1;
 
   /* */
-  str = g_strdup_printf ("POST %s%s%s HTTP/1.0\r\n"
+  str = g_strdup_printf ("POST %s%s%s%s%s%s HTTP/1.0\r\n"
       "%s"
       "x-sessioncookie: %s\r\n"
       "Content-Type: application/x-rtsp-tunnelled\r\n"
@@ -689,18 +696,23 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
       "Content-Length: 32767\r\n"
       "Expires: Sun, 9 Jan 1972 00:00:00 GMT\r\n"
       "\r\n",
+      conn->proxy_host ? "http://" : "",
+      conn->proxy_host ? url->host : "",
+      conn->proxy_host ? url_port_str : "",
       url->abspath, url->query ? "?" : "", url->query ? url->query : "",
       hostparam ? hostparam : "", conn->tunnelid);
 
   /* we start by writing to this fd */
   conn->writefd = &conn->fd1;
 
-  g_free (hostparam);
-
   res = gst_rtsp_connection_write (conn, (guint8 *) str, strlen (str), timeout);
   g_free (str);
   if (res != GST_RTSP_OK)
     goto write_failed;
+
+exit:
+  g_free (hostparam);
+  g_free (url_port_str);
 
   return res;
 
@@ -708,51 +720,48 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout)
 write_failed:
   {
     GST_ERROR ("write failed (%d)", res);
-    g_free (hostparam);
-    return res;
+    goto exit;
   }
 eof:
   {
-    g_free (hostparam);
-    return GST_RTSP_EEOF;
+    res = GST_RTSP_EEOF;
+    goto exit;
   }
 read_error:
   {
-    g_free (hostparam);
-    return res;
+    goto exit;
   }
 timeout:
   {
-    g_free (hostparam);
-    return GST_RTSP_ETIMEOUT;
+    res = GST_RTSP_ETIMEOUT;
+    goto exit;
   }
 select_error:
   {
-    g_free (hostparam);
-    return GST_RTSP_ESYS;
+    res = GST_RTSP_ESYS;
+    goto exit;
   }
 stopped:
   {
-    g_free (hostparam);
-    return GST_RTSP_EINTR;
+    res = GST_RTSP_EINTR;
+    goto exit;
   }
 wrong_result:
   {
     GST_ERROR ("got failure response %d %s", code, resultstr);
-    g_free (hostparam);
-    return GST_RTSP_ERROR;
+    res = GST_RTSP_ERROR;
+    goto exit;
   }
 not_resolved:
   {
     GST_ERROR ("could not resolve %s", conn->ip);
-    g_free (hostparam);
-    return GST_RTSP_ENET;
+    res = GST_RTSP_ENET;
+    goto exit;
   }
 connect_failed:
   {
     GST_ERROR ("failed to connect");
-    g_free (hostparam);
-    return res;
+    goto exit;
   }
 }
 
