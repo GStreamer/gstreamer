@@ -12,7 +12,7 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
-        GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
+        GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(top_builddir)/../gst-ffmpeg/ext/ffmpeg:$(top_builddir)/../gst-plugins-good/gst:$(top_builddir)/../gst-plugins-good/sys:$(top_builddir)/../gst-plugins-good/ext:$(top_builddir)/../gst-plugins-ugly/gst:$(top_builddir)/../gst-plugins-ugly/sys:$(top_builddir)/../gst-plugins-ugly/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
         STATE_IGNORE_ELEMENTS="alsaspdifsink apexsink cdaudio dc1394src dccpclientsrc dccpclientsink dccpserversrc dccpserversink dvbsrc dvbbasebin dfbvideosink festival nassink sdlaudiosink sdlvideosink vcdsrc rfbsrc"
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
@@ -94,6 +94,7 @@ check_PROGRAMS = \
 	elements/qtmux \
 	elements/selector \
 	elements/mxfdemux \
+	elements/mxfmux \
 	elements/y4menc   \
 	$(check_metadata)
 
