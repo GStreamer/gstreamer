@@ -168,17 +168,17 @@ class TestPipeSub(gst.Pipeline):
     def do_handle_message(self, message):
         self.debug('do_handle_message')
         gst.Pipeline.do_handle_message(self, message)
-        self.message = True
+        self.type = message.type
 gobject.type_register(TestPipeSub)
 
 class TestPipeSubSub(TestPipeSub):
     def do_handle_message(self, message):
         self.debug('do_handle_message')
         TestPipeSub.do_handle_message(self, message)
-        self.message = True
 gobject.type_register(TestPipeSubSub)
 
 
+# see http://bugzilla.gnome.org/show_bug.cgi?id=577735
 class TestSubClass(TestCase):
     def setUp(self):
         self.gctrack()
@@ -191,20 +191,25 @@ class TestSubClass(TestCase):
         p = TestPipeSub()
         u = gst.element_factory_make('uridecodebin')
         self.assertEquals(u.__grefcount__, 1)
+        self.failIf(getattr(p, 'type', None))
         # adding uridecodebin triggers a clock-provide message;
         # this message should be dropped, and thus not affect
         # the refcount of u beyond the parenting.
         p.add(u)
-        self.failUnless(getattr(p, 'message'))
+        self.assertEquals(getattr(p, 'type', None), gst.MESSAGE_CLOCK_PROVIDE)
         self.assertEquals(u.__grefcount__, 2)
         del p
         self.assertEquals(u.__grefcount__, 1)
 
     def testSubSubClass(self):
+        # Edward is worried that a subclass of a subclass will screw up
+        # the refcounting wrt. GST_BUS_DROP
         p = TestPipeSubSub()
         u = gst.element_factory_make('uridecodebin')
         self.assertEquals(u.__grefcount__, 1)
+        self.failIf(getattr(p, 'type', None))
         p.add(u)
+        self.assertEquals(getattr(p, 'type', None), gst.MESSAGE_CLOCK_PROVIDE)
         self.assertEquals(u.__grefcount__, 2)
         del p
         self.assertEquals(u.__grefcount__, 1)
