@@ -338,6 +338,7 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
   for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
     guint bsize, size, temp;
+    guint flag;
 
     /* only need to store the length when it's not the last header */
     if (!g_list_next (walk))
@@ -355,10 +356,12 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
     bsize = GST_BUFFER_SIZE (buf);
     /* write the size backwards */
+    flag = 0;
     while (size) {
       size--;
-      data[size] = bsize & 0x7f;
+      data[size] = (bsize & 0x7f) | flag;
       bsize >>= 7;
+      flag = 0x80;              /* Flag bit on all bytes of the length except the last */
     }
     data += temp;
   }
