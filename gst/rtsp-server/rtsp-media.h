@@ -123,6 +123,7 @@ struct _GstRTSPMediaStream {
 /**
  * GstRTSPMedia:
  * @shared: if this media can be shared between clients
+ * @reusable: if this media can be reused after an unprepare
  * @element: the data providing element
  * @streams: the different streams provided by @element
  * @prepared: if the media is prepared for streaming
@@ -144,6 +145,8 @@ struct _GstRTSPMedia {
   GObject       parent;
 
   gboolean      shared;
+  gboolean      reusable;
+  gboolean      reused;
 
   GstElement   *element;
   GArray       *streams;
@@ -194,8 +197,13 @@ GstRTSPMedia *        gst_rtsp_media_new              (void);
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_reusable     (GstRTSPMedia *media, gboolean reusable);
+gboolean              gst_rtsp_media_is_reusable      (GstRTSPMedia *media);
+
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
+gboolean              gst_rtsp_media_is_prepared      (GstRTSPMedia *media);
+gboolean              gst_rtsp_media_unprepare        (GstRTSPMedia *media);
 
 /* dealing with the media */
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);

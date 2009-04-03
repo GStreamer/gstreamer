@@ -20,11 +20,13 @@
 #include "rtsp-media.h"
 
 #define DEFAULT_SHARED         FALSE
+#define DEFAULT_REUSABLE       FALSE
 
 enum
 {
   PROP_0,
   PROP_SHARED,
+  PROP_REUSABLE,
   PROP_LAST
 };
 
@@ -55,6 +57,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   g_object_class_install_property (gobject_class, PROP_SHARED,
       g_param_spec_boolean ("shared", "Shared", "If this media pipeline can be shared",
           DEFAULT_SHARED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_REUSABLE,
+      g_param_spec_boolean ("reusable", "Reusable",
+          "If this media pipeline can be reused after an unprepare",
+          DEFAULT_REUSABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->context = g_main_context_new ();
   klass->loop = g_main_loop_new (klass->context, TRUE);
@@ -129,6 +136,9 @@ gst_rtsp_media_get_property (GObject *object, guint propid,
     case PROP_SHARED:
       g_value_set_boolean (value, gst_rtsp_media_is_shared (media));
       break;
+    case PROP_REUSABLE:
+      g_value_set_boolean (value, gst_rtsp_media_is_reusable (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -143,6 +153,9 @@ gst_rtsp_media_set_property (GObject *object, guint propid,
   switch (propid) {
     case PROP_SHARED:
       gst_rtsp_media_set_shared (media, g_value_get_boolean (value));
+      break;
+    case PROP_REUSABLE:
+      gst_rtsp_media_set_reusable (media, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -260,6 +273,38 @@ gst_rtsp_media_is_shared (GstRTSPMedia *media)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
   return media->shared;
+}
+
+/**
+ * gst_rtsp_media_set_reusable:
+ * @media: a #GstRTSPMedia
+ * @reusable: the new value
+ *
+ * Set or unset if the pipeline for @media can be reused after the pipeline has
+ * been unprepared.
+ */
+void
+gst_rtsp_media_set_reusable (GstRTSPMedia *media, gboolean reusable)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  media->reusable = reusable;
+}
+
+/**
+ * gst_rtsp_media_is_reusable:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media can be reused after an unprepare.
+ *
+ * Returns: %TRUE if the media can be reused
+ */
+gboolean
+gst_rtsp_media_is_reusable (GstRTSPMedia *media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  return media->reusable;
 }
 
 /**
@@ -971,6 +1016,9 @@ gst_rtsp_media_prepare (GstRTSPMedia *media)
   if (media->prepared)
     goto was_prepared;
 
+  if (!media->reusable && media->reused)
+    goto is_reused;
+
   g_message ("preparing media %p", media);
 
   media->pipeline = gst_pipeline_new ("media-pipeline");
@@ -1055,6 +1103,37 @@ state_failed:
     gst_element_set_state (media->pipeline, GST_STATE_NULL);
     return FALSE;
   }
+is_reused:
+  {
+    g_warning ("can not reused media %p", media);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_media_unprepare:
+ * @obj: a #GstRTSPMedia
+ *
+ * Unprepare @media. After this call, the media should be prepared again before
+ * it can be used again. If the media is set to be non-reusable, a new instance
+ * must be created.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_unprepare (GstRTSPMedia *media)
+{
+  if (!media->prepared)
+    return TRUE;
+
+  if (media->reusable) {
+    g_message ("unprepare media %p", media);
+    media->target_state = GST_STATE_NULL;
+    gst_element_set_state (media->pipeline, GST_STATE_NULL);
+    media->prepared = FALSE;
+    media->reused = TRUE;
+  } 
+  return TRUE;
 }
 
 /**
@@ -1073,10 +1152,10 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
   gint i;
   GstStateChangeReturn ret;
   gboolean add, remove, do_state;
+  gint old_active;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (transports != NULL, FALSE);
-  g_return_val_if_fail (media->prepared, FALSE);
 
   /* NULL and READY are the same */
   if (state == GST_STATE_READY)
@@ -1090,7 +1169,7 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
       unlock_streams (media);
       break;
     case GST_STATE_PAUSED:
-      /* we're going from PLAYING to READY or NULL, remove */
+      /* we're going from PLAYING to PAUSED, READY or NULL, remove */
       if (media->target_state == GST_STATE_PLAYING)
 	remove = TRUE;
       break;
@@ -1101,6 +1180,7 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
     default:
       break;
   }
+  old_active = media->active;
 
   for (i = 0; i < transports->len; i++) {
     GstRTSPMediaTrans *tr;
@@ -1121,18 +1201,27 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
     switch (trans->lower_transport) {
       case GST_RTSP_LOWER_TRANS_UDP:
       case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+      {
+	gchar *dest;
+	gint min, max;
+
+	dest = trans->destination;
+	min = trans->client_port.min;
+	max = trans->client_port.max;
+
 	if (add) {
-          g_message ("adding %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
-          g_signal_emit_by_name (stream->udpsink[0], "add", trans->destination, trans->client_port.min, NULL);
-          g_signal_emit_by_name (stream->udpsink[1], "add", trans->destination, trans->client_port.max, NULL);
+          g_message ("adding %s:%d-%d", dest, min, max);
+          g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
+          g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
 	  media->active++;
 	} else if (remove) {
-          g_message ("removing %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
-          g_signal_emit_by_name (stream->udpsink[0], "remove", trans->destination, trans->client_port.min, NULL);
-          g_signal_emit_by_name (stream->udpsink[1], "remove", trans->destination, trans->client_port.max, NULL);
+          g_message ("removing %s:%d-%d", dest, min, max);
+          g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
+          g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
 	  media->active--;
 	}
         break;
+      }
       case GST_RTSP_LOWER_TRANS_TCP:
 	if (add) {
 	  stream->transports = g_list_prepend (stream->transports, tr);
@@ -1147,7 +1236,7 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
   }
 
   /* we just added the first media, do the playing state change */
-  if (media->active == 1 && add)
+  if (old_active == 0 && add)
     do_state = TRUE;
   /* if we have no more active media, do the downward state changes */
   else if (media->active == 0)
@@ -1157,10 +1246,14 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
 
   g_message ("active %d media %p", media->active, media);
 
-  if (do_state) {
-    g_message ("state %s media %p", gst_element_state_get_name (state), media);
-    media->target_state = state;
-    ret = gst_element_set_state (media->pipeline, state);
+  if (do_state && media->target_state != state) {
+    if (state == GST_STATE_NULL) {
+      gst_rtsp_media_unprepare (media);
+    } else {
+      g_message ("state %s media %p", gst_element_state_get_name (state), media);
+      media->target_state = state;
+      ret = gst_element_set_state (media->pipeline, state);
+    }
   }
 
   /* remember where we are */
