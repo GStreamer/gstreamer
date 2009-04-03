@@ -228,7 +228,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
   /* create GstControlledProperty for each property */
   while ((name = va_arg (var_args, gchar *))) {
     /* test if this property isn't yet controlled */
-    if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {
+    if (!self || !gst_controller_find_controlled_property (self, name)) {
       /* create GstControlledProperty and add to self->propeties List */
       if ((prop = gst_controlled_property_new (object, name))) {
         /* if we don't have a controller object yet, now is the time to create one */
@@ -290,7 +290,7 @@ gst_controller_new_list (GObject * object, GList * list)
   for (node = list; node; node = g_list_next (node)) {
     name = (gchar *) node->data;
     /* test if this property isn't yet controlled */
-    if (!self || !(prop = gst_controller_find_controlled_property (self, name))) {
+    if (!self || !gst_controller_find_controlled_property (self, name)) {
       /* create GstControlledProperty and add to self->propeties List */
       if ((prop = gst_controlled_property_new (object, name))) {
         /* if we don't have a controller object yet, now is the time to create one */
