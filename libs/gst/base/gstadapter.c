@@ -239,7 +239,7 @@ gst_adapter_peek_into (GstAdapter * adapter, guint8 * data, guint size)
   /* The first buffer might be partly consumed, so need to handle
    * 'skipped' bytes. */
   cur = adapter->buflist->data;
-  copied = to_copy = MIN (GST_BUFFER_SIZE (cur) - adapter->skip, size);
+  copied = MIN (GST_BUFFER_SIZE (cur) - adapter->skip, size);
   memcpy (data, GST_BUFFER_DATA (cur) + adapter->skip, copied);
   data += copied;
 
