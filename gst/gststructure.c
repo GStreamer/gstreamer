@@ -1827,8 +1827,6 @@ gst_structure_parse_value (gchar * str,
   /* check if there's a (type_name) 'cast' */
   type_name = NULL;
   if (*s == '(') {
-    type = G_TYPE_INVALID;
-
     s++;
     while (g_ascii_isspace (*s))
       s++;
