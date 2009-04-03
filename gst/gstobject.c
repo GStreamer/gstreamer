@@ -502,12 +502,9 @@ gst_object_dispatch_properties_changed (GObject * object,
   GstObject *gst_object, *parent, *old_parent;
   guint i;
   gchar *name, *debug_name;
-  GstObjectClass *klass;
 
   /* we fail when this is not a GstObject */
   g_return_if_fail (GST_IS_OBJECT (object));
-
-  klass = GST_OBJECT_GET_CLASS (object);
 
   /* do the standard dispatching */
   G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
@@ -1175,10 +1172,6 @@ gst_signal_object_get_type (void)
 static void
 gst_signal_object_class_init (GstSignalObjectClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-
   parent_class = g_type_class_peek_parent (klass);
 
 #ifndef GST_DISABLE_LOADSAVE

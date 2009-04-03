@@ -1055,14 +1055,12 @@ static gboolean
 gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseTransform *trans;
-  GstBaseTransformClass *klass;
   GstPad *otherpad, *otherpeer;
   GstCaps *othercaps = NULL;
   gboolean ret = TRUE;
   GstCaps *incaps, *outcaps;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
   otherpeer = gst_pad_get_peer (otherpad);

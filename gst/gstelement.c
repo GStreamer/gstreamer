@@ -2416,14 +2416,8 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
 {
   GstElementClass *oclass;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstState current;
-  GstState next;
 
   oclass = GST_ELEMENT_GET_CLASS (element);
-
-  /* start with the current state. */
-  current = (GstState) GST_STATE_TRANSITION_CURRENT (transition);
-  next = GST_STATE_TRANSITION_NEXT (transition);
 
   /* call the state change function so it can set the state */
   if (oclass->change_state)

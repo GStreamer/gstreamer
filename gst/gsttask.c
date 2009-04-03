@@ -427,12 +427,9 @@ no_lock:
 gboolean
 gst_task_stop (GstTask * task)
 {
-  GstTaskClass *tclass;
   GstTaskState old;
 
   g_return_val_if_fail (GST_IS_TASK (task), FALSE);
-
-  tclass = GST_TASK_GET_CLASS (task);
 
   GST_DEBUG_OBJECT (task, "Stopping task %p", task);
 

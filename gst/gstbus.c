@@ -163,10 +163,8 @@ static void
 gst_bus_class_init (GstBusClass * klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 

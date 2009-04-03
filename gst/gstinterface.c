@@ -172,14 +172,10 @@ gst_implements_interface_cast (gpointer from, GType iface_type)
 gboolean
 gst_implements_interface_check (gpointer from, GType type)
 {
-  GstImplementsInterface *iface;
-
   /* check cast, return FALSE if it fails, don't give a warning... */
   if (!G_TYPE_CHECK_INSTANCE_TYPE (from, type)) {
     return FALSE;
   }
-
-  iface = G_TYPE_CHECK_INSTANCE_CAST (from, type, GstImplementsInterface);
 
   /* now, if we're an element (or derivative), is this thing
    * actually implemented for real? */

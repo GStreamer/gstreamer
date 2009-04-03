@@ -432,11 +432,9 @@ gst_identity_check_imperfect_timestamp (GstIdentity * identity, GstBuffer * buf)
     /* check if we had a previous buffer to compare to */
     if (identity->prev_timestamp != GST_CLOCK_TIME_NONE &&
         identity->prev_duration != GST_CLOCK_TIME_NONE) {
-      guint64 offset;
       GstClockTime t_expected;
       GstClockTimeDiff dt;
 
-      offset = GST_BUFFER_OFFSET (buf);
       t_expected = identity->prev_timestamp + identity->prev_duration;
       dt = GST_CLOCK_DIFF (t_expected, timestamp);
       if (dt != 0) {

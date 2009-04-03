@@ -1201,7 +1201,6 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstCollectData *data;
   GstCollectPads *pads;
-  guint64 size;
   GstFlowReturn ret;
   GstBuffer **buffer_p;
 
@@ -1216,7 +1215,6 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   GST_OBJECT_UNLOCK (pad);
 
   pads = data->collect;
-  size = GST_BUFFER_SIZE (buffer);
 
   GST_OBJECT_LOCK (pads);
   /* if not started, bail out */
