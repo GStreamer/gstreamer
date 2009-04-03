@@ -231,7 +231,7 @@ unescape_character (const char *scanner)
     return -1;
   }
 
-  second_digit = hex_to_int (*scanner++);
+  second_digit = hex_to_int (*scanner);
   if (second_digit < 0) {
     return -1;
   }

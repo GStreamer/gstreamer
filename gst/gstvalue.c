@@ -1910,7 +1910,7 @@ gst_string_unwrap (const gchar * s)
     goto beach;
 
   /* null terminate result string and return */
-  *write++ = '\0';
+  *write = '\0';
   return ret;
 
 beach:
