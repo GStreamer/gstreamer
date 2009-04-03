@@ -80,12 +80,9 @@ static void
 gst_rtsp_client_finalize (GObject * obj)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (obj);
-  GList *walk;
 
   g_message ("finalize client %p", client);
 
-  for (walk = client->sessions; walk; walk = g_list_next (walk))
-    g_object_weak_unref (G_OBJECT (walk->data), (GWeakNotify) client_session_finalized, client);
   g_list_free (client->sessions);
 
   gst_rtsp_connection_free (client->connection);
