@@ -228,8 +228,8 @@ gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
 
   if (pic_hdr.pic_type == I_FRAME &&
       mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
-    dec->device->vdp_video_surface_destroy (mpeg_dec->vdp_info.
-        forward_reference);
+    dec->device->vdp_video_surface_destroy (mpeg_dec->
+        vdp_info.forward_reference);
     mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
   }
 
