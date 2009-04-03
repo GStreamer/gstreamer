@@ -709,17 +709,15 @@ AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
     DVDNAV_MAJOR=`echo $DVDNAV_VERSION | cut -d. -f1 | sed s/[a-zA-Z\-].*//g`
     DVDNAV_MINOR=`echo $DVDNAV_VERSION | cut -d. -f2 | sed s/[a-zA-Z\-].*//g`
     DVDNAV_MICRO=`echo $DVDNAV_VERSION | cut -d. -f3 | sed s/[a-zA-Z\-].*//g`
-    if [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
+    if [[ "$DVDNAV_MAJOR" -eq "4" ]] && \
        [[ "$DVDNAV_MINOR" -lt "1" ]]; then
-      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
+      AC_MSG_WARN([libdvdnav >= 4.1.2 is required, you have $DVDNAV_VERSION])
       HAVE_DVDNAV="no"
-    elif [[ "$DVDNAV_MAJOR" -eq "0" ]] && \
+    elif [[ "$DVDNAV_MAJOR" -eq "4" ]] && \
          [[ "$DVDNAV_MINOR" -eq "1" ]] && \
-         [[ "$DVDNAV_MICRO" -lt "7" ]]; then
-      AC_MSG_WARN([libdvdnav >= 0.1.7 is required, you have $DVDNAV_VERSION])
+         [[ "$DVDNAV_MICRO" -lt "2" ]]; then
+      AC_MSG_WARN([libdvdnav >= 4.1.2 is required, you have $DVDNAV_VERSION])
       HAVE_DVDNAV="no"
-    elif [[ "$DVDNAV_MAJOR" -eq "0" ]]; then
-      AC_DEFINE(DVDNAV_OLD, 1, [Define if an old libdvdnav is used])      
     fi
   fi
   AS_SCRUB_INCLUDE(DVDNAV_CFLAGS)
