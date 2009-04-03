@@ -975,14 +975,17 @@ static gboolean
 gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseTransform *trans;
+#if 0
   GstPad *otherpad;
+#endif
   GstCaps *othercaps = NULL;
   gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
 
 #if 0
+  otherpad = (pad == trans->srcpad) ? trans->sinkpad : trans->srcpad;
+
   /* we need fixed caps for the check, fall back to the default implementation
    * if we don't */
   if (!gst_caps_is_fixed (caps))
@@ -1025,8 +1028,11 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
 #endif
 
 done:
+#if 0
+  /* We know it's always NULL since we never use it */
   if (othercaps)
     gst_caps_unref (othercaps);
+#endif
   gst_object_unref (trans);
 
   return ret;
