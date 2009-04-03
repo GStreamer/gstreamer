@@ -709,8 +709,11 @@ AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], resindvd, [
     DVDNAV_MAJOR=`echo $DVDNAV_VERSION | cut -d. -f1 | sed s/[a-zA-Z\-].*//g`
     DVDNAV_MINOR=`echo $DVDNAV_VERSION | cut -d. -f2 | sed s/[a-zA-Z\-].*//g`
     DVDNAV_MICRO=`echo $DVDNAV_VERSION | cut -d. -f3 | sed s/[a-zA-Z\-].*//g`
-    if [[ "$DVDNAV_MAJOR" -eq "4" ]] && \
-       [[ "$DVDNAV_MINOR" -lt "1" ]]; then
+    if [[ "$DVDNAV_MAJOR" -lt "4" ]]; then
+      AC_MSG_WARN([libdvdnav >= 4.1.2 is required, you have $DVDNAV_VERSION])
+      HAVE_DVDNAV="no"
+    elif [[ "$DVDNAV_MAJOR" -eq "4" ]] && \
+         [[ "$DVDNAV_MINOR" -lt "1" ]]; then
       AC_MSG_WARN([libdvdnav >= 4.1.2 is required, you have $DVDNAV_VERSION])
       HAVE_DVDNAV="no"
     elif [[ "$DVDNAV_MAJOR" -eq "4" ]] && \
