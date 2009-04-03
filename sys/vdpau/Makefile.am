@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstvdpau.la
 
 libgstvdpau_la_SOURCES = \
-	gst-vdpau-device.c \
+	gstvdpaudevice.c \
 	gstvdpaudecoder.c \
 	gstvdpaumpegdecoder.c \
 	mpegutil.c
@@ -13,7 +13,7 @@ libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
-	gst-vdpau-device.h \
+	gstvdpaudevice.h \
 	gstvdpaudecoder.h \
 	gstvdpaumpegdecoder.h \
 	mpegutil.h

@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include "gst-vdpau-device.h"
+#include "gstvdpaudevice.h"
 
 G_BEGIN_DECLS
 
