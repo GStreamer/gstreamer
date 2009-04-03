@@ -1323,7 +1323,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   gboolean post_paused = FALSE;
   gboolean post_async_done = FALSE;
   gboolean post_playing = FALSE;
-  gboolean sync;
 
   /* we are certainly not playing async anymore now */
   basesink->playing_async = FALSE;
@@ -1333,7 +1332,6 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   next = GST_STATE_NEXT (basesink);
   pending = GST_STATE_PENDING (basesink);
   post_pending = pending;
-  sync = basesink->sync;
 
   switch (pending) {
     case GST_STATE_PLAYING:
