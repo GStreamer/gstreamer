@@ -6,5 +6,5 @@ such features are added to this demuxer it would need to be moved to the
 -ugly module or those features need to come as add-in functionality stored in 
 another module.
 
-As the plugin is as of today's date (19th of June 2007) it do not 
+As the plugin is as of today's date (19th of June 2007) it does not 
 violate any software patents we know of.
