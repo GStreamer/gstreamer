@@ -95,7 +95,6 @@ gst_vdpau_device_constructed (GObject * object)
     {0, NULL}
   };
 
-  /* FIXME: We probably want to use the same VdpDevice for every VDPAU element */
   device->display = XOpenDisplay (device->display_name);
   if (!device->display) {
     GST_ERROR_OBJECT (device, "Could not open X display with name: %s",
@@ -256,12 +255,10 @@ gst_vdpau_get_device (const gchar * display_name)
     device = g_hash_table_lookup (devices_hash, "");
 
   if (!device) {
-    g_debug ("asdasd");
     device = gst_vdpau_device_new (display_name);
     g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, devices_hash);
   } else
     g_object_ref (device);
 
-  g_debug ("HMM");
   return device;
 }
