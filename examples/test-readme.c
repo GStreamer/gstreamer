@@ -48,6 +48,8 @@ main (int argc, char *argv[])
   gst_rtsp_media_factory_set_launch (factory, 
     "( videotestsrc is-live=1 ! x264enc ! rtph264pay name=pay0 pt=96 )");
 
+  gst_rtsp_media_factory_set_shared (factory, TRUE);
+
   /* attach the test factory to the /test url */
   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
 
