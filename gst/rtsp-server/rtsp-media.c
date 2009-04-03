@@ -1072,7 +1072,7 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
 {
   gint i;
   GstStateChangeReturn ret;
-  gboolean add, remove;
+  gboolean add, remove, do_state;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (transports != NULL, FALSE);
@@ -1082,15 +1082,13 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
   if (state == GST_STATE_READY)
     state = GST_STATE_NULL;
 
-  if (media->target_state == state)
-    return TRUE;
-
   add = remove = FALSE;
 
   switch (state) {
     case GST_STATE_NULL:
       /* unlock the streams so that they follow the state changes from now on */
       unlock_streams (media);
+      break;
     case GST_STATE_PAUSED:
       /* we're going from PLAYING to READY or NULL, remove */
       if (media->target_state == GST_STATE_PLAYING)
@@ -1127,10 +1125,12 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
           g_message ("adding %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
           g_signal_emit_by_name (stream->udpsink[0], "add", trans->destination, trans->client_port.min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "add", trans->destination, trans->client_port.max, NULL);
+	  media->active++;
 	} else if (remove) {
           g_message ("removing %s:%d-%d", trans->destination, trans->client_port.min, trans->client_port.max);
           g_signal_emit_by_name (stream->udpsink[0], "remove", trans->destination, trans->client_port.min, NULL);
           g_signal_emit_by_name (stream->udpsink[1], "remove", trans->destination, trans->client_port.max, NULL);
+	  media->active--;
 	}
         break;
       case GST_RTSP_LOWER_TRANS_TCP:
@@ -1146,9 +1146,22 @@ gst_rtsp_media_set_state (GstRTSPMedia *media, GstState state, GArray *transport
     }
   }
 
-  g_message ("state %s media %p", gst_element_state_get_name (state), media);
-  media->target_state = state;
-  ret = gst_element_set_state (media->pipeline, state);
+  /* we just added the first media, do the playing state change */
+  if (media->active == 1 && add)
+    do_state = TRUE;
+  /* if we have no more active media, do the downward state changes */
+  else if (media->active == 0)
+    do_state = TRUE;
+  else
+    do_state = FALSE;
+
+  g_message ("active %d media %p", media->active, media);
+
+  if (do_state) {
+    g_message ("state %s media %p", gst_element_state_get_name (state), media);
+    media->target_state = state;
+    ret = gst_element_set_state (media->pipeline, state);
+  }
 
   /* remember where we are */
   if (state == GST_STATE_PAUSED)

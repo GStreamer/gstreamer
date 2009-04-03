@@ -148,6 +148,7 @@ struct _GstRTSPMedia {
   GstElement   *element;
   GArray       *streams;
   gboolean      prepared;
+  gint          active;
 
   /* the pipeline for the media */
   GstElement   *pipeline;
