@@ -30,6 +30,12 @@ enum
   PROP_LAST
 };
 
+enum
+{
+  SIGNAL_UNPREPARED,
+  SIGNAL_LAST
+};
+
 static void gst_rtsp_media_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
 static void gst_rtsp_media_set_property (GObject *object, guint propid,
@@ -39,6 +45,8 @@ static void gst_rtsp_media_finalize (GObject * obj);
 static gpointer do_loop (GstRTSPMediaClass *klass);
 static gboolean default_handle_message (GstRTSPMedia *media, GstMessage *message);
 static void unlock_streams (GstRTSPMedia *media);
+
+static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
 
@@ -62,6 +70,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_param_spec_boolean ("reusable", "Reusable",
           "If this media pipeline can be reused after an unprepare",
           DEFAULT_REUSABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_media_signals[SIGNAL_UNPREPARED] =
+      g_signal_new ("unprepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPMediaClass, unprepared), NULL, NULL,
+      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   klass->context = g_main_context_new ();
   klass->loop = g_main_loop_new (klass->context, TRUE);

@@ -186,7 +186,11 @@ struct _GstRTSPMediaClass {
   GMainLoop    *loop;
   GThread      *thread;
 
+  /* vmethods */
   gboolean     (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
+
+  /* signals */
+  gboolean     (*unprepared)      (GstRTSPMedia *media);
 };
 
 GType                 gst_rtsp_media_get_type         (void);
