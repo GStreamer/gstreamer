@@ -250,6 +250,21 @@ gst_rtsp_media_factory_is_shared (GstRTSPMediaFactory *factory)
   return result;
 }
 
+static gboolean
+compare_media (gpointer key, GstRTSPMedia *media1, GstRTSPMedia *media2)
+{
+  return (media1 == media2);
+}
+
+static void
+media_unprepared (GstRTSPMedia *media, GstRTSPMediaFactory *factory)
+{
+  g_mutex_lock (factory->medias_lock);
+  g_hash_table_foreach_remove (factory->medias, (GHRFunc) compare_media,
+       media);
+  g_mutex_unlock (factory->medias_lock);
+}
+
 /**
  * gst_rtsp_media_factory_construct:
  * @factory: a #GstRTSPMediaFactory
@@ -309,6 +324,12 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory *factory, const GstRTSPUrl
         g_object_ref (media);
         g_hash_table_insert (factory->medias, key, media);
         key = NULL;
+      }
+      if (!gst_rtsp_media_is_reusable (media)) {
+	/* when not reusable, connect to the unprepare signal to remove the item
+	 * from our cache when it gets unprepared */
+	g_signal_connect (media, "unprepared", (GCallback) media_unprepared,
+			factory);
       }
     }
   }
