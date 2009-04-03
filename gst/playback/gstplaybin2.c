@@ -1230,6 +1230,7 @@ get_current_stream_number (GstPlayBin * playbin, GPtrArray * channels)
     pad = g_ptr_array_index (channels, i);
     if ((selector = gst_pad_get_parent (pad))) {
       g_object_get (selector, "active-pad", &current, NULL);
+      gst_object_unref (selector);
 
       if (pad == current) {
         gst_object_unref (current);
@@ -1241,9 +1242,6 @@ get_current_stream_number (GstPlayBin * playbin, GPtrArray * channels)
         gst_object_unref (current);
     }
   }
-
-  if (selector)
-    gst_object_unref (selector);
 
   return ret;
 }
