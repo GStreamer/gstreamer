@@ -2530,7 +2530,6 @@ gst_bin_continue_func (BinContinueData * data)
   GstBin *bin;
   GstState current, next, pending;
   GstStateChange transition;
-  GstStateChangeReturn ret;
 
   bin = data->bin;
   pending = data->pending;
@@ -2560,7 +2559,7 @@ gst_bin_continue_func (BinContinueData * data)
       gst_element_state_get_name (current),
       gst_element_state_get_name (next), gst_element_state_get_name (pending));
 
-  ret = gst_element_change_state (GST_ELEMENT_CAST (bin), transition);
+  gst_element_change_state (GST_ELEMENT_CAST (bin), transition);
 
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
