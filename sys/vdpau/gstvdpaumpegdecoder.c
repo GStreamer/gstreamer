@@ -38,8 +38,6 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#include "gstvdpauvideobuffer.h"
-#include "gstvdpauvideoyuv.h"
 #include "mpegutil.h"
 #include "gstvdpaumpegdecoder.h"
 

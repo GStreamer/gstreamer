@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstvdpauvideobuffer.h"
 #include "gstvdpaudecoder.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdpau_decoder_debug);
