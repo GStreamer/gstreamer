@@ -144,6 +144,7 @@ fi
 
 AC_OUTPUT([
 source/Makefile
+fixup/Makefile
 gstreamer-sharp/Makefile
 gstreamer-sharp/AssemblyInfo.cs
 gstreamer-sharp/gstreamer-sharp.dll.config

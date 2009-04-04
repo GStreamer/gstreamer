@@ -47,18 +47,19 @@
   <attr path="/api/namespace/object[@name='GhostPad']" name="parent">GstPad</attr>
   
   <change-node-type path="/api/namespace/object[@name='Event']">boxed</change-node-type>
-  <remove-attr path="/api/namespace/object[@name='Event']" name="parent" />
   <attr path="/api/namespace/object[@name='Event']" name="opaque">true</attr>
   <change-node-type path="/api/namespace/object[@name='Buffer']">boxed</change-node-type>
-  <remove-attr path="/api/namespace/object[@name='Buffer']" name="parent" />
   <attr path="/api/namespace/object[@name='Buffer']" name="opaque">true</attr>
   <change-node-type path="/api/namespace/object[@name='Message']">boxed</change-node-type>
-  <remove-attr path="/api/namespace/object[@name='Message']" name="parent" />
   <attr path="/api/namespace/object[@name='Message']" name="opaque">true</attr>
   <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
-  <remove-attr path="/api/namespace/object[@name='Query']" name="parent" />
   <attr path="/api/namespace/object[@name='Query']" name="opaque">true</attr>
-  <remove-node path="/api/namespace/object[@cname='GstMiniObject']" />
+  <change-node-type path="/api/namespace/object[@name='MiniObject']">boxed</change-node-type>
+  <attr path="/api/namespace/object[@name='MiniObject']" name="opaque">true</attr>
+  <remove-attr path="/api/namespace/boxed[@name='MiniObject']" name="parent" />
+  <remove-node path="/api/namespace/boxed[@name='MiniObject']/constructor[@cname='gst_mini_object_new']" />
+
+  <!-- <remove-node path="/api/namespace/object[@cname='GstMiniObject']" /> -->
 
   <!-- We implement this ourselves, using the overload that keeps the callback from getting GCed -->
   <attr path="/api/namespace/object[@name='Bus']/method[@name='AddWatch']" name="hidden">true</attr>
@@ -190,6 +191,10 @@
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetChar']/*/*[@name='value']" name="pass_as">out</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetCharIndex']/*/*[@name='value']" name="pass_as">out</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetUlong']/*/*[@name='value']" name="pass_as">out</attr>
+
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildAdded']" name="name">EmitChildAdded</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildRemoved']" name="name">EmitChildRemoved</attr>
+  <attr path="/api/namespace/callback[@name='IteratorNextFunction']/parameters/parameter[@name='result']" name="name">res</attr>
   <!--
   <attr path="/api/namespace/boxed[@name='Plugin']/field[@name='Filename']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/field[@name='Name']" name="hidden">1</attr>

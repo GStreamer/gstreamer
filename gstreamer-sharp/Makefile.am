@@ -59,7 +59,8 @@ customs = 			\
 	Element.custom		\
 	Message.custom		\
 	Pad.custom		\
-	Object.custom	
+	Object.custom		\
+	MiniObject.custom
 		
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
@@ -75,7 +76,7 @@ EXTRA_DIST =			\
 $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
 	cp $(srcdir)/$(RAW_API) $(API)
 	chmod u+w $(API)
-	$(GAPI_FIXUP) --api=$(API) --metadata=$(srcdir)/$(METADATA) \
+	$(MONO) $(top_builddir)/fixup/gst-gapi-fixup.exe --api=$(API) --metadata=$(srcdir)/$(METADATA) \
 	--symbols=$(srcdir)/$(SYMBOLS)
 
 generated-stamp: $(API) $(GAPI_CODEGEN) $(build_customs)

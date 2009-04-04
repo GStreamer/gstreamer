@@ -170,8 +170,8 @@ public class DecodeBinTranscoder : IDisposable
     
         DecodeBinTranscoder transcoder = new DecodeBinTranscoder();
         
-        transcoder.Error += delegate(object o, ErrorArgs args) {
-            Console.WriteLine("Error: {0}", args.Error);
+        transcoder.Error += delegate(object o, ErrorArgs eargs) {
+            Console.WriteLine("Error: {0}", eargs.Error);
             transcoder.Dispose();
             loop.Quit();
         };
@@ -182,11 +182,11 @@ public class DecodeBinTranscoder : IDisposable
             loop.Quit();
         };
         
-        transcoder.Progress += delegate(object o, ProgressArgs args) {
+        transcoder.Progress += delegate(object o, ProgressArgs pargs) {
             Console.Write("\rEncoding: {0} / {1} ({2:00.00}%) ", 
-                new TimeSpan((args.Position / (long) Clock.Second) * TimeSpan.TicksPerSecond), 
-                new TimeSpan((args.Duration / (long) Clock.Second) * TimeSpan.TicksPerSecond),
-                ((double)args.Position / (double)args.Duration) * 100.0);
+                new TimeSpan((pargs.Position / (long) Clock.Second) * TimeSpan.TicksPerSecond), 
+                new TimeSpan((pargs.Duration / (long) Clock.Second) * TimeSpan.TicksPerSecond),
+                ((double)pargs.Position / (double)pargs.Duration) * 100.0);
         };
         
         transcoder.Transcode(args[0], args[1]);

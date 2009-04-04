@@ -1,0 +1,3 @@
+	protected MiniObject () : base (IntPtr.Zero)
+	{
+	}

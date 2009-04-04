@@ -1,4 +1,4 @@
-SUBDIRS = source gstreamer-sharp doc tests sample
+SUBDIRS = source fixup gstreamer-sharp doc tests sample
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gstreamer-sharp-0.10.pc
