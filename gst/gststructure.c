@@ -139,6 +139,7 @@ gst_structure_id_empty_new (GQuark quark)
   return gst_structure_id_empty_new_with_size (quark, 0);
 }
 
+#ifndef G_DISABLE_CHECKS
 static gboolean
 gst_structure_validate_name (const gchar * name)
 {
@@ -166,6 +167,7 @@ gst_structure_validate_name (const gchar * name)
 
   return TRUE;
 }
+#endif
 
 /**
  * gst_structure_empty_new:
