@@ -167,11 +167,8 @@ namespace GtkSharp.Parsing {
 				bool matched = false;
 				while (api_iter.MoveNext ()) {
 					XmlElement node = ((IHasXmlNode)api_iter.Current).GetNode () as XmlElement;
-					XmlAttribute attr = node.Attributes[name];
 
-					Console.WriteLine (attr);
-					if (attr != null)
-						node.Attributes.Remove (attr);
+					node.RemoveAttribute (name);
 					matched = true;
 				}
 				if (!matched)
