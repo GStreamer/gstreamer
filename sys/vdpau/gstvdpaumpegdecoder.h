@@ -47,10 +47,10 @@ struct _GstVdpauMpegDecoder
   
   VdpDecoder decoder;
   VdpPictureInfoMPEG1Or2 vdp_info;
+  GstBuffer *f_buffer;
   
   GstAdapter *adapter;
   gint slices;
-
 };
 
 struct _GstVdpauMpegDecoderClass 

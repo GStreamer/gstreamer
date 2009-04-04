@@ -38,6 +38,8 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#include "gstvdpauvideobuffer.h"
+#include "gstvdpauvideoyuv.h"
 #include "mpegutil.h"
 #include "gstvdpaumpegdecoder.h"
 
@@ -133,19 +135,20 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
 {
   GstVdpauDecoder *dec;
   GstBuffer *buffer;
+  GstVdpauVideoBuffer *outbuf;
   VdpVideoSurface surface;
   GstVdpauDevice *device;
   VdpBitstreamBuffer vbit[1];
   VdpStatus status;
-  GstFlowReturn ret;
 
   dec = GST_VDPAU_DECODER (mpeg_dec);
 
   buffer = gst_adapter_take_buffer (mpeg_dec->adapter,
       gst_adapter_available (mpeg_dec->adapter));
 
-  surface =
-      gst_vdpau_decoder_create_video_surface (GST_VDPAU_DECODER (mpeg_dec));
+  outbuf = gst_vdpau_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
+      dec->width, dec->height);
+  surface = outbuf->surface;
 
   device = dec->device;
 
@@ -165,23 +168,23 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
             device->vdp_get_error_string (status)));
 
     if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-      device->vdp_video_surface_destroy (mpeg_dec->vdp_info.forward_reference);
+      gst_buffer_unref (mpeg_dec->f_buffer);
 
-    device->vdp_video_surface_destroy (surface);
+    gst_buffer_unref (GST_BUFFER (outbuf));
 
     return GST_FLOW_ERROR;
   }
 
-  ret =
-      gst_vdpau_decoder_push_video_surface (GST_VDPAU_DECODER (mpeg_dec),
-      surface);
+  gst_buffer_ref (GST_BUFFER (outbuf));
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-    device->vdp_video_surface_destroy (mpeg_dec->vdp_info.forward_reference);
+    gst_buffer_unref (mpeg_dec->f_buffer);
 
   mpeg_dec->vdp_info.forward_reference = surface;
+  mpeg_dec->f_buffer = GST_BUFFER (outbuf);
 
-  return ret;
+  return gst_vdpau_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
+      outbuf);
 }
 
 static gboolean
@@ -228,8 +231,7 @@ gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
 
   if (pic_hdr.pic_type == I_FRAME &&
       mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
-    dec->device->vdp_video_surface_destroy (mpeg_dec->
-        vdp_info.forward_reference);
+    gst_buffer_unref (mpeg_dec->f_buffer);
     mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
   }
 
@@ -421,11 +423,6 @@ gst_vdpau_mpeg_decoder_finalize (GObject * object)
 {
   GstVdpauMpegDecoder *mpeg_dec = (GstVdpauMpegDecoder *) object;
 
-#if 0                           /* FIXME: can't free the decoder since the device already has been freed */
-  if (mpeg_dec->decoder != VDP_INVALID_HANDLE)
-    dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
-#endif
-
   g_object_unref (mpeg_dec->adapter);
 }
 
@@ -475,8 +472,12 @@ vdpaumpegdecoder_init (GstPlugin * vdpaumpegdecoder)
   GST_DEBUG_CATEGORY_INIT (gst_vdpau_mpeg_decoder_debug, "vdpaumpegdecoder",
       0, "Template vdpaumpegdecoder");
 
-  return gst_element_register (vdpaumpegdecoder, "vdpaumpegdecoder",
+  gst_element_register (vdpaumpegdecoder, "vdpaumpegdecoder",
       GST_RANK_NONE, GST_TYPE_VDPAU_MPEG_DECODER);
+  gst_element_register (vdpaumpegdecoder, "vdpauvideoyuv",
+      GST_RANK_NONE, GST_TYPE_VDPAU_VIDEO_YUV);
+
+  return TRUE;
 }
 
 /* gstreamer looks for this structure to register vdpaumpegdecoders

@@ -47,8 +47,6 @@ struct _GstVdpauDecoder {
   GstPad *src;
   GstPad *sink;
 
-  GstCaps *src_caps;
-
   gint width, height;
   gint framerate_numerator, framerate_denominator;
   guint32 format;
@@ -66,8 +64,8 @@ struct _GstVdpauDecoderClass {
 
 GType gst_vdpau_decoder_get_type (void);
 
-gboolean gst_vdpau_decoder_push_video_surface (GstVdpauDecoder * dec,
-                                               VdpVideoSurface surface);
+gboolean gst_vdpau_decoder_push_video_buffer (GstVdpauDecoder * dec,
+                                               GstVdpauVideoBuffer *buffer);
 VdpVideoSurface gst_vdpau_decoder_create_video_surface (GstVdpauDecoder *dec);
 
 G_END_DECLS
