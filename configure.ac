@@ -4,12 +4,6 @@ AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(gstreamer-sharp, 0.9.5.99)
 AM_MAINTAINER_MODE
 
-AC_ARG_WITH(readme, AC_HELP_STRING([--with-readme], [This must be passed to configure indicating you have fully read and understand README]), readme_understanding="yes", readme_understanding="no")
-
-if test ! "x$readme_understanding" = "xyes"; then
-	AC_MSG_ERROR([You must pass --with-readme to indicate you have read and fully understand the implications in the README file])
-fi
-
 AC_PROG_INSTALL
 
 PACKAGE_VERSION=gstreamer-sharp-0.10
