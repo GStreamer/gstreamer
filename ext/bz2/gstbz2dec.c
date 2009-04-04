@@ -29,11 +29,6 @@
 GST_DEBUG_CATEGORY_STATIC (bz2dec_debug);
 #define GST_CAT_DEFAULT bz2dec_debug
 
-static const GstElementDetails bz2dec_details =
-GST_ELEMENT_DETAILS ("BZ2 decoder",
-    "Codec/Decoder", "Decodes compressed streams",
-    "Lutz Mueller <lutz@users.sourceforge.net>");
-
 static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-bzip"));
@@ -44,6 +39,9 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 struct _GstBz2dec
 {
   GstElement parent;
+
+  GstPad *sink;
+  GstPad *src;
 
   /* Properties */
   guint first_buffer_size;
@@ -105,44 +103,40 @@ gst_bz2dec_decompress_init (GstBz2dec * b)
 static GstFlowReturn
 gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
 {
-  GstBz2dec *b = GST_BZ2DEC (gst_pad_get_parent (pad));
-  GstPad *src = gst_element_get_pad (GST_ELEMENT (b), "src");
+  GstFlowReturn flow;
+  GstBuffer *out;
+  GstBz2dec *b;
   int r = BZ_OK;
 
-  gst_object_unref (b);
-  gst_object_unref (src);
-  if (!b->ready) {
-    GST_ELEMENT_ERROR (b, CORE, FAILED, (NULL), ("Decompressor not ready."));
-    return GST_FLOW_ERROR;
-  }
+  b = GST_BZ2DEC (GST_PAD_PARENT (pad));
+
+  if (!b->ready)
+    goto not_ready;
 
   b->stream.next_in = (char *) GST_BUFFER_DATA (in);
   b->stream.avail_in = GST_BUFFER_SIZE (in);
 
-  while (r != BZ_STREAM_END) {
-    GstBuffer *out;
+  do {
     guint n;
-    GstFlowReturn fr;
 
     /* Create the output buffer */
-    if ((fr = gst_pad_alloc_buffer (src, b->offset,
-                b->offset ? b->buffer_size : b->first_buffer_size,
-                GST_PAD_CAPS (src), &out)) != GST_FLOW_OK) {
+    flow = gst_pad_alloc_buffer (b->src, b->offset,
+        b->offset ? b->buffer_size : b->first_buffer_size,
+        GST_PAD_CAPS (b->src), &out);
+
+    if (flow != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (b, "pad alloc failed: %s", gst_flow_get_name (flow));
       gst_bz2dec_decompress_init (b);
-      return fr;
+      break;
     }
 
     /* Decode */
     b->stream.next_out = (char *) GST_BUFFER_DATA (out);
     b->stream.avail_out = GST_BUFFER_SIZE (out);
     r = BZ2_bzDecompress (&b->stream);
-    if ((r != BZ_OK) && (r != BZ_STREAM_END)) {
-      GST_ELEMENT_ERROR (b, STREAM, DECODE, (NULL),
-          ("Failed to decompress data (error code %i).", r));
-      gst_bz2dec_decompress_init (b);
-      gst_buffer_unref (out);
-      return GST_FLOW_ERROR;
-    }
+    if ((r != BZ_OK) && (r != BZ_STREAM_END))
+      goto decode_failed;
+
     if (b->stream.avail_out >= GST_BUFFER_SIZE (out)) {
       gst_buffer_unref (out);
       break;
@@ -157,34 +151,58 @@ gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
       caps = gst_type_find_helper_for_buffer (GST_OBJECT (b), out, NULL);
       if (caps) {
         gst_buffer_set_caps (out, caps);
-        gst_pad_set_caps (src, caps);
+        gst_pad_set_caps (b->src, caps);
+        gst_pad_use_fixed_caps (b->src);
         gst_caps_unref (caps);
+      } else {
+        /* FIXME: shouldn't we queue output buffers until we have a type? */
       }
     }
 
     /* Push data */
     n = GST_BUFFER_SIZE (out);
-    if ((fr = gst_pad_push (src, out)) != GST_FLOW_OK)
-      return fr;
+    flow = gst_pad_push (b->src, out);
+    if (flow != GST_FLOW_OK)
+      break;
     b->offset += n;
-  }
+  } while (r != BZ_STREAM_END);
+
+done:
+
   gst_buffer_unref (in);
-  return GST_FLOW_OK;
+  return flow;
+
+/* ERRORS */
+decode_failed:
+  {
+    GST_ELEMENT_ERROR (b, STREAM, DECODE, (NULL),
+        ("Failed to decompress data (error code %i).", r));
+    gst_bz2dec_decompress_init (b);
+    gst_buffer_unref (out);
+    flow = GST_FLOW_ERROR;
+    goto done;
+  }
+not_ready:
+  {
+    GST_ELEMENT_ERROR (b, LIBRARY, FAILED, (NULL), ("Decompressor not ready."));
+    flow = GST_FLOW_WRONG_STATE;
+    goto done;
+  }
 }
 
 static void
 gst_bz2dec_init (GstBz2dec * b, GstBz2decClass * klass)
 {
-  GstPad *pad;
-
   b->first_buffer_size = DEFAULT_FIRST_BUFFER_SIZE;
   b->buffer_size = DEFAULT_BUFFER_SIZE;
-  pad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_chain_function (pad, gst_bz2dec_chain);
-  gst_element_add_pad (GST_ELEMENT (b), pad);
-  pad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (b), pad);
-  gst_pad_use_fixed_caps (pad);
+
+  b->sink = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (b->sink, GST_DEBUG_FUNCPTR (gst_bz2dec_chain));
+  gst_element_add_pad (GST_ELEMENT (b), b->sink);
+
+  b->src = gst_pad_new_from_static_template (&src_template, "src");
+  gst_element_add_pad (GST_ELEMENT (b), b->src);
+  gst_pad_use_fixed_caps (b->src);
 
   gst_bz2dec_decompress_init (b);
 }
@@ -198,7 +216,9 @@ gst_bz2dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (ec,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details (ec, &bz2dec_details);
+  gst_element_class_set_details_simple (ec, "BZ2 decoder",
+      "Codec/Decoder", "Decodes compressed streams",
+      "Lutz Mueller <lutz@users.sourceforge.net>");
 }
 
 static void
