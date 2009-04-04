@@ -520,13 +520,13 @@ gboolean
 gst_navigation_message_parse_mouse_over (GstMessage * message,
     gboolean * active)
 {
-  g_return_val_if_fail (GST_NAVIGATION_MESSAGE_HAS_TYPE (message, MOUSE_OVER),
-      FALSE);
+  if (!GST_NAVIGATION_MESSAGE_HAS_TYPE (message, MOUSE_OVER))
+    return FALSE;
 
   if (active) {
     const GstStructure *s = gst_message_get_structure (message);
-    g_return_val_if_fail (gst_structure_get_boolean (s, "active", active),
-        FALSE);
+    if (gst_structure_get_boolean (s, "active", active) == FALSE)
+      return FALSE;
   }
 
   return TRUE;

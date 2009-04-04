@@ -707,7 +707,8 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
 
   GST_DEBUG_OBJECT (v4lsrc, "creating buffer for frame %d", num);
 
-  g_return_val_if_fail (gst_v4lsrc_get_fps (v4lsrc, &fps_n, &fps_d), NULL);
+  if (!(gst_v4lsrc_get_fps (v4lsrc, &fps_n, &fps_d)))
+    return NULL;
 
   buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4LSRC_BUFFER);
 
