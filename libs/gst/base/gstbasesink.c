@@ -275,9 +275,10 @@ static void gst_base_sink_finalize (GObject * object);
 GType
 gst_base_sink_get_type (void)
 {
-  static GType base_sink_type = 0;
+  static volatile gsize base_sink_type = 0;
 
-  if (G_UNLIKELY (base_sink_type == 0)) {
+  if (g_once_init_enter (&base_sink_type)) {
+    GType _type;
     static const GTypeInfo base_sink_info = {
       sizeof (GstBaseSinkClass),
       NULL,
@@ -290,8 +291,9 @@ gst_base_sink_get_type (void)
       (GInstanceInitFunc) gst_base_sink_init,
     };
 
-    base_sink_type = g_type_register_static (GST_TYPE_ELEMENT,
+    _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseSink", &base_sink_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&base_sink_type, _type);
   }
   return base_sink_type;
 }

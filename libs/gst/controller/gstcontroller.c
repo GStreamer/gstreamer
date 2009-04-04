@@ -954,9 +954,10 @@ _gst_controller_class_init (GstControllerClass * klass)
 GType
 gst_controller_get_type (void)
 {
-  static GType type = 0;
+  static volatile gsize type = 0;
 
-  if (type == 0) {
+  if (g_once_init_enter (&type)) {
+    GType _type;
     static const GTypeInfo info = {
       sizeof (GstControllerClass),
       NULL,                     /* base_init */
@@ -969,7 +970,8 @@ gst_controller_get_type (void)
       (GInstanceInitFunc) _gst_controller_init, /* instance_init */
       NULL                      /* value_table */
     };
-    type = g_type_register_static (G_TYPE_OBJECT, "GstController", &info, 0);
+    _type = g_type_register_static (G_TYPE_OBJECT, "GstController", &info, 0);
+    g_once_init_leave (&type, _type);
   }
   return type;
 }

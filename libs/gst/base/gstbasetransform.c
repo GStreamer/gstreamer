@@ -267,9 +267,10 @@ static GstFlowReturn gst_base_transform_prepare_output_buffer (GstBaseTransform
 GType
 gst_base_transform_get_type (void)
 {
-  static GType base_transform_type = 0;
+  static volatile gsize base_transform_type = 0;
 
-  if (!base_transform_type) {
+  if (g_once_init_enter (&base_transform_type)) {
+    GType _type;
     static const GTypeInfo base_transform_info = {
       sizeof (GstBaseTransformClass),
       NULL,
@@ -282,8 +283,9 @@ gst_base_transform_get_type (void)
       (GInstanceInitFunc) gst_base_transform_init,
     };
 
-    base_transform_type = g_type_register_static (GST_TYPE_ELEMENT,
+    _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseTransform", &base_transform_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&base_transform_type, _type);
   }
   return base_transform_type;
 }

@@ -87,8 +87,6 @@ enum
                q->cur_level.time,                                       \
                q->queue->length)
 
-static void gst_data_queue_class_init (GstDataQueueClass * klass);
-static void gst_data_queue_init (GstDataQueue * queue);
 static void gst_data_queue_finalize (GObject * object);
 
 static void gst_data_queue_set_property (GObject * object,
@@ -99,35 +97,16 @@ static void gst_data_queue_get_property (GObject * object,
 static GObjectClass *parent_class = NULL;
 static guint gst_data_queue_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_data_queue_get_type (void)
-{
-  static GType queue_type = 0;
-
-  if (!queue_type) {
-    static const GTypeInfo queue_info = {
-      sizeof (GstDataQueueClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_data_queue_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDataQueue),
-      0,
-      (GInstanceInitFunc) gst_data_queue_init,
-      NULL
-    };
-
-    queue_type = g_type_register_static (G_TYPE_OBJECT,
-        "GstDataQueue", &queue_info, 0);
-    GST_DEBUG_CATEGORY_INIT (data_queue_debug, "dataqueue", 0,
-        "data queue object");
-    GST_DEBUG_CATEGORY_INIT (data_queue_dataflow, "data_queue_dataflow", 0,
-        "dataflow inside the data queue object");
-  }
-
-  return queue_type;
+#define _do_init \
+{ \
+  GST_DEBUG_CATEGORY_INIT (data_queue_debug, "dataqueue", 0, \
+      "data queue object"); \
+  GST_DEBUG_CATEGORY_INIT (data_queue_dataflow, "data_queue_dataflow", 0, \
+      "dataflow inside the data queue object"); \
 }
+
+
+G_DEFINE_TYPE_WITH_CODE (GstDataQueue, gst_data_queue, G_TYPE_OBJECT, _do_init);
 
 static void
 gst_data_queue_class_init (GstDataQueueClass * klass)

@@ -245,9 +245,10 @@ static void gst_base_src_finalize (GObject * object);
 GType
 gst_base_src_get_type (void)
 {
-  static GType base_src_type = 0;
+  static volatile gsize base_src_type = 0;
 
-  if (G_UNLIKELY (base_src_type == 0)) {
+  if (g_once_init_enter (&base_src_type)) {
+    GType _type;
     static const GTypeInfo base_src_info = {
       sizeof (GstBaseSrcClass),
       (GBaseInitFunc) gst_base_src_base_init,
@@ -260,8 +261,9 @@ gst_base_src_get_type (void)
       (GInstanceInitFunc) gst_base_src_init,
     };
 
-    base_src_type = g_type_register_static (GST_TYPE_ELEMENT,
+    _type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstBaseSrc", &base_src_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&base_src_type, _type);
   }
   return base_src_type;
 }
