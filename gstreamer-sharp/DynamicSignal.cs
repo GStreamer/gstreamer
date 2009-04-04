@@ -93,7 +93,8 @@ namespace GLib {
 				si.RegisteredHandler = newHandler;
 			}
 			else {
-				IntPtr closure = g_closure_new_simple(16, IntPtr.Zero);
+				/* We use 32 as this is correct for 32 bit and 64 bit architectures */
+				IntPtr closure = g_closure_new_simple(32, IntPtr.Zero);
 				g_closure_set_meta_marshal(closure, (IntPtr) GCHandle.Alloc(k),  marshalHandler);
 				uint signalId = g_signal_connect_closure(o.Handle, name, closure, after); 
 				SignalHandlers.Add(k, new SignalInfo(signalId, closure, handler));
