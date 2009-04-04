@@ -523,42 +523,14 @@ gst_clock_id_unschedule (GstClockID id)
 /**
  * GstClock abstract base class implementation
  */
-GType
-gst_clock_get_type (void)
-{
-  static GType clock_type = 0;
-
-  if (G_UNLIKELY (clock_type == 0)) {
-    static const GTypeInfo clock_info = {
-      sizeof (GstClockClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_clock_class_init,
-      NULL,
-      NULL,
-      sizeof (GstClock),
-      0,
-      (GInstanceInitFunc) gst_clock_init,
-      NULL
-    };
-
-    clock_type = g_type_register_static (GST_TYPE_OBJECT, "GstClock",
-        &clock_info, G_TYPE_FLAG_ABSTRACT);
-  }
-  return clock_type;
-}
+G_DEFINE_TYPE (GstClock, gst_clock, GST_TYPE_OBJECT);
 
 static void
 gst_clock_class_init (GstClockClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
-
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
 
 #ifndef GST_DISABLE_TRACE
   _gst_clock_entry_trace =
