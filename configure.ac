@@ -329,7 +329,7 @@ else
   esac
 
   # append extra configure options to ac_configure_args if needed
-  if test "x$with_ffmpeg_extra_configure" != no; then
+  if test "x$with_ffmpeg_extra_configure" != "xno"; then
     ac_configure_args="$ac_configure_args $with_ffmpeg_extra_configure"
   fi
 
