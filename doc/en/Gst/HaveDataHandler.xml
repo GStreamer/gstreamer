@@ -1,7 +1,7 @@
 <Type Name="HaveDataHandler" FullName="Gst.HaveDataHandler">
-  <TypeSignature Language="C#" Value="public delegate void HaveDataHandler(object o, Gst.HaveDataArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void HaveDataHandler(object o, HaveDataArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

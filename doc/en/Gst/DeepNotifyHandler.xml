@@ -1,7 +1,7 @@
 <Type Name="DeepNotifyHandler" FullName="Gst.DeepNotifyHandler">
-  <TypeSignature Language="C#" Value="public delegate void DeepNotifyHandler(object o, Gst.DeepNotifyArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void DeepNotifyHandler(object o, DeepNotifyArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

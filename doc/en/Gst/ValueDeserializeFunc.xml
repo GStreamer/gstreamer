@@ -1,7 +1,7 @@
 <Type Name="ValueDeserializeFunc" FullName="Gst.ValueDeserializeFunc">
-  <TypeSignature Language="C#" Value="public delegate bool ValueDeserializeFunc(GLib.Value dest, string s);" />
+  <TypeSignature Language="C#" Value="public delegate bool ValueDeserializeFunc(Value dest, string s);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="dest">To be added.</param>
     <param name="s">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

@@ -1,7 +1,7 @@
 <Type Name="ParentSetHandler" FullName="Gst.ParentSetHandler">
-  <TypeSignature Language="C#" Value="public delegate void ParentSetHandler(object o, Gst.ParentSetArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void ParentSetHandler(object o, ParentSetArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

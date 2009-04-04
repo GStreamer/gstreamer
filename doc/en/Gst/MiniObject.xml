@@ -1,7 +1,7 @@
 <Type Name="MiniObject" FullName="Gst.MiniObject">
   <TypeSignature Language="C#" Value="public class MiniObject : GLib.Opaque" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -9,209 +9,83 @@
   </Base>
   <Interfaces>
   </Interfaces>
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MiniObject (GLib.GType type);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="type" Type="GLib.GType" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MiniObject (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Replace">
-      <MemberSignature Language="C#" Value="public void Replace (Gst.MiniObject newdata);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="newdata" Type="Gst.MiniObject" />
-      </Parameters>
-      <Docs>
-        <param name="newdata">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Flags">
-      <MemberSignature Language="C#" Value="public uint Flags { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Refcount">
-      <MemberSignature Language="C#" Value="public int Refcount { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IsWritable">
-      <MemberSignature Language="C#" Value="public bool IsWritable { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CreateNativeObject">
-      <MemberSignature Language="C#" Value="protected virtual void CreateNativeObject (string[] names, GLib.Value[] vals);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="names" Type="System.String[]" />
-        <Parameter Name="vals" Type="GLib.Value[]" />
-      </Parameters>
-      <Docs>
-        <param name="names">To be added.</param>
-        <param name="vals">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="RegisterGType">
-      <MemberSignature Language="C#" Value="protected static GLib.GType RegisterGType (Type t);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="t" Type="System.Type" />
-      </Parameters>
-      <Docs>
-        <param name="t">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="LookupGType">
-      <MemberSignature Language="C#" Value="protected GLib.GType LookupGType ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Handle">
-      <MemberSignature Language="C#" Value="public IntPtr Handle { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.IntPtr</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Raw">
-      <MemberSignature Language="C#" Value="protected IntPtr Raw { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.IntPtr</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Copy">
-      <MemberSignature Language="C#" Value="public Gst.MiniObject Copy ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MiniObject</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="MakeWritable">
-      <MemberSignature Language="C#" Value="public Gst.MiniObject MakeWritable ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MiniObject</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetMiniObject">
-      <MemberSignature Language="C#" Value="public static Gst.MiniObject GetMiniObject (IntPtr o);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MiniObject</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="o" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="o">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName=".ctor"><MemberSignature Language="C#" Value="protected MiniObject ();" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public MiniObject (GLib.GType type);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="type" Type="GLib.GType" /></Parameters>
+      <Docs><param name="type">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public MiniObject (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Copy">
+      <MemberSignature Language="C#" Value="public Gst.MiniObject Copy ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.MiniObject</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Flags">
+      <MemberSignature Language="C#" Value="public uint Flags { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Handle">
+      <MemberSignature Language="C#" Value="public IntPtr Handle { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.IntPtr</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>2.14.0.0</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IsWritable">
+      <MemberSignature Language="C#" Value="public bool IsWritable { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MakeWritable">
+      <MemberSignature Language="C#" Value="public Gst.MiniObject MakeWritable ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.MiniObject</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Raw">
+      <MemberSignature Language="C#" Value="protected IntPtr Raw { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.IntPtr</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>2.14.0.0</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Refcount">
+      <MemberSignature Language="C#" Value="public int Refcount { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Replace">
+      <MemberSignature Language="C#" Value="public void Replace (Gst.MiniObject newdata);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="newdata" Type="Gst.MiniObject" /></Parameters>
+      <Docs><param name="newdata">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  </Members>
 </Type>

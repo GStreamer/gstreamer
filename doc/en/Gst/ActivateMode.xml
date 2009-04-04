@@ -1,46 +1,34 @@
 <Type Name="ActivateMode" FullName="Gst.ActivateMode">
   <TypeSignature Language="C#" Value="public enum ActivateMode" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Pull">
-      <MemberSignature Language="C#" Value="Pull" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ActivateMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="None">
-      <MemberSignature Language="C#" Value="None" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ActivateMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Push">
-      <MemberSignature Language="C#" Value="Push" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ActivateMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName="None">
+      <MemberSignature Language="C#" Value="None" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ActivateMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Pull">
+      <MemberSignature Language="C#" Value="Pull" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ActivateMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Push">
+      <MemberSignature Language="C#" Value="Push" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ActivateMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

@@ -1,46 +1,34 @@
 <Type Name="TaskState" FullName="Gst.TaskState">
   <TypeSignature Language="C#" Value="public enum TaskState" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Started">
-      <MemberSignature Language="C#" Value="Started" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TaskState</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Stopped">
-      <MemberSignature Language="C#" Value="Stopped" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TaskState</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Paused">
-      <MemberSignature Language="C#" Value="Paused" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TaskState</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName="Paused">
+      <MemberSignature Language="C#" Value="Paused" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TaskState</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Started">
+      <MemberSignature Language="C#" Value="Started" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TaskState</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Stopped">
+      <MemberSignature Language="C#" Value="Stopped" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TaskState</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+  </Members>
 </Type>

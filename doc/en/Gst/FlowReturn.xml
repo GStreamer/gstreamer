@@ -1,96 +1,64 @@
 <Type Name="FlowReturn" FullName="Gst.FlowReturn">
   <TypeSignature Language="C#" Value="public enum FlowReturn" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="NotLinked">
-      <MemberSignature Language="C#" Value="NotLinked" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Error">
-      <MemberSignature Language="C#" Value="Error" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="NotSupported">
-      <MemberSignature Language="C#" Value="NotSupported" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Resend">
-      <MemberSignature Language="C#" Value="Resend" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Ok">
-      <MemberSignature Language="C#" Value="Ok" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="NotNegotiated">
-      <MemberSignature Language="C#" Value="NotNegotiated" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Unexpected">
-      <MemberSignature Language="C#" Value="Unexpected" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="WrongState">
-      <MemberSignature Language="C#" Value="WrongState" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FlowReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName="CustomError"><MemberSignature Language="C#" Value="CustomError" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="CustomSuccess"><MemberSignature Language="C#" Value="CustomSuccess" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Error">
+      <MemberSignature Language="C#" Value="Error" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NotLinked">
+      <MemberSignature Language="C#" Value="NotLinked" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NotNegotiated">
+      <MemberSignature Language="C#" Value="NotNegotiated" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NotSupported">
+      <MemberSignature Language="C#" Value="NotSupported" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Ok">
+      <MemberSignature Language="C#" Value="Ok" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Resend">
+      <MemberSignature Language="C#" Value="Resend" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unexpected">
+      <MemberSignature Language="C#" Value="Unexpected" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="WrongState">
+      <MemberSignature Language="C#" Value="WrongState" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.FlowReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

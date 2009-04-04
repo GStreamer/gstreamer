@@ -1,430 +1,167 @@
 <Type Name="Event" FullName="Gst.Event">
   <TypeSignature Language="C#" Value="public class Event : Gst.MiniObject" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gst.MiniObject</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Event (GLib.GType gtype);" />
-      <MemberType>Constructor</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>System.Obsolete(Message=null, IsError=False)</AttributeName>
-        </Attribute>
-      </Attributes>
-      <Parameters>
-        <Parameter Name="gtype" Type="GLib.GType" />
-      </Parameters>
-      <Docs>
-        <param name="gtype">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (Gst.Format format, long minsize, long maxsize, bool async);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="minsize" Type="System.Int64" />
-        <Parameter Name="maxsize" Type="System.Int64" />
-        <Parameter Name="async" Type="System.Boolean" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="minsize">To be added.</param>
-        <param name="maxsize">To be added.</param>
-        <param name="async">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (Gst.EventType type, Gst.Structure structure);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="type" Type="Gst.EventType" />
-        <Parameter Name="structure" Type="Gst.Structure" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <param name="structure">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (Gst.Structure structure);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="structure" Type="Gst.Structure" />
-      </Parameters>
-      <Docs>
-        <param name="structure">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (bool update, double rate, Gst.Format format, long start, long stop, long position);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="update" Type="System.Boolean" />
-        <Parameter Name="rate" Type="System.Double" />
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="start" Type="System.Int64" />
-        <Parameter Name="stop" Type="System.Int64" />
-        <Parameter Name="position" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="update">To be added.</param>
-        <param name="rate">To be added.</param>
-        <param name="format">To be added.</param>
-        <param name="start">To be added.</param>
-        <param name="stop">To be added.</param>
-        <param name="position">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (double proportion, long diff, ulong timestamp);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="proportion" Type="System.Double" />
-        <Parameter Name="diff" Type="System.Int64" />
-        <Parameter Name="timestamp" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="proportion">To be added.</param>
-        <param name="diff">To be added.</param>
-        <param name="timestamp">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType cur_type, long cur, Gst.SeekType stop_type, long stop);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="rate" Type="System.Double" />
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="flags" Type="Gst.SeekFlags" />
-        <Parameter Name="cur_type" Type="Gst.SeekType" />
-        <Parameter Name="cur" Type="System.Int64" />
-        <Parameter Name="stop_type" Type="Gst.SeekType" />
-        <Parameter Name="stop" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="rate">To be added.</param>
-        <param name="format">To be added.</param>
-        <param name="flags">To be added.</param>
-        <param name="cur_type">To be added.</param>
-        <param name="cur">To be added.</param>
-        <param name="stop_type">To be added.</param>
-        <param name="stop">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Event (Gst.TagList taglist);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="taglist" Type="Gst.TagList" />
-      </Parameters>
-      <Docs>
-        <param name="taglist">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="NewFlushStart">
-      <MemberSignature Language="C#" Value="public static Gst.Event NewFlushStart ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Event</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="NewFlushStop">
-      <MemberSignature Language="C#" Value="public static Gst.Event NewFlushStop ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Event</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeGetName">
-      <MemberSignature Language="C#" Value="public static string TypeGetName (Gst.EventType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="type" Type="Gst.EventType" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseNewSegment">
-      <MemberSignature Language="C#" Value="public void ParseNewSegment (out bool update, out double rate, out Gst.Format format, out long start, out long stop, out long position);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="update" Type="System.Boolean&amp;" RefType="out" />
-        <Parameter Name="rate" Type="System.Double&amp;" RefType="out" />
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="start" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="stop" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="position" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="update">To be added.</param>
-        <param name="rate">To be added.</param>
-        <param name="format">To be added.</param>
-        <param name="start">To be added.</param>
-        <param name="stop">To be added.</param>
-        <param name="position">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseTag">
-      <MemberSignature Language="C#" Value="public void ParseTag (Gst.TagList taglist);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="taglist" Type="Gst.TagList" />
-      </Parameters>
-      <Docs>
-        <param name="taglist">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseQos">
-      <MemberSignature Language="C#" Value="public void ParseQos (out double proportion, out long diff, out ulong timestamp);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="proportion" Type="System.Double&amp;" RefType="out" />
-        <Parameter Name="diff" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="timestamp" Type="System.UInt64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="proportion">To be added.</param>
-        <param name="diff">To be added.</param>
-        <param name="timestamp">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseSeek">
-      <MemberSignature Language="C#" Value="public void ParseSeek (out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType cur_type, out long cur, out Gst.SeekType stop_type, out long stop);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="rate" Type="System.Double&amp;" RefType="out" />
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="flags" Type="Gst.SeekFlags&amp;" RefType="out" />
-        <Parameter Name="cur_type" Type="Gst.SeekType&amp;" RefType="out" />
-        <Parameter Name="cur" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="stop_type" Type="Gst.SeekType&amp;" RefType="out" />
-        <Parameter Name="stop" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="rate">To be added.</param>
-        <param name="format">To be added.</param>
-        <param name="flags">To be added.</param>
-        <param name="cur_type">To be added.</param>
-        <param name="cur">To be added.</param>
-        <param name="stop_type">To be added.</param>
-        <param name="stop">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeToQuark">
-      <MemberSignature Language="C#" Value="public static int TypeToQuark (Gst.EventType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="type" Type="Gst.EventType" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseBufferSize">
-      <MemberSignature Language="C#" Value="public void ParseBufferSize (out Gst.Format format, out long minsize, out long maxsize, out bool async);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="minsize" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="maxsize" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="async" Type="System.Boolean&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="minsize">To be added.</param>
-        <param name="maxsize">To be added.</param>
-        <param name="async">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeGetFlags">
-      <MemberSignature Language="C#" Value="public static Gst.EventTypeFlags TypeGetFlags (Gst.EventType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventTypeFlags</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="type" Type="Gst.EventType" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Src">
-      <MemberSignature Language="C#" Value="public Gst.Object Src { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Object</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Timestamp">
-      <MemberSignature Language="C#" Value="public ulong Timestamp { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public Gst.EventType Type { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Structure">
-      <MemberSignature Language="C#" Value="public Gst.Structure Structure { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Structure</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetEvent">
-      <MemberSignature Language="C#" Value="public static Gst.Event GetEvent (IntPtr raw);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Event</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event ();" />
+      <MemberType>Constructor</MemberType>
+      <Parameters />
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (Gst.Structure structure);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="structure" Type="Gst.Structure" /></Parameters>
+      <Docs><param name="structure">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (Gst.TagList taglist);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="taglist" Type="Gst.TagList" /></Parameters>
+      <Docs><param name="taglist">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Event (ulong latency);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="latency" Type="System.UInt64" /></Parameters><Docs><param name="latency">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (Gst.EventType type, Gst.Structure structure);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="type" Type="Gst.EventType" /><Parameter Name="structure" Type="Gst.Structure" /></Parameters>
+      <Docs><param name="type">To be added.</param><param name="structure">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (double proportion, long diff, ulong timestamp);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="proportion" Type="System.Double" /><Parameter Name="diff" Type="System.Int64" /><Parameter Name="timestamp" Type="System.UInt64" /></Parameters>
+      <Docs><param name="proportion">To be added.</param><param name="diff">To be added.</param><param name="timestamp">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (Gst.Format format, long minsize, long maxsize, bool async);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="minsize" Type="System.Int64" /><Parameter Name="maxsize" Type="System.Int64" /><Parameter Name="async" Type="System.Boolean" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="minsize">To be added.</param><param name="maxsize">To be added.</param><param name="async">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (bool update, double rate, Gst.Format format, long start, long stop, long position);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="update" Type="System.Boolean" /><Parameter Name="rate" Type="System.Double" /><Parameter Name="format" Type="Gst.Format" /><Parameter Name="start" Type="System.Int64" /><Parameter Name="stop" Type="System.Int64" /><Parameter Name="position" Type="System.Int64" /></Parameters>
+      <Docs><param name="update">To be added.</param><param name="rate">To be added.</param><param name="format">To be added.</param><param name="start">To be added.</param><param name="stop">To be added.</param><param name="position">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Event (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="update" Type="System.Boolean" /><Parameter Name="rate" Type="System.Double" /><Parameter Name="applied_rate" Type="System.Double" /><Parameter Name="format" Type="Gst.Format" /><Parameter Name="start" Type="System.Int64" /><Parameter Name="stop" Type="System.Int64" /><Parameter Name="position" Type="System.Int64" /></Parameters><Docs><param name="update">To be added.</param><param name="rate">To be added.</param><param name="applied_rate">To be added.</param><param name="format">To be added.</param><param name="start">To be added.</param><param name="stop">To be added.</param><param name="position">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Event (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="rate" Type="System.Double" /><Parameter Name="format" Type="Gst.Format" /><Parameter Name="flags" Type="Gst.SeekFlags" /><Parameter Name="start_type" Type="Gst.SeekType" /><Parameter Name="start" Type="System.Int64" /><Parameter Name="stop_type" Type="Gst.SeekType" /><Parameter Name="stop" Type="System.Int64" /></Parameters>
+      <Docs><param name="rate">To be added.</param><param name="format">To be added.</param><param name="flags">To be added.</param><param name="start_type">To be added.</param><param name="start">To be added.</param><param name="stop_type">To be added.</param><param name="stop">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="HasName"><MemberSignature Language="C#" Value="public bool HasName (string name);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="name" Type="System.String" /></Parameters><Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewFlushStart">
+      <MemberSignature Language="C#" Value="public static Gst.Event NewFlushStart ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Event</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewFlushStop">
+      <MemberSignature Language="C#" Value="public static Gst.Event NewFlushStop ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Event</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseBufferSize">
+      <MemberSignature Language="C#" Value="public void ParseBufferSize (out Gst.Format format, out long minsize, out long maxsize, out bool async);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="minsize" Type="System.Int64&amp;" RefType="out" /><Parameter Name="maxsize" Type="System.Int64&amp;" RefType="out" /><Parameter Name="async" Type="System.Boolean&amp;" RefType="out" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="minsize">To be added.</param><param name="maxsize">To be added.</param><param name="async">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseLatency"><MemberSignature Language="C#" Value="public ulong ParseLatency ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseNewSegment">
+      <MemberSignature Language="C#" Value="public void ParseNewSegment (out bool update, out double rate, out Gst.Format format, out long start, out long stop, out long position);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="update" Type="System.Boolean&amp;" RefType="out" /><Parameter Name="rate" Type="System.Double&amp;" RefType="out" /><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="start" Type="System.Int64&amp;" RefType="out" /><Parameter Name="stop" Type="System.Int64&amp;" RefType="out" /><Parameter Name="position" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="update">To be added.</param><param name="rate">To be added.</param><param name="format">To be added.</param><param name="start">To be added.</param><param name="stop">To be added.</param><param name="position">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseNewSegmentFull"><MemberSignature Language="C#" Value="public void ParseNewSegmentFull (out bool update, out double rate, out double applied_rate, out Gst.Format format, out long start, out long stop, out long position);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="update" Type="System.Boolean&amp;" RefType="out" /><Parameter Name="rate" Type="System.Double&amp;" RefType="out" /><Parameter Name="applied_rate" Type="System.Double&amp;" RefType="out" /><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="start" Type="System.Int64&amp;" RefType="out" /><Parameter Name="stop" Type="System.Int64&amp;" RefType="out" /><Parameter Name="position" Type="System.Int64&amp;" RefType="out" /></Parameters><Docs><param name="update">To be added.</param><param name="rate">To be added.</param><param name="applied_rate">To be added.</param><param name="format">To be added.</param><param name="start">To be added.</param><param name="stop">To be added.</param><param name="position">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseQos">
+      <MemberSignature Language="C#" Value="public void ParseQos (out double proportion, out long diff, out ulong timestamp);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="proportion" Type="System.Double&amp;" RefType="out" /><Parameter Name="diff" Type="System.Int64&amp;" RefType="out" /><Parameter Name="timestamp" Type="System.UInt64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="proportion">To be added.</param><param name="diff">To be added.</param><param name="timestamp">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseSeek">
+      <MemberSignature Language="C#" Value="public void ParseSeek (out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType start_type, out long start, out Gst.SeekType stop_type, out long stop);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="rate" Type="System.Double&amp;" RefType="out" /><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="flags" Type="Gst.SeekFlags&amp;" RefType="out" /><Parameter Name="start_type" Type="Gst.SeekType&amp;" RefType="out" /><Parameter Name="start" Type="System.Int64&amp;" RefType="out" /><Parameter Name="stop_type" Type="Gst.SeekType&amp;" RefType="out" /><Parameter Name="stop" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="rate">To be added.</param><param name="format">To be added.</param><param name="flags">To be added.</param><param name="start_type">To be added.</param><param name="start">To be added.</param><param name="stop_type">To be added.</param><param name="stop">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseTag">
+      <MemberSignature Language="C#" Value="public void ParseTag (Gst.TagList taglist);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="taglist" Type="Gst.TagList" /></Parameters>
+      <Docs><param name="taglist">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Seqnum"><MemberSignature Language="C#" Value="public uint Seqnum { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Src">
+      <MemberSignature Language="C#" Value="public Gst.Object Src { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Object</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Structure">
+      <MemberSignature Language="C#" Value="public Gst.Structure Structure { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Timestamp">
+      <MemberSignature Language="C#" Value="public ulong Timestamp { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
+      <MemberSignature Language="C#" Value="public Gst.EventType Type { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeGetName">
+      <MemberSignature Language="C#" Value="public static string TypeGetName (Gst.EventType type);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="type" Type="Gst.EventType" /></Parameters>
+      <Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeToQuark">
+      <MemberSignature Language="C#" Value="public static int TypeToQuark (Gst.EventType type);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="type" Type="Gst.EventType" /></Parameters>
+      <Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+    
+    
+    
+  </Members>
 </Type>

@@ -1,207 +1,240 @@
 <Overview>
   <Assemblies>
-    <Assembly Name="gst-sharp" Version="0.9.5.99" />
+    <Assembly Name="gstreamer-sharp" Version="0.9.5.99" />
   </Assemblies>
   <Remarks>To be added.</Remarks>
   <Copyright>To be added.</Copyright>
   <Types>
+    <Namespace Name="GLib">
+      <Type Name="DynamicSignal" Kind="Class" />
+      <Type Name="DynamicSignalHandler" Kind="Delegate" />
+    </Namespace>
     <Namespace Name="Gst">
-      <Type Name="ChildProxy" />
-      <Type Name="TagSetter" />
-      <Type Name="Application" />
-      <Type Name="CommonTags" />
-      <Type Name="AllocTrace" />
-      <Type Name="Bin" />
-      <Type Name="Element" />
-      <Type Name="Object" />
-      <Type Name="Buffer" />
-      <Type Name="MiniObject" />
-      <Type Name="Bus" />
-      <Type Name="Caps" />
-      <Type Name="ChildAddedArgs" />
-      <Type Name="ChildRemovedArgs" />
-      <Type Name="Clock" />
-      <Type Name="ClockEntry" />
-      <Type Name="DebugCategory" />
-      <Type Name="Debug" />
-      <Type Name="DebugMessage" />
-      <Type Name="DeepNotifyArgs" />
-      <Type Name="ElementAddedArgs" />
-      <Type Name="ElementDetails" />
-      <Type Name="ElementFactory" />
-      <Type Name="PluginFeature" />
-      <Type Name="ElementRemovedArgs" />
-      <Type Name="EntryAddedArgs" />
-      <Type Name="Event" />
-      <Type Name="FeatureAddedArgs" />
-      <Type Name="Flow" />
-      <Type Name="FormatDefinition" />
-      <Type Name="Fraction" />
-      <Type Name="GhostPad" />
-      <Type Name="Pad" />
-      <Type Name="Global" />
-      <Type Name="HasPadCreatedArgs" />
-      <Type Name="HaveDataArgs" />
-      <Type Name="IndexAssociation" />
-      <Type Name="Index" />
-      <Type Name="IndexEntry" />
-      <Type Name="IndexFactory" />
-      <Type Name="IndexGroup" />
-      <Type Name="Init" />
-      <Type Name="Iterator" />
-      <Type Name="LinkedArgs" />
-      <Type Name="Message" />
-      <Type Name="MessageArgs" />
-      <Type Name="PadAddedArgs" />
-      <Type Name="PadRemovedArgs" />
-      <Type Name="PadTemplate" />
-      <Type Name="ParentSetArgs" />
-      <Type Name="ParentUnsetArgs" />
-      <Type Name="Pipeline" />
-      <Type Name="PluginAddedArgs" />
-      <Type Name="Plugin" />
-      <Type Name="PluginDesc" />
-      <Type Name="Print" />
-      <Type Name="Query" />
-      <Type Name="QueryTypeDefinition" />
-      <Type Name="Registry" />
-      <Type Name="Segment" />
-      <Type Name="StaticCaps" />
-      <Type Name="StaticPadTemplate" />
-      <Type Name="Structure" />
-      <Type Name="SyncMessageArgs" />
-      <Type Name="SystemClock" />
-      <Type Name="Tag" />
-      <Type Name="TagList" />
-      <Type Name="Task" />
-      <Type Name="Trace" />
-      <Type Name="TraceEntry" />
-      <Type Name="TypeFind" />
-      <Type Name="TypeFindFactory" />
-      <Type Name="TypeNameData" />
-      <Type Name="UnlinkedArgs" />
-      <Type Name="Util" />
-      <Type Name="Value" />
-      <Type Name="ValueTable" />
-      <Type Name="XML" />
-      <Type Name="BusFunc" />
-      <Type Name="BusSyncHandler" />
-      <Type Name="ChildAddedHandler" />
-      <Type Name="ChildRemovedHandler" />
-      <Type Name="ClockCallback" />
-      <Type Name="DeepNotifyHandler" />
-      <Type Name="ElementAddedHandler" />
-      <Type Name="ElementRemovedHandler" />
-      <Type Name="EntryAddedHandler" />
-      <Type Name="FeatureAddedHandler" />
-      <Type Name="FilterFunc" />
-      <Type Name="HasPadCreatedHandler" />
-      <Type Name="HaveDataHandler" />
-      <Type Name="IndexFilter" />
-      <Type Name="IndexResolver" />
-      <Type Name="IteratorDisposeFunction" />
-      <Type Name="IteratorFoldFunction" />
-      <Type Name="IteratorFreeFunction" />
-      <Type Name="IteratorItemFunction" />
-      <Type Name="IteratorNextFunction" />
-      <Type Name="IteratorResyncFunction" />
-      <Type Name="LinkedHandler" />
-      <Type Name="LogFunction" />
-      <Type Name="MiniObjectCopyFunction" />
-      <Type Name="MiniObjectFinalizeFunction" />
-      <Type Name="PadAcceptCapsFunction" />
-      <Type Name="PadActivateFunction" />
-      <Type Name="PadActivateModeFunction" />
-      <Type Name="PadAddedHandler" />
-      <Type Name="PadBlockCallback" />
-      <Type Name="PadBufferAllocFunction" />
-      <Type Name="PadChainFunction" />
-      <Type Name="PadCheckGetRangeFunction" />
-      <Type Name="PadDispatcherFunction" />
-      <Type Name="PadEventFunction" />
-      <Type Name="PadFixateCapsFunction" />
-      <Type Name="PadGetCapsFunction" />
-      <Type Name="PadGetRangeFunction" />
-      <Type Name="PadIntLinkFunction" />
-      <Type Name="PadLinkFunction" />
-      <Type Name="PadQueryFunction" />
-      <Type Name="PadRemovedHandler" />
-      <Type Name="PadSetCapsFunction" />
-      <Type Name="PadUnlinkFunction" />
-      <Type Name="ParentSetHandler" />
-      <Type Name="ParentUnsetHandler" />
-      <Type Name="PluginAddedHandler" />
-      <Type Name="PluginFeatureFilter" />
-      <Type Name="PluginFilter" />
-      <Type Name="PluginInitFunc" />
-      <Type Name="StructureForeachFunc" />
-      <Type Name="StructureMapFunc" />
-      <Type Name="TagForeachFunc" />
-      <Type Name="TagMergeFunc" />
-      <Type Name="TaskFunction" />
-      <Type Name="TypeFindFunction" />
-      <Type Name="UnlinkedHandler" />
-      <Type Name="ValueCompareFunc" />
-      <Type Name="ValueDeserializeFunc" />
-      <Type Name="ValueIntersectFunc" />
-      <Type Name="ValueSerializeFunc" />
-      <Type Name="ValueSubtractFunc" />
-      <Type Name="ValueUnionFunc" />
-      <Type Name="ActivateMode" />
-      <Type Name="AllocTraceFlags" />
-      <Type Name="AssocFlags" />
-      <Type Name="BinFlags" />
-      <Type Name="BufferFlag" />
-      <Type Name="BusFlags" />
-      <Type Name="BusSyncReply" />
-      <Type Name="CapsFlags" />
-      <Type Name="ClockEntryType" />
-      <Type Name="ClockFlags" />
-      <Type Name="ClockReturn" />
-      <Type Name="CoreError" />
-      <Type Name="DebugColorFlags" />
-      <Type Name="DebugLevel" />
-      <Type Name="ElementFlags" />
-      <Type Name="EventType" />
-      <Type Name="EventTypeFlags" />
-      <Type Name="FlowReturn" />
-      <Type Name="Format" />
-      <Type Name="IndexCertainty" />
-      <Type Name="IndexEntryType" />
-      <Type Name="IndexFlags" />
-      <Type Name="IndexLookupMethod" />
-      <Type Name="IndexResolverMethod" />
-      <Type Name="IteratorItem" />
-      <Type Name="IteratorResult" />
-      <Type Name="LibraryError" />
-      <Type Name="MessageType" />
-      <Type Name="MiniObjectFlags" />
-      <Type Name="ObjectFlags" />
-      <Type Name="PadDirection" />
-      <Type Name="PadFlags" />
-      <Type Name="PadLinkReturn" />
-      <Type Name="PadPresence" />
-      <Type Name="PadTemplateFlags" />
-      <Type Name="ParseError" />
-      <Type Name="PipelineFlags" />
-      <Type Name="PluginError" />
-      <Type Name="PluginFlags" />
-      <Type Name="QueryType" />
-      <Type Name="Rank" />
-      <Type Name="ResourceError" />
-      <Type Name="SeekFlags" />
-      <Type Name="SeekType" />
-      <Type Name="StateChange" />
-      <Type Name="StateChangeReturn" />
-      <Type Name="State" />
-      <Type Name="StreamError" />
-      <Type Name="TagFlag" />
-      <Type Name="TagMergeMode" />
-      <Type Name="TaskState" />
-      <Type Name="TypeFindProbability" />
-      <Type Name="PlayBin" />
-      <Type Name="MessageHandler" />
-      <Type Name="SyncMessageHandler" />
+      <Type Name="ActivateMode" Kind="Enumeration" />
+      <Type Name="AllocTrace" Kind="Structure" />
+      <Type Name="AllocTraceFlags" Kind="Enumeration" />
+      <Type Name="Application" Kind="Class" />
+      <Type Name="AssocFlags" Kind="Enumeration" />
+      <Type Name="Bin" Kind="Class" />
+      <Type Name="BindingHelper" Kind="Class" />
+      <Type Name="BinFlags" Kind="Enumeration" />
+      <Type Name="Buffer" Kind="Class" />
+      <Type Name="BufferCopyFlags" Kind="Enumeration" />
+      <Type Name="BufferFlag" Kind="Enumeration" />
+      <Type Name="BufferingMode" Kind="Enumeration" />
+      <Type Name="Bus" Kind="Class" />
+      <Type Name="BusFlags" Kind="Enumeration" />
+      <Type Name="BusFunc" Kind="Delegate" />
+      <Type Name="BusSyncHandler" Kind="Delegate" />
+      <Type Name="BusSyncReply" Kind="Enumeration" />
+      <Type Name="Caps" Kind="Class" />
+      <Type Name="CapsFlags" Kind="Enumeration" />
+      <Type Name="ChildAddedArgs" Kind="Class" />
+      <Type Name="ChildAddedHandler" Kind="Delegate" />
+      <Type Name="ChildProxy" Kind="Interface" />
+      <Type Name="ChildProxyAdapter" Kind="Class" />
+      <Type Name="ChildProxyImplementor" Kind="Interface" />
+      <Type Name="ChildRemovedArgs" Kind="Class" />
+      <Type Name="ChildRemovedHandler" Kind="Delegate" />
+      <Type Name="Clock" Kind="Class" />
+      <Type Name="ClockCallback" Kind="Delegate" />
+      <Type Name="ClockEntry" Kind="Structure" />
+      <Type Name="ClockEntryType" Kind="Enumeration" />
+      <Type Name="ClockFlags" Kind="Enumeration" />
+      <Type Name="ClockReturn" Kind="Enumeration" />
+      <Type Name="CommonTags" Kind="Class" />
+      <Type Name="CoreError" Kind="Enumeration" />
+      <Type Name="Debug" Kind="Class" />
+      <Type Name="DebugCategory" Kind="Structure" />
+      <Type Name="DebugColorFlags" Kind="Enumeration" />
+      <Type Name="DebugGraphDetails" Kind="Enumeration" />
+      <Type Name="DebugLevel" Kind="Enumeration" />
+      <Type Name="DebugMessage" Kind="Class" />
+      <Type Name="DecodeBin" Kind="Class" />
+      <Type Name="DeepNotifyArgs" Kind="Class" />
+      <Type Name="DeepNotifyHandler" Kind="Delegate" />
+      <Type Name="DoLatencyArgs" Kind="Class" />
+      <Type Name="DoLatencyHandler" Kind="Delegate" />
+      <Type Name="Element" Kind="Class" />
+      <Type Name="ElementAddedArgs" Kind="Class" />
+      <Type Name="ElementAddedHandler" Kind="Delegate" />
+      <Type Name="ElementDetails" Kind="Structure" />
+      <Type Name="ElementFactory" Kind="Class" />
+      <Type Name="ElementFlags" Kind="Enumeration" />
+      <Type Name="ElementRemovedArgs" Kind="Class" />
+      <Type Name="ElementRemovedHandler" Kind="Delegate" />
+      <Type Name="EntryAddedArgs" Kind="Class" />
+      <Type Name="EntryAddedHandler" Kind="Delegate" />
+      <Type Name="Event" Kind="Class" />
+      <Type Name="EventType" Kind="Enumeration" />
+      <Type Name="EventTypeFlags" Kind="Enumeration" />
+      <Type Name="FeatureAddedArgs" Kind="Class" />
+      <Type Name="FeatureAddedHandler" Kind="Delegate" />
+      <Type Name="FilterFunc" Kind="Delegate" />
+      <Type Name="Flow" Kind="Class" />
+      <Type Name="FlowReturn" Kind="Enumeration" />
+      <Type Name="Format" Kind="Enumeration" />
+      <Type Name="FormatDefinition" Kind="Structure" />
+      <Type Name="Fraction" Kind="Class" />
+      <Type Name="GhostPad" Kind="Class" />
+      <Type Name="Global" Kind="Class" />
+      <Type Name="HasPadCreatedArgs" Kind="Class" />
+      <Type Name="HasPadCreatedHandler" Kind="Delegate" />
+      <Type Name="HaveDataArgs" Kind="Class" />
+      <Type Name="HaveDataHandler" Kind="Delegate" />
+      <Type Name="HaveTypeArgs" Kind="Class" />
+      <Type Name="HaveTypeHandler" Kind="Delegate" />
+      <Type Name="Index" Kind="Class" />
+      <Type Name="IndexAssociation" Kind="Structure" />
+      <Type Name="IndexCertainty" Kind="Enumeration" />
+      <Type Name="IndexEntry" Kind="Structure" />
+      <Type Name="IndexEntryType" Kind="Enumeration" />
+      <Type Name="IndexFactory" Kind="Class" />
+      <Type Name="IndexFilter" Kind="Delegate" />
+      <Type Name="IndexFlags" Kind="Enumeration" />
+      <Type Name="IndexGroup" Kind="Structure" />
+      <Type Name="IndexLookupMethod" Kind="Enumeration" />
+      <Type Name="IndexResolver" Kind="Delegate" />
+      <Type Name="IndexResolverMethod" Kind="Enumeration" />
+      <Type Name="Init" Kind="Class" />
+      <Type Name="Iterator" Kind="Class" />
+      <Type Name="IteratorDisposeFunction" Kind="Delegate" />
+      <Type Name="IteratorFoldFunction" Kind="Delegate" />
+      <Type Name="IteratorFreeFunction" Kind="Delegate" />
+      <Type Name="IteratorItem" Kind="Enumeration" />
+      <Type Name="IteratorItemFunction" Kind="Delegate" />
+      <Type Name="IteratorNextFunction" Kind="Delegate" />
+      <Type Name="IteratorResult" Kind="Enumeration" />
+      <Type Name="IteratorResyncFunction" Kind="Delegate" />
+      <Type Name="LibraryError" Kind="Enumeration" />
+      <Type Name="LinkedArgs" Kind="Class" />
+      <Type Name="LinkedHandler" Kind="Delegate" />
+      <Type Name="LogFunction" Kind="Delegate" />
+      <Type Name="Message" Kind="Class" />
+      <Type Name="MessageArgs" Kind="Class" />
+      <Type Name="MessageHandler" Kind="Delegate" />
+      <Type Name="MessageType" Kind="Enumeration" />
+      <Type Name="MiniObject" Kind="Class" />
+      <Type Name="MiniObjectCopyFunction" Kind="Delegate" />
+      <Type Name="MiniObjectFinalizeFunction" Kind="Delegate" />
+      <Type Name="MiniObjectFlags" Kind="Enumeration" />
+      <Type Name="NewDecodedPadArgs" Kind="Class" />
+      <Type Name="NewDecodedPadHandler" Kind="Delegate" />
+      <Type Name="Object" Kind="Class" />
+      <Type Name="ObjectFlags" Kind="Enumeration" />
+      <Type Name="Pad" Kind="Class" />
+      <Type Name="Pad+BufferProbeDelegate" Kind="Delegate" />
+      <Type Name="Pad+DataProbeDelegate" Kind="Delegate" />
+      <Type Name="PadAcceptCapsFunction" Kind="Delegate" />
+      <Type Name="PadActivateFunction" Kind="Delegate" />
+      <Type Name="PadActivateModeFunction" Kind="Delegate" />
+      <Type Name="PadAddedArgs" Kind="Class" />
+      <Type Name="PadAddedHandler" Kind="Delegate" />
+      <Type Name="PadBlockCallback" Kind="Delegate" />
+      <Type Name="PadBufferAllocFunction" Kind="Delegate" />
+      <Type Name="PadChainFunction" Kind="Delegate" />
+      <Type Name="PadCheckGetRangeFunction" Kind="Delegate" />
+      <Type Name="PadDirection" Kind="Enumeration" />
+      <Type Name="PadDispatcherFunction" Kind="Delegate" />
+      <Type Name="PadEventFunction" Kind="Delegate" />
+      <Type Name="PadFixateCapsFunction" Kind="Delegate" />
+      <Type Name="PadFlags" Kind="Enumeration" />
+      <Type Name="PadGetCapsFunction" Kind="Delegate" />
+      <Type Name="PadGetRangeFunction" Kind="Delegate" />
+      <Type Name="PadIntLinkFunction" Kind="Delegate" />
+      <Type Name="PadIterIntLinkFunction" Kind="Delegate" />
+      <Type Name="PadLinkFunction" Kind="Delegate" />
+      <Type Name="PadLinkReturn" Kind="Enumeration" />
+      <Type Name="PadPresence" Kind="Enumeration" />
+      <Type Name="PadQueryFunction" Kind="Delegate" />
+      <Type Name="PadRemovedArgs" Kind="Class" />
+      <Type Name="PadRemovedHandler" Kind="Delegate" />
+      <Type Name="PadSetCapsFunction" Kind="Delegate" />
+      <Type Name="PadTemplate" Kind="Class" />
+      <Type Name="PadTemplateFlags" Kind="Enumeration" />
+      <Type Name="PadUnlinkFunction" Kind="Delegate" />
+      <Type Name="ParentSetArgs" Kind="Class" />
+      <Type Name="ParentSetHandler" Kind="Delegate" />
+      <Type Name="ParentUnsetArgs" Kind="Class" />
+      <Type Name="ParentUnsetHandler" Kind="Delegate" />
+      <Type Name="ParseContext" Kind="Class" />
+      <Type Name="ParseError" Kind="Enumeration" />
+      <Type Name="ParseFlags" Kind="Enumeration" />
+      <Type Name="Pipeline" Kind="Class" />
+      <Type Name="PipelineFlags" Kind="Enumeration" />
+      <Type Name="PlayBin" Kind="Class" />
+      <Type Name="Plugin" Kind="Class" />
+      <Type Name="PluginAddedArgs" Kind="Class" />
+      <Type Name="PluginAddedHandler" Kind="Delegate" />
+      <Type Name="PluginDependencyFlags" Kind="Enumeration" />
+      <Type Name="PluginDesc" Kind="Structure" />
+      <Type Name="PluginError" Kind="Enumeration" />
+      <Type Name="PluginFeature" Kind="Class" />
+      <Type Name="PluginFeatureFilter" Kind="Delegate" />
+      <Type Name="PluginFilter" Kind="Delegate" />
+      <Type Name="PluginFlags" Kind="Enumeration" />
+      <Type Name="PluginInitFunc" Kind="Delegate" />
+      <Type Name="Poll" Kind="Class" />
+      <Type Name="PollFD" Kind="Structure" />
+      <Type Name="Print" Kind="Class" />
+      <Type Name="ProxyPad" Kind="Class" />
+      <Type Name="QuarkId" Kind="Enumeration" />
+      <Type Name="Query" Kind="Class" />
+      <Type Name="QueryType" Kind="Enumeration" />
+      <Type Name="QueryTypeDefinition" Kind="Structure" />
+      <Type Name="Rank" Kind="Enumeration" />
+      <Type Name="Registry" Kind="Class" />
+      <Type Name="ResourceError" Kind="Enumeration" />
+      <Type Name="SeekFlags" Kind="Enumeration" />
+      <Type Name="SeekType" Kind="Enumeration" />
+      <Type Name="Segment" Kind="Class" />
+      <Type Name="Segtrap" Kind="Class" />
+      <Type Name="State" Kind="Enumeration" />
+      <Type Name="StateChange" Kind="Enumeration" />
+      <Type Name="StateChangeReturn" Kind="Enumeration" />
+      <Type Name="StaticCaps" Kind="Structure" />
+      <Type Name="StaticPadTemplate" Kind="Structure" />
+      <Type Name="StreamError" Kind="Enumeration" />
+      <Type Name="Structure" Kind="Class" />
+      <Type Name="StructureChangeType" Kind="Enumeration" />
+      <Type Name="StructureForeachFunc" Kind="Delegate" />
+      <Type Name="StructureMapFunc" Kind="Delegate" />
+      <Type Name="SyncMessageArgs" Kind="Class" />
+      <Type Name="SyncMessageHandler" Kind="Delegate" />
+      <Type Name="SystemClock" Kind="Class" />
+      <Type Name="Tag" Kind="Class" />
+      <Type Name="TagFlag" Kind="Enumeration" />
+      <Type Name="TagForeachFunc" Kind="Delegate" />
+      <Type Name="TagList" Kind="Class" />
+      <Type Name="TagMergeFunc" Kind="Delegate" />
+      <Type Name="TagMergeMode" Kind="Enumeration" />
+      <Type Name="TagSetter" Kind="Interface" />
+      <Type Name="TagSetterAdapter" Kind="Class" />
+      <Type Name="TagSetterImplementor" Kind="Interface" />
+      <Type Name="Task" Kind="Class" />
+      <Type Name="TaskFunction" Kind="Delegate" />
+      <Type Name="TaskState" Kind="Enumeration" />
+      <Type Name="Trace" Kind="Class" />
+      <Type Name="TraceEntry" Kind="Structure" />
+      <Type Name="TypeFind" Kind="Structure" />
+      <Type Name="TypeFindElement" Kind="Class" />
+      <Type Name="TypeFindFactory" Kind="Class" />
+      <Type Name="TypeFindFunction" Kind="Delegate" />
+      <Type Name="TypeFindProbability" Kind="Enumeration" />
+      <Type Name="TypeNameData" Kind="Structure" />
+      <Type Name="UnlinkedArgs" Kind="Class" />
+      <Type Name="UnlinkedHandler" Kind="Delegate" />
+      <Type Name="Util" Kind="Class" />
+      <Type Name="Value" Kind="Class" />
+      <Type Name="ValueCompareFunc" Kind="Delegate" />
+      <Type Name="ValueDeserializeFunc" Kind="Delegate" />
+      <Type Name="ValueIntersectFunc" Kind="Delegate" />
+      <Type Name="ValueSerializeFunc" Kind="Delegate" />
+      <Type Name="ValueSubtractFunc" Kind="Delegate" />
+      <Type Name="ValueTable" Kind="Structure" />
+      <Type Name="ValueUnionFunc" Kind="Delegate" />
+      <Type Name="Version" Kind="Class" />
+      <Type Name="XML" Kind="Class" />
     </Namespace>
   </Types>
   <Title>gst-sharp</Title>

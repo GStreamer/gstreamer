@@ -1,0 +1,24 @@
+<Type Name="Pad+DataProbeDelegate" FullName="Gst.Pad+DataProbeDelegate">
+  <TypeSignature Language="C#" Value="public delegate bool Pad.DataProbeDelegate(Pad pad, Opaque miniobject);" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="pad" Type="Gst.Pad" />
+    <Parameter Name="miniobject" Type="GLib.Opaque" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Boolean</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="pad">To be added.</param>
+    <param name="miniobject">To be added.</param>
+    <summary>To be added.</summary>
+    <value>To be added.</value>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

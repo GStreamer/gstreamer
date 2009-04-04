@@ -1,7 +1,7 @@
 <Type Name="PadGetRangeFunction" FullName="Gst.PadGetRangeFunction">
-  <TypeSignature Language="C#" Value="public delegate Gst.FlowReturn PadGetRangeFunction(Gst.Pad pad, ulong offset, uint length, Gst.Buffer buffer);" />
+  <TypeSignature Language="C#" Value="public delegate Gst.FlowReturn PadGetRangeFunction(Pad pad, ulong offset, uint length, Buffer buffer);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -22,7 +22,7 @@
     <param name="length">To be added.</param>
     <param name="buffer">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

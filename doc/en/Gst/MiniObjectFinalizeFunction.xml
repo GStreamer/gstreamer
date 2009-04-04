@@ -1,7 +1,7 @@
 <Type Name="MiniObjectFinalizeFunction" FullName="Gst.MiniObjectFinalizeFunction">
-  <TypeSignature Language="C#" Value="public delegate void MiniObjectFinalizeFunction(Gst.MiniObject obj);" />
+  <TypeSignature Language="C#" Value="public delegate void MiniObjectFinalizeFunction(MiniObject obj);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

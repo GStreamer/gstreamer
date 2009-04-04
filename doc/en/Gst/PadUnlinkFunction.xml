@@ -1,7 +1,7 @@
 <Type Name="PadUnlinkFunction" FullName="Gst.PadUnlinkFunction">
-  <TypeSignature Language="C#" Value="public delegate void PadUnlinkFunction(Gst.Pad pad);" />
+  <TypeSignature Language="C#" Value="public delegate void PadUnlinkFunction(Pad pad);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

@@ -1,7 +1,7 @@
 <Type Name="PluginAddedHandler" FullName="Gst.PluginAddedHandler">
-  <TypeSignature Language="C#" Value="public delegate void PluginAddedHandler(object o, Gst.PluginAddedArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void PluginAddedHandler(object o, PluginAddedArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

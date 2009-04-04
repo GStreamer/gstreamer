@@ -1,0 +1,22 @@
+<Type Name="TagSetterImplementor" FullName="Gst.TagSetterImplementor">
+  <TypeSignature Language="C#" Value="public interface TagSetterImplementor : GLib.IWrapper" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>GLib.IWrapper</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GInterface(typeof(Gst.TagSetterAdapter))</AttributeName>
+    </Attribute>
+  </Attributes>
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members />
+</Type>

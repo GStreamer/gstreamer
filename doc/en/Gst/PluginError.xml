@@ -1,46 +1,34 @@
 <Type Name="PluginError" FullName="Gst.PluginError">
   <TypeSignature Language="C#" Value="public enum PluginError" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="NameMismatch">
-      <MemberSignature Language="C#" Value="NameMismatch" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PluginError</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Dependencies">
-      <MemberSignature Language="C#" Value="Dependencies" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PluginError</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Module">
-      <MemberSignature Language="C#" Value="Module" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PluginError</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    <Member MemberName="Dependencies">
+      <MemberSignature Language="C#" Value="Dependencies" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PluginError</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Module">
+      <MemberSignature Language="C#" Value="Module" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PluginError</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NameMismatch">
+      <MemberSignature Language="C#" Value="NameMismatch" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PluginError</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+  </Members>
 </Type>

@@ -1,7 +1,7 @@
 <Type Name="IndexResolver" FullName="Gst.IndexResolver">
-  <TypeSignature Language="C#" Value="public delegate bool IndexResolver(Gst.Index index, Gst.Object writer, string writer_string);" />
+  <TypeSignature Language="C#" Value="public delegate bool IndexResolver(Index index, Object writer, string writer_string);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -20,7 +20,7 @@
     <param name="writer">To be added.</param>
     <param name="writer_string">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

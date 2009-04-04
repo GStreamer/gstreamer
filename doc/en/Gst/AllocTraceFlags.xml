@@ -1,7 +1,7 @@
 <Type Name="AllocTraceFlags" FullName="Gst.AllocTraceFlags">
   <TypeSignature Language="C#" Value="public enum AllocTraceFlags" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,30 +12,22 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="MemLive">
-      <MemberSignature Language="C#" Value="MemLive" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.AllocTraceFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Live">
-      <MemberSignature Language="C#" Value="Live" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.AllocTraceFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    <Member MemberName="Live">
+      <MemberSignature Language="C#" Value="Live" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.AllocTraceFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MemLive">
+      <MemberSignature Language="C#" Value="MemLive" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.AllocTraceFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+  </Members>
 </Type>

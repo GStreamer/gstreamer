@@ -1,91 +1,54 @@
 <Type Name="ValueTable" FullName="Gst.ValueTable">
   <TypeSignature Language="C#" Value="public struct ValueTable" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.ValueType</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public GLib.GType Type;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Zero">
-      <MemberSignature Language="C#" Value="public static Gst.ValueTable Zero;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ValueTable</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="New">
-      <MemberSignature Language="C#" Value="public static Gst.ValueTable New (IntPtr raw);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ValueTable</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Compare">
-      <MemberSignature Language="C#" Value="public Gst.ValueCompareFunc Compare { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ValueCompareFunc</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Serialize">
-      <MemberSignature Language="C#" Value="public Gst.ValueSerializeFunc Serialize { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ValueSerializeFunc</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Deserialize">
-      <MemberSignature Language="C#" Value="public Gst.ValueDeserializeFunc Deserialize { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ValueDeserializeFunc</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName="Compare">
+      <MemberSignature Language="C#" Value="public Gst.ValueCompareFunc Compare { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.ValueCompareFunc</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Deserialize">
+      <MemberSignature Language="C#" Value="public Gst.ValueDeserializeFunc Deserialize { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.ValueDeserializeFunc</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="New">
+      <MemberSignature Language="C#" Value="public static Gst.ValueTable New (IntPtr raw);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.ValueTable</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Serialize">
+      <MemberSignature Language="C#" Value="public Gst.ValueSerializeFunc Serialize { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.ValueSerializeFunc</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
+      <MemberSignature Language="C#" Value="public GLib.GType Type;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Zero">
+      <MemberSignature Language="C#" Value="public static Gst.ValueTable Zero;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ValueTable</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+  </Members>
 </Type>

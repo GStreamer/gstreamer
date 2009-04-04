@@ -1,7 +1,7 @@
 <Type Name="EventTypeFlags" FullName="Gst.EventTypeFlags">
   <TypeSignature Language="C#" Value="public enum EventTypeFlags" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,40 +12,28 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="Upstream">
-      <MemberSignature Language="C#" Value="Upstream" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventTypeFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Serialized">
-      <MemberSignature Language="C#" Value="Serialized" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventTypeFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Downstream">
-      <MemberSignature Language="C#" Value="Downstream" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventTypeFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    <Member MemberName="Downstream">
+      <MemberSignature Language="C#" Value="Downstream" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventTypeFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Serialized">
+      <MemberSignature Language="C#" Value="Serialized" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventTypeFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Upstream">
+      <MemberSignature Language="C#" Value="Upstream" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventTypeFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+  </Members>
 </Type>

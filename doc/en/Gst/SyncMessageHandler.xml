@@ -1,7 +1,7 @@
 <Type Name="SyncMessageHandler" FullName="Gst.SyncMessageHandler">
-  <TypeSignature Language="C#" Value="public delegate void SyncMessageHandler(object o, Gst.SyncMessageArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void SyncMessageHandler(object o, SyncMessageArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

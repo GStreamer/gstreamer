@@ -1,478 +1,195 @@
 <Type Name="Clock" FullName="Gst.Clock">
   <TypeSignature Language="C#" Value="public class Clock : Gst.Object" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gst.Object</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Clock (GLib.GType gtype);" />
-      <MemberType>Constructor</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>System.Obsolete(Message=null, IsError=False)</AttributeName>
-        </Attribute>
-      </Attributes>
-      <Parameters>
-        <Parameter Name="gtype" Type="GLib.GType" />
-      </Parameters>
-      <Docs>
-        <param name="gtype">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Clock (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Clock (Gst.Clock clock, ulong start_time, ulong interval);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="clock" Type="Gst.Clock" />
-        <Parameter Name="start_time" Type="System.UInt64" />
-        <Parameter Name="interval" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="clock">To be added.</param>
-        <param name="start_time">To be added.</param>
-        <param name="interval">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Clock (Gst.Clock clock, ulong time);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="clock" Type="Gst.Clock" />
-        <Parameter Name="time" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="clock">To be added.</param>
-        <param name="time">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetResolution">
-      <MemberSignature Language="C#" Value="public ulong SetResolution (ulong resolution);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="resolution" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="resolution">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetCalibration">
-      <MemberSignature Language="C#" Value="public void GetCalibration (out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="_internal" Type="System.UInt64&amp;" RefType="out" />
-        <Parameter Name="external" Type="System.UInt64&amp;" RefType="out" />
-        <Parameter Name="rate_num" Type="System.UInt64&amp;" RefType="out" />
-        <Parameter Name="rate_denom" Type="System.UInt64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="_internal">To be added.</param>
-        <param name="external">To be added.</param>
-        <param name="rate_num">To be added.</param>
-        <param name="rate_denom">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdGetTime">
-      <MemberSignature Language="C#" Value="public static ulong IdGetTime (IntPtr id);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="id">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdRef">
-      <MemberSignature Language="C#" Value="public static IntPtr IdRef (IntPtr id);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.IntPtr</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="id">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AdjustUnlocked">
-      <MemberSignature Language="C#" Value="public ulong AdjustUnlocked (ulong _internal);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="_internal" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="_internal">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdWaitAsync">
-      <MemberSignature Language="C#" Value="public static Gst.ClockReturn IdWaitAsync (IntPtr id, Gst.ClockCallback func);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockReturn</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id" Type="System.IntPtr" />
-        <Parameter Name="func" Type="Gst.ClockCallback" />
-      </Parameters>
-      <Docs>
-        <param name="id">To be added.</param>
-        <param name="func">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetCalibration">
-      <MemberSignature Language="C#" Value="public void SetCalibration (ulong _internal, ulong external, ulong rate_num, ulong rate_denom);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="_internal" Type="System.UInt64" />
-        <Parameter Name="external" Type="System.UInt64" />
-        <Parameter Name="rate_num" Type="System.UInt64" />
-        <Parameter Name="rate_denom" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="_internal">To be added.</param>
-        <param name="external">To be added.</param>
-        <param name="rate_num">To be added.</param>
-        <param name="rate_denom">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetMaster">
-      <MemberSignature Language="C#" Value="public bool SetMaster (Gst.Clock master);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="master" Type="Gst.Clock" />
-      </Parameters>
-      <Docs>
-        <param name="master">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdUnschedule">
-      <MemberSignature Language="C#" Value="public static void IdUnschedule (IntPtr id);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="id">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdWait">
-      <MemberSignature Language="C#" Value="public static Gst.ClockReturn IdWait (IntPtr id, out long jitter);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockReturn</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id" Type="System.IntPtr" />
-        <Parameter Name="jitter" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="id">To be added.</param>
-        <param name="jitter">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdUnref">
-      <MemberSignature Language="C#" Value="public static void IdUnref (IntPtr id);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="id">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IdCompareFunc">
-      <MemberSignature Language="C#" Value="public static int IdCompareFunc (IntPtr id1, IntPtr id2);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="id1" Type="System.IntPtr" />
-        <Parameter Name="id2" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="id1">To be added.</param>
-        <param name="id2">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AddObservation">
-      <MemberSignature Language="C#" Value="public bool AddObservation (ulong slave, ulong master, out double r_squared);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="slave" Type="System.UInt64" />
-        <Parameter Name="master" Type="System.UInt64" />
-        <Parameter Name="r_squared" Type="System.Double&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="slave">To be added.</param>
-        <param name="master">To be added.</param>
-        <param name="r_squared">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Stats">
-      <MemberSignature Language="C#" Value="public bool Stats { set; get; };" />
-      <MemberType>Property</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property(Name="stats")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Timeout">
-      <MemberSignature Language="C#" Value="public ulong Timeout { set; get; };" />
-      <MemberType>Property</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property(Name="timeout")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="WindowSize">
-      <MemberSignature Language="C#" Value="public int WindowSize { set; get; };" />
-      <MemberType>Property</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property(Name="window-size")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="WindowThreshold">
-      <MemberSignature Language="C#" Value="public int WindowThreshold { set; get; };" />
-      <MemberType>Property</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Property(Name="window-threshold")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Master">
-      <MemberSignature Language="C#" Value="public Gst.Clock Master { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Clock</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Resolution">
-      <MemberSignature Language="C#" Value="public ulong Resolution { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="InternalTime">
-      <MemberSignature Language="C#" Value="public ulong InternalTime { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Time">
-      <MemberSignature Language="C#" Value="public ulong Time { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GstSecond">
-      <MemberSignature Language="C#" Value="public static readonly ulong GstSecond = 1000000000;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <MemberValue>1000000000</MemberValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GstMSecond">
-      <MemberSignature Language="C#" Value="public static readonly ulong GstMSecond = 1000000000;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <MemberValue>1000000000</MemberValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GstUSecond">
-      <MemberSignature Language="C#" Value="public static readonly ulong GstUSecond = 1000000000;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <MemberValue>1000000000</MemberValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GstNSecond">
-      <MemberSignature Language="C#" Value="public static readonly ulong GstNSecond = 1000000000;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <MemberValue>1000000000</MemberValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="protected Clock (GLib.GType gtype);" />
+      <MemberType>Constructor</MemberType>
+      <Attributes><Attribute><AttributeName>System.Obsolete</AttributeName></Attribute></Attributes>
+      <Parameters><Parameter Name="gtype" Type="GLib.GType" /></Parameters>
+      <Docs><param name="gtype">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Clock (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Clock (Gst.Clock clock, ulong time);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="clock" Type="Gst.Clock" /><Parameter Name="time" Type="System.UInt64" /></Parameters>
+      <Docs><param name="clock">To be added.</param><param name="time">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Clock (Gst.Clock clock, ulong start_time, ulong interval);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="clock" Type="Gst.Clock" /><Parameter Name="start_time" Type="System.UInt64" /><Parameter Name="interval" Type="System.UInt64" /></Parameters>
+      <Docs><param name="clock">To be added.</param><param name="start_time">To be added.</param><param name="interval">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AddObservation">
+      <MemberSignature Language="C#" Value="public bool AddObservation (ulong slave, ulong master, out double r_squared);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="slave" Type="System.UInt64" /><Parameter Name="master" Type="System.UInt64" /><Parameter Name="r_squared" Type="System.Double&amp;" RefType="out" /></Parameters>
+      <Docs><param name="slave">To be added.</param><param name="master">To be added.</param><param name="r_squared">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AdjustUnlocked">
+      <MemberSignature Language="C#" Value="public ulong AdjustUnlocked (ulong _internal);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="_internal" Type="System.UInt64" /></Parameters>
+      <Docs><param name="_internal">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetCalibration">
+      <MemberSignature Language="C#" Value="public void GetCalibration (out ulong _internal, out ulong external, out ulong rate_num, out ulong rate_denom);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="_internal" Type="System.UInt64&amp;" RefType="out" /><Parameter Name="external" Type="System.UInt64&amp;" RefType="out" /><Parameter Name="rate_num" Type="System.UInt64&amp;" RefType="out" /><Parameter Name="rate_denom" Type="System.UInt64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="_internal">To be added.</param><param name="external">To be added.</param><param name="rate_num">To be added.</param><param name="rate_denom">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdCompareFunc">
+      <MemberSignature Language="C#" Value="public static int IdCompareFunc (IntPtr id1, IntPtr id2);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id1" Type="System.IntPtr" /><Parameter Name="id2" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="id1">To be added.</param><param name="id2">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdGetTime">
+      <MemberSignature Language="C#" Value="public static ulong IdGetTime (IntPtr id);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="id">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdRef">
+      <MemberSignature Language="C#" Value="public static IntPtr IdRef (IntPtr id);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.IntPtr</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="id">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdUnref">
+      <MemberSignature Language="C#" Value="public static void IdUnref (IntPtr id);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="id">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdUnschedule">
+      <MemberSignature Language="C#" Value="public static void IdUnschedule (IntPtr id);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="id">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdWait">
+      <MemberSignature Language="C#" Value="public static Gst.ClockReturn IdWait (IntPtr id, out long jitter);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockReturn</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id" Type="System.IntPtr" /><Parameter Name="jitter" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="id">To be added.</param><param name="jitter">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdWaitAsync">
+      <MemberSignature Language="C#" Value="public static Gst.ClockReturn IdWaitAsync (IntPtr id, Gst.ClockCallback func);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockReturn</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="id" Type="System.IntPtr" /><Parameter Name="func" Type="Gst.ClockCallback" /></Parameters>
+      <Docs><param name="id">To be added.</param><param name="func">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="InternalTime">
+      <MemberSignature Language="C#" Value="public ulong InternalTime { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Master">
+      <MemberSignature Language="C#" Value="public Gst.Clock Master { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Clock</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MSecond"><MemberSignature Language="C#" Value="public static readonly ulong MSecond = 1000000000;" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><MemberValue>1000000000</MemberValue><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="NSecond"><MemberSignature Language="C#" Value="public static readonly ulong NSecond = 1000000000;" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><MemberValue>1000000000</MemberValue><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Resolution">
+      <MemberSignature Language="C#" Value="public ulong Resolution { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Second"><MemberSignature Language="C#" Value="public static readonly ulong Second = 1000000000;" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><MemberValue>1000000000</MemberValue><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetCalibration">
+      <MemberSignature Language="C#" Value="public void SetCalibration (ulong _internal, ulong external, ulong rate_num, ulong rate_denom);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="_internal" Type="System.UInt64" /><Parameter Name="external" Type="System.UInt64" /><Parameter Name="rate_num" Type="System.UInt64" /><Parameter Name="rate_denom" Type="System.UInt64" /></Parameters>
+      <Docs><param name="_internal">To be added.</param><param name="external">To be added.</param><param name="rate_num">To be added.</param><param name="rate_denom">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetMaster">
+      <MemberSignature Language="C#" Value="public bool SetMaster (Gst.Clock master);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="master" Type="Gst.Clock" /></Parameters>
+      <Docs><param name="master">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetResolution">
+      <MemberSignature Language="C#" Value="public ulong SetResolution (ulong resolution);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="resolution" Type="System.UInt64" /></Parameters>
+      <Docs><param name="resolution">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Stats">
+      <MemberSignature Language="C#" Value="public bool Stats { set; get; }" />
+      <MemberType>Property</MemberType>
+      <Attributes><Attribute><AttributeName>GLib.Property("stats")</AttributeName></Attribute></Attributes>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Time">
+      <MemberSignature Language="C#" Value="public ulong Time { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TimeIsValid"><MemberSignature Language="C#" Value="public static bool TimeIsValid (ulong time);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="time" Type="System.UInt64" /></Parameters><Docs><param name="time">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="TimeNone"><MemberSignature Language="C#" Value="public static readonly ulong TimeNone = 18446744073709551615;" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><MemberValue>18446744073709551615</MemberValue><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Timeout">
+      <MemberSignature Language="C#" Value="public ulong Timeout { set; get; }" />
+      <MemberType>Property</MemberType>
+      <Attributes><Attribute><AttributeName>GLib.Property("timeout")</AttributeName></Attribute></Attributes>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="UnadjustUnlocked"><MemberSignature Language="C#" Value="public ulong UnadjustUnlocked (ulong external);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><Parameters><Parameter Name="external" Type="System.UInt64" /></Parameters><Docs><param name="external">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="USecond"><MemberSignature Language="C#" Value="public static readonly ulong USecond = 1000000000;" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><MemberValue>1000000000</MemberValue><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="WindowSize">
+      <MemberSignature Language="C#" Value="public int WindowSize { set; get; }" />
+      <MemberType>Property</MemberType>
+      <Attributes><Attribute><AttributeName>GLib.Property("window-size")</AttributeName></Attribute></Attributes>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="WindowThreshold">
+      <MemberSignature Language="C#" Value="public int WindowThreshold { set; get; }" />
+      <MemberType>Property</MemberType>
+      <Attributes><Attribute><AttributeName>GLib.Property("window-threshold")</AttributeName></Attribute></Attributes>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  </Members>
 </Type>

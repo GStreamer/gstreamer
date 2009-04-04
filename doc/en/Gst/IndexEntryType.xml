@@ -1,56 +1,40 @@
 <Type Name="IndexEntryType" FullName="Gst.IndexEntryType">
   <TypeSignature Language="C#" Value="public enum IndexEntryType" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Format">
-      <MemberSignature Language="C#" Value="Format" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Association">
-      <MemberSignature Language="C#" Value="Association" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Object">
-      <MemberSignature Language="C#" Value="Object" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Id">
-      <MemberSignature Language="C#" Value="Id" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName="Association">
+      <MemberSignature Language="C#" Value="Association" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Format">
+      <MemberSignature Language="C#" Value="Format" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Id">
+      <MemberSignature Language="C#" Value="Id" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Object">
+      <MemberSignature Language="C#" Value="Object" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+  </Members>
 </Type>

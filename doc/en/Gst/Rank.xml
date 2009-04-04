@@ -1,56 +1,40 @@
 <Type Name="Rank" FullName="Gst.Rank">
   <TypeSignature Language="C#" Value="public enum Rank" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Marginal">
-      <MemberSignature Language="C#" Value="Marginal" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Rank</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Primary">
-      <MemberSignature Language="C#" Value="Primary" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Rank</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="None">
-      <MemberSignature Language="C#" Value="None" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Rank</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Secondary">
-      <MemberSignature Language="C#" Value="Secondary" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Rank</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    <Member MemberName="Marginal">
+      <MemberSignature Language="C#" Value="Marginal" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.Rank</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="None">
+      <MemberSignature Language="C#" Value="None" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.Rank</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Primary">
+      <MemberSignature Language="C#" Value="Primary" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.Rank</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Secondary">
+      <MemberSignature Language="C#" Value="Secondary" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.Rank</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

@@ -1,66 +1,46 @@
 <Type Name="State" FullName="Gst.State">
   <TypeSignature Language="C#" Value="public enum State" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Null">
-      <MemberSignature Language="C#" Value="Null" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.State</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Ready">
-      <MemberSignature Language="C#" Value="Ready" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.State</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Paused">
-      <MemberSignature Language="C#" Value="Paused" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.State</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Playing">
-      <MemberSignature Language="C#" Value="Playing" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.State</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="VoidPending">
-      <MemberSignature Language="C#" Value="VoidPending" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.State</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    <Member MemberName="Null">
+      <MemberSignature Language="C#" Value="Null" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Paused">
+      <MemberSignature Language="C#" Value="Paused" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Playing">
+      <MemberSignature Language="C#" Value="Playing" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Ready">
+      <MemberSignature Language="C#" Value="Ready" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="VoidPending">
+      <MemberSignature Language="C#" Value="VoidPending" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

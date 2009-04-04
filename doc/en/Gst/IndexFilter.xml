@@ -1,7 +1,7 @@
 <Type Name="IndexFilter" FullName="Gst.IndexFilter">
-  <TypeSignature Language="C#" Value="public delegate bool IndexFilter(Gst.Index index, Gst.IndexEntry entry);" />
+  <TypeSignature Language="C#" Value="public delegate bool IndexFilter(Index index, IndexEntry entry);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="index">To be added.</param>
     <param name="entry">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

@@ -1,150 +1,72 @@
 <Type Name="Util" FullName="Gst.Util">
   <TypeSignature Language="C#" Value="public class Util" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Object</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Util ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GdoubleToGuint64">
-      <MemberSignature Language="C#" Value="public static ulong GdoubleToGuint64 (double value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="value" Type="System.Double" />
-      </Parameters>
-      <Docs>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Uint64ScaleInt">
-      <MemberSignature Language="C#" Value="public static ulong Uint64ScaleInt (ulong val, int num, int denom);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="val" Type="System.UInt64" />
-        <Parameter Name="num" Type="System.Int32" />
-        <Parameter Name="denom" Type="System.Int32" />
-      </Parameters>
-      <Docs>
-        <param name="val">To be added.</param>
-        <param name="num">To be added.</param>
-        <param name="denom">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetObjectArg">
-      <MemberSignature Language="C#" Value="public static void SetObjectArg (GLib.Object objekt, string name, string value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="GLib.Object" />
-        <Parameter Name="name" Type="System.String" />
-        <Parameter Name="value" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="name">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Guint64ToGdouble">
-      <MemberSignature Language="C#" Value="public static double Guint64ToGdouble (ulong value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Double</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="value" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DumpMem">
-      <MemberSignature Language="C#" Value="public static byte DumpMem (uint size);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Byte</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="size" Type="System.UInt32" />
-      </Parameters>
-      <Docs>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Uint64Scale">
-      <MemberSignature Language="C#" Value="public static ulong Uint64Scale (ulong val, ulong num, ulong denom);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="val" Type="System.UInt64" />
-        <Parameter Name="num" Type="System.UInt64" />
-        <Parameter Name="denom" Type="System.UInt64" />
-      </Parameters>
-      <Docs>
-        <param name="val">To be added.</param>
-        <param name="num">To be added.</param>
-        <param name="denom">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetValueFromString">
-      <MemberSignature Language="C#" Value="public static void SetValueFromString (GLib.Value value, string value_str);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="value" Type="GLib.Value" />
-        <Parameter Name="value_str" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="value">To be added.</param>
-        <param name="value_str">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Util ();" />
+      <MemberType>Constructor</MemberType>
+      <Parameters />
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DumpMem">
+      <MemberSignature Language="C#" Value="public static byte DumpMem (uint size);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Byte</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="size" Type="System.UInt32" /></Parameters>
+      <Docs><param name="size">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GdoubleToGuint64">
+      <MemberSignature Language="C#" Value="public static ulong GdoubleToGuint64 (double value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="value" Type="System.Double" /></Parameters>
+      <Docs><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Guint64ToGdouble">
+      <MemberSignature Language="C#" Value="public static double Guint64ToGdouble (ulong value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Double</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="value" Type="System.UInt64" /></Parameters>
+      <Docs><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SeqnumCompare"><MemberSignature Language="C#" Value="public static int SeqnumCompare (uint s1, uint s2);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue><Parameters><Parameter Name="s1" Type="System.UInt32" /><Parameter Name="s2" Type="System.UInt32" /></Parameters><Docs><param name="s1">To be added.</param><param name="s2">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="SeqnumNext"><MemberSignature Language="C#" Value="public static uint SeqnumNext ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetObjectArg">
+      <MemberSignature Language="C#" Value="public static void SetObjectArg (GLib.Object objekt, string name, string value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="GLib.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="value" Type="System.String" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="name">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetValueFromString">
+      <MemberSignature Language="C#" Value="public static void SetValueFromString (GLib.Value value, string value_str);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="value" Type="GLib.Value" /><Parameter Name="value_str" Type="System.String" /></Parameters>
+      <Docs><param name="value">To be added.</param><param name="value_str">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Timestamp"><MemberSignature Language="C#" Value="public static ulong Timestamp { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Uint64Scale">
+      <MemberSignature Language="C#" Value="public static ulong Uint64Scale (ulong val, ulong num, ulong denom);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="val" Type="System.UInt64" /><Parameter Name="num" Type="System.UInt64" /><Parameter Name="denom" Type="System.UInt64" /></Parameters>
+      <Docs><param name="val">To be added.</param><param name="num">To be added.</param><param name="denom">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Uint64ScaleInt">
+      <MemberSignature Language="C#" Value="public static ulong Uint64ScaleInt (ulong val, int num, int denom);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="val" Type="System.UInt64" /><Parameter Name="num" Type="System.Int32" /><Parameter Name="denom" Type="System.Int32" /></Parameters>
+      <Docs><param name="val">To be added.</param><param name="num">To be added.</param><param name="denom">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+  </Members>
 </Type>

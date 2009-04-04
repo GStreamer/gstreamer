@@ -1,726 +1,293 @@
 <Type Name="TagList" FullName="Gst.TagList">
   <TypeSignature Language="C#" Value="public class TagList : GLib.Opaque" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public TagList (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public TagList ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUchar">
-      <MemberSignature Language="C#" Value="public bool GetUchar (string tag, out byte value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Byte&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetIntIndex">
-      <MemberSignature Language="C#" Value="public bool GetIntIndex (string tag, uint index, out int value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Int32&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUintIndex">
-      <MemberSignature Language="C#" Value="public bool GetUintIndex (string tag, uint index, out uint value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.UInt32&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUlong">
-      <MemberSignature Language="C#" Value="public bool GetUlong (string tag, out ulong value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.UInt64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUcharIndex">
-      <MemberSignature Language="C#" Value="public bool GetUcharIndex (string tag, uint index, out byte value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Byte&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetValueIndex">
-      <MemberSignature Language="C#" Value="public GLib.Value GetValueIndex (string tag, uint index);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.Value</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="RemoveTag">
-      <MemberSignature Language="C#" Value="public void RemoveTag (string tag);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Insert">
-      <MemberSignature Language="C#" Value="public void Insert (Gst.TagList from, Gst.TagMergeMode mode);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="from" Type="Gst.TagList" />
-        <Parameter Name="mode" Type="Gst.TagMergeMode" />
-      </Parameters>
-      <Docs>
-        <param name="from">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetInt64Index">
-      <MemberSignature Language="C#" Value="public bool GetInt64Index (string tag, uint index, out long value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUlongIndex">
-      <MemberSignature Language="C#" Value="public bool GetUlongIndex (string tag, uint index, out ulong value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.UInt64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetDoubleIndex">
-      <MemberSignature Language="C#" Value="public bool GetDoubleIndex (string tag, uint index, out double value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Double&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetBooleanIndex">
-      <MemberSignature Language="C#" Value="public bool GetBooleanIndex (string tag, uint index, out bool value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Boolean&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetInt64">
-      <MemberSignature Language="C#" Value="public bool GetInt64 (string tag, out long value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetLongIndex">
-      <MemberSignature Language="C#" Value="public bool GetLongIndex (string tag, uint index, out long value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUint64">
-      <MemberSignature Language="C#" Value="public bool GetUint64 (string tag, out ulong value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.UInt64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Copy">
-      <MemberSignature Language="C#" Value="public Gst.TagList Copy ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagList</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetBoolean">
-      <MemberSignature Language="C#" Value="public bool GetBoolean (string tag, out bool value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Boolean&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetFloat">
-      <MemberSignature Language="C#" Value="public bool GetFloat (string tag, out float value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Single&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetPointerIndex">
-      <MemberSignature Language="C#" Value="public bool GetPointerIndex (string tag, uint index, IntPtr value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AddValist">
-      <MemberSignature Language="C#" Value="public void AddValist (Gst.TagMergeMode mode, string tag, IntPtr var_args);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="mode" Type="Gst.TagMergeMode" />
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="var_args" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="mode">To be added.</param>
-        <param name="tag">To be added.</param>
-        <param name="var_args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Merge">
-      <MemberSignature Language="C#" Value="public Gst.TagList Merge (Gst.TagList list2, Gst.TagMergeMode mode);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagList</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="list2" Type="Gst.TagList" />
-        <Parameter Name="mode" Type="Gst.TagMergeMode" />
-      </Parameters>
-      <Docs>
-        <param name="list2">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AddValistValues">
-      <MemberSignature Language="C#" Value="public void AddValistValues (Gst.TagMergeMode mode, string tag, IntPtr var_args);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="mode" Type="Gst.TagMergeMode" />
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="var_args" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="mode">To be added.</param>
-        <param name="tag">To be added.</param>
-        <param name="var_args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Foreach">
-      <MemberSignature Language="C#" Value="public void Foreach (Gst.TagForeachFunc func);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="func" Type="Gst.TagForeachFunc" />
-      </Parameters>
-      <Docs>
-        <param name="func">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetLong">
-      <MemberSignature Language="C#" Value="public bool GetLong (string tag, out long value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetInt">
-      <MemberSignature Language="C#" Value="public bool GetInt (string tag, out int value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Int32&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUint">
-      <MemberSignature Language="C#" Value="public bool GetUint (string tag, out uint value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.UInt32&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetFloatIndex">
-      <MemberSignature Language="C#" Value="public bool GetFloatIndex (string tag, uint index, out float value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.Single&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetPointer">
-      <MemberSignature Language="C#" Value="public bool GetPointer (string tag, IntPtr value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetUint64Index">
-      <MemberSignature Language="C#" Value="public bool GetUint64Index (string tag, uint index, out ulong value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.UInt64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetDouble">
-      <MemberSignature Language="C#" Value="public bool GetDouble (string tag, out double value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.Double&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetTagSize">
-      <MemberSignature Language="C#" Value="public uint GetTagSize (string tag);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public GLib.GType Type { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetCharIndex">
-      <MemberSignature Language="C#" Value="public bool GetCharIndex (string tag, uint index, out string value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.String&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CopyValue">
-      <MemberSignature Language="C#" Value="public static bool CopyValue (ref GLib.Value dest, Gst.TagList list, string tag);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="dest" Type="GLib.Value&amp;" RefType="ref" />
-        <Parameter Name="list" Type="Gst.TagList" />
-        <Parameter Name="tag" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="dest">To be added.</param>
-        <param name="list">To be added.</param>
-        <param name="tag">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetChar">
-      <MemberSignature Language="C#" Value="public bool GetChar (string tag, out string value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.String&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetString">
-      <MemberSignature Language="C#" Value="public bool GetString (string tag, out string value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="value" Type="System.String&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetStringIndex">
-      <MemberSignature Language="C#" Value="public bool GetStringIndex (string tag, uint index, out string value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="tag" Type="System.String" />
-        <Parameter Name="index" Type="System.UInt32" />
-        <Parameter Name="value" Type="System.String&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="tag">To be added.</param>
-        <param name="index">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public TagList ();" />
+      <MemberType>Constructor</MemberType>
+      <Parameters />
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public TagList (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AddValist">
+      <MemberSignature Language="C#" Value="public void AddValist (Gst.TagMergeMode mode, string tag, IntPtr var_args);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="mode" Type="Gst.TagMergeMode" /><Parameter Name="tag" Type="System.String" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="mode">To be added.</param><param name="tag">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AddValistValues">
+      <MemberSignature Language="C#" Value="public void AddValistValues (Gst.TagMergeMode mode, string tag, IntPtr var_args);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="mode" Type="Gst.TagMergeMode" /><Parameter Name="tag" Type="System.String" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="mode">To be added.</param><param name="tag">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Copy">
+      <MemberSignature Language="C#" Value="public Gst.TagList Copy ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.TagList</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CopyValue">
+      <MemberSignature Language="C#" Value="public static bool CopyValue (ref GLib.Value dest, Gst.TagList list, string tag);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="dest" Type="GLib.Value&amp;" RefType="ref" /><Parameter Name="list" Type="Gst.TagList" /><Parameter Name="tag" Type="System.String" /></Parameters>
+      <Docs><param name="dest">To be added.</param><param name="list">To be added.</param><param name="tag">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Foreach">
+      <MemberSignature Language="C#" Value="public void Foreach (Gst.TagForeachFunc func);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="func" Type="Gst.TagForeachFunc" /></Parameters>
+      <Docs><param name="func">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetBoolean">
+      <MemberSignature Language="C#" Value="public bool GetBoolean (string tag, out bool value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Boolean&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetBooleanIndex">
+      <MemberSignature Language="C#" Value="public bool GetBooleanIndex (string tag, uint index, out bool value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Boolean&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetChar">
+      <MemberSignature Language="C#" Value="public bool GetChar (string tag, out string value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.String&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetCharIndex">
+      <MemberSignature Language="C#" Value="public bool GetCharIndex (string tag, uint index, out string value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.String&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetDouble">
+      <MemberSignature Language="C#" Value="public bool GetDouble (string tag, out double value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Double&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetDoubleIndex">
+      <MemberSignature Language="C#" Value="public bool GetDoubleIndex (string tag, uint index, out double value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Double&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFloat">
+      <MemberSignature Language="C#" Value="public bool GetFloat (string tag, out float value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Single&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFloatIndex">
+      <MemberSignature Language="C#" Value="public bool GetFloatIndex (string tag, uint index, out float value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Single&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetInt">
+      <MemberSignature Language="C#" Value="public bool GetInt (string tag, out int value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Int32&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetInt64">
+      <MemberSignature Language="C#" Value="public bool GetInt64 (string tag, out long value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetInt64Index">
+      <MemberSignature Language="C#" Value="public bool GetInt64Index (string tag, uint index, out long value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetIntIndex">
+      <MemberSignature Language="C#" Value="public bool GetIntIndex (string tag, uint index, out int value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Int32&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetLong">
+      <MemberSignature Language="C#" Value="public bool GetLong (string tag, out long value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetLongIndex">
+      <MemberSignature Language="C#" Value="public bool GetLongIndex (string tag, uint index, out long value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetPointer">
+      <MemberSignature Language="C#" Value="public bool GetPointer (string tag, IntPtr value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetPointerIndex">
+      <MemberSignature Language="C#" Value="public bool GetPointerIndex (string tag, uint index, IntPtr value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetString">
+      <MemberSignature Language="C#" Value="public bool GetString (string tag, out string value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.String&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetStringIndex">
+      <MemberSignature Language="C#" Value="public bool GetStringIndex (string tag, uint index, out string value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.String&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetTagSize">
+      <MemberSignature Language="C#" Value="public uint GetTagSize (string tag);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /></Parameters>
+      <Docs><param name="tag">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUchar">
+      <MemberSignature Language="C#" Value="public bool GetUchar (string tag, out byte value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.Byte&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUcharIndex">
+      <MemberSignature Language="C#" Value="public bool GetUcharIndex (string tag, uint index, out byte value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.Byte&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUint">
+      <MemberSignature Language="C#" Value="public bool GetUint (string tag, out uint value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.UInt32&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUint64">
+      <MemberSignature Language="C#" Value="public bool GetUint64 (string tag, out ulong value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.UInt64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUint64Index">
+      <MemberSignature Language="C#" Value="public bool GetUint64Index (string tag, uint index, out ulong value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.UInt64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUintIndex">
+      <MemberSignature Language="C#" Value="public bool GetUintIndex (string tag, uint index, out uint value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.UInt32&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUlong">
+      <MemberSignature Language="C#" Value="public bool GetUlong (string tag, out ulong value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="value" Type="System.UInt64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUlongIndex">
+      <MemberSignature Language="C#" Value="public bool GetUlongIndex (string tag, uint index, out ulong value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /><Parameter Name="value" Type="System.UInt64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetValueIndex">
+      <MemberSignature Language="C#" Value="public GLib.Value GetValueIndex (string tag, uint index);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /><Parameter Name="index" Type="System.UInt32" /></Parameters>
+      <Docs><param name="tag">To be added.</param><param name="index">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Insert">
+      <MemberSignature Language="C#" Value="public void Insert (Gst.TagList from, Gst.TagMergeMode mode);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="from" Type="Gst.TagList" /><Parameter Name="mode" Type="Gst.TagMergeMode" /></Parameters>
+      <Docs><param name="from">To be added.</param><param name="mode">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IsEmpty"><MemberSignature Language="C#" Value="public bool IsEmpty { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Merge">
+      <MemberSignature Language="C#" Value="public Gst.TagList Merge (Gst.TagList list2, Gst.TagMergeMode mode);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.TagList</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="list2" Type="Gst.TagList" /><Parameter Name="mode" Type="Gst.TagMergeMode" /></Parameters>
+      <Docs><param name="list2">To be added.</param><param name="mode">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveTag">
+      <MemberSignature Language="C#" Value="public void RemoveTag (string tag);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="tag" Type="System.String" /></Parameters>
+      <Docs><param name="tag">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
+      <MemberSignature Language="C#" Value="public GLib.GType Type { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+    
+  </Members>
 </Type>

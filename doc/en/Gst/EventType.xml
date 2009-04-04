@@ -1,166 +1,106 @@
 <Type Name="EventType" FullName="Gst.EventType">
   <TypeSignature Language="C#" Value="public enum EventType" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Downstream">
-      <MemberSignature Language="C#" Value="Downstream" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="FlushStart">
-      <MemberSignature Language="C#" Value="FlushStart" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="DownstreamOob">
-      <MemberSignature Language="C#" Value="DownstreamOob" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Eos">
-      <MemberSignature Language="C#" Value="Eos" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Navigation">
-      <MemberSignature Language="C#" Value="Navigation" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="FlushStop">
-      <MemberSignature Language="C#" Value="FlushStop" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="BufferSize">
-      <MemberSignature Language="C#" Value="BufferSize" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="BothOob">
-      <MemberSignature Language="C#" Value="BothOob" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Both">
-      <MemberSignature Language="C#" Value="Both" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Seek">
-      <MemberSignature Language="C#" Value="Seek" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Upstream">
-      <MemberSignature Language="C#" Value="Upstream" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Tag">
-      <MemberSignature Language="C#" Value="Tag" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="NewSegment">
-      <MemberSignature Language="C#" Value="NewSegment" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Unknown">
-      <MemberSignature Language="C#" Value="Unknown" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Qos">
-      <MemberSignature Language="C#" Value="Qos" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.EventType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName="Both">
+      <MemberSignature Language="C#" Value="Both" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="BothOob">
+      <MemberSignature Language="C#" Value="BothOob" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="BufferSize">
+      <MemberSignature Language="C#" Value="BufferSize" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Downstream">
+      <MemberSignature Language="C#" Value="Downstream" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DownstreamOob">
+      <MemberSignature Language="C#" Value="DownstreamOob" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Eos">
+      <MemberSignature Language="C#" Value="Eos" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Flag"><MemberSignature Language="C#" Value="Flag" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="FlushStart">
+      <MemberSignature Language="C#" Value="FlushStart" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FlushStop">
+      <MemberSignature Language="C#" Value="FlushStop" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Latency"><MemberSignature Language="C#" Value="Latency" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Navigation">
+      <MemberSignature Language="C#" Value="Navigation" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewSegment">
+      <MemberSignature Language="C#" Value="NewSegment" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Qos">
+      <MemberSignature Language="C#" Value="Qos" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Seek">
+      <MemberSignature Language="C#" Value="Seek" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Tag">
+      <MemberSignature Language="C#" Value="Tag" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unknown">
+      <MemberSignature Language="C#" Value="Unknown" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Upstream">
+      <MemberSignature Language="C#" Value="Upstream" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+  </Members>
 </Type>

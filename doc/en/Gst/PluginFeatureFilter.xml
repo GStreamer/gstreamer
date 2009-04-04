@@ -1,7 +1,7 @@
 <Type Name="PluginFeatureFilter" FullName="Gst.PluginFeatureFilter">
-  <TypeSignature Language="C#" Value="public delegate bool PluginFeatureFilter(Gst.PluginFeature feature);" />
+  <TypeSignature Language="C#" Value="public delegate bool PluginFeatureFilter(PluginFeature feature);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -16,7 +16,7 @@
   <Docs>
     <param name="feature">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

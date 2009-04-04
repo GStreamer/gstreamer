@@ -1,96 +1,64 @@
 <Type Name="TagMergeMode" FullName="Gst.TagMergeMode">
   <TypeSignature Language="C#" Value="public enum TagMergeMode" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Keep">
-      <MemberSignature Language="C#" Value="Keep" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Undefined">
-      <MemberSignature Language="C#" Value="Undefined" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Append">
-      <MemberSignature Language="C#" Value="Append" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="ReplaceAll">
-      <MemberSignature Language="C#" Value="ReplaceAll" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="KeepAll">
-      <MemberSignature Language="C#" Value="KeepAll" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Replace">
-      <MemberSignature Language="C#" Value="Replace" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Count">
-      <MemberSignature Language="C#" Value="Count" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Prepend">
-      <MemberSignature Language="C#" Value="Prepend" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TagMergeMode</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName="Append">
+      <MemberSignature Language="C#" Value="Append" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Count">
+      <MemberSignature Language="C#" Value="Count" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Keep">
+      <MemberSignature Language="C#" Value="Keep" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="KeepAll">
+      <MemberSignature Language="C#" Value="KeepAll" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Prepend">
+      <MemberSignature Language="C#" Value="Prepend" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Replace">
+      <MemberSignature Language="C#" Value="Replace" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ReplaceAll">
+      <MemberSignature Language="C#" Value="ReplaceAll" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Undefined">
+      <MemberSignature Language="C#" Value="Undefined" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TagMergeMode</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+    
+  </Members>
 </Type>

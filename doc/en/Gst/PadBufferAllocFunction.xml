@@ -1,7 +1,7 @@
 <Type Name="PadBufferAllocFunction" FullName="Gst.PadBufferAllocFunction">
-  <TypeSignature Language="C#" Value="public delegate Gst.FlowReturn PadBufferAllocFunction(Gst.Pad pad, ulong offset, uint size, Gst.Caps caps, Gst.Buffer buf);" />
+  <TypeSignature Language="C#" Value="public delegate Gst.FlowReturn PadBufferAllocFunction(Pad pad, ulong offset, uint size, Caps caps, Buffer buf);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -24,7 +24,7 @@
     <param name="caps">To be added.</param>
     <param name="buf">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

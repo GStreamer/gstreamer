@@ -1,46 +1,34 @@
 <Type Name="IndexLookupMethod" FullName="Gst.IndexLookupMethod">
   <TypeSignature Language="C#" Value="public enum IndexLookupMethod" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="After">
-      <MemberSignature Language="C#" Value="After" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexLookupMethod</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Before">
-      <MemberSignature Language="C#" Value="Before" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexLookupMethod</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Exact">
-      <MemberSignature Language="C#" Value="Exact" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexLookupMethod</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName="After">
+      <MemberSignature Language="C#" Value="After" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexLookupMethod</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Before">
+      <MemberSignature Language="C#" Value="Before" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexLookupMethod</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Exact">
+      <MemberSignature Language="C#" Value="Exact" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexLookupMethod</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

@@ -1,38 +1,29 @@
 <Type Name="ElementAddedArgs" FullName="Gst.ElementAddedArgs">
   <TypeSignature Language="C#" Value="public class ElementAddedArgs : GLib.SignalArgs" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>GLib.SignalArgs</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public ElementAddedArgs ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Child">
-      <MemberSignature Language="C#" Value="public Gst.Element Child { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public ElementAddedArgs ();" />
+      <MemberType>Constructor</MemberType>
+      <Parameters />
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Child">
+      <MemberSignature Language="C#" Value="public Gst.Element Child { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

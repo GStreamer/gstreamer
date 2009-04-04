@@ -1,7 +1,7 @@
 <Type Name="PadLinkFunction" FullName="Gst.PadLinkFunction">
-  <TypeSignature Language="C#" Value="public delegate Gst.PadLinkReturn PadLinkFunction(Gst.Pad pad, Gst.Pad peer);" />
+  <TypeSignature Language="C#" Value="public delegate Gst.PadLinkReturn PadLinkFunction(Pad pad, Pad peer);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="pad">To be added.</param>
     <param name="peer">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

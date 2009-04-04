@@ -1,7 +1,7 @@
 <Type Name="PadAddedHandler" FullName="Gst.PadAddedHandler">
-  <TypeSignature Language="C#" Value="public delegate void PadAddedHandler(object o, Gst.PadAddedArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void PadAddedHandler(object o, PadAddedArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

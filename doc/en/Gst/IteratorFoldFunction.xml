@@ -1,7 +1,7 @@
 <Type Name="IteratorFoldFunction" FullName="Gst.IteratorFoldFunction">
-  <TypeSignature Language="C#" Value="public delegate bool IteratorFoldFunction(IntPtr item, GLib.Value ret);" />
+  <TypeSignature Language="C#" Value="public delegate bool IteratorFoldFunction(IntPtr item, Value ret);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="item">To be added.</param>
     <param name="ret">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

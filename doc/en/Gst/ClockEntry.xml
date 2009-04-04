@@ -1,123 +1,72 @@
 <Type Name="ClockEntry" FullName="Gst.ClockEntry">
   <TypeSignature Language="C#" Value="public struct ClockEntry" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.ValueType</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName="Refcount">
-      <MemberSignature Language="C#" Value="public int Refcount;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public Gst.ClockEntryType Type;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Time">
-      <MemberSignature Language="C#" Value="public ulong Time;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Interval">
-      <MemberSignature Language="C#" Value="public ulong Interval;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Status">
-      <MemberSignature Language="C#" Value="public Gst.ClockReturn Status;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockReturn</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Zero">
-      <MemberSignature Language="C#" Value="public static Gst.ClockEntry Zero;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockEntry</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="New">
-      <MemberSignature Language="C#" Value="public static Gst.ClockEntry New (IntPtr raw);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockEntry</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Clock">
-      <MemberSignature Language="C#" Value="public Gst.Clock Clock { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Clock</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Func">
-      <MemberSignature Language="C#" Value="public Gst.ClockCallback Func { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockCallback</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    <Member MemberName="Clock">
+      <MemberSignature Language="C#" Value="public Gst.Clock Clock { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Clock</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Func">
+      <MemberSignature Language="C#" Value="public Gst.ClockCallback Func { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockCallback</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Interval">
+      <MemberSignature Language="C#" Value="public ulong Interval;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="New">
+      <MemberSignature Language="C#" Value="public static Gst.ClockEntry New (IntPtr raw);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockEntry</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Refcount">
+      <MemberSignature Language="C#" Value="public int Refcount;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Status">
+      <MemberSignature Language="C#" Value="public Gst.ClockReturn Status;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockReturn</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Time">
+      <MemberSignature Language="C#" Value="public ulong Time;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
+      <MemberSignature Language="C#" Value="public Gst.ClockEntryType Type;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Zero">
+      <MemberSignature Language="C#" Value="public static Gst.ClockEntry Zero;" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockEntry</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+  </Members>
 </Type>

@@ -1,7 +1,7 @@
 <Type Name="StateChange" FullName="Gst.StateChange">
   <TypeSignature Language="C#" Value="public enum StateChange" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,70 +12,46 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="ReadyToNull">
-      <MemberSignature Language="C#" Value="ReadyToNull" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.StateChange</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="NullToReady">
-      <MemberSignature Language="C#" Value="NullToReady" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.StateChange</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="PausedToPlaying">
-      <MemberSignature Language="C#" Value="PausedToPlaying" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.StateChange</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="PlayingToPaused">
-      <MemberSignature Language="C#" Value="PlayingToPaused" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.StateChange</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="PausedToReady">
-      <MemberSignature Language="C#" Value="PausedToReady" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.StateChange</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="ReadyToPaused">
-      <MemberSignature Language="C#" Value="ReadyToPaused" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.StateChange</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    <Member MemberName="NullToReady">
+      <MemberSignature Language="C#" Value="NullToReady" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.StateChange</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PausedToPlaying">
+      <MemberSignature Language="C#" Value="PausedToPlaying" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.StateChange</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PausedToReady">
+      <MemberSignature Language="C#" Value="PausedToReady" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.StateChange</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PlayingToPaused">
+      <MemberSignature Language="C#" Value="PlayingToPaused" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.StateChange</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ReadyToNull">
+      <MemberSignature Language="C#" Value="ReadyToNull" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.StateChange</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ReadyToPaused">
+      <MemberSignature Language="C#" Value="ReadyToPaused" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.StateChange</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

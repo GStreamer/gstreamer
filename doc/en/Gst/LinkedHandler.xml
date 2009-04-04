@@ -1,7 +1,7 @@
 <Type Name="LinkedHandler" FullName="Gst.LinkedHandler">
-  <TypeSignature Language="C#" Value="public delegate void LinkedHandler(object o, Gst.LinkedArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void LinkedHandler(object o, LinkedArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

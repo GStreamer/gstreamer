@@ -1,56 +1,40 @@
 <Type Name="SeekType" FullName="Gst.SeekType">
   <TypeSignature Language="C#" Value="public enum SeekType" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="End">
-      <MemberSignature Language="C#" Value="End" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.SeekType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Set">
-      <MemberSignature Language="C#" Value="Set" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.SeekType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Cur">
-      <MemberSignature Language="C#" Value="Cur" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.SeekType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="None">
-      <MemberSignature Language="C#" Value="None" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.SeekType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName="Cur">
+      <MemberSignature Language="C#" Value="Cur" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.SeekType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="End">
+      <MemberSignature Language="C#" Value="End" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.SeekType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="None">
+      <MemberSignature Language="C#" Value="None" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.SeekType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Set">
+      <MemberSignature Language="C#" Value="Set" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.SeekType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+  </Members>
 </Type>

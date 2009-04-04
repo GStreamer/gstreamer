@@ -1,7 +1,7 @@
 <Type Name="MiniObjectCopyFunction" FullName="Gst.MiniObjectCopyFunction">
-  <TypeSignature Language="C#" Value="public delegate Gst.MiniObject MiniObjectCopyFunction(Gst.MiniObject obj);" />
+  <TypeSignature Language="C#" Value="public delegate Gst.MiniObject MiniObjectCopyFunction(MiniObject obj);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -16,7 +16,7 @@
   <Docs>
     <param name="obj">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

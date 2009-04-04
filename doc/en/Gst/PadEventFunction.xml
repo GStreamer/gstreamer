@@ -1,7 +1,7 @@
 <Type Name="PadEventFunction" FullName="Gst.PadEventFunction">
-  <TypeSignature Language="C#" Value="public delegate bool PadEventFunction(Gst.Pad pad, Gst.Event evnt);" />
+  <TypeSignature Language="C#" Value="public delegate bool PadEventFunction(Pad pad, Event evnt);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="pad">To be added.</param>
     <param name="evnt">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

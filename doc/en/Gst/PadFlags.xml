@@ -1,7 +1,7 @@
 <Type Name="PadFlags" FullName="Gst.PadFlags">
   <TypeSignature Language="C#" Value="public enum PadFlags" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,60 +12,35 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="InSetcaps">
-      <MemberSignature Language="C#" Value="InSetcaps" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Flushing">
-      <MemberSignature Language="C#" Value="Flushing" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="InGetcaps">
-      <MemberSignature Language="C#" Value="InGetcaps" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="FlagLast">
-      <MemberSignature Language="C#" Value="FlagLast" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Blocked">
-      <MemberSignature Language="C#" Value="Blocked" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+  <Member MemberName="Blocked">
+      <MemberSignature Language="C#" Value="Blocked" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Blocking"><MemberSignature Language="C#" Value="Blocking" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PadFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Flushing">
+      <MemberSignature Language="C#" Value="Flushing" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="InGetcaps">
+      <MemberSignature Language="C#" Value="InGetcaps" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="InSetcaps">
+      <MemberSignature Language="C#" Value="InSetcaps" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Last"><MemberSignature Language="C#" Value="Last" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PadFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member></Members>
 </Type>

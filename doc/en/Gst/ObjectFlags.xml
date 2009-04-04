@@ -1,7 +1,7 @@
 <Type Name="ObjectFlags" FullName="Gst.ObjectFlags">
   <TypeSignature Language="C#" Value="public enum ObjectFlags" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,40 +12,28 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="Disposing">
-      <MemberSignature Language="C#" Value="Disposing" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ObjectFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Last">
-      <MemberSignature Language="C#" Value="Last" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ObjectFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Floating">
-      <MemberSignature Language="C#" Value="Floating" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ObjectFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName="Disposing">
+      <MemberSignature Language="C#" Value="Disposing" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ObjectFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Floating">
+      <MemberSignature Language="C#" Value="Floating" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ObjectFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Last">
+      <MemberSignature Language="C#" Value="Last" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ObjectFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+  </Members>
 </Type>

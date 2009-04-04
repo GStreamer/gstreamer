@@ -1,7 +1,7 @@
 <Type Name="IndexFlags" FullName="Gst.IndexFlags">
   <TypeSignature Language="C#" Value="public enum IndexFlags" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,40 +12,23 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="Writable">
-      <MemberSignature Language="C#" Value="Writable" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Readable">
-      <MemberSignature Language="C#" Value="Readable" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="FlagLast">
-      <MemberSignature Language="C#" Value="FlagLast" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IndexFlags</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    <Member MemberName="Last"><MemberSignature Language="C#" Value="Last" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.IndexFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Readable">
+      <MemberSignature Language="C#" Value="Readable" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Writable">
+      <MemberSignature Language="C#" Value="Writable" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IndexFlags</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+  </Members>
 </Type>

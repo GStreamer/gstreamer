@@ -1,7 +1,7 @@
 <Type Name="PadQueryFunction" FullName="Gst.PadQueryFunction">
-  <TypeSignature Language="C#" Value="public delegate bool PadQueryFunction(Gst.Pad pad, Gst.Query query);" />
+  <TypeSignature Language="C#" Value="public delegate bool PadQueryFunction(Pad pad, Query query);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="pad">To be added.</param>
     <param name="query">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

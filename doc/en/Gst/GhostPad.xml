@@ -1,114 +1,61 @@
 <Type Name="GhostPad" FullName="Gst.GhostPad">
   <TypeSignature Language="C#" Value="public class GhostPad : Gst.Pad" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gst.Pad</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected GhostPad (GLib.GType gtype);" />
-      <MemberType>Constructor</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>System.Obsolete(Message=null, IsError=False)</AttributeName>
-        </Attribute>
-      </Attributes>
-      <Parameters>
-        <Parameter Name="gtype" Type="GLib.GType" />
-      </Parameters>
-      <Docs>
-        <param name="gtype">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public GhostPad (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public GhostPad (string name, Gst.Pad target);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="name" Type="System.String" />
-        <Parameter Name="target" Type="Gst.Pad" />
-      </Parameters>
-      <Docs>
-        <param name="name">To be added.</param>
-        <param name="target">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public GhostPad (string name, Gst.PadDirection dir);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="name" Type="System.String" />
-        <Parameter Name="dir" Type="Gst.PadDirection" />
-      </Parameters>
-      <Docs>
-        <param name="name">To be added.</param>
-        <param name="dir">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetTarget">
-      <MemberSignature Language="C#" Value="public bool SetTarget (Gst.Pad newtarget);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="newtarget" Type="Gst.Pad" />
-      </Parameters>
-      <Docs>
-        <param name="newtarget">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Target">
-      <MemberSignature Language="C#" Value="public Gst.Pad Target { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Pad</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="protected GhostPad (GLib.GType gtype);" />
+      <MemberType>Constructor</MemberType>
+      <Attributes><Attribute><AttributeName>System.Obsolete</AttributeName></Attribute></Attributes>
+      <Parameters><Parameter Name="gtype" Type="GLib.GType" /></Parameters>
+      <Docs><param name="gtype">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public GhostPad (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public GhostPad (string name, Gst.Pad target);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="target" Type="Gst.Pad" /></Parameters>
+      <Docs><param name="name">To be added.</param><param name="target">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public GhostPad (string name, Gst.PadDirection dir);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="dir" Type="Gst.PadDirection" /></Parameters>
+      <Docs><param name="name">To be added.</param><param name="dir">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public GhostPad (string name, Gst.PadTemplate templ);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="templ" Type="Gst.PadTemplate" /></Parameters><Docs><param name="name">To be added.</param><param name="templ">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public GhostPad (string name, Gst.Pad target, Gst.PadTemplate templ);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="target" Type="Gst.Pad" /><Parameter Name="templ" Type="Gst.PadTemplate" /></Parameters><Docs><param name="name">To be added.</param><param name="target">To be added.</param><param name="templ">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Construct"><MemberSignature Language="C#" Value="public bool Construct ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetTarget">
+      <MemberSignature Language="C#" Value="public bool SetTarget (Gst.Pad newtarget);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="newtarget" Type="Gst.Pad" /></Parameters>
+      <Docs><param name="newtarget">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Target">
+      <MemberSignature Language="C#" Value="public Gst.Pad Target { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Pad</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

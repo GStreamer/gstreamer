@@ -1,7 +1,7 @@
 <Type Name="MessageType" FullName="Gst.MessageType">
   <TypeSignature Language="C#" Value="public enum MessageType" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -12,220 +12,136 @@
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
-  <Members>
-    <Member MemberName="StructureChange">
-      <MemberSignature Language="C#" Value="StructureChange" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="StateChanged">
-      <MemberSignature Language="C#" Value="StateChanged" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Duration">
-      <MemberSignature Language="C#" Value="Duration" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="NewClock">
-      <MemberSignature Language="C#" Value="NewClock" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Eos">
-      <MemberSignature Language="C#" Value="Eos" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Info">
-      <MemberSignature Language="C#" Value="Info" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Error">
-      <MemberSignature Language="C#" Value="Error" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Buffering">
-      <MemberSignature Language="C#" Value="Buffering" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="SegmentDone">
-      <MemberSignature Language="C#" Value="SegmentDone" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="ClockProvide">
-      <MemberSignature Language="C#" Value="ClockProvide" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="ClockLost">
-      <MemberSignature Language="C#" Value="ClockLost" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Any">
-      <MemberSignature Language="C#" Value="Any" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="StateDirty">
-      <MemberSignature Language="C#" Value="StateDirty" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Application">
-      <MemberSignature Language="C#" Value="Application" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Element">
-      <MemberSignature Language="C#" Value="Element" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Tag">
-      <MemberSignature Language="C#" Value="Tag" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="StreamStatus">
-      <MemberSignature Language="C#" Value="StreamStatus" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="SegmentStart">
-      <MemberSignature Language="C#" Value="SegmentStart" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Unknown">
-      <MemberSignature Language="C#" Value="Unknown" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Warning">
-      <MemberSignature Language="C#" Value="Warning" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="StepDone">
-      <MemberSignature Language="C#" Value="StepDone" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.MessageType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName="Any">
+      <MemberSignature Language="C#" Value="Any" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Application">
+      <MemberSignature Language="C#" Value="Application" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AsyncDone"><MemberSignature Language="C#" Value="AsyncDone" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="AsyncStart"><MemberSignature Language="C#" Value="AsyncStart" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Buffering">
+      <MemberSignature Language="C#" Value="Buffering" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ClockLost">
+      <MemberSignature Language="C#" Value="ClockLost" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ClockProvide">
+      <MemberSignature Language="C#" Value="ClockProvide" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Duration">
+      <MemberSignature Language="C#" Value="Duration" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Element">
+      <MemberSignature Language="C#" Value="Element" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Eos">
+      <MemberSignature Language="C#" Value="Eos" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Error">
+      <MemberSignature Language="C#" Value="Error" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Info">
+      <MemberSignature Language="C#" Value="Info" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Latency"><MemberSignature Language="C#" Value="Latency" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="NewClock">
+      <MemberSignature Language="C#" Value="NewClock" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SegmentDone">
+      <MemberSignature Language="C#" Value="SegmentDone" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SegmentStart">
+      <MemberSignature Language="C#" Value="SegmentStart" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StateChanged">
+      <MemberSignature Language="C#" Value="StateChanged" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StateDirty">
+      <MemberSignature Language="C#" Value="StateDirty" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StepDone">
+      <MemberSignature Language="C#" Value="StepDone" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StreamStatus">
+      <MemberSignature Language="C#" Value="StreamStatus" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StructureChange">
+      <MemberSignature Language="C#" Value="StructureChange" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Tag">
+      <MemberSignature Language="C#" Value="Tag" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unknown">
+      <MemberSignature Language="C#" Value="Unknown" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Warning">
+      <MemberSignature Language="C#" Value="Warning" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.MessageType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+  </Members>
 </Type>

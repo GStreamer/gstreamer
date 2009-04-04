@@ -1,424 +1,205 @@
 <Type Name="Global" FullName="Gst.Global">
   <TypeSignature Language="C#" Value="public class Global" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Object</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Global ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="VersionString">
-      <MemberSignature Language="C#" Value="public static string VersionString ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseLaunch">
-      <MemberSignature Language="C#" Value="public static Gst.Element ParseLaunch (string pipeline_description);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="pipeline_description" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="pipeline_description">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GErrorGetType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GErrorGetType ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseBinFromDescription">
-      <MemberSignature Language="C#" Value="public static Gst.Element ParseBinFromDescription (string bin_description, bool ghost_unconnected_pads);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="bin_description" Type="System.String" />
-        <Parameter Name="ghost_unconnected_pads" Type="System.Boolean" />
-      </Parameters>
-      <Docs>
-        <param name="bin_description">To be added.</param>
-        <param name="ghost_unconnected_pads">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatGetName">
-      <MemberSignature Language="C#" Value="public static string FormatGetName (Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatGetDetails">
-      <MemberSignature Language="C#" Value="public static Gst.FormatDefinition FormatGetDetails (Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.FormatDefinition</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DefaultRegistryCheckFeatureVersion">
-      <MemberSignature Language="C#" Value="public static bool DefaultRegistryCheckFeatureVersion (string feature_name, uint min_major, uint min_minor, uint min_micro);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="feature_name" Type="System.String" />
-        <Parameter Name="min_major" Type="System.UInt32" />
-        <Parameter Name="min_minor" Type="System.UInt32" />
-        <Parameter Name="min_micro" Type="System.UInt32" />
-      </Parameters>
-      <Docs>
-        <param name="feature_name">To be added.</param>
-        <param name="min_major">To be added.</param>
-        <param name="min_minor">To be added.</param>
-        <param name="min_micro">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ResourceErrorQuark">
-      <MemberSignature Language="C#" Value="public static int ResourceErrorQuark ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatGetByNick">
-      <MemberSignature Language="C#" Value="public static Gst.Format FormatGetByNick (string nick);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Format</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="nick" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="nick">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IntRangeGetType">
-      <MemberSignature Language="C#" Value="public static GLib.GType IntRangeGetType ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DoubleRangeGetType">
-      <MemberSignature Language="C#" Value="public static GLib.GType DoubleRangeGetType ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatIterateDefinitions">
-      <MemberSignature Language="C#" Value="public static Gst.Iterator FormatIterateDefinitions ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Iterator</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CoreErrorQuark">
-      <MemberSignature Language="C#" Value="public static int CoreErrorQuark ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="IsTagList">
-      <MemberSignature Language="C#" Value="public static bool IsTagList (IntPtr p);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="p" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="p">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseErrorQuark">
-      <MemberSignature Language="C#" Value="public static int ParseErrorQuark ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseLaunchv">
-      <MemberSignature Language="C#" Value="public static Gst.Element ParseLaunchv (string argv);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Element</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="argv" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="argv">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ErrorGetMessage">
-      <MemberSignature Language="C#" Value="public static string ErrorGetMessage (int domain, int code);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="domain" Type="System.Int32" />
-        <Parameter Name="code" Type="System.Int32" />
-      </Parameters>
-      <Docs>
-        <param name="domain">To be added.</param>
-        <param name="code">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="StreamErrorQuark">
-      <MemberSignature Language="C#" Value="public static int StreamErrorQuark ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatToQuark">
-      <MemberSignature Language="C#" Value="public static int FormatToQuark (Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="AtomicIntSet">
-      <MemberSignature Language="C#" Value="public static int AtomicIntSet (int value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="value" Type="System.Int32" />
-      </Parameters>
-      <Docs>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="LibraryErrorQuark">
-      <MemberSignature Language="C#" Value="public static int LibraryErrorQuark ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FourccGetType">
-      <MemberSignature Language="C#" Value="public static GLib.GType FourccGetType ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatsContains">
-      <MemberSignature Language="C#" Value="public static bool FormatsContains (out Gst.Format formats, Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="formats" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="formats">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FilterRun">
-      <MemberSignature Language="C#" Value="public static GLib.List FilterRun (GLib.List list, Gst.FilterFunc func, bool first);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.List</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="list" Type="GLib.List" />
-        <Parameter Name="func" Type="Gst.FilterFunc" />
-        <Parameter Name="first" Type="System.Boolean" />
-      </Parameters>
-      <Docs>
-        <param name="list">To be added.</param>
-        <param name="func">To be added.</param>
-        <param name="first">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatRegister">
-      <MemberSignature Language="C#" Value="public static Gst.Format FormatRegister (string nick, string description);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Format</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="nick" Type="System.String" />
-        <Parameter Name="description" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="nick">To be added.</param>
-        <param name="description">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DateGetType">
-      <MemberSignature Language="C#" Value="public static GLib.GType DateGetType ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Global ();" />
+      <MemberType>Constructor</MemberType>
+      <Parameters />
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AtomicIntSet">
+      <MemberSignature Language="C#" Value="public static int AtomicIntSet (int value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="value" Type="System.Int32" /></Parameters>
+      <Docs><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CoreErrorQuark">
+      <MemberSignature Language="C#" Value="public static int CoreErrorQuark ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DateGetType">
+      <MemberSignature Language="C#" Value="public static GLib.GType DateGetType ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DefaultRegistryCheckFeatureVersion">
+      <MemberSignature Language="C#" Value="public static bool DefaultRegistryCheckFeatureVersion (string feature_name, uint min_major, uint min_minor, uint min_micro);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="feature_name" Type="System.String" /><Parameter Name="min_major" Type="System.UInt32" /><Parameter Name="min_minor" Type="System.UInt32" /><Parameter Name="min_micro" Type="System.UInt32" /></Parameters>
+      <Docs><param name="feature_name">To be added.</param><param name="min_major">To be added.</param><param name="min_minor">To be added.</param><param name="min_micro">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DoubleRangeGetType">
+      <MemberSignature Language="C#" Value="public static GLib.GType DoubleRangeGetType ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ErrorGetMessage">
+      <MemberSignature Language="C#" Value="public static string ErrorGetMessage (int domain, int code);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="domain" Type="System.Int32" /><Parameter Name="code" Type="System.Int32" /></Parameters>
+      <Docs><param name="domain">To be added.</param><param name="code">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FilterRun">
+      <MemberSignature Language="C#" Value="public static GLib.List FilterRun (GLib.List list, Gst.FilterFunc func, bool first);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="list" Type="GLib.List" /><Parameter Name="func" Type="Gst.FilterFunc" /><Parameter Name="first" Type="System.Boolean" /></Parameters>
+      <Docs><param name="list">To be added.</param><param name="func">To be added.</param><param name="first">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatGetByNick">
+      <MemberSignature Language="C#" Value="public static Gst.Format FormatGetByNick (string nick);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Format</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="nick" Type="System.String" /></Parameters>
+      <Docs><param name="nick">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatGetDetails">
+      <MemberSignature Language="C#" Value="public static Gst.FormatDefinition FormatGetDetails (Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.FormatDefinition</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatGetName">
+      <MemberSignature Language="C#" Value="public static string FormatGetName (Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatIterateDefinitions">
+      <MemberSignature Language="C#" Value="public static Gst.Iterator FormatIterateDefinitions ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatRegister">
+      <MemberSignature Language="C#" Value="public static Gst.Format FormatRegister (string nick, string description);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Format</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="nick" Type="System.String" /><Parameter Name="description" Type="System.String" /></Parameters>
+      <Docs><param name="nick">To be added.</param><param name="description">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatsContains">
+      <MemberSignature Language="C#" Value="public static bool FormatsContains (out Gst.Format formats, Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="formats" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="formats">To be added.</param><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatToQuark">
+      <MemberSignature Language="C#" Value="public static int FormatToQuark (Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FourccGetType">
+      <MemberSignature Language="C#" Value="public static GLib.GType FourccGetType ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GErrorGetType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GErrorGetType ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IntRangeGetType">
+      <MemberSignature Language="C#" Value="public static GLib.GType IntRangeGetType ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IsTagList">
+      <MemberSignature Language="C#" Value="public static bool IsTagList (IntPtr p);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="p" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="p">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="LibraryErrorQuark">
+      <MemberSignature Language="C#" Value="public static int LibraryErrorQuark ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseBinFromDescription">
+      <MemberSignature Language="C#" Value="public static Gst.Element ParseBinFromDescription (string bin_description, bool ghost_unlinked_pads);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="bin_description" Type="System.String" /><Parameter Name="ghost_unlinked_pads" Type="System.Boolean" /></Parameters>
+      <Docs><param name="bin_description">To be added.</param><param name="ghost_unlinked_pads">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseBinFromDescriptionFull"><MemberSignature Language="C#" Value="public static Gst.Element ParseBinFromDescriptionFull (string bin_description, bool ghost_unlinked_pads, Gst.ParseContext context, Gst.ParseFlags flags);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="bin_description" Type="System.String" /><Parameter Name="ghost_unlinked_pads" Type="System.Boolean" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters><Docs><param name="bin_description">To be added.</param><param name="ghost_unlinked_pads">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseErrorQuark">
+      <MemberSignature Language="C#" Value="public static int ParseErrorQuark ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseLaunch">
+      <MemberSignature Language="C#" Value="public static Gst.Element ParseLaunch (string pipeline_description);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="pipeline_description" Type="System.String" /></Parameters>
+      <Docs><param name="pipeline_description">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseLaunchFull"><MemberSignature Language="C#" Value="public static Gst.Element ParseLaunchFull (string pipeline_description, Gst.ParseContext context, Gst.ParseFlags flags);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="pipeline_description" Type="System.String" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters><Docs><param name="pipeline_description">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseLaunchv">
+      <MemberSignature Language="C#" Value="public static Gst.Element ParseLaunchv (string argv);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="argv" Type="System.String" /></Parameters>
+      <Docs><param name="argv">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseLaunchvFull"><MemberSignature Language="C#" Value="public static Gst.Element ParseLaunchvFull (string argv, Gst.ParseContext context, Gst.ParseFlags flags);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="argv" Type="System.String" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters><Docs><param name="argv">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ResourceErrorQuark">
+      <MemberSignature Language="C#" Value="public static int ResourceErrorQuark ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StreamErrorQuark">
+      <MemberSignature Language="C#" Value="public static int StreamErrorQuark ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="UpdateRegistry"><MemberSignature Language="C#" Value="public static bool UpdateRegistry ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="VersionString">
+      <MemberSignature Language="C#" Value="public static string VersionString ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  </Members>
 </Type>

@@ -1,7 +1,7 @@
 <Type Name="IteratorNextFunction" FullName="Gst.IteratorNextFunction">
-  <TypeSignature Language="C#" Value="public delegate Gst.IteratorResult IteratorNextFunction(Gst.Iterator it, IntPtr result);" />
+  <TypeSignature Language="C#" Value="public delegate Gst.IteratorResult IteratorNextFunction(Iterator it, IntPtr res);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -9,16 +9,16 @@
   </Base>
   <Parameters>
     <Parameter Name="it" Type="Gst.Iterator" />
-    <Parameter Name="result" Type="System.IntPtr" />
+    <Parameter Name="res" Type="System.IntPtr" />
   </Parameters>
   <ReturnValue>
     <ReturnType>Gst.IteratorResult</ReturnType>
   </ReturnValue>
   <Docs>
     <param name="it">To be added.</param>
-    <param name="result">To be added.</param>
+    <param name="res">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

@@ -1,138 +1,75 @@
 <Type Name="Iterator" FullName="Gst.Iterator">
   <TypeSignature Language="C#" Value="public class Iterator : GLib.Opaque" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Iterator (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Fold">
-      <MemberSignature Language="C#" Value="public Gst.IteratorResult Fold (Gst.IteratorFoldFunction func, GLib.Value ret_val);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IteratorResult</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="func" Type="Gst.IteratorFoldFunction" />
-        <Parameter Name="ret_val" Type="GLib.Value" />
-      </Parameters>
-      <Docs>
-        <param name="func">To be added.</param>
-        <param name="ret_val">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Push">
-      <MemberSignature Language="C#" Value="public void Push (Gst.Iterator other);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="other" Type="Gst.Iterator" />
-      </Parameters>
-      <Docs>
-        <param name="other">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Next">
-      <MemberSignature Language="C#" Value="public Gst.IteratorResult Next (IntPtr elem);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IteratorResult</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="elem" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="elem">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Resync">
-      <MemberSignature Language="C#" Value="public void Resync ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="MasterCookie">
-      <MemberSignature Language="C#" Value="public uint MasterCookie { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Pushed">
-      <MemberSignature Language="C#" Value="public Gst.Iterator Pushed { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Iterator</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Cookie">
-      <MemberSignature Language="C#" Value="public uint Cookie { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public GLib.GType Type { set; get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Iterator (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Cookie">
+      <MemberSignature Language="C#" Value="public uint Cookie { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Fold">
+      <MemberSignature Language="C#" Value="public Gst.IteratorResult Fold (Gst.IteratorFoldFunction func, GLib.Value ret_val);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.IteratorResult</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="func" Type="Gst.IteratorFoldFunction" /><Parameter Name="ret_val" Type="GLib.Value" /></Parameters>
+      <Docs><param name="func">To be added.</param><param name="ret_val">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MasterCookie">
+      <MemberSignature Language="C#" Value="public uint MasterCookie { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Next">
+      <MemberSignature Language="C#" Value="public Gst.IteratorResult Next (IntPtr elem);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.IteratorResult</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="elem" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="elem">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Push">
+      <MemberSignature Language="C#" Value="public void Push (Gst.Iterator other);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="other" Type="Gst.Iterator" /></Parameters>
+      <Docs><param name="other">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Pushed">
+      <MemberSignature Language="C#" Value="public Gst.Iterator Pushed { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Resync">
+      <MemberSignature Language="C#" Value="public void Resync ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
+      <MemberSignature Language="C#" Value="public GLib.GType Type { set; get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

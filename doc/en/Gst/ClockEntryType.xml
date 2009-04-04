@@ -1,36 +1,28 @@
 <Type Name="ClockEntryType" FullName="Gst.ClockEntryType">
   <TypeSignature Language="C#" Value="public enum ClockEntryType" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Single">
-      <MemberSignature Language="C#" Value="Single" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Periodic">
-      <MemberSignature Language="C#" Value="Periodic" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.ClockEntryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    <Member MemberName="Periodic">
+      <MemberSignature Language="C#" Value="Periodic" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Single">
+      <MemberSignature Language="C#" Value="Single" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.ClockEntryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+  </Members>
 </Type>

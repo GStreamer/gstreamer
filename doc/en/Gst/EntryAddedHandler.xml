@@ -1,7 +1,7 @@
 <Type Name="EntryAddedHandler" FullName="Gst.EntryAddedHandler">
-  <TypeSignature Language="C#" Value="public delegate void EntryAddedHandler(object o, Gst.EntryAddedArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void EntryAddedHandler(object o, EntryAddedArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

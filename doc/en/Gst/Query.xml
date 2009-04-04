@@ -1,495 +1,201 @@
 <Type Name="Query" FullName="Gst.Query">
   <TypeSignature Language="C#" Value="public class Query : Gst.MiniObject" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gst.MiniObject</BaseTypeName>
   </Base>
   <Interfaces />
-  <Members>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Query (GLib.GType gtype);" />
-      <MemberType>Constructor</MemberType>
-      <Attributes>
-        <Attribute>
-          <AttributeName>System.Obsolete(Message=null, IsError=False)</AttributeName>
-        </Attribute>
-      </Attributes>
-      <Parameters>
-        <Parameter Name="gtype" Type="GLib.GType" />
-      </Parameters>
-      <Docs>
-        <param name="gtype">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Query (IntPtr raw);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Query (Gst.QueryType type, Gst.Structure structure);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="type" Type="Gst.QueryType" />
-        <Parameter Name="structure" Type="Gst.Structure" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <param name="structure">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Query (Gst.Format src_format, long value, Gst.Format dest_format);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="src_format" Type="Gst.Format" />
-        <Parameter Name="value" Type="System.Int64" />
-        <Parameter Name="dest_format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="src_format">To be added.</param>
-        <param name="value">To be added.</param>
-        <param name="dest_format">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Query (Gst.Format format);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="NewPosition">
-      <MemberSignature Language="C#" Value="public static Gst.Query NewPosition (Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Query</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="NewSeeking">
-      <MemberSignature Language="C#" Value="public static Gst.Query NewSeeking (Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Query</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="NewSegment">
-      <MemberSignature Language="C#" Value="public static Gst.Query NewSegment (Gst.Format format);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Query</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeGetName">
-      <MemberSignature Language="C#" Value="public static string TypeGetName (Gst.QueryType query);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="query" Type="Gst.QueryType" />
-      </Parameters>
-      <Docs>
-        <param name="query">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetDuration">
-      <MemberSignature Language="C#" Value="public void SetDuration (Gst.Format format, long duration);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="duration" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="duration">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseDuration">
-      <MemberSignature Language="C#" Value="public void ParseDuration (out Gst.Format format, out long duration);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="duration" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="duration">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeGetByNick">
-      <MemberSignature Language="C#" Value="public static Gst.QueryType TypeGetByNick (string nick);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.QueryType</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="nick" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="nick">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeGetDetails">
-      <MemberSignature Language="C#" Value="public static Gst.QueryTypeDefinition TypeGetDetails (Gst.QueryType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.QueryTypeDefinition</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="type" Type="Gst.QueryType" />
-      </Parameters>
-      <Docs>
-        <param name="type">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeIterateDefinitions">
-      <MemberSignature Language="C#" Value="public static Gst.Iterator TypeIterateDefinitions ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Iterator</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetConvert">
-      <MemberSignature Language="C#" Value="public void SetConvert (Gst.Format src_format, long src_value, Gst.Format dest_format, long dest_value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="src_format" Type="Gst.Format" />
-        <Parameter Name="src_value" Type="System.Int64" />
-        <Parameter Name="dest_format" Type="Gst.Format" />
-        <Parameter Name="dest_value" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="src_format">To be added.</param>
-        <param name="src_value">To be added.</param>
-        <param name="dest_format">To be added.</param>
-        <param name="dest_value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetSegment">
-      <MemberSignature Language="C#" Value="public void SetSegment (double rate, Gst.Format format, long start_value, long stop_value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="rate" Type="System.Double" />
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="start_value" Type="System.Int64" />
-        <Parameter Name="stop_value" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="rate">To be added.</param>
-        <param name="format">To be added.</param>
-        <param name="start_value">To be added.</param>
-        <param name="stop_value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseConvert">
-      <MemberSignature Language="C#" Value="public void ParseConvert (out Gst.Format src_format, out long src_value, out Gst.Format dest_format, out long dest_value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="src_format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="src_value" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="dest_format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="dest_value" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="src_format">To be added.</param>
-        <param name="src_value">To be added.</param>
-        <param name="dest_format">To be added.</param>
-        <param name="dest_value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseSegment">
-      <MemberSignature Language="C#" Value="public void ParseSegment (out double rate, out Gst.Format format, out long start_value, out long stop_value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="rate" Type="System.Double&amp;" RefType="out" />
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="start_value" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="stop_value" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="rate">To be added.</param>
-        <param name="format">To be added.</param>
-        <param name="start_value">To be added.</param>
-        <param name="stop_value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypesContains">
-      <MemberSignature Language="C#" Value="public static bool TypesContains (out Gst.QueryType types, Gst.QueryType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="types" Type="Gst.QueryType&amp;" RefType="out" />
-        <Parameter Name="type" Type="Gst.QueryType" />
-      </Parameters>
-      <Docs>
-        <param name="types">To be added.</param>
-        <param name="type">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetSeeking">
-      <MemberSignature Language="C#" Value="public void SetSeeking (Gst.Format format, bool seekable, long segment_start, long segment_end);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="seekable" Type="System.Boolean" />
-        <Parameter Name="segment_start" Type="System.Int64" />
-        <Parameter Name="segment_end" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="seekable">To be added.</param>
-        <param name="segment_start">To be added.</param>
-        <param name="segment_end">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParseSeeking">
-      <MemberSignature Language="C#" Value="public void ParseSeeking (out Gst.Format format, out bool seekable, out long segment_start, out long segment_end);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="seekable" Type="System.Boolean&amp;" RefType="out" />
-        <Parameter Name="segment_start" Type="System.Int64&amp;" RefType="out" />
-        <Parameter Name="segment_end" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="seekable">To be added.</param>
-        <param name="segment_start">To be added.</param>
-        <param name="segment_end">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeToQuark">
-      <MemberSignature Language="C#" Value="public static int TypeToQuark (Gst.QueryType query);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Int32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="query" Type="Gst.QueryType" />
-      </Parameters>
-      <Docs>
-        <param name="query">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ParsePosition">
-      <MemberSignature Language="C#" Value="public void ParsePosition (out Gst.Format format, out long cur);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format&amp;" RefType="out" />
-        <Parameter Name="cur" Type="System.Int64&amp;" RefType="out" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="cur">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetPosition">
-      <MemberSignature Language="C#" Value="public void SetPosition (Gst.Format format, long cur);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-        <Parameter Name="cur" Type="System.Int64" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <param name="cur">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TypeRegister">
-      <MemberSignature Language="C#" Value="public static Gst.QueryType TypeRegister (string nick, string description);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.QueryType</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="nick" Type="System.String" />
-        <Parameter Name="description" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="nick">To be added.</param>
-        <param name="description">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public Gst.QueryType Type { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.QueryType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Structure">
-      <MemberSignature Language="C#" Value="public Gst.Structure Structure { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Structure</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GType">
-      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; };" />
-      <MemberType>Property</MemberType>
-      <ReturnValue>
-        <ReturnType>GLib.GType</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetQuery">
-      <MemberSignature Language="C#" Value="public static Gst.Query GetQuery (IntPtr raw);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.Query</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="raw" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="raw">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Query ();" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Query (Gst.Format format);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Query (IntPtr raw);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Query (Gst.QueryType type, Gst.Structure structure);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="type" Type="Gst.QueryType" /><Parameter Name="structure" Type="Gst.Structure" /></Parameters>
+      <Docs><param name="type">To be added.</param><param name="structure">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Query (Gst.Format src_format, long value, Gst.Format dest_format);" />
+      <MemberType>Constructor</MemberType>
+      <Parameters><Parameter Name="src_format" Type="Gst.Format" /><Parameter Name="value" Type="System.Int64" /><Parameter Name="dest_format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="src_format">To be added.</param><param name="value">To be added.</param><param name="dest_format">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewDuration"><MemberSignature Language="C#" Value="public static Gst.Query NewDuration (Gst.Format format);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Query</ReturnType></ReturnValue><Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters><Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewLatency"><MemberSignature Language="C#" Value="public static Gst.Query NewLatency ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Query</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewPosition">
+      <MemberSignature Language="C#" Value="public static Gst.Query NewPosition (Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Query</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewSeeking">
+      <MemberSignature Language="C#" Value="public static Gst.Query NewSeeking (Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Query</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewSegment">
+      <MemberSignature Language="C#" Value="public static Gst.Query NewSegment (Gst.Format format);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Query</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewUri"><MemberSignature Language="C#" Value="public static Gst.Query NewUri ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Query</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseBufferingPercent"><MemberSignature Language="C#" Value="public void ParseBufferingPercent (out bool busy, out int percent);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="busy" Type="System.Boolean&amp;" RefType="out" /><Parameter Name="percent" Type="System.Int32&amp;" RefType="out" /></Parameters><Docs><param name="busy">To be added.</param><param name="percent">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseBufferingRange"><MemberSignature Language="C#" Value="public void ParseBufferingRange (out Gst.Format format, out long start, out long stop, out long estimated_total);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="start" Type="System.Int64&amp;" RefType="out" /><Parameter Name="stop" Type="System.Int64&amp;" RefType="out" /><Parameter Name="estimated_total" Type="System.Int64&amp;" RefType="out" /></Parameters><Docs><param name="format">To be added.</param><param name="start">To be added.</param><param name="stop">To be added.</param><param name="estimated_total">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseBufferingStats"><MemberSignature Language="C#" Value="public void ParseBufferingStats (out Gst.BufferingMode mode, out int avg_in, out int avg_out, out long buffering_left);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="mode" Type="Gst.BufferingMode&amp;" RefType="out" /><Parameter Name="avg_in" Type="System.Int32&amp;" RefType="out" /><Parameter Name="avg_out" Type="System.Int32&amp;" RefType="out" /><Parameter Name="buffering_left" Type="System.Int64&amp;" RefType="out" /></Parameters><Docs><param name="mode">To be added.</param><param name="avg_in">To be added.</param><param name="avg_out">To be added.</param><param name="buffering_left">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseConvert">
+      <MemberSignature Language="C#" Value="public void ParseConvert (out Gst.Format src_format, out long src_value, out Gst.Format dest_format, out long dest_value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="src_format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="src_value" Type="System.Int64&amp;" RefType="out" /><Parameter Name="dest_format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="dest_value" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="src_format">To be added.</param><param name="src_value">To be added.</param><param name="dest_format">To be added.</param><param name="dest_value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseDuration">
+      <MemberSignature Language="C#" Value="public void ParseDuration (out Gst.Format format, out long duration);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="duration" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="duration">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseFormatsLength"><MemberSignature Language="C#" Value="public uint ParseFormatsLength ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseFormatsNth"><MemberSignature Language="C#" Value="public Gst.Format ParseFormatsNth (uint nth);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Format</ReturnType></ReturnValue><Parameters><Parameter Name="nth" Type="System.UInt32" /></Parameters><Docs><param name="nth">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseLatency"><MemberSignature Language="C#" Value="public void ParseLatency (out bool live, out ulong min_latency, out ulong max_latency);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="live" Type="System.Boolean&amp;" RefType="out" /><Parameter Name="min_latency" Type="System.UInt64&amp;" RefType="out" /><Parameter Name="max_latency" Type="System.UInt64&amp;" RefType="out" /></Parameters><Docs><param name="live">To be added.</param><param name="min_latency">To be added.</param><param name="max_latency">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParsePosition">
+      <MemberSignature Language="C#" Value="public void ParsePosition (out Gst.Format format, out long cur);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="cur" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="cur">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseSeeking">
+      <MemberSignature Language="C#" Value="public void ParseSeeking (out Gst.Format format, out bool seekable, out long segment_start, out long segment_end);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="seekable" Type="System.Boolean&amp;" RefType="out" /><Parameter Name="segment_start" Type="System.Int64&amp;" RefType="out" /><Parameter Name="segment_end" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="seekable">To be added.</param><param name="segment_start">To be added.</param><param name="segment_end">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseSegment">
+      <MemberSignature Language="C#" Value="public void ParseSegment (out double rate, out Gst.Format format, out long start_value, out long stop_value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="rate" Type="System.Double&amp;" RefType="out" /><Parameter Name="format" Type="Gst.Format&amp;" RefType="out" /><Parameter Name="start_value" Type="System.Int64&amp;" RefType="out" /><Parameter Name="stop_value" Type="System.Int64&amp;" RefType="out" /></Parameters>
+      <Docs><param name="rate">To be added.</param><param name="format">To be added.</param><param name="start_value">To be added.</param><param name="stop_value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseUri"><MemberSignature Language="C#" Value="public void ParseUri (string uri);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="uri" Type="System.String" /></Parameters><Docs><param name="uri">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetBufferingPercent"><MemberSignature Language="C#" Value="public void SetBufferingPercent (bool busy, int percent);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="busy" Type="System.Boolean" /><Parameter Name="percent" Type="System.Int32" /></Parameters><Docs><param name="busy">To be added.</param><param name="percent">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetBufferingRange"><MemberSignature Language="C#" Value="public void SetBufferingRange (Gst.Format format, long start, long stop, long estimated_total);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="start" Type="System.Int64" /><Parameter Name="stop" Type="System.Int64" /><Parameter Name="estimated_total" Type="System.Int64" /></Parameters><Docs><param name="format">To be added.</param><param name="start">To be added.</param><param name="stop">To be added.</param><param name="estimated_total">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetBufferingStats"><MemberSignature Language="C#" Value="public void SetBufferingStats (Gst.BufferingMode mode, int avg_in, int avg_out, long buffering_left);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="mode" Type="Gst.BufferingMode" /><Parameter Name="avg_in" Type="System.Int32" /><Parameter Name="avg_out" Type="System.Int32" /><Parameter Name="buffering_left" Type="System.Int64" /></Parameters><Docs><param name="mode">To be added.</param><param name="avg_in">To be added.</param><param name="avg_out">To be added.</param><param name="buffering_left">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetConvert">
+      <MemberSignature Language="C#" Value="public void SetConvert (Gst.Format src_format, long src_value, Gst.Format dest_format, long dest_value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="src_format" Type="Gst.Format" /><Parameter Name="src_value" Type="System.Int64" /><Parameter Name="dest_format" Type="Gst.Format" /><Parameter Name="dest_value" Type="System.Int64" /></Parameters>
+      <Docs><param name="src_format">To be added.</param><param name="src_value">To be added.</param><param name="dest_format">To be added.</param><param name="dest_value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetDuration">
+      <MemberSignature Language="C#" Value="public void SetDuration (Gst.Format format, long duration);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="duration" Type="System.Int64" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="duration">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetFormatsv"><MemberSignature Language="C#" Value="public Gst.Format SetFormatsv (int n_formats);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Format</ReturnType></ReturnValue><Parameters><Parameter Name="n_formats" Type="System.Int32" /></Parameters><Docs><param name="n_formats">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetLatency"><MemberSignature Language="C#" Value="public void SetLatency (bool live, ulong min_latency, ulong max_latency);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="live" Type="System.Boolean" /><Parameter Name="min_latency" Type="System.UInt64" /><Parameter Name="max_latency" Type="System.UInt64" /></Parameters><Docs><param name="live">To be added.</param><param name="min_latency">To be added.</param><param name="max_latency">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetPosition">
+      <MemberSignature Language="C#" Value="public void SetPosition (Gst.Format format, long cur);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="cur" Type="System.Int64" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="cur">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetSeeking">
+      <MemberSignature Language="C#" Value="public void SetSeeking (Gst.Format format, bool seekable, long segment_start, long segment_end);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="seekable" Type="System.Boolean" /><Parameter Name="segment_start" Type="System.Int64" /><Parameter Name="segment_end" Type="System.Int64" /></Parameters>
+      <Docs><param name="format">To be added.</param><param name="seekable">To be added.</param><param name="segment_start">To be added.</param><param name="segment_end">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetSegment">
+      <MemberSignature Language="C#" Value="public void SetSegment (double rate, Gst.Format format, long start_value, long stop_value);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="rate" Type="System.Double" /><Parameter Name="format" Type="Gst.Format" /><Parameter Name="start_value" Type="System.Int64" /><Parameter Name="stop_value" Type="System.Int64" /></Parameters>
+      <Docs><param name="rate">To be added.</param><param name="format">To be added.</param><param name="start_value">To be added.</param><param name="stop_value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Structure">
+      <MemberSignature Language="C#" Value="public Gst.Structure Structure { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
+      <MemberSignature Language="C#" Value="public Gst.QueryType Type { get; }" />
+      <MemberType>Property</MemberType>
+      <ReturnValue><ReturnType>Gst.QueryType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeGetByNick">
+      <MemberSignature Language="C#" Value="public static Gst.QueryType TypeGetByNick (string nick);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.QueryType</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="nick" Type="System.String" /></Parameters>
+      <Docs><param name="nick">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeGetDetails">
+      <MemberSignature Language="C#" Value="public static Gst.QueryTypeDefinition TypeGetDetails (Gst.QueryType type);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.QueryTypeDefinition</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="type" Type="Gst.QueryType" /></Parameters>
+      <Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeGetName">
+      <MemberSignature Language="C#" Value="public static string TypeGetName (Gst.QueryType query);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="query" Type="Gst.QueryType" /></Parameters>
+      <Docs><param name="query">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeIterateDefinitions">
+      <MemberSignature Language="C#" Value="public static Gst.Iterator TypeIterateDefinitions ();" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
+      <Parameters />
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeRegister">
+      <MemberSignature Language="C#" Value="public static Gst.QueryType TypeRegister (string nick, string description);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>Gst.QueryType</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="nick" Type="System.String" /><Parameter Name="description" Type="System.String" /></Parameters>
+      <Docs><param name="nick">To be added.</param><param name="description">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypesContains">
+      <MemberSignature Language="C#" Value="public static bool TypesContains (out Gst.QueryType types, Gst.QueryType type);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="types" Type="Gst.QueryType&amp;" RefType="out" /><Parameter Name="type" Type="Gst.QueryType" /></Parameters>
+      <Docs><param name="types">To be added.</param><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeToQuark">
+      <MemberSignature Language="C#" Value="public static int TypeToQuark (Gst.QueryType query);" />
+      <MemberType>Method</MemberType>
+      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="query" Type="Gst.QueryType" /></Parameters>
+      <Docs><param name="query">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Uri"><MemberSignature Language="C#" Value="public string Uri { set; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.String</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

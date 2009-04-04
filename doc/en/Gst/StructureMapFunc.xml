@@ -1,7 +1,7 @@
 <Type Name="StructureMapFunc" FullName="Gst.StructureMapFunc">
-  <TypeSignature Language="C#" Value="public delegate bool StructureMapFunc(int field_id, GLib.Value value);" />
+  <TypeSignature Language="C#" Value="public delegate bool StructureMapFunc(int field_id, Value value);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
@@ -18,7 +18,7 @@
     <param name="field_id">To be added.</param>
     <param name="value">To be added.</param>
     <summary>To be added.</summary>
-    <returns>To be added.</returns>
+    <value>To be added.</value>
     <remarks>To be added.</remarks>
   </Docs>
 </Type>

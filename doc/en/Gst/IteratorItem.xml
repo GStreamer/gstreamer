@@ -1,46 +1,34 @@
 <Type Name="IteratorItem" FullName="Gst.IteratorItem">
   <TypeSignature Language="C#" Value="public enum IteratorItem" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="End">
-      <MemberSignature Language="C#" Value="End" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IteratorItem</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Pass">
-      <MemberSignature Language="C#" Value="Pass" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IteratorItem</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Skip">
-      <MemberSignature Language="C#" Value="Skip" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.IteratorItem</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName="End">
+      <MemberSignature Language="C#" Value="End" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IteratorItem</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Pass">
+      <MemberSignature Language="C#" Value="Pass" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IteratorItem</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Skip">
+      <MemberSignature Language="C#" Value="Skip" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.IteratorItem</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+  </Members>
 </Type>

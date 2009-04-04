@@ -1,46 +1,34 @@
 <Type Name="PadDirection" FullName="Gst.PadDirection">
   <TypeSignature Language="C#" Value="public enum PadDirection" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Unknown">
-      <MemberSignature Language="C#" Value="Unknown" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadDirection</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Src">
-      <MemberSignature Language="C#" Value="Src" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadDirection</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Sink">
-      <MemberSignature Language="C#" Value="Sink" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.PadDirection</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    <Member MemberName="Sink">
+      <MemberSignature Language="C#" Value="Sink" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadDirection</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Src">
+      <MemberSignature Language="C#" Value="Src" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadDirection</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unknown">
+      <MemberSignature Language="C#" Value="Unknown" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.PadDirection</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+  </Members>
 </Type>

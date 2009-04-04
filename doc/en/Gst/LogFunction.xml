@@ -1,7 +1,7 @@
 <Type Name="LogFunction" FullName="Gst.LogFunction">
-  <TypeSignature Language="C#" Value="public delegate void LogFunction(Gst.DebugCategory category, Gst.DebugLevel level, string file, string function, int line, GLib.Object objekt, Gst.DebugMessage message);" />
+  <TypeSignature Language="C#" Value="public delegate void LogFunction(DebugCategory category, DebugLevel level, string file, string function, int line, Object objekt, DebugMessage message);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

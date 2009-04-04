@@ -1,7 +1,7 @@
 <Type Name="HasPadCreatedHandler" FullName="Gst.HasPadCreatedHandler">
-  <TypeSignature Language="C#" Value="public delegate void HasPadCreatedHandler(object o, Gst.HasPadCreatedArgs args);" />
+  <TypeSignature Language="C#" Value="public delegate void HasPadCreatedHandler(object o, HasPadCreatedArgs args);" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>

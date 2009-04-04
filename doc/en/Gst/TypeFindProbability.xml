@@ -1,66 +1,46 @@
 <Type Name="TypeFindProbability" FullName="Gst.TypeFindProbability">
   <TypeSignature Language="C#" Value="public enum TypeFindProbability" />
   <AssemblyInfo>
-    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
-  <Members>
-    <Member MemberName="Maximum">
-      <MemberSignature Language="C#" Value="Maximum" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TypeFindProbability</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Minimum">
-      <MemberSignature Language="C#" Value="Minimum" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TypeFindProbability</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Possible">
-      <MemberSignature Language="C#" Value="Possible" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TypeFindProbability</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Likely">
-      <MemberSignature Language="C#" Value="Likely" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TypeFindProbability</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="NearlyCertain">
-      <MemberSignature Language="C#" Value="NearlyCertain" />
-      <MemberType>Field</MemberType>
-      <ReturnValue>
-        <ReturnType>Gst.TypeFindProbability</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-  </Members>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
   </Docs>
+  <Members>
+    
+    
+    <Member MemberName="Likely">
+      <MemberSignature Language="C#" Value="Likely" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TypeFindProbability</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Maximum">
+      <MemberSignature Language="C#" Value="Maximum" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TypeFindProbability</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Minimum">
+      <MemberSignature Language="C#" Value="Minimum" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TypeFindProbability</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NearlyCertain">
+      <MemberSignature Language="C#" Value="NearlyCertain" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TypeFindProbability</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Possible">
+      <MemberSignature Language="C#" Value="Possible" />
+      <MemberType>Field</MemberType>
+      <ReturnValue><ReturnType>Gst.TypeFindProbability</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary></Docs>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    
+    
+  </Members>
 </Type>
