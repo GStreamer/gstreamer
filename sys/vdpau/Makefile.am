@@ -6,7 +6,8 @@ libgstvdpau_la_SOURCES = \
 	gstvdpaumpegdecoder.c \
 	mpegutil.c \
 	gstvdpauvideoyuv.c \
-	gstvdpauvideobuffer.c
+	gstvdpauvideobuffer.c \
+	gstvdpau.c
 
 libgstvdpau_la_CFLAGS = $(GST_CFLAGS) $(X11_CFLAGS) -Ivdpau
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \

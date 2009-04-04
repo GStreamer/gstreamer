@@ -70,8 +70,11 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "systemstream = (boolean) false, parsed = (boolean) true")
     );
 
-GST_BOILERPLATE (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder, GstVdpauDecoder,
-    GST_TYPE_VDPAU_DECODER);
+#define DEBUG_INIT(bla) \
+GST_DEBUG_CATEGORY_INIT (gst_vdpau_mpeg_decoder_debug, "vdpaumpegdecoder", 0, "VDPAU powered mpeg decoder");
+
+GST_BOILERPLATE_FULL (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder,
+    GstVdpauDecoder, GST_TYPE_VDPAU_DECODER, DEBUG_INIT);
 
 static void gst_vdpau_mpeg_decoder_finalize (GObject * object);
 static void gst_vdpau_mpeg_decoder_set_property (GObject * object,
@@ -457,36 +460,3 @@ gst_vdpau_mpeg_decoder_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and other features
- */
-static gboolean
-vdpaumpegdecoder_init (GstPlugin * vdpaumpegdecoder)
-{
-  /* debug category for fltering log messages
-   *
-   * exchange the string 'Template vdpaumpegdecoder' with your description
-   */
-  GST_DEBUG_CATEGORY_INIT (gst_vdpau_mpeg_decoder_debug, "vdpaumpegdecoder",
-      0, "Template vdpaumpegdecoder");
-
-  gst_element_register (vdpaumpegdecoder, "vdpaumpegdecoder",
-      GST_RANK_NONE, GST_TYPE_VDPAU_MPEG_DECODER);
-  gst_element_register (vdpaumpegdecoder, "vdpauvideoyuv",
-      GST_RANK_NONE, GST_TYPE_VDPAU_VIDEO_YUV);
-
-  return TRUE;
-}
-
-/* gstreamer looks for this structure to register vdpaumpegdecoders
- *
- * exchange the string 'Template vdpaumpegdecoder' with your vdpaumpegdecoder description
- */
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "vdpaumpegdecoder",
-    "Template vdpaumpegdecoder",
-    vdpaumpegdecoder_init,
-    VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

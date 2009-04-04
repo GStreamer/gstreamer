@@ -57,7 +57,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]"));
 
 #define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_vdpau_video_yuv_debug, "vdpauvideo_yuv", 0, "vdpauvideo_yuv base class");
+    GST_DEBUG_CATEGORY_INIT (gst_vdpau_video_yuv_debug, "vdpauvideoyuv", 0, "VDPAU VdpSurface to YUV");
 
 GST_BOILERPLATE_FULL (GstVdpauVideoYUV, gst_vdpau_video_yuv, GstElement,
     GST_TYPE_ELEMENT, DEBUG_INIT);
