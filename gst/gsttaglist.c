@@ -873,7 +873,6 @@ void
 gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
     const gchar * tag, va_list var_args)
 {
-  GstTagInfo *info;
   GQuark quark;
 
   g_return_if_fail (GST_IS_TAG_LIST (list));
@@ -886,8 +885,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
 
   while (tag != NULL) {
     quark = g_quark_from_string (tag);
-    info = gst_tag_lookup (quark);
-    g_return_if_fail (info != NULL);
+    g_return_if_fail (gst_tag_lookup (quark) != NULL);
     gst_tag_list_add_value_internal (list, mode, quark, va_arg (var_args,
             GValue *));
     tag = va_arg (var_args, gchar *);
