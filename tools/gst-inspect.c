@@ -302,8 +302,6 @@ print_element_properties_info (GstElement * element)
     if (param->flags & GST_PARAM_CONTROLLABLE) {
       if (!first_flag)
         g_print (", ");
-      else
-        first_flag = FALSE;
       g_print (_("controllable"));
     }
     n_print ("\n");
