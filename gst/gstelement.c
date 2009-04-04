@@ -148,9 +148,10 @@ static guint gst_element_signals[LAST_SIGNAL] = { 0 };
 GType
 gst_element_get_type (void)
 {
-  static GType gst_element_type = 0;
+  static volatile gsize gst_element_type = 0;
 
-  if (G_UNLIKELY (gst_element_type == 0)) {
+  if (g_once_init_enter (&gst_element_type)) {
+    GType _type;
     static const GTypeInfo element_info = {
       sizeof (GstElementClass),
       gst_element_base_class_init,
@@ -164,8 +165,9 @@ gst_element_get_type (void)
       NULL
     };
 
-    gst_element_type = g_type_register_static (GST_TYPE_OBJECT, "GstElement",
+    _type = g_type_register_static (GST_TYPE_OBJECT, "GstElement",
         &element_info, G_TYPE_FLAG_ABSTRACT);
+    g_once_init_leave (&gst_element_type, _type);
   }
   return gst_element_type;
 }

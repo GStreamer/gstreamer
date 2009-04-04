@@ -124,41 +124,18 @@ gst_index_entry_get_type (void)
   return index_entry_type;
 }
 
-
-GType
-gst_index_get_type (void)
-{
-  static GType index_type = 0;
-
-  if (!index_type) {
-    static const GTypeInfo index_info = {
-      sizeof (GstIndexClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_index_class_init,
-      NULL,
-      NULL,
-      sizeof (GstIndex),
-      0,
-      (GInstanceInitFunc) gst_index_init,
-      NULL
-    };
-
-    index_type =
-        g_type_register_static (GST_TYPE_OBJECT, "GstIndex", &index_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (index_debug, "GST_INDEX", GST_DEBUG_BOLD,
-        "Generic indexing support");
-  }
-  return index_type;
+#define _do_init \
+{ \
+  GST_DEBUG_CATEGORY_INIT (index_debug, "GST_INDEX", GST_DEBUG_BOLD, \
+      "Generic indexing support"); \
 }
+
+G_DEFINE_TYPE_WITH_CODE (GstIndex, gst_index, GST_TYPE_OBJECT, _do_init);
 
 static void
 gst_index_class_init (GstIndexClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 

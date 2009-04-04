@@ -140,9 +140,6 @@ static void gst_signal_object_init (GstSignalObject * object);
 static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 #endif
 
-static void gst_object_class_init (GstObjectClass * klass);
-static void gst_object_init (GTypeInstance * instance, gpointer g_class);
-
 static void gst_object_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_object_get_property (GObject * object, guint prop_id,
@@ -163,38 +160,12 @@ static void gst_object_real_restore_thyself (GstObject * object,
 static GObjectClass *parent_class = NULL;
 static guint gst_object_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_object_get_type (void)
-{
-  static GType gst_object_type = 0;
-
-  if (G_UNLIKELY (gst_object_type == 0)) {
-    static const GTypeInfo object_info = {
-      sizeof (GstObjectClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_object_class_init,
-      NULL,
-      NULL,
-      sizeof (GstObject),
-      0,
-      gst_object_init,
-      NULL
-    };
-
-    gst_object_type =
-        g_type_register_static (G_TYPE_OBJECT, "GstObject", &object_info,
-        G_TYPE_FLAG_ABSTRACT);
-  }
-  return gst_object_type;
-}
+G_DEFINE_ABSTRACT_TYPE (GstObject, gst_object, G_TYPE_OBJECT);
 
 static void
 gst_object_class_init (GstObjectClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -286,10 +257,8 @@ gst_object_class_init (GstObjectClass * klass)
 }
 
 static void
-gst_object_init (GTypeInstance * instance, gpointer g_class)
+gst_object_init (GstObject * object)
 {
-  GstObject *object = GST_OBJECT (instance);
-
   object->lock = g_mutex_new ();
   object->parent = NULL;
   object->name = NULL;
@@ -1143,31 +1112,7 @@ struct _GstSignalObjectClass
 #endif
 };
 
-static GType
-gst_signal_object_get_type (void)
-{
-  static GType signal_object_type = 0;
-
-  if (G_UNLIKELY (signal_object_type == 0)) {
-    static const GTypeInfo signal_object_info = {
-      sizeof (GstSignalObjectClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_signal_object_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSignalObject),
-      0,
-      (GInstanceInitFunc) gst_signal_object_init,
-      NULL
-    };
-
-    signal_object_type =
-        g_type_register_static (G_TYPE_OBJECT, "GstSignalObject",
-        &signal_object_info, 0);
-  }
-  return signal_object_type;
-}
+G_DEFINE_TYPE (GstSignalObject, gst_signal_object, G_TYPE_OBJECT);
 
 static void
 gst_signal_object_class_init (GstSignalObjectClass * klass)

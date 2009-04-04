@@ -87,8 +87,6 @@
 
 #define GST_EVENT_SEQNUM(e) ((GstEvent*)e)->abidata.seqnum
 
-static void gst_event_init (GTypeInstance * instance, gpointer g_class);
-static void gst_event_class_init (gpointer g_class, gpointer class_data);
 static void gst_event_finalize (GstEvent * event);
 static GstEvent *_gst_event_copy (GstEvent * event);
 
@@ -188,57 +186,30 @@ gst_event_type_get_flags (GstEventType type)
   return ret;
 }
 
-GType
-gst_event_get_type (void)
-{
-  static GType _gst_event_type = 0;
-  int i;
-
-  if (G_UNLIKELY (_gst_event_type == 0)) {
-    static const GTypeInfo event_info = {
-      sizeof (GstEventClass),
-      NULL,
-      NULL,
-      gst_event_class_init,
-      NULL,
-      NULL,
-      sizeof (GstEvent),
-      0,
-      gst_event_init,
-      NULL
-    };
-
-    _gst_event_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
-        "GstEvent", &event_info, 0);
-
-    for (i = 0; event_quarks[i].name; i++) {
-      event_quarks[i].quark = g_quark_from_static_string (event_quarks[i].name);
-    }
-  }
-
-  return _gst_event_type;
+#define _do_init \
+{ \
+  gint i; \
+  \
+  for (i = 0; event_quarks[i].name; i++) { \
+    event_quarks[i].quark = g_quark_from_static_string (event_quarks[i].name); \
+  } \
 }
 
+G_DEFINE_TYPE_WITH_CODE (GstEvent, gst_event, GST_TYPE_MINI_OBJECT, _do_init);
+
 static void
-gst_event_class_init (gpointer g_class, gpointer class_data)
+gst_event_class_init (GstEventClass * klass)
 {
-  GstEventClass *event_class = GST_EVENT_CLASS (g_class);
+  parent_class = g_type_class_peek_parent (klass);
 
-  parent_class = g_type_class_peek_parent (g_class);
-
-  event_class->mini_object_class.copy =
-      (GstMiniObjectCopyFunction) _gst_event_copy;
-  event_class->mini_object_class.finalize =
+  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_event_copy;
+  klass->mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_event_finalize;
 }
 
 static void
-gst_event_init (GTypeInstance * instance, gpointer g_class)
+gst_event_init (GstEvent * event)
 {
-  GstEvent *event;
-
-  event = GST_EVENT (instance);
-
   GST_EVENT_TIMESTAMP (event) = GST_CLOCK_TIME_NONE;
 }
 

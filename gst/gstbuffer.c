@@ -120,16 +120,12 @@
 #include "gstutils.h"
 #include "gstminiobject.h"
 
-static void gst_buffer_init (GTypeInstance * instance, gpointer g_class);
-static void gst_buffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 static GType gst_subbuffer_get_type (void);
 
 static GType _gst_subbuffer_type = 0;
 static GType _gst_buffer_type = 0;
-
-static GstMiniObjectClass *parent_class = NULL;
 
 void
 _gst_buffer_initialize (void)
@@ -141,41 +137,19 @@ _gst_buffer_initialize (void)
   g_type_class_ref (gst_subbuffer_get_type ());
 }
 
-GType
-gst_buffer_get_type (void)
-{
-  if (G_UNLIKELY (_gst_buffer_type == 0)) {
-    static const GTypeInfo buffer_info = {
-      sizeof (GstBufferClass),
-      NULL,
-      NULL,
-      gst_buffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstBuffer),
-      0,
-      gst_buffer_init,
-      NULL
-    };
-
-    _gst_buffer_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
-        "GstBuffer", &buffer_info, 0);
-  }
-  return _gst_buffer_type;
+#define _do_init \
+{ \
+  _gst_buffer_type = g_define_type_id; \
 }
 
+G_DEFINE_TYPE_WITH_CODE (GstBuffer, gst_buffer, GST_TYPE_MINI_OBJECT, _do_init);
+
 static void
-gst_buffer_class_init (gpointer g_class, gpointer class_data)
+gst_buffer_class_init (GstBufferClass * klass)
 {
-  GstBufferClass *buffer_class = GST_BUFFER_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
-
-  buffer_class->mini_object_class.copy =
-      (GstMiniObjectCopyFunction) _gst_buffer_copy;
-  buffer_class->mini_object_class.finalize =
+  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_buffer_copy;
+  klass->mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_buffer_finalize;
-
 }
 
 static void
@@ -191,7 +165,8 @@ gst_buffer_finalize (GstBuffer * buffer)
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 
-  parent_class->finalize (GST_MINI_OBJECT_CAST (buffer));
+  GST_MINI_OBJECT_CLASS (gst_buffer_parent_class)->finalize
+      (GST_MINI_OBJECT_CAST (buffer));
 }
 
 /**
@@ -268,12 +243,8 @@ _gst_buffer_copy (GstBuffer * buffer)
 }
 
 static void
-gst_buffer_init (GTypeInstance * instance, gpointer g_class)
+gst_buffer_init (GstBuffer * buffer)
 {
-  GstBuffer *buffer;
-
-  buffer = (GstBuffer *) instance;
-
   GST_CAT_LOG (GST_CAT_BUFFER, "init %p", buffer);
 
   GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
@@ -490,43 +461,20 @@ struct _GstSubBufferClass
   GstBufferClass buffer_class;
 };
 
-static GstBufferClass *sub_parent_class;
-
-static void gst_subbuffer_init (GTypeInstance * instance, gpointer g_class);
-static void gst_subbuffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_subbuffer_finalize (GstSubBuffer * buffer);
 
-static GType
-gst_subbuffer_get_type (void)
-{
-  if (G_UNLIKELY (_gst_subbuffer_type == 0)) {
-    static const GTypeInfo subbuffer_info = {
-      sizeof (GstSubBufferClass),
-      NULL,
-      NULL,
-      gst_subbuffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSubBuffer),
-      0,
-      gst_subbuffer_init,
-      NULL
-    };
-
-    _gst_subbuffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstSubBuffer", &subbuffer_info, 0);
-  }
-  return _gst_subbuffer_type;
+#define _do_init_sub \
+{ \
+  _gst_subbuffer_type = g_define_type_id; \
 }
 
+G_DEFINE_TYPE_WITH_CODE (GstSubBuffer, gst_subbuffer, GST_TYPE_BUFFER,
+    _do_init_sub);
+
 static void
-gst_subbuffer_class_init (gpointer g_class, gpointer class_data)
+gst_subbuffer_class_init (GstSubBufferClass * klass)
 {
-  GstBufferClass *buffer_class = GST_BUFFER_CLASS (g_class);
-
-  sub_parent_class = g_type_class_peek_parent (g_class);
-
-  buffer_class->mini_object_class.finalize =
+  klass->buffer_class.mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_subbuffer_finalize;
 }
 
@@ -535,12 +483,12 @@ gst_subbuffer_finalize (GstSubBuffer * buffer)
 {
   gst_buffer_unref (buffer->parent);
 
-  GST_MINI_OBJECT_CLASS (sub_parent_class)->
-      finalize (GST_MINI_OBJECT_CAST (buffer));
+  GST_MINI_OBJECT_CLASS (gst_subbuffer_parent_class)->finalize
+      (GST_MINI_OBJECT_CAST (buffer));
 }
 
 static void
-gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
+gst_subbuffer_init (GstSubBuffer * instance)
 {
   GST_BUFFER_FLAG_SET (GST_BUFFER_CAST (instance), GST_BUFFER_FLAG_READONLY);
 }

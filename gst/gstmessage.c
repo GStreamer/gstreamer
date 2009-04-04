@@ -62,8 +62,6 @@
 
 #define GST_MESSAGE_SEQNUM(e) ((GstMessage*)e)->abidata.ABI.seqnum
 
-static void gst_message_init (GTypeInstance * instance, gpointer g_class);
-static void gst_message_class_init (gpointer g_class, gpointer class_data);
 static void gst_message_finalize (GstMessage * message);
 static GstMessage *_gst_message_copy (GstMessage * message);
 
@@ -155,55 +153,32 @@ gst_message_type_to_quark (GstMessageType type)
   return 0;
 }
 
-GType
-gst_message_get_type (void)
-{
-  static GType _gst_message_type;
-
-  if (G_UNLIKELY (_gst_message_type == 0)) {
-    gint i;
-    static const GTypeInfo message_info = {
-      sizeof (GstMessageClass),
-      NULL,
-      NULL,
-      gst_message_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMessage),
-      0,
-      gst_message_init,
-      NULL
-    };
-
-    _gst_message_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
-        "GstMessage", &message_info, 0);
-
-    for (i = 0; message_quarks[i].name; i++) {
-      message_quarks[i].quark =
-          g_quark_from_static_string (message_quarks[i].name);
-    }
-  }
-  return _gst_message_type;
+#define _do_init \
+{ \
+  gint i; \
+  \
+  for (i = 0; message_quarks[i].name; i++) { \
+    message_quarks[i].quark = \
+        g_quark_from_static_string (message_quarks[i].name); \
+  } \
 }
 
+G_DEFINE_TYPE_WITH_CODE (GstMessage, gst_message, GST_TYPE_MINI_OBJECT,
+    _do_init);
+
 static void
-gst_message_class_init (gpointer g_class, gpointer class_data)
+gst_message_class_init (GstMessageClass * klass)
 {
-  GstMessageClass *message_class = GST_MESSAGE_CLASS (g_class);
+  parent_class = g_type_class_peek_parent (klass);
 
-  parent_class = g_type_class_peek_parent (g_class);
-
-  message_class->mini_object_class.copy =
-      (GstMiniObjectCopyFunction) _gst_message_copy;
-  message_class->mini_object_class.finalize =
+  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_message_copy;
+  klass->mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_message_finalize;
 }
 
 static void
-gst_message_init (GTypeInstance * instance, gpointer g_class)
+gst_message_init (GstMessage * message)
 {
-  GstMessage *message = GST_MESSAGE (instance);
-
   GST_CAT_LOG (GST_CAT_MESSAGE, "new message %p", message);
   GST_MESSAGE_TIMESTAMP (message) = GST_CLOCK_TIME_NONE;
 }

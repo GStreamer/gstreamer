@@ -126,35 +126,13 @@ enum
 static GstObject *parent_class = NULL;
 static guint gst_pad_template_signals[LAST_SIGNAL] = { 0 };
 
-static void gst_pad_template_class_init (GstPadTemplateClass * klass);
-static void gst_pad_template_init (GstPadTemplate * templ,
-    GstPadTemplateClass * klass);
 static void gst_pad_template_dispose (GObject * object);
 static void gst_pad_template_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_pad_template_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-GType
-gst_pad_template_get_type (void)
-{
-  static GType padtemplate_type = 0;
-
-  if (G_UNLIKELY (padtemplate_type == 0)) {
-    static const GTypeInfo padtemplate_info = {
-      sizeof (GstPadTemplateClass), NULL, NULL,
-      (GClassInitFunc) gst_pad_template_class_init, NULL, NULL,
-      sizeof (GstPadTemplate),
-      0,
-      (GInstanceInitFunc) gst_pad_template_init, NULL
-    };
-
-    padtemplate_type =
-        g_type_register_static (GST_TYPE_OBJECT, "GstPadTemplate",
-        &padtemplate_info, 0);
-  }
-  return padtemplate_type;
-}
+G_DEFINE_TYPE (GstPadTemplate, gst_pad_template, GST_TYPE_OBJECT);
 
 static void
 gst_pad_template_class_init (GstPadTemplateClass * klass)
@@ -239,7 +217,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
 }
 
 static void
-gst_pad_template_init (GstPadTemplate * templ, GstPadTemplateClass * klass)
+gst_pad_template_init (GstPadTemplate * templ)
 {
   /* FIXME 0.11: Does anybody remember why this is here? If not, let's
    * change it for 0.11 and let gst_element_class_add_pad_template() for

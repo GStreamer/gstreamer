@@ -89,57 +89,32 @@
 GST_DEBUG_CATEGORY (type_find_debug);
 #define GST_CAT_DEFAULT type_find_debug
 
-static void gst_type_find_factory_class_init (gpointer g_class,
-    gpointer class_data);
-static void gst_type_find_factory_init (GTypeInstance * instance,
-    gpointer g_class);
 static void gst_type_find_factory_dispose (GObject * object);
 
 static GstPluginFeatureClass *parent_class = NULL;
 
-GType
-gst_type_find_factory_get_type (void)
-{
-  static GType typefind_type = 0;
-
-  if (G_UNLIKELY (typefind_type == 0)) {
-    static const GTypeInfo typefind_info = {
-      sizeof (GstTypeFindFactoryClass),
-      NULL,
-      NULL,
-      gst_type_find_factory_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTypeFindFactory),
-      0,
-      gst_type_find_factory_init,
-      NULL
-    };
-
-    typefind_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-        "GstTypeFindFactory", &typefind_info, 0);
-    GST_DEBUG_CATEGORY_INIT (type_find_debug, "GST_TYPEFIND",
-        GST_DEBUG_FG_GREEN, "typefinding subsystem");
-  }
-
-  return typefind_type;
+#define _do_init \
+{ \
+  GST_DEBUG_CATEGORY_INIT (type_find_debug, "GST_TYPEFIND", \
+      GST_DEBUG_FG_GREEN, "typefinding subsystem"); \
 }
 
-static void
-gst_type_find_factory_class_init (gpointer g_class, gpointer class_data)
-{
-  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+G_DEFINE_TYPE_WITH_CODE (GstTypeFindFactory, gst_type_find_factory,
+    GST_TYPE_PLUGIN_FEATURE, _do_init);
 
-  parent_class = g_type_class_peek_parent (g_class);
+static void
+gst_type_find_factory_class_init (GstTypeFindFactoryClass * klass)
+{
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  parent_class = g_type_class_peek_parent (klass);
 
   object_class->dispose = gst_type_find_factory_dispose;
 }
 
 static void
-gst_type_find_factory_init (GTypeInstance * instance, gpointer g_class)
+gst_type_find_factory_init (GstTypeFindFactory * factory)
 {
-  GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (instance);
-
   factory->user_data = factory;
   factory->user_data_notify = NULL;
 }

@@ -479,9 +479,10 @@ gst_child_proxy_base_init (gpointer g_class)
 GType
 gst_child_proxy_get_type (void)
 {
-  static GType type = 0;
+  static volatile gsize type = 0;
 
-  if (G_UNLIKELY (type == 0)) {
+  if (g_once_init_enter (&type)) {
+    GType _type;
     static const GTypeInfo info = {
       sizeof (GstChildProxyInterface),
       gst_child_proxy_base_init,        /* base_init */
@@ -493,9 +494,12 @@ gst_child_proxy_get_type (void)
       0,                        /* n_preallocs */
       NULL                      /* instance_init */
     };
-    type = g_type_register_static (G_TYPE_INTERFACE, "GstChildProxy", &info, 0);
 
-    g_type_interface_add_prerequisite (type, GST_TYPE_OBJECT);
+    _type =
+        g_type_register_static (G_TYPE_INTERFACE, "GstChildProxy", &info, 0);
+
+    g_type_interface_add_prerequisite (_type, GST_TYPE_OBJECT);
+    g_once_init_leave (&type, (gsize) _type);
   }
   return type;
 }

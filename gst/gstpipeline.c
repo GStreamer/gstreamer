@@ -88,6 +88,7 @@
 #include "gstpipeline.h"
 #include "gstinfo.h"
 #include "gstsystemclock.h"
+#include "gstutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (pipeline_debug);
 #define GST_CAT_DEFAULT pipeline_debug
@@ -125,8 +126,6 @@ struct _GstPipelinePrivate
 
 
 static void gst_pipeline_base_init (gpointer g_class);
-static void gst_pipeline_class_init (gpointer g_class, gpointer class_data);
-static void gst_pipeline_init (GTypeInstance * instance, gpointer g_class);
 
 static void gst_pipeline_dispose (GObject * object);
 static void gst_pipeline_set_property (GObject * object, guint prop_id,
@@ -140,37 +139,16 @@ static GstStateChangeReturn gst_pipeline_change_state (GstElement * element,
 
 static void gst_pipeline_handle_message (GstBin * bin, GstMessage * message);
 
-static GstBinClass *parent_class = NULL;
-
 /* static guint gst_pipeline_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_pipeline_get_type (void)
-{
-  static GType pipeline_type = 0;
-
-  if (G_UNLIKELY (pipeline_type == 0)) {
-    static const GTypeInfo pipeline_info = {
-      sizeof (GstPipelineClass),
-      gst_pipeline_base_init,
-      NULL,
-      (GClassInitFunc) gst_pipeline_class_init,
-      NULL,
-      NULL,
-      sizeof (GstPipeline),
-      0,
-      gst_pipeline_init,
-      NULL
-    };
-
-    pipeline_type =
-        g_type_register_static (GST_TYPE_BIN, "GstPipeline", &pipeline_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (pipeline_debug, "pipeline", GST_DEBUG_BOLD,
-        "debugging info for the 'pipeline' container element");
-  }
-  return pipeline_type;
+#define _do_init(type) \
+{ \
+  GST_DEBUG_CATEGORY_INIT (pipeline_debug, "pipeline", GST_DEBUG_BOLD, \
+      "debugging info for the 'pipeline' container element"); \
 }
+
+GST_BOILERPLATE_FULL (GstPipeline, gst_pipeline, GstBin, GST_TYPE_BIN,
+    _do_init);
 
 static void
 gst_pipeline_base_init (gpointer g_class)
@@ -184,12 +162,11 @@ gst_pipeline_base_init (gpointer g_class)
 }
 
 static void
-gst_pipeline_class_init (gpointer g_class, gpointer class_data)
+gst_pipeline_class_init (GstPipelineClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
-  GstBinClass *gstbin_class = GST_BIN_CLASS (g_class);
-  GstPipelineClass *klass = GST_PIPELINE_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstBinClass *gstbin_class = GST_BIN_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -239,9 +216,8 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 }
 
 static void
-gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
+gst_pipeline_init (GstPipeline * pipeline, GstPipelineClass * klass)
 {
-  GstPipeline *pipeline = GST_PIPELINE (instance);
   GstBus *bus;
 
   pipeline->priv = GST_PIPELINE_GET_PRIVATE (pipeline);

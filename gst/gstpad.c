@@ -95,8 +95,6 @@ enum
   /* FILL ME */
 };
 
-static void gst_pad_class_init (GstPadClass * klass);
-static void gst_pad_init (GstPad * pad);
 static void gst_pad_dispose (GObject * object);
 static void gst_pad_finalize (GObject * object);
 static void gst_pad_set_property (GObject * object, guint prop_id,
@@ -188,36 +186,22 @@ gst_flow_to_quark (GstFlowReturn ret)
   return 0;
 }
 
-GType
-gst_pad_get_type (void)
-{
-  static GType gst_pad_type = 0;
-
-  if (G_UNLIKELY (gst_pad_type == 0)) {
-    static const GTypeInfo pad_info = {
-      sizeof (GstPadClass), NULL, NULL,
-      (GClassInitFunc) gst_pad_class_init, NULL, NULL,
-      sizeof (GstPad),
-      0,
-      (GInstanceInitFunc) gst_pad_init, NULL
-    };
-    gint i;
-
-    gst_pad_type = g_type_register_static (GST_TYPE_OBJECT, "GstPad",
-        &pad_info, 0);
-
-    buffer_quark = g_quark_from_static_string ("buffer");
-    event_quark = g_quark_from_static_string ("event");
-
-    for (i = 0; flow_quarks[i].name; i++) {
-      flow_quarks[i].quark = g_quark_from_static_string (flow_quarks[i].name);
-    }
-
-    GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW",
-        GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads");
-  }
-  return gst_pad_type;
+#define _do_init \
+{ \
+  gint i; \
+  \
+  buffer_quark = g_quark_from_static_string ("buffer"); \
+  event_quark = g_quark_from_static_string ("event"); \
+  \
+  for (i = 0; flow_quarks[i].name; i++) { \
+    flow_quarks[i].quark = g_quark_from_static_string (flow_quarks[i].name); \
+  } \
+  \
+  GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW", \
+      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads"); \
 }
+
+G_DEFINE_TYPE_WITH_CODE (GstPad, gst_pad, GST_TYPE_OBJECT, _do_init);
 
 static gboolean
 _gst_do_pass_data_accumulator (GSignalInvocationHint * ihint,

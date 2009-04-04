@@ -70,7 +70,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
 
-static void gst_query_class_init (gpointer g_class, gpointer class_data);
 static void gst_query_finalize (GstQuery * query);
 static GstQuery *_gst_query_copy (GstQuery * query);
 
@@ -164,43 +163,22 @@ gst_query_type_to_quark (GstQueryType query)
   return def->quark;
 }
 
-GType
-gst_query_get_type (void)
+G_DEFINE_TYPE (GstQuery, gst_query, GST_TYPE_MINI_OBJECT);
+
+static void
+gst_query_class_init (GstQueryClass * klass)
 {
-  static GType _gst_query_type;
+  parent_class = g_type_class_peek_parent (klass);
 
-  if (G_UNLIKELY (_gst_query_type == 0)) {
-    static const GTypeInfo query_info = {
-      sizeof (GstQueryClass),
-      NULL,
-      NULL,
-      gst_query_class_init,
-      NULL,
-      NULL,
-      sizeof (GstQuery),
-      0,
-      NULL,
-      NULL
-    };
+  klass->mini_object_class.copy = (GstMiniObjectCopyFunction) _gst_query_copy;
+  klass->mini_object_class.finalize =
+      (GstMiniObjectFinalizeFunction) gst_query_finalize;
 
-    _gst_query_type = g_type_register_static (GST_TYPE_MINI_OBJECT,
-        "GstQuery", &query_info, 0);
-  }
-  return _gst_query_type;
 }
 
 static void
-gst_query_class_init (gpointer g_class, gpointer class_data)
+gst_query_init (GstQuery * query)
 {
-  GstQueryClass *query_class = GST_QUERY_CLASS (g_class);
-
-  parent_class = g_type_class_peek_parent (g_class);
-
-  query_class->mini_object_class.copy =
-      (GstMiniObjectCopyFunction) _gst_query_copy;
-  query_class->mini_object_class.finalize =
-      (GstMiniObjectFinalizeFunction) gst_query_finalize;
-
 }
 
 static void

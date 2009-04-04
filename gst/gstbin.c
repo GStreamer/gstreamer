@@ -274,59 +274,34 @@ enum
       /* FILL ME */
 };
 
-static void gst_bin_base_init (gpointer g_class);
-static void gst_bin_class_init (GstBinClass * klass);
-static void gst_bin_init (GstBin * bin);
 static void gst_bin_child_proxy_init (gpointer g_iface, gpointer iface_data);
 
-static GstElementClass *parent_class = NULL;
 static guint gst_bin_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_bin_get_type (void)
-{
-  static GType gst_bin_type = 0;
-  const gchar *compat;
-
-  if (G_UNLIKELY (gst_bin_type == 0)) {
-    static const GTypeInfo bin_info = {
-      sizeof (GstBinClass),
-      gst_bin_base_init,
-      NULL,
-      (GClassInitFunc) gst_bin_class_init,
-      NULL,
-      NULL,
-      sizeof (GstBin),
-      0,
-      (GInstanceInitFunc) gst_bin_init,
-      NULL
-    };
-    static const GInterfaceInfo child_proxy_info = {
-      gst_bin_child_proxy_init,
-      NULL,
-      NULL
-    };
-
-    gst_bin_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstBin", &bin_info, 0);
-
-    g_type_add_interface_static (gst_bin_type, GST_TYPE_CHILD_PROXY,
-        &child_proxy_info);
-
-    GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD,
-        "debugging info for the 'bin' container element");
-
-    /* compatibility stuff */
-    compat = g_getenv ("GST_COMPAT");
-    if (compat != NULL) {
-      if (strstr (compat, "no-live-preroll"))
-        enable_latency = FALSE;
-      else if (strstr (compat, "live-preroll"))
-        enable_latency = TRUE;
-    }
-  }
-  return gst_bin_type;
+#define _do_init(type) \
+{ \
+  const gchar *compat; \
+  static const GInterfaceInfo iface_info = { \
+    gst_bin_child_proxy_init, \
+    NULL, \
+    NULL}; \
+  \
+  g_type_add_interface_static (type, GST_TYPE_CHILD_PROXY, &iface_info); \
+  \
+  GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD, \
+      "debugging info for the 'bin' container element"); \
+  \
+  /* compatibility stuff */ \
+  compat = g_getenv ("GST_COMPAT"); \
+  if (compat != NULL) { \
+    if (strstr (compat, "no-live-preroll")) \
+      enable_latency = FALSE; \
+    else if (strstr (compat, "live-preroll")) \
+      enable_latency = TRUE; \
+  } \
 }
+
+GST_BOILERPLATE_FULL (GstBin, gst_bin, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static void
 gst_bin_base_init (gpointer g_class)
@@ -408,8 +383,6 @@ gst_bin_class_init (GstBinClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   g_type_class_add_private (klass, sizeof (GstBinPrivate));
 
@@ -511,7 +484,7 @@ gst_bin_class_init (GstBinClass * klass)
 }
 
 static void
-gst_bin_init (GstBin * bin)
+gst_bin_init (GstBin * bin, GstBinClass * klass)
 {
   GstBus *bus;
 

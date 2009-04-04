@@ -57,36 +57,12 @@ static void gst_xml_object_loaded (GstObject * private, GstObject * object,
 static GstObjectClass *parent_class = NULL;
 static guint gst_xml_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_xml_get_type (void)
-{
-  static GType xml_type = 0;
-
-  if (G_UNLIKELY (xml_type == 0)) {
-    static const GTypeInfo xml_info = {
-      sizeof (GstXMLClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_xml_class_init,
-      NULL,
-      NULL,
-      sizeof (GstXML),
-      0,
-      (GInstanceInitFunc) gst_xml_init,
-      NULL
-    };
-
-    xml_type = g_type_register_static (GST_TYPE_OBJECT, "GstXML", &xml_info, 0);
-  }
-  return xml_type;
-}
+G_DEFINE_TYPE (GstXML, gst_xml, GST_TYPE_OBJECT);
 
 static void
 gst_xml_class_init (GstXMLClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 

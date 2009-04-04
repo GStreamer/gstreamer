@@ -43,42 +43,21 @@ static void gst_index_factory_finalize (GObject * object);
 static GstPluginFeatureClass *factory_parent_class = NULL;
 
 /* static guint gst_index_factory_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_index_factory_get_type (void)
-{
-  static GType indexfactory_type = 0;
-
-  if (G_UNLIKELY (indexfactory_type == 0)) {
-    static const GTypeInfo indexfactory_info = {
-      sizeof (GstIndexFactoryClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_index_factory_class_init,
-      NULL,
-      NULL,
-      sizeof (GstIndexFactory),
-      0,
-      NULL,
-      NULL
-    };
-
-    indexfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-        "GstIndexFactory", &indexfactory_info, 0);
-  }
-  return indexfactory_type;
-}
+G_DEFINE_TYPE (GstIndexFactory, gst_index_factory, GST_TYPE_PLUGIN_FEATURE);
 
 static void
 gst_index_factory_class_init (GstIndexFactoryClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   factory_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_index_factory_finalize);
+}
+
+static void
+gst_index_factory_init (GstIndexFactory * factory)
+{
 }
 
 static void

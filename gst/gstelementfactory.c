@@ -79,39 +79,20 @@ static GstPluginFeatureClass *parent_class = NULL;
 
 /* static guint gst_element_factory_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_element_factory_get_type (void)
-{
-  static GType elementfactory_type = 0;
-
-  if (G_UNLIKELY (elementfactory_type == 0)) {
-    static const GTypeInfo elementfactory_info = {
-      sizeof (GstElementFactoryClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_element_factory_class_init,
-      NULL,
-      NULL,
-      sizeof (GstElementFactory),
-      0,
-      (GInstanceInitFunc) gst_element_factory_init,
-      NULL
-    };
-
-    elementfactory_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
-        "GstElementFactory", &elementfactory_info, 0);
-    GST_DEBUG_CATEGORY_INIT (element_factory_debug, "GST_ELEMENT_FACTORY",
-        GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED,
-        "element factories keep information about installed elements");
-  }
-  return elementfactory_type;
+#define _do_init \
+{ \
+  GST_DEBUG_CATEGORY_INIT (element_factory_debug, "GST_ELEMENT_FACTORY", \
+      GST_DEBUG_BOLD | GST_DEBUG_FG_WHITE | GST_DEBUG_BG_RED, \
+      "element factories keep information about installed elements"); \
 }
+
+G_DEFINE_TYPE_WITH_CODE (GstElementFactory, gst_element_factory,
+    GST_TYPE_PLUGIN_FEATURE, _do_init);
+
 static void
 gst_element_factory_class_init (GstElementFactoryClass * klass)
 {
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 

@@ -101,30 +101,7 @@ static GstClockClass *parent_class = NULL;
 
 /* static guint gst_system_clock_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_system_clock_get_type (void)
-{
-  static GType clock_type = 0;
-
-  if (G_UNLIKELY (clock_type == 0)) {
-    static const GTypeInfo clock_info = {
-      sizeof (GstSystemClockClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_system_clock_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSystemClock),
-      0,
-      (GInstanceInitFunc) gst_system_clock_init,
-      NULL
-    };
-
-    clock_type = g_type_register_static (GST_TYPE_CLOCK, "GstSystemClock",
-        &clock_info, 0);
-  }
-  return clock_type;
-}
+G_DEFINE_TYPE (GstSystemClock, gst_system_clock, GST_TYPE_CLOCK);
 
 static GType
 gst_clock_type_get_type (void)

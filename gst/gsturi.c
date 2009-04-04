@@ -56,9 +56,10 @@ static void gst_uri_handler_base_init (gpointer g_class);
 GType
 gst_uri_handler_get_type (void)
 {
-  static GType urihandler_type = 0;
+  static volatile gsize urihandler_type = 0;
 
-  if (G_UNLIKELY (urihandler_type == 0)) {
+  if (g_once_init_enter (&urihandler_type)) {
+    GType _type;
     static const GTypeInfo urihandler_info = {
       sizeof (GstURIHandlerInterface),
       gst_uri_handler_base_init,
@@ -72,14 +73,16 @@ gst_uri_handler_get_type (void)
       NULL
     };
 
-    urihandler_type = g_type_register_static (G_TYPE_INTERFACE,
+    _type = g_type_register_static (G_TYPE_INTERFACE,
         "GstURIHandler", &urihandler_info, 0);
 
     GST_DEBUG_CATEGORY_INIT (gst_uri_handler_debug, "GST_URI", GST_DEBUG_BOLD,
         "handling of URIs");
+    g_once_init_leave (&urihandler_type, _type);
   }
   return urihandler_type;
 }
+
 static void
 gst_uri_handler_base_init (gpointer g_class)
 {

@@ -47,9 +47,10 @@ gst_implements_interface_supported_default (GstImplementsInterface * iface,
 GType
 gst_implements_interface_get_type (void)
 {
-  static GType gst_interface_type = 0;
+  static volatile gsize gst_interface_type = 0;
 
-  if (!gst_interface_type) {
+  if (g_once_init_enter (&gst_interface_type)) {
+    GType _type;
     static const GTypeInfo gst_interface_info = {
       sizeof (GstImplementsInterfaceClass),
       (GBaseInitFunc) gst_implements_interface_class_init,
@@ -63,10 +64,11 @@ gst_implements_interface_get_type (void)
       NULL
     };
 
-    gst_interface_type = g_type_register_static (G_TYPE_INTERFACE,
+    _type = g_type_register_static (G_TYPE_INTERFACE,
         "GstImplementsInterface", &gst_interface_info, 0);
 
-    g_type_interface_add_prerequisite (gst_interface_type, GST_TYPE_ELEMENT);
+    g_type_interface_add_prerequisite (_type, GST_TYPE_ELEMENT);
+    g_once_init_leave (&gst_interface_type, _type);
   }
 
   return gst_interface_type;

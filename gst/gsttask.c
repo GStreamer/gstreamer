@@ -76,32 +76,12 @@ static GstObjectClass *parent_class = NULL;
 
 static GStaticMutex pool_lock = G_STATIC_MUTEX_INIT;
 
-GType
-gst_task_get_type (void)
-{
-  static GType _gst_task_type = 0;
-
-  if (G_UNLIKELY (_gst_task_type == 0)) {
-    static const GTypeInfo task_info = {
-      sizeof (GstTaskClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_task_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTask),
-      0,
-      (GInstanceInitFunc) gst_task_init,
-      NULL
-    };
-
-    _gst_task_type =
-        g_type_register_static (GST_TYPE_OBJECT, "GstTask", &task_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (task_debug, "task", 0, "Processing tasks");
-  }
-  return _gst_task_type;
+#define _do_init \
+{ \
+  GST_DEBUG_CATEGORY_INIT (task_debug, "task", 0, "Processing tasks"); \
 }
+
+G_DEFINE_TYPE_WITH_CODE (GstTask, gst_task, GST_TYPE_OBJECT, _do_init);
 
 static void
 gst_task_class_init (GstTaskClass * klass)
