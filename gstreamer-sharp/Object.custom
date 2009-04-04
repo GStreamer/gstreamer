@@ -4,10 +4,3 @@
 	}
 
 
-	public override void Dispose() {
-		if(this.Handle != IntPtr.Zero) {
-			Gst.Object.Unref(this.Handle);
-			this.Raw = IntPtr.Zero;
-		}
-	}
-
