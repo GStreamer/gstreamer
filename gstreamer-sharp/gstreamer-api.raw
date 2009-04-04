@@ -4268,18 +4268,6 @@
           <parameter type="GstPlugin*" name="plugin" />
         </parameters>
       </method>
-      <method name="BinaryReadCache" cname="gst_registry_binary_read_cache">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-char*" name="location" />
-        </parameters>
-      </method>
-      <method name="BinaryWriteCache" cname="gst_registry_binary_write_cache">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-char*" name="location" />
-        </parameters>
-      </method>
       <method name="FeatureFilter" cname="gst_registry_feature_filter">
         <return-type type="GList*" />
         <parameters>
@@ -4583,14 +4571,6 @@
         </parameters>
       </method>
     </struct>
-    <struct name="BinaryChunk" cname="GstBinaryChunk" opaque="true" />
-    <struct name="BinaryDep" cname="GstBinaryDep" opaque="true" />
-    <struct name="BinaryElementFactory" cname="GstBinaryElementFactory" opaque="true" />
-    <struct name="BinaryPadTemplate" cname="GstBinaryPadTemplate" opaque="true" />
-    <struct name="BinaryPluginElement" cname="GstBinaryPluginElement" opaque="true" />
-    <struct name="BinaryPluginFeature" cname="GstBinaryPluginFeature" opaque="true" />
-    <struct name="BinaryRegistryMagic" cname="GstBinaryRegistryMagic" opaque="true" />
-    <struct name="BinaryTypeFindFactory" cname="GstBinaryTypeFindFactory" opaque="true" />
     <boxed name="Caps" cname="GstCaps" opaque="true">
       <field name="Type" cname="type" type="GType" access="public" writeable="true" />
       <field name="Refcount" cname="refcount" type="gint" access="public" writeable="true" />

@@ -13,6 +13,8 @@
         <exclude>gstreamer-0.10.22/gst/gstinterface.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gsturi.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstpreset.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gstregistrybinary.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gstregistryxml.h</exclude>
       </namespace>
 	</library>
   </api>
