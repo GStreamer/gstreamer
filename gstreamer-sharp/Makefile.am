@@ -15,7 +15,7 @@ ASSEMBLY = $(ASSEMBLY_NAME).dll
 gapidir = $(datadir)/gapi
 gapi_DATA = $(APIS)
 
-glue_includes="gst/gstbin.h gst/gstpipeline.h gst/gstsegment.h"
+glue_includes="gst/gst.h"
 
 CLEANFILES = $(ASSEMBLY) $(ASSEMBLY).mdb generated-stamp generated/*.cs glue/generated.c $(API) $(KEYFILE)
 DISTCLEANFILES = $(ASSEMBLY).config AssemblyInfo.cs

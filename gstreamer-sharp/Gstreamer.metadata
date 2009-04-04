@@ -30,6 +30,9 @@
   <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Bin']/method[@name='Add']" name="hidden">1</attr> 
+  <attr path="/api/namespace/object[@name='ParamSpecFraction']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Param']" name="hidden">1</attr>
 
 
   <attr path="/api/namespace/object[@name='Element']/signal[@name='NoMorePads']" name="name">HasNoMorePads</attr>
@@ -84,8 +87,10 @@
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='queryfunc']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='intlinkfunc']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='bufferallocfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='iterintlinkfunc']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Message']/method[@name='ParseWarning']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Message']/method[@name='ParseError']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Message']/method[@name='ParseInfo']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Object']/method[@name='DefaultError']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Plugin']/method[@name='LoadFile']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']" name="opaque">true</attr>
@@ -100,6 +105,7 @@
   <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Free']" name="hidden">1</attr>
   <attr path="/api/namespace/enum[@name='MessageType']" name="parent">uint</attr>
   <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Unknown']" name="value">0U</attr>
+  <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Any']" name="value">0xffffffff</attr>
   <!-- Gross hack to remove items added by badly parsed GstEventType enum -->
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='0_']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
@@ -126,6 +132,7 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_QOS']" name="value">241</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SEEK']" name="value">257</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NAVIGATION']" name="value">273</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_LATENCY']" name="value">289</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_UPSTREAM']" name="value">513</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM']" name="value">518</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM_OOB']" name="value">514</attr>
@@ -141,12 +148,15 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_QOS']" name="name">Qos</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SEEK']" name="name">Seek</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NAVIGATION']" name="name">Navigation</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_LATENCY']" name="name">Latency</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_UPSTREAM']" name="name">Upstream</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM']" name="name">Downstream</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM_OOB']" name="name">DownstreamOob</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH']" name="name">Both</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH_OOB']" name="name">BothOob</attr>
   <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
+  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="name">Last</attr>
+  <attr path="/api/namespace/enum[@name='BinFlags']/member[@cname='GST_BIN_FLAG_LAST']" name="value">ElementFlags.Last &lt;&lt; 5</attr>
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_PREROLL']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DISCONT']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
@@ -154,6 +164,7 @@
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_GAP']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DELTA_UNIT']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
+  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLUSHING']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
   <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
@@ -167,14 +178,18 @@
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_IS_SINK']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_UNPARENTING']" name="value">ObjectFlags.Last &lt;&lt; 2</attr>
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 16</attr>
+  <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_WRITABLE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_READABLE']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 8</attr>
+  <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLUSHING']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_IN_GETCAPS']" name="value">ObjectFlags.Last &lt;&lt; 2</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_IN_SETCAPS']" name="value">ObjectFlags.Last &lt;&lt; 3</attr>
+  <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKING']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 8</attr>
+  <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FIXED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>

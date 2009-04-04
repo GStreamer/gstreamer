@@ -9,9 +9,10 @@
 -->	
     <library name="gstreamer-0.10.dll">
       <namespace name="Gst">
-        <dir>gstreamer-0.10.3/gst</dir>
-        <exclude>gstreamer-0.10.3/gst/gstinterface.h</exclude>
-        <exclude>gstreamer-0.10.3/gst/gsturi.h</exclude>
+        <dir>gstreamer-0.10.22/gst</dir>
+        <exclude>gstreamer-0.10.22/gst/gstinterface.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gsturi.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gstpreset.h</exclude>
       </namespace>
 	</library>
   </api>
