@@ -141,6 +141,7 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
   GstVdpauDevice *device;
   VdpBitstreamBuffer vbit[1];
   VdpStatus status;
+  GstFlowReturn ret;
 
   dec = GST_VDPAU_DECODER (mpeg_dec);
 
@@ -178,14 +179,16 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
 
   gst_buffer_ref (GST_BUFFER (outbuf));
 
+  ret = gst_vdpau_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
+      outbuf);
+
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
     gst_buffer_unref (mpeg_dec->f_buffer);
 
   mpeg_dec->vdp_info.forward_reference = surface;
   mpeg_dec->f_buffer = GST_BUFFER (outbuf);
 
-  return gst_vdpau_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
-      outbuf);
+  return ret;
 }
 
 static gboolean
@@ -211,6 +214,26 @@ gst_vdpau_mpeg_decoder_parse_picture_coding (GstVdpauMpegDecoder * mpeg_dec,
   info->concealment_motion_vectors = pic_ext.concealment_motion_vectors;
   info->q_scale_type = pic_ext.q_scale_type;
   info->intra_vlc_format = pic_ext.intra_vlc_format;
+
+  return TRUE;
+}
+
+static gboolean
+gst_vdpau_mpeg_decoder_parse_sequence (GstVdpauMpegDecoder * mpeg_dec,
+    guint8 * data, guint8 * end)
+{
+  GstVdpauDecoder *dec;
+  MPEGSeqHdr hdr;
+
+  dec = GST_VDPAU_DECODER (mpeg_dec);
+
+  if (!mpeg_util_parse_sequence_hdr (&hdr, data, end))
+    return FALSE;
+
+  memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
+      &hdr.intra_quantizer_matrix, 64);
+  memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
+      &hdr.non_intra_quantizer_matrix, 64);
 
   return TRUE;
 }
@@ -320,6 +343,7 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
         break;
       case MPEG_PACKET_SEQUENCE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
+        gst_vdpau_mpeg_decoder_parse_sequence (mpeg_dec, data, end);
         break;
       case MPEG_PACKET_EXTENSION:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION");

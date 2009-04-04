@@ -123,7 +123,7 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        return GST_FLOW_ERROR;
+        break;
       }
       break;
     }
@@ -159,13 +159,15 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        return GST_FLOW_ERROR;
+        break;
       }
       break;
     }
     default:
       break;
   }
+
+  gst_buffer_unref (buffer);
 
   if (outbuf) {
     gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
