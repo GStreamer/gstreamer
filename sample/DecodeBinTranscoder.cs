@@ -110,11 +110,11 @@ public class DecodeBinTranscoder : IDisposable
     private void OnNewDecodedPad(object o, NewDecodedPadArgs args)
     {
         Pad sinkpad = audioconvert.GetPad("sink");
-        
+
         if(sinkpad.IsLinked) {
             return;
         }
-        
+
         Caps caps = args.Pad.Caps;
         Structure structure = caps.GetStructure(0);
         

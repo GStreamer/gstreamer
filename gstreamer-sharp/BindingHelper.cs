@@ -44,8 +44,11 @@ namespace Gst
             }
             
             if(raiseDelegate != null) {
-                raiseDelegate.DynamicInvoke(new object [] { o, 
-                    Activator.CreateInstance(type, new object [] { args }) });
+	        GLib.SignalArgs new_args = (GLib.SignalArgs) Activator.CreateInstance (type);
+		new_args.RetVal = args.RetVal;
+		new_args.Args = args.Args;
+		
+                raiseDelegate.DynamicInvoke(new object [] { o, new_args }); 
             }
         }
     }

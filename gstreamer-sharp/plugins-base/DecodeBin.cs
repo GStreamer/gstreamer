@@ -16,16 +16,12 @@ namespace Gst
 
     public class NewDecodedPadArgs : GLib.SignalArgs 
     {
-        public NewDecodedPadArgs(GLib.SignalArgs args) : base(args)
-        {
-        }
-    
         public Gst.Pad Pad {
-            get { return (Gst.Pad)Args[1]; }
+            get { return (Gst.Pad)Args[0]; }
         }
         
         public bool Last {
-            get { return (bool)Args[2]; }
+            get { return (bool)Args[1]; }
         }
     }
 
