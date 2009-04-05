@@ -44,7 +44,7 @@ namespace Gst
             BindingHelper.InvokeProxySignalDelegate(have_type_delegate, typeof(HaveTypeArgs), o, args);
         }
      
-        public event GLib.DynamicSignalHandler HaveType {
+        public event HaveTypeHandler HaveType {
             add {
                 have_type_delegate = BindingHelper.AddProxySignalDelegate(this, "have-type", 
                     OnHaveType, have_type_delegate, value);

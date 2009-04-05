@@ -12,14 +12,14 @@ using System;
 using System.Runtime.InteropServices;
 using System.Collections;
 
-namespace GLib {
+namespace Gst {
 	
 	public delegate void DynamicSignalHandler(object o, SignalArgs args);
 
 	delegate void GClosureMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr, 
 		IntPtr invocation_hint, IntPtr data);
 
-	public class DynamicSignal {
+	public static class DynamicSignal {
 		
 		private static readonly int gvalue_struct_size = Marshal.SizeOf(typeof(GLib.Value));
 

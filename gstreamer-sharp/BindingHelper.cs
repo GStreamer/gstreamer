@@ -16,7 +16,7 @@ namespace Gst
     public static class BindingHelper
     {
         public static Delegate AddProxySignalDelegate(Element element, string signal, 
-            GLib.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler)
+            DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate addHandler)
         {
             if(existingHandler == null) {
                 element.Connect(signal, baseHandler);
@@ -26,7 +26,7 @@ namespace Gst
         }
         
         public static Delegate RemoveProxySignalDelegate(Element element, string signal, 
-            GLib.DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler)
+            DynamicSignalHandler baseHandler, Delegate existingHandler, Delegate removeHandler)
         {
             Delegate temp_delegate = Delegate.Remove(existingHandler, removeHandler);
             if(temp_delegate == null) {

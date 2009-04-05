@@ -51,14 +51,14 @@
         return gst_element_query_duration(Handle, ref format, out duration);
     }
 
-	public void Connect(string signal, GLib.DynamicSignalHandler handler)
+	public void Connect(string signal, DynamicSignalHandler handler)
 	{
-		GLib.DynamicSignal.Connect(this, signal, handler);
+		DynamicSignal.Connect(this, signal, handler);
 	}
 
-	public void Disconnect(string signal, GLib.DynamicSignalHandler handler)
+	public void Disconnect(string signal, DynamicSignalHandler handler)
 	{
-		GLib.DynamicSignal.Disconnect(this, signal, handler);
+		DynamicSignal.Disconnect(this, signal, handler);
 	}
 
 	public bool AddPad(Pad p)
