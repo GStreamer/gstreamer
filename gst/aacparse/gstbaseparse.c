@@ -605,10 +605,11 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
     case GST_EVENT_FLUSH_START:
       parse->priv->flushing = TRUE;
+      handled = gst_pad_push_event (parse->srcpad, event);
       /* Wait for _chain() to exit by taking the srcpad STREAM_LOCK */
       GST_PAD_STREAM_LOCK (parse->srcpad);
-      handled = gst_pad_push_event (parse->srcpad, event);
       GST_PAD_STREAM_UNLOCK (parse->srcpad);
+
       break;
 
     case GST_EVENT_FLUSH_STOP:
@@ -896,12 +897,12 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
   while (!parse->priv->flushing) {
     tmpbuf = gst_buffer_new ();
 
-    GST_BASE_PARSE_LOCK (parse);
-    min_size = parse->priv->min_frame_size;
-    GST_BASE_PARSE_UNLOCK (parse);
-
     /* Synchronization loop */
     for (;;) {
+      GST_BASE_PARSE_LOCK (parse);
+      min_size = parse->priv->min_frame_size;
+      GST_BASE_PARSE_UNLOCK (parse);
+
       /* Collect at least min_frame_size bytes */
       if (gst_adapter_available (parse->adapter) < min_size) {
         GST_DEBUG_OBJECT (parse, "not enough data available (only %d bytes)",
@@ -923,6 +924,12 @@ gst_base_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       skip = -1;
       if (bclass->check_valid_frame (parse, tmpbuf, &fsize, &skip)) {
+        if (gst_adapter_available (parse->adapter) < fsize) {
+          GST_DEBUG_OBJECT (parse,
+              "found valid frame but not enough data available (only %d bytes)",
+              gst_adapter_available (parse->adapter));
+          goto done;
+        }
         break;
       }
       if (skip > 0) {
