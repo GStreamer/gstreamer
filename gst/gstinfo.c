@@ -702,7 +702,7 @@ gst_debug_construct_win_color (guint colorinfo)
 #define CAT_FMT "%20s %s:%d:%s:%s"
 
 #ifdef G_OS_WIN32
-static const guchar levelcolormap[] = {
+static const guchar levelcolormap[GST_LEVEL_COUNT] = {
   /* GST_LEVEL_NONE */
   FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
   /* GST_LEVEL_ERROR */
@@ -714,22 +714,34 @@ static const guchar levelcolormap[] = {
   /* GST_LEVEL_DEBUG */
   FOREGROUND_GREEN | FOREGROUND_BLUE,
   /* GST_LEVEL_LOG */
+  FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
+  /* GST_LEVEL_FIXME */
+  FOREGROUND_RED | FOREGROUND_GREEN,
+  /* placeholder for log level 7 */
+  0,
+  /* placeholder for log level 8 */
+  0,
+  /* GST_LEVEL_MEMDUMP */
   FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
 };
 
-static const guchar available_colors[6] = {
+static const guchar available_colors[] = {
   FOREGROUND_RED, FOREGROUND_GREEN, FOREGROUND_RED | FOREGROUND_GREEN,
   FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE,
   FOREGROUND_GREEN | FOREGROUND_BLUE,
 };
 #else
-static const gchar *levelcolormap[] = {
+static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
   "\033[37m",                   /* GST_LEVEL_NONE */
   "\033[31;01m",                /* GST_LEVEL_ERROR */
   "\033[33;01m",                /* GST_LEVEL_WARNING */
   "\033[32;01m",                /* GST_LEVEL_INFO */
   "\033[36m",                   /* GST_LEVEL_DEBUG */
-  "\033[37m"                    /* GST_LEVEL_LOG */
+  "\033[37m",                   /* GST_LEVEL_LOG */
+  "\033[33;01m",                /* GST_LEVEL_FIXME */
+  "\033[37m",                   /* placeholder for log level 7 */
+  "\033[37m",                   /* placeholder for log level 8 */
+  "\033[37m"                    /* GST_LEVEL_MEMDUMP */
 };
 #endif
 
@@ -806,7 +818,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     /* timestamp */
     g_printerr ("%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
     /* pid */
-    SET_COLOR (available_colors[pid % 6]);
+    SET_COLOR (available_colors[pid % G_N_ELEMENTS (available_colors)]);
     g_printerr (PID_FMT, pid);
     /* thread */
     SET_COLOR (clear);
@@ -860,6 +872,10 @@ gst_debug_level_get_name (GstDebugLevel level)
       return "DEBUG";
     case GST_LEVEL_LOG:
       return "LOG  ";
+    case GST_LEVEL_FIXME:
+      return "FIXME";
+    case GST_LEVEL_MEMDUMP:
+      return "MEMDUMP  ";
     default:
       g_warning ("invalid level specified for gst_debug_level_get_name");
       return "";
@@ -1468,6 +1484,62 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
 }
 #endif /* HAVE_PRINTF_EXTENSION */
 
+static void
+gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
+    const guint8 * mem, gsize mem_offset, gsize mem_size)
+{
+  gchar hexstr[50], ascstr[18], digitstr[4];
+
+  if (mem_size > 16)
+    mem_size = 16;
+
+  hexstr[0] = '\0';
+  ascstr[0] = '\0';
+
+  if (mem != NULL) {
+    guint i = 0;
+
+    mem += mem_offset;
+    while (i < mem_size) {
+      ascstr[i] = (g_ascii_isprint (mem[i])) ? mem[i] : '.';
+      g_snprintf (digitstr, sizeof (digitstr), "%02x ", mem[i]);
+      g_strlcat (hexstr, digitstr, sizeof (hexstr));
+      ++i;
+    }
+    ascstr[i] = '\0';
+  }
+
+  g_snprintf (linebuf, linebuf_size, "%08x: %-48.48s %-16.16s",
+      mem_offset, hexstr, ascstr);
+}
+
+void
+_gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, GObject * obj, const gchar * msg,
+    const guint8 * data, guint length)
+{
+  guint off = 0;
+
+  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "--------"
+      "-------------------------------------------------------------------");
+
+  if (msg != NULL && *msg != '\0') {
+    gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, msg);
+  }
+
+  while (off < length) {
+    gchar buf[128];
+
+    /* gst_info_dump_mem_line will process 16 bytes at most */
+    gst_info_dump_mem_line (buf, sizeof (buf), data, off, length - off);
+    gst_debug_log (cat, GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", buf);
+    off += 16;
+  }
+
+  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "--------"
+      "-------------------------------------------------------------------");
+}
+
 #else /* !GST_DISABLE_GST_DEBUG */
 #ifndef GST_REMOVE_DISABLED
 void
@@ -1536,6 +1608,13 @@ gboolean
 _priv_gst_in_valgrind (void)
 {
   return FALSE;
+}
+
+void
+_gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, GObject * obj, const gchar * msg,
+    const guint8 * data, guint length)
+{
 }
 #endif /* GST_REMOVE_DISABLED */
 #endif /* GST_DISABLE_GST_DEBUG */

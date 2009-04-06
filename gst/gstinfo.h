@@ -59,6 +59,14 @@ G_BEGIN_DECLS
  *  useful to know. As a rule of thumb a pipeline that is iterating as expected
  *  should never output anzthing else but LOG messages.
  *  Examples for this are referencing/dereferencing of objects or cothread switches.
+ * @GST_LEVEL_FIXME: Fixme messages are messages that indicate that something
+ *  in the executed code path is not fully implemented or handled yet. Note
+ *  that this does not replace proper error handling in any way, the purpose
+ *  of this message is to make it easier to spot incomplete/unfinished pieces
+ *  of code when reading the debug log. (Since: 0.10.23)
+ * @GST_LEVEL_MEMDUMP: memory dump messages are used to log (small) chunks of
+ *  data as memory dumps in the log. They will be displayed as hexdump with
+ *  ASCII characters. (Since: 0.10.23)
  * @GST_LEVEL_COUNT: The number of defined debugging levels.
  *
  * The level defines the importance of a debugging message. The more important a
@@ -71,6 +79,9 @@ typedef enum {
   GST_LEVEL_INFO,
   GST_LEVEL_DEBUG,
   GST_LEVEL_LOG,
+  GST_LEVEL_FIXME = 6,
+  /* add more */
+  GST_LEVEL_MEMDUMP = 9,
   /* add more */
   GST_LEVEL_COUNT
 } GstDebugLevel;
@@ -464,6 +475,30 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
 #endif
 #endif /* G_HAVE_ISO_VARARGS */
 
+/* private helper function */
+void _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, GObject * obj, const gchar * msg,
+    const guint8 * data, guint length);
+
+/* This one doesn't have varargs in the macro, so it's different than all the
+ * other macros and hence in a separate block right here. Docs chunks are
+ * with the other doc chunks below though. */
+#define __GST_CAT_MEMDUMP_LOG(cat,object,msg,data,length) G_STMT_START{       \
+  if (G_UNLIKELY (GST_LEVEL_MEMDUMP <= __gst_debug_min)) {                    \
+    _gst_debug_dump_mem ((cat), __FILE__, GST_FUNCTION, __LINE__,             \
+        (GObject *) (object), (msg), (data), (length));                       \
+  }                                                                           \
+}G_STMT_END
+
+#define GST_CAT_MEMDUMP_OBJECT(cat,obj,msg,data,length)  \
+    __GST_CAT_MEMDUMP_LOG(cat,obj,msg,data,length)
+#define GST_CAT_MEMDUMP(cat,msg,data,length)             \
+    __GST_CAT_MEMDUMP_LOG(cat,NULL,msg,data,length)
+#define GST_MEMDUMP_OBJECT(obj,msg,data,length)          \
+    __GST_CAT_MEMDUMP_LOG(GST_CAT_DEFAULT,obj,msg,data,length)
+#define GST_MEMDUMP(msg,data,length)                     \
+    __GST_CAT_MEMDUMP_LOG(GST_CAT_DEFAULT,NULL,msg,data,length)
+
 /**
  * GST_CAT_ERROR_OBJECT:
  * @cat: category to use
@@ -505,6 +540,29 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output an logging message belonging to the given object in the given category.
  */
+/**
+ * GST_CAT_FIXME_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output a fixme message belonging to the given object in the given category.
+ *
+ * Since: 0.10.23
+ */
+/**
+ * GST_CAT_MEMDUMP_OBJECT:
+ * @cat: category to use
+ * @obj: the #GObject the message belongs to
+ * @msg: message string to log with the data
+ * @data: pointer to the data to output
+ * @length: length of the data to output
+ *
+ * Output a hexdump of @data relating to the given object in the given
+ * category.
+ *
+ * Since: 0.10.23
+ */
 
 
 /**
@@ -541,6 +599,26 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  * @...: printf-style message to output
  *
  * Output an logging message in the given category.
+ */
+/**
+ * GST_CAT_FIXME:
+ * @cat: category to use
+ * @...: printf-style message to output
+ *
+ * Output an fixme message in the given category.
+ *
+ * Since: 0.10.23
+ */
+/**
+ * GST_CAT_MEMDUMP:
+ * @cat: category to use
+ * @msg: message string to log with the data
+ * @data: pointer to the data to output
+ * @length: length of the data to output
+ *
+ * Output a hexdump of @data in the given category.
+ *
+ * Since: 0.10.23
  */
 
 
@@ -581,6 +659,26 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output a logging message belonging to the given object in the default category.
  */
+/**
+ * GST_FIXME_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @...: printf-style message to output
+ *
+ * Output a logging message belonging to the given object in the default category.
+ *
+ * Since: 0.10.23
+ */
+/**
+ * GST_MEMDUMP_OBJECT:
+ * @obj: the #GObject the message belongs to
+ * @msg: message string to log with the data
+ * @data: pointer to the data to output
+ * @length: length of the data to output
+ *
+ * Output a logging message belonging to the given object in the default category.
+ *
+ * Since: 0.10.23
+ */
 
 
 /**
@@ -613,6 +711,24 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
  *
  * Output a logging message in the default category.
  */
+/**
+ * GST_FIXME:
+ * @...: printf-style message to output
+ *
+ * Output a fixme message in the default category.
+ *
+ * Since: 0.10.23
+ */
+/**
+ * GST_MEMDUMP:
+ * @msg: message string to log with the data
+ * @data: pointer to the data to output
+ * @length: length of the data to output
+ *
+ * Output a hexdump of @data.
+ *
+ * Since: 0.10.23
+ */
 
 #ifdef G_HAVE_ISO_VARARGS
 
@@ -621,24 +737,28 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
 #define GST_CAT_INFO_OBJECT(cat,obj,...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_INFO,    obj,  __VA_ARGS__)
 #define GST_CAT_DEBUG_OBJECT(cat,obj,...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_DEBUG,   obj,  __VA_ARGS__)
 #define GST_CAT_LOG_OBJECT(cat,obj,...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_LOG,     obj,  __VA_ARGS__)
+#define GST_CAT_FIXME_OBJECT(cat,obj,...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_FIXME,   obj,  __VA_ARGS__)
 
 #define GST_CAT_ERROR(cat,...)			GST_CAT_LEVEL_LOG (cat, GST_LEVEL_ERROR,   NULL, __VA_ARGS__)
 #define GST_CAT_WARNING(cat,...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_WARNING, NULL, __VA_ARGS__)
 #define GST_CAT_INFO(cat,...)			GST_CAT_LEVEL_LOG (cat, GST_LEVEL_INFO,    NULL, __VA_ARGS__)
 #define GST_CAT_DEBUG(cat,...)			GST_CAT_LEVEL_LOG (cat, GST_LEVEL_DEBUG,   NULL, __VA_ARGS__)
 #define GST_CAT_LOG(cat,...)			GST_CAT_LEVEL_LOG (cat, GST_LEVEL_LOG,     NULL, __VA_ARGS__)
+#define GST_CAT_FIXME(cat,...)			GST_CAT_LEVEL_LOG (cat, GST_LEVEL_FIXME,   NULL, __VA_ARGS__)
 
 #define GST_ERROR_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   obj,  __VA_ARGS__)
 #define GST_WARNING_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, obj,  __VA_ARGS__)
 #define GST_INFO_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    obj,  __VA_ARGS__)
 #define GST_DEBUG_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   obj,  __VA_ARGS__)
 #define GST_LOG_OBJECT(obj,...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     obj,  __VA_ARGS__)
+#define GST_FIXME_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   obj,  __VA_ARGS__)
 
 #define GST_ERROR(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   NULL, __VA_ARGS__)
 #define GST_WARNING(...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, NULL, __VA_ARGS__)
 #define GST_INFO(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    NULL, __VA_ARGS__)
 #define GST_DEBUG(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   NULL, __VA_ARGS__)
 #define GST_LOG(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     NULL, __VA_ARGS__)
+#define GST_FIXME(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   NULL, __VA_ARGS__)
 
 #else
 #ifdef G_HAVE_GNUC_VARARGS
@@ -648,24 +768,28 @@ GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
 #define GST_CAT_INFO_OBJECT(cat,obj,args...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_INFO,    obj,  ##args )
 #define GST_CAT_DEBUG_OBJECT(cat,obj,args...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_DEBUG,   obj,  ##args )
 #define GST_CAT_LOG_OBJECT(cat,obj,args...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_LOG,     obj,  ##args )
+#define GST_CAT_FIXME_OBJECT(cat,obj,args...)	GST_CAT_LEVEL_LOG (cat, GST_LEVEL_FIXME,   obj,  ##args )
 
 #define GST_CAT_ERROR(cat,args...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_ERROR,   NULL, ##args )
 #define GST_CAT_WARNING(cat,args...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_WARNING, NULL, ##args )
 #define GST_CAT_INFO(cat,args...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_INFO,    NULL, ##args )
 #define GST_CAT_DEBUG(cat,args...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_DEBUG,   NULL, ##args )
 #define GST_CAT_LOG(cat,args...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_LOG,     NULL, ##args )
+#define GST_CAT_FIXME(cat,args...)		GST_CAT_LEVEL_LOG (cat, GST_LEVEL_FIXME,   NULL, ##args )
 
 #define GST_ERROR_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   obj,  ##args )
 #define GST_WARNING_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, obj,  ##args )
 #define GST_INFO_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    obj,  ##args )
 #define GST_DEBUG_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   obj,  ##args )
 #define GST_LOG_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     obj,  ##args )
+#define GST_FIXME_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   obj,  ##args )
 
 #define GST_ERROR(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   NULL, ##args )
 #define GST_WARNING(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, NULL, ##args )
 #define GST_INFO(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    NULL, ##args )
 #define GST_DEBUG(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   NULL, ##args )
 #define GST_LOG(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     NULL, ##args )
+#define GST_FIXME(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   NULL, ##args )
 
 #else
 /* no variadic macros, use inline */
@@ -725,6 +849,17 @@ GST_CAT_LOG_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
 }
 
 static inline void
+GST_CAT_FIXME_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_FIXME, obj, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
 GST_CAT_ERROR (GstDebugCategory * cat, const char *format, ...)
 {
   va_list varargs;
@@ -771,6 +906,16 @@ GST_CAT_LOG (GstDebugCategory * cat, const char *format, ...)
 
   va_start (varargs, format);
   GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_LOG, NULL, format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_CAT_FIXME (GstDebugCategory * cat, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, GST_LEVEL_FIXME, NULL, format, varargs);
   va_end (varargs);
 }
 
@@ -830,6 +975,17 @@ GST_LOG_OBJECT (gpointer obj, const char *format, ...)
 }
 
 static inline void
+GST_FIXME_OBJECT (gpointer obj, const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_FIXME, obj, format,
+      varargs);
+  va_end (varargs);
+}
+
+static inline void
 GST_ERROR (const char *format, ...)
 {
   va_list varargs;
@@ -881,6 +1037,17 @@ GST_LOG (const char *format, ...)
   va_start (varargs, format);
   GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_LOG, NULL,
       format, varargs);
+  va_end (varargs);
+}
+
+static inline void
+GST_FIXME (const char *format, ...)
+{
+  va_list varargs;
+
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (GST_CAT_DEFAULT, GST_LEVEL_FIXME, NULL, format,
+      varargs);
   va_end (varargs);
 }
 #endif
@@ -975,24 +1142,28 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define GST_CAT_INFO_OBJECT(...)			/* NOP */
 #define GST_CAT_DEBUG_OBJECT(...)			/* NOP */
 #define GST_CAT_LOG_OBJECT(...)				/* NOP */
+#define GST_CAT_FIXME_OBJECT(...)			/* NOP */
 
 #define GST_CAT_ERROR(...)				/* NOP */
 #define GST_CAT_WARNING(...)				/* NOP */
 #define GST_CAT_INFO(...)				/* NOP */
 #define GST_CAT_DEBUG(...)				/* NOP */
 #define GST_CAT_LOG(...)				/* NOP */
+#define GST_CAT_FIXME(...)				/* NOP */
 
 #define GST_ERROR_OBJECT(...)				/* NOP */
 #define GST_WARNING_OBJECT(...)				/* NOP */
 #define GST_INFO_OBJECT(...)				/* NOP */
 #define GST_DEBUG_OBJECT(...)				/* NOP */
 #define GST_LOG_OBJECT(...)				/* NOP */
+#define GST_FIXME_OBJECT(...)				/* NOP */
 
 #define GST_ERROR(...)					/* NOP */
 #define GST_WARNING(...)				/* NOP */
 #define GST_INFO(...)					/* NOP */
 #define GST_DEBUG(...)					/* NOP */
 #define GST_LOG(...)					/* NOP */
+#define GST_FIXME(...)					/* NOP */
 
 #else
 #ifdef G_HAVE_GNUC_VARARGS
@@ -1004,24 +1175,28 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define GST_CAT_INFO_OBJECT(args...)			/* NOP */
 #define GST_CAT_DEBUG_OBJECT(args...)			/* NOP */
 #define GST_CAT_LOG_OBJECT(args...)			/* NOP */
+#define GST_CAT_FIXME_OBJECT(args...)			/* NOP */
 
 #define GST_CAT_ERROR(args...)				/* NOP */
 #define GST_CAT_WARNING(args...)			/* NOP */
 #define GST_CAT_INFO(args...)				/* NOP */
 #define GST_CAT_DEBUG(args...)				/* NOP */
 #define GST_CAT_LOG(args...)				/* NOP */
+#define GST_CAT_FIXME(args...)				/* NOP */
 
 #define GST_ERROR_OBJECT(args...)			/* NOP */
 #define GST_WARNING_OBJECT(args...)			/* NOP */
 #define GST_INFO_OBJECT(args...)			/* NOP */
 #define GST_DEBUG_OBJECT(args...)			/* NOP */
 #define GST_LOG_OBJECT(args...)				/* NOP */
+#define GST_FIXME_OBJECT(args...)			/* NOP */
 
 #define GST_ERROR(args...)				/* NOP */
 #define GST_WARNING(args...)				/* NOP */
 #define GST_INFO(args...)				/* NOP */
 #define GST_DEBUG(args...)				/* NOP */
 #define GST_LOG(args...)				/* NOP */
+#define GST_FIXME(args...)				/* NOP */
 
 #else
 static inline void
@@ -1061,6 +1236,12 @@ GST_CAT_LOG_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
 }
 
 static inline void
+GST_CAT_FIXME_OBJECT (GstDebugCategory * cat, gpointer obj, const char *format,
+    ...)
+{
+}
+
+static inline void
 GST_CAT_ERROR (GstDebugCategory * cat, const char *format, ...)
 {
 }
@@ -1082,6 +1263,11 @@ GST_CAT_DEBUG (GstDebugCategory * cat, const char *format, ...)
 
 static inline void
 GST_CAT_LOG (GstDebugCategory * cat, const char *format, ...)
+{
+}
+
+static inline void
+GST_CAT_FIXME (GstDebugCategory * cat, const char *format, ...)
 {
 }
 
@@ -1111,6 +1297,11 @@ GST_LOG_OBJECT (gpointer obj, const char *format, ...)
 }
 
 static inline void
+GST_FIXME_OBJECT (gpointer obj, const char *format, ...)
+{
+}
+
+static inline void
 GST_ERROR (const char *format, ...)
 {
 }
@@ -1134,11 +1325,22 @@ static inline void
 GST_LOG (const char *format, ...)
 {
 }
+
+static inline void
+GST_FIXME (const char *format, ...)
+{
+}
+
 #endif
 #endif
 
 #define GST_DEBUG_FUNCPTR(ptr) (ptr)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) (g_strdup_printf ("%p", ptr))
+
+#define GST_CAT_MEMDUMP_OBJECT(cat,obj,msg,data,length) /* NOP */
+#define GST_CAT_MEMDUMP(cat,msg,data,length)            /* NOP */
+#define GST_MEMDUMP_OBJECT(obj,msg,data,length)         /* NOP */
+#define GST_MEMDUMP(msg,data,length)                    /* NOP */
 
 #endif /* GST_DISABLE_GST_DEBUG */
 

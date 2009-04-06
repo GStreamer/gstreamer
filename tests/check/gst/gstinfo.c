@@ -190,6 +190,48 @@ GST_START_TEST (info_log_handler)
 
 GST_END_TEST;
 
+GST_START_TEST (info_dump_mem)
+{
+  GstDebugCategory *cat = NULL;
+  GstElement *e;
+
+  const guint8 data[] = { 0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70,
+    0x71, 0x74, 0x20, 0x20, 0x20, 0x05, 0x03, 0x00, 0x71, 0x74, 0x20, 0x20,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xef, 0xe1, 0x6d, 0x6f, 0x6f, 0x76, 0x00, 0x00, 0x00, 0x6c,
+    0x6d, 0x76, 0x68, 0x64, 0x00, 0x00, 0x00, 0x00, 0xbf, 0xd1, 0x00, 0x1d,
+    0xbf, 0xd1, 0x00, 0x1e, 0x00, 0x00, 0x0b, 0xb5, 0x00, 0x04, 0x59, 0xc5,
+    0x00, 0x01, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x01, '%', 's', '%', 's'
+  };
+
+  e = gst_element_factory_make ("fakesink", NULL);
+  GST_DEBUG_CATEGORY_INIT (cat, "dumpcat", 0, "data dump debug category");
+  GST_MEMDUMP ("quicktime header", data, sizeof (data));
+  GST_MEMDUMP (NULL, data, sizeof (data));
+  GST_CAT_MEMDUMP (cat, "quicktime header", data, sizeof (data));
+  GST_MEMDUMP_OBJECT (e, "object stuff", data, sizeof (data));
+  GST_CAT_MEMDUMP_OBJECT (cat, e, "object/cat stuff", data, sizeof (data));
+  gst_object_unref (e);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (info_fixme)
+{
+  GstDebugCategory *cat = NULL;
+  GstElement *e;
+
+  e = gst_element_factory_make ("fakesink", NULL);
+  GST_DEBUG_CATEGORY_INIT (cat, "fixcat", 0, "FIXME debug category");
+  GST_FIXME ("fix %s thing", "this");
+  GST_FIXME_OBJECT (e, "fix %s object", "this");
+  GST_CAT_FIXME (cat, "fix some%s in this category", "thing");
+  GST_CAT_FIXME_OBJECT (cat, e, "fix some%s in this cat and object", "thing");
+  gst_object_unref (e);
+}
+
+GST_END_TEST;
 #endif
 
 static Suite *
@@ -205,6 +247,8 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_segment_format_printf_extension);
   tcase_add_test (tc_chain, info_ptr_format_printf_extension);
   tcase_add_test (tc_chain, info_log_handler);
+  tcase_add_test (tc_chain, info_dump_mem);
+  tcase_add_test (tc_chain, info_fixme);
 #endif
 
   return s;
