@@ -1,112 +1,64 @@
 <?xml version="1.0"?>
 <metadata>
-  <attr path="/api/namespace/object[@name='Bin']" name="disable_gtype_ctor">1</attr>
-  <attr path="/api/namespace/object[@name='Pipeline']" name="disable_gtype_ctor">1</attr>
-  <attr path="/api/namespace/object[@cname='GstPipeline']/method[@name='GetBus']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
-
-  <!-- for GstController's object func -->
-  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_control_properties']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_get_controller']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_get_value_array']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_get_value_arrays']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_set_controller']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_sync_values']" name="hidden">true</attr>
-
   <attr path="/api/namespace/boxed[@name='Caps']/method[@name='FromString']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/object[@name='Buffer']/method[@name='GetCaps']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/object[@name='Object']/field[@name='Refcount']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveBufferProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddBufferProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddDataProbe']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveDataProbe']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildAdded']" name="name">EmitChildAdded</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildRemoved']" name="name">EmitChildRemoved</attr>
+
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_RESOLUTION']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_MASTER']" name="value">MiniObjectFlags.Last &lt;&lt; 5</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
+
+  <attr path="/api/namespace/object[@name='Bin']" name="disable_gtype_ctor">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='AddMany']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bin']/method[@name='Add']" name="hidden">1</attr> 
+
+  <attr path="/api/namespace/enum[@name='BinFlags']/member[@cname='GST_BIN_FLAG_LAST']" name="value">ElementFlags.Last &lt;&lt; 5</attr>
+
+  <change-node-type path="/api/namespace/object[@name='Buffer']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='Buffer']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@name='GetCaps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/constructor[@cname='gst_buffer_new']" name="hidden">true</attr>
+
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_PREROLL']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DISCONT']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_IN_CAPS']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_GAP']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DELTA_UNIT']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
+
+  <attr path="/api/namespace/object[@name='Bus']/method[@name='AddWatch']" name="hidden">true</attr>
+
+  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="name">Last</attr>
+  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLUSHING']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
+
   <attr path="/api/namespace/object[@name='Element']/method[@name='LinkMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@name='UnlinkMany']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Message']/method[@cname='gst_message_new_error']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_add_pad']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
-
-  <attr path="/api/namespace/object[@name='Bin']/method[@name='Add']" name="hidden">1</attr> 
-  <attr path="/api/namespace/object[@name='ParamSpecFraction']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
-  <attr path="/api/namespace/class[@name='Param']" name="hidden">1</attr>
-
-
   <attr path="/api/namespace/object[@name='Element']/signal[@name='NoMorePads']" name="name">HasNoMorePads</attr>
-  <!-- Hidden as the parameter name conflicts with generated code -->
   <attr path="/api/namespace/object[@name='Element']/method[@name='ContinueState']/parameters/*[@name='ret']" name="name">state_change_ret</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@name='QueryPosition']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@name='QueryDuration']" name="hidden">1</attr>
-  <attr path="/api/namespace/class[@name='Flow']/method[@name='ToQuark']/parameters/*[@name='ret']" name="name">flow_ret</attr>
-  <attr path="/api/namespace/class[@name='Flow']/method[@name='GetName']/parameters/*[@name='ret']" name="name">get_name_ret</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/method[@name='Fold']/parameters/*[@name='ret']" name="name">ret_val</attr>
-  <attr path="/api/namespace/object[@name='PadTemplate']/signal[@name='PadCreated']" name="name">HasPadCreated</attr>
-  <attr path="/api/namespace/object[@name='PluginFeature']/field[@name='Name']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Index']/field[@cname='resolver']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='GhostPad']" name="parent">GstPad</attr>
-  
+
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
+
+  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="name">Last</attr>
+  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_LOCKED_STATE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_IS_SINK']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
+  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_UNPARENTING']" name="value">ObjectFlags.Last &lt;&lt; 2</attr>
+  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 16</attr>
+
   <change-node-type path="/api/namespace/object[@name='Event']">boxed</change-node-type>
-  <attr path="/api/namespace/object[@name='Event']" name="opaque">true</attr>
-  <change-node-type path="/api/namespace/object[@name='Buffer']">boxed</change-node-type>
-  <attr path="/api/namespace/object[@name='Buffer']" name="opaque">true</attr>
-  <change-node-type path="/api/namespace/object[@name='Message']">boxed</change-node-type>
-  <attr path="/api/namespace/object[@name='Message']" name="opaque">true</attr>
-  <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
-  <attr path="/api/namespace/object[@name='Query']" name="opaque">true</attr>
-  <change-node-type path="/api/namespace/object[@name='MiniObject']">boxed</change-node-type>
-  <attr path="/api/namespace/object[@name='MiniObject']" name="opaque">true</attr>
-  <remove-attr path="/api/namespace/boxed[@name='MiniObject']" name="parent" />
-  <remove-node path="/api/namespace/boxed[@name='MiniObject']/constructor[@cname='gst_mini_object_new']" />
+  <attr path="/api/namespace/boxed[@name='Event']" name="opaque">true</attr>
 
-  <!-- <remove-node path="/api/namespace/object[@cname='GstMiniObject']" /> -->
-
-  <!-- We implement this ourselves, using the overload that keeps the callback from getting GCed -->
-  <attr path="/api/namespace/object[@name='Bus']/method[@name='AddWatch']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Buffer']/constructor[@name='gst_buffer_new']" name="hidden">true</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='QueryPosition']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='QueryDuration']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_callback']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='getcapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='setcapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='acceptcapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='fixatecapsfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatepushfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatepullfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='linkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='unlinkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='chainfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='checkgetrangefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='getrangefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='eventfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='querytypefunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='queryfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='intlinkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='bufferallocfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@cname='iterintlinkfunc']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Message']/method[@name='ParseWarning']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Message']/method[@name='ParseError']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Message']/method[@name='ParseInfo']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@name='DefaultError']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Plugin']/method[@name='LoadFile']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Structure']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Structure']/field[@name='ParentRefcount']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Structure']/method[@name='SetParentRefcount']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='TypeFind']/method[@name='Register']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Next']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Item']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Resync']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Free']" name="hidden">1</attr>
-  <attr path="/api/namespace/enum[@name='MessageType']" name="parent">uint</attr>
-  <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Unknown']" name="value">0U</attr>
-  <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Any']" name="value">0xffffffff</attr>
-  <!-- Gross hack to remove items added by badly parsed GstEventType enum -->
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='0_']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
@@ -154,34 +106,78 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM_OOB']" name="name">DownstreamOob</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH']" name="name">Both</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH_OOB']" name="name">BothOob</attr>
-  <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
-  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="name">Last</attr>
-  <attr path="/api/namespace/enum[@name='BinFlags']/member[@cname='GST_BIN_FLAG_LAST']" name="value">ElementFlags.Last &lt;&lt; 5</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_PREROLL']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DISCONT']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_IN_CAPS']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_GAP']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DELTA_UNIT']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
-  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="name">Last</attr>
-  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLUSHING']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
-  <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_RESOLUTION']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_MASTER']" name="value">MiniObjectFlags.Last &lt;&lt; 5</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
-  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_LOCKED_STATE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
-  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_IS_SINK']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
-  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_UNPARENTING']" name="value">ObjectFlags.Last &lt;&lt; 2</attr>
-  <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 16</attr>
+
+  <attr path="/api/namespace/class[@name='Flow']/method[@name='ToQuark']/parameters/*[@name='ret']" name="name">flow_ret</attr>
+  <attr path="/api/namespace/class[@name='Flow']/method[@name='GetName']/parameters/*[@name='ret']" name="name">get_name_ret</attr>
+
+  <attr path="/api/namespace/object[@name='GhostPad']" name="parent">GstPad</attr>
+
+  <attr path="/api/namespace/object[@name='Index']/field[@cname='resolver']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="hidden">1</attr>
+
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_WRITABLE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_READABLE']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 8</attr>
+
+  <attr path="/api/namespace/struct[@name='Iterator']/method[@name='Fold']/parameters/*[@name='ret']" name="name">ret_val</attr>
+  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Next']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Item']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Resync']" name="hidden">1</attr>
+  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Free']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/callback[@name='IteratorNextFunction']/parameters/parameter[@name='result']" name="name">res</attr>
+
+  <change-node-type path="/api/namespace/object[@name='Message']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='Message']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseWarning']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseError']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseInfo']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/enum[@name='MessageType']" name="parent">uint</attr>
+  <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Unknown']" name="value">0U</attr>
+  <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Any']" name="value">0xffffffff</attr>
+  
+  <change-node-type path="/api/namespace/object[@name='MiniObject']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='MiniObject']" name="opaque">true</attr>
+  <remove-attr path="/api/namespace/boxed[@name='MiniObject']" name="parent" />
+  <remove-node path="/api/namespace/boxed[@name='MiniObject']/constructor[@cname='gst_mini_object_new']" />
+
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Refcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@name='DefaultError']" name="hidden">1</attr>
+  
+  <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
+
+  <attr path="/api/namespace/object[@name='Pipeline']" name="disable_gtype_ctor">1</attr>
+  <attr path="/api/namespace/object[@name='Pipeline']/method[@name='GetBus']/return-type" name="owned">true</attr>
+
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveBufferProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddBufferProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddDataProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveDataProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='QueryPosition']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='QueryDuration']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_callback']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='getcapsfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='setcapsfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='acceptcapsfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='fixatecapsfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatefunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatepushfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='activatepullfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='linkfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='unlinkfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='chainfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='checkgetrangefunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='getrangefunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='eventfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='querytypefunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='queryfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='intlinkfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='bufferallocfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='iterintlinkfunc']" name="hidden">1</attr>
+
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLUSHING']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
@@ -189,17 +185,42 @@
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_IN_SETCAPS']" name="value">ObjectFlags.Last &lt;&lt; 3</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKING']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 8</attr>
+
+  <attr path="/api/namespace/object[@name='PadTemplate']/signal[@name='PadCreated']" name="name">HasPadCreated</attr>
+
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FIXED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
+
+  <attr path="/api/namespace/class[@name='Param']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@name='ParamSpecFraction']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
+
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_LAST']" name="value">BinFlags.Last &lt;&lt; 4</attr>
+
+  <attr path="/api/namespace/object[@name='Plugin']/method[@name='LoadFile']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@name='PluginFeature']/field[@name='Name']" name="hidden">1</attr>
+
+  <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
+
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_NULL_TO_READY']" name="value">(State.Null &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_PAUSED']" name="value">(State.Ready &lt;&lt; 3) | State.Paused</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_PAUSED_TO_PLAYING']" name="value">(State.Paused &lt;&lt; 3) | State.Playing</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_PLAYING_TO_PAUSED']" name="value">(State.Playing &lt;&lt; 3) | State.Paused</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_PAUSED_TO_READY']" name="value">(State.Paused &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_NULL']" name="value">(State.Ready &lt;&lt; 3) | State.Null</attr>
+
+  <attr path="/api/namespace/boxed[@name='Structure']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/field[@name='ParentRefcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@name='SetParentRefcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
+
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='CopyValue']/*/*[@name='dest']" name="pass_as">ref</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetString']/*/*[@name='value']" name="pass_as">out</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetStringIndex']/*/*[@name='value']" name="pass_as">out</attr>
@@ -207,41 +228,5 @@
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetCharIndex']/*/*[@name='value']" name="pass_as">out</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetUlong']/*/*[@name='value']" name="pass_as">out</attr>
 
-  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildAdded']" name="name">EmitChildAdded</attr>
-  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildRemoved']" name="name">EmitChildRemoved</attr>
-  <attr path="/api/namespace/callback[@name='IteratorNextFunction']/parameters/parameter[@name='result']" name="name">res</attr>
-  <!--
-  <attr path="/api/namespace/boxed[@name='Plugin']/field[@name='Filename']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Structure']/field[@name='Name']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='ElementLoopFunction']" name="hidden">1</attr>	
-  <attr path="/api/namespace/callback[@name='PadBufferAllocFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadChainFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadConvertFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadEventFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadFixateFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadGetCapsFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadGetFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadIntLinkFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadLinkFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadQueryfunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/callback[@name='PadUnlinkFunction']" name="hidden">1</attr>
-  <attr path="/api/namespace/class[@cname='GstClass_']" name="hidden">1</attr>
-  <attr path="/api/namespace/interface[@name='ColorBalance']/method[@name='ValueChanged']" name="name">ChangeValue</attr>
-  <attr path="/api/namespace/interface[@name='Mixer']/method[@name='MuteToggled']" name="name">ToggleMute</attr>
-  <attr path="/api/namespace/interface[@name='Mixer']/method[@name='OptionChanged']" name="name">ChangeOption</attr>
-  <attr path="/api/namespace/interface[@name='Mixer']/method[@name='RecordToggled']" name="name">ToggleRecord</attr>
-  <attr path="/api/namespace/interface[@name='Mixer']/method[@name='VolumeChanged']" name="name">ChangeVolume</attr>
-  <attr path="/api/namespace/interface[@name='Tuner']/method[@name='FrequencyChanged']" name="name">ChangeFrequency</attr>
-  <attr path="/api/namespace/interface[@name='Tuner']/method[@name='SignalChanged']" name="name">ChangeSignal</attr>
-  <attr path="/api/namespace/object[@name='Bin']/method[@name='GetList']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Element']/method[@name='LinkFiltered']/*/*[@name='filtercaps']" name="pass_as">ref</attr>
-  <attr path="/api/namespace/object[@name='Pad']/field[@name='ElementPrivate']" name="hidden">1</attr>  
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='GetElementPrivate']" name="hidden">1</attr>  
-  <attr path="/api/namespace/object[@name='Pad']/method[@name='SetElementPrivate']" name="hidden">1</attr>  
-  <attr path="/api/namespace/object[@name='FakeSrc']/property[@name='Eos']" name="new_flag">1</attr>
-  <attr path="/api/namespace/object[@name='FdSrc']/signal[@name='Timeout']" name="name">TimedOut</attr>
-  <attr path="/api/namespace/object[@name='Index']/property[@name='Resolver']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='MixerTrack']/signal[@name='VolumeChanged']/parameters/parameter[@name='volumes']" name="array">1</attr>
-	<attr path="/api/namespace/boxed[@name='Data']/method[@cname='gst_data_copy']" name="name">GetCopy</attr>
-	-->
+  <attr path="/api/namespace/struct[@name='TypeFind']/method[@name='Register']" name="hidden">1</attr>
 </metadata>
