@@ -5,8 +5,6 @@
   <Remarks>To be added.</Remarks>
   <Copyright>To be added.</Copyright>
   <Types>
-    <Namespace Name="GLib">
-    </Namespace>
     <Namespace Name="Gst">
       <Type Name="ActivateMode" Kind="Enumeration" />
       <Type Name="AllocTrace" Kind="Structure" />
