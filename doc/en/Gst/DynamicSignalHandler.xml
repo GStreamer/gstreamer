@@ -1,4 +1,4 @@
-<Type Name="DynamicSignalHandler" FullName="GLib.DynamicSignalHandler">
+<Type Name="DynamicSignalHandler" FullName="Gst.DynamicSignalHandler">
   <TypeSignature Language="C#" Value="public delegate void DynamicSignalHandler(object o, SignalArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>

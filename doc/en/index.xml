@@ -6,8 +6,6 @@
   <Copyright>To be added.</Copyright>
   <Types>
     <Namespace Name="GLib">
-      <Type Name="DynamicSignal" Kind="Class" />
-      <Type Name="DynamicSignalHandler" Kind="Delegate" />
     </Namespace>
     <Namespace Name="Gst">
       <Type Name="ActivateMode" Kind="Enumeration" />
@@ -55,6 +53,8 @@
       <Type Name="DeepNotifyHandler" Kind="Delegate" />
       <Type Name="DoLatencyArgs" Kind="Class" />
       <Type Name="DoLatencyHandler" Kind="Delegate" />
+      <Type Name="DynamicSignal" Kind="Class" />
+      <Type Name="DynamicSignalHandler" Kind="Delegate" />
       <Type Name="Element" Kind="Class" />
       <Type Name="ElementAddedArgs" Kind="Class" />
       <Type Name="ElementAddedHandler" Kind="Delegate" />
