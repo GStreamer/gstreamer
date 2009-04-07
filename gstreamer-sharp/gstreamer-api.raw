@@ -75,59 +75,6 @@
       <member cname="GST_CLOCK_ERROR" name="Error" value="5" />
       <member cname="GST_CLOCK_UNSUPPORTED" name="Unsupported" value="6" />
     </enum>
-    <enum name="CoreError" cname="GstCoreError" type="enum">
-      <member cname="GST_CORE_ERROR_FAILED" name="Failed" value="1" />
-      <member cname="GST_CORE_ERROR_TOO_LAZY" name="TooLazy" />
-      <member cname="GST_CORE_ERROR_NOT_IMPLEMENTED" name="NotImplemented" />
-      <member cname="GST_CORE_ERROR_STATE_CHANGE" name="StateChange" />
-      <member cname="GST_CORE_ERROR_PAD" name="Pad" />
-      <member cname="GST_CORE_ERROR_THREAD" name="Thread" />
-      <member cname="GST_CORE_ERROR_NEGOTIATION" name="Negotiation" />
-      <member cname="GST_CORE_ERROR_EVENT" name="Event" />
-      <member cname="GST_CORE_ERROR_SEEK" name="Seek" />
-      <member cname="GST_CORE_ERROR_CAPS" name="Caps" />
-      <member cname="GST_CORE_ERROR_TAG" name="Tag" />
-      <member cname="GST_CORE_ERROR_MISSING_PLUGIN" name="MissingPlugin" />
-      <member cname="GST_CORE_ERROR_CLOCK" name="Clock" />
-      <member cname="GST_CORE_ERROR_DISABLED" name="Disabled" />
-      <member cname="GST_CORE_ERROR_NUM_ERRORS" name="NumErrors" />
-    </enum>
-    <enum name="DebugColorFlags" cname="GstDebugColorFlags" type="enum">
-      <member cname="GST_DEBUG_FG_BLACK" name="FgBlack" value="0x0000" />
-      <member cname="GST_DEBUG_FG_RED" name="FgRed" value="0x0001" />
-      <member cname="GST_DEBUG_FG_GREEN" name="FgGreen" value="0x0002" />
-      <member cname="GST_DEBUG_FG_YELLOW" name="FgYellow" value="0x0003" />
-      <member cname="GST_DEBUG_FG_BLUE" name="FgBlue" value="0x0004" />
-      <member cname="GST_DEBUG_FG_MAGENTA" name="FgMagenta" value="0x0005" />
-      <member cname="GST_DEBUG_FG_CYAN" name="FgCyan" value="0x0006" />
-      <member cname="GST_DEBUG_FG_WHITE" name="FgWhite" value="0x0007" />
-      <member cname="GST_DEBUG_BG_BLACK" name="BgBlack" value="0x0000" />
-      <member cname="GST_DEBUG_BG_RED" name="BgRed" value="0x0010" />
-      <member cname="GST_DEBUG_BG_GREEN" name="BgGreen" value="0x0020" />
-      <member cname="GST_DEBUG_BG_YELLOW" name="BgYellow" value="0x0030" />
-      <member cname="GST_DEBUG_BG_BLUE" name="BgBlue" value="0x0040" />
-      <member cname="GST_DEBUG_BG_MAGENTA" name="BgMagenta" value="0x0050" />
-      <member cname="GST_DEBUG_BG_CYAN" name="BgCyan" value="0x0060" />
-      <member cname="GST_DEBUG_BG_WHITE" name="BgWhite" value="0x0070" />
-      <member cname="GST_DEBUG_BOLD" name="Bold" value="0x0100" />
-      <member cname="GST_DEBUG_UNDERLINE" name="Underline" value="0x0200" />
-    </enum>
-    <enum name="DebugGraphDetails" cname="GstDebugGraphDetails" type="flags">
-      <member cname="GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE" name="MediaType" value="1 &lt;&lt; 0" />
-      <member cname="GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS" name="CapsDetails" value="1 &lt;&lt; 1" />
-      <member cname="GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS" name="NonDefaultParams" value="1 &lt;&lt; 2" />
-      <member cname="GST_DEBUG_GRAPH_SHOW_STATES" name="States" value="1 &lt;&lt; 3" />
-      <member cname="GST_DEBUG_GRAPH_SHOW_ALL" name="All" value="(1&lt;&lt;4)-1" />
-    </enum>
-    <enum name="DebugLevel" cname="GstDebugLevel" type="enum">
-      <member cname="GST_LEVEL_NONE" name="None" />
-      <member cname="GST_LEVEL_ERROR" name="Error" />
-      <member cname="GST_LEVEL_WARNING" name="Warning" />
-      <member cname="GST_LEVEL_INFO" name="Info" />
-      <member cname="GST_LEVEL_DEBUG" name="Debug" />
-      <member cname="GST_LEVEL_LOG" name="Log" />
-      <member cname="GST_LEVEL_COUNT" name="Count" />
-    </enum>
     <enum name="ElementFlags" cname="GstElementFlags" type="flags">
       <member cname="GST_ELEMENT_LOCKED_STATE" name="LockedState" value="GST_OBJECT_FLAG_LAST &lt;&lt; 0" />
       <member cname="GST_ELEMENT_IS_SINK" name="IsSink" value="GST_OBJECT_FLAG_LAST &lt;&lt; 1" />
@@ -218,26 +165,6 @@
       <member cname="GST_INDEX_RESOLVER_CUSTOM" name="Custom" />
       <member cname="GST_INDEX_RESOLVER_GTYPE" name="Gtype" />
       <member cname="GST_INDEX_RESOLVER_PATH" name="Path" />
-    </enum>
-    <enum name="IteratorItem" cname="GstIteratorItem" type="enum">
-      <member cname="GST_ITERATOR_ITEM_SKIP" name="Skip" />
-      <member cname="GST_ITERATOR_ITEM_PASS" name="Pass" value="1" />
-      <member cname="GST_ITERATOR_ITEM_END" name="End" value="2" />
-    </enum>
-    <enum name="IteratorResult" cname="GstIteratorResult" type="enum">
-      <member cname="GST_ITERATOR_DONE" name="Done" />
-      <member cname="GST_ITERATOR_OK" name="Ok" value="1" />
-      <member cname="GST_ITERATOR_RESYNC" name="Resync" value="2" />
-      <member cname="GST_ITERATOR_ERROR" name="Error" value="3" />
-    </enum>
-    <enum name="LibraryError" cname="GstLibraryError" type="enum">
-      <member cname="GST_LIBRARY_ERROR_FAILED" name="Failed" value="1" />
-      <member cname="GST_LIBRARY_ERROR_TOO_LAZY" name="TooLazy" />
-      <member cname="GST_LIBRARY_ERROR_INIT" name="Init" />
-      <member cname="GST_LIBRARY_ERROR_SHUTDOWN" name="Shutdown" />
-      <member cname="GST_LIBRARY_ERROR_SETTINGS" name="Settings" />
-      <member cname="GST_LIBRARY_ERROR_ENCODE" name="Encode" />
-      <member cname="GST_LIBRARY_ERROR_NUM_ERRORS" name="NumErrors" />
     </enum>
     <enum name="MessageType" cname="GstMessageType" type="flags">
       <member cname="GST_MESSAGE_UNKNOWN" name="Unknown" />
@@ -336,61 +263,6 @@
     <enum name="PluginFlags" cname="GstPluginFlags" type="flags">
       <member cname="GST_PLUGIN_FLAG_CACHED" name="Cached" value="1 &lt;&lt; 0" />
     </enum>
-    <enum name="QuarkId" cname="GstQuarkId" type="enum">
-      <member cname="GST_QUARK_FORMAT" name="Format" />
-      <member cname="GST_QUARK_CURRENT" name="Current" value="1" />
-      <member cname="GST_QUARK_DURATION" name="Duration" value="2" />
-      <member cname="GST_QUARK_RATE" name="Rate" value="3" />
-      <member cname="GST_QUARK_SEEKABLE" name="Seekable" value="4" />
-      <member cname="GST_QUARK_SEGMENT_START" name="SegmentStart" value="5" />
-      <member cname="GST_QUARK_SEGMENT_END" name="SegmentEnd" value="6" />
-      <member cname="GST_QUARK_SRC_FORMAT" name="SrcFormat" value="7" />
-      <member cname="GST_QUARK_SRC_VALUE" name="SrcValue" value="8" />
-      <member cname="GST_QUARK_DEST_FORMAT" name="DestFormat" value="9" />
-      <member cname="GST_QUARK_DEST_VALUE" name="DestValue" value="10" />
-      <member cname="GST_QUARK_START_FORMAT" name="StartFormat" value="11" />
-      <member cname="GST_QUARK_START_VALUE" name="StartValue" value="12" />
-      <member cname="GST_QUARK_STOP_FORMAT" name="StopFormat" value="13" />
-      <member cname="GST_QUARK_STOP_VALUE" name="StopValue" value="14" />
-      <member cname="GST_QUARK_GERROR" name="Gerror" value="15" />
-      <member cname="GST_QUARK_DEBUG" name="Debug" value="16" />
-      <member cname="GST_QUARK_BUFFER_PERCENT" name="BufferPercent" value="17" />
-      <member cname="GST_QUARK_BUFFERING_MODE" name="BufferingMode" value="18" />
-      <member cname="GST_QUARK_AVG_IN_RATE" name="AvgInRate" value="19" />
-      <member cname="GST_QUARK_AVG_OUT_RATE" name="AvgOutRate" value="20" />
-      <member cname="GST_QUARK_BUFFERING_LEFT" name="BufferingLeft" value="21" />
-      <member cname="GST_QUARK_ESTIMATED_TOTAL" name="EstimatedTotal" value="22" />
-      <member cname="GST_QUARK_OLD_STATE" name="OldState" value="23" />
-      <member cname="GST_QUARK_NEW_STATE" name="NewState" value="24" />
-      <member cname="GST_QUARK_PENDING_STATE" name="PendingState" value="25" />
-      <member cname="GST_QUARK_CLOCK" name="Clock" value="26" />
-      <member cname="GST_QUARK_READY" name="Ready" value="27" />
-      <member cname="GST_QUARK_POSITION" name="Position" value="28" />
-      <member cname="GST_QUARK_NEW_BASE_TIME" name="NewBaseTime" value="29" />
-      <member cname="GST_QUARK_LIVE" name="Live" value="30" />
-      <member cname="GST_QUARK_MIN_LATENCY" name="MinLatency" value="31" />
-      <member cname="GST_QUARK_MAX_LATENCY" name="MaxLatency" value="32" />
-      <member cname="GST_QUARK_BUSY" name="Busy" value="33" />
-      <member cname="GST_QUARK_TYPE" name="Type" value="34" />
-      <member cname="GST_QUARK_OWNER" name="Owner" value="35" />
-      <member cname="GST_QUARK_UPDATE" name="Update" value="36" />
-      <member cname="GST_QUARK_APPLIED_RATE" name="AppliedRate" value="37" />
-      <member cname="GST_QUARK_START" name="Start" value="38" />
-      <member cname="GST_QUARK_STOP" name="Stop" value="39" />
-      <member cname="GST_QUARK_MINSIZE" name="Minsize" value="40" />
-      <member cname="GST_QUARK_MAXSIZE" name="Maxsize" value="41" />
-      <member cname="GST_QUARK_ASYNC" name="Async" value="42" />
-      <member cname="GST_QUARK_PROPORTION" name="Proportion" value="43" />
-      <member cname="GST_QUARK_DIFF" name="Diff" value="44" />
-      <member cname="GST_QUARK_TIMESTAMP" name="Timestamp" value="45" />
-      <member cname="GST_QUARK_FLAGS" name="Flags" value="46" />
-      <member cname="GST_QUARK_CUR_TYPE" name="CurType" value="47" />
-      <member cname="GST_QUARK_CUR" name="Cur" value="48" />
-      <member cname="GST_QUARK_STOP_TYPE" name="StopType" value="49" />
-      <member cname="GST_QUARK_LATENCY" name="Latency" value="50" />
-      <member cname="GST_QUARK_URI" name="Uri" value="51" />
-      <member cname="GST_QUARK_MAX" name="Max" value="52" />
-    </enum>
     <enum name="QueryType" cname="GstQueryType" type="enum">
       <member cname="GST_QUERY_NONE" name="None" />
       <member cname="GST_QUERY_POSITION" name="Position" />
@@ -411,23 +283,6 @@
       <member cname="GST_RANK_MARGINAL" name="Marginal" value="64" />
       <member cname="GST_RANK_SECONDARY" name="Secondary" value="128" />
       <member cname="GST_RANK_PRIMARY" name="Primary" value="256" />
-    </enum>
-    <enum name="ResourceError" cname="GstResourceError" type="enum">
-      <member cname="GST_RESOURCE_ERROR_FAILED" name="Failed" value="1" />
-      <member cname="GST_RESOURCE_ERROR_TOO_LAZY" name="TooLazy" />
-      <member cname="GST_RESOURCE_ERROR_NOT_FOUND" name="NotFound" />
-      <member cname="GST_RESOURCE_ERROR_BUSY" name="Busy" />
-      <member cname="GST_RESOURCE_ERROR_OPEN_READ" name="OpenRead" />
-      <member cname="GST_RESOURCE_ERROR_OPEN_WRITE" name="OpenWrite" />
-      <member cname="GST_RESOURCE_ERROR_OPEN_READ_WRITE" name="OpenReadWrite" />
-      <member cname="GST_RESOURCE_ERROR_CLOSE" name="Close" />
-      <member cname="GST_RESOURCE_ERROR_READ" name="Read" />
-      <member cname="GST_RESOURCE_ERROR_WRITE" name="Write" />
-      <member cname="GST_RESOURCE_ERROR_SEEK" name="Seek" />
-      <member cname="GST_RESOURCE_ERROR_SYNC" name="Sync" />
-      <member cname="GST_RESOURCE_ERROR_SETTINGS" name="Settings" />
-      <member cname="GST_RESOURCE_ERROR_NO_SPACE_LEFT" name="NoSpaceLeft" />
-      <member cname="GST_RESOURCE_ERROR_NUM_ERRORS" name="NumErrors" />
     </enum>
     <enum name="SeekFlags" cname="GstSeekFlags" type="flags">
       <member cname="GST_SEEK_FLAG_NONE" name="None" />
@@ -463,22 +318,6 @@
       <member cname="GST_STATE_CHANGE_SUCCESS" name="Success" value="1" />
       <member cname="GST_STATE_CHANGE_ASYNC" name="Async" value="2" />
       <member cname="GST_STATE_CHANGE_NO_PREROLL" name="NoPreroll" value="3" />
-    </enum>
-    <enum name="StreamError" cname="GstStreamError" type="enum">
-      <member cname="GST_STREAM_ERROR_FAILED" name="Failed" value="1" />
-      <member cname="GST_STREAM_ERROR_TOO_LAZY" name="TooLazy" />
-      <member cname="GST_STREAM_ERROR_NOT_IMPLEMENTED" name="NotImplemented" />
-      <member cname="GST_STREAM_ERROR_TYPE_NOT_FOUND" name="TypeNotFound" />
-      <member cname="GST_STREAM_ERROR_WRONG_TYPE" name="WrongType" />
-      <member cname="GST_STREAM_ERROR_CODEC_NOT_FOUND" name="CodecNotFound" />
-      <member cname="GST_STREAM_ERROR_DECODE" name="Decode" />
-      <member cname="GST_STREAM_ERROR_ENCODE" name="Encode" />
-      <member cname="GST_STREAM_ERROR_DEMUX" name="Demux" />
-      <member cname="GST_STREAM_ERROR_MUX" name="Mux" />
-      <member cname="GST_STREAM_ERROR_FORMAT" name="Format" />
-      <member cname="GST_STREAM_ERROR_DECRYPT" name="Decrypt" />
-      <member cname="GST_STREAM_ERROR_DECRYPT_NOKEY" name="DecryptNokey" />
-      <member cname="GST_STREAM_ERROR_NUM_ERRORS" name="NumErrors" />
     </enum>
     <enum name="StructureChangeType" cname="GstStructureChangeType" type="enum">
       <member cname="GST_STRUCTURE_CHANGE_TYPE_PAD_LINK" name="Link" />
@@ -538,13 +377,6 @@
         <parameter type="gpointer" name="user_data" />
       </parameters>
     </callback>
-    <callback name="FilterFunc" cname="GstFilterFunc">
-      <return-type type="gboolean" />
-      <parameters>
-        <parameter type="gpointer" name="obj" />
-        <parameter type="gpointer" name="user_data" />
-      </parameters>
-    </callback>
     <callback name="IndexFilter" cname="GstIndexFilter">
       <return-type type="gboolean" />
       <parameters>
@@ -560,59 +392,6 @@
         <parameter type="GstObject*" name="writer" />
         <parameter type="gchar**" name="writer_string" />
         <parameter type="gpointer" name="user_data" />
-      </parameters>
-    </callback>
-    <callback name="IteratorDisposeFunction" cname="GstIteratorDisposeFunction">
-      <return-type type="void" />
-      <parameters>
-        <parameter type="gpointer" name="owner" />
-      </parameters>
-    </callback>
-    <callback name="IteratorFoldFunction" cname="GstIteratorFoldFunction">
-      <return-type type="gboolean" />
-      <parameters>
-        <parameter type="gpointer" name="item" />
-        <parameter type="GValue*" name="ret" />
-        <parameter type="gpointer" name="user_data" />
-      </parameters>
-    </callback>
-    <callback name="IteratorFreeFunction" cname="GstIteratorFreeFunction">
-      <return-type type="void" />
-      <parameters>
-        <parameter type="GstIterator*" name="it" />
-      </parameters>
-    </callback>
-    <callback name="IteratorItemFunction" cname="GstIteratorItemFunction">
-      <return-type type="GstIteratorItem" />
-      <parameters>
-        <parameter type="GstIterator*" name="it" />
-        <parameter type="gpointer" name="item" />
-      </parameters>
-    </callback>
-    <callback name="IteratorNextFunction" cname="GstIteratorNextFunction">
-      <return-type type="GstIteratorResult" />
-      <parameters>
-        <parameter type="GstIterator*" name="it" />
-        <parameter type="gpointer*" name="result" />
-      </parameters>
-    </callback>
-    <callback name="IteratorResyncFunction" cname="GstIteratorResyncFunction">
-      <return-type type="void" />
-      <parameters>
-        <parameter type="GstIterator*" name="it" />
-      </parameters>
-    </callback>
-    <callback name="LogFunction" cname="GstLogFunction">
-      <return-type type="void" />
-      <parameters>
-        <parameter type="GstDebugCategory*" name="category" />
-        <parameter type="GstDebugLevel" name="level" />
-        <parameter type="const-gchar*" name="file" />
-        <parameter type="const-gchar*" name="function" />
-        <parameter type="gint" name="line" />
-        <parameter type="GObject*" name="object" />
-        <parameter type="GstDebugMessage*" name="message" />
-        <parameter type="gpointer" name="data" />
       </parameters>
     </callback>
     <callback name="MiniObjectCopyFunction" cname="GstMiniObjectCopyFunction">
@@ -815,50 +594,6 @@
       <parameters>
         <parameter type="GstTypeFind*" name="find" />
         <parameter type="gpointer" name="data" />
-      </parameters>
-    </callback>
-    <callback name="ValueCompareFunc" cname="GstValueCompareFunc">
-      <return-type type="gint" />
-      <parameters>
-        <parameter type="const-GValue*" name="value1" />
-        <parameter type="const-GValue*" name="value2" />
-      </parameters>
-    </callback>
-    <callback name="ValueDeserializeFunc" cname="GstValueDeserializeFunc">
-      <return-type type="gboolean" />
-      <parameters>
-        <parameter type="GValue*" name="dest" />
-        <parameter type="const-gchar*" name="s" />
-      </parameters>
-    </callback>
-    <callback name="ValueIntersectFunc" cname="GstValueIntersectFunc">
-      <return-type type="gboolean" />
-      <parameters>
-        <parameter type="GValue*" name="dest" />
-        <parameter type="const-GValue*" name="value1" />
-        <parameter type="const-GValue*" name="value2" />
-      </parameters>
-    </callback>
-    <callback name="ValueSerializeFunc" cname="GstValueSerializeFunc">
-      <return-type type="gchar*" />
-      <parameters>
-        <parameter type="const-GValue*" name="value1" />
-      </parameters>
-    </callback>
-    <callback name="ValueSubtractFunc" cname="GstValueSubtractFunc">
-      <return-type type="gboolean" />
-      <parameters>
-        <parameter type="GValue*" name="dest" />
-        <parameter type="const-GValue*" name="minuend" />
-        <parameter type="const-GValue*" name="subtrahend" />
-      </parameters>
-    </callback>
-    <callback name="ValueUnionFunc" cname="GstValueUnionFunc">
-      <return-type type="gboolean" />
-      <parameters>
-        <parameter type="GValue*" name="dest" />
-        <parameter type="const-GValue*" name="value1" />
-        <parameter type="const-GValue*" name="value2" />
       </parameters>
     </callback>
     <interface name="ChildProxy" cname="GstChildProxy">
@@ -3700,17 +3435,6 @@
         </parameters>
       </method>
     </object>
-    <object name="ParamSpecFraction" cname="GstParamSpecFraction" parent="GParamSpec">
-      <field name="MinNum" cname="min_num" type="gint" />
-      <field name="MinDen" cname="min_den" type="gint" />
-      <field name="MaxNum" cname="max_num" type="gint" />
-      <field name="MaxDen" cname="max_den" type="gint" />
-      <field name="DefNum" cname="def_num" type="gint" />
-      <field name="DefDen" cname="def_den" type="gint" />
-      <method name="GetType" cname="gst_param_spec_fraction_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-    </object>
     <object name="ParamSpecMiniObject" cname="GstParamSpecMiniObject" parent="GParamSpec">
       <method name="GetType" cname="gst_param_spec_mini_object_get_type" shared="true">
         <return-type type="GType" />
@@ -4727,13 +4451,6 @@
     <alias name="ClockID" cname="GstClockID" type="gpointer" />
     <alias name="ClockTime" cname="GstClockTime" type="guint64" />
     <alias name="ClockTimeDiff" cname="GstClockTimeDiff" type="gint64" />
-    <struct name="DebugCategory" cname="GstDebugCategory">
-      <field name="Threshold" cname="threshold" type="gint" access="private" />
-      <field name="Color" cname="color" type="guint" access="private" />
-      <field name="Name" cname="name" type="const-gchar*" access="private" />
-      <field name="Description" cname="description" type="const-gchar*" access="private" />
-    </struct>
-    <struct name="DebugMessage" cname="GstDebugMessage" opaque="true" />
     <struct name="ElementDetails" cname="GstElementDetails">
       <field name="Longname" cname="longname" type="gchar*" />
       <field name="Klass" cname="klass" type="gchar*" />
@@ -4778,88 +4495,6 @@
       <field name="Certainty" cname="certainty" type="GstIndexCertainty" access="private" />
       <field name="Peergroup" cname="peergroup" type="gint" access="private" />
     </struct>
-    <struct name="Iterator" cname="GstIterator" opaque="true">
-      <field name="Next" cname="next" type="GstIteratorNextFunction" access="public" writeable="true" />
-      <field name="Item" cname="item" type="GstIteratorItemFunction" access="public" writeable="true" />
-      <field name="Resync" cname="resync" type="GstIteratorResyncFunction" access="public" writeable="true" />
-      <field name="Free" cname="free" type="GstIteratorFreeFunction" access="public" writeable="true" />
-      <field name="Pushed" cname="pushed" type="GstIterator*" access="public" writeable="true" />
-      <field name="Type" cname="type" type="GType" access="public" writeable="true" />
-      <field name="Lock" cname="lock" type="GMutex*" access="public" writeable="true" />
-      <field name="Cookie" cname="cookie" type="guint32" access="public" writeable="true" />
-      <field name="MasterCookie" cname="master_cookie" type="guint32*" access="public" writeable="true" />
-      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" access="private" />
-      <method name="Filter" cname="gst_iterator_filter">
-        <return-type type="GstIterator*" />
-        <parameters>
-          <parameter type="GCompareFunc" name="func" />
-          <parameter type="gpointer" name="user_data" />
-        </parameters>
-      </method>
-      <method name="FindCustom" cname="gst_iterator_find_custom">
-        <return-type type="gpointer" />
-        <parameters>
-          <parameter type="GCompareFunc" name="func" />
-          <parameter type="gpointer" name="user_data" />
-        </parameters>
-      </method>
-      <method name="Fold" cname="gst_iterator_fold">
-        <return-type type="GstIteratorResult" />
-        <parameters>
-          <parameter type="GstIteratorFoldFunction" name="func" />
-          <parameter type="GValue*" name="ret" />
-          <parameter type="gpointer" name="user_data" />
-        </parameters>
-      </method>
-      <method name="Foreach" cname="gst_iterator_foreach">
-        <return-type type="GstIteratorResult" />
-        <parameters>
-          <parameter type="GFunc" name="func" />
-          <parameter type="gpointer" name="user_data" />
-        </parameters>
-      </method>
-      <method name="Free" cname="gst_iterator_free">
-        <return-type type="void" />
-      </method>
-      <constructor cname="gst_iterator_new">
-        <parameters>
-          <parameter type="guint" name="size" />
-          <parameter type="GType" name="type" />
-          <parameter type="GMutex*" name="lock" />
-          <parameter type="guint32*" name="master_cookie" />
-          <parameter type="GstIteratorNextFunction" name="next" />
-          <parameter type="GstIteratorItemFunction" name="item" />
-          <parameter type="GstIteratorResyncFunction" name="resync" />
-          <parameter type="GstIteratorFreeFunction" name="free" />
-        </parameters>
-      </constructor>
-      <constructor cname="gst_iterator_new_list">
-        <parameters>
-          <parameter type="GType" name="type" />
-          <parameter type="GMutex*" name="lock" />
-          <parameter type="guint32*" name="master_cookie" />
-          <parameter type="GList**" name="list" />
-          <parameter type="gpointer" name="owner" />
-          <parameter type="GstIteratorItemFunction" name="item" />
-          <parameter type="GstIteratorDisposeFunction" name="free" />
-        </parameters>
-      </constructor>
-      <method name="Next" cname="gst_iterator_next">
-        <return-type type="GstIteratorResult" />
-        <parameters>
-          <parameter type="gpointer*" name="elem" />
-        </parameters>
-      </method>
-      <method name="Push" cname="gst_iterator_push">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstIterator*" name="other" />
-        </parameters>
-      </method>
-      <method name="Resync" cname="gst_iterator_resync">
-        <return-type type="void" />
-      </method>
-    </struct>
     <struct name="ParseContext" cname="GstParseContext" opaque="true">
       <method name="Free" cname="gst_parse_context_free">
         <return-type type="void" />
@@ -4881,107 +4516,6 @@
       <field name="Package" cname="package" type="const-gchar*" />
       <field name="Origin" cname="origin" type="const-gchar*" />
       <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
-    </struct>
-    <struct name="Poll" cname="GstPoll" opaque="true">
-      <method name="AddFd" cname="gst_poll_add_fd">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="Free" cname="gst_poll_free">
-        <return-type type="void" />
-      </method>
-      <constructor cname="gst_poll_new">
-        <parameters>
-          <parameter type="gboolean" name="controllable" />
-        </parameters>
-      </constructor>
-      <method name="RemoveFd" cname="gst_poll_remove_fd">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="Restart" cname="gst_poll_restart">
-        <return-type type="void" />
-      </method>
-      <method name="SetControllable" cname="gst_poll_set_controllable">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="gboolean" name="controllable" />
-        </parameters>
-      </method>
-      <method name="SetFlushing" cname="gst_poll_set_flushing">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="gboolean" name="flushing" />
-        </parameters>
-      </method>
-      <method name="Wait" cname="gst_poll_wait">
-        <return-type type="gint" />
-        <parameters>
-          <parameter type="GstClockTime" name="timeout" />
-        </parameters>
-      </method>
-    </struct>
-    <struct name="PollFD" cname="GstPollFD">
-      <field name="Fd" cname="fd" type="int" />
-      <field name="Idx" cname="idx" type="gint" />
-      <method name="CanRead" cname="gst_poll_fd_can_read" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="CanWrite" cname="gst_poll_fd_can_write" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="CtlRead" cname="gst_poll_fd_ctl_read" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-          <parameter type="gboolean" name="active" />
-        </parameters>
-      </method>
-      <method name="CtlWrite" cname="gst_poll_fd_ctl_write" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-          <parameter type="gboolean" name="active" />
-        </parameters>
-      </method>
-      <method name="HasClosed" cname="gst_poll_fd_has_closed" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="HasError" cname="gst_poll_fd_has_error" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="Ignored" cname="gst_poll_fd_ignored" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstPoll*" name="set" />
-          <parameter type="GstPollFD*" name="fd" />
-        </parameters>
-      </method>
-      <method name="Init" cname="gst_poll_fd_init">
-        <return-type type="void" />
-      </method>
     </struct>
     <struct name="QueryTypeDefinition" cname="GstQueryTypeDefinition">
       <field name="Value" cname="value" type="GstQueryType" />
@@ -5792,13 +5326,6 @@
       <field name="Name" cname="name" type="const-gchar*" />
       <field name="Type" cname="type" type="GType" />
     </struct>
-    <struct name="ValueTable" cname="GstValueTable">
-      <field name="Type" cname="type" type="GType" />
-      <field name="Compare" cname="compare" type="GstValueCompareFunc" />
-      <field name="Serialize" cname="serialize" type="GstValueSerializeFunc" />
-      <field name="Deserialize" cname="deserialize" type="GstValueDeserializeFunc" />
-      <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="void*" access="private" />
-    </struct>
     <class name="Global" cname="GstGlobal">
       <method name="AtomicIntSet" cname="gst_atomic_int_set" shared="true">
         <return-type type="void" />
@@ -5815,12 +5342,6 @@
           <parameter type="GstXmlNodePtr" name="self" />
         </parameters>
       </method>
-      <method name="CoreErrorQuark" cname="gst_core_error_quark" shared="true">
-        <return-type type="GQuark" />
-      </method>
-      <method name="DateGetType" cname="gst_date_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
       <method name="DefaultRegistryCheckFeatureVersion" cname="gst_default_registry_check_feature_version" shared="true">
         <return-type type="gboolean" />
         <parameters>
@@ -5828,25 +5349,6 @@
           <parameter type="guint" name="min_major" />
           <parameter type="guint" name="min_minor" />
           <parameter type="guint" name="min_micro" />
-        </parameters>
-      </method>
-      <method name="DoubleRangeGetType" cname="gst_double_range_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <method name="ErrorGetMessage" cname="gst_error_get_message" shared="true">
-        <return-type type="gchar*" />
-        <parameters>
-          <parameter type="GQuark" name="domain" />
-          <parameter type="gint" name="code" />
-        </parameters>
-      </method>
-      <method name="FilterRun" cname="gst_filter_run" shared="true">
-        <return-type type="GList*" />
-        <parameters>
-          <parameter type="const-GList*" name="list" />
-          <parameter type="GstFilterFunc" name="func" />
-          <parameter type="gboolean" name="first" />
-          <parameter type="gpointer" name="user_data" />
         </parameters>
       </method>
       <method name="FormatGetByNick" cname="gst_format_get_by_nick" shared="true">
@@ -5890,23 +5392,21 @@
           <parameter type="GstFormat" name="format" />
         </parameters>
       </method>
-      <method name="FourccGetType" cname="gst_fourcc_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <method name="GErrorGetType" cname="gst_g_error_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <method name="IntRangeGetType" cname="gst_int_range_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
       <method name="IsTagList" cname="gst_is_tag_list" shared="true">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gconstpointer" name="p" />
         </parameters>
       </method>
-      <method name="LibraryErrorQuark" cname="gst_library_error_quark" shared="true">
-        <return-type type="GQuark" />
+      <method name="ParamSpecMiniObject" cname="gst_param_spec_mini_object" shared="true">
+        <return-type type="GParamSpec*" />
+        <parameters>
+          <parameter type="const-char*" name="name" />
+          <parameter type="const-char*" name="nick" />
+          <parameter type="const-char*" name="blurb" />
+          <parameter type="GType" name="object_type" />
+          <parameter type="GParamFlags" name="flags" />
+        </parameters>
       </method>
       <method name="ParseBinFromDescription" cname="gst_parse_bin_from_description" shared="true">
         <return-type type="GstElement*" />
@@ -5961,12 +5461,6 @@
           <parameter type="GError**" name="error" />
         </parameters>
       </method>
-      <method name="ResourceErrorQuark" cname="gst_resource_error_quark" shared="true">
-        <return-type type="GQuark" />
-      </method>
-      <method name="StreamErrorQuark" cname="gst_stream_error_quark" shared="true">
-        <return-type type="GQuark" />
-      </method>
       <method name="TypeRegisterStaticFull" cname="gst_type_register_static_full" shared="true">
         <return-type type="GType" />
         <parameters>
@@ -5992,23 +5486,6 @@
         <return-type type="gchar*" />
       </method>
     </class>
-    <class name="Debug" cname="GstDebug_">
-      <method name="PrintStackTrace" cname="gst_debug_print_stack_trace" shared="true">
-        <return-type type="void" />
-      </method>
-      <method name="RemoveLogFunction" cname="gst_debug_remove_log_function" shared="true">
-        <return-type type="guint" />
-        <parameters>
-          <parameter type="GstLogFunction" name="func" />
-        </parameters>
-      </method>
-      <method name="RemoveLogFunctionByData" cname="gst_debug_remove_log_function_by_data" shared="true">
-        <return-type type="guint" />
-        <parameters>
-          <parameter type="gpointer" name="data" />
-        </parameters>
-      </method>
-    </class>
     <class name="Flow" cname="GstFlow_">
       <method name="GetName" cname="gst_flow_get_name" shared="true">
         <return-type type="const-gchar*" />
@@ -6023,14 +5500,6 @@
         </parameters>
       </method>
     </class>
-    <class name="Fraction" cname="GstFraction_">
-      <method name="GetType" cname="gst_fraction_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <method name="RangeGetType" cname="gst_fraction_range_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-    </class>
     <class name="Init" cname="GstInit_">
       <method name="Check" cname="gst_init_check" shared="true">
         <return-type type="gboolean" />
@@ -6042,33 +5511,6 @@
       </method>
       <method name="GetOptionGroup" cname="gst_init_get_option_group" shared="true">
         <return-type type="GOptionGroup*" />
-      </method>
-    </class>
-    <class name="Param" cname="GstParam_">
-      <method name="SpecFraction" cname="gst_param_spec_fraction" shared="true">
-        <return-type type="GParamSpec*" />
-        <parameters>
-          <parameter type="const-gchar*" name="name" />
-          <parameter type="const-gchar*" name="nick" />
-          <parameter type="const-gchar*" name="blurb" />
-          <parameter type="gint" name="min_num" />
-          <parameter type="gint" name="min_denom" />
-          <parameter type="gint" name="max_num" />
-          <parameter type="gint" name="max_denom" />
-          <parameter type="gint" name="default_num" />
-          <parameter type="gint" name="default_denom" />
-          <parameter type="GParamFlags" name="flags" />
-        </parameters>
-      </method>
-      <method name="SpecMiniObject" cname="gst_param_spec_mini_object" shared="true">
-        <return-type type="GParamSpec*" />
-        <parameters>
-          <parameter type="const-char*" name="name" />
-          <parameter type="const-char*" name="nick" />
-          <parameter type="const-char*" name="blurb" />
-          <parameter type="GType" name="object_type" />
-          <parameter type="GParamFlags" name="flags" />
-        </parameters>
       </method>
     </class>
     <class name="Print" cname="GstPrint_">
@@ -6229,162 +5671,8 @@
       </method>
     </class>
     <class name="Value" cname="GstValue_">
-      <method name="ArrayAppendValue" cname="gst_value_array_append_value" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GValue*" name="append_value" />
-        </parameters>
-      </method>
-      <method name="ArrayGetSize" cname="gst_value_array_get_size" shared="true">
-        <return-type type="guint" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="ArrayGetType" cname="gst_value_array_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <method name="ArrayGetValue" cname="gst_value_array_get_value" shared="true">
-        <return-type type="const-GValue*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-          <parameter type="guint" name="index" />
-        </parameters>
-      </method>
-      <method name="ArrayPrependValue" cname="gst_value_array_prepend_value" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GValue*" name="prepend_value" />
-        </parameters>
-      </method>
-      <method name="CanCompare" cname="gst_value_can_compare" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
-        </parameters>
-      </method>
-      <method name="CanIntersect" cname="gst_value_can_intersect" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
-        </parameters>
-      </method>
-      <method name="CanSubtract" cname="gst_value_can_subtract" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GValue*" name="minuend" />
-          <parameter type="const-GValue*" name="subtrahend" />
-        </parameters>
-      </method>
-      <method name="CanUnion" cname="gst_value_can_union" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
-        </parameters>
-      </method>
-      <method name="Compare" cname="gst_value_compare" shared="true">
-        <return-type type="gint" />
-        <parameters>
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
-        </parameters>
-      </method>
-      <method name="Deserialize" cname="gst_value_deserialize" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-gchar*" name="src" />
-        </parameters>
-      </method>
       <method name="DupMiniObject" cname="gst_value_dup_mini_object" shared="true">
         <return-type type="GstMiniObject*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="FractionMultiply" cname="gst_value_fraction_multiply" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GValue*" name="product" />
-          <parameter type="const-GValue*" name="factor1" />
-          <parameter type="const-GValue*" name="factor2" />
-        </parameters>
-      </method>
-      <method name="FractionSubtract" cname="gst_value_fraction_subtract" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-GValue*" name="minuend" />
-          <parameter type="const-GValue*" name="subtrahend" />
-        </parameters>
-      </method>
-      <method name="GetCaps" cname="gst_value_get_caps" shared="true">
-        <return-type type="const-GstCaps*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetDate" cname="gst_value_get_date" shared="true">
-        <return-type type="const-GDate*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetDoubleRangeMax" cname="gst_value_get_double_range_max" shared="true">
-        <return-type type="gdouble" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetDoubleRangeMin" cname="gst_value_get_double_range_min" shared="true">
-        <return-type type="gdouble" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetFourcc" cname="gst_value_get_fourcc" shared="true">
-        <return-type type="guint32" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetFractionDenominator" cname="gst_value_get_fraction_denominator" shared="true">
-        <return-type type="gint" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetFractionNumerator" cname="gst_value_get_fraction_numerator" shared="true">
-        <return-type type="gint" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetFractionRangeMax" cname="gst_value_get_fraction_range_max" shared="true">
-        <return-type type="const-GValue*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetFractionRangeMin" cname="gst_value_get_fraction_range_min" shared="true">
-        <return-type type="const-GValue*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetIntRangeMax" cname="gst_value_get_int_range_max" shared="true">
-        <return-type type="gint" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="GetIntRangeMin" cname="gst_value_get_int_range_min" shared="true">
-        <return-type type="gint" />
         <parameters>
           <parameter type="const-GValue*" name="value" />
         </parameters>
@@ -6395,170 +5683,6 @@
           <parameter type="const-GValue*" name="value" />
         </parameters>
       </method>
-      <method name="GetStructure" cname="gst_value_get_structure" shared="true">
-        <return-type type="const-GstStructure*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="InitAndCopy" cname="gst_value_init_and_copy" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-GValue*" name="src" />
-        </parameters>
-      </method>
-      <method name="Intersect" cname="gst_value_intersect" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
-        </parameters>
-      </method>
-      <method name="IsFixed" cname="gst_value_is_fixed" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="ListAppendValue" cname="gst_value_list_append_value" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GValue*" name="append_value" />
-        </parameters>
-      </method>
-      <method name="ListConcat" cname="gst_value_list_concat" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
-        </parameters>
-      </method>
-      <method name="ListGetSize" cname="gst_value_list_get_size" shared="true">
-        <return-type type="guint" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="ListGetType" cname="gst_value_list_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <method name="ListGetValue" cname="gst_value_list_get_value" shared="true">
-        <return-type type="const-GValue*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-          <parameter type="guint" name="index" />
-        </parameters>
-      </method>
-      <method name="ListPrependValue" cname="gst_value_list_prepend_value" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GValue*" name="prepend_value" />
-        </parameters>
-      </method>
-      <method name="Register" cname="gst_value_register" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="const-GstValueTable*" name="table" />
-        </parameters>
-      </method>
-      <method name="RegisterIntersectFunc" cname="gst_value_register_intersect_func" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GType" name="type1" />
-          <parameter type="GType" name="type2" />
-          <parameter type="GstValueIntersectFunc" name="func" />
-        </parameters>
-      </method>
-      <method name="RegisterSubtractFunc" cname="gst_value_register_subtract_func" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GType" name="minuend_type" />
-          <parameter type="GType" name="subtrahend_type" />
-          <parameter type="GstValueSubtractFunc" name="func" />
-        </parameters>
-      </method>
-      <method name="RegisterUnionFunc" cname="gst_value_register_union_func" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GType" name="type1" />
-          <parameter type="GType" name="type2" />
-          <parameter type="GstValueUnionFunc" name="func" />
-        </parameters>
-      </method>
-      <method name="Serialize" cname="gst_value_serialize" shared="true">
-        <return-type type="gchar*" />
-        <parameters>
-          <parameter type="const-GValue*" name="value" />
-        </parameters>
-      </method>
-      <method name="SetCaps" cname="gst_value_set_caps" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GstCaps*" name="caps" />
-        </parameters>
-      </method>
-      <method name="SetDate" cname="gst_value_set_date" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GDate*" name="date" />
-        </parameters>
-      </method>
-      <method name="SetDoubleRange" cname="gst_value_set_double_range" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="gdouble" name="start" />
-          <parameter type="gdouble" name="end" />
-        </parameters>
-      </method>
-      <method name="SetFourcc" cname="gst_value_set_fourcc" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="guint32" name="fourcc" />
-        </parameters>
-      </method>
-      <method name="SetFraction" cname="gst_value_set_fraction" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="gint" name="numerator" />
-          <parameter type="gint" name="denominator" />
-        </parameters>
-      </method>
-      <method name="SetFractionRange" cname="gst_value_set_fraction_range" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GValue*" name="start" />
-          <parameter type="const-GValue*" name="end" />
-        </parameters>
-      </method>
-      <method name="SetFractionRangeFull" cname="gst_value_set_fraction_range_full" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="gint" name="numerator_start" />
-          <parameter type="gint" name="denominator_start" />
-          <parameter type="gint" name="numerator_end" />
-          <parameter type="gint" name="denominator_end" />
-        </parameters>
-      </method>
-      <method name="SetIntRange" cname="gst_value_set_int_range" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="gint" name="start" />
-          <parameter type="gint" name="end" />
-        </parameters>
-      </method>
       <method name="SetMiniObject" cname="gst_value_set_mini_object" shared="true">
         <return-type type="void" />
         <parameters>
@@ -6566,34 +5690,11 @@
           <parameter type="GstMiniObject*" name="mini_object" />
         </parameters>
       </method>
-      <method name="SetStructure" cname="gst_value_set_structure" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GValue*" name="value" />
-          <parameter type="const-GstStructure*" name="structure" />
-        </parameters>
-      </method>
-      <method name="Subtract" cname="gst_value_subtract" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-GValue*" name="minuend" />
-          <parameter type="const-GValue*" name="subtrahend" />
-        </parameters>
-      </method>
       <method name="TakeMiniObject" cname="gst_value_take_mini_object" shared="true">
         <return-type type="void" />
         <parameters>
           <parameter type="GValue*" name="value" />
           <parameter type="GstMiniObject*" name="mini_object" />
-        </parameters>
-      </method>
-      <method name="Union" cname="gst_value_union" shared="true">
-        <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GValue*" name="dest" />
-          <parameter type="const-GValue*" name="value1" />
-          <parameter type="const-GValue*" name="value2" />
         </parameters>
       </method>
     </class>

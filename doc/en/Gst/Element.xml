@@ -176,25 +176,7 @@
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public object this[string property] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="property" Type="System.String" /></Parameters><Docs><param name="property">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="IteratePads">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IteratePads ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateSinkPads">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateSinkPads ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateSrcPads">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateSrcPads ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="LastReturn">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public object this[string property] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="property" Type="System.String" /></Parameters><Docs><param name="property">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="LastReturn">
       <MemberSignature Language="C#" Value="public Gst.StateChangeReturn LastReturn { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>Gst.StateChangeReturn</ReturnType></ReturnValue>

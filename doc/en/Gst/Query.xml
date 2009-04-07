@@ -173,12 +173,6 @@
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Parameters><Parameter Name="query" Type="Gst.QueryType" /></Parameters>
       <Docs><param name="query">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeIterateDefinitions">
-      <MemberSignature Language="C#" Value="public static Gst.Iterator TypeIterateDefinitions ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TypeRegister">
       <MemberSignature Language="C#" Value="public static Gst.QueryType TypeRegister (string nick, string description);" />
       <MemberType>Method</MemberType>

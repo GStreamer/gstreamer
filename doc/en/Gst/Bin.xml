@@ -167,42 +167,6 @@
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateAllByInterface">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateAllByInterface (GLib.GType iface);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="iface" Type="GLib.GType" /></Parameters>
-      <Docs><param name="iface">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateElements">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateElements ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateRecurse">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateRecurse ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateSinks">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateSinks ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateSorted">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateSorted ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IterateSources">
-      <MemberSignature Language="C#" Value="public Gst.Iterator IterateSources ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Iterator</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Messages">
       <MemberSignature Language="C#" Value="public GLib.List Messages { get; }" />
       <MemberType>Property</MemberType>

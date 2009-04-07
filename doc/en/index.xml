@@ -37,13 +37,6 @@
       <Type Name="ClockFlags" Kind="Enumeration" />
       <Type Name="ClockReturn" Kind="Enumeration" />
       <Type Name="CommonTags" Kind="Class" />
-      <Type Name="CoreError" Kind="Enumeration" />
-      <Type Name="Debug" Kind="Class" />
-      <Type Name="DebugCategory" Kind="Structure" />
-      <Type Name="DebugColorFlags" Kind="Enumeration" />
-      <Type Name="DebugGraphDetails" Kind="Enumeration" />
-      <Type Name="DebugLevel" Kind="Enumeration" />
-      <Type Name="DebugMessage" Kind="Class" />
       <Type Name="DecodeBin" Kind="Class" />
       <Type Name="DeepNotifyArgs" Kind="Class" />
       <Type Name="DeepNotifyHandler" Kind="Delegate" />
@@ -66,12 +59,10 @@
       <Type Name="EventTypeFlags" Kind="Enumeration" />
       <Type Name="FeatureAddedArgs" Kind="Class" />
       <Type Name="FeatureAddedHandler" Kind="Delegate" />
-      <Type Name="FilterFunc" Kind="Delegate" />
       <Type Name="Flow" Kind="Class" />
       <Type Name="FlowReturn" Kind="Enumeration" />
       <Type Name="Format" Kind="Enumeration" />
       <Type Name="FormatDefinition" Kind="Structure" />
-      <Type Name="Fraction" Kind="Class" />
       <Type Name="GhostPad" Kind="Class" />
       <Type Name="Global" Kind="Class" />
       <Type Name="HasPadCreatedArgs" Kind="Class" />
@@ -92,19 +83,8 @@
       <Type Name="IndexLookupMethod" Kind="Enumeration" />
       <Type Name="IndexResolver" Kind="Delegate" />
       <Type Name="IndexResolverMethod" Kind="Enumeration" />
-      <Type Name="Iterator" Kind="Class" />
-      <Type Name="IteratorDisposeFunction" Kind="Delegate" />
-      <Type Name="IteratorFoldFunction" Kind="Delegate" />
-      <Type Name="IteratorFreeFunction" Kind="Delegate" />
-      <Type Name="IteratorItem" Kind="Enumeration" />
-      <Type Name="IteratorItemFunction" Kind="Delegate" />
-      <Type Name="IteratorNextFunction" Kind="Delegate" />
-      <Type Name="IteratorResult" Kind="Enumeration" />
-      <Type Name="IteratorResyncFunction" Kind="Delegate" />
-      <Type Name="LibraryError" Kind="Enumeration" />
       <Type Name="LinkedArgs" Kind="Class" />
       <Type Name="LinkedHandler" Kind="Delegate" />
-      <Type Name="LogFunction" Kind="Delegate" />
       <Type Name="Message" Kind="Class" />
       <Type Name="MessageArgs" Kind="Class" />
       <Type Name="MessageHandler" Kind="Delegate" />
@@ -137,7 +117,6 @@
       <Type Name="PadGetCapsFunction" Kind="Delegate" />
       <Type Name="PadGetRangeFunction" Kind="Delegate" />
       <Type Name="PadIntLinkFunction" Kind="Delegate" />
-      <Type Name="PadIterIntLinkFunction" Kind="Delegate" />
       <Type Name="PadLinkFunction" Kind="Delegate" />
       <Type Name="PadLinkReturn" Kind="Enumeration" />
       <Type Name="PadPresence" Kind="Enumeration" />
@@ -169,17 +148,13 @@
       <Type Name="PluginFilter" Kind="Delegate" />
       <Type Name="PluginFlags" Kind="Enumeration" />
       <Type Name="PluginInitFunc" Kind="Delegate" />
-      <Type Name="Poll" Kind="Class" />
-      <Type Name="PollFD" Kind="Structure" />
       <Type Name="Print" Kind="Class" />
       <Type Name="ProxyPad" Kind="Class" />
-      <Type Name="QuarkId" Kind="Enumeration" />
       <Type Name="Query" Kind="Class" />
       <Type Name="QueryType" Kind="Enumeration" />
       <Type Name="QueryTypeDefinition" Kind="Structure" />
       <Type Name="Rank" Kind="Enumeration" />
       <Type Name="Registry" Kind="Class" />
-      <Type Name="ResourceError" Kind="Enumeration" />
       <Type Name="SeekFlags" Kind="Enumeration" />
       <Type Name="SeekType" Kind="Enumeration" />
       <Type Name="Segment" Kind="Class" />
@@ -189,7 +164,6 @@
       <Type Name="StateChangeReturn" Kind="Enumeration" />
       <Type Name="StaticCaps" Kind="Structure" />
       <Type Name="StaticPadTemplate" Kind="Structure" />
-      <Type Name="StreamError" Kind="Enumeration" />
       <Type Name="Structure" Kind="Class" />
       <Type Name="StructureChangeType" Kind="Enumeration" />
       <Type Name="StructureForeachFunc" Kind="Delegate" />
@@ -219,13 +193,6 @@
       <Type Name="UnlinkedHandler" Kind="Delegate" />
       <Type Name="Util" Kind="Class" />
       <Type Name="Value" Kind="Class" />
-      <Type Name="ValueCompareFunc" Kind="Delegate" />
-      <Type Name="ValueDeserializeFunc" Kind="Delegate" />
-      <Type Name="ValueIntersectFunc" Kind="Delegate" />
-      <Type Name="ValueSerializeFunc" Kind="Delegate" />
-      <Type Name="ValueSubtractFunc" Kind="Delegate" />
-      <Type Name="ValueTable" Kind="Structure" />
-      <Type Name="ValueUnionFunc" Kind="Delegate" />
       <Type Name="Version" Kind="Class" />
       <Type Name="XML" Kind="Class" />
     </Namespace>

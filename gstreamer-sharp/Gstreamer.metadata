@@ -123,14 +123,6 @@
 
   <remove-node path="/api/namespace/class[@name='Init']" />
 
-  <attr path="/api/namespace/struct[@name='Iterator']/method[@name='Fold']/parameters/*[@name='ret']" name="name">ret_val</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Next']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Item']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Resync']" name="hidden">1</attr>
-  <attr path="/api/namespace/struct[@name='Iterator']/field[@name='Free']" name="hidden">1</attr>
-
-  <attr path="/api/namespace/callback[@name='IteratorNextFunction']/parameters/parameter[@name='result']" name="name">res</attr>
-
   <change-node-type path="/api/namespace/object[@name='Message']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Message']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseWarning']" name="hidden">1</attr>
@@ -195,9 +187,6 @@
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FIXED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
 
-  <attr path="/api/namespace/class[@name='Param']" name="hidden">1</attr>
-
-  <attr path="/api/namespace/object[@name='ParamSpecFraction']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
 
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>
