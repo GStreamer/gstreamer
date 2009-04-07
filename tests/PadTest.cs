@@ -251,14 +251,12 @@ public class PadTest
 		Assert.AreEqual(caps.Refcount, 2, "caps");
 
 		Gst.Buffer buffer = new Gst.Buffer();
-		buffer.Ref();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.NotLinked);
 		Assert.AreEqual(buffer.Refcount, 1, "buffer");
 		buffer.Dispose();
 
 		ulong handler_id = src.AddBufferProbe(new Pad.BufferProbeDelegate(ProbeHandler));
 		buffer = new Gst.Buffer();
-		buffer.Ref();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.Ok);
 		buffer.Dispose();
 		src.RemoveBufferProbe((uint)handler_id);
