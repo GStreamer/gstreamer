@@ -28,6 +28,9 @@ noinst_DATA = $(TARGETS)
 gstreamer-sharp-docs.zip gstreamer-sharp-docs.tree: $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml
 	$(MDASSEMBLER) --ecma $(srcdir)/en -o gstreamer-sharp-docs
 
+html: $(srcdir)/en/*/*.xml $(srcdir)/en/*.xml
+	$(MONODOCS2HTML) -source:$(srcdir)/en -dest:html
+
 update: $(ASSEMBLIES)
 	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(top_builddir)/gstreamer-sharp/glue/.libs \
 	$(MONODOCER) $(ASSEMBLIES_BUILD) -path:en -updateto:en -delete
@@ -42,3 +45,6 @@ dist-hook:
 	cp $(srcdir)/en/*.xml $(distdir)/en/
 	mkdir -p $(distdir)/en/Gst/
 	cp $(srcdir)/en/Gst/*.xml $(distdir)/en/Gst/
+
+distclean-local:
+	rm -rf html

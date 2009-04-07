@@ -68,16 +68,19 @@ PKG_CHECK_MODULES(MONODOC_DEPENDENCY, monodoc >= $MONODOC_REQUIRED_VERSION, enab
 if test "x$enable_monodoc" = "xyes"; then
 	AC_PATH_PROG(MONODOCER, monodocer, no)
 	AC_PATH_PROG(MDASSEMBLER, mdassembler, no)
-	if test x$MONODOCER = xno -o x$MDASSEMBLER = xno; then
+	AC_PATH_PROG(MONODOCS2HTML, monodocs2html, no)
+	if test x$MONODOCER = xno -o x$MDASSEMBLER = xno -o x$MONODOCS2HTML = xno; then
 		enable_monodoc=no
 	fi
 else
 	MONODOCER=
 	MDASSEMBLER=
+	MONODOCS2HTML=
 fi
 
 AC_SUBST(MONODOCER)
 AC_SUBST(MDASSEMBLER)
+AC_SUBST(MONODOCS2HTML)
 
 MONODOC_SOURCESDIR=`pkg-config --variable=sourcesdir monodoc`
 AC_SUBST(MONODOC_SOURCESDIR)
