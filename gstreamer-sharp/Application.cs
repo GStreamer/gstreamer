@@ -77,13 +77,13 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10") ]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_init (ref int argc, ref IntPtr argv);
 
-    [DllImport ("gstreamer-0.10") ]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern bool gst_init_check (ref int argc, ref IntPtr argv, out IntPtr error);
 
-    [DllImport ("gstreamer-0.10") ]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_deinit();
   }
 }

@@ -57,10 +57,10 @@ namespace Gst {
       }
     }
 
-    [DllImport ("gstreamer-0.10") ]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_version (out uint major, out uint minor, out uint micro, out uint nano);
 
-    [DllImport ("gstreamer-0.10") ]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_version_string();
   }
 }
