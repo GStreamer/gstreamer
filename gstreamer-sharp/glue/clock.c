@@ -1,33 +1,38 @@
 #include <glib.h>
 #include <gst/gstclock.h>
 
-guint64 gstsharp_gst_clock_get_gst_second()
+guint64
+gstsharp_gst_clock_get_gst_second ()
 {
-    return GST_SECOND;
+  return GST_SECOND;
 }
 
-guint64 gstsharp_gst_clock_get_gst_msecond()
+guint64
+gstsharp_gst_clock_get_gst_msecond ()
 {
-    return GST_MSECOND;
+  return GST_MSECOND;
 }
 
-guint64 gstsharp_gst_clock_get_gst_usecond()
+guint64
+gstsharp_gst_clock_get_gst_usecond ()
 {
-    return GST_USECOND;
+  return GST_USECOND;
 }
 
-guint64 gstsharp_gst_clock_get_gst_nsecond()
+guint64
+gstsharp_gst_clock_get_gst_nsecond ()
 {
-    return GST_NSECOND;
+  return GST_NSECOND;
 }
 
-guint64 gstsharp_gst_clock_get_time_none()
+guint64
+gstsharp_gst_clock_get_time_none ()
 {
-	return GST_CLOCK_TIME_NONE;
+  return GST_CLOCK_TIME_NONE;
 }
 
-gboolean gstsharp_gst_clock_time_is_valid(GstClockTime time)
+gboolean
+gstsharp_gst_clock_time_is_valid (GstClockTime time)
 {
-	return GST_CLOCK_TIME_IS_VALID(time);
+  return GST_CLOCK_TIME_IS_VALID (time);
 }
-

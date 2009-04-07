@@ -1,34 +1,33 @@
 
-    [DllImport("gstreamersharpglue-0.10")]
-    private extern static ulong gstsharp_gst_clock_get_gst_second();
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static ulong gstsharp_gst_clock_get_gst_second();
 
-    public static readonly ulong Second = gstsharp_gst_clock_get_gst_second();
+public static readonly ulong Second = gstsharp_gst_clock_get_gst_second();
 
-    [DllImport("gstreamersharpglue-0.10")]
-    private extern static ulong gstsharp_gst_clock_get_gst_msecond();
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static ulong gstsharp_gst_clock_get_gst_msecond();
 
-    public static readonly ulong MSecond = gstsharp_gst_clock_get_gst_second();
+public static readonly ulong MSecond = gstsharp_gst_clock_get_gst_second();
 
-    [DllImport("gstreamersharpglue-0.10")]
-    private extern static ulong gstsharp_gst_clock_get_gst_usecond();
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static ulong gstsharp_gst_clock_get_gst_usecond();
 
-    public static readonly ulong USecond = gstsharp_gst_clock_get_gst_second();
+public static readonly ulong USecond = gstsharp_gst_clock_get_gst_second();
 
-    [DllImport("gstreamersharpglue-0.10")]
-    private extern static ulong gstsharp_gst_clock_get_gst_nsecond();
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static ulong gstsharp_gst_clock_get_gst_nsecond();
 
-    public static readonly ulong NSecond = gstsharp_gst_clock_get_gst_second();
+public static readonly ulong NSecond = gstsharp_gst_clock_get_gst_second();
 
-    [DllImport("gstreamersharpglue-0.10")]
-    private extern static ulong gstsharp_gst_clock_get_time_none();
-    
-    public static readonly ulong TimeNone = gstsharp_gst_clock_get_time_none();
-    
-    [DllImport("gstreamersharpglue-0.10")]
-    private extern static bool gstsharp_gst_clock_time_is_valid(ulong time);
-    
-    public static bool TimeIsValid(ulong time)
-    {
-        return gstsharp_gst_clock_time_is_valid(time);
-    }
-    
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static ulong gstsharp_gst_clock_get_time_none();
+
+public static readonly ulong TimeNone = gstsharp_gst_clock_get_time_none();
+
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static bool gstsharp_gst_clock_time_is_valid (ulong time);
+
+public static bool TimeIsValid (ulong time) {
+  return gstsharp_gst_clock_time_is_valid (time);
+}
+

@@ -8,4 +8,3 @@ gstsharp_g_error_get_message (GError * error)
 
   return NULL;
 }
-

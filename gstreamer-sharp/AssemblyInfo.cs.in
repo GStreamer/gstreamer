@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly:AssemblyVersion("@VERSION@")]
-[assembly:AssemblyDelaySign(false)]
-[assembly:AssemblyKeyFile("gstreamer-sharp.snk")]
+[assembly:AssemblyVersion ("@VERSION@") ]
+[assembly:AssemblyDelaySign (false) ]
+[assembly:AssemblyKeyFile ("gstreamer-sharp.snk") ]

@@ -7,7 +7,7 @@ gstsharp_g_closure_sizeof (void)
 }
 
 GType
-gstsharp_g_type_from_instance (GTypeInstance *instance)
+gstsharp_g_type_from_instance (GTypeInstance * instance)
 {
   return G_TYPE_FROM_INSTANCE (instance);
 }

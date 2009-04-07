@@ -5,7 +5,7 @@
 //
 // This class implements functions to bind callbacks to GObject signals
 // dynamically and to emit signals dynamically.
-// 
+//
 //
 
 using GLib;
@@ -14,304 +14,310 @@ using System.Runtime.InteropServices;
 using System.Collections;
 
 namespace Gst {
-	
-	public delegate void DynamicSignalHandler(object o, SignalArgs args);
 
-	delegate void GClosureMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr, 
-		IntPtr invocation_hint, IntPtr data);
+  public delegate void DynamicSignalHandler (object o, SignalArgs args);
 
-	public static class DynamicSignal {
-		
-		private static readonly int gvalue_struct_size = Marshal.SizeOf(typeof(GLib.Value));
+  delegate void GClosureMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr,
+                                 IntPtr invocation_hint, IntPtr data);
 
-		class ObjectSignalKey {
-			object o;
-			string signal_name;
+  public static class DynamicSignal {
 
-			public ObjectSignalKey (object o, string name) {
-				this.o = o;
-				signal_name = name;
-			}
+    private static readonly int gvalue_struct_size = Marshal.SizeOf (typeof (GLib.Value));
 
-			public override bool Equals(object o) {
-				if(o is ObjectSignalKey) {
-					ObjectSignalKey k = (ObjectSignalKey) o;
-					return k.o.Equals(this.o) && signal_name.Equals(k.signal_name);
-				}
-				return base.Equals(o);
-			}
+    class ObjectSignalKey {
+      object o;
+      string signal_name;
 
-			public override int GetHashCode() {
-				return o.GetHashCode() ^ signal_name.GetHashCode();
-			}
-		}
+      public ObjectSignalKey (object o, string name) {
+        this.o = o;
+        signal_name = name;
+      }
 
-		class SignalInfo {
-			uint handlerId;
-			IntPtr closure;
-			Delegate registeredHandler;
+      public override bool Equals (object o) {
+        if (o is ObjectSignalKey) {
+          ObjectSignalKey k = (ObjectSignalKey) o;
+          return k.o.Equals (this.o) && signal_name.Equals (k.signal_name);
+        }
+        return base.Equals (o);
+      }
 
-			public IntPtr Closure {
-				get { return closure; }
-				set { closure = value; }
-			}
+      public override int GetHashCode() {
+        return o.GetHashCode() ^ signal_name.GetHashCode();
+      }
+    }
 
-			public uint HandlerId {
-				get { return handlerId; }
-				set { handlerId = value; }			
-			}
+    class SignalInfo {
+      uint handlerId;
+      IntPtr closure;
+      Delegate registeredHandler;
 
-			public Delegate RegisteredHandler {
-				get { return registeredHandler; }
-				set { registeredHandler = value; }
-			}
+      public IntPtr Closure {
+        get {
+          return closure;
+        }
+        set {
+          closure = value;
+        }
+      }
 
-			public SignalInfo(uint handlerId, IntPtr closure, Delegate registeredHandler) {
-				this.handlerId = handlerId;
-				this.closure = closure;
-				this.registeredHandler = registeredHandler;
-			}
-		}
+      public uint HandlerId {
+        get {
+          return handlerId;
+        }
+        set {
+          handlerId = value;
+        }
+      }
 
-		static Hashtable SignalHandlers = new Hashtable();
+      public Delegate RegisteredHandler {
+        get {
+          return registeredHandler;
+        }
+        set {
+          registeredHandler = value;
+        }
+      }
 
-		static GClosureMarshal marshalHandler = new GClosureMarshal(OnMarshal);
+      public SignalInfo (uint handlerId, IntPtr closure, Delegate registeredHandler) {
+        this.handlerId = handlerId;
+        this.closure = closure;
+        this.registeredHandler = registeredHandler;
+      }
+    }
 
-		public static void Connect(GLib.Object o, string name, DynamicSignalHandler handler) {
-			Connect(o, name, false, handler);
-		}
+    static Hashtable SignalHandlers = new Hashtable();
 
-		static int g_closure_sizeof = gstsharp_g_closure_sizeof ();
+    static GClosureMarshal marshalHandler = new GClosureMarshal (OnMarshal);
 
-		public static void Connect(GLib.Object o, string name, 
-			bool after, DynamicSignalHandler handler)
-		{
-			Delegate newHandler;
+    public static void Connect (GLib.Object o, string name, DynamicSignalHandler handler) {
+      Connect (o, name, false, handler);
+    }
 
-			ObjectSignalKey k = new ObjectSignalKey(o, name);
-						
-			if(SignalHandlers[k] != null) {
-				SignalInfo si = (SignalInfo) SignalHandlers[k];
-				newHandler = Delegate.Combine(si.RegisteredHandler, handler);
-				si.RegisteredHandler = newHandler;
-			}
-			else {
-				IntPtr closure = g_closure_new_simple(g_closure_sizeof, IntPtr.Zero);
-				g_closure_set_meta_marshal(closure, (IntPtr) GCHandle.Alloc(k),  marshalHandler);
-				uint signalId = g_signal_connect_closure(o.Handle, name, closure, after); 
-				SignalHandlers.Add(k, new SignalInfo(signalId, closure, handler));
-			}
-		}
+    static int g_closure_sizeof = gstsharp_g_closure_sizeof ();
 
-		[DllImport("gstreamersharpglue-0.10")]
-		static extern int gstsharp_g_closure_sizeof ();
+    public static void Connect (GLib.Object o, string name,
+                                bool after, DynamicSignalHandler handler) {
+      Delegate newHandler;
 
-		public static void Disconnect(GLib.Object o, string name, DynamicSignalHandler handler) {
-			ObjectSignalKey k = new ObjectSignalKey(o, name);
-			if(SignalHandlers[k] != null) 
-			{
-				SignalInfo si = (SignalInfo) SignalHandlers[k];
-				Delegate newHandler = Delegate.Remove(si.RegisteredHandler, handler);
-				if(newHandler == null || handler == null) {
-					g_signal_handler_disconnect(o.Handle, si.HandlerId);
-					SignalHandlers.Remove(k);
-				} else {
-					si.RegisteredHandler = newHandler;
-				}
-			}
-		}
+      ObjectSignalKey k = new ObjectSignalKey (o, name);
 
-		[DllImport("libgobject-2.0-0.dll")]
-		static extern IntPtr g_value_peek_pointer(IntPtr ptr);
+      if (SignalHandlers[k] != null) {
+        SignalInfo si = (SignalInfo) SignalHandlers[k];
+        newHandler = Delegate.Combine (si.RegisteredHandler, handler);
+        si.RegisteredHandler = newHandler;
+      } else {
+        IntPtr closure = g_closure_new_simple (g_closure_sizeof, IntPtr.Zero);
+        g_closure_set_meta_marshal (closure, (IntPtr) GCHandle.Alloc (k),  marshalHandler);
+        uint signalId = g_signal_connect_closure (o.Handle, name, closure, after);
+        SignalHandlers.Add (k, new SignalInfo (signalId, closure, handler));
+      }
+    }
 
-		static void OnMarshal(IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr, 
-			IntPtr ihint, IntPtr data) 
-		{
-			object [] args = new object[argc - 1];
-			object o = ((GLib.Value) Marshal.PtrToStructure(argsPtr, typeof(GLib.Value))).Val;
+    [DllImport ("gstreamersharpglue-0.10") ]
+    static extern int gstsharp_g_closure_sizeof ();
 
-			for(int i=1; i < argc; i++) {
-				IntPtr struct_ptr = (IntPtr)((long) argsPtr + (i * gvalue_struct_size));
-				Type detectedType = GLib.GType.LookupType(Marshal.ReadIntPtr(struct_ptr));
-				if(detectedType.IsSubclassOf(typeof(Opaque))) {
-					args[i - 1] = (Opaque) Opaque.GetOpaque(g_value_peek_pointer(struct_ptr), detectedType, false);
-				}
-				else {
-					GLib.Value argument = (GLib.Value) Marshal.PtrToStructure(struct_ptr, typeof(GLib.Value));
-					args[i - 1] = argument.Val;
-				}
-			}
+    public static void Disconnect (GLib.Object o, string name, DynamicSignalHandler handler) {
+      ObjectSignalKey k = new ObjectSignalKey (o, name);
+      if (SignalHandlers[k] != null) {
+        SignalInfo si = (SignalInfo) SignalHandlers[k];
+        Delegate newHandler = Delegate.Remove (si.RegisteredHandler, handler);
+        if (newHandler == null || handler == null) {
+          g_signal_handler_disconnect (o.Handle, si.HandlerId);
+          SignalHandlers.Remove (k);
+        } else {
+          si.RegisteredHandler = newHandler;
+        }
+      }
+    }
 
-			if(data == IntPtr.Zero) {
-				Console.Error.WriteLine("No available data");
-			}
+    [DllImport ("libgobject-2.0-0.dll") ]
+    static extern IntPtr g_value_peek_pointer (IntPtr ptr);
 
-			ObjectSignalKey k = (ObjectSignalKey)((GCHandle) data).Target;
-			if(k != null) {
-				SignalArgs arg = new SignalArgs();
-				arg.Args = args;
-				SignalInfo si = (SignalInfo) SignalHandlers[k];
-				DynamicSignalHandler handler = (DynamicSignalHandler) si.RegisteredHandler;
-				handler(o, arg);
-				if(arg.RetVal != null) {
-					retval.Val = arg.RetVal;
-				}
-			}
-		}
+    static void OnMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr,
+                           IntPtr ihint, IntPtr data) {
+      object [] args = new object[argc - 1];
+      object o = ( (GLib.Value) Marshal.PtrToStructure (argsPtr, typeof (GLib.Value))).Val;
 
-		
-		[DllImport("gobject-2.0.dll")]
-		static extern IntPtr g_closure_new_simple(int size, IntPtr data);
+      for (int i = 1; i < argc; i++) {
+        IntPtr struct_ptr = (IntPtr) ( (long) argsPtr + (i * gvalue_struct_size));
+        Type detectedType = GLib.GType.LookupType (Marshal.ReadIntPtr (struct_ptr));
+        if (detectedType.IsSubclassOf (typeof (Opaque))) {
+          args[i - 1] = (Opaque) Opaque.GetOpaque (g_value_peek_pointer (struct_ptr), detectedType, false);
+        } else {
+          GLib.Value argument = (GLib.Value) Marshal.PtrToStructure (struct_ptr, typeof (GLib.Value));
+          args[i - 1] = argument.Val;
+        }
+      }
 
-		[DllImport("gobject-2.0.dll")]
-		static extern uint g_signal_connect_closure(IntPtr instance, 
-			string name, IntPtr closure, bool after);
+      if (data == IntPtr.Zero) {
+        Console.Error.WriteLine ("No available data");
+      }
 
-		[DllImport("gobject-2.0.dll")]
-		static extern void g_closure_set_meta_marshal(IntPtr closure, IntPtr data, GClosureMarshal marshal);
+      ObjectSignalKey k = (ObjectSignalKey) ( (GCHandle) data).Target;
+      if (k != null) {
+        SignalArgs arg = new SignalArgs();
+        arg.Args = args;
+        SignalInfo si = (SignalInfo) SignalHandlers[k];
+        DynamicSignalHandler handler = (DynamicSignalHandler) si.RegisteredHandler;
+        handler (o, arg);
+        if (arg.RetVal != null) {
+          retval.Val = arg.RetVal;
+        }
+      }
+    }
 
-		class GTypeSignalKey {
-			GType type;
-			string signal_name;
 
-			public GTypeSignalKey (GType type, string name) {
-				this.type = type;
-				signal_name = name;
-			}
+    [DllImport ("gobject-2.0.dll") ]
+    static extern IntPtr g_closure_new_simple (int size, IntPtr data);
 
-			public override bool Equals(object o) {
-				if(o is GTypeSignalKey) {
-					GTypeSignalKey k = (GTypeSignalKey) o;
-					return k.type.Equals(this.type) && signal_name.Equals(k.signal_name);
-				}
-				return base.Equals(o);
-			}
+    [DllImport ("gobject-2.0.dll") ]
+    static extern uint g_signal_connect_closure (IntPtr instance,
+          string name, IntPtr closure, bool after);
 
-			public override int GetHashCode() {
-				return type.GetHashCode() ^ signal_name.GetHashCode();
-			}
-		}
+    [DllImport ("gobject-2.0.dll") ]
+    static extern void g_closure_set_meta_marshal (IntPtr closure, IntPtr data, GClosureMarshal marshal);
 
-		struct SignalQuery {
-			public uint signal_id;
-			public string signal_name;
-			public GType itype;
-			public uint signal_flags;
-			public GType return_type;
-			public uint n_params;
-			public Type[] param_types;
-		}
+    class GTypeSignalKey {
+      GType type;
+      string signal_name;
 
-		static Hashtable SignalEmitInfo = new Hashtable ();
+      public GTypeSignalKey (GType type, string name) {
+        this.type = type;
+        signal_name = name;
+      }
 
-		public static object Emit (GLib.Object o, string name, params object[] parameters)
-		{
-			SignalQuery query;
-			IntPtr type = gstsharp_g_type_from_instance (o.Handle);			
-			GType gtype = new GType (type);
-			string signal_name, signal_detail;
-			uint signal_detail_quark = 0;
-			int colon;
-			
-			colon = name.LastIndexOf ("::");
-			
-			if (colon == -1) {
-				signal_name = name;
-				signal_detail = String.Empty;
-			} else {
-				signal_name = name.Substring (0, colon);
-				signal_detail = name.Substring (colon + 2);
-			}
-			
-			GTypeSignalKey key = new GTypeSignalKey (gtype, signal_name);
-			
-			if (SignalEmitInfo[key] == null) {
-				uint signal_id = g_signal_lookup (signal_name, type);
-				
-				if (signal_id == 0)
-					throw new NotSupportedException (String.Format ("{0} has no signal of name {1}", o, name));
-				GSignalQuery q = new GSignalQuery ();
-				g_signal_query (signal_id, ref q);
-				
-				if (q.signal_id == 0)
-					throw new NotSupportedException (String.Format ("{0} couldn't be queried for signal with name {1}", o, name));
-				
-				query = new SignalQuery ();
-				
-				query.signal_id = signal_id;
-				query.signal_name = Marshaller.Utf8PtrToString (q.signal_name);
-				query.itype = new GType (q.itype);
-				query.signal_flags = q.signal_flags;
-				query.return_type = new GType (q.return_type);
-				query.n_params = q.n_params;
-				query.param_types = new Type[q.n_params];
-				
-				for (int i = 0; i < query.n_params; i++) {
-					IntPtr t = Marshal.ReadIntPtr (q.param_types, i);
-					GType g = new GType (t);
-					
-					query.param_types[i] = (Type) g;
-				}
-				
-				SignalEmitInfo.Add (key, query);
-			}
-			
-			query = (SignalQuery) SignalEmitInfo[key];
-			GLib.Value[] signal_parameters = new GLib.Value[query.n_params + 1];
-			signal_parameters[0] = new GLib.Value (o);
-			
-			if (parameters.Length != query.n_params)
-				throw new ApplicationException (String.Format ("Invalid number of parameters: expected {0}, got {1}", query.n_params, parameters.Length));
-			
-			for (int i = 0; i < query.n_params; i++) {
-				Type expected_type = (Type) query.param_types[i];
-				Type given_type = parameters[i].GetType ();
-				
-				if (expected_type != given_type && ! given_type.IsSubclassOf (given_type))
-					throw new ApplicationException (String.Format ("Invalid parameter type: expected {0}, got {1}", expected_type, given_type));
-				
-				signal_parameters[i + 1] = new GLib.Value (parameters[i]);
-			}
-			
-			GLib.Value return_value = new GLib.Value ();
-			if (query.return_type != GType.Invalid && query.return_type != GType.None)
-				return_value.Init (query.return_type);
-			
-			if (signal_detail != String.Empty)
-				signal_detail_quark = g_quark_from_string (signal_detail);
-			
-			g_signal_emitv (signal_parameters, query.signal_id, signal_detail_quark, ref return_value);
+      public override bool Equals (object o) {
+        if (o is GTypeSignalKey) {
+          GTypeSignalKey k = (GTypeSignalKey) o;
+          return k.type.Equals (this.type) && signal_name.Equals (k.signal_name);
+        }
+        return base.Equals (o);
+      }
 
-			return (query.return_type != GType.Invalid && query.return_type != GType.None) ? return_value.Val : null;
-		}
+      public override int GetHashCode() {
+        return type.GetHashCode() ^ signal_name.GetHashCode();
+      }
+    }
 
-		[DllImport ("gstreamersharpglue-0.10")]
-		static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
+    struct SignalQuery {
+      public uint signal_id;
+      public string signal_name;
+      public GType itype;
+      public uint signal_flags;
+      public GType return_type;
+      public uint n_params;
+      public Type[] param_types;
+    }
 
-		[DllImport("gobject-2.0.dll")]
-		static extern int g_signal_handler_disconnect(IntPtr o, uint handler_id);
+    static Hashtable SignalEmitInfo = new Hashtable ();
 
-		[DllImport("gobject-2.0.dll")]
-		static extern uint g_signal_lookup (string name, IntPtr itype);
-		
-		[DllImport("glib-2.0.dll")]
-		static extern uint g_quark_from_string (string str);
+    public static object Emit (GLib.Object o, string name, params object[] parameters) {
+      SignalQuery query;
+      IntPtr type = gstsharp_g_type_from_instance (o.Handle);
+      GType gtype = new GType (type);
+      string signal_name, signal_detail;
+      uint signal_detail_quark = 0;
+      int colon;
 
-		[DllImport("gobject-2.0.dll")]
-		static extern void g_signal_emitv (GLib.Value[] parameters, uint signal_id, uint detail, ref GLib.Value return_value);
+      colon = name.LastIndexOf ("::");
 
-		[StructLayout(LayoutKind.Sequential)]
-		struct GSignalQuery {
-			public uint signal_id;
-			public IntPtr signal_name;
-			public IntPtr itype;
-			public uint signal_flags;
-			public IntPtr return_type;
-			public uint n_params;
-			public IntPtr param_types;
-		}
+      if (colon == -1) {
+        signal_name = name;
+        signal_detail = String.Empty;
+      } else {
+        signal_name = name.Substring (0, colon);
+        signal_detail = name.Substring (colon + 2);
+      }
 
-		[DllImport("gobject-2.0.dll")]
-		static extern void g_signal_query (uint signal_id, ref GSignalQuery query);
-	}
+      GTypeSignalKey key = new GTypeSignalKey (gtype, signal_name);
+
+      if (SignalEmitInfo[key] == null) {
+        uint signal_id = g_signal_lookup (signal_name, type);
+
+        if (signal_id == 0)
+          throw new NotSupportedException (String.Format ("{0} has no signal of name {1}", o, name));
+        GSignalQuery q = new GSignalQuery ();
+        g_signal_query (signal_id, ref q);
+
+        if (q.signal_id == 0)
+          throw new NotSupportedException (String.Format ("{0} couldn't be queried for signal with name {1}", o, name));
+
+        query = new SignalQuery ();
+
+        query.signal_id = signal_id;
+        query.signal_name = Marshaller.Utf8PtrToString (q.signal_name);
+        query.itype = new GType (q.itype);
+        query.signal_flags = q.signal_flags;
+        query.return_type = new GType (q.return_type);
+        query.n_params = q.n_params;
+        query.param_types = new Type[q.n_params];
+
+        for (int i = 0; i < query.n_params; i++) {
+          IntPtr t = Marshal.ReadIntPtr (q.param_types, i);
+          GType g = new GType (t);
+
+          query.param_types[i] = (Type) g;
+        }
+
+        SignalEmitInfo.Add (key, query);
+      }
+
+      query = (SignalQuery) SignalEmitInfo[key];
+      GLib.Value[] signal_parameters = new GLib.Value[query.n_params + 1];
+      signal_parameters[0] = new GLib.Value (o);
+
+      if (parameters.Length != query.n_params)
+        throw new ApplicationException (String.Format ("Invalid number of parameters: expected {0}, got {1}", query.n_params, parameters.Length));
+
+      for (int i = 0; i < query.n_params; i++) {
+        Type expected_type = (Type) query.param_types[i];
+        Type given_type = parameters[i].GetType ();
+
+        if (expected_type != given_type && ! given_type.IsSubclassOf (given_type))
+          throw new ApplicationException (String.Format ("Invalid parameter type: expected {0}, got {1}", expected_type, given_type));
+
+        signal_parameters[i + 1] = new GLib.Value (parameters[i]);
+      }
+
+      GLib.Value return_value = new GLib.Value ();
+      if (query.return_type != GType.Invalid && query.return_type != GType.None)
+        return_value.Init (query.return_type);
+
+      if (signal_detail != String.Empty)
+        signal_detail_quark = g_quark_from_string (signal_detail);
+
+      g_signal_emitv (signal_parameters, query.signal_id, signal_detail_quark, ref return_value);
+
+      return (query.return_type != GType.Invalid && query.return_type != GType.None) ? return_value.Val : null;
+    }
+
+    [DllImport ("gstreamersharpglue-0.10") ]
+    static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
+
+    [DllImport ("gobject-2.0.dll") ]
+    static extern int g_signal_handler_disconnect (IntPtr o, uint handler_id);
+
+    [DllImport ("gobject-2.0.dll") ]
+    static extern uint g_signal_lookup (string name, IntPtr itype);
+
+    [DllImport ("glib-2.0.dll") ]
+    static extern uint g_quark_from_string (string str);
+
+    [DllImport ("gobject-2.0.dll") ]
+    static extern void g_signal_emitv (GLib.Value[] parameters, uint signal_id, uint detail, ref GLib.Value return_value);
+
+    [StructLayout (LayoutKind.Sequential) ]
+    struct GSignalQuery {
+      public uint signal_id;
+      public IntPtr signal_name;
+      public IntPtr itype;
+      public uint signal_flags;
+      public IntPtr return_type;
+      public uint n_params;
+      public IntPtr param_types;
+    }
+
+    [DllImport ("gobject-2.0.dll") ]
+    static extern void g_signal_query (uint signal_id, ref GSignalQuery query);
+  }
 }

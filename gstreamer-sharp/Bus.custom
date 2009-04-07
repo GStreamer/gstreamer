@@ -1,5 +1,4 @@
-        
-    public uint AddWatch(BusFunc func)
-    {
-        return AddWatchFull(0, func);
-    }
+
+public uint AddWatch (BusFunc func) {
+  return AddWatchFull (0, func);
+}

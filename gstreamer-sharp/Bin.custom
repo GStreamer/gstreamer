@@ -1,68 +1,66 @@
 
-    [DllImport ("gstreamersharpglue-0.10")]
-    private extern static uint gstsharp_gst_bin_get_children_offset();
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static uint gstsharp_gst_bin_get_children_offset();
 
-    static uint children_offset = gstsharp_gst_bin_get_children_offset();
+static uint children_offset = gstsharp_gst_bin_get_children_offset();
 
-    public Element [] Children {
-        get {
-            GLib.List list;
-            
-            unsafe {
-                IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + children_offset);
-                list = new GLib.List((*raw_ptr));
-            }
-            
-            Element [] result = new Element[list.Count];
-            
-            for(int i = list.Count - 1; i >= 0; i--) {
-                result[i] = list[i] as Element;
-            }
-            
-            return result;
-        }
+public Element [] Children {
+  get {
+    GLib.List list;
+
+    unsafe {
+      IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + children_offset);
+      list = new GLib.List ( (*raw_ptr));
     }
 
-    [DllImport("gstreamer-0.10.dll")]
-    static extern bool gst_bin_add(IntPtr raw, IntPtr element);
+    Element [] result = new Element[list.Count];
 
-    public bool Add(Gst.Element element) {
-	bool raw_ret = gst_bin_add(Handle, element == null ? IntPtr.Zero : element.Handle);
-	if(raw_ret) {
-		// Incrmenting the refcount of the element.
-		Gst.Object.Ref(element.Handle);
-	}
-	bool ret = raw_ret;
-	return ret;
+    for (int i = list.Count - 1; i >= 0; i--) {
+      result[i] = list[i] as Element;
     }
 
-    public bool AddMany(params Element[] elements)
-    {
-        if(elements == null) {
-            return false;
-        }
-        
-        foreach(Element element in elements) {
-            if(element == null || !Add(element)) {
-                return false;
-            }
-        }
-        
-        return true;
+    return result;
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_bin_add (IntPtr raw, IntPtr element);
+
+public bool Add (Gst.Element element) {
+  bool raw_ret = gst_bin_add (Handle, element == null ? IntPtr.Zero : element.Handle);
+  if (raw_ret) {
+    // Incrmenting the refcount of the element.
+    Gst.Object.Ref (element.Handle);
+  }
+  bool ret = raw_ret;
+  return ret;
+}
+
+public bool AddMany (params Element[] elements) {
+  if (elements == null) {
+    return false;
+  }
+
+  foreach (Element element in elements) {
+    if (element == null || !Add (element)) {
+      return false;
     }
+  }
 
-	public bool RemoveMany(params Element[] elements)
-	{
-		if(elements == null) {
-			return false;
-		}
-		
-		foreach(Element element in elements) {
-			if(element == null || !Remove(element)) {
-				return false;
-			}
-		}
+  return true;
+}
 
-		return true;
-	}
-   
+public bool RemoveMany (params Element[] elements) {
+  if (elements == null) {
+    return false;
+  }
+
+  foreach (Element element in elements) {
+    if (element == null || !Remove (element)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+

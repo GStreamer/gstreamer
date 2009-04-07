@@ -1,18 +1,16 @@
 
-	[DllImport("gstreamersharpglue-0.10")]
-	private extern static IntPtr gstsharp_message_parse_error(IntPtr raw);
-	
-	public void ParseError(out string error)
-	{
-		IntPtr err = gstsharp_message_parse_error(Handle);
-		error = GLib.Marshaller.PtrToStringGFree(err);
-	}
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static IntPtr gstsharp_message_parse_error (IntPtr raw);
 
-	[DllImport("gstreamersharpglue-0.10")]
-	private extern static IntPtr gstsharp_message_error_new();
+public void ParseError (out string error) {
+  IntPtr err = gstsharp_message_parse_error (Handle);
+  error = GLib.Marshaller.PtrToStringGFree (err);
+}
 
-	public Message(Gst.Object src, string debug) 
-	{
-		IntPtr error = gstsharp_message_error_new();
-		Raw = gst_message_new_error(src == null ? IntPtr.Zero : src.Handle, error, GLib.Marshaller.StringToPtrGStrdup(debug));
-	}
+[DllImport ("gstreamersharpglue-0.10") ]
+private extern static IntPtr gstsharp_message_error_new();
+
+public Message (Gst.Object src, string debug) {
+  IntPtr error = gstsharp_message_error_new();
+  Raw = gst_message_new_error (src == null ? IntPtr.Zero : src.Handle, error, GLib.Marshaller.StringToPtrGStrdup (debug));
+}

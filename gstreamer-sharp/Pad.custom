@@ -1,113 +1,101 @@
-    
-    [DllImport("gstreamer-0.10.dll")]
-    private static extern bool gst_pad_query_position(IntPtr raw, ref Format format, out long cur);
 
-    public bool QueryPosition(Gst.Format format, out long current) 
-    {
-        return gst_pad_query_position(Handle, ref format, out current);
-    }
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern bool gst_pad_query_position (IntPtr raw, ref Format format, out long cur);
 
-    [DllImport("gstreamer-0.10.dll")]
-    private static extern bool gst_pad_query_duration(IntPtr raw, ref Format format, out long duration);
+public bool QueryPosition (Gst.Format format, out long current) {
+  return gst_pad_query_position (Handle, ref format, out current);
+}
 
-    public bool QueryDuration(Gst.Format format, out long duration) 
-    {
-        return gst_pad_query_duration(Handle, ref format, out duration);
-    }
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern bool gst_pad_query_duration (IntPtr raw, ref Format format, out long duration);
+
+public bool QueryDuration (Gst.Format format, out long duration) {
+  return gst_pad_query_duration (Handle, ref format, out duration);
+}
 
 
-	public delegate bool BufferProbeDelegate(Pad pad, Gst.Buffer buffer);
-	internal delegate bool BufferProbeNativeDelegate(IntPtr pad, IntPtr buf, IntPtr data);
+public delegate bool BufferProbeDelegate (Pad pad, Gst.Buffer buffer);
+internal delegate bool BufferProbeNativeDelegate (IntPtr pad, IntPtr buf, IntPtr data);
 
-	internal class BufferProbeWrapper {
-		internal BufferProbeNativeDelegate NativeFunc;
-		BufferProbeDelegate managedFunc;
+internal class BufferProbeWrapper {
+  internal BufferProbeNativeDelegate NativeFunc;
+  BufferProbeDelegate managedFunc;
 
-		public BufferProbeWrapper(BufferProbeDelegate func) 
-		{
-			managedFunc = func;
-			if(func != null)
-				NativeFunc = new BufferProbeNativeDelegate(BufferProbeMarshaller);
-		}
+  public BufferProbeWrapper (BufferProbeDelegate func) {
+    managedFunc = func;
+    if (func != null)
+      NativeFunc = new BufferProbeNativeDelegate (BufferProbeMarshaller);
+  }
 
-		public bool BufferProbeMarshaller(IntPtr raw_pad, IntPtr buf, IntPtr data)
-		{
-			Pad pad = GLib.Object.GetObject(raw_pad) as Pad;
-			Gst.Buffer buffer = GLib.Opaque.GetOpaque(buf, typeof(Gst.Buffer), false) as Gst.Buffer;
-			return (bool) (managedFunc (pad, buffer));
-		}
-	}
+  public bool BufferProbeMarshaller (IntPtr raw_pad, IntPtr buf, IntPtr data) {
+    Pad pad = GLib.Object.GetObject (raw_pad) as Pad;
+    Gst.Buffer buffer = GLib.Opaque.GetOpaque (buf, typeof (Gst.Buffer), false) as Gst.Buffer;
+    return (bool) (managedFunc (pad, buffer));
+  }
+}
 
-	[DllImport("gstreamer-0.10.dll")]
-	private static extern ulong gst_pad_add_buffer_probe(IntPtr pad, BufferProbeNativeDelegate func, IntPtr data); 
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern ulong gst_pad_add_buffer_probe (IntPtr pad, BufferProbeNativeDelegate func, IntPtr data);
 
-	public ulong AddBufferProbe(BufferProbeDelegate func)
-	{
-		BufferProbeWrapper func_wrapper;
-		if(PersistentData["AddBufferProbe"] != null) {
-			func_wrapper = PersistentData["AddBufferProbe"] as BufferProbeWrapper;
-		}
-		else 
-		{
-			func_wrapper = new BufferProbeWrapper(func);
-			PersistentData["AddBufferProbe"] = func_wrapper;
-		}	
+public ulong AddBufferProbe (BufferProbeDelegate func) {
+  BufferProbeWrapper func_wrapper;
+  if (PersistentData["AddBufferProbe"] != null) {
+    func_wrapper = PersistentData["AddBufferProbe"] as BufferProbeWrapper;
+  } else {
+    func_wrapper = new BufferProbeWrapper (func);
+    PersistentData["AddBufferProbe"] = func_wrapper;
+  }
 
-		return gst_pad_add_buffer_probe(this.Handle, func_wrapper.NativeFunc, IntPtr.Zero);
-	} 
+  return gst_pad_add_buffer_probe (this.Handle, func_wrapper.NativeFunc, IntPtr.Zero);
+}
 
-	[DllImport("gstreamer-0.10.dll")]
-	private static extern void gst_pad_remove_buffer_probe(IntPtr pad, uint handler_id);
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern void gst_pad_remove_buffer_probe (IntPtr pad, uint handler_id);
 
-	public void RemoveBufferProbe(uint handler_id)
-	{
-		gst_pad_remove_buffer_probe(this.Handle, handler_id);
-		PersistentData["AddBufferProbe"] = null;
-	}
+public void RemoveBufferProbe (uint handler_id) {
+  gst_pad_remove_buffer_probe (this.Handle, handler_id);
+  PersistentData["AddBufferProbe"] = null;
+}
 
-	public delegate bool DataProbeDelegate (Pad pad, GLib.Opaque miniobject); 
-	internal delegate bool DataProbeNativeDelegate(IntPtr pad, IntPtr miniobj, IntPtr data);
+public delegate bool DataProbeDelegate (Pad pad, GLib.Opaque miniobject);
+internal delegate bool DataProbeNativeDelegate (IntPtr pad, IntPtr miniobj, IntPtr data);
 
-	internal class DataProbeWrapper {
-		internal DataProbeNativeDelegate NativeFunc;
-		DataProbeDelegate ManagedFunc;
+internal class DataProbeWrapper {
+  internal DataProbeNativeDelegate NativeFunc;
+  DataProbeDelegate ManagedFunc;
 
-		public DataProbeWrapper(DataProbeDelegate func)
-		{
-			ManagedFunc = func;
-			if(func != null)
-				NativeFunc = new DataProbeNativeDelegate(DataProbeMarshaller);
-		}
+  public DataProbeWrapper (DataProbeDelegate func) {
+    ManagedFunc = func;
+    if (func != null)
+      NativeFunc = new DataProbeNativeDelegate (DataProbeMarshaller);
+  }
 
-		public bool DataProbeMarshaller (IntPtr raw_pad, IntPtr miniobj, IntPtr data)
-		{
-			Pad pad = GLib.Object.GetObject(raw_pad) as Pad;
-			GLib.Opaque opaque = GLib.Opaque.GetOpaque(miniobj, typeof(GLib.Opaque), true);
-			return ManagedFunc(pad, opaque);
-		}
-	}
+  public bool DataProbeMarshaller (IntPtr raw_pad, IntPtr miniobj, IntPtr data) {
+    Pad pad = GLib.Object.GetObject (raw_pad) as Pad;
+    GLib.Opaque opaque = GLib.Opaque.GetOpaque (miniobj, typeof (GLib.Opaque), true);
+    return ManagedFunc (pad, opaque);
+  }
+}
 
-	[DllImport("gstreamer-0.10.dll")]
-	static extern uint gst_pad_add_data_probe(IntPtr pad, DataProbeNativeDelegate func, IntPtr data);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern uint gst_pad_add_data_probe (IntPtr pad, DataProbeNativeDelegate func, IntPtr data);
 
-	public uint AddDataProbe(DataProbeDelegate func) 
-	{
-		DataProbeWrapper func_wrapper;
-		if(PersistentData["AddDataProbe"] != null) {
-			func_wrapper = PersistentData["AddDataProbe"] as DataProbeWrapper;
-		} else {
-			func_wrapper = new DataProbeWrapper(func);
-			PersistentData["AddDataProbe"] = func_wrapper;
-		}
+public uint AddDataProbe (DataProbeDelegate func) {
+  DataProbeWrapper func_wrapper;
+  if (PersistentData["AddDataProbe"] != null) {
+    func_wrapper = PersistentData["AddDataProbe"] as DataProbeWrapper;
+  } else {
+    func_wrapper = new DataProbeWrapper (func);
+    PersistentData["AddDataProbe"] = func_wrapper;
+  }
 
-		return gst_pad_add_data_probe(this.Handle, func_wrapper.NativeFunc, IntPtr.Zero);
-	}
+  return gst_pad_add_data_probe (this.Handle, func_wrapper.NativeFunc, IntPtr.Zero);
+}
 
-	[DllImport("gstreamer-0.10.dll")]
-	static extern void gst_pad_remove_data_probe(IntPtr pad, uint handler_id);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_pad_remove_data_probe (IntPtr pad, uint handler_id);
 
-	public void RemoveDataProbe(uint handler_id) 
-	{
-		gst_pad_remove_data_probe(this.Handle, handler_id);
-		PersistentData["AddDataProbe"] = null;
-	}
+public void RemoveDataProbe (uint handler_id) {
+  gst_pad_remove_data_probe (this.Handle, handler_id);
+  PersistentData["AddDataProbe"] = null;
+}

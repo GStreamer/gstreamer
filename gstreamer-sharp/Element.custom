@@ -1,99 +1,87 @@
 
-    public object this[string property] {
-        get { return GetProperty(property).Val; }
-        set { SetProperty(property, value); }
-    }
-    
-    public new GLib.Value GetProperty(string propertyName) 
-    {
-        return base.GetProperty(propertyName);
-    }
+public object this[string property] {
+  get {
+    return GetProperty (property).Val;
+  }
+  set {
+    SetProperty (property, value);
+  }
+}
 
-    public new void SetProperty(string propertyName, GLib.Value value) 
-    {
-        base.SetProperty(propertyName, value);
-    }
+public new GLib.Value GetProperty (string propertyName) {
+  return base.GetProperty (propertyName);
+}
 
-    public void SetProperty(string propertyName, object value)
-    {
-        base.SetProperty(propertyName, new GLib.Value(value));
-    }
+public new void SetProperty (string propertyName, GLib.Value value) {
+  base.SetProperty (propertyName, value);
+}
 
-    public void SetProperty(string propertyName, string value) 
-    {
-        base.SetProperty(propertyName, new GLib.Value(value));
-    }
-    
-    public void SetProperty(string propertyName, int value) 
-    {
-        base.SetProperty(propertyName, new GLib.Value(value));
-    }
-    
-    public void SetProperty(string propertyName, double value)
-    {
-        base.SetProperty(propertyName, new GLib.Value(value));
-    }
+public void SetProperty (string propertyName, object value) {
+  base.SetProperty (propertyName, new GLib.Value (value));
+}
 
-    public void SetProperty(string propertyName, bool value) 
-    {
-        base.SetProperty(propertyName, new GLib.Value(value));
-    }
+public void SetProperty (string propertyName, string value) {
+  base.SetProperty (propertyName, new GLib.Value (value));
+}
+
+public void SetProperty (string propertyName, int value) {
+  base.SetProperty (propertyName, new GLib.Value (value));
+}
+
+public void SetProperty (string propertyName, double value) {
+  base.SetProperty (propertyName, new GLib.Value (value));
+}
+
+public void SetProperty (string propertyName, bool value) {
+  base.SetProperty (propertyName, new GLib.Value (value));
+}
 
 
-    public bool QueryPosition(Gst.Format format, out long current) 
-    {
-        return gst_element_query_position(Handle, ref format, out current);
-    }
+public bool QueryPosition (Gst.Format format, out long current) {
+  return gst_element_query_position (Handle, ref format, out current);
+}
 
 
-    public bool QueryDuration(Gst.Format format, out long duration) 
-    {
-        return gst_element_query_duration(Handle, ref format, out duration);
-    }
+public bool QueryDuration (Gst.Format format, out long duration) {
+  return gst_element_query_duration (Handle, ref format, out duration);
+}
 
-	public void Connect(string signal, DynamicSignalHandler handler)
-	{
-		DynamicSignal.Connect(this, signal, handler);
-	}
+public void Connect (string signal, DynamicSignalHandler handler) {
+  DynamicSignal.Connect (this, signal, handler);
+}
 
-	public void Disconnect(string signal, DynamicSignalHandler handler)
-	{
-		DynamicSignal.Disconnect(this, signal, handler);
-	}
+public void Disconnect (string signal, DynamicSignalHandler handler) {
+  DynamicSignal.Disconnect (this, signal, handler);
+}
 
-	public bool AddPad(Pad p)
-	{
-		bool ret = gst_element_add_pad(this.Handle, p == null ? IntPtr.Zero : p.Handle);
-		if(ret)
-			Gst.Object.Ref(p.Handle);
-		return ret;
-	}
-	
-	public static bool LinkMany(params Element [] elements) 
-	{
-		for(int i=0; i < elements.Length - 1; i++) 
-		{
-			if(!elements[i].Link(elements[i+1]))
-				return false;
-		}
-		
-		return true;
-	}
+public bool AddPad (Pad p) {
+  bool ret = gst_element_add_pad (this.Handle, p == null ? IntPtr.Zero : p.Handle);
+  if (ret)
+    Gst.Object.Ref (p.Handle);
+  return ret;
+}
 
-	public static void UnlinkMany(params Element [] elements) 
-	{
-		for(int i=0; i < elements.Length - 1; i++)
-		{
-			elements[i].Unlink(elements[i+1]);
-		}
-	}
+public static bool LinkMany (params Element [] elements) {
+  for (int i = 0; i < elements.Length - 1; i++) {
+    if (!elements[i].Link (elements[i+1]))
+      return false;
+  }
+
+  return true;
+}
+
+public static void UnlinkMany (params Element [] elements) {
+  for (int i = 0; i < elements.Length - 1; i++) {
+    elements[i].Unlink (elements[i+1]);
+  }
+}
 
 
-    [DllImport("gstreamer-0.10.dll")]
-    private static extern bool gst_element_query_position(IntPtr raw, ref Format format, out long cur);
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern bool gst_element_query_position (IntPtr raw, ref Format format, out long cur);
 
-    [DllImport("gstreamer-0.10.dll")]
-    private static extern bool gst_element_query_duration(IntPtr raw, ref Format format, out long duration);
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern bool gst_element_query_duration (IntPtr raw, ref Format format, out long duration);
 
-	[DllImport("gstreamer-0.10.dll")]
-	static extern bool gst_element_add_pad(IntPtr raw, IntPtr pad);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_element_add_pad (IntPtr raw, IntPtr pad);
