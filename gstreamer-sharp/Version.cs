@@ -12,27 +12,22 @@ using System.Runtime.InteropServices;
 
 namespace Gst 
 {
-    public class Version
+    public static class Version
     {
-        private uint major;
-        private uint minor;
-        private uint micro;
-        private uint nano;
-        private string version_string;
+        private static uint major;
+        private static uint minor;
+        private static uint micro;
+        private static uint nano;
+        private static string version_string;
     
-        internal Version()
+        static Version()
         {
             gst_version(out major, out minor, out micro, out nano);
         }
         
-        public override string ToString()
-        {
-            return String.Format("{0}.{1}.{2}.{3}", major, minor, micro, nano);
-        }
-        
-        public string Description {
+        public static string Description {
             get {
-                if(version_string == null) {
+                if (version_string == null) {
                     IntPtr version_string_ptr = gst_version_string();
                     version_string = GLib.Marshaller.Utf8PtrToString(version_string_ptr);
                 }
@@ -41,19 +36,19 @@ namespace Gst
             }
         }
         
-        public uint Major {
+        public static uint Major {
             get { return major; }
         }
         
-        public uint Minor {
+        public static uint Minor {
             get { return minor; }
         }
         
-        public uint Micro {
+        public static uint Micro {
             get { return micro; }
         }
         
-        public uint Nano {
+        public static uint Nano {
             get { return nano; }
         }
         

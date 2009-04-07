@@ -77,18 +77,6 @@ namespace Gst
             }
         }
         
-        private static Version version = null;
-        
-        public static Version Version {
-            get {
-                if(version == null) {
-                    version = new Version();
-                }
-                
-                return version;
-            }
-        }
-        
         [DllImport("gstreamer-0.10")]
         private static extern void gst_init(ref int argc, ref IntPtr argv);
 
