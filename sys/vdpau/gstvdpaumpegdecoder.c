@@ -169,8 +169,10 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
         ("Error returned from vdpau was: %s",
             device->vdp_get_error_string (status)));
 
-    if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
+    if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
       gst_buffer_unref (mpeg_dec->f_buffer);
+      mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+    }
 
     gst_buffer_unref (GST_BUFFER (outbuf));
 
