@@ -1,0 +1,8 @@
+generated/*
+glue/generated.c
+generated-stamp
+AssemblyInfo.cs
+gstreamer-api.xml
+gstreamer-sharp.dll.config
+gstreamer-sharp.dll.mdb
+gstreamer-sharp.snk
