@@ -7,7 +7,8 @@ libgstvdpau_la_SOURCES = \
 	mpegutil.c \
 	gstvdpauvideoyuv.c \
 	gstvdpauvideobuffer.c \
-	gstvdpau.c
+	gstvdpau.c \
+	gstvdpauyuvvideo.c
 
 libgstvdpau_la_CFLAGS = $(GST_CFLAGS) $(X11_CFLAGS) -Ivdpau
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
@@ -19,8 +20,9 @@ noinst_HEADERS = \
 	gstvdpaudevice.h \
 	gstvdpaudecoder.h \
 	gstvdpaumpegdecoder.h \
+	mpegutil.h \
 	gstvdpauvideoyuv.h \
 	gstvdpauvideobuffer.h \
-	mpegutil.h
+	gstvdpauyuvvideo.h
 	
 

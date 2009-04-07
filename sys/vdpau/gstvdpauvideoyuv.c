@@ -412,6 +412,7 @@ gst_vdpau_video_yuv_init (GstVdpauVideoYUV * video_yuv,
       gst_vdpau_video_yuv_sink_set_caps);
   gst_pad_set_chain_function (video_yuv->sink, gst_vdpau_video_yuv_chain);
   gst_element_add_pad (GST_ELEMENT (video_yuv), video_yuv->sink);
+  gst_pad_set_active (video_yuv->sink, TRUE);
 }
 
 static void

@@ -7,6 +7,8 @@
 
 #include "gstvdpaumpegdecoder.h"
 #include "gstvdpauvideoyuv.h"
+#include "gstvdpauyuvvideo.h"
+
 static gboolean
 vdpau_init (GstPlugin * vdpaumpegdecoder)
 {
@@ -14,6 +16,8 @@ vdpau_init (GstPlugin * vdpaumpegdecoder)
       GST_RANK_NONE, GST_TYPE_VDPAU_MPEG_DECODER);
   gst_element_register (vdpaumpegdecoder, "vdpauvideoyuv",
       GST_RANK_NONE, GST_TYPE_VDPAU_VIDEO_YUV);
+  gst_element_register (vdpaumpegdecoder, "vdpauyuvvideo",
+      GST_RANK_NONE, GST_TYPE_VDPAU_YUV_VIDEO);
 
   return TRUE;
 }

@@ -83,6 +83,8 @@ gst_vdpau_device_constructed (GObject * object)
         &device->vdp_video_surface_query_ycbcr_capabilities},
     {VDP_FUNC_ID_VIDEO_SURFACE_GET_BITS_Y_CB_CR,
         &device->vdp_video_surface_get_bits_ycbcr},
+    {VDP_FUNC_ID_VIDEO_SURFACE_PUT_BITS_Y_CB_CR,
+        &device->vdp_video_surface_put_bits_ycbcr},
     {VDP_FUNC_ID_VIDEO_SURFACE_GET_PARAMETERS,
         &device->vdp_video_surface_get_parameters},
     {VDP_FUNC_ID_DECODER_CREATE, &device->vdp_decoder_create},
@@ -257,6 +259,10 @@ gst_vdpau_get_device (const gchar * display_name)
   if (!device) {
     device = gst_vdpau_device_new (display_name);
     g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, devices_hash);
+    if (display_name)
+      g_hash_table_insert (devices_hash, g_strdup (display_name), device);
+    else
+      g_hash_table_insert (devices_hash, g_strdup (""), device);
   } else
     g_object_ref (device);
 

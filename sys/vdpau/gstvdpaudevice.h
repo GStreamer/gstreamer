@@ -61,6 +61,7 @@ struct _GstVdpauDevice
   VdpVideoSurfaceQueryGetPutBitsYCbCrCapabilities *vdp_video_surface_query_ycbcr_capabilities;
   VdpVideoSurfaceGetParameters                    *vdp_video_surface_get_parameters;
   VdpVideoSurfaceGetBitsYCbCr                     *vdp_video_surface_get_bits_ycbcr;
+  VdpVideoSurfacePutBitsYCbCr                     *vdp_video_surface_put_bits_ycbcr;
 
   VdpDecoderCreate                                *vdp_decoder_create;
   VdpDecoderDestroy                               *vdp_decoder_destroy;
