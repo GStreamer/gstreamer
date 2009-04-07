@@ -24,7 +24,6 @@
   <change-node-type path="/api/namespace/object[@name='Buffer']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Buffer']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='Buffer']/method[@name='GetCaps']/return-type" name="owned">true</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/constructor[@cname='gst_buffer_new']" name="hidden">true</attr>
 
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
   <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_PREROLL']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
