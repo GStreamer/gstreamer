@@ -17,11 +17,6 @@
     
     
     <Member MemberName=".ctor"><MemberSignature Language="C#" Value="protected MiniObject ();" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public MiniObject (GLib.GType type);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters><Parameter Name="type" Type="GLib.GType" /></Parameters>
-      <Docs><param name="type">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public MiniObject (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>

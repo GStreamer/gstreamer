@@ -36,11 +36,6 @@
     
     
   <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Buffer ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Buffer (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
