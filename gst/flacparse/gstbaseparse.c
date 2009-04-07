@@ -1763,7 +1763,7 @@ gst_base_parse_frame_in_segment (GstBaseParse * parse, GstBuffer * buffer,
   } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
       GST_BUFFER_DURATION_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (segment->start) &&
-      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION_IS_VALID (buffer)
+      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
       < segment->start) {
     return FALSE;
   }

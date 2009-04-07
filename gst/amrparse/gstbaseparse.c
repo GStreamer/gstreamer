@@ -796,7 +796,7 @@ gst_base_parse_handle_and_push_buffer (GstBaseParse * parse,
     } else if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
         GST_BUFFER_DURATION_IS_VALID (buffer) &&
         GST_CLOCK_TIME_IS_VALID (parse->segment.start) &&
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION_IS_VALID (buffer)
+        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer)
         < parse->segment.start) {
       /* FIXME: subclass needs way to override the start as downstream might
        * need frames before for proper decoding */
