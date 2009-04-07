@@ -12,10 +12,6 @@
       <member cname="GST_ACTIVATE_PUSH" name="Push" />
       <member cname="GST_ACTIVATE_PULL" name="Pull" />
     </enum>
-    <enum name="AllocTraceFlags" cname="GstAllocTraceFlags" type="flags">
-      <member cname="GST_ALLOC_TRACE_LIVE" name="Live" value="1 &lt;&lt; 0" />
-      <member cname="GST_ALLOC_TRACE_MEM_LIVE" name="MemLive" value="1 &lt;&lt; 1" />
-    </enum>
     <enum name="AssocFlags" cname="GstAssocFlags" type="flags">
       <member cname="GST_ASSOCIATION_FLAG_NONE" name="None" />
       <member cname="GST_ASSOCIATION_FLAG_KEY_UNIT" name="KeyUnit" value="1 &lt;&lt; 0" />
@@ -4529,48 +4525,6 @@
         </parameters>
       </method>
     </object>
-    <struct name="AllocTrace" cname="GstAllocTrace">
-      <field name="Name" cname="name" type="gchar*" />
-      <field name="Flags" cname="flags" type="gint" />
-      <field name="Live" cname="live" type="gint" />
-      <field name="MemLive" cname="mem_live" type="GSList*" />
-      <method name="Available" cname="gst_alloc_trace_available" shared="true">
-        <return-type type="gboolean" />
-      </method>
-      <method name="Get" cname="gst_alloc_trace_get" shared="true">
-        <return-type type="GstAllocTrace*" />
-        <parameters>
-          <parameter type="const-gchar*" name="name" />
-        </parameters>
-      </method>
-      <method name="List" cname="gst_alloc_trace_list" shared="true">
-        <return-type type="const-GList*" />
-      </method>
-      <method name="LiveAll" cname="gst_alloc_trace_live_all" shared="true">
-        <return-type type="int" />
-      </method>
-      <method name="Print" cname="gst_alloc_trace_print">
-        <return-type type="void" />
-      </method>
-      <method name="PrintAll" cname="gst_alloc_trace_print_all" shared="true">
-        <return-type type="void" />
-      </method>
-      <method name="PrintLive" cname="gst_alloc_trace_print_live" shared="true">
-        <return-type type="void" />
-      </method>
-      <method name="SetFlags" cname="gst_alloc_trace_set_flags">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstAllocTraceFlags" name="flags" />
-        </parameters>
-      </method>
-      <method name="SetFlagsAll" cname="gst_alloc_trace_set_flags_all" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="GstAllocTraceFlags" name="flags" />
-        </parameters>
-      </method>
-    </struct>
     <boxed name="Caps" cname="GstCaps" opaque="true">
       <field name="Type" cname="type" type="GType" access="public" writeable="true" />
       <field name="Refcount" cname="refcount" type="gint" access="public" writeable="true" />
@@ -5770,43 +5724,6 @@
         </parameters>
       </method>
     </boxed>
-    <struct name="Trace" cname="GstTrace" opaque="true">
-      <field name="Filename" cname="filename" type="gchar*" access="private" />
-      <field name="Fd" cname="fd" type="int" access="private" />
-      <field name="Buf" cname="buf" type="GstTraceEntry*" access="private" />
-      <field name="Bufsize" cname="bufsize" type="gint" access="private" />
-      <field name="Bufoffset" cname="bufoffset" type="gint" access="private" />
-      <method name="Destroy" cname="gst_trace_destroy">
-        <return-type type="void" />
-      </method>
-      <method name="Flush" cname="gst_trace_flush">
-        <return-type type="void" />
-      </method>
-      <constructor cname="gst_trace_new">
-        <parameters>
-          <parameter type="gchar*" name="filename" />
-          <parameter type="gint" name="size" />
-        </parameters>
-      </constructor>
-      <method name="ReadTsc" cname="gst_trace_read_tsc" shared="true">
-        <return-type type="void" />
-        <parameters>
-          <parameter type="gint64*" name="dst" />
-        </parameters>
-      </method>
-      <method name="SetDefault" cname="gst_trace_set_default">
-        <return-type type="void" />
-      </method>
-      <method name="TextFlush" cname="gst_trace_text_flush">
-        <return-type type="void" />
-      </method>
-    </struct>
-    <struct name="TraceEntry" cname="GstTraceEntry">
-      <field name="Timestamp" cname="timestamp" type="gint64" />
-      <field name="Sequence" cname="sequence" type="guint32" />
-      <field name="Data" cname="data" type="guint32" />
-      <field name="Message" cname="message" array_len="112" type="gchar" />
-    </struct>
     <struct name="TypeFind" cname="GstTypeFind">
       <callback cname="peek">
         <return-type type="guint8*" />

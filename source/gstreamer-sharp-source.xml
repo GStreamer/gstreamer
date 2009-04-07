@@ -10,9 +10,13 @@
     <library name="gstreamer-0.10.dll">
       <namespace name="Gst">
         <dir>gstreamer-0.10.22/gst</dir>
+	<!-- Needs to be bound -->
         <exclude>gstreamer-0.10.22/gst/gstinterface.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gsturi.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstpreset.h</exclude>
+	<!-- Not bound -->
+        <exclude>gstreamer-0.10.22/gst/gsttrace.h</exclude>
+	<!-- Private headers -->
         <exclude>gstreamer-0.10.22/gst/gstregistrybinary.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstregistryxml.h</exclude>
       </namespace>
