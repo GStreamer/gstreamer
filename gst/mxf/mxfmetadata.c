@@ -2609,8 +2609,7 @@ mxf_metadata_track_identifier_parse (const MXFUL * track_identifier)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (mxf_metadata_track_identifier); i++)
-    if (mxf_ul_is_equal (mxf_metadata_track_identifier[i].ul,
-            track_identifier) == 0)
+    if (mxf_ul_is_equal (mxf_metadata_track_identifier[i].ul, track_identifier))
       return mxf_metadata_track_identifier[i].type;
 
   return MXF_METADATA_TRACK_UNKNOWN;
