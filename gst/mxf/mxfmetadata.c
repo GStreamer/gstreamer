@@ -397,30 +397,18 @@ mxf_metadata_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   GList *ret = NULL;
   MXFLocalTag *t;
   MXFMetadataClass *klass;
-  static const guint8 metadata_key[] = {
-    0x06, 0x0e, 0x2b, 0x34, 0x02, 0x53, 0x01, 0x01,
-    0x0d, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 instance_uid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x15, 0x02, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 generation_uid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x01, 0x00, 0x00, 0x00
-  };
 
   g_return_val_if_fail (MXF_IS_METADATA (self), NULL);
   klass = MXF_METADATA_GET_CLASS (self);
 
   /* Last element contains the metadata key */
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, metadata_key, 16);
+  memcpy (&t->ul, MXF_UL (METADATA), 16);
   GST_WRITE_UINT16_BE (&t->ul.u[13], klass->type);
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &instance_uid_ul, 16);
+  memcpy (&t->ul, MXF_UL (INSTANCE_UID), 16);
   t->size = 16;
   t->data = g_slice_alloc (16);
   t->g_slice = TRUE;
@@ -430,7 +418,7 @@ mxf_metadata_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (!mxf_uuid_is_zero (&self->parent.generation_uid)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &generation_uid_ul, 16);
+    memcpy (&t->ul, MXF_UL (GENERATION_UID), 16);
     t->size = 16;
     t->data = g_slice_alloc (16);
     t->g_slice = TRUE;
@@ -883,45 +871,9 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
       (m, primer);
   MXFLocalTag *t;
   guint i;
-  static const guint8 last_modified_date_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x10, 0x02, 0x04, 0x00, 0x00
-  };
-  static const guint8 version_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x03, 0x01, 0x02, 0x01, 0x05, 0x00, 0x00, 0x00
-  };
-  static const guint8 object_model_version_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x03, 0x01, 0x02, 0x01, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 primary_package_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x06, 0x01, 0x01, 0x04, 0x01, 0x08, 0x00, 0x00
-  };
-  static const guint8 identifications_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x06, 0x04, 0x00, 0x00
-  };
-  static const guint8 content_storage_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x02, 0x01, 0x00, 0x00
-  };
-  static const guint8 operational_pattern_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x01, 0x02, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 essence_containers_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x01, 0x02, 0x02, 0x10, 0x02, 0x01, 0x00, 0x00
-  };
-  static const guint8 dm_schemes_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x01, 0x02, 0x02, 0x10, 0x02, 0x02, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &last_modified_date_ul, 16);
+  memcpy (&t->ul, MXF_UL (LAST_MODIFIED_DATE), 16);
   t->size = 8;
   t->data = g_slice_alloc (8);
   t->g_slice = TRUE;
@@ -930,7 +882,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &version_ul, 16);
+  memcpy (&t->ul, MXF_UL (VERSION), 16);
   t->size = 2;
   t->data = g_slice_alloc (2);
   t->g_slice = TRUE;
@@ -940,7 +892,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (self->object_model_version) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &object_model_version_ul, 16);
+    memcpy (&t->ul, MXF_UL (OBJECT_MODEL_VERSION), 16);
     t->size = 4;
     t->data = g_slice_alloc (4);
     t->g_slice = TRUE;
@@ -951,7 +903,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (!mxf_uuid_is_zero (&self->primary_package_uid)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &primary_package_ul, 16);
+    memcpy (&t->ul, MXF_UL (PRIMARY_PACKAGE), 16);
     t->size = 16;
     t->data = g_slice_alloc (16);
     t->g_slice = TRUE;
@@ -961,7 +913,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &identifications_ul, 16);
+  memcpy (&t->ul, MXF_UL (IDENTIFICATIONS), 16);
   t->size = 8 + 16 * self->n_identifications;
   t->data = g_slice_alloc0 (t->size);
   t->g_slice = TRUE;
@@ -978,7 +930,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &content_storage_ul, 16);
+  memcpy (&t->ul, MXF_UL (CONTENT_STORAGE), 16);
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -988,7 +940,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &operational_pattern_ul, 16);
+  memcpy (&t->ul, MXF_UL (OPERATIONAL_PATTERN), 16);
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -997,7 +949,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &essence_containers_ul, 16);
+  memcpy (&t->ul, MXF_UL (ESSENCE_CONTAINERS), 16);
   t->size = 8 + 16 * self->n_essence_containers;
   t->data = g_slice_alloc0 (t->size);
   t->g_slice = TRUE;
@@ -1011,7 +963,7 @@ mxf_metadata_preface_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (self->dm_schemes) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &dm_schemes_ul, 16);
+    memcpy (&t->ul, MXF_UL (DM_SCHEMES), 16);
     t->size = 8 + 16 * self->n_dm_schemes;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -1237,42 +1189,10 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_identification_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 company_name_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x02, 0x01, 0x00, 0x00
-  };
-  static const guint8 product_name_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x03, 0x01, 0x00, 0x00
-  };
-  static const guint8 product_version_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 version_string_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x05, 0x01, 0x00, 0x00
-  };
-  static const guint8 product_uid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x07, 0x00, 0x00, 0x00
-  };
-  static const guint8 modification_date_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x10, 0x02, 0x03, 0x00, 0x00
-  };
-  static const guint8 toolkit_version_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x0A, 0x00, 0x00, 0x00
-  };
-  static const guint8 platform_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x07, 0x01, 0x06, 0x01, 0x00, 0x00
-  };
 
   if (self->company_name) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &company_name_ul, 16);
+    memcpy (&t->ul, MXF_UL (COMPANY_NAME), 16);
     t->data = mxf_utf8_to_utf16 (self->company_name, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x3c01, &t->ul);
     ret = g_list_prepend (ret, t);
@@ -1280,7 +1200,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (self->product_name) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &product_name_ul, 16);
+    memcpy (&t->ul, MXF_UL (PRODUCT_NAME), 16);
     t->data = mxf_utf8_to_utf16 (self->product_name, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x3c02, &t->ul);
     ret = g_list_prepend (ret, t);
@@ -1288,7 +1208,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (!mxf_product_version_is_valid (&self->product_version)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &product_version_ul, 16);
+    memcpy (&t->ul, MXF_UL (PRODUCT_VERSION), 16);
     t->size = 10;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -1299,7 +1219,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (self->version_string) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &version_string_ul, 16);
+    memcpy (&t->ul, MXF_UL (VERSION_STRING), 16);
     t->data = mxf_utf8_to_utf16 (self->version_string, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x3c04, &t->ul);
     ret = g_list_prepend (ret, t);
@@ -1307,7 +1227,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (!mxf_uuid_is_zero (&self->product_uid)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &product_uid_ul, 16);
+    memcpy (&t->ul, MXF_UL (PRODUCT_UID), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -1318,7 +1238,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (!mxf_timestamp_is_unknown (&self->modification_date)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &modification_date_ul, 16);
+    memcpy (&t->ul, MXF_UL (MODIFICATION_DATE), 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -1329,7 +1249,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (!mxf_product_version_is_valid (&self->toolkit_version)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &toolkit_version_ul, 16);
+    memcpy (&t->ul, MXF_UL (TOOLKIT_VERSION), 16);
     t->size = 10;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -1340,7 +1260,7 @@ mxf_metadata_identification_write_tags (MXFMetadataBase * m,
 
   if (self->platform) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &platform_ul, 16);
+    memcpy (&t->ul, MXF_UL (PLATFORM), 16);
     t->data = mxf_utf8_to_utf16 (self->platform, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x3c08, &t->ul);
     ret = g_list_prepend (ret, t);
@@ -1599,18 +1519,10 @@ mxf_metadata_content_storage_write_tags (MXFMetadataBase * m,
       (mxf_metadata_content_storage_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
   guint i;
-  static const guint8 packages_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x05, 0x01, 0x00, 0x00
-  };
-  static const guint8 essence_container_data_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x05, 0x02, 0x00, 0x00
-  };
 
   if (self->packages) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &packages_ul, 16);
+    memcpy (&t->ul, MXF_UL (PACKAGES), 16);
     t->size = 8 + 16 * self->n_packages;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -1630,7 +1542,7 @@ mxf_metadata_content_storage_write_tags (MXFMetadataBase * m,
 
   if (self->essence_container_data) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &essence_container_data_ul, 16);
+    memcpy (&t->ul, MXF_UL (ESSENCE_CONTAINER_DATA), 16);
     t->size = 8 + 16 * self->n_essence_container_data;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -1811,21 +1723,9 @@ mxf_metadata_essence_container_data_write_tags (MXFMetadataBase * m,
       (mxf_metadata_essence_container_data_parent_class)->write_tags (m,
       primer);
   MXFLocalTag *t;
-  static const guint8 linked_package_uid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x06, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 body_sid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x01, 0x03, 0x04, 0x04, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 index_sid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x01, 0x03, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &linked_package_uid_ul, 16);
+  memcpy (&t->ul, MXF_UL (LINKED_PACKAGE_UID), 16);
   t->size = 32;
   t->data = g_slice_alloc0 (32);
   t->g_slice = TRUE;
@@ -1835,7 +1735,7 @@ mxf_metadata_essence_container_data_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &body_sid_ul, 16);
+  memcpy (&t->ul, MXF_UL (BODY_SID), 16);
   t->size = 4;
   t->data = g_slice_alloc (4);
   t->g_slice = TRUE;
@@ -1845,7 +1745,7 @@ mxf_metadata_essence_container_data_write_tags (MXFMetadataBase * m,
 
   if (self->index_sid) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &index_sid_ul, 16);
+    memcpy (&t->ul, MXF_UL (INDEX_SID), 16);
     t->size = 4;
     t->data = g_slice_alloc (4);
     t->g_slice = TRUE;
@@ -2088,29 +1988,9 @@ mxf_metadata_generic_package_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_generic_package_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 package_uid_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x01, 0x15, 0x10, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 name_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x03, 0x03, 0x02, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 package_creation_date_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x10, 0x01, 0x03, 0x00, 0x00
-  };
-  static const guint8 package_modified_date_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x10, 0x02, 0x05, 0x00, 0x00
-  };
-  static const guint8 tracks_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x06, 0x05, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &package_uid_ul, 16);
+  memcpy (&t->ul, MXF_UL (PACKAGE_UID), 16);
   t->size = 32;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2120,14 +2000,14 @@ mxf_metadata_generic_package_write_tags (MXFMetadataBase * m,
 
   if (self->name) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &name_ul, 16);
+    memcpy (&t->ul, MXF_UL (PACKAGE_NAME), 16);
     t->data = mxf_utf8_to_utf16 (self->name, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x4402, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &package_creation_date_ul, 16);
+  memcpy (&t->ul, MXF_UL (PACKAGE_CREATION_DATE), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2136,7 +2016,7 @@ mxf_metadata_generic_package_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &package_modified_date_ul, 16);
+  memcpy (&t->ul, MXF_UL (PACKAGE_MODIFIED_DATE), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2148,7 +2028,7 @@ mxf_metadata_generic_package_write_tags (MXFMetadataBase * m,
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &tracks_ul, 16);
+    memcpy (&t->ul, MXF_UL (TRACKS), 16);
     t->size = 8 + 16 * self->n_tracks;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -2462,14 +2342,10 @@ mxf_metadata_source_package_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_source_package_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 descriptor_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x02, 0x03, 0x00, 0x00
-  };
 
   if (self->descriptor) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &descriptor_ul, 16);
+    memcpy (&t->ul, MXF_UL (DESCRIPTOR), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -2647,25 +2523,9 @@ mxf_metadata_track_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
       MXF_METADATA_BASE_CLASS (mxf_metadata_track_parent_class)->write_tags (m,
       primer);
   MXFLocalTag *t;
-  static const guint8 track_id_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x01, 0x07, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 track_number_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x01, 0x04, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 track_name_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x01, 0x07, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 sequence_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x02, 0x04, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &track_id_ul, 16);
+  memcpy (&t->ul, MXF_UL (TRACK_ID), 16);
   t->size = 4;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2674,7 +2534,7 @@ mxf_metadata_track_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &track_number_ul, 16);
+  memcpy (&t->ul, MXF_UL (TRACK_NUMBER), 16);
   t->size = 4;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2684,14 +2544,14 @@ mxf_metadata_track_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (self->track_name) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &track_name_ul, 16);
+    memcpy (&t->ul, MXF_UL (TRACK_NAME), 16);
     t->data = mxf_utf8_to_utf16 (self->track_name, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x4802, &t->ul);
     ret = g_list_prepend (ret, t);
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &sequence_ul, 16);
+  memcpy (&t->ul, MXF_UL (SEQUENCE), 16);
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2724,33 +2584,23 @@ mxf_metadata_track_class_init (MXFMetadataTrackClass * klass)
 /* SMPTE RP224 */
 static const struct
 {
-  guint8 ul[16];
-  MXFMetadataTrackType type;
+  const MXFUL *ul;
+  const MXFMetadataTrackType type;
 } mxf_metadata_track_identifier[] = {
-  { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01,
-          0x01, 0x03, 0x02, 0x01, 0x01, 0x00, 0x00, 0x00},
-      MXF_METADATA_TRACK_TIMECODE_12M_INACTIVE}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x01,
-          0x02, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_TIMECODE_12M_ACTIVE}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x01,
-          0x03, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_TIMECODE_309M}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x01,
-          0x10, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_METADATA}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x02,
-          0x01, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_PICTURE_ESSENCE}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x02,
-          0x02, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_SOUND_ESSENCE}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x02,
-          0x03, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_DATA_ESSENCE}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x03,
-          0x01, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_AUXILIARY_DATA}, { {
-  0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x01, 0x03, 0x02, 0x03,
-          0x02, 0x00, 0x00, 0x00}, MXF_METADATA_TRACK_PARSED_TEXT},
+  {
+  MXF_UL (TRACK_TIMECODE_12M_INACTIVE),
+        MXF_METADATA_TRACK_TIMECODE_12M_INACTIVE}, {
+  MXF_UL (TRACK_TIMECODE_12M_ACTIVE), MXF_METADATA_TRACK_TIMECODE_12M_ACTIVE}, {
+  MXF_UL (TRACK_TIMECODE_309M), MXF_METADATA_TRACK_TIMECODE_309M}, {
+  MXF_UL (TRACK_METADATA), MXF_METADATA_TRACK_METADATA}, {
+  MXF_UL (TRACK_PICTURE_ESSENCE), MXF_METADATA_TRACK_PICTURE_ESSENCE}, {
+  MXF_UL (TRACK_SOUND_ESSENCE), MXF_METADATA_TRACK_SOUND_ESSENCE}, {
+  MXF_UL (TRACK_DATA_ESSENCE), MXF_METADATA_TRACK_DATA_ESSENCE}, {
+  MXF_UL (TRACK_AUXILIARY_DATA), MXF_METADATA_TRACK_AUXILIARY_DATA}, {
+  MXF_UL (TRACK_PARSED_TEXT), MXF_METADATA_TRACK_PARSED_TEXT},
       /* Avid video? */
-  { {
-  0x80, 0x7d, 0x00, 0x60, 0x08, 0x14, 0x3e, 0x6f, 0x6f, 0x3c, 0x8c, 0xe1,
-          0x6c, 0xef, 0x11, 0xd2}, MXF_METADATA_TRACK_PICTURE_ESSENCE}
+  {
+  MXF_UL (TRACK_AVID_PICTURE_ESSENCE), MXF_METADATA_TRACK_PICTURE_ESSENCE}
 };
 
 MXFMetadataTrackType
@@ -2759,8 +2609,8 @@ mxf_metadata_track_identifier_parse (const MXFUL * track_identifier)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (mxf_metadata_track_identifier); i++)
-    if (memcmp (&mxf_metadata_track_identifier[i].ul, &track_identifier->u,
-            16) == 0)
+    if (mxf_ul_is_equal (mxf_metadata_track_identifier[i].ul,
+            track_identifier) == 0)
       return mxf_metadata_track_identifier[i].type;
 
   return MXF_METADATA_TRACK_UNKNOWN;
@@ -2773,7 +2623,7 @@ mxf_metadata_track_identifier_get (MXFMetadataTrackType type)
 
   for (i = 0; i < G_N_ELEMENTS (mxf_metadata_track_identifier); i++)
     if (mxf_metadata_track_identifier[i].type == type)
-      return (const MXFUL *) &mxf_metadata_track_identifier[i].ul;
+      return mxf_metadata_track_identifier[i].ul;
 
   return NULL;
 }
@@ -2843,17 +2693,9 @@ mxf_metadata_timeline_track_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_timeline_track_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 edit_rate_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x30, 0x04, 0x05, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 origin_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x03, 0x01, 0x03, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &edit_rate_ul, 16);
+  memcpy (&t->ul, MXF_UL (EDIT_RATE), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2863,7 +2705,7 @@ mxf_metadata_timeline_track_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &origin_ul, 16);
+  memcpy (&t->ul, MXF_UL (ORIGIN), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2958,17 +2800,9 @@ mxf_metadata_event_track_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_event_track_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 event_edit_rate_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x30, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 event_origin_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x07, 0x02, 0x01, 0x03, 0x01, 0x0B, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &event_edit_rate_ul, 16);
+  memcpy (&t->ul, MXF_UL (EVENT_EDIT_RATE), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -2978,7 +2812,7 @@ mxf_metadata_event_track_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &event_origin_ul, 16);
+  memcpy (&t->ul, MXF_UL (EVENT_ORIGIN), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3191,21 +3025,9 @@ mxf_metadata_sequence_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
       MXF_METADATA_BASE_CLASS (mxf_metadata_sequence_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 data_definition_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x07, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 duration_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x02, 0x01, 0x01, 0x03, 0x00, 0x00
-  };
-  static const guint8 structural_components_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x06, 0x09, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &data_definition_ul, 16);
+  memcpy (&t->ul, MXF_UL (DATA_DEFINITION), 16);
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3214,7 +3036,7 @@ mxf_metadata_sequence_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &duration_ul, 16);
+  memcpy (&t->ul, MXF_UL (DURATION), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3225,7 +3047,7 @@ mxf_metadata_sequence_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
   if (self->structural_components) {
     guint i;
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &structural_components_ul, 16);
+    memcpy (&t->ul, MXF_UL (STRUCTURAL_COMPONENTS), 16);
     t->size = 8 + 16 * self->n_structural_components;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -3342,17 +3164,9 @@ mxf_metadata_structural_component_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_structural_component_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 data_definition_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x07, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 duration_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x02, 0x01, 0x01, 0x03, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &data_definition_ul, 16);
+  memcpy (&t->ul, MXF_UL (DATA_DEFINITION), 16);
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3361,7 +3175,7 @@ mxf_metadata_structural_component_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &duration_ul, 16);
+  memcpy (&t->ul, MXF_UL (DURATION), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3466,21 +3280,9 @@ mxf_metadata_timecode_component_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_timecode_component_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 rounded_timecode_base_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x04, 0x01, 0x01, 0x02, 0x06, 0x00, 0x00
-  };
-  static const guint8 start_timecode_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x03, 0x01, 0x05, 0x00, 0x00
-  };
-  static const guint8 drop_frame_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x04, 0x01, 0x01, 0x05, 0x00, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &rounded_timecode_base_ul, 16);
+  memcpy (&t->ul, MXF_UL (ROUNDED_TIMECODE_BASE), 16);
   t->size = 2;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3489,7 +3291,7 @@ mxf_metadata_timecode_component_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &start_timecode_ul, 16);
+  memcpy (&t->ul, MXF_UL (START_TIMECODE), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3498,7 +3300,7 @@ mxf_metadata_timecode_component_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &drop_frame_ul, 16);
+  memcpy (&t->ul, MXF_UL (DROP_FRAME), 16);
   t->size = 1;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3650,21 +3452,9 @@ mxf_metadata_source_clip_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_source_clip_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 start_position_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x03, 0x01, 0x04, 0x00, 0x00
-  };
-  static const guint8 source_package_id_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x03, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 source_track_id_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x03, 0x02, 0x00, 0x00, 0x00
-  };
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &start_position_ul, 16);
+  memcpy (&t->ul, MXF_UL (START_POSITION), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3673,7 +3463,7 @@ mxf_metadata_source_clip_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &source_package_id_ul, 16);
+  memcpy (&t->ul, MXF_UL (SOURCE_PACKAGE_ID), 16);
   t->size = 32;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3682,7 +3472,7 @@ mxf_metadata_source_clip_write_tags (MXFMetadataBase * m,
   ret = g_list_prepend (ret, t);
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &source_track_id_ul, 16);
+  memcpy (&t->ul, MXF_UL (SOURCE_TRACK_ID), 16);
   t->size = 4;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -3830,16 +3620,12 @@ mxf_metadata_dm_source_clip_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_dm_source_clip_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 track_ids_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x01, 0x07, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00
-  };
 
   if (self->track_ids) {
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &track_ids_ul, 16);
+    memcpy (&t->ul, MXF_UL (DM_SOURCECLIP_TRACK_IDS), 16);
     t->size = 8 + 4 * self->n_track_ids;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4057,26 +3843,10 @@ mxf_metadata_dm_segment_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
       MXF_METADATA_BASE_CLASS (mxf_metadata_dm_segment_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 event_start_position_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x07, 0x02, 0x01, 0x03, 0x03, 0x03, 0x00, 0x00
-  };
-  static const guint8 event_comment_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x30, 0x04, 0x04, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 track_ids_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x01, 0x07, 0x01, 0x05, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 dm_framework_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x06, 0x01, 0x01, 0x04, 0x02, 0x0C, 0x00, 0x00
-  };
 
   if (self->event_start_position != -1) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &event_start_position_ul, 16);
+    memcpy (&t->ul, MXF_UL (EVENT_START_POSITION), 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4087,7 +3857,7 @@ mxf_metadata_dm_segment_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (self->event_comment) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &event_comment_ul, 16);
+    memcpy (&t->ul, MXF_UL (EVENT_COMMENT), 16);
     t->data = mxf_utf8_to_utf16 (self->event_comment, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x0602, &t->ul);
     ret = g_list_prepend (ret, t);
@@ -4097,7 +3867,7 @@ mxf_metadata_dm_segment_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &track_ids_ul, 16);
+    memcpy (&t->ul, MXF_UL (DM_SEGMENT_TRACK_IDS), 16);
     t->size = 8 + 4 * self->n_track_ids;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4111,7 +3881,7 @@ mxf_metadata_dm_segment_write_tags (MXFMetadataBase * m, MXFPrimerPack * primer)
 
   if (self->dm_framework) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &dm_framework_ul, 16);
+    memcpy (&t->ul, MXF_UL (DM_FRAMEWORK), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4297,16 +4067,12 @@ mxf_metadata_generic_descriptor_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_generic_descriptor_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 locators_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x06, 0x03, 0x00, 0x00
-  };
 
   if (self->locators) {
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &locators_ul, 16);
+    memcpy (&t->ul, MXF_UL (LOCATORS), 16);
     t->size = 8 + 16 * self->n_locators;;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -4453,30 +4219,10 @@ mxf_metadata_file_descriptor_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_file_descriptor_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 linked_track_id_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x06, 0x01, 0x01, 0x03, 0x05, 0x00, 0x00, 0x00
-  };
-  static const guint8 sample_rate_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x06, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 container_duration_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x06, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 essence_container_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x01, 0x02, 0x00, 0x00
-  };
-  static const guint8 codec_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x06, 0x01, 0x01, 0x04, 0x01, 0x03, 0x00, 0x00
-  };
 
   if (self->linked_track_id) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &linked_track_id_ul, 16);
+    memcpy (&t->ul, MXF_UL (LINKED_TRACK_ID), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4486,7 +4232,7 @@ mxf_metadata_file_descriptor_write_tags (MXFMetadataBase * m,
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &sample_rate_ul, 16);
+  memcpy (&t->ul, MXF_UL (SAMPLE_RATE), 16);
   t->size = 8;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -4497,7 +4243,7 @@ mxf_metadata_file_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->container_duration > 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &container_duration_ul, 16);
+    memcpy (&t->ul, MXF_UL (CONTAINER_DURATION), 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4507,7 +4253,7 @@ mxf_metadata_file_descriptor_write_tags (MXFMetadataBase * m,
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &essence_container_ul, 16);
+  memcpy (&t->ul, MXF_UL (ESSENCE_CONTAINER), 16);
   t->size = 16;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -4517,7 +4263,7 @@ mxf_metadata_file_descriptor_write_tags (MXFMetadataBase * m,
 
   if (!mxf_ul_is_zero (&self->codec)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &codec_ul, 16);
+    memcpy (&t->ul, MXF_UL (CODEC), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4861,106 +4607,10 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
       (mxf_metadata_generic_picture_essence_descriptor_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 signal_standard_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x05, 0x01, 0x13, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 frame_layout_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x03, 0x01, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 stored_width_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x02, 0x02, 0x00, 0x00, 0x00
-  };
-  static const guint8 stored_height_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x02, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 stored_f2_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x03, 0x02, 0x08, 0x00, 0x00, 0x00
-  };
-  static const guint8 sampled_width_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x08, 0x00, 0x00, 0x00
-  };
-  static const guint8 sampled_height_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x07, 0x00, 0x00, 0x00
-  };
-  static const guint8 sampled_x_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x09, 0x00, 0x00, 0x00
-  };
-  static const guint8 sampled_y_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x0A, 0x00, 0x00, 0x00
-  };
-  static const guint8 display_height_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x0B, 0x00, 0x00, 0x00
-  };
-  static const guint8 display_width_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x0C, 0x00, 0x00, 0x00
-  };
-  static const guint8 display_x_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x0D, 0x00, 0x00, 0x00
-  };
-  static const guint8 display_y_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x0E, 0x00, 0x00, 0x00
-  };
-  static const guint8 display_f2_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x03, 0x02, 0x07, 0x00, 0x00, 0x00
-  };
-  static const guint8 aspect_ratio_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 active_format_descriptor_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x03, 0x02, 0x09, 0x00, 0x00, 0x00
-  };
-  static const guint8 video_line_map_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x03, 0x02, 0x05, 0x00, 0x00, 0x00
-  };
-  static const guint8 alpha_transparency_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x05, 0x20, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 capture_gamma_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x02, 0x01, 0x01, 0x01, 0x02, 0x00
-  };
-  static const guint8 image_alignment_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x18, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 image_start_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x18, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 image_end_offset_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x18, 0x03, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 field_dominance_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x03, 0x01, 0x06, 0x00, 0x00, 0x00
-  };
-  static const guint8 picture_essence_coding_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x06, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
 
   if (self->signal_standard != 1) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &signal_standard_ul, 16);
+    memcpy (&t->ul, MXF_UL (SIGNAL_STANDARD), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4971,7 +4621,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->frame_layout != 255) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &frame_layout_ul, 16);
+    memcpy (&t->ul, MXF_UL (FRAME_LAYOUT), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4982,7 +4632,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->stored_width != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &stored_width_ul, 16);
+    memcpy (&t->ul, MXF_UL (STORED_WIDTH), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -4993,7 +4643,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->stored_height != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &stored_height_ul, 16);
+    memcpy (&t->ul, MXF_UL (STORED_HEIGHT), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5004,7 +4654,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->stored_f2_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &stored_f2_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (STORED_F2_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5015,7 +4665,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->sampled_width != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &sampled_width_ul, 16);
+    memcpy (&t->ul, MXF_UL (SAMPLED_WIDTH), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5026,7 +4676,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->sampled_height != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &sampled_height_ul, 16);
+    memcpy (&t->ul, MXF_UL (SAMPLED_HEIGHT), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5037,7 +4687,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->sampled_x_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &sampled_x_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (SAMPLED_X_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5048,7 +4698,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->sampled_y_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &sampled_y_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (SAMPLED_Y_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5059,7 +4709,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->display_height != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &display_height_ul, 16);
+    memcpy (&t->ul, MXF_UL (DISPLAY_HEIGHT), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5070,7 +4720,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->display_width != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &display_width_ul, 16);
+    memcpy (&t->ul, MXF_UL (DISPLAY_WIDTH), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5081,7 +4731,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->display_x_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &display_x_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (DISPLAY_X_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5092,7 +4742,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->display_y_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &display_y_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (DISPLAY_Y_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5103,7 +4753,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->display_f2_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &display_f2_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (DISPLAY_F2_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5114,7 +4764,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->aspect_ratio.n != 0 && self->aspect_ratio.d != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &aspect_ratio_ul, 16);
+    memcpy (&t->ul, MXF_UL (ASPECT_RATIO), 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5126,7 +4776,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->active_format_descriptor != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &active_format_descriptor_ul, 16);
+    memcpy (&t->ul, MXF_UL (ACTIVE_FORMAT_DESCRIPTOR), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5137,7 +4787,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->video_line_map[0] != 0 || self->video_line_map[1] != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &video_line_map_ul, 16);
+    memcpy (&t->ul, MXF_UL (VIDEO_LINE_MAP), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5149,7 +4799,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->alpha_transparency != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &alpha_transparency_ul, 16);
+    memcpy (&t->ul, MXF_UL (ALPHA_TRANSPARENCY), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5160,7 +4810,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (!mxf_ul_is_zero (&self->capture_gamma)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &capture_gamma_ul, 16);
+    memcpy (&t->ul, MXF_UL (CAPTURE_GAMMA), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5171,7 +4821,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->image_alignment_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &image_alignment_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (IMAGE_ALIGNMENT_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5182,7 +4832,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->image_start_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &image_start_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (IMAGE_START_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5193,7 +4843,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->image_end_offset != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &image_end_offset_ul, 16);
+    memcpy (&t->ul, MXF_UL (IMAGE_END_OFFSET), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5204,7 +4854,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->field_dominance != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &field_dominance_ul, 16);
+    memcpy (&t->ul, MXF_UL (FIELD_DOMINANCE), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5215,7 +4865,7 @@ mxf_metadata_generic_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (!mxf_ul_is_zero (&self->picture_essence_coding)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &picture_essence_coding_ul, 16);
+    memcpy (&t->ul, MXF_UL (PICTURE_ESSENCE_CODING), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5503,42 +5153,10 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
       (mxf_metadata_generic_sound_essence_descriptor_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 audio_sampling_rate_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x02, 0x03, 0x01, 0x01, 0x01, 0x00, 0x00
-  };
-  static const guint8 locked_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x04, 0x02, 0x03, 0x01, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 audio_ref_level_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x02, 0x01, 0x01, 0x03, 0x00, 0x00, 0x00
-  };
-  static const guint8 electro_spatial_formulation_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x02, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 channel_count_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x02, 0x01, 0x01, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 quantization_bits_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x04, 0x02, 0x03, 0x03, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 dial_norm_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x02, 0x07, 0x01, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 sound_essence_compression_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x02, 0x04, 0x02, 0x00, 0x00, 0x00, 0x00
-  };
 
   if (self->audio_sampling_rate.d && self->audio_sampling_rate.n) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &audio_sampling_rate_ul, 16);
+    memcpy (&t->ul, MXF_UL (AUDIO_SAMPLING_RATE), 16);
     t->size = 8;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5549,7 +5167,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
   }
 
   t = g_slice_new0 (MXFLocalTag);
-  memcpy (&t->ul, &locked_ul, 16);
+  memcpy (&t->ul, MXF_UL (LOCKED), 16);
   t->size = 1;
   t->data = g_slice_alloc (t->size);
   t->g_slice = TRUE;
@@ -5559,7 +5177,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->audio_ref_level) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &audio_ref_level_ul, 16);
+    memcpy (&t->ul, MXF_UL (AUDIO_REF_LEVEL), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5570,7 +5188,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->electro_spatial_formulation != 255) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &electro_spatial_formulation_ul, 16);
+    memcpy (&t->ul, MXF_UL (ELECTRO_SPATIAL_FORMULATION), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5581,7 +5199,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->channel_count) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &channel_count_ul, 16);
+    memcpy (&t->ul, MXF_UL (CHANNEL_COUNT), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5592,7 +5210,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->quantization_bits) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &quantization_bits_ul, 16);
+    memcpy (&t->ul, MXF_UL (QUANTIZATION_BITS), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5603,7 +5221,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->dial_norm != 0) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &dial_norm_ul, 16);
+    memcpy (&t->ul, MXF_UL (DIAL_NORM), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5614,7 +5232,7 @@ mxf_metadata_generic_sound_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (!mxf_ul_is_zero (&self->sound_essence_compression)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &sound_essence_compression_ul, 16);
+    memcpy (&t->ul, MXF_UL (SOUND_ESSENCE_COMPRESSION), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5865,50 +5483,10 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
       (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 component_depth_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x05, 0x03, 0x0A, 0x00, 0x00, 0x00
-  };
-  static const guint8 horizontal_subsampling_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x05, 0x00, 0x00, 0x00
-  };
-  static const guint8 vertical_subsampling_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x05, 0x01, 0x10, 0x00, 0x00, 0x00
-  };
-  static const guint8 color_siting_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x01, 0x06, 0x00, 0x00, 0x00
-  };
-  static const guint8 reversed_byte_order_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x03, 0x01, 0x02, 0x01, 0x0A, 0x00, 0x00, 0x00
-  };
-  static const guint8 padding_bits_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x18, 0x01, 0x04, 0x00, 0x00, 0x00, 0x00
-  };
-  static const guint8 alpha_sample_depth_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x05, 0x03, 0x07, 0x00, 0x00, 0x00
-  };
-  static const guint8 black_ref_level_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x03, 0x03, 0x00, 0x00, 0x00
-  };
-  static const guint8 white_ref_level_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x04, 0x01, 0x05, 0x03, 0x04, 0x00, 0x00, 0x00
-  };
-  static const guint8 color_range_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x05, 0x03, 0x05, 0x00, 0x00, 0x00
-  };
 
   if (self->component_depth) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &component_depth_ul, 16);
+    memcpy (&t->ul, MXF_UL (COMPONENT_DEPTH), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5919,7 +5497,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->horizontal_subsampling) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &horizontal_subsampling_ul, 16);
+    memcpy (&t->ul, MXF_UL (HORIZONTAL_SUBSAMPLING), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5930,7 +5508,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->vertical_subsampling) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &vertical_subsampling_ul, 16);
+    memcpy (&t->ul, MXF_UL (VERTICAL_SUBSAMPLING), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5941,7 +5519,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->color_siting != 0xff) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &color_siting_ul, 16);
+    memcpy (&t->ul, MXF_UL (COLOR_SITING), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5952,7 +5530,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->reversed_byte_order) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &reversed_byte_order_ul, 16);
+    memcpy (&t->ul, MXF_UL (REVERSED_BYTE_ORDER), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5963,7 +5541,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->padding_bits) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &padding_bits_ul, 16);
+    memcpy (&t->ul, MXF_UL (PADDING_BITS), 16);
     t->size = 2;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5974,7 +5552,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->alpha_sample_depth) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &alpha_sample_depth_ul, 16);
+    memcpy (&t->ul, MXF_UL (ALPHA_SAMPLE_DEPTH), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5985,7 +5563,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->black_ref_level) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &black_ref_level_ul, 16);
+    memcpy (&t->ul, MXF_UL (BLACK_REF_LEVEL), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -5996,7 +5574,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->white_ref_level) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &white_ref_level_ul, 16);
+    memcpy (&t->ul, MXF_UL (WHITE_REF_LEVEL), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6007,7 +5585,7 @@ mxf_metadata_cdci_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->color_range) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &color_range_ul, 16);
+    memcpy (&t->ul, MXF_UL (COLOR_RANGE), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6207,34 +5785,10 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
       (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 component_max_ref_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x05, 0x03, 0x0B, 0x00, 0x00, 0x00
-  };
-  static const guint8 component_min_ref_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x05, 0x03, 0x0C, 0x00, 0x00, 0x00
-  };
-  static const guint8 alpha_max_ref_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x05, 0x03, 0x0D, 0x00, 0x00, 0x00
-  };
-  static const guint8 alpha_min_ref_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x05, 0x03, 0x0E, 0x00, 0x00, 0x00
-  };
-  static const guint8 scanning_direction_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x05,
-    0x04, 0x01, 0x04, 0x04, 0x01, 0x00, 0x00, 0x00
-  };
-  static const guint8 pixel_layout_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x04, 0x01, 0x05, 0x03, 0x06, 0x00, 0x00, 0x00
-  };
 
   if (self->component_max_ref != 255) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &component_max_ref_ul, 16);
+    memcpy (&t->ul, MXF_UL (COMPONENT_MAX_REF), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6245,7 +5799,7 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->component_min_ref) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &component_min_ref_ul, 16);
+    memcpy (&t->ul, MXF_UL (COMPONENT_MIN_REF), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6256,7 +5810,7 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->alpha_max_ref != 255) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &alpha_max_ref_ul, 16);
+    memcpy (&t->ul, MXF_UL (ALPHA_MAX_REF), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6267,7 +5821,7 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->alpha_min_ref) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &alpha_min_ref_ul, 16);
+    memcpy (&t->ul, MXF_UL (ALPHA_MIN_REF), 16);
     t->size = 4;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6278,7 +5832,7 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->scanning_direction) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &scanning_direction_ul, 16);
+    memcpy (&t->ul, MXF_UL (SCANNING_DIRECTION), 16);
     t->size = 1;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6289,7 +5843,7 @@ mxf_metadata_rgba_picture_essence_descriptor_write_tags (MXFMetadataBase * m,
 
   if (self->pixel_layout) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &pixel_layout_ul, 16);
+    memcpy (&t->ul, MXF_UL (PIXEL_LAYOUT), 16);
     t->size = 2 * self->n_pixel_layout + 2;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -6404,14 +5958,10 @@ mxf_metadata_generic_data_essence_descriptor_write_tags (MXFMetadataBase * m,
       (mxf_metadata_generic_data_essence_descriptor_parent_class)->write_tags
       (m, primer);
   MXFLocalTag *t;
-  static const guint8 data_essence_coding_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x03,
-    0x04, 0x03, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00
-  };
 
   if (!mxf_ul_is_zero (&self->data_essence_coding)) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &data_essence_coding_ul, 16);
+    memcpy (&t->ul, MXF_UL (DATA_ESSENCE_CODING), 16);
     t->size = 16;
     t->data = g_slice_alloc (t->size);
     t->g_slice = TRUE;
@@ -6598,16 +6148,12 @@ mxf_metadata_multiple_descriptor_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_multiple_descriptor_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 sub_descriptors_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x04,
-    0x06, 0x01, 0x01, 0x04, 0x06, 0x0B, 0x00, 0x00
-  };
 
   if (self->sub_descriptors) {
     guint i;
 
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &sub_descriptors_ul, 16);
+    memcpy (&t->ul, MXF_UL (SUB_DESCRIPTORS), 16);
     t->size = 8 + 16 * self->n_sub_descriptors;
     t->data = g_slice_alloc0 (t->size);
     t->g_slice = TRUE;
@@ -6726,14 +6272,10 @@ mxf_metadata_text_locator_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_text_locator_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 locator_name_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x02,
-    0x01, 0x04, 0x01, 0x02, 0x01, 0x00, 0x00, 0x00
-  };
 
   if (self->locator_name) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &locator_name_ul, 16);
+    memcpy (&t->ul, MXF_UL (LOCATOR_NAME), 16);
     t->data = mxf_utf8_to_utf16 (self->locator_name, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x4101, &t->ul);
     ret = g_list_prepend (ret, t);
@@ -6825,14 +6367,10 @@ mxf_metadata_network_locator_write_tags (MXFMetadataBase * m,
       MXF_METADATA_BASE_CLASS
       (mxf_metadata_network_locator_parent_class)->write_tags (m, primer);
   MXFLocalTag *t;
-  static const guint8 url_string_ul[] = {
-    0x06, 0x0E, 0x2B, 0x34, 0x01, 0x01, 0x01, 0x01,
-    0x01, 0x02, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00
-  };
 
   if (self->url_string) {
     t = g_slice_new0 (MXFLocalTag);
-    memcpy (&t->ul, &url_string_ul, 16);
+    memcpy (&t->ul, MXF_UL (URL_STRING), 16);
     t->data = mxf_utf8_to_utf16 (self->url_string, &t->size);
     mxf_primer_pack_add_mapping (primer, 0x4001, &t->ul);
     ret = g_list_prepend (ret, t);
