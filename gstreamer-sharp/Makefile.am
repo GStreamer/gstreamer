@@ -43,6 +43,7 @@ sources = \
 	Version.cs \
 	AssemblyInfo.cs \
 	CommonTags.cs \
+	GError.cs \
 	plugins-base/PlayBin.cs \
 	plugins-base/DecodeBin.cs \
 	plugins-base/TypeFindElement.cs

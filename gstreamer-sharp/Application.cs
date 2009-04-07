@@ -55,16 +55,23 @@ namespace Gst
                 bool result = gst_init_check(ref argc, ref argv_ptr, out error_ptr);
                 
                 if(error_ptr != IntPtr.Zero) {
-                    throw new ApplicationException("gst_init_check set error");
+		    string message = GError.GetMessage (error_ptr);
+
+		    if (message == String.Empty)
+		      message = "Reason unknown";
+
+		    GError.Free (error_ptr);
+
+                    throw new ApplicationException(String.Format ("gst_init_check() failed: {0}", message));
                 } else if(!result) {
-                    throw new ApplicationException("gst_init_check failed, error not set");
+                    throw new ApplicationException("gst_init_check() failed: Reason unknown");
                 }
             } else {
                 gst_init(ref argc, ref argv_ptr);
             }
                 
             if(argv_ptr != argv.Handle) {
-                string init_call = check ? "gst_init_check" : "gst_init";
+                string init_call = check ? "gst_init_check()" : "gst_init()";
                 throw new ApplicationException(init_call + " returned a new argv handle");
             }
             
@@ -76,7 +83,7 @@ namespace Gst
                 Array.Copy(progargs, 1, args, 0, argc - 1);
             }
         }
-        
+
         [DllImport("gstreamer-0.10")]
         private static extern void gst_init(ref int argc, ref IntPtr argv);
 
