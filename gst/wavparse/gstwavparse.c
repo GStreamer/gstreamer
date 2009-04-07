@@ -113,6 +113,7 @@ gst_wavparse_base_init (gpointer g_class)
   src_template = gst_pad_template_new ("wavparse_src", GST_PAD_SRC,
       GST_PAD_SOMETIMES, gst_riff_create_audio_template_caps ());
   gst_element_class_add_pad_template (element_class, src_template);
+  gst_object_unref (src_template);
 
   gst_element_class_set_details (element_class, &gst_wavparse_details);
 }
