@@ -35,7 +35,7 @@
     
     
     
-  <Member MemberName=".ctor">
+  <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Buffer ();" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Buffer (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
@@ -115,7 +115,7 @@
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Ref"><MemberSignature Language="C#" Value="public void Ref ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Refcount"><MemberSignature Language="C#" Value="public uint Refcount { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Size">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Refcount"><MemberSignature Language="C#" Value="public int Refcount { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Size">
       <MemberSignature Language="C#" Value="public uint Size { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
@@ -137,5 +137,5 @@
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TryNewAndAlloc"><MemberSignature Language="C#" Value="public static Gst.Buffer TryNewAndAlloc (uint size);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue><Parameters><Parameter Name="size" Type="System.UInt32" /></Parameters><Docs><param name="size">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Unref"><MemberSignature Language="C#" Value="public void Unref ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member></Members>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TryNewAndAlloc"><MemberSignature Language="C#" Value="public static Gst.Buffer TryNewAndAlloc (uint size);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue><Parameters><Parameter Name="size" Type="System.UInt32" /></Parameters><Docs><param name="size">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

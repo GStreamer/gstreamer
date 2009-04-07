@@ -7,8 +7,6 @@
   <Types>
     <Namespace Name="Gst">
       <Type Name="ActivateMode" Kind="Enumeration" />
-      <Type Name="AllocTrace" Kind="Structure" />
-      <Type Name="AllocTraceFlags" Kind="Enumeration" />
       <Type Name="Application" Kind="Class" />
       <Type Name="AssocFlags" Kind="Enumeration" />
       <Type Name="Bin" Kind="Class" />
@@ -94,7 +92,6 @@
       <Type Name="IndexLookupMethod" Kind="Enumeration" />
       <Type Name="IndexResolver" Kind="Delegate" />
       <Type Name="IndexResolverMethod" Kind="Enumeration" />
-      <Type Name="Init" Kind="Class" />
       <Type Name="Iterator" Kind="Class" />
       <Type Name="IteratorDisposeFunction" Kind="Delegate" />
       <Type Name="IteratorFoldFunction" Kind="Delegate" />
@@ -212,8 +209,6 @@
       <Type Name="Task" Kind="Class" />
       <Type Name="TaskFunction" Kind="Delegate" />
       <Type Name="TaskState" Kind="Enumeration" />
-      <Type Name="Trace" Kind="Class" />
-      <Type Name="TraceEntry" Kind="Structure" />
       <Type Name="TypeFind" Kind="Structure" />
       <Type Name="TypeFindElement" Kind="Class" />
       <Type Name="TypeFindFactory" Kind="Class" />
