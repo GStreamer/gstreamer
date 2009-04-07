@@ -18,13 +18,17 @@
         <exclude>gstreamer-0.10.22/gst/gsturi.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstpreset.h</exclude>
 	<!-- Not bound -->
+        <exclude>gstreamer-0.10.22/gst/gstconfig.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gstenumtypes.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstfilter.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstiterator.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstmacros.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gstmarshal.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstparamspecs.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstpoll.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gsttrace.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstvalue.h</exclude>
+        <exclude>gstreamer-0.10.22/gst/gstversion.h</exclude>
 	<!-- Private headers -->
         <exclude>gstreamer-0.10.22/gst/gstregistrybinary.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstregistryxml.h</exclude>
