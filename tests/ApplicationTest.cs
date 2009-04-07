@@ -35,23 +35,5 @@ public class ApplicationTest
         Gst.Application.InitCheck("gstreamer-sharp-test", ref args);
         Gst.Application.Deinit();
     }
-
-    [Test]
-    public void TestVersion()
-    {
-        Assert.AreEqual(Gst.Application.Version.Minor, 10);
-    }
-    
-    [Test]
-    public void TestVersionString()
-    {   
-        Assert.IsNotNull(Gst.Application.Version.ToString());
-    }
-    
-    [Test]
-    public void TestVersionDescription()
-    {
-        Assert.IsNotNull(Gst.Application.Version.Description);
-    }
 }
 
