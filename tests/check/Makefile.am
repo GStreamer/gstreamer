@@ -95,6 +95,7 @@ check_PROGRAMS = \
 	elements/selector \
 	elements/mxfdemux \
 	elements/mxfmux \
+	pipelines/mxf \
 	elements/y4menc   \
 	$(check_metadata)
 
