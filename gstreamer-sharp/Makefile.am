@@ -76,14 +76,14 @@ EXTRA_DIST =			\
 $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
 	cp $(srcdir)/$(RAW_API) $(API)
 	chmod u+w $(API)
-	$(MONO) $(top_builddir)/fixup/gst-gapi-fixup.exe --api=$(API) --metadata=$(srcdir)/$(METADATA) \
-	--symbols=$(srcdir)/$(SYMBOLS)
+	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$(API) --metadata=$(srcdir)/$(METADATA) \
+		--symbols=$(srcdir)/$(SYMBOLS)
 
 generated-stamp: $(API) $(GAPI_CODEGEN) $(build_customs)
 	$(GAPI_CODEGEN) --generate $(API) \
-	--outdir=generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
-	--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
-	--glue-includes=$(glue_includes) \
+		--outdir=generated --customdir=$(srcdir) --assembly-name=$(ASSEMBLY_NAME) \
+		--gluelib-name=gstreamersharpglue-0.10 --glue-filename=glue/generated.c \
+		--glue-includes=$(glue_includes) \
 	&& touch generated-stamp
 
 $(KEYFILE): $(top_srcdir)/gstreamer-sharp.snk

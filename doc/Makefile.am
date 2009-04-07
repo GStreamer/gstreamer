@@ -29,6 +29,7 @@ gstreamer-sharp-docs.zip gstreamer-sharp-docs.tree: $(srcdir)/en/*/*.xml $(srcdi
 	$(MDASSEMBLER) --ecma $(srcdir)/en -o gstreamer-sharp-docs
 
 update: $(ASSEMBLIES)
+	LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(top_builddir)/gstreamer-sharp/glue/.libs \
 	$(MONODOCER) $(ASSEMBLIES_BUILD) -path:en -updateto:en -delete
 
 CLEANFILES = gstreamer-sharp-docs.zip gstreamer-sharp-docs.tree

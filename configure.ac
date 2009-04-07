@@ -4,7 +4,9 @@ AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(gstreamer-sharp, 0.9.5.99)
 AM_MAINTAINER_MODE
 
+AC_PROG_CC
 AC_PROG_INSTALL
+AC_HEADER_STDC
 
 PACKAGE_VERSION=gstreamer-sharp-0.10
 AC_SUBST(PACKAGE_VERSION)
@@ -16,29 +18,29 @@ PKG_CHECK_MODULES(MONO_DEPENDENCY, mono >= $MONO_REQUIRED_VERSION, has_mono=true
 AM_PROG_LIBTOOL
 
 if test "x$has_mono" = "xtrue"; then
-GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)'
-GENERATED_SOURCES=generated/*.cs
-AC_PATH_PROG(RUNTIME, mono, no)
-AC_PATH_PROG(CSC, mcs, no)
-if test `uname -s` = "Darwin"; then
-        LIB_PREFIX=
-        LIB_SUFFIX=.dylib
+	GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)'
+	GENERATED_SOURCES=generated/*.cs
+	AC_PATH_PROG(RUNTIME, mono, no)
+	AC_PATH_PROG(CSC, mcs, no)
+	if test `uname -s` = "Darwin"; then
+        	LIB_PREFIX=
+	        LIB_SUFFIX=.dylib
+	else
+        	LIB_PREFIX=.so
+	        LIB_SUFFIX=
+	fi
 else
-        LIB_PREFIX=.so
-        LIB_SUFFIX=
-fi
-else
-AC_PATH_PROG(CSC, csc.exe, no)
-GACUTIL_FLAGS=
-GENERATED_SOURCES=generated\\\\*.cs
+	AC_PATH_PROG(CSC, csc.exe, no)
+	GACUTIL_FLAGS=
+	GENERATED_SOURCES=generated\\\\*.cs
 
-if test x$CSC = "xno"; then
-        AC_MSG_ERROR([You need to install either mono or .Net])
-else
-RUNTIME=
-LIB_PREFIX=
-LIB_SUFFIX=.dylib
-fi
+	if test x$CSC = "xno"; then
+        	AC_MSG_ERROR([You need to install either mono or .Net])
+	else
+		RUNTIME=
+		LIB_PREFIX=
+		LIB_SUFFIX=.dll
+	fi
 fi
                                                                                 
 CS="C#"
@@ -67,7 +69,7 @@ if test "x$enable_monodoc" = "xyes"; then
 	AC_PATH_PROG(MONODOCER, monodocer, no)
 	AC_PATH_PROG(MDASSEMBLER, mdassembler, no)
 	if test x$MONODOCER = xno -o x$MDASSEMBLER = xno; then
-	   enable_monodoc=no
+		enable_monodoc=no
 	fi
 else
 	MONODOCER=
@@ -81,38 +83,33 @@ MONODOC_SOURCESDIR=`pkg-config --variable=sourcesdir monodoc`
 AC_SUBST(MONODOC_SOURCESDIR)
 
 ## Versions of dependencies
-GTKSHARP_REQUIRED_VERSION=2.4.0
-AC_SUBST(GTKSHARP_REQUIRED_VERSION)
-PKG_CHECK_MODULES(BASE_DEPENDENCIES, gtk-sharp-2.0 >= $GTKSHARP_REQUIRED_VERSION)
-
-## glib-sharp dependancy
 GLIBSHARP_REQUIRED_VERSION=2.13.90
 PKG_CHECK_MODULES(GLIBSHARP, glib-sharp-2.0 >= $GLIBSHARP_REQUIRED_VERSION)
 AC_SUBST(GLIBSHARP_LIBS)
 
-## probably should make gstreamer-plugins optional
-## but generating conditionally the source is not really possible
+GLIB_REQUIRED_VERSION=2.14.0
+PKG_CHECK_MODULES(GLIB,
+	glib-2.0 >= $GLIB_REQUIRED_VERSION
+	gobject-2.0 >= $GLIB_REQUIRED_VERSION
+)
+AC_SUBST(GLIB_LIBS)
+AC_SUBST(GLIB_CFLAGS)
+
 GSTREAMER_REQUIRED_VERSION=0.10.22
 GSTREAMER_PLUGINS_REQUIRED_VERSION=0.10.22
 AC_SUBST(GSTREAMER_REQUIRED_VERSION)
 AC_SUBST(GSTREAMER_PLUGINS_REQUIRED_VERSION)
 PKG_CHECK_MODULES(GST,
-gstreamer-base-0.10 >= $GSTREAMER_REQUIRED_VERSION
-gstreamer-plugins-base-0.10 >= $GSTREAMER_PLUGINS_REQUIRED_VERSION,
-enable_gst=yes, enable_gst=no 
+	gstreamer-base-0.10 >= $GSTREAMER_REQUIRED_VERSION
+	gstreamer-plugins-base-0.10 >= $GSTREAMER_PLUGINS_REQUIRED_VERSION
 )
-
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
-
-if test "x$enable_gst" = "xno" ; then
-      AC_MSG_ERROR([Install gstreamer and gstreamer-plugins])
-fi
 
 AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 
 ## Check for the gapi programs
-PKG_CHECK_MODULES(GAPI, gapi-2.0 >= $GTKSHARP_REQUIRED_VERSION)
+PKG_CHECK_MODULES(GAPI, gapi-2.0 >= $GLIBSHARP_REQUIRED_VERSION)
 
 AC_PATH_PROG(GAPI_CODEGEN, gapi2-codegen, no)
 if test "x$GAPI_CODEGEN" = "xno"; then
@@ -138,14 +135,14 @@ fi
 
 AC_OUTPUT([
 source/Makefile
-fixup/Makefile
+parser/Makefile
 gstreamer-sharp/Makefile
 gstreamer-sharp/AssemblyInfo.cs
 gstreamer-sharp/gstreamer-sharp.dll.config
 gstreamer-sharp/glue/Makefile
 doc/Makefile
 tests/Makefile
-sample/Makefile
+samples/Makefile
 gstreamer-sharp-0.10.pc
 Makefile
 ])
