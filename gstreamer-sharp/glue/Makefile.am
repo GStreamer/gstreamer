@@ -5,7 +5,8 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	clock.c \
 	message.c \
 	miniobject.c \
-	bin.c
+	bin.c \
+	dynamicsignal.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 
