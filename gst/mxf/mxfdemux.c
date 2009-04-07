@@ -2844,7 +2844,8 @@ gst_mxf_demux_chain (GstPad * pad, GstBuffer * inbuf)
 
   if (G_UNLIKELY (demux->offset == 0 && GST_BUFFER_OFFSET (inbuf) != 0)) {
     GST_DEBUG_OBJECT (demux, "offset was zero, synchronizing with buffer's");
-    demux->offset = GST_BUFFER_OFFSET (inbuf);
+    if (GST_BUFFER_OFFSET_IS_VALID (inbuf))
+      demux->offset = GST_BUFFER_OFFSET (inbuf);
     gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
   } else if (demux->current_partition == NULL) {
     gst_mxf_demux_set_partition_for_offset (demux, demux->offset);
