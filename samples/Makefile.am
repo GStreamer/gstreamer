@@ -40,4 +40,5 @@ MAINTAINERCLEANFILES = Makefile.in
 EXTRA_DIST = \
 	PlayBinPlayer.cs \
 	DecodeBinTranscoder.cs \
-	HelloWorld.cs
+	HelloWorld.cs \
+	TypeFind.cs
