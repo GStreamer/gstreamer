@@ -1495,6 +1495,13 @@ no_sync:
      * be aligned to this one */
     align_next = FALSE;
 
+    /* update the output samples. FIXME, this will just skip them when pausing
+     * during trick mode */
+    if (out_samples > written)
+      out_samples -= written;
+    else
+      break;
+
     samples -= written;
     data += written * bps;
   } while (TRUE);
