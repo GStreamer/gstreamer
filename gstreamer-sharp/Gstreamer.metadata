@@ -114,6 +114,24 @@
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_version_string']" />
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_default_registry_check_feature_version']" />
   <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_update_registry']">/api/namespace/object[@name='Registry']</move-node>
+  <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_atomic_int_set']" />
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_format_get_by_nick']">/api/namespace/class[@name='Util']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_format_get_details']">/api/namespace/class[@name='Util']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_format_get_name']">/api/namespace/class[@name='Util']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_format_register']">/api/namespace/class[@name='Util']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_formats_contains']">/api/namespace/class[@name='Util']</move-node>
+  <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_format_to_quark']" />
+  <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_is_tag_list']" />
+  <add-node path="/api/namespace"><class name="Parse" cname="GstParse" disable_void_ctor="1"></class></add-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launch']">/api/namespace/class[@name='Parse']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launch_full']">/api/namespace/class[@name='Parse']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launchv']">/api/namespace/class[@name='Parse']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_launchv_full']">/api/namespace/class[@name='Parse']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_bin_from_description']">/api/namespace/class[@name='Parse']</move-node>
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_bin_from_description_full']">/api/namespace/class[@name='Parse']</move-node>
+  <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_parse_error_quark']" />
+  <!-- TODO: Might still contain something -->
+  <attr path="/api/namespace/class[@name='Global']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Index']/field[@cname='resolver']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="hidden">1</attr>
@@ -190,6 +208,19 @@
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
 
   <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_bin_from_description']" name="name">BinFromDescription</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_bin_from_description_full']" name="name">BinFromDescription</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launch']" name="name">Launch</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launch_full']" name="name">Launch</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv']" name="name">Launch</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv']/parameters/parameter[@name='argv']" name="null_term_array">1</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv_full']" name="name">Launch</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv_full']/parameters/parameter[@name='argv']" name="null_term_array">1</attr>
+
+  <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="null_term_array">1</attr>
+  <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="elements_owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_FIXED_CLOCK']" name="value">BinFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='PipelineFlags']/member[@cname='GST_PIPELINE_FLAG_LAST']" name="value">BinFlags.Last &lt;&lt; 4</attr>

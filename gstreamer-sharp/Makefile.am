@@ -60,6 +60,7 @@ customs = 			\
 	Element.custom		\
 	Message.custom		\
 	Pad.custom		\
+	Parse.custom		\
 	Object.custom		\
 	MiniObject.custom       \
 	Registry.custom

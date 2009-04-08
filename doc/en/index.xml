@@ -64,7 +64,6 @@
       <Type Name="Format" Kind="Enumeration" />
       <Type Name="FormatDefinition" Kind="Structure" />
       <Type Name="GhostPad" Kind="Class" />
-      <Type Name="Global" Kind="Class" />
       <Type Name="HasPadCreatedArgs" Kind="Class" />
       <Type Name="HasPadCreatedHandler" Kind="Delegate" />
       <Type Name="HaveDataArgs" Kind="Class" />
@@ -131,6 +130,7 @@
       <Type Name="ParentSetHandler" Kind="Delegate" />
       <Type Name="ParentUnsetArgs" Kind="Class" />
       <Type Name="ParentUnsetHandler" Kind="Delegate" />
+      <Type Name="Parse" Kind="Class" />
       <Type Name="ParseContext" Kind="Class" />
       <Type Name="ParseError" Kind="Enumeration" />
       <Type Name="ParseFlags" Kind="Enumeration" />
