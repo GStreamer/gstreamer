@@ -849,6 +849,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
     elem = gst_element_factory_make ("autovideosink", "videosink");
     chain->sink = try_element (playsink, elem);
   }
+  /* FIXME: if DEFAULT_VIDEOSINK != "autovideosink" try this now */
   if (chain->sink == NULL) {
     GST_DEBUG_OBJECT (playsink, "trying xvimagesink");
     elem = gst_element_factory_make ("xvimagesink", "videosink");
@@ -948,10 +949,16 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
   /* ERRORS */
 no_sinks:
   {
-    post_missing_element_message (playsink, "autovideosink");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Both autovideosink and xvimagesink elements are missing.")),
-        (NULL));
+    if (!elem) {
+      post_missing_element_message (playsink, "autovideosink");
+      GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+          (_("Both autovideosink and xvimagesink elements are missing.")),
+          (NULL));
+    } else {
+      GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
+          (_("Both autovideosink and xvimagesink elements are not working.")),
+          (NULL));
+    }
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -1329,6 +1336,7 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
     elem = gst_element_factory_make ("autoaudiosink", "audiosink");
     chain->sink = try_element (playsink, elem);
   }
+  /* FIXME: if DEFAULT_AUDIOSINK != "autoaudiosink" try this now */
   if (chain->sink == NULL) {
     GST_DEBUG_OBJECT (playsink, "trying alsasink");
     elem = gst_element_factory_make ("alsasink", "audiosink");
@@ -1473,9 +1481,15 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
   /* ERRORS */
 no_sinks:
   {
-    post_missing_element_message (playsink, "autoaudiosink");
-    GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
-        (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
+    if (!elem) {
+      post_missing_element_message (playsink, "autoaudiosink");
+      GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
+          (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
+    } else {
+      GST_ELEMENT_ERROR (playsink, CORE, STATE_CHANGE,
+          (_("Both autoaudiosink and alsasink elements are not working.")),
+          (NULL));
+    }
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
@@ -1762,8 +1776,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->audio_tee_vissrc = NULL;
         }
         srcpad =
-            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-                vischain->chain.bin), "src");
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+                chain.bin), "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -1928,8 +1942,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
-              vischain->chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
+              chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
