@@ -204,6 +204,13 @@ AG_GST_CHECK_PLUGIN(mpegstream)
 AG_GST_CHECK_PLUGIN(realmedia)
 AG_GST_CHECK_PLUGIN(synaesthesia)
 
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
+
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+  WIN32_LIBS="-lws2_32"
+  AC_SUBST(WIN32_LIBS)
+fi
+
 dnl disable experimental plug-ins
 if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(synaesthesia)
