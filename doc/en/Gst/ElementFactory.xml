@@ -104,14 +104,14 @@
       <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StaticPadTemplates">
-      <MemberSignature Language="C#" Value="public GLib.List StaticPadTemplates { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.StaticPadTemplate[] StaticPadTemplates { get; }" />
       <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>Gst.StaticPadTemplate[]</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="UriProtocols">
-      <MemberSignature Language="C#" Value="public string UriProtocols { get; }" />
+      <MemberSignature Language="C#" Value="public string[] UriProtocols { get; }" />
       <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>System.String[]</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="UriType">
       <MemberSignature Language="C#" Value="public int UriType { get; }" />

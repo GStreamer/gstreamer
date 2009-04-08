@@ -48,6 +48,15 @@
   <attr path="/api/namespace/object[@name='Element']/method[@name='QueryDuration']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Create']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_protocols']/return-type" name="null_term_array">1</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_protocols']/return-type" name="owned">false</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_protocols']/return-type" name="elements_owned">false</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type" name="element_type">GstStaticPadTemplate</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type" name="elements_owned">false</attr>
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_static_pad_templates']/return-type" name="owned">false</attr>
+  <!-- FIXME: Add this once we bind gsturi.h
+  <attr path="/api/namespace/object[@name='ElementFactory']/method[@cname='gst_element_factory_get_uri_type']/return-type" name="type">GstURIType</attr>-->
 
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='ElementFlags']/member[@cname='GST_ELEMENT_LOCKED_STATE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
@@ -227,7 +236,14 @@
 
   <attr path="/api/namespace/object[@name='Plugin']/method[@name='LoadFile']" name="hidden">1</attr>
 
-  <attr path="/api/namespace/object[@name='PluginFeature']/field[@name='Name']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_set_name']" name="name">SetFeatureName</attr>
+  <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_get_name']" name="name">GetFeatureName</attr>
+  <add-node path="/api/namespace/object[@name='PluginFeature']">
+        <method cname="gst_plugin_feature_load" name="Load">
+        <return-type type="GstPluginFeature*" owned="true" />
+      </method>
+  </add-node>
+  <remove-node path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_list_free']" />
 
   <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
