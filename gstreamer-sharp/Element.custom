@@ -54,6 +54,10 @@ public void Disconnect (string signal, DynamicSignalHandler handler) {
   DynamicSignal.Disconnect (this, signal, handler);
 }
 
+public object Emit (string signal, params object[] parameters) {
+  return DynamicSignal.Emit (this, signal, parameters);
+}
+
 public bool AddPad (Pad p) {
   bool ret = gst_element_add_pad (this.Handle, p == null ? IntPtr.Zero : p.Handle);
   if (ret)
