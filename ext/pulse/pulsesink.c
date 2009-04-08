@@ -97,6 +97,7 @@ struct _GstPulseRingBuffer
   pa_stream *stream;
 
   pa_sample_spec sample_spec;
+  gint64 offset;
 
   gboolean corked;
   gboolean in_commit;
@@ -218,7 +219,6 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
     /* Make sure we don't get any further callbacks */
     pa_stream_set_state_callback (pbuf->stream, NULL, NULL);
     pa_stream_set_write_callback (pbuf->stream, NULL, NULL);
-    pa_stream_set_latency_update_callback (pbuf->stream, NULL, NULL);
 
     pa_stream_unref (pbuf->stream);
     pbuf->stream = NULL;
@@ -486,20 +486,6 @@ gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
   }
 }
 
-static void
-gst_pulsering_stream_latency_update_cb (pa_stream * s, void *userdata)
-{
-  GstPulseSink *psink;
-  GstPulseRingBuffer *pbuf;
-
-  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
-
-  GST_LOG_OBJECT (psink, "got latency update callback");
-
-  pa_threaded_mainloop_signal (psink->mainloop, 0);
-}
-
 /* This method should create a new stream of the given @spec. No playback should
  * start yet so we start in the corked state. */
 static gboolean
@@ -514,6 +500,8 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   pa_cvolume v, *pv;
   pa_stream_flags_t flags;
   const gchar *name;
+  GstAudioClock *clock;
+  gint64 time_offset;
 
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
   pbuf = GST_PULSERING_BUFFER_CAST (buf);
@@ -557,8 +545,6 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_state_cb, pbuf);
   pa_stream_set_write_callback (pbuf->stream,
       gst_pulsering_stream_request_cb, pbuf);
-  pa_stream_set_latency_update_callback (pbuf->stream,
-      gst_pulsering_stream_latency_update_cb, pbuf);
 
   /* buffering requirements */
   memset (&buf_attr, 0, sizeof (buf_attr));
@@ -584,8 +570,7 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   }
 
   /* construct the flags */
-  flags = PA_STREAM_INTERPOLATE_TIMING |
-      PA_STREAM_AUTO_TIMING_UPDATE | PA_STREAM_NOT_MONOTONOUS |
+  flags = PA_STREAM_INTERPOLATE_TIMING | PA_STREAM_AUTO_TIMING_UPDATE |
 #if HAVE_PULSE_0_9_11
       PA_STREAM_ADJUST_LATENCY |
 #endif
@@ -617,6 +602,24 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     /* Wait until the stream is ready */
     pa_threaded_mainloop_wait (psink->mainloop);
   }
+
+  /* our clock will now start from 0 again */
+  clock = GST_AUDIO_CLOCK (GST_BASE_AUDIO_SINK (psink)->provided_clock);
+  gst_audio_clock_reset (clock, 0);
+  time_offset = clock->abidata.ABI.time_offset;
+
+  GST_LOG_OBJECT (psink, "got time offset %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_offset));
+
+  /* calculate the sample offset for 0 */
+  if (time_offset > 0)
+    pbuf->offset = gst_util_uint64_scale_int (time_offset,
+        pbuf->sample_spec.rate, GST_SECOND);
+  else
+    pbuf->offset = -gst_util_uint64_scale_int (-time_offset,
+        pbuf->sample_spec.rate, GST_SECOND);
+  GST_LOG_OBJECT (psink, "sample offset %" G_GINT64_FORMAT, pbuf->offset);
+
 
   GST_LOG_OBJECT (psink, "stream is acquired now");
 
@@ -701,6 +704,18 @@ gst_pulseringbuffer_activate (GstRingBuffer * buf, gboolean active)
   return TRUE;
 }
 
+static void
+gst_pulsering_success_cb (pa_stream * s, int success, void *userdata)
+{
+  GstPulseRingBuffer *pbuf;
+  GstPulseSink *psink;
+
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  pa_threaded_mainloop_signal (psink->mainloop, 0);
+}
+
 /* update the corked state of a stream, must be called with the mainloop
  * lock */
 static gboolean
@@ -714,7 +729,8 @@ gst_pulsering_set_corked (GstPulseRingBuffer * pbuf, gboolean corked)
 
   GST_DEBUG_OBJECT (psink, "setting corked state to %d", corked);
   if (pbuf->corked != corked) {
-    if (!(o = pa_stream_cork (pbuf->stream, corked, NULL, NULL)))
+    if (!(o = pa_stream_cork (pbuf->stream, corked,
+                gst_pulsering_success_cb, pbuf)))
       goto cork_failed;
 
     while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
@@ -791,18 +807,6 @@ gst_pulseringbuffer_pause (GstRingBuffer * buf)
   pa_threaded_mainloop_unlock (psink->mainloop);
 
   return res;
-}
-
-static void
-gst_pulsering_success_cb (pa_stream * s, int success, void *userdata)
-{
-  GstPulseRingBuffer *pbuf;
-  GstPulseSink *psink;
-
-  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
-
-  pa_threaded_mainloop_signal (psink->mainloop, 0);
 }
 
 /* stop playback, we flush everything. */
@@ -1016,11 +1020,24 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
     if (avail > out_samples)
       avail = out_samples;
 
-    GST_LOG_OBJECT (psink, "writing %d samples at offset %" G_GUINT64_FORMAT,
-        avail, *sample);
-
-    offset = *sample * bps;
+    /* correct for sample offset against the internal clock */
+    offset = *sample;
+    if (pbuf->offset >= 0) {
+      if (offset > pbuf->offset)
+        offset -= pbuf->offset;
+      else
+        offset = 0;
+    } else {
+      if (offset > -pbuf->offset)
+        offset += pbuf->offset;
+      else
+        offset = 0;
+    }
+    offset *= bps;
     towrite = avail * bps;
+
+    GST_LOG_OBJECT (psink, "writing %d samples at offset %" G_GUINT64_FORMAT,
+        avail, offset);
 
     if (G_LIKELY (inr == outr && !reverse)) {
       /* no rate conversion, simply write out the samples */
@@ -1290,12 +1307,15 @@ gst_pulse_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   pa_threaded_mainloop_lock (psink->mainloop);
-  /* if we don't have enough data to get a timestamp, just return 0 */
-  if (pa_stream_get_time (pbuf->stream, &time) < 0)
-    time = 0;
-  pa_threaded_mainloop_unlock (psink->mainloop);
 
-  time *= 1000;
+  /* if we don't have enough data to get a timestamp, just return NONE, which
+   * will return the last reported time */
+  if (pa_stream_get_time (pbuf->stream, &time) < 0) {
+    GST_DEBUG_OBJECT (psink, "could not get time");
+    time = GST_CLOCK_TIME_NONE;
+  } else
+    time *= 1000;
+  pa_threaded_mainloop_unlock (psink->mainloop);
 
   GST_LOG_OBJECT (psink, "current time is %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time));
@@ -1317,6 +1337,8 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
 
   g_assert ((pulsesink->mainloop = pa_threaded_mainloop_new ()));
   g_assert (pa_threaded_mainloop_start (pulsesink->mainloop) == 0);
+
+//  GST_BASE_SINK (pulsesink)->can_activate_pull = TRUE;
 
   pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink), G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device, TRUE, FALSE);    /* TRUE for sinks, FALSE for sources */
 
