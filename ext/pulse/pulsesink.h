@@ -42,39 +42,31 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PULSESINK))
 #define GST_IS_PULSESINK_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PULSESINK))
+#define GST_PULSESINK_CAST(obj) \
+  ((GstPulseSink *)(obj))
 
 typedef struct _GstPulseSink GstPulseSink;
 typedef struct _GstPulseSinkClass GstPulseSinkClass;
 
 struct _GstPulseSink
 {
-  GstAudioSink sink;
+  GstBaseAudioSink sink;
 
   gchar *server, *device, *stream_name;
+  gchar *device_description;
 
   pa_threaded_mainloop *mainloop;
-
-  pa_context *context;
-  pa_stream *stream;
-
-  pa_sample_spec sample_spec;
 
   GstPulseProbe *probe;
 
   gdouble volume;
   gboolean volume_set;
-
-  gchar *device_description;
-
-  gboolean operation_success;
-  gboolean did_reset, in_write;
-  gboolean corked;
   gint notify;
 };
 
 struct _GstPulseSinkClass
 {
-  GstAudioSinkClass parent_class;
+  GstBaseAudioSinkClass parent_class;
 };
 
 GType gst_pulsesink_get_type (void);
