@@ -25,12 +25,6 @@
       <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
       <Parameters><Parameter Name="value" Type="System.Int32" /></Parameters>
       <Docs><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DefaultRegistryCheckFeatureVersion">
-      <MemberSignature Language="C#" Value="public static bool DefaultRegistryCheckFeatureVersion (string feature_name, uint min_major, uint min_minor, uint min_micro);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="feature_name" Type="System.String" /><Parameter Name="min_major" Type="System.UInt32" /><Parameter Name="min_minor" Type="System.UInt32" /><Parameter Name="min_micro" Type="System.UInt32" /></Parameters>
-      <Docs><param name="feature_name">To be added.</param><param name="min_major">To be added.</param><param name="min_minor">To be added.</param><param name="min_micro">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FormatGetByNick">
       <MemberSignature Language="C#" Value="public static Gst.Format FormatGetByNick (string nick);" />
       <MemberType>Method</MemberType>
@@ -97,7 +91,7 @@
       <ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue>
       <Parameters><Parameter Name="argv" Type="System.String" /></Parameters>
       <Docs><param name="argv">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseLaunchvFull"><MemberSignature Language="C#" Value="public static Gst.Element ParseLaunchvFull (string argv, Gst.ParseContext context, Gst.ParseFlags flags);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="argv" Type="System.String" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters><Docs><param name="argv">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="UpdateRegistry"><MemberSignature Language="C#" Value="public static bool UpdateRegistry ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseLaunchvFull"><MemberSignature Language="C#" Value="public static Gst.Element ParseLaunchvFull (string argv, Gst.ParseContext context, Gst.ParseFlags flags);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Element</ReturnType></ReturnValue><Parameters><Parameter Name="argv" Type="System.String" /><Parameter Name="context" Type="Gst.ParseContext" /><Parameter Name="flags" Type="Gst.ParseFlags" /></Parameters><Docs><param name="argv">To be added.</param><param name="context">To be added.</param><param name="flags">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member>
     
     
     

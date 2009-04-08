@@ -1,23 +1,16 @@
 <gapi-parser-input>
   <api filename="../gstreamer-sharp/gstreamer-api.raw">
-<!--
-	<library name="gstcontroller-0.10.dll">
-	  <namespace name="Gst">
-        <dir>gstreamer-0.10.3/libs/gst/controller</dir>
-      </namespace>
-    </library>
--->	
     <library name="gstreamer-0.10.dll">
       <namespace name="Gst">
         <dir>gstreamer-0.10.22/gst</dir>
-	<!-- Needs to be bound -->
+        <!-- Needs to be bound -->
         <exclude>gstreamer-0.10.22/gst/gstdebugutils.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gsterror.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstinfo.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstinterface.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gsturi.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstpreset.h</exclude>
-	<!-- Not bound -->
+        <!-- Not bound -->
         <exclude>gstreamer-0.10.22/gst/gstconfig.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstenumtypes.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstfilter.h</exclude>
@@ -29,7 +22,7 @@
         <exclude>gstreamer-0.10.22/gst/gsttrace.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstvalue.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstversion.h</exclude>
-	<!-- Private headers -->
+        <!-- Private headers -->
         <exclude>gstreamer-0.10.22/gst/gstregistrybinary.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gstregistryxml.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gst_private.h</exclude>
@@ -39,6 +32,6 @@
         <exclude>gstreamer-0.10.22/gst/gstquark.h</exclude>
         <exclude>gstreamer-0.10.22/gst/gettext.h</exclude>
       </namespace>
-	</library>
+    </library>
   </api>
 </gapi-parser-input>

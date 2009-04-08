@@ -23,8 +23,24 @@
     
     
     
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Registry ();" />
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public Registry ();" />
       <MemberType>Constructor</MemberType>
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
@@ -62,13 +78,7 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("feature-added")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>Gst.FeatureAddedHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FeatureFilter">
-      <MemberSignature Language="C#" Value="public GLib.List FeatureFilter (Gst.PluginFeatureFilter filter, bool first);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="filter" Type="Gst.PluginFeatureFilter" /><Parameter Name="first" Type="System.Boolean" /></Parameters>
-      <Docs><param name="filter">To be added.</param><param name="first">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FindFeature">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FeatureFilter"><MemberSignature Language="C#" Value="public Gst.PluginFeature[] FeatureFilter (Gst.PluginFeatureFilter filter, bool first);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PluginFeature[]</ReturnType></ReturnValue><Parameters><Parameter Name="filter" Type="Gst.PluginFeatureFilter" /><Parameter Name="first" Type="System.Boolean" /></Parameters><Docs><param name="filter">To be added.</param><param name="first">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="FindFeature">
       <MemberSignature Language="C#" Value="public Gst.PluginFeature FindFeature (string name, GLib.GType type);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.PluginFeature</ReturnType></ReturnValue>
@@ -80,19 +90,7 @@
       <ReturnValue><ReturnType>Gst.Plugin</ReturnType></ReturnValue>
       <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
       <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ForkIsEnabled"><MemberSignature Language="C#" Value="public static bool ForkIsEnabled ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ForkSetEnabled"><MemberSignature Language="C#" Value="public static void ForkSetEnabled (bool enabled);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="enabled" Type="System.Boolean" /></Parameters><Docs><param name="enabled">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetFeatureList">
-      <MemberSignature Language="C#" Value="public GLib.List GetFeatureList (GLib.GType type);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="type" Type="GLib.GType" /></Parameters>
-      <Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFeatureListByPlugin">
-      <MemberSignature Language="C#" Value="public GLib.List GetFeatureListByPlugin (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFeatureList"><MemberSignature Language="C#" Value="public Gst.PluginFeature[] GetFeatureList (GLib.GType type);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PluginFeature[]</ReturnType></ReturnValue><Parameters><Parameter Name="type" Type="GLib.GType" /></Parameters><Docs><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetFeatureListByPlugin"><MemberSignature Language="C#" Value="public Gst.PluginFeature[] GetFeatureListByPlugin (string name);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PluginFeature[]</ReturnType></ReturnValue><Parameters><Parameter Name="name" Type="System.String" /></Parameters><Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
@@ -122,9 +120,9 @@
       <Parameters><Parameter Name="plugin" Type="Gst.Plugin" /></Parameters>
       <Docs><param name="plugin">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Registry), ConnectionMethod="OverridePluginAdded")</AttributeName></Attribute></Attributes></Member><Member MemberName="PathList">
-      <MemberSignature Language="C#" Value="public GLib.List PathList { get; }" />
+      <MemberSignature Language="C#" Value="public string[] PathList { get; }" />
       <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>System.String[]</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PluginAdded">
       <MemberSignature Language="C#" Value="public event Gst.PluginAddedHandler PluginAdded;" />
@@ -132,16 +130,10 @@
       <Attributes><Attribute><AttributeName>GLib.Signal("plugin-added")</AttributeName></Attribute></Attributes>
       <ReturnValue><ReturnType>Gst.PluginAddedHandler</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PluginFilter">
-      <MemberSignature Language="C#" Value="public GLib.List PluginFilter (Gst.PluginFilter filter, bool first);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="filter" Type="Gst.PluginFilter" /><Parameter Name="first" Type="System.Boolean" /></Parameters>
-      <Docs><param name="filter">To be added.</param><param name="first">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PluginList">
-      <MemberSignature Language="C#" Value="public GLib.List PluginList { get; }" />
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="PluginFilter"><MemberSignature Language="C#" Value="public Gst.Plugin[] PluginFilter (Gst.PluginFilter filter, bool first);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Plugin[]</ReturnType></ReturnValue><Parameters><Parameter Name="filter" Type="Gst.PluginFilter" /><Parameter Name="first" Type="System.Boolean" /></Parameters><Docs><param name="filter">To be added.</param><param name="first">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="PluginList">
+      <MemberSignature Language="C#" Value="public Gst.Plugin[] PluginList { get; }" />
       <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.List</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>Gst.Plugin[]</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveFeature">
       <MemberSignature Language="C#" Value="public void RemoveFeature (Gst.PluginFeature feature);" />
@@ -155,33 +147,5 @@
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters><Parameter Name="plugin" Type="Gst.Plugin" /></Parameters>
       <Docs><param name="plugin">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ScanPath"><MemberSignature Language="C#" Value="public bool ScanPath (string path);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="path" Type="System.String" /></Parameters><Docs><param name="path">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="XmlReadCache">
-      <MemberSignature Language="C#" Value="public bool XmlReadCache (string location);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="location" Type="System.String" /></Parameters>
-      <Docs><param name="location">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="XmlWriteCache">
-      <MemberSignature Language="C#" Value="public bool XmlWriteCache (string location);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="location" Type="System.String" /></Parameters>
-      <Docs><param name="location">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-  </Members>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ScanPath"><MemberSignature Language="C#" Value="public bool ScanPath (string path);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="path" Type="System.String" /></Parameters><Docs><param name="path">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="UpdateDefault"><MemberSignature Language="C#" Value="public static bool UpdateDefault ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

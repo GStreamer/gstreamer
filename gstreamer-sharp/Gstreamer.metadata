@@ -112,6 +112,8 @@
   <attr path="/api/namespace/object[@name='GhostPad']" name="parent">GstPad</attr>
 
   <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_version_string']" />
+  <remove-node path="/api/namespace/class[@name='Global']/method[@cname='gst_default_registry_check_feature_version']" />
+  <move-node path="/api/namespace/class[@name='Global']/method[@cname='gst_update_registry']">/api/namespace/object[@name='Registry']</move-node>
 
   <attr path="/api/namespace/object[@name='Index']/field[@cname='resolver']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="hidden">1</attr>
@@ -198,6 +200,31 @@
 
   <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
+
+  <attr path="/api/namespace/object[@name='Registry']" name="disable_void_ctor">1</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_update_registry']" name="name">UpdateDefault</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_feature_filter']/return-type" name="element_type">GstPluginFeature</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_feature_filter']/return-type" name="elements_owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_feature_filter']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_feature_list']/return-type" name="element_type">GstPluginFeature</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_feature_list']/return-type" name="elements_owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_feature_list']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_feature_list_by_plugin']/return-type" name="element_type">GstPluginFeature</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_feature_list_by_plugin']/return-type" name="elements_owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_feature_list_by_plugin']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_plugin_filter']/return-type" name="element_type">GstPlugin</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_plugin_filter']/return-type" name="elements_owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_plugin_filter']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_path_list']/return-type" name="element_type">const-char*</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_path_list']/return-type" name="elements_owned">false</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_path_list']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_plugin_list']/return-type" name="element_type">GstPlugin</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_plugin_list']/return-type" name="elements_owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_get_plugin_list']/return-type" name="owned">true</attr>
+  <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_xml_write_cache']" />
+  <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_xml_read_cache']" />
+  <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_fork_is_enabled']" />
+  <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_fork_set_enabled']" />
 
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_NULL_TO_READY']" name="value">(State.Null &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_PAUSED']" name="value">(State.Ready &lt;&lt; 3) | State.Paused</attr>
