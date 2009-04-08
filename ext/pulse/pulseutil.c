@@ -123,7 +123,6 @@ gst_pulse_gst_to_channel_map (pa_channel_map * map,
     const GstRingBufferSpec * spec)
 {
   int i;
-
   GstAudioChannelPosition *pos;
 
   pa_channel_map_init (map);
@@ -131,14 +130,10 @@ gst_pulse_gst_to_channel_map (pa_channel_map * map,
   if (!(pos =
           gst_audio_get_channel_positions (gst_caps_get_structure (spec->caps,
                   0)))) {
-/*         g_debug("%s: No channel positions!\n", G_STRFUNC); */
     return NULL;
   }
 
-/*     g_debug("%s: Got channel positions:\n", G_STRFUNC); */
-
   for (i = 0; i < spec->channels; i++) {
-
     if (pos[i] == GST_AUDIO_CHANNEL_POSITION_NONE) {
       /* no valid mappings for these channels */
       g_free (pos);
@@ -147,15 +142,12 @@ gst_pulse_gst_to_channel_map (pa_channel_map * map,
       map->map[i] = gst_pos_to_pa[pos[i]];
     else
       map->map[i] = PA_CHANNEL_POSITION_INVALID;
-
-    /*g_debug("  channel %d: gst: %d pulse: %d\n", i, pos[i], map->map[i]); */
   }
 
   g_free (pos);
   map->channels = spec->channels;
 
   if (!pa_channel_map_valid (map)) {
-/*         g_debug("generated invalid map!\n"); */
     return NULL;
   }
 
