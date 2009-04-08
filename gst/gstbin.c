@@ -51,10 +51,9 @@
  *
  * gst_object_unref() is used to drop your reference to the bin.
  *
- * The <link linkend="GstBin-element-added">element-added</link> signal is
- * fired whenever a new element is added to the bin. Likewise the <link
- * linkend="GstBin-element-removed">element-removed</link> signal is fired
- * whenever an element is removed from the bin.
+ * The #GstBin::element-added signal is fired whenever a new element is added to
+ * the bin. Likewise the #GstBin::element-removed signal is fired whenever an
+ * element is removed from the bin.
  *
  * <refsect2><title>Notes</title>
  * <para>

@@ -52,7 +52,7 @@
  * gst_clock_id_wait(). To receive a callback when the specific time is reached
  * in the clock use gst_clock_id_wait_async(). Both these calls can be
  * interrupted with the gst_clock_id_unschedule() call. If the blocking wait is
- * unscheduled a return value of GST_CLOCK_UNSCHEDULED is returned.
+ * unscheduled a return value of #GST_CLOCK_UNSCHEDULED is returned.
  *
  * Periodic callbacks scheduled async will be repeatedly called automatically
  * until it is unscheduled. To schedule a sync periodic callback,
@@ -92,12 +92,12 @@
  * of their internal clock relative to the master clock by using the
  * gst_clock_get_calibration() function. 
  *
- * The master/slave synchronisation can be tuned with the "timeout", "window-size"
- * and "window-threshold" properties. The "timeout" property defines the interval
- * to sample the master clock and run the calibration functions. 
- * "window-size" defines the number of samples to use when calibrating and
- * "window-threshold" defines the minimum number of samples before the 
- * calibration is performed.
+ * The master/slave synchronisation can be tuned with the #GstClock:timeout,
+ * #GstClock:window-size and #GstClock:window-threshold properties.
+ * The #GstClock:timeout property defines the interval to sample the master
+ * clock and run the calibration functions. #GstClock:window-size defines the
+ * number of samples to use when calibrating and #GstClock:window-threshold
+ * defines the minimum number of samples before the calibration is performed.
  *
  * Last reviewed on 2006-08-11 (0.10.10)
  */
