@@ -219,13 +219,19 @@
   <attr path="/api/namespace/object[@name='ParamSpecMiniObject']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_bin_from_description']" name="name">BinFromDescription</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_bin_from_description']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_bin_from_description_full']" name="name">BinFromDescription</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_bin_from_description_full']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launch']" name="name">Launch</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launch']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launch_full']" name="name">Launch</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launch_full']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv']" name="name">Launch</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv']/parameters/parameter[@name='argv']" name="null_term_array">1</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv_full']" name="name">Launch</attr>
   <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv_full']/parameters/parameter[@name='argv']" name="null_term_array">1</attr>
+  <attr path="/api/namespace/class[@name='Parse']/method[@cname='gst_parse_launchv_full']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="null_term_array">1</attr>
   <attr path="/api/namespace/struct[@name='ParseContext']/method[@cname='gst_parse_context_get_missing_elements']/return-type" name="owned">true</attr>
@@ -272,6 +278,10 @@
   <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_xml_read_cache']" />
   <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_fork_is_enabled']" />
   <remove-node path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_fork_set_enabled']" />
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_find_plugin']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_find_feature']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_lookup']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_lookup_feature']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_NULL_TO_READY']" name="value">(State.Null &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_PAUSED']" name="value">(State.Ready &lt;&lt; 3) | State.Paused</attr>
