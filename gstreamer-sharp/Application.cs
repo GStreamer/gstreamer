@@ -5,8 +5,8 @@
 //   Aaron Bockover (abockover@novell.com)
 //   Alp Toker (alp@atoker.com)
 //
-// (C) 2006 Novell, Inc.
-// (C) 2002 Alp Toker
+// Copyright (C) 2002 Alp Toker
+// Copyright (C) 2006 Novell, Inc.
 //
 
 using System;

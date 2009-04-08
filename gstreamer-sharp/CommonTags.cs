@@ -4,7 +4,7 @@
 // Authors:
 //   Alp Toker (alp@atoker.com)
 //
-// (C) 2002 Alp Toker
+// Copyright (C) 2002 Alp Toker
 //
 
 namespace Gst {

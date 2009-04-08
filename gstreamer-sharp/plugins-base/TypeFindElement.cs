@@ -4,7 +4,7 @@
 // Authors:
 //   Aaron Bockover (abockover@novell.com)
 //
-// (C) 2006 Novell, Inc.
+// Copyright (C) 2006 Novell, Inc.
 //
 
 using System;
