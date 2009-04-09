@@ -82,6 +82,7 @@ enum
   PROP_SILENT,
   PROP_LAST_MESSAGE,
   PROP_PULL_MODE,
+  PROP_ALLOC_PAD,
 };
 
 static GstStaticPadTemplate tee_src_template = GST_STATIC_PAD_TEMPLATE ("src%d",
@@ -195,6 +196,10 @@ gst_tee_class_init (GstTeeClass * klass)
           "Behavior of tee in pull mode", GST_TYPE_TEE_PULL_MODE,
           DEFAULT_PULL_MODE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ALLOC_PAD,
+      g_param_spec_object ("alloc-pad", "Allocation Src Pad",
+          "The pad used for gst_pad_alloc_buffer", GST_TYPE_PAD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
@@ -294,6 +299,7 @@ activate_failed:
       tee->allocpad = NULL;
     gst_object_unref (srcpad);
     GST_OBJECT_UNLOCK (tee);
+    g_object_notify (G_OBJECT (tee), "alloc-pad");
     return NULL;
   }
 }
@@ -312,6 +318,7 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
   if (tee->allocpad == pad)
     tee->allocpad = NULL;
   GST_OBJECT_UNLOCK (tee);
+  g_object_notify (G_OBJECT (tee), "alloc-pad");
 
   /* wait for pending pad_alloc to finish */
   GST_TEE_DYN_LOCK (tee);
@@ -348,6 +355,18 @@ gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_PULL_MODE:
       tee->pull_mode = g_value_get_enum (value);
       break;
+    case PROP_ALLOC_PAD:
+    {
+      GstPad *pad = g_value_get_object (value);
+      GST_OBJECT_LOCK (pad);
+      if (GST_OBJECT_PARENT (pad) == GST_OBJECT_CAST (object))
+        tee->allocpad = pad;
+      else
+        GST_WARNING_OBJECT (object, "Tried to set alloc pad %s which"
+            " is not my pad", GST_OBJECT_NAME (pad));
+      GST_OBJECT_UNLOCK (pad);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -380,6 +399,9 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PULL_MODE:
       g_value_set_enum (value, tee->pull_mode);
+      break;
+    case PROP_ALLOC_PAD:
+      g_value_set_object (value, tee->allocpad);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -442,6 +464,9 @@ retry:
           GST_DEBUG_PAD_NAME (pad));
       /* we have a buffer, keep the pad for later and exit the loop. */
       tee->allocpad = pad;
+      GST_OBJECT_UNLOCK (tee);
+      g_object_notify (G_OBJECT (tee), "alloc-pad");
+      GST_OBJECT_LOCK (tee);
       break;
     }
     /* no valid buffer, try another pad */
