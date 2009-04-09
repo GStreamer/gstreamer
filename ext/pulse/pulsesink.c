@@ -125,8 +125,6 @@ static gboolean gst_pulseringbuffer_release (GstRingBuffer * buf);
 static gboolean gst_pulseringbuffer_start (GstRingBuffer * buf);
 static gboolean gst_pulseringbuffer_pause (GstRingBuffer * buf);
 static gboolean gst_pulseringbuffer_stop (GstRingBuffer * buf);
-static gboolean gst_pulseringbuffer_activate (GstRingBuffer * buf,
-    gboolean active);
 static guint gst_pulseringbuffer_commit (GstRingBuffer * buf,
     guint64 * sample, guchar * data, gint in_samples, gint out_samples,
     gint * accum);
@@ -186,8 +184,6 @@ gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
   gstringbuffer_class->resume = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_start);
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_stop);
 
-  gstringbuffer_class->activate =
-      GST_DEBUG_FUNCPTR (gst_pulseringbuffer_activate);
   gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (gst_pulseringbuffer_commit);
 }
 
@@ -471,99 +467,6 @@ gst_pulsering_stream_state_cb (pa_stream * s, void *userdata)
 }
 
 static void
-gst_pulsering_pull (GstPulseSink * psink, GstPulseRingBuffer * pbuf)
-{
-  GstBaseSink *basesink;
-  GstBaseAudioSink *sink;
-  GstBuffer *buf;
-  GstRingBuffer *rbuf;
-  GstFlowReturn ret;
-  guint len;
-
-  basesink = GST_BASE_SINK (psink);
-  sink = GST_BASE_AUDIO_SINK (psink);
-  rbuf = GST_RING_BUFFER_CAST (pbuf);
-
-  GST_PAD_STREAM_LOCK (basesink->sinkpad);
-
-  len = 882;
-
-  /* would be nice to arrange for pad_alloc_buffer to return data -- as it is we
-     will copy twice, once into data, once into DMA */
-  GST_LOG_OBJECT (basesink, "pulling %d bytes offset %" G_GUINT64_FORMAT
-      " to fill audio buffer", len, basesink->offset);
-  ret =
-      gst_pad_pull_range (basesink->sinkpad, basesink->segment.last_stop, len,
-      &buf);
-
-  if (ret != GST_FLOW_OK) {
-    if (ret == GST_FLOW_UNEXPECTED)
-      goto eos;
-    else
-      goto error;
-  }
-
-  GST_PAD_PREROLL_LOCK (basesink->sinkpad);
-  if (basesink->flushing)
-    goto flushing;
-
-  /* complete preroll and wait for PLAYING */
-  ret = gst_base_sink_do_preroll (basesink, GST_MINI_OBJECT_CAST (buf));
-  if (ret != GST_FLOW_OK)
-    goto preroll_error;
-
-  if (len != GST_BUFFER_SIZE (buf)) {
-    GST_INFO_OBJECT (basesink,
-        "got different size than requested from sink pad: %u != %u", len,
-        GST_BUFFER_SIZE (buf));
-    len = MIN (GST_BUFFER_SIZE (buf), len);
-  }
-  basesink->segment.last_stop += len;
-
-  GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
-
-  GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
-
-  return;
-
-error:
-  {
-    GST_WARNING_OBJECT (basesink, "Got flow '%s' but can't return it: %d",
-        gst_flow_get_name (ret), ret);
-    gst_ring_buffer_pause (rbuf);
-    GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
-    return;
-  }
-eos:
-  {
-    /* FIXME: this is not quite correct; we'll be called endlessly until
-     * the sink gets shut down; maybe we should set a flag somewhere, or
-     * set segment.stop and segment.duration to the last sample or so */
-    GST_DEBUG_OBJECT (sink, "EOS");
-    gst_ring_buffer_pause (rbuf);
-    gst_element_post_message (GST_ELEMENT_CAST (sink),
-        gst_message_new_eos (GST_OBJECT_CAST (sink)));
-    GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
-  }
-flushing:
-  {
-    GST_DEBUG_OBJECT (sink, "we are flushing");
-    gst_ring_buffer_pause (rbuf);
-    GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
-    GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
-    return;
-  }
-preroll_error:
-  {
-    GST_DEBUG_OBJECT (sink, "error %s", gst_flow_get_name (ret));
-    gst_ring_buffer_pause (rbuf);
-    GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
-    GST_PAD_STREAM_UNLOCK (basesink->sinkpad);
-    return;
-  }
-}
-
-static void
 gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 {
   GstPulseSink *psink;
@@ -574,10 +477,8 @@ gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 
   GST_LOG_OBJECT (psink, "got request for length %" G_GSIZE_FORMAT, length);
 
-  if (GST_RING_BUFFER_CAST (pbuf)->callback) {
-    /* in pull mode */
-    gst_pulsering_pull (psink, pbuf);
-  } else if (pbuf->in_commit) {
+  if (pbuf->in_commit) {
+    /* only signal when we are waiting in the commit thread */
     pa_threaded_mainloop_signal (psink->mainloop, 0);
   }
 }
@@ -783,20 +684,6 @@ gst_pulseringbuffer_release (GstRingBuffer * buf)
   pa_threaded_mainloop_lock (psink->mainloop);
   gst_pulsering_destroy_stream (pbuf);
   pa_threaded_mainloop_unlock (psink->mainloop);
-
-  return TRUE;
-}
-
-/* this method should start the thread that starts pulling data. Usually only
- * used in pull-based scheduling */
-static gboolean
-gst_pulseringbuffer_activate (GstRingBuffer * buf, gboolean active)
-{
-  GstPulseSink *psink;
-
-  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (buf));
-
-  GST_DEBUG_OBJECT (psink, "activating");
 
   return TRUE;
 }
@@ -1354,6 +1241,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
+  GstBaseSinkClass *bc;
   GstBaseAudioSinkClass *gstaudiosink_class = GST_BASE_AUDIO_SINK_CLASS (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pulsesink_finalize);
@@ -1361,6 +1249,10 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_pulsesink_get_property);
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_pulsesink_event);
+
+  /* restore the original basesink pull methods */
+  bc = g_type_class_peek (GST_TYPE_BASE_SINK);
+  gstbasesink_class->activate_pull = GST_DEBUG_FUNCPTR (bc->activate_pull);
 
   gstaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_pulsesink_create_ringbuffer);
@@ -1435,9 +1327,10 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   g_assert ((pulsesink->mainloop = pa_threaded_mainloop_new ()));
   g_assert (pa_threaded_mainloop_start (pulsesink->mainloop) == 0);
 
-  GST_BASE_SINK (pulsesink)->can_activate_pull = TRUE;
-
-  pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink), G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device, TRUE, FALSE);    /* TRUE for sinks, FALSE for sources */
+  /* TRUE for sinks, FALSE for sources */
+  pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
+      G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device,
+      TRUE, FALSE);
 
   /* override with a custom clock */
   if (GST_BASE_AUDIO_SINK (pulsesink)->provided_clock)
