@@ -86,6 +86,7 @@ struct _GstJpegDec {
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
   GstClockTime earliest_time;
+  GstClockTime qos_duration;
 
   /* video state */
   gint framerate_numerator;

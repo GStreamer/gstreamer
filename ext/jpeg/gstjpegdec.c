@@ -128,7 +128,7 @@ static gboolean gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_jpeg_dec_update_qos (GstJpegDec * dec, gdouble proportion,
-    GstClockTime time);
+    GstClockTimeDiff diff, GstClockTime ts);
 static void gst_jpeg_dec_reset_qos (GstJpegDec * dec);
 static void gst_jpeg_dec_read_qos (GstJpegDec * dec, gdouble * proportion,
     GstClockTime * time);
@@ -785,18 +785,25 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
 
 static void
 gst_jpeg_dec_update_qos (GstJpegDec * dec, gdouble proportion,
-    GstClockTime time)
+    GstClockTimeDiff diff, GstClockTime ts)
 {
   GST_OBJECT_LOCK (dec);
   dec->proportion = proportion;
-  dec->earliest_time = time;
+  if (G_LIKELY (ts != GST_CLOCK_TIME_NONE)) {
+    if (G_UNLIKELY (diff > 0))
+      dec->earliest_time = ts + 2 * diff + dec->qos_duration;
+    else
+      dec->earliest_time = ts + diff;
+  } else {
+    dec->earliest_time = GST_CLOCK_TIME_NONE;
+  }
   GST_OBJECT_UNLOCK (dec);
 }
 
 static void
 gst_jpeg_dec_reset_qos (GstJpegDec * dec)
 {
-  gst_jpeg_dec_update_qos (dec, 0.5, GST_CLOCK_TIME_NONE);
+  gst_jpeg_dec_update_qos (dec, 0.5, 0, GST_CLOCK_TIME_NONE);
 }
 
 static void
@@ -975,6 +982,17 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
       dec->framerate_numerator = 0;
       dec->framerate_denominator = 1;
     }
+
+    /* calculate or assume an average frame duration for QoS purposes */
+    GST_OBJECT_LOCK (dec);
+    if (dec->framerate_denominator != 0) {
+      dec->qos_duration = gst_util_uint64_scale (GST_SECOND,
+          dec->framerate_denominator, dec->framerate_numerator);
+    } else {
+      /* if not set just use 25fps */
+      dec->qos_duration = gst_util_uint64_scale (GST_SECOND, 1, 25);
+    }
+    GST_OBJECT_UNLOCK (dec);
 
     caps = gst_caps_new_simple ("video/x-raw-yuv",
         "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
@@ -1173,8 +1191,7 @@ gst_jpeg_dec_src_event (GstPad * pad, GstEvent * event)
       gdouble proportion;
 
       gst_event_parse_qos (event, &proportion, &diff, &timestamp);
-
-      gst_jpeg_dec_update_qos (dec, proportion, timestamp + diff);
+      gst_jpeg_dec_update_qos (dec, proportion, diff, timestamp);
       break;
     }
     default:
