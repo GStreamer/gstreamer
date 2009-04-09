@@ -477,6 +477,7 @@ gst_avi_demux_get_src_query_types (GstPad * pad)
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_SEEKING,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -553,12 +554,29 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
+      GstFormat fmt;
+
       if (stream->strh->type != GST_RIFF_FCC_auds &&
           stream->strh->type != GST_RIFF_FCC_vids) {
         res = FALSE;
         break;
       }
-      gst_query_set_duration (query, GST_FORMAT_TIME, stream->duration);
+
+      gst_query_parse_duration (query, &fmt, NULL);
+
+      switch (fmt) {
+        case GST_FORMAT_TIME:
+          gst_query_set_duration (query, fmt, stream->duration);
+          break;
+        case GST_FORMAT_DEFAULT:
+          GST_DEBUG_OBJECT (query, "total frames is %" G_GUINT32_FORMAT,
+              stream->total_frames);
+          gst_query_set_duration (query, fmt, stream->total_frames);
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
       break;
     }
     case GST_QUERY_SEEKING:{
@@ -584,6 +602,18 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
             0, stream->duration);
         res = TRUE;
       }
+      break;
+    }
+    case GST_QUERY_CONVERT:{
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if ((res = gst_avi_demux_src_convert (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      else
+        res = gst_pad_query_default (pad, query);
       break;
     }
     default:
