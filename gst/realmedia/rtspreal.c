@@ -127,8 +127,10 @@ rtsp_ext_real_before_send (GstRTSPExtension * ext, GstRTSPMessage * request)
           "Linux_2.4_6.0.9.1235_play32_RN01_EN_586");
       gst_rtsp_message_add_header (request, GST_RTSP_HDR_MAX_ASM_WIDTH, "1");
       gst_rtsp_message_add_header (request, GST_RTSP_HDR_LANGUAGE, "en-US");
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_REQUIRE,
-          "com.real.retain-entity-for-setup");
+      if (ctx->isreal) {
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_REQUIRE,
+            "com.real.retain-entity-for-setup");
+      }
       break;
     }
     case GST_RTSP_SETUP:
@@ -170,6 +172,9 @@ rtsp_ext_real_after_send (GstRTSPExtension * ext, GstRTSPMessage * req,
 
       gst_rtsp_ext_real_calc_response_and_checksum (ctx->challenge2,
           ctx->checksum, challenge1);
+
+      GST_DEBUG_OBJECT (ctx, "Found Real challenge tag");
+      ctx->isreal = TRUE;
       break;
     }
     case GST_RTSP_DESCRIBE:
