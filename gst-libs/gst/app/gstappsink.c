@@ -624,6 +624,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
 static GstFlowReturn
 gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
 {
+  GstFlowReturn res = GST_FLOW_OK;
   GstAppSink *appsink = GST_APP_SINK (psink);
   gboolean emit;
 
@@ -633,16 +634,19 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (appsink, "setting preroll buffer %p", buffer);
   gst_buffer_replace (&appsink->priv->preroll, buffer);
+
   g_cond_signal (appsink->priv->cond);
   emit = appsink->priv->emit_signals;
   g_mutex_unlock (appsink->priv->mutex);
 
   if (appsink->priv->callbacks.new_preroll)
-    appsink->priv->callbacks.new_preroll (appsink, appsink->priv->user_data);
+    res =
+        appsink->priv->callbacks.new_preroll (appsink,
+        appsink->priv->user_data);
   else if (emit)
     g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_PREROLL], 0);
 
-  return GST_FLOW_OK;
+  return res;
 
 flushing:
   {
@@ -655,6 +659,7 @@ flushing:
 static GstFlowReturn
 gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
 {
+  GstFlowReturn res = GST_FLOW_OK;
   GstAppSink *appsink = GST_APP_SINK (psink);
   gboolean emit;
 
@@ -685,16 +690,18 @@ gst_app_sink_render (GstBaseSink * psink, GstBuffer * buffer)
   }
   /* we need to ref the buffer when pushing it in the queue */
   g_queue_push_tail (appsink->priv->queue, gst_buffer_ref (buffer));
+
   g_cond_signal (appsink->priv->cond);
   emit = appsink->priv->emit_signals;
   g_mutex_unlock (appsink->priv->mutex);
 
   if (appsink->priv->callbacks.new_buffer)
-    appsink->priv->callbacks.new_buffer (appsink, appsink->priv->user_data);
+    res =
+        appsink->priv->callbacks.new_buffer (appsink, appsink->priv->user_data);
   else if (emit)
     g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_BUFFER], 0);
 
-  return GST_FLOW_OK;
+  return res;
 
 flushing:
   {

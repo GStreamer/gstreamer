@@ -42,15 +42,15 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
 
 /**
  * GstAppSinkCallbacks:
- * @eos: Signal that the end-of-stream has been reached. This signal is
- *       emited from the steaming thread.
- * @new_preroll: Signal that a new preroll buffer is available. 
- *       This signal is emited from the steaming thread.
+ * @eos: Called when the end-of-stream has been reached. This callback
+ *       is called from the steaming thread.
+ * @new_preroll: Called when a new preroll buffer is available. 
+ *       This callback is called from the steaming thread.
  *       The new preroll buffer can be retrieved with
  *       gst_app_sink_pull_preroll() either from this callback
  *       or from any other thread.
- * @new_buffer: Signal that a new buffer is available. 
- *       This signal is emited from the steaming thread.
+ * @new_buffer: Called when a new buffer is available. 
+ *       This callback is called from the steaming thread.
  *       The new buffer can be retrieved with
  *       gst_app_sink_pull_buffer() either from this callback
  *       or from any other thread.
@@ -61,9 +61,9 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
  * Since: 0.10.23
  */
 typedef struct {
-  void (*eos)           (GstAppSink *sink, gpointer user_data);
-  void (*new_preroll)   (GstAppSink *sink, gpointer user_data);
-  void (*new_buffer)    (GstAppSink *sink, gpointer user_data);
+  void          (*eos)           (GstAppSink *sink, gpointer user_data);
+  GstFlowReturn (*new_preroll)   (GstAppSink *sink, gpointer user_data);
+  GstFlowReturn (*new_buffer)    (GstAppSink *sink, gpointer user_data);
 
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];
