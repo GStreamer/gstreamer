@@ -196,53 +196,6 @@ gst_vdpau_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_ERROR;
 }
 
-typedef struct
-{
-  VdpChromaType chroma_type;
-  VdpYCbCrFormat format;
-  guint32 fourcc;
-} VdpauFormats;
-
-static VdpChromaType chroma_types[3] =
-    { VDP_CHROMA_TYPE_420, VDP_CHROMA_TYPE_422, VDP_CHROMA_TYPE_444 };
-static VdpauFormats formats[7] = {
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_NV12,
-        GST_MAKE_FOURCC ('N', 'V', '1', '2')
-      },
-  {
-        VDP_CHROMA_TYPE_422,
-        VDP_YCBCR_FORMAT_UYVY,
-        GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
-      },
-  {
-        VDP_CHROMA_TYPE_444,
-        VDP_YCBCR_FORMAT_V8U8Y8A8,
-        GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')
-      },
-  {
-        VDP_CHROMA_TYPE_444,
-        VDP_YCBCR_FORMAT_Y8U8V8A8,
-        GST_MAKE_FOURCC ('A', 'V', 'U', 'Y')
-      },
-  {
-        VDP_CHROMA_TYPE_422,
-        VDP_YCBCR_FORMAT_YUYV,
-        GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V')
-      },
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_YV12,
-        GST_MAKE_FOURCC ('Y', 'V', '1', '2')
-      },
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_YV12,
-        GST_MAKE_FOURCC ('I', '4', '2', '0')
-      }
-};
-
 static GstCaps *
 gst_vdpau_yuv_video_get_caps (GstVdpauYUVVideo * yuv_video)
 {
@@ -254,7 +207,7 @@ gst_vdpau_yuv_video_get_caps (GstVdpauYUVVideo * yuv_video)
 
   caps = gst_caps_new_empty ();
 
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < N_CHROMA_TYPES; i++) {
     VdpStatus status;
     VdpBool is_supported;
     guint32 max_w, max_h;
@@ -274,7 +227,7 @@ gst_vdpau_yuv_video_get_caps (GstVdpauYUVVideo * yuv_video)
     if (is_supported) {
       gint j;
 
-      for (j = 0; j < 7; j++) {
+      for (j = 0; j < N_FORMATS; j++) {
         if (formats[j].chroma_type != chroma_types[i])
           continue;
 
@@ -337,7 +290,7 @@ gst_vdpau_yuv_video_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_fraction (structure, "pixel-aspect-ratio",
       &par_numerator, &par_denominator);
 
-  for (i = 0; i < 7; i++) {
+  for (i = 0; i < N_FORMATS; i++) {
     if (formats[i].fourcc == fourcc) {
       chroma_type = formats[i].chroma_type;
       break;

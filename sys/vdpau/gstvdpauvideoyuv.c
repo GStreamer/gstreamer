@@ -178,46 +178,6 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_ERROR;
 }
 
-typedef struct
-{
-  VdpChromaType chroma_type;
-  VdpYCbCrFormat format;
-  guint32 fourcc;
-} VdpauFormats;
-
-static VdpauFormats formats[6] = {
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_NV12,
-        GST_MAKE_FOURCC ('N', 'V', '1', '2')
-      },
-  {
-        VDP_CHROMA_TYPE_422,
-        VDP_YCBCR_FORMAT_UYVY,
-        GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')
-      },
-  {
-        VDP_CHROMA_TYPE_444,
-        VDP_YCBCR_FORMAT_V8U8Y8A8,
-        GST_MAKE_FOURCC ('A', 'Y', 'U', 'V')
-      },
-  {
-        VDP_CHROMA_TYPE_444,
-        VDP_YCBCR_FORMAT_Y8U8V8A8,
-        GST_MAKE_FOURCC ('A', 'V', 'U', 'Y')
-      },
-  {
-        VDP_CHROMA_TYPE_422,
-        VDP_YCBCR_FORMAT_YUYV,
-        GST_MAKE_FOURCC ('Y', 'U', 'Y', 'V')
-      },
-  {
-        VDP_CHROMA_TYPE_420,
-        VDP_YCBCR_FORMAT_YV12,
-        GST_MAKE_FOURCC ('Y', 'V', '1', '2')
-      }
-};
-
 static GstCaps *
 gst_vdpau_video_yuv_get_caps (GstVdpauVideoYUV * video_yuv,
     GstVdpauDevice * device, gint chroma_type, gint width, gint height,
@@ -229,7 +189,7 @@ gst_vdpau_video_yuv_get_caps (GstVdpauVideoYUV * video_yuv,
 
   caps = gst_caps_new_empty ();
 
-  for (i = 0; i < 6; i++) {
+  for (i = 0; i < N_FORMATS; i++) {
     VdpStatus status;
     VdpBool is_supported;
 
