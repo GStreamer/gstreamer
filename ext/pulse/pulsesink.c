@@ -315,7 +315,7 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
       t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_NEW))
     return;
 
-  if (!psink->stream)
+  if (!pbuf->stream)
     return;
 
   if (idx != pa_stream_get_index (pbuf->stream))
@@ -361,7 +361,7 @@ gst_pulseringbuffer_open_device (GstRingBuffer * buf)
   pa_context_set_state_callback (pbuf->context,
       gst_pulsering_context_state_cb, pbuf);
 #if HAVE_PULSE_0_9_12
-  pa_context_set_subscribe_callback (psink->context,
+  pa_context_set_subscribe_callback (pbuf->context,
       gst_pulsering_context_subscribe_cb, pbuf);
 #endif
 
