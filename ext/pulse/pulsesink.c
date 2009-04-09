@@ -466,12 +466,48 @@ gst_pulsering_stream_state_cb (pa_stream * s, void *userdata)
   }
 }
 
+/* we need to write empty samples to pulse so that it keeps on updating
+ * the clock correctly, we only start doing this on underflow */
+static void
+gst_pulsering_underflow_cb (pa_stream * s, void *userdata)
+{
+  GstPulseSink *psink;
+  GstRingBuffer *rbuf;
+  GstPulseRingBuffer *pbuf;
+  size_t avail;
+
+  rbuf = GST_RING_BUFFER_CAST (userdata);
+  pbuf = GST_PULSERING_BUFFER_CAST (userdata);
+  psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+
+  GST_LOG_OBJECT (psink, "got underflow");
+
+  if ((avail = pa_stream_writable_size (pbuf->stream)) > 0) {
+    guint segsize, towrite;
+
+    segsize = rbuf->spec.segsize;
+    /* we need to write empty data into the ringbuffer to make it advance the
+     * clock */
+    GST_LOG_OBJECT (psink, "writing %" G_GSIZE_FORMAT " bytes empty data",
+        avail);
+
+    while (avail > 0) {
+      towrite = MIN (avail, segsize);
+      pa_stream_write (pbuf->stream, rbuf->empty_seg, towrite,
+          NULL, 0, PA_SEEK_RELATIVE);
+      avail -= towrite;
+    }
+  }
+}
+
 static void
 gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 {
   GstPulseSink *psink;
+  GstRingBuffer *rbuf;
   GstPulseRingBuffer *pbuf;
 
+  rbuf = GST_RING_BUFFER_CAST (userdata);
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
@@ -542,6 +578,8 @@ gst_pulseringbuffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
       gst_pulsering_stream_state_cb, pbuf);
   pa_stream_set_write_callback (pbuf->stream,
       gst_pulsering_stream_request_cb, pbuf);
+  pa_stream_set_underflow_callback (pbuf->stream,
+      gst_pulsering_underflow_cb, pbuf);
 
   /* buffering requirements */
   memset (&buf_attr, 0, sizeof (buf_attr));
