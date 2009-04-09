@@ -480,7 +480,7 @@ gst_pulsering_underflow_cb (pa_stream * s, void *userdata)
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
-  GST_LOG_OBJECT (psink, "got underflow");
+  GST_WARNING_OBJECT (psink, "got underflow");
 
   if ((avail = pa_stream_writable_size (pbuf->stream)) > 0) {
     guint segsize, towrite;
@@ -493,10 +493,21 @@ gst_pulsering_underflow_cb (pa_stream * s, void *userdata)
 
     while (avail > 0) {
       towrite = MIN (avail, segsize);
-      pa_stream_write (pbuf->stream, rbuf->empty_seg, towrite,
-          NULL, 0, PA_SEEK_RELATIVE);
+      if (pa_stream_write (pbuf->stream, rbuf->empty_seg, towrite,
+              NULL, 0, PA_SEEK_RELATIVE) < 0)
+        goto write_failed;
       avail -= towrite;
     }
+  }
+  return;
+
+  /* ERRORS */
+write_failed:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
+        ("pa_stream_write() failed: %s",
+            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
+    return;
   }
 }
 
