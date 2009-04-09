@@ -311,6 +311,8 @@ gst_pulsering_context_subscribe_cb (pa_context * c,
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
+  GST_LOG_OBJECT (psink, "type %d, idx %u", t, idx);
+
   if (t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_CHANGE) &&
       t != (PA_SUBSCRIPTION_EVENT_SINK_INPUT | PA_SUBSCRIPTION_EVENT_NEW))
     return;
@@ -1411,11 +1413,13 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
 
   pa_threaded_mainloop_lock (psink->mainloop);
 
+  GST_DEBUG_OBJECT (psink, "setting volume to %f", volume);
+
   psink->volume = volume;
   psink->volume_set = TRUE;
 
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
-  if (pbuf == NULL)
+  if (pbuf == NULL || pbuf->stream == NULL)
     goto unlock;
 
   gst_pulse_cvolume_from_linear (&v, pbuf->sample_spec.channels, volume);
@@ -1651,14 +1655,12 @@ gst_pulsesink_change_title (GstPulseSink * psink, const gchar * t)
   pa_threaded_mainloop_lock (psink->mainloop);
 
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
-  if (pbuf == NULL)
-    goto no_buffer;
 
   g_free (pbuf->stream_name);
   pbuf->stream_name = g_strdup (t);
 
-  if (gst_pulsering_is_dead (psink, pbuf))
-    goto server_dead;
+  if (pbuf == NULL || pbuf->stream == NULL)
+    goto no_buffer;
 
   if (!(o = pa_stream_set_name (pbuf->stream, pbuf->stream_name, NULL, NULL)))
     goto name_failed;
@@ -1675,11 +1677,6 @@ unlock:
 no_buffer:
   {
     GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
-    goto unlock;
-  }
-server_dead:
-  {
-    GST_DEBUG_OBJECT (psink, "the server is dead");
     goto unlock;
   }
 name_failed:
@@ -1729,11 +1726,8 @@ gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
 
   pa_threaded_mainloop_lock (psink->mainloop);
   pbuf = GST_PULSERING_BUFFER_CAST (GST_BASE_AUDIO_SINK (psink)->ringbuffer);
-  if (pbuf == NULL)
+  if (pbuf == NULL || pbuf->stream == NULL)
     goto no_buffer;
-
-  if (gst_pulsering_is_dead (psink, pbuf))
-    goto server_dead;
 
   if (!(o = pa_stream_proplist_update (pbuf->stream, PA_UPDATE_REPLACE,
               pl, NULL, NULL)))
@@ -1758,11 +1752,6 @@ finish:
 no_buffer:
   {
     GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
-    goto unlock;
-  }
-server_dead:
-  {
-    GST_DEBUG_OBJECT (psink, "the server is dead");
     goto unlock;
   }
 update_failed:
