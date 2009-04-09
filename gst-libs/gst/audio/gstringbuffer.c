@@ -52,6 +52,8 @@ static void gst_ring_buffer_dispose (GObject * object);
 static void gst_ring_buffer_finalize (GObject * object);
 
 static gboolean gst_ring_buffer_pause_unlocked (GstRingBuffer * buf);
+static guint default_commit (GstRingBuffer * buf, guint64 * sample,
+    guchar * data, gint in_samples, gint out_samples, gint * accum);
 
 static GstObjectClass *parent_class = NULL;
 
@@ -89,14 +91,18 @@ gst_ring_buffer_class_init (GstRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
+  GstRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
+  gstringbuffer_class = (GstRingBufferClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ring_buffer_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ring_buffer_finalize);
+
+  gstringbuffer_class->commit = GST_DEBUG_FUNCPTR (default_commit);
 }
 
 static void
@@ -1525,43 +1531,8 @@ G_STMT_START {					\
   GST_DEBUG ("rev_down end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
-/**
- * gst_ring_buffer_commit_full:
- * @buf: the #GstRingBuffer to commit
- * @sample: the sample position of the data
- * @data: the data to commit
- * @in_samples: the number of samples in the data to commit
- * @out_samples: the number of samples to write to the ringbuffer
- * @accum: accumulator for rate conversion.
- *
- * Commit @in_samples samples pointed to by @data to the ringbuffer @buf. 
- *
- * @in_samples and @out_samples define the rate conversion to perform on the the
- * samples in @data. For negative rates, @out_samples must be negative and
- * @in_samples positive.
- *
- * When @out_samples is positive, the first sample will be written at position @sample
- * in the ringbuffer. When @out_samples is negative, the last sample will be written to
- * @sample in reverse order.
- *
- * @out_samples does not need to be a multiple of the segment size of the ringbuffer
- * although it is recommended for optimal performance. 
- *
- * @accum will hold a temporary accumulator used in rate conversion and should be
- * set to 0 when this function is first called. In case the commit operation is
- * interrupted, one can resume the processing by passing the previously returned
- * @accum value back to this function.
- *
- * MT safe.
- *
- * Returns: The number of samples written to the ringbuffer or -1 on error. The
- * number of samples written can be less than @out_samples when @buf was interrupted
- * with a flush or stop.
- *
- * Since: 0.10.11.
- */
-guint
-gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
+static guint
+default_commit (GstRingBuffer * buf, guint64 * sample,
     guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
   gint segdone;
@@ -1572,10 +1543,6 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
   gint inr, outr;
   gboolean reverse;
 
-  if (G_UNLIKELY (in_samples == 0 || out_samples == 0))
-    return in_samples;
-
-  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->data != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
@@ -1691,6 +1658,61 @@ not_started:
     GST_DEBUG_OBJECT (buf, "stopped processing");
     goto done;
   }
+}
+
+/**
+ * gst_ring_buffer_commit_full:
+ * @buf: the #GstRingBuffer to commit
+ * @sample: the sample position of the data
+ * @data: the data to commit
+ * @in_samples: the number of samples in the data to commit
+ * @out_samples: the number of samples to write to the ringbuffer
+ * @accum: accumulator for rate conversion.
+ *
+ * Commit @in_samples samples pointed to by @data to the ringbuffer @buf. 
+ *
+ * @in_samples and @out_samples define the rate conversion to perform on the the
+ * samples in @data. For negative rates, @out_samples must be negative and
+ * @in_samples positive.
+ *
+ * When @out_samples is positive, the first sample will be written at position @sample
+ * in the ringbuffer. When @out_samples is negative, the last sample will be written to
+ * @sample in reverse order.
+ *
+ * @out_samples does not need to be a multiple of the segment size of the ringbuffer
+ * although it is recommended for optimal performance. 
+ *
+ * @accum will hold a temporary accumulator used in rate conversion and should be
+ * set to 0 when this function is first called. In case the commit operation is
+ * interrupted, one can resume the processing by passing the previously returned
+ * @accum value back to this function.
+ *
+ * MT safe.
+ *
+ * Returns: The number of samples written to the ringbuffer or -1 on error. The
+ * number of samples written can be less than @out_samples when @buf was interrupted
+ * with a flush or stop.
+ *
+ * Since: 0.10.11.
+ */
+guint
+gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
+    guchar * data, gint in_samples, gint out_samples, gint * accum)
+{
+  GstRingBufferClass *rclass;
+  guint res = -1;
+
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
+
+  if (G_UNLIKELY (in_samples == 0 || out_samples == 0))
+    return in_samples;
+
+  rclass = GST_RING_BUFFER_GET_CLASS (buf);
+
+  if (G_LIKELY (rclass->commit))
+    res = rclass->commit (buf, sample, data, in_samples, out_samples, accum);
+
+  return res;
 }
 
 /**

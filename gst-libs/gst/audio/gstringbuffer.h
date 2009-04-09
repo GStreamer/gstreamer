@@ -300,6 +300,7 @@ struct _GstRingBuffer {
  * @delay: get number of samples queued in device
  * @activate: activate the thread that starts pulling and monitoring the
  * consumed segments in the device. Since 0.10.22
+ * @commit: write samples into the ringbuffer
  *
  * The vmethods that subclasses can override to implement the ringbuffer.
  */
@@ -322,8 +323,12 @@ struct _GstRingBufferClass {
   /* ABI added */
   gboolean     (*activate)     (GstRingBuffer *buf, gboolean active);
 
+  guint        (*commit)       (GstRingBuffer * buf, guint64 *sample,
+                                guchar * data, gint in_samples, 
+                                gint out_samples, gint * accum);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 GType gst_ring_buffer_get_type(void);
