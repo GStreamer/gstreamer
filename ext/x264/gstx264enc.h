@@ -96,6 +96,8 @@ struct _GstX264Enc
 
   guint8 *buffer;
   gulong buffer_size;
+
+  gint i_type;
 };
 
 struct _GstX264EncClass

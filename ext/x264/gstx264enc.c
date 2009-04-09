@@ -217,6 +217,7 @@ static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 
 static gboolean gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps);
 static gboolean gst_x264_enc_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_x264_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_x264_enc_chain (GstPad * pad, GstBuffer * buf);
 static void gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send);
 static GstFlowReturn gst_x264_enc_encode_frame (GstX264Enc * encoder,
@@ -418,6 +419,9 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   gst_pad_use_fixed_caps (encoder->srcpad);
   gst_element_add_pad (GST_ELEMENT (encoder), encoder->srcpad);
 
+  gst_pad_set_event_function (encoder->srcpad,
+      GST_DEBUG_FUNCPTR (gst_x264_enc_src_event));
+
   /* properties */
   encoder->threads = ARG_THREADS_DEFAULT;
   encoder->pass = ARG_PASS_DEFAULT;
@@ -452,6 +456,7 @@ gst_x264_enc_init (GstX264Enc * encoder, GstX264EncClass * klass)
   encoder->buffer_size = 100000;
   encoder->buffer = g_malloc (encoder->buffer_size);
 
+  encoder->i_type = X264_TYPE_AUTO;
   x264_param_default (&encoder->x264param);
 
   /* log callback setup; part of parameters */
@@ -804,6 +809,34 @@ gst_x264_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
+gst_x264_enc_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret;
+  GstX264Enc *encoder;
+
+  encoder = GST_X264_ENC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:{
+      const GstStructure *s;
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        /* Set I frame request */
+        encoder->i_type = X264_TYPE_I;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  ret = gst_pad_push_event (encoder->sinkpad, event);
+
+  gst_object_unref (encoder);
+  return ret;
+}
+
+static gboolean
 gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
@@ -817,6 +850,14 @@ gst_x264_enc_sink_event (GstPad * pad, GstEvent * event)
       break;
       /* no flushing if flush received,
        * buffers in encoder are considered (in the) past */
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      const GstStructure *s;
+      s = gst_event_get_structure (event);
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        encoder->i_type = X264_TYPE_I;
+      }
+      break;
+    }
     default:
       break;
   }
@@ -837,7 +878,6 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret;
   x264_picture_t pic_in;
   gint i_nal, i;
-
   if (G_UNLIKELY (encoder->x264enc == NULL))
     goto not_inited;
 
@@ -859,7 +899,11 @@ gst_x264_enc_chain (GstPad * pad, GstBuffer * buf)
     pic_in.img.i_stride[i] = encoder->stride[i];
   }
 
-  pic_in.i_type = X264_TYPE_AUTO;
+  pic_in.i_type = encoder->i_type;
+
+  /* Reset encoder forced picture type */
+  encoder->i_type = X264_TYPE_AUTO;
+
   pic_in.i_pts = GST_BUFFER_TIMESTAMP (buf);
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, &i_nal, TRUE);
