@@ -1510,7 +1510,7 @@ gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
   }
 
   g_snprintf (linebuf, linebuf_size, "%08x: %-48.48s %-16.16s",
-      mem_offset, hexstr, ascstr);
+      (guint) mem_offset, hexstr, ascstr);
 }
 
 void
