@@ -438,6 +438,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         g_print ("New clock: %s\n", (clock ? GST_OBJECT_NAME (clock) : "NULL"));
         break;
       }
+      case GST_MESSAGE_CLOCK_LOST:
+        g_print ("Clock lost, selecting a new one\n");
+        gst_element_set_state (pipeline, GST_STATE_PAUSED);
+        gst_element_set_state (pipeline, GST_STATE_PLAYING);
+        break;
       case GST_MESSAGE_EOS:
         waiting_eos = FALSE;
         g_print (_
