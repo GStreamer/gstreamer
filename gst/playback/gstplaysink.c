@@ -433,7 +433,7 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, gboolean blocked,
   gst_bin_remove (GST_BIN_CAST (chain->chain.bin), chain->vis);
 
   /* add new plugin and set state to playing */
-  chain->vis = gst_object_ref (playsink->visualisation);
+  chain->vis = playsink->visualisation;
   gst_bin_add (GST_BIN_CAST (chain->chain.bin), chain->vis);
   gst_element_set_state (chain->vis, GST_STATE_PLAYING);
 
@@ -1567,6 +1567,7 @@ gen_vis_chain (GstPlaySink * playsink)
   GstBin *bin;
   gboolean res;
   GstPad *pad;
+  GstElement *elem;
 
   chain = g_new0 (GstPlayVisChain, 1);
   chain->chain.playsink = playsink;
@@ -1598,12 +1599,17 @@ gen_vis_chain (GstPlaySink * playsink)
   chain->blockpad = gst_element_get_static_pad (chain->resample, "src");
 
   if (playsink->visualisation) {
-    chain->vis = gst_object_ref (playsink->visualisation);
-  } else {
-    chain->vis = gst_element_factory_make ("goom", "vis");
-    if (!chain->vis)
-      goto no_goom;
+    GST_DEBUG_OBJECT (playsink, "trying configure vis");
+    chain->vis = try_element (playsink, playsink->visualisation, FALSE);
   }
+  if (chain->vis == NULL) {
+    GST_DEBUG_OBJECT (playsink, "trying goom");
+    elem = gst_element_factory_make ("goom", "vis");
+    chain->vis = try_element (playsink, elem, TRUE);
+  }
+  if (chain->vis == NULL)
+    goto no_goom;
+
   gst_bin_add (bin, chain->vis);
 
   res = gst_element_link_pads (chain->queue, "src", chain->conv, "sink");
@@ -1776,8 +1782,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
           playsink->audio_tee_vissrc = NULL;
         }
         srcpad =
-            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
-                chain.bin), "src");
+            gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
+                vischain->chain.bin), "src");
         gst_pad_unlink (srcpad, playsink->videochain->sinkpad);
       }
       add_chain (GST_PLAY_CHAIN (playsink->videochain), FALSE);
@@ -1942,8 +1948,8 @@ gst_play_sink_reconfigure (GstPlaySink * playsink)
     if (playsink->vischain) {
       GST_DEBUG_OBJECT (playsink, "setting up vis chain");
       srcpad =
-          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->vischain->
-              chain.bin), "src");
+          gst_element_get_static_pad (GST_ELEMENT_CAST (playsink->
+              vischain->chain.bin), "src");
       add_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       activate_chain (GST_PLAY_CHAIN (playsink->vischain), TRUE);
       if (playsink->audio_tee_vissrc == NULL) {
