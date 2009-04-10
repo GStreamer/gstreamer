@@ -298,7 +298,7 @@ _priv_gst_in_valgrind (void)
     g_assert (in_valgrind == GST_VG_NO_VALGRIND ||
         in_valgrind == GST_VG_INSIDE);
   }
-  return (in_valgrind == GST_VG_INSIDE) ? TRUE : FALSE;
+  return (in_valgrind == GST_VG_INSIDE);
 }
 
 /**
@@ -1166,7 +1166,7 @@ gst_debug_remove_log_function_by_data (gpointer data)
 void
 gst_debug_set_colored (gboolean colored)
 {
-  g_atomic_int_set (&__use_color, colored ? 1 : 0);
+  g_atomic_int_set (&__use_color, (gint) colored);
 }
 
 /**
@@ -1179,7 +1179,7 @@ gst_debug_set_colored (gboolean colored)
 gboolean
 gst_debug_is_colored (void)
 {
-  return g_atomic_int_get (&__use_color) == 0 ? FALSE : TRUE;
+  return (gboolean) g_atomic_int_get (&__use_color);
 }
 
 /**
