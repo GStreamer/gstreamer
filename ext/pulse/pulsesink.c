@@ -929,11 +929,10 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
   guint result;
-  guint bps;
   guint8 *data_end;
   gboolean reverse;
   gint *toprocess;
-  gint inr, outr;
+  gint inr, outr, bps;
   gint64 offset;
   guint bufsize;
 
