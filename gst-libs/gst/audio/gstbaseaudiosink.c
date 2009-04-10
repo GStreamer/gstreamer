@@ -1127,7 +1127,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
    * our internal clock should exactly have been the latency (== the running
    * time of the external clock) */
   etime = GST_ELEMENT_CAST (sink)->base_time + time;
-  itime = gst_base_audio_sink_get_time (sink->provided_clock, sink);
+  itime = gst_clock_get_internal_time (sink->provided_clock);
 
   if (status == GST_CLOCK_EARLY) {
     /* when we prerolled late, we have to take into account the lateness */
