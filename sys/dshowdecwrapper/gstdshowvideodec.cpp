@@ -410,13 +410,7 @@ gst_dshowvideodec_class_init (GstDshowVideoDecClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dshowvideodec_change_state);
 
-  if (!parent_class)
-    parent_class = (GstElementClass *)g_type_class_ref (GST_TYPE_ELEMENT);
-
-  if (!dshowvideodec_debug) {
-    GST_DEBUG_CATEGORY_INIT (dshowvideodec_debug, "dshowvideodec", 0,
-        "Directshow filter video decoder");
-  }
+  parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 }
 
 static void
