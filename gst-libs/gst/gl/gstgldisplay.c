@@ -236,11 +236,9 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "uniform sampler2DRect Ytex, UVtex;\n"
 #else
       "precision mediump float;\n"
-      "varying vec2 v_texCoord;\n"
-      "uniform sampler2D Ytex, UVtex;\n"
+      "varying vec2 v_texCoord;\n" "uniform sampler2D Ytex, UVtex;\n"
 #endif
-      "void main(void) {\n"
-      "  float fx, fy, y, u, v, r, g, b;\n"
+      "void main(void) {\n" "  float fx, fy, y, u, v, r, g, b;\n"
 #ifndef OPENGL_ES2
       "  fx = gl_TexCoord[0].x;\n"
       "  fy = gl_TexCoord[0].y;\n"
@@ -259,9 +257,7 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "  v=v-0.5;\n"
       "  r = y+1.5958*v;\n"
       "  g = y-0.39173*u-0.81290*v;\n"
-      "  b = y+2.017*u;\n"
-      "  gl_FragColor = vec4(r, g, b, 1.0);\n"
-      "}\n";
+      "  b = y+2.017*u;\n" "  gl_FragColor = vec4(r, g, b, 1.0);\n" "}\n";
 
   //ATI: "*0.5", ""
   //normal: "", "*0.5"
@@ -271,11 +267,9 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "uniform sampler2DRect Ytex,Utex,Vtex;\n"
 #else
       "precision mediump float;\n"
-      "varying vec2 v_texCoord;\n"
-      "uniform sampler2D Ytex,Utex,Vtex;\n"
+      "varying vec2 v_texCoord;\n" "uniform sampler2D Ytex,Utex,Vtex;\n"
 #endif
-      "void main(void) {\n"
-      "  float r,g,b,y,u,v;\n"
+      "void main(void) {\n" "  float r,g,b,y,u,v;\n"
 #ifndef OPENGL_ES2
       "  vec2 nxy = gl_TexCoord[0].xy;\n"
       "  y=texture2DRect(Ytex,nxy%s).r;\n"
@@ -284,17 +278,14 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
 #else
       "  vec2 nxy = v_texCoord.xy;\n"
       "  y=texture2D(Ytex,nxy).r;\n"
-      "  u=texture2D(Utex,nxy).r;\n"
-      "  v=texture2D(Vtex,nxy).r;\n"
+      "  u=texture2D(Utex,nxy).r;\n" "  v=texture2D(Vtex,nxy).r;\n"
 #endif
       "  y=1.1643*(y-0.0625);\n"
       "  u=u-0.5;\n"
       "  v=v-0.5;\n"
       "  r=y+1.5958*v;\n"
       "  g=y-0.39173*u-0.81290*v;\n"
-      "  b=y+2.017*u;\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}\n";
+      "  b=y+2.017*u;\n" "  gl_FragColor=vec4(r,g,b,1.0);\n" "}\n";
 
   display->text_shader_upload_AYUV =
 #ifndef OPENGL_ES2
@@ -302,30 +293,24 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "uniform sampler2DRect tex;\n"
 #else
       "precision mediump float;\n"
-      "varying vec2 v_texCoord;\n"
-      "uniform sampler2D tex;\n"
+      "varying vec2 v_texCoord;\n" "uniform sampler2D tex;\n"
 #endif
-      "void main(void) {\n"
-      "  float r,g,b,y,u,v;\n"
+      "void main(void) {\n" "  float r,g,b,y,u,v;\n"
 #ifndef OPENGL_ES2
       "  vec2 nxy=gl_TexCoord[0].xy;\n"
       "  y=texture2DRect(tex,nxy).r;\n"
-      "  u=texture2DRect(tex,nxy).g;\n"
-      "  v=texture2DRect(tex,nxy).b;\n"
+      "  u=texture2DRect(tex,nxy).g;\n" "  v=texture2DRect(tex,nxy).b;\n"
 #else
       "  vec2 nxy = v_texCoord.xy;\n"
       "  y=texture2D(tex,nxy).g;\n"
-      "  u=texture2D(tex,nxy).b;\n"
-      "  v=texture2D(tex,nxy).a;\n"
+      "  u=texture2D(tex,nxy).b;\n" "  v=texture2D(tex,nxy).a;\n"
 #endif
       "  y=1.1643*(y-0.0625);\n"
       "  u=u-0.5;\n"
       "  v=v-0.5;\n"
       "  r=y+1.5958*v;\n"
       "  g=y-0.39173*u-0.81290*v;\n"
-      "  b=y+2.017*u;\n"
-      "  gl_FragColor=vec4(r,g,b,1.0);\n"
-      "}\n";
+      "  b=y+2.017*u;\n" "  gl_FragColor=vec4(r,g,b,1.0);\n" "}\n";
 
   //YUY2:y2,u,y1,v
   //UYVY:v,y1,u,y2
@@ -335,11 +320,9 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "uniform sampler2DRect tex;\n"
 #else
       "precision mediump float;\n"
-      "varying vec2 v_texCoord;\n"
-      "uniform sampler2D tex;\n"
+      "varying vec2 v_texCoord;\n" "uniform sampler2D tex;\n"
 #endif
-      "void main(void) {\n"
-      "  float fx,fy,r,g,b,r2,g2,b2,y1,y2,u,v;\n"
+      "void main(void) {\n" "  float fx,fy,r,g,b,r2,g2,b2,y1,y2,u,v;\n"
 #ifndef OPENGL_ES2
       "  fx = gl_TexCoord[0].x;\n"
       "  fy = gl_TexCoord[0].y;\n"
@@ -365,11 +348,8 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "  v=0.439271*r - 0.367833*g - 0.071438*b ;\n"
       "  y1=0.858885*y1 + 0.0625;\n"
       "  y2=0.858885*y2 + 0.0625;\n"
-      "  u=u + 0.5;\n"
-      "  v=v + 0.5;\n"
-      "  gl_FragColor=vec4(%s);\n"
-      "}\n";
-  
+      "  u=u + 0.5;\n" "  v=v + 0.5;\n" "  gl_FragColor=vec4(%s);\n" "}\n";
+
   //no OpenGL ES 2.0 support because for now it's not possible
   //to attach multiple textures to a frame buffer object
   display->text_shader_download_I420_YV12 =
@@ -394,8 +374,7 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "  v=v + 0.5;\n"
       "  gl_FragData[0] = vec4(y, 0.0, 0.0, 1.0);\n"
       "  gl_FragData[1] = vec4(u, 0.0, 0.0, 1.0);\n"
-      "  gl_FragData[2] = vec4(v, 0.0, 0.0, 1.0);\n"
-      "}\n";
+      "  gl_FragData[2] = vec4(v, 0.0, 0.0, 1.0);\n" "}\n";
 
   display->text_shader_download_AYUV =
 #ifndef OPENGL_ES2
@@ -403,28 +382,22 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "uniform sampler2DRect tex;\n"
 #else
       "precision mediump float;\n"
-      "varying vec2 v_texCoord;\n"
-      "uniform sampler2D tex;\n"
+      "varying vec2 v_texCoord;\n" "uniform sampler2D tex;\n"
 #endif
-      "void main(void) {\n"
-      "  float r,g,b,y,u,v;\n"
+      "void main(void) {\n" "  float r,g,b,y,u,v;\n"
 #ifndef OPENGL_ES2
       "  vec2 nxy=gl_TexCoord[0].xy;\n"
       "  r=texture2DRect(tex,nxy).r;\n"
-      "  g=texture2DRect(tex,nxy).g;\n"
-      "  b=texture2DRect(tex,nxy).b;\n"
+      "  g=texture2DRect(tex,nxy).g;\n" "  b=texture2DRect(tex,nxy).b;\n"
 #else
       "  vec2 nxy=v_texCoord.xy;\n"
       "  r=texture2D(tex,nxy).r;\n"
-      "  g=texture2D(tex,nxy).g;\n"
-      "  b=texture2D(tex,nxy).b;\n"
+      "  g=texture2D(tex,nxy).g;\n" "  b=texture2D(tex,nxy).b;\n"
 #endif
       "  y=0.299011*r + 0.586987*g + 0.114001*b;\n"
       "  u=-0.148246*r -0.29102*g + 0.439266*b;\n"
       "  v=0.439271*r - 0.367833*g - 0.071438*b ;\n"
-      "  y=0.858885*y + 0.0625;\n"
-      "  u=u + 0.5;\n"
-      "  v=v + 0.5;\n"
+      "  y=0.858885*y + 0.0625;\n" "  u=u + 0.5;\n" "  v=v + 0.5;\n"
 #ifndef OPENGL_ES2
       "  gl_FragColor=vec4(y,u,v,1.0);\n"
 #else
@@ -433,53 +406,50 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
       "}\n";
 
 #ifdef OPENGL_ES2
-  display->redisplay_vertex_shader_str =  
-    "attribute vec4 a_position;   \n"
-    "attribute vec2 a_texCoord;   \n"
-    "varying vec2 v_texCoord;     \n"
-    "void main()                  \n"
-    "{                            \n"
-    "   gl_Position = a_position; \n"
-    "   v_texCoord = a_texCoord;  \n"
-    "}                            \n";
-   
-  display->redisplay_fragment_shader_str =  
-    "precision mediump float;                            \n"
-    "varying vec2 v_texCoord;                            \n"
-    "uniform sampler2D s_texture;                        \n"
-    "void main()                                         \n"
-    "{                                                   \n"
-    "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
-    "}                                                   \n";
+  display->redisplay_vertex_shader_str =
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
+      "void main()                  \n"
+      "{                            \n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n" "}                            \n";
+
+  display->redisplay_fragment_shader_str =
+      "precision mediump float;                            \n"
+      "varying vec2 v_texCoord;                            \n"
+      "uniform sampler2D s_texture;                        \n"
+      "void main()                                         \n"
+      "{                                                   \n"
+      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+      "}                                                   \n";
 
   display->text_vertex_shader_upload =
-    "attribute vec4 a_position;   \n"
-    "attribute vec2 a_texCoord;   \n"
-    "varying vec2 v_texCoord;     \n"
-    "void main()                  \n"
-    "{                            \n"
-    "   gl_Position = a_position; \n"
-    "   v_texCoord = a_texCoord;  \n"
-    "}                            \n";
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
+      "void main()                  \n"
+      "{                            \n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n" "}                            \n";
 
   display->text_vertex_shader_download =
-    "attribute vec4 a_position;   \n"
-    "attribute vec2 a_texCoord;   \n"
-    "varying vec2 v_texCoord;     \n"
-    "void main()                  \n"
-    "{                            \n"
-    "   gl_Position = a_position; \n"
-    "   v_texCoord = a_texCoord;  \n"
-    "}                            \n";
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
+      "void main()                  \n"
+      "{                            \n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n" "}                            \n";
 
   display->text_fragment_shader_download_RGB =
-    "precision mediump float;                            \n"
-    "varying vec2 v_texCoord;                            \n"
-    "uniform sampler2D s_texture;                        \n"
-    "void main()                                         \n"
-    "{                                                   \n"
-    "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
-    "}                                                   \n";
+      "precision mediump float;                            \n"
+      "varying vec2 v_texCoord;                            \n"
+      "uniform sampler2D s_texture;                        \n"
+      "void main()                                         \n"
+      "{                                                   \n"
+      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+      "}                                                   \n";
 #endif
 }
 
@@ -742,7 +712,6 @@ gst_gl_display_thread_destroy_context (GstGLDisplay * display)
     glDeleteTextures (1, &display->upload_intex_v);
     display->upload_intex_v = 0;
   }
-
 #ifdef OPENGL_ES2
   if (display->redisplay_shader) {
     g_object_unref (G_OBJECT (display->redisplay_shader));
@@ -793,10 +762,10 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
   GError *error = NULL;
   display->redisplay_shader = gst_gl_shader_new ();
 
-  gst_gl_shader_set_vertex_source(display->redisplay_shader, 
-    display->redisplay_vertex_shader_str);
-  gst_gl_shader_set_fragment_source(display->redisplay_shader, 
-    display->redisplay_fragment_shader_str);
+  gst_gl_shader_set_vertex_source (display->redisplay_shader,
+      display->redisplay_vertex_shader_str);
+  gst_gl_shader_set_fragment_source (display->redisplay_shader,
+      display->redisplay_fragment_shader_str);
 
   gst_gl_shader_compile (display->redisplay_shader, &error);
   if (error) {
@@ -806,12 +775,12 @@ gst_gl_display_thread_init_redisplay (GstGLDisplay * display)
     gst_gl_shader_use (NULL);
     display->isAlive = FALSE;
   } else {
-    display->redisplay_attr_position_loc = 
-      gst_gl_shader_get_attribute_location (display->redisplay_shader, 
-      "a_position");
-    display->redisplay_attr_texture_loc = 
-      gst_gl_shader_get_attribute_location (display->redisplay_shader, 
-      "a_texCoord");
+    display->redisplay_attr_position_loc =
+        gst_gl_shader_get_attribute_location (display->redisplay_shader,
+        "a_position");
+    display->redisplay_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (display->redisplay_shader,
+        "a_texCoord");
   }
 }
 #endif
@@ -878,10 +847,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               display->shader_upload_YUY2 = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_upload_YUY2, 
-              display->text_vertex_shader_upload);
-            gst_gl_shader_set_fragment_source(display->shader_upload_YUY2, 
-              text_shader_upload_YUY2);
+            gst_gl_shader_set_vertex_source (display->shader_upload_YUY2,
+                display->text_vertex_shader_upload);
+            gst_gl_shader_set_fragment_source (display->shader_upload_YUY2,
+                text_shader_upload_YUY2);
 
             gst_gl_shader_compile (display->shader_upload_YUY2, &error);
             if (error) {
@@ -893,12 +862,12 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_upload_YUY2));
               display->shader_upload_YUY2 = NULL;
             } else {
-              display->shader_upload_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_YUY2, 
-                "a_position");
-              display->shader_upload_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_YUY2, 
-                "a_texCoord");
+              display->shader_upload_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_YUY2, "a_position");
+              display->shader_upload_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_YUY2, "a_texCoord");
             }
 #endif
           }
@@ -923,10 +892,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               display->shader_upload_UYVY = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_upload_UYVY, 
-              display->text_vertex_shader_upload);
-            gst_gl_shader_set_fragment_source(display->shader_upload_UYVY, 
-              text_shader_upload_UYVY);
+            gst_gl_shader_set_vertex_source (display->shader_upload_UYVY,
+                display->text_vertex_shader_upload);
+            gst_gl_shader_set_fragment_source (display->shader_upload_UYVY,
+                text_shader_upload_UYVY);
 
             gst_gl_shader_compile (display->shader_upload_UYVY, &error);
             if (error) {
@@ -938,12 +907,12 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_upload_UYVY));
               display->shader_upload_UYVY = NULL;
             } else {
-              display->shader_upload_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_UYVY, 
-                "a_position");
-              display->shader_upload_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_UYVY, 
-                "a_texCoord");
+              display->shader_upload_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_UYVY, "a_position");
+              display->shader_upload_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_UYVY, "a_texCoord");
             }
 #endif
           }
@@ -973,10 +942,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               display->shader_upload_I420_YV12 = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_upload_I420_YV12, 
-              display->text_vertex_shader_upload);
-            gst_gl_shader_set_fragment_source(display->shader_upload_I420_YV12, 
-              display->text_shader_upload_I420_YV12);
+            gst_gl_shader_set_vertex_source (display->shader_upload_I420_YV12,
+                display->text_vertex_shader_upload);
+            gst_gl_shader_set_fragment_source (display->shader_upload_I420_YV12,
+                display->text_shader_upload_I420_YV12);
 
             gst_gl_shader_compile (display->shader_upload_I420_YV12, &error);
             if (error) {
@@ -988,12 +957,12 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_upload_I420_YV12));
               display->shader_upload_I420_YV12 = NULL;
             } else {
-              display->shader_upload_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_I420_YV12, 
-                "a_position");
-              display->shader_upload_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_I420_YV12, 
-                "a_texCoord");
+              display->shader_upload_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_I420_YV12, "a_position");
+              display->shader_upload_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_I420_YV12, "a_texCoord");
             }
 #endif
           }
@@ -1011,10 +980,10 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               display->shader_upload_AYUV = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_upload_AYUV, 
-              display->text_vertex_shader_upload);
-            gst_gl_shader_set_fragment_source(display->shader_upload_AYUV, 
-              display->text_shader_upload_AYUV);
+            gst_gl_shader_set_vertex_source (display->shader_upload_AYUV,
+                display->text_vertex_shader_upload);
+            gst_gl_shader_set_fragment_source (display->shader_upload_AYUV,
+                display->text_shader_upload_AYUV);
 
             gst_gl_shader_compile (display->shader_upload_AYUV, &error);
             if (error) {
@@ -1026,12 +995,12 @@ gst_gl_display_thread_init_upload (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_upload_AYUV));
               display->shader_upload_AYUV = NULL;
             } else {
-              display->shader_upload_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_AYUV, 
-                "a_position");
-              display->shader_upload_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_upload_AYUV, 
-                "a_texCoord");
+              display->shader_upload_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_AYUV, "a_position");
+              display->shader_upload_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_upload_AYUV, "a_texCoord");
             }
 #endif
           }
@@ -1320,10 +1289,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
       GError *error = NULL;
       display->shader_download_RGB = gst_gl_shader_new ();
 
-      gst_gl_shader_set_vertex_source(display->shader_download_RGB, 
-        display->text_vertex_shader_download);
-      gst_gl_shader_set_fragment_source(display->shader_download_RGB, 
-        display->text_fragment_shader_download_RGB);
+      gst_gl_shader_set_vertex_source (display->shader_download_RGB,
+          display->text_vertex_shader_download);
+      gst_gl_shader_set_fragment_source (display->shader_download_RGB,
+          display->text_fragment_shader_download_RGB);
 
       gst_gl_shader_compile (display->shader_download_RGB, &error);
       if (error) {
@@ -1335,12 +1304,12 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
         g_object_unref (G_OBJECT (display->shader_download_RGB));
         display->shader_download_RGB = NULL;
       } else {
-        display->shader_download_attr_position_loc = 
-          gst_gl_shader_get_attribute_location (display->shader_download_RGB, 
-          "a_position");
-        display->shader_download_attr_texture_loc = 
-          gst_gl_shader_get_attribute_location (display->shader_download_RGB, 
-          "a_texCoord");
+        display->shader_download_attr_position_loc =
+            gst_gl_shader_get_attribute_location (display->shader_download_RGB,
+            "a_position");
+        display->shader_download_attr_texture_loc =
+            gst_gl_shader_get_attribute_location (display->shader_download_RGB,
+            "a_texCoord");
       }
     }
 #endif
@@ -1376,10 +1345,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
               display->shader_download_YUY2 = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_download_YUY2, 
-              display->text_vertex_shader_download);
-            gst_gl_shader_set_fragment_source(display->shader_download_YUY2, 
-              text_shader_download_YUY2);
+            gst_gl_shader_set_vertex_source (display->shader_download_YUY2,
+                display->text_vertex_shader_download);
+            gst_gl_shader_set_fragment_source (display->shader_download_YUY2,
+                text_shader_download_YUY2);
 
             gst_gl_shader_compile (display->shader_download_YUY2, &error);
             if (error) {
@@ -1391,12 +1360,12 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_download_YUY2));
               display->shader_download_YUY2 = NULL;
             } else {
-              display->shader_download_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_download_YUY2, 
-                "a_position");
-              display->shader_download_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_download_YUY2, 
-                "a_texCoord");
+              display->shader_download_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_download_YUY2, "a_position");
+              display->shader_download_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_download_YUY2, "a_texCoord");
             }
 #endif
           }
@@ -1417,10 +1386,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
               display->shader_download_UYVY = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_download_UYVY, 
-              display->text_vertex_shader_download);
-            gst_gl_shader_set_fragment_source(display->shader_download_UYVY, 
-              text_shader_download_UYVY);
+            gst_gl_shader_set_vertex_source (display->shader_download_UYVY,
+                display->text_vertex_shader_download);
+            gst_gl_shader_set_fragment_source (display->shader_download_UYVY,
+                text_shader_download_UYVY);
 
             gst_gl_shader_compile (display->shader_download_UYVY, &error);
             if (error) {
@@ -1432,12 +1401,12 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_download_UYVY));
               display->shader_download_UYVY = NULL;
             } else {
-              display->shader_download_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_download_UYVY, 
-                "a_position");
-              display->shader_download_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_download_UYVY, 
-                "a_texCoord");
+              display->shader_download_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_download_UYVY, "a_position");
+              display->shader_download_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_download_UYVY, "a_texCoord");
             }
 #endif
 
@@ -1467,10 +1436,10 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
               display->shader_download_AYUV = NULL;
             }
 #else
-            gst_gl_shader_set_vertex_source(display->shader_download_AYUV, 
-              display->text_vertex_shader_download);
-            gst_gl_shader_set_fragment_source(display->shader_download_AYUV, 
-              display->text_shader_download_AYUV);
+            gst_gl_shader_set_vertex_source (display->shader_download_AYUV,
+                display->text_vertex_shader_download);
+            gst_gl_shader_set_fragment_source (display->shader_download_AYUV,
+                display->text_shader_download_AYUV);
 
             gst_gl_shader_compile (display->shader_download_AYUV, &error);
             if (error) {
@@ -1482,12 +1451,12 @@ gst_gl_display_thread_init_download (GstGLDisplay * display)
               g_object_unref (G_OBJECT (display->shader_download_AYUV));
               display->shader_download_AYUV = NULL;
             } else {
-              display->shader_download_attr_position_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_download_AYUV, 
-                "a_position");
-              display->shader_download_attr_texture_loc = 
-                gst_gl_shader_get_attribute_location (display->shader_download_AYUV, 
-                "a_texCoord");
+              display->shader_download_attr_position_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_download_AYUV, "a_position");
+              display->shader_download_attr_texture_loc =
+                  gst_gl_shader_get_attribute_location
+                  (display->shader_download_AYUV, "a_texCoord");
             }
 #endif
             break;
@@ -1570,6 +1539,12 @@ gst_gl_display_thread_gen_fbo (GstGLDisplay * display)
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
       display->gen_fbo_width, display->gen_fbo_height, 0, GL_RGBA,
       GL_UNSIGNED_BYTE, NULL);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      GL_CLAMP_TO_EDGE);
 
   //attach the texture to the FBO to renderer to
   glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -1633,7 +1608,7 @@ gst_gl_display_thread_use_fbo (GstGLDisplay * display)
   glPushMatrix ();
   glLoadIdentity ();
 #else // OPENGL_ES2
-  glGetIntegerv(GL_VIEWPORT, viewport_dim);
+  glGetIntegerv (GL_VIEWPORT, viewport_dim);
 #endif
 
   glViewport (0, 0, display->use_fbo_width, display->use_fbo_height);
@@ -1658,7 +1633,8 @@ gst_gl_display_thread_use_fbo (GstGLDisplay * display)
   glPopMatrix ();
   glPopAttrib ();
 #else
-  glViewport(viewport_dim[0], viewport_dim[1], viewport_dim[2], viewport_dim[3]);
+  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
 #endif
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
@@ -1831,15 +1807,15 @@ gst_gl_display_on_draw (GstGLDisplay * display)
 
 #else //OPENGL_ES2
 
-    const GLfloat vVertices [] = 
-      {1.0f,  1.0f, 0.0f,
-       1.0f,  0.0f,
-      -1.0f,  1.0f, 0.0f,
-       0.0f,  0.0f,
+    const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
+      1.0f, 0.0f,
+      -1.0f, 1.0f, 0.0f,
+      0.0f, 0.0f,
       -1.0f, -1.0f, 0.0f,
-       0.0f,  1.0f,
-       1.0f, -1.0f, 0.0f,
-       1.0f,  1.0f};
+      0.0f, 1.0f,
+      1.0f, -1.0f, 0.0f,
+      1.0f, 1.0f
+    };
 
     GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
@@ -1848,12 +1824,12 @@ gst_gl_display_on_draw (GstGLDisplay * display)
     gst_gl_shader_use (display->redisplay_shader);
 
     //Load the vertex position
-    glVertexAttribPointer (display->redisplay_attr_position_loc, 3, GL_FLOAT, 
-      GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+    glVertexAttribPointer (display->redisplay_attr_position_loc, 3, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
     //Load the texture coordinate
     glVertexAttribPointer (display->redisplay_attr_texture_loc, 2, GL_FLOAT,
-      GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+        GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
     glEnableVertexAttribArray (display->redisplay_attr_position_loc);
     glEnableVertexAttribArray (display->redisplay_attr_texture_loc);
@@ -1865,7 +1841,7 @@ gst_gl_display_on_draw (GstGLDisplay * display)
     glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 #endif
 
-  }//end default opengl scene
+  }                             //end default opengl scene
 }
 
 
@@ -2046,7 +2022,19 @@ gst_gl_display_check_framebuffer_status (void)
       break;
 
     case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-      GST_ERROR ("GL_FRAMEBUFFER_UNSUPPORTED_EXT");
+      GST_ERROR ("GL_FRAMEBUFFER_UNSUPPORTED");
+      break;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+      GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+      break;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+      GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+      break;
+
+    case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
+      GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
       break;
 
     default:
@@ -2109,7 +2097,7 @@ gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture, gint width,
 #ifdef OPENGL_ES2
     if (!display->redisplay_shader) {
       gst_gl_window_send_message (display->gl_window,
-        GST_GL_WINDOW_CB (gst_gl_display_thread_init_redisplay), display);
+          GST_GL_WINDOW_CB (gst_gl_display_thread_init_redisplay), display);
     }
 #endif
 
@@ -2420,6 +2408,14 @@ gst_gl_display_thread_init_upload_fbo (GstGLDisplay * display)
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
         display->upload_width, display->upload_height, 0, GL_RGBA,
         GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE);
 
     //attach the texture to the FBO to renderer to
     glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -2699,15 +2695,15 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
 
-  const GLfloat vVertices [] = 
-    {1.0f,  -1.0f, 0.0f,
-     1.0f,  0.0f,
-    -1.0f,  -1.0f, 0.0f,
-     0.0f,  .0f,
-    -1.0f,  1.0f, 0.0f,
-     0.0f,  1.0f,
-     1.0f,  1.0f, 0.0f,
-     1.0f,  1.0f};
+  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
+    1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f,
+    0.0f, .0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f
+  };
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 #endif
@@ -2737,13 +2733,13 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
   glPushMatrix ();
   glLoadIdentity ();
 #else // OPENGL_ES2
-  glGetIntegerv(GL_VIEWPORT, viewport_dim);
+  glGetIntegerv (GL_VIEWPORT, viewport_dim);
 #endif
 
   glViewport (0, 0, display->upload_width, display->upload_height);
 
 #ifndef OPENGL_ES2
-  glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+  glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
 #endif
 
   glClearColor (0.0, 0.0, 0.0, 0.0);
@@ -2766,9 +2762,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
       glLoadIdentity ();
 #else
       glVertexAttribPointer (display->shader_upload_attr_position_loc, 3,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
       glVertexAttribPointer (display->shader_upload_attr_texture_loc, 2,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
       glEnableVertexAttribArray (display->shader_upload_attr_position_loc);
       glEnableVertexAttribArray (display->shader_upload_attr_texture_loc);
@@ -2814,9 +2810,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
           glLoadIdentity ();
 #else
           glVertexAttribPointer (display->shader_upload_attr_position_loc, 3,
-            GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
           glVertexAttribPointer (display->shader_upload_attr_texture_loc, 2,
-            GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
           glEnableVertexAttribArray (display->shader_upload_attr_position_loc);
           glEnableVertexAttribArray (display->shader_upload_attr_texture_loc);
@@ -2884,9 +2880,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
       glLoadIdentity ();
 #else
       glVertexAttribPointer (display->shader_upload_attr_position_loc, 3,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
       glVertexAttribPointer (display->shader_upload_attr_texture_loc, 2,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
       glEnableVertexAttribArray (display->shader_upload_attr_position_loc);
       glEnableVertexAttribArray (display->shader_upload_attr_texture_loc);
@@ -2942,9 +2938,9 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
       glLoadIdentity ();
 #else
       glVertexAttribPointer (display->shader_upload_attr_position_loc, 3,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
       glVertexAttribPointer (display->shader_upload_attr_texture_loc, 2,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
       glEnableVertexAttribArray (display->shader_upload_attr_position_loc);
       glEnableVertexAttribArray (display->shader_upload_attr_texture_loc);
@@ -2999,7 +2995,8 @@ gst_gl_display_thread_do_upload_draw (GstGLDisplay * display)
   glPopMatrix ();
   glPopAttrib ();
 #else
-  glViewport(viewport_dim[0], viewport_dim[1], viewport_dim[2], viewport_dim[3]);
+  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
 #endif
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
@@ -3022,15 +3019,15 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   gint width = display->ouput_texture_width;
   gint height = display->ouput_texture_height;
 
-  const GLfloat vVertices [] = 
-    {1.0f,  -1.0f, 0.0f,
-     1.0f,  0.0f,
-    -1.0f,  -1.0f, 0.0f,
-     0.0f,  0.0f,
-    -1.0f,  1.0f, 0.0f,
-     0.0f,  1.0f,
-     1.0f,  1.0f, 0.0f,
-     1.0f,  1.0f};
+  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
+    1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f,
+    0.0f, 0.0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f
+  };
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
@@ -3042,9 +3039,9 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   gst_gl_shader_use (display->shader_download_RGB);
 
   glVertexAttribPointer (display->shader_download_attr_position_loc, 3,
-    GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
   glVertexAttribPointer (display->shader_download_attr_texture_loc, 2,
-    GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
   glEnableVertexAttribArray (display->shader_download_attr_position_loc);
   glEnableVertexAttribArray (display->shader_download_attr_texture_loc);
@@ -3070,8 +3067,7 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
           GL_UNSIGNED_BYTE, data);
 #else
-      glReadPixels (0, 0, width, height, GL_RGBA,
-		    GL_UNSIGNED_BYTE, data);
+      glReadPixels (0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
 #endif
       break;
     case GST_VIDEO_FORMAT_BGRx:
@@ -3088,8 +3084,7 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
           GL_UNSIGNED_BYTE, data);
 #else
-      glReadPixels (0, 0, width, height, GL_RGB,
-		    GL_UNSIGNED_BYTE, data);
+      glReadPixels (0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
 #endif
       break;
     case GST_VIDEO_FORMAT_BGR:
@@ -3116,15 +3111,15 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
 
-  const GLfloat vVertices [] = 
-    {1.0f,  -1.0f, 0.0f,
-     1.0f,  0.0f,
-    -1.0f,  -1.0f, 0.0f,
-     0.0f,  .0f,
-    -1.0f,  1.0f, 0.0f,
-     0.0f,  1.0f,
-     1.0f,  1.0f, 0.0f,
-     1.0f,  1.0f};
+  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
+    1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f,
+    0.0f, .0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f
+  };
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 #endif
@@ -3143,7 +3138,7 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   glPushMatrix ();
   glLoadIdentity ();
 #else // OPENGL_ES2
-  glGetIntegerv(GL_VIEWPORT, viewport_dim);
+  glGetIntegerv (GL_VIEWPORT, viewport_dim);
 #endif
 
   glViewport (0, 0, width, height);
@@ -3178,9 +3173,9 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
       glLoadIdentity ();
 #else
       glVertexAttribPointer (display->shader_download_attr_position_loc, 3,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
       glVertexAttribPointer (display->shader_download_attr_texture_loc, 2,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
       glEnableVertexAttribArray (display->shader_download_attr_position_loc);
       glEnableVertexAttribArray (display->shader_download_attr_texture_loc);
@@ -3236,9 +3231,9 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
       glLoadIdentity ();
 #else
       glVertexAttribPointer (display->shader_download_attr_position_loc, 3,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), vVertices);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
       glVertexAttribPointer (display->shader_download_attr_texture_loc, 2,
-        GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), &vVertices[3]);
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
       glEnableVertexAttribArray (display->shader_download_attr_position_loc);
       glEnableVertexAttribArray (display->shader_download_attr_texture_loc);
@@ -3286,7 +3281,8 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   glPopMatrix ();
   glPopAttrib ();
 #else
-  glViewport(viewport_dim[0], viewport_dim[1], viewport_dim[2], viewport_dim[3]);
+  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
 #endif
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
