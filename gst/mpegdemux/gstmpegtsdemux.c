@@ -1287,11 +1287,10 @@ gst_mpegts_stream_parse_pmt (GstMpegTSStream * stream,
       /* set as elementary */
       ES_stream->PID_type = PID_TYPE_ELEMENTARY;
       /* set stream type */
-      if (program_number == 10510 && stream_type == ST_VIDEO_MPEG1)
+      /* hack for ITV HD (sid 10510, video pid 3401 */
+      if (program_number == 10510 && entry.PID == 3401 &&
+          stream_type == ST_PRIVATE_DATA)
         stream_type = ST_VIDEO_H264;
-      else
-        g_print ("program number: %d stream type: %d pid: %d\n",
-            program_number, stream_type, entry.PID);
       ES_stream->stream_type = stream_type;
       ES_stream->flags &= ~MPEGTS_STREAM_FLAG_STREAM_TYPE_UNKNOWN;
 
