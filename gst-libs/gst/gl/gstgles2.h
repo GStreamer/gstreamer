@@ -1,4 +1,4 @@
-/* 
+/*
  * GStreamer
  * Copyright (C) 2009 Julien Isorce <julien.isorce@gmail.com>
  *
@@ -27,9 +27,23 @@
 
 #define GLEW_OK 0
 #define GLEW_NO_ERROR 0
-static const char* glewGetString (GLenum name) { return "1.5.1"; };
-static unsigned int glewInit() { return GLEW_OK;};
-static const char* glewGetErrorString (GLenum error) { return GLEW_NO_ERROR; };
+static const char *
+glewGetString (GLenum name)
+{
+  return "1.5.1";
+};
+
+static unsigned int
+glewInit ()
+{
+  return GLEW_OK;
+};
+
+static const char *
+glewGetErrorString (GLenum error)
+{
+  return GLEW_NO_ERROR;
+};
 
 #define GLEW_VERSION 1
 #define GLEW_VERSION_MAJOR 5
@@ -56,6 +70,9 @@ static const char* glewGetErrorString (GLenum error) { return GLEW_NO_ERROR; };
 #define GL_DEPTH_ATTACHMENT_EXT GL_DEPTH_ATTACHMENT
 #define GL_FRAMEBUFFER_COMPLETE_EXT GL_FRAMEBUFFER_COMPLETE
 #define GL_FRAMEBUFFER_UNSUPPORTED_EXT GL_FRAMEBUFFER_UNSUPPORTED
+#define GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+#define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
 
 #define GL_COLOR_ATTACHMENT0_EXT GL_COLOR_ATTACHMENT0
 
@@ -109,8 +126,16 @@ static const char* glewGetErrorString (GLenum error) { return GLEW_NO_ERROR; };
 
 #define GL_COLOR_ATTACHMENT1_EXT 0
 #define GL_COLOR_ATTACHMENT2_EXT 0
-static void glReadBuffer(GLenum name) {};
-static void glTexEnvi(GLenum name1, GLenum name2, GLenum name3) {};
+static void
+glReadBuffer (GLenum name)
+{
+};
+
+static void
+glTexEnvi (GLenum name1, GLenum name2, GLenum name3)
+{
+};
+
 #define GL_TEXTURE_ENV 0
 #define GL_TEXTURE_ENV_MODE 0
 
