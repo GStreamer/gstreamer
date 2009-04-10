@@ -62,6 +62,8 @@ struct _GstPulseSink
   gdouble volume;
   gboolean volume_set;
   gint notify;
+  
+  const gchar *pa_version;
 };
 
 struct _GstPulseSinkClass

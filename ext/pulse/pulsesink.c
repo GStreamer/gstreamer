@@ -482,8 +482,10 @@ gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 
   GST_LOG_OBJECT (psink, "got request for length %" G_GSIZE_FORMAT, length);
 
-  if (pbuf->in_commit) {
-    /* only signal when we are waiting in the commit thread */
+  if (pbuf->in_commit && (length >= rbuf->spec.segsize)) {
+    /* only signal when we are waiting in the commit thread
+     * and got request for atleast a segment
+     */
     pa_threaded_mainloop_signal (psink->mainloop, 0);
   }
 }
@@ -729,6 +731,8 @@ gst_pulsering_set_corked (GstPulseRingBuffer * pbuf, gboolean corked,
         goto server_dead;
     }
     pbuf->corked = corked;
+  } else {
+    GST_DEBUG_OBJECT (psink, "skipping, already in requested state");
   }
   res = TRUE;
 
@@ -818,18 +822,19 @@ gst_pulseringbuffer_stop (GstRingBuffer * buf)
     pa_threaded_mainloop_signal (psink->mainloop, 0);
   }
 
-  /* then try to flush, it's not fatal when this fails */
-  GST_DEBUG_OBJECT (psink, "flushing");
-  if ((o = pa_stream_flush (pbuf->stream, gst_pulsering_success_cb, pbuf))) {
-    while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
-      GST_DEBUG_OBJECT (psink, "wait for completion");
-      pa_threaded_mainloop_wait (psink->mainloop);
-      if (gst_pulsering_is_dead (psink, pbuf))
-        goto server_dead;
+  if (strcmp (psink->pa_version, "0.9.12")) {
+    /* then try to flush, it's not fatal when this fails */
+    GST_DEBUG_OBJECT (psink, "flushing");
+    if ((o = pa_stream_flush (pbuf->stream, gst_pulsering_success_cb, pbuf))) {
+      while (pa_operation_get_state (o) == PA_OPERATION_RUNNING) {
+        GST_DEBUG_OBJECT (psink, "wait for completion");
+        pa_threaded_mainloop_wait (psink->mainloop);
+        if (gst_pulsering_is_dead (psink, pbuf))
+          goto server_dead;
+      }
+      GST_DEBUG_OBJECT (psink, "flush completed");
     }
-    GST_DEBUG_OBJECT (psink, "flush completed");
   }
-
   res = TRUE;
 
 cleanup:
@@ -1376,6 +1381,9 @@ gst_pulsesink_init (GstPulseSink * pulsesink, GstPulseSinkClass * klass)
   pulsesink->volume_set = FALSE;
 
   pulsesink->notify = 0;
+
+  /* needed for conditional execution */
+  pulsesink->pa_version = pa_get_library_version ();
 
   g_assert ((pulsesink->mainloop = pa_threaded_mainloop_new ()));
   g_assert (pa_threaded_mainloop_start (pulsesink->mainloop) == 0);
