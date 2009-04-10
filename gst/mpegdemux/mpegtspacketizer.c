@@ -502,6 +502,17 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
     g_free (struct_name);
 
     if (stream_info_length) {
+      /* check for AC3 descriptor */
+      GstMPEGDescriptor *desc =
+          gst_mpeg_descriptor_parse (data, stream_info_length);
+      if (desc != NULL) {
+        if (gst_mpeg_descriptor_find (desc, DESC_DVB_AC3)) {
+          gst_structure_set (stream_info, "has-ac3", G_TYPE_BOOLEAN, TRUE,
+              NULL);
+        }
+        gst_mpeg_descriptor_free (desc);
+      }
+
       descriptors = g_value_array_new (0);
       if (!mpegts_packetizer_parse_descriptors (packetizer,
               &data, data + stream_info_length, descriptors)) {
@@ -514,6 +525,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
       gst_structure_set (stream_info,
           "descriptors", G_TYPE_VALUE_ARRAY, descriptors, NULL);
       g_value_array_free (descriptors);
+
     }
 
     g_value_init (&stream_value, GST_TYPE_STRUCTURE);
