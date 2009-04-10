@@ -43,50 +43,54 @@ typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
 
 //Color space conversion method
-typedef enum {
-  GST_GL_DISPLAY_CONVERSION_GLSL,   //ARB_fragment_shade
-  GST_GL_DISPLAY_CONVERSION_MATRIX, //ARB_imaging
-  GST_GL_DISPLAY_CONVERSION_MESA,   //MESA_ycbcr_texture
+typedef enum
+{
+  GST_GL_DISPLAY_CONVERSION_GLSL,       //ARB_fragment_shade
+  GST_GL_DISPLAY_CONVERSION_MATRIX,     //ARB_imaging
+  GST_GL_DISPLAY_CONVERSION_MESA,       //MESA_ycbcr_texture
 } GstGLDisplayConversion;
 
 
 //Projection type
-typedef enum {
+typedef enum
+{
   GST_GL_DISPLAY_PROJECTION_ORTHO2D,
   GST_GL_DISPLAY_PROJECTION_PERSPECIVE
 } GstGLDisplayProjection;
 
 //Texture pool elements
-typedef struct _GstGLDisplayTex {
+typedef struct _GstGLDisplayTex
+{
   GLuint texture;
 } GstGLDisplayTex;
 
 
 //Client callbacks
-typedef void (* CRCB) ( GLuint, GLuint );
-typedef gboolean (* CDCB) ( GLuint, GLuint, GLuint);
+typedef void (*CRCB) (GLuint, GLuint);
+typedef gboolean (*CDCB) (GLuint, GLuint, GLuint);
 
-typedef void (* GstGLDisplayThreadFunc) (GstGLDisplay *display, gpointer data);
+typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
 
 //opengl scene callback
-typedef void (* GLCB) ( gint, gint, guint, gpointer stuff);
+typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
 
-struct _GstGLDisplay {
+struct _GstGLDisplay
+{
   GObject object;
 
   //thread safe
-  GMutex* mutex;
+  GMutex *mutex;
 
   //gl context
-  GThread* gl_thread;
-  GstGLWindow* gl_window;
+  GThread *gl_thread;
+  GstGLWindow *gl_window;
   gboolean visible;
   gboolean isAlive;
-  GHashTable* texture_pool;
+  GHashTable *texture_pool;
 
   //conditions
-  GCond* cond_create_context;
-  GCond* cond_destroy_context;
+  GCond *cond_create_context;
+  GCond *cond_destroy_context;
 
   //generic gl code
   GstGLDisplayThreadFunc generic_callback;
@@ -97,9 +101,9 @@ struct _GstGLDisplay {
   GLuint redisplay_texture_width;
   GLuint redisplay_texture_height;
 #ifdef OPENGL_ES2
-  GstGLShader* redisplay_shader;
-  GLbyte* redisplay_vertex_shader_str;
-  GLbyte* redisplay_fragment_shader_str;
+  GstGLShader *redisplay_shader;
+  gchar *redisplay_vertex_shader_str;
+  gchar *redisplay_fragment_shader_str;
   GLint redisplay_attr_position_loc;
   GLint redisplay_attr_texture_loc;
 #endif
@@ -149,7 +153,7 @@ struct _GstGLDisplay {
   gdouble use_fbo_proj_param3;
   gdouble use_fbo_proj_param4;
   GstGLDisplayProjection use_fbo_projection;
-  gpointer* use_fbo_stuff;
+  gpointer *use_fbo_stuff;
   GLuint input_texture_width;
   GLuint input_texture_height;
   GLuint input_texture;
@@ -174,51 +178,52 @@ struct _GstGLDisplay {
   GLuint ouput_texture_height;
 
   //action gen and del shader
-  const gchar* gen_shader_fragment_source;
-  const gchar* gen_shader_vertex_source;
-  GstGLShader* gen_shader;
-  GstGLShader* del_shader;
+  const gchar *gen_shader_fragment_source;
+  const gchar *gen_shader_vertex_source;
+  GstGLShader *gen_shader;
+  GstGLShader *del_shader;
 
   //fragement shader upload
-  gchar* text_shader_upload_YUY2_UYVY;
-  GstGLShader* shader_upload_YUY2;
-  GstGLShader* shader_upload_UYVY;
+  gchar *text_shader_upload_YUY2_UYVY;
+  GstGLShader *shader_upload_YUY2;
+  GstGLShader *shader_upload_UYVY;
 
-  gchar* text_shader_upload_I420_YV12;
-  GstGLShader* shader_upload_I420_YV12;
+  gchar *text_shader_upload_I420_YV12;
+  GstGLShader *shader_upload_I420_YV12;
 
-  gchar* text_shader_upload_AYUV;
-  GstGLShader* shader_upload_AYUV;
+  gchar *text_shader_upload_AYUV;
+  GstGLShader *shader_upload_AYUV;
 
 #ifdef OPENGL_ES2
-  GLbyte* text_vertex_shader_upload;
+  gchar *text_vertex_shader_upload;
   GLint shader_upload_attr_position_loc;
   GLint shader_upload_attr_texture_loc;
 #endif
 
   //fragement shader download
-  gchar* text_shader_download_YUY2_UYVY;
-  GstGLShader* shader_download_YUY2;
-  GstGLShader* shader_download_UYVY;
+  gchar *text_shader_download_YUY2_UYVY;
+  GstGLShader *shader_download_YUY2;
+  GstGLShader *shader_download_UYVY;
 
-  gchar* text_shader_download_I420_YV12;
-  GstGLShader* shader_download_I420_YV12;
+  gchar *text_shader_download_I420_YV12;
+  GstGLShader *shader_download_I420_YV12;
 
-  gchar* text_shader_download_AYUV;
-  GstGLShader* shader_download_AYUV;
+  gchar *text_shader_download_AYUV;
+  GstGLShader *shader_download_AYUV;
 
 #ifdef OPENGL_ES2
-  GLbyte* text_vertex_shader_download;
+  gchar *text_vertex_shader_download;
   GLint shader_download_attr_position_loc;
   GLint shader_download_attr_texture_loc;
-  GLbyte* text_fragment_shader_download_RGB;
-  GstGLShader* shader_download_RGB;
+  gchar *text_fragment_shader_download_RGB;
+  GstGLShader *shader_download_RGB;
 #endif
 
 };
 
 
-struct _GstGLDisplayClass {
+struct _GstGLDisplayClass
+{
   GObjectClass object_class;
 };
 
@@ -228,49 +233,50 @@ GType gst_gl_display_get_type (void);
 //------------------------------------------------------------
 //-------------------- Public declarations ------------------
 //------------------------------------------------------------
-GstGLDisplay* gst_gl_display_new (void);
+GstGLDisplay *gst_gl_display_new (void);
 
-void gst_gl_display_create_context (GstGLDisplay* display,
-                                    GLint width, GLint height);
-gboolean gst_gl_display_redisplay (GstGLDisplay* display, GLuint texture, gint width, gint height);
+void gst_gl_display_create_context (GstGLDisplay * display,
+    GLint width, GLint height);
+gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
+    gint width, gint height);
 
-void gst_gl_display_thread_add (GstGLDisplay *display,
-				GstGLDisplayThreadFunc func, gpointer data);
+void gst_gl_display_thread_add (GstGLDisplay * display,
+    GstGLDisplayThreadFunc func, gpointer data);
 
-void gst_gl_display_gen_texture (GstGLDisplay* display, GLuint* pTexture, GLint width, GLint height);
-void gst_gl_display_del_texture (GstGLDisplay* display, GLuint texture, GLint width, GLint height);
+void gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
+    GLint width, GLint height);
+void gst_gl_display_del_texture (GstGLDisplay * display, GLuint texture,
+    GLint width, GLint height);
 
-void gst_gl_display_init_upload (GstGLDisplay* display, GstVideoFormat video_format,
-                                 guint gl_width, guint gl_height,
-                                 gint video_width, gint video_height);
-gboolean gst_gl_display_do_upload (GstGLDisplay* display, GLuint texture,
-                                   gint data_width, gint data_height,
-                                   gpointer data);
-void gst_gl_display_init_download (GstGLDisplay* display, GstVideoFormat video_format,
-                                   gint width, gint height);
-gboolean gst_gl_display_do_download (GstGLDisplay* display, GLuint texture,
-                                     gint width, gint height,
-                                     gpointer data);
+void gst_gl_display_init_upload (GstGLDisplay * display,
+    GstVideoFormat video_format, guint gl_width, guint gl_height,
+    gint video_width, gint video_height);
+gboolean gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
+    gint data_width, gint data_height, gpointer data);
+void gst_gl_display_init_download (GstGLDisplay * display,
+    GstVideoFormat video_format, gint width, gint height);
+gboolean gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
+    gint width, gint height, gpointer data);
 
-void gst_gl_display_gen_fbo (GstGLDisplay* display, gint width, gint height,
-                             GLuint* fbo, GLuint* depthbuffer);
-gboolean gst_gl_display_use_fbo (GstGLDisplay* display, gint texture_fbo_width, gint texture_fbo_height,
-                                 GLuint fbo, GLuint depth_buffer, GLuint texture_fbo, GLCB cb,
-                                 gint input_texture_width, gint input_texture_height, GLuint input_texture,
-                                 gdouble proj_param1, gdouble proj_param2,
-                                 gdouble proj_param3, gdouble proj_param4,
-                                 GstGLDisplayProjection projection, gpointer* stuff);
-void gst_gl_display_del_fbo (GstGLDisplay* display, GLuint fbo,
-                             GLuint depth_buffer);
+void gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
+    GLuint * fbo, GLuint * depthbuffer);
+gboolean gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
+    gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
+    GLuint texture_fbo, GLCB cb, gint input_texture_width,
+    gint input_texture_height, GLuint input_texture, gdouble proj_param1,
+    gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
+    GstGLDisplayProjection projection, gpointer * stuff);
+void gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo,
+    GLuint depth_buffer);
 
-void gst_gl_display_gen_shader (GstGLDisplay* display,
-                                const gchar* shader_vertex_source,
-                                const gchar* shader_fragment_source,
-                                GstGLShader** shader);
-void gst_gl_display_del_shader (GstGLDisplay* display, GstGLShader* shader);
+void gst_gl_display_gen_shader (GstGLDisplay * display,
+    const gchar * shader_vertex_source,
+    const gchar * shader_fragment_source, GstGLShader ** shader);
+void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
 
-void gst_gl_display_set_window_id (GstGLDisplay* display, gulong window_id);
-void gst_gl_display_set_client_reshape_callback (GstGLDisplay* display, CRCB cb);
-void gst_gl_display_set_client_draw_callback (GstGLDisplay* display, CDCB cb);
+void gst_gl_display_set_window_id (GstGLDisplay * display, gulong window_id);
+void gst_gl_display_set_client_reshape_callback (GstGLDisplay * display,
+    CRCB cb);
+void gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb);
 
 #endif

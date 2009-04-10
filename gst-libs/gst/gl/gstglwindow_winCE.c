@@ -27,10 +27,12 @@
 #define WM_GST_GL_WINDOW_CUSTOM (WM_APP+1)
 #define WM_GST_GL_WINDOW_QUIT (WM_APP+2)
 
-LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
+    LPARAM lParam);
+LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
+    LPARAM lParam);
 
-const gchar* EGLErrorString();
+const gchar *EGLErrorString ();
 
 #define GST_GL_WINDOW_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
@@ -76,8 +78,8 @@ gst_gl_window_finalize (GObject * object)
 }
 
 static void
-gst_gl_window_log_handler (const gchar *domain, GLogLevelFlags flags,
-                           const gchar *message, gpointer user_data)
+gst_gl_window_log_handler (const gchar * domain, GLogLevelFlags flags,
+    const gchar * message, gpointer user_data)
 {
   if (_gst_gl_window_debug) {
     g_log_default_handler (domain, flags, message, user_data);
@@ -103,9 +105,8 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
 
   atom = GetClassInfo (hinstance, "GSTGL", &wc);
 
-  if (atom == 0)
-  {
-    ZeroMemory (&wc, sizeof(WNDCLASS));
+  if (atom == 0) {
+    ZeroMemory (&wc, sizeof (WNDCLASS));
 
     wc.lpfnWndProc = window_proc;
     wc.cbClsExtra = 0;
@@ -121,12 +122,12 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
     atom = RegisterClass (&wc);
 
     if (atom == 0)
-      g_error ("Failed to register window class %x\r\n", GetLastError());
+      g_error ("Failed to register window class %x\r\n", GetLastError ());
   }
 }
 
 static void
-gst_gl_window_init (GstGLWindow *window)
+gst_gl_window_init (GstGLWindow * window)
 {
   window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
 
@@ -134,7 +135,7 @@ gst_gl_window_init (GstGLWindow *window)
     _gst_gl_window_debug = TRUE;
 
   g_log_set_handler ("GstGLWindow", G_LOG_LEVEL_DEBUG,
-    gst_gl_window_log_handler, NULL);
+      gst_gl_window_log_handler, NULL);
 }
 
 /* Must be called in the gl thread */
@@ -143,7 +144,7 @@ gst_gl_window_new (gint width, gint height)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
-  GstGLWindowClass* klass = GST_GL_WINDOW_GET_CLASS (window);
+  GstGLWindowClass *klass = GST_GL_WINDOW_GET_CLASS (window);
 
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
@@ -167,21 +168,13 @@ gst_gl_window_new (gint width, gint height)
   priv->visible = FALSE;
 
   width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-  height += 2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
+  height +=
+      2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
 
-  priv->internal_win_id = CreateWindow (
-    "GSTGL",
-    "OpenGL renderer",
-    WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW, //WS_POPUP | WS_BORDER | WS_SYSMENU | WS_CAPTION
-    x, y, width, height,
-    (HWND) NULL,
-    (HMENU) NULL,
-    hinstance,
-    window
-  );
+  priv->internal_win_id = CreateWindow ("GSTGL", "OpenGL renderer", WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW,    //WS_POPUP | WS_BORDER | WS_SYSMENU | WS_CAPTION
+      x, y, width, height, (HWND) NULL, (HMENU) NULL, hinstance, window);
 
-  if (!priv->internal_win_id)
-  {
+  if (!priv->internal_win_id) {
     g_debug ("failed to create gl window: %d\n", priv->internal_win_id);
     return NULL;
   }
@@ -206,36 +199,41 @@ gst_gl_window_error_quark (void)
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
 {
   GstGLWindowPrivate *priv = window->priv;
-  WNDPROC window_parent_proc = (WNDPROC) (guint64) GetWindowLongPtr((HWND)id, GWL_WNDPROC);
+  WNDPROC window_parent_proc =
+      (WNDPROC) (guint64) GetWindowLongPtr ((HWND) id, GWL_WNDPROC);
   RECT rect;
 
-  SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND)id);
-  SetProp ((HWND)id, "gl_window_id", priv->internal_win_id);
-  SetProp ((HWND)id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
-  SetWindowLongPtr ((HWND)id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
+  SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
+  SetProp ((HWND) id, "gl_window_id", priv->internal_win_id);
+  SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
+  SetWindowLongPtr ((HWND) id, GWL_WNDPROC, (DWORD) (guint64) sub_class_proc);
 
   SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
-  SetParent (priv->internal_win_id, (HWND)id);
+  SetParent (priv->internal_win_id, (HWND) id);
 
   //take changes into account: SWP_FRAMECHANGED
-  GetClientRect ((HWND)id, &rect);
-  SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top, rect.right, rect.bottom,
-    SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE);
-  MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right, rect.bottom, FALSE);
+  GetClientRect ((HWND) id, &rect);
+  SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top,
+      rect.right, rect.bottom,
+      SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+      SWP_FRAMECHANGED | SWP_NOACTIVATE);
+  MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right,
+      rect.bottom, FALSE);
 }
 
 void
-gst_gl_window_set_external_gl_context (GstGLWindow *window, guint64 context)
+gst_gl_window_set_external_gl_context (GstGLWindow * window, guint64 context)
 {
   g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
 }
 
 /* Must be called in the gl thread */
 void
-gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
+gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data)
 {
   GstGLWindowPrivate *priv = window->priv;
 
@@ -245,7 +243,8 @@ gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gp
 
 /* Must be called in the gl thread */
 void
-gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback , gpointer data)
+gst_gl_window_set_resize_callback (GstGLWindow * window,
+    GstGLWindowCB2 callback, gpointer data)
 {
   GstGLWindowPrivate *priv = window->priv;
 
@@ -255,7 +254,8 @@ gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback 
 
 /* Must be called in the gl thread */
 void
-gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
+gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data)
 {
   GstGLWindowPrivate *priv = window->priv;
 
@@ -264,29 +264,28 @@ gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, g
 }
 
 void
-gst_gl_window_draw_unlocked (GstGLWindow *window)
+gst_gl_window_draw_unlocked (GstGLWindow * window)
 {
   gst_gl_window_draw (window);
 }
 
 /* Thread safe */
 void
-gst_gl_window_draw (GstGLWindow *window)
+gst_gl_window_draw (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  if (!priv->visible)
-  {
+  if (!priv->visible) {
     ShowWindowAsync (priv->internal_win_id, SW_SHOW);
     priv->visible = TRUE;
   }
 
   RedrawWindow (priv->internal_win_id, NULL, NULL,
-    RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
+      RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
 }
 
 void
-gst_gl_window_run_loop (GstGLWindow *window)
+gst_gl_window_run_loop (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
   gboolean running = TRUE;
@@ -295,18 +294,14 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
   g_debug ("begin loop\n");
 
-  while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0)
-  {
-      if (bRet == -1)
-      {
-          g_error ("Failed to get message %x\r\n", GetLastError());
-          running = FALSE;
-      }
-      else
-      {
-          TranslateMessage (&msg);
-          DispatchMessage (&msg);
-      }
+  while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0) {
+    if (bRet == -1) {
+      g_error ("Failed to get message %x\r\n", GetLastError ());
+      running = FALSE;
+    } else {
+      TranslateMessage (&msg);
+      DispatchMessage (&msg);
+    }
   }
 
   g_debug ("end loop\n");
@@ -314,12 +309,13 @@ gst_gl_window_run_loop (GstGLWindow *window)
 
 /* Thread safe */
 void
-gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
+gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data)
 {
-  if (window)
-  {
+  if (window) {
     GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = PostMessage(priv->internal_win_id, WM_GST_GL_WINDOW_QUIT, (WPARAM) data, (LPARAM) callback);
+    LRESULT res = PostMessage (priv->internal_win_id, WM_GST_GL_WINDOW_QUIT,
+        (WPARAM) data, (LPARAM) callback);
     g_assert (SUCCEEDED (res));
     g_debug ("end loop requested\n");
   }
@@ -327,21 +323,24 @@ gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer d
 
 /* Thread safe */
 void
-gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointer data)
+gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data)
 {
-  if (window)
-  {
+  if (window) {
     GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = SendMessage (priv->internal_win_id, WM_GST_GL_WINDOW_CUSTOM, (WPARAM) data, (LPARAM) callback);
+    LRESULT res = SendMessage (priv->internal_win_id, WM_GST_GL_WINDOW_CUSTOM,
+        (WPARAM) data, (LPARAM) callback);
     g_assert (SUCCEEDED (res));
   }
 }
 
-LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK
+window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   if (uMsg == WM_CREATE) {
 
-    GstGLWindow *window = (GstGLWindow *) (((LPCREATESTRUCT) lParam)->lpCreateParams);
+    GstGLWindow *window =
+        (GstGLWindow *) (((LPCREATESTRUCT) lParam)->lpCreateParams);
 
     g_debug ("WM_CREATE\n");
 
@@ -352,68 +351,79 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       EGLint minorVersion;
       EGLint numConfigs;
       EGLConfig config;
-      EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
-      
-      EGLint attribList[] =
-      {
-        EGL_RED_SIZE,       5,
-        EGL_GREEN_SIZE,     6,
-        EGL_BLUE_SIZE,      5,
-        EGL_ALPHA_SIZE,     8,
-        EGL_DEPTH_SIZE,     8,
-        EGL_STENCIL_SIZE,   8,
-        EGL_SAMPLE_BUFFERS, EGL_DONT_CARE, //1
+      EGLint contextAttribs[] =
+          { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
+
+      EGLint attribList[] = {
+        EGL_RED_SIZE, 5,
+        EGL_GREEN_SIZE, 6,
+        EGL_BLUE_SIZE, 5,
+        EGL_ALPHA_SIZE, 8,
+        EGL_DEPTH_SIZE, 8,
+        EGL_STENCIL_SIZE, 8,
+        EGL_SAMPLE_BUFFERS, EGL_DONT_CARE,      //1
         EGL_NONE
       };
-      
+
       GstGLWindowPrivate *priv = window->priv;
 
       priv->display = eglGetDisplay (GetDC (hWnd));
       if (priv->display != EGL_NO_DISPLAY)
         g_debug ("display retrieved: %d\n", priv->display);
       else
-        g_debug ("failed to retrieve display %d, %s\n", hWnd, EGLErrorString());
+        g_debug ("failed to retrieve display %d, %s\n", hWnd,
+            EGLErrorString ());
 
       if (eglInitialize (priv->display, &majorVersion, &minorVersion))
         g_debug ("egl initialized: %d.%d\n", majorVersion, minorVersion);
       else
-        g_debug ("failed to initialize egl %d, %s\n", priv->display, EGLErrorString());
+        g_debug ("failed to initialize egl %d, %s\n", priv->display,
+            EGLErrorString ());
 
       if (eglGetConfigs (priv->display, NULL, 0, &numConfigs))
         g_debug ("configs retrieved: %d\n", numConfigs);
       else
-        g_debug ("failed to retrieve configs %d, %s\n", priv->display, EGLErrorString());
+        g_debug ("failed to retrieve configs %d, %s\n", priv->display,
+            EGLErrorString ());
 
       if (eglChooseConfig (priv->display, attribList, &config, 1, &numConfigs))
         g_debug ("config set: %d, %d\n", config, numConfigs);
       else
-        g_debug ("failed to set config %d, %s\n", priv->display, EGLErrorString());
+        g_debug ("failed to set config %d, %s\n", priv->display,
+            EGLErrorString ());
 
-      priv->surface = eglCreateWindowSurface (priv->display, config, (EGLNativeWindowType)hWnd, NULL);
+      priv->surface =
+          eglCreateWindowSurface (priv->display, config,
+          (EGLNativeWindowType) hWnd, NULL);
       if (priv->surface != EGL_NO_SURFACE)
         g_debug ("surface created: %d\n", priv->surface);
       else
-        g_debug ("failed to create surface %d, %d, %d, %s\n", priv->display, priv->surface, hWnd, EGLErrorString());
+        g_debug ("failed to create surface %d, %d, %d, %s\n", priv->display,
+            priv->surface, hWnd, EGLErrorString ());
 
-      priv->gl_context = eglCreateContext (priv->display, config, EGL_NO_CONTEXT, contextAttribs);
+      priv->gl_context =
+          eglCreateContext (priv->display, config, EGL_NO_CONTEXT,
+          contextAttribs);
       if (priv->gl_context != EGL_NO_CONTEXT)
         g_debug ("gl context created: %d\n", priv->gl_context);
       else
-        g_debug ("failed to create glcontext %d, %d, s\n", priv->gl_context, hWnd, EGLErrorString());
+        g_debug ("failed to create glcontext %d, %d, %s\n", priv->gl_context,
+            hWnd, EGLErrorString ());
 
       ReleaseDC (hWnd, priv->display);
 
-      if (!eglMakeCurrent (priv->display, priv->surface, priv->surface, priv->gl_context))
-        g_debug ("failed to make opengl context current %d, %s\n", hWnd, EGLErrorString());
+      if (!eglMakeCurrent (priv->display, priv->surface, priv->surface,
+              priv->gl_context))
+        g_debug ("failed to make opengl context current %d, %s\n", hWnd,
+            EGLErrorString ());
     }
 
     SetProp (hWnd, "gl_window", window);
 
     return 0;
-  }
-  else if (GetProp(hWnd, "gl_window")) {
+  } else if (GetProp (hWnd, "gl_window")) {
 
-    GstGLWindow *window = GetProp(hWnd, "gl_window");
+    GstGLWindow *window = GetProp (hWnd, "gl_window");
     GstGLWindowPrivate *priv = NULL;
 
     g_assert (window);
@@ -424,21 +434,20 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
     g_assert (priv->internal_win_id == hWnd);
 
-    g_assert (priv->gl_context == eglGetCurrentContext());
+    g_assert (priv->gl_context == eglGetCurrentContext ());
 
-    switch ( uMsg ) {
+    switch (uMsg) {
 
       case WM_SIZE:
       {
         if (priv->resize_cb)
-          priv->resize_cb (priv->resize_data, LOWORD(lParam), HIWORD(lParam));
+          priv->resize_cb (priv->resize_data, LOWORD (lParam), HIWORD (lParam));
         break;
       }
 
       case WM_PAINT:
       {
-        if (priv->draw_cb)
-        {
+        if (priv->draw_cb) {
           priv->draw_cb (priv->draw_data);
           eglSwapBuffers (priv->display, priv->surface);
           ValidateRect (hWnd, NULL);
@@ -451,14 +460,14 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         ShowWindowAsync (priv->internal_win_id, SW_HIDE);
 
         if (priv->close_cb)
-            priv->close_cb (priv->close_data);
+          priv->close_cb (priv->close_data);
 
-          priv->draw_cb = NULL;
-          priv->draw_data = NULL;
-          priv->resize_cb = NULL;
-          priv->resize_data = NULL;
-          priv->close_cb = NULL;
-          priv->close_data = NULL;
+        priv->draw_cb = NULL;
+        priv->draw_data = NULL;
+        priv->resize_cb = NULL;
+        priv->resize_data = NULL;
+        priv->close_cb = NULL;
+        priv->close_data = NULL;
         break;
       }
 
@@ -472,13 +481,13 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         destroy_cb ((gpointer) wParam);
 
         parent_id = GetProp (hWnd, "gl_window_parent_id");
-        if (parent_id)
-        {
+        if (parent_id) {
           WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
           g_assert (parent_proc);
 
-          SetWindowLongPtr (parent_id, GWL_WNDPROC, (LONG) (guint64) parent_proc);
+          SetWindowLongPtr (parent_id, GWL_WNDPROC,
+              (LONG) (guint64) parent_proc);
           SetParent (hWnd, NULL);
 
           RemoveProp (parent_id, "gl_window_parent_proc");
@@ -488,34 +497,36 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         priv->is_closed = TRUE;
         RemoveProp (hWnd, "gl_window");
 
-        if (!eglMakeCurrent (priv->display, priv->surface, priv->surface, EGL_NO_CONTEXT))
-          g_debug ("failed to make current null context %d, %s\n", priv->display, EGLErrorString());
+        if (!eglMakeCurrent (priv->display, priv->surface, priv->surface,
+                EGL_NO_CONTEXT))
+          g_debug ("failed to make current null context %d, %s\n",
+              priv->display, EGLErrorString ());
 
-        if (priv->gl_context)
-        {
+        if (priv->gl_context) {
           if (!eglDestroyContext (priv->display, priv->gl_context))
-            g_debug ("failed to destroy context %d, %s\n", priv->gl_context, EGLErrorString());
+            g_debug ("failed to destroy context %d, %s\n", priv->gl_context,
+                EGLErrorString ());
           priv->gl_context = NULL;
         }
 
-        if (priv->surface)
-        {
+        if (priv->surface) {
           if (!eglDestroySurface (priv->display, priv->surface))
-            g_debug ("failed to destroy surface %d, %s\n", priv->surface, EGLErrorString());
+            g_debug ("failed to destroy surface %d, %s\n", priv->surface,
+                EGLErrorString ());
           priv->surface = NULL;
         }
 
-        if (priv->surface)
-        {
+        if (priv->surface) {
           if (!eglTerminate (priv->display))
-            g_debug ("failed to terminate display %d, %s\n", priv->display, EGLErrorString());
+            g_debug ("failed to terminate display %d, %s\n", priv->display,
+                EGLErrorString ());
           priv->surface = NULL;
         }
 
-        if (priv->internal_win_id)
-        {
-          if (!DestroyWindow(priv->internal_win_id))
-            g_debug ("failed to destroy window %d, 0x%x\n", hWnd, GetLastError());
+        if (priv->internal_win_id) {
+          if (!DestroyWindow (priv->internal_win_id))
+            g_debug ("failed to destroy window %d, 0x%x\n", hWnd,
+                GetLastError ());
         }
 
         PostQuitMessage (0);
@@ -532,8 +543,7 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
       case WM_GST_GL_WINDOW_CUSTOM:
       {
-        if (!priv->is_closed)
-        {
+        if (!priv->is_closed) {
           GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
           custom_cb ((gpointer) wParam);
         }
@@ -554,28 +564,28 @@ LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     }
 
     return 0;
-  }
-  else
-    return DefWindowProc( hWnd, uMsg, wParam, lParam );
+  } else
+    return DefWindowProc (hWnd, uMsg, wParam, lParam);
 }
 
-LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT FAR PASCAL
+sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   WNDPROC window_parent_proc = GetProp (hWnd, "gl_window_parent_proc");
 
-  if (uMsg == WM_SIZE)
-  {
+  if (uMsg == WM_SIZE) {
     HWND gl_window_id = GetProp (hWnd, "gl_window_id");
-    MoveWindow (gl_window_id, 0, 0, LOWORD(lParam), HIWORD(lParam), FALSE);
+    MoveWindow (gl_window_id, 0, 0, LOWORD (lParam), HIWORD (lParam), FALSE);
   }
 
   return CallWindowProc (window_parent_proc, hWnd, uMsg, wParam, lParam);
 }
 
-const gchar* EGLErrorString()
+const gchar *
+EGLErrorString ()
 {
-  EGLint nErr = eglGetError();
-  switch(nErr){
+  EGLint nErr = eglGetError ();
+  switch (nErr) {
     case EGL_SUCCESS:
       return "EGL_SUCCESS";
     case EGL_BAD_DISPLAY:
