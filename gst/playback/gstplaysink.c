@@ -470,7 +470,10 @@ gst_play_sink_set_vis_plugin (GstPlaySink * playsink, GstElement * vis)
   /* first store the new vis */
   if (playsink->visualisation)
     gst_object_unref (playsink->visualisation);
-  playsink->visualisation = gst_object_ref (vis);
+  /* take ownership */
+  gst_object_ref (vis);
+  gst_object_sink (vis);
+  playsink->visualisation = vis;
 
   /* now try to change the plugin in the running vis chain, if we have no chain,
    * we don't bother, any future vis chain will be created with the new vis
@@ -793,9 +796,9 @@ gst_play_sink_find_property_sinks (GstPlaySink * playsink, GstElement * obj,
 
 /* try to change the state of an element. This function returns the element when
  * the state change could be performed. When this function returns NULL an error
- * occured and the element is unreffed. */
+ * occured and the element is unreffed if @unref is TRUE. */
 static GstElement *
-try_element (GstPlaySink * playsink, GstElement * element)
+try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
 {
   GstStateChangeReturn ret;
 
@@ -804,7 +807,8 @@ try_element (GstPlaySink * playsink, GstElement * element)
     if (ret == GST_STATE_CHANGE_FAILURE) {
       GST_DEBUG_OBJECT (playsink, "failed state change..");
       gst_element_set_state (element, GST_STATE_NULL);
-      gst_object_unref (element);
+      if (unref)
+        gst_object_unref (element);
       element = NULL;
     }
   }
@@ -841,19 +845,18 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async,
 
   if (playsink->video_sink) {
     GST_DEBUG_OBJECT (playsink, "trying configured videosink");
-    elem = gst_object_ref (playsink->video_sink);
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, playsink->video_sink, FALSE);
   }
   if (chain->sink == NULL) {
     GST_DEBUG_OBJECT (playsink, "trying autovideosink");
     elem = gst_element_factory_make ("autovideosink", "videosink");
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, elem, TRUE);
   }
   /* FIXME: if DEFAULT_VIDEOSINK != "autovideosink" try this now */
   if (chain->sink == NULL) {
     GST_DEBUG_OBJECT (playsink, "trying xvimagesink");
     elem = gst_element_factory_make ("xvimagesink", "videosink");
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, elem, TRUE);
   }
   if (chain->sink == NULL)
     goto no_sinks;
@@ -1042,8 +1045,7 @@ gen_text_chain (GstPlaySink * playsink)
   /* first try to hook the text pad to the custom sink */
   if (playsink->text_sink) {
     GST_DEBUG_OBJECT (playsink, "trying configured textsink");
-    elem = gst_object_ref (playsink->text_sink);
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, playsink->text_sink, FALSE);
     if (chain->sink) {
       elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
       if (elem) {
@@ -1200,8 +1202,7 @@ gen_subp_chain (GstPlaySink * playsink)
   /* first try to hook the text pad to the custom sink */
   if (playsink->subp_sink) {
     GST_DEBUG_OBJECT (playsink, "trying configured subpsink");
-    elem = gst_object_ref (playsink->text_sink);
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, playsink->text_sink, FALSE);
     if (chain->sink) {
       elem = gst_play_sink_find_property_sinks (playsink, chain->sink, "async");
       if (elem) {
@@ -1328,19 +1329,18 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw, gboolean queue)
 
   if (playsink->audio_sink) {
     GST_DEBUG_OBJECT (playsink, "trying configured audiosink");
-    elem = gst_object_ref (playsink->audio_sink);
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, playsink->audio_sink, FALSE);
   }
   if (chain->sink == NULL) {
     GST_DEBUG_OBJECT (playsink, "trying autoaudiosink");
     elem = gst_element_factory_make ("autoaudiosink", "audiosink");
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, elem, TRUE);
   }
   /* FIXME: if DEFAULT_AUDIOSINK != "autoaudiosink" try this now */
   if (chain->sink == NULL) {
     GST_DEBUG_OBJECT (playsink, "trying alsasink");
     elem = gst_element_factory_make ("alsasink", "audiosink");
-    chain->sink = try_element (playsink, elem);
+    chain->sink = try_element (playsink, elem, TRUE);
   }
   if (chain->sink == NULL)
     goto no_sinks;
