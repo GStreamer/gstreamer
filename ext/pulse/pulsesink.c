@@ -1338,6 +1338,8 @@ gst_pulse_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
 
   pa_threaded_mainloop_lock (psink->mainloop);
+  if (gst_pulsering_is_dead (psink, pbuf))
+    goto server_dead;
 
   /* if we don't have enough data to get a timestamp, just return NONE, which
    * will return the last reported time */
@@ -1352,6 +1354,15 @@ gst_pulse_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
       GST_TIME_ARGS (time));
 
   return time;
+
+  /* ERRORS */
+server_dead:
+  {
+    GST_DEBUG_OBJECT (psink, "the server is dead");
+    pa_threaded_mainloop_unlock (psink->mainloop);
+
+    return GST_CLOCK_TIME_NONE;
+  }
 }
 
 static void
