@@ -2144,6 +2144,15 @@ msg_buffering (GstBus * bus, GstMessage * message, GstPipeline * data)
   }
 }
 
+static void
+msg_clock_lost (GstBus * bus, GstMessage * message, GstPipeline * data)
+{
+  g_print ("clock lost! PAUSE and PLAY to select a new clock\n");
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+}
+
 #ifdef HAVE_X
 
 static guint embed_xid = 0;
@@ -2209,6 +2218,8 @@ connect_bus_signals (GstElement * pipeline)
       pipeline);
 
   g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
+      pipeline);
+  g_signal_connect (bus, "message::clock-lost", (GCallback) msg_clock_lost,
       pipeline);
   g_signal_connect (bus, "message::error", (GCallback) message_received,
       pipeline);
