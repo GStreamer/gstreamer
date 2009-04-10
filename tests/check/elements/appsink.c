@@ -68,10 +68,12 @@ notify_test_function (gpointer userdata)
   global_testdata = operate_on_data (GPOINTER_TO_INT (userdata));
 }
 
-void
+static GstFlowReturn
 callback_function (GstAppSink * appsink, gpointer callback_data)
 {
   global_testdata = operate_on_data (*((gint *) callback_data));
+
+  return GST_FLOW_OK;
 }
 
 void
