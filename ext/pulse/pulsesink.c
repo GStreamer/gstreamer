@@ -1092,17 +1092,21 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
 
     /* check if we need to uncork after writing the samples */
     if (pbuf->corked) {
-      const pa_timing_info *info = pa_stream_get_timing_info (pbuf->stream);
+      const pa_timing_info *info;
 
-      GST_LOG_OBJECT (psink,
-          "read_index at %" G_GUINT64_FORMAT ", offset %" G_GINT64_FORMAT,
-          info->read_index, offset);
+      if ((info = pa_stream_get_timing_info (pbuf->stream))) {
+        GST_LOG_OBJECT (psink,
+            "read_index at %" G_GUINT64_FORMAT ", offset %" G_GINT64_FORMAT,
+            info->read_index, offset);
 
-      /* we uncork when the read_index is too far behind the offset we need
-       * to write to. */
-      if (info->read_index + bufsize <= offset) {
-        if (!gst_pulsering_set_corked (pbuf, FALSE, FALSE))
-          goto uncork_failed;
+        /* we uncork when the read_index is too far behind the offset we need
+         * to write to. */
+        if (info->read_index + bufsize <= offset) {
+          if (!gst_pulsering_set_corked (pbuf, FALSE, FALSE))
+            goto uncork_failed;
+        }
+      } else {
+        GST_LOG_OBJECT (psink, "no timing info available yet");
       }
     }
   }
