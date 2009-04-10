@@ -100,6 +100,7 @@ check_PROGRAMS = \
 	elements/gdppay \
 	elements/multifdsink \
 	elements/playbin \
+	elements/playbin2 \
 	$(check_subparse) \
 	elements/videorate \
 	elements/videoscale \
@@ -255,6 +256,9 @@ elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_playbin2_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_playbin2_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
