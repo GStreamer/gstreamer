@@ -369,6 +369,10 @@ struct _GstPlayBin
   gint shutdown;
 
   GValueArray *elements;        /* factories we can use for selecting elements */
+
+  gboolean have_selector;       /* set to FALSE when we fail to create an
+                                 * input-selector, so that we only post a
+                                 * warning once */
 };
 
 struct _GstPlayBinClass
@@ -988,6 +992,9 @@ gst_play_bin_init (GstPlayBin * playbin)
 
   playbin->lock = g_mutex_new ();
   playbin->dyn_lock = g_mutex_new ();
+
+  /* assume we can create a selector */
+  playbin->have_selector = TRUE;
 
   /* init groups */
   playbin->curr_group = &playbin->groups[0];
@@ -1736,22 +1743,37 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     goto unknown_type;
 
   GST_SOURCE_GROUP_LOCK (group);
-  if (select->selector == NULL) {
+  if (select->selector == NULL && playbin->have_selector) {
     /* no selector, create one */
     GST_DEBUG_OBJECT (playbin, "creating new selector");
     select->selector = gst_element_factory_make ("input-selector", NULL);
-    if (select->selector == NULL)
-      goto no_selector;
+    if (select->selector == NULL) {
+      /* post the missing selector message only once */
+      playbin->have_selector = FALSE;
+      gst_element_post_message (GST_ELEMENT_CAST (playbin),
+          gst_missing_element_message_new (GST_ELEMENT_CAST (playbin),
+              "input-selector"));
+      GST_ELEMENT_WARNING (playbin, CORE, MISSING_PLUGIN,
+          (_("Missing element '%s' - check your GStreamer installation."),
+              "input-selector"), (NULL));
+    } else {
+      g_signal_connect (select->selector, "notify::active-pad",
+          G_CALLBACK (selector_active_pad_changed), playbin);
 
-    g_signal_connect (select->selector, "notify::active-pad",
-        G_CALLBACK (selector_active_pad_changed), playbin);
+      GST_DEBUG_OBJECT (playbin, "adding new selector %p", select->selector);
+      gst_bin_add (GST_BIN_CAST (playbin), select->selector);
+      gst_element_set_state (select->selector, GST_STATE_PAUSED);
+    }
+  }
 
-    GST_DEBUG_OBJECT (playbin, "adding new selector %p", select->selector);
-    gst_bin_add (GST_BIN_CAST (playbin), select->selector);
-    gst_element_set_state (select->selector, GST_STATE_PAUSED);
-
-    /* save source pad */
-    select->srcpad = gst_element_get_static_pad (select->selector, "src");
+  if (select->srcpad == NULL) {
+    if (select->selector) {
+      /* save source pad of the selector */
+      select->srcpad = gst_element_get_static_pad (select->selector, "src");
+    } else {
+      /* no selector, use the pad as the source pad then */
+      select->srcpad = gst_object_ref (pad);
+    }
     /* block the selector srcpad. It's possible that multiple decodebins start
      * pushing data into the selectors before we have a chance to collect all
      * streams and connect the sinks, resulting in not-linked errors. After we
@@ -1760,28 +1782,35 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   }
 
   /* get sinkpad for the new stream */
-  if ((sinkpad = gst_element_get_request_pad (select->selector, "sink%d"))) {
-    GST_DEBUG_OBJECT (playbin, "got pad %s:%s from selector",
-        GST_DEBUG_PAD_NAME (sinkpad));
+  if (select->selector) {
+    if ((sinkpad = gst_element_get_request_pad (select->selector, "sink%d"))) {
+      GST_DEBUG_OBJECT (playbin, "got pad %s:%s from selector",
+          GST_DEBUG_PAD_NAME (sinkpad));
 
-    /* store the selector for the pad */
-    g_object_set_data (G_OBJECT (sinkpad), "playbin2.select", select);
+      /* store the selector for the pad */
+      g_object_set_data (G_OBJECT (sinkpad), "playbin2.select", select);
 
-    /* store the pad in the array */
-    GST_DEBUG_OBJECT (playbin, "pad %p added to array", sinkpad);
-    g_ptr_array_add (select->channels, sinkpad);
+      /* store the pad in the array */
+      GST_DEBUG_OBJECT (playbin, "pad %p added to array", sinkpad);
+      g_ptr_array_add (select->channels, sinkpad);
 
-    res = gst_pad_link (pad, sinkpad);
-    if (GST_PAD_LINK_FAILED (res))
-      goto link_failed;
+      res = gst_pad_link (pad, sinkpad);
+      if (GST_PAD_LINK_FAILED (res))
+        goto link_failed;
 
-    /* store selector pad so we can release it */
-    g_object_set_data (G_OBJECT (pad), "playbin2.sinkpad", sinkpad);
+      /* store selector pad so we can release it */
+      g_object_set_data (G_OBJECT (pad), "playbin2.sinkpad", sinkpad);
 
-    changed = TRUE;
+      changed = TRUE;
+      GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to selector %p",
+          GST_DEBUG_PAD_NAME (pad), select->selector);
+    }
+  } else {
+    /* no selector, don't configure anything, we'll link the new pad directly to
+     * the sink. */
+    changed = FALSE;
+    sinkpad = NULL;
   }
-  GST_DEBUG_OBJECT (playbin, "linked pad %s:%s to selector %p",
-      GST_DEBUG_PAD_NAME (pad), select->selector);
   GST_SOURCE_GROUP_UNLOCK (group);
 
   if (changed) {
@@ -1820,18 +1849,6 @@ unknown_type:
   {
     GST_ERROR_OBJECT (playbin, "unknown type %s for pad %s:%s",
         name, GST_DEBUG_PAD_NAME (pad));
-    goto done;
-  }
-no_selector:
-  {
-    GST_SOURCE_GROUP_UNLOCK (group);
-
-    gst_element_post_message (GST_ELEMENT_CAST (playbin),
-        gst_missing_element_message_new (GST_ELEMENT_CAST (playbin),
-            "input-selector"));
-    GST_ELEMENT_ERROR (playbin, CORE, MISSING_PLUGIN,
-        (_("Missing element '%s' - check your GStreamer installation."),
-            "input-selector"), (NULL));
     goto done;
   }
 link_failed:
@@ -1937,7 +1954,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
      * created for it. If there is the media type, get a sinkpad from the sink
      * and link it. We only do this if we have not yet requested the sinkpad
      * before. */
-    if (select->selector && select->sinkpad == NULL) {
+    if (select->srcpad && select->sinkpad == NULL) {
       GST_DEBUG_OBJECT (playbin, "requesting new sink pad %d", select->type);
       select->sinkpad =
           gst_play_sink_request_pad (playbin->playsink, select->type);
@@ -1979,7 +1996,7 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
     for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
-      if (select->selector) {
+      if (select->srcpad) {
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
         gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
@@ -2004,15 +2021,15 @@ shutdown:
     for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
       GstSourceSelect *select = &group->selector[i];
 
-      if (select->selector && select->sinkpad == NULL) {
-        GST_DEBUG_OBJECT (playbin, "requesting new flushing sink pad");
-        select->sinkpad =
-            gst_play_sink_request_pad (playbin->playsink,
-            GST_PLAY_SINK_TYPE_FLUSHING);
-        res = gst_pad_link (select->srcpad, select->sinkpad);
-        GST_DEBUG_OBJECT (playbin, "linked flushing, result: %d", res);
-      }
       if (select->srcpad) {
+        if (select->sinkpad == NULL) {
+          GST_DEBUG_OBJECT (playbin, "requesting new flushing sink pad");
+          select->sinkpad =
+              gst_play_sink_request_pad (playbin->playsink,
+              GST_PLAY_SINK_TYPE_FLUSHING);
+          res = gst_pad_link (select->srcpad, select->sinkpad);
+          GST_DEBUG_OBJECT (playbin, "linked flushing, result: %d", res);
+        }
         GST_DEBUG_OBJECT (playbin, "unblocking %" GST_PTR_FORMAT,
             select->srcpad);
         gst_pad_set_blocked_async (select->srcpad, FALSE, selector_blocked,
@@ -2350,27 +2367,27 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
   for (i = 0; i < GST_PLAY_SINK_TYPE_LAST; i++) {
     GstSourceSelect *select = &group->selector[i];
 
-    if (!select->selector)
-      continue;
-
     GST_DEBUG_OBJECT (playbin, "unlinking selector %s", select->media);
 
-    if (select->sinkpad) {
-      GST_LOG_OBJECT (playbin, "unlinking from sink");
-      gst_pad_unlink (select->srcpad, select->sinkpad);
+    if (select->srcpad) {
+      if (select->sinkpad) {
+        GST_LOG_OBJECT (playbin, "unlinking from sink");
+        gst_pad_unlink (select->srcpad, select->sinkpad);
 
-      /* release back */
-      GST_LOG_OBJECT (playbin, "release sink pad");
-      gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
-      select->sinkpad = NULL;
+        /* release back */
+        GST_LOG_OBJECT (playbin, "release sink pad");
+        gst_play_sink_release_pad (playbin->playsink, select->sinkpad);
+        select->sinkpad = NULL;
+      }
+      gst_object_unref (select->srcpad);
+      select->srcpad = NULL;
     }
 
-    gst_object_unref (select->srcpad);
-    select->srcpad = NULL;
-
-    gst_element_set_state (select->selector, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
-    select->selector = NULL;
+    if (select->selector) {
+      gst_element_set_state (select->selector, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (playbin), select->selector);
+      select->selector = NULL;
+    }
   }
   /* we still have the decodebins added to the playbin2 but we can't remove them
    * yet or change their state because this function might be called from the
