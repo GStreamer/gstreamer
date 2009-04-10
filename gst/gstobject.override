@@ -47,7 +47,9 @@ _wrap_gst_object_tp_repr (PyObject * self)
 
   repr = g_strdup_printf ("<%s object (%s) at 0x%lx>",
       self->ob_type->tp_name,
-      GST_OBJECT_NAME (object) ? GST_OBJECT_NAME (object) : "unnamed",
+      object ? (
+        GST_OBJECT_NAME (object) ? GST_OBJECT_NAME (object) : "unnamed"
+      ) : "(null)",
       (long) self);
   ret = PyString_FromString (repr);
   g_free (repr);

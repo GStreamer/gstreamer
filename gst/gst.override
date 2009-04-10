@@ -241,6 +241,12 @@ pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
     return Py_None;    
 }
 
+GType
+gst_tag_get_tag_type (const gchar * tag)
+{
+  return gst_tag_get_type (tag);
+}
+
 %%
 include
   gstbin.override
