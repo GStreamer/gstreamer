@@ -891,7 +891,7 @@ gst_queue_is_empty (GstQueue * queue)
    * Therefore, only consider it empty if it is not filled. */
   return ((queue->min_threshold.buffers > 0 &&
           queue->cur_level.buffers < queue->min_threshold.buffers) ||
-      (queue->min_threshold.bytes > 0 &&
+      (queue->min_threshold.bytes &&
           queue->cur_level.bytes < queue->min_threshold.bytes) ||
       (queue->min_threshold.time > 0 &&
           queue->cur_level.time < queue->min_threshold.time)) &&
@@ -901,11 +901,11 @@ gst_queue_is_empty (GstQueue * queue)
 static gboolean
 gst_queue_is_filled (GstQueue * queue)
 {
-  return (((queue->max_size.buffers > 0 &&
+  return (((queue->max_size.buffers &&
               queue->cur_level.buffers >= queue->max_size.buffers) ||
-          (queue->max_size.bytes > 0 &&
+          (queue->max_size.bytes &&
               queue->cur_level.bytes >= queue->max_size.bytes) ||
-          (queue->max_size.time > 0 &&
+          (queue->max_size.time &&
               queue->cur_level.time >= queue->max_size.time)));
 }
 
@@ -1344,13 +1344,13 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
        * limit, the best thing we can do is to return an infinite delay. In
        * reality a better estimate would be the byte/buffer rate but that is not
        * possible right now. */
-      if (queue->max_size.time > 0 && max != -1)
+      if (queue->max_size.time && max != -1)
         max += queue->max_size.time;
       else
         max = -1;
 
       /* adjust for min-threshold */
-      if (queue->min_threshold.time > 0 && min != -1)
+      if (queue->min_threshold.time && min != -1)
         min += queue->min_threshold.time;
 
       gst_query_set_latency (query, live, min, max);

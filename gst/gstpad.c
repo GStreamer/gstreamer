@@ -4174,7 +4174,7 @@ gst_pad_chain_data_unchecked (GstPad * pad, gboolean is_buffer, void *data,
   caps = gst_pad_data_get_caps (is_buffer, data);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
 
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) != 0;
   GST_OBJECT_UNLOCK (pad);
 
   /* see if the signal should be emited, we emit before caps nego as
@@ -4409,7 +4409,7 @@ gst_pad_push_data (GstPad * pad, gboolean is_buffer, void *data,
 
   /* we emit signals on the pad arg, the peer will have a chance to
    * emit in the _chain() function */
-  if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad) > 0)) {
+  if (G_UNLIKELY (GST_PAD_DO_BUFFER_SIGNALS (pad))) {
     cache = NULL;
     /* unlock before emitting */
     GST_OBJECT_UNLOCK (pad);
@@ -4866,7 +4866,7 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) != 0;
   GST_OBJECT_UNLOCK (pad);
 
   if (G_UNLIKELY ((getrangefunc = GST_PAD_GETRANGEFUNC (pad)) == NULL))
@@ -5034,7 +5034,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
 
   /* signal emision for the pad, peer has chance to emit when
    * we call _get_range() */
-  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) > 0;
+  emit_signal = GST_PAD_DO_BUFFER_SIGNALS (pad) != 0;
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
@@ -5172,7 +5172,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     GST_EVENT_SRC (event) = gst_object_ref (pad);
   }
 
-  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
+  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) != 0)) {
     GST_OBJECT_UNLOCK (pad);
 
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (event)))
@@ -5279,7 +5279,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
   }
 
   /* pad signals */
-  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) > 0)) {
+  if (G_UNLIKELY (GST_PAD_DO_EVENT_SIGNALS (pad) != 0)) {
     GST_OBJECT_UNLOCK (pad);
 
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT_CAST (event)))

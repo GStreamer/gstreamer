@@ -357,7 +357,7 @@ void
 gst_mini_object_unref (GstMiniObject * mini_object)
 {
   g_return_if_fail (GST_IS_MINI_OBJECT (mini_object));
-  g_return_if_fail (mini_object->refcount > 0);
+  g_return_if_fail (mini_object->refcount);
 
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p unref %d->%d",
       mini_object,

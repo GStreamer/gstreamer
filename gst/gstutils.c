@@ -307,7 +307,7 @@ gst_util_div128_64 (GstUInt64 c1, GstUInt64 c0, guint64 denom)
    * part of denom since denom > G_MAXUINT32. */
   s = gst_util_clz (v.l.high);
 
-  if (s > 0) {
+  if (s) {
     /* normalize divisor and dividend */
     v.ll <<= s;
     c1.ll = (c1.ll << s) | (c0.l.high >> (32 - s));
@@ -3367,7 +3367,7 @@ void
 gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
 {
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (handler_id > 0);
+  g_return_if_fail (handler_id);
 
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
@@ -3391,7 +3391,7 @@ void
 gst_pad_remove_event_probe (GstPad * pad, guint handler_id)
 {
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (handler_id > 0);
+  g_return_if_fail (handler_id);
 
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
@@ -3413,7 +3413,7 @@ void
 gst_pad_remove_buffer_probe (GstPad * pad, guint handler_id)
 {
   g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (handler_id > 0);
+  g_return_if_fail (handler_id);
 
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);

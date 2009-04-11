@@ -313,7 +313,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
   handler = bus->sync_handler;
   handler_data = bus->sync_handler_data;
-  emit_sync_message = bus->priv->num_sync_message_emitters > 0;
+  emit_sync_message = bus->priv->num_sync_message_emitters;
   GST_OBJECT_UNLOCK (bus);
 
   /* first call the sync handler if it is installed */
@@ -1215,7 +1215,7 @@ gst_bus_add_signal_watch_full (GstBus * bus, gint priority)
   /* I know the callees don't take this lock, so go ahead and abuse it */
   GST_OBJECT_LOCK (bus);
 
-  if (bus->num_signal_watchers > 0)
+  if (bus->num_signal_watchers)
     goto done;
 
   /* this should not fail because the counter above takes care of it */
@@ -1288,7 +1288,7 @@ gst_bus_remove_signal_watch (GstBus * bus)
 
   bus->num_signal_watchers--;
 
-  if (bus->num_signal_watchers > 0)
+  if (bus->num_signal_watchers)
     goto done;
 
   id = bus->signal_watch_id;

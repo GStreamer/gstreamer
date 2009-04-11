@@ -1004,7 +1004,7 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
 {
   g_return_if_fail (GST_IS_CLOCK (clock));
   g_return_if_fail (rate_num != GST_CLOCK_TIME_NONE);
-  g_return_if_fail (rate_denom > 0 && rate_denom != GST_CLOCK_TIME_NONE);
+  g_return_if_fail (rate_denom && rate_denom != GST_CLOCK_TIME_NONE);
 
   write_seqlock (clock);
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,

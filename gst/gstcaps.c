@@ -405,7 +405,7 @@ gst_caps_ref (GstCaps * caps)
   GST_CAT_TRACE (GST_CAT_REFCOUNTING, "%p %d->%d", caps,
       GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) + 1);
 #endif
-  g_return_val_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0, NULL);
+  g_return_val_if_fail (GST_CAPS_REFCOUNT_VALUE (caps), NULL);
 
   g_atomic_int_inc (&caps->refcount);
 
@@ -429,7 +429,7 @@ gst_caps_unref (GstCaps * caps)
       GST_CAPS_REFCOUNT_VALUE (caps), GST_CAPS_REFCOUNT_VALUE (caps) - 1);
 #endif
 
-  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
+  g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps));
 
   /* if we ended up with the refcount at zero, free the caps */
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&caps->refcount)))
@@ -474,7 +474,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
     G_LOCK (static_caps_lock);
     /* check if other thread already updated */
-    if (G_UNLIKELY (g_atomic_int_get (&caps->refcount) > 0))
+    if (G_UNLIKELY (g_atomic_int_get (&caps->refcount)))
       goto done;
 
     string = static_caps->string;
@@ -1591,7 +1591,7 @@ gst_caps_subtract (const GstCaps * minuend, const GstCaps * subtrahend)
      Note: there's a test that checks this behaviour. */
   g_return_val_if_fail (!CAPS_IS_ANY (minuend), NULL);
   sublen = subtrahend->structs->len;
-  g_assert (sublen > 0);
+  g_assert (sublen);
 
   src = gst_caps_copy (minuend);
   for (i = 0; i < sublen; i++) {
@@ -2087,7 +2087,7 @@ gst_caps_to_string (const GstCaps * caps)
   for (i = 0; i < clen; i++) {
     GstStructure *structure;
 
-    if (i > 0) {
+    if (i) {
       /* ';' is now added by gst_structure_to_string */
       g_string_append_c (s, ' ');
     }

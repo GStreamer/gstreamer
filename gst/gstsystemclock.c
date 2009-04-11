@@ -334,7 +334,7 @@ gst_system_clock_add_wakeup (GstSystemClock * sysclock)
 static void
 gst_system_clock_wait_wakeup (GstSystemClock * sysclock)
 {
-  while (sysclock->priv->wakeup_count > 0) {
+  while (sysclock->priv->wakeup_count) {
     GST_CLOCK_WAIT (sysclock);
   }
 }

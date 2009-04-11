@@ -1744,7 +1744,7 @@ gst_structure_value_get_generic_type (GValue * val)
       || G_VALUE_TYPE (val) == GST_TYPE_ARRAY) {
     GArray *array = g_value_peek_pointer (val);
 
-    if (array->len > 0) {
+    if (array->len) {
       GValue *value = &g_array_index (array, GValue, 0);
 
       return gst_structure_value_get_generic_type (value);
