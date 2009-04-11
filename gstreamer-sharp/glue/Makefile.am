@@ -6,8 +6,8 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	message.c \
 	miniobject.c \
 	bin.c \
-	dynamicsignal.c \
-	gerror.c
+	gerror.c \
+	gobject.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 

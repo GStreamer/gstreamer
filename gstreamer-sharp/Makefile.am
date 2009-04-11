@@ -44,6 +44,7 @@ sources = \
 	AssemblyInfo.cs \
 	CommonTags.cs \
 	GError.cs \
+	Value.cs \
 	plugins-base/PlayBin.cs \
 	plugins-base/DecodeBin.cs \
 	plugins-base/TypeFindElement.cs

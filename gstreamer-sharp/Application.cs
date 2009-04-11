@@ -73,7 +73,7 @@ namespace Gst {
       } else {
         progargs = argv.GetArgs (argc);
         args = new string[argc - 1];
-        Array.Copy (progargs, 1, args, 0, argc - 1);
+        System.Array.Copy (progargs, 1, args, 0, argc - 1);
       }
     }
 

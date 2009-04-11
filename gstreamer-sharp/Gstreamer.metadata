@@ -305,4 +305,7 @@
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetUlong']/*/*[@name='value']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/struct[@name='TypeFind']/method[@name='Register']" name="hidden">1</attr>
+
+  <!-- We implement this ourselves -->
+  <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>
 </metadata>

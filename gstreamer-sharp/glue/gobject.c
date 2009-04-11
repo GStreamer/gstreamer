@@ -11,3 +11,9 @@ gstsharp_g_type_from_instance (GTypeInstance * instance)
 {
   return G_TYPE_FROM_INSTANCE (instance);
 }
+
+GType
+gstsharp_g_value_type (const GValue *val) {
+  return G_VALUE_TYPE (val);
+}
+
