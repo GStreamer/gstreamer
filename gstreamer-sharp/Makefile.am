@@ -64,7 +64,8 @@ customs = 			\
 	Parse.custom		\
 	Object.custom		\
 	MiniObject.custom       \
-	Registry.custom
+	Registry.custom         \
+	Structure.custom
 
 		
 

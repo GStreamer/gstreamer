@@ -1,0 +1,65 @@
+public Structure (string name, params object[] fields) : this (name)
+{
+  Set (fields);
+}
+
+public object Get (string field) {
+  GLib.Value v;
+
+  v = GetValue (field);
+  return Gst.Value.GetValue (v);
+}
+
+public void Set (string field, object value) {
+  SetValue (field, Gst.Value.CreateValue (value));
+}
+
+public void Set (params object[] fields) {
+  int i, length = fields.Length;
+
+  if (length % 2 != 0)
+    throw new ArgumentException ();
+
+  for (i = 0; i < length; i += 2) {
+    SetValue (fields[i] as string, Gst.Value.CreateValue (fields[i+1]));
+  }
+}
+
+public object this [string field] {
+  set {
+    GLib.Value v;
+
+    if (field == null)
+      throw new ArgumentNullException ();
+
+    v = Gst.Value.CreateValue (value);
+
+    Set (field, value);
+  }
+  get {
+    if (field == null)
+      throw new ArgumentNullException ();
+
+    return Get (field);
+  }
+}
+
+public IEnumerable Fields {
+  get {
+    ArrayList fields = new ArrayList ();
+    for (uint i = 0; i < Count; i++)
+      fields.Add (NthFieldName (i));
+
+    return fields;
+  }
+}
+
+public static Structure NewFromString (string structure) {
+  IntPtr raw_ret = gst_structure_from_string (structure, IntPtr.Zero);
+  Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern IntPtr gst_structure_from_string (string structure, IntPtr end);
+

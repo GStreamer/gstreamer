@@ -294,6 +294,45 @@
   <attr path="/api/namespace/boxed[@name='Structure']/field[@name='ParentRefcount']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@name='SetParentRefcount']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_name_id']" name="hidden">1</attr>
+  <change-node-type path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_empty_new']">constructor</change-node-type>
+  <remove-attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_empty_new']" name="name" />
+  <remove-attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_empty_new']" name="shared" />
+  <attr path="/api/namespace/boxed[@name='Structure']/field[@cname='type']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_empty_new']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_new_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_copy']" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_value']" name="name">SetValue</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_value']" name="name">GetValue</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_get_value']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_set_value']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_set']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_id_set_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_remove_fields']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_remove_fields_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_n_fields']" name="name">GetCount</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_boolean']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_int']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_uint']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_fourcc']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_double']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_string']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_date']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_clock_time']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_enum']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_fraction']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_foreach']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_map_in_place']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_from_string']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_has_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_field_type']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_nth_field_name']" name="accessibility">private</attr>
+
+  <attr path="/api/namespace/callback[@name='StructureForeachFunc']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/callback[@name='StructureMapFunc']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
 
