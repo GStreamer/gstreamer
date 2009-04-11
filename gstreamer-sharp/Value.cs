@@ -1,6 +1,7 @@
 // Wrapper for GLib.Value to add support for GstFraction, GstFourcc, Gst*Range, ...
 
 using System;
+using System.Text;
 using System.Collections;
 using System.Runtime.InteropServices;
 using GLib;
@@ -414,7 +415,7 @@ namespace Gst {
     }
 
     public override string ToString () {
-      return Val.ToString ();
+      return String.Format ("{0}-{1}-{2}", Val.Year, Val.Month, Val.Day);
     }
 
     public static explicit operator GLib.Value (Date date) {
@@ -445,7 +446,7 @@ namespace Gst {
     private static extern void gst_value_set_date (ref GLib.Value val, IntPtr date);
   }
 
-  public struct List {
+  public struct List : IEnumerable {
     private IList content;
 
     public static GLib.GType GType {
@@ -469,6 +470,20 @@ namespace Gst {
       }
     }
 
+    public override string ToString () {
+      StringBuilder sb = new StringBuilder ();
+
+      sb.Append ("< ");
+      for (int i = 0; i < content.Count; i++) {
+        sb.Append (content[i]);
+        if (i < content.Count - 1)
+          sb.Append (", ");
+      }
+      sb.Append (" >");
+
+      return sb.ToString ();
+    }
+
     public static explicit operator GLib.Value (List l) {
       GLib.Value val = new GLib.Value (List.GType);
 
@@ -478,6 +493,19 @@ namespace Gst {
       }
 
       return val;
+    }
+
+    public IEnumerator GetEnumerator () {
+      return content.GetEnumerator ();
+    }
+
+    public object this [int index] {
+      set {
+        content[index] = value;
+      }
+      get {
+        return content[index];
+      }
     }
 
     [DllImport ("gstreamer-0.10.dll") ]
@@ -490,7 +518,7 @@ namespace Gst {
     private static extern void gst_value_list_append_value (ref GLib.Value val, ref GLib.Value el);
   }
 
-  public struct Array {
+  public struct Array : IEnumerable {
     private IList content;
 
     public static GLib.GType GType {
@@ -523,6 +551,33 @@ namespace Gst {
       }
 
       return val;
+    }
+
+    public override string ToString () {
+      StringBuilder sb = new StringBuilder ();
+
+      sb.Append ("{ ");
+      for (int i = 0; i < content.Count; i++) {
+        sb.Append (content[i]);
+        if (i < content.Count - 1)
+          sb.Append (", ");
+      }
+      sb.Append (" }");
+
+      return sb.ToString ();
+    }
+
+    public IEnumerator GetEnumerator () {
+      return content.GetEnumerator ();
+    }
+
+    public object this [int index] {
+      set {
+        content[index] = value;
+      }
+      get {
+        return content[index];
+      }
     }
 
     [DllImport ("gstreamer-0.10.dll") ]
