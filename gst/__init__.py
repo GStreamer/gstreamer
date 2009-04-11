@@ -21,12 +21,11 @@
 # 
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 
-__gstltihooks_used__ = False
 try:
-    import gstltihooks
-    __gstltihooks_used__ = True
-except:
-    pass
+    import gstlibtoolimporter
+    gstlibtoolimporter.install()
+except ImportError:
+    gstlibtoolimporter = None
 
 import sys
 
@@ -155,7 +154,6 @@ class Fraction(Value):
     def __float__(self):
         return float(self.num) / float(self.denom)
 
-import sys
 try:
     dlsave = sys.getdlopenflags()
     from DLFCN import RTLD_GLOBAL, RTLD_LAZY
@@ -220,10 +218,11 @@ if locals().has_key("message_new_buffering"):
 # with other people's module importers
 # it also clears out the module completely as if it were never loaded,
 # so that if anyone else imports gstltihooks the hooks get installed
-if __gstltihooks_used__:
-    gstltihooks.uninstall()
-    __gstltihooks_used__ = False
-    del gstltihooks
+if gstlibtoolimporter is not None:
+    import audio
+    import pbutils
+    import tag
+    import video
+    gstlibtoolimporter.uninstall()
     import sys
-    del sys.modules['gstltihooks']
-
+    del sys.modules["gstlibtoolimporter"]

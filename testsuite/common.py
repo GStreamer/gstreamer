@@ -89,10 +89,11 @@ except ImportError:
 file = gst.pbutils.__file__
 assert file.startswith(path), 'bad gst.pbutils path: %s' % file
 
-# testhelper needs gstltihooks
-import gstltihooks
+# testhelper needs gstlibtoolimporter
+import gstlibtoolimporter
+gstlibtoolimporter.install()
 import testhelper
-gstltihooks.uninstall()
+gstlibtoolimporter.uninstall()
 
 _stderr = None
 
