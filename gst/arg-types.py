@@ -335,39 +335,6 @@ class StringArrayArg(ArgType):
 					      "    }\n"
 					      "    return PyTuple_New (0);\n")
 
-class Uint8PArg(ArgType):
-	"""guint8* arguments (strings)"""
-	def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
-		if pdflt:
-			if pdflt != 'NULL': pdflt = '"' + pdflt + '"'
-			info.varlist.add('guint8', '*' + pname + ' = ' + pdflt)
-		else:
-			info.varlist.add('guint8', '*' + pname)
-		info.arglist.append(pname)
-		if pnull:
-			info.add_parselist('z', ['&' + pname], [pname])
-		else:
-			info.add_parselist('s', ['&' + pname], [pname])
-
-	def write_return(self, ptype, ownsreturn, info):
-		if ownsreturn:
-			# have to free result ...
-			info.varlist.add('guint8', '*ret')
-			info.codeafter.append('    if (ret) {\n' +
-					      '        PyObject *py_ret = PyString_FromString((gchar*) ret);\n' +
-					      '        g_free(ret);\n' +
-					      '        return py_ret;\n' +
-					      '    }\n' +
-					      '    Py_INCREF(Py_None);\n' +
-					      '    return Py_None;')
-		else:
-			info.varlist.add('const guint8', '*ret')
-			info.codeafter.append('    if (ret)\n' +
-					      '        return PyString_FromString((gchar*) ret);\n'+
-					      '    Py_INCREF(Py_None);\n' +
-					      '    return Py_None;')
-
-
 
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
@@ -377,8 +344,6 @@ matcher.register('GstCaps', GstCapsArg()) #FIXME: does this work?
 matcher.register('GstCaps*', GstCapsArg()) #FIXME: does this work?
 matcher.register('const-GstCaps*', GstCapsArg())
 matcher.register('GstIterator*', GstIteratorArg())
-matcher.register('guint8*', Uint8PArg())
-matcher.register('const-guint8*', Uint8PArg())
 
 arg = PointerArg('gpointer', 'G_TYPE_POINTER')
 matcher.register('GstClockID', arg)
