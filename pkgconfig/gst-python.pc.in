@@ -14,6 +14,6 @@ defsdir=${datadir}/gst-python/@GST_MAJORMINOR@/defs
 
 Name: gst-python
 Description: Python bindings for GStreamer
-Requires: pygtk-2.0, gstreamer-@GST_MAJORMINOR@
+Requires: pygobject-2.0, gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
 Cflags: -I${gstpythonincludedir}

@@ -15,6 +15,6 @@ pyexecdir=${pcfiledir}/..
 
 Name: gst-python uninstalled
 Description: Python bindings for GStreamer, not installed
-Requires: pygtk-2.0, gstreamer-@GST_MAJORMINOR@
+Requires: pygobject-2.0, gstreamer-@GST_MAJORMINOR@
 Version: @VERSION@
 #Cflags: -I${gstpythonincludedir}
