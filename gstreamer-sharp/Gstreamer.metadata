@@ -164,6 +164,7 @@
   
   <change-node-type path="/api/namespace/object[@name='MiniObject']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='MiniObject']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='MiniObject']" name="abstract">1</attr>
   <remove-attr path="/api/namespace/boxed[@name='MiniObject']" name="parent" />
   <remove-node path="/api/namespace/boxed[@name='MiniObject']/constructor[@cname='gst_mini_object_new']" />
 
@@ -244,6 +245,7 @@
 
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_set_name']" name="name">SetFeatureName</attr>
   <attr path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_get_name']" name="name">GetFeatureName</attr>
+  <attr path="/api/namespace/object[@name='PluginFeature']" name="abstract">1</attr>
   <add-node path="/api/namespace/object[@name='PluginFeature']">
         <method cname="gst_plugin_feature_load" name="Load">
         <return-type type="GstPluginFeature*" owned="true" />
