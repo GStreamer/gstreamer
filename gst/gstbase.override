@@ -840,3 +840,66 @@ _wrap_GstBaseTransform__do_src_event(PyObject *cls, PyObject *args, PyObject *kw
     return PyBool_FromLong(ret);
 
 }
+%%
+override gst_adapter_take kwargs
+static PyObject *
+_wrap_gst_adapter_take(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "nbytes", NULL };
+    PyObject *py_nbytes = NULL;
+    guint nbytes = 0;
+    guint8 *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:GstAdapter.take", kwlist, &py_nbytes))
+        return NULL;
+    if (py_nbytes) {
+        if (PyLong_Check(py_nbytes))
+            nbytes = PyLong_AsUnsignedLong(py_nbytes);
+        else if (PyInt_Check(py_nbytes))
+            nbytes = PyInt_AsLong(py_nbytes);
+        else
+            PyErr_SetString(PyExc_TypeError, "Parameter 'nbytes' must be an int or a long");
+        if (PyErr_Occurred())
+            return NULL;
+    }
+    pyg_begin_allow_threads;
+    ret = gst_adapter_take(GST_ADAPTER(self->obj), nbytes);
+    pyg_end_allow_threads;
+    if (ret) {
+        PyObject *py_ret = PyString_FromStringAndSize((gchar*) ret, nbytes);
+        g_free(ret);
+        return py_ret;
+    }
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+%%
+override gst_adapter_peek kwargs
+static PyObject *
+_wrap_gst_adapter_peek(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "size", NULL };
+    PyObject *py_size = NULL;
+    const guint8 *ret;
+    guint size = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:GstAdapter.peek", kwlist, &py_size))
+        return NULL;
+    if (py_size) {
+        if (PyLong_Check(py_size))
+            size = PyLong_AsUnsignedLong(py_size);
+        else if (PyInt_Check(py_size))
+            size = PyInt_AsLong(py_size);
+        else
+            PyErr_SetString(PyExc_TypeError, "Parameter 'size' must be an int or a long");
+        if (PyErr_Occurred())
+            return NULL;
+    }
+    pyg_begin_allow_threads;
+    ret = gst_adapter_peek(GST_ADAPTER(self->obj), size);
+    pyg_end_allow_threads;
+    if (ret)
+        return PyString_FromStringAndSize((gchar*) ret, size);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
