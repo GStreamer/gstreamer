@@ -302,7 +302,6 @@ ignore
   gst_error_get_message
   gst_parse_launchv
   gst_trace_read_tsc
-  gst_debug_log
   gst_debug_log_default
   gst_iterator_new_list
   gst_task_set_lock
@@ -741,6 +740,33 @@ _wrap_gst_flow_get_name(PyObject *self, PyObject *args, PyObject *kwargs)
     return Py_None;
 }
 
+%%
+override gst_debug_log args
+static PyObject *
+_wrap_gst_debug_log (PyObject *whatever, PyObject *string)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+    gchar	*filename;
+    gchar	*func;
+    gint	lineno;
+    gchar	*message;
+
+    PyObject *py_level = NULL;
+    GstDebugLevel level;
+
+    if (!PyArg_ParseTuple(string, "Ossis:gst.debug_log", &py_level, &filename, &func, &lineno, &message)) {
+	return NULL;
+    }
+    if (pyg_enum_get_value(GST_TYPE_DEBUG_LEVEL, py_level, (gint *)&level)) {
+        return NULL;
+    }
+
+    /* gst_debug_log : category, level, file, function, line, object, format, va_list */
+    gst_debug_log (python_debug, level, filename, func, lineno, NULL, "%s", message);
+#endif
+    Py_INCREF (Py_None);
+    return Py_None;
+}
 %%
 override gst_log args
 static PyObject *
