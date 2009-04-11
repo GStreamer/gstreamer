@@ -2,26 +2,26 @@ protected MiniObject () : base (IntPtr.Zero)
 {
 }
 
-    public static MiniObject NewFromValue (GLib.Value val) {
-      IntPtr type = gstsharp_g_value_type (ref val);
-      GLib.GType gtype = new GLib.GType (type);
-      
-      return (MiniObject) GLib.Opaque.GetOpaque (gst_value_get_mini_object (ref val), (Type) gtype, false);
-    }
+public static MiniObject NewFromValue (GLib.Value val) {
+  IntPtr type = gstsharp_g_value_type (ref val);
+  GLib.GType gtype = new GLib.GType (type);
 
-    public static explicit operator GLib.Value (MiniObject o) {
-      GLib.Value val = new GLib.Value (new GLib.GType (gstsharp_g_type_from_instance (o.Handle)));
+  return (MiniObject) GLib.Opaque.GetOpaque (gst_value_get_mini_object (ref val), (Type) gtype, false);
+}
 
-      gst_value_set_mini_object (ref val, o.Handle);
+public static explicit operator GLib.Value (MiniObject o) {
+  GLib.Value val = new GLib.Value (new GLib.GType (gstsharp_g_type_from_instance (o.Handle)));
 
-      return val;
-    }
+  gst_value_set_mini_object (ref val, o.Handle);
 
-    [DllImport("gstreamersharpglue-0.10.dll")]
-    private static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
-    [DllImport("gstreamersharpglue-0.10.dll")]
-    private static extern IntPtr gstsharp_g_value_type (ref GLib.Value val);
-    [DllImport("gstreamer-0.10.dll")]
-    private static extern IntPtr gst_value_get_mini_object (ref GLib.Value v);
-    [DllImport("gstreamer-0.10.dll")]
-    private static extern void gst_value_set_mini_object (ref GLib.Value v, IntPtr o);
+  return val;
+}
+
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+private static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
+[DllImport ("gstreamersharpglue-0.10.dll") ]
+private static extern IntPtr gstsharp_g_value_type (ref GLib.Value val);
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern IntPtr gst_value_get_mini_object (ref GLib.Value v);
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern void gst_value_set_mini_object (ref GLib.Value v, IntPtr o);

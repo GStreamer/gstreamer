@@ -28,36 +28,36 @@ namespace Gst {
         return new Gst.List (val);
       else if (type == Gst.Array.GType.Val)
         return new Gst.Array (val);
-      else if (((Type) gtype).IsSubclassOf (typeof (Gst.MiniObject)))
+      else if ( ( (Type) gtype).IsSubclassOf (typeof (Gst.MiniObject)))
         return MiniObject.NewFromValue (val);
       else
         return val.Val;
     }
 
-    [DllImport("gstreamersharpglue-0.10.dll")]
+    [DllImport ("gstreamersharpglue-0.10.dll") ]
     private static extern IntPtr gstsharp_g_value_type (ref GLib.Value val);
 
     public static GLib.Value CreateValue (object o) {
       if (o.GetType () == typeof (Fraction))
-        return (GLib.Value) ((Fraction) o);
+        return (GLib.Value) ( (Fraction) o);
       else if (o.GetType () == typeof (DoubleRange))
-        return (GLib.Value) ((DoubleRange) o);
+        return (GLib.Value) ( (DoubleRange) o);
       else if (o.GetType () == typeof (IntRange))
-        return (GLib.Value) ((IntRange) o);
+        return (GLib.Value) ( (IntRange) o);
       else if (o.GetType () == typeof (FractionRange))
-        return (GLib.Value) ((FractionRange) o);
+        return (GLib.Value) ( (FractionRange) o);
       else if (o.GetType () == typeof (Fourcc))
-        return (GLib.Value) ((Fourcc) o);
+        return (GLib.Value) ( (Fourcc) o);
       else if (o.GetType () == typeof (Date))
-        return (GLib.Value) ((Date) o);
+        return (GLib.Value) ( (Date) o);
       else if (o.GetType () == typeof (DateTime))
-        return (GLib.Value) (new Date ((DateTime) o));
+        return (GLib.Value) (new Date ( (DateTime) o));
       else if (o.GetType () == typeof (Gst.List))
-        return (GLib.Value) ((Gst.List) o);
+        return (GLib.Value) ( (Gst.List) o);
       else if (o.GetType () == typeof (Gst.Array))
-        return (GLib.Value) ((Gst.Array) o);
+        return (GLib.Value) ( (Gst.Array) o);
       else if (o.GetType ().IsSubclassOf (typeof (Gst.MiniObject)))
-        return (GLib.Value) ((MiniObject) o);
+        return (GLib.Value) ( (MiniObject) o);
       else
         return new GLib.Value (o);
     }
@@ -71,10 +71,10 @@ namespace Gst {
 
       set {
         numerator = value;
-	Reduce ();
+        Reduce ();
       }
     }
-    
+
     public int Denominator {
       get {
         return denominator;
@@ -82,16 +82,16 @@ namespace Gst {
 
       set {
         if (denominator == 0)
-	  throw new ArgumentException ();
+          throw new ArgumentException ();
 
         denominator = value;
-	Reduce ();
+        Reduce ();
       }
     }
 
     private int numerator;
     private int denominator;
-    
+
     public static GLib.GType GType {
       get {
         return new GType (gst_fraction_get_type ());
@@ -113,9 +113,9 @@ namespace Gst {
 
       while (b != 0) {
         int temp = a;
-	
-	a = b;
-	b = temp % b;
+
+        a = b;
+        b = temp % b;
       }
       return Math.Abs (a);
     }
@@ -146,15 +146,15 @@ namespace Gst {
     }
 
     public static explicit operator double (Fraction fraction) {
-      return ((double) fraction.numerator) / ((double) fraction.denominator);
+      return ( (double) fraction.numerator) / ( (double) fraction.denominator);
     }
 
     public static Fraction operator + (Fraction a, Fraction b) {
-      return new Fraction ((a.Numerator * b.Denominator) + (b.Numerator * a.Denominator), a.Denominator * b.Denominator);
+      return new Fraction ( (a.Numerator * b.Denominator) + (b.Numerator * a.Denominator), a.Denominator * b.Denominator);
     }
 
     public static Fraction operator - (Fraction a, Fraction b) {
-      return new Fraction ((a.Numerator * b.Denominator) - (b.Numerator * a.Denominator), a.Denominator * b.Denominator);
+      return new Fraction ( (a.Numerator * b.Denominator) - (b.Numerator * a.Denominator), a.Denominator * b.Denominator);
     }
 
     public static Fraction operator * (Fraction a, Fraction b) {
@@ -165,13 +165,13 @@ namespace Gst {
       return new Fraction (a.Numerator * b.Denominator, a.Denominator * b.Numerator);
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_fraction (ref GLib.Value v, int numerator, int denominator);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern int gst_value_get_fraction_numerator (ref GLib.Value v);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern int gst_value_get_fraction_denominator (ref GLib.Value v);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_fraction_get_type ();
   }
 
@@ -209,13 +209,13 @@ namespace Gst {
       return val;
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_double_range_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_double_range (ref GLib.Value v, double min, double max);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern double gst_value_get_double_range_min (ref GLib.Value v);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern double gst_value_get_double_range_max (ref GLib.Value v);
   }
 
@@ -253,13 +253,13 @@ namespace Gst {
       return val;
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_int_range_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_int_range (ref GLib.Value v, int min, int max);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern int gst_value_get_int_range_min (ref GLib.Value v);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern int gst_value_get_int_range_max (ref GLib.Value v);
   }
 
@@ -309,13 +309,13 @@ namespace Gst {
       return val;
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_fraction_range_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_fraction_range (ref GLib.Value v, ref GLib.Value min, ref GLib.Value max);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_get_fraction_range_min (ref GLib.Value v);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_get_fraction_range_max (ref GLib.Value v);
   }
 
@@ -336,30 +336,30 @@ namespace Gst {
       if (fourcc.Length != 4)
         throw new ArgumentException ();
 
-      this.Val = (uint) ((((byte) fourcc[0]) << 24) |
-                    (((byte) fourcc[1]) << 16) |
-		    (((byte) fourcc[2]) << 8) |
-		    (((byte) fourcc[3]) << 0));
+      this.Val = (uint) ( ( ( (byte) fourcc[0]) << 24) |
+                          ( ( (byte) fourcc[1]) << 16) |
+                          ( ( (byte) fourcc[2]) << 8) |
+                          ( ( (byte) fourcc[3]) << 0));
     }
 
     public Fourcc (string fourcc) {
       if (fourcc.Length != 4)
         throw new ArgumentException ();
 
-      this.Val = (uint) ((((byte) fourcc[0]) << 24) |
-                    (((byte) fourcc[1]) << 16) |
-		    (((byte) fourcc[2]) << 8) |
-		    (((byte) fourcc[3]) << 0));
+      this.Val = (uint) ( ( ( (byte) fourcc[0]) << 24) |
+                          ( ( (byte) fourcc[1]) << 16) |
+                          ( ( (byte) fourcc[2]) << 8) |
+                          ( ( (byte) fourcc[3]) << 0));
     }
 
     public Fourcc (GLib.Value val) : this (gst_value_get_fourcc (ref val)) {
     }
 
     public override string ToString () {
-      return String.Format ("{0}{1}{2}{3}", (char) ((Val >> 24) & 0xff),
-          (char) ((Val >> 16) & 0xff),
-	  (char) ((Val >> 8) & 0xff),
-	  (char) ((Val >> 0) & 0xff));
+      return String.Format ("{0}{1}{2}{3}", (char) ( (Val >> 24) & 0xff),
+                            (char) ( (Val >> 16) & 0xff),
+                            (char) ( (Val >> 8) & 0xff),
+                            (char) ( (Val >> 0) & 0xff));
     }
 
     public static explicit operator GLib.Value (Fourcc fourcc) {
@@ -370,21 +370,22 @@ namespace Gst {
     }
 
     public static explicit operator char[] (Fourcc fourcc) {
-      return new char[] {(char) ((fourcc.Val >> 24) & 0xff),
-          (char) ((fourcc.Val >> 16) & 0xff),
-	  (char) ((fourcc.Val >> 8) & 0xff),
-	  (char) ((fourcc.Val >> 0) & 0xff)};
+      return new char[] { (char) ( (fourcc.Val >> 24) & 0xff),
+                          (char) ( (fourcc.Val >> 16) & 0xff),
+                          (char) ( (fourcc.Val >> 8) & 0xff),
+                          (char) ( (fourcc.Val >> 0) & 0xff)
+                        };
     }
 
     public static explicit operator string (Fourcc fourcc) {
       return fourcc.ToString ();
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_fourcc_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_fourcc (ref GLib.Value v, uint fourcc);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern uint gst_value_get_fourcc (ref GLib.Value v);
 
   }
@@ -418,7 +419,7 @@ namespace Gst {
 
     public static explicit operator GLib.Value (Date date) {
       GLib.Value val = new GLib.Value (Date.GType);
-      IntPtr date_ptr = g_date_new_dmy ((byte) date.Val.Day, (int) date.Val.Month, (ushort) date.Val.Year);
+      IntPtr date_ptr = g_date_new_dmy ( (byte) date.Val.Day, (int) date.Val.Month, (ushort) date.Val.Year);
 
       gst_value_set_date (ref val, date_ptr);
 
@@ -427,20 +428,20 @@ namespace Gst {
       return val;
     }
 
-    [DllImport("libglib-2.0-0.dll")]
+    [DllImport ("libglib-2.0-0.dll") ]
     private static extern byte g_date_get_day (IntPtr date);
-    [DllImport("libglib-2.0-0.dll")]
+    [DllImport ("libglib-2.0-0.dll") ]
     private static extern int g_date_get_month (IntPtr date);
-    [DllImport("libglib-2.0-0.dll")]
+    [DllImport ("libglib-2.0-0.dll") ]
     private static extern ushort g_date_get_year (IntPtr date);
-    [DllImport("libglib-2.0-0.dll")]
+    [DllImport ("libglib-2.0-0.dll") ]
     private static extern IntPtr g_date_new_dmy (byte day, int month, ushort year);
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_date_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_get_date (ref GLib.Value val);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_set_date (ref GLib.Value val, IntPtr date);
   }
 
@@ -473,19 +474,19 @@ namespace Gst {
 
       foreach (object o in l.content) {
         GLib.Value v = Gst.Value.CreateValue (o);
-	gst_value_list_append_value (ref val, ref v);
+        gst_value_list_append_value (ref val, ref v);
       }
 
       return val;
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_list_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern uint gst_value_list_get_size (ref GLib.Value val);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_list_get_value (ref GLib.Value val, uint index);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_list_append_value (ref GLib.Value val, ref GLib.Value el);
   }
 
@@ -518,19 +519,19 @@ namespace Gst {
 
       foreach (object o in a.content) {
         GLib.Value v = Gst.Value.CreateValue (o);
-	gst_value_array_append_value (ref val, ref v);
+        gst_value_array_append_value (ref val, ref v);
       }
 
       return val;
     }
 
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_array_get_type ();
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern uint gst_value_array_get_size (ref GLib.Value val);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern IntPtr gst_value_array_get_value (ref GLib.Value val, uint index);
-    [DllImport("gstreamer-0.10.dll")]
+    [DllImport ("gstreamer-0.10.dll") ]
     private static extern void gst_value_array_append_value (ref GLib.Value val, ref GLib.Value el);
   }
 }
