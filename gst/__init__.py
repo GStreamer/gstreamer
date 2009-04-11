@@ -189,6 +189,12 @@ try:
     import libxml2
 except:
     pass
+
+# disable registry update during initialization
+import os
+doupdate = os.getenv("GST_REGISTRY_UPDATE") != "no"
+os.environ["GST_REGISTRY_UPDATE"] = "no"
+
 from _gst import *
 import interfaces
 
@@ -226,3 +232,8 @@ if gstlibtoolimporter is not None:
     gstlibtoolimporter.uninstall()
     import sys
     del sys.modules["gstlibtoolimporter"]
+
+if doupdate:
+    # update the registry now that we've loaded all symbols
+    os.unsetenv("GST_REGISTRY_UPDATE")
+    update_registry()
