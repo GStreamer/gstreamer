@@ -53,7 +53,7 @@ class AdapterTest(TestCase):
         b = self.adapter.peek(5)
         # it can return more than 5 bytes
         self.assert_(len(b) >= 5)
-        self.assertEquals(b[:5], "01234")
+        self.assertEquals(b, "01234")
 
         # it's still 10 bytes big
         self.assertEquals(self.adapter.available(), 10)
@@ -69,7 +69,7 @@ class AdapterTest(TestCase):
         self.assertEquals(self.adapter.available(), 5)
 
         # it flushed the first 5 bytes
-        self.assertEquals(self.adapter.peek(5)[:5], "56789")
+        self.assertEquals(self.adapter.peek(5), "56789")
 
         self.adapter.flush(5)
         self.assertEquals(self.adapter.available(), 0)
@@ -79,5 +79,5 @@ class AdapterTest(TestCase):
         self.assertEquals(self.adapter.available(), 10)
 
         s = self.adapter.take(5)
-        self.assertEquals(s[:5], "01234")
+        self.assertEquals(s, "01234")
         self.assertEquals(self.adapter.available(), 5)
