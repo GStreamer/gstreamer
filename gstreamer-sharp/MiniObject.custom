@@ -1,4 +1,4 @@
-protected MiniObject () : base (IntPtr.Zero)
+protected MiniObject () : base ()
 {
 }
 
@@ -25,3 +25,17 @@ private static extern IntPtr gstsharp_g_value_type (ref GLib.Value val);
 private static extern IntPtr gst_value_get_mini_object (ref GLib.Value v);
 [DllImport ("gstreamer-0.10.dll") ]
 private static extern void gst_value_set_mini_object (ref GLib.Value v, IntPtr o);
+
+/* FIXME: This is not optimal! */
+public void MakeWritable() {
+  if (IsWritable)
+    return;
+
+  IntPtr copy = gst_mini_object_copy (Raw);
+  Raw = copy;
+  /* ^--- Takes a second ref, not good */
+  Unref (Raw);
+  /* ^--- Sets Owned = false, wrong! */
+  Owned = true;
+}
+

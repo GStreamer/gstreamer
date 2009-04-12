@@ -167,7 +167,16 @@
   <attr path="/api/namespace/boxed[@name='MiniObject']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='MiniObject']" name="abstract">1</attr>
   <remove-attr path="/api/namespace/boxed[@name='MiniObject']" name="parent" />
-  <remove-node path="/api/namespace/boxed[@name='MiniObject']/constructor[@cname='gst_mini_object_new']" />
+  <attr path="/api/namespace/boxed[@name='MiniObject']/field[@name='Refcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='MiniObject']/field[@name='Flags']" name="writeable">true</attr>
+  <attr path="/api/namespace/boxed[@name='MiniObject']/field[@name='Flags']" name="type">GstMiniObjectFlags</attr>
+  <attr path="/api/namespace/boxed[@name='MiniObject']/method[@cname='gst_mini_object_copy']" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='MiniObject']/method[@cname='gst_mini_object_make_writable']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='MiniObject']/method[@cname='gst_mini_object_replace']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/callback[@name='MiniObjectCopyFunction']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/callback[@name='MiniObjectFinalizeFunction']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Object']/field[@name='Refcount']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Object']/method[@name='DefaultError']" name="hidden">1</attr>
