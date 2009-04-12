@@ -25,13 +25,14 @@
   <attr path="/api/namespace/boxed[@name='Buffer']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='Buffer']/method[@name='GetCaps']/return-type" name="owned">true</attr>
 
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_PREROLL']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DISCONT']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_IN_CAPS']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_GAP']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_DELTA_UNIT']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
-  <attr path="/api/namespace/enum[@name='BufferFlag']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlag']" name="name">BufferFlags</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_PREROLL']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_DISCONT']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_IN_CAPS']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_GAP']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_DELTA_UNIT']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
   <attr path="/api/namespace/object[@name='Bus']/method[@name='AddWatch']" name="hidden">true</attr>
 
@@ -337,6 +338,8 @@
   <attr path="/api/namespace/callback[@name='StructureMapFunc']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/enum[@name='TagFlag']" name="name">TagFlags</attr>
 
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='CopyValue']/*/*[@name='dest']" name="pass_as">ref</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetString']/*/*[@name='value']" name="pass_as">out</attr>
