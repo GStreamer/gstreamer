@@ -2309,11 +2309,12 @@ restart:
     GstBuffer *buf;
 
     /* no point in searching beyond the soft-max if any. */
-    if (soft_max_buffers) {
+    if (soft_max_buffers > 0) {
       limit = MIN (limit, soft_max_buffers);
     }
-    GST_LOG_OBJECT (sink, "extending queue to include sync point, now at %d",
-        max_buffer_usage);
+    GST_LOG_OBJECT (sink,
+        "extending queue to include sync point, now at %d, limit is %d",
+        max_buffer_usage, limit);
     for (i = 0; i < limit; i++) {
       buf = g_array_index (sink->bufqueue, GstBuffer *, i);
       if (is_sync_frame (sink, buf)) {
