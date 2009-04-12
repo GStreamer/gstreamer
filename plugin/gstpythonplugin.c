@@ -253,6 +253,8 @@ pygst_require (gchar * version)
   PyObject *pygst, *gst;
   PyObject *require;
   PyObject *modules;
+  gboolean doupdate = TRUE;
+  const gchar *regupd;
 
   modules = PySys_GetObject ("modules");
   /* Try to see if 'gst' is already imported */
@@ -273,12 +275,25 @@ pygst_require (gchar * version)
         goto error;
       }
     }
+
+    /* We don't want the registry to be loaded when we import gst */
+    if ((regupd = g_getenv ("GST_REGISTRY_UPDATE"))
+        && (!g_strcmp0 (regupd, "no")))
+      doupdate = FALSE;
+    g_setenv ("GST_REGISTRY_UPDATE", "no", TRUE);
+
     if (!(gst = PyImport_ImportModule ("gst"))) {
       GST_ERROR ("couldn't import the gst module");
       Py_DECREF (pygst);
+      if (doupdate)
+        g_unsetenv ("GST_REGISTRY_UPDATE");
       goto error;
     }
   }
+
+  if (doupdate)
+    g_unsetenv ("GST_REGISTRY_UPDATE");
+
 #define IMPORT(x, y) \
     _PyGst##x##_Type = (PyTypeObject *)PyObject_GetAttrString(gst, y); \
 	if (_PyGst##x##_Type == NULL) { \
