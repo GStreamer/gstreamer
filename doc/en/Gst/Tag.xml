@@ -14,7 +14,16 @@
   </Docs>
   <Members>
     
-    <Member MemberName=".ctor">
+    
+    
+    
+    
+    
+    
+    
+    
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Tag ();" />
       <MemberType>Constructor</MemberType>
       <Parameters />
@@ -31,13 +40,7 @@
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Parameters><Parameter Name="tag" Type="System.String" /></Parameters>
       <Docs><param name="tag">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFlag">
-      <MemberSignature Language="C#" Value="public static Gst.TagFlag GetFlag (string tag);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.TagFlag</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="tag" Type="System.String" /></Parameters>
-      <Docs><param name="tag">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetGType">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFlag"><MemberSignature Language="C#" Value="public static Gst.TagFlags GetFlag (string tag);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.TagFlags</ReturnType></ReturnValue><Parameters><Parameter Name="tag" Type="System.String" /></Parameters><Docs><param name="tag">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetGType">
       <MemberSignature Language="C#" Value="public static GLib.GType GetGType (string tag);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
@@ -67,20 +70,5 @@
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters><Parameter Name="dest" Type="GLib.Value" /><Parameter Name="src" Type="GLib.Value" /></Parameters>
       <Docs><param name="dest">To be added.</param><param name="src">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Register">
-      <MemberSignature Language="C#" Value="public static void Register (string name, Gst.TagFlag flag, GLib.GType type, string nick, string blurb, Gst.TagMergeFunc func);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="flag" Type="Gst.TagFlag" /><Parameter Name="type" Type="GLib.GType" /><Parameter Name="nick" Type="System.String" /><Parameter Name="blurb" Type="System.String" /><Parameter Name="func" Type="Gst.TagMergeFunc" /></Parameters>
-      <Docs><param name="name">To be added.</param><param name="flag">To be added.</param><param name="type">To be added.</param><param name="nick">To be added.</param><param name="blurb">To be added.</param><param name="func">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-    
-    
-    
-    
-    
-    
-    
-  </Members>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Register"><MemberSignature Language="C#" Value="public static void Register (string name, Gst.TagFlags flag, GLib.GType type, string nick, string blurb, Gst.TagMergeFunc func);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="flag" Type="Gst.TagFlags" /><Parameter Name="type" Type="GLib.GType" /><Parameter Name="nick" Type="System.String" /><Parameter Name="blurb" Type="System.String" /><Parameter Name="func" Type="Gst.TagMergeFunc" /></Parameters><Docs><param name="name">To be added.</param><param name="flag">To be added.</param><param name="type">To be added.</param><param name="nick">To be added.</param><param name="blurb">To be added.</param><param name="func">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>

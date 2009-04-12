@@ -7,7 +7,8 @@
   <Base>
     <BaseTypeName>GLib.Opaque</BaseTypeName>
   </Base>
-  <Interfaces />
+  <Interfaces>
+  </Interfaces>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
@@ -46,29 +47,22 @@
     
     
     
-    <Member MemberName=".ctor">
+    
+    
+    
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Structure (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
       <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Structure (string name, string firstfield, IntPtr varargs);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="firstfield" Type="System.String" /><Parameter Name="varargs" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="name">To be added.</param><param name="firstfield">To be added.</param><param name="varargs">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Copy">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Structure (string name);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="name" Type="System.String" /></Parameters><Docs><param name="name">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Structure (string name, object[] fields);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="name" Type="System.String" /><Parameter Name="fields" Type="System.Object[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="name">To be added.</param><param name="fields">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Copy">
       <MemberSignature Language="C#" Value="public Gst.Structure Copy ();" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="EmptyNew">
-      <MemberSignature Language="C#" Value="public static Gst.Structure EmptyNew (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FixateFieldBoolean">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Count"><MemberSignature Language="C#" Value="public int Count { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Fields"><MemberSignature Language="C#" Value="public System.Collections.IEnumerable Fields { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerable</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="FixateFieldBoolean">
       <MemberSignature Language="C#" Value="public bool FixateFieldBoolean (string field_name, bool target);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
@@ -92,179 +86,26 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="field_name" Type="System.String" /><Parameter Name="target" Type="System.Int32" /></Parameters>
       <Docs><param name="field_name">To be added.</param><param name="target">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Foreach">
-      <MemberSignature Language="C#" Value="public bool Foreach (Gst.StructureForeachFunc func);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="func" Type="Gst.StructureForeachFunc" /></Parameters>
-      <Docs><param name="func">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FromString">
-      <MemberSignature Language="C#" Value="public static Gst.Structure FromString (string str1ng, string end);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="str1ng" Type="System.String" /><Parameter Name="end" Type="System.String" /></Parameters>
-      <Docs><param name="str1ng">To be added.</param><param name="end">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetBoolean">
-      <MemberSignature Language="C#" Value="public bool GetBoolean (string fieldname, out bool value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="System.Boolean&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetClockTime">
-      <MemberSignature Language="C#" Value="public bool GetClockTime (string fieldname, out ulong value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="System.UInt64&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetDouble">
-      <MemberSignature Language="C#" Value="public bool GetDouble (string fieldname, out double value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="System.Double&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetEnum">
-      <MemberSignature Language="C#" Value="public bool GetEnum (string fieldname, GLib.GType enumtype, out int value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="enumtype" Type="GLib.GType" /><Parameter Name="value" Type="System.Int32&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="enumtype">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFieldType">
-      <MemberSignature Language="C#" Value="public GLib.GType GetFieldType (string fieldname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFourcc">
-      <MemberSignature Language="C#" Value="public bool GetFourcc (string fieldname, out uint value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="System.UInt32&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetFraction">
-      <MemberSignature Language="C#" Value="public bool GetFraction (string fieldname, out int value_numerator, out int value_denominator);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value_numerator" Type="System.Int32&amp;" RefType="out" /><Parameter Name="value_denominator" Type="System.Int32&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value_numerator">To be added.</param><param name="value_denominator">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetInt">
-      <MemberSignature Language="C#" Value="public bool GetInt (string fieldname, out int value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="System.Int32&amp;" RefType="out" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetString">
-      <MemberSignature Language="C#" Value="public string GetString (string fieldname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetUint"><MemberSignature Language="C#" Value="public bool GetUint (string fieldname, out uint value);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="System.UInt32&amp;" RefType="out" /></Parameters><Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetValue">
-      <MemberSignature Language="C#" Value="public GLib.Value GetValue (string fieldname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Get"><MemberSignature Language="C#" Value="public object Get (string field);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="field" Type="System.String" /></Parameters><Docs><param name="field">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetValue"><MemberSignature Language="C#" Value="public GLib.Value GetValue (string fieldname);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue><Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters><Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="HasField">
-      <MemberSignature Language="C#" Value="public bool HasField (string fieldname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="HasFieldTyped">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="HasField"><MemberSignature Language="C#" Value="public bool HasField (string fieldname);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters><Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="HasFieldTyped">
       <MemberSignature Language="C#" Value="public bool HasFieldTyped (string fieldname, GLib.GType type);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="type" Type="GLib.GType" /></Parameters>
       <Docs><param name="fieldname">To be added.</param><param name="type">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="HasName">
-      <MemberSignature Language="C#" Value="public bool HasName (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdEmptyNew">
-      <MemberSignature Language="C#" Value="public static Gst.Structure IdEmptyNew (int quark);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="quark" Type="System.Int32" /></Parameters>
-      <Docs><param name="quark">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdGetValue">
-      <MemberSignature Language="C#" Value="public GLib.Value IdGetValue (int field);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="field" Type="System.Int32" /></Parameters>
-      <Docs><param name="field">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IdSetValist"><MemberSignature Language="C#" Value="public void IdSetValist (int fieldname, IntPtr varargs);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="fieldname" Type="System.Int32" /><Parameter Name="varargs" Type="System.IntPtr" /></Parameters><Docs><param name="fieldname">To be added.</param><param name="varargs">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="IdSetValue">
-      <MemberSignature Language="C#" Value="public void IdSetValue (int field, GLib.Value value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="field" Type="System.Int32" /><Parameter Name="value" Type="GLib.Value" /></Parameters>
-      <Docs><param name="field">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MapInPlace">
-      <MemberSignature Language="C#" Value="public bool MapInPlace (Gst.StructureMapFunc func);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="func" Type="Gst.StructureMapFunc" /></Parameters>
-      <Docs><param name="func">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Name">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public object this[string field] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="field" Type="System.String" /></Parameters><Docs><param name="field">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Name">
       <MemberSignature Language="C#" Value="public string Name { set; get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NameId">
-      <MemberSignature Language="C#" Value="public int NameId { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NFields">
-      <MemberSignature Language="C#" Value="public int NFields ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NthFieldName">
-      <MemberSignature Language="C#" Value="public string NthFieldName (uint index);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="index" Type="System.UInt32" /></Parameters>
-      <Docs><param name="index">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveAllFields">
-      <MemberSignature Language="C#" Value="public void RemoveAllFields ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveField">
-      <MemberSignature Language="C#" Value="public void RemoveField (string fieldname);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveFieldsValist">
-      <MemberSignature Language="C#" Value="public void RemoveFieldsValist (string fieldname, IntPtr varargs);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="varargs" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="varargs">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetValue">
-      <MemberSignature Language="C#" Value="public void SetValue (string fieldname, GLib.Value value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="GLib.Value" /></Parameters>
-      <Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public GLib.GType Type { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
-    
-    
-    
-  </Members>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewFromString"><MemberSignature Language="C#" Value="public static Gst.Structure NewFromString (string structure);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue><Parameters><Parameter Name="structure" Type="System.String" /></Parameters><Docs><param name="structure">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="RemoveAllFields"><MemberSignature Language="C#" Value="public void RemoveAllFields ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="RemoveField"><MemberSignature Language="C#" Value="public void RemoveField (string fieldname);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="fieldname" Type="System.String" /></Parameters><Docs><param name="fieldname">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Set"><MemberSignature Language="C#" Value="public void Set (object[] fields);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="fields" Type="System.Object[]"><Attributes><Attribute><AttributeName>System.ParamArray</AttributeName></Attribute></Attributes></Parameter></Parameters><Docs><param name="fields">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Set"><MemberSignature Language="C#" Value="public void Set (string field, object value);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="field" Type="System.String" /><Parameter Name="value" Type="System.Object" /></Parameters><Docs><param name="field">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetValue"><MemberSignature Language="C#" Value="public void SetValue (string fieldname, GLib.Value value);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="fieldname" Type="System.String" /><Parameter Name="value" Type="GLib.Value" /></Parameters><Docs><param name="fieldname">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member></Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

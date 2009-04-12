@@ -1,0 +1,63 @@
+<Type Name="List" FullName="Gst.List">
+  <TypeSignature Language="C#" Value="public struct List : System.Collections.IEnumerable" />
+  <AssemblyInfo>
+    <AssemblyName>gstreamer-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.ValueType</BaseTypeName>
+  </Base>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.Collections.IEnumerable</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+  <Members>
+    
+    
+    
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public List (GLib.Value val);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters><Parameter Name="val" Type="GLib.Value" /></Parameters>
+      <Docs><param name="val">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public List (System.Collections.IList content);" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters><Parameter Name="content" Type="System.Collections.IList" /></Parameters>
+      <Docs><param name="content">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetEnumerator"><MemberSignature Language="C#" Value="public System.Collections.IEnumerator GetEnumerator ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerator</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
+      <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public object this[int index] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="index" Type="System.Int32" /></Parameters><Docs><param name="index">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="op_Explicit">
+      <MemberSignature Language="C#" Value="public static GLib.Value op_Explicit (Gst.List l);" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>0.9.5.99</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="l" Type="Gst.List" /></Parameters>
+      <Docs><param name="l">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member>
+  </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>
+    </Attribute>
+  </Attributes>
+</Type>

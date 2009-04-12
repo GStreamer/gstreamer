@@ -8,13 +8,14 @@
     <Namespace Name="Gst">
       <Type Name="ActivateMode" Kind="Enumeration" />
       <Type Name="Application" Kind="Class" />
+      <Type Name="Array" Kind="Structure" />
       <Type Name="AssocFlags" Kind="Enumeration" />
       <Type Name="Bin" Kind="Class" />
       <Type Name="BindingHelper" Kind="Class" />
       <Type Name="BinFlags" Kind="Enumeration" />
       <Type Name="Buffer" Kind="Class" />
       <Type Name="BufferCopyFlags" Kind="Enumeration" />
-      <Type Name="BufferFlag" Kind="Enumeration" />
+      <Type Name="BufferFlags" Kind="Enumeration" />
       <Type Name="BufferingMode" Kind="Enumeration" />
       <Type Name="Bus" Kind="Class" />
       <Type Name="BusFlags" Kind="Enumeration" />
@@ -37,11 +38,13 @@
       <Type Name="ClockFlags" Kind="Enumeration" />
       <Type Name="ClockReturn" Kind="Enumeration" />
       <Type Name="CommonTags" Kind="Class" />
+      <Type Name="Date" Kind="Structure" />
       <Type Name="DecodeBin" Kind="Class" />
       <Type Name="DeepNotifyArgs" Kind="Class" />
       <Type Name="DeepNotifyHandler" Kind="Delegate" />
       <Type Name="DoLatencyArgs" Kind="Class" />
       <Type Name="DoLatencyHandler" Kind="Delegate" />
+      <Type Name="DoubleRange" Kind="Structure" />
       <Type Name="DynamicSignal" Kind="Class" />
       <Type Name="DynamicSignalHandler" Kind="Delegate" />
       <Type Name="Element" Kind="Class" />
@@ -63,6 +66,9 @@
       <Type Name="FlowReturn" Kind="Enumeration" />
       <Type Name="Format" Kind="Enumeration" />
       <Type Name="FormatDefinition" Kind="Structure" />
+      <Type Name="Fourcc" Kind="Structure" />
+      <Type Name="Fraction" Kind="Structure" />
+      <Type Name="FractionRange" Kind="Structure" />
       <Type Name="GhostPad" Kind="Class" />
       <Type Name="HasPadCreatedArgs" Kind="Class" />
       <Type Name="HasPadCreatedHandler" Kind="Delegate" />
@@ -82,15 +88,15 @@
       <Type Name="IndexLookupMethod" Kind="Enumeration" />
       <Type Name="IndexResolver" Kind="Delegate" />
       <Type Name="IndexResolverMethod" Kind="Enumeration" />
+      <Type Name="IntRange" Kind="Structure" />
       <Type Name="LinkedArgs" Kind="Class" />
       <Type Name="LinkedHandler" Kind="Delegate" />
+      <Type Name="List" Kind="Structure" />
       <Type Name="Message" Kind="Class" />
       <Type Name="MessageArgs" Kind="Class" />
       <Type Name="MessageHandler" Kind="Delegate" />
       <Type Name="MessageType" Kind="Enumeration" />
       <Type Name="MiniObject" Kind="Class" />
-      <Type Name="MiniObjectCopyFunction" Kind="Delegate" />
-      <Type Name="MiniObjectFinalizeFunction" Kind="Delegate" />
       <Type Name="MiniObjectFlags" Kind="Enumeration" />
       <Type Name="NewDecodedPadArgs" Kind="Class" />
       <Type Name="NewDecodedPadHandler" Kind="Delegate" />
@@ -166,13 +172,11 @@
       <Type Name="StaticPadTemplate" Kind="Structure" />
       <Type Name="Structure" Kind="Class" />
       <Type Name="StructureChangeType" Kind="Enumeration" />
-      <Type Name="StructureForeachFunc" Kind="Delegate" />
-      <Type Name="StructureMapFunc" Kind="Delegate" />
       <Type Name="SyncMessageArgs" Kind="Class" />
       <Type Name="SyncMessageHandler" Kind="Delegate" />
       <Type Name="SystemClock" Kind="Class" />
       <Type Name="Tag" Kind="Class" />
-      <Type Name="TagFlag" Kind="Enumeration" />
+      <Type Name="TagFlags" Kind="Enumeration" />
       <Type Name="TagForeachFunc" Kind="Delegate" />
       <Type Name="TagList" Kind="Class" />
       <Type Name="TagMergeFunc" Kind="Delegate" />

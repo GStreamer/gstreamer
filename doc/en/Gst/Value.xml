@@ -1,5 +1,5 @@
 <Type Name="Value" FullName="Gst.Value">
-  <TypeSignature Language="C#" Value="public class Value" />
+  <TypeSignature Language="C#" Value="public static class Value" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -44,30 +44,6 @@
     
     
     
-    <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Value ();" />
-      <MemberType>Constructor</MemberType>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DupMiniObject"><MemberSignature Language="C#" Value="public static Gst.MiniObject DupMiniObject (GLib.Value value);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.MiniObject</ReturnType></ReturnValue><Parameters><Parameter Name="value" Type="GLib.Value" /></Parameters><Docs><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetMiniObject">
-      <MemberSignature Language="C#" Value="public static Gst.MiniObject GetMiniObject (GLib.Value value);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.MiniObject</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="value" Type="GLib.Value" /></Parameters>
-      <Docs><param name="value">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetMiniObject">
-      <MemberSignature Language="C#" Value="public static void SetMiniObject (GLib.Value value, Gst.MiniObject mini_object);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="value" Type="GLib.Value" /><Parameter Name="mini_object" Type="Gst.MiniObject" /></Parameters>
-      <Docs><param name="value">To be added.</param><param name="mini_object">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TakeMiniObject">
-      <MemberSignature Language="C#" Value="public static void TakeMiniObject (GLib.Value value, Gst.MiniObject mini_object);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="value" Type="GLib.Value" /><Parameter Name="mini_object" Type="Gst.MiniObject" /></Parameters>
-      <Docs><param name="value">To be added.</param><param name="mini_object">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
     
     
     
@@ -86,5 +62,6 @@
     
     
     
-  </Members>
+    
+  <Member MemberName="CreateValue"><MemberSignature Language="C#" Value="public static GLib.Value CreateValue (object o);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue><Parameters><Parameter Name="o" Type="System.Object" /></Parameters><Docs><param name="o">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetValue"><MemberSignature Language="C#" Value="public static object GetValue (GLib.Value val);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Object</ReturnType></ReturnValue><Parameters><Parameter Name="val" Type="GLib.Value" /></Parameters><Docs><param name="val">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
 </Type>
