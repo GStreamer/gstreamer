@@ -3499,6 +3499,39 @@ gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
 }
 
 static GstFlowReturn
+gst_matroska_demux_push_speex_codec_priv_data (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * stream)
+{
+  GstFlowReturn ret;
+  guint8 *pdata;
+
+  GST_LOG_OBJECT (demux, "priv data size = %u", stream->codec_priv_size);
+
+  pdata = (guint8 *) stream->codec_priv;
+
+  /* need at least 'fLaC' marker + STREAMINFO metadata block */
+  if (stream->codec_priv_size < 80) {
+    GST_WARNING_OBJECT (demux, "not enough codec priv data for speex headers");
+    return GST_FLOW_ERROR;
+  }
+
+  if (memcmp (pdata, "Speex   ", 8) != 0) {
+    GST_WARNING_OBJECT (demux, "no Speex marker at start of stream headers");
+    return GST_FLOW_ERROR;
+  }
+
+  ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata, 80);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (stream->codec_priv_size == 80)
+    return ret;
+  else
+    return gst_matroska_demux_push_hdr_buf (demux, stream, pdata + 80,
+        stream->codec_priv_size - 80);
+}
+
+static GstFlowReturn
 gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * stream)
 {
@@ -4045,6 +4078,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         if (stream->send_flac_headers) {
           ret = gst_matroska_demux_push_flac_codec_priv_data (demux, stream);
           stream->send_flac_headers = FALSE;
+        }
+
+        if (stream->send_speex_headers) {
+          ret = gst_matroska_demux_push_speex_codec_priv_data (demux, stream);
+          stream->send_speex_headers = FALSE;
         }
 
         if (stream->send_dvd_event) {
@@ -4958,6 +4996,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
 
   context->send_xiph_headers = FALSE;
   context->send_flac_headers = FALSE;
+  context->send_speex_headers = FALSE;
 
   /* TODO: check if we have all codec types from matroska-ids.h
    *       check if we have to do more special things with codec_private
@@ -5308,6 +5347,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
 
   context->send_xiph_headers = FALSE;
   context->send_flac_headers = FALSE;
+  context->send_speex_headers = FALSE;
 
   /* TODO: check if we have all codec types from matroska-ids.h
    *       check if we have to do more special things with codec_private
@@ -5380,6 +5420,9 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_FLAC)) {
     caps = gst_caps_new_simple ("audio/x-flac", NULL);
     context->send_flac_headers = TRUE;
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_SPEEX)) {
+    caps = gst_caps_new_simple ("audio/x-speex", NULL);
+    context->send_speex_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds *auds = NULL;
 

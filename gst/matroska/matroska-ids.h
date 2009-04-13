@@ -351,6 +351,8 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_DTS            "A_DTS"
 #define GST_MATROSKA_CODEC_ID_AUDIO_VORBIS         "A_VORBIS"
 #define GST_MATROSKA_CODEC_ID_AUDIO_FLAC           "A_FLAC"
+/* FIXME: not yet in the spec */
+#define GST_MATROSKA_CODEC_ID_AUDIO_SPEEX          "A_SPEEX"
 #define GST_MATROSKA_CODEC_ID_AUDIO_ACM            "A_MS/ACM"
 #define GST_MATROSKA_CODEC_ID_AUDIO_TTA            "A_TTA1"
 #define GST_MATROSKA_CODEC_ID_AUDIO_WAVPACK4       "A_WAVPACK4"
@@ -487,6 +489,11 @@ struct _GstMatroskaTrackContext {
    * buffer from the codec_priv data before sending any data, and just
    * testing for time == 0 is not enough to detect that. Used by demuxer */
   gboolean      send_flac_headers;
+
+  /* Special flag for Speex, for which we need to reconstruct the header
+   * buffer from the codec_priv data before sending any data, and just
+   * testing for time == 0 is not enough to detect that. Used by demuxer */
+  gboolean      send_speex_headers;
 
   /* Special flag for VobSub, for which we have to send colour table info
    * (if available) first before sending any data, and just testing

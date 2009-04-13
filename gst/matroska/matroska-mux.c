@@ -142,6 +142,8 @@ static GstStaticPadTemplate audiosink_templ =
         COMMON_AUDIO_CAPS "; "
         "audio/x-flac, "
         COMMON_AUDIO_CAPS "; "
+        "audio/x-speex, "
+        COMMON_AUDIO_CAPS "; "
         "audio/x-raw-int, "
         "width = (int) 8, "
         "depth = (int) 8, "
@@ -223,6 +225,8 @@ static guint64 gst_matroska_mux_create_uid ();
 static gboolean theora_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
 static gboolean vorbis_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context);
+static gboolean speex_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
 static gboolean flac_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
@@ -1140,6 +1144,69 @@ flac_streamheader_to_codecdata (const GValue * streamheader,
   return TRUE;
 }
 
+static gboolean
+speex_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context)
+{
+  GArray *bufarr;
+  GValue *bufval;
+  GstBuffer *buffer;
+
+  if (streamheader == NULL || G_VALUE_TYPE (streamheader) != GST_TYPE_ARRAY) {
+    GST_WARNING ("No or invalid streamheader field in the caps");
+    return FALSE;
+  }
+
+  bufarr = g_value_peek_pointer (streamheader);
+  if (bufarr->len != 2) {
+    GST_WARNING ("Too few headers in streamheader field");
+    return FALSE;
+  }
+
+  context->xiph_headers_to_skip = bufarr->len + 1;
+
+  bufval = &g_array_index (bufarr, GValue, 0);
+  if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
+    GST_WARNING ("streamheaders array does not contain GstBuffers");
+    return FALSE;
+  }
+
+  buffer = g_value_peek_pointer (bufval);
+
+  if (GST_BUFFER_SIZE (buffer) < 80
+      || memcmp (GST_BUFFER_DATA (buffer), "Speex   ", 8) != 0) {
+    GST_WARNING ("Invalid streamheader for Speex");
+    return FALSE;
+  }
+
+  context->codec_priv = g_malloc (GST_BUFFER_SIZE (buffer));
+  context->codec_priv_size = GST_BUFFER_SIZE (buffer);
+  memcpy (context->codec_priv, GST_BUFFER_DATA (buffer),
+      GST_BUFFER_SIZE (buffer));
+
+  bufval = &g_array_index (bufarr, GValue, 1);
+
+  if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER) {
+    g_free (context->codec_priv);
+    context->codec_priv = NULL;
+    context->codec_priv_size = 0;
+    GST_WARNING ("streamheaders array does not contain GstBuffers");
+    return FALSE;
+  }
+
+  buffer = g_value_peek_pointer (bufval);
+
+  context->codec_priv =
+      g_realloc (context->codec_priv,
+      context->codec_priv_size + GST_BUFFER_SIZE (buffer));
+  memcpy ((guint8 *) context->codec_priv + context->codec_priv_size,
+      GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+  context->codec_priv_size =
+      context->codec_priv_size + GST_BUFFER_SIZE (buffer);
+
+  return TRUE;
+}
+
 static gchar *
 aac_codec_data_to_codec_id (const GstBuffer * buf)
 {
@@ -1379,6 +1446,23 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (!flac_streamheader_to_codecdata (streamheader, context)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
           ("flac stream headers missing or malformed"));
+      return FALSE;
+    }
+    return TRUE;
+  } else if (!strcmp (mimetype, "audio/x-speex")) {
+    const GValue *streamheader;
+
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_SPEEX);
+    if (context->codec_priv != NULL) {
+      g_free (context->codec_priv);
+      context->codec_priv = NULL;
+      context->codec_priv_size = 0;
+    }
+
+    streamheader = gst_structure_get_value (structure, "streamheader");
+    if (!speex_streamheader_to_codecdata (streamheader, context)) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+          ("speex stream headers missing or malformed"));
       return FALSE;
     }
     return TRUE;
