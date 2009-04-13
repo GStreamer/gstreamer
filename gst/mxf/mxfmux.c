@@ -882,7 +882,7 @@ gst_mxf_mux_create_metadata (GstMXFMux * mux)
 }
 
 static GstFlowReturn
-gst_mxf_mux_create_header_partition_pack (GstMXFMux * mux)
+gst_mxf_mux_init_partition_pack (GstMXFMux * mux)
 {
   GSList *l;
   guint i = 0;
@@ -1096,10 +1096,6 @@ gst_mxf_mux_write_body_partition (GstMXFMux * mux)
   GstBuffer *buf;
 
   mux->partition.type = MXF_PARTITION_PACK_BODY;
-  mux->partition.closed = mux->partition.complete = FALSE;
-  mux->partition.major_version = 0x0001;
-  mux->partition.minor_version = 0x0002;
-  mux->partition.kag_size = 0;
   mux->partition.this_partition = mux->offset;
   mux->partition.prev_partition = 0;
   mux->partition.footer_partition = 0;
@@ -1215,9 +1211,6 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
     mux->partition.type = MXF_PARTITION_PACK_FOOTER;
     mux->partition.closed = TRUE;
     mux->partition.complete = TRUE;
-    mux->partition.major_version = 0x0001;
-    mux->partition.minor_version = 0x0002;
-    mux->partition.kag_size = 0;
     mux->partition.this_partition = mux->offset;
     mux->partition.prev_partition = body_partition;
     mux->partition.footer_partition = mux->offset;
@@ -1254,9 +1247,6 @@ gst_mxf_mux_handle_eos (GstMXFMux * mux)
       mux->partition.type = MXF_PARTITION_PACK_HEADER;
       mux->partition.closed = TRUE;
       mux->partition.complete = TRUE;
-      mux->partition.major_version = 0x0001;
-      mux->partition.minor_version = 0x0002;
-      mux->partition.kag_size = 0;
       mux->partition.this_partition = 0;
       mux->partition.prev_partition = footer_partition;
       mux->partition.footer_partition = footer_partition;
@@ -1326,7 +1316,7 @@ gst_mxf_mux_collected (GstCollectPads * pads, gpointer user_data)
       if ((ret = gst_mxf_mux_create_metadata (mux)) != GST_FLOW_OK)
         goto error;
 
-      if ((ret = gst_mxf_mux_create_header_partition_pack (mux)) != GST_FLOW_OK)
+      if ((ret = gst_mxf_mux_init_partition_pack (mux)) != GST_FLOW_OK)
         goto error;
 
       ret = gst_mxf_mux_write_header_metadata (mux);
