@@ -101,10 +101,10 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
       data[0] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
           0, video_yuv->width, video_yuv->height);
-      data[1] = data[0] +
+      data[1] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
           2, video_yuv->width, video_yuv->height);
-      data[2] = data[0] +
+      data[2] = GST_BUFFER_DATA (outbuf) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
           1, video_yuv->width, video_yuv->height);
 
@@ -123,7 +123,53 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        break;
+        goto error;
+      }
+      break;
+    }
+    case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+    {
+      gint size;
+      GstFlowReturn result;
+      VdpStatus status;
+      guint8 *data[3];
+      guint32 stride[3];
+
+      size =
+          gst_video_format_get_size (GST_VIDEO_FORMAT_YV12, video_yuv->width,
+          video_yuv->height);
+      result =
+          gst_pad_alloc_buffer_and_set_caps (video_yuv->src,
+          GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (video_yuv->src), &outbuf);
+      if (G_UNLIKELY (result != GST_FLOW_OK))
+        return result;
+
+      data[0] = GST_BUFFER_DATA (outbuf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+          0, video_yuv->width, video_yuv->height);
+      data[1] = GST_BUFFER_DATA (outbuf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+          2, video_yuv->width, video_yuv->height);
+      data[2] = GST_BUFFER_DATA (outbuf) +
+          gst_video_format_get_component_offset (GST_VIDEO_FORMAT_I420,
+          1, video_yuv->width, video_yuv->height);
+
+      stride[0] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
+          0, video_yuv->width);
+      stride[1] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
+          2, video_yuv->width);
+      stride[2] = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_I420,
+          1, video_yuv->width);
+
+      status =
+          device->vdp_video_surface_get_bits_ycbcr (surface,
+          VDP_YCBCR_FORMAT_YV12, (void *) data, stride);
+      if (G_UNLIKELY (status != VDP_STATUS_OK)) {
+        GST_ELEMENT_ERROR (video_yuv, RESOURCE, READ,
+            ("Couldn't get data from vdpau"),
+            ("Error returned from vdpau was: %s",
+                device->vdp_get_error_string (status)));
+        goto error;
       }
       break;
     }
@@ -159,7 +205,7 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        break;
+        goto error;
       }
       break;
     }
@@ -169,12 +215,11 @@ gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_buffer_unref (buffer);
 
-  if (outbuf) {
-    gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  return gst_pad_push (video_yuv->src, outbuf);
 
-    return gst_pad_push (video_yuv->src, outbuf);
-  }
-
+error:
+  gst_buffer_unref (outbuf);
   return GST_FLOW_ERROR;
 }
 

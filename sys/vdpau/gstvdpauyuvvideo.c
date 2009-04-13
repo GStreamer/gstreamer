@@ -95,10 +95,10 @@ gst_vdpau_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
       data[0] = GST_BUFFER_DATA (buffer) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
           0, yuv_video->width, yuv_video->height);
-      data[1] = data[0] +
+      data[1] = GST_BUFFER_DATA (buffer) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
           2, yuv_video->width, yuv_video->height);
-      data[2] = data[0] +
+      data[2] = GST_BUFFER_DATA (buffer) +
           gst_video_format_get_component_offset (GST_VIDEO_FORMAT_YV12,
           1, yuv_video->width, yuv_video->height);
 
@@ -117,7 +117,7 @@ gst_vdpau_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't push YV12 data to VDPAU"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        break;
+        goto error;
       }
       break;
     }
@@ -152,7 +152,7 @@ gst_vdpau_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't push YV12 data to VDPAU"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        break;
+        goto error;
       }
       break;
     }
@@ -176,7 +176,7 @@ gst_vdpau_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
             ("Couldn't get data from vdpau"),
             ("Error returned from vdpau was: %s",
                 device->vdp_get_error_string (status)));
-        break;
+        goto error;
       }
       break;
     }
@@ -186,13 +186,13 @@ gst_vdpau_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_buffer_unref (buffer);
 
-  if (outbuf) {
-    gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (yuv_video->src));
+  gst_buffer_copy_metadata (outbuf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (yuv_video->src));
 
-    return gst_pad_push (yuv_video->src, outbuf);
-  }
+  return gst_pad_push (yuv_video->src, outbuf);
 
+error:
+  gst_buffer_unref (outbuf);
   return GST_FLOW_ERROR;
 }
 
