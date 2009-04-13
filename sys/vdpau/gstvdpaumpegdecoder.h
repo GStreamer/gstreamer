@@ -41,8 +41,6 @@ struct _GstVdpauMpegDecoder
 {
   GstVdpauDecoder dec;
 
-  gboolean silent;
-
   gint version;
   
   VdpDecoder decoder;

@@ -53,8 +53,7 @@ enum
 
 enum
 {
-  PROP_0,
-  PROP_SILENT
+  PROP_0
 };
 
 /* the capabilities of the inputs and outputs.
@@ -408,10 +407,6 @@ gst_vdpau_mpeg_decoder_class_init (GstVdpauMpegDecoderClass * klass)
   gobject_class->set_property = gst_vdpau_mpeg_decoder_set_property;
   gobject_class->get_property = gst_vdpau_mpeg_decoder_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE));
-
   vdpaudec_class->set_caps = gst_vdpau_mpeg_decoder_set_caps;
 }
 
@@ -436,7 +431,6 @@ gst_vdpau_mpeg_decoder_init (GstVdpauMpegDecoder * mpeg_dec,
 
   dec = GST_VDPAU_DECODER (mpeg_dec);
 
-  mpeg_dec->silent = FALSE;
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
   gst_vdpau_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
@@ -457,12 +451,7 @@ static void
 gst_vdpau_mpeg_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVdpauMpegDecoder *filter = GST_VDPAU_MPEG_DECODER (object);
-
   switch (prop_id) {
-    case PROP_SILENT:
-      filter->silent = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -473,12 +462,7 @@ static void
 gst_vdpau_mpeg_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVdpauMpegDecoder *filter = GST_VDPAU_MPEG_DECODER (object);
-
   switch (prop_id) {
-    case PROP_SILENT:
-      g_value_set_boolean (value, filter->silent);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

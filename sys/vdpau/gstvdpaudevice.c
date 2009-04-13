@@ -29,7 +29,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_vdpau_device_debug);
 enum
 {
   PROP_0,
-
   PROP_DISPLAY
 };
 

@@ -40,8 +40,7 @@ enum
 
 enum
 {
-  PROP_0,
-  PROP_SILENT
+  PROP_0
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -387,17 +386,12 @@ gst_vdpau_video_yuv_class_init (GstVdpauVideoYUVClass * klass)
   gobject_class->finalize = gst_vdpau_video_yuv_finalize;
   gobject_class->set_property = gst_vdpau_video_yuv_set_property;
   gobject_class->get_property = gst_vdpau_video_yuv_get_property;
-
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 
 static void
 gst_vdpau_video_yuv_init (GstVdpauVideoYUV * video_yuv,
     GstVdpauVideoYUVClass * klass)
 {
-  video_yuv->silent = FALSE;
   video_yuv->src_caps = NULL;
 
   video_yuv->height = 0;
@@ -433,12 +427,7 @@ static void
 gst_vdpau_video_yuv_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVdpauVideoYUV *video_yuv = GST_VDPAU_VIDEO_YUV (object);
-
   switch (prop_id) {
-    case PROP_SILENT:
-      video_yuv->silent = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -449,12 +438,7 @@ static void
 gst_vdpau_video_yuv_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVdpauVideoYUV *video_yuv = GST_VDPAU_VIDEO_YUV (object);
-
   switch (prop_id) {
-    case PROP_SILENT:
-      g_value_set_boolean (value, video_yuv->silent);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

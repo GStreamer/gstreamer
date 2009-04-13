@@ -47,8 +47,6 @@ struct _GstVdpauVideoYUV {
   gint framerate_numerator, framerate_denominator;
   gint par_numerator, par_denominator;
   guint format;
-  
-  gboolean silent;
 };
 
 struct _GstVdpauVideoYUVClass {

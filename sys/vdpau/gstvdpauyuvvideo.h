@@ -49,8 +49,6 @@ struct _GstVdpauYUVVideo {
   guint32 format;
   gint chroma_type;
   gint width, height;
-  
-  gboolean silent;
 };
 
 struct _GstVdpauYUVVideoClass {
