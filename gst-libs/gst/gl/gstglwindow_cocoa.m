@@ -74,8 +74,8 @@
 /* ============================================================= */
 
 #ifndef GNUSTEP
-static BOOL GSRegisterCurrentThread() { return TRUE; };
-static GSUnregisterCurrentThread() {};
+static BOOL GSRegisterCurrentThread(void) { return TRUE; };
+static void GSUnregisterCurrentThread(void) {};
 #endif
 
 #define GST_GL_WINDOW_GET_PRIVATE(o)  \
@@ -185,11 +185,12 @@ gst_gl_window_new (gint width, gint height)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: priv];
 
   if (priv->internal_win_id) {
+    NSRect windowRect;
     NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
     GST_DEBUG ("main screen rect: %d %d %d %d", (int) mainRect.origin.x, (int) mainRect.origin.y, 
       (int) mainRect.size.width, (int) mainRect.size.height);
 
-    NSRect windowRect = [priv->internal_win_id frame];
+    windowRect = [priv->internal_win_id frame];
     GST_DEBUG ("window rect: %d %d %d %d", (int) windowRect.origin.x, (int) windowRect.origin.y, 
       (int) windowRect.size.width, (int) windowRect.size.height);
 
@@ -370,8 +371,6 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     defer: (BOOL) flag screen: (NSScreen *) aScreen
     gstWin: (GstGLWindowPrivate *) priv {
 
-  m_isClosed = NO;
-  m_priv = priv;
   NSOpenGLView *glView = nil;
   NSOpenGLPixelFormat *fmt = nil;
   NSOpenGLContext *glContext = nil;
@@ -385,6 +384,9 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     NSOpenGLPFAWindow,
     0
   };
+
+  m_isClosed = NO;
+  m_priv = priv;
 
   self = [super initWithContentRect: contentRect
 		styleMask: styleMask backing: bufferingType
@@ -420,10 +422,13 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
    * Discarded if you configured your driver to Never-use-V-Sync.
    */
   NS_DURING {
+#if 0
+    /* FIXME doesn't compile */
     if (glContext) {
       long swapInterval = 1;
       [[glView openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
     }
+#endif
   } NS_HANDLER {
      g_debug ("your back-end does not implement NSOpenglContext::setValues");
   }

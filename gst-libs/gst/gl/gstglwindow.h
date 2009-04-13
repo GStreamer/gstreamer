@@ -30,8 +30,8 @@
 #include "gstgles2.h"
 /* OpenGL for usual systems */
 #else
-#if (!GNUSTEP && MACOS)
-#include <OpenGL/glew.h>
+#if __APPLE__
+#include <GL/glew.h>
 #include <OpenGL/OpenGL.h>
 #include <OpenGL/gl.h>
 #else
