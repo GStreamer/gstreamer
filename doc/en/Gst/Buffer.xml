@@ -35,7 +35,7 @@
     
     
     
-  <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Buffer ();" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
+  <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Buffer ();" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Buffer (byte[] data);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="data" Type="System.Byte[]" /></Parameters><Docs><param name="data">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Buffer (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
@@ -57,12 +57,12 @@
       <Parameters><Parameter Name="offset" Type="System.UInt32" /><Parameter Name="size" Type="System.UInt32" /></Parameters>
       <Docs><param name="offset">To be added.</param><param name="size">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Data">
-      <MemberSignature Language="C#" Value="public byte Data { get; }" />
+      <MemberSignature Language="C#" Value="public byte[] Data { set; get; }" />
       <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Byte</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>System.Byte[]</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Duration">
-      <MemberSignature Language="C#" Value="public ulong Duration { get; }" />
+      <MemberSignature Language="C#" Value="public ulong Duration { set; get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
@@ -82,36 +82,19 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="buf2" Type="Gst.Buffer" /></Parameters>
       <Docs><param name="buf2">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Join">
-      <MemberSignature Language="C#" Value="public Gst.Buffer Join (Gst.Buffer buf2);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="buf2" Type="Gst.Buffer" /></Parameters>
-      <Docs><param name="buf2">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MakeMetadataWritable">
-      <MemberSignature Language="C#" Value="public Gst.Buffer MakeMetadataWritable ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MallocData">
-      <MemberSignature Language="C#" Value="public byte MallocData { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Byte</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Merge">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public byte this[uint index] { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Byte</ReturnType></ReturnValue><Parameters><Parameter Name="index" Type="System.UInt32" /></Parameters><Docs><param name="index">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="MakeMetadataWritable"><MemberSignature Language="C#" Value="public void MakeMetadataWritable ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Merge">
       <MemberSignature Language="C#" Value="public Gst.Buffer Merge (Gst.Buffer buf2);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue>
       <Parameters><Parameter Name="buf2" Type="Gst.Buffer" /></Parameters>
       <Docs><param name="buf2">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Offset">
-      <MemberSignature Language="C#" Value="public ulong Offset { get; }" />
+      <MemberSignature Language="C#" Value="public ulong Offset { set; get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="OffsetEnd">
-      <MemberSignature Language="C#" Value="public ulong OffsetEnd { get; }" />
+      <MemberSignature Language="C#" Value="public ulong OffsetEnd { set; get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
@@ -126,16 +109,15 @@
       <ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue>
       <Parameters><Parameter Name="offset" Type="System.UInt32" /><Parameter Name="buf2" Type="Gst.Buffer" /><Parameter Name="len" Type="System.UInt32" /></Parameters>
       <Docs><param name="offset">To be added.</param><param name="buf2">To be added.</param><param name="len">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Stamp">
-      <MemberSignature Language="C#" Value="public void Stamp (Gst.Buffer src);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="src" Type="Gst.Buffer" /></Parameters>
-      <Docs><param name="src">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Timestamp">
-      <MemberSignature Language="C#" Value="public ulong Timestamp { get; }" />
+      <MemberSignature Language="C#" Value="public ulong Timestamp { set; get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="TryNewAndAlloc"><MemberSignature Language="C#" Value="public static Gst.Buffer TryNewAndAlloc (uint size);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Buffer</ReturnType></ReturnValue><Parameters><Parameter Name="size" Type="System.UInt32" /></Parameters><Docs><param name="size">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member></Members>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member></Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

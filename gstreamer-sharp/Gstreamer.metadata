@@ -23,7 +23,26 @@
 
   <change-node-type path="/api/namespace/object[@name='Buffer']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Buffer']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Buffer']/method[@name='GetCaps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_get_caps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Data']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Duration']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='MallocData']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Offset']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='OffsetEnd']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Timestamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='Caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/field[@name='FreeFunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_get_caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_set_caps']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_stamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_join']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_make_metadata_writable']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/constructor[@cname='gst_buffer_new_and_alloc']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_try_new_and_alloc']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_create_sub']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_merge']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Buffer']/method[@cname='gst_buffer_span']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='BufferFlag']" name="name">BufferFlags</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_READONLY']" name="value">MiniObjectFlags.Readonly</attr>

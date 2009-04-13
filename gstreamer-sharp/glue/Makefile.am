@@ -4,7 +4,6 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	buffer.c	\
 	clock.c \
 	message.c \
-	miniobject.c \
 	bin.c \
 	gerror.c \
 	gobject.c
