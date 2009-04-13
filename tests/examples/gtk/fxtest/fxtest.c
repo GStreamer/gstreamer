@@ -3,11 +3,7 @@
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#ifdef WIN32
-#include <gdk/gdkwin32.h>
-#else
-#include <gdk/gdkx.h>
-#endif
+#include "../gstgtk.h"
 
 #include <gst/interfaces/xoverlay.h>
 
@@ -19,12 +15,8 @@ expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
   GstXOverlay *overlay =
       GST_X_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
           GST_TYPE_X_OVERLAY));
-#ifdef WIN32
-  gst_x_overlay_set_xwindow_id (overlay,
-      (gulong) GDK_WINDOW_HWND (widget->window));
-#else
-  gst_x_overlay_set_xwindow_id (overlay, GDK_WINDOW_XWINDOW (widget->window));
-#endif
+
+  gst_x_overlay_set_gtk_window (overlay, widget);
 
   return FALSE;
 }

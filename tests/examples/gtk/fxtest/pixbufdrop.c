@@ -3,11 +3,7 @@
 #include <gdk/gdk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#ifdef WIN32
-#include <gdk/gdkwin32.h>
-#else
-#include <gdk/gdkx.h>
-#endif
+#include "../gstgtk.h"
 
 #include <gst/interfaces/xoverlay.h>
 
@@ -33,13 +29,7 @@ create_window (GstBus * bus, GstMessage * message, GtkWidget * widget)
   if (!gst_structure_has_name (message->structure, "prepare-xwindow-id"))
     return GST_BUS_PASS;
 
-#ifdef WIN32
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-      (gulong) GDK_WINDOW_HWND (widget->window));
-#else
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
-      GDK_WINDOW_XWINDOW (widget->window));
-#endif
+  gst_x_overlay_set_gtk_window (GST_X_OVERLAY (GST_MESSAGE_SRC (message)), widget);
 
   gst_message_unref (message);
 
