@@ -215,6 +215,8 @@ gst_param_spec_fraction (const gchar * name, const gchar * nick,
  * may be modified given the current state of @element.
  *
  * Returns: TRUE if the property may be modified
+ *
+ * Since: 0.10.23
  */
 gboolean
 gst_param_spec_is_mutable (GParamSpec * param_spec, GstElement * element)
