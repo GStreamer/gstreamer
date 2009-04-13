@@ -23,39 +23,39 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpaudevice.h"
+#include "gstvdpdevice.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDPAU_YUV_VIDEO            (gst_vdpau_yuv_video_get_type())
-#define GST_VDPAU_YUV_VIDEO(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_YUV_VIDEO,GstVdpauYUVVideo))
-#define GST_VDPAU_YUV_VIDEO_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_YUV_VIDEO,GstVdpauYUVVideoClass))
-#define GST_VDPAU_YUV_VIDEO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_YUV_VIDEO, GstVdpauYUVVideoClass))
+#define GST_TYPE_VDPAU_YUV_VIDEO            (gst_vdp_yuv_video_get_type())
+#define GST_VDPAU_YUV_VIDEO(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_YUV_VIDEO,GstVdpYUVVideo))
+#define GST_VDPAU_YUV_VIDEO_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_YUV_VIDEO,GstVdpYUVVideoClass))
+#define GST_VDPAU_YUV_VIDEO_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_YUV_VIDEO, GstVdpYUVVideoClass))
 #define GST_IS_VDPAU_YUV_VIDEO(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_YUV_VIDEO))
 #define GST_IS_VDPAU_YUV_VIDEO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_YUV_VIDEO))
 
-typedef struct _GstVdpauYUVVideo      GstVdpauYUVVideo;
-typedef struct _GstVdpauYUVVideoClass GstVdpauYUVVideoClass;
+typedef struct _GstVdpYUVVideo      GstVdpYUVVideo;
+typedef struct _GstVdpYUVVideoClass GstVdpYUVVideoClass;
 
-struct _GstVdpauYUVVideo {
+struct _GstVdpYUVVideo {
   GstElement element;
 
   GstPad *src, *sink;
   GstCaps *sink_caps;
 
   gchar *display;
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
 
   guint32 format;
   gint chroma_type;
   gint width, height;
 };
 
-struct _GstVdpauYUVVideoClass {
+struct _GstVdpYUVVideoClass {
   GstElementClass parent_class;
 };
 
-GType gst_vdpau_yuv_video_get_type (void);
+GType gst_vdp_yuv_video_get_type (void);
 
 G_END_DECLS
 

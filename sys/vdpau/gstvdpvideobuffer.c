@@ -22,14 +22,14 @@
 #include "config.h"
 #endif
 
-#include "gstvdpauvideobuffer.h"
+#include "gstvdpvideobuffer.h"
 
-static GObjectClass *gst_vdpau_video_buffer_parent_class;
+static GObjectClass *gst_vdp_video_buffer_parent_class;
 
 static void
-gst_vdpau_video_buffer_finalize (GstVdpauVideoBuffer * buffer)
+gst_vdp_video_buffer_finalize (GstVdpVideoBuffer * buffer)
 {
-  GstVdpauDevice *device = buffer->device;
+  GstVdpDevice *device = buffer->device;
   VdpStatus status;
 
   status = device->vdp_video_surface_destroy (buffer->surface);
@@ -40,59 +40,59 @@ gst_vdpau_video_buffer_finalize (GstVdpauVideoBuffer * buffer)
 
   g_object_unref (buffer->device);
 
-  GST_MINI_OBJECT_CLASS (gst_vdpau_video_buffer_parent_class)->finalize
+  GST_MINI_OBJECT_CLASS (gst_vdp_video_buffer_parent_class)->finalize
       (GST_MINI_OBJECT (buffer));
 }
 
 static void
-gst_vdpau_video_buffer_init (GstVdpauVideoBuffer * buffer, gpointer g_class)
+gst_vdp_video_buffer_init (GstVdpVideoBuffer * buffer, gpointer g_class)
 {
   buffer->device = NULL;
   buffer->surface = VDP_INVALID_HANDLE;
 }
 
 static void
-gst_vdpau_video_buffer_class_init (gpointer g_class, gpointer class_data)
+gst_vdp_video_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
 
-  gst_vdpau_video_buffer_parent_class = g_type_class_peek_parent (g_class);
+  gst_vdp_video_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      gst_vdpau_video_buffer_finalize;
+      gst_vdp_video_buffer_finalize;
 }
 
 
 GType
-gst_vdpau_video_buffer_get_type (void)
+gst_vdp_video_buffer_get_type (void)
 {
-  static GType _gst_vdpau_video_buffer_type;
+  static GType _gst_vdp_video_buffer_type;
 
-  if (G_UNLIKELY (_gst_vdpau_video_buffer_type == 0)) {
+  if (G_UNLIKELY (_gst_vdp_video_buffer_type == 0)) {
     static const GTypeInfo info = {
       sizeof (GstBufferClass),
       NULL,
       NULL,
-      gst_vdpau_video_buffer_class_init,
+      gst_vdp_video_buffer_class_init,
       NULL,
       NULL,
-      sizeof (GstVdpauVideoBuffer),
+      sizeof (GstVdpVideoBuffer),
       0,
-      (GInstanceInitFunc) gst_vdpau_video_buffer_init,
+      (GInstanceInitFunc) gst_vdp_video_buffer_init,
       NULL
     };
-    _gst_vdpau_video_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstVdpauVideoBuffer", &info, 0);
+    _gst_vdp_video_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstVdpVideoBuffer", &info, 0);
   }
-  return _gst_vdpau_video_buffer_type;
+  return _gst_vdp_video_buffer_type;
 }
 
 
-GstVdpauVideoBuffer *
-gst_vdpau_video_buffer_new (GstVdpauDevice * device, VdpChromaType chroma_type,
+GstVdpVideoBuffer *
+gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type,
     gint width, gint height)
 {
-  GstVdpauVideoBuffer *buffer;
+  GstVdpVideoBuffer *buffer;
   VdpStatus status;
   VdpVideoSurface surface;
 
@@ -105,7 +105,7 @@ gst_vdpau_video_buffer_new (GstVdpauDevice * device, VdpChromaType chroma_type,
   }
 
   buffer =
-      (GstVdpauVideoBuffer *) gst_mini_object_new (GST_TYPE_VDPAU_VIDEO_BUFFER);
+      (GstVdpVideoBuffer *) gst_mini_object_new (GST_TYPE_VDPAU_VIDEO_BUFFER);
 
   buffer->device = g_object_ref (device);
   buffer->surface = surface;

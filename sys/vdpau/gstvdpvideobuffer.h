@@ -24,27 +24,27 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstvdpaudevice.h"
+#include "gstvdpdevice.h"
 
-#include "gstvdpauvideobuffer.h"
+#include "gstvdpvideobuffer.h"
 
-typedef struct _GstVdpauVideoBuffer GstVdpauVideoBuffer;
+typedef struct _GstVdpVideoBuffer GstVdpVideoBuffer;
 
-#define GST_TYPE_VDPAU_VIDEO_BUFFER (gst_vdpau_video_buffer_get_type())
+#define GST_TYPE_VDPAU_VIDEO_BUFFER (gst_vdp_video_buffer_get_type())
 
 #define GST_IS_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER))
-#define GST_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER, GstVdpauVideoBuffer))
+#define GST_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER, GstVdpVideoBuffer))
 
-struct _GstVdpauVideoBuffer {
+struct _GstVdpVideoBuffer {
   GstBuffer buffer;
 
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
   VdpVideoSurface surface;
 };
 
-GType gst_vdpau_video_buffer_get_type (void);
+GType gst_vdp_video_buffer_get_type (void);
 
-GstVdpauVideoBuffer* gst_vdpau_video_buffer_new (GstVdpauDevice * device, VdpChromaType chroma_type, gint width, gint height);
+GstVdpVideoBuffer* gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type, gint width, gint height);
 
 #define GST_VDPAU_VIDEO_CAPS \
   "video/vdpau-video, " \

@@ -23,27 +23,27 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpaudevice.h"
-#include "gstvdpauvideobuffer.h"
+#include "gstvdpdevice.h"
+#include "gstvdpvideobuffer.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDPAU_DECODER            (gst_vdpau_decoder_get_type())
-#define GST_VDPAU_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpauDecoder))
-#define GST_VDPAU_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpauDecoderClass))
-#define GST_VDPAU_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DECODER, GstVdpauDecoderClass))
+#define GST_TYPE_VDPAU_DECODER            (gst_vdp_decoder_get_type())
+#define GST_VDPAU_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpDecoder))
+#define GST_VDPAU_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpDecoderClass))
+#define GST_VDPAU_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DECODER, GstVdpDecoderClass))
 #define GST_IS_VDPAU_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_DECODER))
 #define GST_IS_VDPAU_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_DECODER))
 
-typedef struct _GstVdpauDecoder      GstVdpauDecoder;
-typedef struct _GstVdpauDecoderClass GstVdpauDecoderClass;
+typedef struct _GstVdpDecoder      GstVdpDecoder;
+typedef struct _GstVdpDecoderClass GstVdpDecoderClass;
 typedef struct _VdpauFunctions VdpauFunctions;
 
-struct _GstVdpauDecoder {
+struct _GstVdpDecoder {
   GstElement element;
 
   gchar *display_name;
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
 
   GstPad *src;
   GstPad *sink;
@@ -57,17 +57,17 @@ struct _GstVdpauDecoder {
   gboolean silent;
 };
 
-struct _GstVdpauDecoderClass {
+struct _GstVdpDecoderClass {
   GstElementClass parent_class;
 
-  gboolean (*set_caps) (GstVdpauDecoder *dec, GstCaps *caps);
+  gboolean (*set_caps) (GstVdpDecoder *dec, GstCaps *caps);
 };
 
-GType gst_vdpau_decoder_get_type (void);
+GType gst_vdp_decoder_get_type (void);
 
-gboolean gst_vdpau_decoder_push_video_buffer (GstVdpauDecoder * dec,
-                                              GstVdpauVideoBuffer *buffer);
-VdpVideoSurface gst_vdpau_decoder_create_video_surface (GstVdpauDecoder *dec);
+gboolean gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
+                                              GstVdpVideoBuffer *buffer);
+VdpVideoSurface gst_vdp_decoder_create_video_surface (GstVdpDecoder *dec);
 
 G_END_DECLS
 

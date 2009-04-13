@@ -21,10 +21,10 @@
 #include <vdpau/vdpau_x11.h>
 #include <gst/gst.h>
 
-#include "gstvdpaudevice.h"
+#include "gstvdpdevice.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_vdpau_device_debug);
-#define GST_CAT_DEFAULT gst_vdpau_device_debug
+GST_DEBUG_CATEGORY_STATIC (gst_vdp_device_debug);
+#define GST_CAT_DEFAULT gst_vdp_device_debug
 
 enum
 {
@@ -34,10 +34,10 @@ enum
 
 
 
-G_DEFINE_TYPE (GstVdpauDevice, gst_vdpau_device, G_TYPE_OBJECT);
+G_DEFINE_TYPE (GstVdpDevice, gst_vdp_device, G_TYPE_OBJECT);
 
 static void
-gst_vdpau_device_init (GstVdpauDevice * device)
+gst_vdp_device_init (GstVdpDevice * device)
 {
   device->display_name = NULL;
   device->display = NULL;
@@ -45,21 +45,21 @@ gst_vdpau_device_init (GstVdpauDevice * device)
 }
 
 static void
-gst_vdpau_device_finalize (GObject * object)
+gst_vdp_device_finalize (GObject * object)
 {
-  GstVdpauDevice *device = (GstVdpauDevice *) object;
+  GstVdpDevice *device = (GstVdpDevice *) object;
 
   device->vdp_device_destroy (device->device);
   g_free (device->display_name);
 
-  G_OBJECT_CLASS (gst_vdpau_device_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_vdp_device_parent_class)->finalize (object);
 
 }
 
 static void
-gst_vdpau_device_constructed (GObject * object)
+gst_vdp_device_constructed (GObject * object)
 {
-  GstVdpauDevice *device = (GstVdpauDevice *) object;
+  GstVdpDevice *device = (GstVdpDevice *) object;
   gint screen;
   VdpStatus status;
   gint i;
@@ -147,14 +147,14 @@ error:
 }
 
 static void
-gst_vdpau_device_set_property (GObject * object, guint prop_id,
+gst_vdp_device_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
 
   g_return_if_fail (GST_IS_VDPAU_DEVICE (object));
 
-  device = (GstVdpauDevice *) object;
+  device = (GstVdpDevice *) object;
 
   switch (prop_id) {
     case PROP_DISPLAY:
@@ -167,14 +167,14 @@ gst_vdpau_device_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_vdpau_device_get_property (GObject * object, guint prop_id, GValue * value,
+gst_vdp_device_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
 
   g_return_if_fail (GST_IS_VDPAU_DEVICE (object));
 
-  device = (GstVdpauDevice *) object;
+  device = (GstVdpDevice *) object;
 
   switch (prop_id) {
     case PROP_DISPLAY:
@@ -187,14 +187,14 @@ gst_vdpau_device_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_vdpau_device_class_init (GstVdpauDeviceClass * klass)
+gst_vdp_device_class_init (GstVdpDeviceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->constructed = gst_vdpau_device_constructed;
-  object_class->finalize = gst_vdpau_device_finalize;
-  object_class->get_property = gst_vdpau_device_get_property;
-  object_class->set_property = gst_vdpau_device_set_property;
+  object_class->constructed = gst_vdp_device_constructed;
+  object_class->finalize = gst_vdp_device_finalize;
+  object_class->get_property = gst_vdp_device_get_property;
+  object_class->set_property = gst_vdp_device_set_property;
 
 
   g_object_class_install_property (object_class,
@@ -204,14 +204,14 @@ gst_vdpau_device_class_init (GstVdpauDeviceClass * klass)
           "X Display Name",
           "", G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
-  GST_DEBUG_CATEGORY_INIT (gst_vdpau_device_debug, "vdpaudevice",
+  GST_DEBUG_CATEGORY_INIT (gst_vdp_device_debug, "vdpaudevice",
       0, "vdpaudevice");
 }
 
-GstVdpauDevice *
-gst_vdpau_device_new (const gchar * display_name)
+GstVdpDevice *
+gst_vdp_device_new (const gchar * display_name)
 {
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
 
   device = g_object_new (GST_TYPE_VDPAU_DEVICE, "display", display_name);
 
@@ -240,12 +240,12 @@ create_devices_hash (gpointer data)
   return g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
 }
 
-GstVdpauDevice *
-gst_vdpau_get_device (const gchar * display_name)
+GstVdpDevice *
+gst_vdp_get_device (const gchar * display_name)
 {
   static GOnce my_once = G_ONCE_INIT;
   GHashTable *devices_hash;
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
 
   g_once (&my_once, create_devices_hash, NULL);
   devices_hash = my_once.retval;
@@ -256,7 +256,7 @@ gst_vdpau_get_device (const gchar * display_name)
     device = g_hash_table_lookup (devices_hash, "");
 
   if (!device) {
-    device = gst_vdpau_device_new (display_name);
+    device = gst_vdp_device_new (display_name);
     g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, devices_hash);
     if (display_name)
       g_hash_table_insert (devices_hash, g_strdup (display_name), device);

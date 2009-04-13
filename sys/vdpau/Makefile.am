@@ -1,14 +1,14 @@
 plugin_LTLIBRARIES = libgstvdpau.la
 
 libgstvdpau_la_SOURCES = \
-	gstvdpaudevice.c \
-	gstvdpaudecoder.c \
-	gstvdpaumpegdecoder.c \
+	gstvdpdevice.c \
+	gstvdpdecoder.c \
+	gstvdpmpegdecoder.c \
 	mpegutil.c \
-	gstvdpauvideoyuv.c \
-	gstvdpauvideobuffer.c \
-	gstvdpau.c \
-	gstvdpauyuvvideo.c
+	gstvdpvideoyuv.c \
+	gstvdpvideobuffer.c \
+	gstvdp.c \
+	gstvdpyuvvideo.c
 
 libgstvdpau_la_CFLAGS = $(GST_CFLAGS) $(X11_CFLAGS) -Ivdpau
 libgstvdpau_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
@@ -17,12 +17,12 @@ libgstvdpau_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvdpau_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
-	gstvdpaudevice.h \
-	gstvdpaudecoder.h \
-	gstvdpaumpegdecoder.h \
+	gstvdpdevice.h \
+	gstvdpdecoder.h \
+	gstvdpmpegdecoder.h \
 	mpegutil.h \
-	gstvdpauvideoyuv.h \
-	gstvdpauvideobuffer.h \
-	gstvdpauyuvvideo.h
+	gstvdpvideoyuv.h \
+	gstvdpvideobuffer.h \
+	gstvdpyuvvideo.h
 	
 

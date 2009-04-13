@@ -25,10 +25,10 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstvdpaudecoder.h"
+#include "gstvdpdecoder.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_vdpau_decoder_debug);
-#define GST_CAT_DEFAULT gst_vdpau_decoder_debug
+GST_DEBUG_CATEGORY_STATIC (gst_vdp_decoder_debug);
+#define GST_CAT_DEFAULT gst_vdp_decoder_debug
 
 /* Filter signals and args */
 enum
@@ -50,20 +50,20 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/vdpau-video, " "chroma-type = (int) 0"));
 
 #define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_vdpau_decoder_debug, "vdpaudecoder", 0, "vdpaudecoder base class");
+    GST_DEBUG_CATEGORY_INIT (gst_vdp_decoder_debug, "vdpaudecoder", 0, "vdpaudecoder base class");
 
-GST_BOILERPLATE_FULL (GstVdpauDecoder, gst_vdpau_decoder, GstElement,
+GST_BOILERPLATE_FULL (GstVdpDecoder, gst_vdp_decoder, GstElement,
     GST_TYPE_ELEMENT, DEBUG_INIT);
 
-static void gst_vdpau_decoder_finalize (GObject * object);
-static void gst_vdpau_decoder_set_property (GObject * object, guint prop_id,
+static void gst_vdp_decoder_finalize (GObject * object);
+static void gst_vdp_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_vdpau_decoder_get_property (GObject * object, guint prop_id,
+static void gst_vdp_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 GstFlowReturn
-gst_vdpau_decoder_push_video_buffer (GstVdpauDecoder * dec,
-    GstVdpauVideoBuffer * buffer)
+gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
+    GstVdpVideoBuffer * buffer)
 {
   GST_BUFFER_TIMESTAMP (buffer) =
       gst_util_uint64_scale_int (GST_SECOND * dec->frame_nr,
@@ -80,15 +80,15 @@ gst_vdpau_decoder_push_video_buffer (GstVdpauDecoder * dec,
 }
 
 static GstStateChangeReturn
-gst_vdpau_decoder_change_state (GstElement * element, GstStateChange transition)
+gst_vdp_decoder_change_state (GstElement * element, GstStateChange transition)
 {
-  GstVdpauDecoder *dec;
+  GstVdpDecoder *dec;
 
   dec = GST_VDPAU_DECODER (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      dec->device = gst_vdpau_get_device (dec->display_name);
+      dec->device = gst_vdp_get_device (dec->display_name);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       g_object_unref (dec->device);
@@ -102,10 +102,10 @@ gst_vdpau_decoder_change_state (GstElement * element, GstStateChange transition)
 }
 
 static gboolean
-gst_vdpau_decoder_sink_set_caps (GstPad * pad, GstCaps * caps)
+gst_vdp_decoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
-  GstVdpauDecoder *dec = GST_VDPAU_DECODER (GST_OBJECT_PARENT (pad));
-  GstVdpauDecoderClass *dec_class = GST_VDPAU_DECODER_GET_CLASS (dec);
+  GstVdpDecoder *dec = GST_VDPAU_DECODER (GST_OBJECT_PARENT (pad));
+  GstVdpDecoderClass *dec_class = GST_VDPAU_DECODER_GET_CLASS (dec);
 
   GstCaps *src_caps, *new_caps;
   GstStructure *structure;
@@ -161,7 +161,7 @@ gst_vdpau_decoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 /* GObject vmethod implementations */
 
 static void
-gst_vdpau_decoder_base_init (gpointer klass)
+gst_vdp_decoder_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -177,7 +177,7 @@ gst_vdpau_decoder_base_init (gpointer klass)
 
 /* initialize the vdpaudecoder's class */
 static void
-gst_vdpau_decoder_class_init (GstVdpauDecoderClass * klass)
+gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -185,9 +185,9 @@ gst_vdpau_decoder_class_init (GstVdpauDecoderClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = gst_vdpau_decoder_finalize;
-  gobject_class->set_property = gst_vdpau_decoder_set_property;
-  gobject_class->get_property = gst_vdpau_decoder_get_property;
+  gobject_class->finalize = gst_vdp_decoder_finalize;
+  gobject_class->set_property = gst_vdp_decoder_set_property;
+  gobject_class->get_property = gst_vdp_decoder_get_property;
 
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Display", "X Display name",
@@ -197,11 +197,11 @@ gst_vdpau_decoder_class_init (GstVdpauDecoderClass * klass)
       g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  gstelement_class->change_state = gst_vdpau_decoder_change_state;
+  gstelement_class->change_state = gst_vdp_decoder_change_state;
 }
 
 static void
-gst_vdpau_decoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
+gst_vdp_decoder_init (GstVdpDecoder * dec, GstVdpDecoderClass * klass)
 {
   dec->display_name = NULL;
   dec->device = NULL;
@@ -219,15 +219,15 @@ gst_vdpau_decoder_init (GstVdpauDecoder * dec, GstVdpauDecoderClass * klass)
 
   dec->sink = gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (klass), "sink"), "sink");
-  gst_pad_set_setcaps_function (dec->sink, gst_vdpau_decoder_sink_set_caps);
+  gst_pad_set_setcaps_function (dec->sink, gst_vdp_decoder_sink_set_caps);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sink);
   gst_pad_set_active (dec->sink, TRUE);
 }
 
 static void
-gst_vdpau_decoder_finalize (GObject * object)
+gst_vdp_decoder_finalize (GObject * object)
 {
-  GstVdpauDecoder *dec = (GstVdpauDecoder *) object;
+  GstVdpDecoder *dec = (GstVdpDecoder *) object;
 
   if (dec->device)
     g_object_unref (dec->device);
@@ -236,10 +236,10 @@ gst_vdpau_decoder_finalize (GObject * object)
 }
 
 static void
-gst_vdpau_decoder_set_property (GObject * object, guint prop_id,
+gst_vdp_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVdpauDecoder *dec = GST_VDPAU_DECODER (object);
+  GstVdpDecoder *dec = GST_VDPAU_DECODER (object);
 
   switch (prop_id) {
     case PROP_DISPLAY:
@@ -256,10 +256,10 @@ gst_vdpau_decoder_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_vdpau_decoder_get_property (GObject * object, guint prop_id,
+gst_vdp_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVdpauDecoder *dec = GST_VDPAU_DECODER (object);
+  GstVdpDecoder *dec = GST_VDPAU_DECODER (object);
 
   switch (prop_id) {
     case PROP_DISPLAY:

@@ -5,9 +5,9 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpaumpegdecoder.h"
-#include "gstvdpauvideoyuv.h"
-#include "gstvdpauyuvvideo.h"
+#include "gstvdpmpegdecoder.h"
+#include "gstvdpvideoyuv.h"
+#include "gstvdpyuvvideo.h"
 
 static gboolean
 vdpau_init (GstPlugin * vdpaumpegdecoder)

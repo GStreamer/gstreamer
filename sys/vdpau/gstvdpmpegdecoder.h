@@ -24,22 +24,22 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "gstvdpaudecoder.h"
+#include "gstvdpdecoder.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VDPAU_MPEG_DECODER            (gst_vdpau_mpeg_decoder_get_type())
-#define GST_VDPAU_MPEG_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoder))
-#define GST_VDPAU_MPEG_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpauMpegDecoderClass))
+#define GST_TYPE_VDPAU_MPEG_DECODER            (gst_vdp_mpeg_decoder_get_type())
+#define GST_VDPAU_MPEG_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpMpegDecoder))
+#define GST_VDPAU_MPEG_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_MPEG_DECODER,GstVdpMpegDecoderClass))
 #define GST_IS_VDPAU_MPEG_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_MPEG_DECODER))
 #define GST_IS_VDPAU_MPEG_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_MPEG_DECODER))
 
-typedef struct _GstVdpauMpegDecoder      GstVdpauMpegDecoder;
-typedef struct _GstVdpauMpegDecoderClass GstVdpauMpegDecoderClass;
+typedef struct _GstVdpMpegDecoder      GstVdpMpegDecoder;
+typedef struct _GstVdpMpegDecoderClass GstVdpMpegDecoderClass;
 
-struct _GstVdpauMpegDecoder
+struct _GstVdpMpegDecoder
 {
-  GstVdpauDecoder dec;
+  GstVdpDecoder dec;
 
   gint version;
   
@@ -53,12 +53,12 @@ struct _GstVdpauMpegDecoder
   gint slices;
 };
 
-struct _GstVdpauMpegDecoderClass 
+struct _GstVdpMpegDecoderClass 
 {
-  GstVdpauDecoderClass parent_class;
+  GstVdpDecoderClass parent_class;
 };
 
-GType gst_vdpau_mpeg_decoder_get_type (void);
+GType gst_vdp_mpeg_decoder_get_type (void);
 
 G_END_DECLS
 

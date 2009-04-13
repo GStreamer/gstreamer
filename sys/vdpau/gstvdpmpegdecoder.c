@@ -39,10 +39,10 @@
 #include <string.h>
 
 #include "mpegutil.h"
-#include "gstvdpaumpegdecoder.h"
+#include "gstvdpmpegdecoder.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_vdpau_mpeg_decoder_debug);
-#define GST_CAT_DEFAULT gst_vdpau_mpeg_decoder_debug
+GST_DEBUG_CATEGORY_STATIC (gst_vdp_mpeg_decoder_debug);
+#define GST_CAT_DEFAULT gst_vdp_mpeg_decoder_debug
 
 /* Filter signals and args */
 enum
@@ -68,27 +68,27 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define DEBUG_INIT(bla) \
-GST_DEBUG_CATEGORY_INIT (gst_vdpau_mpeg_decoder_debug, "vdpaumpegdecoder", 0, "VDPAU powered mpeg decoder");
+GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_decoder_debug, "vdpaumpegdecoder", 0, "VDPAU powered mpeg decoder");
 
-GST_BOILERPLATE_FULL (GstVdpauMpegDecoder, gst_vdpau_mpeg_decoder,
-    GstVdpauDecoder, GST_TYPE_VDPAU_DECODER, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstVdpMpegDecoder, gst_vdp_mpeg_decoder,
+    GstVdpDecoder, GST_TYPE_VDPAU_DECODER, DEBUG_INIT);
 
-static void gst_vdpau_mpeg_decoder_finalize (GObject * object);
-static void gst_vdpau_mpeg_decoder_set_property (GObject * object,
+static void gst_vdp_mpeg_decoder_finalize (GObject * object);
+static void gst_vdp_mpeg_decoder_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_vdpau_mpeg_decoder_get_property (GObject * object,
+static void gst_vdp_mpeg_decoder_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean
-gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
+gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
 {
-  GstVdpauMpegDecoder *mpeg_dec;
+  GstVdpMpegDecoder *mpeg_dec;
   GstStructure *structure;
   const GValue *value;
   GstBuffer *codec_data;
   MPEGSeqHdr hdr = { 0, };
   VdpDecoderProfile profile;
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
   VdpStatus status;
 
   mpeg_dec = GST_VDPAU_MPEG_DECODER (dec);
@@ -132,13 +132,13 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
+gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 {
-  GstVdpauDecoder *dec;
+  GstVdpDecoder *dec;
   GstBuffer *buffer;
-  GstVdpauVideoBuffer *outbuf;
+  GstVdpVideoBuffer *outbuf;
   VdpVideoSurface surface;
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
   VdpBitstreamBuffer vbit[1];
   VdpStatus status;
   GstFlowReturn ret;
@@ -148,7 +148,7 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
   buffer = gst_adapter_take_buffer (mpeg_dec->adapter,
       gst_adapter_available (mpeg_dec->adapter));
 
-  outbuf = gst_vdpau_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
+  outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
       dec->width, dec->height);
   surface = outbuf->surface;
 
@@ -181,7 +181,7 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
 
   gst_buffer_ref (GST_BUFFER (outbuf));
 
-  ret = gst_vdpau_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
+  ret = gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
       outbuf);
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
@@ -194,10 +194,10 @@ gst_vdpau_mpeg_decoder_decode (GstVdpauMpegDecoder * mpeg_dec)
 }
 
 static gboolean
-gst_vdpau_mpeg_decoder_parse_picture_coding (GstVdpauMpegDecoder * mpeg_dec,
+gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
     guint8 * data, guint8 * end)
 {
-  GstVdpauDecoder *dec;
+  GstVdpDecoder *dec;
   MPEGPictureExt pic_ext;
   VdpPictureInfoMPEG1Or2 *info;
 
@@ -223,10 +223,10 @@ gst_vdpau_mpeg_decoder_parse_picture_coding (GstVdpauMpegDecoder * mpeg_dec,
 }
 
 static gboolean
-gst_vdpau_mpeg_decoder_parse_sequence (GstVdpauMpegDecoder * mpeg_dec,
+gst_vdp_mpeg_decoder_parse_sequence (GstVdpMpegDecoder * mpeg_dec,
     guint8 * data, guint8 * end)
 {
-  GstVdpauDecoder *dec;
+  GstVdpDecoder *dec;
   MPEGSeqHdr hdr;
 
   dec = GST_VDPAU_DECODER (mpeg_dec);
@@ -243,10 +243,10 @@ gst_vdpau_mpeg_decoder_parse_sequence (GstVdpauMpegDecoder * mpeg_dec,
 }
 
 static gboolean
-gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
+gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
     guint8 * data, guint8 * end)
 {
-  GstVdpauDecoder *dec;
+  GstVdpDecoder *dec;
   MPEGPictureHdr pic_hdr;
 
   dec = GST_VDPAU_DECODER (mpeg_dec);
@@ -278,7 +278,7 @@ gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
 }
 
 static gboolean
-gst_vdpau_mpeg_decoder_parse_gop (GstVdpauMpegDecoder * mpeg_dec, guint8 * data,
+gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec, guint8 * data,
     guint8 * end)
 {
   MPEGPictureGOP gop;
@@ -290,7 +290,7 @@ gst_vdpau_mpeg_decoder_parse_gop (GstVdpauMpegDecoder * mpeg_dec, guint8 * data,
 }
 
 static gboolean
-gst_vdpau_mpeg_decoder_parse_quant_matrix (GstVdpauMpegDecoder * mpeg_dec,
+gst_vdp_mpeg_decoder_parse_quant_matrix (GstVdpMpegDecoder * mpeg_dec,
     guint8 * data, guint8 * end)
 {
   MPEGQuantMatrix qm;
@@ -306,9 +306,9 @@ gst_vdpau_mpeg_decoder_parse_quant_matrix (GstVdpauMpegDecoder * mpeg_dec,
 }
 
 static GstFlowReturn
-gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
+gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstVdpauMpegDecoder *mpeg_dec;
+  GstVdpMpegDecoder *mpeg_dec;
   guint8 *data, *end;
   guint32 sync_word = 0xffffffff;
 
@@ -345,22 +345,21 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
         if (mpeg_dec->vdp_info.slice_count > 0 && mpeg_dec->want_slice) {
-          if (gst_vdpau_mpeg_decoder_decode (mpeg_dec) != GST_FLOW_OK)
+          if (gst_vdp_mpeg_decoder_decode (mpeg_dec) != GST_FLOW_OK)
             return GST_FLOW_ERROR;
         }
-        gst_vdpau_mpeg_decoder_parse_picture (mpeg_dec, packet_start,
-            packet_end);
+        gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start, packet_end);
         break;
       case MPEG_PACKET_SEQUENCE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
-        gst_vdpau_mpeg_decoder_parse_sequence (mpeg_dec, packet_start,
+        gst_vdp_mpeg_decoder_parse_sequence (mpeg_dec, packet_start,
             packet_end);
         break;
       case MPEG_PACKET_EXTENSION:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION");
         switch (read_bits (data + 1, 0, 4)) {
           case MPEG_PACKET_EXT_PICTURE_CODING:
-            gst_vdpau_mpeg_decoder_parse_picture_coding (mpeg_dec, packet_start,
+            gst_vdp_mpeg_decoder_parse_picture_coding (mpeg_dec, packet_start,
                 packet_end);
             break;
           default:
@@ -369,12 +368,12 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
         break;
       case MPEG_PACKET_EXT_QUANT_MATRIX:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_QUANT_MATRIX");
-        gst_vdpau_mpeg_decoder_parse_quant_matrix (mpeg_dec, packet_start,
+        gst_vdp_mpeg_decoder_parse_quant_matrix (mpeg_dec, packet_start,
             packet_end);
         break;
       case MPEG_PACKET_GOP:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_GOP");
-        gst_vdpau_mpeg_decoder_parse_gop (mpeg_dec, packet_start, packet_end);
+        gst_vdp_mpeg_decoder_parse_gop (mpeg_dec, packet_start, packet_end);
         break;
       default:
         break;
@@ -387,7 +386,7 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 /* GObject vmethod implementations */
 
 static void
-gst_vdpau_mpeg_decoder_base_init (gpointer gclass)
+gst_vdp_mpeg_decoder_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
@@ -403,25 +402,25 @@ gst_vdpau_mpeg_decoder_base_init (gpointer gclass)
 
 /* initialize the vdpaumpegdecoder's class */
 static void
-gst_vdpau_mpeg_decoder_class_init (GstVdpauMpegDecoderClass * klass)
+gst_vdp_mpeg_decoder_class_init (GstVdpMpegDecoderClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstVdpauDecoderClass *vdpaudec_class;
+  GstVdpDecoderClass *vdpaudec_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  vdpaudec_class = (GstVdpauDecoderClass *) klass;
+  vdpaudec_class = (GstVdpDecoderClass *) klass;
 
-  gobject_class->finalize = gst_vdpau_mpeg_decoder_finalize;
-  gobject_class->set_property = gst_vdpau_mpeg_decoder_set_property;
-  gobject_class->get_property = gst_vdpau_mpeg_decoder_get_property;
+  gobject_class->finalize = gst_vdp_mpeg_decoder_finalize;
+  gobject_class->set_property = gst_vdp_mpeg_decoder_set_property;
+  gobject_class->get_property = gst_vdp_mpeg_decoder_get_property;
 
-  vdpaudec_class->set_caps = gst_vdpau_mpeg_decoder_set_caps;
+  vdpaudec_class->set_caps = gst_vdp_mpeg_decoder_set_caps;
 }
 
 static void
-gst_vdpau_mpeg_decoder_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
+gst_vdp_mpeg_decoder_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
 {
   vdp_info->forward_reference = VDP_INVALID_HANDLE;
   vdp_info->backward_reference = VDP_INVALID_HANDLE;
@@ -434,33 +433,33 @@ gst_vdpau_mpeg_decoder_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
 }
 
 static void
-gst_vdpau_mpeg_decoder_init (GstVdpauMpegDecoder * mpeg_dec,
-    GstVdpauMpegDecoderClass * gclass)
+gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
+    GstVdpMpegDecoderClass * gclass)
 {
-  GstVdpauDecoder *dec;
+  GstVdpDecoder *dec;
 
   dec = GST_VDPAU_DECODER (mpeg_dec);
 
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
-  gst_vdpau_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
+  gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   mpeg_dec->adapter = gst_adapter_new ();
 
   mpeg_dec->want_slice = FALSE;
 
-  gst_pad_set_chain_function (dec->sink, gst_vdpau_mpeg_decoder_chain);
+  gst_pad_set_chain_function (dec->sink, gst_vdp_mpeg_decoder_chain);
 }
 
 static void
-gst_vdpau_mpeg_decoder_finalize (GObject * object)
+gst_vdp_mpeg_decoder_finalize (GObject * object)
 {
-  GstVdpauMpegDecoder *mpeg_dec = (GstVdpauMpegDecoder *) object;
+  GstVdpMpegDecoder *mpeg_dec = (GstVdpMpegDecoder *) object;
 
   g_object_unref (mpeg_dec->adapter);
 }
 
 static void
-gst_vdpau_mpeg_decoder_set_property (GObject * object, guint prop_id,
+gst_vdp_mpeg_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -471,7 +470,7 @@ gst_vdpau_mpeg_decoder_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_vdpau_mpeg_decoder_get_property (GObject * object, guint prop_id,
+gst_vdp_mpeg_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {

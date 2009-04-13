@@ -25,11 +25,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstvdpauvideobuffer.h"
-#include "gstvdpauvideoyuv.h"
+#include "gstvdpvideobuffer.h"
+#include "gstvdpvideoyuv.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_vdpau_video_yuv_debug);
-#define GST_CAT_DEFAULT gst_vdpau_video_yuv_debug
+GST_DEBUG_CATEGORY_STATIC (gst_vdp_video_yuv_debug);
+#define GST_CAT_DEFAULT gst_vdp_video_yuv_debug
 
 /* Filter signals and args */
 enum
@@ -56,22 +56,22 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]"));
 
 #define DEBUG_INIT(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_vdpau_video_yuv_debug, "vdpauvideoyuv", 0, "VDPAU VdpSurface to YUV");
+    GST_DEBUG_CATEGORY_INIT (gst_vdp_video_yuv_debug, "vdpauvideoyuv", 0, "VDPAU VdpSurface to YUV");
 
-GST_BOILERPLATE_FULL (GstVdpauVideoYUV, gst_vdpau_video_yuv, GstElement,
+GST_BOILERPLATE_FULL (GstVdpVideoYUV, gst_vdp_video_yuv, GstElement,
     GST_TYPE_ELEMENT, DEBUG_INIT);
 
-static void gst_vdpau_video_yuv_finalize (GObject * object);
-static void gst_vdpau_video_yuv_set_property (GObject * object, guint prop_id,
+static void gst_vdp_video_yuv_finalize (GObject * object);
+static void gst_vdp_video_yuv_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_vdpau_video_yuv_get_property (GObject * object, guint prop_id,
+static void gst_vdp_video_yuv_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 GstFlowReturn
-gst_vdpau_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
+gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstVdpauVideoYUV *video_yuv;
-  GstVdpauDevice *device;
+  GstVdpVideoYUV *video_yuv;
+  GstVdpDevice *device;
   VdpVideoSurface surface;
   GstBuffer *outbuf = NULL;
 
@@ -223,8 +223,8 @@ error:
 }
 
 static GstCaps *
-gst_vdpau_video_yuv_get_caps (GstVdpauVideoYUV * video_yuv,
-    GstVdpauDevice * device, gint chroma_type, gint width, gint height,
+gst_vdp_video_yuv_get_caps (GstVdpVideoYUV * video_yuv,
+    GstVdpDevice * device, gint chroma_type, gint width, gint height,
     gint framerate_numerator, gint framerate_denominator, gint par_numerator,
     gint par_denominator)
 {
@@ -274,14 +274,14 @@ gst_vdpau_video_yuv_get_caps (GstVdpauVideoYUV * video_yuv,
 }
 
 static gboolean
-gst_vdpau_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
+gst_vdp_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
-  GstVdpauVideoYUV *video_yuv = GST_VDPAU_VIDEO_YUV (GST_OBJECT_PARENT (pad));
+  GstVdpVideoYUV *video_yuv = GST_VDPAU_VIDEO_YUV (GST_OBJECT_PARENT (pad));
 
   GstCaps *src_caps, *new_caps;
   GstStructure *structure;
   const GValue *value;
-  GstVdpauDevice *device;
+  GstVdpDevice *device;
   gint chroma_type;
   gint width, height;
   gint framerate_numerator, framerate_denominator;
@@ -302,7 +302,7 @@ gst_vdpau_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
       &par_numerator, &par_denominator);
 
   src_caps =
-      gst_vdpau_video_yuv_get_caps (video_yuv, device, chroma_type, width,
+      gst_vdp_video_yuv_get_caps (video_yuv, device, chroma_type, width,
       height, framerate_numerator, framerate_denominator, par_numerator,
       par_denominator);
   if (G_UNLIKELY (!src_caps))
@@ -340,9 +340,9 @@ gst_vdpau_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
 }
 
 static GstCaps *
-gst_vdpau_video_yuv_src_getcaps (GstPad * pad)
+gst_vdp_video_yuv_src_getcaps (GstPad * pad)
 {
-  GstVdpauVideoYUV *video_yuv;
+  GstVdpVideoYUV *video_yuv;
 
   video_yuv = GST_VDPAU_VIDEO_YUV (GST_OBJECT_PARENT (pad));
 
@@ -358,7 +358,7 @@ gst_vdpau_video_yuv_src_getcaps (GstPad * pad)
 /* GObject vmethod implementations */
 
 static void
-gst_vdpau_video_yuv_base_init (gpointer klass)
+gst_vdp_video_yuv_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -375,7 +375,7 @@ gst_vdpau_video_yuv_base_init (gpointer klass)
 }
 
 static void
-gst_vdpau_video_yuv_class_init (GstVdpauVideoYUVClass * klass)
+gst_vdp_video_yuv_class_init (GstVdpVideoYUVClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -383,14 +383,13 @@ gst_vdpau_video_yuv_class_init (GstVdpauVideoYUVClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->finalize = gst_vdpau_video_yuv_finalize;
-  gobject_class->set_property = gst_vdpau_video_yuv_set_property;
-  gobject_class->get_property = gst_vdpau_video_yuv_get_property;
+  gobject_class->finalize = gst_vdp_video_yuv_finalize;
+  gobject_class->set_property = gst_vdp_video_yuv_set_property;
+  gobject_class->get_property = gst_vdp_video_yuv_get_property;
 }
 
 static void
-gst_vdpau_video_yuv_init (GstVdpauVideoYUV * video_yuv,
-    GstVdpauVideoYUVClass * klass)
+gst_vdp_video_yuv_init (GstVdpVideoYUV * video_yuv, GstVdpVideoYUVClass * klass)
 {
   video_yuv->src_caps = NULL;
 
@@ -402,29 +401,28 @@ gst_vdpau_video_yuv_init (GstVdpauVideoYUV * video_yuv,
   video_yuv->par_denominator = 1;
 
   video_yuv->src = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_getcaps_function (video_yuv->src,
-      gst_vdpau_video_yuv_src_getcaps);
+  gst_pad_set_getcaps_function (video_yuv->src, gst_vdp_video_yuv_src_getcaps);
   gst_element_add_pad (GST_ELEMENT (video_yuv), video_yuv->src);
 
   video_yuv->sink = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_setcaps_function (video_yuv->sink,
-      gst_vdpau_video_yuv_sink_set_caps);
-  gst_pad_set_chain_function (video_yuv->sink, gst_vdpau_video_yuv_chain);
+      gst_vdp_video_yuv_sink_set_caps);
+  gst_pad_set_chain_function (video_yuv->sink, gst_vdp_video_yuv_chain);
   gst_element_add_pad (GST_ELEMENT (video_yuv), video_yuv->sink);
   gst_pad_set_active (video_yuv->sink, TRUE);
 }
 
 static void
-gst_vdpau_video_yuv_finalize (GObject * object)
+gst_vdp_video_yuv_finalize (GObject * object)
 {
-  GstVdpauVideoYUV *video_yuv = (GstVdpauVideoYUV *) object;
+  GstVdpVideoYUV *video_yuv = (GstVdpVideoYUV *) object;
 
   if (video_yuv->src_caps)
     gst_caps_unref (video_yuv->src_caps);
 }
 
 static void
-gst_vdpau_video_yuv_set_property (GObject * object, guint prop_id,
+gst_vdp_video_yuv_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -435,7 +433,7 @@ gst_vdpau_video_yuv_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_vdpau_video_yuv_get_property (GObject * object, guint prop_id,
+gst_vdp_video_yuv_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
