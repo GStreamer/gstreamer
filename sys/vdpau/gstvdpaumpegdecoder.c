@@ -211,7 +211,6 @@ gst_vdpau_mpeg_decoder_parse_picture_coding (GstVdpauMpegDecoder * mpeg_dec,
 
   info->intra_dc_precision = pic_ext.intra_dc_precision;
   info->picture_structure = pic_ext.picture_structure;
-  GST_DEBUG ("Picture structure %d", info->picture_structure);
   info->top_field_first = pic_ext.top_field_first;
   info->frame_pred_frame_dct = pic_ext.frame_pred_frame_dct;
   info->concealment_motion_vectors = pic_ext.concealment_motion_vectors;
@@ -340,14 +339,15 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
         gst_adapter_push (mpeg_dec->adapter, subbuf);
         mpeg_dec->vdp_info.slice_count++;
       }
-    } else if (mpeg_dec->vdp_info.slice_count > 0 && mpeg_dec->want_slice) {
-      if (gst_vdpau_mpeg_decoder_decode (mpeg_dec) != GST_FLOW_OK)
-        return GST_FLOW_ERROR;
     }
 
     switch (data[0]) {
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
+        if (mpeg_dec->vdp_info.slice_count > 0 && mpeg_dec->want_slice) {
+          if (gst_vdpau_mpeg_decoder_decode (mpeg_dec) != GST_FLOW_OK)
+            return GST_FLOW_ERROR;
+        }
         gst_vdpau_mpeg_decoder_parse_picture (mpeg_dec, packet_start,
             packet_end);
         break;
