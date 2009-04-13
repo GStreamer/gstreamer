@@ -10,13 +10,13 @@
 #include "gstvdpyuvvideo.h"
 
 static gboolean
-vdpau_init (GstPlugin * vdpaumpegdecoder)
+vdpau_init (GstPlugin * vdpau_plugin)
 {
-  gst_element_register (vdpaumpegdecoder, "vdpaumpegdecoder",
+  gst_element_register (vdpau_plugin, "vdpaumpegdecoder",
       GST_RANK_NONE, GST_TYPE_VDPAU_MPEG_DECODER);
-  gst_element_register (vdpaumpegdecoder, "vdpauvideoyuv",
+  gst_element_register (vdpau_plugin, "vdpauvideoyuv",
       GST_RANK_NONE, GST_TYPE_VDPAU_VIDEO_YUV);
-  gst_element_register (vdpaumpegdecoder, "vdpauyuvvideo",
+  gst_element_register (vdpau_plugin, "vdpauyuvvideo",
       GST_RANK_NONE, GST_TYPE_VDPAU_YUV_VIDEO);
 
   return TRUE;
