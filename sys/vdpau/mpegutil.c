@@ -314,7 +314,7 @@ mpeg_util_parse_picture_coding_extension (MPEGPictureExt * ext, guint8 * data,
 {
   guint32 code;
 
-  if (G_UNLIKELY ((end - data) < 10))
+  if (G_UNLIKELY ((end - data) < 9))
     return FALSE;               /* Packet too small */
 
   code = GST_READ_UINT32_BE (data);

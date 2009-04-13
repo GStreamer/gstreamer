@@ -112,6 +112,7 @@ gst_vdpau_mpeg_decoder_set_caps (GstVdpauDecoder * dec, GstCaps * caps)
         break;
     }
   }
+
   memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
       &hdr.intra_quantizer_matrix, 64);
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
@@ -210,11 +211,14 @@ gst_vdpau_mpeg_decoder_parse_picture_coding (GstVdpauMpegDecoder * mpeg_dec,
 
   info->intra_dc_precision = pic_ext.intra_dc_precision;
   info->picture_structure = pic_ext.picture_structure;
+  GST_DEBUG ("Picture structure %d", info->picture_structure);
   info->top_field_first = pic_ext.top_field_first;
   info->frame_pred_frame_dct = pic_ext.frame_pred_frame_dct;
   info->concealment_motion_vectors = pic_ext.concealment_motion_vectors;
   info->q_scale_type = pic_ext.q_scale_type;
   info->intra_vlc_format = pic_ext.intra_vlc_format;
+
+  mpeg_dec->want_slice = TRUE;
 
   return TRUE;
 }
@@ -266,7 +270,10 @@ gst_vdpau_mpeg_decoder_parse_picture (GstVdpauMpegDecoder * mpeg_dec,
     mpeg_dec->vdp_info.full_pel_backward_vector =
         pic_hdr.full_pel_backward_vector;
     memcpy (&mpeg_dec->vdp_info.f_code, &pic_hdr.f_code, 4);
-  }
+
+    mpeg_dec->want_slice = TRUE;
+  } else
+    mpeg_dec->want_slice = FALSE;
 
   return TRUE;
 }
@@ -326,12 +333,14 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
       GstBuffer *subbuf;
 
       GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SLICE");
-      subbuf =
-          gst_buffer_create_sub (buffer,
-          packet_start - GST_BUFFER_DATA (buffer), packet_end - packet_start);
-      gst_adapter_push (mpeg_dec->adapter, subbuf);
-      mpeg_dec->vdp_info.slice_count++;
-    } else if (mpeg_dec->vdp_info.slice_count > 0) {
+      if (mpeg_dec->want_slice) {
+        subbuf =
+            gst_buffer_create_sub (buffer,
+            packet_start - GST_BUFFER_DATA (buffer), packet_end - packet_start);
+        gst_adapter_push (mpeg_dec->adapter, subbuf);
+        mpeg_dec->vdp_info.slice_count++;
+      }
+    } else if (mpeg_dec->vdp_info.slice_count > 0 && mpeg_dec->want_slice) {
       if (gst_vdpau_mpeg_decoder_decode (mpeg_dec) != GST_FLOW_OK)
         return GST_FLOW_ERROR;
     }
@@ -344,7 +353,8 @@ gst_vdpau_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
         break;
       case MPEG_PACKET_SEQUENCE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
-        gst_vdpau_mpeg_decoder_parse_sequence (mpeg_dec, data, end);
+        gst_vdpau_mpeg_decoder_parse_sequence (mpeg_dec, packet_start,
+            packet_end);
         break;
       case MPEG_PACKET_EXTENSION:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION");
@@ -435,6 +445,8 @@ gst_vdpau_mpeg_decoder_init (GstVdpauMpegDecoder * mpeg_dec,
   gst_vdpau_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   mpeg_dec->adapter = gst_adapter_new ();
+
+  mpeg_dec->want_slice = FALSE;
 
   gst_pad_set_chain_function (dec->sink, gst_vdpau_mpeg_decoder_chain);
 }
