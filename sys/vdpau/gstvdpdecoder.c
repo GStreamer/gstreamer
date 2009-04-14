@@ -40,8 +40,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_DISPLAY,
-  PROP_SILENT
+  PROP_DISPLAY
 };
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -187,10 +186,6 @@ gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
       g_param_spec_string ("display", "Display", "X Display name",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
-
   gstelement_class->change_state = gst_vdp_decoder_change_state;
 }
 
@@ -199,7 +194,6 @@ gst_vdp_decoder_init (GstVdpDecoder * dec, GstVdpDecoderClass * klass)
 {
   dec->display_name = NULL;
   dec->device = NULL;
-  dec->silent = FALSE;
 
   dec->height = 0;
   dec->width = 0;
@@ -240,9 +234,6 @@ gst_vdp_decoder_set_property (GObject * object, guint prop_id,
       g_free (dec->display_name);
       dec->display_name = g_value_dup_string (value);
       break;
-    case PROP_SILENT:
-      dec->silent = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -258,9 +249,6 @@ gst_vdp_decoder_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DISPLAY:
       g_value_set_string (value, dec->display_name);
-      break;
-    case PROP_SILENT:
-      g_value_set_boolean (value, dec->silent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

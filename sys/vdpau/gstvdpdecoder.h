@@ -53,8 +53,6 @@ struct _GstVdpDecoder {
   guint32 format;
 
   gint frame_nr;
-
-  gboolean silent;
 };
 
 struct _GstVdpDecoderClass {
