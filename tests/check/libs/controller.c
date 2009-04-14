@@ -319,7 +319,7 @@ GST_START_TEST (controller_new_fail4)
 
 GST_END_TEST;
 
-/* tests for static params */
+/* tests for construct-only params */
 GST_START_TEST (controller_new_fail5)
 {
   GstController *ctrl;
@@ -456,7 +456,7 @@ GST_START_TEST (controller_param_twice)
   res = gst_controller_remove_properties (ctrl, "ulong", NULL);
   fail_unless (res, NULL);
 
-  /* removing it agian should not work */
+  /* removing it again should not work */
   res = gst_controller_remove_properties (ctrl, "ulong", NULL);
   fail_unless (!res, NULL);
 
