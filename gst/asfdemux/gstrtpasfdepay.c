@@ -259,7 +259,7 @@ gst_rtp_asf_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
      * S: packet contains a keyframe.
      * L: Length or offset present.
      * R: relative timestamp present
-     * R: duration present
+     * D: duration present
      * I: locationid present
      */
 
