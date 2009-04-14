@@ -24,6 +24,9 @@
  * This library includes general definitions and functions, useful for
  * all typed FFT classes.
  *
+ * The gstfft library is based on
+ * <a href="http://sourceforge.net/projects/kissfft">kissfft</a> by
+ * by Mark Borgerding.
  */
 
 #include <glib.h>
