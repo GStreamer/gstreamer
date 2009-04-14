@@ -165,12 +165,6 @@ gst_vdp_decoder_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class,
-      "VdpauDecoder",
-      "Codec/Decoder/Video",
-      "VDPAU decoder base class",
-      "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 }
