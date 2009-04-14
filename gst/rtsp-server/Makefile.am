@@ -29,7 +29,9 @@ libgstrtspserver_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtspserver_@GST_MAJORMINOR@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
     -lgstrtp-@GST_MAJORMINOR@ -lgstrtsp-@GST_MAJORMINOR@ \
-            -lgstsdp-@GST_MAJORMINOR@ $(GST_LIBS) $(LIBM)
+            -lgstsdp-@GST_MAJORMINOR@ \
+            -lgstapp-@GST_MAJORMINOR@ \
+	    $(GST_LIBS) $(LIBM)
 libgstrtspserver_@GST_MAJORMINOR@_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstrtspserver_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/rtsp-server

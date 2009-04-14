@@ -1017,6 +1017,7 @@ handle_data (GstRTSPClient *client, GstRTSPMessage *message)
   guint8 *data;
   guint size;
   GstBuffer *buffer;
+  gboolean handled;
 
   /* find the stream for this message */ 
   res = gst_rtsp_message_parse_data (message, &channel);
@@ -1030,6 +1031,7 @@ handle_data (GstRTSPClient *client, GstRTSPMessage *message)
   GST_BUFFER_MALLOCDATA (buffer) = data;
   GST_BUFFER_SIZE (buffer) = size;
 
+  handled = FALSE;
   for (walk = client->streams; walk; walk = g_list_next (walk)) {
     GstRTSPSessionStream *stream = (GstRTSPSessionStream *) walk->data;
     GstRTSPMediaStream *mstream;
@@ -1048,12 +1050,17 @@ handle_data (GstRTSPClient *client, GstRTSPMessage *message)
       /* dispatch to the stream based on the channel number */
       if (tr->interleaved.min == channel) {
 	gst_rtsp_media_stream_rtp (mstream, buffer);
+	handled = TRUE;
+        break;
       } else if (tr->interleaved.max == channel) {
 	gst_rtsp_media_stream_rtcp (mstream, buffer);
+	handled = TRUE;
+        break;
       }
     }
   }
-  gst_buffer_unref (buffer);
+  if (!handled)
+    gst_buffer_unref (buffer);
 }
 
 /**

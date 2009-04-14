@@ -17,6 +17,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <gst/app/gstappsrc.h>
+#include <gst/app/gstappsink.h>
+
 #include "rtsp-media.h"
 
 #define DEFAULT_SHARED         FALSE
@@ -468,6 +471,8 @@ weird_type:
  * Handle an RTP buffer for the stream. This method is usually called when a
  * message has been received from a client using the TCP transport.
  *
+ * This function takes ownership of @buffer.
+ *
  * Returns: a GstFlowReturn.
  */
 GstFlowReturn
@@ -475,7 +480,7 @@ gst_rtsp_media_stream_rtp (GstRTSPMediaStream *stream, GstBuffer *buffer)
 {
   GstFlowReturn ret;
 
-  g_signal_emit_by_name (stream->appsrc[0], "push-buffer", buffer, &ret);
+  ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (stream->appsrc[0]), buffer);
 
   return ret;
 }
@@ -488,6 +493,8 @@ gst_rtsp_media_stream_rtp (GstRTSPMediaStream *stream, GstBuffer *buffer)
  * Handle an RTCP buffer for the stream. This method is usually called when a
  * message has been received from a client using the TCP transport.
  *
+ * This function takes ownership of @buffer.
+ *
  * Returns: a GstFlowReturn.
  */
 GstFlowReturn
@@ -495,9 +502,9 @@ gst_rtsp_media_stream_rtcp (GstRTSPMediaStream *stream, GstBuffer *buffer)
 {
   GstFlowReturn ret;
 
-  g_signal_emit_by_name (stream->appsrc[1], "push-buffer", buffer, &ret);
+  ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (stream->appsrc[1]), buffer);
 
-  return GST_FLOW_ERROR;
+  return ret;
 }
 
 /* Allocate the udp ports and sockets */
@@ -710,20 +717,23 @@ on_timeout (GObject *session, GObject *source, GstRTSPMedia *media)
   g_message ("%p: source %p timeout", media, source);
 }
 
-static void
-handle_new_buffer (GstElement *sink, GstRTSPMediaStream *stream)
+static GstFlowReturn
+handle_new_buffer (GstAppSink *sink, gpointer user_data)
 {
   GList *walk;
   GstBuffer *buffer;
+  GstRTSPMediaStream *stream;
 
-  g_signal_emit_by_name (sink, "pull-buffer", &buffer);
+  buffer = gst_app_sink_pull_buffer (sink);
   if (!buffer)
-    return;
+    return GST_FLOW_OK;
+
+  stream = (GstRTSPMediaStream *) user_data;
 
   for (walk = stream->transports; walk; walk = g_list_next (walk)) {
     GstRTSPMediaTrans *tr = (GstRTSPMediaTrans *) walk->data;
 
-    if (sink == stream->appsink[0]) {
+    if (GST_ELEMENT_CAST (sink) == stream->appsink[0]) {
       if (tr->send_rtp) 
         tr->send_rtp (buffer, tr->transport->interleaved.min, tr->user_data);
     }
@@ -733,7 +743,15 @@ handle_new_buffer (GstElement *sink, GstRTSPMediaStream *stream)
     }
   }
   gst_buffer_unref (buffer);
+
+  return GST_FLOW_OK;
 }
+
+static GstAppSinkCallbacks sink_cb = {
+  NULL,  /* not interested in EOS */
+  NULL,  /* not interested in preroll buffers */
+  handle_new_buffer
+};
 
 /* prepare the pipeline objects to handle @stream in @media */
 static gboolean
@@ -762,15 +780,13 @@ setup_stream (GstRTSPMediaStream *stream, guint idx, GstRTSPMedia *media)
     stream->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
     stream->appsink[i] = gst_element_factory_make ("appsink", NULL);
     g_object_set (stream->appsink[i], "async", FALSE, "sync", FALSE, NULL);
-    g_object_set (stream->appsink[i], "emit-signals", TRUE, NULL);
+    g_object_set (stream->appsink[i], "emit-signals", FALSE, NULL);
     g_object_set (stream->appsink[i], "preroll-queue-len", 1, NULL);
     gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsink[i]);
     gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsrc[i]);
+    gst_app_sink_set_callbacks (GST_APP_SINK_CAST (stream->appsink[i]),
+		  &sink_cb, stream, NULL);
   }
-  g_signal_connect (stream->appsink[0], "new-buffer",
-	(GCallback) handle_new_buffer, stream);
-  g_signal_connect (stream->appsink[1], "new-buffer",
-	(GCallback) handle_new_buffer, stream);
 
   /* hook up the stream to the RTP session elements. */
   name = g_strdup_printf ("send_rtp_sink_%d", idx);
