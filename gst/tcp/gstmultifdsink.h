@@ -235,6 +235,8 @@ struct _GstMultiFdSink {
   gint64 time_min;	/* min time to queue */
   gint   buffers_min;   /* min number of buffers to queue */
 
+  gboolean resend_streamheader; /* resend streamheader if it changes */
+
   /* stats */
   gint buffers_queued;  /* number of queued buffers */
   gint bytes_queued;    /* number of queued bytes */

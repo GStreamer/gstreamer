@@ -181,6 +181,8 @@ enum
 #define DEFAULT_QOS_DSCP                -1
 #define DEFAULT_HANDLE_READ             TRUE
 
+#define DEFAULT_RESEND_STREAMHEADER      TRUE
+
 enum
 {
   PROP_0,
@@ -213,6 +215,8 @@ enum
   PROP_QOS_DSCP,
 
   PROP_HANDLE_READ,
+
+  PROP_RESEND_STREAMHEADER,
 
   PROP_LAST
 };
@@ -490,8 +494,8 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
       g_param_spec_int ("qos-dscp", "QoS diff srv code point",
           "Quality of Service, differentiated services code point (-1 default)",
-          -1, 63, DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
-
+          -1, 63, DEFAULT_QOS_DSCP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstMultiFdSink::handle-read
    *
@@ -502,7 +506,19 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_HANDLE_READ,
       g_param_spec_boolean ("handle-read", "Handle Read",
           "Handle client reads and discard the data",
-          DEFAULT_HANDLE_READ, G_PARAM_READWRITE));
+          DEFAULT_HANDLE_READ, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstMultiFdSink::resend-streamheader
+   *
+   * Resend the streamheaders to existing clients when they change.
+   *
+   * Since: 0.10.23
+   */
+  g_object_class_install_property (gobject_class, PROP_RESEND_STREAMHEADER,
+      g_param_spec_boolean ("resend-streamheader", "Resend streamheader",
+          "Resend the streamheader if it changes in the caps",
+          DEFAULT_RESEND_STREAMHEADER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstMultiFdSink::add:
@@ -694,6 +710,8 @@ gst_multi_fd_sink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
 
   this->qos_dscp = DEFAULT_QOS_DSCP;
   this->handle_read = DEFAULT_HANDLE_READ;
+
+  this->resend_streamheader = DEFAULT_RESEND_STREAMHEADER;
 
   this->header_flags = 0;
 }
@@ -1367,14 +1385,21 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
           send_streamheader = TRUE;
         } else {
           /* both old and new caps have streamheader set */
-          sh1 = gst_structure_get_value (s, "streamheader");
-          s = gst_caps_get_structure (caps, 0);
-          sh2 = gst_structure_get_value (s, "streamheader");
-          if (gst_value_compare (sh1, sh2) != GST_VALUE_EQUAL) {
+          if (!sink->resend_streamheader) {
             GST_DEBUG_OBJECT (sink,
-                "[fd %5d] new streamheader different from old, sending",
+                "[fd %5d] asked to not resend the streamheader, not sending",
                 client->fd.fd);
-            send_streamheader = TRUE;
+            send_streamheader = FALSE;
+          } else {
+            sh1 = gst_structure_get_value (s, "streamheader");
+            s = gst_caps_get_structure (caps, 0);
+            sh2 = gst_structure_get_value (s, "streamheader");
+            if (gst_value_compare (sh1, sh2) != GST_VALUE_EQUAL) {
+              GST_DEBUG_OBJECT (sink,
+                  "[fd %5d] new streamheader different from old, sending",
+                  client->fd.fd);
+              send_streamheader = TRUE;
+            }
           }
         }
       }
@@ -2685,6 +2710,9 @@ gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
     case PROP_HANDLE_READ:
       multifdsink->handle_read = g_value_get_boolean (value);
       break;
+    case PROP_RESEND_STREAMHEADER:
+      multifdsink->resend_streamheader = g_value_get_boolean (value);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2766,6 +2794,9 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_HANDLE_READ:
       g_value_set_boolean (value, multifdsink->handle_read);
+      break;
+    case PROP_RESEND_STREAMHEADER:
+      g_value_set_boolean (value, multifdsink->resend_streamheader);
       break;
 
     default:
