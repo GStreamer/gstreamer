@@ -1,0 +1,164 @@
+public static Gst.Caps NewEmpty () {
+  return new Gst.Caps ();
+}
+
+public Caps (Structure s) : this () {
+  Append (s);
+}
+
+public Caps (Structure[] s) : this () {
+  foreach (Structure o in s)
+    Append (o);
+}
+
+[DllImport ("gstreamersharpglue-0.10") ]
+extern static uint gstsharp_gst_caps_get_refcount_offset ();
+
+static uint refcount_offset = gstsharp_gst_caps_get_refcount_offset ();
+private int Refcount {
+  get {
+    unsafe {
+      int* raw_ptr = (int*) ( ( (byte*) Handle) + refcount_offset);
+      return (*raw_ptr);
+    }
+  }
+}
+
+public bool IsWritable {
+  get {
+    return (Refcount == 1);
+  }
+}
+
+/* FIXME: This is not optimal! */
+public void MakeWritable() {
+  if (IsWritable)
+    return;
+
+  IntPtr copy = gst_caps_copy (Raw);
+  Raw = copy;
+  /* ^--- Takes a second ref, not good */
+  Unref (Raw);
+  /* ^--- Sets Owned = false, wrong! */
+  Owned = true;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+private static extern IntPtr gst_caps_get_structure (IntPtr handle, uint index);
+
+public Structure this [uint index] {
+  get {
+    if (index >= Size)
+      throw new ArgumentOutOfRangeException ();
+
+    IntPtr raw_ptr = gst_caps_get_structure (Handle, (uint) index);
+
+    return (Gst.Structure) new Gst.Structure (raw_ptr);
+  }
+}
+
+private class StructureEnumerator : IEnumerator {
+  Gst.Caps caps;
+  long index;
+
+  public StructureEnumerator (Gst.Caps caps) {
+    this.caps = caps;
+    index = -1;
+  }
+
+  public object Current {
+    get {
+      if (index >= caps.Size)
+        throw new ArgumentOutOfRangeException ();
+      if (index == -1)
+        throw new ArgumentException ();
+
+      return caps[ (uint) index];
+    }
+  }
+
+  public bool MoveNext () {
+    index += 1;
+    return (index < caps.Size);
+  }
+
+  public void Reset () {
+    index = -1;
+  }
+}
+
+public IEnumerator GetEnumerator() {
+  return new StructureEnumerator (this);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_append_structure (IntPtr caps, IntPtr structure);
+
+public void Append (Structure s) {
+  if (!IsWritable)
+    throw new ApplicationException ();
+
+  gst_caps_append_structure (Handle, s.Copy().Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_append (IntPtr caps, IntPtr caps2);
+
+public void Append (Caps caps) {
+  if (!IsWritable)
+    throw new ApplicationException ();
+
+  gst_caps_append (Handle, caps.Copy().Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_merge_structure (IntPtr caps, IntPtr structure);
+
+public void Merge (Structure s) {
+  if (!IsWritable)
+    throw new ApplicationException ();
+
+  gst_caps_merge_structure (Handle, s.Copy().Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_merge (IntPtr caps, IntPtr caps2);
+
+public void Merge (Caps caps) {
+  if (!IsWritable)
+    throw new ApplicationException ();
+
+  gst_caps_merge (Handle, caps.Copy().Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_remove_structure (IntPtr caps, uint index);
+
+public void RemoveStructure (uint index) {
+  if (!IsWritable)
+    throw new ApplicationException ();
+  if (index >= Size)
+    throw new ArgumentOutOfRangeException ();
+
+  gst_caps_remove_structure (Handle, index);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_caps_do_simplify (IntPtr caps);
+
+public bool DoSimplify () {
+  if (!IsWritable)
+    throw new ApplicationException ();
+
+  return gst_caps_do_simplify (Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_truncate (IntPtr caps);
+
+public void Truncate () {
+  if (!IsWritable)
+    throw new ApplicationException ();
+
+  gst_caps_truncate (Handle);
+}

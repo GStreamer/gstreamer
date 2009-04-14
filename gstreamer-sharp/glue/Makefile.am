@@ -2,9 +2,11 @@ lib_LTLIBRARIES = libgstreamersharpglue-0.10.la
 
 libgstreamersharpglue_0_10_la_SOURCES =	\
 	buffer.c	\
+	caps.c          \
 	clock.c \
 	message.c \
 	bin.c \
+	structure.c \
 	gerror.c \
 	gobject.c
 

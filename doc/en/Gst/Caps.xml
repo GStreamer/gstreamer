@@ -1,5 +1,5 @@
 <Type Name="Caps" FullName="Gst.Caps">
-  <TypeSignature Language="C#" Value="public class Caps : GLib.Opaque" />
+  <TypeSignature Language="C#" Value="public class Caps : GLib.Opaque, System.Collections.IEnumerable" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -7,7 +7,11 @@
   <Base>
     <BaseTypeName>GLib.Opaque</BaseTypeName>
   </Base>
-  <Interfaces />
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.Collections.IEnumerable</InterfaceName>
+    </Interface>
+  </Interfaces>
   <Docs>
     <summary>To be added.</summary>
     <remarks>To be added.</remarks>
@@ -31,29 +35,12 @@
       <MemberType>Constructor</MemberType>
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Caps (Gst.Structure s);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="s" Type="Gst.Structure" /></Parameters><Docs><param name="s">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Caps (Gst.Structure[] s);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="s" Type="Gst.Structure[]" /></Parameters><Docs><param name="s">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Caps (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
       <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public Caps (Gst.Structure structure, IntPtr var_args);" />
-      <MemberType>Constructor</MemberType>
-      <Parameters><Parameter Name="structure" Type="Gst.Structure" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="structure">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Append">
-      <MemberSignature Language="C#" Value="public void Append (Gst.Caps caps2);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="caps2" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="caps2">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="AppendStructure">
-      <MemberSignature Language="C#" Value="public void AppendStructure (Gst.Structure structure);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="structure" Type="Gst.Structure" /></Parameters>
-      <Docs><param name="structure">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Copy">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Append"><MemberSignature Language="C#" Value="public void Append (Gst.Caps caps);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="caps" Type="Gst.Caps" /></Parameters><Docs><param name="caps">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Append"><MemberSignature Language="C#" Value="public void Append (Gst.Structure s);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="s" Type="Gst.Structure" /></Parameters><Docs><param name="s">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Copy">
       <MemberSignature Language="C#" Value="public Gst.Caps Copy ();" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
@@ -65,30 +52,7 @@
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
       <Parameters><Parameter Name="nth" Type="System.UInt32" /></Parameters>
       <Docs><param name="nth">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DoSimplify">
-      <MemberSignature Language="C#" Value="public bool DoSimplify ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Flags">
-      <MemberSignature Language="C#" Value="public Gst.CapsFlags Flags { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.CapsFlags</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="FromString">
-      <MemberSignature Language="C#" Value="public static Gst.Caps FromString (string str1ng);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="str1ng" Type="System.String" /></Parameters>
-      <Docs><param name="str1ng">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GetStructure">
-      <MemberSignature Language="C#" Value="public Gst.Structure GetStructure (uint index);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="index" Type="System.UInt32" /></Parameters>
-      <Docs><param name="index">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DoSimplify"><MemberSignature Language="C#" Value="public bool DoSimplify ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GetEnumerator"><MemberSignature Language="C#" Value="public System.Collections.IEnumerator GetEnumerator ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Collections.IEnumerator</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
@@ -138,42 +102,19 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="superset" Type="Gst.Caps" /></Parameters>
       <Docs><param name="superset">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="MakeWritable">
-      <MemberSignature Language="C#" Value="public Gst.Caps MakeWritable ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Merge"><MemberSignature Language="C#" Value="public void Merge (Gst.Caps caps2);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="caps2" Type="Gst.Caps" /></Parameters><Docs><param name="caps2">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="MergeStructure"><MemberSignature Language="C#" Value="public void MergeStructure (Gst.Structure structure);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="structure" Type="Gst.Structure" /></Parameters><Docs><param name="structure">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewEmpty">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="IsWritable"><MemberSignature Language="C#" Value="public bool IsWritable { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Item"><MemberSignature Language="C#" Value="public Gst.Structure this[uint index] { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Structure</ReturnType></ReturnValue><Parameters><Parameter Name="index" Type="System.UInt32" /></Parameters><Docs><param name="index">To be added.</param><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="MakeWritable"><MemberSignature Language="C#" Value="public void MakeWritable ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Merge"><MemberSignature Language="C#" Value="public void Merge (Gst.Caps caps);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="caps" Type="Gst.Caps" /></Parameters><Docs><param name="caps">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Merge"><MemberSignature Language="C#" Value="public void Merge (Gst.Structure s);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="s" Type="Gst.Structure" /></Parameters><Docs><param name="s">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewAny"><MemberSignature Language="C#" Value="public static Gst.Caps NewAny ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="NewEmpty">
       <MemberSignature Language="C#" Value="public static Gst.Caps NewEmpty ();" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Normalize">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NewFromString"><MemberSignature Language="C#" Value="public static Gst.Caps NewFromString (string str1ng);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue><Parameters><Parameter Name="str1ng" Type="System.String" /></Parameters><Docs><param name="str1ng">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Normalize">
       <MemberSignature Language="C#" Value="public Gst.Caps Normalize ();" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Refcount">
-      <MemberSignature Language="C#" Value="public int Refcount { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveStructure"><MemberSignature Language="C#" Value="public void RemoveStructure (uint idx);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="idx" Type="System.UInt32" /></Parameters><Docs><param name="idx">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Replace">
-      <MemberSignature Language="C#" Value="public void Replace (Gst.Caps newcaps);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="newcaps" Type="Gst.Caps" /></Parameters>
-      <Docs><param name="newcaps">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetSimpleValist">
-      <MemberSignature Language="C#" Value="public void SetSimpleValist (string field, IntPtr varargs);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="field" Type="System.String" /><Parameter Name="varargs" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="field">To be added.</param><param name="varargs">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Size">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveStructure"><MemberSignature Language="C#" Value="public void RemoveStructure (uint index);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="index" Type="System.UInt32" /></Parameters><Docs><param name="index">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Size">
       <MemberSignature Language="C#" Value="public uint Size { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
@@ -184,18 +125,7 @@
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
       <Parameters><Parameter Name="subtrahend" Type="Gst.Caps" /></Parameters>
       <Docs><param name="subtrahend">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Truncate">
-      <MemberSignature Language="C#" Value="public void Truncate ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Type">
-      <MemberSignature Language="C#" Value="public GLib.GType Type { set; get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Union">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Truncate"><MemberSignature Language="C#" Value="public void Truncate ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Union">
       <MemberSignature Language="C#" Value="public Gst.Caps Union (Gst.Caps caps2);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
@@ -220,4 +150,9 @@
     
     
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

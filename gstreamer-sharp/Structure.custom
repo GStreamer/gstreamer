@@ -1,5 +1,120 @@
-public Structure (string name, params object[] fields) : this (name)
-{
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_structure_get_name (IntPtr raw);
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_structure_set_name (IntPtr raw, IntPtr name);
+
+public string Name {
+  get  {
+    IntPtr raw_ret = gst_structure_get_name (Handle);
+    string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+    return ret;
+  }
+  set  {
+    if (!IsMutable)
+      throw new ApplicationException ();
+
+    IntPtr native_value = GLib.Marshaller.StringToPtrGStrdup (value);
+    gst_structure_set_name (Handle, native_value);
+    GLib.Marshaller.Free (native_value);
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_structure_set_value (IntPtr raw, IntPtr fieldname, IntPtr value);
+
+public void SetValue (string fieldname, GLib.Value value) {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  IntPtr native_fieldname = GLib.Marshaller.StringToPtrGStrdup (fieldname);
+  IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+  gst_structure_set_value (Handle, native_fieldname, native_value);
+  GLib.Marshaller.Free (native_fieldname);
+  value = (GLib.Value) Marshal.PtrToStructure (native_value, typeof (GLib.Value));
+  Marshal.FreeHGlobal (native_value);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_structure_fixate_field_boolean (IntPtr raw, IntPtr field_name, bool target);
+
+public bool FixateFieldBoolean (string field_name, bool target) {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  bool raw_ret = gst_structure_fixate_field_boolean (Handle, native_field_name, target);
+  bool ret = raw_ret;
+  GLib.Marshaller.Free (native_field_name);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_structure_remove_all_fields (IntPtr raw);
+
+public void RemoveAllFields() {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  gst_structure_remove_all_fields (Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_structure_remove_field (IntPtr raw, IntPtr fieldname);
+
+public void RemoveField (string fieldname) {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  IntPtr native_fieldname = GLib.Marshaller.StringToPtrGStrdup (fieldname);
+  gst_structure_remove_field (Handle, native_fieldname);
+  GLib.Marshaller.Free (native_fieldname);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_structure_fixate_field_nearest_double (IntPtr raw, IntPtr field_name, double target);
+
+public bool FixateFieldNearestDouble (string field_name, double target) {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  bool raw_ret = gst_structure_fixate_field_nearest_double (Handle, native_field_name, target);
+  bool ret = raw_ret;
+  GLib.Marshaller.Free (native_field_name);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_structure_fixate_field_nearest_int (IntPtr raw, IntPtr field_name, int target);
+
+public bool FixateFieldNearestInt (string field_name, int target) {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  bool raw_ret = gst_structure_fixate_field_nearest_int (Handle, native_field_name, target);
+  bool ret = raw_ret;
+  GLib.Marshaller.Free (native_field_name);
+  return ret;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_structure_fixate_field_nearest_fraction (IntPtr raw, IntPtr field_name, int target_numerator, int target_denominator);
+
+public bool FixateFieldNearestFraction (string field_name, int target_numerator, int target_denominator) {
+  if (!IsMutable)
+    throw new ApplicationException ();
+
+  IntPtr native_field_name = GLib.Marshaller.StringToPtrGStrdup (field_name);
+  bool raw_ret = gst_structure_fixate_field_nearest_fraction (Handle, native_field_name, target_numerator, target_denominator);
+  bool ret = raw_ret;
+  GLib.Marshaller.Free (native_field_name);
+  return ret;
+}
+
+
+public Structure (string name, params object[] fields) : this (name) {
   Set (fields);
 }
 
@@ -34,7 +149,7 @@ public object this [string field] {
 
     v = Gst.Value.CreateValue (value);
 
-    Set (field, value);
+    Set (field, v);
   }
   get {
     if (field == null)
@@ -62,4 +177,29 @@ public static Structure NewFromString (string structure) {
 
 [DllImport ("gstreamer-0.10.dll") ]
 private static extern IntPtr gst_structure_from_string (string structure, IntPtr end);
+
+public bool FixateFieldNearestFraction (string field_name, Fraction target) {
+  return FixateFieldNearestFraction (field_name, target.Numerator, target.Denominator);
+}
+
+
+[DllImport ("gstreamersharpglue-0.10") ]
+extern static uint gstsharp_gst_structure_get_parent_refcount_offset ();
+
+static uint parent_refcount_offset = gstsharp_gst_structure_get_parent_refcount_offset ();
+
+public bool IsMutable {
+  get {
+    unsafe {
+      int **parent_refcount = (int **) ( ( (byte*) Handle) + parent_refcount_offset);
+
+      if (*parent_refcount == (int *) IntPtr.Zero)
+        return true;
+      if (**parent_refcount == 1)
+        return true;
+
+      return false;
+    }
+  }
+}
 

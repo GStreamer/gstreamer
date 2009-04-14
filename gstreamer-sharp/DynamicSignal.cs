@@ -130,9 +130,6 @@ namespace Gst {
       }
     }
 
-    [DllImport ("libgobject-2.0-0.dll") ]
-    static extern IntPtr g_value_peek_pointer (IntPtr ptr);
-
     static void OnMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr,
                            IntPtr ihint, IntPtr data) {
       object [] args = new object[argc - 1];

@@ -1,18 +1,5 @@
 <?xml version="1.0"?>
 <metadata>
-  <attr path="/api/namespace/boxed[@name='Caps']/method[@name='FromString']/return-type" name="owned">true</attr>
-
-  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildAdded']" name="name">EmitChildAdded</attr>
-  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildRemoved']" name="name">EmitChildRemoved</attr>
-
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_RESOLUTION']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_MASTER']" name="value">MiniObjectFlags.Last &lt;&lt; 5</attr>
-  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
-
   <attr path="/api/namespace/object[@name='Bin']" name="disable_gtype_ctor">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='AddMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
@@ -58,6 +45,54 @@
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLUSHING']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
+
+  <add-node path="/api/namespace/boxed[@name='Caps']">
+    <implements>
+      <interface name="IEnumerable" />
+    </implements>
+  </add-node>
+  <attr path="/api/namespace/boxed[@name='Caps']/field[@name='Refcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/field[@name='Type']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/field[@name='Flags']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_from_string']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_from_string']" name="name">NewFromString</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_copy_nth']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_replace']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_make_writable']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_truncate']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_do_simplify']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_set_simple_valist']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_set_simple']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_get_structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_merge_structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_remove_structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_append_structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_append']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_merge']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_intersect']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_union']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_normalize']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_subtract']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_full_valist']" name="hidden">1</attr>
+  <change-node-type path="/api/namespace/boxed[@name='Caps']/constructor[@cname='gst_caps_new_any']">method</change-node-type>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_new_any']" name="name">NewAny</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_new_any']" name="shared">true</attr>
+  <add-node path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_new_any']">
+    <return-type type="GstCaps*" owned="true" />
+  </add-node>
+
+  <attr path="/api/namespace/enum[@name='CapsFlags']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildAdded']" name="name">EmitChildAdded</attr>
+  <attr path="/api/namespace/interface[@name='ChildProxy']/method[@name='ChildRemoved']" name="name">EmitChildRemoved</attr>
+
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 1</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_RESOLUTION']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_MASTER']" name="value">MiniObjectFlags.Last &lt;&lt; 5</attr>
+  <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
   <attr path="/api/namespace/object[@name='Element']/method[@name='LinkMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@name='UnlinkMany']" name="hidden">1</attr>
@@ -324,6 +359,16 @@
   <attr path="/api/namespace/boxed[@name='Structure']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/field[@name='ParentRefcount']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@name='SetParentRefcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_value']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_fixate_field_boolean']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_fixate_field_boolean']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_remove_all_fields']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_remove_field']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_fixate_field_nearest_double']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_fixate_field_nearest_int']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_fixate_field_nearest_fraction']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_name_id']" name="hidden">1</attr>
   <change-node-type path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_empty_new']">constructor</change-node-type>

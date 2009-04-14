@@ -23,7 +23,6 @@
       <Type Name="BusSyncHandler" Kind="Delegate" />
       <Type Name="BusSyncReply" Kind="Enumeration" />
       <Type Name="Caps" Kind="Class" />
-      <Type Name="CapsFlags" Kind="Enumeration" />
       <Type Name="ChildAddedArgs" Kind="Class" />
       <Type Name="ChildAddedHandler" Kind="Delegate" />
       <Type Name="ChildProxy" Kind="Interface" />
