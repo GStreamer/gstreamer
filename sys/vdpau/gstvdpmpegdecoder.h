@@ -46,8 +46,6 @@ struct _GstVdpMpegDecoder
   VdpDecoder decoder;
   VdpPictureInfoMPEG1Or2 vdp_info;
   GstBuffer *f_buffer;
-
-  gboolean want_slice;
   
   GstAdapter *adapter;
   gint slices;
