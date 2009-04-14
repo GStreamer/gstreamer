@@ -38,9 +38,9 @@ public class CapsTest
     }
 
     [Test]
-    public void TestFromString()
+    public void TestNewFromString()
     {
-        Caps caps = Caps.FromString("video/x-raw-yuv, " + 
+        Caps caps = Caps.NewFromString("video/x-raw-yuv, " + 
                                     "format=(fourcc)I420, " +
                                     "width=(int)384, " + 
                                     "height=(int)288, " + 
@@ -58,12 +58,12 @@ public class CapsTest
     [Test]
     public void TestIntersecting()
     {
-        Caps caps1 = Caps.FromString("video/x-raw-yuv, " + 
+        Caps caps1 = Caps.NewFromString("video/x-raw-yuv, " + 
                                      "format=(fourcc)I420, " + 
                                      "width=(int)[ 1,1000 ], " + 
                                      "height=(int)[ 1, 1000 ], " + 
                                      "framerate=(fraction)[ 0/1, 100/1 ]");
-        Caps caps2 = Caps.FromString("video/x-raw-yuv, " + 
+        Caps caps2 = Caps.NewFromString("video/x-raw-yuv, " + 
                                      "format=(fourcc)I420, " + 
                                      "width=(int)640, " + 
                                      "height=(int)480");
@@ -88,10 +88,10 @@ public class CapsTest
     [Test]
     public void TestUnion()
     {
-        Caps caps1 = Caps.FromString("video/x-raw-yuv, " + 
+        Caps caps1 = Caps.NewFromString("video/x-raw-yuv, " + 
                                      "format=(fourcc)I420, " + 
                                      "width=(int)640"); 
-        Caps caps2 = Caps.FromString("video/x-raw-yuv, " + 
+        Caps caps2 = Caps.NewFromString("video/x-raw-yuv, " + 
                                      "format=(fourcc)I420, " + 
                                      "height=(int)480");
         Assert.IsNotNull(caps1);

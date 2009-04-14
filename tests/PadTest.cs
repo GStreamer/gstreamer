@@ -49,7 +49,7 @@ public class PadTest
 
     public static Caps PadGetCapsStub(Pad pad)
     {
-        return Caps.FromString("video/x-raw-yuv");
+        return Caps.NewFromString("video/x-raw-yuv");
     }
 
     [Test]
@@ -129,56 +129,19 @@ public class PadTest
 	{
 		Pad src = new Pad("source", PadDirection.Src);
 		Assert.IsNotNull(src, "Pad could not be created");
-		Assert.AreEqual(src.Refcount, 1, "source pad");
 
 		string name = src.Name;
 		Assert.AreEqual(name, "source");
-		Assert.AreEqual(src.Refcount, 1, "source pad");
 
 		Pad sink = new Pad("sink", PadDirection.Sink);
 		Assert.IsNotNull(sink, "Pad could not be created");
 
 		Assert.AreEqual(src.Link(sink), PadLinkReturn.Noformat);
-		Assert.AreEqual(src.Refcount, 1, "source pad");
-		Assert.AreEqual(sink.Refcount, 1, "sink pad");
 
 		sink.Dispose();
 		src.Dispose();
 	}
 	
-	[Test]
-	public void TestRefcount()
-	{
-		Pad sink = new Pad("sink", PadDirection.Sink);
-		Assert.IsNotNull(sink, "Pad could not be created");
-		
-		Pad src = new Pad("src", PadDirection.Src);
-		Assert.IsNotNull(src, "Pad could not be created");
-
-		Caps caps = Caps.FromString("foo/bar");
-
-		Assert.AreEqual(caps.Refcount, 1, "caps");
-
-		src.SetCaps(caps);
-		sink.SetCaps(caps);
-
-		Assert.AreEqual(caps.Refcount, 3, "caps");
-
-		PadLinkReturn plr = src.Link(sink);
-		Assert.AreEqual(plr, PadLinkReturn.Ok, "Pad link failed");	
-
-		Assert.AreEqual(caps.Refcount, 3, "caps");
-		
-		src.Unlink(sink);
-		Assert.AreEqual(caps.Refcount, 3, "caps");
-
-		src.Dispose();
-		sink.Dispose();
-		Assert.AreEqual(caps.Refcount, 1, "caps");
-
-		caps.Dispose();
-	}
-
 	[Test]
 	public void TestGetAllowedCaps()
 	{
@@ -204,11 +167,10 @@ public class PadTest
 		Caps caps = src.AllowedCaps;
 		Assert.IsNull(caps);
 
-		caps = Caps.FromString("foo/bar");
+		caps = Caps.NewFromString("foo/bar");
 
 		src.SetCaps(caps);
 		sink.SetCaps(caps);
-		Assert.AreEqual(caps.Refcount, 3, "caps");
 
 		PadLinkReturn plr = src.Link(sink);
 		Assert.AreEqual(plr, PadLinkReturn.Ok);
@@ -217,18 +179,13 @@ public class PadTest
 		Assert.IsNotNull(gotcaps);
 		Assert.IsTrue(gotcaps.IsEqual(caps));
 
-		Assert.AreEqual(gotcaps.Refcount, 1, "gotcaps");
 		gotcaps.Dispose();
 
 		src.Unlink(sink);
-		Assert.AreEqual(caps.Refcount, 3, "caps");
-		Assert.AreEqual(src.Refcount, 1, "src");
-		Assert.AreEqual(sink.Refcount, 1, "sink");
 
 		src.Dispose();
 		sink.Dispose();
 		
-		Assert.AreEqual(caps.Refcount, 1, "caps");
 		caps.Dispose();
 	}
 
@@ -246,13 +203,11 @@ public class PadTest
 		Caps caps = src.AllowedCaps;
 		Assert.IsNull(caps);
 
-		caps = Caps.FromString("foo/bar");
+		caps = Caps.NewFromString("foo/bar");
 		src.SetCaps(caps);
-		Assert.AreEqual(caps.Refcount, 2, "caps");
 
 		Gst.Buffer buffer = new Gst.Buffer();
 		Assert.AreEqual(src.Push(buffer), FlowReturn.NotLinked);
-		Assert.AreEqual(buffer.Refcount, 1, "buffer");
 		buffer.Dispose();
 
 		ulong handler_id = src.AddBufferProbe(new Pad.BufferProbeDelegate(ProbeHandler));
@@ -261,12 +216,8 @@ public class PadTest
 		buffer.Dispose();
 		src.RemoveBufferProbe((uint)handler_id);
 
-		Assert.AreEqual(caps.Refcount, 2, "caps");
-		Assert.AreEqual(src.Refcount, 1, "src");
-		
 		src.Dispose();
 
-		Assert.AreEqual(caps.Refcount, 1, "caps");
 		caps.Dispose();	
 	}
 }

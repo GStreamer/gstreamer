@@ -116,7 +116,7 @@ public class DecodeBinTranscoder : IDisposable
         }
 
         Caps caps = args.Pad.Caps;
-        Structure structure = caps.GetStructure(0);
+        Structure structure = caps[0];
         
         if(!structure.Name.StartsWith("audio")) {
             return;

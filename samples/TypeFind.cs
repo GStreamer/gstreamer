@@ -33,8 +33,7 @@ public static class GstTypefindTest
     
     private static void OnHaveType(object o, GLib.SignalArgs args) 
     {
-		Caps caps = args.Args[1] as Caps;
-		caps.Refcount++;
+	Caps caps = args.Args[1] as Caps;
         Console.WriteLine("MimeType: {0}", caps);            
     }
 }
