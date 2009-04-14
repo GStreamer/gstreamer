@@ -212,7 +212,9 @@ gst_param_spec_fraction (const gchar * name, const gchar * nick,
  * @element: the GstElement of the property to be modified
  *
  * Checks if an object property for the GstElement given in @element
- * may be modified given the current state of @element.
+ * may be modified given the current state of @element.  In order to
+ * avoid races, this function should be called with the object lock
+ * of @element held.
  *
  * Note: By the time this method returns, the state of the element might have
  * changed already. Use this method only if you can control the state of the
@@ -233,7 +235,6 @@ gst_param_spec_is_mutable (GParamSpec * param_spec, GstElement * element)
     return TRUE;
   }
 
-  GST_OBJECT_LOCK (element);
   state = GST_STATE (element);
   if (param_spec->flags & GST_PARAM_MUTABLE_PAUSED) {
     if (state > GST_STATE_PAUSED) {
@@ -248,7 +249,6 @@ gst_param_spec_is_mutable (GParamSpec * param_spec, GstElement * element)
       ret = FALSE;
     }
   }
-  GST_OBJECT_UNLOCK (element);
 
   return ret;
 }
