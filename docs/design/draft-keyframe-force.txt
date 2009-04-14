@@ -48,7 +48,7 @@ Implementation:
 	                                 triggered the event.
 	 (G_TYPE_UINT64)"stream-time"  : the stream position that triggered the
 	                                 event.
-	 (G_TYPE_UINT64)"running_time" : the running time of the stream when the 
+	 (G_TYPE_UINT64)"running-time" : the running time of the stream when the 
 	                                 event was triggered.
 	 ....                          : optional other data fields.
 
@@ -70,3 +70,18 @@ Implementation:
   3) The application receives the GstForceKeyUnit on a sink padprobe of the sink
      and reconfigures the sink to make it perform new actions after receiving
      the next buffer. 
+
+
+Upstream
+--------
+
+When using RTP packets can get lost or receivers can be added at any time,
+they may request a new key frame.
+
+An downstream element sends an upstream "GstForceKeyUnit" event up the
+pipeline.
+
+When an element produces some kind of key unit in output, but has
+no such concept in its input (like an encoder that takes raw frames),
+it consumes the event (doesn't pass it upstream), and instead sends
+a downstream GstForceKeyUnit event and a new keyframe.

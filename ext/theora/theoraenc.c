@@ -184,6 +184,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_BOILERPLATE (GstTheoraEnc, gst_theora_enc, GstElement, GST_TYPE_ELEMENT);
 
 static gboolean theora_enc_sink_event (GstPad * pad, GstEvent * event);
+static gboolean theora_enc_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn theora_enc_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_enc_change_state (GstElement * element,
     GstStateChange transition);
@@ -292,6 +293,7 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
 
   enc->srcpad =
       gst_pad_new_from_static_template (&theora_enc_src_factory, "src");
+  gst_pad_set_event_function (enc->srcpad, theora_enc_src_event);
   gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
   gst_segment_init (&enc->segment, GST_FORMAT_UNDEFINED);
@@ -668,6 +670,41 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
+theora_enc_src_event (GstPad * pad, GstEvent * event)
+{
+  GstTheoraEnc *enc;
+  gboolean res = TRUE;
+
+  enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      const GstStructure *s;
+
+      s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        GST_OBJECT_LOCK (enc);
+        enc->force_keyframe = TRUE;
+        GST_OBJECT_UNLOCK (enc);
+        /* consume the event */
+        res = TRUE;
+        gst_event_unref (event);
+      } else {
+        res = gst_pad_push_event (enc->sinkpad, event);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_push_event (enc->sinkpad, event);
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
 theora_enc_is_discontinuous (GstTheoraEnc * enc, GstClockTime timestamp,
     GstClockTime duration)
 {
@@ -704,6 +741,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
   ogg_packet op;
   GstClockTime timestamp, duration, running_time;
   GstFlowReturn ret;
+  gboolean force_keyframe;
 
   enc = GST_THEORA_ENC (GST_PAD_PARENT (pad));
 
@@ -716,8 +754,33 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
    */
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+
   running_time =
       gst_segment_to_running_time (&enc->segment, GST_FORMAT_TIME, timestamp);
+
+  /* see if we need to schedule a keyframe */
+  GST_OBJECT_LOCK (enc);
+  force_keyframe = enc->force_keyframe;
+  enc->force_keyframe = FALSE;
+  GST_OBJECT_UNLOCK (enc);
+
+  if (force_keyframe) {
+    GstClockTime stream_time;
+    GstStructure *s;
+
+    stream_time = gst_segment_to_stream_time (&enc->segment,
+        GST_FORMAT_TIME, timestamp);
+
+    s = gst_structure_new ("GstForceKeyUnit",
+        "timestamp", G_TYPE_UINT64, timestamp,
+        "stream-time", G_TYPE_UINT64, stream_time,
+        "running-time", G_TYPE_UINT64, running_time, NULL);
+
+    theora_enc_force_keyframe (enc);
+
+    gst_pad_push_event (enc->srcpad,
+        gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s));
+  }
 
   /* make sure we copy the discont flag to the next outgoing buffer when it's
    * set on the incomming buffer */
@@ -1044,6 +1107,7 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       theora_info_init (&enc->info);
       theora_comment_init (&enc->comment);
       enc->packetno = 0;
+      enc->force_keyframe = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
