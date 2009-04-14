@@ -65,9 +65,7 @@ struct _GstRtpH263Pay
 
   GstAdapter *adapter;
   GstClockTime first_ts;
-#if 0
   gboolean prop_payload_mode;
-#endif
   guint8 *data;
   guint available_data;
 
