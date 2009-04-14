@@ -47,6 +47,8 @@ typedef struct _GstSystemClockPrivate GstSystemClockPrivate;
  * @GST_CLOCK_TYPE_REALTIME: time since Epoch
  * @GST_CLOCK_TYPE_MONOTONIC: monotonic time since some unspecified starting
  *                            point
+ *
+ * The different kind of clocks.
  */
 typedef enum {
   GST_CLOCK_TYPE_REALTIME	= 0,
