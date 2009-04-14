@@ -3989,14 +3989,12 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
       return GST_FLOW_OK;
     } else if (tag == GST_RIFF_TAG_idx1) {
       GST_DEBUG ("Found index tag, stream done");
-      gst_avi_demux_push_event (avi, gst_event_new_eos ());
       avi->have_eos = TRUE;
-      return GST_FLOW_OK;
+      return GST_FLOW_UNEXPECTED;
     } else {
       GST_DEBUG ("No more stream chunks, send EOS");
-      gst_avi_demux_push_event (avi, gst_event_new_eos ());
       avi->have_eos = TRUE;
-      return GST_FLOW_OK;
+      return GST_FLOW_UNEXPECTED;
     }
 
     if (!gst_avi_demux_peek_chunk (avi, &tag, &size)) {
