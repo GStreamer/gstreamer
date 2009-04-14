@@ -47,7 +47,7 @@ GType gst_vdp_video_buffer_get_type (void);
 GstVdpVideoBuffer* gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type, gint width, gint height);
 
 #define GST_VDPAU_VIDEO_CAPS \
-  "video/vdpau-video, " \
+  "video/x-vdpau-video, " \
   "chroma-type = (int)[0,2], " \
   "width = (int)[1,4096], " \
   "height = (int)[1,4096]"

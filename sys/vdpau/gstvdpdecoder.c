@@ -46,7 +46,7 @@ enum
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/vdpau-video, " "chroma-type = (int) 0"));
+    GST_STATIC_CAPS ("video/x-vdpau-video, " "chroma-type = (int) 0"));
 
 #define DEBUG_INIT(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_decoder_debug, "vdpaudecoder", 0, "vdpaudecoder base class");
