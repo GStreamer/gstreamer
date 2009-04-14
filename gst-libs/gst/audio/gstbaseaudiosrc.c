@@ -968,6 +968,9 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   } else {
     GstClockTime base_time;
 
+    /* to get the timestamp against the clock we also need to add our offset */
+    timestamp = gst_audio_clock_adjust (clock, timestamp);
+
     /* we are not slaved, subtract base_time */
     base_time = GST_ELEMENT_CAST (src)->base_time;
 
