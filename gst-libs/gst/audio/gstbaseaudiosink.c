@@ -455,8 +455,9 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
       sink->ringbuffer->spec.rate);
 
   GST_DEBUG_OBJECT (sink,
-      "processed samples: raw %llu, delay %u, real %llu, time %"
-      GST_TIME_FORMAT, raw, delay, samples, GST_TIME_ARGS (result));
+      "processed samples: raw %" G_GUINT64_FORMAT ", delay %u, real %"
+      G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT,
+      raw, delay, samples, GST_TIME_ARGS (result));
 
   return result;
 }
@@ -1244,8 +1245,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   time = GST_BUFFER_TIMESTAMP (buf);
 
   GST_DEBUG_OBJECT (sink,
-      "time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT
-      ", samples %u", GST_TIME_ARGS (time), in_offset,
+      "time %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT ", start %"
+      GST_TIME_FORMAT ", samples %u", GST_TIME_ARGS (time), in_offset,
       GST_TIME_ARGS (bsink->segment.start), samples);
 
   data = GST_BUFFER_DATA (buf);
