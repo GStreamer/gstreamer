@@ -356,6 +356,16 @@
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_PAUSED_TO_READY']" name="value">(State.Paused &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_NULL']" name="value">(State.Ready &lt;&lt; 3) | State.Null</attr>
 
+  <change-node-type path="/api/namespace/struct[@name='StaticCaps']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='StaticCaps']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='StaticCaps']/method[@cname='gst_static_caps_get']" name="name">GetCaps</attr>
+  <attr path="/api/namespace/boxed[@name='StaticCaps']/method[@cname='gst_static_caps_get']/return-type" name="owned">true</attr>
+
+  <change-node-type path="/api/namespace/struct[@name='StaticPadTemplate']">boxed</change-node-type>
+  <attr path="/api/namespace/boxed[@name='StaticPadTemplate']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='StaticPadTemplate']/method[@cname='gst_static_pad_template_get']" name="name">GetPadTemplate</attr>
+  <attr path="/api/namespace/boxed[@name='StaticPadTemplate']/method[@cname='gst_static_pad_template_get']" name="owned">true</attr>
+
   <attr path="/api/namespace/boxed[@name='Structure']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/field[@name='ParentRefcount']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@name='SetParentRefcount']" name="hidden">1</attr>

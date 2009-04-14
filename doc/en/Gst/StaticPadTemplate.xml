@@ -1,11 +1,11 @@
 <Type Name="StaticPadTemplate" FullName="Gst.StaticPadTemplate">
-  <TypeSignature Language="C#" Value="public struct StaticPadTemplate" />
+  <TypeSignature Language="C#" Value="public class StaticPadTemplate : GLib.Opaque" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
   </AssemblyInfo>
   <Base>
-    <BaseTypeName>System.ValueType</BaseTypeName>
+    <BaseTypeName>GLib.Opaque</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
@@ -17,54 +17,17 @@
     
     
     
-    <Member MemberName="Caps">
+    <Member MemberName=".ctor"><MemberSignature Language="C#" Value="public StaticPadTemplate (IntPtr raw);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters><Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public StaticPadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="name_template" Type="System.String" /><Parameter Name="direction" Type="Gst.PadDirection" /><Parameter Name="presence" Type="Gst.PadPresence" /><Parameter Name="caps" Type="Gst.Caps" /></Parameters><Docs><param name="name_template">To be added.</param><param name="direction">To be added.</param><param name="presence">To be added.</param><param name="caps">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Caps">
       <MemberSignature Language="C#" Value="public Gst.Caps Caps { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>Gst.Caps</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Direction">
-      <MemberSignature Language="C#" Value="public Gst.PadDirection Direction;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.PadDirection</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Get">
-      <MemberSignature Language="C#" Value="public Gst.PadTemplate Get ();" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.PadTemplate</ReturnType></ReturnValue>
-      <Parameters />
-      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Direction"><MemberSignature Language="C#" Value="public Gst.PadDirection Direction { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PadDirection</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>GLib.GType</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NameTemplate">
-      <MemberSignature Language="C#" Value="public string NameTemplate;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="New">
-      <MemberSignature Language="C#" Value="public static Gst.StaticPadTemplate New (IntPtr raw);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>Gst.StaticPadTemplate</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="raw">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Presence">
-      <MemberSignature Language="C#" Value="public Gst.PadPresence Presence;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.PadPresence</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="StaticCaps">
-      <MemberSignature Language="C#" Value="public Gst.StaticCaps StaticCaps;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.StaticCaps</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Zero">
-      <MemberSignature Language="C#" Value="public static Gst.StaticPadTemplate Zero;" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.StaticPadTemplate</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="NameTemplate"><MemberSignature Language="C#" Value="public string NameTemplate { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.String</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="PadTemplate"><MemberSignature Language="C#" Value="public Gst.PadTemplate PadTemplate { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PadTemplate</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="Presence"><MemberSignature Language="C#" Value="public Gst.PadPresence Presence { get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.PadPresence</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member>
     
     
     
