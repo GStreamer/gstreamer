@@ -164,6 +164,27 @@ static const gchar *rtsp_headers[] = {
   "ETag",                       /* ETag */
   "If-Match",                   /* If-Match */
 
+  /* WM extensions [MS-RTSP] */
+  "Accept-Charset",             /* Accept-Charset */
+  "Supported",                  /* Supported */
+  "Vary",                       /* Vary */
+  "X-Accelerate-Streaming",     /* X-Accelerate-Streaming */
+  "X-Accept-Authentication",    /* X-Accept-Authentication */
+  "X-Accept-Proxy-Authentication",      /* X-Accept-Proxy-Authentication */
+  "X-Broadcast-Id",             /* X-Broadcast-Id */
+  "X-Burst-Streaming",          /* X-Burst-Streaming */
+  "X-Notice",                   /* X-Notice */
+  "X-Player-Lag-Time",          /* X-Player-Lag-Time */
+  "X-Playlist",                 /* X-Playlist */
+  "X-Playlist-Change-Notice",   /* X-Playlist-Change-Notice */
+  "X-Playlist-Gen-Id",          /* X-Playlist-Gen-Id */
+  "X-Playlist-Seek-Id",         /* X-Playlist-Seek-Id */
+  "X-Proxy-Client-Agent",       /* X-Proxy-Client-Agent */
+  "X-Proxy-Client-Verb",        /* X-Proxy-Client-Verb */
+  "X-Receding-PlaylistChange",  /* X-Receding-PlaylistChange */
+  "X-RTP-Info",                 /* X-RTP-Info */
+  "X-StartupProfile",           /* X-StartupProfile */
+
   NULL
 };
 

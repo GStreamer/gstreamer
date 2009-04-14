@@ -287,7 +287,29 @@ typedef enum {
 
   /* Since 0.10.23 */
   GST_RTSP_HDR_ETAG,                /* ETag */
-  GST_RTSP_HDR_IF_MATCH             /* If-Match */
+  GST_RTSP_HDR_IF_MATCH,            /* If-Match */
+
+  /* WM extensions [MS-RTSP] Since 0.10.23 */
+  GST_RTSP_HDR_ACCEPT_CHARSET,      /* Accept-Charset */
+  GST_RTSP_HDR_SUPPORTED,           /* Supported */
+  GST_RTSP_HDR_VARY,                /* Vary */
+  GST_RTSP_HDR_X_ACCELERATE_STREAMING,    /* X-Accelerate-Streaming */
+  GST_RTSP_HDR_X_ACCEPT_AUTHENT,    /* X-Accept-Authentication */
+  GST_RTSP_HDR_X_ACCEPT_PROXY_AUTHENT,    /* X-Accept-Proxy-Authentication */
+  GST_RTSP_HDR_X_BROADCAST_ID,      /* X-Broadcast-Id */
+  GST_RTSP_HDR_X_BURST_STREAMING,   /* X-Burst-Streaming */
+  GST_RTSP_HDR_X_NOTICE,            /* X-Notice */
+  GST_RTSP_HDR_X_PLAYER_LAG_TIME,   /* X-Player-Lag-Time */
+  GST_RTSP_HDR_X_PLAYLIST,          /* X-Playlist */
+  GST_RTSP_HDR_X_PLAYLIST_CHANGE_NOTICE,  /* X-Playlist-Change-Notice */
+  GST_RTSP_HDR_X_PLAYLIST_GEN_ID,   /* X-Playlist-Gen-Id */
+  GST_RTSP_HDR_X_PLAYLIST_SEEK_ID,  /* X-Playlist-Seek-Id */
+  GST_RTSP_HDR_X_PROXY_CLIENT_AGENT,      /* X-Proxy-Client-Agent */
+  GST_RTSP_HDR_X_PROXY_CLIENT_VERB, /* X-Proxy-Client-Verb */
+  GST_RTSP_HDR_X_RECEDING_PLAYLISTCHANGE, /* X-Receding-PlaylistChange */
+  GST_RTSP_HDR_X_RTP_INFO,          /* X-RTP-Info */
+  GST_RTSP_HDR_X_STARTUPPROFILE     /* X-StartupProfile */
+
 } GstRTSPHeaderField;
 
 typedef enum {
