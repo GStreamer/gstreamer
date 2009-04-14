@@ -792,6 +792,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
   if (is_colored) {
 #ifndef G_OS_WIN32
+    /* colors, non-windows */
     gchar *color = NULL;
     gchar *clear;
     gchar pidcolor[10];
@@ -812,9 +813,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #undef PRINT_FMT
     g_free (color);
 #else
+    /* colors, windows. We take a lock to keep colors and content together.
+     * Maybe there is a better way but for now this will do the right
+     * thing. */
+    static GStaticMutex win_print_mutex = G_STATIC_MUTEX_INIT;
     const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 #define SET_COLOR(c) \
   SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c));
+    g_static_mutex_lock (&win_print_mutex);
     /* timestamp */
     g_printerr ("%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
     /* pid */
@@ -834,8 +840,10 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     /* message */
     SET_COLOR (clear);
     g_printerr (" %s\n", gst_debug_message_get (message));
+    g_static_mutex_unlock (&win_print_mutex);
 #endif
   } else {
+    /* no color, all platforms */
 #define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
     g_printerr ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed), pid,
         g_thread_self (), gst_debug_level_get_name (level),
