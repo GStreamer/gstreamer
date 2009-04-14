@@ -23,6 +23,7 @@
 #ifndef __GST_AUDIO_CLOCK_H__
 #define __GST_AUDIO_CLOCK_H__
 
+#include <gst/gst.h>
 #include <gst/gstsystemclock.h>
 
 G_BEGIN_DECLS
@@ -37,6 +38,8 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_CLOCK))
 #define GST_IS_AUDIO_CLOCK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_CLOCK))
+#define GST_AUDIO_CLOCK_CAST(obj) \
+  ((GstAudioClock*)(obj))
 
 typedef struct _GstAudioClock GstAudioClock;
 typedef struct _GstAudioClockClass GstAudioClockClass;
@@ -91,6 +94,9 @@ GType           gst_audio_clock_get_type        (void);
 GstClock*       gst_audio_clock_new             (const gchar *name, GstAudioClockGetTimeFunc func,
                                                  gpointer user_data);
 void            gst_audio_clock_reset           (GstAudioClock *clock, GstClockTime time);
+
+GstClockTime    gst_audio_clock_get_time        (GstClock * clock);
+GstClockTime    gst_audio_clock_adjust          (GstClock * clock, GstClockTime time);
 
 G_END_DECLS
 

@@ -39,6 +39,9 @@
 
 #include "gstaudioclock.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_audio_clock_debug);
+#define GST_CAT_DEFAULT gst_audio_clock_debug
+
 static void gst_audio_clock_class_init (GstAudioClockClass * klass);
 static void gst_audio_clock_init (GstAudioClock * clock);
 
@@ -88,6 +91,9 @@ gst_audio_clock_class_init (GstAudioClockClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gstclock_class->get_internal_time = gst_audio_clock_get_internal_time;
+
+  GST_DEBUG_CATEGORY_INIT (gst_audio_clock_debug, "audioclock", 0,
+      "audioclock");
 }
 
 static void
@@ -136,10 +142,18 @@ gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
 void
 gst_audio_clock_reset (GstAudioClock * clock, GstClockTime time)
 {
+  GstClockTimeDiff time_offset;
+
   if (clock->last_time >= time)
-    clock->abidata.ABI.time_offset = clock->last_time - time;
+    time_offset = clock->last_time - time;
   else
-    clock->abidata.ABI.time_offset = -(time - clock->last_time);
+    time_offset = -(time - clock->last_time);
+
+  clock->abidata.ABI.time_offset = time_offset;
+
+  GST_DEBUG_OBJECT (clock,
+      "reset clock to %" GST_TIME_FORMAT ", offset %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time), GST_TIME_ARGS (time_offset));
 }
 
 static GstClockTime
@@ -148,7 +162,7 @@ gst_audio_clock_get_internal_time (GstClock * clock)
   GstAudioClock *aclock;
   GstClockTime result;
 
-  aclock = GST_AUDIO_CLOCK (clock);
+  aclock = GST_AUDIO_CLOCK_CAST (clock);
 
   result = aclock->func (clock, aclock->user_data);
   if (result == GST_CLOCK_TIME_NONE)
@@ -157,5 +171,53 @@ gst_audio_clock_get_internal_time (GstClock * clock)
     result += aclock->abidata.ABI.time_offset;
     aclock->last_time = result;
   }
+  return result;
+}
+
+/**
+ * gst_audio_clock_get_time:
+ * @clock: a #GstAudioClock
+ *
+ * Report the time as returned by the #GstAudioClockGetTimeFunc without applying
+ * any offsets. 
+ *
+ * Returns: the time as reported by the time function of the audio clock
+ *
+ * Since: 0.10.23
+ */
+GstClockTime
+gst_audio_clock_get_time (GstClock * clock)
+{
+  GstAudioClock *aclock;
+  GstClockTime result;
+
+  aclock = GST_AUDIO_CLOCK_CAST (clock);
+
+  result = aclock->func (clock, aclock->user_data);
+
+  return result;
+}
+
+/**
+ * gst_audio_clock_adjust:
+ * @clock: a #GstAudioClock
+ * @time: a #GstClockTime
+ *
+ * Adjust @time with the internal offset of the audio clock.
+ *
+ * Returns: @time adjusted with the internal offset.
+ *
+ * Since: 0.10.23
+ */
+GstClockTime
+gst_audio_clock_adjust (GstClock * clock, GstClockTime time)
+{
+  GstAudioClock *aclock;
+  GstClockTime result;
+
+  aclock = GST_AUDIO_CLOCK_CAST (clock);
+
+  result = time + aclock->abidata.ABI.time_offset;
+
   return result;
 }
