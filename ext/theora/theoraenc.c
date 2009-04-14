@@ -590,6 +590,21 @@ theora_enc_get_ogg_packet_end_time (GstTheoraEnc * enc, ogg_packet * op)
   return theora_granule_time (&enc->state, end_granule) * GST_SECOND;
 }
 
+static void
+theora_enc_force_keyframe (GstTheoraEnc * enc)
+{
+  GstClockTime next_ts;
+
+  /* make sure timestamps increment after resetting the decoder */
+  next_ts = enc->next_ts + enc->timestamp_offset;
+
+  theora_enc_reset (enc);
+  enc->granulepos_offset =
+      gst_util_uint64_scale (next_ts, enc->fps_n, GST_SECOND * enc->fps_d);
+  enc->timestamp_offset = next_ts;
+  enc->next_ts = 0;
+}
+
 static gboolean
 theora_enc_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -640,19 +655,8 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 
       s = gst_event_get_structure (event);
 
-      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
-        GstClockTime next_ts;
-
-        /* make sure timestamps increment after resetting the decoder */
-        next_ts = enc->next_ts + enc->timestamp_offset;
-
-        theora_enc_reset (enc);
-        enc->granulepos_offset =
-            gst_util_uint64_scale (next_ts, enc->fps_n,
-            GST_SECOND * enc->fps_d);
-        enc->timestamp_offset = next_ts;
-        enc->next_ts = 0;
-      }
+      if (gst_structure_has_name (s, "GstForceKeyUnit"))
+        theora_enc_force_keyframe (enc);
       res = gst_pad_push_event (enc->srcpad, event);
       break;
     }
