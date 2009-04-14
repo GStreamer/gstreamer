@@ -1,4 +1,4 @@
-[DllImport("gstreamersharpglue-0.10")]
+[DllImport ("gstreamersharpglue-0.10") ]
 static extern IntPtr gstsharp_gst_static_caps_get_string (IntPtr caps);
 
 public string String {
@@ -16,7 +16,7 @@ protected override void Free (IntPtr raw) {
   GLib.Marshaller.Free (raw);
 }
 
-[DllImport("gstreamersharpglue-0.10")]
+[DllImport ("gstreamersharpglue-0.10") ]
 static extern IntPtr gstsharp_gst_static_caps_new (string caps);
 
 public StaticCaps (Caps caps) {

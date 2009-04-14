@@ -1,4 +1,4 @@
-[DllImport("gstreamersharpglue-0.10")]
+[DllImport ("gstreamersharpglue-0.10") ]
 static extern IntPtr gstsharp_gst_static_pad_template_get_name_template (IntPtr handle);
 
 public string NameTemplate {
@@ -12,7 +12,7 @@ public string NameTemplate {
   }
 }
 
-[DllImport("gstreamersharpglue-0.10")]
+[DllImport ("gstreamersharpglue-0.10") ]
 static extern Gst.PadDirection gstsharp_gst_static_pad_template_get_pad_direction (IntPtr handle);
 public Gst.PadDirection Direction {
   get {
@@ -20,7 +20,7 @@ public Gst.PadDirection Direction {
   }
 }
 
-[DllImport("gstreamersharpglue-0.10")]
+[DllImport ("gstreamersharpglue-0.10") ]
 static extern Gst.PadPresence gstsharp_gst_static_pad_template_get_pad_presence (IntPtr handle);
 public Gst.PadPresence Presence {
   get {
@@ -28,10 +28,13 @@ public Gst.PadPresence Presence {
   }
 }
 
-[DllImport("gstreamersharpglue-0.10")]
+[DllImport ("gstreamersharpglue-0.10") ]
 static extern IntPtr gstsharp_gst_static_pad_template_new (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, string caps);
-public StaticPadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps)
-{
+public StaticPadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps) {
   Raw = gstsharp_gst_static_pad_template_new (name_template, direction, presence, caps.ToString ());
+}
+
+protected override void Free (IntPtr raw) {
+  GLib.Marshaller.Free (raw);
 }
 
