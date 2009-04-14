@@ -179,6 +179,7 @@ enum
 #define DEFAULT_BURST_VALUE             0
 
 #define DEFAULT_QOS_DSCP                -1
+#define DEFAULT_HANDLE_READ             TRUE
 
 enum
 {
@@ -210,6 +211,8 @@ enum
   PROP_BURST_VALUE,
 
   PROP_QOS_DSCP,
+
+  PROP_HANDLE_READ,
 
   PROP_LAST
 };
@@ -485,9 +488,21 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           DEFAULT_BURST_VALUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_QOS_DSCP,
-      g_param_spec_int ("qos_dscp", "QoS diff srv code point",
+      g_param_spec_int ("qos-dscp", "QoS diff srv code point",
           "Quality of Service, differentiated services code point (-1 default)",
           -1, 63, DEFAULT_QOS_DSCP, G_PARAM_READWRITE));
+
+  /**
+   * GstMultiFdSink::handle-read
+   *
+   * Handle read requests from clients and discard the data.
+   *
+   * Since: 0.10.23
+   */
+  g_object_class_install_property (gobject_class, PROP_HANDLE_READ,
+      g_param_spec_boolean ("handle-read", "Handle Read",
+          "Handle client reads and discard the data",
+          DEFAULT_HANDLE_READ, G_PARAM_READWRITE));
 
   /**
    * GstMultiFdSink::add:
@@ -678,6 +693,7 @@ gst_multi_fd_sink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
   this->def_burst_value = DEFAULT_BURST_VALUE;
 
   this->qos_dscp = DEFAULT_QOS_DSCP;
+  this->handle_read = DEFAULT_HANDLE_READ;
 
   this->header_flags = 0;
 }
@@ -841,9 +857,11 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   gst_poll_add_fd (sink->fdset, &client->fd);
 
   /* we don't try to read from write only fds */
-  flags = fcntl (fd, F_GETFL, 0);
-  if ((flags & O_ACCMODE) != O_WRONLY) {
-    gst_poll_fd_ctl_read (sink->fdset, &client->fd, TRUE);
+  if (sink->handle_read) {
+    flags = fcntl (fd, F_GETFL, 0);
+    if ((flags & O_ACCMODE) != O_WRONLY) {
+      gst_poll_fd_ctl_read (sink->fdset, &client->fd, TRUE);
+    }
   }
   /* figure out the mode, can't use send() for non sockets */
   res = fstat (fd, &statbuf);
@@ -2414,6 +2432,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
                 fd, g_strerror (errno), errno);
             if (errno == EBADF) {
               client->status = GST_CLIENT_STATUS_ERROR;
+              /* releases the CLIENTS lock */
               gst_multi_fd_sink_remove_client_link (sink, clients);
             }
           }
@@ -2663,6 +2682,9 @@ gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
       multifdsink->qos_dscp = g_value_get_int (value);
       setup_dscp (multifdsink);
       break;
+    case PROP_HANDLE_READ:
+      multifdsink->handle_read = g_value_get_boolean (value);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2741,6 +2763,9 @@ gst_multi_fd_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_QOS_DSCP:
       g_value_set_int (value, multifdsink->qos_dscp);
+      break;
+    case PROP_HANDLE_READ:
+      g_value_set_boolean (value, multifdsink->handle_read);
       break;
 
     default:
