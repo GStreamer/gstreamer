@@ -466,22 +466,23 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
   gstbasertppayload_class->handle_buffer = gst_rtp_h263_pay_handle_buffer;
   gobject_class->set_property = gst_rtp_h263_pay_set_property;
   gobject_class->get_property = gst_rtp_h263_pay_get_property;
-#if 0
+
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MODE_A_ONLY, g_param_spec_boolean ("modea-only",
           "Fragment packets in mode A Only",
           "Disable packetization modes B and C", DEFAULT_MODE_A,
           G_PARAM_READWRITE));
-#endif
+
   GST_DEBUG_CATEGORY_INIT (rtph263pay_debug, "rtph263pay", 0,
       "H263 RTP Payloader");
-
 }
 
 static void
 gst_rtp_h263_pay_init (GstRtpH263Pay * rtph263pay)
 {
   rtph263pay->adapter = gst_adapter_new ();
+
+  rtph263pay->prop_payload_mode = DEFAULT_MODE_A;
 }
 
 static void
@@ -539,6 +540,9 @@ gst_rtp_h263_pay_set_property (GObject * object, guint prop_id,
   rtph263pay = GST_RTP_H263_PAY (object);
 
   switch (prop_id) {
+    case PROP_MODE_A_ONLY:
+      rtph263pay->prop_payload_mode = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -554,6 +558,9 @@ gst_rtp_h263_pay_get_property (GObject * object, guint prop_id,
   rtph263pay = GST_RTP_H263_PAY (object);
 
   switch (prop_id) {
+    case PROP_MODE_A_ONLY:
+      g_value_set_boolean (value, rtph263pay->prop_payload_mode);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -706,10 +713,10 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
   range = (rtph263pay->data - current) + rtph263pay->available_data;
 
 
-  GST_DEBUG
-      ("Searching for next GOB, data:%p, len:%u, payload_len:%p, current:%p, range:%u",
-      rtph263pay->data, rtph263pay->available_data, boundry->end + 1, current,
-      range);
+  GST_DEBUG ("Searching for next GOB, data:%p, len:%u, payload_len:%p,"
+      " current:%p, range:%u", rtph263pay->data, rtph263pay->available_data,
+      boundry->end + 1, current, range);
+
   /* If we are past the end, stop */
   if (current >= rtph263pay->data + rtph263pay->available_data)
     return NULL;
@@ -719,8 +726,11 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
         (current[i + 1] == 0x0) && (current[i + 2] >> 7 == 0x1)) {
       GST_LOG ("GOB end found at: %p start: %p len: %d", current + i - 1,
           boundry->end + 1, current + i - boundry->end + 2);
-      return gst_rtp_h263_pay_boundry_new (boundry->end + 1, current + i - 1, 0,
+      b = gst_rtp_h263_pay_boundry_new (boundry->end + 1, current + i - 1, 0,
           0);
+      gst_rtp_h263_pay_boundry_destroy (boundry);
+
+      return b;
     }
   }
 
@@ -933,9 +943,8 @@ gst_rtp_h263_pay_move_window_right (GstRtpH263PayContext * context, guint n,
     } else {
       if (n > rest_bits) {
         context->window =
-            (context->
-            window << rest_bits) | (*context->win_end & (((guint) pow (2.0,
-                        (double) rest_bits)) - 1));
+            (context->window << rest_bits) | (*context->
+            win_end & (((guint) pow (2.0, (double) rest_bits)) - 1));
         n -= rest_bits;
         rest_bits = 0;
       } else {
@@ -1346,9 +1355,9 @@ gst_rtp_h263_pay_A_fragment_push (GstRtpH263Pay * rtph263pay,
       (context->gobs[last]->end - context->gobs[first]->start) + 1;
   pack->marker = FALSE;
 
-//if (last == format_props[context->piclayer->ptype_srcformat][0] - 1) {
-  pack->marker = TRUE;
-//}
+  if (last == format_props[context->piclayer->ptype_srcformat][0] - 1) {
+    pack->marker = TRUE;
+  }
 
   pack->gobn = context->gobs[first]->gobn;
   pack->mode = GST_RTP_H263_PAYLOAD_HEADER_MODE_A;
@@ -1699,8 +1708,8 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     bound = gst_rtp_h263_pay_boundry_new (NULL, rtph263pay->data - 1, 0, 0);
     context->gobs =
-        (GstRtpH263PayGob **) g_malloc0 (format_props[context->
-            piclayer->ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
+        (GstRtpH263PayGob **) g_malloc0 (format_props[context->piclayer->
+            ptype_srcformat][0] * sizeof (GstRtpH263PayGob *));
 
 
     for (i = 0; i < format_props[context->piclayer->ptype_srcformat][0]; i++) {
@@ -1737,12 +1746,10 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
         if (payload_len == 0) {
 
           GST_DEBUG ("GOB len > MTU");
-#if 0
           if (rtph263pay->prop_payload_mode) {
             payload_len = context->gobs[i]->length;
             goto force_a;
           }
-#endif
           if (!context->piclayer->ptype_pbmode) {
             GST_DEBUG ("MODE B on GOB %d needed", i);
             if (!gst_rtp_h263_pay_mode_B_fragment (rtph263pay, context,
@@ -1789,14 +1796,14 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
         first = i;
       }
       continue;
-#if 0
+
+    force_a:
       GST_DEBUG ("Pushing GOBS %d to %d because payload size is %d", first, i,
           payload_len);
       gst_rtp_h263_pay_A_fragment_push (rtph263pay, context, first, i);
       payload_len = 0;
       i++;
       first = i;
-#endif
     }
 
 
