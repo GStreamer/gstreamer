@@ -1852,11 +1852,11 @@ gst_ximagesink_navigation_send_event (GstNavigation * navigation,
 
   g_mutex_unlock (ximagesink->flow_lock);
 
-  if (gst_structure_get_double (structure, "pointer_x", &x)) {
+  if (x_offset > 0 && gst_structure_get_double (structure, "pointer_x", &x)) {
     x -= x_offset / 2;
     gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, x, NULL);
   }
-  if (gst_structure_get_double (structure, "pointer_y", &y)) {
+  if (y_offset > 0 && gst_structure_get_double (structure, "pointer_y", &y)) {
     y -= y_offset / 2;
     gst_structure_set (structure, "pointer_y", G_TYPE_DOUBLE, y, NULL);
   }
