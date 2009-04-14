@@ -2349,6 +2349,7 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   demux->broadcast = !!(flags & 0x01);
   demux->seekable = !!(flags & 0x02);
 
+  GST_DEBUG_OBJECT (demux, "min_pktsize = %u", min_pktsize);
   GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);
   GST_DEBUG_OBJECT (demux, "flags::seekable  = %d", demux->seekable);
 
