@@ -216,10 +216,10 @@ gst_param_spec_fraction (const gchar * name, const gchar * nick,
  * avoid races, this function should be called with the object lock
  * of @element held.
  *
- * Note: By the time this method returns, the state of the element might have
+ * <note>By the time this method returns, the state of the element might have
  * changed already. Use this method only if you can control the state of the
  * element between calling this method and setting the property, such as with a
- * mutex.
+ * mutex.</note>
  *
  * Returns: TRUE if the property may be modified
  *
