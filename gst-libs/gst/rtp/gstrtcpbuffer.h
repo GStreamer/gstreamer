@@ -42,6 +42,8 @@ G_BEGIN_DECLS
  * @GST_RTCP_TYPE_SDES: Source description
  * @GST_RTCP_TYPE_BYE: Goodbye
  * @GST_RTCP_TYPE_APP: Application defined
+ * @GST_RTCP_TYPE_RTPFB: Transport layer feedback. Since: 0.10.23
+ * @GST_RTCP_TYPE_PSFB: Payload-specific feedback. Since: 0.10.23
  *
  * Different RTCP packet types.
  */
@@ -52,8 +54,36 @@ typedef enum
   GST_RTCP_TYPE_RR      = 201,
   GST_RTCP_TYPE_SDES    = 202,
   GST_RTCP_TYPE_BYE     = 203,
-  GST_RTCP_TYPE_APP     = 204
+  GST_RTCP_TYPE_APP     = 204,
+  GST_RTCP_TYPE_RTPFB   = 205,
+  GST_RTCP_TYPE_PSFB    = 206
 } GstRTCPType;
+
+/**
+ * GstRTCPFBType:
+ * @GST_RTCP_FB_TYPE_INVALID: Invalid type
+ * @GST_RTCP_RTPFB_TYPE_NACK: Generic NACK
+ * @GST_RTCP_PSFB_TYPE_PLI: Picture Loss Indication
+ * @GST_RTCP_PSFB_TYPE_SLI: Slice Loss Indication
+ * @GST_RTCP_PSFB_TYPE_RPSI: Reference Picture Selection Indication
+ * @GST_RTCP_PSFB_TYPE_AFB: Application layer Feedback
+ *
+ * Different types of feedback messages.
+ *
+ * Since: 0.10.23
+ */
+typedef enum
+{
+  /* generic */
+  GST_RTCP_FB_TYPE_INVALID    = 0,
+  /* RTPFB types */
+  GST_RTCP_RTPFB_TYPE_NACK    = 1,
+  /* PSFB types */
+  GST_RTCP_PSFB_TYPE_PLI      = 1,
+  GST_RTCP_PSFB_TYPE_SLI      = 2,
+  GST_RTCP_PSFB_TYPE_RPSI     = 3,
+  GST_RTCP_PSFB_TYPE_AFB      = 15
+} GstRTCPFBType;
 
 /** 
  * GstRTCPSDESType:
@@ -231,6 +261,14 @@ gboolean        gst_rtcp_packet_bye_add_ssrcs         (GstRTCPPacket *packet, gu
 guint8          gst_rtcp_packet_bye_get_reason_len    (GstRTCPPacket *packet);
 gchar*          gst_rtcp_packet_bye_get_reason        (GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_bye_set_reason        (GstRTCPPacket *packet, const gchar *reason);
+
+/* feedback packets */
+guint32         gst_rtcp_packet_fb_get_sender_ssrc    (GstRTCPPacket *packet);
+void            gst_rtcp_packet_fb_set_sender_ssrc    (GstRTCPPacket *packet, guint32 ssrc);
+guint32         gst_rtcp_packet_fb_get_media_ssrc     (GstRTCPPacket *packet);
+void            gst_rtcp_packet_fb_set_media_ssrc     (GstRTCPPacket *packet, guint32 ssrc);
+GstRTCPFBType   gst_rtcp_packet_fb_get_type           (GstRTCPPacket *packet);
+void            gst_rtcp_packet_fb_set_type           (GstRTCPPacket *packet, GstRTCPFBType type);
 
 /* helper functions */
 guint64         gst_rtcp_ntp_to_unix                  (guint64 ntptime);

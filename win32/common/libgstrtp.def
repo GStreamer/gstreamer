@@ -33,6 +33,12 @@ EXPORTS
 	gst_rtcp_packet_bye_get_reason_len
 	gst_rtcp_packet_bye_get_ssrc_count
 	gst_rtcp_packet_bye_set_reason
+	gst_rtcp_packet_fb_get_media_ssrc
+	gst_rtcp_packet_fb_get_sender_ssrc
+	gst_rtcp_packet_fb_get_type
+	gst_rtcp_packet_fb_set_media_ssrc
+	gst_rtcp_packet_fb_set_sender_ssrc
+	gst_rtcp_packet_fb_set_type
 	gst_rtcp_packet_get_count
 	gst_rtcp_packet_get_length
 	gst_rtcp_packet_get_padding

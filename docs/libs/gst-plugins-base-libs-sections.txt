@@ -1015,6 +1015,7 @@ GST_RTCP_VALID_VALUE
 GstRTCPType
 GstRTCPPacket
 GstRTCPSDESType
+GstRTCPFBType
 
 gst_rtcp_buffer_new_take_data
 gst_rtcp_buffer_new_copy_data
@@ -1067,6 +1068,15 @@ gst_rtcp_packet_bye_add_ssrcs
 gst_rtcp_packet_bye_get_reason_len
 gst_rtcp_packet_bye_get_reason
 gst_rtcp_packet_bye_set_reason
+
+gst_rtcp_packet_fb_get_type
+gst_rtcp_packet_fb_set_type
+
+gst_rtcp_packet_fb_get_sender_ssrc
+gst_rtcp_packet_fb_set_sender_ssrc
+
+gst_rtcp_packet_fb_get_media_ssrc
+gst_rtcp_packet_fb_set_media_ssrc
 
 gst_rtcp_ntp_to_unix
 gst_rtcp_unix_to_ntp
