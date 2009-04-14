@@ -12,7 +12,7 @@
 static gboolean
 vdpau_init (GstPlugin * vdpau_plugin)
 {
-  gst_element_register (vdpau_plugin, "vdpaumpegdecoder",
+  gst_element_register (vdpau_plugin, "vdpaumpegdec",
       GST_RANK_NONE, GST_TYPE_VDPAU_MPEG_DECODER);
   gst_element_register (vdpau_plugin, "vdpauvideoyuv",
       GST_RANK_NONE, GST_TYPE_VDPAU_VIDEO_YUV);

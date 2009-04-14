@@ -19,14 +19,14 @@
  */
 
 /**
- * SECTION:element-vdpaumpegdecoder
+ * SECTION:element-vdpaumpegdec
  *
- * FIXME:Describe vdpaumpegdecoder here.
+ * FIXME:Describe vdpaumpegdec here.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m fakesrc ! vdpaumpegdecoder ! fakesink silent=TRUE
+ * gst-launch -v -m fakesrc ! vdpaumpegdec ! fakesink silent=TRUE
  * ]|
  * </refsect2>
  */
@@ -68,7 +68,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define DEBUG_INIT(bla) \
-GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_decoder_debug, "vdpaumpegdecoder", 0, "VDPAU powered mpeg decoder");
+GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_decoder_debug, "vdpaumpegdec", 0, "VDPAU powered mpeg decoder");
 
 GST_BOILERPLATE_FULL (GstVdpMpegDecoder, gst_vdp_mpeg_decoder,
     GstVdpDecoder, GST_TYPE_VDPAU_DECODER, DEBUG_INIT);
@@ -384,7 +384,7 @@ gst_vdp_mpeg_decoder_base_init (gpointer gclass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_set_details_simple (element_class,
-      "VdpauMpegDecoder",
+      "VDPAU Mpeg Decoder",
       "Decoder",
       "decode mpeg stream with vdpau",
       "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
