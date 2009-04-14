@@ -868,7 +868,7 @@ gst_base_audio_sink_resample_slaving (GstBaseAudioSink * sink,
 
   /* sample clocks and figure out clock skew */
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
-  itime = gst_clock_get_internal_time (sink->provided_clock);
+  itime = gst_audio_clock_get_time (sink->provided_clock);
 
   /* add new observation */
   gst_clock_add_observation (sink->provided_clock, itime, etime, &r_squared);
@@ -921,7 +921,7 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
 
   /* sample clocks and figure out clock skew */
   etime = gst_clock_get_time (GST_ELEMENT_CLOCK (sink));
-  itime = gst_clock_get_internal_time (sink->provided_clock);
+  itime = gst_audio_clock_get_time (sink->provided_clock);
 
   GST_DEBUG_OBJECT (sink,
       "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT
@@ -1127,7 +1127,7 @@ gst_base_audio_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
    * our internal clock should exactly have been the latency (== the running
    * time of the external clock) */
   etime = GST_ELEMENT_CAST (sink)->base_time + time;
-  itime = gst_clock_get_internal_time (sink->provided_clock);
+  itime = gst_audio_clock_get_time (sink->provided_clock);
 
   if (status == GST_CLOCK_EARLY) {
     /* when we prerolled late, we have to take into account the lateness */
@@ -1788,6 +1788,10 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_activate (sink->ringbuffer, FALSE);
       gst_ring_buffer_release (sink->ringbuffer);
       gst_ring_buffer_close_device (sink->ringbuffer);
+      GST_OBJECT_LOCK (sink);
+      gst_object_unparent (GST_OBJECT_CAST (sink->ringbuffer));
+      sink->ringbuffer = NULL;
+      GST_OBJECT_UNLOCK (sink);
       break;
     default:
       break;
