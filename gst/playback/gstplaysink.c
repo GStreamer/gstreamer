@@ -2229,6 +2229,7 @@ void
 gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
 {
   GstPad **res = NULL;
+  gboolean untarget = TRUE;
 
   GST_DEBUG_OBJECT (playsink, "release pad %" GST_PTR_FORMAT, pad);
 
@@ -2239,15 +2240,22 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
     res = &playsink->audio_pad;
   } else if (pad == playsink->text_pad) {
     res = &playsink->text_pad;
+  } else if (pad == playsink->subp_pad) {
+    res = &playsink->subp_pad;
   } else {
     /* try to release the given pad anyway, these could be the FLUSHING pads. */
     res = &pad;
+    untarget = FALSE;
   }
   GST_PLAY_SINK_UNLOCK (playsink);
 
   if (*res) {
     GST_DEBUG_OBJECT (playsink, "deactivate pad %" GST_PTR_FORMAT, *res);
     gst_pad_set_active (*res, FALSE);
+    if (untarget) {
+      GST_DEBUG_OBJECT (playsink, "untargeting pad %" GST_PTR_FORMAT, *res);
+      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (*res), NULL);
+    }
     GST_DEBUG_OBJECT (playsink, "remove pad %" GST_PTR_FORMAT, *res);
     gst_element_remove_pad (GST_ELEMENT_CAST (playsink), *res);
     *res = NULL;
