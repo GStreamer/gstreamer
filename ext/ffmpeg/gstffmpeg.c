@@ -162,5 +162,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "ffmpeg",
     "All FFmpeg codecs (" FFMPEG_SOURCE ")",
-    plugin_init,
-    PACKAGE_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    plugin_init, PACKAGE_VERSION, "LGPL", "FFmpeg", "http://ffmpeg.org/")
