@@ -1040,7 +1040,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
         in_plugin->id == CODEC_ID_ZLIB ||
         (in_plugin->id >= CODEC_ID_PCM_S16LE &&
-            in_plugin->id <= CODEC_ID_PCM_S24DAUD)) {
+            in_plugin->id <= CODEC_ID_PCM_F64LE)) {
       goto next;
     }
 
