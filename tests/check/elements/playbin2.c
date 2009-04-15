@@ -389,9 +389,8 @@ GST_START_TEST (test_refcount)
       "video-sink", videosink,
       "vis-plugin", vis, "flags", 0x01 | 0x02 | 0x08, NULL);
 
-  g_object_set (playbin,
-      //"uri", "redvideo://", NULL);
-      "uri", "file:///home/wim/data/cdda.ogg", NULL);
+  g_object_set (playbin, "uri", "redvideo://", NULL);
+  //"uri", "file:///home/wim/data/cdda.ogg", NULL);
 
   ASSERT_OBJECT_REFCOUNT (playbin, "playbin", 1);
 
