@@ -38,6 +38,10 @@ typedef struct _GstRtpG726DepayClass GstRtpG726DepayClass;
 struct _GstRtpG726Depay
 {
   GstBaseRTPDepayload depayload;
+
+  gboolean aal2;
+  gboolean force_aal2;
+  gint bitrate;
 };
 
 struct _GstRtpG726DepayClass

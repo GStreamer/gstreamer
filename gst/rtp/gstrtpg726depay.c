@@ -49,9 +49,13 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_FORCE_AAL2	TRUE
+
 enum
 {
-  ARG_0
+  PROP_0,
+  PROP_FORCE_AAL2,
+  PROP_LAST
 };
 
 static GstStaticPadTemplate gst_rtp_g726_depay_sink_template =
@@ -61,7 +65,8 @@ static GstStaticPadTemplate gst_rtp_g726_depay_sink_template =
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "encoding-name = (string) { \"G726\", \"G726-16\", \"G726-24\", \"G726-32\", \"G726-40\"}, "
+        "encoding-name = (string) { \"G726\", \"G726-16\", \"G726-24\", \"G726-32\", \"G726-40\", "
+        "\"AAL2-G726-16\", \"AAL2-G726-24\", \"AAL2-G726-32\", \"AAL2-G726-40\" }, "
         "clock-rate = (int) 8000;")
     );
 
@@ -122,6 +127,8 @@ gst_rtp_g726_depay_init (GstRtpG726Depay * rtpG726depay,
   depayload = GST_BASE_RTP_DEPAYLOAD (rtpG726depay);
 
   gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
+
+  rtpG726depay->force_aal2 = DEFAULT_FORCE_AAL2;
 }
 
 static gboolean
@@ -132,7 +139,9 @@ gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   gboolean ret;
   gint clock_rate;
   const gchar *encoding_name;
-  gint bitrate;
+  GstRtpG726Depay *depay;
+
+  depay = GST_RTP_G726_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -140,44 +149,58 @@ gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     clock_rate = 8000;          /* default */
   depayload->clock_rate = clock_rate;
 
+  depay->aal2 = FALSE;
   encoding_name = gst_structure_get_string (structure, "encoding-name");
   if (encoding_name == NULL || g_ascii_strcasecmp (encoding_name, "G726") == 0) {
-    bitrate = DEFAULT_BIT_RATE;
-  } else if (g_ascii_strcasecmp (encoding_name, "G726-16") == 0) {
-    bitrate = 16000;
-  } else if (g_ascii_strcasecmp (encoding_name, "G726-24") == 0) {
-    bitrate = 24000;
-  } else if (g_ascii_strcasecmp (encoding_name, "G726-32") == 0) {
-    bitrate = 32000;
-  } else if (g_ascii_strcasecmp (encoding_name, "G726-40") == 0) {
-    bitrate = 40000;
+    depay->bitrate = DEFAULT_BIT_RATE;
   } else {
-    GST_WARNING ("Could not determine bitrate from encoding-name (%s)",
-        encoding_name);
-    ret = FALSE;
-    goto done;
+    if (g_str_has_prefix (encoding_name, "AAL2-")) {
+      depay->aal2 = TRUE;
+      encoding_name += 5;
+    }
+    if (g_ascii_strcasecmp (encoding_name, "G726-16") == 0) {
+      depay->bitrate = 16000;
+    } else if (g_ascii_strcasecmp (encoding_name, "G726-24") == 0) {
+      depay->bitrate = 24000;
+    } else if (g_ascii_strcasecmp (encoding_name, "G726-32") == 0) {
+      depay->bitrate = 32000;
+    } else if (g_ascii_strcasecmp (encoding_name, "G726-40") == 0) {
+      depay->bitrate = 40000;
+    } else
+      goto unknown_encoding;
   }
-  GST_DEBUG ("RTP G.726 depayloader, bitrate set to %d\n", bitrate);
+
+  GST_DEBUG ("RTP G.726 depayloader, bitrate set to %d\n", depay->bitrate);
 
   srccaps = gst_caps_new_simple ("audio/x-adpcm",
       "channels", G_TYPE_INT, 1,
       "rate", G_TYPE_INT, clock_rate,
-      "bitrate", G_TYPE_INT, bitrate,
+      "bitrate", G_TYPE_INT, depay->bitrate,
       "layout", G_TYPE_STRING, LAYOUT_G726, NULL);
 
   ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
-done:
   return ret;
+
+  /* ERRORS */
+unknown_encoding:
+  {
+    GST_WARNING ("Could not determine bitrate from encoding-name (%s)",
+        encoding_name);
+    return FALSE;
+  }
 }
 
 
 static GstBuffer *
 gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
+  GstRtpG726Depay *depay;
   GstBuffer *outbuf = NULL;
   gboolean marker;
+
+  depay = GST_RTP_G726_DEPAY (depayload);
 
   marker = gst_rtp_buffer_get_marker (buf);
 
@@ -185,7 +208,114 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       GST_BUFFER_SIZE (buf), marker,
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
-  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  if (depay->aal2 || depay->force_aal2) {
+    /* AAL2, we can just copy the bytes */
+    outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+  } else {
+    guint8 *in, *out, tmp;
+    guint len;
+
+    in = gst_rtp_buffer_get_payload (buf);
+    len = gst_rtp_buffer_get_payload_len (buf);
+
+    if (gst_buffer_is_writable (buf)) {
+      outbuf = gst_rtp_buffer_get_payload_buffer (buf);
+    } else {
+      GstBuffer *copy;
+
+      /* copy buffer */
+      copy = gst_buffer_copy (buf);
+      outbuf = gst_rtp_buffer_get_payload_buffer (copy);
+      gst_buffer_unref (copy);
+    }
+    out = GST_BUFFER_DATA (outbuf);
+
+    /* we need to reshuffle the bytes */
+    switch (depay->bitrate) {
+      case 16000:
+      {
+        /*  0               
+         *  0 1 2 3 4 5 6 7 
+         * +-+-+-+-+-+-+-+-+-
+         * |D D|C C|B B|A A| ...
+         * |0 1|0 1|0 1|0 1|
+         * +-+-+-+-+-+-+-+-+-
+         */
+        while (len > 0) {
+          tmp = *in++;
+          *out++ = ((tmp & 0xc0) >> 6) |
+              ((tmp & 0x30) >> 2) | ((tmp & 0x0c) << 2) | ((tmp & 0x03) << 6);
+          len--;
+        }
+        break;
+      }
+      case 24000:
+      {
+        /*  0                   1                   2
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+         * |C C|B B B|A A A|F|E E E|D D D|C|H H H|G G G|F F| ...
+         * |1 2|0 1 2|0 1 2|2|0 1 2|0 1 2|0|0 1 2|0 1 2|0 1|
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+         */
+        while (len > 2) {
+          tmp = *in++;
+          *out++ = ((tmp & 0xe0) >> 5) |
+              ((tmp & 0x1c) << 1) | ((tmp & 0x03) << 6);
+          tmp = *in++;
+          *out++ = ((tmp & 0x80) >> 7) |
+              ((tmp & 0x70) >> 3) | ((tmp & 0x0e) << 4) | ((tmp & 0x01) << 7);
+          tmp = *in++;
+          *out++ = ((tmp & 0xc0) >> 6) |
+              ((tmp & 0x38) >> 1) | ((tmp & 0x07) << 5);
+          len -= 3;
+        }
+        break;
+      }
+      case 32000:
+      {
+        /*  0                   1
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+         * |B B B B|A A A A|D D D D|C C C C| ...
+         * |0 1 2 3|0 1 2 3|0 1 2 3|0 1 2 3|
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+         */
+        while (len > 0) {
+          tmp = *in++;
+          *out++ = ((tmp & 0xf0) >> 4) | ((tmp & 0x0f) << 4);
+          len--;
+        }
+        break;
+      }
+      case 40000:
+      {
+        /*  0                   1                   2                   3                   4
+         *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+         * |B B B|A A A A A|D|C C C C C|B B|E E E E|D D D D|G G|F F F F F|E|H H H H H|G G G|
+         * |2 3 4|0 1 2 3 4|4|0 1 2 3 4|0 1|1 2 3 4|0 1 2 3|3 4|0 1 2 3 4|0|0 1 2 3 4|0 1 2|   
+         * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+         */
+        while (len > 4) {
+          tmp = *in++;
+          *out++ = ((tmp & 0xf8) >> 3) | ((tmp & 0x07) << 5);
+          tmp = *in++;
+          *out++ = ((tmp & 0xc0) >> 6) |
+              ((tmp & 0x3e) << 1) | ((tmp & 0x01) << 7);
+          tmp = *in++;
+          *out++ = ((tmp & 0xf0) >> 4) | ((tmp & 0x0f) << 4);
+          tmp = *in++;
+          *out++ = ((tmp & 0x80) >> 7) |
+              ((tmp & 0x7c) >> 1) | ((tmp & 0x03) << 6);
+          tmp = *in++;
+          *out++ = ((tmp & 0xe0) >> 5) | ((tmp & 0x1f) << 3);
+          len -= 5;
+        }
+        break;
+      }
+    }
+  }
 
   if (marker) {
     /* mark start of talkspurt with discont */
