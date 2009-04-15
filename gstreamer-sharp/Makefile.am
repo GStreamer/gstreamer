@@ -63,6 +63,7 @@ customs = 			\
 	Pad.custom		\
 	Parse.custom		\
 	Object.custom		\
+	PadTemplate.custom      \
 	MiniObject.custom       \
 	Registry.custom         \
 	Structure.custom

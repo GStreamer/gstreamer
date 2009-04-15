@@ -69,8 +69,6 @@
       <Type Name="Fraction" Kind="Structure" />
       <Type Name="FractionRange" Kind="Structure" />
       <Type Name="GhostPad" Kind="Class" />
-      <Type Name="HasPadCreatedArgs" Kind="Class" />
-      <Type Name="HasPadCreatedHandler" Kind="Delegate" />
       <Type Name="HaveDataArgs" Kind="Class" />
       <Type Name="HaveDataHandler" Kind="Delegate" />
       <Type Name="HaveTypeArgs" Kind="Class" />
@@ -113,6 +111,8 @@
       <Type Name="PadBufferAllocFunction" Kind="Delegate" />
       <Type Name="PadChainFunction" Kind="Delegate" />
       <Type Name="PadCheckGetRangeFunction" Kind="Delegate" />
+      <Type Name="PadCreatedArgs" Kind="Class" />
+      <Type Name="PadCreatedHandler" Kind="Delegate" />
       <Type Name="PadDirection" Kind="Enumeration" />
       <Type Name="PadDispatcherFunction" Kind="Delegate" />
       <Type Name="PadEventFunction" Kind="Delegate" />

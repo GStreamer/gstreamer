@@ -1,5 +1,5 @@
-<Type Name="HasPadCreatedHandler" FullName="Gst.HasPadCreatedHandler">
-  <TypeSignature Language="C#" Value="public delegate void HasPadCreatedHandler(object o, HasPadCreatedArgs args);" />
+<Type Name="PadCreatedHandler" FullName="Gst.PadCreatedHandler">
+  <TypeSignature Language="C#" Value="public delegate void PadCreatedHandler(object o, PadCreatedArgs args);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -9,7 +9,7 @@
   </Base>
   <Parameters>
     <Parameter Name="o" Type="System.Object" />
-    <Parameter Name="args" Type="Gst.HasPadCreatedArgs" />
+    <Parameter Name="args" Type="Gst.PadCreatedArgs" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

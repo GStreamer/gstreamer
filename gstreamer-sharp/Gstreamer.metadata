@@ -275,7 +275,9 @@
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKING']" name="value">ObjectFlags.Last &lt;&lt; 4</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="value">ObjectFlags.Last &lt;&lt; 8</attr>
 
-  <attr path="/api/namespace/object[@name='PadTemplate']/signal[@name='PadCreated']" name="name">HasPadCreated</attr>
+  <attr path="/api/namespace/object[@name='PadTemplate']/constructor[@cname='gst_pad_template_new']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='PadTemplate']" name="disable_void_ctor">1</attr>
+  <attr path="/api/namespace/object[@name='PadTemplate']/method[@cname='gst_pad_template_pad_created']" name="name">EmitPadCreated</attr>
 
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadTemplateFlags']/member[@cname='GST_PAD_TEMPLATE_FIXED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>

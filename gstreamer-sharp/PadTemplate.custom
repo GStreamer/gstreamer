@@ -1,0 +1,32 @@
+		[DllImport("gstreamer-0.10.dll")]
+		static extern IntPtr gst_pad_template_new(IntPtr name_template, int direction, int presence, IntPtr caps);
+
+		[DllImport("gstreamer-0.10.dll")]
+		static extern IntPtr gst_caps_ref (IntPtr handle);
+
+		public PadTemplate (string name_template, Gst.PadDirection direction, Gst.PadPresence presence, Gst.Caps caps) : base (IntPtr.Zero)
+		{
+			if (GetType () != typeof (PadTemplate)) {
+				ArrayList vals = new ArrayList();
+				ArrayList names = new ArrayList();
+				names.Add ("name_template");
+				vals.Add (new GLib.Value (name_template));
+				names.Add ("direction");
+				vals.Add (new GLib.Value (direction));
+				names.Add ("presence");
+				vals.Add (new GLib.Value (presence));
+				if (caps != null) {
+					names.Add ("caps");
+					vals.Add (new GLib.Value (caps));
+				}
+				CreateNativeObject ((string[])names.ToArray (typeof (string)), (GLib.Value[])vals.ToArray (typeof (GLib.Value)));
+				return;
+			}
+			IntPtr native_name_template = GLib.Marshaller.StringToPtrGStrdup (name_template);
+			if (caps != null)
+			  gst_caps_ref (caps.Handle);
+
+			Raw = gst_pad_template_new(native_name_template, (int) direction, (int) presence, caps == null ? IntPtr.Zero : caps.Handle);
+			GLib.Marshaller.Free (native_name_template);
+		}
+
