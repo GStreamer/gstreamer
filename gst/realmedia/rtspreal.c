@@ -118,16 +118,16 @@ rtsp_ext_real_before_send (GstRTSPExtension * ext, GstRTSPMessage * request)
     }
     case GST_RTSP_DESCRIBE:
     {
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_BANDWIDTH,
-          DEFAULT_BANDWIDTH);
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_GUID,
-          "00000000-0000-0000-0000-000000000000");
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_REGION_DATA, "0");
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_CLIENT_ID,
-          "Linux_2.4_6.0.9.1235_play32_RN01_EN_586");
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_MAX_ASM_WIDTH, "1");
-      gst_rtsp_message_add_header (request, GST_RTSP_HDR_LANGUAGE, "en-US");
       if (ctx->isreal) {
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_BANDWIDTH,
+            DEFAULT_BANDWIDTH);
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_GUID,
+            "00000000-0000-0000-0000-000000000000");
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_REGION_DATA, "0");
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_CLIENT_ID,
+            "Linux_2.4_6.0.9.1235_play32_RN01_EN_586");
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_MAX_ASM_WIDTH, "1");
+        gst_rtsp_message_add_header (request, GST_RTSP_HDR_LANGUAGE, "en-US");
         gst_rtsp_message_add_header (request, GST_RTSP_HDR_REQUIRE,
             "com.real.retain-entity-for-setup");
       }
