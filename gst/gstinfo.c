@@ -85,6 +85,7 @@
  * categories. These are explained at GST_DEBUG_CATEGORY_INIT().
  */
 
+#define GST_INFO_C
 #include "gst_private.h"
 #include "gstinfo.h"
 
@@ -1564,39 +1565,10 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
 {
 }
 
-const gchar *
-gst_debug_message_get (GstDebugMessage * message)
-{
-  return "";
-}
-
-gchar *
-gst_debug_construct_term_color (guint colorinfo)
-{
-  return g_strdup ("");
-}
-
-gint
-gst_debug_construct_win_color (guint colorinfo)
-{
-  return 0;
-}
-
 void
 gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, GstDebugMessage * message, gpointer unused)
-{
-}
-
-const gchar *
-gst_debug_level_get_name (GstDebugLevel level)
-{
-  return "";
-}
-
-void
-gst_debug_add_log_function (GstLogFunction func, gpointer data)
 {
 }
 

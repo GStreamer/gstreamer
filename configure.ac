@@ -732,6 +732,7 @@ sed \
 AC_OUTPUT
 
 dnl negate for output
+if test "x${GST_DISABLE_GST_DEBUG}" = "xno"; then enable_gst_debug="yes"; fi
 if test "x${GST_DISABLE_LOADSAVE}" = "xno"; then enable_loadsave="yes"; fi
 if test "x${GST_DISABLE_PARSE}" = "xno"; then enable_parse="yes"; fi
 if test "x${GST_DISABLE_OPTION_PARSING}" = "xno"; then enable_option_parsing="yes"; fi
@@ -754,6 +755,7 @@ Configuration
 	Documentation (manuals)    : ${enable_docbook}
 	Documentation (API)        : ${enable_gtk_doc}
 
+	Debug Logging              : ${enable_gst_debug}
 	Pipeline XML load/save     : ${enable_loadsave}
 	Command-line parser        : ${enable_parse}
 	Option parsing in gst_init : ${enable_option_parsing}

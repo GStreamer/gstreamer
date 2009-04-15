@@ -1089,7 +1089,7 @@ G_CONST_RETURN gchar *
 #else /* GST_DISABLE_GST_DEBUG */
 
 
-#if defined(__GNUC__) && __GNUC__ >= 3
+#if !defined(GST_INFO_C) && defined(__GNUC__) && __GNUC__ >= 3
 #  pragma GCC poison gst_debug_log
 #  pragma GCC poison gst_debug_log_valist
 #  pragma GCC poison _gst_debug_category_new
