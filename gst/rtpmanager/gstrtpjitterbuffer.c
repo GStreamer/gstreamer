@@ -1653,8 +1653,8 @@ do_eos:
     GST_DEBUG_OBJECT (jitterbuffer, "We are EOS, pushing EOS downstream");
     priv->srcresult = GST_FLOW_UNEXPECTED;
     gst_pad_pause_task (priv->srcpad);
-    gst_pad_push_event (priv->srcpad, gst_event_new_eos ());
     JBUF_UNLOCK (priv);
+    gst_pad_push_event (priv->srcpad, gst_event_new_eos ());
     return;
   }
 do_npt_stop:
