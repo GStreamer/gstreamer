@@ -570,6 +570,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_YV12;
     case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       return GST_VIDEO_FORMAT_YUY2;
+    case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
+      return GST_VIDEO_FORMAT_YVYU;
     case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
       return GST_VIDEO_FORMAT_UYVY;
     case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
@@ -607,6 +609,8 @@ gst_video_format_to_fourcc (GstVideoFormat format)
       return GST_MAKE_FOURCC ('Y', 'V', '1', '2');
     case GST_VIDEO_FORMAT_YUY2:
       return GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+    case GST_VIDEO_FORMAT_YVYU:
+      return GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U');
     case GST_VIDEO_FORMAT_UYVY:
       return GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
     case GST_VIDEO_FORMAT_AYUV:
@@ -710,6 +714,7 @@ gst_video_format_is_rgb (GstVideoFormat format)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_Y41B:
@@ -748,6 +753,7 @@ gst_video_format_is_yuv (GstVideoFormat format)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_Y41B:
@@ -787,6 +793,7 @@ gst_video_format_has_alpha (GstVideoFormat format)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
@@ -844,6 +851,7 @@ gst_video_format_get_row_stride (GstVideoFormat format, int component,
         return GST_ROUND_UP_4 (GST_ROUND_UP_2 (width) / 2);
       }
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       return GST_ROUND_UP_4 (width * 2);
     case GST_VIDEO_FORMAT_AYUV:
@@ -903,6 +911,7 @@ gst_video_format_get_pixel_stride (GstVideoFormat format, int component)
     case GST_VIDEO_FORMAT_Y42B:
       return 1;
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       if (component == 0) {
         return 2;
@@ -953,6 +962,7 @@ gst_video_format_get_component_width (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       if (component == 0) {
         return width;
@@ -1021,6 +1031,7 @@ gst_video_format_get_component_height (GstVideoFormat format, int component,
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_RGBx:
@@ -1095,6 +1106,14 @@ gst_video_format_get_component_offset (GstVideoFormat format, int component,
         return 1;
       if (component == 2)
         return 3;
+      return 0;
+    case GST_VIDEO_FORMAT_YVYU:
+      if (component == 0)
+        return 0;
+      if (component == 1)
+        return 3;
+      if (component == 2)
+        return 1;
       return 0;
     case GST_VIDEO_FORMAT_UYVY:
       if (component == 0)
@@ -1224,6 +1243,7 @@ gst_video_format_get_size (GstVideoFormat format, int width, int height)
           (GST_ROUND_UP_2 (height) / 2) * 2;
       return size;
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_YVYU:
     case GST_VIDEO_FORMAT_UYVY:
       return GST_ROUND_UP_4 (width * 2) * height;
     case GST_VIDEO_FORMAT_AYUV:

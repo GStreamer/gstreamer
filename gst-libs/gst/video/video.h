@@ -47,6 +47,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_BGR: reverse rgb
  * @GST_VIDEO_FORMAT_Y41B: planar 4:1:1 YUV (Since: 0.10.18)
  * @GST_VIDEO_FORMAT_Y42B: planar 4:2:2 YUV (Since: 0.10.18)
+ * @GST_VIDEO_FORMAT_YVYU: packed 4:2:2 YUV (Y0-V0-Y1-U0 Y2-V2-Y3-U2 Y4 ...) (Since: 0.10.23)
  *
  * Enum value describing the most common video formats.
  */
@@ -68,7 +69,8 @@ typedef enum {
   GST_VIDEO_FORMAT_RGB,
   GST_VIDEO_FORMAT_BGR,
   GST_VIDEO_FORMAT_Y41B,
-  GST_VIDEO_FORMAT_Y42B
+  GST_VIDEO_FORMAT_Y42B,
+  GST_VIDEO_FORMAT_YVYU
 } GstVideoFormat;
 
 #define GST_VIDEO_BYTE1_MASK_32  "0xFF000000"
