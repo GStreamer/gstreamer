@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-01-09 22:45+0000\n"
+"POT-Creation-Date: 2009-04-15 23:00+0100\n"
 "PO-Revision-Date: 2009-01-18 15:48+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -81,8 +81,11 @@ msgid "Could not open device for playback in %d-channel mode."
 msgstr "Laitetta ei voitu avata toistoa varten %d-kanavaisessa tilassa."
 
 #: ext/alsa/gstalsasink.c:687
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Laitetta ei voitu avata toistoa varten. Laitetta käyttää toinen sovellus."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Laitetta ei voitu avata toistoa varten. Laitetta käyttää toinen sovellus."
 
 #: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
@@ -102,8 +105,12 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "Laitetta ei voitu avata nauhoitusta varten %d-kanavaisessa tilassa."
 
 #: ext/alsa/gstalsasrc.c:628
-msgid "Could not open audio device for recording. Device is being used by another application."
-msgstr "Äänilaitetta ei voitu avata nauhoitusta varten. Laitetta käyttää toinen sovellus."
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Äänilaitetta ei voitu avata nauhoitusta varten. Laitetta käyttää toinen "
+"sovellus."
 
 #: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
@@ -140,63 +147,72 @@ msgstr "VFS-tiedostoa \"%s\" ei voitu sulkea."
 msgid "Error while writing to file \"%s\"."
 msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3150
+#: ext/ogg/gstoggdemux.c:3160
 msgid "Internal data stream error."
 msgstr "Sisäisen tietovirran virhe."
 
-#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1028
-#: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1075
+#: gst/playback/gstplaybasebin.c:1554 gst/playback/gstplaybasebin.c:1690
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
+msgstr ""
+"Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
 
-#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1424
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1460
 msgid "This appears to be a text file"
 msgstr "Tämä näyttää olevan tekstitiedosto"
 
-#: gst/playback/gstplaybasebin.c:1519
+#: gst/playback/gstplaybasebin.c:1537
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Virheellinen tekstitysten URI \"%s\", tekstitys ei ole käytössä."
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:812
+#: gst/playback/gstplaybasebin.c:1660 gst/playback/gsturidecodebin.c:840
 msgid "No URI specified to play from."
 msgstr "URIa, josta soitetaan, ei annettu."
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:818
+#: gst/playback/gstplaybasebin.c:1666 gst/playback/gsturidecodebin.c:846
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Virheellinen URI \"%s\"."
 
-#: gst/playback/gstplaybasebin.c:1654
+#: gst/playback/gstplaybasebin.c:1672
 msgid "RTSP streams cannot be played yet."
 msgstr "RTSP-virtoja ei voi vielä soittaa."
 
-#: gst/playback/gstplaybasebin.c:2006
+#: gst/playback/gstplaybasebin.c:2025
 msgid "Could not create \"decodebin\" element."
 msgstr "Elementtiä \"decodebin\" ei voitu luoda."
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1406
+#: gst/playback/gstplaybasebin.c:2244 gst/playback/gsturidecodebin.c:1446
 msgid "Source element is invalid."
 msgstr "Lähde-elementti on virheellinen."
 
-#: gst/playback/gstplaybasebin.c:2301
-msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
-msgstr "Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
+#: gst/playback/gstplaybasebin.c:2321
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai "
+"muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
 
-#: gst/playback/gstplaybasebin.c:2306
-msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
-msgstr "Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun täytyy asentaa tarvittavia liitännäisiä."
+#: gst/playback/gstplaybasebin.c:2326
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun "
+"täytyy asentaa tarvittavia liitännäisiä."
 
-#: gst/playback/gstplaybasebin.c:2310
+#: gst/playback/gstplaybasebin.c:2330
 msgid "This is not a media file"
 msgstr "Tämä ei ole mediatiedosto"
 
-#: gst/playback/gstplaybasebin.c:2315
+#: gst/playback/gstplaybasebin.c:2335
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Havaittiin tekstitysvirta, mutta ei videovirtaa."
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:758
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:958
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
 
@@ -204,63 +220,83 @@ msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:714 gst/playback/gstplaysink.c:729
-#: gst/playback/gstplaysink.c:845 gst/playback/gstplaysink.c:854
-#: gst/playback/gstplaysink.c:955 gst/playback/gstplaysink.c:973
-#: gst/playback/gstplaysink.c:992 gst/playback/gstplaysink.c:1139
-#: gst/playback/gstplaysink.c:1148 gst/playback/gstplaysink.c:1157
+#: gst/playback/gstplaysink.c:906 gst/playback/gstplaysink.c:924
+#: gst/playback/gstplaysink.c:1091 gst/playback/gstplaysink.c:1103
+#: gst/playback/gstplaysink.c:1258 gst/playback/gstplaysink.c:1271
+#: gst/playback/gstplaysink.c:1396 gst/playback/gstplaysink.c:1414
+#: gst/playback/gstplaysink.c:1433 gst/playback/gstplaysink.c:1639
+#: gst/playback/gstplaysink.c:1648 gst/playback/gstplaysink.c:1657
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1045
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1487
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
 
-#: gst/playback/gstplaysink.c:1028
+#: gst/playback/gstplaysink.c:962
+#, fuzzy
+msgid "Both autovideosink and xvimagesink elements are not working."
+msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
+
+#: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
+msgid "Custom text sink element is not usable."
+msgstr ""
+
+#: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "Äänenvoimakkuuden hallintaa ei löytynyt"
 
-#: gst/playback/gstplaysink.c:1380
+#: gst/playback/gstplaysink.c:1490
+#, fuzzy
+msgid "Both autoaudiosink and alsasink elements are not working."
+msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
+
+#: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
 msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
 
-#: gst/playback/gstqueue2.c:991
+#: gst/playback/gstplaysink.c:1993
+#, fuzzy
+msgid "Can't play a text subtitles and subpictures."
+msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
+
+#: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."
 msgstr "Tiedostonimeä ei annettu."
 
-#: gst/playback/gstqueue2.c:997
+#: gst/playback/gstqueue2.c:1011
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
 
-#: gst/playback/gsturidecodebin.c:589
+#: gst/playback/gsturidecodebin.c:609
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Purkajaa tyypille \"%s\" ei ole saatavilla."
 
-#: gst/playback/gsturidecodebin.c:824
+#: gst/playback/gsturidecodebin.c:852
 msgid "This stream type cannot be played yet."
 msgstr "Tätä virtatyyppiä ei voi vielä soittaa."
 
-#: gst/playback/gsturidecodebin.c:835
+#: gst/playback/gsturidecodebin.c:863
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Protokollalle \"%s\" ei ole määritelty URI-käsittelijää."
 
-#: gst/playback/gsturidecodebin.c:1126
+#: gst/playback/gsturidecodebin.c:1164
 msgid "Could not create \"decodebin2\" element."
 msgstr "Elementtiä \"decodebin2\" ei voitu luoda."
 
-#: gst/playback/gsturidecodebin.c:1193
+#: gst/playback/gsturidecodebin.c:1231
 msgid "Could not create \"queue2\" element."
 msgstr "Elementtiä \"queue2\" ei voitu luoda."
 
-#: gst/playback/gsturidecodebin.c:1232
+#: gst/playback/gsturidecodebin.c:1270
 msgid "Could not create \"typefind\" element."
 msgstr "Elementtiä \"typefind\" ei voitu luoda."
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:278
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:287
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Virhe lähetettäessä tietoa kohteeseen \"%s:%d\"."
@@ -275,7 +311,7 @@ msgstr "Virhe lähetettäessä gdp-otsaketietoja kohteeseen \"%s:%d\"."
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Virhe lähetettäessä gdp-sisältöä kohteeseen \"%s:%d\"."
 
-#: gst/tcp/gsttcpclientsink.c:390 gst/tcp/gsttcpclientsrc.c:373
+#: gst/tcp/gsttcpclientsink.c:399 gst/tcp/gsttcpclientsrc.c:382
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Yhteys kohteeseen %s:%d estettiin."

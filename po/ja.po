@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.20.3\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-17 14:28+0100\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2009-04-15 23:00+0100\n"
 "PO-Revision-Date: 2009-01-11 20:45+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -74,11 +74,15 @@ msgstr "ステレオモードで再生用にデバイスをオープンできま
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "%d チャンネルモードで再生用にデバイスを開くことができませんでした"
 
-#: ext/alsa/gstalsasink.c:685
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "再生用にオーディオデバイスを開くことができませんでした。デバイスは他のアプリケーションで利用されています"
+#: ext/alsa/gstalsasink.c:687
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"再生用にオーディオデバイスを開くことができませんでした。デバイスは他のアプリ"
+"ケーションで利用されています"
 
-#: ext/alsa/gstalsasink.c:690
+#: ext/alsa/gstalsasink.c:692
 msgid "Could not open audio device for playback."
 msgstr "再生用にオーティオデバイスを開くことができませんでした"
 
@@ -96,8 +100,12 @@ msgid "Could not open device for recording in %d-channel mode"
 msgstr "%d チャンネルモードで録音用にデバイスを開くことができませんでした"
 
 #: ext/alsa/gstalsasrc.c:628
-msgid "Could not open audio device for recording. Device is being used by another application."
-msgstr "録音用にオーディオデバイスを開くことができませんでした。デバイスは他のアプリケーションで利用されています"
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"録音用にオーディオデバイスを開くことができませんでした。デバイスは他のアプリ"
+"ケーションで利用されています"
 
 #: ext/alsa/gstalsasrc.c:633
 msgid "Could not open audio device for recording."
@@ -129,68 +137,78 @@ msgstr "ファイル名が与えられていません"
 msgid "Could not close vfs file \"%s\"."
 msgstr "vfs ファイル \"%s\" をクローズできませんでした"
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:570
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
 
-#: ext/ogg/gstoggdemux.c:3126
+#: ext/ogg/gstoggdemux.c:3160
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
 
-#: gst/playback/gstdecodebin.c:901 gst/playback/gstdecodebin2.c:1016
-#: gst/playback/gstplaybasebin.c:1536 gst/playback/gstplaybasebin.c:1672
+#: gst/playback/gstdecodebin.c:985 gst/playback/gstdecodebin2.c:1075
+#: gst/playback/gstplaybasebin.c:1554 gst/playback/gstplaybasebin.c:1690
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "%s プラグインはこのストリームを再生するのに必要ですが、インストールされていません"
+msgstr ""
+"%s プラグインはこのストリームを再生するのに必要ですが、インストールされていま"
+"せん"
 
-#: gst/playback/gstdecodebin.c:1715
+#: gst/playback/gstdecodebin.c:1799 gst/playback/gstdecodebin2.c:1460
 msgid "This appears to be a text file"
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1519
+#: gst/playback/gstplaybasebin.c:1537
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "不正な字幕 URI \"%s\"。字幕を無効にします。"
 
-#: gst/playback/gstplaybasebin.c:1642 gst/playback/gsturidecodebin.c:767
+#: gst/playback/gstplaybasebin.c:1660 gst/playback/gsturidecodebin.c:840
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1648 gst/playback/gsturidecodebin.c:773
+#: gst/playback/gstplaybasebin.c:1666 gst/playback/gsturidecodebin.c:846
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "不正な URI \"%s\""
 
-#: gst/playback/gstplaybasebin.c:1654
+#: gst/playback/gstplaybasebin.c:1672
 msgid "RTSP streams cannot be played yet."
 msgstr "RTSP ストリームをまだ再生できません"
 
-#: gst/playback/gstplaybasebin.c:2006
+#: gst/playback/gstplaybasebin.c:2025
 msgid "Could not create \"decodebin\" element."
 msgstr "\"decodebin\" エレメントを作成できません"
 
-#: gst/playback/gstplaybasebin.c:2224 gst/playback/gsturidecodebin.c:1350
+#: gst/playback/gstplaybasebin.c:2244 gst/playback/gsturidecodebin.c:1446
 msgid "Source element is invalid."
 msgstr "ソースエレメントが不正です"
 
-#: gst/playback/gstplaybasebin.c:2301
-msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
-msgstr "字幕ストリームのみ認識しました。字幕ファイルかテキストファイルをロード中か、メディアファイルが認識されないのかどちらかです。"
+#: gst/playback/gstplaybasebin.c:2321
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"字幕ストリームのみ認識しました。字幕ファイルかテキストファイルをロード中か、"
+"メディアファイルが認識されないのかどちらかです。"
 
-#: gst/playback/gstplaybasebin.c:2306
-msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
-msgstr "このファイルを扱うことができるデコーダがインストールされていません。必要なプラグインをインストールする必要があるかもしれません"
+#: gst/playback/gstplaybasebin.c:2326
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"このファイルを扱うことができるデコーダがインストールされていません。必要なプ"
+"ラグインをインストールする必要があるかもしれません"
 
-#: gst/playback/gstplaybasebin.c:2310
+#: gst/playback/gstplaybasebin.c:2330
 msgid "This is not a media file"
 msgstr "これはメディアファイルではありません"
 
-#: gst/playback/gstplaybasebin.c:2315
+#: gst/playback/gstplaybasebin.c:2335
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "字幕のストリームを認識しましたが、動画ストリームがありません"
 
-#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:741
+#: gst/playback/gstplaybin.c:882 gst/playback/gstplaysink.c:958
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
 
@@ -198,59 +216,84 @@ msgstr "autovideosink と xvimagesink エレメントの両方が見つかりま
 #: gst/playback/gstplaybin.c:1157 gst/playback/gstplaybin.c:1166
 #: gst/playback/gstplaybin.c:1175 gst/playback/gstplaybin.c:1306
 #: gst/playback/gstplaybin.c:1315 gst/playback/gstplaybin.c:1324
-#: gst/playback/gstplaysink.c:750 gst/playback/gstplaysink.c:759
-#: gst/playback/gstplaysink.c:846 gst/playback/gstplaysink.c:855
-#: gst/playback/gstplaysink.c:1010 gst/playback/gstplaysink.c:1019
-#: gst/playback/gstplaysink.c:1028 gst/playback/gstplaysink.c:1123
-#: gst/playback/gstplaysink.c:1132 gst/playback/gstplaysink.c:1141
+#: gst/playback/gstplaysink.c:906 gst/playback/gstplaysink.c:924
+#: gst/playback/gstplaysink.c:1091 gst/playback/gstplaysink.c:1103
+#: gst/playback/gstplaysink.c:1258 gst/playback/gstplaysink.c:1271
+#: gst/playback/gstplaysink.c:1396 gst/playback/gstplaysink.c:1414
+#: gst/playback/gstplaysink.c:1433 gst/playback/gstplaysink.c:1639
+#: gst/playback/gstplaysink.c:1648 gst/playback/gstplaysink.c:1657
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "エレメント '%s' が見つかりません - GStreamer のインストールが失敗している可能性があります"
+msgstr ""
+"エレメント '%s' が見つかりません - GStreamer のインストールが失敗している可能"
+"性があります"
 
-#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1002
+#: gst/playback/gstplaybin.c:1150 gst/playback/gstplaysink.c:1487
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
 
-#: gst/playback/gstplaysink.c:989
+#: gst/playback/gstplaysink.c:962
+#, fuzzy
+msgid "Both autovideosink and xvimagesink elements are not working."
+msgstr "autovideosink と xvimagesink エレメントの両方が見つかりません"
+
+#: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
+msgid "Custom text sink element is not usable."
+msgstr ""
+
+#: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "ボリュームコントロールが見つかりません"
 
-#: gst/playback/gstqueue2.c:991
+#: gst/playback/gstplaysink.c:1490
+#, fuzzy
+msgid "Both autoaudiosink and alsasink elements are not working."
+msgstr "autovideosink と alsasink エレメントの両方が見つかりません"
+
+#: gst/playback/gstplaysink.c:1985
+msgid "Can't play a text file without video."
+msgstr ""
+
+#: gst/playback/gstplaysink.c:1993
+msgid "Can't play a text subtitles and subpictures."
+msgstr ""
+
+#: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."
 msgstr "ファイル名が指定されていません"
 
-#: gst/playback/gstqueue2.c:997
+#: gst/playback/gstqueue2.c:1011
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "読み込み用にファイル \"%s\" を開くことができませんでした"
 
-#: gst/playback/gsturidecodebin.c:548
+#: gst/playback/gsturidecodebin.c:609
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "タイプ '%s' 用のデコーダーが利用可能ではありません。"
 
-#: gst/playback/gsturidecodebin.c:779
+#: gst/playback/gsturidecodebin.c:852
 msgid "This stream type cannot be played yet."
 msgstr "このストリームタイプをまだ再生することはできません"
 
-#: gst/playback/gsturidecodebin.c:790
+#: gst/playback/gsturidecodebin.c:863
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "\"%s\" 用の URI ハンドラの実装はありません"
 
-#: gst/playback/gsturidecodebin.c:1081
+#: gst/playback/gsturidecodebin.c:1164
 msgid "Could not create \"decodebin2\" element."
 msgstr "\"decodebin2\" エレメントを作成できませんでした"
 
-#: gst/playback/gsturidecodebin.c:1137
+#: gst/playback/gsturidecodebin.c:1231
 msgid "Could not create \"queue2\" element."
 msgstr "\"queue2\" エレメントを作成できませんでした"
 
-#: gst/playback/gsturidecodebin.c:1176
+#: gst/playback/gsturidecodebin.c:1270
 msgid "Could not create \"typefind\" element."
 msgstr "\"typefind\" エレメントを作成できませんでした"
 
-#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:272
+#: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:287
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "データを \"%s:%d\" へ送信中にエラーが発生しました"
@@ -265,16 +308,16 @@ msgstr "gdp ヘッダデータを \"%s:%d\" へ送信中にエラーが発生し
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "gdp ペイロードデータを \"%s:%d\" へ送信中にエラーが発生しました"
 
-#: gst/tcp/gsttcpclientsink.c:384 gst/tcp/gsttcpclientsrc.c:368
+#: gst/tcp/gsttcpclientsink.c:399 gst/tcp/gsttcpclientsrc.c:382
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "%s:%d への接続が拒否されました"
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:806
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:804
 msgid "Can't record audio fast enough"
 msgstr "十分に速くオーディオを録音することができません"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1038
+#: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
 msgstr "タグの読み込みに失敗しました: データが十分にありません"
 
@@ -318,8 +361,8 @@ msgstr "トラック TRM ID"
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1400
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1433
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1397
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1430
 msgid "This CD has no audio tracks"
 msgstr "この CD にはオーディオトラックがありません"
 
