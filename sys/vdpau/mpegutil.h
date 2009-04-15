@@ -90,6 +90,7 @@ struct MPEGPictureExt
   guint8 concealment_motion_vectors;
   guint8 q_scale_type;
   guint8 intra_vlc_format;
+  guint8 alternate_scan;
 };
 
 struct MPEGPictureGOP

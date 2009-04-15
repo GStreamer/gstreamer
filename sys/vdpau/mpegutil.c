@@ -337,6 +337,7 @@ mpeg_util_parse_picture_coding_extension (MPEGPictureExt * ext, guint8 * data,
   ext->concealment_motion_vectors = read_bits (data + 3, 2, 1);
   ext->q_scale_type = read_bits (data + 3, 3, 1);
   ext->intra_vlc_format = read_bits (data + 3, 4, 1);
+  ext->alternate_scan = read_bits (data + 3, 5, 1);
 
   return TRUE;
 }

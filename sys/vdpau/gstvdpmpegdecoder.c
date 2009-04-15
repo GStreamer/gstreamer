@@ -216,6 +216,7 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
   info->concealment_motion_vectors = pic_ext.concealment_motion_vectors;
   info->q_scale_type = pic_ext.q_scale_type;
   info->intra_vlc_format = pic_ext.intra_vlc_format;
+  info->alternate_scan = pic_ext.alternate_scan;
 
   return TRUE;
 }
