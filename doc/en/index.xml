@@ -167,7 +167,6 @@
       <Type Name="State" Kind="Enumeration" />
       <Type Name="StateChange" Kind="Enumeration" />
       <Type Name="StateChangeReturn" Kind="Enumeration" />
-      <Type Name="StaticCaps" Kind="Class" />
       <Type Name="StaticPadTemplate" Kind="Class" />
       <Type Name="Structure" Kind="Class" />
       <Type Name="StructureChangeType" Kind="Enumeration" />

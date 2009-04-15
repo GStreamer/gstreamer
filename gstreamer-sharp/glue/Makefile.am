@@ -7,8 +7,6 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	message.c \
 	bin.c \
 	structure.c \
-	staticcaps.c \
-	staticpadtemplate.c \
 	gerror.c \
 	gobject.c
 

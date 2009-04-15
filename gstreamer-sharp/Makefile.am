@@ -65,8 +65,6 @@ customs = 			\
 	Object.custom		\
 	MiniObject.custom       \
 	Registry.custom         \
-	StaticCaps.custom       \
-	StaticPadTemplate.custom  \
 	Structure.custom
 
 		
