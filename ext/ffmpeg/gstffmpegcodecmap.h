@@ -113,68 +113,6 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
                                   enum CodecID ** audio_codec_list,
 				  AVOutputFormat * plugin);
 
-/*
- * Since FFMpeg has such really cool and useful descriptions
- * of its codecs, we use our own...
- */
 
-G_CONST_RETURN gchar *
-gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);
-
-/*
- *Get the size of an picture
- */
-int
-gst_ffmpeg_avpicture_get_size (int pix_fmt, int width, int height);
-
-/*
- * Fill in pointers in an AVPicture, aligned by 4 (required by X).
- */
-
-int
-gst_ffmpeg_avpicture_fill (AVPicture * picture,
-                           uint8_t *   ptr,
-                           enum PixelFormat pix_fmt,
-                           int         width,
-                           int         height);
-
-/*
- * Convert from/to a GStreamer <-> FFMpeg timestamp.
- */
-static inline guint64
-gst_ffmpeg_time_ff_to_gst (gint64 pts, AVRational base)
-{
-  guint64 out;
-
-  if (pts == AV_NOPTS_VALUE){
-    out = GST_CLOCK_TIME_NONE;
-  } else {
-    AVRational bq = { 1, GST_SECOND };
-    out = av_rescale_q (pts, base, bq);
-  }
-
-  return out;
-}
-
-static inline gint64
-gst_ffmpeg_time_gst_to_ff (guint64 time, AVRational base)
-{
-  gint64 out;
-
-  if (!GST_CLOCK_TIME_IS_VALID (time) || base.num == 0) {
-    out = AV_NOPTS_VALUE;
-  } else {
-    AVRational bq = { 1, GST_SECOND };
-    out = av_rescale_q (time, bq, base);
-  }
-
-  return out;
-}
-
-void 
-gst_ffmpeg_init_pix_fmt_info();
-
-gint
-av_smp_format_depth(enum SampleFormat smp_fmt);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

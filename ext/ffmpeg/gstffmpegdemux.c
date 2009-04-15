@@ -39,6 +39,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegutils.h"
 #include "gstffmpegpipe.h"
 
 typedef struct _GstFFMpegDemux GstFFMpegDemux;

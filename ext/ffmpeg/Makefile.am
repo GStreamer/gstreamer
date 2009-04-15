@@ -9,6 +9,7 @@ endif
 libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 			  gstffmpegprotocol.c	\
 			  gstffmpegcodecmap.c	\
+			  gstffmpegutils.c	\
 			  gstffmpegenc.c	\
 			  gstffmpegdec.c	\
 			  gstffmpegcfg.c	\
@@ -33,6 +34,7 @@ endif
 noinst_HEADERS = \
 	gstffmpeg.h \
 	gstffmpegcodecmap.h \
+	gstffmpegutils.h \
 	gstffmpegenc.h \
 	gstffmpegcfg.h \
 	gstffmpegpipe.h

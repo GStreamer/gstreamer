@@ -35,6 +35,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegutils.h"
 
 typedef struct _GstFFMpegDeinterlace
 {

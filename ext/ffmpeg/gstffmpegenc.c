@@ -38,6 +38,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegutils.h"
 #include "gstffmpegenc.h"
 #include "gstffmpegcfg.h"
 

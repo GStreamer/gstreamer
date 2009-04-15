@@ -34,6 +34,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegutils.h"
 
 /* define to enable alternative buffer refcounting algorithm */
 #undef EXTRA_REF

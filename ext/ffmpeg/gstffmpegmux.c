@@ -33,6 +33,7 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegutils.h"
 
 typedef struct _GstFFMpegMux GstFFMpegMux;
 typedef struct _GstFFMpegMuxPad GstFFMpegMuxPad;

@@ -36,7 +36,7 @@
 #endif
 
 #include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
+#include "gstffmpegutils.h"
 
 GST_DEBUG_CATEGORY (ffmpeg_debug);
 
