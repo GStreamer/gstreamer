@@ -189,10 +189,10 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   g_assert (params != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFMPEG %s demuxer",
+  details.longname = g_strdup_printf ("FFmpeg %s demuxer",
       params->in_plugin->long_name);
   details.klass = "Codec/Demuxer";
-  details.description = g_strdup_printf ("FFMPEG %s demuxer",
+  details.description = g_strdup_printf ("FFmpeg %s demuxer",
       params->in_plugin->long_name);
   details.author = "Wim Taymans <wim@fluendo.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "

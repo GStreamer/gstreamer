@@ -132,11 +132,11 @@ gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
   g_assert (params != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFMPEG %s encoder",
+  details.longname = g_strdup_printf ("FFmpeg %s encoder",
       params->in_plugin->long_name);
   details.klass = g_strdup_printf ("Codec/Encoder/%s",
       (params->in_plugin->type == CODEC_TYPE_VIDEO) ? "Video" : "Audio");
-  details.description = g_strdup_printf ("FFMPEG %s encoder",
+  details.description = g_strdup_printf ("FFmpeg %s encoder",
       params->in_plugin->name);
   details.author = "Wim Taymans <wim.taymans@gmail.com>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>";
