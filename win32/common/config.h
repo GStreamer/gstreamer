@@ -3,6 +3,9 @@
 /* PREFIX -- specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
 
+/* Define if building universal (internal helper macro) */
+#undef AC_APPLE_UNIVERSAL_BUILD
+
 /* The implementation that should be used for integer audio resampling witll
    be benchmarked at runtime */
 #undef AUDIORESAMPLE_FORMAT_AUTO
@@ -301,13 +304,13 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.22.1"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.22.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.22.1"
+#define PACKAGE_VERSION "0.10.22.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -335,11 +338,19 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.22.1"
+#define VERSION "0.10.22.2"
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-#undef WORDS_BIGENDIAN
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
 
 /* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING

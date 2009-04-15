@@ -30,6 +30,7 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_BGR, "GST_VIDEO_FORMAT_BGR", "bgr"},
       {GST_VIDEO_FORMAT_Y41B, "GST_VIDEO_FORMAT_Y41B", "y41b"},
       {GST_VIDEO_FORMAT_Y42B, "GST_VIDEO_FORMAT_Y42B", "y42b"},
+      {GST_VIDEO_FORMAT_YVYU, "GST_VIDEO_FORMAT_YVYU", "yvyu"},
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstVideoFormat", values);
