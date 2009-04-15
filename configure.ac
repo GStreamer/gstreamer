@@ -290,7 +290,7 @@ AG_GST_CHECK_PLUGIN(auparse)
 AG_GST_CHECK_PLUGIN(autodetect)
 AG_GST_CHECK_PLUGIN(avi)
 AG_GST_CHECK_PLUGIN(cutter)
-AG_GST_CHECK_PLUGIN(debug)
+AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(effectv)
 AG_GST_CHECK_PLUGIN(equalizer)
 AG_GST_CHECK_PLUGIN(id3demux)
@@ -1065,7 +1065,7 @@ gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
 gst/cutter/Makefile
-gst/debug/Makefile
+gst/debugutils/Makefile
 gst/effectv/Makefile
 gst/equalizer/Makefile
 gst/id3demux/Makefile

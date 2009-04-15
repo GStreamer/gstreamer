@@ -135,8 +135,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/avi/gstavimux.h \
 	$(top_srcdir)/gst/avi/gstavisubtitle.h \
 	$(top_srcdir)/gst/cutter/gstcutter.h \
-	$(top_srcdir)/gst/debug/gsttaginject.h \
-	$(top_srcdir)/gst/debug/progressreport.h \
+	$(top_srcdir)/gst/debugutils/gsttaginject.h \
+	$(top_srcdir)/gst/debugutils/progressreport.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
