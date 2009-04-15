@@ -3,6 +3,9 @@
 /* PREFIX -- specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
 
+/* Define if building universal (internal helper macro) */
+#undef AC_APPLE_UNIVERSAL_BUILD
+
 /* Define to 1 if translation of program messages to the user's native
    language is requested. */
 #undef ENABLE_NLS
@@ -274,13 +277,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.22.1"
+#define PACKAGE_STRING "GStreamer 0.10.22.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.22.1"
+#define PACKAGE_VERSION "0.10.22.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -299,11 +302,19 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.22.1"
+#define VERSION "0.10.22.2"
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-#undef WORDS_BIGENDIAN
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS
