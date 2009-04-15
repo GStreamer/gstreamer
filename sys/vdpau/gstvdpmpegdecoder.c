@@ -307,6 +307,7 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   GstVdpMpegDecoder *mpeg_dec;
   guint8 *data, *end;
   guint32 sync_word = 0xffffffff;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   mpeg_dec = GST_VDPAU_MPEG_DECODER (GST_OBJECT_PARENT (pad));
 
@@ -338,10 +339,9 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     switch (data[0]) {
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
-        if (mpeg_dec->vdp_info.slice_count > 0) {
-          if (gst_vdp_mpeg_decoder_decode (mpeg_dec) != GST_FLOW_OK)
-            return GST_FLOW_ERROR;
-        }
+        if (mpeg_dec->vdp_info.slice_count > 0)
+          ret = gst_vdp_mpeg_decoder_decode (mpeg_dec);
+
         gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start, packet_end);
         break;
       case MPEG_PACKET_SEQUENCE:
@@ -374,7 +374,7 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 /* GObject vmethod implementations */
