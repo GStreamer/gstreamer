@@ -177,11 +177,8 @@ gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
   gint gain, balance;
-
   float ratio;
-
   struct audio_info audioinfo;
-
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
 
   g_return_if_fail (mixer->mixer_fd != -1);
@@ -264,17 +261,11 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
   gint gain;
-
   gint balance;
-
   gint l_real_gain;
-
   gint r_real_gain;
-
   float ratio;
-
   struct audio_info audioinfo;
-
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
 
   l_real_gain = volumes[0];
@@ -343,9 +334,7 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gboolean mute)
 {
   struct audio_info audioinfo;
-
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
-
   gint volume, balance;
 
   AUDIO_INITINFO (&audioinfo);
@@ -394,9 +383,7 @@ gst_sunaudiomixer_ctrl_set_record (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gboolean record)
 {
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
-
   struct audio_info audioinfo;
-
   GList *trk;
 
   /* Don't change the setting */
