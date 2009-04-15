@@ -74,7 +74,7 @@ struct _GstDeinterlaceMethodClass {
   guint fields_required;
   guint latency;
 
-  void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent);
+  void (*deinterlace_frame) (GstDeinterlaceMethod *self, GstDeinterlace2 * parent, GstBuffer *outbuf);
 
   const gchar *name;
   const gchar *nick;
@@ -193,8 +193,6 @@ struct _GstDeinterlace2
 
   GstPad *srcpad, *sinkpad;
 
-  guint history_count;
-
   GstDeinterlace2FieldLayout field_layout;
 
   guint frame_size;
@@ -215,9 +213,7 @@ struct _GstDeinterlace2
      the program just started or a picture was skipped.
    */
   GstPicture field_history[MAX_FIELD_HISTORY];
-
-  /* Current overlay buffer pointer. */
-  GstBuffer *out_buf;
+  guint history_count;
 
   /* Overlay pitch (number of bytes between scanlines). */
   guint output_stride;

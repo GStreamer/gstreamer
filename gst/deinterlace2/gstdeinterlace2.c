@@ -72,11 +72,11 @@ gst_deinterlace_method_init (GstDeinterlaceMethod * self)
 
 static void
 gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent)
+    GstDeinterlace2 * parent, GstBuffer * outbuf)
 {
   GstDeinterlaceMethodClass *klass = GST_DEINTERLACE_METHOD_GET_CLASS (self);
 
-  klass->deinterlace_frame (self, parent);
+  klass->deinterlace_frame (self, parent, outbuf);
 }
 
 static gint
@@ -117,13 +117,13 @@ gst_deinterlace_simple_method_copy_scanline (GstDeinterlaceMethod * self,
 
 static void
 gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
-    GstDeinterlace2 * parent)
+    GstDeinterlace2 * parent, GstBuffer * outbuf)
 {
   GstDeinterlaceSimpleMethodClass *dsm_class =
       GST_DEINTERLACE_SIMPLE_METHOD_GET_CLASS (self);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   GstDeinterlaceScanlineData scanlines;
-  guint8 *out = GST_BUFFER_DATA (parent->out_buf);
+  guint8 *out = GST_BUFFER_DATA (outbuf);
   guint8 *field0 = NULL, *field1 = NULL, *field2 = NULL, *field3 = NULL;
   gint cur_field_idx = parent->history_count - dm_class->fields_required;
   guint cur_field_flags = parent->field_history[cur_field_idx].flags;
@@ -570,11 +570,6 @@ gst_deinterlace2_reset_history (GstDeinterlace2 * self)
 static void
 gst_deinterlace2_reset (GstDeinterlace2 * self)
 {
-  if (self->out_buf) {
-    gst_buffer_unref (self->out_buf);
-    self->out_buf = NULL;
-  }
-
   self->output_stride = 0;
   self->line_length = 0;
   self->frame_width = 0;
@@ -748,6 +743,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   gint fields_required = 0;
   gint cur_field_idx = 0;
+  GstBuffer *outbuf;
 
   self = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
 
@@ -781,12 +777,12 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       /* create new buffer */
       ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
           GST_BUFFER_OFFSET_NONE, self->frame_size,
-          GST_PAD_CAPS (self->srcpad), &self->out_buf);
+          GST_PAD_CAPS (self->srcpad), &outbuf);
       if (ret != GST_FLOW_OK)
         return ret;
 
       /* do magic calculus */
-      gst_deinterlace_method_deinterlace_frame (self->method, self);
+      gst_deinterlace_method_deinterlace_frame (self->method, self, outbuf);
 
       g_assert (self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method) >= 0);
@@ -797,14 +793,14 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 
       gst_buffer_unref (gst_deinterlace2_pop_history (self));
 
-      GST_BUFFER_TIMESTAMP (self->out_buf) = timestamp;
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       if (self->fields == GST_DEINTERLACE2_ALL)
-        GST_BUFFER_DURATION (self->out_buf) = self->field_duration;
+        GST_BUFFER_DURATION (outbuf) = self->field_duration;
       else
-        GST_BUFFER_DURATION (self->out_buf) = 2 * self->field_duration;
+        GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
 
-      ret = gst_pad_push (self->srcpad, self->out_buf);
-      self->out_buf = NULL;
+      ret = gst_pad_push (self->srcpad, outbuf);
+      outbuf = NULL;
       if (ret != GST_FLOW_OK)
         return ret;
     }
@@ -828,12 +824,12 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
       /* create new buffer */
       ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
           GST_BUFFER_OFFSET_NONE, self->frame_size,
-          GST_PAD_CAPS (self->srcpad), &self->out_buf);
+          GST_PAD_CAPS (self->srcpad), &outbuf);
       if (ret != GST_FLOW_OK)
         return ret;
 
       /* do magic calculus */
-      gst_deinterlace_method_deinterlace_frame (self->method, self);
+      gst_deinterlace_method_deinterlace_frame (self->method, self, outbuf);
 
       g_assert (self->history_count - 1 -
           gst_deinterlace_method_get_latency (self->method) >= 0);
@@ -844,14 +840,14 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 
       gst_buffer_unref (gst_deinterlace2_pop_history (self));
 
-      GST_BUFFER_TIMESTAMP (self->out_buf) = timestamp;
+      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       if (self->fields == GST_DEINTERLACE2_ALL)
-        GST_BUFFER_DURATION (self->out_buf) = self->field_duration;
+        GST_BUFFER_DURATION (outbuf) = self->field_duration;
       else
-        GST_BUFFER_DURATION (self->out_buf) = 2 * self->field_duration;
+        GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
 
-      ret = gst_pad_push (self->srcpad, self->out_buf);
-      self->out_buf = NULL;
+      ret = gst_pad_push (self->srcpad, outbuf);
+      outbuf = NULL;
 
       if (ret != GST_FLOW_OK)
         return ret;
