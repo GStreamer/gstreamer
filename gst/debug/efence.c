@@ -397,8 +397,8 @@ gst_fenced_buffer_finalize (GstFencedBuffer * buffer)
     munmap (fenced_buffer->region, fenced_buffer->length);
   }
 
-  GST_MINI_OBJECT_CLASS (fenced_buffer_parent_class)->
-      finalize (GST_MINI_OBJECT (buffer));
+  GST_MINI_OBJECT_CLASS (fenced_buffer_parent_class)->finalize (GST_MINI_OBJECT
+      (buffer));
 }
 
 static GstFencedBuffer *

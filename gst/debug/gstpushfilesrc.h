@@ -23,7 +23,6 @@
 #include <gst/gstbin.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_PUSH_FILE_SRC \
   (gst_push_file_src_get_type())
 #define GST_PUSH_FILE_SRC(obj) \
@@ -34,7 +33,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PUSH_FILE_SRC))
 #define GST_IS_PUSH_FILE_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PUSH_FILE_SRC))
-
 typedef struct _GstPushFileSrc GstPushFileSrc;
 typedef struct _GstPushFileSrcClass GstPushFileSrcClass;
 
@@ -42,9 +40,9 @@ struct _GstPushFileSrc
 {
   GstBin parent;
 
-  /*< private >*/
+  /*< private > */
   GstElement *filesrc;
-  GstPad     *srcpad;
+  GstPad *srcpad;
 };
 
 struct _GstPushFileSrcClass
@@ -52,9 +50,7 @@ struct _GstPushFileSrcClass
   GstBinClass parent_class;
 };
 
-GType gst_push_file_src_get_type(void);
+GType gst_push_file_src_get_type (void);
 
 G_END_DECLS
-
-#endif /* __GST_PUSH_FILE_SRC_H__*/
-
+#endif /* __GST_PUSH_FILE_SRC_H__ */

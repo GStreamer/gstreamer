@@ -26,7 +26,6 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_NAVSEEK \
   (gst_navseek_get_type())
 #define GST_NAVSEEK(obj) \
@@ -37,26 +36,25 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NAVSEEK))
 #define GST_IS_NAVSEEK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NAVSEEK))
-
 typedef struct _GstNavSeek GstNavSeek;
 typedef struct _GstNavSeekClass GstNavSeekClass;
 
-struct _GstNavSeek {
-  GstBaseTransform  basetransform;
+struct _GstNavSeek
+{
+  GstBaseTransform basetransform;
 
-  gdouble           seek_offset;
-  gboolean          loop;
-  gboolean          grab_seg_start;
-  gboolean          grab_seg_end;
-  GstClockTime      segment_start;
-  GstClockTime      segment_end;
+  gdouble seek_offset;
+  gboolean loop;
+  gboolean grab_seg_start;
+  gboolean grab_seg_end;
+  GstClockTime segment_start;
+  GstClockTime segment_end;
 };
 
-struct _GstNavSeekClass {
+struct _GstNavSeekClass
+{
   GstBaseTransformClass parent_class;
 };
 
 G_END_DECLS
-
 #endif /* __GST_NAVSEEK_H__ */
-

@@ -25,15 +25,14 @@
 
 typedef struct _GstTestInfo GstTestInfo;
 
-struct _GstTestInfo {
-  GParamSpec *  (* get_spec)    (const GstTestInfo *info, gboolean compare_value);
-  gpointer      (* new)         (const GstTestInfo *info);
-  void          (* add)         (gpointer test,
-                                 GstBuffer *buffer);
-  gboolean      (* finish)      (gpointer test, GValue *value);
-  void          (* get_value)   (gpointer test,
-                                 GValue *value);
-  void          (* free)        (gpointer test);
+struct _GstTestInfo
+{
+  GParamSpec *(*get_spec) (const GstTestInfo * info, gboolean compare_value);
+    gpointer (*new) (const GstTestInfo * info);
+  void (*add) (gpointer test, GstBuffer * buffer);
+    gboolean (*finish) (gpointer test, GValue * value);
+  void (*get_value) (gpointer test, GValue * value);
+  void (*free) (gpointer test);
 };
 
 extern const GstTestInfo tests[];

@@ -26,7 +26,6 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_PROGRESS_REPORT \
   (gst_progress_report_get_type())
 #define GST_PROGRESS_REPORT(obj) \
@@ -37,7 +36,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PROGRESS_REPORT))
 #define GST_IS_PROGRESS_REPORT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PROGRESS_REPORT))
-
 typedef struct _GstProgressReport GstProgressReport;
 typedef struct _GstProgressReportClass GstProgressReportClass;
 
@@ -62,9 +60,7 @@ struct _GstProgressReportClass
   GstBaseTransformClass parent_class;
 };
 
-GType gst_progress_report_get_type(void);
+GType gst_progress_report_get_type (void);
 
 G_END_DECLS
-
-#endif /* __GST_PROGRESS_REPORT_H__*/
-
+#endif /* __GST_PROGRESS_REPORT_H__ */

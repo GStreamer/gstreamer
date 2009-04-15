@@ -28,8 +28,6 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
-
-
 #define GST_TYPE_TAG_INJECT \
   (gst_tag_inject_get_type())
 #define GST_TAG_INJECT(obj) \
@@ -40,7 +38,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAG_INJECT))
 #define GST_IS_TAG_INJECT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAG_INJECT))
-
 typedef struct _GstTagInject GstTagInject;
 typedef struct _GstTagInjectClass GstTagInjectClass;
 
@@ -49,20 +46,21 @@ typedef struct _GstTagInjectClass GstTagInjectClass;
  *
  * Opaque #GstTagInject data structure
  */
-struct _GstTagInject {
-  GstBaseTransform 	 element;
+struct _GstTagInject
+{
+  GstBaseTransform element;
 
-  /*< private >*/
+  /*< private > */
   GstTagList *tags;
   gboolean tags_sent;
 };
 
-struct _GstTagInjectClass {
+struct _GstTagInjectClass
+{
   GstBaseTransformClass parent_class;
 };
 
-GType gst_tag_inject_get_type(void);
+GType gst_tag_inject_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_TAG_INJECT_H__ */
