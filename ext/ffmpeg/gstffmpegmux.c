@@ -153,11 +153,11 @@ gst_ffmpegmux_base_init (gpointer g_class)
   g_assert (params != NULL);
 
   /* construct the element details struct */
-  details.longname = g_strdup_printf ("FFMPEG %s Muxer",
-      params->in_plugin->name);
+  details.longname = g_strdup_printf ("FFMPEG %s muxer",
+      params->in_plugin->long_name);
   details.klass = g_strdup ("Codec/Muxer");
-  details.description = g_strdup_printf ("FFMPEG %s Muxer",
-      params->in_plugin->name);
+  details.description = g_strdup_printf ("FFMPEG %s muxer",
+      params->in_plugin->long_name);
   details.author = "Wim Taymans <wim.taymans@chello.be>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>";
   gst_element_class_set_details (element_class, &details);
