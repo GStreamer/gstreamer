@@ -256,7 +256,7 @@ typedef enum {
 /**
  * GST_VIDEO_BUFFER_ONEFIELD:
  *
- * If the #GstBuffer is interlaced, the only the first field (as defined by the
+ * If the #GstBuffer is interlaced, then only the first field (as defined by the
  * %GST_VIDEO_BUFFER_TFF flag setting) is to be displayed.
  *
  * Since: 0.10.23
