@@ -355,14 +355,14 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
             gst_vdp_mpeg_decoder_parse_picture_coding (mpeg_dec, packet_start,
                 packet_end);
             break;
+          case MPEG_PACKET_EXT_QUANT_MATRIX:
+            GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_QUANT_MATRIX");
+            gst_vdp_mpeg_decoder_parse_quant_matrix (mpeg_dec, packet_start,
+                packet_end);
+            break;
           default:
             break;
         }
-        break;
-      case MPEG_PACKET_EXT_QUANT_MATRIX:
-        GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_QUANT_MATRIX");
-        gst_vdp_mpeg_decoder_parse_quant_matrix (mpeg_dec, packet_start,
-            packet_end);
         break;
       case MPEG_PACKET_GOP:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_GOP");

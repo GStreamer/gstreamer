@@ -385,31 +385,30 @@ mpeg_util_parse_quant_matrix (MPEGQuantMatrix * qm, guint8 * data, guint8 * end)
 
   code = GST_READ_UINT32_BE (data);
 
-  if (G_UNLIKELY (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_GOP))))
+  if (G_UNLIKELY (G_UNLIKELY (code != (0x00000100 | MPEG_PACKET_EXTENSION))))
     return FALSE;
 
   /* Skip the sync word */
   data += 4;
 
-  load_intra_flag = read_bits (data, 0, 1);
+  load_intra_flag = read_bits (data, 4, 1);
   if (load_intra_flag) {
     if (G_UNLIKELY ((end - data) < 64))
       return FALSE;
-    for (i = 0; i < 64; i++) {
-      qm->intra_quantizer_matrix[mpeg2_scan[i]] = read_bits (data + i, 1, 8);
-    }
-    data += 64;
+    for (i = 0; i < 64; i++)
+      qm->intra_quantizer_matrix[mpeg2_scan[i]] = read_bits (data + i, 5, 8);
 
+    data += 64;
   } else
     memcpy (qm->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
 
-  load_non_intra_flag = read_bits (data, 1 + load_intra_flag, 1);
+  load_non_intra_flag = read_bits (data, 5 + load_intra_flag, 1);
   if (load_non_intra_flag) {
     if (G_UNLIKELY ((end - data) < 64))
       return FALSE;
     for (i = 0; i < 64; i++)
       qm->non_intra_quantizer_matrix[mpeg2_scan[i]] =
-          read_bits (data + i, 2 + load_intra_flag, 8);
+          read_bits (data + i, 6 + load_intra_flag, 8);
   } else
     memset (qm->non_intra_quantizer_matrix, 16, 64);
 
