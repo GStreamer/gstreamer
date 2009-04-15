@@ -979,8 +979,8 @@ gst_base_transform_acceptcaps (GstPad * pad, GstCaps * caps)
   GstBaseTransform *trans;
 #if 0
   GstPad *otherpad;
-#endif
   GstCaps *othercaps = NULL;
+#endif
   gboolean ret = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
@@ -1044,8 +1044,7 @@ no_transform_possible:
   {
     GST_WARNING_OBJECT (trans,
         "transform could not transform %" GST_PTR_FORMAT
-        " in anything we support (othercaps %" GST_PTR_FORMAT ")",
-        caps, othercaps);
+        " in anything we support", caps);
     ret = FALSE;
     goto done;
   }
