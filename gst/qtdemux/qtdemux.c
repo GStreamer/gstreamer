@@ -4335,6 +4335,111 @@ unknown_stream:
   }
 }
 
+static inline gboolean
+qtdemux_is_string_3gp (GstQTDemux * qtdemux, guint32 fourcc)
+{
+  /* Detect if the tag must be handled as 3gpp - i18n metadata. The first
+   * check is for catching all the possible brands, e.g. 3gp4,3gp5,.. and
+   * handling properly the tags present in more than one brand.*/
+  return ((qtdemux->major_brand & GST_MAKE_FOURCC (255, 255, 255, 0)) ==
+      GST_MAKE_FOURCC ('3', 'g', 'p', 0)
+      && (fourcc == FOURCC_cprt || fourcc == FOURCC_gnre
+          || fourcc == FOURCC_kywd)) || fourcc == FOURCC_titl
+      || fourcc == FOURCC_dscp || fourcc == FOURCC_perf || fourcc == FOURCC_auth
+      || fourcc == FOURCC_albm;
+}
+
+static void
+qtdemux_tag_add_location (GstQTDemux * qtdemux, const char *tag,
+    const char *dummy, GNode * node)
+{
+  const gchar *env_vars[] = { "GST_QT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
+  int offset;
+  char *name;
+  gdouble longitude, latitude, altitude;
+
+  offset = 14;
+
+  /* TODO: language code skipped */
+
+  name = gst_tag_freeform_string_to_utf8 ((char *) node->data + offset,
+      -1, env_vars);
+
+  if (!name) {
+    GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
+  }
+
+  /* +1 = skip location role byte */
+  offset += strlen (name) + 1 + 1;
+  longitude = QT_FP32 ((guint8 *) node->data + offset);
+
+  offset += 4;
+  latitude = QT_FP32 ((guint8 *) node->data + offset);
+
+  offset += 4;
+  altitude = QT_FP32 ((guint8 *) node->data + offset);
+
+  gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_GEO_LOCATION_NAME, name,
+      GST_TAG_GEO_LOCATION_LATITUDE, latitude,
+      GST_TAG_GEO_LOCATION_LONGITUDE, longitude,
+      GST_TAG_GEO_LOCATION_ELEVATION, altitude, NULL);
+
+  /* TODO: no GST_TAG_, so astronomical body and additional notes skipped */
+
+  g_free (name);
+}
+
+
+static void
+qtdemux_tag_add_year (GstQTDemux * qtdemux, const char *tag, const char *dummy,
+    GNode * node)
+{
+  guint16 y;
+  GDate *date;
+
+  y = QT_UINT16 ((guint8 *) node->data + 12);
+  GST_DEBUG_OBJECT (qtdemux, "year: %u", y);
+
+  date = g_date_new_dmy (1, 1, y);
+  gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, date, NULL);
+  g_date_free (date);
+}
+
+static void
+qtdemux_tag_add_classification (GstQTDemux * qtdemux, const char *tag,
+    const char *dummy, GNode * node)
+{
+  int offset;
+  char *tag_str = NULL;
+  guint32 entity;
+  guint16 table;
+
+
+  offset = 12;
+  entity = QT_FOURCC ((guint8 *) node->data + offset);
+
+  offset += 4;
+  table = QT_UINT16 ((guint8 *) node->data + offset);
+
+  /* Language code skipped */
+
+  offset += 4;
+
+  /* Tag format: "XXXX://Y[YYYY]/classification info string"
+   * XXXX: classification entity, fixed length 4 chars.
+   * Y[YYYY]: classification table, max 5 chars.
+   */
+  tag_str = g_strdup_printf ("%" GST_FOURCC_FORMAT "://%u/%s",
+      GST_FOURCC_ARGS (entity), table, (char *) node->data + offset);
+  GST_DEBUG_OBJECT (qtdemux, "classification info: %s", tag_str);
+
+  gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_APPEND, tag,
+      tag_str, NULL);
+
+  g_free (tag_str);
+}
+
 static void
 qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
     GNode * node)
@@ -4365,11 +4470,16 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, const char *dummy,
   } else {
     len = QT_UINT32 (node->data);
     type = QT_UINT32 ((guint8 *) node->data + 4);
-    if (type & 0xa9000000) {
+    if ((type >> 24) == 0xa9) {
       /* Type starts with the (C) symbol, so the next 32 bits are
        * the language code, which we ignore */
       offset = 12;
       GST_DEBUG_OBJECT (qtdemux, "found international text tag");
+    } else if (qtdemux_is_string_3gp (qtdemux,
+            QT_FOURCC ((guint8 *) node->data + 4))) {
+      offset = 14;
+      /* 16-bit Language code is ignored here as well */
+      GST_DEBUG_OBJECT (qtdemux, "found 3gpp text tag");
     } else {
       offset = 8;
       GST_DEBUG_OBJECT (qtdemux, "found normal text tag");
@@ -4563,15 +4673,21 @@ static const struct
 } add_funcs[] = {
   {
   FOURCC__nam, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
+  FOURCC_titl, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
   FOURCC__grp, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
   FOURCC__wrt, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
   FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC_perf, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+  FOURCC_auth, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
   FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
+  FOURCC_albm, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
   FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
   FOURCC__cpy, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
   FOURCC__cmt, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
   FOURCC__des, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+  FOURCC_dscp, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
   FOURCC__day, GST_TAG_DATE, NULL, qtdemux_tag_add_date}, {
+  FOURCC_yrrc, GST_TAG_DATE, NULL, qtdemux_tag_add_year}, {
   FOURCC__too, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
   FOURCC__inf, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
   FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, qtdemux_tag_add_num}, {
@@ -4585,7 +4701,10 @@ static const struct
   FOURCC_covr, GST_TAG_PREVIEW_IMAGE, NULL, qtdemux_tag_add_covr}, {
   FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
   FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
-  FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}
+  FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
+  FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, qtdemux_tag_add_location}, {
+  FOURCC_clsf, GST_QT_DEMUX_CLASSIFICATION_TAG, NULL,
+        qtdemux_tag_add_classification}
 };
 
 static void

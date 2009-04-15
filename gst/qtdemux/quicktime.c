@@ -41,6 +41,10 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_BUFFER, "QT atom", "unparsed QT tag atom",
       gst_tag_merge_use_first);
 
+  gst_tag_register (GST_QT_DEMUX_CLASSIFICATION_TAG, GST_TAG_FLAG_META,
+      G_TYPE_STRING, GST_QT_DEMUX_CLASSIFICATION_TAG, "content classification",
+      gst_tag_merge_use_first);
+
   if (!gst_element_register (plugin, "qtdemux",
           GST_RANK_PRIMARY, GST_TYPE_QTDEMUX))
     return FALSE;
