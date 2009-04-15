@@ -418,11 +418,15 @@ gst_vdp_mpeg_decoder_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
   vdp_info->forward_reference = VDP_INVALID_HANDLE;
   vdp_info->backward_reference = VDP_INVALID_HANDLE;
   vdp_info->slice_count = 0;
-  vdp_info->picture_structure = 0;
+  vdp_info->picture_structure = 3;
   vdp_info->picture_coding_type = 0;
   vdp_info->intra_dc_precision = 0;
-  vdp_info->frame_pred_frame_dct = 0;
+  vdp_info->frame_pred_frame_dct = 1;
   vdp_info->concealment_motion_vectors = 0;
+  vdp_info->intra_vlc_format = 0;
+  vdp_info->alternate_scan = 0;
+  vdp_info->q_scale_type = 0;
+  vdp_info->top_field_first = 1;
 }
 
 static void
