@@ -378,8 +378,10 @@ gst_pad_template_new (const gchar * name_template,
  *
  * Gets the capabilities of the static pad template.
  *
- * Returns: the #GstCaps of the static pad template. If you need to keep a
- * reference to the caps, take a ref (see gst_caps_ref ()).
+ * Returns: the #GstCaps of the static pad template.
+ * Unref after usage. Since the core holds an additional
+ * ref to the returned caps, use gst_caps_make_writable()
+ * on the returned caps to modify it.
  */
 GstCaps *
 gst_static_pad_template_get_caps (GstStaticPadTemplate * templ)
