@@ -1156,7 +1156,6 @@ static void gst_rtp_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 /* GstElement vmethods */
-static GstClock *gst_rtp_bin_provide_clock (GstElement * element);
 static GstStateChangeReturn gst_rtp_bin_change_state (GstElement * element,
     GstStateChange transition);
 static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
@@ -1438,8 +1437,6 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Send an event downstream when a packet is lost", DEFAULT_DO_LOST,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gstelement_class->provide_clock =
-      GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -1463,7 +1460,6 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
   rtpbin->priv->bin_lock = g_mutex_new ();
   rtpbin->priv->dyn_lock = g_mutex_new ();
-  rtpbin->provided_clock = gst_system_clock_obtain ();
 
   rtpbin->latency = DEFAULT_LATENCY_MS;
   rtpbin->do_lost = DEFAULT_DO_LOST;
@@ -1509,7 +1505,6 @@ gst_rtp_bin_finalize (GObject * object)
 
   g_mutex_free (rtpbin->priv->bin_lock);
   g_mutex_free (rtpbin->priv->dyn_lock);
-  gst_object_unref (rtpbin->provided_clock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1693,16 +1688,6 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static GstClock *
-gst_rtp_bin_provide_clock (GstElement * element)
-{
-  GstRtpBin *rtpbin;
-
-  rtpbin = GST_RTP_BIN (element);
-
-  return GST_CLOCK_CAST (gst_object_ref (rtpbin->provided_clock));
 }
 
 static void

@@ -48,8 +48,6 @@ struct _GstRtpBin {
   gboolean        do_lost;
   /* a list of session */
   GSList         *sessions;
-  /* clock we provide */
-  GstClock       *provided_clock;
 
   /* a list of clients, these are streams with the same CNAME */
   GSList         *clients;
