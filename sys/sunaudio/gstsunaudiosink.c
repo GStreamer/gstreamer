@@ -203,7 +203,6 @@ gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass)
 static void
 gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
 {
-  GstBaseAudioSink *ba_sink = GST_BASE_AUDIO_SINK (sunaudiosink);
   const char *audiodev;
 
   GST_DEBUG_OBJECT (sunaudiosink, "initializing sunaudiosink");
@@ -506,10 +505,6 @@ gst_sunaudio_sink_do_delay (GstSunAudioSink * sink)
   return;
 
 write_error:
-  GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
-      ("Playback error on device '%s': %s", sink->device, strerror (errno)));
-  return;
-poll_failed:
   GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
       ("Playback error on device '%s': %s", sink->device, strerror (errno)));
   return;

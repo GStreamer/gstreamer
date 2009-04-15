@@ -273,13 +273,9 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
 
   float ratio;
 
-  gchar buf[100];
-
   struct audio_info audioinfo;
 
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
-
-  gint temp[2];
 
   l_real_gain = volumes[0];
   r_real_gain = volumes[1];
