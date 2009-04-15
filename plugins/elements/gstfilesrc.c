@@ -389,11 +389,6 @@ gst_file_src_set_property (GObject * object, guint prop_id,
 
   src = GST_FILE_SRC (object);
 
-  if (!gst_param_spec_is_mutable (pspec, GST_ELEMENT (src))) {
-    GST_WARNING_OBJECT (src, "attempting to change property in wrong state");
-    return;
-  }
-
   switch (prop_id) {
     case ARG_LOCATION:
       gst_file_src_set_location (src, g_value_get_string (value));

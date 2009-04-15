@@ -20,7 +20,6 @@
 #ifndef __GST_PARAMSPECS_H__
 #define __GST_PARAMSPECS_H__
 
-#include <gst/gstelement.h>
 #include <gst/gstvalue.h>
 
 G_BEGIN_DECLS
@@ -122,9 +121,6 @@ GParamSpec  * gst_param_spec_fraction (const gchar * name,
                                        gint max_num, gint max_denom,
                                        gint default_num, gint default_denom,
                                        GParamFlags flags);
-
-gboolean gst_param_spec_is_mutable (GParamSpec *param_spec,
-    GstElement *element);
 
 G_END_DECLS
 
