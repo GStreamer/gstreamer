@@ -153,10 +153,11 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
       G_STRUCT_OFFSET (GstRTPDTMFMuxClass, unlocked), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
-  gobject_class->dispose = gst_rtp_dtmf_mux_dispose;
-  gstelement_class->release_pad = gst_rtp_mux_release_pad;
-  gstrtpmux_class->chain_func = gst_rtp_dtmf_mux_chain;
-  gstrtpmux_class->sink_event_func = gst_rtp_dtmf_mux_sink_event;
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_dispose);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_mux_release_pad);
+  gstrtpmux_class->chain_func = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_chain);
+  gstrtpmux_class->sink_event_func =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_mux_sink_event);
 }
 
 static void

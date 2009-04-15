@@ -176,9 +176,10 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
           "The SSRC of the packets (-1 == random)",
           0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
 
-  gstelement_class->request_new_pad = gst_rtp_mux_request_new_pad;
-  gstelement_class->release_pad = gst_rtp_mux_release_pad;
-  gstelement_class->change_state = gst_rtp_mux_change_state;
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_rtp_mux_request_new_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_mux_release_pad);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_mux_change_state);
 
   klass->chain_func = gst_rtp_mux_chain;
 }
@@ -230,7 +231,8 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
   rtp_mux->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_set_event_function (rtp_mux->srcpad, gst_rtp_mux_src_event);
+  gst_pad_set_event_function (rtp_mux->srcpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_mux_src_event));
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
 
   rtp_mux->ssrc = DEFAULT_SSRC;
