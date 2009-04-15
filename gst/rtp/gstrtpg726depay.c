@@ -81,6 +81,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "layout = (string) \"g726\"")
     );
 
+static void gst_rtp_g726_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtp_g726_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
 static GstBuffer *gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 static gboolean gst_rtp_g726_depay_setcaps (GstBaseRTPDepayload * depayload,
@@ -114,8 +119,17 @@ gst_rtp_g726_depay_class_init (GstRtpG726DepayClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = gst_rtp_g726_depay_set_property;
+  gobject_class->get_property = gst_rtp_g726_depay_get_property;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FORCE_AAL2,
+      g_param_spec_boolean ("force-aal2", "Force AAL2",
+          "Force AAL2 decoding for compatibility with bad payloaders",
+          DEFAULT_FORCE_AAL2, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstbasertpdepayload_class->process = gst_rtp_g726_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_g726_depay_setcaps;
+
 }
 
 static void
@@ -323,6 +337,42 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   }
 
   return outbuf;
+}
+
+static void
+gst_rtp_g726_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpG726Depay *rtpg726depay;
+
+  rtpg726depay = GST_RTP_G726_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_AAL2:
+      rtpg726depay->force_aal2 = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_g726_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpG726Depay *rtpg726depay;
+
+  rtpg726depay = GST_RTP_G726_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_AAL2:
+      g_value_set_boolean (value, rtpg726depay->force_aal2);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 gboolean
