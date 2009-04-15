@@ -1,4 +1,4 @@
-/* 
+/*
  * efence.h
  */
 
@@ -7,11 +7,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif                          /* __cplusplus */
-
+G_BEGIN_DECLS
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_EFENCE \
   (gst_gst_efence_get_type())
@@ -23,28 +19,24 @@ extern "C"
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EFENCE))
 #define GST_IS_EFENCE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EFENCE))
+typedef struct _GstEFence GstEFence;
+typedef struct _GstEFenceClass GstEFenceClass;
 
-  typedef struct _GstEFence GstEFence;
-  typedef struct _GstEFenceClass GstEFenceClass;
+struct _GstEFence
+{
+  GstElement element;
 
-  struct _GstEFence
-  {
-    GstElement element;
+  GstPad *sinkpad, *srcpad;
 
-    GstPad *sinkpad, *srcpad;
+  gboolean fence_top;
+};
 
-    gboolean fence_top;
-  };
+struct _GstEFenceClass
+{
+  GstElementClass parent_class;
+};
 
-  struct _GstEFenceClass
-  {
-    GstElementClass parent_class;
-  };
+GType gst_gst_efence_get_type (void);
 
-  GType gst_gst_efence_get_type (void);
-
-#ifdef __cplusplus
-}
-#endif                          /* __cplusplus */
-
-#endif                          /* __GST_EFENCE_H__ */
+G_END_DECLS
+#endif /* __GST_EFENCE_H__ */
