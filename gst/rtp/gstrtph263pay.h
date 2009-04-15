@@ -189,7 +189,7 @@ typedef struct _GstRtpH263PayBHeader
   unsigned int hmv21:6;         /* horizontal motion vector predictor for MB 3 - part 1 */
 
   unsigned int hmv22:1;         /* horizontal motion vector predictor for MB 3 - part 2 */
-  unsigned int vmv21:7          /* vertical motion vector predictor for MB 3 */
+  unsigned int vmv21:7;          /* vertical motion vector predictor for MB 3 */
 #else
 #error "G_BYTE_ORDER should be big or little endian."
 #endif
@@ -265,7 +265,7 @@ typedef struct _GstRtpH263PayCHeader
   unsigned int hmv21:6;         /* horizontal motion vector predictor for MB 3 - part 1 */
 
   unsigned int hmv22:1;         /* horizontal motion vector predictor for MB 3 - part 2 */
-  unsigned int vmv21:7          /* vertical motion vector predictor for MB 3 */
+  unsigned int vmv21:7;          /* vertical motion vector predictor for MB 3 */
   unsigned int rr1:8;           /* reserved */
   unsigned int rr2:8;           /* reserved */
 

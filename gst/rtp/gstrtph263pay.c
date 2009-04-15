@@ -734,7 +734,7 @@ gst_rtp_h263_pay_gobfinder (GstRtpH263Pay * rtph263pay,
     }
   }
 
-  GST_DEBUG ("Couldn't find any new GBSC in this frame", range);
+  GST_DEBUG ("Couldn't find any new GBSC in this frame, range:%u", range);
 
   b = gst_rtp_h263_pay_boundry_new (boundry->end + 1,
       (guint8 *) (rtph263pay->data + rtph263pay->available_data - 1), 0, 0);
