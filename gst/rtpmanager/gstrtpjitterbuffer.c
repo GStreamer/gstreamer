@@ -786,6 +786,10 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->next_in_seqnum = -1;
   priv->clock_rate = -1;
   priv->eos = FALSE;
+  priv->estimated_eos = -1;
+  priv->last_elapsed = 0;
+  priv->reached_npt_stop = FALSE;
+  priv->ext_timestamp = -1;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
@@ -842,10 +846,6 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       /* reset negotiated values */
       priv->clock_rate = -1;
       priv->clock_base = -1;
-      priv->last_elapsed = 0;
-      priv->estimated_eos = -1;
-      priv->reached_npt_stop = FALSE;
-      priv->ext_timestamp = -1;
       priv->peer_latency = 0;
       priv->last_pt = -1;
       /* block until we go to PLAYING */
@@ -1606,7 +1606,15 @@ push_buffer:
 
     rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
 
-    ext_time = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, rtp_time);
+    GST_LOG_OBJECT (jitterbuffer, "rtp %" G_GUINT32_FORMAT ", ext %"
+        G_GUINT64_FORMAT, rtp_time, priv->ext_timestamp);
+
+    if (rtp_time < priv->ext_timestamp) {
+      ext_time = priv->ext_timestamp;
+    } else {
+      ext_time = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, rtp_time);
+    }
+
     if (ext_time > priv->clock_base)
       elapsed = ext_time - priv->clock_base;
     else
@@ -1615,10 +1623,14 @@ push_buffer:
     elapsed = gst_util_uint64_scale_int (elapsed, GST_SECOND, priv->clock_rate);
 
     if (elapsed > priv->last_elapsed) {
+      guint left;
+
       priv->last_elapsed = elapsed;
 
+      left = priv->npt_stop - priv->npt_start;
+
       if (elapsed > 0)
-        estimated = gst_util_uint64_scale (out_time, priv->npt_stop, elapsed);
+        estimated = gst_util_uint64_scale (out_time, left, elapsed);
       else
         estimated = -1;
 
