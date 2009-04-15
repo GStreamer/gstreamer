@@ -1,24 +1,23 @@
-# translation of gstreamer-0.10.20.3.po to Dutch
+# translation of gstreamer-0.10.21.3.po to Dutch
 # Dutch translation of gstreamer
-# Copyright (C) 2003-2006, 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2003-2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008.
-# Freek de Kruijf <freek@opensuse.org>, 2008.
+# Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.20.3\n"
+"Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
-"PO-Revision-Date: 2008-10-09 21:18+0200\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
+"PO-Revision-Date: 2009-01-23 18:32+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: KBabel 1.11.4\n"
 
 msgid "Print the GStreamer version"
@@ -459,6 +458,14 @@ msgstr "audio codec"
 msgid "codec the audio data is stored in"
 msgstr "codec waarin de audiogegevens is opgeslagen"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "video codec"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "codec waarin het stuk is opgeslagen"
+
 msgid "bitrate"
 msgstr "bitsnelheid"
 
@@ -801,10 +808,11 @@ msgstr ""
 "automatische plugin-installatiemechanismen"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Toon de inhoud van de plugin"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
+"Toon de ondersteunde URI-schema's met de elementen die deze implementeren"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -826,8 +834,8 @@ msgstr "FOUT: verwerken van xml-bestand '%s' mislukt.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
 "WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
 "moment."
@@ -841,7 +849,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "WAARSCHUWING: element met naam '%s' niet gevonden.\n"
 
 msgid "Got Message #%"
-msgstr ""
+msgstr "Bericht #% ontvangen"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -863,27 +871,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "WAARSCHUWING: van element %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Voorbereid, wacht op gereedkomen van de buffering...\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "in buffer opslaan... %d  \n"
+msgstr "in buffer opslaan..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Buffering is gereed, pijplijn gezet op AFSPELEN ...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Wordt gebufferd, pijplijn gezet op PAUZE ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Herverdeel de vertraging...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupt: Pijplijn ingesteld op gestopt ...\n"
 
@@ -892,6 +898,10 @@ msgstr "Tags (ook bekend als metadata) weergeven"
 
 msgid "Output status information and property notifications"
 msgstr "Statusinformatie en eigenschapswaarschuwingen weergeven"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Statusinformatie van soort SOORT niet weergeven"
 
 msgid "Output messages"
 msgstr "Uitvoer"
@@ -914,11 +924,13 @@ msgstr "Geen foutafhandelaar installeren"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Toewijzingsspoor weergeven (indien aangezet tijdens compileren)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
 
@@ -926,56 +938,58 @@ msgstr "FOUT: pijplijn kon niet gemaakt worden.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSCHUWING: foutieve pijplijn: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Pijplijn gezet op gepauzeerd ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FOUT: pijplijn wil niet pauzeren.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Pijplijn klaar en heeft PREROLL niet nodig...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Pijplijn is bezig met PREROLL ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FOUT: pijplijn wil niet PREROLL uitvoeren.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Pijplijn klaar met PREROLL ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Pijplijn gezet op afspelen ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pijplijn wil niet afspelen.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Interrupt: Pijplijn ingesteld op gestopt ...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Uitvoering beëindigd na %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Pijplijn gezet op gereed ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Pijplijn gezet op NULL ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "Pijplijn wordt vrijgemaakt ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Pijplijn gezet op NULL ...\n"
 
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Bericht van element \"%s\" ontvangen (%s): "
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "Pijplijn wordt vrijgemaakt ...\n"

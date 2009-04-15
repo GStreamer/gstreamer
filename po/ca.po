@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -463,6 +463,14 @@ msgstr "còdec d'àudio"
 msgid "codec the audio data is stored in"
 msgstr "còdec en el qual estan emmagatzemades les dades d'àudio"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "còdec de vídeo"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "còdel en el qual estan emmagatzemades les dades de vídeo"
+
 msgid "bitrate"
 msgstr "ràtio de bits"
 
@@ -822,8 +830,8 @@ msgstr "ERROR: l'anàlisi del fitxer xml «%s» ha fallat.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERROR: no hi ha cap conducte de nivell superior en el fitxer «%s».\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "AVÍS: només es gestiona un element de primer nivell ara mateix."
 
 #, c-format
@@ -856,26 +864,28 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ERROR: des de l'element %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
 msgid "buffering..."
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "S'està establint el conducte a REPRODUCCIÓ ...\n"
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "S'està establint el conducte a EN PAUSA ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
+#, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "S'està establint el conducte a NUL ...\n"
 
@@ -884,6 +894,10 @@ msgstr "Mostra els marcadors (també coneguts com metadades)"
 
 msgid "Output status information and property notifications"
 msgstr "Mostra la informació d'estat i notificacions de propietats"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "No mostres informació d'estat de TIPUS"
 
 msgid "Output messages"
 msgstr "Missatges de sortida"
@@ -906,11 +920,13 @@ msgstr "No instal·les un gestor de fallades"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimeix una traça d'alloc (si s'ha habilitat al compilar)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: no s'ha pogut construir el conducte: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERROR: no s'ha pogut construir el conducte.\n"
 
@@ -918,58 +934,60 @@ msgstr "ERROR: no s'ha pogut construir el conducte.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVÍS: el conducte és erroni: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: l'element «conducte» no s'ha trobat.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "S'està establint el conducte a EN PAUSA ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERROR: el conducte no es vol posar en pausa.\n"
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "El conducte s'ha PREPARAT ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "El conducte s'està PREPARANT ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERROR: el conducte no vol preparar-se.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "El conducte s'ha PREPARAT ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "S'està establint el conducte a REPRODUCCIÓ ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: el conducte no vol reproduir-se.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "L'execució ha finalitzat després de %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 "S'està establint el conducte a LLEST ...\n"
 "\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "S'està establint el conducte a NUL ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "S'està establint el conducte a NUL ...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "ubicació original del fitxer com una URI"
@@ -988,6 +1006,9 @@ msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
 
 #~ msgid " ns.\n"
 #~ msgstr " ns.\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
 
 #~ msgid "NO_PREROLL pipeline ...\n"
 #~ msgstr " El conducte NO ES PREPARA ...\n"

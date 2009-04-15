@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2009-01-17 11:59-0200\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -471,6 +471,14 @@ msgstr "CODEC de áudio"
 msgid "codec the audio data is stored in"
 msgstr "CODEC de áudio usado nos dados"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "CODEC de vídeo"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "CODEC de vídeo usado nos dados"
+
 msgid "bitrate"
 msgstr "taxa de bits"
 
@@ -840,8 +848,8 @@ msgstr ""
 "ERRO: nenhum elemento de nível superior na fila de processamento do arquivo "
 "\"%s\".\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "AVISO: apenas um elemento de nível superior é suportado atualmente."
 
 #, c-format
@@ -876,29 +884,28 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "AVISO: do elemento %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, esperando o preenchimento do buffer para finalizar...\n"
 
 msgid "buffering..."
 msgstr "preenchendo buffer..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "Preenchimento do buffer completo, definindo a fila de processamento para "
 "REPRODUZIR...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 "Preenchendo buffer, definindo a fila de processamento para PAUSADO...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr "Redistribuição de latência...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrupção: Parando a fila de processamento...\n"
 
@@ -907,6 +914,10 @@ msgstr "Exibir etiquetas (metadados)"
 
 msgid "Output status information and property notifications"
 msgstr "Exibir informações do estado e notificações de propriedade"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Não é possível obter informações do estado de saída do TIPO"
 
 msgid "Output messages"
 msgstr "Exibir mensagens"
@@ -930,11 +941,13 @@ msgstr "Não instale um manipulador de falhas"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Exibir trilha de alocação (se habilitado na compilação)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERRO: não foi possível construir a fila de processamento: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERRO: não foi possível construir a fila de processamento.\n"
 
@@ -942,57 +955,62 @@ msgstr "ERRO: não foi possível construir a fila de processamento.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVISO: fila de processamento com erros: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERRO: o elemento da \"fila de processamento\" não foi encontrado.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Definindo a fila de processamento para PAUSADO...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERRO: A fila do processamento não quer pausar.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 "A fila de processamento está executando e não necessita de PREPARAÇÃO...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "A fila de processamento está PREPARANDO...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERRO: a fila de processamento não quer preparar.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "A fila de processamento foi PREPARADA...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Definindo a fila de processamento para REPRODUZINDO...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERRO: a fila de processamento não quer reproduzir.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Interrupção: Parando a fila de processamento...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Execução finalizada depois de %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Definindo a fila de processamento para PRONTO...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Definindo a fila de processamento para NULO...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "LIBERANDO a fila de processamento...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Definindo a fila de processamento para NULO...\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "LIBERANDO a fila de processamento...\n"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Obtida mensagem do elemento \"%s\" (%s): "

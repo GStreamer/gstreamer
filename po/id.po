@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2009-01-13 21:05+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -456,6 +456,14 @@ msgstr "codec audio"
 msgid "codec the audio data is stored in"
 msgstr "codec data audio tersimpan"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "codec video"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "codec data video tersimpan"
+
 msgid "bitrate"
 msgstr "bitrasi"
 
@@ -818,8 +826,8 @@ msgstr "GALAT: penguraian berkas xml '%s' gagal.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "GALAT: tak ada elemen baris pipa level atas di berkas '%s'.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "PERINGATAN: hanya satu elemen level atas yang didukung pada saat ini."
 
 #, c-format
@@ -853,26 +861,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "PERINGATAN: dari elemen %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
 
 msgid "buffering..."
 msgstr "menyangga..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Selesai menyangga, mengatur baris pipa ke MEMUTAR ...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Menyangga, mengatur baris pipa ke JEDA ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr "Mendistribusikan ulang latency...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interupsi: Menghentikan baris pipa ...\n"
 
@@ -881,6 +888,10 @@ msgstr "Tag keluaran (juga dikenal sebagai metadata)"
 
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan pemberitahuan properti"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Jangan keluarkan informasi status dari TIPE"
 
 msgid "Output messages"
 msgstr "Pesan keluaran"
@@ -903,11 +914,13 @@ msgstr "Jangan instal penanganan galat"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GALAT: baris pipa tak dapat dibangun.\n"
 
@@ -915,56 +928,61 @@ msgstr "GALAT: baris pipa tak dapat dibangun.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "PERINGATAN: baris pipa berisi galat: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GALAT: elemen 'baris pipa' tak ditemukan.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Mengatur baris pipa ke JEDA ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "GALAT: Baris pipa tak ingin dijedakan.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Baris pipa telah hidup dan tak membutuhkan PRAGULUNG ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Baris pipa PRAGULUNG ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GALAT: baris pipa tak ingin dipragulung.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Baris pipa telah PRAGULUNG ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Mengatur baris pipa ke PUTAR ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GALAT: baris pipa tidak ingin diputar.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Interupsi: Menghentikan baris pipa ...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Eksekusi berakhir setelah %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Mengatur baris pipa ke SIAP ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Mengatur baris pipa ke KOSONG ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "MEMBEBASKAN baris pipa...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Mengatur baris pipa ke KOSONG ...\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "MEMBEBASKAN baris pipa...\n"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Mendapat Pesan dari elemen \"%s\" (%s): "

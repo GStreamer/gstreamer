@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -459,6 +459,14 @@ msgstr "oudio-kodek"
 msgid "codec the audio data is stored in"
 msgstr "kodek waarmee die oudiodata gestoor is"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "video-kodek"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "kodek waarmee die videodata gestoor is"
+
 msgid "bitrate"
 msgstr "bistempo"
 
@@ -818,8 +826,8 @@ msgstr "FOUT: ontleding van xml-lêer '%s' het misluk.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FOUT: geen topvlak pyplynelement in lêer '%s' nie.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "WAARSKUWING: slegs een topvlak element word tans ondersteun."
 
 #, c-format
@@ -851,26 +859,28 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "FOUT: vanaf element %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
 msgid "buffering..."
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Pyplyn word gestel na SPEEL ...\n"
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
+#, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
@@ -879,6 +889,10 @@ msgstr "Wys etikette (ook bekend as metadata)"
 
 msgid "Output status information and property notifications"
 msgstr "Wys statusinligting en kennisgewings van eienskappe"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Moenie statusinligting van TIPE wys nie"
 
 msgid "Output messages"
 msgstr "Afvoerboodskappe"
@@ -901,11 +915,13 @@ msgstr "Moenie 'n fouthanteerder installeer nie"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Druk \"alloc trace\" (indien aangeskakel tydens kompilering)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FOUT: pyplyn kon nie opgestel word nie.\n"
 
@@ -913,56 +929,58 @@ msgstr "FOUT: pyplyn kon nie opgestel word nie.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "WAARSKUWING: foutiewe pyplyn: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FOUT: die pyplynelement kon nie gevind word nie.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Stel pyplyn na POUSEER ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FOUT: pyplyn wil nie pouseer nie.\n"
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Pyplyn is VOORGEROL ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Pyplyn doen VOORROLLING ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FOUT: pyplyn wil nie voorrol nie.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Pyplyn is VOORGEROL ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Pyplyn word gestel na SPEEL ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FOUT: pyplyn wil nie speel nie.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Uitvoering het geëindig na %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Pyplyn word gestel na GEREED ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Pyplyn word gestel na NULL ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "pyplyn word VRYGEMAAK ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Pyplyn word gestel na NULL ...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "oorsprong van lêer gegee as 'n URI"
@@ -978,3 +996,6 @@ msgstr "pyplyn word VRYGEMAAK ...\n"
 
 #~ msgid " ns.\n"
 #~ msgstr " ns.\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "pyplyn word VRYGEMAAK ...\n"

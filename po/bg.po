@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.19.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2008-07-21 11:08+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -456,6 +456,14 @@ msgstr "аудио кодер"
 msgid "codec the audio data is stored in"
 msgstr "кодер, чрез който са съхранени аудио данните"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "видео кодер"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "кодер, чрез който са съхранени видео данните"
+
 msgid "bitrate"
 msgstr "скорост на битовете"
 
@@ -814,8 +822,8 @@ msgstr "ГРЕШКА: файлът с xml „%s“ не може да бъде �
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ГРЕШКА: няма най-горен елемент за конвейер във файла „%s“.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: засега е позволен само един най-горен елемент."
 
 #, c-format
@@ -851,7 +859,6 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: от елемент %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Буфериран, изчаква се завършването на буферирането…\n"
 
@@ -859,19 +866,19 @@ msgstr "Буфериран, изчаква се завършването на б
 msgid "buffering..."
 msgstr "буфериране… %d  \r"
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Буферирането завърши, конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Буфериране, конвейерът се дава НА ПАУЗА…\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекъсване: Конвейерът се спира…\n"
 
@@ -880,6 +887,10 @@ msgstr "Изходни съобщения за етикетите (метада�
 
 msgid "Output status information and property notifications"
 msgstr "Да се дават изходни съобщения за състоянието и промяната на свойства"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
 
 msgid "Output messages"
 msgstr "Изходни съобщения"
@@ -904,11 +915,13 @@ msgstr ""
 "Отпечатване на заделянето на памет (ако е било включено при компилиране на "
 "програмата)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде конструиран: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде конструиран.\n"
 
@@ -916,59 +929,64 @@ msgstr "ГРЕШКА: конвейерът не може да бъде конс�
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: конвейер с грешки: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: не е открит елемент за конвейер — „pipeline“.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Конвейерът се дава НА ПАУЗА…\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: конвейерът не изпълнява даването на пауза.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейерът работи и не се нуждае от БУФЕРИРАНЕ…\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Конвейерът се БУФЕРИРА…\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ГРЕШКА: конвейерът не иска да превърти напред.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Конвейерът е БУФЕРИРАН…\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ…\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: конвейерът не иска да проработи.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Прекъсване: Конвейерът се спира…\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Изпълнението завърши след %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Конвейерът е в ГОТОВНОСТ…\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "ОСВОБОЖДАВАНЕ на конвейера…\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Конвейерът се ЗАНУЛЯВА…\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "първоначално местоположение като адрес"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Получено е съобщение от елемента „%s“ (%s): "
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "ОСВОБОЖДАВАНЕ на конвейера…\n"

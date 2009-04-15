@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2008-09-25 09:55+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -474,6 +474,14 @@ msgstr "zvukový kodek"
 msgid "codec the audio data is stored in"
 msgstr "kodek, v ktorom sú zvukové údaje uložené"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "video kodek"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "kodek, v ktorom sú video údaje uložené"
+
 msgid "bitrate"
 msgstr "Bitová rýchlosť"
 
@@ -839,8 +847,8 @@ msgstr "CHYBA: zlyhala analýza xml súboru '%s'.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "CHYBA: v súbore '%s' chýba prvok rúry najvyššej úrovne.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
 "VAROVANIE: v súčasnosti je podporovaný iba jeden prvok najvyššej úrovne."
 
@@ -875,7 +883,6 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "VAROVANIE: z prvku %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Predčítané, čakám na dokončenie napĺňania vyrovnávacej pamäte...\n"
 
@@ -883,19 +890,19 @@ msgstr "Predčítané, čakám na dokončenie napĺňania vyrovnávacej pamäte.
 msgid "buffering..."
 msgstr "Ukladám do vyrovnávacej pamäte... %d \n"
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Vyrovnávacia pamäť je naplnená, nastavujem rúru na PREHRÁVA ...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Napĺňa sa vyrovnávacia pamäť, nastavujem rúru na POZASTAVENÚ ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prerušenie: Zastavujem rúru ...\n"
 
@@ -904,6 +911,10 @@ msgstr "Vypísať značky (známe tiež ako metadáta)"
 
 msgid "Output status information and property notifications"
 msgstr "Vypísať informácie o stave a upozornenia o vlastnostiach"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Nevypisovať informácie o stave TYPU"
 
 msgid "Output messages"
 msgstr "Vypísať správy"
@@ -926,11 +937,13 @@ msgstr "Neinštalovať obsluhu výnimiek"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Vypisovať stopu alokácie (ak je to povolené pri kompilácii)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "CHYBA: nepodarilo sa vytvoriť rúru: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "CHYBA: nepodarilo sa vytvoriť rúru.\n"
 
@@ -938,62 +951,67 @@ msgstr "CHYBA: nepodarilo sa vytvoriť rúru.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VAROVANIE: chybná rúra: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "CHYBA: prvok 'rúra' sa nenašiel.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Nastavujem rúru na POZASTAVENÚ ...\n"
 
 # On strike?
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "CHYBA: Rúra sa nechce pozastaviť.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rúra je živá a nepotrebuje PREROLL ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rúra je v stave PREROLLING ...\n"
 
 # On strike?
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "CHYBA: rúra nechce prerollovať.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Rúra je v stave PREROLLED ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Nastavujem rúru na PREHRÁVA ...\n"
 
 # On strike?
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "CHYBA: Rúra nechce hrať.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Prerušenie: Zastavujem rúru ...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Vykonávanie skončilo po %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Nastavujem rúru na PRIPRAVENÚ ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "UVOĽŇUJEM rúru ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Dostal som správu od prvku \"%s\" (%s):"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "UVOĽŇUJEM rúru ...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "pôvodné umiestnenie súboru ako URI"

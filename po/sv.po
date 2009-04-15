@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2009-01-12 23:18+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -459,6 +459,14 @@ msgstr "ljudkomprimeringsmetod"
 msgid "codec the audio data is stored in"
 msgstr "komprimeringsmetod som dessa ljuddata lagras med"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "videokomprimeringsmetod"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "komprimeringsmetod som dessa videodata lagras med"
+
 msgid "bitrate"
 msgstr "bitfrekvens"
 
@@ -834,8 +842,8 @@ msgstr "FEL: tolkning av xml-filen \"%s\" misslyckades.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "VARNING: endast ett element på översta nivån stöds just nu."
 
 #, c-format
@@ -869,26 +877,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "VARNING: från elementet %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Förinläst, väntar på att buffringen ska bli färdig...\n"
 
 msgid "buffering..."
 msgstr "buffrar..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Färdig med buffringen, ställer in rörledningen till PLAYING...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Buffrar, ställer in rörledningen till PAUSED...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr "Fördröjning för vidaresändning...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Avbrott: Stoppar rörledningen ...\n"
 
@@ -897,6 +904,10 @@ msgstr "Utmatningstaggar (även känt som metadata)"
 
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Skriv inte ut statusinformation av TYP"
 
 msgid "Output messages"
 msgstr "Utmatningsmeddelanden"
@@ -919,11 +930,13 @@ msgstr "Installera inte en felhanterare"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
@@ -932,57 +945,62 @@ msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ställer in rörledningen till PAUSED...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEL: Rörledningen vill inte göra paus.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rörledningen lever och behöver inte PREROLL ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rörledningen utför PREROLL...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEL: rörledningen vill inte utföra preroll.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Rörledningen har utfört PREROLL...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ställer in rörledningen till PLAYING...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Avbrott: Stoppar rörledningen ...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Ställer in rörledningen till READY...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ställer in rörledningen till NULL...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "FRIGÖR rörledning...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Ställer in rörledningen till NULL...\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "FRIGÖR rörledning...\n"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Fick meddelande från element \"%s\" (%s): "

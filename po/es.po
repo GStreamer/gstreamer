@@ -1,14 +1,14 @@
-# translation of gstreamer-0.10.20.3.po to Español
+# translation of gstreamer-0.10.21.3.po to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 #
-# Jorge González González <aloriel@gmail.com>, 2007, 2008.
+# Jorge González González <aloriel@gmail.com>, 2007, 20, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
+"Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
-"PO-Revision-Date: 2008-10-18 16:32+0200\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
+"PO-Revision-Date: 2009-04-04 13:33+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -460,6 +460,14 @@ msgstr "códec de sonido"
 msgid "codec the audio data is stored in"
 msgstr "los datos del códec de sonido se almacenan en"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "códec de vídeo"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "los datos del códec de vídeo se almacenan en"
+
 msgid "bitrate"
 msgstr "tasa de bits"
 
@@ -802,10 +810,11 @@ msgstr ""
 "instalación externa automática de complementos "
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Listar el contenido del complemento"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
+"Imprimir los esquemas URI soportados, con los elementos que los implementan"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -829,8 +838,8 @@ msgstr ""
 "ERROR: no existe el elemento de nivel superior de la segmentación en el "
 "archivo «%s».\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
 "ADVERTENCIA: en este momento sólo se soporta un elemento de nivel superior."
 
@@ -844,7 +853,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "ADVERTENCIA: no se encontró el elemento llamado «%s».\n"
 
 msgid "Got Message #%"
-msgstr ""
+msgstr "Se obtuvo el mensaje #%"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -866,29 +875,27 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ADVERTENCIA: del elemento %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, esperando a llenar el búfer para terminar...\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "almacenando en el búfer... %d  \n"
+msgstr "almacenando en el búfer..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 "Se terminó de almacenar en el búfer, estableciendo la segmentación para "
 "REPRODUCIR...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "almacenando en el búfer, estableciendo la segmentación a PAUSA...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Redistribuir latencia...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrumpir: parando el conducto ...\n"
 
@@ -897,6 +904,10 @@ msgstr "Etiquetas de salida (también conocidos como metadatos)"
 
 msgid "Output status information and property notifications"
 msgstr "Información de estado de la salida y notificaciones de las propiedades"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "No sacar la salida de la información de estado del TIPO"
 
 msgid "Output messages"
 msgstr "Mensajes de salida"
@@ -919,11 +930,13 @@ msgstr "No instalar un manejador predeterminado"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimir la traza de asignaciones (si se activó al compilar)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERROR: no se pudo construir el conducto:%s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERROR: no se pudo construir el conducto.\n"
 
@@ -931,56 +944,61 @@ msgstr "ERROR: no se pudo construir el conducto.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ADVERTENCIA: conducto erróneo: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERROR: el elemento «conducto» no se encontró.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Estableciendo el conducto a PAUSA ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERROR: El conducto no quiere pausarse.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "El conducto está vivo y no necesita PREPARARSE ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "El conducto está PREPARÁNDOSE ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERROR: el conducto no quiere prepararse.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "El conducto está PREPARADO ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Estableciendo el conducto a REPRODUCIENDO ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERROR: el conducto no quiere reproducir.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Interrumpir: parando el conducto ...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "La ejecución finalizó después de %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Estableciando el conducto a PREPARADO ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Estableciendo el conducto a NULL ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "LIBERANDO el conducto ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Estableciendo el conducto a NULL ...\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "LIBERANDO el conducto ...\n"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Se recibió un mensaje del elemento «%s» (%s): "

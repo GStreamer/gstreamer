@@ -1,21 +1,21 @@
 # Vietnamese Translation for GStreamer.
-# Copyright © 2008 Free Software Foundation, Inc.
+# Copyright © 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Clytie Siddall <clytie@riverland.net.au>, 2005-2008.
+# Clytie Siddall <clytie@riverland.net.au>, 2005-2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
+"Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
-"PO-Revision-Date: 2008-09-21 21:56+0930\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
+"PO-Revision-Date: 2009-01-26 22:21+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: LocFactoryEditor 1.7b3\n"
+"X-Generator: LocFactoryEditor 1.8\n"
 
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản GStreamer"
@@ -52,10 +52,10 @@ msgid "Disable debugging"
 msgstr "Tắt gỡ lỗi"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "Bật chẩn đoán chi tiết việc tải bổ sung"
+msgstr "Bật chẩn đoán chi tiết việc nạp phần bổ sung"
 
 msgid "Colon-separated paths containing plugins"
-msgstr "Các đường dẫn chứa bổ sung, phân cách nhau bởi dấu phẩy."
+msgstr "Các đường dẫn định giới bằng dấu hai chấm mà chứa phần bổ sung"
 
 msgid "PATHS"
 msgstr "ĐƯỜNG DẪN"
@@ -64,14 +64,14 @@ msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"Danh sách định giới bằng dấu phẩy của các bổ sung cần tải trước, thêm vào "
-"danh sách được cất giữ trong biến môi trường <GST_PLUGIN_PATH>."
+"Danh sách định giới bằng dấu phẩy chứa các phần bổ sung cần nạp trước, thêm "
+"vào danh sách được cất giữ trong biến môi trường GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
 msgstr "BỔ SUNG"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Tắt khả năng bắt lỗi phân đoạn trong khi tải bổ sung"
+msgstr "Tắt chức năng bắt lỗi phân đoạn trong khi nạp phần bổ sung"
 
 msgid "Disable updating the registry"
 msgstr "Tắt khả năng cập nhật bộ đăng ký"
@@ -451,6 +451,14 @@ msgstr "codec âm thanh"
 msgid "codec the audio data is stored in"
 msgstr "cách mã hóa/giải mã dữ liệu âm thanh này"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "codec ảnh động"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "cách mã hóa/giải mã dữ liệu ảnh động này"
+
 msgid "bitrate"
 msgstr "tỷ lệ bit"
 
@@ -773,7 +781,7 @@ msgstr "Đếm tổng: "
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] "%d bổ sung"
+msgstr[0] "%d phần bổ sung"
 
 #, c-format
 msgid "%d feature"
@@ -788,23 +796,23 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"In ra danh sách cho máy phân tách được chứa các tính năng của bổ sung đã ghi "
-"rõ.\n"
-"\t\t\t\tCó ích khi dùng cơ chế cài đặt bổ sung tự động bên ngoại."
+"In ra danh sách cho máy phân tích được chứa các tính năng của phần bổ sung "
+"đã ghi rõ.\n"
+"\t\t\t\tCó ích khi dùng cơ chế tự động bên ngoài mà cài đặt phần bổ sung."
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Liệt kê nội dung phần bổ sung"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "In ra các lược đồ URI được hỗ trợ, với những yếu tố thực hiện chúng."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Không thể nạp tập tin bổ sung: %s\n"
+msgstr "Không thể nạp tập tin phần bổ sung: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Không có yếu tố hay bổ sung « %s »\n"
+msgstr "Không có yếu tố hay phần bổ sung như vậy « %s »\n"
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
@@ -818,8 +826,8 @@ msgstr "LỖI: lỗi phân tách tập tin xml « %s ».\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "LỖI: không có yếu tố đường ống cấp đầu trong tập tin « %s ».\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "CẢNH BÁO : hiện thời hỗ trợ chỉ một yếu tố cấp đầu."
 
 #, c-format
@@ -831,7 +839,7 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "CẢNH BÁO : không tìm thấy yếu tố tên « %s ».\n"
 
 msgid "Got Message #%"
-msgstr ""
+msgstr "Nhận được thông điệp #%"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
@@ -853,27 +861,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "CẢNH BÁO : từ yếu tố %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong...\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "đang chuyển hoán đệm... %d \n"
+msgstr "đang chuyển hoán đệm..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Chuyển hoán đệm xong nên lập đường ống thành ĐANG PHÁT ...\n"
+msgstr "Hoàn tất chuyển hoán đệm nên lập đường ống thành ĐANG PHÁT ...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Đang chuyển hoán đệm nên lập đường ống thành BỊ TẠM DỪNG ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Phân phối lại sự âm ỷ...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
 
@@ -882,6 +888,10 @@ msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"
 
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo tài sản"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Không xuất thông tin trạng thái KIỂU"
 
 msgid "Output messages"
 msgstr "Thông điệp xuất"
@@ -904,11 +914,13 @@ msgstr "Không cài đặt bộ quản lý lỗi"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "LỖI: không thể cấu tạo đường ống: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "LỖI: không thể cấu tạo đường ống.\n"
 
@@ -916,56 +928,58 @@ msgstr "LỖI: không thể cấu tạo đường ống.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "CẢNH BÁO : đường ống có lỗi: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "LỖI: không tìm thấy yếu tố « đường ống » (pipeline).\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Đang lập đường ống thành BỊ TẠM DỪNG ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "LỖI: đường ống không tạm dừng được.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Đường ống là động, không cần TIỀN CUỘN ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Đường ống ĐANG TIỀN CUỘN ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "LỖI: đường ống không tiền cuộn được.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Đường ống ĐÃ TIỀN CUỘN ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Đang lập đường ống thành ĐANG PHÁT ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "LỖI: đường ống không phát được.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Đang lập đường ống thành SẴN SÀNG ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
 
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Mới nhận Thông điệp từ yếu tố « %s » (%s): "
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"

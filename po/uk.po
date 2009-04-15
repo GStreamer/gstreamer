@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2007-09-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -453,6 +453,14 @@ msgstr "аудіо кодек"
 msgid "codec the audio data is stored in"
 msgstr "кодек, яким закодовані звукові дані"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "відео кодек"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "кодек, яким закодовані відео дані"
+
 msgid "bitrate"
 msgstr "щільність потоку бітів"
 
@@ -816,8 +824,8 @@ msgstr "ПОМИЛКА: помилка при аналізі xml файлу \"%s
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ПОМИЛКА: немає верхнього елементу каналу у файлі \"%s\".\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "ПОПЕРЕДЖЕННЯ: наразі підтримується лише один верхній елемент."
 
 #, c-format
@@ -852,26 +860,26 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: у елементі %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Виконано preroll, для буферизації для завершення...\n"
 
 msgid "buffering..."
 msgstr ""
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Буферизацію завершено, канал переводиться у стан ВІДТВОРЕННЯ ...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Буферизація, канал переводиться у стан ПРИЗУПИНЕНО ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
+#, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Переривання: Канал переводиться у стан ПРИЗУПИНЕНО ...\n"
 
@@ -880,6 +888,10 @@ msgstr "Вивести теги (також відомі як метадані)"
 
 msgid "Output status information and property notifications"
 msgstr "Вивести інформацію про статус та сповіщення властивостей"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Не виводити інформацію про статус типу ТИП"
 
 msgid "Output messages"
 msgstr "Виведено повідомлення"
@@ -902,11 +914,13 @@ msgstr "Не встановлювати обробник збоїв"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вивести трасу розподілу (якщо ввімкнено при компіляції)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ПОМИЛКА: канал не може бути сконструйований.\n"
 
@@ -914,59 +928,63 @@ msgstr "ПОМИЛКА: канал не може бути сконструйов
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: помилковий канал: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Канал переводиться у стан ПРИЗУПИНЕНО ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ПОМИЛКА: канал не може призупинитись.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвеєр активний та не потребує PREROLL ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Канал у стані PREROLLING ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ПОМИЛКА: канал не може перейти у стан preroll.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Канал у стані PREROLLED ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Канал переводиться у стан ВІДТВОРЕННЯ ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Виконання завершено після %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Канал переводиться у стан ГОТОВИЙ ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Канал переводиться у стан NULL ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "канал ЗВІЛЬНЕННЯ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Канал переводиться у стан NULL ...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "оригінальне розташування файлу у вигляді URI"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Отримано повідомлення від елементу \"%s\" (%s): "
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "канал ЗВІЛЬНЕННЯ...\n"

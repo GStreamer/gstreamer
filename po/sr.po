@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -483,6 +483,14 @@ msgstr "звучно кодирање"
 msgid "codec the audio data is stored in"
 msgstr "на који начин су звучни подаци кодирани"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "видео кодирање"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "на који начин су видео подаци кодирани"
+
 msgid "bitrate"
 msgstr "брзина битова"
 
@@ -845,8 +853,8 @@ msgstr "ГРЕШКА: неуспешно рашчлањивање xml датот
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ГРЕШКА: нема врховног елемента цевовода у датотеци „%s“.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "УПОЗОРЕЊЕ: тренутно је подржан само један врховни елемент."
 
 #, c-format
@@ -878,26 +886,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ГРЕШКА: из елемента %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
 msgid "buffering..."
 msgstr ""
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
@@ -906,6 +913,10 @@ msgstr "Излазне ознаке (такође познато и као ме�
 
 msgid "Output status information and property notifications"
 msgstr "Испиши податке о стању и обавештења о особинама"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Не исписуј податке о стању за ВРСТУ"
 
 msgid "Output messages"
 msgstr ""
@@ -928,11 +939,13 @@ msgstr "Не постављај руковаоца грешкама"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Испиши траг доделе меморије (ако је укључено при превођењу)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: не могу да саставим цевовод: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: не могу да саставим цевовод.\n"
 
@@ -940,55 +953,58 @@ msgstr "ГРЕШКА: не могу да саставим цевовод.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "УПОЗОРЕЊЕ: неисправан цевовод: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: елемент „pipeline“ није нађен.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr ""
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr ""
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#, fuzzy, c-format
-msgid "FREEING pipeline ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
 msgstr "Покрећем цевовод...\n"
 
 #~ msgid "Disable accelerated CPU instructions"

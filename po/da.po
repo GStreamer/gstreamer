@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2007-03-28 00:09+0200\n"
 "Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -458,6 +458,14 @@ msgstr "lydkodeformat"
 msgid "codec the audio data is stored in"
 msgstr "det lydkodeformat dataene er gemt i"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "videokodeformat"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "det kodeformat videodataene er gemt i"
+
 msgid "bitrate"
 msgstr "bithastighed"
 
@@ -817,8 +825,8 @@ msgstr "FEJL: tolkning af XML fil '%s' mislykkedes.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEJL: intet topniveau rørledningselement i fil '%s'.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "ADVARSEL: kun et topniveau element er understøttet endnu."
 
 #, c-format
@@ -850,26 +858,28 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "ADVARSEL: fra element %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
 msgid "buffering..."
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Rørledning sættes til AFSPIL ...\n"
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "PAUSERER rørledning ...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
+#, fuzzy
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Afbryde: Sætter rørledning på PAUSE...\n"
 
@@ -878,6 +888,10 @@ msgstr "Uddatamærkater (også kendt som metadata)"
 
 msgid "Output status information and property notifications"
 msgstr "Uddata statusinformation og egenskabsmeddelelser"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Send ikke statusinformation af TYPE ud"
 
 msgid "Output messages"
 msgstr "Uddatameddelelser"
@@ -900,11 +914,13 @@ msgstr "Installer ikke en fejlhåndterer"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Udskriv allokeringsspor (hvis tilladt på oversættelsestidspunktet)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEJL: rørledningen kunne ikke dannes: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEJL: rørledningen kunne ikke dannes.\n"
 
@@ -912,59 +928,63 @@ msgstr "FEJL: rørledningen kunne ikke dannes.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ADVARSEL: forkert rørledning: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEJL: elementet 'rørledning' blev ikke fundet.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "PAUSERER rørledning ...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEJL: rørledning ønsker ikke at pausere.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rørledningen kører, og behøver ikke at blive PREROLL'ed ...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rørledningen PREROLL'er ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEJL: rørledning ønsker ikke at preroll.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Rørledningen er PREROLL'ed ...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Rørledning sættes til AFSPIL ...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEJL: rørledning ønsker ikke at spille.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Udførsel afsluttet efter %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Rørledning sættes til KLAR ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Rørledning sættes til NUL ...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "Rørledning renses ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Rørledning sættes til NUL ...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "oprindeligt sted for en fil som en URI"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Modtog besked fra element \"%s\" (%s): "
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "Rørledning renses ...\n"

@@ -1,14 +1,15 @@
 # Translation of gstreamer messages to Russian
 # This file is put in the public domain.
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
-# Артём Попов <artfwo@gmail.com>, 2008.
+# Артём Попов <artfwo@gmail.com>, 2009.
+# Pavel Maryanov <acid_jack@ukr.net>, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.18\n"
+"Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
-"PO-Revision-Date: 2008-04-04 00:24+0200\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
+"PO-Revision-Date: 2009-02-12 14:17+0200\n"
 "Last-Translator: Pavel Maryanov <acid_jack@ukr.net>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "MIME-Version: 1.0\n"
@@ -39,8 +40,8 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Список пар, разделенных запятыми вида имя_категории:уровень для установки "
-"уровней отдельных категорий. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+"Список пар, разделённых запятыми, в формате «имя_категории:уровень» для "
+"установки уровней отдельных категорий. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "СПИСОК"
@@ -55,7 +56,7 @@ msgid "Enable verbose plugin loading diagnostics"
 msgstr "Выводить дополнительную информацию при загрузке модулей"
 
 msgid "Colon-separated paths containing plugins"
-msgstr "Список путей (разделённых двоеточиями) для поиска модулей"
+msgstr "Список путей поиска модулей, разделённых двоеточиями"
 
 msgid "PATHS"
 msgstr "ПУТИ"
@@ -64,8 +65,8 @@ msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"Список модулей (через запятую) для предварительной загрузки, вдобавок к "
-"списку, который содержится в переменной среды GST_PLUGIN_PATH"
+"Список модулей (разделяемых запятыми) для предварительной загрузки, "
+"дополняющий список, который содержится в переменной среды GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
 msgstr "МОДУЛИ"
@@ -73,15 +74,14 @@ msgstr "МОДУЛИ"
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Отключить перехват ошибок сегментации памяти во время загрузки модулей"
 
-#, fuzzy
 msgid "Disable updating the registry"
-msgstr "Запретить использование fork(), пока происходит сканирование реестра"
+msgstr "Отключить обновление реестра"
 
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "Запретить использование fork(), пока происходит сканирование реестра"
 
 msgid "GStreamer Options"
-msgstr "Парметры GStreamer"
+msgstr "Параметры GStreamer"
 
 msgid "Show GStreamer Options"
 msgstr "Показать параметры GStreamer"
@@ -126,10 +126,10 @@ msgid "Internal GStreamer error: code not implemented."
 msgstr "Внутренняя ошибка GStreamer: функция не реализована."
 
 msgid "Internal GStreamer error: state change failed."
-msgstr "Внутренняя ошибка GStreamer: сбой смены состояния."
+msgstr "Внутренняя ошибка GStreamer: не удалось сменить состояние."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr "Внутренняя ошибка GStreamer: пробема с контактным гнездом."
+msgstr "Внутренняя ошибка GStreamer: проблема с контактным гнездом."
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "Внутренняя ошибка GStreamer: проблема с потоками."
@@ -245,12 +245,14 @@ msgid "The stream is in the wrong format."
 msgstr "Поток имеет неверный формат."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr ""
+msgstr "Поток зашифрован и его расшифровка не поддерживается."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
+"Поток зашифрован и не может быть расшифрован, потому что не предоставлен "
+"подходящий ключ."
 
 #, c-format
 msgid "No error message for domain %s."
@@ -350,12 +352,13 @@ msgid "count of discs inside collection this disc belongs to"
 msgstr "количество дисков в коллекции, к которой принадлежит этот диск"
 
 msgid "location"
-msgstr "расположение"
+msgstr "местоположение"
 
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
+"Источник данных в виде URI (адрес размещения оригинального файла или потока)"
 
 #, fuzzy
 msgid "homepage"
@@ -389,7 +392,7 @@ msgid "copyright"
 msgstr "авторские права"
 
 msgid "copyright notice of the data"
-msgstr "замечание об авторских правах"
+msgstr "уведомление об авторских правах на эти данные"
 
 msgid "copyright uri"
 msgstr "URI авторских прав"
@@ -451,6 +454,14 @@ msgstr "аудио-кодек"
 msgid "codec the audio data is stored in"
 msgstr "кодек, в котором сохранены аудио-данные"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "видео-кодек"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "кодек, в котором сохранены видео-данные"
+
 msgid "bitrate"
 msgstr "битрейт"
 
@@ -479,7 +490,7 @@ msgid "encoder"
 msgstr "кодировщик"
 
 msgid "encoder used to encode this stream"
-msgstr "кодировщик, использованый для кодирования потока"
+msgstr "кодировщик, используемый для кодирования потока"
 
 msgid "encoder version"
 msgstr "версия кодировщика"
@@ -542,11 +553,10 @@ msgid "preview image related to this stream"
 msgstr "изображение для предпросмотра, связанное с этим потоком"
 
 msgid "attachment"
-msgstr ""
+msgstr "вложение"
 
-#, fuzzy
 msgid "file attached to this stream"
-msgstr "изображение, связанное с этим потоком"
+msgstr "файл, вложенный в этот поток"
 
 msgid "beats per minute"
 msgstr "ударов в минуту"
@@ -555,53 +565,62 @@ msgid "number of beats per minute in audio"
 msgstr "число ударов в минуту для аудио"
 
 msgid "keywords"
-msgstr ""
+msgstr "ключевые слова"
 
-#, fuzzy
 msgid "comma separated keywords describing the content"
-msgstr "короткое описание содержимого данных"
+msgstr "разделяемые запятыми ключевые слова, описывающие содержимое"
 
-#, fuzzy
 msgid "geo location name"
-msgstr "расположение"
+msgstr "геогр. местоположение"
 
 msgid ""
 "human readable descriptive location or where the media has been recorded or "
 "produced"
 msgstr ""
+"описательное название местности, в которой производилась запись или "
+"производство данных"
 
 msgid "geo location latitude"
-msgstr ""
+msgstr "геогр. широта"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
+"географическая широта местности, в которой производилась запись или "
+"производство данных, в градусах в системе координат WGS84 (0 на экваторе, "
+"отрицательные значения для южных широт)"
 
 msgid "geo location longitude"
-msgstr ""
+msgstr "геогр. долгота"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
+"географическая долгота местности, в которой производилась запись или "
+"производство данных, в градусах в системе координат WGS84 (0 на Гринвичском "
+"меридиане, отрицательные значения для западных долгот)"
 
 msgid "geo location elevation"
-msgstr ""
+msgstr "геогр. высота"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
+"географическая высота местности, в которой производилась запись или "
+"производство данных, в метрах согласно системе координат WGS84 (0 на среднем "
+"уровне моря)"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "указаный пустой контейнер «%s» недопустим"
+msgstr "указанный пустой контейнер «%s» недопустим"
 
 #, c-format
 msgid "no bin \"%s\", skipping"
@@ -617,7 +636,7 @@ msgstr "не удалось установить свойство «%s» эле�
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "не удалось присоединить %s к %s"
+msgstr "не удалось соединить %s и %s"
 
 #, c-format
 msgid "no element \"%s\""
@@ -639,7 +658,7 @@ msgstr "нет элемента-источника для URI «%s»"
 
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "нет элемента, который можно было бы привязять к URI «%s»"
+msgstr "нет элемента, который можно было бы присоединить к URI «%s»"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
@@ -647,19 +666,19 @@ msgstr "нет элемента-приёмника для URI «%s»"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "не удалось привязать элемент-приёмник для URI «%s»"
+msgstr "не удалось соединить элемент-приёмник для URI «%s»"
 
 msgid "empty pipeline not allowed"
 msgstr "пустой конвейер недопустим"
 
 msgid "Internal clock error."
-msgstr "Внутреняя ошибка синхронизации."
+msgstr "Внутренняя ошибка синхронизации."
 
 msgid "Internal data flow error."
-msgstr "Внутреняя ошибка течения данных."
+msgstr "Внутренняя ошибка передачи данных."
 
 msgid "Internal data flow problem."
-msgstr "Внутреняя проблема течения данных."
+msgstr "Внутренняя проблема передачи данных."
 
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
@@ -718,7 +737,7 @@ msgstr "«%s» является каталогом."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Файл «%s» является гнездом."
+msgstr "Файл «%s» является сокетом."
 
 msgid "Failed after iterations as requested."
 msgstr "Сбой после итераций, согласно запросу."
@@ -736,13 +755,13 @@ msgid "maximum"
 msgstr "максимум"
 
 msgid "force caps"
-msgstr ""
+msgstr "форсировать возможности"
 
 msgid "force caps without doing a typefind"
-msgstr ""
+msgstr "форсировать возможности без выполнения typefind"
 
 msgid "Stream contains no data."
-msgstr "Поток не содержит данных"
+msgstr "Поток не содержит данных."
 
 msgid "Implemented Interfaces:\n"
 msgstr "Реализованные интерфейсы:\n"
@@ -762,7 +781,7 @@ msgstr "Общее количество: "
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] "%d модуль"
+msgstr[0] "%d plugin"
 msgstr[1] "%d модуля"
 msgstr[2] "%d модулей"
 
@@ -786,10 +805,10 @@ msgstr ""
 "механизмов автоматической установки модулей)"
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "Вывести содержимое модуля"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "Вывести поддерживаемые схемы URI для элементов, которые их используют"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -805,14 +824,14 @@ msgstr ""
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "ОШИБКА: ошибка обработки xml-файла «%s».\n"
+msgstr "ОШИБКА: ошибка разбора xml-файла «%s».\n"
 
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ОШИБКА: в файле «%s» отсутствует главный элемент конвейера.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
 "ПРЕДУПРЕЖДЕНИЕ: в данный момент поддерживается только один главный элемент."
 
@@ -822,14 +841,14 @@ msgstr "ОШИБКА: ошибка обработки аргумента ком�
 
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: элемент «%s» не найден.\n"
+msgstr "ПРЕДУПРЕЖДЕНИЕ: элемент с именем «%s» не найден.\n"
 
 msgid "Got Message #%"
-msgstr ""
+msgstr "Получено сообщение #%"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Получен знак «конец потока» от элемента «%s».\n"
+msgstr "Получен маркер EOS («конец потока») от элемента «%s».\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -840,42 +859,44 @@ msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
-"ИНФО:\n"
+"ИНФОРМАЦИЯ:\n"
 "%s\n"
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: от элемента %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Конвейер подготовлен, дождитесь завершения буферизации...\n"
+msgstr "Конвейер подготовлен, ожидается завершение буферизации...\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "буферизация... %d"
+msgstr "буферизация..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Буферизация завершена, конвейер переведён в состояние PLAYING...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Идёт буферизация, конвейер переведён в состояние PAUSED...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Перераспределение латентности...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "Прерывание: остановка конвейера...\n"
+msgstr "Прерывание: Остановка конвейера...\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Выводить теги (метаданные)"
 
 msgid "Output status information and property notifications"
 msgstr "Выводить информацию о состоянии и уведомления о свойствах"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Не выводить информацию о состоянии ТИПА"
 
 msgid "Output messages"
 msgstr "Выводить сообщения"
@@ -898,68 +919,75 @@ msgstr "Не устанавливать обработчик ошибок"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Вывести трассировку выделения памяти (если включено при сборке)"
 
-#, c-format
-msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "ОШИБКА: конвейер не может быть собран: %s.\n"
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
 
 #, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "ОШИБКА: не удалось собрать конвейер: %s.\n"
+
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "ОШИБКА: конвейер не может быть собран.\n"
+msgstr "ОШИБКА: не удалось собрать конвейер.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "ВНИМАНИЕ: ошибочный конвейер: %s\n"
+msgstr "ПРЕДУПРЕЖДЕНИЕ: ошибочный конвейер: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ОШИБКА: не найден элемент «pipeline».\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Установка конвейера в состояние PAUSED...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ОШИБКА: Конвейер не хочет становиться на паузу.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейер работает и не требует состояния PREROLL...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "Конвейер подготавливается (PREROLL)...\n"
+msgstr "Подготовка конвейера (PREROLL)...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ОШИБКА: конвейер не хочет подготавливаться (PREROLL).\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "Конвейер подготовлен (PREROLL)...\n"
+msgstr "Конвейер подготовлен (PREROLLED)...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Установка конвейера в состояние PLAYING...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ОШИБКА: конвейер не хочет воспроизводить.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Прерывание: Остановка конвейера...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Выполнение окончено после %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Установка конвейера в состояние READY...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Установка конвейера в состояние NULL...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "Освобождение конвейера...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Установка конвейера в состояние NULL...\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "Освобождение конвейера...\n"
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "оригинальное расположение файла в виде URI"

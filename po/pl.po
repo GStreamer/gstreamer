@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2009-01-12 20:09+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -455,6 +455,14 @@ msgstr "kodek dźwięku"
 msgid "codec the audio data is stored in"
 msgstr "kodek użyty do zapisu danych dźwięku"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "kodek obrazu"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "kodek użyty do zapisu danych obrazu"
+
 msgid "bitrate"
 msgstr "prędkość bitowa"
 
@@ -824,8 +832,8 @@ msgstr "BŁĄD: analiza pliku xml '%s' nie powiodła się.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "BŁĄD: brak głównego elementu potoku w pliku '%s'.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "UWAGA: aktualnie obsługiwany jest tylko jeden element główny."
 
 #, c-format
@@ -859,26 +867,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "UWAGA: od elementu %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Przewinięto, czekanie na zakończenie buforowania...\n"
 
 msgid "buffering..."
 msgstr "buforowanie..."
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Buforowanie zakończone, ustawianie potoku na ODTWARZANIE...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Buforowanie, ustawianie potoku na PAUZOWANIE...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr "Rozprzestrzenianie opóźnień...\n"
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Przerwanie: Zatrzymywanie potoku...\n"
 
@@ -887,6 +894,10 @@ msgstr "Wypisanie znaczników (znanych także jako metadane)"
 
 msgid "Output status information and property notifications"
 msgstr "Wypisywanie informacji o stanie i powiadomień właściwości"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Nie wypisywanie informacji o stanie tego RODZAJU"
 
 msgid "Output messages"
 msgstr "Wypisywanie komunikatów"
@@ -909,11 +920,13 @@ msgstr "Nie instalowanie obsługi błędów"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Wypisanie śladu alokacji (jeśli został włączony w czasie kompilacji)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "BŁĄD: nie udało się skonstruować potoku: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "BŁĄD: nie udało się skonstruować potoku.\n"
 
@@ -921,53 +934,58 @@ msgstr "BŁĄD: nie udało się skonstruować potoku.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "UWAGA: błędny potok: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "BŁĄD: nie znaleziono elementu 'pipeline'.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ustawianie potoku na PAUZOWANIE...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "BŁĄD: potok odmawia pauzowania.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Potok jest na żywo i nie wymaga PRZEWINIĘCIA...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Potok jest PRZEWIJANY...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "BŁĄD: potok odmawia przewinięcia.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Potok jest PRZEWINIĘTY...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ustawianie potoku na ODTWARZANIE...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "BŁĄD: potok odmawia odtwarzania.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Przerwanie: Zatrzymywanie potoku...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Wykonywanie zakończone po %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Ustawianie potoku na GOTOWOŚĆ...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ustawianie potoku na NULL...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "ZWALNIANIE potoku...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Ustawianie potoku na NULL...\n"
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "ZWALNIANIE potoku...\n"

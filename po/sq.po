@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -475,6 +475,14 @@ msgstr "audio codec"
 msgid "codec the audio data is stored in"
 msgstr "codec ku janë regjistruar të dhënat audio"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "video codec"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "codec ku janë regjistruar të dhënat video"
+
 msgid "bitrate"
 msgstr "bitrate"
 
@@ -832,8 +840,8 @@ msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
 
 #, c-format
@@ -866,26 +874,25 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "GABIM: nga elementi %s: %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
 msgid "buffering..."
 msgstr ""
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr ""
 
@@ -894,6 +901,10 @@ msgstr "Tags e output (njohur gjithashtu si metadata)"
 
 msgid "Output status information and property notifications"
 msgstr "Njoftime të informacioneve dhe pronësisë së kondicionit të daljes"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "Mos jep informacionin e gjendjes së LLOJIT"
 
 msgid "Output messages"
 msgstr ""
@@ -916,11 +927,13 @@ msgstr "Mos instalo një ushqyes të dëmtuar"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline: %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline.\n"
 
@@ -928,55 +941,58 @@ msgstr "GABIM: i pamundur ndërtimi i pipeline.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "KUJDES: pipline e gabuar: %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, fuzzy
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr ""
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr ""
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "Ekzekutimi përfundoi mbas %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#, fuzzy, c-format
-msgid "FREEING pipeline ...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
 
 #~ msgid "Disable accelerated CPU instructions"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-02-13 15:55+0000\n"
+"POT-Creation-Date: 2009-04-15 22:25+0100\n"
 "PO-Revision-Date: 2008-09-21 19:05+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -458,6 +458,14 @@ msgstr "codec audio"
 msgid "codec the audio data is stored in"
 msgstr "codec de stockage des données audio"
 
+#, fuzzy
+msgid "subtitle codec"
+msgstr "codec vidéo"
+
+#, fuzzy
+msgid "codec the subtitle data is stored in"
+msgstr "codec de stockage des données vidéo"
+
 msgid "bitrate"
 msgstr "débit"
 
@@ -825,8 +833,8 @@ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr ""
 "ERREUR : pas d'élément pipeline de premier niveau dans le fichier « %s ».\n"
 
-#, c-format
-msgid "WARNING: only one toplevel element is supported at this time."
+#, fuzzy
+msgid "WARNING: only one toplevel element is supported at this time.\n"
 msgstr ""
 "AVERTISSEMENT : actuellement, un seul élément pipeline de premier niveau est "
 "géré."
@@ -864,7 +872,6 @@ msgstr ""
 msgid "WARNING: from element %s: %s\n"
 msgstr "AVERTISSEMENT : de l'élément %s : %s\n"
 
-#, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
 
@@ -872,19 +879,19 @@ msgstr "Préparation terminée, attente de la fin de remplissage du tampon...\n"
 msgid "buffering..."
 msgstr "mise en mémoire tampon... %d  \n"
 
-#, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Mémoire tampon pleine, définition du pipeline à PLAYING...\n"
 
-#, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Remplissage du tampon, définition du pipeline à PAUSED...\n"
 
-#, c-format
 msgid "Redistribute latency...\n"
 msgstr ""
 
 #, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr ""
+
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interruption : arrêt du pipeline...\n"
 
@@ -893,6 +900,10 @@ msgstr "Affiche les balises (aussi connues sous le nom de métadonnées)"
 
 msgid "Output status information and property notifications"
 msgstr "Affiche des informations d'état et des notifications de propriétés"
+
+#, fuzzy
+msgid "Do not print any progress information"
+msgstr "N'affiche pas d'informations d'état de TYPE"
 
 msgid "Output messages"
 msgstr "Affiche des messages"
@@ -915,11 +926,13 @@ msgstr "N'installe pas de gestionnaire de dysfonctionnement"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Affiche les traces d'allocations (si activées lors de la compilation)"
 
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr ""
+
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERREUR : le pipeline n'a pas pu être construit : %s.\n"
 
-#, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERREUR : le pipeline n'a pas pu être construit.\n"
 
@@ -927,56 +940,61 @@ msgstr "ERREUR : le pipeline n'a pas pu être construit.\n"
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVERTISSEMENT : pipeline erroné : %s\n"
 
-#, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERREUR : l'élément « pipeline » est introuvable.\n"
 
-#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Définition du pipeline à PAUSED...\n"
 
-#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERREUR : le pipeline refuse de se mettre en pause.\n"
 
-#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Le pipeline est actif et n'a pas besoin de phase PREROLL...\n"
 
-#, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Le pipeline est en phase de PREROLL...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERREUR : le pipeline refuse de passer en phase de préparation.\n"
 
-#, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Le pipeline a terminé la phase PREROLL...\n"
 
-#, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Passage du pipeline à la phase PLAYING...\n"
 
-#, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERREUR : le pipeline refuse de passer en mode actif.\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr ""
+
+msgid "Waiting for EOS...\n"
+msgstr ""
+
+#, fuzzy
+msgid "EOS received - stopping pipeline...\n"
+msgstr "Interruption : arrêt du pipeline...\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr ""
 
 msgid "Execution ended after %"
 msgstr "L'exécution s'est terminée après %"
 
-#, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Définition du pipeline à READY (prêt)...\n"
 
-#, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Définition du pipeline à NULL...\n"
 
-#, c-format
-msgid "FREEING pipeline ...\n"
-msgstr "Libération du pipeline (FREE)...\n"
+#, fuzzy
+msgid "Freeing pipeline ...\n"
+msgstr "Définition du pipeline à NULL...\n"
 
 #~ msgid "Got Message from element \"%s\" (%s): "
 #~ msgstr "Message reçu de l'élément « %s » (%s) : "
+
+#~ msgid "FREEING pipeline ...\n"
+#~ msgstr "Libération du pipeline (FREE)...\n"
