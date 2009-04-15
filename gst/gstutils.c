@@ -772,7 +772,7 @@ gst_element_request_compatible_pad (GstElement * element,
   return pad;
 }
 
-/**
+/*
  * Checks if the source pad and the sink pad can be linked.
  * Both @srcpad and @sinkpad must be unlinked and have a parent.
  */
