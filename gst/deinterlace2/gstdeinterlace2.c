@@ -692,6 +692,7 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
 {
   int i = 1;
   GstClockTime timestamp;
+  GstDeinterlace2FieldLayout field_layout = self->field_layout;
 
   g_assert (self->history_count < MAX_FIELD_HISTORY - 2);
 
@@ -700,13 +701,16 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
     self->field_history[i].flags = self->field_history[i - 2].flags;
   }
 
-  if (self->field_layout == GST_DEINTERLACE2_LAYOUT_AUTO) {
-    GST_WARNING ("Could not detect field layout. Assuming top field first.");
-    self->field_layout = GST_DEINTERLACE2_LAYOUT_TFF;
+  if (field_layout == GST_DEINTERLACE2_LAYOUT_AUTO) {
+    if (!self->interlaced
+        || GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_TFF))
+      field_layout = GST_DEINTERLACE2_LAYOUT_TFF;
+    else
+      field_layout = GST_DEINTERLACE2_LAYOUT_BFF;
   }
 
 
-  if (self->field_layout == GST_DEINTERLACE2_LAYOUT_TFF) {
+  if (field_layout == GST_DEINTERLACE2_LAYOUT_TFF) {
     GST_DEBUG ("Top field first");
     self->field_history[0].buf =
         gst_buffer_create_sub (buffer, self->line_length,
@@ -1077,10 +1081,11 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
       gst_structure_get_fraction (structure, "framerate", &self->frame_rate_n,
       &self->frame_rate_d);
   res &= gst_structure_get_fourcc (structure, "format", &fourcc);
-  /* TODO: get interlaced, field_layout, field_order */
+  res &= gst_video_format_parse_caps_interlaced (caps, &self->interlaced);
   if (!res)
     goto invalid_caps;
 
+  /* FIXME: Only do this when self->interlaced == TRUE ? */
   if (self->fields == GST_DEINTERLACE2_ALL) {
     gint fps_n = self->frame_rate_n, fps_d = self->frame_rate_d;
 

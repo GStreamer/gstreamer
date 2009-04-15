@@ -199,6 +199,7 @@ struct _GstDeinterlace2
 
   guint frame_size;
   gint frame_rate_n, frame_rate_d;
+  gboolean interlaced;
 
   /* Duration of one field */
   GstClockTime field_duration;
