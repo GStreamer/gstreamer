@@ -48,7 +48,6 @@ struct _GstVdpMpegDecoder
   GstBuffer *f_buffer;
   
   GstAdapter *adapter;
-  gint slices;
 };
 
 struct _GstVdpMpegDecoderClass 
