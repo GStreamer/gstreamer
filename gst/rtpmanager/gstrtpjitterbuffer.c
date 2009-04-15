@@ -1623,7 +1623,7 @@ push_buffer:
     elapsed = gst_util_uint64_scale_int (elapsed, GST_SECOND, priv->clock_rate);
 
     if (elapsed > priv->last_elapsed) {
-      guint left;
+      guint64 left;
 
       priv->last_elapsed = elapsed;
 
