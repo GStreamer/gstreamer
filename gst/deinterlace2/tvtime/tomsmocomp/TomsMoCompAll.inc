@@ -61,7 +61,7 @@
 #define SEFUNC(x) Search_Effort_C_##x(src_pitch, dst_pitch, rowsize, pWeaveSrc, pWeaveSrcP, pWeaveDest, IsOdd, pCopySrc, pCopySrcP, FldHeight)
 #endif
 
-void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object)
+void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object, GstBuffer *outbuf)
 {
   GstDeinterlaceMethodTomsMoComp *self = GST_DEINTERLACE_METHOD_TOMSMOCOMP (d_method);
   long SearchEffort = self->search_effort;
@@ -94,7 +94,7 @@ void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object)
     IsOdd      = 1;
 
     // if we have an odd field we copy an even field and weave an odd field
-    pCopyDest = GST_BUFFER_DATA(object->out_buf);
+    pCopyDest = GST_BUFFER_DATA(outbuf);
     pWeaveDest = pCopyDest + dst_pitch;
   }
   /* do it vice verca */
@@ -102,8 +102,8 @@ void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object)
 
     IsOdd      = 0;
     // if we have an even field we copy an odd field and weave an even field
-    pCopyDest = GST_BUFFER_DATA(object->out_buf) + dst_pitch;
-    pWeaveDest = GST_BUFFER_DATA(object->out_buf);
+    pCopyDest = GST_BUFFER_DATA(outbuf) + dst_pitch;
+    pWeaveDest = GST_BUFFER_DATA(outbuf);
   }
 
   

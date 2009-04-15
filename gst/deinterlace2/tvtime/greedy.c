@@ -335,7 +335,7 @@ deinterlace_greedy_packed422_scanline_mmxext (GstDeinterlaceMethodGreedyL *
 
 static void
 deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
-    GstDeinterlace2 * object)
+    GstDeinterlace2 * object, GstBuffer * outbuf)
 {
   GstDeinterlaceMethodGreedyL *self =
       GST_DEINTERLACE_METHOD_GREEDY_L (d_method);
@@ -349,7 +349,7 @@ deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
   unsigned char *L3;            // ptr to Line3
 
   unsigned char *L2P;           // ptr to prev Line2
-  unsigned char *Dest = GST_BUFFER_DATA (object->out_buf);
+  unsigned char *Dest = GST_BUFFER_DATA (outbuf);
 
   // copy first even line no matter what, and the first odd line if we're
   // processing an EVEN field. (note diff from other deint rtns.)
