@@ -90,6 +90,8 @@ static void gst_rtp_dtmf_mux_base_init (gpointer g_class);
 static void gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass);
 static void gst_rtp_dtmf_mux_dispose (GObject * object);
 
+static void gst_rtp_mux_release_pad (GstElement * element, GstPad * pad);
+
 static gboolean gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer);
 
@@ -152,6 +154,7 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   gobject_class->dispose = gst_rtp_dtmf_mux_dispose;
+  gstelement_class->release_pad = gst_rtp_mux_release_pad;
   gstrtpmux_class->chain_func = gst_rtp_dtmf_mux_chain;
   gstrtpmux_class->sink_event_func = gst_rtp_dtmf_mux_sink_event;
 }
@@ -317,6 +320,21 @@ gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (mux);
   return ret;
+}
+
+static void
+gst_rtp_mux_release_pad (GstElement * element, GstPad * pad)
+{
+  GstRTPDTMFMux *mux = GST_RTP_DTMF_MUX (element);
+
+  GST_OBJECT_LOCK (mux);
+  if (mux->special_pad == pad) {
+    gst_object_unref (mux->special_pad);
+    mux->special_pad = NULL;
+  }
+  GST_OBJECT_UNLOCK (mux);
+
+  GST_CALL_PARENT (GST_ELEMENT_CLASS, release_pad, (element, pad));
 }
 
 gboolean
