@@ -266,6 +266,7 @@ AG_GST_CHECK_PLUGIN(legacyresample)
 AG_GST_CHECK_PLUGIN(bayer)
 AG_GST_CHECK_PLUGIN(cdxaparse)
 AG_GST_CHECK_PLUGIN(dccp)
+AG_GST_CHECK_PLUGIN(debugutils)
 AG_GST_CHECK_PLUGIN(deinterlace)
 AG_GST_CHECK_PLUGIN(deinterlace2)
 AG_GST_CHECK_PLUGIN(dtmf)
@@ -1513,6 +1514,7 @@ gst/bayer/Makefile
 gst/camerabin/Makefile
 gst/cdxaparse/Makefile
 gst/dccp/Makefile
+gst/debugutils/Makefile
 gst/deinterlace/Makefile
 gst/deinterlace2/Makefile
 gst/dtmf/Makefile
