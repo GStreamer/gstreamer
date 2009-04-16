@@ -31,4 +31,9 @@
     
     
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.PadDirectionGType))</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

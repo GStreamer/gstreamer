@@ -53,7 +53,7 @@
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="src" Type="Gst.Object" /><Parameter Name="clock" Type="Gst.Clock" /></Parameters>
       <Docs><param name="src">To be added.</param><param name="clock">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor"><MemberSignature Language="C#" Value="public Message (Gst.Object src, Gst.State state);" /><MemberType>Constructor</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Parameters><Parameter Name="src" Type="Gst.Object" /><Parameter Name="state" Type="Gst.State" /></Parameters><Docs><param name="src">To be added.</param><param name="state">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Message (Gst.Object src, Gst.Structure structure);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="src" Type="Gst.Object" /><Parameter Name="structure" Type="Gst.Structure" /></Parameters>
@@ -159,7 +159,7 @@
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters><Parameter Name="clock" Type="Gst.Clock" /></Parameters>
       <Docs><param name="clock">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseSegmentDone">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="ParseRequestState"><MemberSignature Language="C#" Value="public Gst.State ParseRequestState ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.State</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="ParseSegmentDone">
       <MemberSignature Language="C#" Value="public void ParseSegmentDone (out Gst.Format format, out long position);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>

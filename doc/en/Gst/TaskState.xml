@@ -31,4 +31,9 @@
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
     
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.TaskStateGType))</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

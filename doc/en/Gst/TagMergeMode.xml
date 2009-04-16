@@ -61,4 +61,9 @@
     
     
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.TagMergeModeGType))</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

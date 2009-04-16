@@ -36,6 +36,7 @@
       <Type Name="ClockEntryType" Kind="Enumeration" />
       <Type Name="ClockFlags" Kind="Enumeration" />
       <Type Name="ClockReturn" Kind="Enumeration" />
+      <Type Name="ClockType" Kind="Enumeration" />
       <Type Name="CommonTags" Kind="Class" />
       <Type Name="Date" Kind="Structure" />
       <Type Name="DecodeBin" Kind="Class" />

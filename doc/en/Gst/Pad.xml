@@ -439,16 +439,6 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="format" Type="Gst.Format" /><Parameter Name="current" Type="System.Int64&amp;" RefType="out" /></Parameters>
       <Docs><param name="format">To be added.</param><param name="current">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="QueryTypes">
-      <MemberSignature Language="C#" Value="public Gst.QueryType QueryTypes { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.QueryType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="QueryTypesDefault">
-      <MemberSignature Language="C#" Value="public Gst.QueryType QueryTypesDefault { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>Gst.QueryType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="RemoveBufferProbe">
       <MemberSignature Language="C#" Value="public void RemoveBufferProbe (uint handler_id);" />
       <MemberType>Method</MemberType>
@@ -502,7 +492,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="blocked" Type="System.Boolean" /><Parameter Name="cb" Type="Gst.PadBlockCallback" /></Parameters>
       <Docs><param name="blocked">To be added.</param><param name="cb">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetCaps">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetBlockedAsyncFull"><MemberSignature Language="C#" Value="public bool SetBlockedAsyncFull (bool blocked, Gst.PadBlockCallback cb);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="blocked" Type="System.Boolean" /><Parameter Name="cb" Type="Gst.PadBlockCallback" /></Parameters><Docs><param name="blocked">To be added.</param><param name="cb">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="SetCaps">
       <MemberSignature Language="C#" Value="public bool SetCaps (Gst.Caps caps);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>

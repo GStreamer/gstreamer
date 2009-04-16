@@ -9,6 +9,9 @@
   </Base>
   <Attributes>
     <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.StateChangeGType))</AttributeName>
+    </Attribute>
+    <Attribute>
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>

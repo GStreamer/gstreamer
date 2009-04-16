@@ -2,35 +2,34 @@
   <api filename="../gstreamer-sharp/gstreamer-api.raw">
     <library name="gstreamer-0.10.dll">
       <namespace name="Gst">
-        <dir>gstreamer-0.10.22/gst</dir>
+        <dir>../../gstreamer/gst</dir>
         <!-- Needs to be bound -->
-        <exclude>gstreamer-0.10.22/gst/gstdebugutils.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gsterror.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstinfo.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstinterface.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gsturi.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstpreset.h</exclude>
+        <exclude>../../gstreamer/gst/gstdebugutils.h</exclude>
+        <exclude>../../gstreamer/gst/gsterror.h</exclude>
+        <exclude>../../gstreamer/gst/gstinfo.h</exclude>
+        <exclude>../../gstreamer/gst/gstinterface.h</exclude>
+        <exclude>../../gstreamer/gst/gsturi.h</exclude>
+        <exclude>../../gstreamer/gst/gstpreset.h</exclude>
         <!-- Not bound -->
-        <exclude>gstreamer-0.10.22/gst/gstconfig.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstenumtypes.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstfilter.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstiterator.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstmacros.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstmarshal.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstparamspecs.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstpoll.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gsttrace.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstvalue.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstversion.h</exclude>
+        <exclude>../../gstreamer/gst/gstconfig.h</exclude>
+        <exclude>../../gstreamer/gst/gstfilter.h</exclude>
+        <exclude>../../gstreamer/gst/gstiterator.h</exclude>
+        <exclude>../../gstreamer/gst/gstmacros.h</exclude>
+        <exclude>../../gstreamer/gst/gstmarshal.h</exclude>
+        <exclude>../../gstreamer/gst/gstparamspecs.h</exclude>
+        <exclude>../../gstreamer/gst/gstpoll.h</exclude>
+        <exclude>../../gstreamer/gst/gsttrace.h</exclude>
+        <exclude>../../gstreamer/gst/gstvalue.h</exclude>
+        <exclude>../../gstreamer/gst/gstversion.h</exclude>
         <!-- Private headers -->
-        <exclude>gstreamer-0.10.22/gst/gstregistrybinary.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstregistryxml.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gst_private.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/glib-compat-private.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/glib-i18n-lib.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/glib-i18n-app.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gstquark.h</exclude>
-        <exclude>gstreamer-0.10.22/gst/gettext.h</exclude>
+        <exclude>../../gstreamer/gst/gstregistrybinary.h</exclude>
+        <exclude>../../gstreamer/gst/gstregistryxml.h</exclude>
+        <exclude>../../gstreamer/gst/gst_private.h</exclude>
+        <exclude>../../gstreamer/gst/glib-compat-private.h</exclude>
+        <exclude>../../gstreamer/gst/glib-i18n-lib.h</exclude>
+        <exclude>../../gstreamer/gst/glib-i18n-app.h</exclude>
+        <exclude>../../gstreamer/gst/gstquark.h</exclude>
+        <exclude>../../gstreamer/gst/gettext.h</exclude>
       </namespace>
     </library>
   </api>

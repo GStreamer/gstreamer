@@ -103,4 +103,9 @@
     
     
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.EventTypeGType))</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

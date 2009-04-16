@@ -5,6 +5,11 @@
   <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='Add']" name="hidden">1</attr> 
+  <add-node path="/api/namespace/object[@name='Bin']">
+    <implements>
+      <interface cname="GstChildProxy" />
+    </implements>
+  </add-node>
 
   <attr path="/api/namespace/enum[@name='BinFlags']/member[@cname='GST_BIN_FLAG_LAST']" name="value">ElementFlags.Last &lt;&lt; 5</attr>
 
@@ -38,6 +43,9 @@
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_IN_CAPS']" name="value">MiniObjectFlags.Last &lt;&lt; 2</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_GAP']" name="value">MiniObjectFlags.Last &lt;&lt; 3</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_DELTA_UNIT']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_MEDIA1']" name="value">MiniObjectFlags.Last &lt;&lt; 5</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_MEDIA2']" name="value">MiniObjectFlags.Last &lt;&lt; 6</attr>
+  <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_MEDIA3']" name="value">MiniObjectFlags.Last &lt;&lt; 7</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
   <attr path="/api/namespace/object[@name='Bus']/method[@name='AddWatch']" name="hidden">true</attr>
@@ -93,6 +101,8 @@
   <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_RESOLUTION']" name="value">MiniObjectFlags.Last &lt;&lt; 4</attr>
   <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_CAN_SET_MASTER']" name="value">MiniObjectFlags.Last &lt;&lt; 5</attr>
   <attr path="/api/namespace/enum[@name='ClockFlags']/member[@cname='GST_CLOCK_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
+
+  <attr path="/api/namespace/class[@name='Debug']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Element']/method[@name='LinkMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@name='UnlinkMany']" name="hidden">1</attr>
@@ -200,6 +210,8 @@
   <attr path="/api/namespace/object[@name='Index']/field[@cname='resolver']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Index']/property[@cname='resolver']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/class[@name='Iterator']" name="hidden">1</attr>
+
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_WRITABLE']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
   <attr path="/api/namespace/enum[@name='IndexFlags']/member[@cname='GST_INDEX_READABLE']" name="value">ObjectFlags.Last &lt;&lt; 1</attr>
@@ -266,6 +278,8 @@
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='intlinkfunc']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='bufferallocfunc']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/field[@cname='iterintlinkfunc']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_destroy_data']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/field[@cname='block_callback_called']" name="hidden">1</attr>
 
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='PadFlags']/member[@cname='GST_PAD_BLOCKED']" name="value">ObjectFlags.Last &lt;&lt; 0</attr>
@@ -351,6 +365,8 @@
   <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_lookup']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_registry_lookup_feature']/return-type" name="owned">true</attr>
 
+  <attr path="/api/namespace/enum[@name='SearchMode']" name="hidden">1</attr>
+
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_NULL_TO_READY']" name="value">(State.Null &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_PAUSED']" name="value">(State.Ready &lt;&lt; 3) | State.Paused</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_PAUSED_TO_PLAYING']" name="value">(State.Paused &lt;&lt; 3) | State.Playing</attr>
@@ -435,6 +451,8 @@
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='GetUlong']/*/*[@name='value']" name="pass_as">out</attr>
 
   <attr path="/api/namespace/struct[@name='TypeFind']/method[@name='Register']" name="hidden">1</attr>
+
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_array_binary_search']" name="hidden">1</attr>
 
   <!-- We implement this ourselves -->
   <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>

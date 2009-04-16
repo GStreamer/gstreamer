@@ -55,4 +55,9 @@
     
     
   </Members>
+  <Attributes>
+    <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.ClockReturnGType))</AttributeName>
+    </Attribute>
+  </Attributes>
 </Type>

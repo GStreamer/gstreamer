@@ -9,6 +9,9 @@
   </Base>
   <Attributes>
     <Attribute>
+      <AttributeName>GLib.GType(typeof(Gst.BufferFlagsGType))</AttributeName>
+    </Attribute>
+    <Attribute>
       <AttributeName>System.Flags</AttributeName>
     </Attribute>
   </Attributes>
@@ -63,7 +66,7 @@
       </AssemblyInfo>
       <ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary></Docs>
-    </Member><Member MemberName="Preroll">
+    </Member><Member MemberName="Media1"><MemberSignature Language="C#" Value="Media1" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Media2"><MemberSignature Language="C#" Value="Media2" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Media3"><MemberSignature Language="C#" Value="Media3" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.BufferFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Preroll">
       <MemberSignature Language="C#" Value="Preroll" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
