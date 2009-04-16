@@ -157,6 +157,8 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
     /* unset forward_reference since next frame must be an I_FRAME */
     mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
 
+    mpeg_dec->vdp_info.slice_count = 0;
+
     return GST_FLOW_OK;
   }
 
@@ -181,11 +183,6 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
         ("Error returned from vdpau was: %s",
             device->vdp_get_error_string (status)));
 
-    if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
-      gst_buffer_unref (mpeg_dec->f_buffer);
-      mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
-    }
-
     gst_buffer_unref (GST_BUFFER (outbuf));
 
     return GST_FLOW_ERROR;
@@ -197,7 +194,9 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
     b_outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
         dec->width, dec->height);
-    mpeg_dec->b_vdp_info.backward_reference = surface;
+    mpeg_dec->b_vdp_info.backward_reference =
+        mpeg_dec->b_vdp_info.forward_reference;
+    mpeg_dec->b_vdp_info.forward_reference = surface;
     vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
     vbit[0].bitstream = GST_BUFFER_DATA (mpeg_dec->b_buffer);
     vbit[0].bitstream_bytes = GST_BUFFER_SIZE (mpeg_dec->b_buffer);
@@ -212,12 +211,12 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
           ("Could not decode B_FRAME"),
           ("Error returned from vdpau was: %s",
               device->vdp_get_error_string (status)));
-
-      if (mpeg_dec->b_vdp_info.forward_reference != VDP_INVALID_HANDLE)
-        gst_buffer_unref (mpeg_dec->f_buffer);
     }
 
     gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec), b_outbuf);
+
+    if (mpeg_dec->b_vdp_info.forward_reference != VDP_INVALID_HANDLE)
+      gst_buffer_unref (mpeg_dec->f_buffer);
   }
 
   gst_buffer_ref (GST_BUFFER (outbuf));
