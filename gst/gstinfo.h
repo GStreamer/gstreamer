@@ -1089,7 +1089,9 @@ G_CONST_RETURN gchar *
 #else /* GST_DISABLE_GST_DEBUG */
 
 
-#if !defined(GST_INFO_C) && defined(__GNUC__) && __GNUC__ >= 3
+#ifndef GST_INFO_C
+
+#if defined(__GNUC__) && __GNUC__ >= 3
 #  pragma GCC poison gst_debug_log
 #  pragma GCC poison gst_debug_log_valist
 #  pragma GCC poison _gst_debug_category_new
@@ -1101,7 +1103,7 @@ G_CONST_RETURN gchar *
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
 
 #define gst_debug_level_get_name(level)				("NONE")
-#define gst_debug_message_get(message)  			("NONE")
+#define gst_debug_message_get(message)  			("")
 #define gst_debug_add_log_function(func,data)		/* NOP */
 guint gst_debug_remove_log_function (GstLogFunction func);
 guint gst_debug_remove_log_function_by_data (gpointer data);
@@ -1132,6 +1134,8 @@ guint gst_debug_remove_log_function_by_data (gpointer data);
 #define gst_debug_get_all_categories()			(NULL)
 #define gst_debug_construct_term_color(colorinfo)	(g_strdup ("00"))
 #define gst_debug_construct_win_color(colorinfo)	(0)
+
+#endif /* !GST_INFO_C */
 
 #ifdef G_HAVE_ISO_VARARGS
 

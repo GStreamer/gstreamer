@@ -1565,10 +1565,27 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
 {
 }
 
+const gchar *
+gst_debug_message_get (GstDebugMessage * message)
+{
+  return "";
+}
+
 void
 gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, GstDebugMessage * message, gpointer unused)
+{
+}
+
+G_CONST_RETURN gchar *
+gst_debug_level_get_name (GstDebugLevel level)
+{
+  return "NONE";
+}
+
+void
+gst_debug_add_log_function (GstLogFunction func, gpointer data)
 {
 }
 
@@ -1580,6 +1597,107 @@ gst_debug_remove_log_function (GstLogFunction func)
 
 guint
 gst_debug_remove_log_function_by_data (gpointer data)
+{
+  return 0;
+}
+
+void
+gst_debug_set_active (gboolean active)
+{
+}
+
+gboolean
+gst_debug_is_active (void)
+{
+  return FALSE;
+}
+
+void
+gst_debug_set_colored (gboolean colored)
+{
+}
+
+gboolean
+gst_debug_is_colored (void)
+{
+  return FALSE;
+}
+
+void
+gst_debug_set_default_threshold (GstDebugLevel level)
+{
+}
+
+GstDebugLevel
+gst_debug_get_default_threshold (void)
+{
+  return GST_LEVEL_NONE;
+}
+
+void
+gst_debug_set_threshold_for_name (const gchar * name, GstDebugLevel level)
+{
+}
+
+void
+gst_debug_unset_threshold_for_name (const gchar * name)
+{
+}
+
+void
+gst_debug_category_free (GstDebugCategory * category)
+{
+}
+
+void
+gst_debug_category_set_threshold (GstDebugCategory * category,
+    GstDebugLevel level)
+{
+}
+
+void
+gst_debug_category_reset_threshold (GstDebugCategory * category)
+{
+}
+
+GstDebugLevel
+gst_debug_category_get_threshold (GstDebugCategory * category)
+{
+  return GST_LEVEL_NONE;
+}
+
+G_CONST_RETURN gchar *
+gst_debug_category_get_name (GstDebugCategory * category)
+{
+  return "";
+}
+
+guint
+gst_debug_category_get_color (GstDebugCategory * category)
+{
+  return 0;
+}
+
+G_CONST_RETURN gchar *
+gst_debug_category_get_description (GstDebugCategory * category)
+{
+  return "";
+}
+
+GSList *
+gst_debug_get_all_categories (void)
+{
+  return NULL;
+}
+
+gchar *
+gst_debug_construct_term_color (guint colorinfo)
+{
+  return g_strdup ("00");
+}
+
+gint
+gst_debug_construct_win_color (guint colorinfo)
 {
   return 0;
 }
