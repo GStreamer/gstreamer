@@ -4929,8 +4929,10 @@ void mxf_metadata_generic_picture_essence_descriptor_set_caps
    * See SMPTE 377M E2.2 and E1.2
    */
   if (self->frame_layout == 1 || self->frame_layout == 2
-      || self->frame_layout == 4)
+      || self->frame_layout == 4) {
     height *= 2;
+    gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
+  }
 
   if (width == 0 || height == 0) {
     GST_ERROR ("Invalid width/height");
@@ -4973,12 +4975,18 @@ gboolean
   gint fps_n, fps_d;
   MXFMetadataFileDescriptor *f = (MXFMetadataFileDescriptor *) self;
   GstStructure *s;
+  gboolean interlaced;
 
   g_return_val_if_fail (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR
       (self), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
 
   s = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_boolean (s, "interlaced", &interlaced) || !interlaced)
+    self->frame_layout = 1;
+  else
+    self->frame_layout = 3;
 
   if (!gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d)) {
     GST_ERROR ("Invalid framerate");
