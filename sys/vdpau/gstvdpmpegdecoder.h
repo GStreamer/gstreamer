@@ -46,6 +46,10 @@ struct _GstVdpMpegDecoder
   VdpDecoder decoder;
   VdpPictureInfoMPEG1Or2 vdp_info;
   GstBuffer *f_buffer;
+
+  /* holds B_FRAMES */
+  GstBuffer *b_buffer;
+  VdpPictureInfoMPEG1Or2 b_vdp_info;
   
   GstAdapter *adapter;
 };
