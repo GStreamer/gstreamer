@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2005 Martin Eikermann <meiker@upb.de>
- * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008-2009 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -187,11 +187,18 @@ typedef enum
   GST_DEINTERLACE2_LAYOUT_BFF
 } GstDeinterlace2FieldLayout;
 
+typedef enum {
+  GST_DEINTERLACE2_MODE_AUTO,
+  GST_DEINTERLACE2_MODE_INTERLACED
+} GstDeinterlace2Mode;
+
 struct _GstDeinterlace2
 {
   GstElement parent;
 
   GstPad *srcpad, *sinkpad;
+
+  GstDeinterlace2Mode mode;
 
   GstDeinterlace2FieldLayout field_layout;
 
@@ -215,14 +222,11 @@ struct _GstDeinterlace2
   GstPicture field_history[MAX_FIELD_HISTORY];
   guint history_count;
 
-  /* Overlay pitch (number of bytes between scanlines). */
-  guint output_stride;
-
   /* Number of bytes of actual data in each scanline.  May be less than
      OverlayPitch since the overlay's scanlines might have alignment
      requirements.  Generally equal to FrameWidth * 2.
    */
-  guint line_length;
+  guint row_stride;
 
   /* Number of pixels in each scanline. */
   gint frame_width;

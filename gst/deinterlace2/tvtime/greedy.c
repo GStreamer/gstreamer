@@ -365,8 +365,8 @@ deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
         GST_BUFFER_DATA (object->field_history[object->history_count - 3].buf);
 
     // copy first even line
-    oil_memcpy (Dest, L1, object->line_length);
-    Dest += object->output_stride;
+    oil_memcpy (Dest, L1, object->row_stride);
+    Dest += object->row_stride;
   } else {
     InfoIsOdd = 0;
     L1 = GST_BUFFER_DATA (object->field_history[object->history_count - 2].buf);
@@ -379,18 +379,18 @@ deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
 
     // copy first even line
     oil_memcpy (Dest, GST_BUFFER_DATA (object->field_history[0].buf),
-        object->line_length);
-    Dest += object->output_stride;
+        object->row_stride);
+    Dest += object->row_stride;
     // then first odd line
-    oil_memcpy (Dest, L1, object->line_length);
-    Dest += object->output_stride;
+    oil_memcpy (Dest, L1, object->row_stride);
+    Dest += object->row_stride;
   }
 
   for (Line = 0; Line < (object->field_height - 1); ++Line) {
-    klass->scanline (self, L2, L1, L3, L2P, Dest, object->line_length);
-    Dest += object->output_stride;
-    oil_memcpy (Dest, L3, object->line_length);
-    Dest += object->output_stride;
+    klass->scanline (self, L2, L1, L3, L2P, Dest, object->row_stride);
+    Dest += object->row_stride;
+    oil_memcpy (Dest, L3, object->row_stride);
+    Dest += object->row_stride;
 
     L1 += Pitch;
     L2 += Pitch;
@@ -399,7 +399,7 @@ deinterlace_frame_di_greedy (GstDeinterlaceMethod * d_method,
   }
 
   if (InfoIsOdd) {
-    oil_memcpy (Dest, L2, object->line_length);
+    oil_memcpy (Dest, L2, object->row_stride);
   }
 }
 

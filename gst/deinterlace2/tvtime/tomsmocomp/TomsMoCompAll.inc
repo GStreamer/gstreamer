@@ -80,8 +80,8 @@ void FUNCT_NAME(GstDeinterlaceMethod *d_method, GstDeinterlace2* object, GstBuff
 
   /* double stride do address just every odd/even scanline */
   src_pitch = object->field_stride;
-  dst_pitch = object->output_stride;
-  rowsize   = object->line_length;
+  dst_pitch = object->row_stride;
+  rowsize   = object->row_stride;
   FldHeight = object->field_height;
 
   pCopySrc   = GST_BUFFER_DATA(object->field_history[object->history_count-1].buf);

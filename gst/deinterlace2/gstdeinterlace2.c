@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2005 Martin Eikermann <meiker@upb.de>
- * Copyright (C) 2008 Sebastian Dröge <slomo@collabora.co.uk>
+ * Copyright (C) 2008-2009 Sebastian Dröge <slomo@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -104,7 +104,7 @@ gst_deinterlace_simple_method_interpolate_scanline (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  oil_memcpy (out, scanlines->m1, parent->line_length);
+  oil_memcpy (out, scanlines->m1, parent->row_stride);
 }
 
 static void
@@ -112,7 +112,7 @@ gst_deinterlace_simple_method_copy_scanline (GstDeinterlaceMethod * self,
     GstDeinterlace2 * parent, guint8 * out,
     GstDeinterlaceScanlineData * scanlines, gint width)
 {
-  oil_memcpy (out, scanlines->m0, parent->line_length);
+  oil_memcpy (out, scanlines->m0, parent->row_stride);
 }
 
 static void
@@ -143,12 +143,12 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
 
   if (cur_field_flags == PICTURE_INTERLACED_BOTTOM) {
     /* double the first scanline of the bottom field */
-    oil_memcpy (out, field0, parent->line_length);
-    out += parent->output_stride;
+    oil_memcpy (out, field0, parent->row_stride);
+    out += parent->row_stride;
   }
 
-  oil_memcpy (out, field0, parent->line_length);
-  out += parent->output_stride;
+  oil_memcpy (out, field0, parent->row_stride);
+  out += parent->row_stride;
 
   for (line = 2; line <= parent->field_height; line++) {
 
@@ -189,7 +189,7 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
 
     dsm_class->interpolate_scanline (self, parent, out, &scanlines,
         parent->frame_width);
-    out += parent->output_stride;
+    out += parent->row_stride;
 
     memset (&scanlines, 0, sizeof (scanlines));
     scanlines.bottom_field = (cur_field_flags == PICTURE_INTERLACED_BOTTOM);
@@ -227,12 +227,12 @@ gst_deinterlace_simple_method_deinterlace_frame (GstDeinterlaceMethod * self,
 
     dsm_class->copy_scanline (self, parent, out, &scanlines,
         parent->frame_width);
-    out += parent->output_stride;
+    out += parent->row_stride;
   }
 
   if (cur_field_flags == PICTURE_INTERLACED_TOP) {
     /* double the last scanline of the top field */
-    oil_memcpy (out, field0, parent->line_length);
+    oil_memcpy (out, field0, parent->row_stride);
   }
 }
 
@@ -570,8 +570,7 @@ gst_deinterlace2_reset_history (GstDeinterlace2 * self)
 static void
 gst_deinterlace2_reset (GstDeinterlace2 * self)
 {
-  self->output_stride = 0;
-  self->line_length = 0;
+  self->row_stride = 0;
   self->frame_width = 0;
   self->frame_height = 0;
   self->frame_rate_n = 0;
@@ -719,13 +718,13 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
     GST_DEBUG ("Top field first");
     field1 = gst_buffer_ref (buffer);
     field1_flags = PICTURE_INTERLACED_TOP;
-    field2 = gst_buffer_create_sub (buffer, self->line_length,
-        GST_BUFFER_SIZE (buffer) - self->line_length);
+    field2 = gst_buffer_create_sub (buffer, self->row_stride,
+        GST_BUFFER_SIZE (buffer) - self->row_stride);
     field2_flags = PICTURE_INTERLACED_BOTTOM;
   } else {
     GST_DEBUG ("Bottom field first");
-    field1 = gst_buffer_create_sub (buffer, self->line_length,
-        GST_BUFFER_SIZE (buffer) - self->line_length);
+    field1 = gst_buffer_create_sub (buffer, self->row_stride,
+        GST_BUFFER_SIZE (buffer) - self->row_stride);
     field1_flags = PICTURE_INTERLACED_BOTTOM;
     field2 = gst_buffer_ref (buffer);
     field2_flags = PICTURE_INTERLACED_TOP;
@@ -1132,7 +1131,6 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
     goto caps_not_accepted;
   gst_caps_unref (othercaps);
 
-  /* TODO: introduce self->field_stride */
   self->field_height = self->frame_height / 2;
 
   fmt = gst_video_format_from_fourcc (fourcc);
@@ -1141,11 +1139,9 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
      change when the buffer-fields concept has landed */
   self->field_stride =
       gst_video_format_get_row_stride (fmt, 0, self->frame_width) * 2;
-  self->output_stride =
-      gst_video_format_get_row_stride (fmt, 0, self->frame_width);
 
   /* in bytes */
-  self->line_length =
+  self->row_stride =
       gst_video_format_get_row_stride (fmt, 0, self->frame_width);
   self->frame_size =
       gst_video_format_get_size (fmt, self->frame_width, self->frame_height);
