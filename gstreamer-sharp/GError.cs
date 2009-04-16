@@ -8,25 +8,50 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace Gst {
-  internal static class GError {
-    public static string GetMessage (IntPtr error) {
-      if (error == IntPtr.Zero)
-        return String.Empty;
 
-      IntPtr message = gstsharp_g_error_get_message (error);
-      if (message == IntPtr.Zero)
-        return String.Empty;
+  [StructLayout (LayoutKind.Sequential) ]
+  internal struct GError {
+    uint domain_quark;
+    int code;
+    IntPtr message;
 
-      return GLib.Marshaller.PtrToStringGFree (message);
+    public uint Domain {
+      get {
+        return domain_quark;
+      }
+      set {
+        domain_quark = value;
+      }
     }
 
-    public static void Free (IntPtr error) {
-      if (error != IntPtr.Zero)
-        g_error_free (error);
+    public int Code {
+      get {
+        return code;
+      }
+      set {
+        code = value;
+      }
     }
 
-    [DllImport ("gstreamersharpglue-0.10") ]
-    static extern IntPtr gstsharp_g_error_get_message (IntPtr error);
+    public string Message {
+      get {
+        if (message == IntPtr.Zero)
+          return null;
+        return GLib.Marshaller.Utf8PtrToString (message);
+      }
+      set {
+        if (message != IntPtr.Zero)
+          GLib.Marshaller.Free (message);
+        message = GLib.Marshaller.StringToPtrGStrdup (value);
+      }
+    }
+
+    public void Unset () {
+      GLib.Marshaller.Free (message);
+      message = IntPtr.Zero;
+      code = 0;
+      domain_quark = 0;
+    }
 
     [DllImport ("glib-2.0.dll") ]
     static extern void g_error_free (IntPtr error);

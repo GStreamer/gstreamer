@@ -48,14 +48,7 @@ namespace Gst {
         bool result = gst_init_check (ref argc, ref argv_ptr, out error_ptr);
 
         if (error_ptr != IntPtr.Zero) {
-          string message = GError.GetMessage (error_ptr);
-
-          if (message == String.Empty)
-            message = "Reason unknown";
-
-          GError.Free (error_ptr);
-
-          throw new ApplicationException (String.Format ("gst_init_check() failed: {0}", message));
+          throw new GLib.GException (error_ptr);
         } else if (!result) {
           throw new ApplicationException ("gst_init_check() failed: Reason unknown");
         }

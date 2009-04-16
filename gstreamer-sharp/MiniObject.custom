@@ -20,8 +20,6 @@ public void SetGValue (ref GLib.Value val) {
 
 [DllImport ("gstreamersharpglue-0.10.dll") ]
 private static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
-[DllImport ("gstreamersharpglue-0.10.dll") ]
-private static extern IntPtr gstsharp_g_value_type (ref GLib.Value val);
 [DllImport ("gstreamer-0.10.dll") ]
 private static extern IntPtr gst_value_dup_mini_object (ref GLib.Value v);
 [DllImport ("gstreamer-0.10.dll") ]
