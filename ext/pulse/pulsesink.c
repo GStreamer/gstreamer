@@ -999,7 +999,8 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
     else
       offset = 0;
   }
-  offset = *sample * bps;
+  /* offset is in bytes */
+  offset *= bps;
 
   while (*toprocess > 0) {
     size_t avail;
@@ -1088,7 +1089,7 @@ gst_pulseringbuffer_commit (GstRingBuffer * buf, guint64 * sample,
       avail = towrite / bps;
     }
     *sample += avail;
-    offset = *sample * bps;
+    offset += avail * bps;
 
     /* check if we need to uncork after writing the samples */
     if (pbuf->corked) {
