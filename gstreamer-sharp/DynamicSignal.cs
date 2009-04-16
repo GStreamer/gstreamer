@@ -133,12 +133,12 @@ namespace Gst {
     static void OnMarshal (IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr,
                            IntPtr ihint, IntPtr data) {
       object [] args = new object[argc - 1];
-      object o = Gst.Value.GetValue ( (GLib.Value) Marshal.PtrToStructure (argsPtr, typeof (GLib.Value)));
+      object o = ( (GLib.Value) Marshal.PtrToStructure (argsPtr, typeof (GLib.Value))).Val;
 
       for (int i = 1; i < argc; i++) {
         IntPtr struct_ptr = (IntPtr) ( (long) argsPtr + (i * gvalue_struct_size));
         GLib.Value argument = (GLib.Value) Marshal.PtrToStructure (struct_ptr, typeof (GLib.Value));
-        args[i - 1] = Gst.Value.GetValue (argument);
+        args[i - 1] = argument.Val;
       }
 
       if (data == IntPtr.Zero) {
@@ -256,7 +256,7 @@ namespace Gst {
 
       query = (SignalQuery) SignalEmitInfo[key];
       GLib.Value[] signal_parameters = new GLib.Value[query.n_params + 1];
-      signal_parameters[0] = Gst.Value.CreateValue (o);
+      signal_parameters[0] = new GLib.Value (o);
 
       if (parameters.Length != query.n_params)
         throw new ApplicationException (String.Format ("Invalid number of parameters: expected {0}, got {1}", query.n_params, parameters.Length));
@@ -268,7 +268,7 @@ namespace Gst {
         if (expected_type != given_type && ! given_type.IsSubclassOf (given_type))
           throw new ApplicationException (String.Format ("Invalid parameter type: expected {0}, got {1}", expected_type, given_type));
 
-        signal_parameters[i + 1] = Gst.Value.CreateValue (parameters[i]);
+        signal_parameters[i + 1] = new GLib.Value (parameters[i]);
       }
 
       GLib.Value return_value = new GLib.Value ();
@@ -280,7 +280,7 @@ namespace Gst {
 
       g_signal_emitv (signal_parameters, query.signal_id, signal_detail_quark, ref return_value);
 
-      return (query.return_type != GType.Invalid && query.return_type != GType.None) ? Gst.Value.GetValue (return_value) : null;
+      return (query.return_type != GType.Invalid && query.return_type != GType.None) ? return_value.Val : null;
     }
 
     [DllImport ("gstreamersharpglue-0.10") ]

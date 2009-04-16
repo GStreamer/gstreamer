@@ -122,11 +122,11 @@ public object Get (string field) {
   GLib.Value v;
 
   v = GetValue (field);
-  return Gst.Value.GetValue (v);
+  return v.Val;
 }
 
 public void Set (string field, object value) {
-  SetValue (field, Gst.Value.CreateValue (value));
+  SetValue (field, new GLib.Value (value));
 }
 
 public void Set (params object[] fields) {
@@ -136,20 +136,16 @@ public void Set (params object[] fields) {
     throw new ArgumentException ();
 
   for (i = 0; i < length; i += 2) {
-    SetValue (fields[i] as string, Gst.Value.CreateValue (fields[i+1]));
+    SetValue (fields[i] as string, new GLib.Value (fields[i+1]));
   }
 }
 
 public object this [string field] {
   set {
-    GLib.Value v;
-
     if (field == null)
       throw new ArgumentNullException ();
 
-    v = Gst.Value.CreateValue (value);
-
-    Set (field, v);
+    Set (field, value);
   }
   get {
     if (field == null)

@@ -1,6 +1,8 @@
 [DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_buffer_try_new_and_alloc (uint size);
 
+public Buffer (GLib.Value val) : base (val) { }
+
 public Buffer (uint size) {
   IntPtr raw = gst_buffer_try_new_and_alloc (size);
   if (raw == IntPtr.Zero)
@@ -195,3 +197,6 @@ public ulong OffsetEnd {
   }
 }
 
+static Buffer () {
+  GLib.GType.Register (Buffer.GType, typeof (Buffer));
+}
