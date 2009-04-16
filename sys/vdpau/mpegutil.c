@@ -285,14 +285,11 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
   /* Skip the sync word */
   data += 4;
 
-  hdr->pic_type = (data[1] >> 3) & 0x07;
+  hdr->pic_type = read_bits (data + 1, 2, 3);
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
     return FALSE;               /* Corrupted picture packet */
 
   if (hdr->pic_type == P_FRAME || hdr->pic_type == B_FRAME) {
-    if (G_UNLIKELY ((end - data) < 5))
-      return FALSE;             /* packet too small */
-
     hdr->full_pel_forward_vector = read_bits (data + 3, 5, 1);
     hdr->f_code[0][0] = hdr->f_code[0][1] = read_bits (data + 3, 6, 3);
 

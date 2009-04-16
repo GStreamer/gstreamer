@@ -131,6 +131,12 @@ gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
   return TRUE;
 }
 
+typedef struct
+{
+  GstBuffer *buffer;
+  VdpPictureInfoMPEG1Or2 vdp_info;
+} GstVdpBFrame;
+
 static GstFlowReturn
 gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 {
@@ -150,13 +156,17 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
   /* if the frame is a B_FRAME we store it for future decoding */
   if (mpeg_dec->vdp_info.picture_coding_type == B_FRAME) {
-    mpeg_dec->b_buffer = buffer;
-    memcpy (&mpeg_dec->b_vdp_info, &mpeg_dec->vdp_info,
+    GstVdpBFrame *b_frame;
+
+    b_frame = g_slice_new (GstVdpBFrame);
+
+    b_frame->buffer = buffer;
+    memcpy (&b_frame->vdp_info, &mpeg_dec->vdp_info,
         sizeof (VdpPictureInfoMPEG1Or2));
 
-    /* unset forward_reference since next frame must be an I_FRAME */
-    mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+    mpeg_dec->b_frames = g_slist_append (mpeg_dec->b_frames, b_frame);
 
+    gst_buffer_ref (mpeg_dec->f_buffer);
     mpeg_dec->vdp_info.slice_count = 0;
 
     return GST_FLOW_OK;
@@ -188,35 +198,43 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
     return GST_FLOW_ERROR;
   }
 
-  /* if we have stored away a B_FRAME we can now decode it */
-  if (mpeg_dec->b_buffer) {
-    GstVdpVideoBuffer *b_outbuf;
+  /* if we have stored away some B_FRAMEs we can now decode them */
+  if (mpeg_dec->b_frames) {
+    GSList *iter;
 
-    b_outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
-        dec->width, dec->height);
-    mpeg_dec->b_vdp_info.backward_reference =
-        mpeg_dec->b_vdp_info.forward_reference;
-    mpeg_dec->b_vdp_info.forward_reference = surface;
-    vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
-    vbit[0].bitstream = GST_BUFFER_DATA (mpeg_dec->b_buffer);
-    vbit[0].bitstream_bytes = GST_BUFFER_SIZE (mpeg_dec->b_buffer);
+    for (iter = mpeg_dec->b_frames; iter; iter = g_slist_next (iter)) {
+      GstVdpBFrame *b_frame;
+      GstVdpVideoBuffer *b_outbuf;
 
-    status = device->vdp_decoder_render (mpeg_dec->decoder, b_outbuf->surface,
-        (VdpPictureInfo *) & mpeg_dec->b_vdp_info, 1, vbit);
-    gst_buffer_unref (mpeg_dec->b_buffer);
-    mpeg_dec->b_buffer = NULL;
+      b_frame = (GstVdpBFrame *) iter->data;
 
-    if (status != VDP_STATUS_OK) {
-      GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
-          ("Could not decode B_FRAME"),
-          ("Error returned from vdpau was: %s",
-              device->vdp_get_error_string (status)));
-    }
+      b_outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
+          dec->width, dec->height);
 
-    gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec), b_outbuf);
+      b_frame->vdp_info.forward_reference = surface;
+      vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
+      vbit[0].bitstream = GST_BUFFER_DATA (b_frame->buffer);
+      vbit[0].bitstream_bytes = GST_BUFFER_SIZE (b_frame->buffer);
 
-    if (mpeg_dec->b_vdp_info.forward_reference != VDP_INVALID_HANDLE)
+      status = device->vdp_decoder_render (mpeg_dec->decoder, b_outbuf->surface,
+          (VdpPictureInfo *) & b_frame->vdp_info, 1, vbit);
+      gst_buffer_unref (b_frame->buffer);
+      g_slice_free (GstVdpBFrame, b_frame);
+
+      if (status != VDP_STATUS_OK) {
+        GST_ELEMENT_ERROR (mpeg_dec, RESOURCE, READ,
+            ("Could not decode B_FRAME"),
+            ("Error returned from vdpau was: %s",
+                device->vdp_get_error_string (status)));
+      }
+
+      gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
+          b_outbuf);
+
       gst_buffer_unref (mpeg_dec->f_buffer);
+    }
+    g_slist_free (mpeg_dec->b_frames);
+    mpeg_dec->b_frames = NULL;
   }
 
   gst_buffer_ref (GST_BUFFER (outbuf));
@@ -294,7 +312,6 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
     return FALSE;
 
   mpeg_dec->vdp_info.picture_coding_type = pic_hdr.pic_type;
-
 
   if (pic_hdr.pic_type == I_FRAME &&
       mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
@@ -481,7 +498,7 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
-  mpeg_dec->b_buffer = NULL;
+  mpeg_dec->b_frames = NULL;
 
   mpeg_dec->adapter = gst_adapter_new ();
 

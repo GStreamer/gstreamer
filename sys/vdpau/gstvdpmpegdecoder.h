@@ -48,8 +48,7 @@ struct _GstVdpMpegDecoder
   GstBuffer *f_buffer;
 
   /* holds B_FRAMES */
-  GstBuffer *b_buffer;
-  VdpPictureInfoMPEG1Or2 b_vdp_info;
+  GSList *b_frames;
   
   GstAdapter *adapter;
 };
