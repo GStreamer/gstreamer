@@ -24,6 +24,7 @@ gst_app_src_end_of_stream
 <SUBSECTION Standard>
 GstAppSrcClass
 GST_APP_SRC
+GST_APP_SRC_CAST
 GST_IS_APP_SRC
 GST_TYPE_APP_SRC
 gst_app_src_get_type
@@ -65,6 +66,7 @@ gst_app_sink_set_callbacks
 GstAppSinkPrivate
 GstAppSinkClass
 GST_APP_SINK
+GST_APP_SINK_CAST
 GST_IS_APP_SINK
 GST_TYPE_APP_SINK
 gst_app_sink_get_type

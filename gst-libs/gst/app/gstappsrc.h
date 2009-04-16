@@ -35,6 +35,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_APP_SRC))
 #define GST_IS_APP_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_APP_SRC))
+/* Since 0.10.23 */
+#define GST_APP_SRC_CAST(obj) \
+  ((GstAppSrc*)(obj))
 
 typedef struct _GstAppSrc GstAppSrc;
 typedef struct _GstAppSrcClass GstAppSrcClass;
