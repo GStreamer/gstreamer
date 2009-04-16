@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <metadata>
-  <attr path="/api/namespace/object[@name='Bin']" name="disable_gtype_ctor">1</attr>
+  <attr path="/api/namespace/object" name="disable_gtype_ctor">1</attr>
+
   <attr path="/api/namespace/object[@name='Bin']/method[@name='AddMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
@@ -249,7 +250,6 @@
   
   <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
 
-  <attr path="/api/namespace/object[@name='Pipeline']" name="disable_gtype_ctor">1</attr>
   <attr path="/api/namespace/object[@name='Pipeline']/method[@name='GetBus']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
