@@ -388,11 +388,13 @@ gst_output_selector_chain (GstPad * pad, GstBuffer * buf)
     /* Do the switch */
     gst_output_selector_switch (osel);
   }
-
-  /* Keep reference to latest buffer to resend it after switch */
-  if (osel->latest_buffer)
-    gst_buffer_unref (osel->latest_buffer);
-  osel->latest_buffer = gst_buffer_ref (buf);
+  
+  if (osel->resend_latest) {
+    /* Keep reference to latest buffer to resend it after switch */
+    if (osel->latest_buffer)
+      gst_buffer_unref (osel->latest_buffer);
+    osel->latest_buffer = gst_buffer_ref (buf);
+  }
 
   /* Keep track of last stop and use it in NEWSEGMENT start after 
      switching to a new src pad */
