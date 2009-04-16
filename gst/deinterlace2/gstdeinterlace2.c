@@ -688,51 +688,83 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
   int i = 1;
   GstClockTime timestamp;
   GstDeinterlace2FieldLayout field_layout = self->field_layout;
+  gboolean repeated = GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_RFF);
+  gboolean tff = GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_TFF);
+  gboolean onefield =
+      GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_ONEFIELD);
+  GstBuffer *field1, *field2;
+  guint fields_to_push = (onefield) ? 1 : (!repeated) ? 2 : 3;
+  gint field1_flags, field2_flags;
 
-  g_assert (self->history_count < MAX_FIELD_HISTORY - 2);
+  g_assert (self->history_count < MAX_FIELD_HISTORY - fields_to_push);
 
-  for (i = MAX_FIELD_HISTORY - 1; i >= 2; i--) {
-    self->field_history[i].buf = self->field_history[i - 2].buf;
-    self->field_history[i].flags = self->field_history[i - 2].flags;
+  for (i = MAX_FIELD_HISTORY - 1; i >= fields_to_push; i--) {
+    self->field_history[i].buf = self->field_history[i - fields_to_push].buf;
+    self->field_history[i].flags =
+        self->field_history[i - fields_to_push].flags;
   }
 
   if (field_layout == GST_DEINTERLACE2_LAYOUT_AUTO) {
-    if (!self->interlaced
-        || GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_TFF))
+    if (!self->interlaced) {
+      GST_WARNING_OBJECT (self, "Can't detect field layout -- assuming TFF");
       field_layout = GST_DEINTERLACE2_LAYOUT_TFF;
-    else
+    } else if (tff) {
+      field_layout = GST_DEINTERLACE2_LAYOUT_TFF;
+    } else {
       field_layout = GST_DEINTERLACE2_LAYOUT_BFF;
+    }
   }
-
 
   if (field_layout == GST_DEINTERLACE2_LAYOUT_TFF) {
     GST_DEBUG ("Top field first");
-    self->field_history[0].buf =
-        gst_buffer_create_sub (buffer, self->line_length,
+    field1 = gst_buffer_ref (buffer);
+    field1_flags = PICTURE_INTERLACED_TOP;
+    field2 = gst_buffer_create_sub (buffer, self->line_length,
         GST_BUFFER_SIZE (buffer) - self->line_length);
-    self->field_history[0].flags = PICTURE_INTERLACED_BOTTOM;
-    self->field_history[1].buf = buffer;
-    self->field_history[1].flags = PICTURE_INTERLACED_TOP;
+    field2_flags = PICTURE_INTERLACED_BOTTOM;
   } else {
     GST_DEBUG ("Bottom field first");
-    self->field_history[0].buf = buffer;
-    self->field_history[0].flags = PICTURE_INTERLACED_TOP;
-    self->field_history[1].buf =
-        gst_buffer_create_sub (buffer, self->line_length,
+    field1 = gst_buffer_create_sub (buffer, self->line_length,
         GST_BUFFER_SIZE (buffer) - self->line_length);
-    self->field_history[1].flags = PICTURE_INTERLACED_BOTTOM;
+    field1_flags = PICTURE_INTERLACED_BOTTOM;
+    field2 = gst_buffer_ref (buffer);
+    field2_flags = PICTURE_INTERLACED_TOP;
   }
 
   /* Timestamps are assigned to the field buffers under the assumption that
      the timestamp of the buffer equals the first fields timestamp */
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_TIMESTAMP (self->field_history[0].buf) =
-      timestamp + self->field_duration;
-  GST_BUFFER_TIMESTAMP (self->field_history[1].buf) = timestamp;
+  if (repeated) {
+    GST_BUFFER_TIMESTAMP (field1) = timestamp;
+    GST_BUFFER_TIMESTAMP (field2) = timestamp + 2 * self->field_duration;
+  } else {
+    GST_BUFFER_TIMESTAMP (field1) = timestamp;
+    GST_BUFFER_TIMESTAMP (field2) = timestamp + self->field_duration;
+  }
 
-  self->history_count += 2;
+  if (repeated) {
+    self->field_history[0].buf = field2;
+    self->field_history[0].flags = field2_flags;
+    self->field_history[1].buf = gst_buffer_ref (field1);
+    self->field_history[1].flags = field1_flags;
+    self->field_history[2].buf = field1;
+    self->field_history[2].flags = field1_flags;
+  } else if (!onefield) {
+    self->field_history[0].buf = field2;
+    self->field_history[0].flags = field2_flags;
+    self->field_history[1].buf = field1;
+    self->field_history[1].flags = field1_flags;
+  } else {                      /* onefield */
+    self->field_history[0].buf = field1;
+    self->field_history[0].flags = field1_flags;
+    gst_buffer_unref (field2);
+  }
+
+  self->history_count += fields_to_push;
   GST_DEBUG ("push, size(history): %d", self->history_count);
+
+  gst_buffer_unref (buffer);
 }
 
 static GstFlowReturn
