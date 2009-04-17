@@ -220,7 +220,7 @@ struct _GstDebugCategory {
 #ifndef GST_FUNCTION
 #if defined (__GNUC__) || (defined (_MSC_VER) && _MSC_VER >= 1300)
 #  define GST_FUNCTION     ((const char*) (__FUNCTION__))
-#elif defined (G_HAVE_ISO_VARARGS)
+#elif defined (__STDC__) && defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #  define GST_FUNCTION     ((const char*) (__func__))
 #else
 #  define GST_FUNCTION     ((const char*) ("???"))
