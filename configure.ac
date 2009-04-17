@@ -225,7 +225,10 @@ case $host_os in
 	AC_DEFINE_UNQUOTED(GST_EXTRA_MODULE_SUFFIX, [".dylib"], [Extra platform specific plugin suffix])
         AC_DEFINE_UNQUOTED(GST_HAVE_UNSAFE_FORK, 1, [Defined when registry scanning through fork is unsafe])
 	;;
-     cygwin* | mingw* | msvc* | mks*)
+     cygwin*)
+	AC_DEFINE_UNQUOTED(GST_HAVE_UNSAFE_FORK, 1, [Defined when registry scanning through fork is unsafe])
+	;;
+     mingw* | msvc* | mks*)
         dnl HAVE_WIN32 currently means "disable POSIXisms".
         AC_DEFINE_UNQUOTED(HAVE_WIN32, 1, [Defined if compiling for Windows])
         ;;
