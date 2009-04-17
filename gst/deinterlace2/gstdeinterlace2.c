@@ -421,7 +421,7 @@ gst_deinterlace2_set_method (GstDeinterlace2 * self,
       self->method = g_object_new (GST_TYPE_DEINTERLACE_WEAVE_BFF, NULL);
       break;
     default:
-      GST_WARNING ("Invalid Deinterlacer Method");
+      GST_WARNING_OBJECT (self, "Invalid Deinterlacer Method");
       return;
   }
 
@@ -663,7 +663,7 @@ gst_deinterlace2_pop_history (GstDeinterlace2 * self)
   buffer = self->field_history[self->history_count - 1].buf;
 
   self->history_count--;
-  GST_DEBUG ("pop, size(history): %d", self->history_count);
+  GST_DEBUG_OBJECT (self, "pop, size(history): %d", self->history_count);
 
   return buffer;
 }
@@ -715,14 +715,14 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
   }
 
   if (field_layout == GST_DEINTERLACE2_LAYOUT_TFF) {
-    GST_DEBUG ("Top field first");
+    GST_DEBUG_OBJECT (self, "Top field first");
     field1 = gst_buffer_ref (buffer);
     field1_flags = PICTURE_INTERLACED_TOP;
     field2 = gst_buffer_create_sub (buffer, self->row_stride,
         GST_BUFFER_SIZE (buffer) - self->row_stride);
     field2_flags = PICTURE_INTERLACED_BOTTOM;
   } else {
-    GST_DEBUG ("Bottom field first");
+    GST_DEBUG_OBJECT (self, "Bottom field first");
     field1 = gst_buffer_create_sub (buffer, self->row_stride,
         GST_BUFFER_SIZE (buffer) - self->row_stride);
     field1_flags = PICTURE_INTERLACED_BOTTOM;
@@ -759,7 +759,7 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
   }
 
   self->history_count += fields_to_push;
-  GST_DEBUG ("push, size(history): %d", self->history_count);
+  GST_DEBUG_OBJECT (self, "push, size(history): %d", self->history_count);
 
   gst_buffer_unref (buffer);
 }
@@ -789,24 +789,24 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
   /* Not enough fields in the history */
   if (self->history_count < fields_required + 1) {
     /* TODO: do bob or just forward frame */
-    GST_DEBUG ("HistoryCount=%d", self->history_count);
+    GST_DEBUG_OBJECT (self, "HistoryCount=%d", self->history_count);
     return GST_FLOW_OK;
   }
 
   while (self->history_count >= fields_required) {
     if (self->fields == GST_DEINTERLACE2_ALL)
-      GST_DEBUG ("All fields");
+      GST_DEBUG_OBJECT (self, "All fields");
     if (self->fields == GST_DEINTERLACE2_TF)
-      GST_DEBUG ("Top fields");
+      GST_DEBUG_OBJECT (self, "Top fields");
     if (self->fields == GST_DEINTERLACE2_BF)
-      GST_DEBUG ("Bottom fields");
+      GST_DEBUG_OBJECT (self, "Bottom fields");
 
     cur_field_idx = self->history_count - fields_required;
 
     if ((self->field_history[cur_field_idx].flags == PICTURE_INTERLACED_TOP
             && self->fields == GST_DEINTERLACE2_TF) ||
         self->fields == GST_DEINTERLACE2_ALL) {
-      GST_DEBUG ("deinterlacing top field");
+      GST_DEBUG_OBJECT (self, "deinterlacing top field");
 
       /* create new buffer */
       ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
@@ -841,7 +841,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
     /* no calculation done: remove excess field */
     else if (self->field_history[cur_field_idx].flags ==
         PICTURE_INTERLACED_TOP && self->fields == GST_DEINTERLACE2_BF) {
-      GST_DEBUG ("Removing unused top field");
+      GST_DEBUG_OBJECT (self, "Removing unused top field");
       gst_buffer_unref (gst_deinterlace2_pop_history (self));
     }
 
@@ -853,7 +853,7 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
     if ((self->field_history[cur_field_idx].flags == PICTURE_INTERLACED_BOTTOM
             && self->fields == GST_DEINTERLACE2_BF) ||
         self->fields == GST_DEINTERLACE2_ALL) {
-      GST_DEBUG ("deinterlacing bottom field");
+      GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
 
       /* create new buffer */
       ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
@@ -889,12 +889,12 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
     /* no calculation done: remove excess field */
     else if (self->field_history[cur_field_idx].flags ==
         PICTURE_INTERLACED_BOTTOM && self->fields == GST_DEINTERLACE2_TF) {
-      GST_DEBUG ("Removing unused bottom field");
+      GST_DEBUG_OBJECT (self, "Removing unused bottom field");
       gst_buffer_unref (gst_deinterlace2_pop_history (self));
     }
   }
 
-  GST_DEBUG ("----chain end ----\n\n");
+  GST_DEBUG_OBJECT (self, "----chain end ----\n\n");
 
   return ret;
 }
@@ -1284,14 +1284,14 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
 
           gst_query_parse_latency (query, &live, &min, &max);
 
-          GST_DEBUG ("Peer latency: min %"
+          GST_DEBUG_OBJECT (self, "Peer latency: min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
           /* add our own latency */
           latency = (fields_required + method_latency) * self->field_duration;
 
-          GST_DEBUG ("Our latency: min %" GST_TIME_FORMAT
+          GST_DEBUG_OBJECT (self, "Our latency: min %" GST_TIME_FORMAT
               ", max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (latency), GST_TIME_ARGS (latency));
 
@@ -1301,7 +1301,7 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
           else
             max = latency;
 
-          GST_DEBUG ("Calculated total latency : min %"
+          GST_DEBUG_OBJECT (self, "Calculated total latency : min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
