@@ -5,7 +5,6 @@
         <dir>../../gstreamer/gst</dir>
         <!-- Needs to be bound -->
         <exclude>../../gstreamer/gst/gstdebugutils.h</exclude>
-        <exclude>../../gstreamer/gst/gsterror.h</exclude>
         <exclude>../../gstreamer/gst/gstinfo.h</exclude>
         <exclude>../../gstreamer/gst/gstinterface.h</exclude>
         <exclude>../../gstreamer/gst/gsturi.h</exclude>
