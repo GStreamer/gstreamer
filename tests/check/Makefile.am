@@ -16,9 +16,11 @@ CLEANFILES = core.* test-registry.xml
 clean-local: clean-local-check
 
 check_PROGRAMS = \
+	generic/plugin-test \
 	generic/libavcodec-locking
 
 VALGRIND_TO_FIX = \
+	generic/plugin-test \
 	generic/libavcodec-locking
 
 TESTS = $(check_PROGRAMS)
