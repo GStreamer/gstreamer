@@ -967,6 +967,11 @@ start_rtcp_thread (GstRtpSession * rtpsession)
   GST_RTP_SESSION_LOCK (rtpsession);
   rtpsession->priv->stop_thread = FALSE;
   if (rtpsession->priv->thread_stopped) {
+    /* if the thread stopped, and we still have a handle to the thread, join it
+     * now. We can safely join with the lock held, the thread will not take it
+     * anymore. */
+    if (rtpsession->priv->thread)
+      g_thread_join (rtpsession->priv->thread);
     /* only create a new thread if the old one was stopped. Otherwise we can
      * just reuse the currently running one. */
     rtpsession->priv->thread =
