@@ -42,7 +42,7 @@ sources = \
 	Application.cs \
 	Version.cs \
 	AssemblyInfo.cs \
-	CommonTags.cs \
+	Tags.cs \
 	GError.cs \
 	Value.cs \
 	plugins-base/PlayBin.cs \
