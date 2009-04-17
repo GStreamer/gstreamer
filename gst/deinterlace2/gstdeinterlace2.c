@@ -734,18 +734,16 @@ gst_deinterlace2_push_history (GstDeinterlace2 * self, GstBuffer * buffer)
      the timestamp of the buffer equals the first fields timestamp */
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  if (repeated) {
-    GST_BUFFER_TIMESTAMP (field1) = timestamp;
-    GST_BUFFER_TIMESTAMP (field2) = timestamp + 2 * self->field_duration;
-  } else {
-    GST_BUFFER_TIMESTAMP (field1) = timestamp;
-    GST_BUFFER_TIMESTAMP (field2) = timestamp + self->field_duration;
-  }
+  GST_BUFFER_TIMESTAMP (field1) = timestamp;
+  GST_BUFFER_TIMESTAMP (field2) = timestamp + self->field_duration;
+  if (repeated)
+    GST_BUFFER_TIMESTAMP (field2) += self->field_duration;
 
   if (repeated) {
     self->field_history[0].buf = field2;
     self->field_history[0].flags = field2_flags;
     self->field_history[1].buf = gst_buffer_ref (field1);
+    GST_BUFFER_TIMESTAMP (self->field_history[1].buf) += self->field_duration;
     self->field_history[1].flags = field1_flags;
     self->field_history[2].buf = field1;
     self->field_history[2].flags = field1_flags;
