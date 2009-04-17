@@ -4,12 +4,13 @@
 namespace Gst {
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-client.h")]
 	public class RTSPClient : GLib.Object {
-		public void* address;
 		public weak Gst.RTSPConnection connection;
-		public weak Gst.RTSPMediaFactory factory;
-		public weak Gst.RTSPMediaMapping mapping;
-		public weak Gst.RTSPSessionPool pool;
-		public weak GLib.Thread thread;
+		public weak Gst.RTSPMedia media;
+		public weak GLib.List sessions;
+		public weak GLib.List streams;
+		public weak Gst.RTSPUrl uri;
+		public weak Gst.RTSPWatch watch;
+		public uint watchid;
 		public bool accept (GLib.IOChannel channel);
 		public Gst.RTSPMediaMapping get_media_mapping ();
 		public Gst.RTSPSessionPool get_session_pool ();
@@ -17,17 +18,55 @@ namespace Gst {
 		public RTSPClient ();
 		public void set_media_mapping (Gst.RTSPMediaMapping mapping);
 		public void set_session_pool (Gst.RTSPSessionPool pool);
+		public Gst.RTSPMediaMapping media_mapping { get; set; }
+		public Gst.RTSPSessionPool session_pool { get; set; }
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media.h")]
 	public class RTSPMedia : GLib.Object {
+		public int active;
+		public bool buffering;
 		public weak Gst.Element element;
+		public uint id;
+		public bool is_live;
+		public weak Gst.Element pipeline;
+		public bool prepared;
+		public weak Gst.RTSPTimeRange range;
+		public bool reused;
+		public weak Gst.Element rtpbin;
+		public weak GLib.TimeoutSource source;
 		public weak GLib.Array streams;
+		public Gst.State target_state;
 		public unowned Gst.RTSPMediaStream get_stream (uint idx);
+		[NoWrapper]
+		public virtual bool handle_message (Gst.Message message);
+		public bool is_prepared ();
+		public bool is_reusable ();
+		public bool is_shared ();
 		public uint n_streams ();
+		[CCode (has_construct_function = false)]
+		public RTSPMedia ();
+		public bool prepare ();
+		public bool seek (Gst.RTSPTimeRange range);
+		public void set_reusable (bool reusable);
+		public void set_shared (bool shared);
+		public bool set_state (Gst.State state, GLib.Array trans);
+		public bool unprepare ();
+		[NoAccessorMethod]
+		public bool reusable { get; set; }
+		[NoAccessorMethod]
+		public bool shared { get; set; }
+		public virtual signal void unprepared ();
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media-factory.h")]
 	public class RTSPMediaFactory : GLib.Object {
+		public weak GLib.Mutex @lock;
+		public weak GLib.HashTable medias;
+		public weak GLib.Mutex medias_lock;
+		[NoWrapper]
+		public virtual void configure (Gst.RTSPMedia media);
 		public virtual Gst.RTSPMedia? @construct (Gst.RTSPUrl url);
+		[NoWrapper]
+		public virtual string gen_key (Gst.RTSPUrl url);
 		[NoWrapper]
 		public virtual Gst.Element? get_element (Gst.RTSPUrl url);
 		public string get_launch ();
@@ -37,6 +76,8 @@ namespace Gst {
 		public void set_launch (string launch);
 		public void set_shared (bool shared);
 		public string launch { get; set; }
+		[NoAccessorMethod]
+		public bool shared { get; set; }
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-media-mapping.h")]
 	public class RTSPMediaMapping : GLib.Object {
@@ -52,20 +93,44 @@ namespace Gst {
 	[Compact]
 	[CCode (cheader_filename = "gst/rtsp-server/rstp-media.h")]
 	public class RTSPMediaStream {
+		[CCode (array_length = false)]
+		public weak Gst.Element[] appsink;
+		[CCode (array_length = false)]
+		public weak Gst.Element[] appsrc;
 		public weak Gst.Caps caps;
 		public ulong caps_sig;
-		public weak Gst.Element element;
-		public uint idx;
-		public weak Gst.RTSPMedia media;
 		public weak Gst.Element payloader;
+		public bool prepared;
+		public weak Gst.Pad recv_rtcp_sink;
+		public weak Gst.Pad send_rtcp_src;
+		public weak Gst.Pad send_rtp_sink;
+		public weak Gst.Pad send_rtp_src;
+		public weak Gst.RTSPRange server_port;
+		public weak GLib.Object session;
 		public weak Gst.Pad srcpad;
+		public weak GLib.List transports;
+		[CCode (array_length = false)]
+		public weak Gst.Element[] udpsink;
+		[CCode (array_length = false)]
+		public weak Gst.Element[] udpsrc;
+		public Gst.FlowReturn rtcp (Gst.Buffer buffer);
+		public Gst.FlowReturn rtp (Gst.Buffer buffer);
+	}
+	[Compact]
+	[CCode (cheader_filename = "gst/gst.h")]
+	public class RTSPMediaTrans {
+		public uint idx;
+		public weak GLib.DestroyNotify notify;
+		public weak Gst.RTSPSendFunc send_rtcp;
+		public weak Gst.RTSPSendFunc send_rtp;
+		public weak Gst.RTSPTransport transport;
+		public void* user_data;
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-server.h")]
 	public class RTSPServer : GLib.Object {
 		public weak string host;
 		public weak GLib.IOChannel io_channel;
 		public weak GLib.TimeoutSource io_watch;
-		public int server_port;
 		public void* server_sin;
 		public weak Gst.PollFD server_sock;
 		[NoWrapper]
@@ -85,64 +150,69 @@ namespace Gst {
 		public void set_port (int port);
 		public void set_session_pool (Gst.RTSPSessionPool pool);
 		public int backlog { get; set; }
-		[NoAccessorMethod]
-		public Gst.RTSPMediaMapping mapping { owned get; set; }
-		[NoAccessorMethod]
-		public Gst.RTSPSessionPool pool { owned get; set; }
+		public Gst.RTSPMediaMapping media_mapping { get; set; }
 		public int port { get; set; }
+		public Gst.RTSPSessionPool session_pool { get; set; }
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSession : GLib.Object {
+		public GLib.TimeVal create_time;
+		public GLib.TimeVal last_access;
 		public weak GLib.List medias;
-		public weak string sessionid;
-		public unowned Gst.RTSPSessionMedia get_media (Gst.RTSPUrl url, Gst.RTSPMediaFactory factory);
+		public unowned Gst.RTSPSessionMedia get_media (Gst.RTSPUrl uri);
+		public unowned string get_sessionid ();
+		public uint get_timeout ();
+		public bool is_expired (GLib.TimeVal now);
+		public unowned Gst.RTSPSessionMedia manage_media (Gst.RTSPUrl uri, owned Gst.RTSPMedia media);
 		[CCode (has_construct_function = false)]
 		public RTSPSession (string sessionid);
+		public int next_timeout (GLib.TimeVal now);
+		public bool release_media (Gst.RTSPSessionMedia media);
+		public void set_timeout (uint timeout);
+		public void touch ();
+		public string sessionid { get; construct; }
+		public uint timeout { get; set; }
 	}
 	[Compact]
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSessionMedia {
-		public weak Gst.RTSPMediaFactory factory;
-		public weak Gst.Element fdsink;
 		public weak Gst.RTSPMedia media;
-		public weak Gst.Element pipeline;
-		public weak Gst.Element rtpbin;
-		public weak Gst.RTSPSession session;
-		public weak GLib.List streams;
+		public Gst.RTSPState state;
+		public weak GLib.Array streams;
+		public weak Gst.RTSPUrl url;
 		public unowned Gst.RTSPSessionStream get_stream (uint idx);
-		public Gst.StateChangeReturn pause ();
-		public Gst.StateChangeReturn play ();
-		public Gst.StateChangeReturn stop ();
+		public bool set_state (Gst.State state);
 	}
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session-pool.h")]
 	public class RTSPSessionPool : GLib.Object {
 		public weak GLib.Mutex @lock;
 		public weak GLib.HashTable sessions;
+		public uint cleanup ();
 		public Gst.RTSPSession create ();
 		[NoWrapper]
 		public virtual string create_session_id ();
+		public GLib.TimeoutSource create_watch ();
 		public Gst.RTSPSession? find (string sessionid);
+		public uint get_max_sessions ();
+		public uint get_n_sessions ();
 		[CCode (has_construct_function = false)]
 		public RTSPSessionPool ();
-		public void remove (Gst.RTSPSession sess);
+		public bool remove (Gst.RTSPSession sess);
+		public void set_max_sessions (uint max);
+		public uint max_sessions { get; set; }
 	}
 	[Compact]
 	[CCode (cheader_filename = "gst/rtsp-server/rtsp-session.h")]
 	public class RTSPSessionStream {
-		public weak Gst.RTSPTransport client_trans;
-		public weak string destination;
-		public uint idx;
-		public weak Gst.RTSPSessionMedia media;
 		public weak Gst.RTSPMediaStream media_stream;
-		public weak Gst.Pad recv_rtcp_sink;
-		public weak Gst.Pad send_rtcp_src;
-		public weak Gst.Pad send_rtp_sink;
-		public weak Gst.Pad send_rtp_src;
-		public weak Gst.RTSPTransport server_trans;
-		[CCode (array_length = false)]
-		public weak Gst.Element[] udpsink;
-		[CCode (array_length = false)]
-		public weak Gst.Element[] udpsrc;
-		public Gst.RTSPTransport set_transport (string destination, Gst.RTSPTransport ct);
+		public weak Gst.RTSPMediaTrans trans;
+		public void set_callbacks (Gst.RTSPSendFunc send_rtp, Gst.RTSPSendFunc send_rtcp, GLib.DestroyNotify notify);
+		public Gst.RTSPTransport set_transport (Gst.RTSPTransport ct);
 	}
+	[CCode (cheader_filename = "gst/gst.h")]
+	public delegate bool RTSPSendFunc (Gst.Buffer buffer, uchar channel);
+	[CCode (cheader_filename = "gst/gst.h")]
+	public delegate bool RTSPSessionPoolFunc (Gst.RTSPSessionPool pool);
+	[CCode (cheader_filename = "gst/gst.h")]
+	public static Gst.SDPMessage rtsp_sdp_from_media (Gst.RTSPMedia media);
 }
