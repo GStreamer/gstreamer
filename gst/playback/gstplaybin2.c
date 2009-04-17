@@ -286,6 +286,9 @@ struct _GstSourceGroup
   GPtrArray *text_channels;     /* links to selector pads */
   GPtrArray *subp_channels;     /* links to selector pads */
 
+  GstElement *audio_sink;       /* autoplugged audio and video sinks */
+  GstElement *video_sink;
+
   /* uridecodebins for uri and subtitle uri */
   GstElement *uridecodebin;
   GstElement *suburidecodebin;
@@ -989,6 +992,12 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
   g_ptr_array_free (group->text_channels, TRUE);
   g_ptr_array_free (group->subp_channels, TRUE);
   g_mutex_free (group->lock);
+  if (group->audio_sink)
+    gst_object_unref (group->audio_sink);
+  group->audio_sink = NULL;
+  if (group->video_sink)
+    gst_object_unref (group->video_sink);
+  group->video_sink = NULL;
 }
 
 static void
@@ -2001,6 +2010,16 @@ no_more_pads_cb (GstElement * decodebin, GstSourceGroup * group)
   GST_SOURCE_GROUP_UNLOCK (group);
 
   if (configure) {
+    /* if we have custom sinks, configure them now */
+    GST_SOURCE_GROUP_LOCK (group);
+    GST_LOG_OBJECT (playbin, "setting custom audio sink %p", group->audio_sink);
+    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
+        group->audio_sink);
+    GST_LOG_OBJECT (playbin, "setting custom video sink %p", group->video_sink);
+    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
+        group->video_sink);
+    GST_SOURCE_GROUP_UNLOCK (group);
+
     GST_LOG_OBJECT (playbin, "reconfigure sink");
     /* we configure the modes if we were the last decodebin to complete. */
     gst_play_sink_reconfigure (playbin->playsink);
@@ -2110,6 +2129,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   GstPlayBin *playbin;
   GstElement *element;
   const gchar *klass;
+  GstPlaySinkType type;
+  GstElement **sinkp;
 
   playbin = group->playbin;
 
@@ -2128,14 +2149,41 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
 
   klass = gst_element_factory_get_klass (factory);
 
+  /* figure out the klass */
+  if (strstr (klass, "Audio")) {
+    GST_DEBUG_OBJECT (playbin, "we found an audio sink");
+    type = GST_PLAY_SINK_TYPE_AUDIO;
+    sinkp = &group->audio_sink;
+  } else if (strstr (klass, "Video")) {
+    GST_DEBUG_OBJECT (playbin, "we found a video sink");
+    type = GST_PLAY_SINK_TYPE_VIDEO;
+    sinkp = &group->video_sink;
+  } else {
+    /* unknown klass, skip this element */
+    GST_WARNING_OBJECT (playbin, "unknown sink klass %s found", klass);
+    return GST_AUTOPLUG_SELECT_SKIP;
+  }
+
   /* if we are asked to do visualisations and it's an audio sink, skip the
    * element. We can only do visualisations with raw sinks */
   if (gst_play_sink_get_flags (playbin->playsink) & GST_PLAY_FLAG_VIS) {
-    if (strstr (klass, "Audio")) {
+    if (type == GST_PLAY_SINK_TYPE_AUDIO) {
       GST_DEBUG_OBJECT (playbin, "skip audio sink because of vis");
       return GST_AUTOPLUG_SELECT_SKIP;
     }
   }
+
+  /* now see if we already have a sink element */
+  GST_SOURCE_GROUP_LOCK (group);
+  if (*sinkp) {
+    GST_DEBUG_OBJECT (playbin, "we already have a pending sink, expose pad");
+    /* for now, just assume that we can link the pad to this same sink. FIXME,
+     * check that we can link this new pad to this sink as well. */
+    GST_SOURCE_GROUP_UNLOCK (group);
+    return GST_AUTOPLUG_SELECT_EXPOSE;
+  }
+  GST_DEBUG_OBJECT (playbin, "we have no pending sink, try to create one");
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
     GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
@@ -2154,20 +2202,24 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
     return GST_AUTOPLUG_SELECT_SKIP;
   }
 
-  /* get klass to figure out if it's audio or video */
-  if (strstr (klass, "Audio")) {
-    GST_DEBUG_OBJECT (playbin, "configure audio sink");
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_AUDIO,
-        element);
-    g_object_notify (G_OBJECT (playbin), "audio-sink");
-  } else if (strstr (klass, "Video")) {
-    GST_DEBUG_OBJECT (playbin, "configure video sink");
-    gst_play_sink_set_sink (playbin->playsink, GST_PLAY_SINK_TYPE_VIDEO,
-        element);
-    g_object_notify (G_OBJECT (playbin), "video-sink");
+  /* remember the sink in the group now, the element is floating, we take
+   * ownership now */
+  GST_SOURCE_GROUP_LOCK (group);
+  if (*sinkp == NULL) {
+    /* store the sink in the group, we will configure it later when we
+     * reconfigure the sink */
+    GST_DEBUG_OBJECT (playbin, "remember sink");
+    gst_object_ref (element);
+    gst_object_sink (element);
+    *sinkp = element;
   } else {
-    GST_WARNING_OBJECT (playbin, "unknown sink klass %s found", klass);
+    /* some other thread configured a sink while we were testing the sink, set
+     * the sink back to NULL and assume we can use the other sink */
+    GST_DEBUG_OBJECT (playbin, "another sink was found, expose pad");
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_object_unref (element);
   }
+  GST_SOURCE_GROUP_UNLOCK (group);
 
   /* tell decodebin to expose the pad because we are going to use this
    * sink */
@@ -2406,6 +2458,13 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
       select->selector = NULL;
     }
   }
+  /* delete any custom sinks we might have */
+  if (group->audio_sink)
+    gst_object_unref (group->audio_sink);
+  group->audio_sink = NULL;
+  if (group->video_sink)
+    gst_object_unref (group->video_sink);
+  group->video_sink = NULL;
   /* we still have the decodebins added to the playbin2 but we can't remove them
    * yet or change their state because this function might be called from the
    * streaming threads, instead block the state so that state changes on the
