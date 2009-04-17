@@ -723,7 +723,7 @@ scan_and_update_registry (GstRegistry * default_registry,
     GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
     changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
 
-#ifdef G_PLATFORM_WIN32
+#ifdef G_OS_WIN32
     {
       char *base_dir;
       char *dir;
