@@ -2340,7 +2340,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
     if (ffmpegdec->do_padding) {
       /* add padding */
-      if (ffmpegdec->padded_size <= size + FF_INPUT_BUFFER_PADDING_SIZE) {
+      if (ffmpegdec->padded_size < size + FF_INPUT_BUFFER_PADDING_SIZE) {
         ffmpegdec->padded_size = size + FF_INPUT_BUFFER_PADDING_SIZE;
         ffmpegdec->padded =
             g_realloc (ffmpegdec->padded, ffmpegdec->padded_size);
