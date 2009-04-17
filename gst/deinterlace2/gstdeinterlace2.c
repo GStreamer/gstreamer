@@ -776,6 +776,11 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
 
   self = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
 
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (self, "DISCONT buffer, resetting history");
+    gst_deinterlace2_reset_history (self);
+  }
+
   gst_deinterlace2_push_history (self, buf);
   buf = NULL;
 
