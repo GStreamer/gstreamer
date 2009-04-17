@@ -165,12 +165,21 @@ gst_audio_clock_get_internal_time (GstClock * clock)
   aclock = GST_AUDIO_CLOCK_CAST (clock);
 
   result = aclock->func (clock, aclock->user_data);
-  if (result == GST_CLOCK_TIME_NONE)
+  if (result == GST_CLOCK_TIME_NONE) {
     result = aclock->last_time;
-  else {
+  } else {
     result += aclock->abidata.ABI.time_offset;
-    aclock->last_time = result;
+    /* clock must be increasing */
+    if (aclock->last_time < result)
+      aclock->last_time = result;
+    else
+      result = aclock->last_time;
   }
+
+  GST_DEBUG_OBJECT (clock,
+      "result %" GST_TIME_FORMAT ", last_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (result), GST_TIME_ARGS (aclock->last_time));
+
   return result;
 }
 
