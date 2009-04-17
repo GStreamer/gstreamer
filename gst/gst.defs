@@ -5282,6 +5282,7 @@
 (define-function query_new_seeking
   (c-name "gst_query_new_seeking")
   (return-type "GstQuery*")
+  (caller-owns-return #t)
   (parameters
     '("GstFormat" "format")
   )
