@@ -74,10 +74,6 @@ static gboolean _gst_plugin_inited;
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
 
-#ifndef HAVE_WIN32
-static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
-#endif
-
 /* list of valid licenses.
  * One of these must be specified or the plugin won't be loaded
  * Contact gstreamer-devel@lists.sourceforge.net if your license should be
@@ -354,6 +350,7 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc)
 
 #ifdef HAVE_SIGACTION
 static struct sigaction oldaction;
+static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
 
 /*
  * _gst_plugin_fault_handler_restore:
@@ -419,7 +416,7 @@ _gst_plugin_fault_handler_setup (void)
 
   sigaction (SIGSEGV, &action, &oldaction);
 }
-#else
+#else /* !HAVE_SIGACTION */
 static void
 _gst_plugin_fault_handler_restore (void)
 {
@@ -429,7 +426,7 @@ static void
 _gst_plugin_fault_handler_setup (void)
 {
 }
-#endif
+#endif /* HAVE_SIGACTION */
 
 static void _gst_plugin_fault_handler_setup ();
 
