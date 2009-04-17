@@ -1236,6 +1236,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           break;
         case CODEC_ID_ADPCM_G726:
           layout = "g726";
+          if (context)
+            /* get a default 20ms packet size */
+            context->frame_size = context->sample_rate / 50;
           break;
         case CODEC_ID_ADPCM_CT:
           layout = "ct";
@@ -2264,6 +2267,8 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
             break;
         }
     }
+    case CODEC_ID_ADPCM_G726:
+      break;
     default:
       break;
   }
