@@ -23,7 +23,7 @@ gstoption_la_LDFLAGS = $(common_ldflags) \
 gstoption_la_SOURCES = gstoptionmodule.c
 
 EXTRA_DIST = \
-	gstltihooks.py \
+	gstlibtoolimporter.py \
 	pygst.py.in \
 	gst-python.spec.in \
 	gst-python.spec \
