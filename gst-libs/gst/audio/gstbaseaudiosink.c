@@ -1789,10 +1789,12 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_activate (sink->ringbuffer, FALSE);
       gst_ring_buffer_release (sink->ringbuffer);
       gst_ring_buffer_close_device (sink->ringbuffer);
+#if 0
       GST_OBJECT_LOCK (sink);
       gst_object_unparent (GST_OBJECT_CAST (sink->ringbuffer));
       sink->ringbuffer = NULL;
       GST_OBJECT_UNLOCK (sink);
+#endif
       break;
     default:
       break;
