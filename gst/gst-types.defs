@@ -349,6 +349,9 @@
     '("in-caps" "GST_BUFFER_FLAG_IN_CAPS")
     '("gap" "GST_BUFFER_FLAG_GAP")
     '("delta-unit" "GST_BUFFER_FLAG_DELTA_UNIT")
+    '("media1" "GST_BUFFER_FLAG_MEDIA1")
+    '("media2" "GST_BUFFER_FLAG_MEDIA2")
+    '("media3" "GST_BUFFER_FLAG_MEDIA3")
     '("last" "GST_BUFFER_FLAG_LAST")
   )
 )
@@ -456,6 +459,18 @@
     '("is-sink" "GST_ELEMENT_IS_SINK")
     '("unparenting" "GST_ELEMENT_UNPARENTING")
     '("flag-last" "GST_ELEMENT_FLAG_LAST")
+  )
+)
+
+(define-flags ParamFlags
+  (in-module "Gst")
+  (c-name "GstParamFlags")
+  (values
+    '("controllable" "GST_PARAM_CONTROLLABLE")
+    '("mutable-ready" "GST_PARAM_MUTABLE_READY")
+    '("mutable-paused" "GST_PARAM_MUTABLE_PAUSED")
+    '("mutable-playing" "GST_PARAM_MUTABLE_PLAYING")
+    '("user-shift" "GST_PARAM_USER_SHIFT")
   )
 )
 
@@ -697,6 +712,8 @@
     '("info" "GST_LEVEL_INFO")
     '("debug" "GST_LEVEL_DEBUG")
     '("log" "GST_LEVEL_LOG")
+    '("fixme" "GST_LEVEL_FIXME")
+    '("memdump" "GST_LEVEL_MEMDUMP")
     '("count" "GST_LEVEL_COUNT")
   )
 )
@@ -778,6 +795,7 @@
     '("latency" "GST_MESSAGE_LATENCY")
     '("async-start" "GST_MESSAGE_ASYNC_START")
     '("async-done" "GST_MESSAGE_ASYNC_DONE")
+    '("request-state" "GST_MESSAGE_REQUEST_STATE")
     '("any" "GST_MESSAGE_ANY")
   )
 )
@@ -1112,6 +1130,17 @@
     '("unknown" "GST_URI_UNKNOWN")
     '("sink" "GST_URI_SINK")
     '("src" "GST_URI_SRC")
+  )
+)
+
+(define-enum SearchMode
+  (in-module "Gst")
+  (c-name "GstSearchMode")
+  (gtype-id "GST_TYPE_SEARCH_MODE")
+  (values
+    '("exact" "GST_SEARCH_MODE_EXACT")
+    '("before" "GST_SEARCH_MODE_BEFORE")
+    '("after" "GST_SEARCH_MODE_AFTER")
   )
 )
 

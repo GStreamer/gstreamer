@@ -802,6 +802,20 @@ _wrap_gst_error (PyObject *whatever, PyObject *string)
 {
     return pygst_debug_log (whatever, string, GST_LEVEL_ERROR, FALSE);
 }
+%%
+override gst_fixme args
+static PyObject *
+_wrap_gst_fixme (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_FIXME, FALSE);
+}
+%%
+override gst_memdump args
+static PyObject *
+_wrap_gst_memdump (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_MEMDUMP, FALSE);
+}
 
 %%
 override gst_object_log args
@@ -837,6 +851,20 @@ static PyObject *
 _wrap_gst_object_error (PyObject *whatever, PyObject *string)
 {
     return pygst_debug_log (whatever, string, GST_LEVEL_ERROR, TRUE);
+}
+%%
+override gst_object_fixme args
+static PyObject *
+_wrap_gst_object_fixme (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_FIXME, TRUE);
+}
+%%
+override gst_object_memdump args
+static PyObject *
+_wrap_gst_object_memdump (PyObject *whatever, PyObject *string)
+{
+    return pygst_debug_log (whatever, string, GST_LEVEL_MEMDUMP, TRUE);
 }
 %%
 override GST_TIME_ARGS kwargs

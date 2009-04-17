@@ -974,6 +974,15 @@
   )
 )
 
+(define-function type_find_helper_for_extension
+  (c-name "gst_type_find_helper_for_extension")
+  (return-type "GstCaps*")
+  (parameters
+   '("GstObject*" "obj")
+   '("const-gchar*" "extension")
+  )
+)
+
 ;; From gstdataqueue.h
 
 (define-function gst_data_queue_get_type

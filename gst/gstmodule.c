@@ -34,14 +34,14 @@
 #include <locale.h>
 
 
-void pygst_register_classes (PyObject *d);
-void pygst_add_constants(PyObject *module, const gchar *strip_prefix);
-void _pygst_register_boxed_types(PyObject *moddict);
-		
+void pygst_register_classes (PyObject * d);
+void pygst_add_constants (PyObject * module, const gchar * strip_prefix);
+void _pygst_register_boxed_types (PyObject * moddict);
+
 extern PyMethodDef pygst_functions[];
 
-GST_DEBUG_CATEGORY (pygst_debug);  /* for bindings code */
-GST_DEBUG_CATEGORY (python_debug); /* for python code */
+GST_DEBUG_CATEGORY (pygst_debug);       /* for bindings code */
+GST_DEBUG_CATEGORY (python_debug);      /* for python code */
 
 /* copied from pygtk to register GType */
 #define REGISTER_TYPE(d, type, name) \
@@ -58,200 +58,218 @@ GST_DEBUG_CATEGORY (python_debug); /* for python code */
                          o=pyg_type_wrapper_new(gtype)); \
     Py_DECREF(o);
 
-static PyObject*
-pygstminiobject_from_gvalue(const GValue *value)
+static PyObject *
+pygstminiobject_from_gvalue (const GValue * value)
 {
-     GstMiniObject	*miniobj;
+  GstMiniObject *miniobj;
 
-     if ((miniobj = gst_value_get_mini_object (value)) == NULL) {
-	  Py_INCREF(Py_None);
-	  return Py_None;
-     }
-     return pygstminiobject_new(miniobj);
+  if ((miniobj = gst_value_get_mini_object (value)) == NULL) {
+    Py_INCREF (Py_None);
+    return Py_None;
+  }
+  return pygstminiobject_new (miniobj);
 }
 
 static int
-pygstminiobject_to_gvalue(GValue *value, PyObject *obj)
+pygstminiobject_to_gvalue (GValue * value, PyObject * obj)
 {
-     PyGstMiniObject	*self = (PyGstMiniObject*) obj;
+  PyGstMiniObject *self = (PyGstMiniObject *) obj;
 
-     gst_value_set_mini_object(value, self->obj);
-     return 0;
+  gst_value_set_mini_object (value, self->obj);
+  return 0;
 }
 
 static void
-sink_gstobject(GObject *object)
+sink_gstobject (GObject * object)
 {
-    if (GST_OBJECT_IS_FLOATING(object)) {
-	g_object_ref(object);
-	gst_object_sink(GST_OBJECT(object));
-    }
+  if (GST_OBJECT_IS_FLOATING (object)) {
+    g_object_ref (object);
+    gst_object_sink (GST_OBJECT (object));
+  }
 }
 
-DL_EXPORT(void)
+DL_EXPORT (void)
 init_gst (void)
 {
-     PyObject *m, *d;
-     PyObject *av, *tuple;
-     int argc, i;
-     guint major, minor, micro, nano;
-     char **argv;
-     GError	*error = NULL;
+  PyObject *m, *d;
+  PyObject *av, *tuple;
+  int argc, i;
+  guint major, minor, micro, nano;
+  char **argv;
+  GError *error = NULL;
 
-     init_pygobject ();
+  init_pygobject ();
 
-     /* pull in arguments */
-     av = PySys_GetObject ("argv");
-     if (av != NULL) {
-	  argc = PyList_Size (av);
-	  argv = g_new (char *, argc);
-	  for (i = 0; i < argc; i++)
-	       argv[i] = g_strdup (PyString_AsString (PyList_GetItem (av, i)));
-     } else {
-          /* gst_init_check does not like argc == 0 */
-	  argc = 1;
-	  argv = g_new (char *, argc);
-	  argv[0] = g_strdup("");
-     }
-     if (!gst_init_check (&argc, &argv, &error)) {
-          gchar *errstr;
-          
-	  if (argv != NULL) {
-	       for (i = 0; i < argc; i++)
-                    g_free (argv[i]);
-	       g_free (argv);
-	  }
-          errstr = g_strdup_printf ("can't initialize module gst: %s",
-              error ? GST_STR_NULL (error->message) : "no error given");
-	  PyErr_SetString (PyExc_RuntimeError, errstr);
-          g_free (errstr);
-	  g_error_free (error);
-	  setlocale(LC_NUMERIC, "C");
-	  return;
-     }
-     
-     setlocale(LC_NUMERIC, "C");
-     if (argv != NULL) {
-	  PySys_SetArgv (argc, argv);
-	  for (i = 0; i < argc; i++)
-	       g_free (argv[i]);
-	  g_free (argv);
-     }
+  /* pull in arguments */
+  av = PySys_GetObject ("argv");
+  if (av != NULL) {
+    argc = PyList_Size (av);
+    argv = g_new (char *, argc);
+    for (i = 0; i < argc; i++)
+      argv[i] = g_strdup (PyString_AsString (PyList_GetItem (av, i)));
+  } else {
+    /* gst_init_check does not like argc == 0 */
+    argc = 1;
+    argv = g_new (char *, argc);
+    argv[0] = g_strdup ("");
+  }
+  if (!gst_init_check (&argc, &argv, &error)) {
+    gchar *errstr;
 
-     /* Initialize debugging category */
-     GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0, "GStreamer python bindings");
-     GST_DEBUG_CATEGORY_INIT (python_debug, "python", 
-         GST_DEBUG_FG_GREEN, "python code using gst-python");
+    if (argv != NULL) {
+      for (i = 0; i < argc; i++)
+        g_free (argv[i]);
+      g_free (argv);
+    }
+    errstr = g_strdup_printf ("can't initialize module gst: %s",
+        error ? GST_STR_NULL (error->message) : "no error given");
+    PyErr_SetString (PyExc_RuntimeError, errstr);
+    g_free (errstr);
+    g_error_free (error);
+    setlocale (LC_NUMERIC, "C");
+    return;
+  }
 
-     pygobject_register_sinkfunc(GST_TYPE_OBJECT, sink_gstobject);
-     
-     m = Py_InitModule ("_gst", pygst_functions);
-     d = PyModule_GetDict (m);
+  setlocale (LC_NUMERIC, "C");
+  if (argv != NULL) {
+    PySys_SetArgv (argc, argv);
+    for (i = 0; i < argc; i++)
+      g_free (argv[i]);
+    g_free (argv);
+  }
 
-     /* gst version */
-     gst_version(&major, &minor, &micro, &nano);
-     tuple = Py_BuildValue("(iii)", major, minor, micro);
-     PyDict_SetItemString(d, "gst_version", tuple);    
-     Py_DECREF(tuple);
-     
-     /* gst-python version */
-     tuple = Py_BuildValue ("(iii)", PYGST_MAJOR_VERSION, PYGST_MINOR_VERSION,
-			    PYGST_MICRO_VERSION);
-     PyDict_SetItemString(d, "pygst_version", tuple);
-     Py_DECREF(tuple);
+  /* Initialize debugging category */
+  GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0,
+      "GStreamer python bindings");
+  GST_DEBUG_CATEGORY_INIT (python_debug, "python", GST_DEBUG_FG_GREEN,
+      "python code using gst-python");
 
-     /* clock stuff */
-     PyModule_AddIntConstant(m, "SECOND", GST_SECOND);
-     PyModule_AddIntConstant(m, "MSECOND", GST_MSECOND);
-     PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
+  pygobject_register_sinkfunc (GST_TYPE_OBJECT, sink_gstobject);
 
-     PyModule_AddObject(m, "CLOCK_TIME_NONE", PyLong_FromUnsignedLongLong(GST_CLOCK_TIME_NONE));
-     PyModule_AddObject(m, "BUFFER_OFFSET_NONE", PyLong_FromUnsignedLongLong(GST_BUFFER_OFFSET_NONE));
+  m = Py_InitModule ("_gst", pygst_functions);
+  d = PyModule_GetDict (m);
 
-     pygst_exceptions_register_classes (d);
-     
-     REGISTER_TYPE(d, PyGstIterator_Type, "Iterator");
+  /* gst version */
+  gst_version (&major, &minor, &micro, &nano);
+  tuple = Py_BuildValue ("(iii)", major, minor, micro);
+  PyDict_SetItemString (d, "gst_version", tuple);
+  Py_DECREF (tuple);
+
+  /* gst-python version */
+  tuple = Py_BuildValue ("(iii)", PYGST_MAJOR_VERSION, PYGST_MINOR_VERSION,
+      PYGST_MICRO_VERSION);
+  PyDict_SetItemString (d, "pygst_version", tuple);
+  Py_DECREF (tuple);
+
+  /* clock stuff */
+  PyModule_AddIntConstant (m, "SECOND", GST_SECOND);
+  PyModule_AddIntConstant (m, "MSECOND", GST_MSECOND);
+  PyModule_AddIntConstant (m, "NSECOND", GST_NSECOND);
+
+  PyModule_AddObject (m, "CLOCK_TIME_NONE",
+      PyLong_FromUnsignedLongLong (GST_CLOCK_TIME_NONE));
+  PyModule_AddObject (m, "BUFFER_OFFSET_NONE",
+      PyLong_FromUnsignedLongLong (GST_BUFFER_OFFSET_NONE));
+
+  pygst_exceptions_register_classes (d);
+
+  REGISTER_TYPE (d, PyGstIterator_Type, "Iterator");
 
 
-     pygstminiobject_register_class(d, "GstMiniObject", GST_TYPE_MINI_OBJECT,
-				    &PyGstMiniObject_Type, NULL);
-     pyg_register_boxed_custom(GST_TYPE_MINI_OBJECT,
-			       pygstminiobject_from_gvalue,
-			       pygstminiobject_to_gvalue);
-     
-     pygst_register_classes (d);
-     pygst_add_constants (m, "GST_");
+  pygstminiobject_register_class (d, "GstMiniObject", GST_TYPE_MINI_OBJECT,
+      &PyGstMiniObject_Type, NULL);
+  pyg_register_boxed_custom (GST_TYPE_MINI_OBJECT,
+      pygstminiobject_from_gvalue, pygstminiobject_to_gvalue);
 
-     /* make our types available */
-     PyModule_AddObject (m, "TYPE_ELEMENT_FACTORY",
-                         pyg_type_wrapper_new(GST_TYPE_ELEMENT_FACTORY));
-     PyModule_AddObject (m, "TYPE_INDEX_FACTORY",
-                         pyg_type_wrapper_new(GST_TYPE_INDEX_FACTORY));
-     PyModule_AddObject (m, "TYPE_TYPE_FIND_FACTORY",
-                         pyg_type_wrapper_new(GST_TYPE_TYPE_FIND_FACTORY));
+  pygst_register_classes (d);
+  pygst_add_constants (m, "GST_");
 
-     /* GStreamer core tags */
-     PyModule_AddStringConstant (m, "TAG_TITLE", GST_TAG_TITLE);
-     PyModule_AddStringConstant (m, "TAG_ARTIST", GST_TAG_ARTIST);
-     PyModule_AddStringConstant (m, "TAG_ALBUM", GST_TAG_ALBUM);
-     PyModule_AddStringConstant (m, "TAG_DATE", GST_TAG_DATE);
-     PyModule_AddStringConstant (m, "TAG_GENRE", GST_TAG_GENRE);
-     PyModule_AddStringConstant (m, "TAG_COMMENT", GST_TAG_COMMENT);
-     PyModule_AddStringConstant (m, "TAG_TRACK_NUMBER", GST_TAG_TRACK_NUMBER);
-     PyModule_AddStringConstant (m, "TAG_TRACK_COUNT", GST_TAG_TRACK_COUNT);
-     PyModule_AddStringConstant (m, "TAG_ALBUM_VOLUME_NUMBER", GST_TAG_ALBUM_VOLUME_NUMBER);
-     PyModule_AddStringConstant (m, "TAG_ALBUM_VOLUME_COUNT", GST_TAG_ALBUM_VOLUME_COUNT);
-     PyModule_AddStringConstant (m, "TAG_LOCATION", GST_TAG_LOCATION);
-     PyModule_AddStringConstant (m, "TAG_DESCRIPTION", GST_TAG_DESCRIPTION);
-     PyModule_AddStringConstant (m, "TAG_VERSION", GST_TAG_VERSION);
-     PyModule_AddStringConstant (m, "TAG_ISRC", GST_TAG_ISRC);
-     PyModule_AddStringConstant (m, "TAG_ORGANIZATION", GST_TAG_ORGANIZATION);
-     PyModule_AddStringConstant (m, "TAG_COPYRIGHT", GST_TAG_COPYRIGHT);
-     PyModule_AddStringConstant (m, "TAG_CONTACT", GST_TAG_CONTACT);
-     PyModule_AddStringConstant (m, "TAG_LICENSE", GST_TAG_LICENSE);
-     PyModule_AddStringConstant (m, "TAG_PERFORMER", GST_TAG_PERFORMER);
-     PyModule_AddStringConstant (m, "TAG_DURATION", GST_TAG_DURATION);
-     PyModule_AddStringConstant (m, "TAG_CODEC", GST_TAG_CODEC);
-     PyModule_AddStringConstant (m, "TAG_VIDEO_CODEC", GST_TAG_VIDEO_CODEC);
-     PyModule_AddStringConstant (m, "TAG_AUDIO_CODEC", GST_TAG_AUDIO_CODEC);
-     PyModule_AddStringConstant (m, "TAG_BITRATE", GST_TAG_BITRATE);
-     PyModule_AddStringConstant (m, "TAG_NOMINAL_BITRATE", GST_TAG_NOMINAL_BITRATE);
-     PyModule_AddStringConstant (m, "TAG_MINIMUM_BITRATE", GST_TAG_MINIMUM_BITRATE);
-     PyModule_AddStringConstant (m, "TAG_MAXIMUM_BITRATE", GST_TAG_MAXIMUM_BITRATE);
-     PyModule_AddStringConstant (m, "TAG_SERIAL", GST_TAG_SERIAL);
-     PyModule_AddStringConstant (m, "TAG_ENCODER", GST_TAG_ENCODER);
-     PyModule_AddStringConstant (m, "TAG_ENCODER_VERSION", GST_TAG_ENCODER_VERSION);
-     PyModule_AddStringConstant (m, "TAG_TRACK_GAIN", GST_TAG_TRACK_GAIN);
-     PyModule_AddStringConstant (m, "TAG_TRACK_PEAK", GST_TAG_TRACK_PEAK);
-     PyModule_AddStringConstant (m, "TAG_ALBUM_GAIN", GST_TAG_ALBUM_GAIN);
-     PyModule_AddStringConstant (m, "TAG_ALBUM_PEAK", GST_TAG_ALBUM_PEAK);
-     PyModule_AddStringConstant (m, "TAG_LANGUAGE_CODE", GST_TAG_LANGUAGE_CODE);
+  /* make our types available */
+  PyModule_AddObject (m, "TYPE_ELEMENT_FACTORY",
+      pyg_type_wrapper_new (GST_TYPE_ELEMENT_FACTORY));
+  PyModule_AddObject (m, "TYPE_INDEX_FACTORY",
+      pyg_type_wrapper_new (GST_TYPE_INDEX_FACTORY));
+  PyModule_AddObject (m, "TYPE_TYPE_FIND_FACTORY",
+      pyg_type_wrapper_new (GST_TYPE_TYPE_FIND_FACTORY));
+
+  /* GStreamer core tags */
+  PyModule_AddStringConstant (m, "TAG_TITLE", GST_TAG_TITLE);
+  PyModule_AddStringConstant (m, "TAG_ARTIST", GST_TAG_ARTIST);
+  PyModule_AddStringConstant (m, "TAG_ALBUM", GST_TAG_ALBUM);
+  PyModule_AddStringConstant (m, "TAG_DATE", GST_TAG_DATE);
+  PyModule_AddStringConstant (m, "TAG_GENRE", GST_TAG_GENRE);
+  PyModule_AddStringConstant (m, "TAG_COMMENT", GST_TAG_COMMENT);
+  PyModule_AddStringConstant (m, "TAG_TRACK_NUMBER", GST_TAG_TRACK_NUMBER);
+  PyModule_AddStringConstant (m, "TAG_TRACK_COUNT", GST_TAG_TRACK_COUNT);
+  PyModule_AddStringConstant (m, "TAG_ALBUM_VOLUME_NUMBER",
+      GST_TAG_ALBUM_VOLUME_NUMBER);
+  PyModule_AddStringConstant (m, "TAG_ALBUM_VOLUME_COUNT",
+      GST_TAG_ALBUM_VOLUME_COUNT);
+  PyModule_AddStringConstant (m, "TAG_LOCATION", GST_TAG_LOCATION);
+  PyModule_AddStringConstant (m, "TAG_DESCRIPTION", GST_TAG_DESCRIPTION);
+  PyModule_AddStringConstant (m, "TAG_VERSION", GST_TAG_VERSION);
+  PyModule_AddStringConstant (m, "TAG_ISRC", GST_TAG_ISRC);
+  PyModule_AddStringConstant (m, "TAG_ORGANIZATION", GST_TAG_ORGANIZATION);
+  PyModule_AddStringConstant (m, "TAG_COPYRIGHT", GST_TAG_COPYRIGHT);
+  PyModule_AddStringConstant (m, "TAG_CONTACT", GST_TAG_CONTACT);
+  PyModule_AddStringConstant (m, "TAG_LICENSE", GST_TAG_LICENSE);
+  PyModule_AddStringConstant (m, "TAG_PERFORMER", GST_TAG_PERFORMER);
+  PyModule_AddStringConstant (m, "TAG_DURATION", GST_TAG_DURATION);
+  PyModule_AddStringConstant (m, "TAG_CODEC", GST_TAG_CODEC);
+  PyModule_AddStringConstant (m, "TAG_VIDEO_CODEC", GST_TAG_VIDEO_CODEC);
+  PyModule_AddStringConstant (m, "TAG_AUDIO_CODEC", GST_TAG_AUDIO_CODEC);
+  PyModule_AddStringConstant (m, "TAG_BITRATE", GST_TAG_BITRATE);
+  PyModule_AddStringConstant (m, "TAG_NOMINAL_BITRATE",
+      GST_TAG_NOMINAL_BITRATE);
+  PyModule_AddStringConstant (m, "TAG_MINIMUM_BITRATE",
+      GST_TAG_MINIMUM_BITRATE);
+  PyModule_AddStringConstant (m, "TAG_MAXIMUM_BITRATE",
+      GST_TAG_MAXIMUM_BITRATE);
+  PyModule_AddStringConstant (m, "TAG_SERIAL", GST_TAG_SERIAL);
+  PyModule_AddStringConstant (m, "TAG_ENCODER", GST_TAG_ENCODER);
+  PyModule_AddStringConstant (m, "TAG_ENCODER_VERSION",
+      GST_TAG_ENCODER_VERSION);
+  PyModule_AddStringConstant (m, "TAG_TRACK_GAIN", GST_TAG_TRACK_GAIN);
+  PyModule_AddStringConstant (m, "TAG_TRACK_PEAK", GST_TAG_TRACK_PEAK);
+  PyModule_AddStringConstant (m, "TAG_ALBUM_GAIN", GST_TAG_ALBUM_GAIN);
+  PyModule_AddStringConstant (m, "TAG_ALBUM_PEAK", GST_TAG_ALBUM_PEAK);
+  PyModule_AddStringConstant (m, "TAG_LANGUAGE_CODE", GST_TAG_LANGUAGE_CODE);
 #if (GST_VERSION_MAJOR == 0 && GST_VERSION_MINOR == 10 && \
      ((GST_VERSION_MICRO >= 6) || (GST_VERSION_MICRO == 5 && GST_VERSION_NANO > 0)))
-     PyModule_AddStringConstant (m, "TAG_IMAGE", GST_TAG_IMAGE);
+  PyModule_AddStringConstant (m, "TAG_IMAGE", GST_TAG_IMAGE);
 #if ((GST_VERSION_MICRO >= 7) || (GST_VERSION_MICRO == 6 && GST_VERSION_NANO > 0 ))
-     PyModule_AddStringConstant (m, "TAG_PREVIEW_IMAGE", GST_TAG_PREVIEW_IMAGE);
+  PyModule_AddStringConstant (m, "TAG_PREVIEW_IMAGE", GST_TAG_PREVIEW_IMAGE);
 #if ((GST_VERSION_MICRO >= 10) || (GST_VERSION_MICRO == 9 && GST_VERSION_NANO > 0 ))
-     PyModule_AddStringConstant (m, "TAG_EXTENDED_COMMENT", GST_TAG_EXTENDED_COMMENT);
+  PyModule_AddStringConstant (m, "TAG_EXTENDED_COMMENT",
+      GST_TAG_EXTENDED_COMMENT);
 #if ((GST_VERSION_MICRO >= 14) || (GST_VERSION_MICRO == 13 && GST_VERSION_NANO > 0))
-     PyModule_AddStringConstant (m, "TAG_LICENSE_URI", GST_TAG_LICENSE_URI);
+  PyModule_AddStringConstant (m, "TAG_LICENSE_URI", GST_TAG_LICENSE_URI);
 #if ((GST_VERSION_MICRO >= 15) || (GST_VERSION_MICRO == 14 && GST_VERSION_NANO > 0))
-     PyModule_AddStringConstant (m, "TAG_COMPOSER", GST_TAG_COMPOSER);
-     PyModule_AddStringConstant (m, "TAG_ARTIST_SORTNAME", GST_TAG_ARTIST_SORTNAME);
-     PyModule_AddStringConstant (m, "TAG_ALBUM_SORTNAME", GST_TAG_ALBUM_SORTNAME);
-     PyModule_AddStringConstant (m, "TAG_TITLE_SORTNAME", GST_TAG_TITLE_SORTNAME);
+  PyModule_AddStringConstant (m, "TAG_COMPOSER", GST_TAG_COMPOSER);
+  PyModule_AddStringConstant (m, "TAG_ARTIST_SORTNAME",
+      GST_TAG_ARTIST_SORTNAME);
+  PyModule_AddStringConstant (m, "TAG_ALBUM_SORTNAME", GST_TAG_ALBUM_SORTNAME);
+  PyModule_AddStringConstant (m, "TAG_TITLE_SORTNAME", GST_TAG_TITLE_SORTNAME);
+#if ((GST_VERSION_MICRO >= 23) || (GST_VERSION_MICRO == 22 && GST_VERSION_NANO > 0))
+  PyModule_AddStringConstant (m, "TAG_SUBTITLE_CODEC", GST_TAG_SUBTITLE_CODEC);
+  PyModule_AddStringConstant (m, "TAG_HOMEPAGE", GST_TAG_HOMEPAGE);
+#endif
 #endif
 #endif
 #endif
 #endif
 #endif
 
-     PyModule_AddStringConstant (m, "LIBRARY_ERROR", (gchar *) g_quark_to_string(GST_LIBRARY_ERROR));
-     PyModule_AddStringConstant (m, "RESOURCE_ERROR",(gchar *)  g_quark_to_string(GST_RESOURCE_ERROR));
-     PyModule_AddStringConstant (m, "CORE_ERROR", (gchar *) g_quark_to_string(GST_CORE_ERROR));
-     PyModule_AddStringConstant (m, "STREAM_ERROR", (gchar *) g_quark_to_string(GST_STREAM_ERROR));
+  PyModule_AddStringConstant (m, "LIBRARY_ERROR",
+      (gchar *) g_quark_to_string (GST_LIBRARY_ERROR));
+  PyModule_AddStringConstant (m, "RESOURCE_ERROR",
+      (gchar *) g_quark_to_string (GST_RESOURCE_ERROR));
+  PyModule_AddStringConstant (m, "CORE_ERROR",
+      (gchar *) g_quark_to_string (GST_CORE_ERROR));
+  PyModule_AddStringConstant (m, "STREAM_ERROR",
+      (gchar *) g_quark_to_string (GST_STREAM_ERROR));
 
-     if (PyErr_Occurred ()) {
-	  Py_FatalError ("can't initialize module gst");
-     }
+  if (PyErr_Occurred ()) {
+    Py_FatalError ("can't initialize module gst");
+  }
 }

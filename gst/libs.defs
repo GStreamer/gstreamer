@@ -32,14 +32,6 @@
 
 ;; Enumerations and flags ...
 
-(define-flags ParamFlags
-  (in-module "Gst")
-  (c-name "GstParamFlags")
-  (values
-    '("controllable" "GST_PARAM_CONTROLLABLE")
-  )
-)
-
 (define-enum InterpolateMode
   (in-module "Gst")
   (c-name "GstInterpolateMode")

@@ -67,6 +67,22 @@
    )
 )
 
+(define-function fixme
+  (c-name "gst_fixme")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+  )
+)
+
+(define-function memdump
+  (c-name "gst_memdump")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+  )
+)
+
 ;; OBJECT DEBUGGING FUNCTIONS FROM PYTHON
 ;; The c functions don't actually exist
 
@@ -109,6 +125,24 @@
 (define-method error
   (of-object "GstObject")
   (c-name "gst_object_error")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-method fixme
+  (of-object "GstObject")
+  (c-name "gst_object_fixme")
+  (return-type "none")
+  (parameters
+   '("gchar *" "msg")
+   )
+)
+
+(define-method memdump
+  (of-object "GstObject")
+  (c-name "gst_object_memdump")
   (return-type "none")
   (parameters
    '("gchar *" "msg")

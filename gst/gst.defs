@@ -2849,6 +2849,14 @@
   )
 )
 
+(define-function debug_construct_win_color
+  (c-name "gst_debug_construct_win_color")
+  (return-type "gint")
+  (parameters
+    '("guint" "colorinfo")
+  )
+)
+
 (define-function debug_remove_log_function
   (c-name "gst_debug_remove_log_function")
   (return-type "guint")
@@ -3252,6 +3260,25 @@
     '("GstStructureChangeType*" "type")
     '("GstElement**" "owner")
     '("gboolean*" "busy")
+  )
+)
+
+(define-function message_new_request_state
+  (c-name "gst_message_new_request_state")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("GstState" "state")
+  )
+)
+
+(define-method parse_request_state
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_request_state")
+  (return-type "none")
+  (parameters
+    '("GstState*" "state")
   )
 )
 
@@ -4414,6 +4441,20 @@
   (return-type "GstClockTime")
 )
 
+(define-function util_array_binary_search
+  (c-name "gst_util_array_binary_search")
+  (return-type "gpointer")
+  (parameters
+    '("gpointer" "array")
+    '("guint" "num_elements")
+    '("gsize" "element_size")
+    '("GCompareDataFunc" "search_func")
+    '("GstSearchMode" "mode")
+    '("gconstpointer" "search_data")
+    '("gpointer" "user_data")
+  )
+)
+
 (define-function pad_load_and_link
   (c-name "gst_pad_load_and_link")
   (return-type "none")
@@ -4845,6 +4886,12 @@
   )
 )
 
+(define-function poll_new_timer
+  (c-name "gst_poll_new_timer")
+  (caller-owns-return #t)
+  (return-type "GstPoll*")
+)
+
 (define-method free
   (of-object "GstPoll")
   (c-name "gst_poll_free")
@@ -4971,6 +5018,18 @@
   (parameters
     '("gboolean" "flushing")
   )
+)
+
+(define-method write_control
+  (of-object "GstPoll")
+  (c-name "gst_poll_write_control")
+  (return-type "gboolean")
+)
+
+(define-method read_control
+  (of-object "GstPoll")
+  (c-name "gst_poll_read_control")
+  (return-type "gboolean")
 )
 
 ;; From gstpreset.h
@@ -6738,6 +6797,26 @@
   )
 )
 
+(define-method get_buffer
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_get_buffer")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "tag")
+    '("GstBuffer**" "value")
+  )
+)
+
+(define-method get_buffer_index
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_get_buffer_index")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "tag")
+    '("guint" "index")
+    '("GstBuffer**" "value")
+  )
+)
 
 ;; From ../gstreamer/gst/gsttaginterface.h
 
