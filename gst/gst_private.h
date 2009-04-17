@@ -119,7 +119,7 @@ gboolean 		gst_registry_binary_write_cache	(GstRegistry * registry, const char *
 
 /*** debugging categories *****************************************************/
 
-#ifndef GST_DISABLE_GST_DEBUG
+#ifndef GST_REMOVE_GST_DEBUG
 
 GST_EXPORT GstDebugCategory *GST_CAT_GST_INIT;
 GST_EXPORT GstDebugCategory *GST_CAT_AUTOPLUG;
