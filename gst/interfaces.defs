@@ -146,6 +146,8 @@
   (values
     '("none" "GST_MIXER_FLAG_NONE")
     '("auto-notifications" "GST_MIXER_FLAG_AUTO_NOTIFICATIONS")
+    '("has-whitelist" "GST_MIXER_FLAG_HAS_WHITELIST")
+    '("grouping" "GST_MIXER_FLAG_GROUPING")
   )
 )
 
@@ -160,6 +162,70 @@
     '("record" "GST_MIXER_TRACK_RECORD")
     '("master" "GST_MIXER_TRACK_MASTER")
     '("software" "GST_MIXER_TRACK_SOFTWARE")
+    '("no-record" "GST_MIXER_TRACK_NO_RECORD")
+    '("no-mute" "GST_MIXER_TRACK_NO_MUTE")
+    '("whitelist" "GST_MIXER_TRACK_WHITELIST")
+  )
+)
+
+(define-enum NavigationCommand
+  (in-module "Gst")
+  (c-name "GstNavigationCommand")
+  (gtype-id "GST_TYPE_NAVIGATION_COMMAND")
+  (values
+    '("invalid" "GST_NAVIGATION_COMMAND_INVALID")
+    '("menu1" "GST_NAVIGATION_COMMAND_MENU1")
+    '("menu2" "GST_NAVIGATION_COMMAND_MENU2")
+    '("menu3" "GST_NAVIGATION_COMMAND_MENU3")
+    '("menu4" "GST_NAVIGATION_COMMAND_MENU4")
+    '("menu5" "GST_NAVIGATION_COMMAND_MENU5")
+    '("menu6" "GST_NAVIGATION_COMMAND_MENU6")
+    '("menu7" "GST_NAVIGATION_COMMAND_MENU7")
+    '("left" "GST_NAVIGATION_COMMAND_LEFT")
+    '("right" "GST_NAVIGATION_COMMAND_RIGHT")
+    '("up" "GST_NAVIGATION_COMMAND_UP")
+    '("down" "GST_NAVIGATION_COMMAND_DOWN")
+    '("activate" "GST_NAVIGATION_COMMAND_ACTIVATE")
+    '("prev-angle" "GST_NAVIGATION_COMMAND_PREV_ANGLE")
+    '("next-angle" "GST_NAVIGATION_COMMAND_NEXT_ANGLE")
+  )
+)
+
+(define-enum NavigationQueryType
+  (in-module "Gst")
+  (c-name "GstNavigationQueryType")
+  (gtype-id "GST_TYPE_NAVIGATION_QUERY_TYPE")
+  (values
+    '("invalid" "GST_NAVIGATION_QUERY_INVALID")
+    '("commands" "GST_NAVIGATION_QUERY_COMMANDS")
+    '("angles" "GST_NAVIGATION_QUERY_ANGLES")
+  )
+)
+
+(define-enum NavigationMessageType
+  (in-module "Gst")
+  (c-name "GstNavigationMessageType")
+  (gtype-id "GST_TYPE_NAVIGATION_MESSAGE_TYPE")
+  (values
+    '("invalid" "GST_NAVIGATION_MESSAGE_INVALID")
+    '("mouse-over" "GST_NAVIGATION_MESSAGE_MOUSE_OVER")
+    '("commands-changed" "GST_NAVIGATION_MESSAGE_COMMANDS_CHANGED")
+    '("angles-changed" "GST_NAVIGATION_MESSAGE_ANGLES_CHANGED")
+  )
+)
+
+(define-enum NavigationEventType
+  (in-module "Gst")
+  (c-name "GstNavigationEventType")
+  (gtype-id "GST_TYPE_NAVIGATION_EVENT_TYPE")
+  (values
+    '("invalid" "GST_NAVIGATION_EVENT_INVALID")
+    '("key-press" "GST_NAVIGATION_EVENT_KEY_PRESS")
+    '("key-release" "GST_NAVIGATION_EVENT_KEY_RELEASE")
+    '("mouse-button-press" "GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS")
+    '("mouse-button-release" "GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE")
+    '("mouse-move" "GST_NAVIGATION_EVENT_MOUSE_MOVE")
+    '("command" "GST_NAVIGATION_EVENT_COMMAND")
   )
 )
 
@@ -474,9 +540,192 @@
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/navigation/navigation.h
 
-(define-function gst_navigation_get_type
+(define-function navigation_get_type
   (c-name "gst_navigation_get_type")
   (return-type "GType")
+)
+
+(define-function navigation_query_get_type
+  (c-name "gst_navigation_query_get_type")
+  (return-type "GstNavigationQueryType")
+  (parameters
+    '("GstQuery*" "query")
+  )
+)
+
+(define-function navigation_query_new_commands
+  (c-name "gst_navigation_query_new_commands")
+  (caller-owns-return #t)
+  (return-type "GstQuery*")
+)
+
+(define-function navigation_query_set_commands
+  (c-name "gst_navigation_query_set_commands")
+  (return-type "none")
+  (parameters
+    '("GstQuery*" "query")
+    '("gint" "n_cmds")
+  )
+  (varargs #t)
+)
+
+(define-function navigation_query_set_commandsv
+  (c-name "gst_navigation_query_set_commandsv")
+  (return-type "none")
+  (parameters
+    '("GstQuery*" "query")
+    '("gint" "n_cmds")
+    '("GstNavigationCommand*" "cmds")
+  )
+)
+
+(define-function navigation_query_parse_commands_length
+  (c-name "gst_navigation_query_parse_commands_length")
+  (return-type "gboolean")
+  (parameters
+    '("GstQuery*" "query")
+    '("guint*" "n_cmds")
+  )
+)
+
+(define-function navigation_query_parse_commands_nth
+  (c-name "gst_navigation_query_parse_commands_nth")
+  (return-type "gboolean")
+  (parameters
+    '("GstQuery*" "query")
+    '("guint" "nth")
+    '("GstNavigationCommand*" "cmd")
+  )
+)
+
+(define-function navigation_query_new_angles
+  (c-name "gst_navigation_query_new_angles")
+  (caller-owns-return #t)
+  (return-type "GstQuery*")
+)
+
+(define-function navigation_query_set_angles
+  (c-name "gst_navigation_query_set_angles")
+  (return-type "none")
+  (parameters
+    '("GstQuery*" "query")
+    '("guint" "cur_angle")
+    '("guint" "n_angles")
+  )
+)
+
+(define-function navigation_query_parse_angles
+  (c-name "gst_navigation_query_parse_angles")
+  (return-type "gboolean")
+  (parameters
+    '("GstQuery*" "query")
+    '("guint*" "cur_angle")
+    '("guint*" "n_angles")
+  )
+)
+
+(define-function navigation_message_get_type
+  (c-name "gst_navigation_message_get_type")
+  (return-type "GstNavigationMessageType")
+  (parameters
+    '("GstMessage*" "message")
+  )
+)
+
+(define-function navigation_message_new_mouse_over
+  (c-name "gst_navigation_message_new_mouse_over")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("gboolean" "active")
+  )
+)
+
+(define-function navigation_message_parse_mouse_over
+  (c-name "gst_navigation_message_parse_mouse_over")
+  (return-type "gboolean")
+  (parameters
+    '("GstMessage*" "message")
+    '("gboolean*" "active")
+  )
+)
+
+(define-function navigation_message_new_commands_changed
+  (c-name "gst_navigation_message_new_commands_changed")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+  )
+)
+
+(define-function navigation_message_new_angles_changed
+  (c-name "gst_navigation_message_new_angles_changed")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("guint" "cur_angle")
+    '("guint" "n_angles")
+  )
+)
+
+(define-function navigation_message_parse_angles_changed
+  (c-name "gst_navigation_message_parse_angles_changed")
+  (return-type "gboolean")
+  (parameters
+    '("GstMessage*" "message")
+    '("guint*" "cur_angle")
+    '("guint*" "n_angles")
+  )
+)
+
+(define-function navigation_event_get_type
+  (c-name "gst_navigation_event_get_type")
+  (return-type "GstNavigationEventType")
+  (parameters
+    '("GstEvent*" "event")
+  )
+)
+
+(define-function navigation_event_parse_key_event
+  (c-name "gst_navigation_event_parse_key_event")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("const-gchar**" "key")
+  )
+)
+
+(define-function navigation_event_parse_mouse_button_event
+  (c-name "gst_navigation_event_parse_mouse_button_event")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("gint*" "button")
+    '("gdouble*" "x")
+    '("gdouble*" "y")
+  )
+)
+
+(define-function navigation_event_parse_mouse_move_event
+  (c-name "gst_navigation_event_parse_mouse_move_event")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("gdouble*" "x")
+    '("gdouble*" "y")
+  )
+)
+
+(define-function navigation_event_parse_command
+  (c-name "gst_navigation_event_parse_command")
+  (return-type "gboolean")
+  (parameters
+    '("GstEvent*" "event")
+    '("GstNavigationCommand*" "command")
+  )
 )
 
 (define-method send_event
@@ -515,6 +764,15 @@
   (return-type "none")
   (parameters
     '("GstStructure*" "structure")
+  )
+)
+
+(define-method send_command
+  (of-object "GstNavigation")
+  (c-name "gst_navigation_send_command")
+  (return-type "none")
+  (parameters
+    '("GstNavigationCommand" "command")
   )
 )
 

@@ -265,6 +265,22 @@
   )
 )
 
+(define-function clock_get_time
+  (c-name "gst_audio_clock_get_time")
+  (return-type "GstClockTime")
+  (parameters
+    '("GstClock*" "clock")
+  )
+)
+
+(define-function clock_adjust
+  (c-name "gst_audio_clock_adjust")
+  (return-type "GstClockTime")
+  (parameters
+    '("GstClock*" "clock")
+    '("GstClockTime" "time")
+  )
+)
 
 
 ;; From gstaudiofilter.h

@@ -39,6 +39,7 @@
     '("bgr" "GST_VIDEO_FORMAT_BGR")
     '("y41b" "GST_VIDEO_FORMAT_Y41B")
     '("y42b" "GST_VIDEO_FORMAT_Y42B")
+    '("yvyu" "GST_VIDEO_FORMAT_YVYU")
   )
 )
 
@@ -110,6 +111,15 @@
   )
 )
 
+(define-function format_parse_caps_interlaced
+  (c-name "gst_video_format_parse_caps_interlaced")
+  (return-type "gboolean")
+  (parameters
+    '("GstCaps*" "caps")
+    '("gboolean*" "interlaced")
+  )
+)
+
 (define-function parse_caps_framerate
   (c-name "gst_video_parse_caps_framerate")
   (return-type "gboolean")
@@ -133,6 +143,7 @@
 (define-method new_caps
   (of-object "GstVideoFormat")
   (c-name "gst_video_format_new_caps")
+  (caller-owns-return #t)
   (return-type "GstCaps*")
   (parameters
     '("int" "width")
@@ -141,6 +152,22 @@
     '("int" "framerate_d")
     '("int" "par_n")
     '("int" "par_d")
+  )
+)
+
+(define-method new_caps_interlaced
+  (of-object "GstVideoFormat")
+  (c-name "gst_video_format_new_caps_interlaced")
+  (caller-owns-return #t)
+  (return-type "GstCaps*")
+  (parameters
+    '("int" "width")
+    '("int" "height")
+    '("int" "framerate_n")
+    '("int" "framerate_d")
+    '("int" "par_n")
+    '("int" "par_d")
+    '("gboolean" "interlaced")
   )
 )
 

@@ -47,6 +47,7 @@ import gobject.GObject as PyGObject_Type
 import gst.Object as PyGstObject_Type
 import gst.Structure as PyGstStructure_Type
 import gst.Element as PyGstElement_Type
+import gst.Query as PyGstQuery_Type
 %%
 include
   xoverlay.override
