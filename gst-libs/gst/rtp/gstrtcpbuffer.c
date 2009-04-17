@@ -544,14 +544,13 @@ gst_rtcp_packet_get_padding (GstRTCPPacket * packet)
  *
  * Get the packet type of the packet pointed to by @packet.
  *
- * Returns: The packet type.
+ * Returns: The packet type or GST_RTCP_TYPE_INVALID when @packet is not
+ * pointing to a valid packet.
  */
 GstRTCPType
 gst_rtcp_packet_get_type (GstRTCPPacket * packet)
 {
   g_return_val_if_fail (packet != NULL, GST_RTCP_TYPE_INVALID);
-  g_return_val_if_fail (packet->type != GST_RTCP_TYPE_INVALID,
-      GST_RTCP_TYPE_INVALID);
 
   return packet->type;
 }
