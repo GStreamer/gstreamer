@@ -5003,7 +5003,6 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
-  GstRTSPResult res;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -5029,13 +5028,11 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   gst_rtsp_connection_flush (src->connection, FALSE);
 
   /* do pause */
-  res =
-      gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE,
-      src->req_location);
-  if (res < 0)
+  if (gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE,
+          src->req_location) < 0)
     goto create_request_failed;
 
-  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
+  if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
     goto send_error;
 
   gst_rtsp_message_unset (&request);
