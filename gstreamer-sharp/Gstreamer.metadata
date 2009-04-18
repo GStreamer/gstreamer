@@ -2,6 +2,8 @@
 <metadata>
   <attr path="/api/namespace/object" name="disable_gtype_ctor">1</attr>
 
+  <attr path="/api/namespace/enum/member[@name='NumErrors']" name="hidden">1</attr>
+
   <attr path="/api/namespace/object[@name='Bin']/method[@name='AddMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>

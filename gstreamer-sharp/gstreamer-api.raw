@@ -82,6 +82,23 @@
       <member cname="GST_CLOCK_TYPE_REALTIME" name="Realtime" />
       <member cname="GST_CLOCK_TYPE_MONOTONIC" name="Monotonic" value="1" />
     </enum>
+    <enum name="CoreError" cname="GstCoreError" gtype="gst_core_error_get_type" type="enum">
+      <member cname="GST_CORE_ERROR_FAILED" name="Failed" value="1" />
+      <member cname="GST_CORE_ERROR_TOO_LAZY" name="TooLazy" />
+      <member cname="GST_CORE_ERROR_NOT_IMPLEMENTED" name="NotImplemented" />
+      <member cname="GST_CORE_ERROR_STATE_CHANGE" name="StateChange" />
+      <member cname="GST_CORE_ERROR_PAD" name="Pad" />
+      <member cname="GST_CORE_ERROR_THREAD" name="Thread" />
+      <member cname="GST_CORE_ERROR_NEGOTIATION" name="Negotiation" />
+      <member cname="GST_CORE_ERROR_EVENT" name="Event" />
+      <member cname="GST_CORE_ERROR_SEEK" name="Seek" />
+      <member cname="GST_CORE_ERROR_CAPS" name="Caps" />
+      <member cname="GST_CORE_ERROR_TAG" name="Tag" />
+      <member cname="GST_CORE_ERROR_MISSING_PLUGIN" name="MissingPlugin" />
+      <member cname="GST_CORE_ERROR_CLOCK" name="Clock" />
+      <member cname="GST_CORE_ERROR_DISABLED" name="Disabled" />
+      <member cname="GST_CORE_ERROR_NUM_ERRORS" name="NumErrors" />
+    </enum>
     <enum name="ElementFlags" cname="GstElementFlags" gtype="gst_element_flags_get_type" type="flags">
       <member cname="GST_ELEMENT_LOCKED_STATE" name="LockedState" value="GST_OBJECT_FLAG_LAST &lt;&lt; 0" />
       <member cname="GST_ELEMENT_IS_SINK" name="IsSink" value="GST_OBJECT_FLAG_LAST &lt;&lt; 1" />
@@ -172,6 +189,15 @@
       <member cname="GST_INDEX_RESOLVER_CUSTOM" name="Custom" />
       <member cname="GST_INDEX_RESOLVER_GTYPE" name="Gtype" />
       <member cname="GST_INDEX_RESOLVER_PATH" name="Path" />
+    </enum>
+    <enum name="LibraryError" cname="GstLibraryError" gtype="gst_library_error_get_type" type="enum">
+      <member cname="GST_LIBRARY_ERROR_FAILED" name="Failed" value="1" />
+      <member cname="GST_LIBRARY_ERROR_TOO_LAZY" name="TooLazy" />
+      <member cname="GST_LIBRARY_ERROR_INIT" name="Init" />
+      <member cname="GST_LIBRARY_ERROR_SHUTDOWN" name="Shutdown" />
+      <member cname="GST_LIBRARY_ERROR_SETTINGS" name="Settings" />
+      <member cname="GST_LIBRARY_ERROR_ENCODE" name="Encode" />
+      <member cname="GST_LIBRARY_ERROR_NUM_ERRORS" name="NumErrors" />
     </enum>
     <enum name="MessageType" cname="GstMessageType" gtype="gst_message_type_get_type" type="flags">
       <member cname="GST_MESSAGE_UNKNOWN" name="Unknown" />
@@ -292,6 +318,23 @@
       <member cname="GST_RANK_SECONDARY" name="Secondary" value="128" />
       <member cname="GST_RANK_PRIMARY" name="Primary" value="256" />
     </enum>
+    <enum name="ResourceError" cname="GstResourceError" gtype="gst_resource_error_get_type" type="enum">
+      <member cname="GST_RESOURCE_ERROR_FAILED" name="Failed" value="1" />
+      <member cname="GST_RESOURCE_ERROR_TOO_LAZY" name="TooLazy" />
+      <member cname="GST_RESOURCE_ERROR_NOT_FOUND" name="NotFound" />
+      <member cname="GST_RESOURCE_ERROR_BUSY" name="Busy" />
+      <member cname="GST_RESOURCE_ERROR_OPEN_READ" name="OpenRead" />
+      <member cname="GST_RESOURCE_ERROR_OPEN_WRITE" name="OpenWrite" />
+      <member cname="GST_RESOURCE_ERROR_OPEN_READ_WRITE" name="OpenReadWrite" />
+      <member cname="GST_RESOURCE_ERROR_CLOSE" name="Close" />
+      <member cname="GST_RESOURCE_ERROR_READ" name="Read" />
+      <member cname="GST_RESOURCE_ERROR_WRITE" name="Write" />
+      <member cname="GST_RESOURCE_ERROR_SEEK" name="Seek" />
+      <member cname="GST_RESOURCE_ERROR_SYNC" name="Sync" />
+      <member cname="GST_RESOURCE_ERROR_SETTINGS" name="Settings" />
+      <member cname="GST_RESOURCE_ERROR_NO_SPACE_LEFT" name="NoSpaceLeft" />
+      <member cname="GST_RESOURCE_ERROR_NUM_ERRORS" name="NumErrors" />
+    </enum>
     <enum name="SearchMode" cname="GstSearchMode" gtype="gst_search_mode_get_type" type="enum">
       <member cname="GST_SEARCH_MODE_EXACT" name="Exact" />
       <member cname="GST_SEARCH_MODE_BEFORE" name="Before" />
@@ -331,6 +374,22 @@
       <member cname="GST_STATE_CHANGE_SUCCESS" name="Success" value="1" />
       <member cname="GST_STATE_CHANGE_ASYNC" name="Async" value="2" />
       <member cname="GST_STATE_CHANGE_NO_PREROLL" name="NoPreroll" value="3" />
+    </enum>
+    <enum name="StreamError" cname="GstStreamError" gtype="gst_stream_error_get_type" type="enum">
+      <member cname="GST_STREAM_ERROR_FAILED" name="Failed" value="1" />
+      <member cname="GST_STREAM_ERROR_TOO_LAZY" name="TooLazy" />
+      <member cname="GST_STREAM_ERROR_NOT_IMPLEMENTED" name="NotImplemented" />
+      <member cname="GST_STREAM_ERROR_TYPE_NOT_FOUND" name="TypeNotFound" />
+      <member cname="GST_STREAM_ERROR_WRONG_TYPE" name="WrongType" />
+      <member cname="GST_STREAM_ERROR_CODEC_NOT_FOUND" name="CodecNotFound" />
+      <member cname="GST_STREAM_ERROR_DECODE" name="Decode" />
+      <member cname="GST_STREAM_ERROR_ENCODE" name="Encode" />
+      <member cname="GST_STREAM_ERROR_DEMUX" name="Demux" />
+      <member cname="GST_STREAM_ERROR_MUX" name="Mux" />
+      <member cname="GST_STREAM_ERROR_FORMAT" name="Format" />
+      <member cname="GST_STREAM_ERROR_DECRYPT" name="Decrypt" />
+      <member cname="GST_STREAM_ERROR_DECRYPT_NOKEY" name="DecryptNokey" />
+      <member cname="GST_STREAM_ERROR_NUM_ERRORS" name="NumErrors" />
     </enum>
     <enum name="StructureChangeType" cname="GstStructureChangeType" gtype="gst_structure_change_type_get_type" type="enum">
       <member cname="GST_STRUCTURE_CHANGE_TYPE_PAD_LINK" name="Link" />
@@ -5388,8 +5447,8 @@
           <parameter type="GstXmlNodePtr" name="self" />
         </parameters>
       </method>
-      <method name="CoreErrorGetType" cname="gst_core_error_get_type" shared="true">
-        <return-type type="GType" />
+      <method name="CoreErrorQuark" cname="gst_core_error_quark" shared="true">
+        <return-type type="GQuark" />
       </method>
       <method name="DefaultRegistryCheckFeatureVersion" cname="gst_default_registry_check_feature_version" shared="true">
         <return-type type="gboolean" />
@@ -5398,6 +5457,13 @@
           <parameter type="guint" name="min_major" />
           <parameter type="guint" name="min_minor" />
           <parameter type="guint" name="min_micro" />
+        </parameters>
+      </method>
+      <method name="ErrorGetMessage" cname="gst_error_get_message" shared="true">
+        <return-type type="gchar*" />
+        <parameters>
+          <parameter type="GQuark" name="domain" />
+          <parameter type="gint" name="code" />
         </parameters>
       </method>
       <method name="FormatGetByNick" cname="gst_format_get_by_nick" shared="true">
@@ -5441,14 +5507,17 @@
           <parameter type="GstFormat" name="format" />
         </parameters>
       </method>
+      <method name="GErrorGetType" cname="gst_g_error_get_type" shared="true">
+        <return-type type="GType" />
+      </method>
       <method name="IsTagList" cname="gst_is_tag_list" shared="true">
         <return-type type="gboolean" />
         <parameters>
           <parameter type="gconstpointer" name="p" />
         </parameters>
       </method>
-      <method name="LibraryErrorGetType" cname="gst_library_error_get_type" shared="true">
-        <return-type type="GType" />
+      <method name="LibraryErrorQuark" cname="gst_library_error_quark" shared="true">
+        <return-type type="GQuark" />
       </method>
       <method name="ParamSpecMiniObject" cname="gst_param_spec_mini_object" shared="true">
         <return-type type="GParamSpec*" />
@@ -5513,11 +5582,11 @@
           <parameter type="GError**" name="error" />
         </parameters>
       </method>
-      <method name="ResourceErrorGetType" cname="gst_resource_error_get_type" shared="true">
-        <return-type type="GType" />
+      <method name="ResourceErrorQuark" cname="gst_resource_error_quark" shared="true">
+        <return-type type="GQuark" />
       </method>
-      <method name="StreamErrorGetType" cname="gst_stream_error_get_type" shared="true">
-        <return-type type="GType" />
+      <method name="StreamErrorQuark" cname="gst_stream_error_quark" shared="true">
+        <return-type type="GQuark" />
       </method>
       <method name="TypeRegisterStaticFull" cname="gst_type_register_static_full" shared="true">
         <return-type type="GType" />
