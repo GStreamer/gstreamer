@@ -395,8 +395,8 @@ gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
         (gulong) priv->gl_display, EGLErrorString ());
 
   priv->gl_context =
-      eglCreateContext (priv->gl_display, config, (EGLContext) external_gl_context,
-      context_attrib);
+      eglCreateContext (priv->gl_display, config,
+      (EGLContext) (guint) external_gl_context, context_attrib);
   if (priv->gl_context != EGL_NO_CONTEXT)
     g_debug ("gl context created: %ld\n", (gulong) priv->gl_context);
   else
