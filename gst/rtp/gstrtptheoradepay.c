@@ -147,11 +147,12 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
 
   /* deserialize base64 to buffer */
   size = strlen (configuration);
-  GST_DEBUG_OBJECT (rtptheoradepay, "base64 config size %u", size);
+  GST_DEBUG_OBJECT (rtptheoradepay, "base64 config size %" G_GSIZE_FORMAT,
+      size);
 
   data = g_base64_decode (configuration, &size);
 
-  GST_DEBUG_OBJECT (rtptheoradepay, "config size %u", size);
+  GST_DEBUG_OBJECT (rtptheoradepay, "config size %" G_GSIZE_FORMAT, size);
 
   /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                     Number of packed headers                  |
@@ -216,7 +217,8 @@ gst_rtp_theora_depay_parse_configuration (GstRtpTheoraDepay * rtptheoradepay,
     data += 6;
 
     GST_DEBUG_OBJECT (rtptheoradepay,
-        "header %d, ident 0x%08x, length %u, left %u", i, ident, length, size);
+        "header %d, ident 0x%08x, length %u, left %" G_GSIZE_FORMAT, i, ident,
+        length, size);
 
     if (size < length)
       goto too_small;
