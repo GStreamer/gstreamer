@@ -468,7 +468,6 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       buffer = subbuf;
 
       size = GST_BUFFER_SIZE (buffer);
-      data = GST_BUFFER_DATA (buffer);
     }
   }
 
