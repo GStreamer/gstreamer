@@ -68,9 +68,6 @@ static gboolean gst_rtp_mpv_depay_setcaps (GstBaseRTPDepayload * depayload,
 static GstBuffer *gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload,
     GstBuffer * buf);
 
-static GstStateChangeReturn gst_rtp_mpv_depay_change_state (GstElement *
-    element, GstStateChange transition);
-
 static void
 gst_rtp_mpv_depay_base_init (gpointer klass)
 {
@@ -87,17 +84,11 @@ gst_rtp_mpv_depay_base_init (gpointer klass)
 static void
 gst_rtp_mpv_depay_class_init (GstRtpMPVDepayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gstelement_class->change_state = gst_rtp_mpv_depay_change_state;
 
   gstbasertpdepayload_class->set_caps = gst_rtp_mpv_depay_setcaps;
   gstbasertpdepayload_class->process = gst_rtp_mpv_depay_process;
@@ -210,32 +201,6 @@ empty_packet:
         (NULL), ("Empty payload."));
     return NULL;
   }
-}
-
-static GstStateChangeReturn
-gst_rtp_mpv_depay_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpMPVDepay *rtpmpvdepay;
-  GstStateChangeReturn ret;
-
-  rtpmpvdepay = GST_RTP_MPV_DEPAY (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-  return ret;
 }
 
 gboolean

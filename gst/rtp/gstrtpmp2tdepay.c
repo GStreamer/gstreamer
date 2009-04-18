@@ -89,10 +89,6 @@ static void gst_rtp_mp2t_depay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_mp2t_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_rtp_mp2t_depay_change_state (GstElement *
-    element, GstStateChange transition);
-
-
 static void
 gst_rtp_mp2t_depay_base_init (gpointer klass)
 {
@@ -110,11 +106,9 @@ static void
 gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
 
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
@@ -132,7 +126,6 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
           "The amount of bytes that need to be skipped at the beginning of the payload",
           0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_rtp_mp2t_depay_change_state;
 }
 
 static void
@@ -233,35 +226,6 @@ gst_rtp_mp2t_depay_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static GstStateChangeReturn
-gst_rtp_mp2t_depay_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstRtpMP2TDepay *rtpmp2tdepay;
-  GstStateChangeReturn ret;
-
-  rtpmp2tdepay = GST_RTP_MP2T_DEPAY (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-  return ret;
 }
 
 gboolean

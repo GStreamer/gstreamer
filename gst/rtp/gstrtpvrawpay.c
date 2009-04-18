@@ -114,7 +114,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass);
 static void gst_rtp_vraw_pay_base_init (GstRtpVRawPayClass * klass);
 static void gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay);
-static void gst_rtp_vraw_pay_finalize (GObject * object);
 
 static gboolean gst_rtp_vraw_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
@@ -164,17 +163,11 @@ gst_rtp_vraw_pay_base_init (GstRtpVRawPayClass * klass)
 static void
 gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = gst_rtp_vraw_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_vraw_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_vraw_pay_handle_buffer;
@@ -186,16 +179,6 @@ gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 static void
 gst_rtp_vraw_pay_init (GstRtpVRawPay * rtpvrawpay)
 {
-}
-
-static void
-gst_rtp_vraw_pay_finalize (GObject * object)
-{
-  GstRtpVRawPay *rtpvrawpay;
-
-  rtpvrawpay = GST_RTP_VRAW_PAY (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

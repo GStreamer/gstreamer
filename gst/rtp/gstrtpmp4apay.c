@@ -71,8 +71,6 @@ static void gst_rtp_mp4a_pay_finalize (GObject * object);
 
 static gboolean gst_rtp_mp4a_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstStateChangeReturn gst_rtp_mp4a_pay_change_state (GstElement * element,
-    GstStateChange transition);
 static GstFlowReturn gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
 
@@ -120,18 +118,14 @@ static void
 gst_rtp_mp4a_pay_class_init (GstRtpMP4APayClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_rtp_mp4a_pay_finalize;
-
-  gstelement_class->change_state = gst_rtp_mp4a_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_mp4a_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_mp4a_pay_handle_buffer;
@@ -452,29 +446,6 @@ gst_rtp_mp4a_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   return ret;
 }
-
-static GstStateChangeReturn
-gst_rtp_mp4a_pay_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpMP4APay *rtpmp4apay;
-  GstStateChangeReturn ret;
-
-  rtpmp4apay = GST_RTP_MP4A_PAY (element);
-
-  switch (transition) {
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    default:
-      break;
-  }
-  return ret;
-}
-
 
 gboolean
 gst_rtp_mp4a_pay_plugin_init (GstPlugin * plugin)

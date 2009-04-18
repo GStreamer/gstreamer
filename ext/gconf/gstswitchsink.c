@@ -41,11 +41,6 @@ enum
 
 GST_BOILERPLATE (GstSwitchSink, gst_switch_sink, GstBin, GST_TYPE_BIN);
 
-static void gst_switch_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_switch_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static void
 gst_switch_sink_base_init (gpointer klass)
 {
@@ -63,8 +58,6 @@ gst_switch_sink_class_init (GstSwitchSinkClass * klass)
       GST_STATIC_CAPS_ANY);
   GstPadTemplate *child_pad_templ;
 
-  oklass->set_property = gst_switch_sink_set_property;
-  oklass->get_property = gst_switch_sink_get_property;
   oklass->dispose = gst_switch_sink_dispose;
   eklass->change_state = gst_switch_sink_change_state;
 
@@ -251,47 +244,6 @@ gst_switch_sink_set_child (GstSwitchSink * sink, GstElement * new_kid)
   }
 
   return gst_switch_commit_new_kid (sink);
-}
-
-static void
-gst_switch_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstSwitchSink *sink;
-
-  g_return_if_fail (GST_IS_SWITCH_SINK (object));
-
-  sink = GST_SWITCH_SINK (object);
-
-  switch (prop_id) {
-      break;
-    default:
-      break;
-  }
-}
-
-#if 0
-static gboolean
-gst_switch_sink_handle_event (GstPad * pad, GstEvent * event)
-{
-}
-#endif
-
-static void
-gst_switch_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstSwitchSink *sink;
-
-  g_return_if_fail (GST_IS_SWITCH_SINK (object));
-
-  sink = GST_SWITCH_SINK (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn

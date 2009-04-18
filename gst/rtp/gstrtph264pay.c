@@ -104,9 +104,6 @@ enum
 
 static void gst_rtp_h264_pay_finalize (GObject * object);
 
-static GstStateChangeReturn gst_rtp_h264_pay_change_state (GstElement * element,
-    GstStateChange transition);
-
 static void gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
@@ -137,11 +134,9 @@ static void
 gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_h264_pay_set_property;
@@ -171,8 +166,6 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
-
-  gstelement_class->change_state = gst_rtp_h264_pay_change_state;
 
   gstbasertppayload_class->set_caps = gst_rtp_h264_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_h264_pay_handle_buffer;
@@ -783,28 +776,6 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   }
   gst_buffer_unref (buffer);
 
-  return ret;
-}
-
-static GstStateChangeReturn
-gst_rtp_h264_pay_change_state (GstElement * element, GstStateChange transition)
-{
-  GstRtpH264Pay *rtph264pay;
-  GstStateChangeReturn ret;
-
-  rtph264pay = GST_RTP_H264_PAY (element);
-
-  switch (transition) {
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    default:
-      break;
-  }
   return ret;
 }
 
