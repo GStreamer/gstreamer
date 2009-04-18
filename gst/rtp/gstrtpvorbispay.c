@@ -541,7 +541,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (rtpvorbispay->packet)
     flush |= (rtpvorbispay->payload_VDT != VDT);
   if (flush)
-    ret = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
+    gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
 
   /* create new packet if we must */
   if (!rtpvorbispay->packet) {
