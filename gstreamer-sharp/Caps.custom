@@ -94,11 +94,14 @@ public IEnumerator GetEnumerator() {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_caps_append_structure (IntPtr caps, IntPtr structure);
 
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_structure_copy (IntPtr raw);
+
 public void Append (Structure s) {
   if (!IsWritable)
     throw new ApplicationException ();
 
-  gst_caps_append_structure (Handle, s.Copy().Handle);
+  gst_caps_append_structure (Handle, gst_structure_copy (s.Handle));
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -108,7 +111,7 @@ public void Append (Caps caps) {
   if (!IsWritable)
     throw new ApplicationException ();
 
-  gst_caps_append (Handle, caps.Copy().Handle);
+  gst_caps_append (Handle, gst_caps_copy (caps.Handle));
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -118,7 +121,7 @@ public void Merge (Structure s) {
   if (!IsWritable)
     throw new ApplicationException ();
 
-  gst_caps_merge_structure (Handle, s.Copy().Handle);
+  gst_caps_merge_structure (Handle, gst_structure_copy (s.Handle));
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -128,7 +131,7 @@ public void Merge (Caps caps) {
   if (!IsWritable)
     throw new ApplicationException ();
 
-  gst_caps_merge (Handle, caps.Copy().Handle);
+  gst_caps_merge (Handle, gst_caps_copy (caps.Handle));
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
