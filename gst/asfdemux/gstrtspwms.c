@@ -178,7 +178,7 @@ gst_rtsp_wms_receive_request (GstRTSPExtension * ext, GstRTSPMessage * request)
       gst_rtsp_message_get_header (request, GST_RTSP_HDR_CONTENT_TYPE,
           &content_type, 0);
 
-      if (content_type && g_ascii_strcasecmp (content_type, EXTENSION_CMD)) {
+      if (content_type && !g_ascii_strcasecmp (content_type, EXTENSION_CMD)) {
         /* parse the command */
 
         /* default implementation, send OK */
