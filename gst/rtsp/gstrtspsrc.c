@@ -1386,6 +1386,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   gboolean update;
   gboolean playing;
   GstSegment seeksegment = { 0, };
+  GList *walk;
 
   if (event) {
     GST_DEBUG_OBJECT (src, "doing seek with event");
@@ -1509,6 +1510,10 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* mark discont */
   GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    stream->discont = TRUE;
+  }
 
   GST_RTSP_STREAM_UNLOCK (src);
 
