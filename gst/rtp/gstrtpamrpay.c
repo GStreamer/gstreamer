@@ -207,7 +207,6 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gint i, num_packets, num_nonempty_packets;
   gint amr_len;
   gint *frame_size;
-  gboolean discont;
 
   rtpamrpay = GST_RTP_AMR_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpamrpay);
@@ -216,7 +215,6 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
-  discont = GST_BUFFER_IS_DISCONT (buffer);
 
   /* setup frame size pointer */
   if (rtpamrpay->mode == GST_RTP_AMR_P_MODE_NB)
@@ -275,11 +273,10 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
   }
 
-  if (discont) {
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
     GST_DEBUG_OBJECT (basepayload, "discont, setting marker bit");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     gst_rtp_buffer_set_marker (outbuf, TRUE);
-    discont = FALSE;
   }
 
   /* get payload, this is now writable */
