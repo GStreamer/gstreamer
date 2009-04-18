@@ -911,7 +911,6 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
     /* bottom border */
     if (bb < 0) {
-      a = 0;
       oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], (-bb) * Ywidth);
       if (sumbuff) {
         for (i = 0; i < Uwidth; i++) {
@@ -926,7 +925,6 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         Udest += Uwidth;
         Vdest += Vwidth;
         sumbuff = FALSE;
-        a = -1;
       }
       oil_splat_u8_ns (Udest, (guint8 *) & empty_px_values[1],
           (UVfloor ((-bb))) * Uwidth);
@@ -1036,7 +1034,6 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     /* right border */
     if (br) {
       oil_splat_u32_ns (destp, &ayuv, br);
-      destp += br;
     }
     destb += out_width;
   }
@@ -1045,7 +1042,6 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     size_t nb_pixels = bb * out_width;
 
     oil_splat_u32_ns (destb, &ayuv, nb_pixels);
-    destb += nb_pixels;
   }
 }
 
