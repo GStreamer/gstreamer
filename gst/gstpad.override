@@ -656,24 +656,29 @@ _wrap_gst_pad_tp_repr (PyGObject *self)
     gchar *elementname = NULL;
 
     pad = GST_PAD(self->obj);
-    parent = GST_ELEMENT (gst_pad_get_parent (pad));
-        
+
+    pyg_begin_allow_threads;
     padname = gst_pad_get_name (pad);
+
+    parent = GST_ELEMENT (gst_pad_get_parent (pad));
     if (parent)
-	elementname = gst_element_get_name (parent);
+	    elementname = gst_element_get_name (parent);
 
     buf = g_strdup_printf ("<GstPad (%s:%s) at %lx>",
         parent ? elementname : "---",
         padname, (long) self->obj);
 
+    g_free(padname);
+
     if (parent) {
         gst_object_unref (parent);
-	g_free(elementname);
+	    g_free(elementname);
     }
-    g_free(padname);
+    pyg_end_allow_threads;
 
     retval = PyString_FromString(buf);
     g_free(buf);
+
     return retval;
 }
 

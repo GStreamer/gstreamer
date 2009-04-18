@@ -232,7 +232,10 @@ pad_name_from_object (PyObject *object, const gchar **name)
     *name = PyString_AsString (object);
     return TRUE;
   } else if (pygobject_check (object, &PyGstPad_Type)) {
-    *name = gst_object_get_name (GST_OBJECT (pygobject_get (object)));
+    GstObject *obj = GST_OBJECT (pygobject_get (object));
+    pyg_begin_allow_threads;
+    *name = gst_object_get_name (obj);
+    pyg_end_allow_threads;
     return TRUE;
   }
   PyErr_SetString(PyExc_TypeError, "argument could not be converted to a pad");
