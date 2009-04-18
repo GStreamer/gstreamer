@@ -1056,12 +1056,12 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
         GValue frequencies = { 0 };
         guint8 type;
 
-        g_value_init (&frequencies, GST_TYPE_LIST);
         type = *current_pos & 0x03;
         current_pos++;
 
         if (type) {
           const gchar *fieldname = NULL;
+          g_value_init (&frequencies, GST_TYPE_LIST);
 
           while (current_pos < delivery + DESC_LENGTH (delivery) - 3) {
             guint32 freq = 0;
