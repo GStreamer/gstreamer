@@ -38,3 +38,14 @@ public void MakeWritable() {
   Owned = true;
 }
 
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_mini_object_copy (IntPtr raw);
+
+public Gst.MiniObject Copy() {
+  IntPtr raw_ret = gst_mini_object_copy (Handle);
+  GLib.GType type = new GLib.GType (gstsharp_g_type_from_instance (raw_ret));
+
+  Gst.MiniObject ret = raw_ret == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (raw_ret, (Type) type, true);
+  return ret;
+}
+
