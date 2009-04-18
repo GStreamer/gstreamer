@@ -1047,9 +1047,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
           &gob->end);
     }
     //Step 5 go trough the blocks - decode DC and TCOEF
-    i = 0;
     last = 0;
-    ind = 0;
     for (i = 0; i < N_BLOCKS; i++) {
 
       GST_DEBUG ("Decoding INTRADC and TCOEF, i:%d", i);
@@ -1187,9 +1185,7 @@ gst_rtp_h263_pay_B_mbfinder (GstRtpH263PayContext * context,
 
     }
     //Step 5 go trough the blocks - decode DC and TCOEF
-    i = 0;
     last = 0;
-    ind = 0;
     for (i = 0; i < N_BLOCKS; i++) {
 
       //if MB type 3 or 4 then INTRADC coef are present in blocks
@@ -1527,10 +1523,8 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
   GST_DEBUG ("GQUANT IS: %08x", gob->quant);
 
   // We are on MB layer
-  mb = 0;
 
-
-  m = mac = a = gst_rtp_h263_pay_mb_new (boundry, 0);
+  m = mac = gst_rtp_h263_pay_mb_new (boundry, 0);
   for (mb = 0; mb < format_props[context->piclayer->ptype_srcformat][1]; mb++) {
 
     GST_DEBUG ("================ START MB %d =================", mb);
