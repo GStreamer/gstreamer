@@ -556,7 +556,7 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (rtptheorapay->packet)
     flush |= (rtptheorapay->payload_TDT != TDT);
   if (flush)
-    ret = gst_rtp_theora_pay_flush_packet (rtptheorapay);
+    gst_rtp_theora_pay_flush_packet (rtptheorapay);
 
   /* create new packet if we must */
   if (!rtptheorapay->packet) {
