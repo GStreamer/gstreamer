@@ -281,7 +281,7 @@ makeZoomBufferStripe (ZoomFilterFXWrapperData * data, int INTERLACE_INCR)
   Uint x, y;
 
   // Where (verticaly) to stop generating the buffer stripe
-  int maxEnd = (data->interlace_start + INTERLACE_INCR);
+  int maxEnd;
 
   // Ratio from pixmap to normalized coordinates
   float ratio = 2.0f / ((float) data->prevX);
