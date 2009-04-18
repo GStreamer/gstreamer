@@ -41,6 +41,7 @@ static void gst_rtsp_server_get_property (GObject *object, guint propid,
     GValue *value, GParamSpec *pspec);
 static void gst_rtsp_server_set_property (GObject *object, guint propid,
     const GValue *value, GParamSpec *pspec);
+static void gst_rtsp_server_finalize (GObject *object);
 
 static GstRTSPClient * default_accept_client (GstRTSPServer *server,
     GIOChannel *channel);
@@ -54,6 +55,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
   
   gobject_class->get_property = gst_rtsp_server_get_property;
   gobject_class->set_property = gst_rtsp_server_set_property;
+  gobject_class->finalize = gst_rtsp_server_finalize;
   
   /**
    * GstRTSPServer::backlog
@@ -109,6 +111,15 @@ gst_rtsp_server_init (GstRTSPServer * server)
   server->backlog = DEFAULT_BACKLOG;
   server->session_pool = gst_rtsp_session_pool_new ();
   server->media_mapping = gst_rtsp_media_mapping_new ();
+}
+
+static void
+gst_rtsp_server_finalize (GObject *object)
+{
+  GstRTSPServer *server = GST_RTSP_SERVER (object);
+
+  g_object_unref (server->session_pool);
+  g_object_unref (server->media_mapping);
 }
 
 /**
