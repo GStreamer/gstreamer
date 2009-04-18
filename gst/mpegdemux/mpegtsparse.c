@@ -1278,7 +1278,7 @@ mpegts_parse_src_pad_query (GstPad * pad, GstQuery * query)
     default:
       res = gst_pad_query_default (pad, query);
   }
-
+  gst_object_unref (parse);
   return res;
 }
 
