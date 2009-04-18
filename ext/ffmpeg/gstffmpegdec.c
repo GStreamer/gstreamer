@@ -2252,8 +2252,9 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   in_offset = GST_BUFFER_OFFSET (inbuf);
 
   GST_LOG_OBJECT (ffmpegdec,
-      "Received new data of size %d, offset:%" G_GINT64_FORMAT ", ts:%"
-      GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT, GST_BUFFER_OFFSET (inbuf),
+      "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
+      GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (inbuf), GST_BUFFER_OFFSET (inbuf),
       GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (in_timestamp),
       GST_TIME_ARGS (in_duration));
 
