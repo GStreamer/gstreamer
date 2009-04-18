@@ -2675,7 +2675,8 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPMessage * request)
     res = gst_rtspsrc_connection_send (src, &response, NULL);
     if (res < 0)
       goto send_error;
-  }
+  } else if (res == GST_RTSP_EEOF)
+    return res;
 
   return GST_RTSP_OK;
 
@@ -2798,7 +2799,10 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     switch (message.type) {
       case GST_RTSP_MESSAGE_REQUEST:
         /* server sends us a request message, handle it */
-        if ((res = gst_rtspsrc_handle_request (src, &message)) < 0)
+        res = gst_rtspsrc_handle_request (src, &message);
+        if (res == GST_RTSP_EEOF)
+          goto server_eof;
+        else if (res < 0)
           goto handle_request_failed;
         break;
       case GST_RTSP_MESSAGE_RESPONSE:
@@ -3056,7 +3060,10 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       switch (message.type) {
         case GST_RTSP_MESSAGE_REQUEST:
           /* server sends us a request message, handle it */
-          if ((res = gst_rtspsrc_handle_request (src, &message)) < 0)
+          res = gst_rtspsrc_handle_request (src, &message);
+          if (res == GST_RTSP_EEOF)
+            goto server_eof;
+          else if (res < 0)
             goto handle_request_failed;
           break;
         case GST_RTSP_MESSAGE_RESPONSE:
@@ -3185,6 +3192,13 @@ play_failed:
   {
     GST_DEBUG_OBJECT (src, "play failed");
     return GST_FLOW_OK;
+  }
+server_eof:
+  {
+    GST_DEBUG_OBJECT (src, "we got an eof from the server");
+    GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+        ("The server closed the connection."));
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -3551,7 +3565,10 @@ next:
 
   switch (response->type) {
     case GST_RTSP_MESSAGE_REQUEST:
-      if ((res = gst_rtspsrc_handle_request (src, response)) < 0)
+      res = gst_rtspsrc_handle_request (src, response);
+      if (res == GST_RTSP_EEOF)
+        goto server_eof;
+      else if (res < 0)
         goto handle_request_failed;
       goto next;
     case GST_RTSP_MESSAGE_RESPONSE:
@@ -3632,6 +3649,13 @@ handle_request_failed:
   {
     /* ERROR was posted */
     return res;
+  }
+server_eof:
+  {
+    GST_DEBUG_OBJECT (src, "we got an eof from the server");
+    GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+        ("The server closed the connection."));
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
