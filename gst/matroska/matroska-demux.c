@@ -4712,7 +4712,6 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
          */
         if (!demux->tracks_parsed) {
           GstEbmlLevel *level;
-          GstFlowReturn iret = GST_FLOW_OK;
           guint32 iid;
           guint level_up;
           guint64 before_pos;
@@ -4733,19 +4732,17 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
           ebml->level = g_list_prepend (ebml->level, level);
 
           /* Search Tracks element */
-          while (iret == GST_FLOW_OK) {
-            if ((iret = gst_ebml_read_skip (ebml)) != GST_FLOW_OK)
+          while (TRUE) {
+            if (gst_ebml_read_skip (ebml) != GST_FLOW_OK)
               break;
 
-            if ((iret =
-                    gst_ebml_peek_id (ebml, &demux->level_up,
-                        &iid)) != GST_FLOW_OK)
+            if (gst_ebml_peek_id (ebml, &demux->level_up, &iid) != GST_FLOW_OK)
               break;
 
             if (iid != GST_MATROSKA_ID_TRACKS)
               continue;
 
-            iret = gst_matroska_demux_parse_tracks (demux);
+            gst_matroska_demux_parse_tracks (demux);
             break;
           }
 
