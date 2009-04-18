@@ -123,7 +123,8 @@ static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
 /* Properties */
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_EXTERNAL_OPENGL_CONTEXT
 };
 
 #define DEBUG_INIT(bla) \
@@ -186,6 +187,12 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_upload_get_unit_size;
   GST_BASE_TRANSFORM_CLASS (klass)->prepare_output_buffer =
       gst_gl_upload_prepare_output_buffer;
+
+  g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
+      g_param_spec_uint64 ("external_opengl_context", 
+          "External OpenGL context",
+          "Give an external OpenGL context with which to share textures",
+          0, _UI64_MAX, 0, G_PARAM_WRITABLE));
 }
 
 static void
@@ -198,9 +205,14 @@ static void
 gst_gl_upload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  //GstGLUpload* upload = GST_GL_UPLOAD (object);
+  GstGLUpload *upload = GST_GL_UPLOAD (object);
 
   switch (prop_id) {
+    case PROP_EXTERNAL_OPENGL_CONTEXT:
+    {
+      upload->external_gl_context = g_value_get_uint64 (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -227,6 +239,7 @@ gst_gl_upload_reset (GstGLUpload * upload)
     g_object_unref (upload->display);
     upload->display = NULL;
   }
+  upload->external_gl_context = 0;
 }
 
 static gboolean
@@ -438,7 +451,8 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   //init unvisible opengl context
   gst_gl_display_create_context (upload->display,
-      upload->gl_width, upload->gl_height);
+      upload->gl_width, upload->gl_height,
+      upload->external_gl_context);
 
   //init colorspace conversion if needed
   gst_gl_display_init_upload (upload->display, upload->video_format,

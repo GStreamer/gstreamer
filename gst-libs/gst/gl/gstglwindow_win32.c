@@ -51,6 +51,7 @@ struct _GstGLWindowPrivate
   HWND internal_win_id;
   HDC device;
   HGLRC gl_context;
+  HGLRC external_gl_context;
   GstGLWindowCB draw_cb;
   gpointer draw_data;
   GstGLWindowCB2 resize_cb;
@@ -143,7 +144,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height)
+gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -160,6 +161,7 @@ gst_gl_window_new (gint width, gint height)
   priv->internal_win_id = 0;
   priv->device = 0;
   priv->gl_context = 0;
+  priv->external_gl_context = (HGLRC) external_gl_context;
   priv->draw_cb = NULL;
   priv->draw_data = NULL;
   priv->resize_cb = NULL;
@@ -224,12 +226,6 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
       SWP_FRAMECHANGED | SWP_NOACTIVATE);
   MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right,
       rect.bottom, FALSE);
-}
-
-void
-gst_gl_window_set_external_gl_context (GstGLWindow * window, guint64 context)
-{
-  g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
 }
 
 /* Must be called in the gl thread */
@@ -411,6 +407,14 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       if (!wglMakeCurrent (priv->device, priv->gl_context))
         g_debug ("failed to make opengl context current %d, %x\r\n", hWnd,
             GetLastError ());
+
+      if (priv->external_gl_context) {
+        if (!wglShareLists (priv->gl_context, priv->external_gl_context))
+          g_debug ("failed to share opengl context %lud with %lud\n",
+              priv->gl_context, priv->external_gl_context);
+        else
+          g_debug ("share opengl context succeed\n");
+      }
     }
 
     SetProp (hWnd, "gl_window", window);

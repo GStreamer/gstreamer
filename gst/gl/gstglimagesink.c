@@ -514,7 +514,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
       //init opengl context
       gst_gl_display_create_context (glimage_sink->display,
-          glimage_sink->width, glimage_sink->height);
+          glimage_sink->width, glimage_sink->height, 0);
 
       if (glimage_sink->window_id)
         gst_gl_display_set_window_id (glimage_sink->display,

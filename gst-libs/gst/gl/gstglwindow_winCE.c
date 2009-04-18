@@ -48,6 +48,7 @@ struct _GstGLWindowPrivate
   EGLDisplay display;
   EGLSurface surface;
   EGLContext gl_context;
+  EGLContext external_gl_context;
   GstGLWindowCB draw_cb;
   gpointer draw_data;
   GstGLWindowCB2 resize_cb;
@@ -140,7 +141,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height)
+gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -158,6 +159,7 @@ gst_gl_window_new (gint width, gint height)
   priv->display = 0;
   priv->surface = 0;
   priv->gl_context = 0;
+  priv->external_gl_context = (EGLContext) external_gl_context;
   priv->draw_cb = NULL;
   priv->draw_data = NULL;
   priv->resize_cb = NULL;
@@ -222,12 +224,6 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
       SWP_FRAMECHANGED | SWP_NOACTIVATE);
   MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right,
       rect.bottom, FALSE);
-}
-
-void
-gst_gl_window_set_external_gl_context (GstGLWindow * window, guint64 context)
-{
-  g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
 }
 
 /* Must be called in the gl thread */
@@ -402,7 +398,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             priv->surface, hWnd, EGLErrorString ());
 
       priv->gl_context =
-          eglCreateContext (priv->display, config, EGL_NO_CONTEXT,
+          eglCreateContext (priv->display, config, priv->external_gl_context,
           contextAttribs);
       if (priv->gl_context != EGL_NO_CONTEXT)
         g_debug ("gl context created: %d\n", priv->gl_context);

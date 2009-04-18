@@ -158,6 +158,9 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
   display->upload_data_height = 0;
   display->upload_data = NULL;
 
+  //foreign gl context
+  display->external_gl_context = 0;
+
   //filter gen fbo
   display->gen_fbo_width = 0;
   display->gen_fbo_height = 0;
@@ -527,7 +530,8 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   GLenum err = 0;
 
   display->gl_window =
-      gst_gl_window_new (display->upload_width, display->upload_height);
+      gst_gl_window_new (display->upload_width, display->upload_height,
+          display->external_gl_context);
 
   if (!display->gl_window) {
     display->isAlive = FALSE;
@@ -2065,12 +2069,13 @@ gst_gl_display_new (void)
  * Called by the first gl element of a video/x-raw-gl flow */
 void
 gst_gl_display_create_context (GstGLDisplay * display,
-    GLint width, GLint height)
+    GLint width, GLint height, guint64 external_gl_context)
 {
   gst_gl_display_lock (display);
 
   display->upload_width = width;
   display->upload_height = height;
+  display->external_gl_context = external_gl_context;
 
   display->gl_thread = g_thread_create (
       (GThreadFunc) gst_gl_display_thread_create_context, display, TRUE, NULL);
