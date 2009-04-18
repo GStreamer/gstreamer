@@ -379,8 +379,8 @@ gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
   XSetWMProtocols (priv->device, priv->internal_win_id, wm_atoms, 2);
 
   priv->gl_context =
-      glXCreateContext (priv->device, priv->visual_info, 
-          (GLXContext) external_gl_context, TRUE);
+      glXCreateContext (priv->device, priv->visual_info,
+      (GLXContext) (guint) external_gl_context, TRUE);
 
   g_debug ("gl context id: %ld\n", (gulong) priv->gl_context);
 
@@ -623,13 +623,13 @@ gst_gl_window_run_loop (GstGLWindow * window)
           if (priv->running) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];
@@ -666,13 +666,13 @@ gst_gl_window_run_loop (GstGLWindow * window)
             && event.xclient.message_type == wm_quit_loop) {
 #if SIZEOF_VOID_P == 8
           GstGLWindowCB destroy_cb =
-              (GstGLWindowCB) (((event.xclient.
-                      data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[1] & 0xffffffff));
+              (GstGLWindowCB) (((event.xclient.data.
+                      l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[1] & 0xffffffff));
           gpointer destroy_data =
-              (gpointer) (((event.xclient.
-                      data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                  data.l[3] & 0xffffffff));
+              (gpointer) (((event.xclient.data.
+                      l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                  l[3] & 0xffffffff));
 #else
           GstGLWindowCB destroy_cb = (GstGLWindowCB) event.xclient.data.l[0];
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
@@ -689,13 +689,13 @@ gst_gl_window_run_loop (GstGLWindow * window)
           while (XCheckTypedEvent (priv->device, ClientMessage, &pending_event)) {
 #if SIZEOF_VOID_P == 8
             GstGLWindowCB custom_cb =
-                (GstGLWindowCB) (((event.xclient.
-                        data.l[0] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[1] & 0xffffffff));
+                (GstGLWindowCB) (((event.xclient.data.
+                        l[0] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[1] & 0xffffffff));
             gpointer custom_data =
-                (gpointer) (((event.xclient.
-                        data.l[2] & 0xffffffff) << 32) | (event.xclient.
-                    data.l[3] & 0xffffffff));
+                (gpointer) (((event.xclient.data.
+                        l[2] & 0xffffffff) << 32) | (event.xclient.data.
+                    l[3] & 0xffffffff));
 #else
             GstGLWindowCB custom_cb = (GstGLWindowCB) event.xclient.data.l[0];
             gpointer custom_data = (gpointer) event.xclient.data.l[1];

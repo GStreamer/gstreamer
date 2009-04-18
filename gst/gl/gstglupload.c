@@ -94,11 +94,10 @@ static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        GST_VIDEO_CAPS_RGB  ";" 
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGBA ";"
-        GST_VIDEO_CAPS_BGR  ";"
+        GST_VIDEO_CAPS_BGR ";"
         GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_BGRA ";"
         GST_VIDEO_CAPS_xRGB ";"
@@ -112,8 +111,7 @@ static GstStaticPadTemplate gst_gl_upload_sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        GST_VIDEO_CAPS_RGB  ";" 
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";"
         GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY, AYUV }"))
@@ -189,10 +187,10 @@ gst_gl_upload_class_init (GstGLUploadClass * klass)
       gst_gl_upload_prepare_output_buffer;
 
   g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
-      g_param_spec_uint64 ("external_opengl_context", 
+      g_param_spec_uint64 ("external_opengl_context",
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
-          0, _UI64_MAX, 0, G_PARAM_WRITABLE));
+          0, G_MAXINT64, 0, G_PARAM_WRITABLE));
 }
 
 static void
@@ -451,8 +449,7 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 
   //init unvisible opengl context
   gst_gl_display_create_context (upload->display,
-      upload->gl_width, upload->gl_height,
-      upload->external_gl_context);
+      upload->gl_width, upload->gl_height, upload->external_gl_context);
 
   //init colorspace conversion if needed
   gst_gl_display_init_upload (upload->display, upload->video_format,
