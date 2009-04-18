@@ -412,7 +412,9 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     goto done;
   }
 
-  spec->segsize = (spec->latency_time * spec->rate / G_USEC_PER_SEC) * spec->bytes_per_sample;
+  spec->segsize =
+      (spec->latency_time * spec->rate / G_USEC_PER_SEC) *
+      spec->bytes_per_sample;
   spec->segtotal = spec->buffer_time / spec->latency_time;
 
   /* create AudioBufferList needed for recording */
