@@ -283,12 +283,14 @@ convolve_apply (VisualFX * _this, Pixel * src, Pixel * dest, PluginInfo * info)
 {
 
   ConvData *data = (ConvData *) _this->fx_data;
+#ifdef DRAW_MOTIF
   float ff;
   int iff;
 
   ff = (FVAL (data->factor_p) * FVAL (data->factor_adj_p) +
       FVAL (data->light)) / 100.0f;
   iff = (unsigned int) (ff * 256);
+#endif
 
   {
     double fcycle = (double) info->cycle;
