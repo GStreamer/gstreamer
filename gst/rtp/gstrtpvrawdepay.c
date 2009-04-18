@@ -139,10 +139,10 @@ gst_rtp_vraw_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   /* optional interlace value but we don't handle interlaced
    * formats yet */
-  if ((str = gst_structure_get_string (structure, "interlace")))
+  if (gst_structure_get_string (structure, "interlace"))
     goto interlaced;
 
-  if (!(str = gst_structure_get_string (structure, "sampling")))
+  if (gst_structure_get_string (structure, "sampling"))
     goto no_sampling;
 
   if (!strcmp (str, "RGB")) {
