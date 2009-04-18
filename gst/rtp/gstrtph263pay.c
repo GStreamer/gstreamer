@@ -1426,7 +1426,6 @@ gst_rtp_h263_pay_mode_B_fragment (GstRtpH263Pay * rtph263pay,
 
 
     /*---------- MODE B MODE FRAGMENTATION ----------*/
-  GstRtpH263PayMB *a;
   GstRtpH263PayMB *mac;
   guint max_payload_size;
   GstRtpH263PayBoundry *boundry;
