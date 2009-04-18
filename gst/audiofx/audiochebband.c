@@ -221,7 +221,7 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
   gdouble rp, ip;
 
   /* zero location in s-plane */
-  gdouble rz = 0.0, iz = 0.0;
+  gdouble iz = 0.0;
 
   /* transfer function coefficients for the z-plane */
   gdouble x0, x1, x2, y1, y2;
@@ -269,10 +269,8 @@ generate_biquad_coefficients (GstAudioChebBand * filter,
     gdouble angle = M_PI / (np * 2.0) + ((p - 1) * M_PI) / (np);
     gdouble mag2;
 
-    rz = 0.0;
     iz = cos (angle);
-    mag2 = rz * rz + iz * iz;
-    rz /= mag2;
+    mag2 = iz * iz;
     iz /= mag2;
   }
 
