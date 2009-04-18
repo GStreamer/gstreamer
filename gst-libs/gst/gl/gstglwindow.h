@@ -79,10 +79,9 @@ struct _GstGLWindowClass {
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type (void);
 
-GstGLWindow * gst_gl_window_new (gint width, gint height);
+GstGLWindow * gst_gl_window_new (gint width, gint height, guint64 external_gl_context);
 
 void gst_gl_window_set_external_window_id (GstGLWindow *window, guint64 id);
-void gst_gl_window_set_external_gl_context (GstGLWindow *window, guint64 context);
 void gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 void gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback, gpointer data);
 void gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data);

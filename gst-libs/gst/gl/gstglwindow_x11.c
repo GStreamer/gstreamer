@@ -242,7 +242,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height)
+gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -379,7 +379,8 @@ gst_gl_window_new (gint width, gint height)
   XSetWMProtocols (priv->device, priv->internal_win_id, wm_atoms, 2);
 
   priv->gl_context =
-      glXCreateContext (priv->device, priv->visual_info, NULL, TRUE);
+      glXCreateContext (priv->device, priv->visual_info, 
+          (GLXContext) external_gl_context, TRUE);
 
   g_debug ("gl context id: %ld\n", (gulong) priv->gl_context);
 
@@ -444,12 +445,6 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
 
     g_mutex_unlock (priv->x_lock);
   }
-}
-
-void
-gst_gl_window_set_external_gl_context (GstGLWindow * window, guint64 context)
-{
-  g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
 }
 
 void

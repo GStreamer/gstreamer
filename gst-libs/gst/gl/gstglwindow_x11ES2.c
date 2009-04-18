@@ -247,7 +247,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height)
+gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -395,7 +395,7 @@ gst_gl_window_new (gint width, gint height)
         (gulong) priv->gl_display, EGLErrorString ());
 
   priv->gl_context =
-      eglCreateContext (priv->gl_display, config, EGL_NO_CONTEXT,
+      eglCreateContext (priv->gl_display, config, (EGLContext) external_gl_context,
       context_attrib);
   if (priv->gl_context != EGL_NO_CONTEXT)
     g_debug ("gl context created: %ld\n", (gulong) priv->gl_context);
@@ -446,12 +446,6 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
 
     g_mutex_unlock (priv->x_lock);
   }
-}
-
-void
-gst_gl_window_set_external_gl_context (GstGLWindow * window, guint64 context)
-{
-  g_warning ("gst_gl_window_set_external_gl_context: not implemented\n");
 }
 
 void
