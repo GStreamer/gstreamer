@@ -602,7 +602,6 @@ static gboolean
 gst_multiudpsink_init_send (GstMultiUDPSink * sink)
 {
   guint bc_val;
-  gint ret;
   GList *clients;
   GstUDPClient *client;
 
@@ -620,9 +619,8 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   }
 
   bc_val = 1;
-  if ((ret =
-          setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
-              sizeof (bc_val))) < 0)
+  if (setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
+          sizeof (bc_val)) < 0)
     goto no_broadcast;
 
   sink->bytes_to_serve = 0;

@@ -237,11 +237,9 @@ static GstCaps *
 gst_pixbufscale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstPixbufScale *pixbufscale;
   GstCaps *ret;
   int i;
 
-  pixbufscale = GST_PIXBUFSCALE (trans);
   ret = gst_caps_copy (caps);
 
   for (i = 0; i < gst_caps_get_size (ret); i++) {
@@ -303,12 +301,9 @@ static gboolean
 gst_pixbufscale_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size)
 {
-  GstPixbufScale *pixbufscale;
   gint width, height;
 
   g_assert (size);
-
-  pixbufscale = GST_PIXBUFSCALE (trans);
 
   if (!parse_caps (caps, &width, &height))
     return FALSE;

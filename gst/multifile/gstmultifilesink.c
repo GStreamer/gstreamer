@@ -115,10 +115,6 @@ static void
 gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
     GstMultiFileSinkClass * g_class)
 {
-  GstPad *pad;
-
-  pad = GST_BASE_SINK_PAD (multifilesink);
-
   multifilesink->filename = g_strdup (DEFAULT_LOCATION);
   multifilesink->index = DEFAULT_INDEX;
 

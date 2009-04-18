@@ -245,10 +245,7 @@ static gboolean
 gst_rtp_xqt_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
-  GstRtpXQTDepay *rtpxqtdepay;
   gint clock_rate = 90000;      /* default */
-
-  rtpxqtdepay = GST_RTP_XQT_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 

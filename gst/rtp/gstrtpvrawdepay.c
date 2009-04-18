@@ -272,14 +272,11 @@ static GstBuffer *
 gst_rtp_vraw_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpVRawDepay *rtpvrawdepay;
-  gint payload_len;
   guint8 *payload, *data, *yp, *up, *vp, *headers;
   guint32 timestamp;
   guint cont, ystride, uvstride, pgroup;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
-
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
 
   timestamp = gst_rtp_buffer_get_timestamp (buf);
 

@@ -1376,7 +1376,6 @@ gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
 static gboolean
 gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 {
-  gboolean res;
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
@@ -1458,11 +1457,11 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if (playing)
     gst_rtspsrc_pause (src);
 
-  res = gst_rtspsrc_do_seek (src, &seeksegment);
+  gst_rtspsrc_do_seek (src, &seeksegment);
 
   /* and continue playing */
   if (playing)
-    res = gst_rtspsrc_play (src, &seeksegment);
+    gst_rtspsrc_play (src, &seeksegment);
 
   /* prepare for streaming again */
   if (flush) {
@@ -1899,12 +1898,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 {
   const gchar *manager;
   gchar *name;
-  GstRTSPResult res;
   GstStateChangeReturn ret;
 
   /* find a manager */
-  if ((res =
-          gst_rtsp_transport_get_manager (transport->trans, &manager, 0)) < 0)
+  if (gst_rtsp_transport_get_manager (transport->trans, &manager, 0) < 0)
     goto no_manager;
 
   if (manager) {
@@ -1914,9 +1911,7 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     if (src->session == NULL) {
       if (!(src->session = gst_element_factory_make (manager, NULL))) {
         /* fallback */
-        if ((res =
-                gst_rtsp_transport_get_manager (transport->trans, &manager,
-                    1)) < 0)
+        if (gst_rtsp_transport_get_manager (transport->trans, &manager, 1) < 0)
           goto no_manager;
 
         if (!manager)
@@ -2367,7 +2362,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   gchar *name;
   GstStructure *s;
   const gchar *mime;
-  GstRTSPResult res;
 
   src = stream->parent;
 
@@ -2376,7 +2370,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   s = gst_caps_get_structure (stream->caps, 0);
 
   /* get the proper mime type for this stream now */
-  if ((res = gst_rtsp_transport_get_mime (transport->trans, &mime)) < 0)
+  if (gst_rtsp_transport_get_mime (transport->trans, &mime) < 0)
     goto unknown_transport;
   if (!mime)
     goto unknown_transport;
@@ -2763,7 +2757,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     if ((tv_timeout.tv_sec | tv_timeout.tv_usec) == 0) {
       GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
       /* send keep-alive, ignore the result, a warning will be posted. */
-      res = gst_rtspsrc_send_keep_alive (src);
+      gst_rtspsrc_send_keep_alive (src);
     }
 
     GST_DEBUG_OBJECT (src, "doing receive");
@@ -3044,7 +3038,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
         case GST_RTSP_ETIMEOUT:
           /* send keep-alive, ignore the result, a warning will be posted. */
           GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
-          res = gst_rtspsrc_send_keep_alive (src);
+          gst_rtspsrc_send_keep_alive (src);
           continue;
         case GST_RTSP_EEOF:
           /* server closed the connection. not very fatal for UDP, reconnect and

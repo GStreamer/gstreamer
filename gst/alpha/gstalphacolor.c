@@ -112,12 +112,9 @@ static GstCaps *
 gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstAlphaColor *alpha = NULL;
   const GstCaps *tmpl_caps = NULL;
   GstCaps *result = NULL, *local_caps = NULL;
   guint i;
-
-  alpha = GST_ALPHA_COLOR (btrans);
 
   local_caps = gst_caps_copy (caps);
 

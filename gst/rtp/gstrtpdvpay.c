@@ -180,10 +180,6 @@ gst_dv_pay_get_property (GObject * object,
 static gboolean
 gst_rtp_dv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  GstRTPDVPay *rtpdvpay;
-
-  rtpdvpay = GST_RTP_DV_PAY (payload);
-
   /* We don't do anything here, but we could check if it's a system stream and if
    * it's not, default to sending the video only. We will negotiate downstream
    * caps when we get to see the first frame. */

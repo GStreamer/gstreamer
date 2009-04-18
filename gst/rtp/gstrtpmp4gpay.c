@@ -528,9 +528,6 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRtpMP4GPay *rtpmp4gpay;
-  GstFlowReturn ret;
-
-  ret = GST_FLOW_OK;
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (basepayload);
 
@@ -539,9 +536,7 @@ gst_rtp_mp4g_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* we always encode and flush a full AU */
   gst_adapter_push (rtpmp4gpay->adapter, buffer);
-  ret = gst_rtp_mp4g_pay_flush (rtpmp4gpay);
-
-  return ret;
+  return gst_rtp_mp4g_pay_flush (rtpmp4gpay);
 }
 
 gboolean

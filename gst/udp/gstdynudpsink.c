@@ -320,7 +320,6 @@ static gboolean
 gst_dynudpsink_init_send (GstDynUDPSink * sink)
 {
   guint bc_val;
-  gint ret;
 
   if (sink->sockfd == -1) {
     /* create sender socket if none available */
@@ -328,9 +327,8 @@ gst_dynudpsink_init_send (GstDynUDPSink * sink)
       goto no_socket;
 
     bc_val = 1;
-    if ((ret =
-            setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
-                sizeof (bc_val))) < 0)
+    if (setsockopt (sink->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
+            sizeof (bc_val)) < 0)
       goto no_broadcast;
 
     sink->externalfd = TRUE;

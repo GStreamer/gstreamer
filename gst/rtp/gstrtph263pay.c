@@ -1823,12 +1823,10 @@ gst_rtp_h263_pay_handle_buffer (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
   GstRtpH263Pay *rtph263pay;
   GstFlowReturn ret;
-  guint size;
 
   GST_DEBUG ("-------------------- NEW FRAME ---------------");
   rtph263pay = GST_RTP_H263_PAY (payload);
 
-  size = GST_BUFFER_SIZE (buffer);
   rtph263pay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   /* we always encode and flush a full picture */

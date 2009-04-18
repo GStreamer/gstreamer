@@ -480,7 +480,6 @@ gst_hdv1394src_discover_avc_node (GstHDV1394Src * src)
   /* loop over all our ports */
   for (; j < m && node == -1; j++) {
     raw1394handle_t handle;
-    gint n_ports;
     struct raw1394_portinfo pinf[16];
 
     /* open the port */
@@ -489,7 +488,7 @@ gst_hdv1394src_discover_avc_node (GstHDV1394Src * src)
       GST_WARNING ("raw1394 - failed to get handle: %s.\n", strerror (errno));
       continue;
     }
-    if ((n_ports = raw1394_get_port_info (handle, pinf, 16)) < 0) {
+    if (raw1394_get_port_info (handle, pinf, 16) < 0) {
       GST_WARNING ("raw1394 - failed to get port info: %s.\n",
           strerror (errno));
       goto next;

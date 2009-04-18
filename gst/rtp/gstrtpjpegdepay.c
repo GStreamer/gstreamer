@@ -381,12 +381,9 @@ static gboolean
 gst_rtp_jpeg_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
-  GstRtpJPEGDepay *rtpjpegdepay;
   GstCaps *outcaps;
   gint clock_rate;
   gboolean res;
-
-  rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 

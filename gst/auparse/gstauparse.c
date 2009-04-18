@@ -162,8 +162,6 @@ gst_au_parse_reset (GstAuParse * auparse)
 static gboolean
 gst_au_parse_add_srcpad (GstAuParse * auparse, GstCaps * new_caps)
 {
-  GstPad *srcpad = NULL;
-
   if (auparse->src_caps && gst_caps_is_equal (new_caps, auparse->src_caps)) {
     GST_LOG_OBJECT (auparse, "same caps, nothing to do");
     return TRUE;
@@ -177,8 +175,7 @@ gst_au_parse_add_srcpad (GstAuParse * auparse, GstCaps * new_caps)
   }
 
   if (auparse->srcpad == NULL) {
-    srcpad = auparse->srcpad =
-        gst_pad_new_from_static_template (&src_template, "src");
+    auparse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
     g_return_val_if_fail (auparse->srcpad != NULL, FALSE);
 
 #if 0
@@ -500,7 +497,6 @@ gst_au_parse_src_convert (GstAuParse * auparse, GstFormat src_format,
     gint64 srcval, GstFormat dest_format, gint64 * destval)
 {
   gboolean ret = TRUE;
-  gint64 offset;
   guint samplesize, rate;
 
   if (dest_format == src_format) {
@@ -510,7 +506,6 @@ gst_au_parse_src_convert (GstAuParse * auparse, GstFormat src_format,
 
   GST_OBJECT_LOCK (auparse);
   samplesize = auparse->sample_size;
-  offset = auparse->offset;
   rate = auparse->samplerate;
   GST_OBJECT_UNLOCK (auparse);
 

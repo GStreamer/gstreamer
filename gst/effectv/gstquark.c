@@ -156,7 +156,7 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
 {
   GstQuarkTV *filter;
   gint area;
-  guint32 *src, *dest;
+  guint32 *dest;
   GstFlowReturn ret = GST_FLOW_OK;
 
   filter = GST_QUARKTV (trans);
@@ -164,7 +164,6 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
   gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   area = filter->area;
-  src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
   if (G_UNLIKELY (filter->planetable == NULL))

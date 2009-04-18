@@ -442,10 +442,7 @@ gst_rtp_dec_finalize (GObject * object)
 static gboolean
 gst_rtp_dec_query_src (GstPad * pad, GstQuery * query)
 {
-  GstRTPDec *rtpdec;
   gboolean res;
-
-  rtpdec = GST_RTP_DEC (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
@@ -755,9 +752,6 @@ static GstStateChangeReturn
 gst_rtp_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstRTPDec *rtpdec;
-
-  rtpdec = GST_RTP_DEC (element);
 
   switch (transition) {
     default:

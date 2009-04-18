@@ -472,11 +472,6 @@ gst_alpha_set_ayuv (guint8 * src, guint8 * dest, gint width, gint height,
 {
   gint b_alpha = (gint) (alpha * 255);
   gint y, x;
-  gint size;
-  gint stride;
-
-  stride = gst_video_format_get_row_stride (GST_VIDEO_FORMAT_AYUV, 0, width);
-  size = gst_video_format_get_size (GST_VIDEO_FORMAT_AYUV, width, height);
 
   for (y = 0; y < height; y++) {
     for (x = 0; x < width; x++) {

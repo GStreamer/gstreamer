@@ -564,11 +564,9 @@ gst_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVideoFlip *videoflip;
-  GstVideoFilter *videofilter;
 
   g_return_if_fail (GST_IS_VIDEO_FLIP (object));
   videoflip = GST_VIDEO_FLIP (object);
-  videofilter = GST_VIDEO_FILTER (object);
 
   switch (prop_id) {
     case ARG_METHOD:

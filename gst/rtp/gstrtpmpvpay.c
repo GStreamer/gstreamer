@@ -114,18 +114,8 @@ gst_rtp_mpv_pay_finalize (GObject * object)
 static gboolean
 gst_rtp_mpv_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  const char *stname;
-  GstStructure *structure;
-  gboolean res;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  stname = gst_structure_get_name (structure);
-
   gst_basertppayload_set_options (payload, "video", FALSE, "MPV", 90000);
-  res = gst_basertppayload_set_outcaps (payload, NULL);
-
-  return res;
+  return gst_basertppayload_set_outcaps (payload, NULL);
 }
 
 static GstFlowReturn
@@ -193,15 +183,12 @@ gst_rtp_mpv_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstRTPMPVPay *rtpmpvpay;
-  guint size, avail, packet_len;
-  guint8 *data;
+  guint avail, packet_len;
   GstClockTime timestamp, duration;
   GstFlowReturn ret;
 
   rtpmpvpay = GST_RTP_MPV_PAY (basepayload);
 
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 

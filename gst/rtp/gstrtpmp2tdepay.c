@@ -140,11 +140,8 @@ gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure;
-  GstRtpMP2TDepay *rtpmp2tdepay;
   gint clock_rate;
   gboolean res;
-
-  rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))

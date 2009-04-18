@@ -410,7 +410,6 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint32 timestamp;
   guint32 header, ident;
   guint8 F, VDT, packets;
-  gboolean free_payload;
 
   rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (depayload);
 
@@ -423,7 +422,6 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     goto packet_short;
 
   payload = gst_rtp_buffer_get_payload (buf);
-  free_payload = FALSE;
 
   header = GST_READ_UINT32_BE (payload);
   /*

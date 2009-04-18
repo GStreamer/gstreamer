@@ -105,12 +105,9 @@ static gboolean
 gst_rtp_mpa_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
-  GstRtpMPADepay *rtpmpadepay;
   GstCaps *outcaps;
   gint clock_rate;
   gboolean res;
-
-  rtpmpadepay = GST_RTP_MPA_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 

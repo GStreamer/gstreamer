@@ -145,10 +145,6 @@ static void
 gst_multi_file_src_init (GstMultiFileSrc * multifilesrc,
     GstMultiFileSrcClass * g_class)
 {
-  GstPad *pad;
-
-  pad = GST_BASE_SRC_PAD (multifilesrc);
-
   multifilesrc->index = DEFAULT_INDEX;
   multifilesrc->filename = g_strdup (DEFAULT_LOCATION);
   multifilesrc->successful_read = FALSE;

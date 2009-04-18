@@ -133,13 +133,10 @@ static gboolean
 gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
-  GstRtpMP4VDepay *rtpmp4vdepay;
   GstCaps *srccaps;
   const gchar *str;
   gint clock_rate;
   gboolean res;
-
-  rtpmp4vdepay = GST_RTP_MP4V_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 

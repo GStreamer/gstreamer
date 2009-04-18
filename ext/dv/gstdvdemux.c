@@ -1032,7 +1032,7 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
 
     /* convert input format to TIME */
     conv = GST_FORMAT_TIME;
-    if (!(res = gst_dvdemux_convert_src_pair (demux, pad,
+    if (!(gst_dvdemux_convert_src_pair (demux, pad,
                 format, cur, stop, conv, &cur, &stop)))
       goto no_format;
 
@@ -1379,11 +1379,10 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
   if (G_UNLIKELY (dvdemux->need_segment)) {
     GstEvent *event;
     GstFormat format;
-    gboolean res;
 
     /* convert to time and store as start/end_timestamp */
     format = GST_FORMAT_TIME;
-    if (!(res = gst_dvdemux_convert_sink_pair (dvdemux,
+    if (!(gst_dvdemux_convert_sink_pair (dvdemux,
                 GST_FORMAT_BYTES, dvdemux->byte_segment.start,
                 dvdemux->byte_segment.stop, format,
                 &dvdemux->time_segment.start, &dvdemux->time_segment.stop)))
@@ -1395,7 +1394,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
 
     /* calculate current frame number */
     format = GST_FORMAT_DEFAULT;
-    if (!(res = gst_dvdemux_src_convert (dvdemux, dvdemux->videosrcpad,
+    if (!(gst_dvdemux_src_convert (dvdemux, dvdemux->videosrcpad,
                 GST_FORMAT_TIME, dvdemux->time_segment.start,
                 &format, &dvdemux->frame_offset)))
       goto segment_error;

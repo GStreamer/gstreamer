@@ -933,7 +933,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
 {
   GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstXContext *xcontext;
-  gint x, y, width, height;
+  gint width, height;
 
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
     return
@@ -947,7 +947,6 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
 
   xcontext = s->xcontext;
 
-  x = y = 0;
   width = xcontext->width;
   height = xcontext->height;
   if (s->endx > s->startx && s->endy > s->starty) {
@@ -955,8 +954,6 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
     if (s->startx < xcontext->width && s->endx < xcontext->width &&
         s->starty < xcontext->height && s->endy < xcontext->height) {
       /* values are fine */
-      x = s->startx;
-      y = s->starty;
       s->width = width = s->endx - s->startx;
       s->height = height = s->endy - s->starty;
     } else {

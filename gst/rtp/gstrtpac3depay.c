@@ -102,12 +102,9 @@ static gboolean
 gst_rtp_ac3_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
-  GstRtpAC3Depay *rtpac3depay;
   gint clock_rate;
   GstCaps *srccaps;
   gboolean res;
-
-  rtpac3depay = GST_RTP_AC3_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 

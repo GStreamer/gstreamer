@@ -497,10 +497,8 @@ gst_matroska_mux_reset (GstElement * element)
 
   for (walk = mux->collect->data; walk; walk = g_slist_next (walk)) {
     GstMatroskaPad *collect_pad;
-    GstPad *thepad;
 
     collect_pad = (GstMatroskaPad *) walk->data;
-    thepad = collect_pad->collect.pad;
 
     /* reset collect pad to pristine state */
     gst_matroska_pad_reset (collect_pad, FALSE);
@@ -2246,7 +2244,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
 {
   GstEbmlWrite *ebml = mux->ebml_write;
   GstBuffer *buf, *hdr;
-  guint64 cluster, blockgroup;
+  guint64 blockgroup;
   gboolean write_duration;
   gint16 relative_timestamp;
   gint64 relative_timestamp64;
@@ -2317,7 +2315,6 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
         GST_BUFFER_TIMESTAMP (buf) / mux->time_scale);
     mux->cluster_time = GST_BUFFER_TIMESTAMP (buf);
   }
-  cluster = mux->cluster;
 
   /* update duration of this track */
   if (GST_BUFFER_DURATION_IS_VALID (buf))

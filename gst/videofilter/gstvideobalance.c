@@ -259,7 +259,6 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstVideoBalance *videobalance;
   guint8 *data;
   guint size;
-  gint width, height;
 
   videobalance = GST_VIDEO_BALANCE (base);
 
@@ -269,9 +268,6 @@ gst_video_balance_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   data = GST_BUFFER_DATA (outbuf);
   size = GST_BUFFER_SIZE (outbuf);
-
-  width = videobalance->width;
-  height = videobalance->height;
 
   if (size < videobalance->size)
     goto wrong_size;
@@ -401,15 +397,12 @@ static void
 gst_video_balance_init (GTypeInstance * instance, gpointer g_class)
 {
   GstVideoBalance *videobalance = GST_VIDEO_BALANCE (instance);
-  GstVideoFilter *videofilter;
   char *channels[4] = { "HUE", "SATURATION",
     "BRIGHTNESS", "CONTRAST"
   };
   gint i;
 
   GST_DEBUG ("gst_video_balance_init");
-
-  videofilter = GST_VIDEO_FILTER (videobalance);
 
   /* do stuff */
   videobalance->contrast = DEFAULT_PROP_CONTRAST;

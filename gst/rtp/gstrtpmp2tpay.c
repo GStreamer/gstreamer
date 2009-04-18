@@ -114,13 +114,6 @@ gst_rtp_mp2t_pay_finalize (GObject * object)
 static gboolean
 gst_rtp_mp2t_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  const char *stname;
-  GstStructure *structure;
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  stname = gst_structure_get_name (structure);
-
   gst_basertppayload_set_options (payload, "video", TRUE, "MP2T-ES", 90000);
   gst_basertppayload_set_outcaps (payload, NULL);
 
@@ -164,14 +157,12 @@ gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 {
   GstRTPMP2TPay *rtpmp2tpay;
   guint size, avail, packet_len;
-  guint8 *data;
   GstClockTime timestamp, duration;
   GstFlowReturn ret;
 
   rtpmp2tpay = GST_RTP_MP2T_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 

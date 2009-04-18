@@ -856,10 +856,6 @@ setup_failed:
 static gboolean
 gst_pngdec_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
-  GstPngDec *pngdec;
-
-  pngdec = GST_PNGDEC (GST_OBJECT_PARENT (sinkpad));
-
   if (active) {
     return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_pngdec_task,
         sinkpad);

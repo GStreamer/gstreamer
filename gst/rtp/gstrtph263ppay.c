@@ -349,11 +349,9 @@ gst_rtp_h263p_pay_handle_buffer (GstBaseRTPPayload * payload,
 {
   GstRtpH263PPay *rtph263ppay;
   GstFlowReturn ret;
-  guint size;
 
   rtph263ppay = GST_RTP_H263P_PAY (payload);
 
-  size = GST_BUFFER_SIZE (buffer);
   rtph263ppay->first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   rtph263ppay->first_duration = GST_BUFFER_DURATION (buffer);
 

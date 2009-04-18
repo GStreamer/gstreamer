@@ -263,10 +263,9 @@ gst_smpte_paint_triangle_clock (guint32 * dest, gint stride,
 {
   gint i;
   gint sign;
-  gfloat angle, angle_s, angle_e;
+  gfloat angle, angle_e;
   gfloat len1;
 
-  angle_s = 0.0;
   angle_e = acos (((x1 - x0) * (x2 - x0) + (y1 - y0) * (y2 - y0)) /
       (sqrt ((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)) *
           sqrt ((x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0))));

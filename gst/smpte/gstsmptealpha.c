@@ -346,13 +346,10 @@ static gboolean
 gst_smpte_alpha_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     guint * size)
 {
-  GstSMPTEAlpha *smpte;
   GstStructure *structure;
   gboolean ret;
   gint width, height;
   guint32 fourcc;
-
-  smpte = GST_SMPTE_ALPHA (btrans);
 
   structure = gst_caps_get_structure (caps, 0);
 

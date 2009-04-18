@@ -420,10 +420,6 @@ static void
 gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstGdkPixbuf *filter;
-
-  filter = GST_GDK_PIXBUF (object);
-
   switch (prop_id) {
     case ARG_SILENT:
       /* filter->silent = g_value_get_boolean (value); */
@@ -438,10 +434,6 @@ static void
 gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstGdkPixbuf *filter;
-
-  filter = GST_GDK_PIXBUF (object);
-
   switch (prop_id) {
     case ARG_SILENT:
       /* g_value_set_boolean (value, filter->silent); */

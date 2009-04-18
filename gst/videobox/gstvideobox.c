@@ -949,7 +949,7 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 {
   guint8 *srcY, *srcU, *srcV;
   gint crop_width, crop_width2, crop_height;
-  gint out_width, out_height;
+  gint out_width;
   gint src_stridey, src_strideu, src_stridev;
   gint br, bl, bt, bb;
   gint colorY, colorU, colorV;
@@ -966,7 +966,6 @@ gst_video_box_i420_ayuv (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   bb = video_box->border_bottom;
 
   out_width = video_box->out_width;
-  out_height = video_box->out_height;
 
   src_stridey = GST_VIDEO_I420_Y_ROWSTRIDE (video_box->in_width);
   src_strideu = GST_VIDEO_I420_U_ROWSTRIDE (video_box->in_width);

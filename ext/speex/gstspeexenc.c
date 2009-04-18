@@ -527,9 +527,6 @@ static gboolean
 gst_speex_enc_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstSpeexEnc *enc;
-
-  enc = GST_SPEEX_ENC (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:

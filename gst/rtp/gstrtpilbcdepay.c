@@ -135,10 +135,6 @@ static void
 gst_rtp_ilbc_depay_init (GstRTPiLBCDepay * rtpilbcdepay,
     GstRTPiLBCDepayClass * klass)
 {
-  GstBaseRTPDepayload *depayload;
-
-  depayload = GST_BASE_RTP_DEPAYLOAD (rtpilbcdepay);
-
   /* Set default mode */
   rtpilbcdepay->mode = DEFAULT_MODE;
 }

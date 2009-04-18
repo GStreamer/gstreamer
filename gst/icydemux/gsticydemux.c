@@ -234,8 +234,6 @@ gst_icydemux_dispose (GObject * object)
 static gboolean
 gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
 {
-  GstPad *srcpad = NULL;
-
   if (icydemux->src_caps == NULL ||
       !gst_caps_is_equal (new_caps, icydemux->src_caps)) {
     gst_caps_replace (&(icydemux->src_caps), new_caps);
@@ -251,7 +249,7 @@ gst_icydemux_add_srcpad (GstICYDemux * icydemux, GstCaps * new_caps)
   }
 
   if (icydemux->srcpad == NULL) {
-    srcpad = icydemux->srcpad =
+    icydemux->srcpad =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_GET_CLASS (icydemux), "src"), "src");
     g_return_val_if_fail (icydemux->srcpad != NULL, FALSE);

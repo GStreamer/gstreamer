@@ -169,7 +169,6 @@ static GstTagList *
 ape_demux_parse_tags (const guint8 * data, gint size)
 {
   GstTagList *taglist = gst_tag_list_new ();
-  gboolean have_tag = FALSE;
 
   GST_LOG ("Reading tags from chunk of size %u bytes", size);
 
@@ -310,7 +309,6 @@ ape_demux_parse_tags (const guint8 * data, gint size)
         gst_tag_list_add_values (taglist, GST_TAG_MERGE_APPEND,
             gst_tag, &v, NULL);
         g_value_unset (&v);
-        have_tag = TRUE;
       }
     }
     GST_DEBUG ("Read tag %s: %s", tag, val);

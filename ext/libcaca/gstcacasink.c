@@ -261,11 +261,6 @@ gst_cacasink_setcaps (GstBaseSink * basesink, GstCaps * caps)
 static void
 gst_cacasink_init (GstCACASink * cacasink)
 {
-  GstPad *pad;
-
-  pad = GST_BASE_SINK_PAD (cacasink);
-  /* gst_pad_set_fixatecaps_function (pad, gst_cacasink_fixate); */
-
   cacasink->screen_width = GST_CACA_DEFAULT_SCREEN_WIDTH;
   cacasink->screen_height = GST_CACA_DEFAULT_SCREEN_HEIGHT;
   cacasink->bpp = GST_CACA_DEFAULT_BPP;

@@ -110,7 +110,6 @@ gst_rtpsirenpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
 {
   GstRTPSirenPay *rtpsirenpay;
   GstBaseRTPAudioPayload *basertpaudiopayload;
-  gboolean ret;
   gint dct_length;
   GstStructure *structure;
   const char *payload_name;
@@ -133,9 +132,7 @@ gst_rtpsirenpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
   /* set options for this frame based audio codec */
   gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload, 20, 40);
 
-  ret = gst_basertppayload_set_outcaps (basertppayload, NULL);
-
-  return TRUE;
+  return gst_basertppayload_set_outcaps (basertppayload, NULL);
 
   /* ERRORS */
 wrong_dct:

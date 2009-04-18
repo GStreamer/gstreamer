@@ -115,11 +115,8 @@ gst_rtp_mp1s_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   GstStructure *structure;
-  GstRtpMP1SDepay *rtpmp1sdepay;
   gint clock_rate;
   gboolean res;
-
-  rtpmp1sdepay = GST_RTP_MP1S_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
@@ -137,10 +134,7 @@ gst_rtp_mp1s_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 static GstBuffer *
 gst_rtp_mp1s_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-  GstRtpMP1SDepay *rtpmp1sdepay;
   GstBuffer *outbuf;
-
-  rtpmp1sdepay = GST_RTP_MP1S_DEPAY (depayload);
 
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
