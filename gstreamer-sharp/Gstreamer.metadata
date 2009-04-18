@@ -224,9 +224,16 @@
 
   <change-node-type path="/api/namespace/object[@name='Message']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Message']" name="opaque">true</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseWarning']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseError']" name="hidden">1</attr>
-  <attr path="/api/namespace/boxed[@name='Message']/method[@name='ParseInfo']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/field[@name='Timestamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/field[@name='Src']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_type_to_quark']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_type_get_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/constructor" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Message']/method" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_structure']" name="hidden" />
+  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_structure']/return-type" name="owned">true</attr>
+  <remove-attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_type']" name="hidden" />
 
   <attr path="/api/namespace/enum[@name='MessageType']" name="parent">uint</attr>
   <attr path="/api/namespace/enum[@name='MessageType']/member[@name='Unknown']" name="value">0U</attr>
