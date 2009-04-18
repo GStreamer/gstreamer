@@ -4448,7 +4448,7 @@ restart:
 
   /* send OPTIONS */
   GST_DEBUG_OBJECT (src, "send options...");
-  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
+  if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
     goto send_error;
 
   /* parse OPTIONS */
@@ -4475,7 +4475,7 @@ restart:
 
   /* send DESCRIBE */
   GST_DEBUG_OBJECT (src, "send describe...");
-  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
+  if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
     goto send_error;
 
   /* we only perform redirect for the describe, currently */
@@ -4696,7 +4696,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     if (res < 0)
       goto create_request_failed;
 
-    if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
+    if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
       goto send_error;
 
     /* FIXME, parse result? */
@@ -4905,7 +4905,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
     g_free (hval);
   }
 
-  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
+  if (gst_rtspsrc_send (src, &request, &response, NULL) < 0)
     goto send_error;
 
   gst_rtsp_message_unset (&request);
