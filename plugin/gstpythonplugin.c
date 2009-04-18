@@ -278,7 +278,7 @@ pygst_require (gchar * version)
 
     /* We don't want the registry to be loaded when we import gst */
     if ((regupd = g_getenv ("GST_REGISTRY_UPDATE"))
-        && (!g_strcmp0 (regupd, "no")))
+        && (!strcmp (regupd, "no")))
       doupdate = FALSE;
     g_setenv ("GST_REGISTRY_UPDATE", "no", TRUE);
 
