@@ -908,10 +908,12 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   }
 
   if (flacdec->close_segment) {
+    GST_DEBUG_OBJECT (flacdec, "pushing close segment");
     gst_pad_push_event (flacdec->srcpad, flacdec->close_segment);
     flacdec->close_segment = NULL;
   }
   if (flacdec->start_segment) {
+    GST_DEBUG_OBJECT (flacdec, "pushing start segment");
     gst_pad_push_event (flacdec->srcpad, flacdec->start_segment);
     flacdec->start_segment = NULL;
   }
@@ -935,14 +937,21 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     flacdec->pending_samples = 0;
   }
 
-  ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
-      flacdec->segment.last_stop, samples * channels * (width / 8),
-      GST_PAD_CAPS (flacdec->srcpad), &outbuf);
+  if (flacdec->seeking) {
+    GST_DEBUG_OBJECT (flacdec, "a pad_alloc would block here, do normal alloc");
+    outbuf = gst_buffer_new_and_alloc (samples * channels * (width / 8));
+    outbuf->offset = flacdec->segment.last_stop;
+  } else {
+    GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");
+    ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
+        flacdec->segment.last_stop, samples * channels * (width / 8),
+        GST_PAD_CAPS (flacdec->srcpad), &outbuf);
 
-  if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (flacdec, "gst_pad_alloc_buffer() returned %s",
-        gst_flow_get_name (ret));
-    goto done;
+    if (ret != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (flacdec, "gst_pad_alloc_buffer() returned %s",
+          gst_flow_get_name (ret));
+      goto done;
+    }
   }
 
   if (flacdec->cur_granulepos != GST_BUFFER_OFFSET_NONE) {
