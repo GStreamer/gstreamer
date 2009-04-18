@@ -37,7 +37,7 @@
       <Type Name="ClockFlags" Kind="Enumeration" />
       <Type Name="ClockReturn" Kind="Enumeration" />
       <Type Name="ClockType" Kind="Enumeration" />
-      <Type Name="CommonTags" Kind="Class" />
+      <Type Name="CoreError" Kind="Enumeration" />
       <Type Name="Date" Kind="Structure" />
       <Type Name="DecodeBin" Kind="Class" />
       <Type Name="DeepNotifyArgs" Kind="Class" />
@@ -87,6 +87,7 @@
       <Type Name="IndexResolver" Kind="Delegate" />
       <Type Name="IndexResolverMethod" Kind="Enumeration" />
       <Type Name="IntRange" Kind="Structure" />
+      <Type Name="LibraryError" Kind="Enumeration" />
       <Type Name="LinkedArgs" Kind="Class" />
       <Type Name="LinkedHandler" Kind="Delegate" />
       <Type Name="List" Kind="Structure" />
@@ -161,6 +162,7 @@
       <Type Name="QueryTypeDefinition" Kind="Structure" />
       <Type Name="Rank" Kind="Enumeration" />
       <Type Name="Registry" Kind="Class" />
+      <Type Name="ResourceError" Kind="Enumeration" />
       <Type Name="SeekFlags" Kind="Enumeration" />
       <Type Name="SeekType" Kind="Enumeration" />
       <Type Name="Segment" Kind="Class" />
@@ -169,6 +171,7 @@
       <Type Name="StateChange" Kind="Enumeration" />
       <Type Name="StateChangeReturn" Kind="Enumeration" />
       <Type Name="StaticPadTemplate" Kind="Class" />
+      <Type Name="StreamError" Kind="Enumeration" />
       <Type Name="Structure" Kind="Class" />
       <Type Name="StructureChangeType" Kind="Enumeration" />
       <Type Name="SyncMessageArgs" Kind="Class" />
@@ -180,6 +183,7 @@
       <Type Name="TagList" Kind="Class" />
       <Type Name="TagMergeFunc" Kind="Delegate" />
       <Type Name="TagMergeMode" Kind="Enumeration" />
+      <Type Name="Tags" Kind="Class" />
       <Type Name="TagSetter" Kind="Interface" />
       <Type Name="TagSetterAdapter" Kind="Class" />
       <Type Name="TagSetterImplementor" Kind="Interface" />
@@ -195,7 +199,6 @@
       <Type Name="UnlinkedArgs" Kind="Class" />
       <Type Name="UnlinkedHandler" Kind="Delegate" />
       <Type Name="Util" Kind="Class" />
-      <Type Name="Value" Kind="Class" />
       <Type Name="Version" Kind="Class" />
       <Type Name="XML" Kind="Class" />
     </Namespace>

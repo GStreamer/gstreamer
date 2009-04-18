@@ -20,7 +20,8 @@
     
     
     
-    <Member MemberName=".ctor">
+    
+  <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Array (GLib.Value val);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
@@ -53,8 +54,7 @@
       <ReturnValue><ReturnType>GLib.Value</ReturnType></ReturnValue>
       <Parameters><Parameter Name="a" Type="Gst.Array" /></Parameters>
       <Docs><param name="a">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member>
-  </Members>
+    </Member><Member MemberName="SetGValue"><MemberSignature Language="C#" Value="public void SetGValue (ref GLib.Value val);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="val" Type="GLib.Value&amp;" RefType="ref" /></Parameters><Docs><param name="val">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member></Members>
   <Attributes>
     <Attribute>
       <AttributeName>System.Reflection.DefaultMember("Item")</AttributeName>

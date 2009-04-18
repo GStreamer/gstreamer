@@ -88,7 +88,7 @@
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Parameters><Parameter Name="fourcc" Type="Gst.Fourcc" /></Parameters>
       <Docs><param name="fourcc">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    </Member><Member MemberName="Val">
+    </Member><Member MemberName="SetGValue"><MemberSignature Language="C#" Value="public void SetGValue (ref GLib.Value val);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters><Parameter Name="val" Type="GLib.Value&amp;" RefType="ref" /></Parameters><Docs><param name="val">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Val">
       <MemberSignature Language="C#" Value="public uint Val;" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>

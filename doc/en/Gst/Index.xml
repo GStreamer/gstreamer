@@ -26,12 +26,6 @@
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Index (GLib.GType gtype);" />
-      <MemberType>Constructor</MemberType>
-      <Attributes><Attribute><AttributeName>System.Obsolete</AttributeName></Attribute></Attributes>
-      <Parameters><Parameter Name="gtype" Type="GLib.GType" /></Parameters>
-      <Docs><param name="gtype">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Index (Gst.Index index);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="index" Type="Gst.Index" /></Parameters>

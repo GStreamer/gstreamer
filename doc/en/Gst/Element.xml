@@ -37,12 +37,6 @@
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="protected Element (GLib.GType gtype);" />
-      <MemberType>Constructor</MemberType>
-      <Attributes><Attribute><AttributeName>System.Obsolete</AttributeName></Attribute></Attributes>
-      <Parameters><Parameter Name="gtype" Type="GLib.GType" /></Parameters>
-      <Docs><param name="gtype">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Element (IntPtr raw);" />
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
