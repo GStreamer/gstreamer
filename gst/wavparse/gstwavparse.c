@@ -2368,7 +2368,6 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       if (fmt == wav->segment.format) {
-        res = TRUE;
         if (wav->streaming) {
           GstQuery *q;
 
