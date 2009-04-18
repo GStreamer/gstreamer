@@ -525,7 +525,6 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
           GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
           GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-      have_frame = TRUE;
     }
 #ifdef HAVE_XFIXES
     /* re-get area where last mouse pointer was  but only if in our clipping
@@ -619,7 +618,6 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     if (ximagesrc->cursor_image != NULL) {
       int cx, cy, i, j, count;
       int startx, starty, iwidth, iheight;
-      gboolean clipped = FALSE;
       gboolean cursor_in_image = TRUE;
 
       cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
@@ -653,7 +651,6 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
           iheight = (cy + ximagesrc->cursor_image->height < ximagesrc->endy) ?
               cy + ximagesrc->cursor_image->height - starty :
               ximagesrc->endy - starty;
-          clipped = TRUE;
         }
       } else {
         startx = cx;
