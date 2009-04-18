@@ -4397,7 +4397,6 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   guint size;
   gint i, n_streams;
   GstSDPMessage sdp = { 0 };
-  GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
   GstRTSPUrl *url;
 
@@ -4538,7 +4537,7 @@ restart:
   /* create streams */
   n_streams = gst_sdp_message_medias_len (&sdp);
   for (i = 0; i < n_streams; i++) {
-    stream = gst_rtspsrc_create_stream (src, &sdp, i);
+    gst_rtspsrc_create_stream (src, &sdp, i);
   }
 
   src->state = GST_RTSP_STATE_INIT;
