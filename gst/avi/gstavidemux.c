@@ -3459,7 +3459,6 @@ no_entry:
 static gboolean
 gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 {
-  gboolean res;
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
@@ -3478,10 +3477,9 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     /* we have to have a format as the segment format. Try to convert
      * if not. */
     if (format != GST_FORMAT_TIME) {
-      GstFormat fmt;
+      GstFormat fmt = GST_FORMAT_TIME;
+      gboolean res = TRUE;
 
-      fmt = GST_FORMAT_TIME;
-      res = TRUE;
       if (cur_type != GST_SEEK_TYPE_NONE)
         res = gst_pad_query_convert (pad, format, cur, &fmt, &cur);
       if (res && stop_type != GST_SEEK_TYPE_NONE)
@@ -3536,7 +3534,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
   /* do the seek, seeksegment.last_stop contains the new position, this
    * actually never fails. */
-  res = gst_avi_demux_do_seek (avi, &seeksegment);
+  gst_avi_demux_do_seek (avi, &seeksegment);
 
   if (flush) {
     gint i;
