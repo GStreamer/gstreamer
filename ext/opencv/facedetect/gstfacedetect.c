@@ -44,14 +44,14 @@
  */
 
 /**
- * SECTION:element-edgedetect
+ * SECTION:element-facedetect
  *
- * FIXME:Describe edgedetect here.
+ * FIXME:Describe facedetect here.
  *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-0.10 videotestsrc ! decodebin ! ffmpegcolorspace ! edgedetect ! ffmpegcolorspace ! xvimagesink
+ * gst-launch-0.10 videotestsrc ! decodebin ! ffmpegcolorspace ! facedetect ! ffmpegcolorspace ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -62,10 +62,12 @@
 
 #include <gst/gst.h>
 
-#include "gstedgedetect.h"
+#include "gstfacedetect.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_edgedetect_debug);
-#define GST_CAT_DEFAULT gst_edgedetect_debug
+GST_DEBUG_CATEGORY_STATIC (gst_facedetect_debug);
+#define GST_CAT_DEFAULT gst_facedetect_debug
+
+#define DEFAULT_PROFILE "/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"
 
 /* Filter signals and args */
 enum
@@ -77,15 +79,11 @@ enum
 enum
 {
   PROP_0,
-  PROP_THRESHOLD1,
-  PROP_THRESHOLD2,
-  PROP_APERTURE,
-  PROP_MASK
+  PROP_DISPLAY,
+  PROP_PROFILE
 };
 
 /* the capabilities of the inputs and outputs.
- *
- * describe the real formats here.
  */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -103,28 +101,30 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     )
 );
 
-GST_BOILERPLATE (Gstedgedetect, gst_edgedetect, GstElement,
+GST_BOILERPLATE (Gstfacedetect, gst_facedetect, GstElement,
     GST_TYPE_ELEMENT);
 
-static void gst_edgedetect_set_property (GObject * object, guint prop_id,
+static void gst_facedetect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_edgedetect_get_property (GObject * object, guint prop_id,
+static void gst_facedetect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_edgedetect_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_facedetect_set_caps (GstPad * pad, GstCaps * caps);
+static GstFlowReturn gst_facedetect_chain (GstPad * pad, GstBuffer * buf);
+
+static void gst_facedetect_load_profile (GObject * object);
 
 /* GObject vmethod implementations */
 
 static void
-gst_edgedetect_base_init (gpointer gclass)
+gst_facedetect_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
   gst_element_class_set_details_simple(element_class,
-    "edgedetect",
+    "facedetect",
     "Filter/Effect/Video",
-    "Performs canny edge detection on videos and images.",
+    "Performs face detection on videos and images, providing detected positions via bus messages",
     "Michael Sheldon <mike@mikeasoft.com>");
 
   gst_element_class_add_pad_template (element_class,
@@ -133,9 +133,9 @@ gst_edgedetect_base_init (gpointer gclass)
       gst_static_pad_template_get (&sink_factory));
 }
 
-/* initialize the edgedetect's class */
+/* initialize the facedetect's class */
 static void
-gst_edgedetect_class_init (GstedgedetectClass * klass)
+gst_facedetect_class_init (GstfacedetectClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -143,21 +143,15 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = gst_edgedetect_set_property;
-  gobject_class->get_property = gst_edgedetect_get_property;
+  gobject_class->set_property = gst_facedetect_set_property;
+  gobject_class->get_property = gst_facedetect_get_property;
 
-  g_object_class_install_property (gobject_class, PROP_MASK,
-      g_param_spec_boolean ("mask", "Mask", "Sets whether the detected edges should be used as a mask on the original input or not",
+  g_object_class_install_property (gobject_class, PROP_DISPLAY,
+      g_param_spec_boolean ("display", "Display", "Sets whether the detected faces should be highlighted in the output",
           TRUE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_THRESHOLD1,
-      g_param_spec_int ("threshold1", "Threshold1", "Threshold value for canny edge detection",
-          0, 1000, 50, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_THRESHOLD2,
-      g_param_spec_int ("threshold2", "Threshold2", "Second threshold value for canny edge detection",
-          0, 1000, 150, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_APERTURE,
-      g_param_spec_int ("aperture", "Aperture", "Aperture size for Sobel operator (Must be either 3, 5 or 7",
-          3, 7, 3, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_PROFILE,
+      g_param_spec_char ("profile", "Profile", "Location of Haar cascade file to use for face detection",
+          G_MININT8, G_MAXINT8, DEFAULT_PROFILE, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -166,16 +160,16 @@ gst_edgedetect_class_init (GstedgedetectClass * klass)
  * initialize instance structure
  */
 static void
-gst_edgedetect_init (Gstedgedetect * filter,
-    GstedgedetectClass * gclass)
+gst_facedetect_init (Gstfacedetect * filter,
+    GstfacedetectClass * gclass)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-                                GST_DEBUG_FUNCPTR(gst_edgedetect_set_caps));
+                                GST_DEBUG_FUNCPTR(gst_facedetect_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
                                 GST_DEBUG_FUNCPTR(gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (filter->sinkpad,
-                              GST_DEBUG_FUNCPTR(gst_edgedetect_chain));
+                              GST_DEBUG_FUNCPTR(gst_facedetect_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
@@ -183,30 +177,24 @@ gst_edgedetect_init (Gstedgedetect * filter,
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  filter->mask = TRUE;
-  filter->threshold1 = 50;
-  filter->threshold2 = 150;
-  filter->aperture = 3;
+  filter->profile = DEFAULT_PROFILE;
+  filter->display = TRUE;
+  gst_facedetect_load_profile(filter);
 }
 
 static void
-gst_edgedetect_set_property (GObject * object, guint prop_id,
+gst_facedetect_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  Gstedgedetect *filter = GST_EDGEDETECT (object);
+  Gstfacedetect *filter = GST_FACEDETECT (object);
 
   switch (prop_id) {
-    case PROP_MASK:
-      filter->mask = g_value_get_boolean (value);
+    case PROP_PROFILE:
+      filter->profile = g_value_get_char (value);
+      gst_facedetect_load_profile(filter);
       break;
-    case PROP_THRESHOLD1:
-      filter->threshold1 = g_value_get_int (value);
-      break;
-    case PROP_THRESHOLD2:
-      filter->threshold2 = g_value_get_int (value);
-      break;
-    case PROP_APERTURE:
-      filter->aperture = g_value_get_int (value);
+    case PROP_DISPLAY:
+      filter->display = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -215,23 +203,17 @@ gst_edgedetect_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_edgedetect_get_property (GObject * object, guint prop_id,
+gst_facedetect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  Gstedgedetect *filter = GST_EDGEDETECT (object);
+  Gstfacedetect *filter = GST_FACEDETECT (object);
 
   switch (prop_id) {
-    case PROP_MASK:
-      g_value_set_boolean (value, filter->mask);
+    case PROP_PROFILE:
+      g_value_set_char (value, filter->profile);
       break;
-    case PROP_THRESHOLD1:
-      g_value_set_int (value, filter->threshold1);
-      break;
-    case PROP_THRESHOLD2:
-      g_value_set_int (value, filter->threshold2);
-      break;
-    case PROP_APERTURE:
-      g_value_set_int (value, filter->aperture);
+    case PROP_DISPLAY:
+      g_value_set_boolean (value, filter->display);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -243,22 +225,21 @@ gst_edgedetect_get_property (GObject * object, guint prop_id,
 
 /* this function handles the link with other elements */
 static gboolean
-gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps)
+gst_facedetect_set_caps (GstPad * pad, GstCaps * caps)
 {
-  Gstedgedetect *filter;
+  Gstfacedetect *filter;
   GstPad *otherpad;
   gint width, height;
   GstStructure *structure;
 
-  filter = GST_EDGEDETECT (gst_pad_get_parent (pad));
+  filter = GST_FACEDETECT (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
 
   filter->cvImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-  filter->cvCEdge = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
   filter->cvGray = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
-  filter->cvEdge = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 1);
+  filter->cvStorage = cvCreateMemStorage(0);
 
   otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
   gst_object_unref (filter);
@@ -270,28 +251,51 @@ gst_edgedetect_set_caps (GstPad * pad, GstCaps * caps)
  * this function does the actual processing
  */
 static GstFlowReturn
-gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
+gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
 {
-  Gstedgedetect *filter;
+  Gstfacedetect *filter;
+  CvSeq *faces;
+  int i;
 
-  filter = GST_EDGEDETECT (GST_OBJECT_PARENT (pad));
+  filter = GST_FACEDETECT (GST_OBJECT_PARENT (pad));
 
   filter->cvImage->imageData = (char *) GST_BUFFER_DATA (buf);
 
   cvCvtColor(filter->cvImage, filter->cvGray, CV_RGB2GRAY);
-  cvSmooth(filter->cvGray, filter->cvEdge, CV_BLUR, 3, 3, 0, 0 );
-  cvNot(filter->cvGray, filter->cvEdge);
-  cvCanny(filter->cvGray, filter->cvEdge, filter->threshold1, filter->threshold2, filter->aperture);
+  cvClearMemStorage(filter->cvStorage);
 
-  cvZero(filter->cvCEdge);
-  if(filter-> mask) {
-    cvCopy(filter->cvImage, filter->cvCEdge, filter->cvEdge);
-  } else {
-    cvCvtColor(filter->cvEdge, filter->cvCEdge, CV_GRAY2RGB);
+  if (filter->cvCascade) {
+    faces = cvHaarDetectObjects(filter->cvGray, filter->cvCascade, filter->cvStorage, 1.1, 2, 0, cvSize(30, 30));
+    
+    for (i = 0; i < (faces ? faces->total : 0); i++) {   
+      CvRect* r = (CvRect *) cvGetSeqElem(faces, i);
+    
+      if (filter->display) {
+        CvPoint center;
+        int radius;
+        center.x = cvRound((r->x + r->width*0.5));
+        center.y = cvRound((r->y + r->height*0.5));
+        radius = cvRound((r->width + r->height)*0.25);
+        cvCircle(filter->cvImage, center, radius, CV_RGB(255, 32, 32), 3, 8, 0);
+      }
+    
+    }
+
   }
-  gst_buffer_set_data(buf, filter->cvCEdge->imageData, filter->cvCEdge->imageSize);
+
+  gst_buffer_set_data(buf, filter->cvImage->imageData, filter->cvImage->imageSize);
 
   return gst_pad_push (filter->srcpad, buf);
+}
+
+
+static void gst_facedetect_load_profile(GObject * object) {
+  Gstfacedetect *filter = GST_FACEDETECT (object);
+
+  filter->cvCascade = (CvHaarClassifierCascade*)cvLoad(filter->profile, 0, 0, 0 );
+  if (!filter->cvCascade) {
+    GST_WARNING ("Couldn't load Haar classifier cascade: %s.", filter->profile);
+  }
 }
 
 
@@ -300,29 +304,24 @@ gst_edgedetect_chain (GstPad * pad, GstBuffer * buf)
  * register the element factories and other features
  */
 static gboolean
-edgedetect_init (GstPlugin * edgedetect)
+facedetect_init (GstPlugin * facedetect)
 {
-  /* debug category for fltering log messages
-   *
-   * exchange the string 'Template edgedetect' with your description
-   */
-  GST_DEBUG_CATEGORY_INIT (gst_edgedetect_debug, "edgedetect",
-      0, "Performs canny edge detection on videos and images");
+  /* debug category for fltering log messages */
+  GST_DEBUG_CATEGORY_INIT (gst_facedetect_debug, "facedetect",
+      0, "Performs face detection on videos and images, providing detected positions via bus messages");
 
-  return gst_element_register (edgedetect, "edgedetect", GST_RANK_NONE,
-      GST_TYPE_EDGEDETECT);
+  return gst_element_register (facedetect, "facedetect", GST_RANK_NONE,
+      GST_TYPE_FACEDETECT);
 }
 
-/* gstreamer looks for this structure to register edgedetects
- *
- * exchange the string 'Template edgedetect' with your edgedetect description
- */
+
+/* gstreamer looks for this structure to register facedetect */
 GST_PLUGIN_DEFINE (
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "edgedetect",
-    "Performs canny edge detection on videos and images",
-    edgedetect_init,
+    "facedetect",
+    "Performs face detection on videos and images, providing detected positions via bus messages",
+    facedetect_init,
     VERSION,
     "LGPL",
     "GStreamer OpenCV Plugins",

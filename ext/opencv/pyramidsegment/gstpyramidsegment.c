@@ -284,7 +284,6 @@ gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
 
   gst_buffer_set_data(buf, filter->cvSegmentedImage->imageData, filter->cvSegmentedImage->imageSize);
 
-  /* just push out the incoming buffer without touching it */
   return gst_pad_push (filter->srcpad, buf);
 }
 
@@ -296,10 +295,7 @@ gst_pyramidsegment_chain (GstPad * pad, GstBuffer * buf)
 static gboolean
 pyramidsegment_init (GstPlugin * pyramidsegment)
 {
-  /* debug category for fltering log messages
-   *
-   * exchange the string 'Template pyramidsegment' with your description
-   */
+  /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_pyramidsegment_debug, "pyramidsegment",
       0, "Applies pyramid segmentation to a video or image");
 
@@ -307,10 +303,7 @@ pyramidsegment_init (GstPlugin * pyramidsegment)
       GST_TYPE_PYRAMIDSEGMENT);
 }
 
-/* gstreamer looks for this structure to register pyramidsegments
- *
- * exchange the string 'Template pyramidsegment' with your pyramidsegment description
- */
+/* gstreamer looks for this structure to register pyramidsegment */
 GST_PLUGIN_DEFINE (
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,

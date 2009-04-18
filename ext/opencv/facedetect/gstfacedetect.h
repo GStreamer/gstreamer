@@ -43,8 +43,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_PYRAMIDSEGMENT_H__
-#define __GST_PYRAMIDSEGMENT_H__
+#ifndef __GST_FACEDETECT_H__
+#define __GST_FACEDETECT_H__
 
 #include <gst/gst.h>
 #include <opencv/cv.h>
@@ -52,46 +52,42 @@
 G_BEGIN_DECLS
 
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_PYRAMIDSEGMENT \
-  (gst_pyramidsegment_get_type())
-#define GST_PYRAMIDSEGMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PYRAMIDSEGMENT,Gstpyramidsegment))
-#define GST_PYRAMIDSEGMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PYRAMIDSEGMENT,GstpyramidsegmentClass))
-#define GST_IS_PYRAMIDSEGMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PYRAMIDSEGMENT))
-#define GST_IS_PYRAMIDSEGMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PYRAMIDSEGMENT))
+#define GST_TYPE_FACEDETECT \
+  (gst_facedetect_get_type())
+#define GST_FACEDETECT(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FACEDETECT,Gstfacedetect))
+#define GST_FACEDETECT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FACEDETECT,GstfacedetectClass))
+#define GST_IS_FACEDETECT(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FACEDETECT))
+#define GST_IS_FACEDETECT_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FACEDETECT))
 
-typedef struct _Gstpyramidsegment      Gstpyramidsegment;
-typedef struct _GstpyramidsegmentClass GstpyramidsegmentClass;
+typedef struct _Gstfacedetect      Gstfacedetect;
+typedef struct _GstfacedetectClass GstfacedetectClass;
 
-struct _Gstpyramidsegment
+struct _Gstfacedetect
 {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
 
-  gboolean silent;
+  gboolean display;
 
-  IplImage *cvImage, *cvSegmentedImage;
+  gchar *profile;
 
-  CvMemStorage *storage;
-
-  CvSeq *comp;
-
-  double threshold1, threshold2;
-  
-  int level;
+  IplImage *cvImage, *cvGray;
+  CvHaarClassifierCascade *cvCascade;
+  CvMemStorage *cvStorage;
 };
 
-struct _GstpyramidsegmentClass 
+struct _GstfacedetectClass 
 {
   GstElementClass parent_class;
 };
 
-GType gst_pyramidsegment_get_type (void);
+GType gst_facedetect_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_PYRAMIDSEGMENT_H__ */
+#endif /* __GST_FACEDETECT_H__ */

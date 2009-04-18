@@ -1,1 +1,1 @@
-SUBDIRS = edgedetect pyramidsegment
+SUBDIRS = edgedetect facedetect pyramidsegment
