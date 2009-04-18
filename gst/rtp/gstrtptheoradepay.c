@@ -388,7 +388,6 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   guint32 timestamp;
   guint32 header, ident;
   guint8 F, TDT, packets;
-  gboolean free_payload;
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 
@@ -401,7 +400,6 @@ gst_rtp_theora_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     goto packet_short;
 
   payload = gst_rtp_buffer_get_payload (buf);
-  free_payload = FALSE;
 
   header = GST_READ_UINT32_BE (payload);
   /*
