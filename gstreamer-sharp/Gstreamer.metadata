@@ -232,7 +232,6 @@
   <attr path="/api/namespace/boxed[@name='Message']/constructor" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Message']/method" name="hidden">1</attr>
   <remove-attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_structure']" name="hidden" />
-  <attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_structure']/return-type" name="owned">true</attr>
   <remove-attr path="/api/namespace/boxed[@name='Message']/method[@cname='gst_message_get_type']" name="hidden" />
 
   <attr path="/api/namespace/enum[@name='MessageType']" name="parent">uint</attr>
