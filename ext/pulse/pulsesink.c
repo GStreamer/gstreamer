@@ -160,11 +160,9 @@ static void
 gst_pulseringbuffer_class_init (GstPulseRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstringbuffer_class = (GstRingBufferClass *) klass;
 
   ring_parent_class = g_type_class_peek_parent (klass);

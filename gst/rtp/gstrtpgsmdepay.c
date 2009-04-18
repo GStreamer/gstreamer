@@ -88,12 +88,8 @@ gst_rtp_gsm_depay_base_init (gpointer klass)
 static void
 gst_rtp_gsm_depay_class_init (GstRTPGSMDepayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertp_depayload_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertp_depayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

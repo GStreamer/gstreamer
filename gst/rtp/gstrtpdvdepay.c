@@ -108,7 +108,6 @@ gst_rtp_dv_depay_class_init (GstRTPDVDepayClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class =
       (GstBaseRTPDepayloadClass *) klass;
-  gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_dv_depay_change_state);

@@ -101,11 +101,9 @@ gst_rtp_theora_pay_base_init (gpointer klass)
 static void
 gst_rtp_theora_pay_class_init (GstRtpTheoraPayClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 

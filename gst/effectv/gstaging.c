@@ -346,12 +346,8 @@ gst_agingtv_base_init (gpointer g_class)
 static void
 gst_agingtv_class_init (gpointer klass, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
 
-  gobject_class = (GObjectClass *) klass;
-  element_class = (GstElementClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

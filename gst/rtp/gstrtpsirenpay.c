@@ -76,12 +76,8 @@ gst_rtpsirenpay_base_init (gpointer klass)
 static void
 gst_rtpsirenpay_class_init (GstRTPSirenPayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);

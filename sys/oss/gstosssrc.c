@@ -147,15 +147,11 @@ static void
 gst_oss_src_class_init (GstOssSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
-  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
   GstAudioSrcClass *gstaudiosrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_src_dispose);

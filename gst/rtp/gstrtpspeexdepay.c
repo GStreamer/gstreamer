@@ -88,12 +88,8 @@ gst_rtp_speex_depay_base_init (gpointer klass)
 static void
 gst_rtp_speex_depay_class_init (GstRtpSPEEXDepayClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseRTPDepayloadClass *gstbasertpdepayload_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   gstbasertpdepayload_class->process = gst_rtp_speex_depay_process;

@@ -364,11 +364,9 @@ gst_video_balance_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
-  GstVideoFilterClass *videofilter_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
   trans_class = GST_BASE_TRANSFORM_CLASS (g_class);
-  videofilter_class = GST_VIDEO_FILTER_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (g_class);
 

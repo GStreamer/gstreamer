@@ -83,12 +83,8 @@ gst_alpha_color_base_init (gpointer g_class)
 static void
 gst_alpha_color_class_init (GstAlphaColorClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstBaseTransformClass *gstbasetransform_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstbasetransform_class = (GstBaseTransformClass *) klass;
 
   gstbasetransform_class->transform_caps =
