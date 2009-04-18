@@ -354,6 +354,7 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   guint64 offset;
   GstBuffer *outbuf = NULL;
   GstBuffer *tagbuf = NULL;
+  GstStateChangeReturn state_result;
 
   pipeline = gst_pipeline_new ("pipeline");
   g_assert (pipeline != NULL);
@@ -397,8 +398,10 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
 
   GST_LOG ("setting and getting state ...");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  fail_unless (gst_element_get_state (pipeline, NULL, NULL,
-          -1) == GST_STATE_CHANGE_SUCCESS);
+  state_result = gst_element_get_state (pipeline, NULL, NULL, -1);
+  fail_unless (state_result == GST_STATE_CHANGE_SUCCESS,
+      "Unexpected result from get_state(). Expected success, got %d",
+      state_result);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
