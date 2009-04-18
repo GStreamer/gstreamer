@@ -448,6 +448,8 @@
 
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/class[@name='Tag']" name="disable_void_ctor">1</attr>
+
   <attr path="/api/namespace/enum[@name='TagFlag']" name="name">TagFlags</attr>
 
   <attr path="/api/namespace/boxed[@name='TagList']/method[@name='CopyValue']/*/*[@name='dest']" name="pass_as">ref</attr>

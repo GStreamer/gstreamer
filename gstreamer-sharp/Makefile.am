@@ -42,7 +42,6 @@ sources = \
 	Application.cs \
 	Version.cs \
 	AssemblyInfo.cs \
-	Tags.cs \
 	GError.cs \
 	Value.cs \
 	plugins-base/PlayBin.cs \
@@ -66,9 +65,8 @@ customs = 			\
 	PadTemplate.custom      \
 	MiniObject.custom       \
 	Registry.custom         \
-	Structure.custom
-
-		
+	Structure.custom        \
+	Tag.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

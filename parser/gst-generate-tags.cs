@@ -3,14 +3,15 @@ using System.IO;
 
 public class GenerateTags {
   public static int Main (string[] args) {
-    if (args.Length != 3) {
-      Console.WriteLine ("usage: gst-generate-tags --header=<filename> --namespace=<namespace> --class=<name>");
+    if (args.Length != 3 && args.Length != 4) {
+      Console.WriteLine ("usage: gst-generate-tags --header=<filename> --namespace=<namespace> --class=<name> [--only-body]");
       return 1;
     }
 
     StreamReader header = null;
     string ns = "Gst";
     string cls = "Tags";
+    bool only_body = false;
 
     foreach (string arg in args) {
 
@@ -29,14 +30,18 @@ public class GenerateTags {
         ns = arg.Substring (12);
       } else if (arg.StartsWith ("--class=")) {
         cls = arg.Substring (8);
+      } else if (arg.StartsWith ("--only-body")) {
+        only_body = true;
       } else {
         Console.WriteLine ("Invalid argument '" + arg + "'");
         return 3;
       }
     }
 
-    Console.WriteLine ("namespace " + ns + " {");
-    Console.WriteLine ("\tpublic static class " + cls + " {");
+    if (!only_body) {
+      Console.WriteLine ("namespace " + ns + " {");
+      Console.WriteLine ("\tpublic static class " + cls + " {");
+    }
 
     string line;
     while ( (line = header.ReadLine ()) != null) {
@@ -77,8 +82,10 @@ public class GenerateTags {
 
     }
 
-    Console.WriteLine ("\t}");
-    Console.WriteLine ("}");
+    if (!only_body) {
+      Console.WriteLine ("\t}");
+      Console.WriteLine ("}");
+    }
 
     return 0;
   }

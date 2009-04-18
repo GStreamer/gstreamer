@@ -6,5 +6,6 @@ api:
 		--header=../../gstreamer/gst/gsttaglist.h \
 		--namespace=Gst \
 		--class=Tags \
-		> $(top_srcdir)/gstreamer-sharp/Tags.cs
+		--only-body \
+		> $(top_srcdir)/gstreamer-sharp/Tag.custom
 
