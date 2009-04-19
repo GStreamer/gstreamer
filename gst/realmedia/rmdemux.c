@@ -470,7 +470,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, GstEvent * event)
 {
   gboolean validated;
   gboolean ret = TRUE;
-  gboolean flush, accurate;
+  gboolean flush;
   GstFormat format;
   gdouble rate;
   GstSeekFlags flags;
@@ -505,7 +505,6 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, GstEvent * event)
   GST_DEBUG_OBJECT (rmdemux, "seek, rate %g", rate);
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
-  accurate = flags & GST_SEEK_FLAG_ACCURATE;
 
   /* first step is to unlock the streaming thread if it is
    * blocked in a chain call, we do this by starting the flush. */
