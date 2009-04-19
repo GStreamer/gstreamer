@@ -42,7 +42,6 @@ GST_DEBUG_CATEGORY (ffmpeg_debug);
 
 static GStaticMutex gst_avcodec_mutex = G_STATIC_MUTEX_INIT;
 
-#error "Deliberately broke the build to kick the buildbots, sorry folks"
 
 int
 gst_ffmpeg_avcodec_open (AVCodecContext * avctx, AVCodec * codec)
