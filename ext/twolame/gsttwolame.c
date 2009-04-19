@@ -684,15 +684,14 @@ gst_two_lame_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
     {
       guchar *mp3_data = NULL;
-      gint mp3_buffer_size, mp3_size = 0;
+      gint mp3_buffer_size;
 
       GST_DEBUG_OBJECT (twolame, "handling FLUSH stop event");
 
       /* clear buffers */
       mp3_buffer_size = 16384;
       mp3_data = g_malloc (mp3_buffer_size);
-      mp3_size =
-          twolame_encode_flush (twolame->glopts, mp3_data, mp3_buffer_size);
+      twolame_encode_flush (twolame->glopts, mp3_data, mp3_buffer_size);
 
       ret = gst_pad_push_event (twolame->srcpad, event);
 
