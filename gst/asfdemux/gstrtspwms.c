@@ -208,11 +208,6 @@ send_error:
   }
 }
 
-static void gst_rtsp_wms_finalize (GObject * object);
-
-static GstStateChangeReturn gst_rtsp_wms_change_state (GstElement * element,
-    GstStateChange transition);
-
 static void gst_rtsp_wms_extension_init (gpointer g_iface, gpointer iface_data);
 
 static void
@@ -242,48 +237,12 @@ gst_rtsp_wms_base_init (gpointer klass)
 static void
 gst_rtsp_wms_class_init (GstRTSPWMSClass * g_class)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstRTSPWMSClass *klass;
-
-  klass = (GstRTSPWMSClass *) g_class;
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->finalize = gst_rtsp_wms_finalize;
-
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_rtsp_wms_change_state);
-
   GST_DEBUG_CATEGORY_INIT (rtspwms_debug, "rtspwms", 0, "WMS RTSP extension");
 }
 
 static void
 gst_rtsp_wms_init (GstRTSPWMS * rtspwms, GstRTSPWMSClass * klass)
 {
-}
-
-static void
-gst_rtsp_wms_finalize (GObject * object)
-{
-  GstRTSPWMS *rtspwms;
-
-  rtspwms = GST_RTSP_WMS (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static GstStateChangeReturn
-gst_rtsp_wms_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret;
-  GstRTSPWMS *rtspwms;
-
-  rtspwms = GST_RTSP_WMS (element);
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return ret;
 }
 
 static void

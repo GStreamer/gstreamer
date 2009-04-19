@@ -92,11 +92,6 @@ static void gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec);
 static void gst_mpeg2dec_finalize (GObject * object);
 static void gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec);
 
-static void gst_mpeg2dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_mpeg2dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 #ifndef GST_DISABLE_INDEX
 static void gst_mpeg2dec_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mpeg2dec_get_index (GstElement * element);
@@ -193,8 +188,6 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property = gst_mpeg2dec_set_property;
-  gobject_class->get_property = gst_mpeg2dec_get_property;
   gobject_class->finalize = gst_mpeg2dec_finalize;
 
   gstelement_class->change_state = gst_mpeg2dec_change_state;
@@ -1828,36 +1821,6 @@ init_failed:
     GST_ELEMENT_ERROR (mpeg2dec, LIBRARY, INIT,
         (NULL), ("Failed to initialize libmpeg2 library"));
     return GST_STATE_CHANGE_FAILURE;
-  }
-}
-
-static void
-gst_mpeg2dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstMpeg2dec *src;
-
-  g_return_if_fail (GST_IS_MPEG2DEC (object));
-  src = GST_MPEG2DEC (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_mpeg2dec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstMpeg2dec *mpeg2dec;
-
-  g_return_if_fail (GST_IS_MPEG2DEC (object));
-  mpeg2dec = GST_MPEG2DEC (object);
-
-  switch (prop_id) {
-    default:
-      break;
   }
 }
 

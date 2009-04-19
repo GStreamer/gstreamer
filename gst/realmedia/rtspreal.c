@@ -665,11 +665,6 @@ reset:
   }
 }
 
-static void gst_rtsp_real_finalize (GObject * object);
-
-static GstStateChangeReturn gst_rtsp_real_change_state (GstElement * element,
-    GstStateChange transition);
-
 static void gst_rtsp_real_extension_init (gpointer g_iface,
     gpointer iface_data);
 
@@ -700,19 +695,6 @@ gst_rtsp_real_base_init (gpointer klass)
 static void
 gst_rtsp_real_class_init (GstRTSPRealClass * g_class)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstRTSPRealClass *klass;
-
-  klass = (GstRTSPRealClass *) g_class;
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->finalize = gst_rtsp_real_finalize;
-
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_rtsp_real_change_state);
-
   GST_DEBUG_CATEGORY_INIT (rtspreal_debug, "rtspreal", 0,
       "RealMedia RTSP extension");
 }
@@ -721,29 +703,6 @@ static void
 gst_rtsp_real_init (GstRTSPReal * rtspreal, GstRTSPRealClass * klass)
 {
   rtspreal->isreal = FALSE;
-}
-
-static void
-gst_rtsp_real_finalize (GObject * object)
-{
-  GstRTSPReal *rtspreal;
-
-  rtspreal = GST_RTSP_REAL (object);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-static GstStateChangeReturn
-gst_rtsp_real_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret;
-  GstRTSPReal *rtspreal;
-
-  rtspreal = GST_RTSP_REAL (element);
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return ret;
 }
 
 static void

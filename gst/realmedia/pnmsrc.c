@@ -86,8 +86,6 @@ static void gst_pnm_src_set_property (GObject * object, guint prop_id,
 static void gst_pnm_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_pnm_src_change_state (GstElement *
-    element, GstStateChange transition);
 
 static void
 gst_pnm_src_base_init (gpointer klass)
@@ -107,11 +105,9 @@ static void
 gst_pnm_src_class_init (GstPNMSrcClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
   GstPushSrcClass *gstpushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
   gstpushsrc_class = (GstPushSrcClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -125,8 +121,6 @@ gst_pnm_src_class_init (GstPNMSrcClass * klass)
       g_param_spec_string ("location", "PNM Location",
           "Location of the PNM url to read",
           DEFAULT_LOCATION, G_PARAM_READWRITE));
-
-  gstelement_class->change_state = gst_pnm_src_change_state;
 
   gstpushsrc_class->create = gst_pnm_src_create;
 }
@@ -191,36 +185,6 @@ gst_pnm_src_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static GstStateChangeReturn
-gst_pnm_src_change_state (GstElement * element, GstStateChange transition)
-{
-  GstPNMSrc *src;
-  GstStateChangeReturn ret;
-
-  src = GST_PNM_SRC (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-  return ret;
 }
 
 static GstFlowReturn

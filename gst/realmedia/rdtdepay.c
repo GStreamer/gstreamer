@@ -75,11 +75,6 @@ GST_BOILERPLATE (GstRDTDepay, gst_rdt_depay, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_rdt_depay_finalize (GObject * object);
 
-static void gst_rdt_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rdt_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstStateChangeReturn gst_rdt_depay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -113,9 +108,6 @@ gst_rdt_depay_class_init (GstRDTDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->set_property = gst_rdt_depay_set_property;
-  gobject_class->get_property = gst_rdt_depay_get_property;
 
   gobject_class->finalize = gst_rdt_depay_finalize;
 
@@ -464,36 +456,6 @@ gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf)
   }
 
   return ret;
-}
-
-static void
-gst_rdt_depay_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstRDTDepay *rdtdepay;
-
-  rdtdepay = GST_RDT_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_rdt_depay_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstRDTDepay *rdtdepay;
-
-  rdtdepay = GST_RDT_DEPAY (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstStateChangeReturn
