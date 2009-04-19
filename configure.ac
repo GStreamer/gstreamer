@@ -302,12 +302,15 @@ else
       [extra configure options for internal ffmpeg ./configure script]),,
       with_ffmpeg_extra_configure=no)
 
+  # basic arguments
+  embffmpeg_configure_args="--prefix=$prefix"
+
   # Enable shared and static so that we get .a files, but with PIC code.
-  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-postproc --enable-swscale --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices --disable-network"
+  embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffserver --disable-ffplay --enable-postproc --enable-gpl --enable-static --enable-shared --disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices --disable-network"
 
   # if we are cross-compiling, tell ffmpeg so
   if test "x$cross_compiling" = xyes; then
-    ac_configure_args="$ac_configure_args --enable-cross-compile \
+    embffmpeg_configure_args="$embffmpeg_configure_args --enable-cross-compile \
         --target-os=$host_os --arch=$host_cpu --cross-prefix=$host_alias-"
   fi
 
@@ -317,10 +320,10 @@ else
     # http://trac.macosforge.org/projects/macports/ticket/13725 for more
     # info.
     darwin*) 
-      ac_configure_args="$ac_configure_args --disable-mmx --disable-altivec"
+      embffmpeg_configure_args="$embffmpeg_configure_args --disable-mmx --disable-altivec"
       ;;
     mingw32*)
-      ac_configure_args="$ac_configure_args --enable-memalign-hack"
+      embffmpeg_configure_args="$embffmpeg_configure_args --enable-memalign-hack"
       WIN32_LIBS="-lws2_32"
       ;;
     *)
@@ -328,16 +331,46 @@ else
       ;;
   esac
 
-  # append extra configure options to ac_configure_args if needed
+  dnl checks for extra enable/disable flags
+  FFMPEG_OPTS="`$srcdir/gst-libs/ext/ffmpeg/configure --help`"
+  # Let's check if we can disable the building of the ffmpeg binary
+  can_disable=`echo "$FFMPEG_OPTS" | grep 'disable-ffmpeg' | wc -l`
+  if test "$can_disable" != "0"; then
+    embffmpeg_configure_args="$embffmpeg_configure_args --disable-ffmpeg"
+  fi
+  dnl check if libswscale needs enabling explicitly
+  can_enable=`echo "$FFMPEG_OPTS" | grep 'enable-swscale' | wc -l`
+  if test "$can_enable" != "0"; then
+    embffmpeg_configure_args="$embffmpeg_configure_args --enable-swscale"
+  fi
+
+  # append extra configure options to embffmpeg_configure_args if needed
   if test "x$with_ffmpeg_extra_configure" != "xno"; then
-    ac_configure_args="$ac_configure_args $with_ffmpeg_extra_configure"
+    embffmpeg_configure_args="$embffmpeg_configure_args $with_ffmpeg_extra_configure"
   fi
 
   AC_SUBST(FFMPEG_CO_DIR)
   AC_SUBST(FFMPEG_SVN)
   AC_SUBST(FFMPEG_REVISION)
   AC_SUBST(FFMPEG_EXTERNALS_REVISION)
-  AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg)
+  AC_CONFIG_COMMANDS([configure-embedded-ffmpeg],
+    [echo "Configuring included FFmpeg instance with args $embffmpeg_configure_args"
+     origdir=`pwd`
+     dnl Don't put path on the configure call when not needed, as FFmpeg's configure relies on it
+     dnl to detect out-of-tree builds
+     if test -z "$srcdir" -o "$srcdir" = .; then
+       confcmd=./configure
+     else
+       confcmd="$origdir"/"$ac_top_srcdir"/gst-libs/ext/ffmpeg/configure
+     fi
+
+     AS_MKDIR_P(["$ac_top_build_prefix"gst-libs/ext/ffmpeg])
+     cd "$ac_top_build_prefix"gst-libs/ext/ffmpeg &&
+         $confcmd $embffmpeg_configure_args ||
+         AC_MSG_ERROR([Failed to configure embedded FFmpeg tree])
+     cd "$origdir"
+    ],
+    [embffmpeg_configure_args="$embffmpeg_configure_args"])
   AC_MSG_NOTICE([Using included FFMpeg code])
 fi
 

@@ -54,25 +54,6 @@ then
     ln -s ../../common/hooks/pre-commit.hook .git/hooks/pre-commit
 fi
 
-
-# Let's check if we can disable the building of the ffmpeg binary
-can_disable=`$FFMPEG_CO_DIR/configure --help | grep 'disable-ffmpeg' | wc -l`
-
-if [ $can_disable != "0" ]
-then
-    CONFIGURE_DEF_OPT="--disable-ffmpeg"
-fi
-
-# Let's clear the 'exit 1' command when we post an Unknown option
-echo "Patching ffmpeg ./configure"
-sed -e '/Unknown option/ {
-N
-N
-s/exit 1/#/
-}' $FFMPEG_CO_DIR/configure > $FFMPEG_CO_DIR/configure.tmp
-mv $FFMPEG_CO_DIR/configure.tmp $FFMPEG_CO_DIR/configure
-chmod +x $FFMPEG_CO_DIR/configure
-
 autogen_options $@
 
 echo -n "+ check for build tools"
