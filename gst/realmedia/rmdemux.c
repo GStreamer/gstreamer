@@ -1570,7 +1570,6 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
   GST_LOG_OBJECT (rmdemux, "stream_number=%d", stream->id);
 
   offset = 30;
-  stream_type = GST_RMDEMUX_STREAM_UNKNOWN;
   stream1_type_string = gst_rm_utils_read_string8 (data + offset,
       length - offset, &str_len);
   offset += str_len;
