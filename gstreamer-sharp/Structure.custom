@@ -1,3 +1,35 @@
+internal bool FreeNative = true;
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_structure_free (IntPtr raw);
+
+protected override void Free (IntPtr raw) {
+  if (!FreeNative)
+    return;
+
+  gst_structure_free (raw);
+}
+
+class FinalizerInfo {
+  IntPtr handle;
+
+  public FinalizerInfo (IntPtr handle) {
+    this.handle = handle;
+  }
+
+  public bool Handler () {
+    gst_structure_free (handle);
+    return false;
+  }
+}
+
+~Structure () {
+  if (!Owned || !FreeNative)
+    return;
+  FinalizerInfo info = new FinalizerInfo (Handle);
+  GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
+}
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_structure_get_name (IntPtr raw);
 
@@ -199,3 +231,8 @@ public bool IsMutable {
   }
 }
 
+internal void CreateNativeCopy () {
+  FreeNative = false;
+  Raw = gst_structure_copy (Raw);
+  FreeNative = true;
+}

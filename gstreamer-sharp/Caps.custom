@@ -35,12 +35,26 @@ public void MakeWritable() {
   if (IsWritable)
     return;
 
+  RemoveStructureReferences ();
   IntPtr copy = gst_caps_copy (Raw);
   Raw = copy;
   /* ^--- Takes a second ref, not good */
   Unref (Raw);
   /* ^--- Sets Owned = false, wrong! */
   Owned = true;
+}
+
+private Hashtable structures = new Hashtable ();
+
+private void RemoveStructureReference (Structure s) {
+  structures.Remove (s.Handle);
+  s.CreateNativeCopy ();
+}
+
+private void RemoveStructureReferences () {
+  foreach (Structure s in structures.Values) {
+    RemoveStructureReference (s);
+  }
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -53,7 +67,18 @@ public Structure this [uint index] {
 
     IntPtr raw_ptr = gst_caps_get_structure (Handle, (uint) index);
 
-    return (Gst.Structure) new Gst.Structure (raw_ptr);
+    if (structures.Contains (raw_ptr)) {
+      Structure ret = (Gst.Structure) structures[raw_ptr];
+
+      return ret;
+    } else {
+      Structure ret = new Gst.Structure (raw_ptr);
+
+      ret.FreeNative = false;
+      structures.Add (raw_ptr, ret);
+
+      return ret;
+    }
   }
 }
 
@@ -131,6 +156,10 @@ public void Merge (Caps caps) {
   if (!IsWritable)
     throw new ApplicationException ();
 
+  /* Removes all structures! */
+  if (caps.IsAny) {
+    RemoveStructureReferences ();
+  }
   gst_caps_merge (Handle, gst_caps_copy (caps.Handle));
 }
 
@@ -143,6 +172,10 @@ public void RemoveStructure (uint index) {
   if (index >= Size)
     throw new ArgumentOutOfRangeException ();
 
+  if (structures.Contains (this[index].Handle)) {
+    RemoveStructureReference (this[index]);
+  }
+
   gst_caps_remove_structure (Handle, index);
 }
 
@@ -152,6 +185,10 @@ static extern bool gst_caps_do_simplify (IntPtr caps);
 public bool DoSimplify () {
   if (!IsWritable)
     throw new ApplicationException ();
+
+  /* FIXME: This might remove/free structures, we have to copy
+   * them before with RemoveStructureReference() somehow
+   */
 
   return gst_caps_do_simplify (Handle);
 }
@@ -163,5 +200,41 @@ public void Truncate () {
   if (!IsWritable)
     throw new ApplicationException ();
 
+  for (uint i = 1; i < Size; i++)
+    RemoveStructureReference (this[i]);
+
   gst_caps_truncate (Handle);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_caps_unref (IntPtr raw);
+
+protected override void Unref (IntPtr raw) {
+  RemoveStructureReferences ();
+  if (Owned) {
+    gst_caps_unref (raw);
+    Owned = false;
+  }
+}
+
+class FinalizerInfo {
+  IntPtr handle;
+
+  public FinalizerInfo (IntPtr handle) {
+    this.handle = handle;
+  }
+
+  public bool Handler () {
+    gst_caps_unref (handle);
+    return false;
+  }
+}
+
+~Caps () {
+  if (!Owned)
+    return;
+  RemoveStructureReferences ();
+
+  FinalizerInfo info = new FinalizerInfo (Handle);
+  GLib.Timeout.Add (50, new GLib.TimeoutHandler (info.Handler));
 }

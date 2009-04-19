@@ -80,6 +80,7 @@
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_append_structure']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_append']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_merge']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_unref']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_intersect']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_union']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/boxed[@name='Caps']/method[@cname='gst_caps_normalize']/return-type" name="owned">true</attr>
@@ -407,6 +408,7 @@
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_fixate_field_nearest_fraction']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_set_valist']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_get_name_id']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_free']" name="hidden">1</attr>
   <change-node-type path="/api/namespace/boxed[@name='Structure']/method[@cname='gst_structure_empty_new']">constructor</change-node-type>
   <remove-attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_empty_new']" name="name" />
   <remove-attr path="/api/namespace/boxed[@name='Structure']/constructor[@cname='gst_structure_empty_new']" name="shared" />
