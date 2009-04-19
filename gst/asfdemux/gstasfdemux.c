@@ -1196,7 +1196,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 static void
 gst_asf_demux_loop (GstASFDemux * demux)
 {
-  GstFlowReturn flow;
+  GstFlowReturn flow = GST_FLOW_OK;
   GstBuffer *buf = NULL;
   guint64 off;
 
