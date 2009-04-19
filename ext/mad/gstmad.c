@@ -731,9 +731,6 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   /* shave off the flush flag, we'll need it later */
   flush = ((flags & GST_SEEK_FLAG_FLUSH) != 0);
 
-  /* assume the worst */
-  res = FALSE;
-
   conv = GST_FORMAT_BYTES;
   if (!gst_mad_convert_sink (pad, GST_FORMAT_TIME, time_cur, &conv, &bytes_cur))
     goto convert_error;
@@ -901,7 +898,6 @@ gst_mad_get_property (GObject * object, guint prop_id,
 static void
 gst_mad_update_info (GstMad * mad)
 {
-  gint abr = mad->vbr_average;
   struct mad_header *header = &mad->frame.header;
   gboolean changed = FALSE;
 
@@ -917,7 +913,6 @@ G_STMT_START{                                                   \
   if (mad->new_header) {
     mad->framecount = 1;
     mad->vbr_rate = header->bitrate;
-    abr = 0;
   } else {
     mad->framecount++;
     mad->vbr_rate += header->bitrate;
@@ -1098,7 +1093,7 @@ mpg123_parse_xing_header (struct mad_header *header,
   int i;
   guint8 *ptr = (guint8 *) buf;
   double frame_duration;
-  int xflags, xframes, xbytes, xvbr_scale;
+  int xflags, xframes, xbytes;
   int abr;
   guint8 xtoc[XING_TOC_LENGTH];
   int lsf_bit = !(header->flags & MAD_FLAG_LSF_EXT);
@@ -1168,12 +1163,10 @@ mpg123_parse_xing_header (struct mad_header *header,
       ptr += XING_TOC_LENGTH;
     }
 
-    xvbr_scale = -1;
     if (xflags & XING_VBR_SCALE_FLAG) {
       if (ptr >= (buf + bufsize - 4))
         return 0;
-      xvbr_scale = BE_32 (ptr);
-      lprintf ("xvbr_scale: %d\n", xvbr_scale);
+      lprintf ("xvbr_scale: %d\n", BE_32 (ptr));
     }
 
     /* 1 kbit = 1000 bits ! (and not 1024 bits) */
