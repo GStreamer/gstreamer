@@ -68,6 +68,8 @@ struct _GstGLImageSink
 
     CRCB clientReshapeCallback;
     CDCB clientDrawCallback;
+
+    gboolean keep_aspect_ratio;
 };
 
 struct _GstGLImageSinkClass

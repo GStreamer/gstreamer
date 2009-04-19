@@ -156,7 +156,8 @@ enum
   ARG_0,
   ARG_DISPLAY,
   PROP_CLIENT_RESHAPE_CALLBACK,
-  PROP_CLIENT_DRAW_CALLBACK
+  PROP_CLIENT_DRAW_CALLBACK,
+  PROP_FORCE_ASPECT_RATIO
 };
 
 GST_BOILERPLATE_FULL (GstGLImageSink, gst_glimage_sink, GstVideoSink,
@@ -226,6 +227,12 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
       g_param_spec_pointer ("client_draw_callback", "Client draw callback",
           "Define a custom draw callback in a client code", G_PARAM_WRITABLE));
 
+  g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio",
+          "Force aspect ratio",
+          "When enabled, scaling will respect original aspect ratio", FALSE,
+          G_PARAM_READWRITE));
+
   gobject_class->finalize = gst_glimage_sink_finalize;
 
   gstelement_class->change_state = gst_glimage_sink_change_state;
@@ -248,6 +255,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink,
   glimage_sink->stored_buffer = NULL;
   glimage_sink->clientReshapeCallback = NULL;
   glimage_sink->clientDrawCallback = NULL;
+  glimage_sink->keep_aspect_ratio = FALSE;
 }
 
 static void
@@ -275,6 +283,11 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
     case PROP_CLIENT_DRAW_CALLBACK:
     {
       glimage_sink->clientDrawCallback = g_value_get_pointer (value);
+      break;
+    }
+    case PROP_FORCE_ASPECT_RATIO:
+    {
+      glimage_sink->keep_aspect_ratio = g_value_get_boolean (value);
       break;
     }
     default:
@@ -313,6 +326,9 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_DISPLAY:
       g_value_set_string (value, glimage_sink->display_name);
+      break;
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, glimage_sink->keep_aspect_ratio);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -553,7 +569,8 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   //redisplay opengl scene
   if (gl_buffer->texture &&
       gst_gl_display_redisplay (glimage_sink->display,
-          gl_buffer->texture, gl_buffer->width, gl_buffer->height))
+          gl_buffer->texture, gl_buffer->width, gl_buffer->height, 
+          glimage_sink->keep_aspect_ratio))
     return GST_FLOW_OK;
   else
     return GST_FLOW_UNEXPECTED;
@@ -592,7 +609,8 @@ gst_glimage_sink_expose (GstXOverlay * overlay)
 
   //redisplay opengl scene
   if (glimage_sink->display && glimage_sink->window_id)
-    gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0);
+    gst_gl_display_redisplay (glimage_sink->display, 0, 0, 0, 
+      glimage_sink->keep_aspect_ratio);
 }
 
 
