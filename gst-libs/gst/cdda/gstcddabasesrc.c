@@ -1271,7 +1271,7 @@ gst_cdda_base_src_add_tags (GstCddaBaseSrc * src)
         GST_FORMAT_TIME, &duration);
 
     gst_tag_list_add (src->tracks[i].tags,
-        GST_TAG_MERGE_REPLACE_ALL,
+        GST_TAG_MERGE_REPLACE,
         GST_TAG_TRACK_NUMBER, i + 1,
         GST_TAG_TRACK_COUNT, src->num_tracks, GST_TAG_DURATION, duration, NULL);
   }
@@ -1285,7 +1285,7 @@ gst_cdda_base_src_add_tags (GstCddaBaseSrc * src)
    * gst_tag_list_get_value_index() rather than use tag names incl.
    * the track number ?? *////////////////////////////////////////
 
-  gst_tag_list_add (src->tags, GST_TAG_MERGE_REPLACE_ALL,
+  gst_tag_list_add (src->tags, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_COUNT, src->num_tracks, NULL);
 #if 0
   for (i = 0; i < src->num_tracks; ++i) {

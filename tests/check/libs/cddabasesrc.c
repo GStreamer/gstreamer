@@ -270,25 +270,78 @@ gst_cd_foo_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
   return buf;
 }
 
+static inline gboolean
+tag_list_has_tag (GstTagList * list, const gchar * tag, GType type)
+{
+  const GValue *val = gst_tag_list_get_value_index (list, tag, 0);
+
+  if (val == NULL) {
+    GST_LOG ("no tag '%s' in taglist %" GST_PTR_FORMAT, tag, list);
+    return FALSE;
+  }
+
+  if (!G_VALUE_HOLDS (val, type)) {
+    GST_LOG ("tag '%s' in taglist %" GST_PTR_FORMAT " is not of type %s",
+        tag, list, g_type_name (type));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 GST_START_TEST (test_discid_calculations)
 {
-  GstElement *foosrc;
+  GstElement *foosrc, *pipeline, *sink;
   gint i;
 
   fail_unless (gst_element_register (NULL, "cdfoosrc", GST_RANK_SECONDARY,
           GST_TYPE_CD_FOO_SRC));
 
+  pipeline = gst_pipeline_new ("pipeline");
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_unless (sink != NULL, "couldn't create fakesink");
+
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
+  fail_unless (foosrc != NULL, "couldn't create cdfoosrc");
+
+  gst_bin_add (GST_BIN (pipeline), foosrc);
+  gst_bin_add (GST_BIN (pipeline), sink);
+  fail_unless (gst_element_link (foosrc, sink));
 
   for (i = 0; i < G_N_ELEMENTS (test_discs); ++i) {
+    GstTagList *tags = NULL;
+    GstMessage *msg;
+
     GST_LOG ("Testing disc layout %u ...", i);
     GST_CD_FOO_SRC (foosrc)->cur_disc = i;
-    gst_element_set_state (foosrc, GST_STATE_PLAYING);
-    gst_element_get_state (foosrc, NULL, NULL, -1);
-    gst_element_set_state (foosrc, GST_STATE_NULL);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+    msg =
+        gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
+        GST_CLOCK_TIME_NONE, GST_MESSAGE_TAG);
+    gst_message_parse_tag (msg, &tags);
+    fail_unless (tags != NULL);
+    fail_unless (tag_list_has_tag (tags, "track-count", G_TYPE_UINT));
+    fail_unless (tag_list_has_tag (tags, "track-number", G_TYPE_UINT));
+    fail_unless (tag_list_has_tag (tags, "duration", G_TYPE_UINT64));
+    fail_unless (tag_list_has_tag (tags, "discid", G_TYPE_STRING));
+    fail_unless (tag_list_has_tag (tags, "discid-full", G_TYPE_STRING));
+    fail_unless (tag_list_has_tag (tags, "musicbrainz-discid", G_TYPE_STRING));
+    fail_unless (tag_list_has_tag (tags, "musicbrainz-discid-full",
+            G_TYPE_STRING));
+    gst_tag_list_free (tags);
+    gst_message_unref (msg);
+
+    msg =
+        gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
+        GST_CLOCK_TIME_NONE, GST_MESSAGE_ASYNC_DONE);
+    gst_message_unref (msg);
+
+    gst_element_set_state (pipeline, GST_STATE_NULL);
   }
 
-  gst_object_unref (foosrc);
+  gst_object_unref (pipeline);
 
   gst_task_cleanup_all ();
 }
