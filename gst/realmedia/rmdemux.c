@@ -1985,7 +1985,6 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
   GstBuffer *buf, *outbuf;
   guint frames, index, i;
   guint8 *data;
-  guint size;
   GstClockTime timestamp;
 
   res = GST_FLOW_OK;
@@ -1995,7 +1994,6 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
   g_ptr_array_set_size (stream->subpackets, 0);
 
   data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   frames = (data[1] & 0xf0) >> 4;

@@ -1096,9 +1096,6 @@ static GstStateChangeReturn
 gst_rdt_manager_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstRDTManager *rdtmanager;
-
-  rdtmanager = GST_RDT_MANAGER (element);
 
   switch (transition) {
     default:
