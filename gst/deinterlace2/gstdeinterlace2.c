@@ -43,6 +43,7 @@ enum
 
 /* Properties */
 
+#define DEFAULT_MODE            GST_DEINTERLACE2_MODE_INTERLACED
 #define DEFAULT_METHOD          GST_DEINTERLACE2_GREEDY_H
 #define DEFAULT_FIELDS          GST_DEINTERLACE2_ALL
 #define DEFAULT_FIELD_LAYOUT    GST_DEINTERLACE2_LAYOUT_AUTO
@@ -50,6 +51,7 @@ enum
 enum
 {
   PROP_0,
+  PROP_MODE,
   PROP_METHOD,
   PROP_FIELDS,
   PROP_FIELD_LAYOUT,
@@ -325,6 +327,25 @@ gst_deinterlace2_field_layout_get_type (void)
   return deinterlace2_field_layout_type;
 }
 
+#define GST_TYPE_DEINTERLACE2_MODES (gst_deinterlace2_modes_get_type ())
+static GType
+gst_deinterlace2_modes_get_type (void)
+{
+  static GType deinterlace2_modes_type = 0;
+
+  static const GEnumValue modes_types[] = {
+    {GST_DEINTERLACE2_MODE_AUTO, "Auto detection", "auto"},
+    {GST_DEINTERLACE2_MODE_INTERLACED, "Enfore deinterlacing", "interlaced"},
+    {0, NULL, NULL},
+  };
+
+  if (!deinterlace2_modes_type) {
+    deinterlace2_modes_type =
+        g_enum_register_static ("GstDeinterlace2Modes", modes_types);
+  }
+  return deinterlace2_modes_type;
+}
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -461,6 +482,14 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
   gobject_class->get_property = gst_deinterlace2_get_property;
   gobject_class->finalize = gst_deinterlace2_finalize;
 
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode",
+          "Mode",
+          "Deinterlace Mode",
+          GST_TYPE_DEINTERLACE2_MODES,
+          DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+      );
+
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method",
           "Method",
@@ -545,6 +574,7 @@ gst_deinterlace2_init (GstDeinterlace2 * self, GstDeinterlace2Class * klass)
 
   gst_element_no_more_pads (GST_ELEMENT (self));
 
+  self->mode = DEFAULT_MODE;
   gst_deinterlace2_set_method (self, DEFAULT_METHOD);
   self->fields = DEFAULT_FIELDS;
   self->field_layout = DEFAULT_FIELD_LAYOUT;
@@ -591,6 +621,14 @@ gst_deinterlace2_set_property (GObject * object, guint prop_id,
   self = GST_DEINTERLACE2 (object);
 
   switch (prop_id) {
+    case PROP_MODE:
+      if (GST_STATE (self) >= GST_STATE_PAUSED) {
+        g_warning ("Setting the 'mode' property is only allowed in "
+            "states other than PAUSED and PLAYING");
+      } else {
+        self->mode = g_value_get_enum (value);
+      }
+      break;
     case PROP_METHOD:
       gst_deinterlace2_set_method (self, g_value_get_enum (value));
       break;
@@ -624,6 +662,9 @@ gst_deinterlace2_get_property (GObject * object, guint prop_id,
   self = GST_DEINTERLACE2 (object);
 
   switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, self->mode);
+      break;
     case PROP_METHOD:
       g_value_set_enum (value, self->method_id);
       break;
@@ -775,6 +816,9 @@ gst_deinterlace2_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *outbuf;
 
   self = GST_DEINTERLACE2 (GST_PAD_PARENT (pad));
+
+  if (!self->interlaced && self->mode != GST_DEINTERLACE2_MODE_INTERLACED)
+    return gst_pad_push (self->srcpad, buf);
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     GST_DEBUG_OBJECT (self, "DISCONT buffer, resetting history");
@@ -980,7 +1024,8 @@ gst_deinterlace2_getcaps (GstPad * pad)
 
   GST_OBJECT_UNLOCK (self);
 
-  if (self->fields == GST_DEINTERLACE2_ALL) {
+  if ((self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED) &&
+      self->fields == GST_DEINTERLACE2_ALL) {
     for (len = gst_caps_get_size (ret); len > 0; len--) {
       GstStructure *s = gst_caps_get_structure (ret, len - 1);
       const GValue *val;
@@ -1115,8 +1160,8 @@ gst_deinterlace2_setcaps (GstPad * pad, GstCaps * caps)
   if (!res)
     goto invalid_caps;
 
-  /* FIXME: Only do this when self->interlaced == TRUE ? */
-  if (self->fields == GST_DEINTERLACE2_ALL) {
+  if ((self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED) &&
+      self->fields == GST_DEINTERLACE2_ALL) {
     gint fps_n = self->frame_rate_n, fps_d = self->frame_rate_d;
 
     if (!gst_fraction_double (&fps_n, &fps_d, otherpad != self->srcpad))
@@ -1265,52 +1310,55 @@ gst_deinterlace2_src_query (GstPad * pad, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:
-    {
-      GstClockTime min, max;
-      gboolean live;
-      GstPad *peer;
+      if (self->interlaced || self->mode == GST_DEINTERLACE2_MODE_INTERLACED) {
+        GstClockTime min, max;
+        gboolean live;
+        GstPad *peer;
 
-      if ((peer = gst_pad_get_peer (self->sinkpad))) {
-        if ((res = gst_pad_query (peer, query))) {
-          GstClockTime latency;
-          gint fields_required = 0;
-          gint method_latency = 0;
+        if ((peer = gst_pad_get_peer (self->sinkpad))) {
+          if ((res = gst_pad_query (peer, query))) {
+            GstClockTime latency;
+            gint fields_required = 0;
+            gint method_latency = 0;
 
-          if (self->method) {
-            fields_required =
-                gst_deinterlace_method_get_fields_required (self->method);
-            method_latency = gst_deinterlace_method_get_latency (self->method);
+            if (self->method) {
+              fields_required =
+                  gst_deinterlace_method_get_fields_required (self->method);
+              method_latency =
+                  gst_deinterlace_method_get_latency (self->method);
+            }
+
+            gst_query_parse_latency (query, &live, &min, &max);
+
+            GST_DEBUG_OBJECT (self, "Peer latency: min %"
+                GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+            /* add our own latency */
+            latency = (fields_required + method_latency) * self->field_duration;
+
+            GST_DEBUG_OBJECT (self, "Our latency: min %" GST_TIME_FORMAT
+                ", max %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (latency), GST_TIME_ARGS (latency));
+
+            min += latency;
+            if (max != GST_CLOCK_TIME_NONE)
+              max += latency;
+            else
+              max = latency;
+
+            GST_DEBUG_OBJECT (self, "Calculated total latency : min %"
+                GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+            gst_query_set_latency (query, live, min, max);
           }
-
-          gst_query_parse_latency (query, &live, &min, &max);
-
-          GST_DEBUG_OBJECT (self, "Peer latency: min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-
-          /* add our own latency */
-          latency = (fields_required + method_latency) * self->field_duration;
-
-          GST_DEBUG_OBJECT (self, "Our latency: min %" GST_TIME_FORMAT
-              ", max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (latency), GST_TIME_ARGS (latency));
-
-          min += latency;
-          if (max != GST_CLOCK_TIME_NONE)
-            max += latency;
-          else
-            max = latency;
-
-          GST_DEBUG_OBJECT (self, "Calculated total latency : min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
-
-          gst_query_set_latency (query, live, min, max);
+          gst_object_unref (peer);
+        } else {
+          res = gst_pad_query_default (pad, query);
         }
-        gst_object_unref (peer);
+        break;
       }
-      break;
-    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
