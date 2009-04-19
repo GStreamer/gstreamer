@@ -400,7 +400,7 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
 {
   gboolean result = TRUE;
   GstBuffer *input = *buf;
-  GstBuffer *outbuf = input;
+  GstBuffer *outbuf;
 
   /*We crop only if the target region is smaller than the input one */
   if ((mpeg2dec->decoded_width > mpeg2dec->width) ||
