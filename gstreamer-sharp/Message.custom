@@ -66,6 +66,18 @@ public uint Seqnum {
   }
 }
 
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_message_get_structure (IntPtr raw);
+
+public Gst.Structure Structure {
+  get  {
+    IntPtr raw_ret = gst_structure_copy (gst_message_get_structure (Handle));
+    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
+    return ret;
+  }
+}
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_message_new_eos (IntPtr src);
 
