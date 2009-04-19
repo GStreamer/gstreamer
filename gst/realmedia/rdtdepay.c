@@ -420,7 +420,7 @@ gst_rdt_depay_chain (GstPad * pad, GstBuffer * buf)
     rdtdepay->header = NULL;
 
     /* push header data first */
-    ret = gst_rdt_depay_push (rdtdepay, out);
+    gst_rdt_depay_push (rdtdepay, out);
   }
 
   /* save timestamp */

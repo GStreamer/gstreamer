@@ -188,7 +188,7 @@ gst_asm_scan_string (GstASMScan * scan, gchar delim)
   scan->val[i] = '\0';
 
   if (ch == delim)
-    ch = NEXT_CHAR (scan);
+    NEXT_CHAR (scan);
 
   scan->token = GST_ASM_TOKEN_STRING;
 }
