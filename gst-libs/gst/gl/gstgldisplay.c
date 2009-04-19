@@ -24,6 +24,7 @@
 #include "config.h"
 #endif
 
+#include <gst/video/gstvideosink.h>
 #include "gstgldisplay.h"
 
 /*
@@ -125,6 +126,7 @@ gst_gl_display_init (GstGLDisplay * display, GstGLDisplayClass * klass)
   display->redisplay_texture = 0;
   display->redisplay_texture_width = 0;
   display->redisplay_texture_height = 0;
+  display->keep_aspect_ratio = FALSE;
 #ifdef OPENGL_ES2
   display->redisplay_shader = NULL;
   display->redisplay_attr_position_loc = 0;
@@ -1747,7 +1749,24 @@ gst_gl_display_on_resize (GstGLDisplay * display, gint width, gint height)
 
   //default reshape
   else {
-    glViewport (0, 0, width, height);
+    if (display->keep_aspect_ratio) {
+      GstVideoRectangle src, dst, result;
+
+      src.x = 0;
+      src.y = 0;
+      src.w = display->redisplay_texture_width;
+      src.h = display->redisplay_texture_height;
+
+      dst.x = 0;
+      dst.y = 0;
+      dst.w = width;
+      dst.h = height;
+
+      gst_video_sink_center_rect (src, dst, &result, TRUE);
+      glViewport (result.x, result.y, result.w, result.h);
+    } else {
+      glViewport (0, 0, width, height);
+    }
 #ifndef OPENGL_ES2
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();
@@ -2091,7 +2110,7 @@ gst_gl_display_create_context (GstGLDisplay * display,
 /* Called by the glimagesink element */
 gboolean
 gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture, gint width,
-    gint height)
+    gint height, gboolean keep_aspect_ratio)
 {
   gboolean isAlive = TRUE;
 
@@ -2111,6 +2130,7 @@ gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture, gint width,
       display->redisplay_texture_width = width;
       display->redisplay_texture_height = height;
     }
+    display->keep_aspect_ratio = keep_aspect_ratio;
     if (display->gl_window)
       gst_gl_window_draw (display->gl_window);
   }

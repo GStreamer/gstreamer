@@ -100,6 +100,7 @@ struct _GstGLDisplay
   GLuint redisplay_texture;
   GLuint redisplay_texture_width;
   GLuint redisplay_texture_height;
+  gboolean keep_aspect_ratio;
 #ifdef OPENGL_ES2
   GstGLShader *redisplay_shader;
   gchar *redisplay_vertex_shader_str;
@@ -241,7 +242,7 @@ GstGLDisplay *gst_gl_display_new (void);
 void gst_gl_display_create_context (GstGLDisplay * display,
     GLint width, GLint height, guint64 external_gl_context);
 gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
-    gint width, gint height);
+    gint width, gint height, gboolean keep_aspect_ratio);
 
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);
