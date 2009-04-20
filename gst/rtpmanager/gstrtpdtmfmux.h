@@ -27,7 +27,7 @@
 #define __GST_RTP_DTMF_MUX_H__
 
 #include <gst/gst.h>
-#include <gstrtpmux.h>
+#include "gstrtpmux.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_RTP_DTMF_MUX (gst_rtp_dtmf_mux_get_type())

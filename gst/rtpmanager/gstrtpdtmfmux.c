@@ -64,8 +64,9 @@
 #endif
 
 #include <gst/gst.h>
-#include <gstrtpdtmfmux.h>
 #include <string.h>
+
+#include "gstrtpdtmfmux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_dtmf_mux_debug);
 #define GST_CAT_DEFAULT gst_rtp_dtmf_mux_debug
