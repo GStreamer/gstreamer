@@ -84,8 +84,6 @@ static void gst_task_finalize (GObject * object);
 
 static void gst_task_func (GstTask * task, GstTaskClass * tclass);
 
-static GstObjectClass *parent_class = NULL;
-
 static GStaticMutex pool_lock = G_STATIC_MUTEX_INIT;
 
 #define _do_init \
@@ -102,7 +100,7 @@ gst_task_class_init (GstTaskClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  g_type_class_add_private (klass, sizeof (GstTaskPrivate));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_task_finalize);
 
@@ -139,7 +137,7 @@ gst_task_finalize (GObject * object)
   g_cond_free (task->cond);
   task->cond = NULL;
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_task_parent_class)->finalize (object);
 }
 
 static void
