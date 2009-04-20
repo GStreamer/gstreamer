@@ -18,16 +18,24 @@
  */
 
 /**
+ * SECTION:element-fpsdisplay
  *
+ * Can display the current and average framerate as a testoverlay or on stdout.
+ *
+ * <refsect2>
+ * <title>Example launch lines</title>
  * |[
  * gst-launch videotestsrc ! fpsdisplaysink
  * gst-launch videotestsrc ! fpsdisplaysink text-overlay=false
  * gst-launch filesrc location=video.avi ! decodebin2 name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
  * ]|
+ * </refsect2>
  */
 /* FIXME:
- * - do we need to proxy xoverlay stuff?
- * - can we avoid the 
+ * - can we avoid plugging the textoverlay?
+ * - we should use autovideosink as we are RANK_NONE and would not get plugged
+ * - gst-seek 15 "videotestsrc ! fpsdisplaysink" dies when closing gst-seek
+ * - if we make ourself RANK_PRIMARY+10 autovideosink asserts
  */
 
 #ifdef HAVE_CONFIG_H
@@ -41,9 +49,9 @@
 #define DEFAULT_FONT "20"
 
 static GstElementDetails fps_display_sink_details = {
-  "Wrapper for xvimagesink's frame-rate display",
+  "Measure and show framerate on videosink",
   "Sink/Video",
-  "Shows the current frame-rate and drop-rate of the xvimagesink on the xvimagesink's video output",
+  "Shows the current frame-rate and drop-rate of the videosink as overlay or text on stdout",
   "Zeeshan Ali <zeeshan.ali@nokia.com>, Stefan Kost <stefan.kost@nokia.com>"
 };
 
@@ -59,9 +67,12 @@ GST_DEBUG_CATEGORY_STATIC (fps_display_sink_debug);
 
 struct _FPSDisplaySinkPrivate
 {
+  /* gstreamer components */
   GstElement *text_overlay;
-  GstElement *xvimagesink;
+  GstElement *video_sink;
+  GstQuery *query;
 
+  /* statistics */
   guint64 frames_rendered, last_frames_rendered;
   guint64 frames_dropped, last_frames_dropped;
   GstClockTime last_ts;
@@ -69,7 +80,7 @@ struct _FPSDisplaySinkPrivate
 
   guint timeout_id;
 
-  gchar *font;
+  /* properties */
   gboolean sync;
   gboolean use_text_overlay;
 };
@@ -126,25 +137,8 @@ fps_display_sink_class_init (FPSDisplaySinkClass * klass)
   g_type_class_add_private (klass, sizeof (FPSDisplaySinkPrivate));
 }
 
-static void
-fps_display_sink_base_init (gpointer klass)
-{
-}
-
-#if 0
-static void
-on_xvimagesink_caps_negotiated (GstPad * pad, GParamSpec * arg,
-    gpointer user_data)
-{
-  GstCaps *caps = gst_pad_get_negotiated_caps (pad);
-
-  g_print ("caps negotiated on xvimagesink = %s\n", gst_caps_to_string (caps));
-  gst_caps_unref (caps);
-}
-#endif
-
 static gboolean
-on_xvimagesink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
+on_video_sink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
     gpointer user_data)
 {
   FPSDisplaySink *self = FPS_DISPLAY_SINK (user_data);
@@ -157,8 +151,9 @@ on_xvimagesink_data_flow (GstPad * pad, GstMiniObject * mini_obj,
       if (GST_BUFFER_TIMESTAMP (buf) <= self->priv->next_ts) {
         self->priv->frames_rendered++;
       } else {
-        g_debug ("dropping frame : ts %" GST_TIME_FORMAT " < expected_ts %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_WARNING_OBJECT (self, "dropping frame : ts %" GST_TIME_FORMAT
+            " < expected_ts %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
             GST_TIME_ARGS (self->priv->next_ts));
         self->priv->frames_dropped++;
       }
@@ -194,50 +189,49 @@ fps_display_sink_init (FPSDisplaySink * self, FPSDisplaySinkClass * g_class)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self, FPS_TYPE_DISPLAY_SINK,
       FPSDisplaySinkPrivate);
 
-  self->priv->font = DEFAULT_FONT;
   self->priv->sync = FALSE;
   self->priv->use_text_overlay = TRUE;
 
-  self->priv->xvimagesink =
-      gst_element_factory_make ("xvimagesink", "fps_display_xvimagesink");
+  /* create child elements */
+  self->priv->video_sink =
+      gst_element_factory_make ("xvimagesink", "fps-display-video_sink");
   self->priv->text_overlay =
-      gst_element_factory_make ("textoverlay", "text-overlay");
+      gst_element_factory_make ("textoverlay", "fps-display-text-overlay");
 
-  if (!self->priv->xvimagesink || !self->priv->text_overlay) {
-    g_debug ("element could not be created");
+  if (!self->priv->video_sink || !self->priv->text_overlay) {
+    GST_ERROR_OBJECT (self, "element could not be created");
     return;
   }
 
-  g_object_set (self->priv->xvimagesink, "sync", self->priv->sync, NULL);
-  g_object_set (self->priv->text_overlay, "font-desc", self->priv->font, NULL);
+  g_object_set (self->priv->video_sink, "sync", self->priv->sync, NULL);
+  g_object_set (self->priv->text_overlay, "font-desc", DEFAULT_FONT, NULL);
 
   /* take a ref before bin takes the ownership */
   gst_object_ref (self->priv->text_overlay);
-  gst_object_ref (self->priv->xvimagesink);
+  gst_object_ref (self->priv->video_sink);
 
   gst_bin_add_many (GST_BIN (self),
-      self->priv->text_overlay, self->priv->xvimagesink, NULL);
+      self->priv->text_overlay, self->priv->video_sink, NULL);
 
-  if (!gst_element_link_many (self->priv->text_overlay, self->priv->xvimagesink,
+  if (!gst_element_link_many (self->priv->text_overlay, self->priv->video_sink,
           NULL)) {
     g_error ("Could not link elements");
   }
 
+  /* create ghost pad */
   target_pad =
       gst_element_get_static_pad (self->priv->text_overlay, "video_sink");
   sink_pad = gst_ghost_pad_new ("sink_pad", target_pad);
   gst_object_unref (target_pad);
   gst_element_add_pad (GST_ELEMENT (self), sink_pad);
 
-  sink_pad = gst_element_get_static_pad (self->priv->xvimagesink, "sink");
-#if 0
-  g_signal_connect (sink_pad, "notify::caps",
-      G_CALLBACK (on_xvimagesink_caps_negotiated), NULL);
-#endif
-  gst_pad_add_data_probe (sink_pad, G_CALLBACK (on_xvimagesink_data_flow),
+  sink_pad = gst_element_get_static_pad (self->priv->video_sink, "sink");
+  gst_pad_add_data_probe (sink_pad, G_CALLBACK (on_video_sink_data_flow),
       (gpointer) self);
 
   gst_object_unref (sink_pad);
+
+  self->priv->query = gst_query_new_position (GST_FORMAT_TIME);
 }
 
 static gboolean
@@ -245,22 +239,9 @@ display_current_fps (gpointer data)
 {
   FPSDisplaySink *self = FPS_DISPLAY_SINK (data);
   gint64 current_ts;
-#if 0
-  guint64 frames_rendered, frames_dropped;
-#endif
-  GstQuery *query;
 
-#if 0
-  query = gst_query_new_qos ();
-  gst_element_query (self->priv->xvimagesink, query);
-  gst_query_parse_qos (query, &frames_rendered, &frames_dropped);
-  gst_query_unref (query);
-#endif
-
-  query = gst_query_new_position (GST_FORMAT_TIME);
-  gst_element_query (self->priv->xvimagesink, query);
-  gst_query_parse_position (query, NULL, &current_ts);
-  gst_query_unref (query);
+  gst_element_query (self->priv->video_sink, self->priv->query);
+  gst_query_parse_position (self->priv->query, NULL, &current_ts);
 
   if (GST_CLOCK_TIME_IS_VALID (self->priv->last_ts)) {
     gdouble rr, dr, average_fps;
@@ -277,9 +258,10 @@ display_current_fps (gpointer data)
         self->priv->frames_rendered / (gdouble) (current_ts / GST_SECOND);
 
     if (dr == 0.0) {
-      sprintf (fps_message, "current: %.2f\naverage: %.2f", rr, average_fps);
+      g_snprintf (fps_message, 255, "current: %.2f\naverage: %.2f", rr,
+          average_fps);
     } else {
-      sprintf (fps_message, "fps: %.2f\ndrop rate: %.2f", rr, dr);
+      g_snprintf (fps_message, 255, "fps: %.2f\ndrop rate: %.2f", rr, dr);
     }
 
     if (self->priv->use_text_overlay) {
@@ -326,9 +308,14 @@ fps_display_sink_dispose (GObject * object)
 {
   FPSDisplaySink *self = FPS_DISPLAY_SINK (object);
 
-  if (self->priv->xvimagesink) {
-    gst_object_unref (self->priv->xvimagesink);
-    self->priv->xvimagesink = NULL;
+  if (self->priv->query) {
+    gst_query_unref (self->priv->query);
+    self->priv->query = NULL;
+  }
+
+  if (self->priv->video_sink) {
+    gst_object_unref (self->priv->video_sink);
+    self->priv->video_sink = NULL;
   }
 
   if (self->priv->text_overlay) {
@@ -348,17 +335,17 @@ fps_display_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_SYNC:
       self->priv->sync = g_value_get_boolean (value);
-      g_object_set (self->priv->xvimagesink, "sync", self->priv->sync, NULL);
+      g_object_set (self->priv->video_sink, "sync", self->priv->sync, NULL);
       break;
     case ARG_TEXT_OVERLAY:
       self->priv->use_text_overlay = g_value_get_boolean (value);
 
       if (!(self->priv->use_text_overlay)) {
-        g_print ("text-overlay set to false\n");
+        GST_DEBUG_OBJECT (self, "text-overlay set to false");
         g_object_set (self->priv->text_overlay, "text", "", "silent", TRUE,
             NULL);
       } else {
-        g_print ("text-overlay set to true\n");
+        GST_DEBUG_OBJECT (self, "text-overlay set to true");
         g_object_set (self->priv->text_overlay, "silent", FALSE, NULL);
       }
       break;
@@ -423,7 +410,7 @@ fps_display_sink_get_type (void)
   if (!fps_display_sink_type) {
     static const GTypeInfo fps_display_sink_info = {
       sizeof (FPSDisplaySinkClass),
-      fps_display_sink_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) fps_display_sink_class_init,
       NULL,
