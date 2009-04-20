@@ -146,7 +146,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
+gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -211,7 +211,7 @@ gst_gl_window_error_quark (void)
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 {
   GstGLWindowPrivate *priv = window->priv;
 
