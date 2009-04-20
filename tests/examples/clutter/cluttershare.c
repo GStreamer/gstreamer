@@ -215,7 +215,7 @@ main (int argc, char *argv[])
 
   glupload = gst_bin_get_by_name (GST_BIN (pipeline), "glupload0");
   g_object_set (G_OBJECT (glupload), "external-opengl-context",
-      (guint64) GPOINTER_TO_UINT (clutter_gl_context), NULL);
+      clutter_gl_context, NULL);
   g_object_unref (glupload);
 
   /* play pipeline */
