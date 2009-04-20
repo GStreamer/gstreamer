@@ -269,7 +269,16 @@ gst_facedetect_chain (GstPad * pad, GstBuffer * buf)
     
     for (i = 0; i < (faces ? faces->total : 0); i++) {   
       CvRect* r = (CvRect *) cvGetSeqElem(faces, i);
-    
+
+      GstStructure *s = gst_structure_new ("face",
+                      "x", G_TYPE_UINT, r->x,
+                      "y", G_TYPE_UINT, r->y,
+                      "width", G_TYPE_UINT, r->width,
+                      "height", G_TYPE_UINT, r->height, NULL);
+
+      GstMessage *m = gst_message_new_element (GST_OBJECT (filter), s);
+      gst_element_post_message (GST_ELEMENT (filter), m);
+
       if (filter->display) {
         CvPoint center;
         int radius;
