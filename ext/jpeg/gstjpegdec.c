@@ -985,7 +985,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
     /* calculate or assume an average frame duration for QoS purposes */
     GST_OBJECT_LOCK (dec);
-    if (dec->framerate_denominator != 0) {
+    if (dec->framerate_numerator != 0) {
       dec->qos_duration = gst_util_uint64_scale (GST_SECOND,
           dec->framerate_denominator, dec->framerate_numerator);
     } else {
