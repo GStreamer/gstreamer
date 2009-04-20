@@ -344,7 +344,7 @@ short_buffer:
     gst_buffer_unref (buffer);
     GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
         (_("Internal data stream error.")),
-        ("Read %u, needed %u bytes", size, length));
+        ("Read %u, needed %" G_GSIZE_FORMAT "bytes", size, length));
     ret = GST_FLOW_ERROR;
     goto pause;
   }
