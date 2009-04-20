@@ -180,7 +180,7 @@ gst_udp_join_group (int sockfd, struct sockaddr_storage *addr, gchar * iface)
 
       mreq4.imr_multiaddr.s_addr =
           ((struct sockaddr_in *) addr)->sin_addr.s_addr;
-#if HAVE_IP_MREQN
+#ifdef HAVE_IP_MREQN
       if (iface)
         mreq4.imr_ifindex = if_nametoindex (iface);
       else
