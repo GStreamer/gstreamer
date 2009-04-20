@@ -2512,7 +2512,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             demux->neededbytes = next_entry_size (demux);
           } else {
             /* sanity check */
-            if (size > 10 * (2 << 20))
+            if (size > 10 * (1 << 20))
               goto no_moov;
             demux->state = QTDEMUX_STATE_BUFFER_MDAT;
             demux->neededbytes = size;
