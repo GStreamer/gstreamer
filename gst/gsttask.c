@@ -125,8 +125,14 @@ static void
 gst_task_finalize (GObject * object)
 {
   GstTask *task = GST_TASK (object);
+  GstTaskPrivate *priv = task->priv;
 
   GST_DEBUG ("task %p finalize", task);
+
+  if (priv->thr_notify)
+    priv->thr_notify (priv->thr_user_data);
+  priv->thr_notify = NULL;
+  priv->thr_user_data = NULL;
 
   /* task thread cannot be running here since it holds a ref
    * to the task so that the finalize could not have happened */
@@ -141,6 +147,9 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
 {
   GStaticRecMutex *lock;
   GThread *tself;
+  GstTaskPrivate *priv;
+
+  priv = task->priv;
 
   tself = g_thread_self ();
 
@@ -157,6 +166,10 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
     goto no_lock;
   task->abidata.ABI.thread = tself;
   GST_OBJECT_UNLOCK (task);
+
+  /* fire the enter_thread callback when we need to */
+  if (priv->thr_callbacks.enter_thread)
+    priv->thr_callbacks.enter_thread (task, tself, priv->thr_user_data);
 
   /* locking order is TASK_LOCK, LOCK */
   g_static_rec_mutex_lock (lock);
@@ -204,6 +217,10 @@ exit:
   task->running = FALSE;
   GST_TASK_SIGNAL (task);
   GST_OBJECT_UNLOCK (task);
+
+  /* fire the leave_thread callback when we need to */
+  if (priv->thr_callbacks.leave_thread)
+    priv->thr_callbacks.leave_thread (task, tself, priv->thr_user_data);
 
   GST_DEBUG ("Exit task %p, thread %p", task, g_thread_self ());
 
