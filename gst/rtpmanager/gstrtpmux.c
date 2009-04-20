@@ -65,7 +65,7 @@ enum
 
 typedef struct
 {
-  gboolean have_ts_base;
+  gboolean have_clock_base;
   guint clock_base;
 } GstRTPMuxPadPrivate;
 
@@ -317,7 +317,7 @@ gst_rtp_mux_readjust_rtp_timestamp (GstRTPMux * rtp_mux, GstPad * pad,
   guint32 sink_ts_base = 0;
   GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
-  if (padpriv->have_ts_base)
+  if (padpriv->have_clock_base)
     sink_ts_base = padpriv->clock_base;
 
   ts = gst_rtp_buffer_get_timestamp (buffer) - sink_ts_base + rtp_mux->ts_base;
@@ -381,7 +381,7 @@ gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
     goto out;
 
   if (gst_structure_get_uint (structure, "clock-base", &padpriv->clock_base)) {
-    padpriv->have_ts_base = TRUE;
+    padpriv->have_clock_base = TRUE;
   }
 
   caps = gst_caps_copy (caps);
