@@ -34,8 +34,13 @@
 /* FIXME:
  * - can we avoid plugging the textoverlay?
  * - we should use autovideosink as we are RANK_NONE and would not get plugged
+ *   - but then we have to lookup the realsink to be able to set sync
  * - gst-seek 15 "videotestsrc ! fpsdisplaysink" dies when closing gst-seek
  * - if we make ourself RANK_PRIMARY+10 autovideosink asserts
+ *
+ * IDEAS:
+ * - do we want to gather min/max fps and show in GST_STATE_CHANGE_READY_TO_NULL
+ * - add another property for the FPS_DISPLAY_INTERVAL_MS
  */
 
 #ifdef HAVE_CONFIG_H
@@ -131,9 +136,6 @@ fps_display_sink_class_init (FPSDisplaySinkClass * klass)
 
   gst_element_class_set_details (gstelement_klass, &fps_display_sink_details);
 
-  GST_DEBUG_CATEGORY_INIT (fps_display_sink_debug, "fpsdisplaysink", 0,
-      "FPS Display Sink");
-
   g_type_class_add_private (klass, sizeof (FPSDisplaySinkPrivate));
 }
 
@@ -213,9 +215,8 @@ fps_display_sink_init (FPSDisplaySink * self, FPSDisplaySinkClass * g_class)
   gst_bin_add_many (GST_BIN (self),
       self->priv->text_overlay, self->priv->video_sink, NULL);
 
-  if (!gst_element_link_many (self->priv->text_overlay, self->priv->video_sink,
-          NULL)) {
-    g_error ("Could not link elements");
+  if (!gst_element_link (self->priv->text_overlay, self->priv->video_sink)) {
+    GST_ERROR_OBJECT (self, "Could not link elements");
   }
 
   /* create ghost pad */
@@ -279,7 +280,7 @@ display_current_fps (gpointer data)
 }
 
 static void
-fps_display_sink_start_the_show (FPSDisplaySink * self)
+fps_display_sink_start (FPSDisplaySink * self)
 {
   /* Init counters */
   self->priv->next_ts = GST_CLOCK_TIME_NONE;
@@ -294,7 +295,7 @@ fps_display_sink_start_the_show (FPSDisplaySink * self)
 }
 
 static void
-fps_display_sink_stop_the_show (FPSDisplaySink * self)
+fps_display_sink_stop (FPSDisplaySink * self)
 {
   /* remove the timeout */
   if (self->priv->timeout_id) {
@@ -382,7 +383,7 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      fps_display_sink_start_the_show (self);
+      fps_display_sink_start (self);
       break;
     default:
       break;
@@ -393,7 +394,7 @@ fps_display_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      fps_display_sink_stop_the_show (self);
+      fps_display_sink_stop (self);
       break;
     default:
       break;
@@ -430,6 +431,9 @@ fps_display_sink_get_type (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (fps_display_sink_debug, "fpsdisplaysink", 0,
+      "FPS Display Sink");
+
   return gst_element_register (plugin, "fpsdisplaysink",
       GST_RANK_NONE, FPS_TYPE_DISPLAY_SINK);
 }
@@ -438,4 +442,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "fpsdisplaysink",
     "A custom sink that show the current FPS of the sink on the video screen",
-    plugin_init, VERSION, "LGPL", "Nokia Real-time Communications", "")
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
