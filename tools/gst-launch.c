@@ -744,7 +744,7 @@ main (int argc, char *argv[])
   if (verbose) {
     gchar **exclude_list =
         exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
-    g_signal_connect (pipeline, "deep_notify",
+    g_signal_connect (pipeline, "deep-notify",
         G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
 #ifndef GST_DISABLE_LOADSAVE
