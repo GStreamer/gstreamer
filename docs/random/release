@@ -40,8 +40,8 @@ RELEASE PROCEDURE:
   - make sure all blocker bugs for that release are fixed or deferred
   - make sure you have a local copy of all online files
   - run 'make download-po' to make sure translations in CVS are up-to-date,
-    and then 'make update' in po/ (which will update the .pot template too and
-    merge the changes into the .po files)
+    and then 'make update-po' in po/ (which will update the .pot template too
+    and merge the changes into the .po files)
   - Make one or more prereleases
     - Make sure you've got the latest clean CVS of the module
     - Run bin/data-get in www/ to sync data from website
