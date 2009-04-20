@@ -168,6 +168,9 @@ public void Set (params object[] fields) {
     throw new ArgumentException ();
 
   for (i = 0; i < length; i += 2) {
+    if (fields[i].GetType () != typeof (string))
+      throw new ArgumentException ();
+
     SetValue (fields[i] as string, new GLib.Value (fields[i+1]));
   }
 }
