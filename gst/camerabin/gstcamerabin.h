@@ -123,6 +123,9 @@ struct _GstCameraBin
   gboolean night_mode;
   gint pre_night_fps_n;
   gint pre_night_fps_d;
+
+  /* Cache the photography interface settings */
+  GstPhotoSettings photo_settings;
 };
 
 /**

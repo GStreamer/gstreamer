@@ -74,7 +74,8 @@
  * of these settings require low-level support the photography interface support
  * is dependent on video src element. In practice photography interface settings
  * cannot be used successfully until in PAUSED state when the video src has
- * opened the video device.
+ * opened the video device. However it is possible to configure photography
+ * settings in NULL state and camerabin will try applying them later.
  * </para>
  * </refsect2>
  * <refsect2>
@@ -375,9 +376,8 @@ gst_camerabin_iface_supported (GstImplementsInterface * iface, GType iface_type)
       return FALSE;
     }
   } else if (iface_type == GST_TYPE_PHOTOGRAPHY) {
-    if (camera->src_vid_src) {
-      return GST_IS_PHOTOGRAPHY (camera->src_vid_src);
-    }
+    /* Always support photography interface */
+    return TRUE;
   }
 
   return FALSE;
@@ -468,6 +468,14 @@ camerabin_setup_src_elements (GstCameraBin * camera)
   } else {
     st = gst_structure_copy (gst_caps_get_structure (camera->view_finder_caps,
             0));
+  }
+
+  /* Update photography interface settings */
+  if (GST_IS_ELEMENT (camera->src_vid_src) &&
+      gst_element_implements_interface (camera->src_vid_src,
+          GST_TYPE_PHOTOGRAPHY)) {
+    gst_photography_set_config (GST_PHOTOGRAPHY (camera->src_vid_src),
+        &camera->photo_settings);
   }
 
   if (camera->width > 0 && camera->height > 0) {
@@ -2495,6 +2503,8 @@ gst_camerabin_init (GstCameraBin * camera, GstCameraBinClass * gclass)
   camera->view_in_sel = NULL;
   camera->view_scale = NULL;
   camera->view_sink = NULL;
+
+  memset (&camera->photo_settings, 0, sizeof (GstPhotoSettings));
 }
 
 static void
