@@ -359,6 +359,22 @@ fi
 
 dnl *** sys plug-ins ***
 
+dnl *** OS X videosrc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
+HAVE_OSX_VIDEO="no"
+AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosrc, [
+  AC_CHECK_HEADER(Quicktime/Quicktime.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
+])
+dnl in case header Quicktime/Quicktime.h is found on other platforms
+case "$host" in
+  *-*darwin*)
+    dnl do nothing
+    ;;
+  *)
+    HAVE_OSX_VIDEO="no"
+    ;;
+esac
+
 dnl check for QuickTime
 translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
 AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
@@ -1565,6 +1581,7 @@ sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/oss4/Makefile
+sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/vcd/Makefile
 sys/wasapi/Makefile
