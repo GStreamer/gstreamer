@@ -46,7 +46,7 @@
 #include <gst/interfaces/xoverlay.h>
 
 #define FPS_DISPLAY_INTERVAL_MS 500     /* 500 ms */
-#define DEFAULT_FONT "20"
+#define DEFAULT_FONT "Sans 20"
 
 static GstElementDetails fps_display_sink_details = {
   "Measure and show framerate on videosink",
