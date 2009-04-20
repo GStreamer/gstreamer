@@ -242,7 +242,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
+gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -299,7 +299,7 @@ gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
   priv->black = XBlackPixel (priv->device, priv->screen_num);
   priv->depth = DefaultDepthOfScreen (priv->screen);
 
-  g_debug ("gl root id: %" G_GUINT64_FORMAT "\n", (guint64) priv->root);
+  g_debug ("gl root id: %lud\n", (gulong) priv->root);
 
   priv->device_width = DisplayWidth (priv->device, priv->screen_num);
   priv->device_height = DisplayHeight (priv->device, priv->screen_num);
@@ -359,8 +359,7 @@ gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
 
   XSetWindowBackgroundPixmap (priv->device, priv->internal_win_id, None);
 
-  g_debug ("gl window id: %" G_GUINT64_FORMAT "\n",
-      (guint64) priv->internal_win_id);
+  g_debug ("gl window id: %lud\n", (gulong) priv->internal_win_id);
 
   g_debug ("gl window props: x:%d y:%d w:%d h:%d\n", x, y, width, height);
 
@@ -380,7 +379,7 @@ gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
 
   priv->gl_context =
       glXCreateContext (priv->device, priv->visual_info,
-      (GLXContext) (guint) external_gl_context, TRUE);
+      (GLXContext) external_gl_context, TRUE);
 
   g_debug ("gl context id: %ld\n", (gulong) priv->gl_context);
 
@@ -421,7 +420,7 @@ gst_gl_window_error_quark (void)
 
 /* Not called by the gl thread */
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 {
   if (window) {
     GstGLWindowPrivate *priv = window->priv;
@@ -431,7 +430,7 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
 
     priv->parent = (Window) id;
 
-    g_debug ("set parent window id: %" G_GUINT64_FORMAT "\n", id);
+    g_debug ("set parent window id: %lud\n", id);
 
     XGetWindowAttributes (priv->disp_send, priv->parent, &attr);
 
@@ -647,8 +646,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
         /* User clicked on the cross */
         else if (wm_delete != None
             && (Atom) event.xclient.data.l[0] == wm_delete) {
-          g_debug ("Close %" G_GUINT64_FORMAT "\n",
-              (guint64) priv->internal_win_id);
+          g_debug ("Close %lud\n", (gulong) priv->internal_win_id);
 
           if (priv->close_cb)
             priv->close_cb (priv->close_data);
@@ -678,8 +676,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
           gpointer destroy_data = (gpointer) event.xclient.data.l[1];
 #endif
 
-          g_debug ("Quit loop message %" G_GUINT64_FORMAT "\n",
-              (guint64) priv->internal_win_id);
+          g_debug ("Quit loop message %lud\n", (gulong) priv->internal_win_id);
 
           /* exit loop */
           priv->running = FALSE;
