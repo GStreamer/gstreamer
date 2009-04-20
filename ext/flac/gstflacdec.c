@@ -931,8 +931,18 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         GST_BUFFER_OFFSET (flacdec->pending),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (flacdec->pending)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (flacdec->pending)));
-    gst_pad_push (flacdec->srcpad, flacdec->pending);
-    flacdec->pending = NULL;
+    /* Pending buffer was always allocated from the seeking thread,
+     * which means it wasn't gst_buffer_alloc'd. Do so now to let
+     * downstream negotiation work on older basetransform */
+    ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
+        GST_BUFFER_OFFSET (flacdec->pending),
+        GST_BUFFER_SIZE (flacdec->pending),
+        GST_BUFFER_CAPS (flacdec->pending), &outbuf);
+    if (ret == GST_FLOW_OK)
+      gst_pad_push (flacdec->srcpad, outbuf);
+
+    gst_buffer_unref (flacdec->pending);
+    outbuf = flacdec->pending = NULL;
     flacdec->segment.last_stop += flacdec->pending_samples;
     flacdec->pending_samples = 0;
   }
@@ -940,7 +950,8 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   if (flacdec->seeking) {
     GST_DEBUG_OBJECT (flacdec, "a pad_alloc would block here, do normal alloc");
     outbuf = gst_buffer_new_and_alloc (samples * channels * (width / 8));
-    outbuf->offset = flacdec->segment.last_stop;
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (flacdec->srcpad));
+    GST_BUFFER_OFFSET (outbuf) = flacdec->segment.last_stop;
   } else {
     GST_LOG_OBJECT (flacdec, "alloc_buffer_and_set_caps");
     ret = gst_pad_alloc_buffer_and_set_caps (flacdec->srcpad,
