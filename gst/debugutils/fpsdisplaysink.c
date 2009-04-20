@@ -22,7 +22,7 @@
  * |[
  * gst-launch videotestsrc ! fpsdisplaysink
  * gst-launch videotestsrc ! fpsdisplaysink text-overlay=false
- *  gst-launch filesrc location=video.avi ! decodebin2 name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
+ * gst-launch filesrc location=video.avi ! decodebin2 name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
  * ]|
  */
 /* FIXME:
@@ -92,64 +92,11 @@ static void fps_display_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void fps_display_sink_dispose (GObject * object);
 
-static gboolean
-fps_display_sink_interface_supported (GstImplementsInterface * iface,
-    GType type)
-{
-  g_assert (type == GST_TYPE_X_OVERLAY);
-  return TRUE;
-}
-
-static void
-fps_display_sink_interface_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = fps_display_sink_interface_supported;
-}
-
-static void
-fps_display_sink_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
-{
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (overlay);
-
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (self->priv->xvimagesink),
-      xwindow_id);
-}
-
-static void
-fps_display_sink_expose (GstXOverlay * overlay)
-{
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (overlay);
-
-  gst_x_overlay_expose (GST_X_OVERLAY (self->priv->xvimagesink));
-}
-
-static void
-fps_display_sink_xoverlay_init (GstXOverlayClass * iface)
-{
-  iface->set_xwindow_id = fps_display_sink_set_xwindow_id;
-  iface->expose = fps_display_sink_expose;
-}
-
-static void
-fps_display_sink_handle_message (GstBin * bin, GstMessage * message)
-{
-  FPSDisplaySink *self = FPS_DISPLAY_SINK (bin);
-
-  if (GST_MESSAGE_SRC (message) != NULL &&
-      GST_MESSAGE_SRC (message) == GST_OBJECT (self->priv->xvimagesink)) {
-    gst_object_unref (GST_MESSAGE_SRC (message));
-    GST_MESSAGE_SRC (message) = gst_object_ref (GST_OBJECT (bin));
-  }
-
-  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
-}
-
 static void
 fps_display_sink_class_init (FPSDisplaySinkClass * klass)
 {
   GObjectClass *gobject_klass = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (klass);
-  GstBinClass *gstbin_klass = GST_BIN_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -167,8 +114,6 @@ fps_display_sink_class_init (FPSDisplaySinkClass * klass)
           "Wether to use text-overlay", TRUE, G_PARAM_READWRITE));
 
   gstelement_klass->change_state = fps_display_sink_change_state;
-
-  gstbin_klass->handle_message = fps_display_sink_handle_message;
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&fps_display_sink_template));
@@ -487,24 +432,9 @@ fps_display_sink_get_type (void)
       0,
       (GInstanceInitFunc) fps_display_sink_init,
     };
-    static const GInterfaceInfo iface_info = {
-      (GInterfaceInitFunc) fps_display_sink_interface_init,
-      NULL,
-      NULL,
-    };
-    static const GInterfaceInfo overlay_info = {
-      (GInterfaceInitFunc) fps_display_sink_xoverlay_init,
-      NULL,
-      NULL,
-    };
 
     fps_display_sink_type = g_type_register_static (GST_TYPE_BIN,
         "FPSDisplaySink", &fps_display_sink_info, 0);
-
-    g_type_add_interface_static (fps_display_sink_type,
-        GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
-    g_type_add_interface_static (fps_display_sink_type, GST_TYPE_X_OVERLAY,
-        &overlay_info);
   }
 
   return fps_display_sink_type;
