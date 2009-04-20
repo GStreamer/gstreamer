@@ -90,6 +90,8 @@ gst_photography_iface_init (GstPhotographyInterface * iface)
   iface->get_capabilities = NULL;
   iface->prepare_for_capture = NULL;
   iface->set_autofocus = NULL;
+  iface->set_config = NULL;
+  iface->get_config = NULL;
 }
 
 #define GST_PHOTOGRAPHY_FUNC_TEMPLATE(function_name, param_type) \
@@ -368,4 +370,54 @@ gst_photography_set_autofocus (GstPhotography * photo, gboolean on)
   if (iface->set_autofocus) {
     iface->set_autofocus (photo, on);
   }
+}
+
+/**
+ * gst_photography_set_config:
+ * @photo: #GstPhotography interface of a #GstElement
+ * @config: #GstPhotoSettings containg the configuration
+ *
+ * Set all configuration settings at once.
+ *
+ * Returns: TRUE if configuration was set successfully, otherwise FALSE.
+ */
+gboolean
+gst_photography_set_config (GstPhotography * photo, GstPhotoSettings *config)
+{
+  GstPhotographyInterface *iface;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (photo != NULL, FALSE);
+
+  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  if (iface->set_config) {
+    ret = iface->set_config (photo, config);
+  }
+
+  return ret;
+}
+
+/**
+ * gst_photography_get_config:
+ * @photo: #GstPhotography interface of a #GstElement
+ * @config: #GstPhotoSettings containg the configuration
+ *
+ * Get all configuration settings at once.
+ *
+ * Returns: TRUE if configuration was got successfully, otherwise FALSE.
+ */
+gboolean
+gst_photography_get_config (GstPhotography * photo, GstPhotoSettings * config)
+{
+  GstPhotographyInterface *iface;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (photo != NULL, FALSE);
+
+  iface = GST_PHOTOGRAPHY_GET_IFACE (photo);
+  if (iface->get_config) {
+    ret = iface->get_config (photo, config);
+  }
+
+  return ret;
 }

@@ -181,6 +181,8 @@ typedef void (*GstPhotoCapturePrepared) (gpointer data,
  * @get_capabilities: vmethod to get supported capabilities of the interface
  * @prepare_for_capture: vmethod to tell the element to prepare for capturing
  * @set_autofocus: vmethod to set autofocus on/off
+ * @set_config: vmethod to set all configuration parameters at once
+ * @get_config: vmethod to get all configuration parameters at once
  *
  * #GstPhotographyInterface interface.
  */
@@ -221,6 +223,8 @@ typedef struct _GstPhotographyInterface
     gboolean (*prepare_for_capture) (GstPhotography * photo,
       GstPhotoCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
   void (*set_autofocus) (GstPhotography * photo, gboolean on);
+    gboolean (*set_config) (GstPhotography * photo, GstPhotoSettings * config);
+    gboolean (*get_config) (GstPhotography * photo, GstPhotoSettings * config);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];
@@ -269,6 +273,11 @@ gboolean gst_photography_prepare_for_capture (GstPhotography * photo,
     GstPhotoCapturePrepared func, GstCaps *capture_caps, gpointer user_data);
 
 void gst_photography_set_autofocus (GstPhotography * photo, gboolean on);
+
+gboolean gst_photography_set_config (GstPhotography * photo,
+    GstPhotoSettings * config);
+gboolean gst_photography_get_config (GstPhotography * photo,
+    GstPhotoSettings * config);
 
 G_END_DECLS
 
