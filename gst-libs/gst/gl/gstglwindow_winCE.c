@@ -123,7 +123,7 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
     atom = RegisterClass (&wc);
 
     if (atom == 0)
-      g_error ("Failed to register window class %x\r\n", GetLastError ());
+      g_error ("Failed to register window class %lud\n", GetLastError ());
   }
 }
 
@@ -141,7 +141,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
+gst_gl_window_new (gint width, gint height, gulong external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -201,7 +201,7 @@ gst_gl_window_error_quark (void)
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 {
   GstGLWindowPrivate *priv = window->priv;
   WNDPROC window_parent_proc =
@@ -292,7 +292,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
 
   while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0) {
     if (bRet == -1) {
-      g_error ("Failed to get message %x\r\n", GetLastError ());
+      g_error ("Failed to get message %lud\n", GetLastError ());
       running = FALSE;
     } else {
       TranslateMessage (&msg);
@@ -521,7 +521,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         if (priv->internal_win_id) {
           if (!DestroyWindow (priv->internal_win_id))
-            g_debug ("failed to destroy window %d, 0x%x\n", hWnd,
+            g_debug ("failed to destroy window %lud, %lud\n", (gulong) hWnd,
                 GetLastError ());
         }
 

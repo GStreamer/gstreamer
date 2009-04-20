@@ -2088,7 +2088,7 @@ gst_gl_display_new (void)
  * Called by the first gl element of a video/x-raw-gl flow */
 void
 gst_gl_display_create_context (GstGLDisplay * display,
-    GLint width, GLint height, guint64 external_gl_context)
+    GLint width, GLint height, gulong external_gl_context)
 {
   gst_gl_display_lock (display);
 

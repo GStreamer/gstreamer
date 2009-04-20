@@ -137,7 +137,7 @@ struct _GstGLDisplay
   gpointer upload_data;
 
   //foreign gl context
-  guint64 external_gl_context;
+  gulong external_gl_context;
 
   //filter gen fbo
   GLuint gen_fbo_width;
@@ -240,7 +240,7 @@ GType gst_gl_display_get_type (void);
 GstGLDisplay *gst_gl_display_new (void);
 
 void gst_gl_display_create_context (GstGLDisplay * display,
-    GLint width, GLint height, guint64 external_gl_context);
+    GLint width, GLint height, gulong external_gl_context);
 gboolean gst_gl_display_redisplay (GstGLDisplay * display, GLuint texture,
     gint width, gint height, gboolean keep_aspect_ratio);
 

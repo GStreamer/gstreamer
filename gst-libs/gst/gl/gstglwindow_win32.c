@@ -75,9 +75,6 @@ HHOOK hHook;
 static void
 gst_gl_window_finalize (GObject * object)
 {
-  GstGLWindow *window = GST_GL_WINDOW (object);
-  GstGLWindowPrivate *priv = window->priv;
-
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
 
@@ -88,11 +85,6 @@ gst_gl_window_log_handler (const gchar * domain, GLogLevelFlags flags,
   if (_gst_gl_window_debug) {
     g_log_default_handler (domain, flags, message, user_data);
   }
-}
-
-static void
-gst_gl_window_base_init (gpointer g_class)
-{
 }
 
 static void
@@ -126,7 +118,7 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
     atom = RegisterClass (&wc);
 
     if (atom == 0)
-      g_error ("Failed to register window class %x\r\n", GetLastError ());
+      g_error ("Failed to register window class %lud\n", GetLastError ());
   }
 }
 
@@ -144,11 +136,10 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
+gst_gl_window_new (gint width, gint height, DWORD_PTR external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
-  GstGLWindowClass *klass = GST_GL_WINDOW_GET_CLASS (window);
 
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
@@ -182,11 +173,11 @@ gst_gl_window_new (gint width, gint height, guint64 external_gl_context)
       x, y, width, height, (HWND) NULL, (HMENU) NULL, hinstance, window);
 
   if (!priv->internal_win_id) {
-    g_debug ("failed to create gl window: %d\n", priv->internal_win_id);
+    g_debug ("failed to create gl window: %lud\n", (gulong) priv->internal_win_id);
     return NULL;
   }
 
-  g_debug ("gl window created: %d\n", priv->internal_win_id);
+  g_debug ("gl window created: %lud\n", (gulong) priv->internal_win_id);
 
   //device is set in the window_proc
   g_assert (priv->device);
@@ -203,11 +194,11 @@ gst_gl_window_error_quark (void)
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, guint64 id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
 {
   GstGLWindowPrivate *priv = window->priv;
   WNDPROC window_parent_proc =
-      (WNDPROC) (guint64) GetWindowLongPtr ((HWND) id, GWL_WNDPROC);
+      (WNDPROC) GetWindowLongPtr ((HWND) id, GWL_WNDPROC);
   RECT rect;
 
   SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
@@ -285,7 +276,6 @@ gst_gl_window_draw (GstGLWindow * window)
 void
 gst_gl_window_run_loop (GstGLWindow * window)
 {
-  GstGLWindowPrivate *priv = window->priv;
   gboolean running = TRUE;
   gboolean bRet = FALSE;
   MSG msg;
@@ -294,7 +284,7 @@ gst_gl_window_run_loop (GstGLWindow * window)
 
   while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0) {
     if (bRet == -1) {
-      g_error ("Failed to get message %x\r\n", GetLastError ());
+      g_error ("Failed to get message %lud\n", GetLastError ());
       running = FALSE;
     } else {
       TranslateMessage (&msg);
@@ -398,20 +388,20 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       gst_gl_window_set_pixel_format (window);
       priv->gl_context = wglCreateContext (priv->device);
       if (priv->gl_context)
-        g_debug ("gl context created: %d\n", priv->gl_context);
+        g_debug ("gl context created: %lud\n", (gulong) priv->gl_context);
       else
-        g_debug ("failed to create glcontext %d, %x\r\n", hWnd,
+        g_debug ("failed to create glcontext %lud, %lud\n", (gulong) hWnd,
             GetLastError ());
       g_assert (priv->gl_context);
       ReleaseDC (hWnd, priv->device);
       if (!wglMakeCurrent (priv->device, priv->gl_context))
-        g_debug ("failed to make opengl context current %d, %x\r\n", hWnd,
+        g_debug ("failed to make opengl context current %lud, %lud\n", (gulong) hWnd,
             GetLastError ());
 
       if (priv->external_gl_context) {
         if (!wglShareLists (priv->gl_context, priv->external_gl_context))
           g_debug ("failed to share opengl context %lud with %lud\n",
-              priv->gl_context, priv->external_gl_context);
+              (gulong) priv->gl_context, (gulong) priv->external_gl_context);
         else
           g_debug ("share opengl context succeed\n");
       }
@@ -488,7 +478,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           g_assert (parent_proc);
 
           SetWindowLongPtr (parent_id, GWL_WNDPROC,
-              (LONG) (guint64) parent_proc);
+              (LONG) parent_proc);
           SetParent (hWnd, NULL);
 
           RemoveProp (parent_id, "gl_window_parent_proc");
@@ -499,20 +489,18 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         RemoveProp (hWnd, "gl_window");
 
         if (!wglMakeCurrent (NULL, NULL))
-          g_debug ("failed to make current %d, %x\r\n", hWnd, GetLastError ());
+          g_debug ("failed to make current %lud, %lud\n", (gulong) hWnd, GetLastError ());
 
         if (priv->gl_context) {
           if (!wglDeleteContext (priv->gl_context))
-            g_debug ("failed to destroy context %d, %x\r\n", priv->gl_context,
+            g_debug ("failed to destroy context %lud, %lud\n", (gulong) priv->gl_context,
                 GetLastError ());
         }
 
         if (priv->internal_win_id) {
-          g_debug ("BEFORE\n");
           if (!DestroyWindow (priv->internal_win_id))
-            g_debug ("failed to destroy window %d, %x\r\n", hWnd,
+            g_debug ("failed to destroy window %lud, %lud\n", (gulong) hWnd,
                 GetLastError ());
-          g_debug ("AFTER\n");
         }
 
         PostQuitMessage (0);
