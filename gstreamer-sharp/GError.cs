@@ -52,8 +52,5 @@ namespace Gst {
       code = 0;
       domain_quark = 0;
     }
-
-    [DllImport ("glib-2.0.dll") ]
-    static extern void g_error_free (IntPtr error);
   }
 }
