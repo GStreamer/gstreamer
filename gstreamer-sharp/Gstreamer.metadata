@@ -451,8 +451,8 @@
   <attr path="/api/namespace/object[@name='Task']/field[@name='Func']" name="hidden">1</attr>
 
   <attr path="/api/namespace/class[@name='Tag']" name="disable_void_ctor">1</attr>
-  <attr path="/api/namespace/class[@name='Tag']/method[@cname='gst_tag_merge_strings_with_comma']/parameters/parameter" name="pass_as">ref</attr>
-  <attr path="/api/namespace/class[@name='Tag']/method[@cname='gst_tag_merge_use_first']/parameters/parameter" name="pass_as">ref</attr>
+  <attr path="/api/namespace/class[@name='Tag']/method[@cname='gst_tag_merge_strings_with_comma']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Tag']/method[@cname='gst_tag_merge_use_first']" name="hidden">1</attr>
   
   <attr path="/api/namespace/callback[@name='TagForeachFunc']" name="hidden">1</attr>
 
@@ -498,7 +498,8 @@
   <attr path="/api/namespace/boxed[@name='TagList']/method[@cname='gst_tag_list_copy_value']" name="hidden">1</attr>
   <attr path="/api/namespace/boxed[@name='TagList']/method[@cname='gst_tag_list_merge']/return-type" name="owned">true</attr>
 
-  <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter" name="pass_as">ref</attr>
+  <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter[@name='dest']" name="pass_as">out</attr>
+  <attr path="/api/namespace/callback[@name='TagMergeFunc']/parameters/parameter[@name='src']" name="pass_as">ref</attr>
 
   <attr path="/api/namespace/struct[@name='TypeFind']/method[@name='Register']" name="hidden">1</attr>
 
