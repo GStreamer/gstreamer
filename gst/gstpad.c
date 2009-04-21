@@ -4801,6 +4801,55 @@ gst_pad_get_element_private (GstPad * pad)
   return pad->element_private;
 }
 
+static void
+do_stream_status (GstPad * pad, GstStreamStatusType type,
+    GThread * thread, GstTask * task)
+{
+  GstElement *parent;
+
+  GST_DEBUG_OBJECT (pad, "doing stream-status %d", type);
+
+  if ((parent = GST_ELEMENT_CAST (gst_pad_get_parent (pad)))) {
+    if (GST_IS_ELEMENT (parent)) {
+      GstMessage *message;
+      GValue value = { 0 };
+
+      message = gst_message_new_stream_status (GST_OBJECT_CAST (pad),
+          type, parent);
+
+      g_value_init (&value, GST_TYPE_TASK);
+      g_value_set_object (&value, task);
+      gst_message_set_stream_status_object (message, &value);
+      g_value_unset (&value);
+
+      GST_DEBUG_OBJECT (pad, "posting stream-status %d", type);
+      gst_element_post_message (parent, message);
+    }
+    gst_object_unref (parent);
+  }
+}
+
+static void
+pad_enter_thread (GstTask * task, GThread * thread, gpointer user_data)
+{
+  do_stream_status (GST_PAD_CAST (user_data), GST_STREAM_STATUS_TYPE_ENTER,
+      thread, task);
+}
+
+static void
+pad_leave_thread (GstTask * task, GThread * thread, gpointer user_data)
+{
+  do_stream_status (GST_PAD_CAST (user_data), GST_STREAM_STATUS_TYPE_LEAVE,
+      thread, task);
+}
+
+static GstTaskThreadCallbacks thr_callbacks = {
+  NULL,
+  pad_enter_thread,
+  pad_leave_thread,
+  NULL
+};
+
 /**
  * gst_pad_start_task:
  * @pad: the #GstPad to start the task of
@@ -4830,6 +4879,7 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   if (task == NULL) {
     task = gst_task_create (func, data);
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
+    gst_task_set_thread_callbacks (task, &thr_callbacks, pad, NULL);
     GST_PAD_TASK (pad) = task;
     GST_DEBUG_OBJECT (pad, "created task");
   }
