@@ -607,7 +607,7 @@ done:
   /* streaming can continue now */
   GST_PAD_STREAM_UNLOCK (rmdemux->sinkpad);
 
-  return TRUE;
+  return ret;
 
 error:
   {
