@@ -2185,6 +2185,7 @@ GST_TASK_WAIT
 
 gst_task_create
 gst_task_set_lock
+gst_task_set_priority
 
 GstTaskThreadCallbacks
 gst_task_set_thread_callbacks

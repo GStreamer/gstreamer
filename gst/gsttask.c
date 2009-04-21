@@ -76,6 +76,9 @@ struct _GstTaskPrivate
   GstTaskThreadCallbacks thr_callbacks;
   gpointer thr_user_data;
   GDestroyNotify thr_notify;
+
+  gboolean prio_set;
+  GThreadPriority priority;
 };
 
 static void gst_task_class_init (GstTaskClass * klass);
@@ -117,6 +120,7 @@ gst_task_init (GstTask * task)
   task->lock = NULL;
   task->cond = g_cond_new ();
   task->state = GST_TASK_STOPPED;
+  task->priv->prio_set = FALSE;
 }
 
 static void
@@ -163,6 +167,9 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
   if (G_UNLIKELY (lock == NULL))
     goto no_lock;
   task->abidata.ABI.thread = tself;
+  /* only update the priority when it was changed */
+  if (priv->prio_set)
+    g_thread_set_priority (tself, priv->priority);
   GST_OBJECT_UNLOCK (task);
 
   /* fire the enter_thread callback when we need to */
@@ -219,6 +226,10 @@ exit:
     GST_OBJECT_UNLOCK (task);
     priv->thr_callbacks.leave_thread (task, tself, priv->thr_user_data);
     GST_OBJECT_LOCK (task);
+  } else {
+    /* restore normal priority when releasing back into the pool, we will not
+     * touch the priority when a custom callback has been installed. */
+    g_thread_set_priority (tself, G_THREAD_PRIORITY_NORMAL);
   }
   GST_TASK_SIGNAL (task);
   GST_OBJECT_UNLOCK (task);
@@ -331,6 +342,41 @@ is_running:
     GST_OBJECT_UNLOCK (task);
     g_warning ("cannot call set_lock on a running task");
   }
+}
+
+/**
+ * gst_task_set_priority:
+ * @task: a #GstTask
+ * @priority: a new priority for @task
+ *
+ * Changes the priority of @task to @priority.
+ *
+ * Note: try not to depend on task priorities.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_task_set_priority (GstTask * task, GThreadPriority priority)
+{
+  GstTaskPrivate *priv;
+  GThread *thread;
+
+  g_return_if_fail (GST_IS_TASK (task));
+
+  priv = task->priv;
+
+  GST_OBJECT_LOCK (task);
+  priv->prio_set = TRUE;
+  priv->priority = priority;
+  thread = task->abidata.ABI.thread;
+  if (thread != NULL) {
+    /* if this task already has a thread, we can configure the priority right
+     * away, else we do that when we assign a thread to the task. */
+    g_thread_set_priority (thread, priority);
+  }
+  GST_OBJECT_UNLOCK (task);
 }
 
 /**

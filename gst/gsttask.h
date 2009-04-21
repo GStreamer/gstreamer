@@ -180,6 +180,7 @@ GType           gst_task_get_type       (void);
 
 GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
 void		gst_task_set_lock	(GstTask *task, GStaticRecMutex *mutex);
+void		gst_task_set_priority	(GstTask *task, GThreadPriority priority);
 
 void            gst_task_set_thread_callbacks  (GstTask *task,
                                                 GstTaskThreadCallbacks *callbacks,
