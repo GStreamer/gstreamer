@@ -1155,13 +1155,13 @@ gst_rtsp_media_unprepare (GstRTSPMedia *media)
   if (!media->prepared)
     return TRUE;
 
-  if (media->reusable) {
-    g_message ("unprepare media %p", media);
-    media->target_state = GST_STATE_NULL;
-    gst_element_set_state (media->pipeline, GST_STATE_NULL);
-    media->prepared = FALSE;
-    media->reused = TRUE;
-  } 
+  g_message ("unprepare media %p", media);
+  media->target_state = GST_STATE_NULL;
+  gst_element_set_state (media->pipeline, GST_STATE_NULL);
+  media->prepared = FALSE;
+  media->reused = FALSE;
+  g_signal_emit_by_name (media, "unprepared", NULL);
+
   return TRUE;
 }
 
