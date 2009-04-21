@@ -67,6 +67,8 @@ typedef struct
 {
   gboolean have_clock_base;
   guint clock_base;
+
+  GstCaps *out_caps;
 } GstRTPMuxPadPrivate;
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -248,6 +250,7 @@ free_pad_private (gpointer data, GObject * where_the_object_was)
 {
   GstRTPMuxPadPrivate *padpriv = data;
 
+  gst_caps_replace (&padpriv->out_caps, NULL);
   g_slice_free (GstRTPMuxPadPrivate, padpriv);
 }
 
@@ -326,6 +329,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
   GstFlowReturn ret;
+  GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
 
@@ -347,7 +351,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
       GST_BUFFER_SIZE (buffer), rtp_mux->seqnum,
       gst_rtp_buffer_get_timestamp (buffer));
 
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (rtp_mux->srcpad));
+  gst_buffer_set_caps (buffer, padpriv->out_caps);
 
   ret = gst_pad_push (rtp_mux->srcpad, buffer);
 
@@ -383,7 +387,11 @@ gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (rtp_mux,
       "setting caps %" GST_PTR_FORMAT " on src pad..", caps);
   ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
-  gst_caps_unref (caps);
+
+  if (ret)
+    gst_caps_replace (&padpriv->out_caps, caps);
+  else
+    gst_caps_unref (caps);
 
 out:
   gst_object_unref (rtp_mux);
