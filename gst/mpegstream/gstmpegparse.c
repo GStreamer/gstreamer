@@ -1030,7 +1030,6 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
           src_format = GST_FORMAT_TIME;
           if (gst_pad_query_peer_duration (mpeg_parse->sinkpad,
                   &src_format, &src_value)) {
-            res = TRUE;
             break;
           }
           /* Otherwise fallthrough */

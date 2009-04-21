@@ -504,11 +504,9 @@ static gboolean
 gst_mpeg_demux_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
 {
   GstMPEGDemux *demux = GST_MPEG_DEMUX (mpeg_parse);
-  guint8 *buf;
 
   parent_class->parse_packhead (mpeg_parse, buffer);
 
-  buf = GST_BUFFER_DATA (buffer);
   /* do something useful here */
 
   if (demux->pending_tags) {
@@ -653,12 +651,12 @@ gst_mpeg_demux_parse_packet (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   guint16 datalen;
 
   GstMPEGStream *outstream = NULL;
-  guint8 *buf, *basebuf;
+  guint8 *buf;
   gint64 timestamp;
 
   GstFlowReturn ret = GST_FLOW_OK;
 
-  basebuf = buf = GST_BUFFER_DATA (buffer);
+  buf = GST_BUFFER_DATA (buffer);
   id = *(buf + 3);
   buf += 4;
 
@@ -1072,7 +1070,6 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     GstClockTimeDiff diff;
     guint64 update_time;
 
-    update_time = MIN (timestamp, mpeg_parse->current_segment.stop);
     update_time = MAX (timestamp, mpeg_parse->current_segment.start);
     diff = GST_CLOCK_DIFF (mpeg_parse->current_segment.last_stop, update_time);
     if (diff > GST_SECOND * 2) {
