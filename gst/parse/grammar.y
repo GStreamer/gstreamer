@@ -290,25 +290,44 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   GType value_type;
 
   if (gst_child_proxy_lookup (GST_OBJECT (set->parent), set->name, &target, &pspec)) { 
+    gboolean got_value = FALSE;
+
     value_type = G_PARAM_SPEC_VALUE_TYPE (pspec);
 
     GST_CAT_LOG (GST_CAT_PIPELINE, "parsing delayed property %s as a %s from %s", pspec->name,
       g_type_name (value_type), set->value_str);
     g_value_init (&v, value_type);
-    if (gst_value_deserialize (&v, set->value_str)) {
-      g_object_set_property (G_OBJECT (target), pspec->name, &v);
+    if (gst_value_deserialize (&v, set->value_str))
+      got_value = TRUE;
+    else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
+       GstElement *bin;
+       
+       bin = gst_parse_bin_from_description (set->value_str, TRUE, NULL);
+       if (bin) {
+         g_value_set_object (&v, bin);
+         got_value = TRUE;
+       }
     }
     g_signal_handler_disconnect (child_proxy, set->signal_id);
     g_free(set->name);
     g_free(set->value_str);
     g_free(set);
+    if (!got_value)
+      goto error;
+    g_object_set_property (G_OBJECT (target), pspec->name, &v);
   }
 
+out:
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
   if (target)
     gst_object_unref (target);
   return;
+
+error:
+  GST_CAT_ERROR (GST_CAT_PIPELINE, "could not set property \"%s\" in element \"%s\"",
+	 pspec->name, GST_ELEMENT_NAME (target));
+  goto out;
 }
 
 
@@ -344,11 +363,25 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   gst_parse_unescape (pos);
 
   if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) { 
+    gboolean got_value = FALSE;
+
     value_type = G_PARAM_SPEC_VALUE_TYPE (pspec); 
+
     GST_CAT_LOG (GST_CAT_PIPELINE, "parsing property %s as a %s", pspec->name,
       g_type_name (value_type));
     g_value_init (&v, value_type);
-    if (!gst_value_deserialize (&v, pos))
+    if (gst_value_deserialize (&v, pos))
+      got_value = TRUE;
+    else if (g_type_is_a (value_type, GST_TYPE_ELEMENT)) {
+       GstElement *bin;
+       
+       bin = gst_parse_bin_from_description (pos, TRUE, NULL);
+       if (bin) {
+         g_value_set_object (&v, bin);
+         got_value = TRUE;
+       }
+    }
+    if (!got_value)
       goto error;
     g_object_set_property (G_OBJECT (target), pspec->name, &v);
   } else { 
