@@ -362,6 +362,7 @@ static gint mpeg[] = {
   CODEC_ID_MPEG2VIDEO,
   CODEC_ID_H263P,
   CODEC_ID_FLV1,
+  CODEC_ID_H263,
   CODEC_ID_NONE
 };
 
