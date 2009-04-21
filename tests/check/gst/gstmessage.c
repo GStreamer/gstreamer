@@ -186,6 +186,60 @@ GST_START_TEST (test_parsing)
      void            gst_message_parse_warning       (GstMessage *message, GError **gerror, gchar **debug);
    */
 
+  /* GST_MESSAGE_STREAM_STATUS   */
+  {
+    GstStreamStatusType type;
+    GstTask *task, *task2;
+    GValue value = { 0 };
+    const GValue *val;
+
+    message =
+        gst_message_new_stream_status (NULL, GST_STREAM_STATUS_TYPE_ENTER,
+        NULL);
+    fail_if (message == NULL);
+    fail_unless (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_STATUS);
+    fail_unless (GST_MESSAGE_SRC (message) == NULL);
+
+    /* set some wrong values to check if the parse method overwrites them
+     * with the good values */
+    type = GST_STREAM_STATUS_TYPE_START;
+    gst_message_parse_stream_status (message, &type, NULL);
+    fail_unless (type == GST_STREAM_STATUS_TYPE_ENTER);
+
+    /* create a task with some dummy function, we're not actually going to run
+     * the task here */
+    task = gst_task_create ((GstTaskFunction) gst_object_unref, NULL);
+
+    ASSERT_OBJECT_REFCOUNT (task, "task", 1);
+
+    /* set the task */
+    g_value_init (&value, GST_TYPE_TASK);
+    g_value_set_object (&value, task);
+
+    ASSERT_OBJECT_REFCOUNT (task, "task", 2);
+
+    gst_message_set_stream_status_object (message, &value);
+    ASSERT_OBJECT_REFCOUNT (task, "task", 3);
+    g_value_unset (&value);
+    ASSERT_OBJECT_REFCOUNT (task, "task", 2);
+    gst_object_unref (task);
+    ASSERT_OBJECT_REFCOUNT (task, "task", 1);
+
+    /* get the object back, no refcount is changed */
+    val = gst_message_get_stream_status_object (message);
+    ASSERT_OBJECT_REFCOUNT (task, "task", 1);
+
+    task2 = g_value_get_object (val);
+
+    fail_unless (GST_IS_TASK (task2));
+    fail_unless (task2 == task);
+
+    ASSERT_OBJECT_REFCOUNT (task, "task", 1);
+    ASSERT_OBJECT_REFCOUNT (task2, "task", 1);
+
+    gst_message_unref (message);
+  }
+
   /* GST_MESSAGE_REQUEST_STATE   */
   {
     GstState state;
