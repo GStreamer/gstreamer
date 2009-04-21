@@ -186,9 +186,9 @@ public bool DoSimplify () {
   if (!IsWritable)
     throw new ApplicationException ();
 
-  /* FIXME: This might remove/free structures, we have to copy
-   * them before with RemoveStructureReference() somehow
-   */
+  /* FIXME: This is not optimal but we don't know before
+   * which structures will be removed */
+  RemoveStructureReferences ();
 
   return gst_caps_do_simplify (Handle);
 }
