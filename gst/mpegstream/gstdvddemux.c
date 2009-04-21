@@ -235,13 +235,11 @@ static void
 gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
 {
   GstElementClass *gstelement_class;
-  GstMPEGParseClass *mpeg_parse_class;
   GstMPEGDemuxClass *mpeg_demux_class;
 
   parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class = (GstElementClass *) klass;
-  mpeg_parse_class = (GstMPEGParseClass *) klass;
   mpeg_demux_class = (GstMPEGDemuxClass *) klass;
 
   gstelement_class->change_state = gst_dvd_demux_change_state;

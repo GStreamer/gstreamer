@@ -64,12 +64,8 @@ gst_mpeg_clock_get_type (void)
 static void
 gst_mpeg_clock_class_init (GstMPEGClockClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstObjectClass *gstobject_class;
   GstClockClass *gstclock_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
