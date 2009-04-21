@@ -11,8 +11,11 @@ the threadpool to use.
 
 We accomodate for the following requirements:
 
- - Application is informed when a streaming thread is about to be created. 
+ - Application is informed when a streaming thread is about to be created. It
+   should be possible for the application to suggest a custom GstTask.
  - Application is informed when the status of a streaming thread is changed.
+   This can be interesting for GUI application that want to visualize the status
+   of the streaming threads (playing/paused/stopped)
  - Application is informed when a streaming thread is destroyed.
 
 We allow for the following scenarios:
@@ -59,16 +62,20 @@ Messages
  (selected) elements. The following fields will be contained in the message:
 
   - "status", GST_TYPE_STREAM_STATUS_TYPE
+
+      - a set of types to control the lifecycle of the thread:
        GST_STREAM_STATUS_TYPE_CREATE: a new streaming thread is going to be
           created. The application has the chance to configure a custom thread.
        GST_STREAM_STATUS_TYPE_ENTER: the streaming thread is about to enter its
           loop function for the first time.
-       GST_STREAM_STATUS_TYPE_START: a streaming thread is started
-       GST_STREAM_STATUS_TYPE_PAUSE: a streaming thread is paused
-       GST_STREAM_STATUS_TYPE_STOP: a streaming thread is stopped
        GST_STREAM_STATUS_TYPE_LEAVE: the streaming thread is about to leave its
           loop.
        GST_STREAM_STATUS_TYPE_DESTROY: a streaming thread is destroyed
+
+      - A set of types to control the state of the threads: 
+       GST_STREAM_STATUS_TYPE_START: a streaming thread is started
+       GST_STREAM_STATUS_TYPE_PAUSE: a streaming thread is paused
+       GST_STREAM_STATUS_TYPE_STOP: a streaming thread is stopped
 
   - "thread-object-type", GST_TYPE_THREAD_OBJECT
      The type of object used for controlling the streaming thread.
@@ -81,10 +88,23 @@ Messages
       A GstTask/GThread controlling this streaming thread. This can be NULL when
       the object controlling the streaming thread is not yet created.
 
+  - "owner", GST_TYPE_ELEMENT
+      The owner element of the thread. The message source will contain the pad
+      (or one of the pads) that will produce data by this thread. If this thread
+      does not produce data on a pad, the message source will contain the owner
+      as well. The idea is that the application should be able to see from the
+      element/pad what function this thread has in the context of the
+      application and configure the thread appropriatly.
+
   - "flow-return", GstFlowReturn
-      a status code for why the thread state changed. when threads are created
+      A status code for why the thread state changed. when threads are created
       and started, this is usually GST_FLOW_OK but when they are stopping it
-      contains the reason why it stopped.
+      contains the reason code why it stopped.
+
+  - "reason", G_TYPE_STRING
+      A string describing the reason why the thread started/stopped/paused.
+      Can be NULL if no reason is given.
+
 
 
 Events
