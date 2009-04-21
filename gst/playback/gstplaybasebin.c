@@ -1709,8 +1709,8 @@ source_new_pad (GstElement * element, GstPad * pad, GstPlayBaseBin * bin)
       GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
 
   /* if this is a pad with all raw caps, we can expose it */
-  bin->raw_decoding_mode = TRUE;
   if (has_all_raw_caps (pad, &is_raw) && is_raw) {
+    bin->raw_decoding_mode = TRUE;
     /* it's all raw, create output pads. */
     new_decoded_pad_full (element, pad, FALSE, bin, FALSE);
     return;
