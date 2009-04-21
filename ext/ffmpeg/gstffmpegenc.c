@@ -912,6 +912,12 @@ gst_ffmpegenc_set_property (GObject * object,
   /* Get a pointer of the right type. */
   ffmpegenc = (GstFFMpegEnc *) (object);
 
+  if (ffmpegenc->opened) {
+    GST_WARNING_OBJECT (ffmpegenc,
+        "Can't change properties once decoder is setup !");
+    return;
+  }
+
   /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
     case ARG_BIT_RATE:
