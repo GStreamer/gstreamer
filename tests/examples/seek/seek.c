@@ -638,29 +638,32 @@ static GstElement *
 make_mp3_pipeline (const gchar * location)
 {
   GstElement *pipeline;
-  GstElement *src, *decoder, *osssink, *queue;
+  GstElement *src, *parser, *decoder, *audiosink, *queue;
   GstPad *seekable;
 
   pipeline = gst_pipeline_new ("app");
 
   src = gst_element_factory_make_or_warn (SOURCE, "src");
+  parser = gst_element_factory_make_or_warn ("mp3parse", "parse");
   decoder = gst_element_factory_make_or_warn ("mad", "dec");
   queue = gst_element_factory_make_or_warn ("queue", "queue");
-  osssink = gst_element_factory_make_or_warn (ASINK, "sink");
+  audiosink = gst_element_factory_make_or_warn (ASINK, "sink");
 
-  seekable_elements = g_list_prepend (seekable_elements, osssink);
+  seekable_elements = g_list_prepend (seekable_elements, audiosink);
 
   g_object_set (G_OBJECT (src), "location", location, NULL);
-  //g_object_set (G_OBJECT (osssink), "fragment", 0x00180008, NULL);
+  //g_object_set (G_OBJECT (audiosink), "fragment", 0x00180008, NULL);
 
   gst_bin_add (GST_BIN (pipeline), src);
+  gst_bin_add (GST_BIN (pipeline), parser);
   gst_bin_add (GST_BIN (pipeline), decoder);
   gst_bin_add (GST_BIN (pipeline), queue);
-  gst_bin_add (GST_BIN (pipeline), osssink);
+  gst_bin_add (GST_BIN (pipeline), audiosink);
 
-  gst_element_link (src, decoder);
+  gst_element_link (src, parser);
+  gst_element_link (parser, decoder);
   gst_element_link (decoder, queue);
-  gst_element_link (queue, osssink);
+  gst_element_link (queue, audiosink);
 
   seekable = gst_element_get_static_pad (queue, "src");
   seekable_pads = g_list_prepend (seekable_pads, seekable);
