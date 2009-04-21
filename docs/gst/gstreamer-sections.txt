@@ -1043,7 +1043,6 @@ gst_iterator_result_get_type
 <TITLE>GstMessage</TITLE>
 GstMessage
 GstMessageType
-GstStructureChangeType
 GST_MESSAGE_SRC
 GST_MESSAGE_TIMESTAMP
 GST_MESSAGE_TYPE
@@ -1094,10 +1093,19 @@ gst_message_new_latency
 gst_message_new_async_start
 gst_message_parse_async_start
 gst_message_new_async_done
+
+GstStructureChangeType
 gst_message_new_structure_change
 gst_message_parse_structure_change
 gst_message_new_request_state
 gst_message_parse_request_state
+
+GstStreamStatusType
+gst_message_new_stream_status
+gst_message_parse_stream_status
+gst_message_set_stream_status_object
+gst_message_get_stream_status_object
+
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
@@ -1109,10 +1117,12 @@ GST_IS_MESSAGE_CLASS
 GST_MESSAGE_GET_CLASS
 GST_TYPE_MESSAGE_TYPE
 GST_TYPE_STRUCTURE_CHANGE_TYPE
+GST_TYPE_STREAM_STATUS_TYPE
 <SUBSECTION Private>
 gst_message_get_type
 gst_message_type_get_type
 gst_structure_change_type_get_type
+gst_stream_status_type_get_type
 GST_MESSAGE_COND
 GST_MESSAGE_GET_LOCK
 GST_MESSAGE_LOCK

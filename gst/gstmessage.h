@@ -198,6 +198,32 @@ typedef enum {
 } GstStructureChangeType;
 
 /**
+ * GstStreamStatusType:
+ * @GST_STREAM_STATUS_TYPE_CREATE: A new thread need to be created.
+ * @GST_STREAM_STATUS_TYPE_ENTER: a thread entered its loop function
+ * @GST_STREAM_STATUS_TYPE_LEAVE: a thread left its loop function
+ * @GST_STREAM_STATUS_TYPE_DESTROY: a thread is destroyed
+ * @GST_STREAM_STATUS_TYPE_START: a thread is started
+ * @GST_STREAM_STATUS_TYPE_PAUSE: a thread is paused
+ * @GST_STREAM_STATUS_TYPE_STOP: a thread is stopped
+ *
+ * The type of a #GstMessageStreamStatus. The stream status messages inform the
+ * application of new streaming threads and their status.
+ *
+ * Since: 0.10.24
+ */
+typedef enum {
+  GST_STREAM_STATUS_TYPE_CREATE   = 0,
+  GST_STREAM_STATUS_TYPE_ENTER    = 1,
+  GST_STREAM_STATUS_TYPE_LEAVE    = 2,
+  GST_STREAM_STATUS_TYPE_DESTROY  = 3,
+
+  GST_STREAM_STATUS_TYPE_START    = 8,
+  GST_STREAM_STATUS_TYPE_PAUSE    = 9,
+  GST_STREAM_STATUS_TYPE_STOP     = 10
+} GstStreamStatusType;
+
+/**
  * GstMessage:
  * @mini_object: the parent structure
  * @type: the #GstMessageType of the message
@@ -404,6 +430,14 @@ GstMessage *	gst_message_new_structure_change   (GstObject * src, GstStructureCh
                                                     GstElement *owner, gboolean busy);
 void		gst_message_parse_structure_change (GstMessage *message, GstStructureChangeType *type,
                                                     GstElement **owner, gboolean *busy);
+
+/* STREAM STATUS */
+GstMessage *	gst_message_new_stream_status        (GstObject * src, GstStreamStatusType type,
+                                                      GstElement *owner);
+void		gst_message_parse_stream_status      (GstMessage *message, GstStreamStatusType *type,
+                                                      GstElement **owner);
+void            gst_message_set_stream_status_object (GstMessage *message, const GValue *object);
+const GValue *  gst_message_get_stream_status_object (GstMessage *message);
 
 /* REQUEST_STATE */
 GstMessage *    gst_message_new_request_state   (GstObject * src, GstState state);

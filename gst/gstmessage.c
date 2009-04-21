@@ -1458,3 +1458,112 @@ gst_message_parse_request_state (GstMessage * message, GstState * state)
     *state = g_value_get_enum (gst_structure_id_get_value (message->structure,
             GST_QUARK (NEW_STATE)));
 }
+
+/**
+ * gst_message_new_stream_status:
+ * @src: The object originating the message.
+ * @type: The stream status type.
+ * @owner: The owner element of @src.
+ *
+ * Create a new stream status message. This message is posted when a streaming
+ * thread is created/destroyed or when the state changed.
+ * 
+ * Returns: The new stream status message.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24.
+ */
+GstMessage *
+gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
+    GstElement * owner)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_empty_new ("GstMessageStreamStatus");
+  gst_structure_id_set (structure,
+      GST_QUARK (TYPE), GST_TYPE_STREAM_STATUS_TYPE, (gint) type,
+      GST_QUARK (OWNER), GST_TYPE_ELEMENT, owner, NULL);
+  message = gst_message_new_custom (GST_MESSAGE_STREAM_STATUS, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_stream_status:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STREAM_STATUS.
+ * @type: A pointer to hold the status type
+ * @owner: The owner element of the message source
+ *
+ * Extracts the stream status type and owner the GstMessage.
+ *
+ * Since: 0.10.24.
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_stream_status (GstMessage * message,
+    GstStreamStatusType * type, GstElement ** owner)
+{
+  const GValue *owner_gvalue;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_STATUS);
+
+  owner_gvalue =
+      gst_structure_id_get_value (message->structure, GST_QUARK (OWNER));
+  g_return_if_fail (owner_gvalue != NULL);
+
+  if (type)
+    *type = g_value_get_enum (gst_structure_id_get_value (message->structure,
+            GST_QUARK (TYPE)));
+  if (owner)
+    *owner = (GstElement *) g_value_get_object (owner_gvalue);
+}
+
+/**
+ * gst_message_set_stream_status_object:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STREAM_STATUS.
+ * @object: the object controlling the streaming
+ *
+ * Configures the object handling the streaming thread. This is usually a
+ * GstTask object but other objects might be added in the future.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_message_set_stream_status_object (GstMessage * message,
+    const GValue * object)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_STATUS);
+
+  gst_structure_id_set_value (message->structure, GST_QUARK (OBJECT), object);
+}
+
+/**
+ * gst_message_get_stream_status_object:
+ * @message: A valid #GstMessage of type GST_MESSAGE_STREAM_STATUS.
+ *
+ * Extracts the object managing the streaming thread from @message.
+ *
+ * Returns: a GValue containing the object that manages the streaming thread.
+ * This object is usually of type GstTask but other types can be added in the
+ * future. The object remains valid as long as @message is valid.
+ *
+ * Since: 0.10.24
+ */
+const GValue *
+gst_message_get_stream_status_object (GstMessage * message)
+{
+  const GValue *result;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (message), NULL);
+  g_return_val_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_STATUS,
+      NULL);
+
+  result = gst_structure_id_get_value (message->structure, GST_QUARK (OBJECT));
+
+  return result;
+}
