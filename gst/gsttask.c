@@ -42,11 +42,12 @@
  * gst_task_set_lock().
  *
  * The task can be started, paused and stopped with gst_task_start(), gst_task_pause()
- * and gst_task_stop() respectively.
+ * and gst_task_stop() respectively or with the gst_task_set_state() function.
  *
  * A #GstTask will repeatedly call the #GstTaskFunction with the user data
- * that was provided when creating the task with gst_task_create(). Before calling
- * the function it will acquire the provided lock.
+ * that was provided when creating the task with gst_task_create(). While calling
+ * the function it will acquire the provided lock. The provided lock is released
+ * when the task pauses or stops.
  *
  * Stopping a task with gst_task_stop() will not immediately make sure the task is
  * not running anymore. Use gst_task_join() to make sure the task is completely
