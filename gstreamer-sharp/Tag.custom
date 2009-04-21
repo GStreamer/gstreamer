@@ -1,3 +1,14 @@
+public static System.Type GetType (string tag) {
+  GLib.GType gt = GetGType (tag);
+  return (Type) gt;
+}
+
+public static void Register (string name, Gst.TagFlags flag, System.Type type, string nick, string blurb, Gst.TagMergeFunc func) {
+  GLib.GType gt = (GLib.GType) (type);
+
+  Register (name, flag, gt, nick, blurb, func);
+}
+
 public const string Title = "title";
 public const string TitleSortname = "title-sortname";
 public const string Artist = "artist";

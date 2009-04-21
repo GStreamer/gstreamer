@@ -66,7 +66,8 @@ customs = 			\
 	MiniObject.custom       \
 	Registry.custom         \
 	Structure.custom        \
-	Tag.custom
+	Tag.custom		\
+	TagList.custom
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

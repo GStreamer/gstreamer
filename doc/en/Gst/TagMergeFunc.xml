@@ -1,5 +1,5 @@
 <Type Name="TagMergeFunc" FullName="Gst.TagMergeFunc">
-  <TypeSignature Language="C#" Value="public delegate void TagMergeFunc(Value dest, Value src);" />
+  <TypeSignature Language="C#" Value="public delegate void TagMergeFunc(ref Value dest, ref Value src);" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -8,8 +8,8 @@
     <BaseTypeName>System.Delegate</BaseTypeName>
   </Base>
   <Parameters>
-    <Parameter Name="dest" Type="GLib.Value" />
-    <Parameter Name="src" Type="GLib.Value" />
+    <Parameter Name="dest" Type="GLib.Value&amp;" RefType="ref" />
+    <Parameter Name="src" Type="GLib.Value&amp;" RefType="ref" />
   </Parameters>
   <ReturnValue>
     <ReturnType>System.Void</ReturnType>

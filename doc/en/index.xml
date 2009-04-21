@@ -179,11 +179,9 @@
       <Type Name="SystemClock" Kind="Class" />
       <Type Name="Tag" Kind="Class" />
       <Type Name="TagFlags" Kind="Enumeration" />
-      <Type Name="TagForeachFunc" Kind="Delegate" />
       <Type Name="TagList" Kind="Class" />
       <Type Name="TagMergeFunc" Kind="Delegate" />
       <Type Name="TagMergeMode" Kind="Enumeration" />
-      <Type Name="Tags" Kind="Class" />
       <Type Name="TagSetter" Kind="Interface" />
       <Type Name="TagSetterAdapter" Kind="Class" />
       <Type Name="TagSetterImplementor" Kind="Interface" />
