@@ -4818,6 +4818,7 @@ gboolean
 gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
 {
   GstTask *task;
+  gboolean res;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
@@ -4832,10 +4833,10 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
     GST_PAD_TASK (pad) = task;
     GST_DEBUG_OBJECT (pad, "created task");
   }
-  gst_task_start (task);
+  res = gst_task_set_state (task, GST_TASK_STARTED);
   GST_OBJECT_UNLOCK (pad);
 
-  return TRUE;
+  return res;
 }
 
 /**
@@ -4853,6 +4854,7 @@ gboolean
 gst_pad_pause_task (GstPad * pad)
 {
   GstTask *task;
+  gboolean res;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -4862,7 +4864,7 @@ gst_pad_pause_task (GstPad * pad)
   task = GST_PAD_TASK (pad);
   if (task == NULL)
     goto no_task;
-  gst_task_pause (task);
+  res = gst_task_set_state (task, GST_TASK_PAUSED);
   GST_OBJECT_UNLOCK (pad);
 
   /* wait for task function to finish, this lock is recursive so it does nothing
@@ -4870,7 +4872,7 @@ gst_pad_pause_task (GstPad * pad)
   GST_PAD_STREAM_LOCK (pad);
   GST_PAD_STREAM_UNLOCK (pad);
 
-  return TRUE;
+  return res;
 
 no_task:
   {
@@ -4900,6 +4902,7 @@ gboolean
 gst_pad_stop_task (GstPad * pad)
 {
   GstTask *task;
+  gboolean res;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
@@ -4910,7 +4913,7 @@ gst_pad_stop_task (GstPad * pad)
   if (task == NULL)
     goto no_task;
   GST_PAD_TASK (pad) = NULL;
-  gst_task_stop (task);
+  res = gst_task_set_state (task, GST_TASK_STOPPED);
   GST_OBJECT_UNLOCK (pad);
 
   GST_PAD_STREAM_LOCK (pad);
@@ -4921,7 +4924,7 @@ gst_pad_stop_task (GstPad * pad)
 
   gst_object_unref (task);
 
-  return TRUE;
+  return res;
 
 no_task:
   {
