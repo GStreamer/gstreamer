@@ -300,8 +300,9 @@ GST_START_TEST (test_message_state_changed_children)
   /* each object is referenced by a message;
    * base_src is blocked in the push and has an extra refcount.
    * base_sink_chain has taken a refcount on the sink, and is blocked on
-   * preroll */
-  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
+   * preroll
+   * The stream-status message holds another ref to the element */
+  ASSERT_OBJECT_REFCOUNT (src, "src", 3);
   /* refcount can be 4 if the bin is still processing the async_done message of
    * the sink. */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
@@ -352,8 +353,9 @@ GST_START_TEST (test_message_state_changed_children)
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
-  /* each object is referenced by two messages */
-  ASSERT_OBJECT_REFCOUNT (src, "src", 3);
+  /* each object is referenced by two messages, the source also has the
+   * stream-status message referencing it */
+  ASSERT_OBJECT_REFCOUNT (src, "src", 4);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);
 
