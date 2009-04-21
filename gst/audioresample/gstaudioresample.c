@@ -521,14 +521,13 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
     guint * othersize)
 {
-  GstAudioResample *resample = GST_AUDIO_RESAMPLE (base);
   GstCaps *srccaps, *sinkcaps;
   gboolean ret = TRUE;
   guint32 ratio_den, ratio_num;
   gint inrate, outrate, gcd;
   gint width;
 
-  GST_LOG_OBJECT (resample, "asked to transform size %d in direction %s",
+  GST_LOG_OBJECT (base, "asked to transform size %d in direction %s",
       size, direction == GST_PAD_SINK ? "SINK" : "SRC");
   if (direction == GST_PAD_SINK) {
     sinkcaps = caps;
@@ -542,7 +541,7 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
       gst_audio_resample_parse_caps (caps, othercaps, &width, NULL, &inrate,
       &outrate, NULL);
   if (G_UNLIKELY (!ret)) {
-    GST_ERROR_OBJECT (resample, "Wrong caps");
+    GST_ERROR_OBJECT (base, "Wrong caps");
     return FALSE;
   }
 
@@ -568,7 +567,7 @@ gst_audio_resample_transform_size (GstBaseTransform * base,
     size *= fac;
   }
 
-  GST_LOG_OBJECT (resample, "transformed size %d to %d", size, *othersize);
+  GST_LOG_OBJECT (base, "transformed size %d to %d", size, *othersize);
 
   return ret;
 }
