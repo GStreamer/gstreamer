@@ -1026,7 +1026,6 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
 
     if (xing_flags & XING_VBR_SCALE_FLAG) {
       mp3parse->xing_vbr_scale = GST_READ_UINT32_BE (data);
-      data += 4;
     } else
       mp3parse->xing_vbr_scale = 0;
 
@@ -1102,7 +1101,6 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       data += 2;
 
       seek_frames = GST_READ_UINT16_BE (data);
-      data += 2;
 
       if (scale == 0 || seek_bytes == 0 || seek_bytes > 4 || seek_frames == 0) {
         GST_WARNING_OBJECT (mp3parse, "Unsupported VBRI seek table");

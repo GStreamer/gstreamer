@@ -119,7 +119,7 @@ parse_header (guint32 header, guint * ret_size, guint * ret_spf,
     gulong * ret_rate)
 {
   guint length, spf;
-  gulong mode, samplerate, bitrate, layer, channels, padding;
+  gulong samplerate, bitrate, layer, padding;
   gint lsf, mpg25;
 
   if ((header & 0xffe00000) != 0xffe00000) {
@@ -160,14 +160,6 @@ parse_header (guint32 header, guint * ret_size, guint * ret_spf,
     mpg25 = 1;
   }
 
-  if (header & (1 << 20)) {
-    lsf = (header & (1 << 19)) ? 0 : 1;
-    mpg25 = 0;
-  } else {
-    lsf = 1;
-    mpg25 = 1;
-  }
-
   layer = 4 - ((header >> 17) & 0x3);
 
   bitrate = (header >> 12) & 0xF;
@@ -179,9 +171,6 @@ parse_header (guint32 header, guint * ret_size, guint * ret_spf,
   samplerate = mp3types_freqs[lsf + mpg25][samplerate];
 
   padding = (header >> 9) & 0x1;
-
-  mode = (header >> 6) & 0x3;
-  channels = (mode == 3) ? 1 : 2;
 
   switch (layer) {
     case 1:
@@ -601,7 +590,6 @@ gst_xing_mux_sink_event (GstPad * pad, GstEvent * event)
   gboolean result;
 
   xing = GST_XING_MUX (gst_pad_get_parent (pad));
-  result = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
