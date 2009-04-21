@@ -337,11 +337,11 @@ GstMessage *	gst_message_new_tag		(GstObject * src, GstTagList * tag_list);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
 
 /* BUFFERING */
-GstMessage *	gst_message_new_buffering	(GstObject * src, gint percent);
-void 		gst_message_parse_buffering	(GstMessage *message, gint *percent);
-void            gst_message_set_buffering_stats (GstMessage *message, GstBufferingMode mode,
-		                                 gint avg_in, gint avg_out,
-						 gint64 buffering_left);
+GstMessage *	gst_message_new_buffering	  (GstObject * src, gint percent);
+void 		gst_message_parse_buffering	  (GstMessage *message, gint *percent);
+void            gst_message_set_buffering_stats   (GstMessage *message, GstBufferingMode mode,
+                                                   gint avg_in, gint avg_out,
+                                                   gint64 buffering_left);
 void            gst_message_parse_buffering_stats (GstMessage *message, GstBufferingMode *mode,
                                                    gint *avg_in, gint *avg_out,
                                                    gint64 *buffering_left);
