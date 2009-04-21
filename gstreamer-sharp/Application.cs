@@ -19,6 +19,7 @@ namespace Gst {
       int argc = 0;
 
       gst_init (ref argc, ref argv);
+      RegisterManagedTypes ();
     }
 
     public static void Init (string progname, ref string [] args) {
@@ -31,6 +32,23 @@ namespace Gst {
 
     public static void Deinit() {
       gst_deinit();
+    }
+
+    private static void RegisterManagedTypes() {
+      GLib.GType t;
+
+      t = Gst.Fraction.GType;
+      t = Gst.DoubleRange.GType;
+      t = Gst.IntRange.GType;
+      t = Gst.FractionRange.GType;
+      t = Gst.Fourcc.GType;
+      t = Gst.Date.GType;
+      t = Gst.List.GType;
+      t = Gst.Array.GType;
+      t = Gst.Caps.GType;
+      t = Gst.Structure.GType;
+      t = Gst.TagList.GType;
+      t = Gst.MiniObject.GType;
     }
 
     private static void FullInit (string progname, ref string [] args, bool check) {
@@ -68,6 +86,7 @@ namespace Gst {
         args = new string[argc - 1];
         System.Array.Copy (progargs, 1, args, 0, argc - 1);
       }
+      RegisterManagedTypes ();
     }
 
     [DllImport ("gstreamer-0.10.dll") ]
