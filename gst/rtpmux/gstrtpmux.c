@@ -36,8 +36,9 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include <gstrtpmux.h>
 #include <string.h>
+
+#include "gstrtpmux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_mux_debug);
 #define GST_CAT_DEFAULT gst_rtp_mux_debug
@@ -64,7 +65,7 @@ enum
 
 typedef struct
 {
-  gboolean have_ts_base;
+  gboolean have_clock_base;
   guint clock_base;
 } GstRTPMuxPadPrivate;
 
@@ -79,10 +80,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("application/x-rtp")
     );
-
-static void gst_rtp_mux_base_init (gpointer g_class);
-static void gst_rtp_mux_class_init (GstRTPMuxClass * klass);
-static void gst_rtp_mux_init (GstRTPMux * rtp_mux);
 
 static void gst_rtp_mux_finalize (GObject * object);
 
@@ -101,34 +98,8 @@ static void gst_rtp_mux_set_property (GObject * object, guint prop_id,
 static void gst_rtp_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_rtp_mux_src_event (GstPad * pad, GstEvent * event);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_rtp_mux_get_type (void)
-{
-  static GType rtp_mux_type = 0;
-
-  if (!rtp_mux_type) {
-    static const GTypeInfo rtp_mux_info = {
-      sizeof (GstRTPMuxClass),
-      gst_rtp_mux_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtp_mux_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRTPMux),
-      0,
-      (GInstanceInitFunc) gst_rtp_mux_init,
-    };
-
-    rtp_mux_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRTPMux",
-        &rtp_mux_info, 0);
-  }
-  return rtp_mux_type;
-}
+GST_BOILERPLATE (GstRTPMux, gst_rtp_mux, GstElement, GST_TYPE_ELEMENT);
 
 static void
 gst_rtp_mux_base_init (gpointer g_class)
@@ -151,8 +122,6 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_rtp_mux_finalize;
   gobject_class->get_property = gst_rtp_mux_get_property;
@@ -224,20 +193,20 @@ gst_rtp_mux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_rtp_mux_init (GstRTPMux * rtp_mux)
+gst_rtp_mux_init (GstRTPMux * object, GstRTPMuxClass * g_class)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (rtp_mux);
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (object);
 
-  rtp_mux->srcpad =
+  object->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_set_event_function (rtp_mux->srcpad,
+  gst_pad_set_event_function (object->srcpad,
       GST_DEBUG_FUNCPTR (gst_rtp_mux_src_event));
-  gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
+  gst_element_add_pad (GST_ELEMENT (object), object->srcpad);
 
-  rtp_mux->ssrc = DEFAULT_SSRC;
-  rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
-  rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
+  object->ssrc = DEFAULT_SSRC;
+  object->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
+  object->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
 }
 
 static void
@@ -348,7 +317,7 @@ gst_rtp_mux_readjust_rtp_timestamp (GstRTPMux * rtp_mux, GstPad * pad,
   guint32 sink_ts_base = 0;
   GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
 
-  if (padpriv->have_ts_base)
+  if (padpriv->have_clock_base)
     sink_ts_base = padpriv->clock_base;
 
   ts = gst_rtp_buffer_get_timestamp (buffer) - sink_ts_base + rtp_mux->ts_base;
@@ -361,7 +330,6 @@ static GstFlowReturn
 gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
-  GstStructure *structure;
   GstFlowReturn ret;
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
@@ -378,10 +346,6 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   rtp_mux->seqnum++;
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
   GST_OBJECT_UNLOCK (rtp_mux);
-  GST_BUFFER_CAPS (buffer) = gst_caps_make_writable (GST_BUFFER_CAPS (buffer));
-  structure = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0U);
-  gst_structure_set (structure, "seqnum-base", G_TYPE_UINT,
-      rtp_mux->seqnum_base, NULL);
   gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
   gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, pad, buffer);
   GST_LOG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
@@ -412,7 +376,7 @@ gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps)
     goto out;
 
   if (gst_structure_get_uint (structure, "clock-base", &padpriv->clock_base)) {
-    padpriv->have_ts_base = TRUE;
+    padpriv->have_clock_base = TRUE;
   }
 
   caps = gst_caps_copy (caps);
