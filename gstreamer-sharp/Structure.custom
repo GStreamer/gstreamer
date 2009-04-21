@@ -190,11 +190,11 @@ public object this [string field] {
   }
 }
 
-public IEnumerable Fields {
+public string[] Fields {
   get {
-    ArrayList fields = new ArrayList ();
+    string[] fields = new string[Count];
     for (uint i = 0; i < Count; i++)
-      fields.Add (NthFieldName (i));
+      fields[i] = NthFieldName (i);
 
     return fields;
   }
