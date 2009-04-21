@@ -3201,12 +3201,6 @@ gst_camerabin_user_pause (GstCameraBin * camera)
       g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", FALSE,
           "active-pad", camera->pad_src_view, NULL);
 
-      /* Enable view finder mode in v4l2camsrc */
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS
-              (camera->src_vid_src), "capture-mode")) {
-        g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 0, NULL);
-      }
-
       /* Set view finder to PLAYING and leave videobin PAUSED */
       gst_element_set_locked_state (camera->vidbin, TRUE);
       gst_element_set_state (GST_ELEMENT (camera), GST_STATE_PLAYING);
@@ -3221,12 +3215,6 @@ gst_camerabin_user_pause (GstCameraBin * camera)
       /* Switch to video recording mode */
       g_object_set (G_OBJECT (camera->src_out_sel), "resend-latest", TRUE,
           "active-pad", camera->pad_src_vid, NULL);
-
-      /* Enable video recording mode in v4l2camsrc */
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS
-              (camera->src_vid_src), "capture-mode")) {
-        g_object_set (G_OBJECT (camera->src_vid_src), "capture-mode", 2, NULL);
-      }
 
       /* Bring all camerabin elements to PLAYING */
       gst_element_set_locked_state (camera->vidbin, FALSE);
