@@ -10,10 +10,10 @@
 # Suomennos: http://gnome.fi/
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-15 23:00+0100\n"
-"PO-Revision-Date: 2009-01-18 15:48+0200\n"
+"POT-Creation-Date: 2009-04-21 20:53+0100\n"
+"PO-Revision-Date: 2009-04-19 21:17+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -235,31 +235,28 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
 
 #: gst/playback/gstplaysink.c:962
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
+msgstr "Sekä autovideosink- ja xvimagesink-elementit eivät toimi."
 
 #: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Räätälöity tekstinieluelementti ei ole käyttökunnossa."
 
 #: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "Äänenvoimakkuuden hallintaa ei löytynyt"
 
 #: gst/playback/gstplaysink.c:1490
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
+msgstr "Sekä autoaudiosink- että alsasink-elementit eivät toimi."
 
 #: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
 msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
 
 #: gst/playback/gstplaysink.c:1993
-#, fuzzy
 msgid "Can't play a text subtitles and subpictures."
-msgstr "Ei voida toistaa tekstitiedosta ilman kuvaa."
+msgstr "Ei voida toistaa tekstitystä sekä alikuvaa."
 
 #: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."

@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-15 23:00+0100\n"
-"PO-Revision-Date: 2009-01-12 20:13+0200\n"
+"POT-Creation-Date: 2009-04-21 20:53+0100\n"
+"PO-Revision-Date: 2009-04-16 21:39+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -237,31 +237,28 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Nie ma żadnego z elementów autoaudiosink i alsasink."
 
 #: gst/playback/gstplaysink.c:962
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Nie ma żadnego z elementów autovideosink i xvimagesink."
+msgstr "Żaden z elementów autovideosink i xvimagesink nie działa."
 
 #: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Własny element text sink nie jest użyteczny."
 
 #: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "Nie znaleziono sterowania głośnością"
 
 #: gst/playback/gstplaysink.c:1490
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Nie ma żadnego z elementów autoaudiosink i alsasink."
+msgstr "Żaden z elementów autoaudiosink i alsasink nie działa."
 
 #: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
 msgstr "Nie można odtwarzać pliku tekstowego bez obrazu."
 
 #: gst/playback/gstplaysink.c:1993
-#, fuzzy
 msgid "Can't play a text subtitles and subpictures."
-msgstr "Nie można odtwarzać pliku tekstowego bez obrazu."
+msgstr "Nie można odtwarzać podpisów tekstowych i podobrazów."
 
 #: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."

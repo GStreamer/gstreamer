@@ -1,14 +1,14 @@
 # Italian translation for gst-plugins-base package of GStreamer project.
 # Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer team
 # This file is distributed under the same license as the gst-plugins-base package.
-# Luca Ferretti <elle.uca@infinito.it>, 2004-2009.
+# Luca Ferretti <elle.uca@infinito.it>, 2004, 2005, 2006, 2007, 2008, 2009.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.21.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-15 23:00+0100\n"
-"PO-Revision-Date: 2009-01-13 11:24+0100\n"
+"POT-Creation-Date: 2009-04-21 20:53+0100\n"
+"PO-Revision-Date: 2009-04-16 22:50+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -237,32 +237,33 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Risultano mancanti entrambi gli elementi «autoaudiosink» e «alsasink»."
 
 #: gst/playback/gstplaysink.c:962
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
 msgstr ""
-"Risultano mancanti entrambi gli elementi «autovideosink» e «xvimagesink»."
+"Entrambi gli elementi «autovideosink» e «xvimagesink» non sono operativi."
 
 #: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "L'elemento sink di testo personalizzato non è utilizzabile."
 
 #: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
 msgstr "Non è stato trovato alcun controllo del volume"
 
 #: gst/playback/gstplaysink.c:1490
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Risultano mancanti entrambi gli elementi «autoaudiosink» e «alsasink»."
+msgstr "Entrambi gli elementi «autoaudiosink» e «alsasink» non sono operativi."
 
 #: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
 msgstr "Impossibile riprodurre un file di testo senza video."
 
+# NOTA NOTA NOTA
+# questo messaggio è stanissimo
+# Subpictures sono cose tipiche dei dvd (vedi google)
+# e sembra che non ci sia una traduzione in italiano
 #: gst/playback/gstplaysink.c:1993
-#, fuzzy
 msgid "Can't play a text subtitles and subpictures."
-msgstr "Impossibile riprodurre un file di testo senza video."
+msgstr "Impossibile riprodurre sottotitoli di testo e subpicture."
 
 #: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."

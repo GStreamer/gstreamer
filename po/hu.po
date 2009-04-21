@@ -1,14 +1,14 @@
 # Hungarian translation of gst-plugins-base
 # This file is distributed under the same license as the gst-plugins-base package.
-# Copyright (C) 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.18\n"
+"Project-Id-Version: gst-plugins-base 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-15 23:00+0100\n"
-"PO-Revision-Date: 2008-05-12 03:35+0200\n"
+"POT-Creation-Date: 2009-04-21 20:53+0100\n"
+"PO-Revision-Date: 2009-04-20 01:44+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -233,30 +233,28 @@ msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
 
 #: gst/playback/gstplaysink.c:962
-#, fuzzy
 msgid "Both autovideosink and xvimagesink elements are not working."
-msgstr "Mind az autovideosink, mind az xvimagesink elemek hiányoznak."
+msgstr "Sem az autovideosink, sem az xvimagesink elem nem működik."
 
 #: gst/playback/gstplaysink.c:1078 gst/playback/gstplaysink.c:1235
 msgid "Custom text sink element is not usable."
-msgstr ""
+msgstr "Az egyéni szövegnyelő elem nem használható."
 
 #: gst/playback/gstplaysink.c:1469
 msgid "No volume control found"
-msgstr ""
+msgstr "Nem található hangerőszabályzó"
 
 #: gst/playback/gstplaysink.c:1490
-#, fuzzy
 msgid "Both autoaudiosink and alsasink elements are not working."
-msgstr "Mind az autoaudiosink, mind az  alsasink elemek hiányoznak."
+msgstr "Sem az autoaudiosink, sem az alsasink elem nem működik."
 
 #: gst/playback/gstplaysink.c:1985
 msgid "Can't play a text file without video."
-msgstr ""
+msgstr "A szövegfájl nem játszható le videó nélkül."
 
 #: gst/playback/gstplaysink.c:1993
 msgid "Can't play a text subtitles and subpictures."
-msgstr ""
+msgstr "Nem játszható le szöveges felirat és részképek."
 
 #: gst/playback/gstqueue2.c:1005
 msgid "No file name specified."
@@ -290,9 +288,8 @@ msgid "Could not create \"queue2\" element."
 msgstr "Nem hozható létre „queue2” elem."
 
 #: gst/playback/gsturidecodebin.c:1270
-#, fuzzy
 msgid "Could not create \"typefind\" element."
-msgstr "Nem hozható létre „decodebin” elem"
+msgstr "Nem hozható létre „typefind” elem."
 
 #: gst/tcp/gsttcp.c:503 gst/tcp/gsttcpclientsink.c:287
 #, c-format
@@ -320,7 +317,7 @@ msgstr "Nem lehet leég gyorsan rögzíteni a hangot"
 
 #: gst-libs/gst/tag/gsttagdemux.c:1055
 msgid "Failed to read tag: not enough data"
-msgstr ""
+msgstr "A címke nem olvasható: nincs elég adat"
 
 #: gst-libs/gst/tag/tags.c:59
 msgid "track ID"
@@ -425,9 +422,8 @@ msgid "TMPlayer subtitle format"
 msgstr "TMPlayer feliratformátum"
 
 #: gst-libs/gst/pbutils/descriptions.c:210
-#, fuzzy
 msgid "Kate subtitle format"
-msgstr "Sami feliratformátum"
+msgstr "Kate feliratformátum"
 
 #: gst-libs/gst/pbutils/descriptions.c:269
 msgid "Uncompressed planar YUV 4:2:0"
