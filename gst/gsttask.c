@@ -213,12 +213,15 @@ exit:
    * before releasing the lock as we can be sure that a ref is held by the
    * caller of the join(). */
   task->running = FALSE;
+  if (priv->thr_callbacks.leave_thread) {
+    /* fire the leave_thread callback when we need to. We need to do this before
+     * we signal the task and with the task lock released. */
+    GST_OBJECT_UNLOCK (task);
+    priv->thr_callbacks.leave_thread (task, tself, priv->thr_user_data);
+    GST_OBJECT_LOCK (task);
+  }
   GST_TASK_SIGNAL (task);
   GST_OBJECT_UNLOCK (task);
-
-  /* fire the leave_thread callback when we need to */
-  if (priv->thr_callbacks.leave_thread)
-    priv->thr_callbacks.leave_thread (task, tself, priv->thr_user_data);
 
   GST_DEBUG ("Exit task %p, thread %p", task, g_thread_self ());
 
