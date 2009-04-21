@@ -263,7 +263,7 @@ gst_amrnbparse_handle_pull_seek (GstAmrnbParse * amrnbparse, GstPad * pad,
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
-  gint64 byte_cur = -1, byte_stop = -1;
+  gint64 byte_cur = -1;
   gboolean flush;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
@@ -301,14 +301,11 @@ gst_amrnbparse_handle_pull_seek (GstAmrnbParse * amrnbparse, GstPad * pad,
   cur = cur / (20 * GST_MSECOND) * (20 * GST_MSECOND);
   if (cur != -1)
     byte_cur = amrnbparse->block * (cur / 20 / GST_MSECOND) + AMRNB_HEADER_SIZE;
-  if (stop != -1)
-    byte_stop =
-        amrnbparse->block * (stop / 20 / GST_MSECOND) + AMRNB_HEADER_SIZE;
   amrnbparse->offset = byte_cur;
   amrnbparse->ts = cur;
 
-  GST_DEBUG_OBJECT (amrnbparse, "Seeking to byte range %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, byte_cur, cur);
+  GST_DEBUG_OBJECT (amrnbparse, "Seeking to byte range %" G_GINT64_FORMAT,
+      byte_cur);
 
   /* and prepare to continue streaming */
   /* send flush stop, peer will accept data and events again. We
