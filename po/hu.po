@@ -2,20 +2,20 @@
 # Copyright (c) 2006 Canonical Ltd, and Rosetta Contributors
 # This file is distributed under the same license as the gstreamer package.
 #
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
+"Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-15 22:25+0100\n"
-"PO-Revision-Date: 2008-09-25 01:50+0100\n"
+"POT-Creation-Date: 2009-04-21 20:49+0100\n"
+"PO-Revision-Date: 2009-04-17 23:54+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
 msgstr "A GStreamer verziójának kiírása"
@@ -360,12 +360,11 @@ msgstr ""
 "A média eredete URI címként (az a hely, ahol az eredeti fájl vagy műsor "
 "megtalálható)"
 
-#, fuzzy
 msgid "homepage"
-msgstr "kép"
+msgstr "honlap"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "A média honlapja (előadó vagy film honlapja)"
 
 msgid "description"
 msgstr "leírás"
@@ -384,7 +383,7 @@ msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
-"International Standard Recording Code - lásd: http://www.ifpi.org/isrc/"
+"International Standard Recording Code – lásd: http://www.ifpi.org/isrc/"
 
 msgid "organization"
 msgstr "szervezet"
@@ -455,13 +454,11 @@ msgstr "hangkodek"
 msgid "codec the audio data is stored in"
 msgstr "a hangadatok tárolására használt kodek"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "videokodek"
+msgstr "feliratkodek"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "a videoadatok tárolására használt kodek"
+msgstr "a feliratadatok tárolására használt kodek"
 
 msgid "bitrate"
 msgstr "bitsebesség"
@@ -620,20 +617,19 @@ msgstr ", "
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "a megadott üres \"%s\" tároló nem engedélyezett"
+msgstr "a megadott üres „%s” tároló nem engedélyezett"
 
 #, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "nincs \"%s\" tároló, átlépés"
+msgstr "nincs „%s” tároló, átlépés"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "nincs \"%s\" tulajdonság a(z) \"%s\" elemben"
+msgstr "nincs „%s” tulajdonság a(z) „%s” elemben"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
-"nem állítható be a(z) \"%2$s\" elem \"%1$s\" tulajdonsága \"%3$s\" értékre"
+msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -641,11 +637,11 @@ msgstr "%s nem linkelhető a következőre: %s"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "nincs \"%s\" elem"
+msgstr "nincs „%s” elem"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "a(z) \"%s\" képesség nem elemezhető"
+msgstr "a(z) „%s” képesség nem elemezhető"
 
 msgid "link without source element"
 msgstr "link forráselem nélkül"
@@ -655,19 +651,19 @@ msgstr "link nyelőelem nélkül"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "nincs forráselem a következő URI címhez: \"%s\""
+msgstr "nincs forráselem a következő URI címhez: „%s”"
 
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "nincs elem, amelyhez a(z) \"%s\" URI linkelhető lenne"
+msgstr "nincs elem, amelyhez a(z) „%s” URI linkelhető lenne"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "nincs nyelőelem a következő URI címhez: \"%s\""
+msgstr "nincs nyelőelem a következő URI címhez: „%s”"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "nem linkelhető nyelőelem a következő URI címhez: \"%s\""
+msgstr "nem linkelhető nyelőelem a következő URI címhez: „%s”"
 
 msgid "empty pipeline not allowed"
 msgstr "üres adatcsatorna nem engedélyezett"
@@ -696,49 +692,49 @@ msgstr ""
 
 #, c-format
 msgid "Error while writing to file descriptor \"%d\"."
-msgstr "Hiba a következő fájlleíróba íráskor: \"%d\"."
+msgstr "Hiba a következő fájlleíróba íráskor: „%d”."
 
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
-msgstr "A következő fájlleíró érvénytelen: \"%d\"."
+msgstr "A következő fájlleíró érvénytelen: „%d”."
 
 msgid "No file name specified for writing."
 msgstr "Nincs fájlnév megadva az íráshoz."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) \"%s\" fájlt."
+msgstr "Nem lehet írásra megnyitni a(z) „%s” fájlt."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Hiba a(z) \"%s\" fájl bezárása közben."
+msgstr "Hiba a(z) „%s” fájl bezárása közben."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Hiba a következő fájlban való tekerés közben: \"%s\"."
+msgstr "Hiba a következő fájlban való tekerés közben: „%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Hiba a(z) \"%s\" fájl írása közben."
+msgstr "Hiba a(z) „%s” fájl írása közben."
 
 msgid "No file name specified for reading."
 msgstr "Nincs megadva fájlnév az olvasáshoz."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nem nyitható meg a(z) \"%s\" fájl olvasásra."
+msgstr "Nem nyitható meg a(z) „%s” fájl olvasásra."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Nem kérhetők le információk a következőkről: \"%s\"."
+msgstr "Nem kérhetők le információk a következőkről: „%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" egy könyvtár."
+msgstr "„%s” egy könyvtár."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "A(z) \"%s\" fájl egy foglalat."
+msgstr "A(z) „%s” fájl egy foglalat."
 
 msgid "Failed after iterations as requested."
 msgstr "Ismétlések után kérésére meghiúsult."
@@ -804,10 +800,10 @@ msgstr ""
 "Külső bővítménytelepítési módszerekkel együtt hasznos."
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "A bővítmény tartalmának felsorolása"
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
+msgstr "Támogatott URI sémák kiírása, az azokat megvalósító elemmel"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -815,23 +811,22 @@ msgstr "Nem tölthető be a bővítményfájl: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Nincs ilyen elem vagy bővítmény: \"%s\"\n"
+msgstr "Nincs ilyen elem vagy bővítmény: „%s”\n"
 
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Használat: gst-xmllaunch <fájl.xml> [ elem.tulajdonság=érték ... ]\n"
+msgstr "Használat: gst-xmllaunch <fájl.xml> [ elem.tulajdonság=érték … ]\n"
 
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
-msgstr "HIBA: a(z) \"%s\" xml fájl feldolgozása meghiúsult.\n"
+msgstr "HIBA: a(z) „%s” xml fájl feldolgozása meghiúsult.\n"
 
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr ""
-"HIBA: nincs felső szintű adatcsatorna elem a következő fájlban: \"%s\".\n"
+"HIBA: nincs felső szintű adatcsatorna elem a következő fájlban: „%s”.\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "FIGYELMEZTETÉS: egyszerre csak egy felső szintű elem támogatott."
+msgstr "FIGYELMEZTETÉS: egyszerre csak egy felső szintű elem támogatott.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -839,18 +834,18 @@ msgstr "HIBA: nem elemezhető a(z) %d. parancssori argumentum: %s.\n"
 
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
-msgstr "FIGYELMEZTETÉS: a(z) \"%s\" nevű elem nem található.\n"
+msgstr "FIGYELMEZTETÉS: a(z) „%s” nevű elem nem található.\n"
 
 msgid "Got Message #%"
-msgstr ""
+msgstr "Üzenet érkezett: #%"
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "EOS érkezett a következő elemtől: \"%s\".\n"
+msgstr "EOS érkezett a következő elemtől: „%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "CÍMKE MEGTALÁLVA: a(z) \"%s\" elem által.\n"
+msgstr "CÍMKE MEGTALÁLVA: a(z) „%s” elem által.\n"
 
 #, c-format
 msgid ""
@@ -865,27 +860,26 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "FIGYELMEZTETÉS: a következő elemtől: %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Előzetesen betöltve, várakozás a pufferelés befejeződésére...\n"
+msgstr "Előzetesen betöltve, várakozás a pufferelés befejeződésére…\n"
 
-#, fuzzy
 msgid "buffering..."
-msgstr "pufferelés... %d  \n"
+msgstr "pufferelés…"
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "A pufferelés kész, adatcsatorna beállítása LEJÁTSZÁSRA...\n"
+msgstr "A pufferelés kész, adatcsatorna beállítása LEJÁTSZÁSRA…\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "Pufferelés, az adatcsatorna beállítása SZÜNETELTETETT állapotúra...\n"
+msgstr "Pufferelés, az adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
 
 msgid "Redistribute latency...\n"
-msgstr ""
+msgstr "Késleltetés újraelosztása…\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Állapot beállítása erre: %s, %s kérésének megfelelően…\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "Megszakítás: Adatcsatorna leállítása ...\n"
+msgstr "Megszakítás: Adatcsatorna leállítása…\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kimeneti címkék (metaadatok)"
@@ -893,9 +887,8 @@ msgstr "Kimeneti címkék (metaadatok)"
 msgid "Output status information and property notifications"
 msgstr "Kimeneti állapotinformációk és tulajdonság-értesítések"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "Ne írjon ki a TÍPUS típus állapotinformációit"
+msgstr "Ne írjon ki előrehaladás-információkat"
 
 msgid "Output messages"
 msgstr "Kimeneti üzenetek"
@@ -904,7 +897,7 @@ msgid "Do not output status information of TYPE"
 msgstr "Ne írjon ki a TÍPUS típus állapotinformációit"
 
 msgid "TYPE1,TYPE2,..."
-msgstr "TÍPUS1,TÍPUS2,..."
+msgstr "TÍPUS1,TÍPUS2,…"
 
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Az adatcsatorna xml ábrázolásának mentése a FÁJLBA és kilépés"
@@ -919,7 +912,7 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Foglalási nyomkövetés nyomtatása (ha fordításkor engedélyezték)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "EOS kényszerítése a forrásokra az adatcsatorna leállítása előtt"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -933,63 +926,52 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "FIGYELMEZTETÉS: hibás adatcsatorna: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "HIBA: az \"adatcsatorna\" elem nem található.\n"
+msgstr "HIBA: az „adatcsatorna” elem nem található.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Adatcsatorna beállítása SZÜNETELTETETT állapotúra...\n"
+msgstr "Adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
 
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "HIBA: az adatcsatorna nem akar megállni.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Az adatcsatorna él és nem szükséges ELINDÍTANI...\n"
+msgstr "Az adatcsatorna él és nem szükséges ELINDÍTANI…\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "Az adatcsatorna INDÍTÁSA...\n"
+msgstr "Az adatcsatorna INDÍTÁSA…\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "HIBA: az adatcsatorna nem akar elindulni.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "Az adatcsatorna ELINDÍTVA...\n"
+msgstr "Az adatcsatorna ELINDÍTVA…\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Adatcsatorna beállítása LEJÁTSZÁSRA...\n"
+msgstr "Adatcsatorna beállítása LEJÁTSZÁSRA…\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "HIBA: az adatcsatorna nem akar lejátszani.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "Leállításkor EOS engedélyezve – EOS kényszerítése az adatcsatornára\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Várakozás EOS-ra…\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Megszakítás: Adatcsatorna leállítása ...\n"
+msgstr "EOS érkezett – adatcsatorna leállítása…\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Hiba történt az EOS-ra várakozáskor\n"
 
 msgid "Execution ended after %"
 msgstr "A végrehajtás befejeződött %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "Az adatcsatorna beállítása KÉSZ állapotra...\n"
+msgstr "Az adatcsatorna beállítása KÉSZ állapotra…\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Az adatcsatorna beállítása NULL értékre...\n"
+msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Az adatcsatorna beállítása NULL értékre...\n"
-
-#~ msgid "Got Message from element \"%s\" (%s): "
-#~ msgstr "Üzenet érkezett a(z) \"%s\" (%s) elemtől: "
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "Az adatcsatorna FELSZABADÍTÁSA...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "a fájl eredeti helye URI címként"
+msgstr "Adatcsatorna felszabadítása…\n"

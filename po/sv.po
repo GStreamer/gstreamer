@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.21.3\n"
+"Project-Id-Version: gstreamer 0.10.22.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2009-04-15 22:25+0100\n"
-"PO-Revision-Date: 2009-01-12 23:18+0100\n"
+"POT-Creation-Date: 2009-04-21 20:49+0100\n"
+"PO-Revision-Date: 2009-04-19 10:57+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -365,12 +365,11 @@ msgstr ""
 "Ursprunget för mediet som en URI (plats där den ursprungliga filen eller "
 "strömmen finns)"
 
-#, fuzzy
 msgid "homepage"
-msgstr "bild"
+msgstr "webbsida"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
+msgstr "Webbsida för detta media (alltså webbsidan för artisten eller filmen)"
 
 msgid "description"
 msgstr "beskrivning"
@@ -459,13 +458,11 @@ msgstr "ljudkomprimeringsmetod"
 msgid "codec the audio data is stored in"
 msgstr "komprimeringsmetod som dessa ljuddata lagras med"
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "videokomprimeringsmetod"
+msgstr "kodek för undertext"
 
-#, fuzzy
 msgid "codec the subtitle data is stored in"
-msgstr "komprimeringsmetod som dessa videodata lagras med"
+msgstr "kodek som undertextdata lagrats med"
 
 msgid "bitrate"
 msgstr "bitfrekvens"
@@ -842,9 +839,8 @@ msgstr "FEL: tolkning av xml-filen \"%s\" misslyckades.\n"
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
-#, fuzzy
 msgid "WARNING: only one toplevel element is supported at this time.\n"
-msgstr "VARNING: endast ett element på översta nivån stöds just nu."
+msgstr "VARNING: endast ett element på översta nivån stöds just nu.\n"
 
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
@@ -894,7 +890,7 @@ msgstr "Fördröjning för vidaresändning...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Ställer in tillståndet till %s enligt begäran från %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Avbrott: Stoppar rörledningen ...\n"
@@ -905,9 +901,8 @@ msgstr "Utmatningstaggar (även känt som metadata)"
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
 
-#, fuzzy
 msgid "Do not print any progress information"
-msgstr "Skriv inte ut statusinformation av TYP"
+msgstr "Skriv inte ut någon förloppsinformation"
 
 msgid "Output messages"
 msgstr "Utmatningsmeddelanden"
@@ -931,7 +926,7 @@ msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Tvinga EOS på källor innan rörledningen stängs av"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -973,17 +968,17 @@ msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "EOS vid avständning aktiverad -- Tvingar EOS på rörledningen\n"
 
+# EOS = End Of Stream
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Väntar på EOS...\n"
 
-#, fuzzy
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Avbrott: Stoppar rörledningen ...\n"
+msgstr "EOS togs emot - stoppar rörledning...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Ett fel inträffade vid väntan på EOS\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 msgid "Execution ended after %"
@@ -995,9 +990,8 @@ msgstr "Ställer in rörledningen till READY...\n"
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ställer in rörledningen till NULL...\n"
 
-#, fuzzy
 msgid "Freeing pipeline ...\n"
-msgstr "Ställer in rörledningen till NULL...\n"
+msgstr "Frigör rörledning ...\n"
 
 #~ msgid "FREEING pipeline ...\n"
 #~ msgstr "FRIGÖR rörledning...\n"
