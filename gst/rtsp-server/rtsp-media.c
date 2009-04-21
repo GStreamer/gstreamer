@@ -1158,9 +1158,13 @@ gst_rtsp_media_unprepare (GstRTSPMedia *media)
   g_message ("unprepare media %p", media);
   media->target_state = GST_STATE_NULL;
   gst_element_set_state (media->pipeline, GST_STATE_NULL);
+
   media->prepared = FALSE;
-  media->reused = FALSE;
-  g_signal_emit_by_name (media, "unprepared", NULL);
+  media->reused = TRUE;
+
+  /* when the media is not reusable, this will effectively unref the media and
+   * recreate it */
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
 
   return TRUE;
 }
