@@ -120,6 +120,11 @@ struct _GstMPEGAudioParse {
   GSList *pending_accurate_seeks;
   gboolean exact_position;
 
+  /* Track whether we're seekable. The seek table for accurate seeking is
+   * not maintained if we're not seekable */
+  gboolean seekable;
+
+
   /* pending segment */
   GstEvent *pending_segment;
   /* pending events */

@@ -662,7 +662,8 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size,
   if (GST_BUFFER_TIMESTAMP (outbuf) == 0)
     mp3parse->exact_position = TRUE;
 
-  if (mp3parse->exact_position && GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
+  if (mp3parse->seekable &&
+      mp3parse->exact_position && GST_BUFFER_TIMESTAMP_IS_VALID (outbuf) &&
       mp3parse->cur_offset != GST_BUFFER_OFFSET_NONE &&
       (!mp3parse->seek_table ||
           (mp3parse_seek_table_last_entry (mp3parse))->byte <
@@ -1329,9 +1330,24 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
       /* Check the first frame for a Xing header to get our total length */
       if (mp3parse->frame_count == 0) {
+        GstQuery *query;
         /* For the first frame in the file, look for a Xing frame after 
          * the header, and output a codec tag */
         gst_mp3parse_handle_first_frame (mp3parse);
+
+        /* Check if we're seekable */
+        query = gst_query_new_seeking (GST_FORMAT_BYTES);
+        if (!gst_pad_peer_query (mp3parse->sinkpad, query)) {
+          mp3parse->seekable = FALSE;
+        } else {
+          gboolean seekable;
+          GstFormat format;
+
+          gst_query_parse_seeking (query, &format, &seekable, NULL, NULL);
+          mp3parse->seekable = seekable;
+        }
+        gst_query_unref (query);
+
       }
 
       /* Update VBR stats */
