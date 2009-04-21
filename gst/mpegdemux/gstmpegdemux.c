@@ -790,6 +790,19 @@ gst_flups_demux_close_segment (GstFluPSDemux * demux)
   }
 }
 
+static inline gboolean
+have_open_streams (GstFluPSDemux * demux)
+{
+  gint id;
+
+  for (id = 0; id < GST_FLUPS_DEMUX_MAX_STREAMS; id++) {
+    if (demux->streams[id])
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static gboolean
 gst_flups_demux_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -861,10 +874,11 @@ gst_flups_demux_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
       GST_INFO_OBJECT (demux, "Received EOS");
-      if (!gst_flups_demux_send_event (demux, event)) {
-        GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
+      if (!gst_flups_demux_send_event (demux, event)
+          && !have_open_streams (demux)) {
+        GST_WARNING_OBJECT (demux, "EOS and no streams open");
         GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-            ("Internal data stream error."), ("Can't push EOS downstream"));
+            ("Internal data stream error."), ("No valid streams detected"));
       }
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -2515,10 +2529,11 @@ pause:
           /* normal playback, send EOS to all linked pads */
           gst_element_no_more_pads (GST_ELEMENT (demux));
           GST_LOG_OBJECT (demux, "Sending EOS, at end of stream");
-          if (!gst_flups_demux_send_event (demux, gst_event_new_eos ())) {
-            GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
+          if (!gst_flups_demux_send_event (demux, gst_event_new_eos ())
+              && !have_open_streams (demux)) {
+            GST_WARNING_OBJECT (demux, "EOS and no streams open");
             GST_ELEMENT_ERROR (demux, STREAM, FAILED,
-                ("Internal data stream error."), ("Can't push EOS downstream"));
+                ("Internal data stream error."), ("No valid streams detected"));
           }
         }
       } else {
