@@ -460,8 +460,18 @@ gst_mms_start (GstBaseSrc * bsrc)
     GST_DEBUG_OBJECT (mms, "Connect successful");
     return TRUE;
   } else {
-    GST_ELEMENT_ERROR (mms, RESOURCE, OPEN_READ,
-        ("Could not connect to this stream"), (NULL));
+    gchar *url, *location;
+
+    GST_ERROR_OBJECT (mms,
+        "Could not connect to this stream, redirecting to rtsp");
+    location = gst_uri_get_location (mms->uri_name);
+    url = g_strdup_printf ("rtsp://%s", location);
+    g_free (location);
+
+    gst_element_post_message (GST_ELEMENT_CAST (mms),
+        gst_message_new_element (GST_OBJECT_CAST (mms),
+            gst_structure_new ("redirect", "new-location", G_TYPE_STRING, url,
+                NULL)));
     return FALSE;
   }
 
