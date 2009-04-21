@@ -61,7 +61,7 @@ Messages
  The existing STREAM_STATUS message will be further defined and implemented in
  (selected) elements. The following fields will be contained in the message:
 
-  - "status", GST_TYPE_STREAM_STATUS_TYPE
+  - "type", GST_TYPE_STREAM_STATUS_TYPE
 
       - a set of types to control the lifecycle of the thread:
        GST_STREAM_STATUS_TYPE_CREATE: a new streaming thread is going to be
@@ -77,17 +77,6 @@ Messages
        GST_STREAM_STATUS_TYPE_PAUSE: a streaming thread is paused
        GST_STREAM_STATUS_TYPE_STOP: a streaming thread is stopped
 
-  - "thread-object-type", GST_TYPE_THREAD_OBJECT
-     The type of object used for controlling the streaming thread.
-       GST_STREAM_THREAD_TASK: thread-object contains a GstTask object
-                               controlling the streaming
-       GST_STREAM_THREAD_GTHREAD: threadobject contains a GThread that controls
-                                  the streaming.
-
-  - "thread-object", GstTask/GThread
-      A GstTask/GThread controlling this streaming thread. This can be NULL when
-      the object controlling the streaming thread is not yet created.
-
   - "owner", GST_TYPE_ELEMENT
       The owner element of the thread. The message source will contain the pad
       (or one of the pads) that will produce data by this thread. If this thread
@@ -95,6 +84,10 @@ Messages
       as well. The idea is that the application should be able to see from the
       element/pad what function this thread has in the context of the
       application and configure the thread appropriatly.
+
+  - "object", G_TYPE, GstTask/GThread
+      A GstTask/GThread controlling this streaming thread. This can be NULL when
+      the object controlling the streaming thread is not yet created.
 
   - "flow-return", GstFlowReturn
       A status code for why the thread state changed. when threads are created
