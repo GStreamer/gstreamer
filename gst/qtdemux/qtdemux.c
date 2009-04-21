@@ -5052,6 +5052,8 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint8 *data_ptr = NULL;
   int data_len = 0;
   guint8 object_type_id = 0;
+  char *codec_name = NULL;
+  GstCaps *caps = NULL;
 
   qtdemux_dump_mem (ptr, len);
   ptr += 8;
@@ -5095,6 +5097,108 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 
+  /* object_type_id in the esds atom in mp4a and mp4v tells us which codec is
+   * in use, and should also be used to override some other parameters for some
+   * codecs. */
+  switch (object_type_id) {
+    case 0x20:                 /* MPEG-4 */
+      break;                    /* Nothing special needed here */
+    case 0x21:                 /* H.264 */
+      codec_name = "H.264 / AVC";
+      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      break;
+    case 0x40:                 /* AAC (any) */
+    case 0x66:                 /* AAC Main */
+    case 0x67:                 /* AAC LC */
+    case 0x68:                 /* AAC SSR */
+      /* Override channels and rate based on the codec_data, as it's often
+       * wrong. */
+      if (data_ptr && data_len >= 2) {
+        guint channels, rateindex;
+        int rates[] = { 96000, 88200, 64000, 48000, 44100, 32000,
+          24000, 22050, 16000, 12000, 11025, 8000
+        };
+
+        channels = (data_ptr[1] & 0x7f) >> 3;
+        if (channels <= 7) {
+          stream->n_channels = channels;
+        }
+
+        rateindex = ((data_ptr[0] & 0x7) << 1) | ((data_ptr[1] & 0x80) >> 7);
+        if (rateindex < sizeof (rates) / sizeof (*rates)) {
+          stream->rate = rates[rateindex];
+        }
+      }
+      break;
+    case 0x60:                 /* MPEG-2, various profiles */
+    case 0x61:
+    case 0x62:
+    case 0x63:
+    case 0x64:
+    case 0x65:
+      codec_name = "MPEG-2 video";
+
+      gst_caps_unref (stream->caps);
+      stream->caps = gst_caps_new_simple ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 2,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case 0x69:                 /* MP3 has two different values, accept either */
+    case 0x6B:
+      /* change to mpeg1 layer 3 audio */
+      gst_caps_set_simple (stream->caps, "layer", G_TYPE_INT, 3,
+          "mpegversion", G_TYPE_INT, 1, NULL);
+      codec_name = "MPEG-1 layer 3";
+      break;
+    case 0x6A:                 /* MPEG-1 */
+      codec_name = "MPEG-1 video";
+
+      gst_caps_unref (stream->caps);
+      stream->caps = gst_caps_new_simple ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 1,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    case 0x6C:                 /* MJPEG */
+      caps = gst_caps_new_simple ("image/jpeg", NULL);
+      codec_name = "Motion-JPEG";
+      break;
+    case 0x6D:                 /* PNG */
+      caps = gst_caps_new_simple ("image/png", NULL);
+      codec_name = "PNG still images";
+      break;
+    case 0x6E:                 /* JPEG2000 */
+      codec_name = "JPEG-2000";
+      caps = gst_caps_new_simple ("image/x-j2c", "fields", G_TYPE_INT, 1, NULL);
+      break;
+    case 0xA4:                 /* Dirac */
+      codec_name = "Dirac";
+      caps = gst_caps_new_simple ("video/x-dirac", NULL);
+      break;
+    case 0xA5:                 /* AC3 */
+      codec_name = "AC-3 audio";
+      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      break;
+    case 0xE1:                 /* QCELP */
+      /* QCELP, the codec_data is a riff tag (little endian) with
+       * more info (http://ftp.3gpp2.org/TSGC/Working/2003/2003-05-SanDiego/TSG-C-2003-05-San%20Diego/WG1/SWG12/C12-20030512-006%20=%20C12-20030217-015_Draft_Baseline%20Text%20of%20FFMS_R2.doc). */
+      caps = gst_caps_new_simple ("audio/qcelp", NULL);
+      codec_name = "QCELP";
+      break;
+    default:
+      break;
+  }
+
+  /* If we have a replacement caps, then change our caps for this stream */
+  if (caps) {
+    gst_caps_unref (stream->caps);
+    stream->caps = caps;
+  }
+
+  if (codec_name && list)
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, codec_name, NULL);
+
+  /* Add the codec_data attribute to caps, if we have it */
   if (data_ptr) {
     GstBuffer *buffer;
 
@@ -5108,35 +5212,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         buffer, NULL);
     gst_buffer_unref (buffer);
   }
-  /* object_type_id in the stsd atom in mp4a tells us about AAC or plain
-   * MPEG audio and other formats */
-  switch (object_type_id) {
-    case 107:
-      /* change to mpeg1 layer 3 audio */
-      gst_caps_set_simple (stream->caps, "layer", G_TYPE_INT, 3,
-          "mpegversion", G_TYPE_INT, 1, NULL);
-      if (list)
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_AUDIO_CODEC, "MPEG-1 layer 3", NULL);
-      break;
-    case 0xE1:
-    {
-      GstStructure *structure;
 
-      /* QCELP, the codec_data is a riff tag (little endian) with
-       * more info (http://ftp.3gpp2.org/TSGC/Working/2003/2003-05-SanDiego/TSG-C-2003-05-San%20Diego/WG1/SWG12/C12-20030512-006%20=%20C12-20030217-015_Draft_Baseline%20Text%20of%20FFMS_R2.doc). */
-      structure = gst_caps_get_structure (stream->caps, 0);
-      gst_structure_set_name (structure, "audio/qcelp");
-      gst_structure_remove_fields (structure, "mpegversion", "framed", NULL);
-
-      if (list)
-        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
-            GST_TAG_AUDIO_CODEC, "QCELP", NULL);
-      break;
-    }
-    default:
-      break;
-  }
 }
 
 #define _codec(name) \
