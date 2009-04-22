@@ -85,7 +85,6 @@ static void gst_rtp_mux_finalize (GObject * object);
 
 static GstPad *gst_rtp_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
-static void gst_rtp_mux_release_pad (GstElement * element, GstPad * pad);
 static GstFlowReturn gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_rtp_mux_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_rtp_mux_getcaps (GstPad * pad);
@@ -147,7 +146,6 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_mux_request_new_pad);
-  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_mux_release_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_mux_change_state);
 
   klass->chain_func = gst_rtp_mux_chain;
@@ -246,6 +244,14 @@ gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ)
 }
 
 static void
+free_pad_private (gpointer data, GObject * where_the_object_was)
+{
+  GstRTPMuxPadPrivate *padpriv = data;
+
+  g_slice_free (GstRTPMuxPadPrivate, padpriv);
+}
+
+static void
 gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
 {
   GstRTPMuxClass *klass;
@@ -265,6 +271,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
   gst_pad_set_active (sinkpad, TRUE);
 
   gst_pad_set_element_private (sinkpad, padpriv);
+  g_object_weak_ref (sinkpad, free_pad_private, padpriv);
 
   /* dd the pad to the element */
   gst_element_add_pad (GST_ELEMENT (rtp_mux), sinkpad);
@@ -294,18 +301,6 @@ gst_rtp_mux_request_new_pad (GstElement * element,
     GST_WARNING_OBJECT (rtp_mux, "failed to create request pad");
 
   return newpad;
-}
-
-static void
-gst_rtp_mux_release_pad (GstElement * element, GstPad * pad)
-{
-  GstRTPMuxPadPrivate *padpriv = gst_pad_get_element_private (pad);
-
-  if (padpriv)
-    g_slice_free (GstRTPMuxPadPrivate, padpriv);
-  gst_pad_set_element_private (pad, NULL);
-
-  gst_element_remove_pad (element, pad);
 }
 
 /* Put our own clock-base on the buffer */
