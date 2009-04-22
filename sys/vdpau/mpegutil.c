@@ -158,7 +158,7 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   if (G_UNLIKELY (data >= end))
     return FALSE;               /* short extension packet */
 
-  ext_code = data[0] >> 4;
+  ext_code = read_bits (data, 0, 4);
 
   switch (ext_code) {
     case MPEG_PACKET_EXT_SEQUENCE:
@@ -171,11 +171,13 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
         /* need at least 10 bytes, minus 4 for the start code 000001b5 */
         return FALSE;
 
-      horiz_size_ext = ((data[1] << 1) & 0x02) | ((data[2] >> 7) & 0x01);
-      vert_size_ext = (data[2] >> 5) & 0x03;
       hdr->profile = read_bits (data, 7, 3);
-      fps_n_ext = (data[5] >> 5) & 0x03;
-      fps_d_ext = data[5] & 0x1f;
+
+      horiz_size_ext = read_bits (data + 1, 7, 2);
+      vert_size_ext = read_bits (data + 2, 1, 2);
+
+      fps_n_ext = read_bits (data + 5, 1, 2);
+      fps_d_ext = read_bits (data + 5, 3, 5);
 
       hdr->fps_n *= (fps_n_ext + 1);
       hdr->fps_d *= (fps_d_ext + 1);
@@ -215,15 +217,15 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   hdr->mpeg_version = 1;
 
   code = GST_READ_UINT32_BE (data);
-  hdr->width = (code >> 20) & 0xfff;
-  hdr->height = (code >> 8) & 0xfff;
+  hdr->width = read_bits (data, 0, 12);
+  hdr->height = read_bits (data + 1, 4, 12);
 
-  dar_idx = (code >> 4) & 0xf;
+  dar_idx = read_bits (data + 3, 0, 4);
   set_par_from_dar (hdr, dar_idx);
-  fps_idx = code & 0xf;
+  fps_idx = read_bits (data + 3, 4, 4);
   set_fps_from_code (hdr, fps_idx);
 
-  constrained_flag = (data[7] >> 2) & 0x01;
+  constrained_flag = read_bits (data + 7, 5, 1);
 
   load_intra_flag = read_bits (data + 7, 6, 1);
   if (load_intra_flag) {
@@ -285,11 +287,14 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
   /* Skip the sync word */
   data += 4;
 
-  hdr->pic_type = read_bits (data + 1, 2, 3);
+  hdr->pic_type = (data[1] >> 3) & 0x07;
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
     return FALSE;               /* Corrupted picture packet */
 
   if (hdr->pic_type == P_FRAME || hdr->pic_type == B_FRAME) {
+    if (G_UNLIKELY ((end - data) < 5))
+      return FALSE;             /* packet too small */
+
     hdr->full_pel_forward_vector = read_bits (data + 3, 5, 1);
     hdr->f_code[0][0] = hdr->f_code[0][1] = read_bits (data + 3, 6, 3);
 
