@@ -60,6 +60,7 @@
     <xi:include href="xml/element-mplex.xml" />
     <xi:include href="xml/element-mythtvsrc.xml" />
     <xi:include href="xml/element-mxfdemux.xml" />
+    <xi:include href="xml/element-mxfmux.xml" />
     <xi:include href="xml/element-nuvdemux.xml" />
     <xi:include href="xml/element-output-selector.xml" />
     <xi:include href="xml/element-rtpdtmfdepay.xml" />

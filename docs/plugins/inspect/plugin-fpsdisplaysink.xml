@@ -1,0 +1,28 @@
+<plugin>
+  <name>fpsdisplaysink</name>
+  <description>A custom sink that show the current FPS of the sink on the video screen</description>
+  <filename>../../gst/debugutils/.libs/libgstfpsdisplaysink.so</filename>
+  <basename>libgstfpsdisplaysink.so</basename>
+  <version>0.10.11.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>Nokia Real-time Communications</package>
+  <origin></origin>
+  <elements>
+    <element>
+      <name>fpsdisplaysink</name>
+      <longname>Wrapper for xvimagesink's frame-rate display</longname>
+      <class>Sink/Video</class>
+      <description>Shows the current frame-rate and drop-rate of the xvimagesink on the xvimagesink's video output</description>
+      <author>Zeeshan Ali &lt;zeeshan.ali@nokia.com&gt;, Stefan Kost &lt;stefan.kost@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

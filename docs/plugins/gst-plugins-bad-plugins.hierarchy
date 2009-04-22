@@ -13,149 +13,299 @@ GObject
           GstCameraBin
         RsnDvdBin
         DvbBaseBin
-        GstAutoConvert
         GstRtpBin
         GstRtpClient
+        FPSDisplaySink
+        GstAutoConvert
         GstSDPDemux
+      GstAmrwbDec
+      GstAmrwbParse
+      GstAmrwbEnc
+      GstBaseMetadata
+        GstMetadataDemux
+        GstMetadataMux
+      GstXvidEnc
+      GstXvidDec
+      GstFaad
       GstBz2enc
       GstBz2dec
-      GstModPlug
-      GstBaseSrc
-        GstPushSrc
-          GstNeonhttpSrc
-          GstMythtvSrc
-          GstDc1394
-          GstMMS
-          GstBaseAudioSrc
-            GstJackAudioSrc
-            GstAudioSrc
-              GstOss4Source
-          GstVCDSrc
-          GstDvbSrc
-          GstDCCPClientSrc
-          GstDCCPServerSrc
-          GstRfbSrc
-        GstSFSrc
-        GstDTMFSrc
-        GstRTPDTMFSrc
       GstCDAudio
+      GstX264Enc
       GstBaseSink
         GstVideoSink
           GstDfbVideoSink
           GstSDLVideoSink
         GstBaseAudioSink
           GstAudioSink
+            GstNasSink
             GstSDLAudioSink
             GstApExSink
-            GstNasSink
             GstOss4Sink
           GstJackAudioSink
-        GstSFSink
         AlsaSPDIFSink
+        GstSFSink
         GstFBDEVSink
         GstDCCPServerSink
         GstDCCPClientSink
-      GstFaad
-      GstCeltEnc
-      GstCeltDec
-      GstSpcDec
-      GstWildmidi
+      GstBaseSrc
+        GstPushSrc
+          GstMythtvSrc
+          GstMMS
+          GstDc1394
+          GstBaseAudioSrc
+            GstJackAudioSrc
+            GstAudioSrc
+              GstOss4Source
+          GstNeonhttpSrc
+          GstVCDSrc
+          GstDvbSrc
+          GstRfbSrc
+          GstDCCPClientSrc
+          GstDCCPServerSrc
+        GstSFSrc
+        GstDTMFSrc
+        GstRTPDTMFSrc
       GstBaseTransform
         GstAudioFilter
           GstOFA
-          GstBPMDetect
           GstStereo
         GstBayer2RGB
-        GstLegacyresample
         GstScaletempo
-        GstDeinterlace
         GstVideoFilter
           GstVideoAnalyse
           GstVideoDetect
           GstVideoMark
-        GstIIR
+        GstAudioresample
+        GstDeinterlace
+      GstDtsDec
+      GstFaac
+      GstMusepackDec
+      GstGSMEnc
+      GstGSMDec
+      GstModPlug
+      GstWildmidi
       GstSignalProcessor
-        ladspa-noise-white
-        ladspa-delay-5s
+        ladspa-flanger
+        ladspa-tap-rotspeak
+        ladspa-retroFlange
+        ladspa-triplePara
+        ladspa-tap-vibrato
+        ladspa-pitchScaleHQ
+        ladspa-matrixStMS
+        ladspa-imp
+        ladspa-analogueOsc
+        ladspa-hilbert
+        ladspa-notch-iir
+        ladspa-bodeShifter
+        ladspa-valveRect
+        ladspa-tap-sigmoid
+        ladspa-diode
+        ladspa-se4
+        ladspa-pitchScale
+        ladspa-foldover
+        ladspa-freqTracker
+        ladspa-rateShifter
+        ladspa-inv
+        ladspa-sc1
+        ladspa-ringmod-2i1o
+        ladspa-ringmod-1i1o1l
+        ladspa-impulse-fc
+        ladspa-tap-reverb
         ladspa-amp-mono
         ladspa-amp-stereo
+        ladspa-stepMuxer
+        ladspa-tap-equalizer
+        ladspa-fastLookaheadLimiter
+        ladspa-artificialLatency
+        ladspa-gate
+        ladspa-delay-n
+        ladspa-delay-l
+        ladspa-delay-c
+        ladspa-bwxover-iir
+        ladspa-buttlow-iir
+        ladspa-butthigh-iir
+        ladspa-mbeq
+        ladspa-lsFilter
+        ladspa-const
+        ladspa-Pulse-VCO
+        ladspa-Saw-VCO
+        ladspa-Rec-VCO
+        ladspa-smoothDecimate
+        ladspa-giantFlange
+        ladspa-lfoPhaser
+        ladspa-fourByFourPole
+        ladspa-autoPhaser
+        ladspa-lpf
+        ladspa-hpf
+        ladspa-tap-autopan
+        ladspa-highpass-iir
+        ladspa-comb
+        ladspa-matrixSpatialiser
+        ladspa-comb-n
+        ladspa-comb-l
+        ladspa-comb-c
+        ladspa-lcrDelay
+        ladspa-combSplitter
+        ladspa-dcRemove
+        ladspa-tap-doubler
+        ladspa-sinusWavewrapper
+        ladspa-modDelay
+        ladspa-shaper
+        ladspa-zm1
+        ladspa-sc4
+        ladspa-delay-5s
+        ladspa-dysonCompress
+        ladspa-tap-stereo-echo
+        ladspa-lowpass-iir
+        ladspa-fadDelay
+        ladspa-plate
+        ladspa-bandpass-iir
+        ladspa-singlePara
+        ladspa-gongBeater
+        ladspa-tapeDelay
+        ladspa-sifter
+        ladspa-tap-dynamics-st
+        ladspa-hardLimiter
+        ladspa-sc3
+        ladspa-amp
+        ladspa-xfade
+        ladspa-xfade4
+        ladspa-tap-pitch
+        ladspa-multivoiceChorus
+        ladspa-G2reverb
+        ladspa-surroundEncoder
+        ladspa-sc2
+        ladspa-gverb
+        ladspa-matrixMSSt
+        ladspa-amPitchshift
+        ladspa-tap-deesser
+        ladspa-tap-tubewarmth
+        ladspa-hermesFilter
+        ladspa-bandpass-a-iir
+        ladspa-gsm
+        ladspa-Chorus1
+        ladspa-Chorus2
+        ladspa-crossoverDist
+        ladspa-allpass-n
+        ladspa-allpass-l
+        ladspa-allpass-c
+        ladspa-decay
+        ladspa-valve
+        ladspa-bodeShifterCV
+        ladspa-harmonicGen
+        ladspa-waveTerrain
+        ladspa-transient
+        ladspa-sinCos
+        ladspa-split
+        ladspa-divider
+        ladspa-declip
+        ladspa-tap-dynamics-m
+        ladspa-tap-reflector
+        ladspa-Ambisonics-11-mono-panner
+        ladspa-Ambisonics-11-stereo-panner
+        ladspa-Ambisonics-11-rotator
+        ladspa-Ambisonics-11-square-decoder
+        ladspa-Ambisonics-11-hexagon-decoder
+        ladspa-Ambisonics-11-cube-decoder
+        ladspa-tap-equalizer-bw
+        ladspa-tap-tremolo
         ladspa-sine-faaa
         ladspa-sine-faac
         ladspa-sine-fcaa
         ladspa-sine-fcac
-        ladspa-lpf
-        ladspa-hpf
-      GstXvidEnc
-      GstXvidDec
-      GstPitch
-      GstMusepackDec
-      GstMpeg2enc
-      GstGSMEnc
-      GstGSMDec
-      GstFaac
-      GstDtsDec
-      GstDiracEnc
+        ladspa-chebstortion
+        ladspa-alias
+        ladspa-Parametric1
+        ladspa-tap-limiter
+        ladspa-noise-white
+        ladspa-tap-pinknoise
+        ladspa-delayorama
+        ladspa-pointerCastDistortion
+        ladspa-svf
+        ladspa-Phaser1
+        ladspa-Phaser1+LFO
+        ladspa-revdelay
+        ladspa-tap-chorusflanger
+        ladspa-vynil
+        ladspa-Mvchpf-1
+        ladspa-djFlanger
+        ladspa-fmOsc
+        ladspa-decimator
+        ladspa-Ambisonics-21-panner
+        ladspa-Ambisonics-21-rotator
+        ladspa-dj-eq-mono
+        ladspa-dj-eq
+        ladspa-Mvclpf-1
+        ladspa-Mvclpf-2
+        ladspa-Mvclpf-3
+        ladspa-Mvclpf-4
+        ladspa-satanMaximiser
+        ladspa-foverdrive
+        ladspa-karaoke
+        ladspa-gong
+        ladspa-sc4m
+      Gstassrender
+      GstTwoLame
+      GstCeltEnc
+      GstCeltDec
       GstTRM
-      GstX264Enc
-      GstBaseMetadata
-        GstMetadataDemux
-        GstMetadataMux
       GstOss4Mixer
-      GstAmrBaseParse
-        GstAmrParse
-      GstFestival
       GstMveDemux
       GstMveMux
-      GstSrtEnc
-      GstMpeg4VParse
-      GstCDXAParse
-      GstVcdParse
-      GstNsfDec
-      GstSirenDec
-      GstSirenEnc
-      MpegTsMux
-      GstRealVideoDec
-      GstRealAudioDec
-      GstRTPMux
-        GstRTPDTMFMux
-      GstRawParse
-        GstVideoParse
-        GstAudioParse
+      GstDeinterlace2
+      GstBaseRTPDepayload
+        GstRtpDTMFDepay
       GstRtpJitterBuffer
       GstRtpPtDemux
       GstRtpSession
       GstRtpSsrcDemux
-      GstPcapParse
+      GstMpegPSDemux
+      GstMpegTSDemux
+      MpegTSParse
+      GstH264Parse
+      GstLiveAdder
+      GstMpeg4VParse
+      GstValve
+      MpegVideoParse
+      GstFLVDemux
+      GstFlvMux
+      GstNuvDemux
+      GstRawParse
+        GstVideoParse
+        GstAudioParse
+      GstSpeed
       GstInputSelector
       GstOutputSelector
-      GstAacBaseParse
-        GstAacParse
-      GstVMncDec
       GstQTMux
       GstMP4Mux
       GstGPPMux
       GstMJ2Mux
-      MpegVideoParse
-      GstH264Parse
-      GstMXFDemux
-      GstY4mEncode
-      GstSpeed
-      GstFreeze
-      GstDVDSpu
-      AIFFParse
+      GstAacBaseParse
+        GstAacParse
+      GstCDXAParse
+      GstVcdParse
+      GstNsfDec
       GstTtaParse
       GstTtaDec
-      GstLiveAdder
-      GstValve
-      GstBaseRTPDepayload
-        GstRtpDTMFDepay
-      GstNuvDemux
-      GstFLVDemux
-      GstFlvMux
-      GstMpegPSDemux
-      GstMpegTSDemux
-      MpegTSParse
-      GstDeinterlace2
+      GstY4mEncode
+      GstRTPMux
+        GstRTPDTMFMux
+      GstFreeze
+      GstVMncDec
+      AIFFParse
+      GstSrtEnc
+      GstFestival
+      MpegTsMux
+      GstDVDSpu
+      GstMXFDemux
+      GstMXFMux
+      GstRealVideoDec
+      GstRealAudioDec
+      GstAmrBaseParse
+        GstAmrParse
+      GstSirenDec
+      GstSirenEnc
+      GstPcapParse
     GstBus
     GstTask
     GstClock
@@ -168,6 +318,8 @@ GObject
       GstJackAudioSinkRingBuffer
   GstSignalObject
   GstColorBalanceChannel
+  GstMixerTrack
+    GstMixerOptions
   RTPSession
   MpegTsPatInfo
   MpegTsPmtInfo
@@ -175,12 +327,12 @@ GInterface
   GTypePlugin
   GstChildProxy
   GstURIHandler
+  GstTagSetter
   GstImplementsInterface
   GstNavigation
   GstColorBalance
   GstXOverlay
-  GstTagSetter
   GstMixer
   GstPropertyProbe
-  MXFDescriptiveMetadataFrameworkInterface
   GstPhotography
+  MXFDescriptiveMetadataFrameworkInterface

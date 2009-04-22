@@ -574,6 +574,20 @@ gst_mxf_demux_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-mxfmux</FILE>
+<TITLE>mxfmux</TITLE>
+GstMXFMux
+<SUBSECTION Standard>
+GstMXFMuxClass
+GST_IS_MXF_MUX
+GST_IS_MXF_MUX_CLASS
+GST_MXF_MUX
+GST_MXF_MUX_CLASS
+GST_TYPE_MXF_MUX
+gst_mxf_mux_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-nuvdemux</FILE>
 <TITLE>nuvdemux</TITLE>
 GstNuvDemux

@@ -163,6 +163,15 @@ GstRtpBin *gstrtpbin
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::on-npt-stop</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -183,6 +192,13 @@ guint  arg1
 <FLAGS>l</FLAGS>
 GstRtpJitterBuffer *gstrtpjitterbuffer
 GstStructure *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRtpJitterBuffer::on-npt-stop</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpJitterBuffer *gstrtpjitterbuffer
 </SIGNAL>
 
 <SIGNAL>
@@ -420,7 +436,7 @@ gint  arg1
 <RETURNS>gboolean</RETURNS>
 <FLAGS>l</FLAGS>
 GstCameraBin *gstcamerabin
-gpointer  arg1
+gchar *arg1
 </SIGNAL>
 
 <SIGNAL>

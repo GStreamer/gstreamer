@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-mxfmux
+ *
+ * mxfmux muxes different streams into an MXF file.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/audio ! decodebin2 ! queue ! mxfmux name=m ! filesink location=file.mxf   filesrc location=/path/to/video ! decodebin2 ! queue ! m. 
+ * ]| This pipeline muxes an audio and video file into a single MXF file.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
