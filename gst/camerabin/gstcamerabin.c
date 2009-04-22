@@ -135,7 +135,6 @@
 /* FIXME: include #include <gst/gst-i18n-plugin.h> and use _(" ") */
 
 #include "gstcamerabin.h"
-#include "gstcamerabinxoverlay.h"
 #include "gstcamerabincolorbalance.h"
 #include "gstcamerabinphotography.h"
 
@@ -356,11 +355,7 @@ gst_camerabin_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstCameraBin *camera = GST_CAMERABIN (iface);
 
-  if (iface_type == GST_TYPE_X_OVERLAY) {
-    if (camera->view_sink) {
-      return GST_IS_X_OVERLAY (camera->view_sink);
-    }
-  } else if (iface_type == GST_TYPE_COLOR_BALANCE) {
+  if (iface_type == GST_TYPE_COLOR_BALANCE) {
     if (camera->src_vid_src) {
       return GST_IS_COLOR_BALANCE (camera->src_vid_src);
     }
@@ -402,12 +397,6 @@ camerabin_init_interfaces (GType type)
     NULL,
   };
 
-  static const GInterfaceInfo camerabin_xoverlay_info = {
-    (GInterfaceInitFunc) gst_camerabin_xoverlay_init,
-    NULL,
-    NULL,
-  };
-
   static const GInterfaceInfo camerabin_color_balance_info = {
     (GInterfaceInitFunc) gst_camerabin_color_balance_init,
     NULL,
@@ -427,9 +416,6 @@ camerabin_init_interfaces (GType type)
 
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &camerabin_info);
-
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY,
-      &camerabin_xoverlay_info);
 
   g_type_add_interface_static (type, GST_TYPE_COLOR_BALANCE,
       &camerabin_color_balance_info);

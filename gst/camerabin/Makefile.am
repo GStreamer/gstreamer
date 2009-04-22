@@ -14,7 +14,6 @@ EXTRA_DIST = gstcamerabin-marshal.list
 plugin_LTLIBRARIES = libgstcamerabin.la
 
 libgstcamerabin_la_SOURCES = gstcamerabin.c             \
-			  gstcamerabinxoverlay.c     \
 			  gstcamerabincolorbalance.c \
 			  camerabinimage.c           \
 			  camerabinvideo.c           \
@@ -33,7 +32,6 @@ libgstcamerabin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcamerabin_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstcamerabin.h             \
-		 gstcamerabinxoverlay.h     \
 		 gstcamerabincolorbalance.h \
 		 camerabinimage.h           \
 		 camerabinvideo.h           \
