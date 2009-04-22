@@ -116,12 +116,12 @@ main (int argc, char *argv[])
   /* link the elements */
   gst_element_link (fakesrc, fakesink);
 
-  /* start playing */
-  gst_element_set_state (bin, GST_STATE_PLAYING);
-
   /* get the bus, we need to install a sync handler */
   bus = gst_pipeline_get_bus (GST_PIPELINE (bin));
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) sync_bus_handler, bin);
+
+  /* start playing */
+  gst_element_set_state (bin, GST_STATE_PLAYING);
 
   /* Run event loop listening for bus messages until EOS or ERROR */
   event_loop (bus, bin);
