@@ -72,6 +72,8 @@ typedef struct _GstMXFMux {
 
   GstPad *srcpad;
   GstCollectPads *collect;
+
+  /* <private> */
   GstPadEventFunction collect_event;
 
   GstMXFMuxState state;
