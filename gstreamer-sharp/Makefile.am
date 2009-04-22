@@ -65,6 +65,7 @@ customs = 			\
 	PadTemplate.custom      \
 	MiniObject.custom       \
 	Registry.custom         \
+	Query.custom 	        \
 	Structure.custom        \
 	Tag.custom		\
 	TagList.custom

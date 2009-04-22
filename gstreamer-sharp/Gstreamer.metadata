@@ -343,6 +343,20 @@
 
   <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/boxed[@name='Query']/field[@name='Structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Query']/method" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Query']/constructor" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_get_type']" name="hidden" />
+  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_by_nick']" name="hidden" />
+  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_by_nick']" name="name">GetTypeByNick</attr>
+  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_name']" name="hidden" />
+  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_name']" name="name">GetTypeName</attr>
+  <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_register']" name="hidden" />
+  <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_register']" name="name">RegisterType</attr>
+
+
+  <attr path="/api/namespace/struct[@name='QueryTypeDefinition']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Registry']" name="disable_void_ctor">1</attr>
   <attr path="/api/namespace/object[@name='Registry']/method[@cname='gst_update_registry']" name="name">UpdateDefault</attr>
