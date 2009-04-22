@@ -285,7 +285,15 @@ namespace Gst {
 
       g_signal_emitv (signal_parameters, query.signal_id, signal_detail_quark, ref return_value);
 
-      return (query.return_type != GType.Invalid && query.return_type != GType.None) ? return_value.Val : null;
+      foreach (GLib.Value v in signal_parameters)
+        v.Dispose ();
+
+      object ret = (query.return_type != GType.Invalid && query.return_type != GType.None) ? return_value.Val : null;
+
+      if (ret != null)
+        return_value.Dispose ();
+
+      return ret;
     }
 
     [DllImport ("gstreamersharpglue-0.10") ]
