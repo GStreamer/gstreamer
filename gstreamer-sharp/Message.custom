@@ -86,7 +86,8 @@ public Gst.Structure Structure {
 }
 
 ~Message () {
-  cached_structure.CreateNativeCopy ();
+  if (cached_structure != null)
+    cached_structure.CreateNativeCopy ();
   cached_structure = null;
 }
 
