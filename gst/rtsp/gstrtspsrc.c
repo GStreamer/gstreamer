@@ -2048,6 +2048,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     /* allocate pads for sending the channel data into the manager */
     pad0 = gst_pad_new_from_template (template, "internalsrc0");
     gst_pad_link (pad0, stream->channelpad[0]);
+    gst_object_unref (stream->channelpad[0]);
     stream->channelpad[0] = pad0;
     gst_pad_set_query_function (pad0, gst_rtspsrc_handle_internal_src_query);
     gst_pad_set_element_private (pad0, src);
@@ -2058,6 +2059,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
        * manager. */
       pad1 = gst_pad_new_from_template (template, "internalsrc1");
       gst_pad_link (pad1, stream->channelpad[1]);
+      gst_object_unref (stream->channelpad[1]);
       stream->channelpad[1] = pad1;
       gst_pad_set_active (pad1, TRUE);
     }
@@ -2080,8 +2082,10 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     g_free (name);
 
     /* and link */
-    if (pad)
+    if (pad) {
       gst_pad_link (pad, stream->rtcppad);
+      gst_object_unref (pad);
+    }
 
     gst_object_unref (template);
   }
@@ -2328,8 +2332,10 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     g_free (name);
 
     /* and link */
-    if (pad)
+    if (pad) {
       gst_pad_link (pad, stream->rtcppad);
+      gst_object_unref (pad);
+    }
   }
 
   return TRUE;
