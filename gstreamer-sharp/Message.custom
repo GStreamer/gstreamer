@@ -125,6 +125,13 @@ public static Message NewError (Gst.Object src, Gst.CoreError error, string mess
   return msg;
 }
 
+public static Message NewError (Gst.Object src, Gst.CoreError error, string message) {
+  return NewError (src, error, message, null);
+}
+public static Message NewError (Gst.Object src, Gst.CoreError error) {
+  return NewError (src, error, null, null);
+}
+
 public static Message NewError (Gst.Object src, Gst.StreamError error, string message, string debug) {
   Gst.GError err = new Gst.GError ();
   err.Code = (int) error;
@@ -140,6 +147,13 @@ public static Message NewError (Gst.Object src, Gst.StreamError error, string me
   return msg;
 }
 
+public static Message NewError (Gst.Object src, Gst.StreamError error, string message) {
+  return NewError (src, error, message, null);
+}
+public static Message NewError (Gst.Object src, Gst.StreamError error) {
+  return NewError (src, error, null, null);
+}
+
 public static Message NewError (Gst.Object src, Gst.LibraryError error, string message, string debug) {
   Gst.GError err = new Gst.GError ();
   err.Code = (int) error;
@@ -153,6 +167,12 @@ public static Message NewError (Gst.Object src, Gst.LibraryError error, string m
   GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
+}
+public static Message NewError (Gst.Object src, Gst.LibraryError error, string message) {
+  return NewError (src, error, message, null);
+}
+public static Message NewError (Gst.Object src, Gst.LibraryError error) {
+  return NewError (src, error, null, null);
 }
 
 public static Message NewError (Gst.Object src, Gst.ResourceError error, string message, string debug) {
@@ -170,10 +190,17 @@ public static Message NewError (Gst.Object src, Gst.ResourceError error, string 
   return msg;
 }
 
+public static Message NewError (Gst.Object src, Gst.ResourceError error, string message) {
+  return NewError (src, error, message, null);
+}
+public static Message NewError (Gst.Object src, Gst.ResourceError error) {
+  return NewError (src, error, null, null);
+}
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_error (IntPtr msg, out IntPtr err, out IntPtr debug);
 
-public Enum ParseError (out string message, out string debug) {
+public void ParseError (out Enum error, out string message, out string debug) {
   if (Type != MessageType.Error)
     throw new ArgumentException ();
 
@@ -187,37 +214,35 @@ public Enum ParseError (out string message, out string debug) {
   else
     debug = null;
 
-  message = null;
-
   if (err == IntPtr.Zero)
-    return null;
+    throw new Exception ();
 
-  GError error = (Gst.GError) Marshal.PtrToStructure (err, typeof (Gst.GError));
+  GError gerror = (Gst.GError) Marshal.PtrToStructure (err, typeof (Gst.GError));
 
-  message = error.Message;
+  message = gerror.Message;
 
-  if (error.Domain == gst_core_error_quark ())
-    return (Gst.CoreError) error.Code;
-  else if (error.Domain == gst_library_error_quark ())
-    return (Gst.LibraryError) error.Code;
-  else if (error.Domain == gst_resource_error_quark ())
-    return (Gst.ResourceError) error.Code;
-  else if (error.Domain == gst_stream_error_quark ())
-    return (Gst.StreamError) error.Code;
-
-  return null;
+  if (gerror.Domain == gst_core_error_quark ())
+    error = (Gst.CoreError) gerror.Code;
+  else if (gerror.Domain == gst_library_error_quark ())
+    error = (Gst.LibraryError) gerror.Code;
+  else if (gerror.Domain == gst_resource_error_quark ())
+    error = (Gst.ResourceError) gerror.Code;
+  else if (gerror.Domain == gst_stream_error_quark ())
+    error = (Gst.StreamError) gerror.Code;
+  else
+    error = null;
 }
 
-public Enum ParseError (out string message) {
+public void ParseError (out Enum error, out string message) {
   string tmp;
 
-  return ParseError (out message, out tmp);
+  ParseError (out error, out message, out tmp);
 }
 
-public Enum ParseError () {
+public void ParseError (out Enum error) {
   string tmp, tmp2;
 
-  return ParseError (out tmp, out tmp2);
+  ParseError (out error, out tmp, out tmp2);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -238,6 +263,13 @@ public static Message NewWarning (Gst.Object src, Gst.CoreError error, string me
   return msg;
 }
 
+public static Message NewWarning (Gst.Object src, Gst.CoreError error, string message) {
+  return NewWarning (src, error, message, null);
+}
+public static Message NewWarning (Gst.Object src, Gst.CoreError error) {
+  return NewWarning (src, error, null, null);
+}
+
 public static Message NewWarning (Gst.Object src, Gst.StreamError error, string message, string debug) {
   Gst.GError err = new Gst.GError ();
   err.Code = (int) error;
@@ -251,6 +283,13 @@ public static Message NewWarning (Gst.Object src, Gst.StreamError error, string 
   GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
+}
+
+public static Message NewWarning (Gst.Object src, Gst.StreamError error, string message) {
+  return NewWarning (src, error, message, null);
+}
+public static Message NewWarning (Gst.Object src, Gst.StreamError error) {
+  return NewWarning (src, error, null, null);
 }
 
 public static Message NewWarning (Gst.Object src, Gst.LibraryError error, string message, string debug) {
@@ -268,6 +307,13 @@ public static Message NewWarning (Gst.Object src, Gst.LibraryError error, string
   return msg;
 }
 
+public static Message NewWarning (Gst.Object src, Gst.LibraryError error, string message) {
+  return NewWarning (src, error, message, null);
+}
+public static Message NewWarning (Gst.Object src, Gst.LibraryError error) {
+  return NewWarning (src, error, null, null);
+}
+
 public static Message NewWarning (Gst.Object src, Gst.ResourceError error, string message, string debug) {
   Gst.GError err = new Gst.GError ();
   err.Code = (int) error;
@@ -283,10 +329,17 @@ public static Message NewWarning (Gst.Object src, Gst.ResourceError error, strin
   return msg;
 }
 
+public static Message NewWarning (Gst.Object src, Gst.ResourceError error, string message) {
+  return NewWarning (src, error, message, null);
+}
+public static Message NewWarning (Gst.Object src, Gst.ResourceError error) {
+  return NewWarning (src, error, null, null);
+}
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_warning (IntPtr msg, out IntPtr err, out IntPtr debug);
 
-public Enum ParseWarning (out string message, out string debug) {
+public void ParseWarning (out Enum error, out string message, out string debug) {
   if (Type != MessageType.Warning)
     throw new ArgumentException ();
 
@@ -300,37 +353,35 @@ public Enum ParseWarning (out string message, out string debug) {
   else
     debug = null;
 
-  message = null;
-
   if (err == IntPtr.Zero)
-    return null;
+    throw new Exception ();
 
-  GError error = (Gst.GError) Marshal.PtrToStructure (err, typeof (Gst.GError));
+  GError gerror = (Gst.GError) Marshal.PtrToStructure (err, typeof (Gst.GError));
 
-  message = error.Message;
+  message = gerror.Message;
 
-  if (error.Domain == gst_core_error_quark ())
-    return (Gst.CoreError) error.Code;
-  else if (error.Domain == gst_library_error_quark ())
-    return (Gst.LibraryError) error.Code;
-  else if (error.Domain == gst_resource_error_quark ())
-    return (Gst.ResourceError) error.Code;
-  else if (error.Domain == gst_stream_error_quark ())
-    return (Gst.StreamError) error.Code;
-
-  return null;
+  if (gerror.Domain == gst_core_error_quark ())
+    error = (Gst.CoreError) gerror.Code;
+  else if (gerror.Domain == gst_library_error_quark ())
+    error = (Gst.LibraryError) gerror.Code;
+  else if (gerror.Domain == gst_resource_error_quark ())
+    error = (Gst.ResourceError) gerror.Code;
+  else if (gerror.Domain == gst_stream_error_quark ())
+    error = (Gst.StreamError) gerror.Code;
+  else
+    error = null;
 }
 
-public Enum ParseWarning (out string message) {
+public void ParseWarning (out Enum error, out string message) {
   string tmp;
 
-  return ParseWarning (out message, out tmp);
+  ParseWarning (out error, out message, out tmp);
 }
 
-public Enum ParseWarning () {
+public void ParseWarning (out Enum error) {
   string tmp, tmp2;
 
-  return ParseWarning (out tmp, out tmp2);
+  ParseWarning (out error, out tmp, out tmp2);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -351,6 +402,13 @@ public static Message NewInfo (Gst.Object src, Gst.CoreError error, string messa
   return msg;
 }
 
+public static Message NewInfo (Gst.Object src, Gst.CoreError error, string message) {
+  return NewInfo (src, error, message, null);
+}
+public static Message NewInfo (Gst.Object src, Gst.CoreError error) {
+  return NewInfo (src, error, null, null);
+}
+
 public static Message NewInfo (Gst.Object src, Gst.StreamError error, string message, string debug) {
   Gst.GError err = new Gst.GError ();
   err.Code = (int) error;
@@ -364,6 +422,13 @@ public static Message NewInfo (Gst.Object src, Gst.StreamError error, string mes
   GLib.Marshaller.Free (raw_ptr);
   err.Unset ();
   return msg;
+}
+
+public static Message NewInfo (Gst.Object src, Gst.StreamError error, string message) {
+  return NewInfo (src, error, message, null);
+}
+public static Message NewInfo (Gst.Object src, Gst.StreamError error) {
+  return NewInfo (src, error, null, null);
 }
 
 public static Message NewInfo (Gst.Object src, Gst.LibraryError error, string message, string debug) {
@@ -381,6 +446,13 @@ public static Message NewInfo (Gst.Object src, Gst.LibraryError error, string me
   return msg;
 }
 
+public static Message NewInfo (Gst.Object src, Gst.LibraryError error, string message) {
+  return NewInfo (src, error, message, null);
+}
+public static Message NewInfo (Gst.Object src, Gst.LibraryError error) {
+  return NewInfo (src, error, null, null);
+}
+
 public static Message NewInfo (Gst.Object src, Gst.ResourceError error, string message, string debug) {
   Gst.GError err = new Gst.GError ();
   err.Code = (int) error;
@@ -396,10 +468,17 @@ public static Message NewInfo (Gst.Object src, Gst.ResourceError error, string m
   return msg;
 }
 
+public static Message NewInfo (Gst.Object src, Gst.ResourceError error, string message) {
+  return NewInfo (src, error, message, null);
+}
+public static Message NewInfo (Gst.Object src, Gst.ResourceError error) {
+  return NewInfo (src, error, null, null);
+}
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_info (IntPtr msg, out IntPtr err, out IntPtr debug);
 
-public Enum ParseInfo (out string message, out string debug) {
+public void ParseInfo (out Enum error, out string message, out string debug) {
   if (Type != MessageType.Info)
     throw new ArgumentException ();
 
@@ -413,37 +492,35 @@ public Enum ParseInfo (out string message, out string debug) {
   else
     debug = null;
 
-  message = null;
-
   if (err == IntPtr.Zero)
-    return null;
+    throw new Exception ();
 
-  GError error = (Gst.GError) Marshal.PtrToStructure (err, typeof (Gst.GError));
+  GError gerror = (Gst.GError) Marshal.PtrToStructure (err, typeof (Gst.GError));
 
-  message = error.Message;
+  message = gerror.Message;
 
-  if (error.Domain == gst_core_error_quark ())
-    return (Gst.CoreError) error.Code;
-  else if (error.Domain == gst_library_error_quark ())
-    return (Gst.LibraryError) error.Code;
-  else if (error.Domain == gst_resource_error_quark ())
-    return (Gst.ResourceError) error.Code;
-  else if (error.Domain == gst_stream_error_quark ())
-    return (Gst.StreamError) error.Code;
-
-  return null;
+  if (gerror.Domain == gst_core_error_quark ())
+    error = (Gst.CoreError) gerror.Code;
+  else if (gerror.Domain == gst_library_error_quark ())
+    error = (Gst.LibraryError) gerror.Code;
+  else if (gerror.Domain == gst_resource_error_quark ())
+    error = (Gst.ResourceError) gerror.Code;
+  else if (gerror.Domain == gst_stream_error_quark ())
+    error = (Gst.StreamError) gerror.Code;
+  else
+    error = null;
 }
 
-public Enum ParseInfo (out string message) {
+public void ParseInfo (out Enum error, out string message) {
   string tmp;
 
-  return ParseInfo (out message, out tmp);
+  ParseInfo (out error, out message, out tmp);
 }
 
-public Enum ParseInfo () {
+public void ParseInfo (out Enum error) {
   string tmp, tmp2;
 
-  return ParseInfo (out tmp, out tmp2);
+  ParseInfo (out error, out tmp, out tmp2);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -461,7 +538,7 @@ public static Message NewTag (Gst.Object src, TagList tags) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_tag (IntPtr msg, out IntPtr tags);
 
-public TagList ParseTag () {
+public void ParseTag (out TagList tags) {
   if (Type != MessageType.Tag)
     throw new ArgumentException ();
 
@@ -469,10 +546,9 @@ public TagList ParseTag () {
 
   gst_message_parse_tag (Handle, out raw_ptr);
   if (raw_ptr == IntPtr.Zero)
-    return null;
-
-  TagList tags = (TagList) GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
-  return tags;
+    tags = null;
+  else
+    tags = (TagList) GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -487,15 +563,11 @@ public static Message NewBuffering (Gst.Object src, int percent) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_buffering (IntPtr msg, out int percent);
 
-public int ParseBuffering () {
-  int percent;
-
+public void ParseBuffering (out int percent) {
   if (Type != MessageType.Buffering)
     throw new ArgumentException ();
 
   gst_message_parse_buffering (Handle, out percent);
-
-  return percent;
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -559,7 +631,7 @@ public static Message NewClockProvide (Gst.Object src, Gst.Clock clock, bool rea
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_clock_provide (IntPtr msg, out IntPtr clock, out bool ready);
 
-public Gst.Clock ParseClockProvide (out bool ready) {
+public void ParseClockProvide (out Gst.Clock clock, out bool ready) {
   if (Type != MessageType.ClockProvide)
     throw new ArgumentException ();
 
@@ -567,7 +639,7 @@ public Gst.Clock ParseClockProvide (out bool ready) {
 
   gst_message_parse_clock_provide (Handle, out raw, out ready);
 
-  return GLib.Object.GetObject (raw, false) as Gst.Clock;
+  clock = GLib.Object.GetObject (raw, false) as Gst.Clock;
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -582,7 +654,7 @@ public static Message NewClockLost (Gst.Object src, Gst.Clock clock) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_clock_lost (IntPtr msg, out IntPtr clock);
 
-public Gst.Clock ParseClockLost () {
+public void ParseClockLost (out Gst.Clock clock) {
   if (Type != MessageType.ClockLost)
     throw new ArgumentException ();
 
@@ -590,7 +662,7 @@ public Gst.Clock ParseClockLost () {
 
   gst_message_parse_clock_lost (Handle, out raw);
 
-  return GLib.Object.GetObject (raw, true) as Gst.Clock;
+  clock = GLib.Object.GetObject (raw, true) as Gst.Clock;
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -605,7 +677,7 @@ public static Message NewNewClock (Gst.Object src, Gst.Clock clock) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_new_clock (IntPtr msg, out IntPtr clock);
 
-public Gst.Clock ParseNewClock () {
+public void ParseNewClock (out Gst.Clock clock) {
   if (Type != MessageType.NewClock)
     throw new ArgumentException ();
 
@@ -613,7 +685,7 @@ public Gst.Clock ParseNewClock () {
 
   gst_message_parse_new_clock (Handle, out raw);
 
-  return GLib.Object.GetObject (raw, true) as Gst.Clock;
+  clock = GLib.Object.GetObject (raw, true) as Gst.Clock;
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
@@ -724,14 +796,11 @@ public static Message NewAsyncStart (Gst.Object src, bool new_base_time) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_message_parse_async_start (IntPtr msg, out bool new_base_time);
 
-public bool ParseAsyncStart () {
+public void ParseAsyncStart (out bool new_base_time) {
   if (Type != MessageType.AsyncStart)
     throw new ArgumentException ();
 
-  bool new_base_time;
-
   gst_message_parse_async_start (Handle, out new_base_time);
-  return new_base_time;
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
