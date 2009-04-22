@@ -708,7 +708,9 @@ static extern IntPtr gst_message_new_application (IntPtr src, IntPtr structure);
 static extern IntPtr gst_structure_copy (IntPtr handle);
 
 public static Message NewApplication (Gst.Object src, Gst.Structure structure) {
-  Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_application (src.Handle, (structure != null) ? gst_structure_copy (structure.Handle) : IntPtr.Zero), typeof (Message), true);
+  Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_application (src.Handle, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Message), true);
+  msg.cached_structure = structure;
+  structure.FreeNative = false;
 
   return msg;
 }
@@ -717,7 +719,9 @@ public static Message NewApplication (Gst.Object src, Gst.Structure structure) {
 static extern IntPtr gst_message_new_element (IntPtr src, IntPtr structure);
 
 public static Message NewElement (Gst.Object src, Gst.Structure structure) {
-  Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_element (src.Handle, (structure != null) ? gst_structure_copy (structure.Handle) : IntPtr.Zero), typeof (Message), true);
+  Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_element (src.Handle, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Message), true);
+  msg.cached_structure = structure;
+  structure.FreeNative = false;
 
   return msg;
 }
@@ -726,7 +730,9 @@ public static Message NewElement (Gst.Object src, Gst.Structure structure) {
 static extern IntPtr gst_message_new_custom (Gst.MessageType type, IntPtr src, IntPtr structure);
 
 public static Message NewCustom (Gst.MessageType type, Gst.Object src, Gst.Structure structure) {
-  Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_custom (type, src.Handle, (structure != null) ? gst_structure_copy (structure.Handle) : IntPtr.Zero), typeof (Message), true);
+  Message msg = (Message) GLib.Opaque.GetOpaque (gst_message_new_custom (type, src.Handle, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Message), true);
+  msg.cached_structure = structure;
+  structure.FreeNative = false;
 
   return msg;
 }
