@@ -1496,7 +1496,9 @@ gst_message_new_stream_status (GstObject * src, GstStreamStatusType type,
  * @type: A pointer to hold the status type
  * @owner: The owner element of the message source
  *
- * Extracts the stream status type and owner the GstMessage.
+ * Extracts the stream status type and owner the GstMessage. The returned
+ * owner remains valid for as long as the reference to @message is valid and
+ * should thus not be unreffed.
  *
  * Since: 0.10.24.
  *
