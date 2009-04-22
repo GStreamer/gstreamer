@@ -211,7 +211,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
       b_outbuf = gst_vdp_video_buffer_new (dec->device, VDP_CHROMA_TYPE_420,
           dec->width, dec->height);
 
-      b_frame->vdp_info.forward_reference = surface;
+      b_frame->vdp_info.backward_reference = surface;
       vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
       vbit[0].bitstream = GST_BUFFER_DATA (b_frame->buffer);
       vbit[0].bitstream_bytes = GST_BUFFER_SIZE (b_frame->buffer);
