@@ -166,7 +166,6 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
     mpeg_dec->b_frames = g_slist_append (mpeg_dec->b_frames, b_frame);
 
-    gst_buffer_ref (mpeg_dec->f_buffer);
     mpeg_dec->vdp_info.slice_count = 0;
 
     return GST_FLOW_OK;
@@ -230,8 +229,6 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
       gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
           b_outbuf);
-
-      gst_buffer_unref (mpeg_dec->f_buffer);
     }
     g_slist_free (mpeg_dec->b_frames);
     mpeg_dec->b_frames = NULL;
