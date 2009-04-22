@@ -22,6 +22,7 @@ always_dirs = \
 	helloworld \
 	manual     \
 	metadata   \
+	streams    \
 	queue
 
 #appreader
