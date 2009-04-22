@@ -159,7 +159,6 @@
       <Type Name="ProxyPad" Kind="Class" />
       <Type Name="Query" Kind="Class" />
       <Type Name="QueryType" Kind="Enumeration" />
-      <Type Name="QueryTypeDefinition" Kind="Structure" />
       <Type Name="Rank" Kind="Enumeration" />
       <Type Name="Registry" Kind="Class" />
       <Type Name="ResourceError" Kind="Enumeration" />
