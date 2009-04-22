@@ -158,7 +158,9 @@ public object Get (string field) {
 }
 
 public void Set (string field, object value) {
-  SetValue (field, new GLib.Value (value));
+  GLib.Value v = new GLib.Value (value);
+  SetValue (field, v);
+  v.Dispose ();
 }
 
 public void Set (params object[] fields) {
@@ -171,7 +173,9 @@ public void Set (params object[] fields) {
     if (fields[i].GetType () != typeof (string))
       throw new ArgumentException ();
 
-    SetValue (fields[i] as string, new GLib.Value (fields[i+1]));
+    GLib.Value v = new GLib.Value (fields[i+1]);
+    SetValue (fields[i] as string, v);
+    v.Dispose ();
   }
 }
 

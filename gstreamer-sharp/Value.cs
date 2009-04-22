@@ -269,6 +269,8 @@ namespace Gst {
       GLib.Value min = new GLib.Value (Min);
       GLib.Value max = new GLib.Value (Max);
       gst_value_set_fraction_range (ref val, ref min, ref max);
+      min.Dispose ();
+      max.Dispose ();
     }
 
     public override string ToString () {
@@ -281,6 +283,8 @@ namespace Gst {
       GLib.Value min = new GLib.Value (range.Min);
       GLib.Value max = new GLib.Value (range.Max);
       gst_value_set_fraction_range (ref val, ref min, ref max);
+      min.Dispose ();
+      max.Dispose ();
       return val;
     }
 
@@ -469,6 +473,7 @@ namespace Gst {
       foreach (object o in content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_list_append_value (ref val, ref v);
+	v.Dispose ();
       }
     }
 
@@ -492,6 +497,7 @@ namespace Gst {
       foreach (object o in l.content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_list_append_value (ref val, ref v);
+	v.Dispose ();
       }
 
       return val;
@@ -552,6 +558,7 @@ namespace Gst {
       foreach (object o in content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_array_append_value (ref val, ref v);
+	v.Dispose ();
       }
     }
 
@@ -561,6 +568,7 @@ namespace Gst {
       foreach (object o in a.content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_array_append_value (ref val, ref v);
+	v.Dispose ();
       }
 
       return val;

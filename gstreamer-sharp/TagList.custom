@@ -68,6 +68,7 @@ public void Add (Gst.TagMergeMode mode, string tag, object value) {
 
   IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (tag);
   gstsharp_gst_tag_list_add_value (Handle, mode, raw_string, ref v);
+  v.Dispose ();
   GLib.Marshaller.Free (raw_string);
 }
 
