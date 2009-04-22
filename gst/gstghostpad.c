@@ -144,20 +144,6 @@ gst_proxy_pad_do_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
-static GList *
-gst_proxy_pad_do_internal_link (GstPad * pad)
-{
-  GList *res = NULL;
-  GstPad *target = gst_proxy_pad_get_target (pad);
-
-  if (target) {
-    res = gst_pad_get_internal_links (target);
-    gst_object_unref (target);
-  }
-
-  return res;
-}
-
 static GstIterator *
 gst_proxy_pad_do_iterate_internal_links (GstPad * pad)
 {
@@ -434,8 +420,6 @@ gst_proxy_pad_init (GstProxyPad * ppad)
       GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query_type));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_proxy_pad_do_event));
   gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_proxy_pad_do_query));
-  gst_pad_set_internal_link_function (pad,
-      GST_DEBUG_FUNCPTR (gst_proxy_pad_do_internal_link));
   gst_pad_set_iterate_internal_links_function (pad,
       GST_DEBUG_FUNCPTR (gst_proxy_pad_do_iterate_internal_links));
 
