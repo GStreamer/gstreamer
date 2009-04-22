@@ -224,7 +224,9 @@ namespace Gst {
       GTypeSignalKey key = new GTypeSignalKey (gtype, signal_name);
 
       if (SignalEmitInfo[key] == null) {
-        uint signal_id = g_signal_lookup (signal_name, type);
+        IntPtr native_string = GLib.Marshaller.StringToPtrGStrdup (signal_name);
+        uint signal_id = g_signal_lookup (native_string, type);
+        GLib.Marshaller.Free (native_string);
 
         if (signal_id == 0)
           throw new NotSupportedException (String.Format ("{0} has no signal of name {1}", o, name));
@@ -275,8 +277,11 @@ namespace Gst {
       if (query.return_type != GType.Invalid && query.return_type != GType.None)
         return_value.Init (query.return_type);
 
-      if (signal_detail != String.Empty)
-        signal_detail_quark = g_quark_from_string (signal_detail);
+      if (signal_detail != String.Empty) {
+        IntPtr native_string = GLib.Marshaller.StringToPtrGStrdup (signal_detail);
+        signal_detail_quark = g_quark_from_string (native_string);
+        GLib.Marshaller.Free (native_string);
+      }
 
       g_signal_emitv (signal_parameters, query.signal_id, signal_detail_quark, ref return_value);
 
@@ -290,10 +295,10 @@ namespace Gst {
     static extern int g_signal_handler_disconnect (IntPtr o, uint handler_id);
 
     [DllImport ("gobject-2.0.dll") ]
-    static extern uint g_signal_lookup (string name, IntPtr itype);
+    static extern uint g_signal_lookup (IntPtr name, IntPtr itype);
 
     [DllImport ("glib-2.0.dll") ]
-    static extern uint g_quark_from_string (string str);
+    static extern uint g_quark_from_string (IntPtr str);
 
     [DllImport ("gobject-2.0.dll") ]
     static extern void g_signal_emitv (GLib.Value[] parameters, uint signal_id, uint detail, ref GLib.Value return_value);

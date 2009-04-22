@@ -9,19 +9,19 @@ public static void Register (string name, Gst.TagFlags flag, System.Type type, s
   Register (name, flag, gt, nick, blurb, func);
 }
 
-		[DllImport("gstreamer-0.10.dll")]
-		static extern void gst_tag_merge_strings_with_comma(out GLib.Value dest, ref GLib.Value src);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_tag_merge_strings_with_comma (out GLib.Value dest, ref GLib.Value src);
 
-		public static void MergeStringsWithComma(out GLib.Value dest, ref GLib.Value src) {
-			gst_tag_merge_strings_with_comma(out dest, ref src);
-		}
+public static void MergeStringsWithComma (out GLib.Value dest, ref GLib.Value src) {
+  gst_tag_merge_strings_with_comma (out dest, ref src);
+}
 
-		[DllImport("gstreamer-0.10.dll")]
-		static extern void gst_tag_merge_use_first(out GLib.Value dest, ref GLib.Value src);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_tag_merge_use_first (out GLib.Value dest, ref GLib.Value src);
 
-		public static void MergeUseFirst(out GLib.Value dest, ref GLib.Value src) {
-			gst_tag_merge_use_first(out dest, ref src);
-		}
+public static void MergeUseFirst (out GLib.Value dest, ref GLib.Value src) {
+  gst_tag_merge_use_first (out dest, ref src);
+}
 
 public const string Title = "title";
 public const string TitleSortname = "title-sortname";

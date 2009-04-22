@@ -19,13 +19,16 @@ public int Size {
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
-static extern bool gst_tag_list_copy_value (ref GLib.Value dest, IntPtr list, string tag);
+static extern bool gst_tag_list_copy_value (ref GLib.Value dest, IntPtr list, IntPtr tag);
 [DllImport ("gstreamer-0.10.dll") ]
-static extern IntPtr gst_tag_list_get_value_index (IntPtr raw, string tag, uint index);
+static extern IntPtr gst_tag_list_get_value_index (IntPtr raw, IntPtr tag, uint index);
 
 public object this[string tag, uint index] {
   get {
-    IntPtr raw_ret = gst_tag_list_get_value_index (Handle, tag, index);
+    IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (tag);
+    IntPtr raw_ret = gst_tag_list_get_value_index (Handle, raw_string, index);
+    GLib.Marshaller.Free (raw_string);
+
     if (raw_ret == IntPtr.Zero)
       return null;
 
@@ -40,7 +43,9 @@ public object this[string tag] {
     GLib.Value v = GLib.Value.Empty;
     bool success;
 
-    success = gst_tag_list_copy_value (ref v, Handle, tag);
+    IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (tag);
+    success = gst_tag_list_copy_value (ref v, Handle, raw_string);
+    GLib.Marshaller.Free (raw_string);
 
     if (!success)
       return null;
@@ -53,7 +58,7 @@ public object this[string tag] {
 }
 
 [DllImport ("gstreamersharpglue-0.10") ]
-static extern void gstsharp_gst_tag_list_add_value (IntPtr list, Gst.TagMergeMode mode, string tag, ref GLib.Value v);
+static extern void gstsharp_gst_tag_list_add_value (IntPtr list, Gst.TagMergeMode mode, IntPtr tag, ref GLib.Value v);
 
 public void Add (Gst.TagMergeMode mode, string tag, object value) {
   if (!Tag.Exists (tag))
@@ -61,7 +66,9 @@ public void Add (Gst.TagMergeMode mode, string tag, object value) {
 
   GLib.Value v = new GLib.Value (value);
 
-  gstsharp_gst_tag_list_add_value (Handle, mode, tag, ref v);
+  IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (tag);
+  gstsharp_gst_tag_list_add_value (Handle, mode, raw_string, ref v);
+  GLib.Marshaller.Free (raw_string);
 }
 
 public void Add (Gst.TagMergeMode mode, params object[] parameters) {
@@ -96,10 +103,12 @@ public string[] Tags {
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
-static extern IntPtr gst_structure_get_value (IntPtr raw, string fieldname);
+static extern IntPtr gst_structure_get_value (IntPtr raw, IntPtr fieldname);
 
 public Gst.List GetTag (string tag) {
-  IntPtr raw_ret = gst_structure_get_value (Handle, tag);
+  IntPtr raw_string = GLib.Marshaller.StringToPtrGStrdup (tag);
+  IntPtr raw_ret = gst_structure_get_value (Handle, raw_string);
+  GLib.Marshaller.Free (raw_string);
   GLib.Value ret = (GLib.Value) Marshal.PtrToStructure (raw_ret, typeof (GLib.Value));
 
   object o = ret.Val;
