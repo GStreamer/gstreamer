@@ -56,6 +56,8 @@ struct _GstFLVDemux
 
   GstPad *audio_pad;
   GstPad *video_pad;
+
+  /* <private> */
   
   GstIndex *index;
   gint index_id;
