@@ -19,6 +19,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-deinterlace2
+ *
+ * deinterlace2 deinterlaces interlaced video frames to progressive video frames.
+ * For this different algorithms can be selected which will be described later.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/file ! decodebin2 ! ffmpegcolorspace ! deinterlace2 ! ffmpegcolorspace ! autovideosink
+ * ]| This pipeline deinterlaces a video file with the default deinterlacing options.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -482,6 +496,14 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
   gobject_class->get_property = gst_deinterlace2_get_property;
   gobject_class->finalize = gst_deinterlace2_finalize;
 
+  /**
+   * GstDeinterlace2:mode
+   * 
+   * This selects whether the deinterlacing methods should
+   * always be applied or if they should only be applied
+   * on content that has the "interlaced" flag on the caps.
+   *
+   */
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode",
           "Mode",
@@ -490,6 +512,79 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
           DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
+  /**
+   * GstDeinterlace2:method
+   * 
+   * Selects the different deinterlacing algorithms that can be used.
+   * These provide different quality and CPU usage.
+   *
+   * Some methods provide parameters which can be set by getting
+   * the "method" child via the #GstChildProxy interface and
+   * setting the appropiate properties on it.
+   *
+   * <itemizedlist>
+   * <listitem>
+   * <para>
+   * tomsmocomp
+   * Motion Adaptive: Motion Search
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * greedyh
+   * Motion Adaptive: Advanced Detection
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * greedyl
+   * Motion Adaptive: Simple Detection
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * vfir
+   * Blur vertical
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * linear
+   * Linear interpolation
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * linearblend
+   * Linear interpolation in time domain
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * scalerbob
+   * Double lines
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * weave
+   * Weave
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * weavetff
+   * Progressive: Top Field First
+   * </para>
+   * </listitem>
+   * <listitem>
+   * <para>
+   * weavebff
+   * Progressive: Bottom Field First
+   * </para>
+   * </listitem>
+   * </itemizedlist>
+   */
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method",
           "Method",
@@ -498,6 +593,13 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
           DEFAULT_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
+  /**
+   * GstDeinterlace2:fields
+   *
+   * This selects which fields should be output. If "all" is selected
+   * the output framerate will be double.
+   *
+   */
   g_object_class_install_property (gobject_class, PROP_FIELDS,
       g_param_spec_enum ("fields",
           "fields",
@@ -506,6 +608,12 @@ gst_deinterlace2_class_init (GstDeinterlace2Class * klass)
           DEFAULT_FIELDS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
+  /**
+   * GstDeinterlace2:layout
+   *
+   * This selects which fields is the first in time.
+   *
+   */
   g_object_class_install_property (gobject_class, PROP_FIELD_LAYOUT,
       g_param_spec_enum ("tff",
           "tff",
