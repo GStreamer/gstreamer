@@ -18,6 +18,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-flvmux
+ *
+ * flvmux muxes different streams into an FLV file.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/audio ! decodebin2 ! queue ! flvmux name=m ! filesink location=file.flv   filesrc location=/path/to/video ! decodebin2 ! queue ! m. 
+ * ]| This pipeline muxes an audio and video file into a single FLV file.
+ * </refsect2>
+ */
+
 /* TODO:
  *   - Write metadata for the file, see FLV spec page 13
  */

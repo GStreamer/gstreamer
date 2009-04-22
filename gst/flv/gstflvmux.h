@@ -67,6 +67,8 @@ typedef struct _GstFlvMux {
 
   GstPad         *srcpad;
   GstCollectPads *collect;
+
+  /* <private> */
   GstPadEventFunction collect_event;
 
   GstFlvMuxState state;

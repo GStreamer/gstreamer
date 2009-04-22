@@ -17,6 +17,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-flvdemux
+ *
+ * flvdemux demuxes an FLV file into the different contained streams.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=/path/to/flv ! flvdemux ! audioconvert ! autoaudiosink
+ * ]| This pipeline demuxes an FLV file and outputs the contained raw audio streams.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
