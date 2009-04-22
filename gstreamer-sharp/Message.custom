@@ -67,15 +67,27 @@ public uint Seqnum {
 }
 
 
+private Gst.Structure cached_structure = null;
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_message_get_structure (IntPtr raw);
 
 public Gst.Structure Structure {
   get  {
-    IntPtr raw_ret = gst_structure_copy (gst_message_get_structure (Handle));
-    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), false);
+    if (cached_structure != null)
+      return cached_structure;
+
+    IntPtr raw_ret = gst_message_get_structure (Handle);
+    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+    ret.FreeNative = false;
+    cached_structure = ret;
     return ret;
   }
+}
+
+~Message () {
+  cached_structure.CreateNativeCopy ();
+  cached_structure = null;
 }
 
 [DllImport ("gstreamer-0.10.dll") ]
