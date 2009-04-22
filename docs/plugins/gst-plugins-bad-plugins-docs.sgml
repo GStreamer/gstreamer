@@ -33,6 +33,7 @@
     <xi:include href="xml/element-dccpserversink.xml" />
     <xi:include href="xml/element-dccpserversrc.xml" />
     <xi:include href="xml/element-deinterlace.xml" />
+    <xi:include href="xml/element-deinterlace2.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-dtmfsrc.xml" />
     <xi:include href="xml/element-dtsdec.xml" />
@@ -101,6 +102,7 @@
     <xi:include href="xml/plugin-cdxaparse.xml" />
     <xi:include href="xml/plugin-celt.xml" />
     <xi:include href="xml/plugin-dccp.xml" />
+    <xi:include href="xml/plugin-deinterlace2.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />
     <xi:include href="xml/plugin-dirac.xml" />
     <xi:include href="xml/plugin-dtmf.xml" />

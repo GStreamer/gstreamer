@@ -198,6 +198,8 @@ struct _GstDeinterlace2
 
   GstPad *srcpad, *sinkpad;
 
+  /* <private> */
+
   GstDeinterlace2Mode mode;
 
   GstDeinterlace2FieldLayout field_layout;
