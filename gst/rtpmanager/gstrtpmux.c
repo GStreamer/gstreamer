@@ -274,7 +274,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
   gst_pad_set_active (sinkpad, TRUE);
 
   gst_pad_set_element_private (sinkpad, padpriv);
-  g_object_weak_ref (sinkpad, free_pad_private, padpriv);
+  g_object_weak_ref (G_OBJECT (sinkpad), free_pad_private, padpriv);
 
   /* dd the pad to the element */
   gst_element_add_pad (GST_ELEMENT (rtp_mux), sinkpad);
