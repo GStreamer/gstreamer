@@ -203,6 +203,9 @@ gst_audio_clock_get_time (GstClock * clock)
   aclock = GST_AUDIO_CLOCK_CAST (clock);
 
   result = aclock->func (clock, aclock->user_data);
+  if (result == GST_CLOCK_TIME_NONE) {
+    result = aclock->last_time - aclock->abidata.ABI.time_offset;
+  }
 
   return result;
 }
