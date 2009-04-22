@@ -49,6 +49,8 @@ struct _GstVdpMpegDecoder
 
   /* holds B_FRAMES */
   GSList *b_frames;
+
+  gboolean broken_gop;
   
   GstAdapter *adapter;
 };

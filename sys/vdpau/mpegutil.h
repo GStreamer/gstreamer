@@ -96,9 +96,11 @@ struct MPEGPictureExt
 struct MPEGPictureGOP
 {
   guint8 drop_frame_flag;
-  guint8 frame;
 
-  GstClockTime timestamp;
+  guint8 hour, minute, second, frame;
+
+  guint8 closed_gop;
+  guint8 broken_gop;
 };
 
 struct MPEGQuantMatrix

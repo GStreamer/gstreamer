@@ -158,6 +158,12 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
   if (mpeg_dec->vdp_info.picture_coding_type == B_FRAME) {
     GstVdpBFrame *b_frame;
 
+    if (mpeg_dec->broken_gop) {
+      gst_buffer_unref (buffer);
+      mpeg_dec->broken_gop = FALSE;
+      return GST_FLOW_OK;
+    }
+
     b_frame = g_slice_new (GstVdpBFrame);
 
     b_frame->buffer = buffer;
@@ -336,6 +342,8 @@ gst_vdp_mpeg_decoder_parse_gop (GstVdpMpegDecoder * mpeg_dec, guint8 * data,
   if (!mpeg_util_parse_picture_gop (&gop, data, end))
     return FALSE;
 
+  mpeg_dec->broken_gop = gop.broken_gop;
+
   return TRUE;
 }
 
@@ -496,6 +504,8 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
 
   mpeg_dec->b_frames = NULL;
+
+  mpeg_dec->broken_gop = FALSE;
 
   mpeg_dec->adapter = gst_adapter_new ();
 

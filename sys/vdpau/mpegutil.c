@@ -348,7 +348,6 @@ gboolean
 mpeg_util_parse_picture_gop (MPEGPictureGOP * gop, guint8 * data, guint8 * end)
 {
   guint32 code;
-  gint hour, minute, second;
 
   if (G_UNLIKELY ((end - data) < 8))
     return FALSE;               /* Packet too small */
@@ -363,15 +362,13 @@ mpeg_util_parse_picture_gop (MPEGPictureGOP * gop, guint8 * data, guint8 * end)
 
   gop->drop_frame_flag = read_bits (data, 0, 1);
 
-  hour = read_bits (data, 1, 5);
-  minute = read_bits (data, 6, 6);
-  second = read_bits (data + 1, 4, 6);
-
-  gop->timestamp = hour * 3600 * GST_SECOND;
-  gop->timestamp += minute * 60 * GST_SECOND;
-  gop->timestamp += second * GST_SECOND;
-
+  gop->hour = read_bits (data, 1, 5);
+  gop->minute = read_bits (data, 6, 6);
+  gop->second = read_bits (data + 1, 4, 6);
   gop->frame = read_bits (data + 2, 3, 6);
+
+  gop->closed_gop = read_bits (data + 3, 1, 1);
+  gop->broken_gop = read_bits (data + 3, 2, 1);
 
   return TRUE;
 }
