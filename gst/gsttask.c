@@ -146,7 +146,7 @@ gst_task_init (GstTask * task)
    * override this later */
   g_static_mutex_lock (&pool_lock);
   task->priv->pool = gst_object_ref (klass->pool);
-  g_static_mutex_lock (&pool_lock);
+  g_static_mutex_unlock (&pool_lock);
 }
 
 static void
