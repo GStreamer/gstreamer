@@ -59,6 +59,7 @@ customs = 			\
 	Debug.custom		\
 	Element.custom		\
 	Message.custom		\
+	Event.custom		\
 	Pad.custom		\
 	Parse.custom		\
 	Object.custom		\

@@ -135,6 +135,16 @@
 
   <change-node-type path="/api/namespace/object[@name='Event']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Event']" name="opaque">true</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_get_type']" name="new_flag">1</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Timestamp']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Src']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Structure']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/field[@name='Seqnum']" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/constructor" name="hidden">1</attr>
+  <attr path="/api/namespace/boxed[@name='Event']/method" name="hidden">1</attr>
+  <remove-attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_get_type']" name="hidden" />
+  <remove-attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_type_get_name']" name="hidden" />
+  <attr path="/api/namespace/boxed[@name='Event']/method[@cname='gst_event_type_get_name']" name="name">GetTypeName</attr>
 
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='0_']" />
   <remove-node path="/api/namespace/enum[@name='EventType']/member[@name='Flag']" />
@@ -178,11 +188,15 @@
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_SEEK']" name="name">Seek</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_NAVIGATION']" name="name">Navigation</attr>
   <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_LATENCY']" name="name">Latency</attr>
-  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_UPSTREAM']" name="name">Upstream</attr>
-  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM']" name="name">Downstream</attr>
-  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM_OOB']" name="name">DownstreamOob</attr>
-  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH']" name="name">Both</attr>
-  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH_OOB']" name="name">BothOob</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_UPSTREAM']" name="name">CustomUpstream</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM']" name="name">CustomDownstream</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_DOWNSTREAM_OOB']" name="name">CustomDownstreamOob</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH']" name="name">CustomBoth</attr>
+  <attr path="/api/namespace/enum[@name='EventType']/member[@cname='_GST_EVENT_CUSTOM_BOTH_OOB']" name="name">CustomBothOob</attr>
+
+  <add-node path="/api/namespace/enum[@name='EventTypeFlags']">
+    <member cname="GST_EVENT_TYPE_BOTH" name="Both" value="Gst.EventTypeFlags.Downstream | Gst.EventTypeFlags.Upstream" />
+  </add-node>
 
   <attr path="/api/namespace/class[@name='Flow']/method[@name='ToQuark']/parameters/*[@name='ret']" name="name">flow_ret</attr>
   <attr path="/api/namespace/class[@name='Flow']/method[@name='GetName']/parameters/*[@name='ret']" name="name">get_name_ret</attr>
@@ -354,7 +368,6 @@
   <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_get_name']" name="name">GetTypeName</attr>
   <remove-attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_register']" name="hidden" />
   <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_type_register']" name="name">RegisterType</attr>
-
 
   <attr path="/api/namespace/struct[@name='QueryTypeDefinition']" name="hidden">1</attr>
 

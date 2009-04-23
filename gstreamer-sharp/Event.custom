@@ -1,0 +1,312 @@
+protected Event () : base () { }
+
+public Event (GLib.Value val) : base (val) { }
+
+[DllImport ("gstreamersharpglue-0.10") ]
+extern static uint gstsharp_gst_event_get_timestamp_offset ();
+
+static uint timestamp_offset = gstsharp_gst_event_get_timestamp_offset ();
+public ulong Timestamp {
+  get {
+    unsafe {
+      ulong* raw_ptr = (ulong*) ( ( (byte*) Handle) + timestamp_offset);
+      return (*raw_ptr);
+    }
+  }
+  set {
+    if (!IsWritable)
+      throw new ApplicationException ();
+
+    unsafe {
+      ulong* raw_ptr = (ulong*) ( ( (byte*) Handle) + timestamp_offset);
+      *raw_ptr = value;
+    }
+  }
+}
+
+[DllImport ("gstreamersharpglue-0.10") ]
+extern static uint gstsharp_gst_event_get_src_offset ();
+
+static uint src_offset = gstsharp_gst_event_get_src_offset ();
+public Gst.Object Src {
+  get {
+    unsafe {
+      IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + src_offset);
+      return GLib.Object.GetObject ( (*raw_ptr)) as Gst.Object;
+    }
+  }
+  set {
+    if (!IsWritable)
+      throw new ApplicationException ();
+
+    unsafe {
+      IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + src_offset);
+      *raw_ptr = value == null ? IntPtr.Zero : value.Handle;
+    }
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern uint gst_event_get_seqnum (IntPtr raw);
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_set_seqnum (IntPtr raw, uint seqnum);
+
+public uint Seqnum {
+  get  {
+    uint raw_ret = gst_event_get_seqnum (Handle);
+    uint ret = raw_ret;
+    return ret;
+  }
+  set  {
+    if (!IsWritable)
+      throw new ApplicationException ();
+
+    gst_event_set_seqnum (Handle, value);
+  }
+}
+
+
+private Gst.Structure cached_structure = null;
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_get_structure (IntPtr raw);
+
+public Gst.Structure Structure {
+  get  {
+    if (cached_structure != null)
+      return cached_structure;
+
+    IntPtr raw_ret = gst_event_get_structure (Handle);
+    Gst.Structure ret = raw_ret == IntPtr.Zero ? null : (Gst.Structure) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Structure), true);
+    ret.FreeNative = false;
+    cached_structure = ret;
+    return ret;
+  }
+}
+
+~Event () {
+  if (cached_structure != null)
+    cached_structure.CreateNativeCopy ();
+  cached_structure = null;
+}
+
+public string TypeName {
+  get {
+    return GetTypeName (Type);
+  }
+}
+
+public bool IsUpstream {
+  get {
+    return ( (uint) Type & (uint) EventTypeFlags.Upstream) != 0;
+  }
+}
+
+public bool IsDownstream {
+  get {
+    return ( (uint) Type & (uint) EventTypeFlags.Downstream) != 0;
+  }
+}
+
+public bool IsSerialized {
+  get {
+    return ( (uint) Type & (uint) EventTypeFlags.Serialized) != 0;
+  }
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern Gst.EventTypeFlags gst_event_type_get_flags (Gst.EventType type);
+
+public static Gst.EventTypeFlags GetTypeFlags (Gst.EventType type) {
+  return gst_event_type_get_flags (type);
+}
+
+public static Gst.EventType MakeType (uint num, Gst.EventTypeFlags flags) {
+  return (Gst.EventType) ( (num << 4) | (uint) flags);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_custom (Gst.EventType type, IntPtr structure);
+
+public static Gst.Event NewCustom (Gst.EventType type, Gst.Structure structure) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_custom (type, (structure != null) ? structure.Handle : IntPtr.Zero), typeof (Gst.Event), true);
+  ev.cached_structure = structure;
+  structure.FreeNative = false;
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_flush_start ();
+
+public static Gst.Event NewFlushStart () {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_flush_start (), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_flush_stop ();
+
+public static Gst.Event NewFlushStop () {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_flush_stop (), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_eos ();
+
+public static Gst.Event NewEos () {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_eos (), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_new_segment_full (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position);
+
+public static Gst.Event NewNewSegment (bool update, double rate, double applied_rate, Gst.Format format, long start, long stop, long position) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_new_segment_full (update, rate, applied_rate, format, start, stop, position), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+public static Gst.Event NewNewSegment (bool update, double rate, Gst.Format format, long start, long stop, long position) {
+  return NewNewSegment (update, rate, 1.0, format, start, stop, position);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_parse_new_segment_full (IntPtr raw, out bool update, out double rate, out double applied_rate, out Gst.Format format, out long start, out long stop, out long position);
+
+public void ParseNewSegment (out bool update, out double rate, out double applied_rate, out Gst.Format format, out long start, out long stop, out long position) {
+  if (Type != Gst.EventType.NewSegment)
+    throw new ApplicationException ();
+
+  gst_event_parse_new_segment_full (Handle, out update, out rate, out applied_rate, out format, out start, out stop, out position);
+}
+
+public void ParseNewSegment (out bool update, out double rate, Gst.Format format, out long start, out long stop, out long position) {
+  double applied_rate;
+
+  ParseNewSegment (out update, out rate, out applied_rate, out format, out start, out stop, out position);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_tag (IntPtr tags);
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_tag_list_copy (IntPtr raw);
+
+public static Gst.Event NewTag (Gst.TagList tags) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_tag ( (tags != null) ? gst_tag_list_copy (tags.Handle) : IntPtr.Zero), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_parse_tag (IntPtr ev, out IntPtr tags);
+
+public void ParseTag (out TagList tags) {
+  if (Type != EventType.Tag)
+    throw new ArgumentException ();
+
+  IntPtr raw_ptr;
+
+  gst_event_parse_tag (Handle, out raw_ptr);
+  if (raw_ptr == IntPtr.Zero)
+    tags = null;
+  else
+    tags = (TagList) GLib.Opaque.GetOpaque (raw_ptr, typeof (TagList), true);
+}
+
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_buffer_size (Gst.Format format, long min, long max, bool async);
+
+public static Gst.Event NewBufferSize (Gst.Format format, long min, long max, bool async) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_buffer_size (format, min, max, async), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_parse_buffer_size (IntPtr ev, out Gst.Format format, out long min, out long max, out bool async);
+
+public void ParseBufferSize (out Gst.Format format, out long min, out long max, out bool async) {
+  if (Type != EventType.BufferSize)
+    throw new ArgumentException ();
+
+  gst_event_parse_buffer_size (Handle, out format, out min, out max, out async);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_qos (double proportion, long diff, ulong timestamp);
+
+public static Gst.Event NewQos (double proportion, long diff, ulong timestamp) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_qos (proportion, diff, timestamp), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_parse_qos (IntPtr ev, out double proportion, out long diff, out ulong timestamp);
+
+public void ParseQos (out double proportion, out long diff, out ulong timestamp) {
+  if (Type != EventType.Qos)
+    throw new ArgumentException ();
+
+  gst_event_parse_qos (Handle, out proportion, out diff, out timestamp);
+}
+
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_seek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop);
+
+public static Gst.Event NewSeek (double rate, Gst.Format format, Gst.SeekFlags flags, Gst.SeekType start_type, long start, Gst.SeekType stop_type, long stop) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_seek (rate, format, flags, start_type, start, stop_type, stop), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_parse_seek (IntPtr ev, out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType start_type, out long start, out Gst.SeekType stop_type, out long stop);
+
+public void ParseSeek (out double rate, out Gst.Format format, out Gst.SeekFlags flags, out Gst.SeekType start_type, out long start, out Gst.SeekType stop_type, out long stop) {
+  if (Type != EventType.Seek)
+    throw new ArgumentException ();
+
+  gst_event_parse_seek (Handle, out rate, out format, out flags, out start_type, out start, out stop_type, out stop);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_navigation (IntPtr structure);
+
+public static Gst.Event NewNavigation (Gst.Structure structure) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_navigation (structure.Handle), typeof (Gst.Event), true);
+  ev.cached_structure = structure;
+  structure.FreeNative = false;
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_event_new_latency (ulong latency);
+
+public static Gst.Event NewLatency (ulong latency) {
+  Gst.Event ev = (Gst.Event) GLib.Opaque.GetOpaque (gst_event_new_latency (latency), typeof (Gst.Event), true);
+
+  return ev;
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_event_parse_latency (IntPtr ev, out ulong latency);
+
+public void ParseLatency (out ulong latency) {
+  if (Type != EventType.Latency)
+    throw new ArgumentException ();
+
+  gst_event_parse_latency (Handle, out latency);
+}
+

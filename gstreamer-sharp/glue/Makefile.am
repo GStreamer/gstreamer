@@ -5,6 +5,7 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	caps.c          \
 	clock.c \
 	message.c \
+	event.c \
 	bin.c \
 	structure.c \
 	taglist.c \
