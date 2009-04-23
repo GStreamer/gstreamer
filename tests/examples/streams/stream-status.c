@@ -45,6 +45,7 @@ sync_bus_handler (GstBus * bus, GstMessage * message, GstElement * bin)
       GstElement *owner;
       const GValue *val;
       gchar *path;
+      GstTask *task = NULL;
 
       g_message ("received STREAM_STATUS");
       gst_message_parse_stream_status (message, &type, &owner);
@@ -61,20 +62,21 @@ sync_bus_handler (GstBus * bus, GstMessage * message, GstElement * bin)
       g_message ("object: type %s, value %p", G_VALUE_TYPE_NAME (val),
           g_value_get_object (val));
 
+      /* see if we know how to deal with this object */
+      if (G_VALUE_TYPE (val) == GST_TYPE_TASK) {
+        task = g_value_get_object (val);
+      }
+
       switch (type) {
+        case GST_STREAM_STATUS_TYPE_CREATE:
+          g_message ("created task %p", task);
+          break;
         case GST_STREAM_STATUS_TYPE_ENTER:
-        {
-          /* see if we know how to deal with this object */
-          if (G_VALUE_TYPE (val) == GST_TYPE_TASK) {
-            GstTask *task;
-
-            task = g_value_get_object (val);
-
-            g_message ("raising task priority");
+          if (task) {
+            g_message ("raising task priority for %p", task);
             gst_task_set_priority (task, G_THREAD_PRIORITY_HIGH);
           }
           break;
-        }
         case GST_STREAM_STATUS_TYPE_LEAVE:
           break;
         default:
