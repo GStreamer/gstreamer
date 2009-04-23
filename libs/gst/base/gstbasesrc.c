@@ -1147,7 +1147,7 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
 static gboolean
 gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 {
-  gboolean res = TRUE;
+  gboolean res = TRUE, tres;
   gdouble rate;
   GstFormat seek_format, dest_format;
   GstSeekFlags flags;
@@ -1334,8 +1334,10 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   src->data.ABI.running = TRUE;
   /* and restart the task in case it got paused explicitely or by
    * the FLUSH_START event we pushed out. */
-  gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
+  tres = gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
       src->srcpad);
+  if (res && !tres)
+    res = FALSE;
 
   /* and release the lock again so we can continue streaming */
   GST_PAD_STREAM_UNLOCK (src->srcpad);
