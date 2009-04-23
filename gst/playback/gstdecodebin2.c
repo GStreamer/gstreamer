@@ -2127,8 +2127,7 @@ gst_decode_group_expose (GstDecodeGroup * group)
     /* update runtime limits. At runtime, we try to keep the amount of buffers
      * in the queues as low as possible (but at least 5 buffers). */
     g_object_set (G_OBJECT (group->multiqueue),
-        "max-size-bytes", 2 * 1024 * 1024,
-        "max-size-time", 2 * GST_SECOND, "max-size-buffers", 5, NULL);
+        "max-size-bytes", 2 * 1024 * 1024, "max-size-buffers", 5, NULL);
     /* we can now disconnect any overrun signal, which is used to expose the
      * group. */
     if (group->overrunsig) {
