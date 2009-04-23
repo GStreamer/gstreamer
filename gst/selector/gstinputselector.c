@@ -392,12 +392,17 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&selpad->segment, update,
           rate, arate, format, start, stop, time);
       GST_OBJECT_UNLOCK (selpad);
-      /* we are not going to forward the segment, mark the segment as
-       * pending */
-      forward = FALSE;
-      selpad->segment_pending = TRUE;
-      GST_INPUT_SELECTOR_UNLOCK (sel);
 
+      /* If we aren't forwarding the event (because the pad is not the
+       * active_sinkpad, and select_all is not set, then set the flag on the
+       * that says a segment needs sending if/when that pad is activated.
+       * For all other cases, we send the event immediately, which makes
+       * sparse streams and other segment updates work correctly downstream.
+       */
+      if (!forward)
+        selpad->segment_pending = TRUE;
+
+      GST_INPUT_SELECTOR_UNLOCK (sel);
       break;
     }
     case GST_EVENT_TAG:
