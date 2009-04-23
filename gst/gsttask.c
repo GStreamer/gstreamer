@@ -401,6 +401,73 @@ gst_task_set_priority (GstTask * task, GThreadPriority priority)
 }
 
 /**
+ * gst_task_get_pool:
+ * @task: a #GstTask
+ *
+ * Get the #GstTaskPool that this task will use for its streaming
+ * threads.
+ *
+ * MT safe.
+ *
+ * Returns: the #GstTaskPool used by @task. gst_object_unref()
+ * after usage.
+ *
+ * Since: 0.10.24
+ */
+GstTaskPool *
+gst_task_get_pool (GstTask * task)
+{
+  GstTaskPool *result;
+  GstTaskPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_TASK (task), NULL);
+
+  priv = task->priv;
+
+  GST_OBJECT_LOCK (task);
+  result = gst_object_ref (priv->pool);
+  GST_OBJECT_UNLOCK (task);
+
+  return result;
+}
+
+/**
+ * gst_task_set_pool:
+ * @task: a #GstTask
+ * @pool: a #GstTaskPool
+ *
+ * Set @pool as the new GstTaskPool for @task. Any new streaming threads that
+ * will be created by @task will now use @pool.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.24
+ */
+void
+gst_task_set_pool (GstTask * task, GstTaskPool * pool)
+{
+  GstTaskPool *old;
+  GstTaskPrivate *priv;
+
+  g_return_if_fail (GST_IS_TASK (task));
+  g_return_if_fail (GST_IS_TASK_POOL (pool));
+
+  priv = task->priv;
+
+  GST_OBJECT_LOCK (task);
+  if (priv->pool != pool) {
+    old = priv->pool;
+    priv->pool = gst_object_ref (pool);
+  } else
+    old = NULL;
+  GST_OBJECT_UNLOCK (task);
+
+  if (old)
+    gst_object_unref (old);
+}
+
+
+/**
  * gst_task_set_thread_callbacks:
  * @task: The #GstTask to use
  * @callbacks: a #GstTaskThreadCallbacks pointer

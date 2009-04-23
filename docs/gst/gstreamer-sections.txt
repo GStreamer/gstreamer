@@ -2210,6 +2210,9 @@ gst_task_create
 gst_task_set_lock
 gst_task_set_priority
 
+gst_task_set_pool
+gst_task_get_pool
+
 GstTaskThreadCallbacks
 gst_task_set_thread_callbacks
 

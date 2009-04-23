@@ -183,6 +183,9 @@ GstTask*	gst_task_create		(GstTaskFunction func, gpointer data);
 void		gst_task_set_lock	(GstTask *task, GStaticRecMutex *mutex);
 void		gst_task_set_priority	(GstTask *task, GThreadPriority priority);
 
+GstTaskPool *   gst_task_get_pool       (GstTask *task);
+void            gst_task_set_pool       (GstTask *task, GstTaskPool *pool);
+
 void            gst_task_set_thread_callbacks  (GstTask *task,
                                                 GstTaskThreadCallbacks *callbacks,
 						gpointer user_data,
