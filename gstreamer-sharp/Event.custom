@@ -135,6 +135,10 @@ public static Gst.EventType MakeType (uint num, Gst.EventTypeFlags flags) {
   return (Gst.EventType) ( (num << 4) | (uint) flags);
 }
 
+public static uint GetTypeNumber (Gst.EventType type) {
+  return ((uint) type) >> 4;
+}
+
 [DllImport ("gstreamer-0.10.dll") ]
 static extern IntPtr gst_event_new_custom (Gst.EventType type, IntPtr structure);
 
