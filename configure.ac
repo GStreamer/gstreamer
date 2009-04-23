@@ -1262,11 +1262,13 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   dnl We only need -lBPM on soundtouch < 1.4
   dnl We check for libSoundTouch since Debian used it before upstream
   dnl added a pkgconfig file.
+  HAVE_SOUNDTOUCH_1_4=yes
   PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.4,
-    HAVE_SOUNDTOUCH=yes, 
+    [HAVE_SOUNDTOUCH=yes],
     [PKG_CHECK_MODULES(SOUNDTOUCH, soundtouch-1.0,
-      HAVE_SOUNDTOUCH=yes
-      SOUNDTOUCH_LIBS=$"SOUNDTOUCH_LIBS -lBPM", 
+      [HAVE_SOUNDTOUCH=yes
+        HAVE_SOUNDTOUCH_1_4=no
+        SOUNDTOUCH_LIBS=$"SOUNDTOUCH_LIBS -lBPM"], 
       [PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch,
         HAVE_SOUNDTOUCH=yes
         SOUNDTOUCH_LIBS=$"SOUNDTOUCH_LIBS -lBPM", 
@@ -1276,6 +1278,10 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   if test "x$HAVE_CXX" != "xyes"; then
     USE_SOUNDTOUCH=false
     AC_MSG_NOTICE([Not building soundtouch plugin: no C++ compiler found])
+  fi
+  if test "x$HAVE_SOUNDTOUCH" = "xyes" -a "x$HAVE_SOUNDTOUCH_1_4" = "xyes"; then
+     AC_DEFINE([HAVE_SOUNDTOUCH_1_4], [1],
+         [Defined if the available libSoundTouch is >= 1.4])
   fi
 ])
 
