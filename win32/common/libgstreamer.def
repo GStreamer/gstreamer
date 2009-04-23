@@ -939,6 +939,7 @@ EXPORTS
 	gst_tag_setter_set_tag_merge_mode
 	gst_task_cleanup_all
 	gst_task_create
+	gst_task_get_pool
 	gst_task_get_state
 	gst_task_get_type
 	gst_task_join
@@ -951,6 +952,7 @@ EXPORTS
 	gst_task_pool_push
 	gst_task_pool_set_func
 	gst_task_set_lock
+	gst_task_set_pool
 	gst_task_set_priority
 	gst_task_set_state
 	gst_task_set_thread_callbacks
