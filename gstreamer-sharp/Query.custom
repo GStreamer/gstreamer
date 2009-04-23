@@ -96,7 +96,7 @@ public void SetPosition (Gst.Format format, long cur) {
 [DllImport ("gstreamer-0.10.dll") ]
 static extern void gst_query_parse_position (IntPtr query, out Gst.Format format, out long cur);
 
-public void ParseConvert (out Gst.Format format, out long cur) {
+public void ParsePosition (out Gst.Format format, out long cur) {
   if (Type != QueryType.Position)
     throw new ApplicationException ();
 
