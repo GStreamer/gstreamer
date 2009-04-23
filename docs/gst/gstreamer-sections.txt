@@ -2168,6 +2168,29 @@ GST_TYPE_TAG_SETTER
 gst_tag_setter_get_type
 </SECTION>
 
+<SECTION>
+<FILE>gsttaskpool</FILE>
+<TITLE>GstTaskPool</TITLE>
+GstTaskPool
+GstTaskPoolClass
+gst_task_pool_new
+gst_task_pool_set_func
+gst_task_pool_prepare
+gst_task_pool_join
+gst_task_pool_push
+gst_task_pool_cleanup
+<SUBSECTION Standard>
+GST_IS_TASK_POOL
+GST_IS_TASK_POOL_CLASS
+GST_TASK_POOL
+GST_TASK_POOL_CAST
+GST_TASK_POOL_CLASS
+GST_TASK_POOL_GET_CLASS
+GST_TYPE_TASK_POOL
+<SUBSECTION Private>
+gst_task_pool_get_type
+</SECTION>
+
 
 <SECTION>
 <FILE>gsttask</FILE>

@@ -86,6 +86,7 @@ Windows.  It is released under the GNU Library General Public License
     <xi:include href="xml/gsttaglist.xml" />
     <xi:include href="xml/gsttagsetter.xml" />
     <xi:include href="xml/gsttask.xml" />
+    <xi:include href="xml/gsttaskpool.xml" />
     <xi:include href="xml/gsttypefind.xml" />
     <xi:include href="xml/gsttypefindfactory.xml" />
     <xi:include href="xml/gsturihandler.xml" />
