@@ -97,4 +97,4 @@ void		gst_task_pool_cleanup     (GstTaskPool *pool);
 
 G_END_DECLS
 
-#endif /* __GST_TASK_H__ */
+#endif /* __GST_TASK_POOL_H__ */
