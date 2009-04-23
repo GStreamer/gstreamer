@@ -57,7 +57,8 @@ struct _GstTaskPool {
 
 /**
  * GstTaskPoolClass:
- * @init: initialize the threadpool
+ * @parent_class: the parent class structure
+ * @prepare: prepare the threadpool
  * @cleanup: make sure all threads are stopped
  * @push: start a new thread
  * @join: join a thread
@@ -67,12 +68,13 @@ struct _GstTaskPool {
 struct _GstTaskPoolClass {
   GstObjectClass parent_class;
 
+  /*< public >*/
   void      (*prepare)  (GstTaskPool *pool, GFunc func,
                          gpointer user_data, GError **error);
   void      (*cleanup)  (GstTaskPool *pool);
 
-  GThread * (*push)     (GstTaskPool *pool, gpointer data, GError **error);
-  void      (*join)     (GstTaskPool *pool, GThread *thread);
+  gpointer  (*push)     (GstTaskPool *pool, gpointer data, GError **error);
+  void      (*join)     (GstTaskPool *pool, gpointer id);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -87,9 +89,9 @@ void            gst_task_pool_set_func    (GstTaskPool *pool,
 
 void            gst_task_pool_prepare     (GstTaskPool *pool, GError **error);
 
-GThread *       gst_task_pool_push        (GstTaskPool *pool, gpointer data,
+gpointer        gst_task_pool_push        (GstTaskPool *pool, gpointer data,
                                            GError **error);
-void            gst_task_pool_join        (GstTaskPool *pool, GThread *thread);
+void            gst_task_pool_join        (GstTaskPool *pool, gpointer id);
 
 void		gst_task_pool_cleanup     (GstTaskPool *pool);
 

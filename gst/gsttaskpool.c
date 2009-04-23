@@ -74,7 +74,7 @@ default_cleanup (GstTaskPool * pool)
   GST_OBJECT_UNLOCK (pool);
 }
 
-static GThread *
+static gpointer
 default_push (GstTaskPool * pool, gpointer data, GError ** error)
 {
   GST_OBJECT_LOCK (pool);
@@ -86,7 +86,7 @@ default_push (GstTaskPool * pool, gpointer data, GError ** error)
 }
 
 static void
-default_join (GstTaskPool * pool, GThread * thread)
+default_join (GstTaskPool * pool, gpointer id)
 {
   /* does nothing, we can't join for threads from the threadpool */
 }
@@ -203,10 +203,11 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  *
  * Start the execution of a new thread from @pool.
  *
- * Returns: a #GThread or NULL when the GThread is not yet known. You must check
- * @error to detect errors.
+ * Returns: a pointer that should be used for the gst_task_pool_join
+ * function. This pointer can be NULL, you must check @error to detect
+ * errors.
  */
-GThread *
+gpointer
 gst_task_pool_push (GstTaskPool * pool, gpointer data, GError ** error)
 {
   GstTaskPoolClass *klass;
@@ -231,12 +232,13 @@ not_supported:
 /**
  * gst_task_pool_join:
  * @pool: a #GstTaskPool
- * @thread: a #GThread
+ * @id: the id
  *
- * Join a GThread or return it to the pool.
+ * Join a task and/or return it to the pool. @id is the id obtained from 
+ * gst_task_pool_push().
  */
 void
-gst_task_pool_join (GstTaskPool * pool, GThread * thread)
+gst_task_pool_join (GstTaskPool * pool, gpointer id)
 {
   GstTaskPoolClass *klass;
 
@@ -245,5 +247,5 @@ gst_task_pool_join (GstTaskPool * pool, GThread * thread)
   klass = GST_TASK_POOL_GET_CLASS (pool);
 
   if (klass->join)
-    klass->join (pool, thread);
+    klass->join (pool, id);
 }

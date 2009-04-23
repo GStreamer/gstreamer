@@ -2176,8 +2176,8 @@ GstTaskPoolClass
 gst_task_pool_new
 gst_task_pool_set_func
 gst_task_pool_prepare
-gst_task_pool_join
 gst_task_pool_push
+gst_task_pool_join
 gst_task_pool_cleanup
 <SUBSECTION Standard>
 GST_IS_TASK_POOL
