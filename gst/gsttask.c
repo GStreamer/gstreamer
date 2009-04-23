@@ -80,8 +80,12 @@ struct _GstTaskPrivate
   gboolean prio_set;
   GThreadPriority priority;
 
+  /* configured pool */
   GstTaskPool *pool;
+
+  /* remember the pool and id that is currently running. */
   gpointer id;
+  GstTaskPool *pool_id;
 };
 
 static void gst_task_class_init (GstTaskClass * klass);
@@ -161,6 +165,8 @@ gst_task_finalize (GObject * object)
     priv->thr_notify (priv->thr_user_data);
   priv->thr_notify = NULL;
   priv->thr_user_data = NULL;
+
+  gst_object_unref (priv->pool);
 
   /* task thread cannot be running here since it holds a ref
    * to the task so that the finalize could not have happened */
@@ -488,8 +494,10 @@ start_task (GstTask * task)
 
   tclass = GST_TASK_GET_CLASS (task);
 
-  /* push on the thread pool */
-  priv->id = gst_task_pool_push (priv->pool, task, &error);
+  /* push on the thread pool, we remember the original pool because the user
+   * could change it later on and then we join to the wrong pool. */
+  priv->pool_id = gst_object_ref (priv->pool);
+  priv->id = gst_task_pool_push (priv->pool_id, task, &error);
 
   if (error != NULL) {
     g_warning ("failed to create thread: %s", error->message);
@@ -671,8 +679,9 @@ gst_task_join (GstTask * task)
   task->abidata.ABI.thread = NULL;
   /* get the id and pool to join */
   if ((id = priv->id)) {
-    if ((pool = priv->pool))
+    if ((pool = priv->pool_id))
       gst_object_ref (pool);
+    priv->pool_id = NULL;
     priv->id = NULL;
   }
   GST_OBJECT_UNLOCK (task);
