@@ -58,10 +58,13 @@ public object Emit (string signal, params object[] parameters) {
   return DynamicSignal.Emit (this, signal, parameters);
 }
 
+[DllImport ("gobject-2.0-0.dll")]
+static extern IntPtr g_object_ref (IntPtr raw);
+
 public bool AddPad (Pad p) {
   bool ret = gst_element_add_pad (this.Handle, p == null ? IntPtr.Zero : p.Handle);
   if (ret)
-    Gst.Object.Ref (p.Handle);
+    g_object_ref (p.Handle);
   return ret;
 }
 

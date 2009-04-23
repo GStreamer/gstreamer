@@ -9,6 +9,7 @@ libgstreamersharpglue_0_10_la_SOURCES =	\
 	bin.c \
 	structure.c \
 	taglist.c \
+	object.c \
 	gobject.c
 
 nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 

@@ -305,7 +305,7 @@ namespace Gst {
     [DllImport ("gobject-2.0.dll") ]
     static extern uint g_signal_lookup (IntPtr name, IntPtr itype);
 
-    [DllImport ("glib-2.0.dll") ]
+    [DllImport ("libglib-2.0.dll") ]
     static extern uint g_quark_from_string (IntPtr str);
 
     [DllImport ("gobject-2.0.dll") ]

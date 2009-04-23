@@ -267,8 +267,26 @@
 
   <attr path="/api/namespace/callback[@name='MiniObjectFinalizeFunction']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/object[@name='Object']" name="abstract">1</attr>
   <attr path="/api/namespace/object[@name='Object']/field[@name='Refcount']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Object']/method[@name='DefaultError']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Lock']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Name']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/field[@name='NamePrefix']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Parent']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Flags']" name="writeable">true</attr>
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Flags']" name="type">GstObjectFlags</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_default_error']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_default_deep_notify']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_set_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_get_name']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_ref']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_unref']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_replace']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_sink']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_set_parent']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_get_parent']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/method[@cname='gst_object_check_uniqueness']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Object']/signal[@cname='deep-notify']" name="hidden">1</attr>
   
   <attr path="/api/namespace/enum[@name='ObjectFlags']/member[@cname='GST_OBJECT_FLAG_LAST']" name="name">Last</attr>
 

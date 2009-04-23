@@ -1,5 +1,5 @@
 <Type Name="Object" FullName="Gst.Object">
-  <TypeSignature Language="C#" Value="public class Object : GLib.Object" />
+  <TypeSignature Language="C#" Value="public abstract class Object : GLib.Object" />
   <AssemblyInfo>
     <AssemblyName>gstreamer-sharp</AssemblyName>
     <AssemblyVersion>0.9.5.99</AssemblyVersion>
@@ -39,28 +39,10 @@
       <MemberType>Constructor</MemberType>
       <Parameters><Parameter Name="raw" Type="System.IntPtr" /></Parameters>
       <Docs><param name="raw">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CheckUniqueness">
-      <MemberSignature Language="C#" Value="public static bool CheckUniqueness (GLib.List list, string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="list" Type="GLib.List" /><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="list">To be added.</param><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DeepNotify">
-      <MemberSignature Language="C#" Value="public event Gst.DeepNotifyHandler DeepNotify;" />
-      <MemberType>Event</MemberType>
-      <Attributes><Attribute><AttributeName>GLib.Signal("deep-notify")</AttributeName></Attribute></Attributes>
-      <ReturnValue><ReturnType>Gst.DeepNotifyHandler</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DefaultDeepNotify">
-      <MemberSignature Language="C#" Value="public static void DefaultDeepNotify (GLib.Object objekt, Gst.Object orig, IntPtr pspec, string excluded_props);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="objekt" Type="GLib.Object" /><Parameter Name="orig" Type="Gst.Object" /><Parameter Name="pspec" Type="System.IntPtr" /><Parameter Name="excluded_props" Type="System.String" /></Parameters>
-      <Docs><param name="objekt">To be added.</param><param name="orig">To be added.</param><param name="pspec">To be added.</param><param name="excluded_props">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Flags">
-      <MemberSignature Language="C#" Value="public uint Flags { get; }" />
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CheckUniqueness"><MemberSignature Language="C#" Value="public static bool CheckUniqueness (Gst.Object[] objects, string name);" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters><Parameter Name="objects" Type="Gst.Object[]" /><Parameter Name="name" Type="System.String" /></Parameters><Docs><param name="objects">To be added.</param><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Flags">
+      <MemberSignature Language="C#" Value="public Gst.ObjectFlags Flags { set; get; }" />
       <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
+      <ReturnValue><ReturnType>Gst.ObjectFlags</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="GType">
       <MemberSignature Language="C#" Value="public static GLib.GType GType { get; }" />
@@ -73,7 +55,7 @@
       <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
       <Parameters><Parameter Name="ancestor" Type="Gst.Object" /></Parameters>
       <Docs><param name="ancestor">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Name">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Lock"><MemberSignature Language="C#" Value="public void Lock ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Name">
       <MemberSignature Language="C#" Value="public string Name { set; get; }" />
       <MemberType>Property</MemberType>
       <Attributes><Attribute><AttributeName>GLib.Property("name")</AttributeName></Attribute></Attributes>
@@ -84,13 +66,7 @@
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="OnDeepNotify">
-      <MemberSignature Language="C#" Value="protected virtual void OnDeepNotify (Gst.Object orig, IntPtr pspec);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="orig" Type="Gst.Object" /><Parameter Name="pspec" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="orig">To be added.</param><param name="pspec">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Object), ConnectionMethod="OverrideDeepNotify")</AttributeName></Attribute></Attributes></Member><Member MemberName="OnParentSet">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="OnParentSet">
       <MemberSignature Language="C#" Value="protected virtual void OnParentSet (Gst.Object parent);" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
@@ -103,7 +79,7 @@
       <Parameters><Parameter Name="parent" Type="Gst.Object" /></Parameters>
       <Docs><param name="parent">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><Attributes><Attribute><AttributeName>GLib.DefaultSignalHandler(Type=typeof(Gst.Object), ConnectionMethod="OverrideParentUnset")</AttributeName></Attribute></Attributes></Member><Member MemberName="Parent">
-      <MemberSignature Language="C#" Value="public Gst.Object Parent { get; }" />
+      <MemberSignature Language="C#" Value="public Gst.Object Parent { set; get; }" />
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>Gst.Object</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
@@ -124,53 +100,12 @@
       <MemberType>Property</MemberType>
       <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Ref">
-      <MemberSignature Language="C#" Value="public static IntPtr Ref (IntPtr objekt);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.IntPtr</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="objekt" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="objekt">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Refcount">
-      <MemberSignature Language="C#" Value="public int Refcount { get; }" />
-      <MemberType>Property</MemberType>
-      <ReturnValue><ReturnType>System.Int32</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Replace">
-      <MemberSignature Language="C#" Value="public void Replace (Gst.Object newobj);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="newobj" Type="Gst.Object" /></Parameters>
-      <Docs><param name="newobj">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetName">
-      <MemberSignature Language="C#" Value="public bool SetName (string name);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
-      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="SetParent">
-      <MemberSignature Language="C#" Value="public bool SetParent (Gst.Object parent);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="parent" Type="Gst.Object" /></Parameters>
-      <Docs><param name="parent">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Sink">
-      <MemberSignature Language="C#" Value="public static void Sink (IntPtr objekt);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="objekt" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="objekt">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unparent">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Raw"><MemberSignature Language="C#" Value="protected override IntPtr Raw { set; get; }" /><MemberType>Property</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.IntPtr</ReturnType></ReturnValue><Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs></Member><Member MemberName="TryLock"><MemberSignature Language="C#" Value="public bool TryLock ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs></Member><Member MemberName="Unlock"><MemberSignature Language="C#" Value="public void Unlock ();" /><MemberType>Method</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue><Parameters /><Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs></Member><Member MemberName="Unparent">
       <MemberSignature Language="C#" Value="public void Unparent ();" />
       <MemberType>Method</MemberType>
       <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
       <Parameters />
       <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unref">
-      <MemberSignature Language="C#" Value="public static void Unref (IntPtr objekt);" />
-      <MemberType>Method</MemberType>
-      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
-      <Parameters><Parameter Name="objekt" Type="System.IntPtr" /></Parameters>
-      <Docs><param name="objekt">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member>
     
     

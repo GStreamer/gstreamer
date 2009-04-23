@@ -20,7 +20,7 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
-    <Member MemberName="Downstream">
+    <Member MemberName="Both"><MemberSignature Language="C#" Value="Both" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventTypeFlags</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Downstream">
       <MemberSignature Language="C#" Value="Downstream" />
       <MemberType>Field</MemberType>
       <ReturnValue><ReturnType>Gst.EventTypeFlags</ReturnType></ReturnValue>

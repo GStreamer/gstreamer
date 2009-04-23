@@ -1,8 +1,80 @@
+[DllImport ("gstreamer-0.10.dll") ]
+static extern void gst_object_sink (IntPtr raw);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_object_ref (IntPtr raw);
 
-public int Refcount {
+protected override IntPtr Raw {
   get {
-    return this.RefCount;
+    return base.Raw;
+  }
+  set {
+    if (value != IntPtr.Zero) {
+      gst_object_ref (value);
+      gst_object_sink (value);
+    }
+    base.Raw = value;
   }
 }
 
 
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_object_set_parent (IntPtr raw, IntPtr parent);
+[DllImport ("gstreamer-0.10.dll") ]
+static extern IntPtr gst_object_get_parent (IntPtr raw);
+
+public Gst.Object Parent {
+  set {
+    bool raw_ret = gst_object_set_parent (Handle, value == null ? IntPtr.Zero : value.Handle);
+    if (!raw_ret)
+      throw new ApplicationException ();
+  }
+  get {
+    IntPtr raw_ret = gst_object_get_parent (Handle);
+    Gst.Object ret = GLib.Object.GetObject (raw_ret, true) as Gst.Object;
+    return ret;
+  }
+}
+
+[DllImport ("gstreamersharpglue-0.10") ]
+extern static uint gstsharp_gst_object_get_lock_offset ();
+
+static uint lock_offset = gstsharp_gst_object_get_lock_offset ();
+private IntPtr LockPtr {
+  get {
+    unsafe {
+      IntPtr* raw_ptr = (IntPtr*) ( ( (byte*) Handle) + lock_offset);
+      return (*raw_ptr);
+    }
+  }
+}
+
+[DllImport ("libglib-2.0-0.dll") ]
+static extern void g_mutex_lock (IntPtr mutex);
+[DllImport ("libglib-2.0-0.dll") ]
+static extern void g_mutex_unlock (IntPtr mutex);
+[DllImport ("libglib-2.0-0.dll") ]
+static extern bool g_mutex_trylock (IntPtr mutex);
+
+public void Lock () {
+  g_mutex_lock (LockPtr);
+}
+
+public void Unlock () {
+  g_mutex_unlock (LockPtr);
+}
+
+public bool TryLock () {
+  return g_mutex_trylock (LockPtr);
+}
+
+[DllImport ("gstreamer-0.10.dll") ]
+static extern bool gst_object_check_uniqueness (IntPtr list, IntPtr name);
+
+public static bool CheckUniqueness (Gst.Object[] objects, string name) {
+  GLib.List list = new GLib.List (objects, typeof (Gst.Object), false, false);
+  IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+  bool raw_ret = gst_object_check_uniqueness (list.Handle, native_name);
+  bool ret = raw_ret;
+  GLib.Marshaller.Free (native_name);
+  return ret;
+}

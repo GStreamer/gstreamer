@@ -40,8 +40,6 @@
       <Type Name="CoreError" Kind="Enumeration" />
       <Type Name="Date" Kind="Structure" />
       <Type Name="DecodeBin" Kind="Class" />
-      <Type Name="DeepNotifyArgs" Kind="Class" />
-      <Type Name="DeepNotifyHandler" Kind="Delegate" />
       <Type Name="DoLatencyArgs" Kind="Class" />
       <Type Name="DoLatencyHandler" Kind="Delegate" />
       <Type Name="DoubleRange" Kind="Structure" />

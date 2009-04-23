@@ -22,32 +22,12 @@
     
     
     
-    <Member MemberName="Both">
-      <MemberSignature Language="C#" Value="Both" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="BothOob">
-      <MemberSignature Language="C#" Value="BothOob" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="BufferSize">
+    <Member MemberName="BufferSize">
       <MemberSignature Language="C#" Value="BufferSize" />
       <MemberType>Field</MemberType>
       <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Downstream">
-      <MemberSignature Language="C#" Value="Downstream" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="DownstreamOob">
-      <MemberSignature Language="C#" Value="DownstreamOob" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Eos">
+    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="CustomBoth"><MemberSignature Language="C#" Value="CustomBoth" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="CustomBothOob"><MemberSignature Language="C#" Value="CustomBothOob" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="CustomDownstream"><MemberSignature Language="C#" Value="CustomDownstream" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="CustomDownstreamOob"><MemberSignature Language="C#" Value="CustomDownstreamOob" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="CustomUpstream"><MemberSignature Language="C#" Value="CustomUpstream" /><MemberType>Field</MemberType><AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo><ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue><Docs><summary>To be added.</summary></Docs></Member><Member MemberName="Eos">
       <MemberSignature Language="C#" Value="Eos" />
       <MemberType>Field</MemberType>
       <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
@@ -89,11 +69,6 @@
       <Docs><summary>To be added.</summary></Docs>
     <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Unknown">
       <MemberSignature Language="C#" Value="Unknown" />
-      <MemberType>Field</MemberType>
-      <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
-      <Docs><summary>To be added.</summary></Docs>
-    <AssemblyInfo><AssemblyVersion>0.9.5.99</AssemblyVersion></AssemblyInfo></Member><Member MemberName="Upstream">
-      <MemberSignature Language="C#" Value="Upstream" />
       <MemberType>Field</MemberType>
       <ReturnValue><ReturnType>Gst.EventType</ReturnType></ReturnValue>
       <Docs><summary>To be added.</summary></Docs>
