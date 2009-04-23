@@ -35,7 +35,8 @@ tests =  \
 	test_segment.py \
 	test_taglist.py \
 	test_xml.py \
-	test_pbutils.py
+	test_pbutils.py	\
+	test_gst.py
 
 check-local: testhelper.la
 	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
