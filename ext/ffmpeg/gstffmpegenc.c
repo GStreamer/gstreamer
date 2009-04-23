@@ -783,6 +783,11 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
     gst_buffer_unref (subbuf);
 
     ret = gst_pad_push (ffmpegenc->srcpad, outbuf);
+    if (ret != GST_FLOW_OK) {
+      /* cleanup and return */
+      gst_buffer_unref (inbuf);
+      return ret;
+    }
 
     in_size -= frame_size;
   }
