@@ -10,6 +10,7 @@ legacyresample
 mpeg2enc
 mplex
 mxfdemux
+mxfmux
 neonhttpsrc
 ofa
 qtmux
