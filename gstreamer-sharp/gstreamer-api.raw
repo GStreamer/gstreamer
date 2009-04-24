@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<api parser_version="1">
+<api parser_version="2">
   <!--
 
         This file was automatically generated.
@@ -669,33 +669,36 @@
       </parameters>
     </callback>
     <interface name="ChildProxy" cname="GstChildProxy">
-      <virtual_method name="GetChildByIndex" cname="get_child_by_index">
-        <return-type type="GstObject*" />
-        <parameters>
-          <parameter type="GstChildProxy*" name="parent" />
-          <parameter type="guint" name="index" />
-        </parameters>
-      </virtual_method>
-      <virtual_method name="GetChildrenCount" cname="get_children_count">
-        <return-type type="guint" />
-        <parameters>
-          <parameter type="GstChildProxy*" name="parent" />
-        </parameters>
-      </virtual_method>
+      <class_struct cname="GstChildProxyInterface">
+        <field name="Parent" cname="parent" type="GTypeInterface" />
+        <method vm="get_child_by_index" />
+        <method vm="get_children_count" />
+        <method signal_vm="child_added" />
+        <method signal_vm="child_removed" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <signal name="ChildAdded" cname="child-added" when="FIRST" field_name="child_added">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstChildProxy*" name="parent" />
           <parameter type="GstObject*" name="child" />
         </parameters>
       </signal>
       <signal name="ChildRemoved" cname="child-removed" when="FIRST" field_name="child_removed">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstChildProxy*" name="parent" />
           <parameter type="GstObject*" name="child" />
         </parameters>
       </signal>
+      <virtual_method name="GetChildByIndex" cname="get_child_by_index">
+        <return-type type="GstObject*" />
+        <parameters>
+          <parameter type="guint" name="index" />
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetChildrenCount" cname="get_children_count">
+        <return-type type="guint" />
+        <parameters />
+      </virtual_method>
       <method name="ChildAdded" cname="gst_child_proxy_child_added" shared="true">
         <return-type type="void" />
         <parameters>
@@ -787,6 +790,9 @@
       </method>
     </interface>
     <interface name="TagSetter" cname="GstTagSetter">
+      <class_struct cname="GstTagSetterIFace">
+        <field name="GIface" cname="g_iface" type="GTypeInterface" />
+      </class_struct>
       <method name="AddTagValist" cname="gst_tag_setter_add_tag_valist">
         <return-type type="void" />
         <parameters>
@@ -846,6 +852,17 @@
       </method>
     </interface>
     <object name="Bin" cname="GstBin" parent="GstElement">
+      <class_struct cname="GstBinClass">
+        <field name="ParentClass" cname="parent_class" type="GstElementClass" />
+        <field name="Pool" cname="pool" type="GThreadPool*" />
+        <method signal_vm="element_added" />
+        <method signal_vm="element_removed" />
+        <method vm="add_element" />
+        <method vm="remove_element" />
+        <method vm="handle_message" />
+        <method signal_vm="do_latency" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING-1" />
+      </class_struct>
       <field name="Numchildren" cname="numchildren" type="gint" access="public" />
       <field name="Children" cname="children" type="GList*" access="public" />
       <field name="ChildrenCookie" cname="children_cookie" type="guint32" access="public" />
@@ -862,41 +879,34 @@
       <signal name="ElementAdded" cname="element-added" when="FIRST" field_name="element_added">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstBin*" name="bin" />
           <parameter type="GstElement*" name="child" />
         </parameters>
       </signal>
       <signal name="ElementRemoved" cname="element-removed" when="FIRST" field_name="element_removed">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstBin*" name="bin" />
           <parameter type="GstElement*" name="child" />
         </parameters>
       </signal>
       <signal name="DoLatency" cname="do-latency" when="LAST" field_name="do_latency">
         <return-type type="gboolean" />
-        <parameters>
-          <parameter type="GstBin*" name="bin" />
-        </parameters>
+        <parameters />
       </signal>
       <virtual_method name="AddElement" cname="add_element">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstBin*" name="bin" />
           <parameter type="GstElement*" name="element" />
         </parameters>
       </virtual_method>
       <virtual_method name="RemoveElement" cname="remove_element">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstBin*" name="bin" />
           <parameter type="GstElement*" name="element" />
         </parameters>
       </virtual_method>
       <virtual_method name="HandleMessage" cname="handle_message">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstBin*" name="bin" />
           <parameter type="GstMessage*" name="message" />
         </parameters>
       </virtual_method>
@@ -990,6 +1000,9 @@
       </method>
     </object>
     <object name="Buffer" cname="GstBuffer" parent="GstMiniObject">
+      <class_struct cname="GstBufferClass">
+        <field name="MiniObjectClass" cname="mini_object_class" type="GstMiniObjectClass" />
+      </class_struct>
       <field name="Data" cname="data" type="guint8*" access="public" />
       <field name="Size" cname="size" type="guint" access="public" />
       <field name="Timestamp" cname="timestamp" type="GstClockTime" access="public" />
@@ -1078,6 +1091,12 @@
       </method>
     </object>
     <object name="Bus" cname="GstBus" parent="GstObject">
+      <class_struct cname="GstBusClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method signal_vm="message" />
+        <method signal_vm="sync_message" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Queue" cname="queue" type="GQueue*" />
       <field name="QueueLock" cname="queue_lock" type="GMutex*" />
       <field name="SyncHandler" cname="sync_handler" type="GstBusSyncHandler" />
@@ -1089,14 +1108,12 @@
       <signal name="SyncMessage" cname="sync-message" when="LAST" field_name="sync_message">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstBus*" name="bus" />
           <parameter type="GstMessage*" name="message" />
         </parameters>
       </signal>
       <signal name="Message" cname="message" when="LAST" field_name="message">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstBus*" name="bus" />
           <parameter type="GstMessage*" name="message" />
         </parameters>
       </signal>
@@ -1211,6 +1228,17 @@
       </method>
     </object>
     <object name="Clock" cname="GstClock" parent="GstObject">
+      <class_struct cname="GstClockClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method vm="change_resolution" />
+        <method vm="get_resolution" />
+        <method vm="get_internal_time" />
+        <method vm="wait" />
+        <method vm="wait_async" />
+        <method vm="unschedule" />
+        <method vm="wait_jitter" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING - 1" />
+      </class_struct>
       <field name="SlaveLock" cname="slave_lock" type="GMutex*" />
       <field name="InternalCalibration" cname="internal_calibration" type="GstClockTime" />
       <field name="ExternalCalibration" cname="external_calibration" type="GstClockTime" />
@@ -1237,48 +1265,39 @@
       <virtual_method name="ChangeResolution" cname="change_resolution">
         <return-type type="GstClockTime" />
         <parameters>
-          <parameter type="GstClock*" name="clock" />
           <parameter type="GstClockTime" name="old_resolution" />
           <parameter type="GstClockTime" name="new_resolution" />
         </parameters>
       </virtual_method>
       <virtual_method name="GetResolution" cname="get_resolution">
         <return-type type="GstClockTime" />
-        <parameters>
-          <parameter type="GstClock*" name="clock" />
-        </parameters>
+        <parameters />
       </virtual_method>
       <virtual_method name="GetInternalTime" cname="get_internal_time">
         <return-type type="GstClockTime" />
-        <parameters>
-          <parameter type="GstClock*" name="clock" />
-        </parameters>
+        <parameters />
       </virtual_method>
       <virtual_method name="Wait" cname="wait">
         <return-type type="GstClockReturn" />
         <parameters>
-          <parameter type="GstClock*" name="clock" />
           <parameter type="GstClockEntry*" name="entry" />
         </parameters>
       </virtual_method>
       <virtual_method name="WaitAsync" cname="wait_async">
         <return-type type="GstClockReturn" />
         <parameters>
-          <parameter type="GstClock*" name="clock" />
           <parameter type="GstClockEntry*" name="entry" />
         </parameters>
       </virtual_method>
       <virtual_method name="Unschedule" cname="unschedule">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstClock*" name="clock" />
           <parameter type="GstClockEntry*" name="entry" />
         </parameters>
       </virtual_method>
       <virtual_method name="WaitJitter" cname="wait_jitter">
         <return-type type="GstClockReturn" />
         <parameters>
-          <parameter type="GstClock*" name="clock" />
           <parameter type="GstClockEntry*" name="entry" />
           <parameter type="GstClockTimeDiff*" name="jitter" />
         </parameters>
@@ -1409,6 +1428,31 @@
       </method>
     </object>
     <object name="Element" cname="GstElement" parent="GstObject">
+      <class_struct cname="GstElementClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <field name="Details" cname="details" type="GstElementDetails" />
+        <field name="Elementfactory" cname="elementfactory" type="GstElementFactory*" />
+        <field name="Padtemplates" cname="padtemplates" type="GList*" />
+        <field name="Numpadtemplates" cname="numpadtemplates" type="gint" />
+        <field name="PadTemplCookie" cname="pad_templ_cookie" type="guint32" />
+        <method signal_vm="pad_added" />
+        <method signal_vm="pad_removed" />
+        <method signal_vm="no_more_pads" />
+        <method vm="request_new_pad" />
+        <method vm="release_pad" />
+        <method vm="get_state" />
+        <method vm="set_state" />
+        <method vm="change_state" />
+        <method vm="set_bus" />
+        <method vm="provide_clock" />
+        <method vm="set_clock" />
+        <method vm="get_index" />
+        <method vm="set_index" />
+        <method vm="send_event" />
+        <method vm="get_query_types" />
+        <method vm="query" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="StateLock" cname="state_lock" type="GStaticRecMutex*" access="public" />
       <field name="StateCond" cname="state_cond" type="GCond*" access="public" />
       <field name="StateCookie" cname="state_cookie" type="guint32" access="public" />
@@ -1430,27 +1474,22 @@
       <signal name="PadAdded" cname="pad-added" when="LAST" field_name="pad_added">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstPad*" name="pad" />
         </parameters>
       </signal>
       <signal name="PadRemoved" cname="pad-removed" when="LAST" field_name="pad_removed">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstPad*" name="pad" />
         </parameters>
       </signal>
       <signal name="NoMorePads" cname="no-more-pads" when="LAST" field_name="no_more_pads">
         <return-type type="void" />
-        <parameters>
-          <parameter type="GstElement*" name="element" />
-        </parameters>
+        <parameters />
       </signal>
       <virtual_method name="RequestNewPad" cname="request_new_pad">
         <return-type type="GstPad*" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstPadTemplate*" name="templ" />
           <parameter type="const-gchar*" name="name" />
         </parameters>
@@ -1458,14 +1497,12 @@
       <virtual_method name="ReleasePad" cname="release_pad">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstPad*" name="pad" />
         </parameters>
       </virtual_method>
       <virtual_method name="GetState" cname="get_state">
         <return-type type="GstStateChangeReturn" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstState*" name="state" />
           <parameter type="GstState*" name="pending" />
           <parameter type="GstClockTime" name="timeout" />
@@ -1474,61 +1511,54 @@
       <virtual_method name="SetState" cname="set_state">
         <return-type type="GstStateChangeReturn" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstState" name="state" />
         </parameters>
       </virtual_method>
       <virtual_method name="ChangeState" cname="change_state">
         <return-type type="GstStateChangeReturn" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstStateChange" name="transition" />
         </parameters>
       </virtual_method>
       <virtual_method name="SetBus" cname="set_bus">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstBus*" name="bus" />
         </parameters>
       </virtual_method>
       <virtual_method name="ProvideClock" cname="provide_clock">
         <return-type type="GstClock*" />
-        <parameters>
-          <parameter type="GstElement*" name="element" />
-        </parameters>
+        <parameters />
       </virtual_method>
       <virtual_method name="SetClock" cname="set_clock">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstClock*" name="clock" />
         </parameters>
       </virtual_method>
       <virtual_method name="GetIndex" cname="get_index">
         <return-type type="GstIndex*" />
-        <parameters>
-          <parameter type="GstElement*" name="element" />
-        </parameters>
+        <parameters />
       </virtual_method>
       <virtual_method name="SetIndex" cname="set_index">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstIndex*" name="index" />
         </parameters>
       </virtual_method>
       <virtual_method name="SendEvent" cname="send_event">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstEvent*" name="event" />
         </parameters>
+      </virtual_method>
+      <virtual_method name="GetQueryTypes" cname="get_query_types">
+        <return-type type="GstQueryType*" />
+        <parameters />
       </virtual_method>
       <virtual_method name="Query" cname="query">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstElement*" name="element" />
           <parameter type="GstQuery*" name="query" />
         </parameters>
       </virtual_method>
@@ -1907,6 +1937,10 @@
       </method>
     </object>
     <object name="ElementFactory" cname="GstElementFactory" parent="GstPluginFeature">
+      <class_struct cname="GstElementFactoryClass">
+        <field name="ParentClass" cname="parent_class" type="GstPluginFeatureClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Type" cname="type" type="GType" />
       <field name="Details" cname="details" type="GstElementDetails" />
       <field name="Staticpadtemplates" cname="staticpadtemplates" type="GList*" />
@@ -1984,6 +2018,10 @@
       </method>
     </object>
     <object name="Event" cname="GstEvent" parent="GstMiniObject">
+      <class_struct cname="GstEventClass">
+        <field name="MiniObjectClass" cname="mini_object_class" type="GstMiniObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Type" cname="type" type="GstEventType" access="public" />
       <field name="Timestamp" cname="timestamp" type="guint64" access="public" />
       <field name="Src" cname="src" type="GstObject*" access="public" />
@@ -2156,6 +2194,10 @@
       </method>
     </object>
     <object name="GhostPad" cname="GstGhostPad" parent="GstProxyPad">
+      <class_struct cname="GstGhostPadClass">
+        <field name="ParentClass" cname="parent_class" type="GstProxyPadClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Priv" cname="priv" type="GstGhostPadPrivate*" />
       <method name="Construct" cname="gst_ghost_pad_construct">
         <return-type type="gboolean" />
@@ -2199,6 +2241,15 @@
       </method>
     </object>
     <object name="Index" cname="GstIndex" parent="GstObject">
+      <class_struct cname="GstIndexClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method vm="get_writer_id" />
+        <method vm="commit" />
+        <method vm="add_entry" />
+        <method vm="get_assoc_entry" />
+        <method signal_vm="entry_added" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Groups" cname="groups" type="GList*" />
       <field name="Curgroup" cname="curgroup" type="GstIndexGroup*" />
       <field name="Maxgroup" cname="maxgroup" type="gint" />
@@ -2215,7 +2266,6 @@
       <signal name="EntryAdded" cname="entry-added" when="LAST" field_name="entry_added">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstIndex*" name="index" />
           <parameter type="GstIndexEntry*" name="entry" />
         </parameters>
       </signal>
@@ -2223,7 +2273,6 @@
       <virtual_method name="GetWriterId" cname="get_writer_id">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstIndex*" name="index" />
           <parameter type="gint*" name="writer_id" />
           <parameter type="gchar*" name="writer_string" />
         </parameters>
@@ -2231,21 +2280,18 @@
       <virtual_method name="Commit" cname="commit">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstIndex*" name="index" />
           <parameter type="gint" name="id" />
         </parameters>
       </virtual_method>
       <virtual_method name="AddEntry" cname="add_entry">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstIndex*" name="index" />
           <parameter type="GstIndexEntry*" name="entry" />
         </parameters>
       </virtual_method>
       <virtual_method name="GetAssocEntry" cname="get_assoc_entry">
         <return-type type="GstIndexEntry*" />
         <parameters>
-          <parameter type="GstIndex*" name="index" />
           <parameter type="gint" name="id" />
           <parameter type="GstIndexLookupMethod" name="method" />
           <parameter type="GstAssocFlags" name="flags" />
@@ -2391,6 +2437,10 @@
       </method>
     </object>
     <object name="IndexFactory" cname="GstIndexFactory" parent="GstPluginFeature">
+      <class_struct cname="GstIndexFactoryClass">
+        <field name="Parent" cname="parent" type="GstPluginFeatureClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Longdesc" cname="longdesc" type="gchar*" />
       <field name="Type" cname="type" type="GType" />
       <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
@@ -2424,6 +2474,10 @@
       </constructor>
     </object>
     <object name="Message" cname="GstMessage" parent="GstMiniObject">
+      <class_struct cname="GstMessageClass">
+        <field name="MiniObjectClass" cname="mini_object_class" type="GstMiniObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Lock" cname="lock" type="GMutex*" />
       <field name="Cond" cname="cond" type="GCond*" />
       <field name="Type" cname="type" type="GstMessageType" access="public" />
@@ -2719,6 +2773,12 @@
       </method>
     </object>
     <object name="MiniObject" cname="GstMiniObject" parent="GTypeInstance">
+      <class_struct cname="GstMiniObjectClass">
+        <field name="TypeClass" cname="type_class" type="GTypeClass" />
+        <field name="Copy" cname="copy" type="GstMiniObjectCopyFunction" />
+        <field name="Finalize" cname="finalize" type="GstMiniObjectFinalizeFunction" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" />
+      </class_struct>
       <field name="Refcount" cname="refcount" type="gint" access="public" />
       <field name="Flags" cname="flags" type="guint" access="public" />
       <field name="GstReserved" cname="_gst_reserved" type="gpointer" />
@@ -2753,6 +2813,19 @@
       </method>
     </object>
     <object name="Object" cname="GstObject" parent="GObject">
+      <class_struct cname="GstObjectClass">
+        <field name="ParentClass" cname="parent_class" type="GObjectClass" />
+        <field name="PathStringSeparator" cname="path_string_separator" type="gchar*" />
+        <field name="SignalObject" cname="signal_object" type="GObject*" />
+        <field name="Lock" cname="lock" type="GStaticRecMutex*" />
+        <method signal_vm="parent_set" />
+        <method signal_vm="parent_unset" />
+        <method signal_vm="object_saved" />
+        <method signal_vm="deep_notify" />
+        <method vm="save_thyself" />
+        <method vm="restore_thyself" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Refcount" cname="refcount" type="gint" access="public" />
       <field name="Lock" cname="lock" type="GMutex*" access="public" />
       <field name="Name" cname="name" type="gchar*" access="public" />
@@ -2764,28 +2837,24 @@
       <signal name="ParentSet" cname="parent-set" when="LAST" field_name="parent_set">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstObject*" name="object" />
           <parameter type="GstObject*" name="parent" />
         </parameters>
       </signal>
       <signal name="ParentUnset" cname="parent-unset" when="LAST" field_name="parent_unset">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstObject*" name="object" />
           <parameter type="GstObject*" name="parent" />
         </parameters>
       </signal>
       <signal name="ObjectSaved" cname="object-saved" when="LAST" manual="true" field_name="object_saved">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstObject*" name="object" />
           <parameter type="GstXmlNodePtr" name="parent" />
         </parameters>
       </signal>
       <signal name="DeepNotify" cname="deep-notify" when="FIRST" field_name="deep_notify">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstObject*" name="object" />
           <parameter type="GstObject*" name="orig" />
           <parameter type="GParamSpec*" name="pspec" />
         </parameters>
@@ -2793,14 +2862,12 @@
       <virtual_method name="SaveThyself" cname="save_thyself">
         <return-type type="GstXmlNodePtr" />
         <parameters>
-          <parameter type="GstObject*" name="object" />
           <parameter type="GstXmlNodePtr" name="parent" />
         </parameters>
       </virtual_method>
       <virtual_method name="RestoreThyself" cname="restore_thyself">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstObject*" name="object" />
           <parameter type="GstXmlNodePtr" name="self" />
         </parameters>
       </virtual_method>
@@ -2907,6 +2974,14 @@
       </method>
     </object>
     <object name="Pad" cname="GstPad" parent="GstObject">
+      <class_struct cname="GstPadClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method signal_vm="linked" />
+        <method signal_vm="unlinked" />
+        <method signal_vm="request_link" />
+        <method signal_vm="have_data" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="ElementPrivate" cname="element_private" type="gpointer" access="public" />
       <field name="Padtemplate" cname="padtemplate" type="GstPadTemplate*" access="public" />
       <field name="Direction" cname="direction" type="GstPadDirection" access="public" />
@@ -2946,27 +3021,22 @@
       <signal name="Linked" cname="linked" when="LAST" field_name="linked">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstPad*" name="pad" />
           <parameter type="GstPad*" name="peer" />
         </parameters>
       </signal>
       <signal name="Unlinked" cname="unlinked" when="LAST" field_name="unlinked">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstPad*" name="pad" />
           <parameter type="GstPad*" name="peer" />
         </parameters>
       </signal>
       <signal name="RequestLink" cname="request-link" when="LAST" field_name="request_link">
         <return-type type="void" />
-        <parameters>
-          <parameter type="GstPad*" name="pad" />
-        </parameters>
+        <parameters />
       </signal>
       <signal name="HaveData" cname="have-data" when="LAST" field_name="have_data">
         <return-type type="gboolean" />
         <parameters>
-          <parameter type="GstPad*" name="pad" />
           <parameter type="GstMiniObject*" name="data" />
         </parameters>
       </signal>
@@ -3483,6 +3553,11 @@
       </method>
     </object>
     <object name="PadTemplate" cname="GstPadTemplate" parent="GstObject">
+      <class_struct cname="GstPadTemplateClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method signal_vm="pad_created" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="NameTemplate" cname="name_template" type="gchar*" />
       <field name="Direction" cname="direction" type="GstPadDirection" />
       <field name="Presence" cname="presence" type="GstPadPresence" />
@@ -3491,7 +3566,6 @@
       <signal name="PadCreated" cname="pad-created" when="LAST" field_name="pad_created">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstPadTemplate*" name="templ" />
           <parameter type="GstPad*" name="pad" />
         </parameters>
       </signal>
@@ -3526,6 +3600,10 @@
       </method>
     </object>
     <object name="Pipeline" cname="GstPipeline" parent="GstBin">
+      <class_struct cname="GstPipelineClass">
+        <field name="ParentClass" cname="parent_class" type="GstBinClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="FixedClock" cname="fixed_clock" type="GstClock*" access="public" />
       <field name="StreamTime" cname="stream_time" type="GstClockTime" access="public" />
       <field name="Delay" cname="delay" type="GstClockTime" access="public" />
@@ -3591,6 +3669,10 @@
       </method>
     </object>
     <object name="Plugin" cname="GstPlugin" parent="GstObject">
+      <class_struct cname="GstPluginClass">
+        <field name="ObjectClass" cname="object_class" type="GstObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Desc" cname="desc" type="GstPluginDesc" />
       <field name="OrigDesc" cname="orig_desc" type="GstPluginDesc*" />
       <field name="Flags" cname="flags" type="unsigned int" />
@@ -3701,6 +3783,10 @@
       </method>
     </object>
     <object name="PluginFeature" cname="GstPluginFeature" parent="GstObject">
+      <class_struct cname="GstPluginFeatureClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Loaded" cname="loaded" type="gboolean" />
       <field name="Name" cname="name" type="gchar*" />
       <field name="Rank" cname="rank" type="guint" />
@@ -3749,12 +3835,20 @@
       </method>
     </object>
     <object name="ProxyPad" cname="GstProxyPad" parent="GstPad">
+      <class_struct cname="GstProxyPadClass">
+        <field name="ParentClass" cname="parent_class" type="GstPadClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="1" />
+      </class_struct>
       <field name="Priv" cname="priv" type="GstProxyPadPrivate*" />
       <method name="GetType" cname="gst_proxy_pad_get_type" shared="true">
         <return-type type="GType" />
       </method>
     </object>
     <object name="Query" cname="GstQuery" parent="GstMiniObject">
+      <class_struct cname="GstQueryClass">
+        <field name="MiniObjectClass" cname="mini_object_class" type="GstMiniObjectClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Type" cname="type" type="GstQueryType" access="public" />
       <field name="Structure" cname="structure" type="GstStructure*" access="public" />
       <field name="GstReserved" cname="_gst_reserved" type="gpointer" />
@@ -4035,6 +4129,12 @@
       </method>
     </object>
     <object name="Registry" cname="GstRegistry" parent="GstObject">
+      <class_struct cname="GstRegistryClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method signal_vm="plugin_added" />
+        <method signal_vm="feature_added" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Plugins" cname="plugins" type="GList*" />
       <field name="Features" cname="features" type="GList*" />
       <field name="Paths" cname="paths" type="GList*" />
@@ -4044,14 +4144,12 @@
       <signal name="PluginAdded" cname="plugin-added" when="LAST" manual="true" field_name="plugin_added">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstRegistry*" name="registry" />
           <parameter type="GstPlugin*" name="plugin" />
         </parameters>
       </signal>
       <signal name="FeatureAdded" cname="feature-added" when="LAST" manual="true" field_name="feature_added">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstRegistry*" name="registry" />
           <parameter type="GstPluginFeature*" name="feature" />
         </parameters>
       </signal>
@@ -4179,6 +4277,10 @@
       </method>
     </object>
     <object name="SystemClock" cname="GstSystemClock" parent="GstClock">
+      <class_struct cname="GstSystemClockClass">
+        <field name="ParentClass" cname="parent_class" type="GstClockClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Thread" cname="thread" type="GThread*" />
       <field name="Stopping" cname="stopping" type="gboolean" />
       <field name="Priv" cname="priv" type="GstSystemClockPrivate*" />
@@ -4192,6 +4294,11 @@
       </method>
     </object>
     <object name="Task" cname="GstTask" parent="GstObject">
+      <class_struct cname="GstTaskClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <field name="Pool" cname="pool" type="GThreadPool*" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="State" cname="state" type="GstTaskState" access="public" />
       <field name="Cond" cname="cond" type="GCond*" access="public" />
       <field name="Lock" cname="lock" type="GStaticRecMutex*" access="public" />
@@ -4235,6 +4342,10 @@
       </method>
     </object>
     <object name="TypeFindFactory" cname="GstTypeFindFactory" parent="GstPluginFeature">
+      <class_struct cname="GstTypeFindFactoryClass">
+        <field name="Parent" cname="parent" type="GstPluginFeatureClass" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Function" cname="function" type="GstTypeFindFunction" />
       <field name="Extensions" cname="extensions" type="gchar**" />
       <field name="Caps" cname="caps" type="GstCaps*" />
@@ -4261,13 +4372,18 @@
       </method>
     </object>
     <object name="XML" cname="GstXML" parent="GstObject">
+      <class_struct cname="GstXMLClass">
+        <field name="ParentClass" cname="parent_class" type="GstObjectClass" />
+        <method signal_vm="object_loaded" />
+        <method vm="object_saved" />
+        <field name="GstReserved" cname="_gst_reserved" type="gpointer" array_len="GST_PADDING" />
+      </class_struct>
       <field name="Topelements" cname="topelements" type="GList*" access="public" />
       <field name="Ns" cname="ns" type="xmlNsPtr" access="public" />
       <field name="GstReserved" cname="_gst_reserved" array_len="GST_PADDING" type="gpointer" />
       <signal name="ObjectLoaded" cname="object-loaded" when="LAST" manual="true" field_name="object_loaded">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstXML*" name="xml" />
           <parameter type="GstObject*" name="object" />
           <parameter type="xmlNodePtr" name="self" />
         </parameters>
@@ -4275,7 +4391,6 @@
       <virtual_method name="ObjectSaved" cname="object_saved">
         <return-type type="void" />
         <parameters>
-          <parameter type="GstXML*" name="xml" />
           <parameter type="GstObject*" name="object" />
           <parameter type="xmlNodePtr" name="self" />
         </parameters>

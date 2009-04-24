@@ -12,5 +12,5 @@ api:
 		--namespace=Gst \
 		--class=Tags \
 		--only-body \
-		> $(top_srcdir)/gstreamer-sharp/Tag.custom
+		>> $(top_srcdir)/gstreamer-sharp/Tag.custom
 
