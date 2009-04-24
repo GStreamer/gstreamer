@@ -685,8 +685,8 @@ get_current_pgc (resinDvdSrc * src)
       DVDNAV_STATUS_OK)
     return NULL;
 
-  /* To find the right tmap, we need the title number within this VTS (vts_ttn)
-   *    * from the VMG tt_srpt table... */
+  /* To find the right PGC, we need the title number within this VTS (vts_ttn)
+   * from the VMG tt_srpt table... */
   if (title < 1 || title > src->vmg_file->tt_srpt->nr_of_srpts)
     return NULL;
 
@@ -864,6 +864,9 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           "CELL change dur now %" GST_TIME_FORMAT " position now %"
           GST_TIME_FORMAT, GST_TIME_ARGS (src->pgc_duration),
           GST_TIME_ARGS (src->cur_position));
+
+      rsn_dvdsrc_prepare_streamsinfo_event (src);
+
       break;
     }
     case DVDNAV_SPU_CLUT_CHANGE:
@@ -884,9 +887,6 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       }
 
       src->in_menu = !dvdnav_is_domain_vts (src->dvdnav);
-
-      if (!dvdnav_is_domain_fp (src->dvdnav))
-        rsn_dvdsrc_prepare_streamsinfo_event (src);
 
       break;
     }
@@ -1018,7 +1018,7 @@ rsn_dvdsrc_create (RsnPushSrc * psrc, GstBuffer ** outbuf)
   /* Push in-band events now that we've dropped the dvd_lock, before
    * we change segment */
   if (streams_event) {
-    GST_LOG_OBJECT (src, "Pushing stream event");
+    GST_LOG_OBJECT (src, "Pushing stream layout event");
     gst_pad_push_event (GST_BASE_SRC_PAD (src), streams_event);
   }
   if (clut_event) {
@@ -1475,8 +1475,8 @@ rsn_dvdsrc_prepare_spu_stream_event (resinDvdSrc * src, guint8 logical_stream,
   src->cur_spu_phys_stream = phys_stream;
   src->cur_spu_forced_only = forced_only;
 
-  GST_DEBUG_OBJECT (src, "Preparing SPU change, phys %d forced %d",
-      phys_stream, forced_only);
+  GST_DEBUG_OBJECT (src, "Preparing SPU change, log %d phys %d forced %d",
+      logical_stream, phys_stream, forced_only);
 
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-set-subpicture-track",
@@ -1506,6 +1506,7 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   gchar *t;
   gboolean is_widescreen;
   gboolean have_audio;
+  gboolean have_subp;
 
   if (src->vts_attrs == NULL || src->vts_n >= src->vts_attrs->len) {
     if (src->vts_attrs)
@@ -1561,6 +1562,16 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
   have_audio = FALSE;
   for (i = 0; i < n_audio; i++) {
     const audio_attr_t *a = a_attrs + i;
+    gint phys_id = dvdnav_get_audio_logical_stream (src->dvdnav, (guint) i);
+
+    if (phys_id == -1) {
+      GST_DEBUG_OBJECT (src, "No substream ID in map for audio %d. Skipping.",
+          i);
+      continue;
+    }
+
+    GST_DEBUG_OBJECT (src, "mapped logical audio %d to MPEG substream %d",
+        i, phys_id);
 
 #if 1
     /* FIXME: Only output A52 streams for now, until the decoder switching
@@ -1573,12 +1584,16 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
 #endif
     have_audio = TRUE;
 
+    GST_DEBUG_OBJECT (src, "Audio stream %d is format %d, substream %d", i,
+        (int) a->audio_format, phys_id);
+
+    t = g_strdup_printf ("audio-%d-stream", i);
+    gst_structure_set (s, t, G_TYPE_INT, phys_id, NULL);
+    g_free (t);
+
     t = g_strdup_printf ("audio-%d-format", i);
     gst_structure_set (s, t, G_TYPE_INT, (int) a->audio_format, NULL);
     g_free (t);
-
-    GST_DEBUG_OBJECT (src, "Audio stream %d is format %d", i,
-        (int) a->audio_format);
 
     if (a->lang_type) {
       t = g_strdup_printf ("audio-%d-language", i);
@@ -1594,17 +1609,29 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
 
   if (have_audio == FALSE) {
     /* Always create at least one audio stream */
-    gst_structure_set (s, "audio-0-format", G_TYPE_INT, (int) 0, NULL);
+    gst_structure_set (s, "audio-0-format", G_TYPE_INT, (int) 0,
+        "audio-0-stream", G_TYPE_INT, (int) 0, NULL);
   }
 
   /* subpictures */
-  if (n_subp == 0) {
-    /* Always create at least one subpicture stream */
-    gst_structure_set (s, "subpicture-0-format", G_TYPE_INT, (int) 0, NULL);
-    gst_structure_set (s, "subpicture-0-language", G_TYPE_STRING, "MENU", NULL);
-  }
+  have_subp = FALSE;
   for (i = 0; i < n_subp; i++) {
     const subp_attr_t *u = s_attrs + i;
+    gint phys_id = dvdnav_get_spu_logical_stream (src->dvdnav, (guint) i);
+
+    if (phys_id == -1) {
+      GST_DEBUG_OBJECT (src, "No substream ID in map for subpicture %d. "
+          "Skipping", i);
+      continue;
+    }
+    have_subp = TRUE;
+
+    GST_DEBUG_OBJECT (src, "mapped logical subpicture %d to MPEG substream %d",
+        i, phys_id);
+
+    t = g_strdup_printf ("subpicture-%d-stream", i);
+    gst_structure_set (s, t, G_TYPE_INT, (int) phys_id, NULL);
+    g_free (t);
 
     t = g_strdup_printf ("subpicture-%d-format", i);
     gst_structure_set (s, t, G_TYPE_INT, (int) 0, NULL);
@@ -1622,6 +1649,12 @@ rsn_dvdsrc_prepare_streamsinfo_event (resinDvdSrc * src)
 
     GST_DEBUG_OBJECT (src, "Subpicture stream %d is language %s", i,
         lang_code[0] ? lang_code : "NONE");
+  }
+  if (!have_subp) {
+    /* Always create at least one subpicture stream */
+    gst_structure_set (s, "subpicture-0-format", G_TYPE_INT, (int) 0,
+        "subpicture-0-language", G_TYPE_STRING, "MENU",
+        "subpicture-0-stream", G_TYPE_INT, (int) 0, NULL);
   }
 
   if (src->streams_event)
@@ -1655,7 +1688,7 @@ rsn_dvdsrc_prepare_clut_change_event (resinDvdSrc * src, const guint32 * clut)
   /* Create the DVD event and put the structure into it. */
   event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, structure);
 
-  GST_LOG_OBJECT (src, "pushing clut change event %" GST_PTR_FORMAT, event);
+  GST_LOG_OBJECT (src, "preparing clut change event %" GST_PTR_FORMAT, event);
 
   if (src->clut_event)
     gst_event_unref (src->clut_event);
