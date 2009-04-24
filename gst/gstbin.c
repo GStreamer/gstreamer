@@ -2523,6 +2523,7 @@ gst_bin_continue_func (BinContinueData * data)
   transition = (GstStateChange) GST_STATE_TRANSITION (current, next);
 
   GST_STATE_NEXT (bin) = next;
+  GST_STATE_PENDING (bin) = pending;
   /* mark busy */
   GST_STATE_RETURN (bin) = GST_STATE_CHANGE_ASYNC;
   GST_OBJECT_UNLOCK (bin);
