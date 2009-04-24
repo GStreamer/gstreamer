@@ -735,7 +735,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
       stream_id %= MAX_DVD_AUDIO_STREAMS;
 
-      aud_type = demux->audio_stream_types[stream_id % MAX_DVD_AUDIO_STREAMS];
+      aud_type = demux->audio_stream_types[stream_id];
 
       switch (aud_type) {
         case 0x0:
