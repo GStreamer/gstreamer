@@ -53,22 +53,30 @@ default_push (GstTaskPool * pool, GstTaskPoolFunction func, gpointer data,
   TestRTId *tid;
   gint res;
   pthread_attr_t attr;
-  //struct sched_param param;
+  struct sched_param param;
 
   g_message ("pushing Realtime pool %p, %p", pool, func);
 
   tid = g_slice_new0 (TestRTId);
 
+  g_message ("set policy");
   pthread_attr_init (&attr);
-  /* 
-     pthread_attr_setschedpolicy (&attr, SCHED_RR);
-     param.sched_priority = 50;
-     pthread_attr_setschedparam (&attr, &param);
-   */
+  if ((res = pthread_attr_setschedpolicy (&attr, SCHED_RR)) != 0)
+    g_warning ("setschedpolicy: failure: %p", g_strerror (res));
 
+  g_message ("set prio");
+  param.sched_priority = 50;
+  if ((res = pthread_attr_setschedparam (&attr, &param)) != 0)
+    g_warning ("setschedparam: failure: %p", g_strerror (res));
+
+  g_message ("set inherit");
+  if ((res = pthread_attr_setinheritsched (&attr, PTHREAD_EXPLICIT_SCHED)) != 0)
+    g_warning ("setinheritsched: failure: %p", g_strerror (res));
+
+  g_message ("create thread");
   res = pthread_create (&tid->thread, &attr, (void *(*)(void *)) func, data);
 
-  if (res < 0) {
+  if (res != 0) {
     g_set_error (error, G_THREAD_ERROR, G_THREAD_ERROR_AGAIN,
         "Error creating thread: %s", g_strerror (res));
     g_slice_free (TestRTId, tid);

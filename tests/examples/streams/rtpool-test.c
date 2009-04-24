@@ -21,6 +21,17 @@ event_loop (GstBus * bus, GstElement * pipe)
         gst_message_unref (message);
         return;
       case GST_MESSAGE_WARNING:
+      {
+        GError *gerror;
+        gchar *debug;
+
+        gst_message_parse_warning (message, &gerror, &debug);
+        gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
+        gst_message_unref (message);
+        g_error_free (gerror);
+        g_free (debug);
+        return;
+      }
       case GST_MESSAGE_ERROR:{
         GError *gerror;
         gchar *debug;
@@ -79,10 +90,6 @@ sync_bus_handler (GstBus * bus, GstMessage * message, GstElement * bin)
           }
           break;
         case GST_STREAM_STATUS_TYPE_ENTER:
-          if (task) {
-            g_message ("raising task priority for %p", task);
-            gst_task_set_priority (task, G_THREAD_PRIORITY_HIGH);
-          }
           break;
         case GST_STREAM_STATUS_TYPE_LEAVE:
           break;
@@ -101,7 +108,7 @@ sync_bus_handler (GstBus * bus, GstMessage * message, GstElement * bin)
 int
 main (int argc, char *argv[])
 {
-  GstElement *bin, *fakesrc, *fakesink;
+  GstElement *bin, *alsasrc, *alsasink;
   GstBus *bus;
   GstStateChangeReturn ret;
 
@@ -115,19 +122,22 @@ main (int argc, char *argv[])
   g_assert (bin);
 
   /* create a source */
-  fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
-  g_assert (fakesrc);
-  g_object_set (fakesrc, "num-buffers", 50, NULL);
+  alsasrc = gst_element_factory_make ("alsasrc", "alsasrc");
+  g_assert (alsasrc);
+  g_object_set (alsasrc, "device", "hw:0", NULL);
+  g_object_set (alsasrc, "slave-method", 2, NULL);
 
   /* and a sink */
-  fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  g_assert (fakesink);
+  alsasink = gst_element_factory_make ("alsasink", "alsasink");
+  g_assert (alsasink);
+  g_object_set (alsasink, "device", "hw:0", NULL);
+  g_object_set (alsasink, "buffer-time", (gint64) 10000, NULL);
 
   /* add objects to the main pipeline */
-  gst_bin_add_many (GST_BIN (bin), fakesrc, fakesink, NULL);
+  gst_bin_add_many (GST_BIN (bin), alsasrc, alsasink, NULL);
 
   /* link the elements */
-  gst_element_link (fakesrc, fakesink);
+  gst_element_link (alsasrc, alsasink);
 
   /* get the bus, we need to install a sync handler */
   bus = gst_pipeline_get_bus (GST_PIPELINE (bin));
