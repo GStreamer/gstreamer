@@ -950,7 +950,6 @@ EXPORTS
 	gst_task_pool_new
 	gst_task_pool_prepare
 	gst_task_pool_push
-	gst_task_pool_set_func
 	gst_task_set_lock
 	gst_task_set_pool
 	gst_task_set_priority

@@ -51,12 +51,30 @@ static void gst_task_pool_finalize (GObject * object);
 
 G_DEFINE_TYPE_WITH_CODE (GstTaskPool, gst_task_pool, GST_TYPE_OBJECT, _do_init);
 
+typedef struct
+{
+  GstTaskPoolFunction func;
+  gpointer user_data;
+} TaskData;
+
 static void
-default_prepare (GstTaskPool * pool, GFunc func, gpointer user_data,
-    GError ** error)
+default_func (TaskData * tdata, GstTaskPool * pool)
+{
+  GstTaskPoolFunction func;
+  gpointer user_data;
+
+  func = tdata->func;
+  user_data = tdata->user_data;
+  g_slice_free (TaskData, tdata);
+
+  func (user_data);
+}
+
+static void
+default_prepare (GstTaskPool * pool, GError ** error)
 {
   GST_OBJECT_LOCK (pool);
-  pool->pool = g_thread_pool_new ((GFunc) func, user_data, -1, FALSE, NULL);
+  pool->pool = g_thread_pool_new ((GFunc) default_func, pool, -1, FALSE, NULL);
   GST_OBJECT_UNLOCK (pool);
 }
 
@@ -75,11 +93,21 @@ default_cleanup (GstTaskPool * pool)
 }
 
 static gpointer
-default_push (GstTaskPool * pool, gpointer data, GError ** error)
+default_push (GstTaskPool * pool, GstTaskPoolFunction func,
+    gpointer user_data, GError ** error)
 {
+  TaskData *tdata;
+
+  tdata = g_slice_new (TaskData);
+  tdata->func = func;
+  tdata->user_data = user_data;
+
   GST_OBJECT_LOCK (pool);
   if (pool->pool)
-    g_thread_pool_push (pool->pool, data, error);
+    g_thread_pool_push (pool->pool, tdata, error);
+  else {
+    g_slice_free (TaskData, tdata);
+  }
   GST_OBJECT_UNLOCK (pool);
 
   return NULL;
@@ -88,7 +116,7 @@ default_push (GstTaskPool * pool, gpointer data, GError ** error)
 static void
 default_join (GstTaskPool * pool, gpointer id)
 {
-  /* does nothing, we can't join for threads from the threadpool */
+  /* we do nothing here, we can't join from the pools */
 }
 
 static void
@@ -141,16 +169,6 @@ gst_task_pool_new (void)
   return pool;
 }
 
-void
-gst_task_pool_set_func (GstTaskPool * pool, GFunc func, gpointer user_data)
-{
-  g_return_if_fail (GST_IS_TASK_POOL (pool));
-
-  pool->func = func;
-  pool->user_data = user_data;
-}
-
-
 /**
  * gst_task_pool_prepare:
  * @pool: a #GstTaskPool
@@ -170,7 +188,7 @@ gst_task_pool_prepare (GstTaskPool * pool, GError ** error)
   klass = GST_TASK_POOL_GET_CLASS (pool);
 
   if (klass->prepare)
-    klass->prepare (pool, pool->func, pool->user_data, error);
+    klass->prepare (pool, error);
 }
 
 /**
@@ -198,7 +216,8 @@ gst_task_pool_cleanup (GstTaskPool * pool)
 /**
  * gst_task_pool_push:
  * @pool: a #GstTaskPool
- * @data: data to pass to the thread function
+ * @func: the function to call
+ * @user_data: data to pass to @func
  * @error: return location for an error
  *
  * Start the execution of a new thread from @pool.
@@ -208,7 +227,8 @@ gst_task_pool_cleanup (GstTaskPool * pool)
  * errors.
  */
 gpointer
-gst_task_pool_push (GstTaskPool * pool, gpointer data, GError ** error)
+gst_task_pool_push (GstTaskPool * pool, GstTaskPoolFunction func,
+    gpointer user_data, GError ** error)
 {
   GstTaskPoolClass *klass;
 
@@ -219,7 +239,7 @@ gst_task_pool_push (GstTaskPool * pool, gpointer data, GError ** error)
   if (klass->push == NULL)
     goto not_supported;
 
-  return klass->push (pool, data, error);
+  return klass->push (pool, func, user_data, error);
 
   /* ERRORS */
 not_supported:

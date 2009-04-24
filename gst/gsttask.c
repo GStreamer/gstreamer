@@ -92,7 +92,7 @@ static void gst_task_class_init (GstTaskClass * klass);
 static void gst_task_init (GstTask * task);
 static void gst_task_finalize (GObject * object);
 
-static void gst_task_func (GstTask * task, GstTaskClass * tclass);
+static void gst_task_func (GstTask * task);
 
 static GStaticMutex pool_lock = G_STATIC_MUTEX_INIT;
 
@@ -112,7 +112,6 @@ init_klass_pool (GstTaskClass * klass)
     gst_object_unref (klass->pool);
   }
   klass->pool = gst_task_pool_new ();
-  gst_task_pool_set_func (klass->pool, (GFunc) gst_task_func, klass);
   gst_task_pool_prepare (klass->pool, NULL);
   g_static_mutex_unlock (&pool_lock);
 }
@@ -177,7 +176,7 @@ gst_task_finalize (GObject * object)
 }
 
 static void
-gst_task_func (GstTask * task, GstTaskClass * tclass)
+gst_task_func (GstTask * task)
 {
   GStaticRecMutex *lock;
   GThread *tself;
@@ -564,7 +563,9 @@ start_task (GstTask * task)
   /* push on the thread pool, we remember the original pool because the user
    * could change it later on and then we join to the wrong pool. */
   priv->pool_id = gst_object_ref (priv->pool);
-  priv->id = gst_task_pool_push (priv->pool_id, task, &error);
+  priv->id =
+      gst_task_pool_push (priv->pool_id, (GstTaskPoolFunction) gst_task_func,
+      task, &error);
 
   if (error != NULL) {
     g_warning ("failed to create thread: %s", error->message);

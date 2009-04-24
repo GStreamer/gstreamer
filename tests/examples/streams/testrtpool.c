@@ -17,18 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <pthread.h>
+
 #include "testrtpool.h"
 
 static void test_rt_pool_class_init (TestRTPoolClass * klass);
 static void test_rt_pool_init (TestRTPool * pool);
 static void test_rt_pool_finalize (GObject * object);
 
+typedef struct
+{
+  pthread_t thread;
+} TestRTId;
+
 G_DEFINE_TYPE (TestRTPool, test_rt_pool, GST_TYPE_TASK_POOL);
 
 static void
-default_prepare (GstTaskPool * pool, GFunc func, gpointer user_data,
-    GError ** error)
+default_prepare (GstTaskPool * pool, GError ** error)
 {
+  /* we don't do anything here. We could construct a pool of threads here that
+   * we could reuse later but we don't */
   g_message ("prepare Realtime pool %p", pool);
 }
 
@@ -39,19 +47,47 @@ default_cleanup (GstTaskPool * pool)
 }
 
 static gpointer
-default_push (GstTaskPool * pool, gpointer data, GError ** error)
+default_push (GstTaskPool * pool, GstTaskPoolFunction func, gpointer data,
+    GError ** error)
 {
-  g_message ("pushing Realtime pool %p", pool);
+  TestRTId *tid;
+  gint res;
+  pthread_attr_t attr;
+  //struct sched_param param;
 
-  *error = g_error_new (1, 1, "not supported");
+  g_message ("pushing Realtime pool %p, %p", pool, func);
 
-  return NULL;
+  tid = g_slice_new0 (TestRTId);
+
+  pthread_attr_init (&attr);
+  /* 
+     pthread_attr_setschedpolicy (&attr, SCHED_RR);
+     param.sched_priority = 50;
+     pthread_attr_setschedparam (&attr, &param);
+   */
+
+  res = pthread_create (&tid->thread, &attr, (void *(*)(void *)) func, data);
+
+  if (res < 0) {
+    g_set_error (error, G_THREAD_ERROR, G_THREAD_ERROR_AGAIN,
+        "Error creating thread: %s", g_strerror (res));
+    g_slice_free (TestRTId, tid);
+    tid = NULL;
+  }
+
+  return tid;
 }
 
 static void
 default_join (GstTaskPool * pool, gpointer id)
 {
+  TestRTId *tid = (TestRTId *) id;
+
   g_message ("joining Realtime pool %p", pool);
+
+  pthread_join (tid->thread, NULL);
+
+  g_slice_free (TestRTId, tid);
 }
 
 static void

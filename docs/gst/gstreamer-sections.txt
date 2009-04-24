@@ -2173,8 +2173,8 @@ gst_tag_setter_get_type
 <TITLE>GstTaskPool</TITLE>
 GstTaskPool
 GstTaskPoolClass
+GstTaskPoolFunction
 gst_task_pool_new
-gst_task_pool_set_func
 gst_task_pool_prepare
 gst_task_pool_push
 gst_task_pool_join

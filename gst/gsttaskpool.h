@@ -38,6 +38,8 @@ G_BEGIN_DECLS
 typedef struct _GstTaskPool GstTaskPool;
 typedef struct _GstTaskPoolClass GstTaskPoolClass;
 
+typedef void   (*GstTaskPoolFunction)          (void *data);
+
 /**
  * GstTaskPool:
  *
@@ -47,9 +49,6 @@ struct _GstTaskPool {
   GstObject      object;
 
   /*< private >*/
-  GFunc          func;
-  gpointer       user_data;
-
   GThreadPool   *pool;
 
   gpointer _gst_reserved[GST_PADDING];
@@ -69,11 +68,11 @@ struct _GstTaskPoolClass {
   GstObjectClass parent_class;
 
   /*< public >*/
-  void      (*prepare)  (GstTaskPool *pool, GFunc func,
-                         gpointer user_data, GError **error);
+  void      (*prepare)  (GstTaskPool *pool, GError **error);
   void      (*cleanup)  (GstTaskPool *pool);
 
-  gpointer  (*push)     (GstTaskPool *pool, gpointer data, GError **error);
+  gpointer  (*push)     (GstTaskPool *pool, GstTaskPoolFunction func,
+                         gpointer user_data, GError **error);
   void      (*join)     (GstTaskPool *pool, gpointer id);
 
   /*< private >*/
@@ -83,14 +82,10 @@ struct _GstTaskPoolClass {
 GType           gst_task_pool_get_type    (void);
 
 GstTaskPool *   gst_task_pool_new         (void);
-
-void            gst_task_pool_set_func    (GstTaskPool *pool,
-                                           GFunc func, gpointer user_data);
-
 void            gst_task_pool_prepare     (GstTaskPool *pool, GError **error);
 
-gpointer        gst_task_pool_push        (GstTaskPool *pool, gpointer data,
-                                           GError **error);
+gpointer        gst_task_pool_push        (GstTaskPool *pool, GstTaskPoolFunction func, 
+                                           gpointer user_data, GError **error);
 void            gst_task_pool_join        (GstTaskPool *pool, gpointer id);
 
 void		gst_task_pool_cleanup     (GstTaskPool *pool);
