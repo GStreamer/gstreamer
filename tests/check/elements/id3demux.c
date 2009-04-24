@@ -201,6 +201,36 @@ GST_START_TEST (test_wcop)
 
 GST_END_TEST;
 
+static void
+check_unsync (const GstTagList * tags, const gchar * file)
+{
+  gchar *album = NULL;
+  gchar *title = NULL;
+  gchar *artist = NULL;
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &title));
+  fail_unless (title != NULL);
+  fail_unless_equals_string (title, "ARTIST");  /* sic */
+  g_free (title);
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ALBUM, &album));
+  fail_unless (album != NULL);
+  fail_unless_equals_string (album, "Album");
+  g_free (album);
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ARTIST, &artist));
+  fail_unless (artist != NULL);
+  fail_unless_equals_string (artist, "藝人");
+  g_free (artist);
+}
+
+GST_START_TEST (test_unsync)
+{
+  run_check_for_file ("id3-577468-unsynced-tag.tag", check_unsync);
+}
+
+GST_END_TEST;
+
 static Suite *
 id3demux_suite (void)
 {
@@ -210,6 +240,7 @@ id3demux_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_tdat_tyer);
   tcase_add_test (tc_chain, test_wcop);
+  tcase_add_test (tc_chain, test_unsync);
 
   return s;
 }
