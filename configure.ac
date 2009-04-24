@@ -451,20 +451,21 @@ AM_CONDITIONAL(GST_HAVE_MONOTONIC_CLOCK, test "$gst_cv_monotonic_clock" = "yes")
 dnl Check for a way to display the function name in debug output
 AG_GST_CHECK_FUNCTION
 
-dnl test for register_printf_function
-AC_CHECK_FUNC(register_printf_function,
-  [
-    GST_PRINTF_EXTENSION_POINTER_FORMAT_DEFINE="#define GST_PTR_FORMAT \"P\""
-    GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE="#define GST_SEGMENT_FORMAT \"Q\""
-    GST_USING_PRINTF_EXTENSION_DEFINE="#define GST_USING_PRINTF_EXTENSION"
-    AC_DEFINE(HAVE_PRINTF_EXTENSION, 1,
-      [Defined if we have register_printf_function ()])
-  ], [
+dnl test for register_printf_specifier or register_printf_function
+AC_CHECK_FUNCS([register_printf_specifier register_printf_function],
+    [HAVE_PRINTF_EXTENSION=yes])
+
+if test "$HAVE_PRINTF_EXTENSION" = yes; then
+  GST_PRINTF_EXTENSION_POINTER_FORMAT_DEFINE="#define GST_PTR_FORMAT \"P\""
+  GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE="#define GST_SEGMENT_FORMAT \"Q\""
+  GST_USING_PRINTF_EXTENSION_DEFINE="#define GST_USING_PRINTF_EXTENSION"
+  AC_DEFINE(HAVE_PRINTF_EXTENSION, 1,
+      [Defined if we have printf specifier extensions available])
+else
     GST_PRINTF_EXTENSION_POINTER_FORMAT_DEFINE="#define GST_PTR_FORMAT \"p\""
     GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE="#define GST_SEGMENT_FORMAT \"p\""
     GST_USING_PRINTF_EXTENSION_DEFINE="#undef GST_USING_PRINTF_EXTENSION"
-  ]
-)
+fi
 AC_SUBST(GST_PRINTF_EXTENSION_POINTER_FORMAT_DEFINE)
 AC_SUBST(GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE)
 AC_SUBST(GST_USING_PRINTF_EXTENSION_DEFINE)
