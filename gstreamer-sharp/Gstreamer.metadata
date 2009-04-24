@@ -443,6 +443,8 @@
 
   <attr path="/api/namespace/enum[@name='SearchMode']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/boxed[@name='Segment']/method[@cname='gst_segment_set_newsegment_full']" name="name">SetNewsegment</attr>
+
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_NULL_TO_READY']" name="value">(State.Null &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_PAUSED']" name="value">(State.Ready &lt;&lt; 3) | State.Paused</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_PAUSED_TO_PLAYING']" name="value">(State.Paused &lt;&lt; 3) | State.Playing</attr>
