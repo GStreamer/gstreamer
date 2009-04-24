@@ -97,12 +97,40 @@ id3demux_calc_id3v2_tag_size (GstBuffer * buf)
   return size;
 }
 
+static guint8 *
+id3demux_ununsync_data (const guint8 * unsync_data, guint32 * size)
+{
+  const guint8 *end;
+  guint8 *out, *uu;
+  guint out_size;
+
+  uu = out = g_malloc (*size);
+
+  for (end = unsync_data + *size; unsync_data < end - 1; ++unsync_data, ++uu) {
+    *uu = *unsync_data;
+    if (G_UNLIKELY (*unsync_data == 0xff && *(unsync_data + 1) == 0x00))
+      ++unsync_data;
+  }
+
+  /* take care of last byte (if last two bytes weren't 0xff 0x00) */
+  if (unsync_data < end) {
+    *uu = *unsync_data;
+    ++uu;
+  }
+
+  out_size = uu - out;
+  GST_DEBUG ("size after un-unsyncing: %u (before: %u)", out_size, *size);
+
+  *size = out_size;
+  return out;
+}
+
 /* caller must pass buffer with full ID3 tag */
 ID3TagsResult
 id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
     GstTagList ** tags)
 {
-  guint8 *data;
+  guint8 *data, *uu_data = NULL;
   guint read_size;
   ID3TagsWorking work;
   guint8 flags;
@@ -134,6 +162,12 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
     return ID3TAGS_READ_TAG;
   }
 
+  GST_DEBUG ("ID3v2 header flags: %s %s %s %s",
+      (flags & ID3V2_HDR_FLAG_UNSYNC) ? "UNSYNC" : "",
+      (flags & ID3V2_HDR_FLAG_EXTHDR) ? "EXTENDED_HEADER" : "",
+      (flags & ID3V2_HDR_FLAG_EXPERIMENTAL) ? "EXPERIMENTAL" : "",
+      (flags & ID3V2_HDR_FLAG_FOOTER) ? "FOOTER" : "");
+
   /* This shouldn't really happen! Caller should have checked first */
   if (GST_BUFFER_SIZE (buffer) < read_size) {
     GST_DEBUG
@@ -148,6 +182,8 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
 
   g_return_val_if_fail (tags != NULL, ID3TAGS_READ_TAG);
 
+  GST_MEMDUMP ("ID3v2 tag", GST_BUFFER_DATA (buffer), read_size);
+
   memset (&work, 0, sizeof (ID3TagsWorking));
   work.buffer = buffer;
   work.hdr.version = version;
@@ -159,9 +195,19 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
   else
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE;
 
+  if ((flags & ID3V2_HDR_FLAG_UNSYNC)) {
+    GST_DEBUG ("Un-unsyncing entire tag");
+    uu_data = id3demux_ununsync_data (work.hdr.frame_data,
+        &work.hdr.frame_data_size);
+    work.hdr.frame_data = uu_data;
+    GST_MEMDUMP ("ID3v2 tag (un-unsyced)", uu_data, work.hdr.frame_data_size);
+  }
+
   result = id3demux_id3v2_frames_to_tag_list (&work, work.hdr.frame_data_size);
 
   *tags = work.tags;
+
+  g_free (uu_data);
 
   return result;
 }
@@ -425,6 +471,17 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
         frame_size, work->hdr.frame_data + frame_hdr_size + frame_size - start,
         work->hdr.frame_data + frame_hdr_size + frame_size - start,
         obsolete_id);
+#define flag_string(flag,str) \
+        ((frame_flags & (flag)) ? (str) : "")
+    GST_LOG ("Frame header flags: 0x%04x %s %s %s %s %s %s %s", frame_flags,
+        flag_string (ID3V2_FRAME_STATUS_FRAME_ALTER_PRESERVE, "ALTER_PRESERVE"),
+        flag_string (ID3V2_FRAME_STATUS_READONLY, "READONLY"),
+        flag_string (ID3V2_FRAME_FORMAT_GROUPING_ID, "GROUPING_ID"),
+        flag_string (ID3V2_FRAME_FORMAT_COMPRESSION, "COMPRESSION"),
+        flag_string (ID3V2_FRAME_FORMAT_ENCRYPTION, "ENCRYPTION"),
+        flag_string (ID3V2_FRAME_FORMAT_UNSYNCHRONISATION, "UNSYNC"),
+        flag_string (ID3V2_FRAME_FORMAT_DATA_LENGTH_INDICATOR, "LENGHT_IND"));
+#undef flag_str
 #endif
 
     if (!obsolete_id) {
