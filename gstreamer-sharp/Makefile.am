@@ -86,8 +86,6 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA) $(srcdir)/$(SYMBOLS)
 	chmod u+w $(API)
 	$(MONO) $(top_builddir)/parser/gst-gapi-fixup.exe --api=$(API) --metadata=$(srcdir)/$(METADATA) \
 		--symbols=$(srcdir)/$(SYMBOLS)
-	sed 's;GST_PADDING_LARGE;20;g' $(API) > $(API).tmp
-	sed 's;GST_PADDING;4;g' $(API).tmp > $(API)
 
 generated-stamp: $(API) $(GAPI_CODEGEN) $(build_customs)
 	$(GAPI_CODEGEN) --generate $(API) \
