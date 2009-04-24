@@ -125,12 +125,14 @@ main (int argc, char *argv[])
   alsasrc = gst_element_factory_make ("alsasrc", "alsasrc");
   g_assert (alsasrc);
   g_object_set (alsasrc, "device", "hw:0", NULL);
+  g_object_set (alsasrc, "latency-time", (gint64) 2000, NULL);
   g_object_set (alsasrc, "slave-method", 2, NULL);
 
   /* and a sink */
   alsasink = gst_element_factory_make ("alsasink", "alsasink");
   g_assert (alsasink);
   g_object_set (alsasink, "device", "hw:0", NULL);
+  g_object_set (alsasink, "latency-time", (gint64) 2000, NULL);
   g_object_set (alsasink, "buffer-time", (gint64) 10000, NULL);
 
   /* add objects to the main pipeline */
