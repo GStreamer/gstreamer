@@ -159,7 +159,7 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
   else
     work.hdr.frame_data_size = read_size - ID3V2_HDR_SIZE;
 
-  result = id3demux_id3v2_frames_to_tag_list (&work, read_size);
+  result = id3demux_id3v2_frames_to_tag_list (&work, work.hdr.frame_data_size);
 
   *tags = work.tags;
 
