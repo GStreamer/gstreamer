@@ -159,8 +159,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         "mp4mux",
         "MP4",
         "GstMP4Mux",
-        /* FIXME does not feel right, due to qt caps mess */
-        GST_STATIC_CAPS ("video/quicktime"),
+        GST_STATIC_CAPS ("application/x-iso-mp4"),
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS),
         GST_STATIC_CAPS (MP3_CAPS "; " AAC_CAPS)
