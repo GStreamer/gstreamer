@@ -917,7 +917,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 getaddrinfo_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
-        ("getaddrinfo failed %d: %s (%d)", ret, g_strerror (errno), errno));
+        ("getaddrinfo failed: %s (%d)", gai_strerror (ret), ret));
     return FALSE;
   }
 no_socket:
