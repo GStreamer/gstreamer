@@ -92,7 +92,7 @@ gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
   GstVdpDevice *device;
   VdpStatus status;
 
-  mpeg_dec = GST_VDPAU_MPEG_DECODER (dec);
+  mpeg_dec = GST_VDP_MPEG_DECODER (dec);
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "mpegversion", &mpeg_dec->version);
@@ -150,7 +150,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
   VdpStatus status;
   GstFlowReturn ret;
 
-  dec = GST_VDPAU_DECODER (mpeg_dec);
+  dec = GST_VDP_DECODER (mpeg_dec);
 
   buffer = gst_adapter_take_buffer (mpeg_dec->adapter,
       gst_adapter_available (mpeg_dec->adapter));
@@ -234,8 +234,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
                 device->vdp_get_error_string (status)));
       }
 
-      gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
-          b_outbuf);
+      gst_vdp_decoder_push_video_buffer (GST_VDP_DECODER (mpeg_dec), b_outbuf);
     }
     g_slist_free (mpeg_dec->b_frames);
     mpeg_dec->b_frames = NULL;
@@ -243,8 +242,7 @@ gst_vdp_mpeg_decoder_decode (GstVdpMpegDecoder * mpeg_dec)
 
   gst_buffer_ref (GST_BUFFER (outbuf));
 
-  ret = gst_vdp_decoder_push_video_buffer (GST_VDPAU_DECODER (mpeg_dec),
-      outbuf);
+  ret = gst_vdp_decoder_push_video_buffer (GST_VDP_DECODER (mpeg_dec), outbuf);
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
     gst_buffer_unref (mpeg_dec->f_buffer);
@@ -263,7 +261,7 @@ gst_vdp_mpeg_decoder_parse_picture_coding (GstVdpMpegDecoder * mpeg_dec,
   MPEGPictureExt pic_ext;
   VdpPictureInfoMPEG1Or2 *info;
 
-  dec = GST_VDPAU_DECODER (mpeg_dec);
+  dec = GST_VDP_DECODER (mpeg_dec);
   info = &mpeg_dec->vdp_info;
 
   if (!mpeg_util_parse_picture_coding_extension (&pic_ext, data, end))
@@ -290,7 +288,7 @@ gst_vdp_mpeg_decoder_parse_sequence (GstVdpMpegDecoder * mpeg_dec,
   GstVdpDecoder *dec;
   MPEGSeqHdr hdr;
 
-  dec = GST_VDPAU_DECODER (mpeg_dec);
+  dec = GST_VDP_DECODER (mpeg_dec);
 
   if (!mpeg_util_parse_sequence_hdr (&hdr, data, end))
     return FALSE;
@@ -310,7 +308,7 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
   GstVdpDecoder *dec;
   MPEGPictureHdr pic_hdr;
 
-  dec = GST_VDPAU_DECODER (mpeg_dec);
+  dec = GST_VDP_DECODER (mpeg_dec);
 
   if (!mpeg_util_parse_picture_hdr (&pic_hdr, data, end))
     return FALSE;
@@ -392,7 +390,7 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   guint32 sync_word = 0xffffffff;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  mpeg_dec = GST_VDPAU_MPEG_DECODER (GST_OBJECT_PARENT (pad));
+  mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
 
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
     GST_DEBUG_OBJECT (mpeg_dec, "Received discont buffer");
@@ -474,8 +472,8 @@ gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
   GstVdpDecoder *dec;
   gboolean res;
 
-  mpeg_dec = GST_VDPAU_MPEG_DECODER (GST_OBJECT_PARENT (pad));
-  dec = GST_VDPAU_DECODER (mpeg_dec);
+  mpeg_dec = GST_VDP_MPEG_DECODER (GST_OBJECT_PARENT (pad));
+  dec = GST_VDP_DECODER (mpeg_dec);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -553,7 +551,7 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
 {
   GstVdpDecoder *dec;
 
-  dec = GST_VDPAU_DECODER (mpeg_dec);
+  dec = GST_VDP_DECODER (mpeg_dec);
 
   mpeg_dec->decoder = VDP_INVALID_HANDLE;
   gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);

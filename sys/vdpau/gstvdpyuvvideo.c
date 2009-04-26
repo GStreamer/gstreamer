@@ -54,7 +54,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VDPAU_VIDEO_CAPS));
+    GST_STATIC_CAPS (GST_VDP_VIDEO_CAPS));
 
 #define DEBUG_INIT(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_yuv_video_debug, "vdpauvideoyuv", 0, "YUV to VDPAU video surface");
@@ -76,13 +76,13 @@ gst_vdp_yuv_video_chain (GstPad * pad, GstBuffer * buffer)
   VdpVideoSurface surface;
   GstBuffer *outbuf = NULL;
 
-  yuv_video = GST_VDPAU_YUV_VIDEO (GST_OBJECT_PARENT (pad));
+  yuv_video = GST_VDP_YUV_VIDEO (GST_OBJECT_PARENT (pad));
   device = yuv_video->device;
 
   outbuf =
       GST_BUFFER (gst_vdp_video_buffer_new (device, yuv_video->chroma_type,
           yuv_video->width, yuv_video->height));
-  surface = GST_VDPAU_VIDEO_BUFFER (outbuf)->surface;
+  surface = GST_VDP_VIDEO_BUFFER (outbuf)->surface;
 
   switch (yuv_video->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
@@ -267,7 +267,7 @@ error:
 static gboolean
 gst_vdp_yuv_video_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstVdpYUVVideo *yuv_video = GST_VDPAU_YUV_VIDEO (GST_OBJECT_PARENT (pad));
+  GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (GST_OBJECT_PARENT (pad));
 
   GstStructure *structure;
   guint32 fourcc;
@@ -337,7 +337,7 @@ gst_vdp_yuv_video_sink_getcaps (GstPad * pad)
 {
   GstVdpYUVVideo *yuv_video;
 
-  yuv_video = GST_VDPAU_YUV_VIDEO (GST_OBJECT_PARENT (pad));
+  yuv_video = GST_VDP_YUV_VIDEO (GST_OBJECT_PARENT (pad));
 
   if (yuv_video->sink_caps)
     return gst_caps_copy (yuv_video->sink_caps);
@@ -350,7 +350,7 @@ gst_vdp_yuv_video_change_state (GstElement * element, GstStateChange transition)
 {
   GstVdpYUVVideo *yuv_video;
 
-  yuv_video = GST_VDPAU_YUV_VIDEO (element);
+  yuv_video = GST_VDP_YUV_VIDEO (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -446,7 +446,7 @@ static void
 gst_vdp_yuv_video_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVdpYUVVideo *yuv_video = GST_VDPAU_YUV_VIDEO (object);
+  GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (object);
 
   switch (prop_id) {
     case PROP_DISPLAY:
@@ -463,7 +463,7 @@ static void
 gst_vdp_yuv_video_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVdpYUVVideo *yuv_video = GST_VDPAU_YUV_VIDEO (object);
+  GstVdpYUVVideo *yuv_video = GST_VDP_YUV_VIDEO (object);
 
   switch (prop_id) {
     case PROP_DISPLAY:

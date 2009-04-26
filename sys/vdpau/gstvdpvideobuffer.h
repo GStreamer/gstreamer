@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GST_VDPAU_VIDEO_BUFFER_H_
-#define _GST_VDPAU_VIDEO_BUFFER_H_
+#ifndef _GST_VDP_VIDEO_BUFFER_H_
+#define _GST_VDP_VIDEO_BUFFER_H_
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -33,7 +33,7 @@ typedef struct _GstVdpVideoBuffer GstVdpVideoBuffer;
 #define GST_TYPE_VDPAU_VIDEO_BUFFER (gst_vdp_video_buffer_get_type())
 
 #define GST_IS_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER))
-#define GST_VDPAU_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER, GstVdpVideoBuffer))
+#define GST_VDP_VIDEO_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_VIDEO_BUFFER, GstVdpVideoBuffer))
 
 struct _GstVdpVideoBuffer {
   GstBuffer buffer;
@@ -46,7 +46,7 @@ GType gst_vdp_video_buffer_get_type (void);
 
 GstVdpVideoBuffer* gst_vdp_video_buffer_new (GstVdpDevice * device, VdpChromaType chroma_type, gint width, gint height);
 
-#define GST_VDPAU_VIDEO_CAPS \
+#define GST_VDP_VIDEO_CAPS \
   "video/x-vdpau-video, " \
   "chroma-type = (int)[0,2], " \
   "width = (int)[1,4096], " \

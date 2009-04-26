@@ -46,7 +46,7 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VDPAU_VIDEO_CAPS));
+    GST_STATIC_CAPS (GST_VDP_VIDEO_CAPS));
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -75,9 +75,9 @@ gst_vdp_video_yuv_chain (GstPad * pad, GstBuffer * buffer)
   VdpVideoSurface surface;
   GstBuffer *outbuf = NULL;
 
-  video_yuv = GST_VDPAU_VIDEO_YUV (GST_OBJECT_PARENT (pad));
-  device = GST_VDPAU_VIDEO_BUFFER (buffer)->device;
-  surface = GST_VDPAU_VIDEO_BUFFER (buffer)->surface;
+  video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
+  device = GST_VDP_VIDEO_BUFFER (buffer)->device;
+  surface = GST_VDP_VIDEO_BUFFER (buffer)->surface;
 
   switch (video_yuv->format) {
     case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
@@ -276,7 +276,7 @@ gst_vdp_video_yuv_get_caps (GstVdpVideoYUV * video_yuv,
 static gboolean
 gst_vdp_video_yuv_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
-  GstVdpVideoYUV *video_yuv = GST_VDPAU_VIDEO_YUV (GST_OBJECT_PARENT (pad));
+  GstVdpVideoYUV *video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
 
   GstCaps *src_caps, *new_caps;
   GstStructure *structure;
@@ -344,7 +344,7 @@ gst_vdp_video_yuv_src_getcaps (GstPad * pad)
 {
   GstVdpVideoYUV *video_yuv;
 
-  video_yuv = GST_VDPAU_VIDEO_YUV (GST_OBJECT_PARENT (pad));
+  video_yuv = GST_VDP_VIDEO_YUV (GST_OBJECT_PARENT (pad));
 
   if (video_yuv->src_caps)
     return gst_caps_copy (video_yuv->src_caps);

@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef _GST_VDPAU_DEVICE_H_
-#define _GST_VDPAU_DEVICE_H_
+#ifndef _GST_VDP_DEVICE_H_
+#define _GST_VDP_DEVICE_H_
 
 #include <X11/Xlib.h>
 #include <vdpau/vdpau.h>
@@ -29,11 +29,11 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VDPAU_DEVICE             (gst_vdp_device_get_type ())
-#define GST_VDPAU_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_DEVICE, GstVdpDevice))
-#define GST_VDPAU_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VDPAU_DEVICE, GstVdpDeviceClass))
+#define GST_VDP_DEVICE(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDPAU_DEVICE, GstVdpDevice))
+#define GST_VDP_DEVICE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VDPAU_DEVICE, GstVdpDeviceClass))
 #define GST_IS_VDPAU_DEVICE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDPAU_DEVICE))
 #define GST_IS_VDPAU_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VDPAU_DEVICE))
-#define GST_VDPAU_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DEVICE, GstVdpDeviceClass))
+#define GST_VDP_DEVICE_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DEVICE, GstVdpDeviceClass))
 
 typedef struct _GstVdpDeviceClass GstVdpDeviceClass;
 typedef struct _GstVdpDevice GstVdpDevice;
@@ -129,4 +129,4 @@ GstVdpDevice *gst_vdp_get_device (const gchar *display_name);
 
 G_END_DECLS
 
-#endif /* _GST_VDPAU_DEVICE_H_ */
+#endif /* _GST_VDP_DEVICE_H_ */

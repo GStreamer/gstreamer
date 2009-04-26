@@ -83,7 +83,7 @@ gst_vdp_decoder_change_state (GstElement * element, GstStateChange transition)
 {
   GstVdpDecoder *dec;
 
-  dec = GST_VDPAU_DECODER (element);
+  dec = GST_VDP_DECODER (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -103,8 +103,8 @@ gst_vdp_decoder_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_vdp_decoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
-  GstVdpDecoder *dec = GST_VDPAU_DECODER (GST_OBJECT_PARENT (pad));
-  GstVdpDecoderClass *dec_class = GST_VDPAU_DECODER_GET_CLASS (dec);
+  GstVdpDecoder *dec = GST_VDP_DECODER (GST_OBJECT_PARENT (pad));
+  GstVdpDecoderClass *dec_class = GST_VDP_DECODER_GET_CLASS (dec);
 
   GstCaps *src_caps, *new_caps;
   GstStructure *structure;
@@ -227,7 +227,7 @@ static void
 gst_vdp_decoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVdpDecoder *dec = GST_VDPAU_DECODER (object);
+  GstVdpDecoder *dec = GST_VDP_DECODER (object);
 
   switch (prop_id) {
     case PROP_DISPLAY:
@@ -244,7 +244,7 @@ static void
 gst_vdp_decoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVdpDecoder *dec = GST_VDPAU_DECODER (object);
+  GstVdpDecoder *dec = GST_VDP_DECODER (object);
 
   switch (prop_id) {
     case PROP_DISPLAY:

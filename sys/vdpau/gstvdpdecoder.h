@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#ifndef __GST_VDPAU_DECODER_H__
-#define __GST_VDPAU_DECODER_H__
+#ifndef __GST_VDP_DECODER_H__
+#define __GST_VDP_DECODER_H__
 
 #include <gst/gst.h>
 
@@ -29,9 +29,9 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VDPAU_DECODER            (gst_vdp_decoder_get_type())
-#define GST_VDPAU_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpDecoder))
-#define GST_VDPAU_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpDecoderClass))
-#define GST_VDPAU_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DECODER, GstVdpDecoderClass))
+#define GST_VDP_DECODER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDPAU_DECODER,GstVdpDecoder))
+#define GST_VDP_DECODER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VDPAU_DECODER,GstVdpDecoderClass))
+#define GST_VDP_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VDPAU_DECODER, GstVdpDecoderClass))
 #define GST_IS_VDPAU_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VDPAU_DECODER))
 #define GST_IS_VDPAU_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VDPAU_DECODER))
 
@@ -69,4 +69,4 @@ VdpVideoSurface gst_vdp_decoder_create_video_surface (GstVdpDecoder *dec);
 
 G_END_DECLS
 
-#endif /* __GST_VDPAU_DECODER_H__ */
+#endif /* __GST_VDP_DECODER_H__ */
