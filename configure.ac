@@ -913,7 +913,7 @@ AG_GST_CHECK_FEATURE(SPEEX, [speex speech codec], speex, [
 dnl *** taglib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
 AG_GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
-  AG_GST_PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4)
+  AG_GST_PKG_CHECK_MODULES(TAGLIB, taglib >= 1.5)
   if test "x$HAVE_CXX" != "xyes"; then
     USE_TAGLIB=false
     AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
