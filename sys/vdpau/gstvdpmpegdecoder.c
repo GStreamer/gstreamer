@@ -467,6 +467,33 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   return ret;
 }
 
+static gboolean
+gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstVdpMpegDecoder *mpeg_dec;
+  GstVdpDecoder *dec;
+  gboolean res;
+
+  mpeg_dec = GST_VDPAU_MPEG_DECODER (GST_OBJECT_PARENT (pad));
+  dec = GST_VDPAU_DECODER (mpeg_dec);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+    {
+      GST_DEBUG_OBJECT (mpeg_dec, "flush stop");
+
+      gst_vdp_mpeg_decoder_reset (mpeg_dec);
+      res = gst_pad_push_event (dec->src, event);
+
+      break;
+    }
+    default:
+      res = gst_pad_event_default (pad, event);
+  }
+
+  return res;
+}
+
 /* GObject vmethod implementations */
 
 static void
@@ -538,6 +565,7 @@ gst_vdp_mpeg_decoder_init (GstVdpMpegDecoder * mpeg_dec,
   mpeg_dec->adapter = gst_adapter_new ();
 
   gst_pad_set_chain_function (dec->sink, gst_vdp_mpeg_decoder_chain);
+  gst_pad_set_event_function (dec->sink, gst_vdp_mpeg_decoder_sink_event);
 }
 
 static void
