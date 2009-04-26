@@ -233,7 +233,13 @@ rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
 static void
 rsn_dvdsrc_init (resinDvdSrc * rsndvdsrc, resinDvdSrcClass * gclass)
 {
-  rsndvdsrc->faststart = DEFAULT_FASTSTART;
+  const gchar *envvar;
+
+  envvar = g_getenv ("DVDFASTSTART");
+  if (envvar)
+    rsndvdsrc->faststart = (strcmp (envvar, "0") && strcmp (envvar, "no"));
+  else
+    rsndvdsrc->faststart = DEFAULT_FASTSTART;
 
   rsndvdsrc->device = g_strdup (DEFAULT_DEVICE);
   rsndvdsrc->dvd_lock = g_mutex_new ();
