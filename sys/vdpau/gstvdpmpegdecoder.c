@@ -73,6 +73,7 @@ GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_decoder_debug, "vdpaumpegdec", 0, "VDPAU p
 GST_BOILERPLATE_FULL (GstVdpMpegDecoder, gst_vdp_mpeg_decoder,
     GstVdpDecoder, GST_TYPE_VDPAU_DECODER, DEBUG_INIT);
 
+static void gst_vdp_mpeg_decoder_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
 static void gst_vdp_mpeg_decoder_finalize (GObject * object);
 static void gst_vdp_mpeg_decoder_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -363,6 +364,26 @@ gst_vdp_mpeg_decoder_parse_quant_matrix (GstVdpMpegDecoder * mpeg_dec,
   return TRUE;
 }
 
+static void
+gst_vdp_mpeg_decoder_reset (GstVdpMpegDecoder * mpeg_dec)
+{
+  GSList *iter;
+
+  for (iter = mpeg_dec->b_frames; iter; iter = iter->next) {
+    GstVdpBFrame *b_frame = (GstVdpBFrame *) iter->data;
+
+    gst_buffer_unref (b_frame->buffer);
+    g_slice_free (GstVdpBFrame, b_frame);
+  }
+  g_slist_free (mpeg_dec->b_frames);
+  mpeg_dec->b_frames = NULL;
+
+  if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
+    gst_buffer_unref (mpeg_dec->f_buffer);
+
+  gst_vdp_mpeg_decoder_init_info (&mpeg_dec->vdp_info);
+}
+
 static GstFlowReturn
 gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -372,6 +393,12 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
 
   mpeg_dec = GST_VDPAU_MPEG_DECODER (GST_OBJECT_PARENT (pad));
+
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
+    GST_DEBUG_OBJECT (mpeg_dec, "Received discont buffer");
+    gst_vdp_mpeg_decoder_reset (mpeg_dec);
+    return GST_FLOW_OK;
+  }
 
   data = GST_BUFFER_DATA (buffer);
   end = GST_BUFFER_DATA (buffer) + GST_BUFFER_SIZE (buffer);
