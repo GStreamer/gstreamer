@@ -415,6 +415,7 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION");
         switch (read_bits (data + 1, 0, 4)) {
           case MPEG_PACKET_EXT_PICTURE_CODING:
+            GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_PICTURE_CODING");
             gst_vdp_mpeg_decoder_parse_picture_coding (mpeg_dec, packet_start,
                 packet_end);
             break;
