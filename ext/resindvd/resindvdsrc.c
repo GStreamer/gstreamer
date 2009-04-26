@@ -556,7 +556,8 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
   GstSegment *segment = &(GST_BASE_SRC (src)->segment);
 
   if (src->in_still_state == FALSE) {
-    g_print ("**** STILL FRAME. Duration %d ****\n", duration);
+    GST_DEBUG_OBJECT (src, "**** Start STILL FRAME. Duration %d ****",
+        duration);
     /* Send a close-segment event, and a dvd-still start
      * event, then sleep */
     s = gst_structure_new ("application/x-gst-dvd",
@@ -580,7 +581,7 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     gst_pad_push_event (GST_BASE_SRC_PAD (src), still_event);
     gst_pad_push_event (GST_BASE_SRC_PAD (src), seg_event);
     if (hl_event) {
-      g_print ("Sending highlight event before still\n");
+      GST_LOG_OBJECT (src, "Sending highlight event before still");
       gst_pad_push_event (GST_BASE_SRC_PAD (src), hl_event);
     }
     g_mutex_lock (src->dvd_lock);
@@ -770,8 +771,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
         if (src->cur_end_ts == GST_CLOCK_TIME_NONE || diff > 2 * GST_SECOND ||
             diff < 0) {
           discont = TRUE;
-          g_print ("Discont NAV packet start TS %" GST_TIME_FORMAT
-              " != end TS %" GST_TIME_FORMAT "\n",
+          GST_DEBUG_OBJECT (src, "Discont NAV packet start TS %" GST_TIME_FORMAT
+              " != end TS %" GST_TIME_FORMAT,
               GST_TIME_ARGS (new_start_ptm), GST_TIME_ARGS (src->cur_end_ts));
         }
       }
@@ -850,8 +851,8 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       /* Drain out the queues so that the info on the screen matches
        * the VM state */
       if (have_dvd_lock) {
-        /* FIXME: Drain out the queues */
-        g_print ("****** FIXME: WAIT *****\n");
+        /* FIXME: Drain out the queues, by sleeping on the clock or something */
+        GST_LOG_OBJECT (src, "****** FIXME: WAIT for queues to drain *****");
       }
       if (dvdnav_wait_skip (src->dvdnav) != DVDNAV_STATUS_OK)
         goto internal_error;
@@ -929,7 +930,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
       break;
     }
     case DVDNAV_HOP_CHANNEL:
-      g_print ("Channel hop - User action\n");
+      GST_DEBUG_OBJECT (src, "Channel hop - User action");
       src->need_segment = TRUE;
       break;
     case DVDNAV_NOP:
@@ -1214,7 +1215,7 @@ rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
       if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
           && cur > 0
           && dvdnav_angle_change (src->dvdnav, cur - 1) == DVDNAV_STATUS_OK)
-        g_print ("Switched to angle %d\n", cur - 1);
+        GST_INFO_OBJECT (src, "Switched to angle %d", cur - 1);
       /* Angle switches are seamless and involve no branching */
       break;
     }
@@ -1222,7 +1223,7 @@ rsn_dvdsrc_do_command (resinDvdSrc * src, GstNavigationCommand command)
       gint32 cur, agls;
       if (dvdnav_get_angle_info (src->dvdnav, &cur, &agls) == DVDNAV_STATUS_OK
           && dvdnav_angle_change (src->dvdnav, cur + 1) == DVDNAV_STATUS_OK)
-        g_print ("Switched to angle %d\n", cur + 1);
+        GST_INFO_OBJECT (src, "Switched to angle %d", cur + 1);
       /* Angle switches are seamless and involve no branching */
       break;
     }
@@ -2229,7 +2230,7 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
 
   sector = title_tmap->map_ent[entry - 1] & 0x7fffffff;
 
-  GST_LOG_OBJECT (src, "Got sector %u for time seek (entry %d of %d)\n",
+  GST_LOG_OBJECT (src, "Got sector %u for time seek (entry %d of %d)",
       sector, entry, title_tmap->nr_of_entries);
 
   /* Sector is now an absolute sector within the current VTS, but
@@ -2257,7 +2258,7 @@ rsn_dvdsrc_get_sector_from_time_tmap (resinDvdSrc * src, GstClockTime ts)
     logical_sector += (cell->last_sector - cell->first_sector + 1);
   }
 
-  GST_DEBUG_OBJECT (src, "Mapped sector %u onto PGC relative sector %u\n",
+  GST_DEBUG_OBJECT (src, "Mapped sector %u onto PGC relative sector %u",
       sector, logical_sector);
 
   return logical_sector;

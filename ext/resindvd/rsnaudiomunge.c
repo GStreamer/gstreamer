@@ -178,7 +178,8 @@ rsn_audiomunge_chain (GstPad * pad, GstBuffer * buf)
   RsnAudioMunge *munge = RSN_AUDIOMUNGE (GST_OBJECT_PARENT (pad));
 
   if (!munge->have_audio) {
-    g_print ("First audio after flush has TS %" GST_TIME_FORMAT "\n",
+    GST_INFO_OBJECT (munge,
+        "First audio after flush has TS %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
   }
 
@@ -221,8 +222,8 @@ rsn_audiomunge_make_audio (RsnAudioMunge * munge,
 
   memset (GST_BUFFER_DATA (audio_buf), 0, buf_size);
 
-  g_print ("Sending %u bytes (%" GST_TIME_FORMAT ") of audio data "
-      "with TS %" GST_TIME_FORMAT "\n",
+  GST_LOG_OBJECT (munge, "Sending %u bytes (%" GST_TIME_FORMAT
+      ") of audio data with TS %" GST_TIME_FORMAT,
       buf_size, GST_TIME_ARGS (fill_time), GST_TIME_ARGS (start));
 
   ret = gst_pad_push (munge->srcpad, audio_buf);
@@ -251,7 +252,7 @@ rsn_audiomunge_handle_dvd_event (RsnAudioMunge * munge, GstEvent * event)
      * when a new-segment arrives */
     munge->in_still = in_still;
 
-    g_print ("**** AUDIO MUNGE: still-state now %d\n", munge->in_still);
+    GST_INFO_OBJECT (munge, "AUDIO MUNGE: still-state now %d", munge->in_still);
   }
 }
 
@@ -312,9 +313,9 @@ rsn_audiomunge_sink_event (GstPad * pad, GstEvent * event)
       }
 
       if (segment->accum >= AUDIO_FILL_THRESHOLD || munge->in_still) {
-        g_print ("***********  Sending audio fill: accum = %" GST_TIME_FORMAT
-            " still-state=%d\n", GST_TIME_ARGS (segment->accum),
-            munge->in_still);
+        GST_DEBUG_OBJECT (munge,
+            "Sending audio fill: accum = %" GST_TIME_FORMAT " still-state=%d",
+            GST_TIME_ARGS (segment->accum), munge->in_still);
 
         /* Just generate a 100ms silence buffer for now. FIXME: Fill the gap */
         if (rsn_audiomunge_make_audio (munge, segment->start,

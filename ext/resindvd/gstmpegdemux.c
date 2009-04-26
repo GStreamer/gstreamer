@@ -411,8 +411,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
     GST_DEBUG_OBJECT (demux, "discont buffer to pad %" GST_PTR_FORMAT
-        " with TS %" GST_TIME_FORMAT "\n", stream->pad,
-        GST_TIME_ARGS (timestamp));
+        " with TS %" GST_TIME_FORMAT, stream->pad, GST_TIME_ARGS (timestamp));
 
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     stream->discont = FALSE;
@@ -722,7 +721,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
         gst_event_ref (event);
         ret = gst_pad_push_event (temp->pad, event);
-        g_print ("Subpicture physical ID change to %d, forced %d\n", stream_id,
+        GST_INFO_OBJECT (demux,
+            "Subpicture physical ID change to %d, forced %d", stream_id,
             forced_only);
       }
     }
@@ -776,7 +776,6 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
         GstEvent *sel_event =
             gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
         gst_pad_push_event (temp->pad, sel_event);
-        g_print ("Audio physical ID change to %d\n", stream_id);
 
         gst_event_ref (event);
         ret = gst_pad_push_event (temp->pad, event);
@@ -841,9 +840,9 @@ gst_flups_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&demux->sink_segment, update, rate,
           arate, format, start, stop, time);
 
-      g_print ("demux: got segment update %d start %" G_GINT64_FORMAT
-          " stop %" G_GINT64_FORMAT " time %" G_GINT64_FORMAT "\n",
-          update, start, stop, time);
+      GST_DEBUG_OBJECT (demux,
+          "demux: got segment update %d start %" G_GINT64_FORMAT " stop %"
+          G_GINT64_FORMAT " time %" G_GINT64_FORMAT, update, start, stop, time);
 
       accum = demux->sink_segment.accum;
       start = demux->sink_segment.start;
@@ -860,15 +859,11 @@ gst_flups_demux_sink_event (GstPad * pad, GstEvent * event)
       if (stop != -1)
         stop = start + dur;
 
-      GST_INFO_OBJECT (demux, "sending new segment: rate %g "
-          "format %d, start: %" G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT
-          ", time: %" G_GINT64_FORMAT, rate, format, start, stop, time);
-
-      g_print ("sending new segment: update %d rate %g format %d, start: %"
+      GST_DEBUG_OBJECT (demux,
+          "sending new segment: update %d rate %g format %d, start: %"
           G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT ", time: %"
-          G_GINT64_FORMAT " scr_adjust: %" G_GINT64_FORMAT
-          "(%" GST_TIME_FORMAT ")\n",
-          update, rate, format, start, stop, time, demux->scr_adjust,
+          G_GINT64_FORMAT " scr_adjust: %" G_GINT64_FORMAT "(%" GST_TIME_FORMAT
+          ")", update, rate, format, start, stop, time, demux->scr_adjust,
           GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->scr_adjust)));
 
       gst_segment_set_newsegment_full (&demux->src_segment, update,
@@ -1336,7 +1331,8 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
           ", adjust %" G_GINT64_FORMAT, diff, demux->scr_adjust);
       scr_adjusted = demux->next_scr;
 #else
-      g_print ("Unexpected SCR diff of %" G_GINT64_FORMAT "\n", diff);
+      GST_WARNING_OBJECT (demux, "Unexpected SCR diff of %" G_GINT64_FORMAT,
+          diff);
 #endif
     } else {
       demux->next_scr = scr_adjusted;

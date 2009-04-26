@@ -267,7 +267,6 @@ rsn_audiodec_proxy_src_chain (GstPad * pad, GstBuffer * buf)
 
   gst_object_unref (srcpad);
 
-  g_print ("srcpad %p\n", self->srcpad);
   if (self == NULL)
     return GST_FLOW_ERROR;
 
@@ -395,7 +394,6 @@ rsn_audiodec_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
   RsnAudioDec *self = RSN_AUDIODEC (element);
 
-  g_print ("State change in element %p trans %d\n", element, transition);
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:{
       GstElement *new_child;
