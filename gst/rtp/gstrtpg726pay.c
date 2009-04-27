@@ -99,8 +99,10 @@ gst_rtp_g726_pay_base_init (gpointer klass)
 static void
 gst_rtp_g726_pay_class_init (GstRtpG726PayClass * klass)
 {
+  GObjectClass *gobject_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   gobject_class->set_property = gst_rtp_g726_pay_set_property;
