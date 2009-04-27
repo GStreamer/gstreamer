@@ -75,28 +75,6 @@ gst_vdp_decoder_push_video_buffer (GstVdpDecoder * dec,
   return gst_pad_push (dec->src, GST_BUFFER (buffer));
 }
 
-static GstStateChangeReturn
-gst_vdp_decoder_change_state (GstElement * element, GstStateChange transition)
-{
-  GstVdpDecoder *dec;
-
-  dec = GST_VDP_DECODER (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      dec->device = gst_vdp_get_device (dec->display_name);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_object_unref (dec->device);
-      dec->device = NULL;
-      break;
-    default:
-      break;
-  }
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-
 static gboolean
 gst_vdp_decoder_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
@@ -182,8 +160,6 @@ gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
   g_object_class_install_property (gobject_class, PROP_DISPLAY,
       g_param_spec_string ("display", "Display", "X Display name",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-  gstelement_class->change_state = gst_vdp_decoder_change_state;
 }
 
 static void
@@ -213,9 +189,6 @@ static void
 gst_vdp_decoder_finalize (GObject * object)
 {
   GstVdpDecoder *dec = (GstVdpDecoder *) object;
-
-  if (dec->device)
-    g_object_unref (dec->device);
 
   g_free (dec->display_name);
 }

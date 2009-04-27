@@ -120,6 +120,12 @@ gst_vdp_mpeg_decoder_set_caps (GstVdpDecoder * dec, GstCaps * caps)
       &hdr.non_intra_quantizer_matrix, 64);
 
   device = dec->device;
+
+  if (mpeg_dec->decoder != VDP_INVALID_HANDLE) {
+    device->vdp_decoder_destroy (mpeg_dec->decoder);
+    mpeg_dec->decoder = VDP_INVALID_HANDLE;
+  }
+
   status = device->vdp_decoder_create (device->device, profile, dec->width,
       dec->height, 2, &mpeg_dec->decoder);
   if (status != VDP_STATUS_OK) {
@@ -499,6 +505,36 @@ gst_vdp_mpeg_decoder_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static GstStateChangeReturn
+gst_vdp_mpeg_decoder_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstVdpMpegDecoder *mpeg_dec;
+  GstVdpDecoder *dec;
+
+  mpeg_dec = GST_VDP_MPEG_DECODER (element);
+  dec = GST_VDP_DECODER (mpeg_dec);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      dec->device = gst_vdp_get_device (dec->display_name);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_vdp_mpeg_decoder_reset (mpeg_dec);
+
+      dec->device->vdp_decoder_destroy (mpeg_dec->decoder);
+      mpeg_dec->decoder = VDP_INVALID_HANDLE;
+
+      g_object_unref (dec->device);
+      dec->device = NULL;
+      break;
+    default:
+      break;
+  }
+
+  return GST_STATE_CHANGE_SUCCESS;
+}
+
 /* GObject vmethod implementations */
 
 static void
@@ -533,6 +569,8 @@ gst_vdp_mpeg_decoder_class_init (GstVdpMpegDecoderClass * klass)
   gobject_class->get_property = gst_vdp_mpeg_decoder_get_property;
 
   vdpaudec_class->set_caps = gst_vdp_mpeg_decoder_set_caps;
+
+  gstelement_class->change_state = gst_vdp_mpeg_decoder_change_state;
 }
 
 static void
