@@ -65,6 +65,7 @@ customs = 			\
 	Parse.custom		\
 	Object.custom		\
 	PadTemplate.custom      \
+	Plugin.custom     	\
 	MiniObject.custom       \
 	Registry.custom         \
 	Query.custom 	        \

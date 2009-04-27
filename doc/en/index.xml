@@ -146,7 +146,6 @@
       <Type Name="PluginAddedArgs" Kind="Class" />
       <Type Name="PluginAddedHandler" Kind="Delegate" />
       <Type Name="PluginDependencyFlags" Kind="Enumeration" />
-      <Type Name="PluginDesc" Kind="Structure" />
       <Type Name="PluginError" Kind="Enumeration" />
       <Type Name="PluginFeature" Kind="Class" />
       <Type Name="PluginFeatureFilter" Kind="Delegate" />

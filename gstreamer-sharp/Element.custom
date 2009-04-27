@@ -58,7 +58,7 @@ public object Emit (string signal, params object[] parameters) {
   return DynamicSignal.Emit (this, signal, parameters);
 }
 
-[DllImport ("gobject-2.0-0.dll")]
+[DllImport ("gobject-2.0-0.dll") ]
 static extern IntPtr g_object_ref (IntPtr raw);
 
 public bool AddPad (Pad p) {

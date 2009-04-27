@@ -473,7 +473,7 @@ namespace Gst {
       foreach (object o in content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_list_append_value (ref val, ref v);
-	v.Dispose ();
+        v.Dispose ();
       }
     }
 
@@ -497,7 +497,7 @@ namespace Gst {
       foreach (object o in l.content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_list_append_value (ref val, ref v);
-	v.Dispose ();
+        v.Dispose ();
       }
 
       return val;
@@ -558,7 +558,7 @@ namespace Gst {
       foreach (object o in content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_array_append_value (ref val, ref v);
-	v.Dispose ();
+        v.Dispose ();
       }
     }
 
@@ -568,7 +568,7 @@ namespace Gst {
       foreach (object o in a.content) {
         GLib.Value v = new GLib.Value (o);
         gst_value_array_append_value (ref val, ref v);
-	v.Dispose ();
+        v.Dispose ();
       }
 
       return val;

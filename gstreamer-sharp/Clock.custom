@@ -123,7 +123,7 @@ private IntPtr EntriesPtr {
 
 protected Gst.ClockEntry[] Entries {
   get {
-    return (Gst.ClockEntry[]) GLib.Marshaller.ListPtrToArray (EntriesPtr, typeof(GLib.List), false, false, typeof(Gst.ClockEntry));
+    return (Gst.ClockEntry[]) GLib.Marshaller.ListPtrToArray (EntriesPtr, typeof (GLib.List), false, false, typeof (Gst.ClockEntry));
   }
 }
 
