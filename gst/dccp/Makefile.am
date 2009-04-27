@@ -21,5 +21,5 @@ noinst_HEADERS = gstdccp.h \
                  gstdccpserversink.h \
                  gstdccpserversrc.h \
                  gstdccpclientsink.h \
-                 gstdccpclientsrc.h
-
+                 gstdccpclientsrc.h \
+                 gstdccp_common.h

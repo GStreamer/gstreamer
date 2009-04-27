@@ -126,6 +126,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 %{_libdir}/gstreamer-%{majorminor}/libgstxdgmime.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfpsdisplaysink.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography-enumtypes.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography.h
 %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
