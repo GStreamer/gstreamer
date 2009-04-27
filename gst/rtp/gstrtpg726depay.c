@@ -31,6 +31,9 @@
 
 #include "gstrtpg726depay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpg726depay_debug);
+#define GST_CAT_DEFAULT (rtpg726depay_debug)
+
 #define DEFAULT_BIT_RATE 32000
 #define SAMPLE_RATE 8000
 #define LAYOUT_G726 "g726"
@@ -115,8 +118,6 @@ gst_rtp_g726_depay_class_init (GstRtpG726DepayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_rtp_g726_depay_set_property;
   gobject_class->get_property = gst_rtp_g726_depay_get_property;
 
@@ -128,6 +129,8 @@ gst_rtp_g726_depay_class_init (GstRtpG726DepayClass * klass)
   gstbasertpdepayload_class->process = gst_rtp_g726_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_g726_depay_setcaps;
 
+  GST_DEBUG_CATEGORY_INIT (rtpg726depay_debug, "rtpg726depay", 0,
+      "G.726 RTP Depayloader");
 }
 
 static void
@@ -242,7 +245,8 @@ gst_rtp_g726_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
     out = GST_BUFFER_DATA (outbuf);
 
-    /* we need to reshuffle the bytes */
+    /* we need to reshuffle the bytes, input is always of the form
+     * A B C D ... with the number of bits depending on the bitrate. */
     switch (depay->bitrate) {
       case 16000:
       {
