@@ -325,10 +325,14 @@ gst_vdp_mpeg_decoder_parse_picture (GstVdpMpegDecoder * mpeg_dec,
 
   mpeg_dec->vdp_info.picture_coding_type = pic_hdr.pic_type;
 
-  if (pic_hdr.pic_type == I_FRAME &&
-      mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
-    gst_buffer_unref (mpeg_dec->f_buffer);
-    mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+  if (pic_hdr.pic_type == I_FRAME) {
+    if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE) {
+      gst_buffer_unref (mpeg_dec->f_buffer);
+      mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
+    }
+  } else if (mpeg_dec->vdp_info.forward_reference == VDP_INVALID_HANDLE) {
+    GST_DEBUG_OBJECT (mpeg_dec, "Drop frame since we've got no I_FRAME yet");
+    return FALSE;
   }
 
   if (mpeg_dec->version == 1) {
@@ -439,7 +443,9 @@ gst_vdp_mpeg_decoder_chain (GstPad * pad, GstBuffer * buffer)
       case MPEG_PACKET_PICTURE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
 
-        gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start, packet_end);
+        if (!gst_vdp_mpeg_decoder_parse_picture (mpeg_dec, packet_start,
+                packet_end))
+          return GST_FLOW_OK;
         break;
       case MPEG_PACKET_SEQUENCE:
         GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
