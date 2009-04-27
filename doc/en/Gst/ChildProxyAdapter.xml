@@ -17,6 +17,23 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public ChildProxyAdapter ();" />
       <MemberType>Constructor</MemberType>
@@ -24,339 +41,156 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public ChildProxyAdapter (Gst.ChildProxyImplementor implementor);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Parameters>
-        <Parameter Name="implementor" Type="Gst.ChildProxyImplementor" />
-      </Parameters>
-      <Docs>
-        <param name="implementor">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName=".ctor">
+      <Parameters><Parameter Name="implementor" Type="Gst.ChildProxyImplementor" /></Parameters>
+      <Docs><param name="implementor">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public ChildProxyAdapter (IntPtr handle);" />
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Parameters>
-        <Parameter Name="handle" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="handle">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ChildAdded">
+      <Parameters><Parameter Name="handle" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="handle">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="ChildAdded">
       <MemberSignature Language="C#" Value="public event Gst.ChildAddedHandler ChildAdded;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Signal("child-added")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>Gst.ChildAddedHandler</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ChildRemoved">
+      <Attributes><Attribute><AttributeName>GLib.Signal("child-added")</AttributeName></Attribute></Attributes>
+      <ReturnValue><ReturnType>Gst.ChildAddedHandler</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="ChildRemoved">
       <MemberSignature Language="C#" Value="public event Gst.ChildRemovedHandler ChildRemoved;" />
       <MemberType>Event</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>GLib.Signal("child-removed")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>Gst.ChildRemovedHandler</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ChildrenCount">
+      <Attributes><Attribute><AttributeName>GLib.Signal("child-removed")</AttributeName></Attribute></Attributes>
+      <ReturnValue><ReturnType>Gst.ChildRemovedHandler</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="ChildrenCount">
       <MemberSignature Language="C#" Value="public uint ChildrenCount { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="EmitChildAdded">
+      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="EmitChildAdded">
       <MemberSignature Language="C#" Value="public static void EmitChildAdded (Gst.Object objekt, Gst.Object child);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="child" Type="Gst.Object" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="child">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="EmitChildRemoved">
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="child" Type="Gst.Object" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="child">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="EmitChildRemoved">
       <MemberSignature Language="C#" Value="public static void EmitChildRemoved (Gst.Object objekt, Gst.Object child);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="child" Type="Gst.Object" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="child">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetChildByIndex">
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="child" Type="Gst.Object" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="child">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetChildByIndex">
       <MemberSignature Language="C#" Value="public Gst.Object GetChildByIndex (uint index);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.Object</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="index" Type="System.UInt32" />
-      </Parameters>
-      <Docs>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetChildByName">
+      <ReturnValue><ReturnType>Gst.Object</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="index" Type="System.UInt32" /></Parameters>
+      <Docs><param name="index">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetChildByName">
       <MemberSignature Language="C#" Value="public Gst.Object GetChildByName (string name);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.Object</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="name" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="name">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetObject">
+      <ReturnValue><ReturnType>Gst.Object</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="name" Type="System.String" /></Parameters>
+      <Docs><param name="name">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetObject">
       <MemberSignature Language="C#" Value="public static Gst.ChildProxy GetObject (GLib.Object obj);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.ChildProxy</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="obj" Type="GLib.Object" />
-      </Parameters>
-      <Docs>
-        <param name="obj">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetObject">
+      <ReturnValue><ReturnType>Gst.ChildProxy</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="obj" Type="GLib.Object" /></Parameters>
+      <Docs><param name="obj">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetObject">
       <MemberSignature Language="C#" Value="public static Gst.ChildProxy GetObject (IntPtr handle, bool owned);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.ChildProxy</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="handle" Type="System.IntPtr" />
-        <Parameter Name="owned" Type="System.Boolean" />
-      </Parameters>
-      <Docs>
-        <param name="handle">To be added.</param>
-        <param name="owned">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetProperty">
+      <ReturnValue><ReturnType>Gst.ChildProxy</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="handle" Type="System.IntPtr" /><Parameter Name="owned" Type="System.Boolean" /></Parameters>
+      <Docs><param name="handle">To be added.</param><param name="owned">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetProperty">
       <MemberSignature Language="C#" Value="public static void GetProperty (Gst.Object objekt, string name, GLib.Value value);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="name" Type="System.String" />
-        <Parameter Name="value" Type="GLib.Value" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="name">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetValist">
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="value" Type="GLib.Value" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="name">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="GetValist">
       <MemberSignature Language="C#" Value="public static void GetValist (Gst.Object objekt, string first_property_name, IntPtr var_args);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="first_property_name" Type="System.String" />
-        <Parameter Name="var_args" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="first_property_name">To be added.</param>
-        <param name="var_args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Implementor">
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="first_property_name" Type="System.String" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="first_property_name">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="Implementor">
       <MemberSignature Language="C#" Value="public Gst.ChildProxyImplementor Implementor { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.ChildProxyImplementor</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Lookup">
+      <ReturnValue><ReturnType>Gst.ChildProxyImplementor</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="Lookup">
       <MemberSignature Language="C#" Value="public static bool Lookup (Gst.Object objekt, string name, Gst.Object target, IntPtr pspec);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="name" Type="System.String" />
-        <Parameter Name="target" Type="Gst.Object" />
-        <Parameter Name="pspec" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="name">To be added.</param>
-        <param name="target">To be added.</param>
-        <param name="pspec">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetProperty">
+      <ReturnValue><ReturnType>System.Boolean</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="target" Type="Gst.Object" /><Parameter Name="pspec" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="name">To be added.</param><param name="target">To be added.</param><param name="pspec">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="SetProperty">
       <MemberSignature Language="C#" Value="public static void SetProperty (Gst.Object objekt, string name, GLib.Value value);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="name" Type="System.String" />
-        <Parameter Name="value" Type="GLib.Value" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="name">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SetValist">
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="name" Type="System.String" /><Parameter Name="value" Type="GLib.Value" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="name">To be added.</param><param name="value">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="SetValist">
       <MemberSignature Language="C#" Value="public static void SetValist (Gst.Object objekt, string first_property_name, IntPtr var_args);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="objekt" Type="Gst.Object" />
-        <Parameter Name="first_property_name" Type="System.String" />
-        <Parameter Name="var_args" Type="System.IntPtr" />
-      </Parameters>
-      <Docs>
-        <param name="objekt">To be added.</param>
-        <param name="first_property_name">To be added.</param>
-        <param name="var_args">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
+      <ReturnValue><ReturnType>System.Void</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="objekt" Type="Gst.Object" /><Parameter Name="first_property_name" Type="System.String" /><Parameter Name="var_args" Type="System.IntPtr" /></Parameters>
+      <Docs><param name="objekt">To be added.</param><param name="first_property_name">To be added.</param><param name="var_args">To be added.</param><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
     </Member>
   </Members>
 </Type>

@@ -74,9 +74,23 @@
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_MEDIA3']" name="value">MiniObjectFlags.Last &lt;&lt; 7</attr>
   <attr path="/api/namespace/enum[@name='BufferFlags']/member[@cname='GST_BUFFER_FLAG_LAST']" name="value">MiniObjectFlags.Last &lt;&lt; 8</attr>
 
-  <attr path="/api/namespace/object[@name='Bus']/method[@name='AddWatch']" name="hidden">true</attr>
   <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
-  <attr path="/api/namespace/object[@name='Bus']/field[@name='SyncHandler']" name="hidden">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/field" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_post']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_peek']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_pop']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_pop_filtered']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_pop_filtered']" name="name">Pop</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_timed_pop']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_timed_pop']" name="name">Pop</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_timed_pop_filtered']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_timed_pop_filtered']" name="name">Pop</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_sync_signal_handler']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_add_watch_full']" name="name">AddWatch</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_add_watch']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_async_signal_func']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_add_signal_watch_full']" name="name">AddSignalWatch</attr>
+  <attr path="/api/namespace/object[@name='Bus']/method[@cname='gst_bus_poll']/return-type" name="owned">true</attr>
 
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLAG_LAST']" name="name">Last</attr>
   <attr path="/api/namespace/enum[@name='BusFlags']/member[@cname='GST_BUS_FLUSHING']" name="value">MiniObjectFlags.Last &lt;&lt; 0</attr>

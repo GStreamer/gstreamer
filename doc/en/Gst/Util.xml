@@ -13,6 +13,13 @@
     <remarks>To be added.</remarks>
   </Docs>
   <Members>
+    
+    
+    
+    
+    
+    
+    
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public Util ();" />
       <MemberType>Constructor</MemberType>
@@ -20,138 +27,69 @@
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FlowGetName">
+      <Docs><summary>To be added.</summary><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="FlowGetName">
       <MemberSignature Language="C#" Value="public static string FlowGetName (Gst.FlowReturn flow_ret);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="flow_ret" Type="Gst.FlowReturn" />
-      </Parameters>
-      <Docs>
-        <param name="flow_ret">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatGetByNick">
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="flow_ret" Type="Gst.FlowReturn" /></Parameters>
+      <Docs><param name="flow_ret">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="FormatGetByNick">
       <MemberSignature Language="C#" Value="public static Gst.Format FormatGetByNick (string nick);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.Format</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="nick" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="nick">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatGetDetails">
+      <ReturnValue><ReturnType>Gst.Format</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="nick" Type="System.String" /></Parameters>
+      <Docs><param name="nick">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="FormatGetDetails">
       <MemberSignature Language="C#" Value="public static Gst.FormatDefinition FormatGetDetails (Gst.Format format);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.FormatDefinition</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatGetName">
+      <ReturnValue><ReturnType>Gst.FormatDefinition</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="FormatGetName">
       <MemberSignature Language="C#" Value="public static string FormatGetName (Gst.Format format);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.String</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="format" Type="Gst.Format" />
-      </Parameters>
-      <Docs>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="FormatRegister">
+      <ReturnValue><ReturnType>System.String</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="format" Type="Gst.Format" /></Parameters>
+      <Docs><param name="format">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="FormatRegister">
       <MemberSignature Language="C#" Value="public static Gst.Format FormatRegister (string nick, string description);" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>Gst.Format</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="nick" Type="System.String" />
-        <Parameter Name="description" Type="System.String" />
-      </Parameters>
-      <Docs>
-        <param name="nick">To be added.</param>
-        <param name="description">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SeqnumNext">
+      <ReturnValue><ReturnType>Gst.Format</ReturnType></ReturnValue>
+      <Parameters><Parameter Name="nick" Type="System.String" /><Parameter Name="description" Type="System.String" /></Parameters>
+      <Docs><param name="nick">To be added.</param><param name="description">To be added.</param><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="SeqnumNext">
       <MemberSignature Language="C#" Value="public static uint SeqnumNext ();" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
+      <ReturnValue><ReturnType>System.UInt32</ReturnType></ReturnValue>
       <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Timestamp">
+      <Docs><summary>To be added.</summary><returns>To be added.</returns><remarks>To be added.</remarks></Docs>
+    </Member><Member MemberName="Timestamp">
       <MemberSignature Language="C#" Value="public static ulong Timestamp { get; }" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>0.9.5.99</AssemblyVersion>
       </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.UInt64</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
+      <ReturnValue><ReturnType>System.UInt64</ReturnType></ReturnValue>
+      <Docs><summary>To be added.</summary><value>To be added.</value><remarks>To be added.</remarks></Docs>
     </Member>
   </Members>
 </Type>
