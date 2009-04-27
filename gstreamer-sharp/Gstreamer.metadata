@@ -329,8 +329,10 @@
     <member cname="GST_EVENT_TYPE_BOTH" name="Both" value="Gst.EventTypeFlags.Downstream | Gst.EventTypeFlags.Upstream" />
   </add-node>
 
+  <attr path="/api/namespace/class[@name='Flow']" name="hidden">1</attr>
   <attr path="/api/namespace/class[@name='Flow']/method[@name='ToQuark']/parameters/*[@name='ret']" name="name">flow_ret</attr>
-  <attr path="/api/namespace/class[@name='Flow']/method[@name='GetName']/parameters/*[@name='ret']" name="name">get_name_ret</attr>
+
+  <move-node path="/api/namespace/class[@name='Flow']/method[@cname='gst_flow_get_name']" name="name">/api/namespace/class[@name='Util']</move-node>
 
   <attr path="/api/namespace/object[@name='GhostPad']" name="parent">GstPad</attr>
 
@@ -521,6 +523,8 @@
   </add-node>
   <remove-node path="/api/namespace/object[@name='PluginFeature']/method[@cname='gst_plugin_feature_list_free']" />
 
+  <attr path="/api/namespace/class[@name='Print']" name="hidden">1</attr>
+
   <change-node-type path="/api/namespace/object[@name='Query']">boxed</change-node-type>
   <attr path="/api/namespace/boxed[@name='Query']" name="opaque">true</attr>
   <attr path="/api/namespace/boxed[@name='Query']/method[@cname='gst_query_get_type']" name="new_flag">1</attr>
@@ -569,6 +573,8 @@
   <attr path="/api/namespace/enum[@name='SearchMode']" name="hidden">1</attr>
 
   <attr path="/api/namespace/boxed[@name='Segment']/method[@cname='gst_segment_set_newsegment_full']" name="name">SetNewsegment</attr>
+
+  <attr path="/api/namespace/class[@name='Segtrap']" name="hidden">1</attr>
 
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_NULL_TO_READY']" name="value">(State.Null &lt;&lt; 3) | State.Ready</attr>
   <attr path="/api/namespace/enum[@name='StateChange']/member[@cname='GST_STATE_CHANGE_READY_TO_PAUSED']" name="value">(State.Ready &lt;&lt; 3) | State.Paused</attr>
@@ -718,7 +724,19 @@
   <!-- FIXME: Bug https://bugzilla.novell.com/show_bug.cgi?id=323372 -->
   <attr path="/api/namespace/object[@name='TypeFindFactory']/field[@name='Extensions']" name="hidden">1</attr>
 
+  <attr path="/api/namespace/class[@name='Util']" name="disable_void_ctor">1</attr>
   <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_array_binary_search']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_flow_get_name']" name="name">FlowGetName</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_flow_get_name']/parameters/parameter" name="name">flow_ret</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_formats_contains']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_dump_mem']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_gdouble_to_guint64']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_guint64_to_gdouble']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_seqnum_compare']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_object_arg']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_uint64_scale_int']" name="hidden">1</attr>
+  <attr path="/api/namespace/class[@name='Util']/method[@cname='gst_util_set_value_from_string']" name="hidden">1</attr>
 
   <!-- We implement this ourselves -->
   <attr path="/api/namespace/class[@name='Value']" name="hidden">1</attr>
