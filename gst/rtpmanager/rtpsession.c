@@ -1221,6 +1221,8 @@ rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
         GINT_TO_POINTER (sess->source->ssrc), sess->source);
   }
   RTP_SESSION_UNLOCK (sess);
+
+  g_object_notify (G_OBJECT (sess), "internal-ssrc");
 }
 
 /**
@@ -2435,6 +2437,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   GList *item;
   ReportData data;
   RTPSource *own;
+  gboolean notify = FALSE;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
@@ -2521,9 +2524,13 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     sess->bye_reason = NULL;
     sess->sent_bye = FALSE;
     sess->change_ssrc = FALSE;
+    notify = TRUE;
     GST_DEBUG ("changed our SSRC to %08x", own->ssrc);
   }
   RTP_SESSION_UNLOCK (sess);
+
+  if (notify)
+    g_object_notify (G_OBJECT (sess), "internal-ssrc");
 
   /* push out the RTCP packet */
   if (data.rtcp) {
